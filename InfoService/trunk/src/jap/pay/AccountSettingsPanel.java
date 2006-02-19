@@ -43,12 +43,12 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -71,10 +71,13 @@ import org.w3c.dom.Element;
 import anon.crypto.JAPCertificate;
 import anon.crypto.XMLEncryption;
 import anon.pay.BI;
+import anon.pay.BIConnection;
 import anon.pay.PayAccount;
 import anon.pay.PayAccountsFile;
 import anon.pay.xml.XMLAccountInfo;
 import anon.pay.xml.XMLBalance;
+import anon.pay.xml.XMLPaymentOption;
+import anon.pay.xml.XMLPaymentOptions;
 import anon.pay.xml.XMLTransCert;
 import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
@@ -82,6 +85,8 @@ import gui.GUIUtils;
 import gui.JAPHelp;
 import gui.JAPMessages;
 import gui.dialog.CaptchaContentPane;
+import gui.dialog.DialogContentPane;
+import gui.dialog.DialogContentPane.Options;
 import gui.dialog.IDialogOptions;
 import gui.dialog.JAPDialog;
 import gui.dialog.PasswordContentPane;
@@ -91,7 +96,9 @@ import jap.AbstractJAPConfModule;
 import jap.JAPConstants;
 import jap.JAPController;
 import jap.JAPUtil;
-import jap.pay.wizard.PaymentWizard;
+import jap.pay.wizardnew.MethodSelectionPane;
+import jap.pay.wizardnew.PassivePaymentPane;
+import jap.pay.wizardnew.PaymentInfoPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -165,6 +172,20 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		getName() + "_notexported";
 	private static final String MSG_CONNECTIONACTIVE = AccountSettingsPanel.class.
 		getName() + "_connectionactive";
+	private static final String MSG_FETCHINGOPTIONS = AccountSettingsPanel.class.
+		getName() + "_fetchingoptions";
+	private static final String MSG_FETCHINGTAN = AccountSettingsPanel.class.
+		getName() + "_fetchingtan";
+	private static final String MSG_CHARGEWELCOME = AccountSettingsPanel.class.
+		getName() + "_chargewelcome";
+	private static final String MSG_CHARGETITLE = AccountSettingsPanel.class.
+		getName() + "_chargetitle";
+	private static final String MSG_SENDINGPASSIVE = AccountSettingsPanel.class.
+		getName() + "_sendingpassive";
+	private static final String MSG_SENTPASSIVE = AccountSettingsPanel.class.
+		getName() + "_sentpassive";
+	private static final String MSG_NOTSENTPASSIVE = AccountSettingsPanel.class.
+		getName() + "_notsentpassive";
 
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
@@ -188,6 +209,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private JList m_listAccounts;
 	private boolean m_bReady = true;
 	private boolean m_bCreatingAccount = false;
+
+	private XMLPaymentOptions m_paymentOptions;
 
 	public AccountSettingsPanel()
 	{
@@ -543,8 +566,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			p.updateDialog();
 			d.pack();
 			d.setVisible(true);
-			if (p.getValue() != PasswordContentPane.RETURN_VALUE_CANCEL &&
-				p.getValue() != PasswordContentPane.RETURN_VALUE_CLOSED)
+			if (p.getButtonValue() != PasswordContentPane.RETURN_VALUE_CANCEL &&
+				p.getButtonValue() != PasswordContentPane.RETURN_VALUE_CLOSED)
 			{
 				JAPController.getInstance().setPaymentPassword(new String(p.getPassword()));
 			}
@@ -557,8 +580,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			p.updateDialog();
 			d.pack();
 			d.setVisible(true);
-			if (p.getValue() != PasswordContentPane.RETURN_VALUE_CANCEL &&
-				p.getValue() != PasswordContentPane.RETURN_VALUE_CLOSED)
+			if (p.getButtonValue() != PasswordContentPane.RETURN_VALUE_CANCEL &&
+				p.getButtonValue() != PasswordContentPane.RETURN_VALUE_CLOSED)
 			{
 				JAPController.getInstance().setPaymentPassword(new String(p.getPassword()));
 			}
@@ -688,7 +711,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	/**
 	 * Charges the selected account
 	 */
-	private void doChargeAccount(PayAccount selectedAccount)
+	private void doChargeAccount(final PayAccount selectedAccount)
 	{
 		if (selectedAccount == null)
 		{
@@ -703,16 +726,217 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 										  JOptionPane.WARNING_MESSAGE);
 			return;
 		}
-		XMLTransCert transferCertificate = null;
 
-		PaymentWizard paymentWiz = new PaymentWizard(selectedAccount);
-		if (paymentWiz.getSelectedOption() != null)
+		JAPDialog d = new JAPDialog(GUIUtils.getParentWindow(this.getRootPanel()),
+									JAPMessages.getString(MSG_CHARGETITLE), true);
+		SimpleWizardContentPane welcomePane = new SimpleWizardContentPane(d,
+			JAPMessages.getString(MSG_CHARGEWELCOME), null, null);
+
+		WorkerContentPane.ReturnThread fetchOptions = new WorkerContentPane.ReturnThread()
 		{
-		if (paymentWiz.getSelectedOption().getName().equals("CreditCard"))
-		{
-			doGetStatement(selectedAccount);
-		}
+			private XMLPaymentOptions m_paymentOptions;
+			public void run()
+			{
+				try
+				{
+					BI pi = selectedAccount.getBI();
+					BIConnection piConn = new BIConnection(pi);
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+								  "Connecting to PI: " + pi.getHostName() + ":" + pi.getPortNumber());
+					piConn.connect();
+					piConn.authenticate(PayAccountsFile.getInstance().getActiveAccount().
+										getAccountCertificate(),
+										PayAccountsFile.getInstance().getActiveAccount().
+										getSigningInstance());
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+								  "Fetching payment options");
+					m_paymentOptions = piConn.getPaymentOptions();
+					piConn.disconnect();
+				}
+				catch (Exception e)
+				{
+					e.printStackTrace();
+					LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
+								  "Error fetching payment options: " + e.getMessage());
+				}
 			}
+
+			public Object getValue()
+			{
+				return m_paymentOptions;
+			}
+		};
+
+		WorkerContentPane fetchOptionsPane = new WorkerContentPane(d,
+			JAPMessages.getString(MSG_FETCHINGOPTIONS), welcomePane,
+			fetchOptions);
+		fetchOptionsPane.getButtonCancel().setVisible(false);
+		final MethodSelectionPane methodSelectionPane = new MethodSelectionPane(d, fetchOptionsPane);
+
+		WorkerContentPane.ReturnThread fetchTan = new WorkerContentPane.ReturnThread()
+		{
+			private XMLTransCert m_transCert;
+			public void run()
+			{
+				if (m_transCert == null)
+				{
+					try
+					{
+						LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+									  "Fetching Transaction Certificate from Payment Instance");
+
+						m_transCert = selectedAccount.charge();
+					}
+					catch (Exception e)
+					{
+						LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
+									  "Error fetching TransCert: " + e.getMessage());
+					}
+				}
+			}
+
+			public Object getValue()
+			{
+				return m_transCert;
+			}
+		};
+
+		WorkerContentPane fetchTanPane = new WorkerContentPane(d, JAPMessages.getString(MSG_FETCHINGTAN),
+			methodSelectionPane,
+			fetchTan);
+		fetchTanPane.getButtonCancel().setVisible(false);
+
+		final PaymentInfoPane paymentInfoPane = new PaymentInfoPane(d, fetchTanPane)
+		{
+			public boolean isSkippedAsNextContentPane()
+			{
+				if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
+					XMLPaymentOption.OPTION_ACTIVE))
+				{
+					return false;
+				}
+				else
+				{
+					return true;
+				}
+			}
+
+			public boolean isSkippedAsPreviousContentPane()
+			{
+				return true;
+			}
+		};
+
+		final PassivePaymentPane passivePaymentPane = new PassivePaymentPane(d, paymentInfoPane)
+		{
+
+			public boolean isSkippedAsNextContentPane()
+			{
+				if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
+					XMLPaymentOption.OPTION_ACTIVE))
+				{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+		};
+
+		WorkerContentPane.ReturnThread sendPassive = new WorkerContentPane.ReturnThread()
+		{
+			private Boolean m_successful = new Boolean(true);
+
+			public void run()
+			{
+				/** Post data to payment instance */
+				BIConnection biConn = new BIConnection(selectedAccount.getBI());
+				try
+				{
+					biConn.connect();
+					biConn.authenticate(selectedAccount.getAccountCertificate(),
+										selectedAccount.getSigningInstance());
+					if (!biConn.sendPassivePayment(passivePaymentPane.getEnteredInfo()))
+					{
+						m_successful = new Boolean(false);
+					}
+					biConn.disconnect();
+				}
+				catch (Exception e)
+				{
+					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+								  "Could not send PassivePayment to payment instance: " + e.getMessage());
+				}
+			}
+
+			public Object getValue()
+			{
+				return m_successful;
+			}
+		};
+
+		final WorkerContentPane sendPassivePane = new WorkerContentPane(d,
+			JAPMessages.getString(MSG_SENDINGPASSIVE),
+			passivePaymentPane,
+			sendPassive)
+		{
+			public boolean isSkippedAsNextContentPane()
+			{
+				if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
+					XMLPaymentOption.OPTION_ACTIVE))
+				{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+		};
+		sendPassivePane.getButtonCancel().setVisible(false);
+
+		final SimpleWizardContentPane sentPane = new SimpleWizardContentPane(d,
+			JAPMessages.getString(MSG_SENTPASSIVE), null, new Options(sendPassivePane))
+		{
+			public boolean isSkippedAsNextContentPane()
+			{
+				if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
+					XMLPaymentOption.OPTION_ACTIVE))
+				{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+		};
+		sentPane.addComponentListener(new ComponentAdapter()
+		{
+			public void componentShown(ComponentEvent a_event)
+			{
+				if ( ( (Boolean) sendPassivePane.getValue()).booleanValue() == false)
+				{
+					sentPane.setText(JAPMessages.getString(MSG_NOTSENTPASSIVE));
+				}
+			}
+		});
+		sentPane.getButtonCancel().setVisible(false);
+		sentPane.getButtonNo().setVisible(false);
+
+		welcomePane.updateDialogOptimalSized(welcomePane);
+		d.setLocationCenteredOnOwner();
+		d.setVisible(true);
+
+		if (methodSelectionPane.getSelectedPaymentOption() != null &&
+			passivePaymentPane.getButtonValue() == JAPDialog.RETURN_VALUE_OK)
+		{
+			if (methodSelectionPane.getSelectedPaymentOption().getName().equals("CreditCard"))
+			{
+				doGetStatement(selectedAccount);
+			}
+		}
 	}
 
 	/**
@@ -801,7 +1025,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				}
 			});
 
-
 			PasswordContentPane pc = null;
 			//First account, ask for password
 			if (PayAccountsFile.getInstance().getNumAccounts() == 0)
@@ -836,7 +1059,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					{
 						if (captcha.isVisible())
 						{
-							captcha.setValue(IDialogOptions.RETURN_VALUE_CLOSED);
+							captcha.setButtonValue(IDialogOptions.RETURN_VALUE_CLOSED);
 							captcha.checkCancel();
 						}
 						d.dispose();
@@ -898,11 +1121,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			return;
 		}
 
-	if (JAPController.getInstance().getAnonMode())
-	{
-		JAPDialog.showMessageDialog(GUIUtils.getParentWindow(this.getRootPanel()), JAPMessages.getString(MSG_CONNECTIONACTIVE));
-	return;
-	}
+		if (JAPController.getInstance().getAnonMode())
+		{
+			JAPDialog.showMessageDialog(GUIUtils.getParentWindow(this.getRootPanel()),
+										JAPMessages.getString(MSG_CONNECTIONACTIVE));
+			return;
+		}
 
 		PayAccountsFile accounts = PayAccountsFile.getInstance();
 		try
@@ -985,8 +1209,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			p.updateDialog();
 			d.pack();
 			d.setVisible(true);
-			if (p.getValue() != PasswordContentPane.RETURN_VALUE_CANCEL &&
-				p.getValue() != PasswordContentPane.RETURN_VALUE_CLOSED)
+			if (p.getButtonValue() != PasswordContentPane.RETURN_VALUE_CANCEL &&
+				p.getButtonValue() != PasswordContentPane.RETURN_VALUE_CLOSED)
 			{
 
 				strPassword = new String(p.getPassword());
@@ -1096,8 +1320,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 							p.updateDialog();
 							d.pack();
 							d.setVisible(true);
-							if (p.getValue() != PasswordContentPane.RETURN_VALUE_CANCEL &&
-								p.getValue() != PasswordContentPane.RETURN_VALUE_CLOSED)
+							if (p.getButtonValue() != PasswordContentPane.RETURN_VALUE_CANCEL &&
+								p.getButtonValue() != PasswordContentPane.RETURN_VALUE_CLOSED)
 							{
 								strPassword = new String(p.getPassword());
 							}

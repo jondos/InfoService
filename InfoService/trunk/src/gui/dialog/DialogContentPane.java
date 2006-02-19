@@ -578,6 +578,18 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 				setDefaultButton(DEFAULT_BUTTON_KEEP);
 			}
 		}
+
+		addComponentListener(new ComponentAdapter()
+		{
+			public void componentShown(ComponentEvent a_event)
+			{
+				if (hasWizardLayout())
+				{
+					setTextOfWizardNextButton();
+				}
+				validateDialog();
+			}
+		});
 	}
 
 	/**
@@ -1090,6 +1102,33 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	}
 
 	/**
+	 * Returns if this content pane has a successor.
+	 * @return if this content pane has a successor
+	 */
+	public final boolean hasNextContentPane()
+	{
+		DialogContentPane contentPane = this;
+
+		while ((contentPane = contentPane.getNextContentPane()) != null)
+		{
+			try
+			{
+				if (!contentPane.isSkippedAsNextContentPane())
+				{
+					return true;
+				}
+			}
+			catch (Exception a_e)
+			{
+				// state is unknown and interpreted as false
+				return false;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Returns if this content pane is formatted with the wizard layout. The "Yes" and "OK" buttons will
 	 * be transformed to "Next", the "No" button is replaced by "Previous" and all buttons are shown
 	 * (Cancel, Previous, Next), not regarding what buttons have been defined by the option type.
@@ -1398,6 +1437,21 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	}
 
 	/**
+	 * Calls validate() on the dialog.
+	 */
+	public final void validateDialog()
+	{
+		if (getDialog() instanceof JDialog)
+		{
+			( (JDialog) getDialog()).validate();
+		}
+		else
+		{
+			( (JAPDialog) getDialog()).validate();
+		}
+	}
+
+	/**
 	 * Replaces the content pane of the parent dialog with the content defined in this object.
 	 * @return the errors returned by checkUpdate() or null or an empty array if no errors occured and
 	 * the update has been done
@@ -1701,10 +1755,32 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	}
 
 	/**
+	 * Optional return value that may be created by the content pane during its visibility.
+	 * @return return value that may be created by the content pane during its visibility
+	 */
+	public Object getValue()
+	{
+		return null;
+	}
+
+	/**
+	 * If this content pane is made visible by calling moveToNextContentPane of a previous content pane,
+	 * this method is called automatically right before it gets visible with the object that the previous
+	 * content pane returns by getValue().
+	 * This method is very useful if this content pane needs data that has been created by its
+	 * previous content pane(s). If it receives <code>null</code>, it should return without any action.
+	 * @param a_value an Object
+	 */
+	public void setInitValue(Object a_value)
+	{
+		// do nothing by default
+	}
+
+	/**
 	 * Returns the button value the user has selected.
 	 * @return the button value the user has selected
 	 */
-	public final int getValue()
+	public final int getButtonValue()
 	{
 		return m_value;
 	}
@@ -1713,7 +1789,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 * Sets the button value. If the type is unknown, it is set to RETURN_VALUE_UNINITIALIZED.
 	 * @param a_value the new button value
 	 */
-	public final void setValue(int a_value)
+	public final void setButtonValue(int a_value)
 	{
 		if (RETURN_VALUE_CANCEL == a_value || RETURN_VALUE_OK == a_value ||
 			RETURN_VALUE_CLOSED == a_value || RETURN_VALUE_YES == a_value || RETURN_VALUE_NO == a_value)
@@ -1734,8 +1810,8 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 */
 	public final boolean hasValidValue()
 	{
-		return getValue() != RETURN_VALUE_CANCEL && getValue() != RETURN_VALUE_CLOSED &&
-			getValue() != RETURN_VALUE_UNINITIALIZED;
+		return getButtonValue() != RETURN_VALUE_CANCEL && getButtonValue() != RETURN_VALUE_CLOSED &&
+			getButtonValue() != RETURN_VALUE_UNINITIALIZED;
 	}
 
 	/**
@@ -2272,6 +2348,10 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 
 		if (currentContentPane != null)
 		{
+			if (a_bNext)
+			{
+				currentContentPane.setInitValue(getValue());
+			}
 			CheckError[] errors = currentContentPane.updateDialog();
 			boolean bFocused = false;
 
@@ -2497,14 +2577,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			m_btnYesOK = new JButton();
 			m_btnYesOK.addActionListener(m_buttonListener);
 		}
-		if (getNextContentPane() != null)
-		{
-			m_btnYesOK.setText(JAPMessages.getString(MSG_NEXT) + " >");
-		}
-		else
-		{
-			m_btnYesOK.setText(JAPMessages.getString(MSG_FINISH));
-		}
+		setTextOfWizardNextButton();
 		m_panelOptions.add(m_btnYesOK);
 
 		m_panelOptions.add(Box.createHorizontalStrut(5));
@@ -2515,6 +2588,19 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		}
 		m_btnCancel.setText(JAPMessages.getString(MSG_CANCEL));
 		m_panelOptions.add(m_btnCancel);
+	}
+
+	private void setTextOfWizardNextButton()
+	{
+		if (hasNextContentPane())
+		{
+			m_btnYesOK.setText(JAPMessages.getString(MSG_NEXT) + " >");
+		}
+		else
+		{
+			m_btnYesOK.setText(JAPMessages.getString(MSG_FINISH));
+		}
+		m_btnYesOK.invalidate();
 	}
 
 	private void createOptions()
@@ -2547,9 +2633,9 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	{
 		public void windowClosed(WindowEvent a_event)
 		{
-			if (getValue() == RETURN_VALUE_UNINITIALIZED)
+			if (getButtonValue() == RETURN_VALUE_UNINITIALIZED)
 			{
-				setValue(RETURN_VALUE_CLOSED);
+				setButtonValue(RETURN_VALUE_CLOSED);
 			}
 
 			ComponentListener listener = m_currentlyActiveContentPaneComponentListener;
