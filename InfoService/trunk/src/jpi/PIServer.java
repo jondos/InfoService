@@ -129,7 +129,7 @@ public class PIServer implements Runnable
 					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 					Thread.sleep(100); //just to ensure the server will not consume 100% CPU...
 				}
-				catch (InterruptedException ex)
+				catch (Exception ex)
 				{
 				}
 			}
