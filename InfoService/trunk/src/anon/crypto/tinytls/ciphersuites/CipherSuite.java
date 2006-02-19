@@ -214,13 +214,13 @@ public abstract class CipherSuite
 		}
 
 		//check if we've recieved the right padding
-		for (int i = msg.m_dataLen - 1; i > msg.m_dataLen - paddinglength - 2; i--)
+		/*for (int i = msg.m_dataLen - 1; i > msg.m_dataLen - paddinglength - 2; i--)
 		{
 			if (msg.m_Data[i] != paddinglength)
 			{
 				throw new TLSException("wrong Padding detected", 2, 51);
 			}
-		}
+		}*/
 
 		len -= paddinglength;
 		msg.setLength(len);
