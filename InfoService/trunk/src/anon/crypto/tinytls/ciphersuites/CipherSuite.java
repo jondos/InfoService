@@ -206,7 +206,8 @@ public abstract class CipherSuite
 		}
 		//remove padding and mac
 		int len = msg.m_dataLen - m_hmac.getMacSize() - 1;
-		int paddinglength = (msg.m_Data[msg.m_dataLen - 1])&0x00FF; //padding
+		byte paddingbyte=msg.m_Data[msg.m_dataLen - 1];
+		int paddinglength = paddingbyte&0x00FF; //padding
 		if(paddinglength>msg.m_dataLen-2)
 		{
 			throw new TLSException("wrong Padding len detected", 2, 51);
@@ -214,13 +215,13 @@ public abstract class CipherSuite
 		}
 
 		//check if we've recieved the right padding
-		/*for (int i = msg.m_dataLen - 1; i > msg.m_dataLen - paddinglength - 2; i--)
+		for (int i = msg.m_dataLen - 1; i > msg.m_dataLen - paddinglength - 2; i--)
 		{
-			if (msg.m_Data[i] != paddinglength)
+			if (msg.m_Data[i] != paddingbyte)
 			{
 				throw new TLSException("wrong Padding detected", 2, 51);
 			}
-		}*/
+		}
 
 		len -= paddinglength;
 		msg.setLength(len);
