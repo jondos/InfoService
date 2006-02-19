@@ -241,7 +241,7 @@ public class WorkerContentPane extends DialogContentPane implements
 
 		public synchronized void run()
 		{
-			setValue(RETURN_VALUE_UNINITIALIZED);
+			setButtonValue(RETURN_VALUE_UNINITIALIZED);
 
 			// clear interrupted flag
 			m_workerInterrupted = false;
@@ -276,14 +276,14 @@ public class WorkerContentPane extends DialogContentPane implements
 
 			if (!m_workerInterrupted)
 			{
-				setValue(RETURN_VALUE_OK);
+				setButtonValue(RETURN_VALUE_OK);
 				moveToNextContentPane();
 			}
 			notifyAll();
 		}
 	}
 
-	public Object getThreadValue()
+	public Object getValue()
 	{
 		if (m_workerRunnable instanceof ReturnThread)
 		{

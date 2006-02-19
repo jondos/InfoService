@@ -87,7 +87,10 @@ public class PIServer implements Runnable
 		}
 		catch (Exception e)
 		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
+			if (!m_typeAI)
+			{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "PIServer (BI): Exception in run(): "+ e);
+			}
 			return;
 		}
 
@@ -117,13 +120,6 @@ public class PIServer implements Runnable
 				LogHolder.log(LogLevel.ALERT, LogType.PAY,
 							  "PIServer accept loop exception: " + e.getMessage());
 				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
-				try
-				{
-					Thread.sleep(10000);
-				}
-				catch (InterruptedException ex)
-				{
-				}
 			}
 		}
 	}

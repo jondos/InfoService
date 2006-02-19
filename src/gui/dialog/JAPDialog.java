@@ -1316,7 +1316,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		dialog.addWindowListener(new SimpleDialogButtonFocusWindowAdapter(dialogContentPane));
 		dialog.setVisible(true);
 
-		return dialogContentPane.getValue();
+		return dialogContentPane.getButtonValue();
 	}
 
 	/**
