@@ -1051,7 +1051,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 					throw new IllegalStateException(
 									   "You may not optimise the dialog size while it is visible!");
 				}
-				nextContentPane.updateDialog(maxTextWidth);
+				nextContentPane.updateDialog(maxTextWidth, false);
 				nextContentPane.m_rootPane.setPreferredSize(null);
 				dialog.pack();
 				dialogWidth = Math.max(dialogWidth, dialog.getSize().width);
@@ -1072,7 +1072,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 					throw new IllegalStateException(
 									   "You may not optimise the dialog size while it is visible!");
 				}
-				nextContentPane.updateDialog();
+				nextContentPane.updateDialog(maxTextWidth, false);
 				nextContentPane.m_rootPane.setPreferredSize(null);
 				dialog.pack();
 				dialogWidth = Math.max(dialogWidth, dialog.getSize().width);
@@ -1458,7 +1458,18 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 */
 	public final synchronized CheckError[] updateDialog()
 	{
-		return updateDialog(MIN_TEXT_WIDTH);
+		return updateDialog(MIN_TEXT_WIDTH, true);
+	}
+
+	/**
+	 * Replaces the content pane of the parent dialog with the content defined in this object.
+	 * @param a_bCheckUpdate if checkUpdate should be called
+	 * @return the errors returned by checkUpdate() or null or an empty array if no errors occured and
+	 * the update has been done
+	 */
+	private final synchronized CheckError[] updateDialog(boolean a_bCheckUpdate)
+	{
+		return updateDialog(MIN_TEXT_WIDTH, a_bCheckUpdate);
 	}
 
 	/**
@@ -1531,15 +1542,23 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 * @return the errors returned by checkUpdate() or null or an empty array if no errors occured and
 	 * the update has been done
 	 * @param a_maxTextWidth the maximum width that is allowed for the (optional) text field
+	 * @param a_bCallCheckUpdate if checkUpdate should be called
 	 */
-	private final synchronized CheckError[] updateDialog(int a_maxTextWidth)
+	private final synchronized CheckError[] updateDialog(int a_maxTextWidth, boolean a_bCallCheckUpdate)
 	{
 		JDialog dialog;
 		JOptionPane pane;
 		Object[] options;
 		CheckError[] errors;
 
-		errors = checkUpdate();
+		if (a_bCallCheckUpdate)
+		{
+			errors = checkUpdate();
+		}
+		else
+		{
+			errors = null;
+		}
 
 		if (errors != null && errors.length > 0)
 		{
@@ -1937,7 +1956,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 				m_titlePane.remove(m_lblSeeFullText);
 				m_lblSeeFullText = null;
 			}
-			updateDialog();
+			updateDialog(false);
 
 			if (dialog.getContentPane().getSize().height < dialog.getContentPane().getPreferredSize().height)
 			{
@@ -1984,7 +2003,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 							// no feasible cut has been found; remove the text field completely
 							m_titlePane.remove(m_lblText);
 							m_lblText = null;
-							updateDialog();
+							updateDialog(false);
 							break;
 						}
 					}
@@ -1993,7 +2012,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 					m_lblText.setText(JAPHtmlMultiLineLabel.removeHTMLHEADAndBODYTags(m_lblText.getText()) +
 									  "...");
 					m_lblText.setPreferredWidth(preferredWidth);
-					updateDialog();
+					updateDialog(false);
 
 					if (dialog.getContentPane().getSize().height <
 						dialog.getContentPane().getPreferredSize().height)
@@ -2035,7 +2054,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			}
 			if (bWasActive)
 			{
-				updateDialog();
+				updateDialog(false);
 			}
 
 			getDialog().notifyAll();
