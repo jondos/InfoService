@@ -45,9 +45,9 @@ public class Mixminion implements AnonService
 
 	///minimal mixminion routers, that are used
 	public final static int MIN_ROUTE_LEN = 2;
-	
+
 	private int m_RouteLength;
-	
+
 	private static Mixminion ms_theMixminionInstance = null;
 	private ImmutableProxyInterface m_proxyInterface;
 
@@ -57,9 +57,10 @@ public class Mixminion implements AnonService
 
 	public int initialize(AnonServerDescription anonServer)
 	{
+		setRouteLength(((MixminionServiceDescription)anonServer).getRouteLen());
 		return 0;
 	}
-	
+
 	/**
 	 * sets RouteLength
 	 *
@@ -73,7 +74,7 @@ public class Mixminion implements AnonService
 			m_RouteLength = len;
 		}
 	}
-	
+
 	public int getRouteLength()
 	{
 		return m_RouteLength;
@@ -83,7 +84,7 @@ public class Mixminion implements AnonService
 	{
 		return 0;
 	}
-	
+
 	public ImmutableProxyInterface getProxy()
 	{
 		return m_proxyInterface;

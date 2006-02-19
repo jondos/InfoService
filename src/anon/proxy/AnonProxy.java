@@ -25,7 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package proxy;
+package anon.proxy;
 
 import java.io.InterruptedIOException;
 import java.net.ServerSocket;
@@ -48,11 +48,10 @@ import anon.server.impl.ProxyConnection;
 import anon.tor.Tor;
 import anon.tor.TorAnonServerDescription;
 import anon.mixminion.Mixminion;
-import jap.JAPModel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.mixminion.MixminonServiceDescription;
+import anon.mixminion.MixminionServiceDescription;
 
 final public class AnonProxy implements Runnable, AnonServiceEventListener
 {
@@ -77,8 +76,17 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	 */
 	private MixCascade m_currentMixCascade;
 
+	/**
+	 * Stores the Tor params.
+	 */
+	private TorAnonServerDescription m_currentTorParams;
+
+	/**
+	 * Stores the Mixminion params.
+	 */
+	private MixminionServiceDescription m_currentMixminionParams;
+
 	private boolean m_bAutoReconnect = false;
-	private boolean m_bPreCreateAnonRoutes = false;
 
 	/**
 	 * Stores, whether we use a forwarded connection (already active, when AnonProxy is created) or
@@ -148,6 +156,26 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	}
 
 	/**
+	 * Sets the parameter for Tor. If null TOR proxy is disabled.
+	 *
+	 * @param newMixCascade The new MixCascade we are connected to.
+	 */
+	public void setTorParams(TorAnonServerDescription newTorParams)
+	{
+		m_currentTorParams = newTorParams;
+	}
+
+	/**
+	 * Sets the parameter for Tor. If null TOR proxy is disabled.
+	 *
+	 * @param newMixCascade The new MixCascade we are connected to.
+	 */
+	public void setMixminionParams(MixminionServiceDescription newMixminionParams)
+	{
+		m_currentMixminionParams = newMixminionParams;
+	}
+
+	/**
 	 * Changes the dummy traffic interval on the connection to the server. This method respects
 	 * dummy traffic restrictions on a forwarded connection. If there is a minimum dummy traffic
 	 * rate needed by the server, the dummy traffic interval gets never bigger than that needed
@@ -188,11 +216,6 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		}
 	}
 
-	public void setPreCreateAnonRoutes(boolean b)
-	{
-		m_bPreCreateAnonRoutes = b;
-	}
-
 	public int start()
 	{
 		m_numChannels = 0;
@@ -209,16 +232,19 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			return ret;
 		}
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy.start(): AN.ON initialized");
-		m_Tor = AnonServiceFactory.getAnonServiceInstance("TOR");
-		m_Tor.setProxy(m_proxyInterface);
-		m_Tor.initialize(new TorAnonServerDescription(true, m_bPreCreateAnonRoutes));
-		( (Tor) m_Tor).setCircuitLength(JAPModel.getTorMinRouteLen(), JAPModel.getTorMaxRouteLen());
-		( (Tor) m_Tor).setConnectionsPerRoute(JAPModel.getTorMaxConnectionsPerRoute());
-		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy.start(): Tor initialized");
-		m_Mixminion = AnonServiceFactory.getAnonServiceInstance("Mixminion");
-		m_Mixminion.setProxy(m_proxyInterface);
-		m_Mixminion.initialize(new MixminonServiceDescription());
-		((Mixminion)m_Mixminion).setRouteLength(JAPModel.getMixminionRouteLen());
+		if (m_currentTorParams != null)
+		{
+			m_Tor = AnonServiceFactory.getAnonServiceInstance("TOR");
+			m_Tor.setProxy(m_proxyInterface);
+			m_Tor.initialize(m_currentTorParams);
+			LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy.start(): Tor initialized");
+		}
+		if (m_currentMixminionParams != null)
+		{
+			m_Mixminion = AnonServiceFactory.getAnonServiceInstance("Mixminion");
+			m_Mixminion.setProxy(m_proxyInterface);
+			m_Mixminion.initialize(m_currentMixminionParams);
+		}
 		threadRun = new Thread(this, "JAP - AnonProxy");
 		threadRun.start();
 		return ErrorCodes.E_SUCCESS;
@@ -227,7 +253,10 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	public void stop()
 	{
 		m_Anon.shutdown();
-		m_Tor.shutdown();
+		if (m_Tor != null)
+		{
+			m_Tor.shutdown();
+		}
 		m_bIsRunning = false;
 		try
 		{
@@ -235,6 +264,8 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		}
 		catch (Exception e)
 		{}
+		m_Tor = null;
+		m_Mixminion = null;
 	}
 
 	public void run()
@@ -314,7 +345,10 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	{
 		if (type == AnonChannel.SOCKS)
 		{
-			return m_Tor.createChannel(AnonChannel.SOCKS);
+			if (m_Tor != null)
+			{
+				return m_Tor.createChannel(AnonChannel.SOCKS);
+			}
 		}
 		else if (type == AnonChannel.HTTP)
 		{
@@ -322,10 +356,12 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		}
 		else if (type == AnonChannel.SMTP)
 		{
-			return m_Mixminion.createChannel(AnonChannel.SMTP);
+			if (m_Mixminion != null)
+			{
+				return m_Mixminion.createChannel(AnonChannel.SMTP);
+			}
 		}
-
-	return null;
+		return null;
 	}
 
 	synchronized boolean reconnect()
@@ -423,14 +459,13 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	}
 
 	public void packetMixed(long a_totalBytes)
-{
-	Enumeration e = m_anonServiceListener.elements();
-	while (e.hasMoreElements())
 	{
-		( (AnonServiceEventListener) e.nextElement()).packetMixed(a_totalBytes);
+		Enumeration e = m_anonServiceListener.elements();
+		while (e.hasMoreElements())
+		{
+			( (AnonServiceEventListener) e.nextElement()).packetMixed(a_totalBytes);
+		}
+
 	}
-
-}
-
 
 }

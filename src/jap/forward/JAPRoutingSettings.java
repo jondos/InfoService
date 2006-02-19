@@ -54,7 +54,7 @@ import jap.JAPModel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import proxy.AnonProxy;
+import anon.proxy.AnonProxy;
 
 /**
  * This class stores all routing settings. Observers of this class are notified, if the settings

@@ -640,7 +640,7 @@ public class Tor implements Runnable, AnonService
 	 * @param max
 	 * maximum circuit length
 	 */
-	public void setCircuitLength(int min, int max)
+	private void setCircuitLength(int min, int max)
 	{
 		if ( (max >= min) && (min >= MIN_ROUTE_LEN) && (max <= MAX_ROUTE_LEN))
 		{
@@ -650,7 +650,7 @@ public class Tor implements Runnable, AnonService
 	}
 
 	/*** Set the total number of allowed different connections per route*/
-	public void setConnectionsPerRoute(int i)
+	private void setConnectionsPerRoute(int i)
 	{
 		m_ConnectionsPerCircuit = i;
 	}
@@ -762,6 +762,8 @@ public class Tor implements Runnable, AnonService
 		TorAnonServerDescription td = (TorAnonServerDescription) torDirServer;
 		setORListServer(td.useInfoService(), td.getTorDirServerAddr(),
 						td.getTorDirServerPort());
+		setCircuitLength(td.getMinRouteLen(),td.getMaxRouteLen());
+		setConnectionsPerRoute(td.getMaxConnectionsPerRoute());
 
 		try
 		{

@@ -35,6 +35,9 @@ public class TorAnonServerDescription implements AnonServerDescription
 	private final String m_strTorDirServerAddr;
 	private final boolean m_bUseInfoService;
 	private final boolean m_bStartCircuitsAtStartup;
+	private int m_iMaxRouteLen=Tor.MAX_ROUTE_LEN;
+	private int m_iMinRouteLen=Tor.MIN_ROUTE_LEN;
+	private int m_iMaxConnectionsPerRoute=Circuit.MAX_STREAMS_OVER_CIRCUIT;
 
 	/**
 	 * Constructor
@@ -136,4 +139,35 @@ public class TorAnonServerDescription implements AnonServerDescription
 	{
 		return m_bStartCircuitsAtStartup;
 	}
+
+	public void setMaxRouteLen(int i)
+	{
+		m_iMaxRouteLen=i;
+	}
+
+	public int getMaxRouteLen()
+	{
+		return m_iMaxRouteLen;
+	}
+
+	public void setMinRouteLen(int i)
+	{
+		m_iMinRouteLen=i;
+	}
+
+	public int getMinRouteLen()
+	{
+		return m_iMinRouteLen;
+	}
+
+	public void setMaxConnectionsPerRoute(int i)
+	{
+		m_iMaxConnectionsPerRoute=i;
+	}
+
+	public int getMaxConnectionsPerRoute()
+	{
+		return m_iMaxConnectionsPerRoute;
+	}
+
 }

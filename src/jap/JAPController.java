@@ -77,9 +77,9 @@ import platform.AbstractOS;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import proxy.AnonProxy;
+import anon.proxy.AnonProxy;
 import proxy.DirectProxy;
-import proxy.IProxyListener;
+import anon.proxy.IProxyListener;
 import update.JAPUpdateWizard;
 import jap.forward.*;
 import anon.pay.IAIEventListener;
@@ -87,8 +87,9 @@ import gui.*;
 import anon.pay.PayAccount;
 import gui.dialog.JAPDialog;
 import gui.dialog.PasswordContentPane;
-
+import anon.mixminion.MixminionServiceDescription;
 import javax.swing.JOptionPane;
+import anon.tor.TorAnonServerDescription;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -1744,7 +1745,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 					MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
 					m_proxyAnon.setMixCascade(currentMixCascade);
 					m_proxyAnon.setAutoReConnect(JAPModel.getAutoReConnect());
-					m_proxyAnon.setPreCreateAnonRoutes(JAPModel.isPreCreateAnonRoutesEnabled());
+					TorAnonServerDescription td=new TorAnonServerDescription(true,JAPModel.isPreCreateAnonRoutesEnabled());
+					td.setMaxRouteLen(JAPModel.getTorMaxRouteLen());
+					td.setMinRouteLen(JAPModel.getTorMinRouteLen());
+					td.setMaxConnectionsPerRoute(JAPModel.getTorMaxConnectionsPerRoute());
+					m_proxyAnon.setTorParams(td);
+					m_proxyAnon.setMixminionParams(new MixminionServiceDescription(JAPModel.getMixminionRouteLen()));
 					m_proxyAnon.setProxyListener(m_Controller);
 					m_proxyAnon.setDummyTraffic(JAPModel.getDummyTraffic());
 					// -> we can try to start anonymity
