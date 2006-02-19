@@ -190,6 +190,10 @@ public class TinyTLSServerSocket extends Socket
 					ioe.bytesTransferred = 0;
 					throw ioe;
 				}
+				if(length<0)
+				{
+					throw new TLSException("Wrong record len",2,70);
+				}
 				m_aktTLSRecord.setLength(length);
 				m_ReadRecordState = STATE_PAYLOAD;
 				m_aktPendOffset = 0;
@@ -265,7 +269,6 @@ public class TinyTLSServerSocket extends Socket
 				}
 				catch (Throwable t)
 				{
-					t.printStackTrace();
 					throw new TLSException("Exception by reading next TSL record: " + t.getMessage(), 2, 80);
 				}
 			}
