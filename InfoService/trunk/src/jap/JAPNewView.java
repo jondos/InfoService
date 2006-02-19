@@ -93,7 +93,7 @@ import jap.pay.PaymentMainPanel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import proxy.IProxyListener;
+import anon.proxy.IProxyListener;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver

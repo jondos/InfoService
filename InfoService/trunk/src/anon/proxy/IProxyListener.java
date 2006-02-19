@@ -25,12 +25,12 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package proxy;
+package anon.proxy;
 
 public interface IProxyListener
 {
-	final static int PROTOCOL_OTHER=0;
-	final static int PROTOCOL_WWW=1;
+	int PROTOCOL_OTHER=0;
+	int PROTOCOL_WWW=1;
 
 	void channelsChanged(int channels);
 

@@ -27,9 +27,9 @@
  */
 package jap;
 
-import proxy.IProxyListener;
+import anon.proxy.IProxyListener;
 
-public interface JAPObserver extends IProxyListener
+interface JAPObserver extends IProxyListener
 {
 	/** Called if some values in the Model have changed. The GUI should
 	 *  refresh itselves.

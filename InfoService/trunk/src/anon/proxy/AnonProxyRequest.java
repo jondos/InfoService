@@ -25,7 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package proxy;
+package anon.proxy;
 
 import java.io.InputStream;
 import java.io.InterruptedIOException;
@@ -39,7 +39,7 @@ import anon.AnonChannel;
 import anon.NotConnectedToMixException;
 import anon.ToManyOpenChannelsException;
 
-final class AnonProxyRequest implements Runnable
+public final class AnonProxyRequest implements Runnable
 {
 	private InputStream m_InChannel;
 	private OutputStream m_OutChannel;
@@ -86,6 +86,11 @@ final class AnonProxyRequest implements Runnable
 			{
 				newChannel = m_Proxy.createChannel(AnonChannel.SMTP);
 				m_iProtocol = IProxyListener.PROTOCOL_OTHER;
+				if(newChannel==null)
+				{
+					m_bRequestIsAlive=false;
+					return;
+				}
 			}
 			catch (Throwable to)
 			{
