@@ -37,6 +37,11 @@ import anon.crypto.JAPCertificate;
 import anon.crypto.tinytls.TLSException;
 import anon.crypto.tinytls.TLSRecord;
 import anon.crypto.tinytls.keyexchange.Key_Exchange;
+import anon.util.ByteArrayUtil;
+import org.bouncycastle.crypto.macs.HMac;
+import org.bouncycastle.crypto.digests.SHA1Digest;
+import org.bouncycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.modes.CBCBlockCipher;
 
 /**
  * @author stefan
@@ -51,6 +56,8 @@ public abstract class CipherSuite
 	protected String m_ciphersuitename = "Name not set";
 	private Key_Exchange m_keyexchangealgorithm = null;
 	private JAPCertificate m_servercertificate = null;
+	protected CBCBlockCipher m_decryptcipher;
+	private HMac m_hmac = new HMac(new SHA1Digest());
 
 	/**
 	 * writesequenznumber for packages
@@ -185,7 +192,56 @@ public abstract class CipherSuite
 	 * @param message message
 	 * @return decoded message
 	 */
-	public abstract void decode(TLSRecord msg) throws TLSException;
+	public void decode(TLSRecord msg) throws TLSException
+	{
+
+		if ( (msg.m_dataLen % m_decryptcipher.getBlockSize()) != 0 ||
+			msg.m_dataLen < m_hmac.getMacSize())
+		{
+			throw new TLSException("wrong payload len!");
+		}
+		for (int i = 0; i < msg.m_dataLen; i += m_decryptcipher.getBlockSize())
+		{
+			m_decryptcipher.processBlock(msg.m_Data, i, msg.m_Data, i);
+		}
+		//remove padding and mac
+		int len = msg.m_dataLen - m_hmac.getMacSize() - 1;
+		int paddinglength = (msg.m_Data[msg.m_dataLen - 1])&0x00FF; //padding
+		if(paddinglength>msg.m_dataLen-2)
+		{
+			throw new TLSException("wrong Padding len detected", 2, 51);
+
+		}
+
+		//check if we've recieved the right padding
+		for (int i = msg.m_dataLen - 1; i > msg.m_dataLen - paddinglength - 2; i--)
+		{
+			if (msg.m_Data[i] != paddinglength)
+			{
+				throw new TLSException("wrong Padding detected", 2, 51);
+			}
+		}
+
+		len -= paddinglength;
+		msg.setLength(len);
+
+		m_hmac.reset();
+		m_hmac.init(new KeyParameter(m_servermacsecret));
+		m_hmac.update(ByteArrayUtil.inttobyte(m_readsequenznumber, 8), 0, 8);
+		m_readsequenznumber++;
+		m_hmac.update(msg.m_Header, 0, msg.m_Header.length);
+		m_hmac.update(msg.m_Data, 0, len);
+		byte[] mac = new byte[m_hmac.getMacSize()];
+		m_hmac.doFinal(mac, 0);
+
+		for (int i = 0; i < mac.length; i++)
+		{
+			if (msg.m_Data[len + i] != mac[i])
+			{
+				throw new TLSException("Wrong MAC detected!!!", 2, 20);
+			}
+		}
+	}
 
 	/**
 	 * calculate server and client write keys (see RFC2246 TLS Record Protocoll)
