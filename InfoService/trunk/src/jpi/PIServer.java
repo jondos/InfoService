@@ -89,7 +89,7 @@ public class PIServer implements Runnable
 		{
 			if (!m_typeAI)
 			{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "PIServer (BI): Exception in run(): "+ e);
+				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "PIServer (BI): Exception in run(): " + e);
 			}
 			return;
 		}
@@ -103,23 +103,35 @@ public class PIServer implements Runnable
 			{
 				acceptedSocket = m_serverSocket.accept();
 				acceptedSocket.setSoTimeout(30000);
-				InetAddress remote = acceptedSocket.getInetAddress();
-				String strRemote = "unknown";
-				if (remote != null)
+				try
 				{
-					strRemote = remote.getHostAddress();
+					InetAddress remote = acceptedSocket.getInetAddress();
+					String strRemote = "unknown";
+					if (remote != null)
+					{
+						strRemote = remote.getHostAddress();
+					}
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+								  "JPIServer: connection from: " + strRemote);
 				}
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-							  "JPIServer: connection from: " + strRemote);
-
+				catch (Throwable t)
+				{
+				}
 				con = new JPIConnection(acceptedSocket, m_typeAI);
 				new Thread(con).start();
 			}
-			catch (Exception e)
+			catch (Throwable e)
 			{
-				LogHolder.log(LogLevel.ALERT, LogType.PAY,
-							  "PIServer accept loop exception: " + e.getMessage());
-				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
+				try
+				{
+					LogHolder.log(LogLevel.ALERT, LogType.PAY,
+								  "PIServer accept loop exception: " + e.getMessage());
+					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
+					Thread.sleep(100); //just to ensure the server will not consume 100% CPU...
+				}
+				catch (InterruptedException ex)
+				{
+				}
 			}
 		}
 	}
