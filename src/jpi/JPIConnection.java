@@ -38,6 +38,7 @@ import jpi.util.HttpServer;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.crypto.tinytls.TinyTLSServerSocket;
 
 /**
  * Bedient eine Verbindung innerhalb eines Threads. Die Http-Requests werden
@@ -68,8 +69,6 @@ public class JPIConnection implements Runnable
 	public JPIConnection(Socket socket, boolean bIsAI) throws IOException
 	{
 		m_socket = socket;
-		m_inStream = new DataInputStream(socket.getInputStream());
-		m_outStream = new DataOutputStream(socket.getOutputStream());
 		m_bIsAI = bIsAI;
 	}
 
@@ -79,6 +78,12 @@ public class JPIConnection implements Runnable
 		PICommand command = null;
 		try
 		{
+			if(m_socket instanceof TinyTLSServerSocket)
+			{
+				((TinyTLSServerSocket)m_socket).startHandshake();
+			}
+			m_inStream = new DataInputStream(m_socket.getInputStream());
+			m_outStream = new DataOutputStream(m_socket.getOutputStream());
 			HttpServer server = new HttpServer(m_inStream, m_outStream);
 			PIRequest request;
 			if (!m_bIsAI)
