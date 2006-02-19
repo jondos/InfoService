@@ -67,7 +67,6 @@ public class TinyTLSServer extends ServerSocket
 		tls = new TinyTLSServerSocket(s);
 		tls.setDSSParameters(m_DSSCertificate, m_DSSKey);
 		tls.setRSAParameters(m_RSACertificate, m_RSAKey);
-		tls.startHandshake();
 		return tls;
 	}
 
