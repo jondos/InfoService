@@ -51,7 +51,6 @@ public class DHE_RSA_WITH_3DES_CBC_SHA extends CipherSuite
 {
 
 	private CBCBlockCipher m_encryptcipher;
-	private CBCBlockCipher m_decryptcipher;
 	private MyRandom m_rand;
 
 	/**
@@ -94,46 +93,6 @@ public class DHE_RSA_WITH_3DES_CBC_SHA extends CipherSuite
 		msg.setLength(msg.m_dataLen);
 	}
 
-	public void decode(TLSRecord msg) throws TLSException
-	{
-		for (int i = 0; i < msg.m_dataLen; i += m_decryptcipher.getBlockSize())
-		{
-			m_decryptcipher.processBlock(msg.m_Data, i, msg.m_Data, i);
-		}
-		//remove padding and mac
-		HMac hmac = new HMac(new SHA1Digest());
-		int len = msg.m_dataLen - hmac.getMacSize() - 1;
-		byte paddinglength = msg.m_Data[msg.m_dataLen - 1]; //padding
-
-		//check if we've recieved the right padding
-		for (int i = msg.m_dataLen - 1; i > msg.m_dataLen - paddinglength - 2; i--)
-		{
-			if (msg.m_Data[i] != paddinglength)
-			{
-				throw new TLSException("wrong Padding detected", 2, 51);
-			}
-		}
-
-		len -= (paddinglength & 0xFF);
-		msg.setLength(len);
-
-		hmac.reset();
-		hmac.init(new KeyParameter(m_servermacsecret));
-		hmac.update(ByteArrayUtil.inttobyte(m_readsequenznumber, 8), 0, 8);
-		m_readsequenznumber++;
-		hmac.update(msg.m_Header, 0, msg.m_Header.length);
-		hmac.update(msg.m_Data, 0, len);
-		byte[] mac = new byte[hmac.getMacSize()];
-		hmac.doFinal(mac, 0);
-
-		for (int i = 0; i < mac.length; i++)
-		{
-			if (msg.m_Data[len + i] != mac[i])
-			{
-				throw new TLSException("Wrong MAC detected!!!", 2, 20);
-			}
-		}
-	}
 
 	protected void calculateKeys(byte[] keys, boolean forclient)
 	{
