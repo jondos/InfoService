@@ -84,19 +84,14 @@ public final class LogHolder
 		m_logInstance = new DummyLog();
 	}
 
-	public void finalize()
+	public void finalize() throws Throwable
 	{
 		if (equals(ms_logHolderInstance))
 		{
 			ms_logHolderInstance = null;
 		}
-		try
-		{
-			super.finalize();
-		}
-		catch (Throwable ex)
-		{
-		}
+
+		super.finalize();
 	}
 
 	/**
@@ -133,26 +128,32 @@ public final class LogHolder
 	/**
 	 * Write the log data for a Throwable to the Log instance.
 	 *
-	 * @param logLevel The log level (see constants in class LogLevel).
-	 * @param logType The log type (see constants in class LogType).
+	 * @param a_logLevel The log level (see constants in class LogLevel).
+	 * @param a_logType The log type (see constants in class LogType).
 	 * @param a_throwable a Throwable to log
 	 */
-	public static synchronized void log(int logLevel, int logType, Throwable a_throwable)
+	public static synchronized void log(int a_logLevel, int a_logType, Throwable a_throwable)
 	{
-		if (isLogged(logLevel, logType))
+		if (a_throwable == null)
+		{
+			log(a_logLevel, a_logType, (String)null);
+			return;
+		}
+
+		if (isLogged(a_logLevel, a_logType))
 		{
 			if (m_messageDetailLevel == DETAIL_LEVEL_LOWEST)
 			{
-				getInstance().getLogInstance().log(logLevel, logType, a_throwable.getMessage());
+				getInstance().getLogInstance().log(a_logLevel, a_logType, a_throwable.getMessage());
 			}
 			else if (m_messageDetailLevel > DETAIL_LEVEL_LOWEST &&
 					 m_messageDetailLevel < DETAIL_LEVEL_HIGHEST)
 			{
-				getInstance().getLogInstance().log(logLevel, logType, a_throwable.toString());
+				getInstance().getLogInstance().log(a_logLevel, a_logType, a_throwable.toString());
 			}
 			else if (m_messageDetailLevel == DETAIL_LEVEL_HIGHEST)
 			{
-				getInstance().getLogInstance().log(logLevel, logType, Util.getStackTrace(a_throwable));
+				getInstance().getLogInstance().log(a_logLevel, a_logType, Util.getStackTrace(a_throwable));
 			}
 		}
 	}

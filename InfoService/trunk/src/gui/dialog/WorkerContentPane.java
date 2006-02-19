@@ -79,7 +79,7 @@ public class WorkerContentPane extends DialogContentPane implements
 	{
 		super(a_parentDialog, a_strText, new Layout(a_strTitle),
 			  new Options(OPTION_TYPE_CANCEL, a_previousContentPane));
-		setDefaultButtonOperation(ON_CLICK_DISPOSE_DIALOG | ON_CANCEL_SHOW_PREVIOUS_CONTENT);
+		setDefaultButtonOperation(ON_CLICK_DISPOSE_DIALOG);
 		m_workerRunnable = a_workerRunnable;
 
 		getContentPane().setLayout(new BorderLayout());
