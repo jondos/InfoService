@@ -280,9 +280,10 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		}
 	}
 
-	public void setInitValue(Object a_object)
+	public CheckError[] checkUpdate()
 	{
 		showInfo();
+		return null;
 	}
 
 
