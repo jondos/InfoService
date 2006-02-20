@@ -1783,19 +1783,6 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	}
 
 	/**
-	 * If this content pane is made visible by calling moveToNextContentPane of a previous content pane,
-	 * this method is called automatically right before it gets visible with the object that the previous
-	 * content pane returns by getValue().
-	 * This method is very useful if this content pane needs data that has been created by its
-	 * previous content pane(s). If it receives <code>null</code>, it should return without any action.
-	 * @param a_value an Object
-	 */
-	public void setInitValue(Object a_value)
-	{
-		// do nothing by default
-	}
-
-	/**
 	 * Returns the button value the user has selected.
 	 * @return the button value the user has selected
 	 */
@@ -2367,10 +2354,6 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 
 		if (currentContentPane != null)
 		{
-			if (a_bNext)
-			{
-				currentContentPane.setInitValue(getValue());
-			}
 			CheckError[] errors = currentContentPane.updateDialog();
 			boolean bFocused = false;
 

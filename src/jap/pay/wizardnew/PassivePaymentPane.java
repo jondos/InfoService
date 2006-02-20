@@ -225,9 +225,10 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		return null;
 	}
 
-	public void setInitValue(Object a_object)
+	public CheckError[] checkUpdate()
 	{
 		showForm();
+		return null;
 	}
 
 }

@@ -217,10 +217,11 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		m_selectedPaymentOption = null;
 	}
 
-	public void setInitValue(Object a_object)
+	public CheckError[] checkUpdate()
 	{
 		showPaymentOptions();
 		resetSelection();
+		return null;
 	}
 
 }
