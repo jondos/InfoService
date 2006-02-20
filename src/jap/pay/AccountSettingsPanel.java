@@ -186,6 +186,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		getName() + "_sentpassive";
 	private static final String MSG_NOTSENTPASSIVE = AccountSettingsPanel.class.
 		getName() + "_notsentpassive";
+	private static final String MSG_NEWCAPTCHA = AccountSettingsPanel.class.
+		getName() + "_newcaptcha";
 
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
@@ -770,7 +772,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		WorkerContentPane fetchOptionsPane = new WorkerContentPane(d,
 			JAPMessages.getString(MSG_FETCHINGOPTIONS), welcomePane,
 			fetchOptions);
-		fetchOptionsPane.getButtonCancel().setVisible(false);
+		fetchOptionsPane.setInterruptThreadSafe(false);
 		final MethodSelectionPane methodSelectionPane = new MethodSelectionPane(d, fetchOptionsPane);
 
 		WorkerContentPane.ReturnThread fetchTan = new WorkerContentPane.ReturnThread()
@@ -804,7 +806,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		WorkerContentPane fetchTanPane = new WorkerContentPane(d, JAPMessages.getString(MSG_FETCHINGTAN),
 			methodSelectionPane,
 			fetchTan);
-		fetchTanPane.getButtonCancel().setVisible(false);
+		fetchTanPane.setInterruptThreadSafe(false);
 
 		final PaymentInfoPane paymentInfoPane = new PaymentInfoPane(d, fetchTanPane)
 		{
@@ -1016,6 +1018,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			panel2.setInterruptThreadSafe(false);
 
 			final CaptchaContentPane captcha = new CaptchaContentPane(d, panel2);
+			captcha.getButtonNo().setText(JAPMessages.getString(MSG_NEWCAPTCHA));
+
 			PayAccountsFile.getInstance().addPaymentListener(captcha);
 			captcha.addComponentListener(new ComponentAdapter()
 			{

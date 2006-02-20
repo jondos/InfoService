@@ -2609,13 +2609,15 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	{
 		boolean bHasWizardLayout = hasWizardLayout();
 
-		if (m_panelOptions != null && !bHasWizardLayout && !(m_bHasHadWizardLayout && !bHasWizardLayout))
+		if (m_panelOptions != null &&
+			((!bHasWizardLayout && !m_bHasHadWizardLayout)  || (bHasWizardLayout && m_bHasHadWizardLayout)))
 		{
 			// no need to change the option buttons
+			m_bHasHadWizardLayout = bHasWizardLayout;
 			return;
 		}
-		m_bHasHadWizardLayout = bHasWizardLayout;
 
+		m_bHasHadWizardLayout = bHasWizardLayout;
 		if (m_buttonListener == null)
 		{
 			m_buttonListener = new ButtonListener();
