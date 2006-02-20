@@ -188,6 +188,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		getName() + "_notsentpassive";
 	private static final String MSG_NEWCAPTCHA = AccountSettingsPanel.class.
 		getName() + "_newcaptcha";
+	private static final String MSG_NEWCAPTCHA_EASTER_EGG = AccountSettingsPanel.class.
+		getName() + "_newcaptchaEasterEgg";
 
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
@@ -1019,6 +1021,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 			final CaptchaContentPane captcha = new CaptchaContentPane(d, panel2);
 			captcha.getButtonNo().setText(JAPMessages.getString(MSG_NEWCAPTCHA));
+			captcha.getButtonNo().setToolTipText(JAPMessages.getString(MSG_NEWCAPTCHA_EASTER_EGG));
 
 			PayAccountsFile.getInstance().addPaymentListener(captcha);
 			captcha.addComponentListener(new ComponentAdapter()
