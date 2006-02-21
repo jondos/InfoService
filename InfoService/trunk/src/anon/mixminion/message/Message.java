@@ -62,7 +62,7 @@ public class Message
     int MAX_FRAGMENTS_PER_CHUNK = 16;
     double EXP_FACTOR = 1.3333333333333333;
 
-    
+
 	/** The Constructor of a Message **/
 	public Message(byte[] payload, Vector recipient, int hops)
 	{
@@ -117,7 +117,7 @@ public class Message
 			frags = new byte[][] {all};
 		}
 		else
-		{	  
+		{
 //			When generating plaintext forward
 //			fragmented messages, the message generator uses a routing type of
 //			"FRAGMENT" (0x0103), an empty routing info, and prepends the
@@ -134,7 +134,7 @@ public class Message
 	        LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 	                "[Message] Fragmented, new Compressed Size = " + compressPayload.length);
 	        if (compressPayload.length + SINGLETON_HEADER_LEN <= 28 * 1024) throw new RuntimeException("Fragmented Header nach Neukomprimierung mit Single-Länge");
-			
+
 //            Let FRAGMENTS = DIVIDE(M_C, 28KB-OVERHEAD-FRAGMENT_HEADER_LEN)
 //            Let ID = Rand(TAG_LEN)
 //            Let SZ = Int(32,Len(M_C))
@@ -165,7 +165,7 @@ public class Message
 		}
 		// Pfad für die Header erzeugen
 		// hops gerade machen
-        m_hops = ((m_hops+1) / 2)*2; 
+        m_hops = ((m_hops+1) / 2)*2;
 		//Pfad anlegen
 		MMRList mmrlist = new MMRList(new InfoServiceMMRListFetcher());
 		mmrlist.updateList();
@@ -181,7 +181,7 @@ public class Message
 			path = mmrlist.getByRandomWithFrag(m_hops, frags.length);
 			isfragmented = true;
 		}
-		
+
 		for (int i_frag = 0; i_frag < frags.length; i_frag++)
 		{
             LogHolder.log(LogLevel.DEBUG, LogType.MISC,
@@ -191,7 +191,7 @@ public class Message
             Vector wholepath = (Vector) path.elementAt(i_frag);
             Vector path1 = MixMinionCryptoUtil.subVector(wholepath, 0, m_hops/2);
             Vector path2 = MixMinionCryptoUtil.subVector(wholepath, m_hops/2, m_hops/2);
-                        
+
 			//zwei mal secrets bauen
 			Vector secrets1 = new Vector();
 			Vector secrets2 = new Vector();
@@ -208,7 +208,7 @@ public class Message
 			else {
 				exit2 = ((MMRDescription)path2.elementAt(0)).getExitInformation(m_recipient);
 			}
-			
+
 			ExitInformation exit1 = new ExitInformation();
 			exit1.m_Type = RoutingInformation.TYPE_SWAP_FORWARD_TO_HOST;
 			exit1.m_Content = ((ForwardInformation)((MMRDescription)path2.elementAt(0)).getRoutingInformation()).m_Content;
@@ -275,7 +275,7 @@ public class Message
 	{
         int PS = 28*1024 - FRAGMENT_HEADER_LEN - OVERHEAD;
         double EXF = 4.0 / 3.0;
-        
+
 		System.out.println("   divideIntoFragments");
         System.out.println("      M   = " + M.length);
         System.out.println("      PS  = " + PS);
@@ -299,11 +299,11 @@ public class Message
 		byte[] random = MixMinionCryptoUtil.randomArray(KEY_LEN);
 		int len = M.length - NUM_CHUNKS * PS * K;
 		System.out.println(len);
-        
+
         // begin  FIXME this wasn't write in the E2E, but it seems to be right
 		    len = Math.abs(len);
         // end    FIXME
-        
+
 		byte[] prng = MixMinionCryptoUtil.createPRNG(random, len);
 		M = ByteArrayUtil.conc(M, prng);
 
@@ -405,12 +405,12 @@ public class Message
 		return ByteArrayUtil.copy(repairBuffer[I], repairOffs[I], packetsize);
 //		return new String(repairBuffer[I], repairOffs[I], packetsize);
 	}
-    
-    
+
+
     private boolean sendToMixMinionServer(byte[] message, MMRDescription description)
     {
         boolean returnValue = false;
-        
+
         try
         {
             Mixminion mixminion = Mixminion.getInstance();
@@ -430,11 +430,11 @@ public class Message
         {
             e.printStackTrace();
         }
-        
+
         return returnValue;
     }
-    
-    
+
+
     /**
      * for testing
      * @param args
@@ -442,17 +442,17 @@ public class Message
     public static void main(String[] args)
     {
         Message mmm = new Message(null, null, 0);
-        
+
         byte[] M_original = MixMinionCryptoUtil.randomArray(80000);
         byte[] M1 = (byte[]) M_original.clone();
         byte[] M2 = (byte[]) M_original.clone();
-        
+
         byte[][] f1 = mmm.divideIntoFragments(M1);
         byte[][] f2 = mmm._divide_NACH_PYTHON_CODE(M2);
-        
+
         System.out.println(f1);
         System.out.println(f2);
-        
+
         boolean eq = true;
         for (int i=0; i<f1.length; i++)
         {
@@ -461,12 +461,12 @@ public class Message
             eq = eq && e;
         }
         System.out.println(eq);
-        
+
     }
-    
-    
+
+
     /**
-	* Diese Methode ist aus den PhytonCode übernommen und anschliessend 
+	* Diese Methode ist aus den PhytonCode übernommen und anschliessend
 	* in Java umgeschrieben worden
 	*/
     byte[][] _divide_NACH_PYTHON_CODE(byte[] M)
@@ -509,7 +509,7 @@ public class Message
         for (int i=0; i<nChunks; i++)
         {
             byte[] b = ByteArrayUtil.copy(s, i*chunkSize, chunkSize);
-            chunks.add(b);
+            chunks.addElement(b);
         }
 
         Vector fragments = new Vector();
@@ -518,24 +518,24 @@ public class Message
             Vector blocks = new Vector();
             for (int j=0; j<k; j++)
             {
-                byte[] b = ByteArrayUtil.copy((byte[])chunks.get(i), j*fragCapacity, fragCapacity);
-                blocks.add(b);
+                byte[] b = ByteArrayUtil.copy((byte[])chunks.elementAt(i), j*fragCapacity, fragCapacity);
+                blocks.addElement(b);
             }
             for (int j=0; j<n; j++)
             {
                 byte[] b = FRAGMENT(s, k, n, j, fragCapacity);
-                fragments.add(b);
+                fragments.addElement(b);
             }
         }
-        
+
         byte[][] allFragments = new byte[fragments.size()][fragCapacity];
         for (int i=0; i<fragments.size(); i++)
         {
-            allFragments[i] = (byte[]) fragments.get(i);
+            allFragments[i] = (byte[]) fragments.elementAt(i);
         }
         return allFragments;
     }
-    
+
     /**
      * rechte die Ganzzahl aus, welche grösser als a/b ist
      * @param a
@@ -546,5 +546,5 @@ public class Message
     {
         return (int) Math.ceil(a / b);
     }
-    
+
 }
