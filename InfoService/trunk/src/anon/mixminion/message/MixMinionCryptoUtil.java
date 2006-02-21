@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.SecureRandom;
+import java.util.Vector;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
@@ -73,19 +74,27 @@ public class MixMinionCryptoUtil
 		myDigest.doFinal(ret, 0);
 		return ret;
 	}
-
+	
 	/**
-	 * encrypts a given array with aes in counter mode
-	 * @author Stefan
-	 * @param key byte[]
-	 * @param plain byte[]
-	 * @return the ciphered array byte[]
+	 * 
+	 * @param v
+	 * @param offset
+	 * @param len
+	 * @return
 	 */
+	public static Vector subVector(Vector v, int offset, int len) {
+		Vector erg = new Vector();
+		for (int i=offset; i < (offset+len); i++) {
+			erg.addElement(v.elementAt(i));
+		}
+		return erg;
+	}
+
 
 	/**
 	 * Die Encrypt-Funktion nach der MixMinion-Spec
 	 */
-	static byte[] Encrypt(byte[] K, byte[] M)
+	public static byte[] Encrypt(byte[] K, byte[] M)
 	{
 //      - Encrypt(K, M) = M ^ PRNG(K,Len(M)) - The encryption of an octet array
 //      M with our stream cipher, using key K.  (Encrypt(Encrypt(M)) = M.)
@@ -149,7 +158,7 @@ public class MixMinionCryptoUtil
 	 * @param M
 	 * @return
 	 */
-	static byte[] SPRP_Encrypt(byte[] K, byte[] M)
+	public static byte[] SPRP_Encrypt(byte[] K, byte[] M)
 	{
 //    3.1.1.3. Super-pseudorandom permutation
 //
@@ -191,6 +200,46 @@ public class MixMinionCryptoUtil
 		return ByteArrayUtil.conc(L, R);
 	}
 
+	/**
+	 * Die SPRP_Encrypt-Funktion nach der MixMinion-Spec
+	 * @param k
+	 * @param M
+	 * @return
+	 */
+	public static byte[] SPRP_Decrypt(byte[] K, byte[] M)
+	{
+		/*We decrypt a message M with a key K as follows:
+			 K1 = K
+			 K2 = K ^ [00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01]
+			 K3 = K ^ [00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 02]
+			 K4 = K ^ [00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 03]
+			 L := M[0:20]
+			 R := M[20:Len(M)-20]
+			 L := L ^ Hash(K4 | R | K4)
+			 R := Encrypt( Hash(K3 | L | K3)[0:16], R )
+			 L := L ^ Hash(K2 | R | K2)
+			 R := Encrypt( Hash(K1 | L | K1)[0:16], R )
+			 SPRP_Decrypt(K, M) = L | R
+*/
+
+		byte[] h1 = new byte[20];
+
+		byte[] K1 = K;
+		h1[19] = 1;
+		byte[] K2 = xor(K, h1);
+		h1[19] = 2;
+		byte[] K3 = xor(K, h1);
+		h1[19] = 3;
+		byte[] K4 = xor(K, h1);
+		byte[] L = ByteArrayUtil.copy(M, 0, 20);
+		byte[] R = ByteArrayUtil.copy(M, 20, M.length - 20);
+		L = xor(L, hash(ByteArrayUtil.conc(K4, R, K4)));
+		R = Encrypt(ByteArrayUtil.copy(hash(ByteArrayUtil.conc(K3, L, K3)), 0, 16), R);
+		L = xor(L, hash(ByteArrayUtil.conc(K2, R, K2)));
+		R = Encrypt(ByteArrayUtil.copy(hash(ByteArrayUtil.conc(K1, L, K1)), 0, 16), R);
+
+		return ByteArrayUtil.conc(L, R);
+	}
 	/**
 	 * this Method is for compressing some Data, with the ZLIB-Standard
 	 */

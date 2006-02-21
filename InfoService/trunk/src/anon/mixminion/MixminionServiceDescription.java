@@ -16,4 +16,8 @@ public class MixminionServiceDescription implements AnonServerDescription
 	{
 		return m_iRouteLen;
 	}
+	public void setRouteLen(int i)
+	{
+		m_iRouteLen=i;
+	}
 }

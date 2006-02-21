@@ -33,20 +33,18 @@ import anon.infoservice.ImmutableProxyInterface;
 import anon.AnonChannel;
 import java.net.ConnectException;
 import anon.AnonServiceEventListener;
-import anon.tor.TorSocksChannel;
 
 /** This class implements the Mixminion anonymity service, which can be used to sent anonymous e-mail
  *
  */
 public class Mixminion implements AnonService
 {
-//	/maximal mixminion routers, that are used
+	private static MixminionServiceDescription m_serviceDescription;
+	//maximal mixminion routers, that are used
 	public final static int MAX_ROUTE_LEN = 10;
 
 	///minimal mixminion routers, that are used
 	public final static int MIN_ROUTE_LEN = 2;
-
-	private int m_RouteLength;
 
 	private static Mixminion ms_theMixminionInstance = null;
 	private ImmutableProxyInterface m_proxyInterface;
@@ -57,7 +55,7 @@ public class Mixminion implements AnonService
 
 	public int initialize(AnonServerDescription anonServer)
 	{
-		setRouteLength(((MixminionServiceDescription)anonServer).getRouteLen());
+		m_serviceDescription = (MixminionServiceDescription)anonServer;
 		return 0;
 	}
 
@@ -67,17 +65,17 @@ public class Mixminion implements AnonService
 	 * @param len
 	 * route length
 	 */
-	public void setRouteLength(int len)
+	public void setRouteLen(int len)
 	{
 		if ( (len >= MIN_ROUTE_LEN) && (len <= MAX_ROUTE_LEN))
 		{
-			m_RouteLength = len;
+			m_serviceDescription.setRouteLen(len);
 		}
 	}
 
-	public int getRouteLength()
+	public static int getRouteLen()
 	{
-		return m_RouteLength;
+		return m_serviceDescription.getRouteLen();
 	}
 
 	public int setProxy(ImmutableProxyInterface a_Proxy)

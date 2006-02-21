@@ -28,10 +28,8 @@
 
 package anon.mixminion.message;
 
-import anon.mixminion.mmrdescription.MMRList;
 import anon.mixminion.mmrdescription.MMRDescription;
 import anon.mixminion.message.MixMinionCryptoUtil;
-import anon.mixminion.mmrdescription.InfoServiceMMRListFetcher;
 import anon.crypto.MyRSA;
 import anon.crypto.MyRSAPublicKey;
 import java.util.Vector;
@@ -40,7 +38,6 @@ import anon.util.ByteArrayUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.util.Base64;
 
 /**
  * @author Stefan Rönisch
@@ -62,8 +59,6 @@ public class Header
 		0x00, 0x03}; //Version Minor, Version Major
 
 	//stuff
-	private Vector m_secrets;
-	private MMRDescription m_firstrouter;
 	private byte[] m_header;
 
 	/**
@@ -71,10 +66,9 @@ public class Header
 	 * @param hops
 	 * @param recipient
 	 */
-	public Header(int hops, Vector recipient)
+	public Header(Vector path, Vector secrets, ExitInformation exitInfo) 
 	{
-		System.out.println("Neuer Header wird gebaut");
-		m_header = buildHeader(hops, recipient);
+		m_header = buildHeader(path, secrets, exitInfo);
 
 	}
 
@@ -85,25 +79,21 @@ public class Header
 	 * @param recipient String
 	 * @return Vector with byte[]-Objects
 	 */
-	private byte[] buildHeader(int hops, Vector recipient)
+	private byte[] buildHeader(Vector path, Vector secrets, ExitInformation exitInfo)
 	{
 //Variables
 		//Adresses of the intermediate nodes
 		Vector routingInformation = new Vector(); // Vector with the RoutingInformation
-		//Vector routingType = new Vector(); // Vector with the Routing Types
 		//Public Keys of the intermediate nodes
 		Vector publicKey = new Vector(); // Vector with the Public-Keys
 		//Secret Keys to be shared with the intermediate Nodes
-		m_secrets = new Vector();
 		//junkKeys
 		Vector junkKeys = new Vector(); // Vector with the Junk-Keys
 		//Subsecrets
 		Vector subSecret = new Vector(); // Subkeys of the Secret Keys
 		//Anzahl der intermediate Nodes
-		int internodes = hops;
-		//Delivery Router
-		MMRDescription lastrouter;
-		//Padding Sizes
+		int internodes = path.size();
+	//Padding Sizes
 		int[] size = new int[internodes + 1];
 
 //Initialisation of the needed data
@@ -113,68 +103,19 @@ public class Header
 		routingInformation.addElement(null);
 		junkKeys.addElement(null);
 		subSecret.addElement(null);
-		m_secrets.addElement(null);
-
-		//Fill routingInformation, routing Type and secrets
-		/*MMRList mmrlist = new MMRList(new InfoServiceMMRListFetcher());
-		mmrlist.updateList();
-		//FIXME wasn mit fragmenten?
-		Vector routers = mmrlist.getByRandom(hops, false);
-		m_firstrouter = (MMRDescription) routers.elementAt(0);
-		lastrouter = (MMRDescription) routers.elementAt(hops - 1);
-*/
-
-		MMRDescription mmdescr=new MMRDescription("141.76.46.90", "JAP", 48099,
-
-														Base64.decode("JzZdlwSPXEfncFH/tl+A5CZhGN4="),
-
-														Base64.decode("HR6d+Li3vbUBu9NKm500wadrnng="),
-														true, false);
-
-		mmdescr.setIdentityKey(Base64.decode("MIIBCgKCAQEA1XZi7436861AxxYgNEbnVyobQg+wPbuRZNlFJ5x2pDyRNFOQrLG2+pK8Z/AzVxMbEPvLNCIn5nAvuRZGn/aGryhy0bzlX/D0CHG44qagoVb36kGeXv4jvLy/aYu4nxLUrgoEdp0t+J3kWQScnOsOiBwF60l4Acc5+51T/YBctYvSO2OY8VpexB7S2+1pIGjT7rsXVXCK18G0Xms4dt/qPKK/2fzPw/kR06Ggf006JCyFKEDMfDrbZ6gvLS3BiUVZV7ZYACAeznv5Hj/dwRJtT7QGqvJyr6zrZi7epSD41J3Uqh8oYABu5g3cQEtdMc33WLBXdhmjAmTG0wcSZxGyeQIDAQAB"));
-
-		mmdescr.setPacketKey(Base64.decode("MIIBCgKCAQEAkoQcO+eFjs3blj9v1rzCXDjRPJc3pC/R7XyXaYGsqv9ps2KB92mSyFxpSp3XTGE2AWW463AKAV5nz3DksUfhuQ2I0ILccVza0Uey/zvLEI0HCdI52fLopyr9u5+m0zWuGonY7IZYxOcJnNBbeiZIuxK1lRXQwz1r2UGyjewpfb9Zwb7fG7WLVq9mo1EDcewNop2fuA3wy049168SZFWFOd7QrtbnBsRVeVo3ZS/FOVF7PjNU7lGc3uVIWMxaMdY1Y+XjDD8oD+xOXp5jad2qyeqbKbUHZS1CdWt8MmfOMcZ3df+43U4s/q3+1YeyADlRBPOdoo7ZCnY6QVvayXFUBQIDAQAB"));
-lastrouter=mmdescr;
-		mmdescr=new MMRDescription("141.76.46.90", "JAP", 48099,
-
-														Base64.decode("JzZdlwSPXEfncFH/tl+A5CZhGN4="),
-
-														Base64.decode("HR6d+Li3vbUBu9NKm500wadrnng="),
-														true, false);
-
-		mmdescr.setIdentityKey(Base64.decode("MIIBCgKCAQEA1XZi7436861AxxYgNEbnVyobQg+wPbuRZNlFJ5x2pDyRNFOQrLG2+pK8Z/AzVxMbEPvLNCIn5nAvuRZGn/aGryhy0bzlX/D0CHG44qagoVb36kGeXv4jvLy/aYu4nxLUrgoEdp0t+J3kWQScnOsOiBwF60l4Acc5+51T/YBctYvSO2OY8VpexB7S2+1pIGjT7rsXVXCK18G0Xms4dt/qPKK/2fzPw/kR06Ggf006JCyFKEDMfDrbZ6gvLS3BiUVZV7ZYACAeznv5Hj/dwRJtT7QGqvJyr6zrZi7epSD41J3Uqh8oYABu5g3cQEtdMc33WLBXdhmjAmTG0wcSZxGyeQIDAQAB"));
-
-		mmdescr.setPacketKey(Base64.decode("MIIBCgKCAQEAkoQcO+eFjs3blj9v1rzCXDjRPJc3pC/R7XyXaYGsqv9ps2KB92mSyFxpSp3XTGE2AWW463AKAV5nz3DksUfhuQ2I0ILccVza0Uey/zvLEI0HCdI52fLopyr9u5+m0zWuGonY7IZYxOcJnNBbeiZIuxK1lRXQwz1r2UGyjewpfb9Zwb7fG7WLVq9mo1EDcewNop2fuA3wy049168SZFWFOd7QrtbnBsRVeVo3ZS/FOVF7PjNU7lGc3uVIWMxaMdY1Y+XjDD8oD+xOXp5jad2qyeqbKbUHZS1CdWt8MmfOMcZ3df+43U4s/q3+1YeyADlRBPOdoo7ZCnY6QVvayXFUBQIDAQAB"));
-m_firstrouter=mmdescr;
+		
 		for (int i = 1; i <= internodes; i++)
 		{
-			//secrets
-			m_secrets.addElement(MixMinionCryptoUtil.randomArray(16));
 
 			//Headerkeys, k und junkKeys
-			mmdescr=new MMRDescription("141.76.46.90", "JAP", 48099,
-
-														Base64.decode("JzZdlwSPXEfncFH/tl+A5CZhGN4="),
-
-														Base64.decode("HR6d+Li3vbUBu9NKm500wadrnng="),
-														true, false);
-
-	mmdescr.setIdentityKey(Base64.decode("MIIBCgKCAQEA1XZi7436861AxxYgNEbnVyobQg+wPbuRZNlFJ5x2pDyRNFOQrLG2+pK8Z/AzVxMbEPvLNCIn5nAvuRZGn/aGryhy0bzlX/D0CHG44qagoVb36kGeXv4jvLy/aYu4nxLUrgoEdp0t+J3kWQScnOsOiBwF60l4Acc5+51T/YBctYvSO2OY8VpexB7S2+1pIGjT7rsXVXCK18G0Xms4dt/qPKK/2fzPw/kR06Ggf006JCyFKEDMfDrbZ6gvLS3BiUVZV7ZYACAeznv5Hj/dwRJtT7QGqvJyr6zrZi7epSD41J3Uqh8oYABu5g3cQEtdMc33WLBXdhmjAmTG0wcSZxGyeQIDAQAB"));
-
-	mmdescr.setPacketKey(Base64.decode("MIIBCgKCAQEAkoQcO+eFjs3blj9v1rzCXDjRPJc3pC/R7XyXaYGsqv9ps2KB92mSyFxpSp3XTGE2AWW463AKAV5nz3DksUfhuQ2I0ILccVza0Uey/zvLEI0HCdI52fLopyr9u5+m0zWuGonY7IZYxOcJnNBbeiZIuxK1lRXQwz1r2UGyjewpfb9Zwb7fG7WLVq9mo1EDcewNop2fuA3wy049168SZFWFOd7QrtbnBsRVeVo3ZS/FOVF7PjNU7lGc3uVIWMxaMdY1Y+XjDD8oD+xOXp5jad2qyeqbKbUHZS1CdWt8MmfOMcZ3df+43U4s/q3+1YeyADlRBPOdoo7ZCnY6QVvayXFUBQIDAQAB"));
-
+			MMRDescription mmdescr = (MMRDescription)path.elementAt(i-1);
 			publicKey.addElement(mmdescr.getPacketKey());
-			junkKeys.addElement( (subKey( (byte[]) m_secrets.elementAt(i), "RANDOM JUNK")));
-			subSecret.addElement( (subKey( (byte[]) m_secrets.elementAt(i), "HEADER SECRET KEY")));
+			junkKeys.addElement( (subKey( (byte[]) secrets.elementAt(i-1), "RANDOM JUNK")));
+			subSecret.addElement( (subKey( (byte[]) secrets.elementAt(i-1), "HEADER SECRET KEY")));
 
 			//Routing Information
-			RoutingInformation ri=mmdescr.getRoutingInformation();
-			if ( (i == 1) && (hops > 1))/*(i==internodes)*/
-			{
-				//First Routing Type must be an swp-fwd, except only one hop
-				ri.m_Type=RoutingInformation.TYPE_SWAP_FORWARD_TO_HOST;
-			}
-			routingInformation.addElement( ri);
+			RoutingInformation	ri = mmdescr.getRoutingInformation();
+			routingInformation.addElement(ri);
 
 		}
 
@@ -184,16 +125,15 @@ m_firstrouter=mmdescr;
 		{
 			if (i == internodes)
 			{
-				size[i]= lastrouter.getExitInformation(recipient).m_Content.length;
+				size[i] = exitInfo.m_Content.length;
 			}
 			else
 			{
-				size[i]=((RoutingInformation) routingInformation.elementAt(i + 1)).m_Content.length
-					;
+				size[i] = ( (RoutingInformation) routingInformation.elementAt(i + 1)).m_Content.length;
 			}
-			size[i]+= MIN_SH + PK_OVERHEAD_LEN;
+			size[i] += MIN_SH + PK_OVERHEAD_LEN;
 			//Length of all subheaders
-			totalsize+=size[i];
+			totalsize += size[i];
 		}
 
 //Length of padding needed for the header
@@ -204,33 +144,75 @@ m_firstrouter=mmdescr;
 						  "[Calculating HEADERSIZE]: Subheaders don't fit into HEADER_LEN ");
 		}
 
-// Calculate the junk
+		// Calculate the Junk that will be appended during processing.
+		// J_i is the junk that node i will append, and node i+1 will see.
+//		  J_0 = ""
+		//	  for i = 1 .. N
+		//	 J_i = J_(i-1) | PRNG(JUNK_KEY_i, SIZE_i)
+		// Stream_i = PRNG(K_i, 2048 + SIZE_i)
+		// Before we encrypt the junk, we encrypt all the data, and all
+		// the initial padding, but not the RSA-encrypted part.
+		//    OFFSET = PADDING_LEN + SUM(SIZE_i ... SIZE_N) - 256
+		//           = 2048 - SUM(SIZE_1 ... SIZE_N) + SUM(SIZE_i ... SIZE_N)
+		//             -256
+		//           = 2048-256 - SUM(SIZE_1 ... SIZE_(i-1))
+		//           = 2048 - 256 - len(J_{i-1})
+		//OFFSET = HEADER_LEN - PK_ENC_LEN - Len(J_(i-1))
+		//J_i = J_i ^ Stream_i[OFFSET:Len(J_i)]
+		//end
 		Vector junkSeen = new Vector();
-		Vector stream = new Vector();
+		//Vector stream = new Vector();
 		//at position 0 there is no junk
-		stream.addElement(null);
+		byte[] Stream_i = null;
 		junkSeen.addElement( ("").getBytes());
 
 		//calculating for the rest
 		for (int i = 1; i <= internodes; i++)
 		{
 			byte[] lastJunk = (byte[]) junkSeen.elementAt(i - 1);
-			byte[] temp = ByteArrayUtil.conc(lastJunk,
-											 (MixMinionCryptoUtil.createPRNG( (byte[]) junkKeys.elementAt(i),
+			byte[] J_i = ByteArrayUtil.conc(lastJunk,
+											(MixMinionCryptoUtil.createPRNG( (byte[]) junkKeys.elementAt(i),
 				size[i])));
-			stream.addElement(MixMinionCryptoUtil.createPRNG( (byte[]) subSecret.elementAt(i), 2048 + size[i]));
+			Stream_i = MixMinionCryptoUtil.createPRNG( (byte[]) subSecret.elementAt(i), 2048 + size[i]);
 			int offset = HEADER_LEN - PK_ENC_LEN - lastJunk.length;
-			junkSeen.addElement(MixMinionCryptoUtil.xor(temp,
-				ByteArrayUtil.copy( (byte[]) stream.elementAt(i), offset, (temp.length))));
+			junkSeen.addElement(MixMinionCryptoUtil.xor(J_i,
+				ByteArrayUtil.copy(Stream_i, offset, J_i.length)));
 		}
 
 //We start with the padding.
 		Vector header = new Vector(); //Vector for cumulating the subheaders
 		header.setSize(internodes + 2);
+		// Create the Header, starting with the padding.
+		// H_(N+1) = Rand(PADDING_LEN)
 		byte[] padding = MixMinionCryptoUtil.randomArray(paddingLen);
 		header.setElementAt(padding, internodes + 1);
 
 //Now, we build the subheaders, iterating through the nodes backwards.
+		/*
+		 for i = N .. 1
+		  if i = N then
+		 Set RT and RI from R.
+		  else
+		 Let RT = RT_(i+1), RI = RI_(i+1)
+		  endif
+
+		  SH0 = SHS(V, SK_i, Z(HASH_LEN), len(RI), RT, RI)
+		  SH_LEN = LEN(SH0)
+		  H0 = SH0 | H_(i+1)
+
+		  REST = H0[PK_MAX_DATA_LEN : Len(H0) - PK_MAX_DATA_LEN]
+
+		  EREST = Encrypt(K_i, REST)
+		  DIGEST = HASH(EREST | J_(i-1))
+
+		  SH = SHS(V, SK_i, DIGEST, len(RI), RT, RI)
+		  UNDERFLOW = Max(PK_MAX_DATA_LEN - SH_LEN, 0)
+		  RSA_PART = SH | H0[PK_MAX_DATA_LEN - UNDERFLOW : UNDERFLOW]
+
+		  ESH = PK_ENCRYPT(PK_i, RSA_PART)
+		  H_i = ESH | EREST
+		  end
+		 */
 		for (int i = internodes; i >= 1; i--)
 		{
 			//initial the actual routingInformation and routingType
@@ -238,17 +220,15 @@ m_firstrouter=mmdescr;
 			ForwardInformation ri;
 			if (i == internodes)
 			{
-				ri=(ForwardInformation)lastrouter.getExitInformation(recipient);
-
+				ri = (ForwardInformation) exitInfo; 
 			}
 			else
 			{
 				ri = (ForwardInformation) routingInformation.elementAt(i + 1);
-
 			}
 
 			//build the Subheader without the digest
-			byte[] sh0 = makeSHS(VERSION_MAJOR, (byte[]) m_secrets.elementAt(i),
+			byte[] sh0 = makeSHS(VERSION_MAJOR, (byte[]) secrets.elementAt(i-1),
 								 new byte[HASH_LEN],
 								 ByteArrayUtil.inttobyte(ri.m_Content.length, 2), ri.m_Type, ri.m_Content);
 			int sh_len = sh0.length;
@@ -262,13 +242,14 @@ m_firstrouter=mmdescr;
 			byte[] digest = MixMinionCryptoUtil.hash(ByteArrayUtil.conc(erest,
 				(byte[]) junkSeen.elementAt(i - 1)));
 			//build the subheader with the digest
-			byte[] sh = makeSHS(VERSION_MAJOR, (byte[]) m_secrets.elementAt(i), digest,
+			byte[] sh = makeSHS(VERSION_MAJOR, (byte[]) secrets.elementAt(i-1), digest,
 								ByteArrayUtil.inttobyte(ri.m_Content.length, 2), ri.m_Type, ri.m_Content);
 			//calculate the underflow
 			int underflow = max(PK_MAX_DATA_LEN - sh_len, 0);
 			//take the part needed to encrypt with the publiuc key
 			byte[] rsa_part = ByteArrayUtil.conc(sh,
-												 ByteArrayUtil.copy(h0, PK_MAX_DATA_LEN - underflow, underflow));
+												 ByteArrayUtil.copy(h0, PK_MAX_DATA_LEN - underflow,
+				underflow));
 			//encrypt it
 			byte[] esh = pk_encrypt( (MyRSAPublicKey) publicKey.elementAt(i), rsa_part);
 			//adden
@@ -289,28 +270,6 @@ m_firstrouter=mmdescr;
 		return m_header;
 	}
 
-	/**
-	 * Gives back the secrets Vector with byte[]
-	 * @return secrets Vector
-	 */
-	public Vector getSecrets()
-	{
-		Vector ret = new Vector();
-		for (int i = 0; i < m_secrets.size() - 1; i++)
-		{
-			ret.addElement( (byte[]) m_secrets.elementAt(i + 1));
-		}
-		return ret;
-	}
-
-	/**
-	 * Get the first Router as MMRDescription
-	 * @return firstrouter MMRDescription
-	 */
-	public MMRDescription getRoute()
-	{
-		return m_firstrouter;
-	}
 
 //------------------HELPER-Methods---------------------------
 
@@ -338,7 +297,7 @@ m_firstrouter=mmdescr;
 	private byte[] makeFSHS(byte[] v, byte[] sk, byte[] d, byte[] rs, short rt)
 	{
 
-		return ByteArrayUtil.conc(v, sk, d, rs,ByteArrayUtil.inttobyte(rt,2));
+		return ByteArrayUtil.conc(v, sk, d, rs, ByteArrayUtil.inttobyte(rt, 2));
 	}
 
 	/**

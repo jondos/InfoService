@@ -248,19 +248,10 @@ final class JAPConfMixminion extends AbstractJAPConfModule implements ActionList
 					m_tableRouters.setValueAt(mmrd.getName(), i, 0);
 					m_tableRouters.setValueAt(mmrd.getAddress(), i, 1);
 					m_tableRouters.setValueAt(new Integer(mmrd.getPort()), i, 2);
-					//FIXME
-//					m_tableRouters.setValueAt(mmrd.getSoftware(), i, 3);
+					m_tableRouters.setValueAt(mmrd.getSoftwareVersion(), i, 3);
 				}
 
-				//FIXME
-//				Date published=mmrl.getPublished();
-				String strPublished=JAPMessages.getString("unknown");
-//				if(published!=null)
-//				{
-//					strPublished=ms_dateFormat.format(ol.getPublished());
-//				}
-				m_labelAvailableRouters.setText(JAPMessages.getString("mixminionBorderAvailableRouters") + " (" +
-												strPublished + "):");
+				m_labelAvailableRouters.setText(JAPMessages.getString("mixminionBorderAvailableRouters:"));
 				getRootPanel().updateUI();
 				m_bttnFetchRouters.setEnabled(true);
 			}

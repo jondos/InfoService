@@ -44,7 +44,8 @@ public class MMRList
 
 	private Vector m_mixminionrouters; // all Routers
 	private Vector m_middlenodes; //all but the exitnodes
-	private Vector m_exitnodes; //nodes with smtp-availibility
+	private Vector m_exitnodes; //nodes with smtp-availability
+	private Vector m_fragexitnodes; //nodes with frag and exit availability
 	private Hashtable m_mixminionroutersWithNames;
 	private MyRandom m_rand;
 	private MMRListFetcher m_mmrlistFetcher;
@@ -57,6 +58,7 @@ public class MMRList
 	{
 		m_mixminionrouters = new Vector();
 		m_middlenodes = new Vector();
+		m_fragexitnodes = new Vector();
 		m_exitnodes = new Vector();
 		m_mixminionroutersWithNames = new Hashtable();
 		m_mmrlistFetcher = fetcher;
@@ -162,6 +164,10 @@ public class MMRList
 		return (MMRDescription) this.m_mixminionrouters.elementAt( (m_rand.nextInt(m_mixminionrouters.size())));
 	}
 
+
+	
+	
+	
 	/**
 	 * selects a Routing List randomly, last element is surely an exit-node
 	 * tries to blanace the probability of exit and non-exit nodes
@@ -170,40 +176,55 @@ public class MMRList
 	 * @return routers vector
 	 */
 
-	public synchronized Vector getByRandom(int hops, boolean fragmented)
+	public synchronized Vector getByRandomWithExit(int hops)
 	{
 		Vector routers = new Vector();
 		MMRDescription x = null;
 		boolean contains = true;
-		boolean frags = false;
 
 		for (int i=0; i<hops-1; i++) {
 			contains=true;
 			while (contains) {
-			x = getByRandom();
+				x = getByRandom();
 				contains = routers.contains(x);
 			}
 			routers.addElement(x);
 		}
 
 		contains = true;
-		if (fragmented) {
-			while (contains || !frags) {
-				x = getByRandom(m_exitnodes);
-				contains = routers.contains(x);
-				frags = x.allowsFragmented();
-		}
-		}
-		else {
 			while (contains ) {
 				x = getByRandom(m_exitnodes);
 				contains = routers.contains(x);
 			}
-		}
 		routers.addElement(x);
-		System.out.println("Last Router frags: " +x.allowsFragmented() +"exit: " + x.isExitNode());
-
 		return routers;
+	}
+	
+	public synchronized Vector getByRandomWithFrag(int hops, int frags)
+	{
+		Vector routes = new Vector();
+		Vector route = null;
+		MMRDescription temp = null;
+		MMRDescription exit = null;
+		boolean contains = true;
+
+		exit = getByRandom(m_fragexitnodes);
+		
+		for (int i = 0; i < frags; i++) {
+			route = new Vector();
+			for (int j = 0; j < hops-1; j++) {
+				contains=true;
+				while (contains) {
+					temp = getByRandom();
+					contains = route.contains(temp);
+				}
+				route.addElement(temp);
+			}
+			route.addElement(exit);
+			routes.addElement(route);
+		}
+
+		return routes;
 	}
 
 	/**
@@ -235,10 +256,10 @@ public class MMRList
 		Vector mmrs = new Vector();
 		Vector mnodes = new Vector();
 		Vector enodes = new Vector();
+		Vector fnodes = new Vector();
 
 		Hashtable mmrswn = new Hashtable();
 		LineNumberReader reader = new LineNumberReader(new StringReader(strDocument));
-		Date published = null;
 		String aktLine = reader.readLine();
 
 		if(aktLine==null)
@@ -257,7 +278,14 @@ public class MMRList
 				MMRDescription mmrd = MMRDescription.parse(reader);
 				if ((mmrd != null) && !mmrswn.containsKey(mmrd.getName()) /*&& mmrd.hasValidDates()*/)
 				{
-					if (mmrd.isExitNode()) enodes.addElement(mmrd);
+					if (mmrd.isExitNode()) {
+						if (mmrd.allowsFragmented()) {
+							fnodes.addElement(mmrd);
+						}
+						else {
+							enodes.addElement(mmrd);
+						}
+					}
 					else mnodes.addElement(mmrd);
 
 					mmrs.addElement(mmrd);
@@ -270,7 +298,8 @@ public class MMRList
 
 		m_middlenodes = mnodes;
 		m_exitnodes = enodes;
-		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "ExitNodes : "+enodes.size()+" MiddleNodes : " +mnodes.size());
+		m_fragexitnodes = fnodes;
+		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "ExitNodes : "+enodes.size()+" MiddleNodes : " +mnodes.size() +"Frag-Exit-Nodes:" +fnodes.size());
 		m_mixminionrouters = mmrs;
 		m_mixminionroutersWithNames = mmrswn;
 		return true;
