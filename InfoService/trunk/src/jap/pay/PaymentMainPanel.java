@@ -121,6 +121,10 @@ public class PaymentMainPanel extends FlippingPanel
 
 	private JLabel m_labelTotalSpent;
 	private JLabel m_labelSessionSpent;
+	private JLabel m_labelTitle;
+	private JLabel m_labelTitleSmall;
+	private JLabel m_labelTotalSpentHeader;
+	private JLabel m_labelSessionSpentHeader;
 
 	private long m_spentThisSession;
 
@@ -133,14 +137,15 @@ public class PaymentMainPanel extends FlippingPanel
 		JPanel fullPanel = new JPanel();
 		fullPanel.setLayout(new GridBagLayout());
 		GridBagConstraints c1 = new GridBagConstraints();
-		JLabel label = new JLabel(JAPMessages.getString(MSG_TITLE));
+		m_labelTitle = new JLabel(JAPMessages.getString(MSG_TITLE));
 		c1.insets = new Insets(0, 5, 0, 0);
 		c1.anchor = GridBagConstraints.WEST;
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.HORIZONTAL;
-		fullPanel.add(label, c1);
+		fullPanel.add(m_labelTitle, c1);
 		JComponent spacer = new JPanel();
-		Dimension spacerDimension = new Dimension(label.getFontMetrics(label.getFont()).charWidth('9') * 6, 1);
+		Dimension spacerDimension = new Dimension(m_labelTitle.getFontMetrics(m_labelTitle.getFont()).
+												  charWidth('9') * 6, 1);
 		spacer.setPreferredSize(spacerDimension);
 		c1.insets = new Insets(0, 0, 0, 0);
 		c1.gridx = 1;
@@ -154,7 +159,7 @@ public class PaymentMainPanel extends FlippingPanel
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.gridx = 2;
 		fullPanel.add(m_BalanceText, c1);
-		label = new JLabel(" ", SwingConstants.RIGHT);
+		JLabel label = new JLabel(" ", SwingConstants.RIGHT);
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.gridx = 3;
@@ -173,13 +178,13 @@ public class PaymentMainPanel extends FlippingPanel
 		c1.insets = new Insets(0, 5, 0, 0);
 		fullPanel.add(m_BalanceProgressBar, c1);
 
-		m_labelSessionSpent = new JLabel(JAPMessages.getString(MSG_SESSIONSPENT));
+		m_labelSessionSpentHeader = new JLabel(JAPMessages.getString(MSG_SESSIONSPENT));
 		c1.insets = new Insets(10, 20, 0, 0);
 		c1.gridx = 0;
 		c1.gridy = 1;
 		c1.anchor = GridBagConstraints.WEST;
 		c1.weightx = 0;
-		fullPanel.add(m_labelSessionSpent, c1);
+		fullPanel.add(m_labelSessionSpentHeader, c1);
 		spacer = new JPanel();
 		spacer.setPreferredSize(spacerDimension);
 		c1.gridx = 1;
@@ -195,13 +200,13 @@ public class PaymentMainPanel extends FlippingPanel
 		c1.weightx = 0;
 		fullPanel.add(m_labelSessionSpent, c1);
 
-		label = new JLabel(JAPMessages.getString(MSG_TOTALSPENT));
+		m_labelTotalSpentHeader = new JLabel(JAPMessages.getString(MSG_TOTALSPENT));
 		c1.insets = new Insets(10, 20, 0, 0);
 		c1.gridx = 0;
 		c1.gridy = 2;
 		c1.anchor = GridBagConstraints.WEST;
 		c1.weightx = 0;
-		fullPanel.add(label, c1);
+		fullPanel.add(m_labelTotalSpentHeader, c1);
 		spacer = new JPanel();
 		spacer.setPreferredSize(spacerDimension);
 		c1.gridx = 1;
@@ -243,12 +248,12 @@ public class PaymentMainPanel extends FlippingPanel
 		JPanel smallPanel = new JPanel();
 		smallPanel.setLayout(new GridBagLayout());
 		c1 = new GridBagConstraints();
-		label = new JLabel(JAPMessages.getString(MSG_TITLE));
+		m_labelTitleSmall = new JLabel(JAPMessages.getString(MSG_TITLE));
 		c1.insets = new Insets(0, 5, 0, 0);
 		c1.anchor = GridBagConstraints.WEST;
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.HORIZONTAL;
-		smallPanel.add(label, c1);
+		smallPanel.add(m_labelTitleSmall, c1);
 		spacer = new JPanel();
 		spacerDimension = new Dimension(label.getFontMetrics(label.getFont()).charWidth('9') * 6, 1);
 		spacer.setPreferredSize(spacerDimension);
@@ -450,7 +455,7 @@ public class PaymentMainPanel extends FlippingPanel
 			else
 			{
 				if (accounts.getActiveAccount() != null && !JAPController.getInstance().getDontAskPayment())
-						{
+				{
 					JAPDialog.LinkedCheckBox checkBox = new JAPDialog.LinkedCheckBox(false);
 
 					int ret = JAPDialog.showConfirmDialog(JAPController.getView(),
@@ -460,9 +465,9 @@ public class PaymentMainPanel extends FlippingPanel
 					JAPController.getInstance().setDontAskPayment(checkBox.getState());
 
 					if (ret != JAPDialog.RETURN_VALUE_OK)
-			{
-				JAPController.getInstance().setAnonMode(false);
-			}
+					{
+						JAPController.getInstance().setAnonMode(false);
+					}
 				}
 			}
 			if (accounts.getActiveAccount() != null)
@@ -527,5 +532,14 @@ public class PaymentMainPanel extends FlippingPanel
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY, e);
 			}
 		}
+	}
+
+	public void localeChanged()
+	{
+		m_labelTitle.setText(JAPMessages.getString(MSG_TITLE));
+		m_labelTitleSmall.setText(JAPMessages.getString(MSG_TITLE));
+		m_labelTotalSpentHeader.setText(JAPMessages.getString(MSG_TOTALSPENT));
+		m_labelSessionSpentHeader.setText(JAPMessages.getString(MSG_SESSIONSPENT));
+		m_dateLabel.setText(JAPMessages.getString(MSG_LASTUPDATE));
 	}
 }

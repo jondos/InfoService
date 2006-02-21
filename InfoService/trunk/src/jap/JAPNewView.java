@@ -1178,17 +1178,18 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelOwnTrafficSmall.setText(JAPMessages.getString("ngOwnTraffic"));
 		m_labelOwnTrafficWWW.setText(JAPMessages.getString("ngOwnTrafficWWW"));
 		m_labelOwnTrafficOther.setText(JAPMessages.getString("ngOwnTrafficOther"));
-		if (m_bWithPayment)
-		{
-			m_labelPayment.setText(JAPMessages.getString("ngPayment"));
 
-		}
 		m_labelMeterDetailsRisk.setText(JAPMessages.getString("meterDetailsRisk") + " ");
 		m_labelOwnChannels.setText(JAPMessages.getString("ownTrafficChannels"));
 		m_labelOwnBytes.setText(JAPMessages.getString("ownTrafficBytes"));
 		if (m_dlgConfig != null)
 		{
 			m_dlgConfig.localeChanged();
+		}
+
+	    if (m_bWithPayment)
+		{
+			((PaymentMainPanel)m_flippingPanelPayment).localeChanged();
 		}
 		m_NumberFormat = NumberFormat.getInstance();
 		Dimension d = super.getPreferredSize();
