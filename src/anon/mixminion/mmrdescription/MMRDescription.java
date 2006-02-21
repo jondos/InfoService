@@ -27,11 +27,9 @@
  */
 package anon.mixminion.mmrdescription;
 
-import java.io.FileOutputStream;
 import java.io.LineNumberReader;
 
 import anon.crypto.MyRSAPublicKey;
-import anon.mixminion.message.MixMinionCryptoUtil;
 import anon.util.Base64;
 import anon.util.ByteArrayUtil;
 
@@ -55,6 +53,7 @@ public class MMRDescription
 	private byte[] m_keydigest;
 	private boolean m_isExitNode;
 	private boolean m_allowsFragmened;
+	private String m_software;
 	/**
 	 *
 	 * @param address
@@ -65,7 +64,7 @@ public class MMRDescription
 	 * @param exit
 	 */
 	public MMRDescription(String address, String name, int port, byte[] digest,
-						  byte[] keydigest, boolean exit, boolean fragmented)
+						  byte[] keydigest, boolean exit, boolean fragmented, String software)
 	{
 		this.m_address = address;
 		this.m_name = name;
@@ -74,6 +73,7 @@ public class MMRDescription
 		this.m_keydigest = keydigest;
 		this.m_isExitNode = exit;
 		this.m_allowsFragmened = fragmented;
+		this.m_software = software;
 	}
 
 	/**
@@ -210,17 +210,26 @@ public class MMRDescription
 	}
 
 	/**
+	 * 
+	 * @return m_software
+	 */
+	public String getSoftwareVersion(){
+		return m_software;
+	}
+		
+	/**
 	 *
 	 * @param email vector with strings max 8
 	 * @return vector with routingtype, routinginformation
 	 */
-	public ExitInformation getExitInformation(Vector email)
+	public static ExitInformation getExitInformation(Vector email)
 	{
 		ExitInformation exitInformation = new ExitInformation();
 		SecureRandom rand = new SecureRandom();
 		byte[] arRand = new byte[20];
 		rand.nextBytes(arRand);
-		arRand[0] &= 0x7F;
+        arRand[0] &= 0x7F; 
+        
 
 		//if no e-mail adress is specified return a vector with a drop and log error
 		if (email.size() < 1)
@@ -282,7 +291,7 @@ public class MMRDescription
 			byte[] packetkey = Base64.decode(reader.readLine().substring(12));
 
 			reader.readLine(); // skip Packet Versions
-			reader.readLine(); // skip Software
+			String software = reader.readLine().substring(10); // Software
 			reader.readLine(); // skip Secure-Configuration
 			reader.readLine(); // skip Contact
 			reader.readLine(); // skip Why Insecure
@@ -336,7 +345,7 @@ public class MMRDescription
 
 			//build the new MMRDescription
 			MMRDescription mmrd = new MMRDescription(hostname, nickname, Integer.parseInt(port), digest,
-				keydigest, exitNode, fragmented);
+				keydigest, exitNode, fragmented, software);
 
 			if (!mmrd.setIdentityKey(identity) || !mmrd.setPacketKey(packetkey))
 			{

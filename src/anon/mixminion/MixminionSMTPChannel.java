@@ -163,11 +163,13 @@ public class MixminionSMTPChannel extends AbstractChannel
                 EMail eMail = new EMail(rec,m_text);
 
 				//FIXME TESTING
-                byte[] h_end= {0x0A};
-                byte[] pl=ByteArrayUtil.conc(h_end, "unser text".getBytes());
-                //byte[] pl = "Dies ist Stefans Test...".getBytes();
+//                byte[] h_end= {0x0A};
+//                byte[] pl=ByteArrayUtil.conc(h_end, "unser text".getBytes());
+//                //byte[] pl = "Dies ist Stefans Test...".getBytes();
 				//END
-                Message m = new Message(pl/*FIXME eMail.getPayload().getBytes()*/, eMail.getReceiverAsVektor(), 5);
+                int hops = Mixminion.getRouteLen();
+                hops = 1;
+                Message m = new Message(eMail.getPayload().getBytes(), eMail.getReceiverAsVektor(), hops);
 
 				boolean success = m.send();
 

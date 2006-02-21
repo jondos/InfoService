@@ -90,15 +90,15 @@ public class FirstMMRConnection
 		// 1k blocksize
 		m_blocksize = 1024;
 		m_bIsClosed = true;
-//		m_description = d;
+		m_description = d;
 
-		MMRDescription mmdescr=new MMRDescription("141.76.46.90", "JAP", 48099,
-														Base64.decode("JzZdlwSPXEfncFH/tl+A5CZhGN4="),
-														Base64.decode("HR6d+Li3vbUBu9NKm500wadrnng="),
-														true, false);
-		mmdescr.setIdentityKey(Base64.decode("MIIBCgKCAQEA1XZi7436861AxxYgNEbnVyobQg+wPbuRZNlFJ5x2pDyRNFOQrLG2+pK8Z/AzVxMbEPvLNCIn5nAvuRZGn/aGryhy0bzlX/D0CHG44qagoVb36kGeXv4jvLy/aYu4nxLUrgoEdp0t+J3kWQScnOsOiBwF60l4Acc5+51T/YBctYvSO2OY8VpexB7S2+1pIGjT7rsXVXCK18G0Xms4dt/qPKK/2fzPw/kR06Ggf006JCyFKEDMfDrbZ6gvLS3BiUVZV7ZYACAeznv5Hj/dwRJtT7QGqvJyr6zrZi7epSD41J3Uqh8oYABu5g3cQEtdMc33WLBXdhmjAmTG0wcSZxGyeQIDAQAB"));
-		mmdescr.setPacketKey(Base64.decode("MIIBCgKCAQEAkoQcO+eFjs3blj9v1rzCXDjRPJc3pC/R7XyXaYGsqv9ps2KB92mSyFxpSp3XTGE2AWW463AKAV5nz3DksUfhuQ2I0ILccVza0Uey/zvLEI0HCdI52fLopyr9u5+m0zWuGonY7IZYxOcJnNBbeiZIuxK1lRXQwz1r2UGyjewpfb9Zwb7fG7WLVq9mo1EDcewNop2fuA3wy049168SZFWFOd7QrtbnBsRVeVo3ZS/FOVF7PjNU7lGc3uVIWMxaMdY1Y+XjDD8oD+xOXp5jad2qyeqbKbUHZS1CdWt8MmfOMcZ3df+43U4s/q3+1YeyADlRBPOdoo7ZCnY6QVvayXFUBQIDAQAB"));
-		m_description = mmdescr;
+//		MMRDescription mmdescr=new MMRDescription("141.76.46.90", "JAP", 48099,
+//														Base64.decode("JzZdlwSPXEfncFH/tl+A5CZhGN4="),
+//														Base64.decode("HR6d+Li3vbUBu9NKm500wadrnng="),
+//														true, false);
+//		mmdescr.setIdentityKey(Base64.decode("MIIBCgKCAQEA1XZi7436861AxxYgNEbnVyobQg+wPbuRZNlFJ5x2pDyRNFOQrLG2+pK8Z/AzVxMbEPvLNCIn5nAvuRZGn/aGryhy0bzlX/D0CHG44qagoVb36kGeXv4jvLy/aYu4nxLUrgoEdp0t+J3kWQScnOsOiBwF60l4Acc5+51T/YBctYvSO2OY8VpexB7S2+1pIGjT7rsXVXCK18G0Xms4dt/qPKK/2fzPw/kR06Ggf006JCyFKEDMfDrbZ6gvLS3BiUVZV7ZYACAeznv5Hj/dwRJtT7QGqvJyr6zrZi7epSD41J3Uqh8oYABu5g3cQEtdMc33WLBXdhmjAmTG0wcSZxGyeQIDAQAB"));
+//		mmdescr.setPacketKey(Base64.decode("MIIBCgKCAQEAkoQcO+eFjs3blj9v1rzCXDjRPJc3pC/R7XyXaYGsqv9ps2KB92mSyFxpSp3XTGE2AWW463AKAV5nz3DksUfhuQ2I0ILccVza0Uey/zvLEI0HCdI52fLopyr9u5+m0zWuGonY7IZYxOcJnNBbeiZIuxK1lRXQwz1r2UGyjewpfb9Zwb7fG7WLVq9mo1EDcewNop2fuA3wy049168SZFWFOd7QrtbnBsRVeVo3ZS/FOVF7PjNU7lGc3uVIWMxaMdY1Y+XjDD8oD+xOXp5jad2qyeqbKbUHZS1CdWt8MmfOMcZ3df+43U4s/q3+1YeyADlRBPOdoo7ZCnY6QVvayXFUBQIDAQAB"));
+//		m_description = mmdescr;
 		m_Mixminion = a_Mixminion;
 	}
 
@@ -131,7 +131,7 @@ public class FirstMMRConnection
 	 * @return
 	 * success of packet-transmission
 	 */
-	public boolean send(byte[] send, String sendtype) throws IOException
+	private boolean sending(byte[] send, String sendtype) throws IOException
 	{
 		try
 		{
@@ -141,7 +141,7 @@ public class FirstMMRConnection
 
 			// "SEND" or "JUNK", CRLF = 6 octets
 			String s = sendtype + "\r\n";
-			byte[] init = new byte[6];
+			byte [] init = new byte [6];
 			init = s.getBytes();
 
 			// message M = 32k octets
@@ -203,6 +203,31 @@ public class FirstMMRConnection
 	}
 
 	/**
+	 * connects to first MMR, sends a Message-packet and closes the connection
+	 * @param send
+	 * 32k message as byte array
+	 * @return
+	 * success of packet-transmission
+	 */
+	public boolean send(byte[] message) throws IOException
+	{
+		try {
+			this.connect();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		// "SEND", CRLF = 6 octets
+		String sendtype = "SEND";
+
+		boolean send = this.sending(message, sendtype);
+
+		this.close();
+
+		if (send) return true;
+		else return false;
+	}
+
+	/**
 	 * sends a Message-packet
 	 * @param send
 	 * 32k message as byte array
@@ -213,7 +238,7 @@ public class FirstMMRConnection
 	{
 		// "SEND", CRLF = 6 octets
 		String sendtype = "SEND";
-		return this.send(message, sendtype);
+		return this.sending(message, sendtype);
 
 	}
 
@@ -232,7 +257,7 @@ public class FirstMMRConnection
 		byte[] message = new byte[MESSAGE_LEN];
 		new Random().nextBytes(message);
 
-		return this.send(message, sendtype);
+		return this.sending(message, sendtype);
 
 	}
 
@@ -392,7 +417,7 @@ public class FirstMMRConnection
 		m_istream = m_tinyTLS.getInputStream();
 		BufferedInputStream in_buffstream = new BufferedInputStream(m_istream);
 
-		m_tinyTLS.setSoTimeout(5000);
+		m_tinyTLS.setSoTimeout(30000);
 
 		//MMTP-initialization
 		m_ostream.write(m_protocol.concat("\r\n").getBytes());

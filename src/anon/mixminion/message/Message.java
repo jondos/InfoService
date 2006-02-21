@@ -28,17 +28,20 @@
 
 package anon.mixminion.message;
 
-import java.io.FileOutputStream;
 import java.util.Vector;
+
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 import anon.mixminion.FirstMMRConnection;
 import anon.mixminion.Mixminion;
-import anon.mixminion.mmrdescription.MMRDescription;
-import anon.util.ByteArrayUtil;
-
 import anon.mixminion.fec.FECCode;
 import anon.mixminion.fec.FECCodeFactory;
-import anon.util.Base64;
+import anon.mixminion.mmrdescription.InfoServiceMMRListFetcher;
+import anon.mixminion.mmrdescription.MMRDescription;
+import anon.mixminion.mmrdescription.MMRList;
+import anon.util.ByteArrayUtil;
 
 /**
  * @author Jens Kempe
@@ -53,12 +56,16 @@ public class Message
 	static final int FRAGMENT_HEADER_LEN = 47,
 	SINGLETON_HEADER_LEN = 22,
 	KEY_LEN = 16,
-	OVERHEAD = 0; // weil Plaintext forward Message
+	OVERHEAD = 0; // ist 0 weil Plaintext forward Message
 
+    // Konstanten aus den PhyonCode
+    int MAX_FRAGMENTS_PER_CHUNK = 16;
+    double EXP_FACTOR = 1.3333333333333333;
+
+    
 	/** The Constructor of a Message **/
 	public Message(byte[] payload, Vector recipient, int hops)
 	{
-		System.out.println("   Constructor");
 		this.m_payload = payload;
 		this.m_recipient = recipient;
 		this.m_hops = hops;
@@ -85,25 +92,17 @@ public class Message
 
 		/*2*/
 		byte[] compressPayload = MixMinionCryptoUtil.compressData(m_payload);
-		System.out.println("   Compressed Size = " + compressPayload.length);
+        LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+                "[Message] Compressed Size = " + compressPayload.length);
 
-		try
-		{
-			new FileOutputStream("C:/temp/compress.txt").write(compressPayload);
-		}
-		catch (Exception e)
-		{}
-
-		// Feld für die Fragmente
+		// Feld fuer die Fragmente
 		byte[][] frags = null;
 
-		byte[] help = null;
 		// "possibly" falls mehr als 28K dann fragmentieren //
 //        if (compressPayload.length > 28*1024) frags = divideIntoFragments(compressPayload, 28*1024, 4/3);
 //        else frags = new String[] {new String(compressPayload)};
 //        System.out.println("   l=" + frags.length);
 
-		//Erstmal nur fï¿½r Nachrichten kleiner 28KB
 		if (compressPayload.length + SINGLETON_HEADER_LEN <= 28 * 1024)
 		{
 			// Let PADDING_LEN = 28KB - LEN(M_C) - SINGLETON_HEADER_LEN - OVERHEAD
@@ -116,38 +115,26 @@ public class Message
 			byte[] hash = MixMinionCryptoUtil.hash(ByteArrayUtil.conc(compressPayload, PADDING));
 			byte[] all = ByteArrayUtil.conc(first, hash, compressPayload, PADDING);
 			frags = new byte[][] {all};
-			help = all;
-			try
-			{
-				new FileOutputStream("C:/temp/frag1_1.txt").write(all);
-			}
-			catch (Exception e)
-			{}
-			try
-			{
-				new FileOutputStream("C:/temp/frag1_2.txt").write(frags[0]);
-			}
-			catch (Exception e)
-			{}
-
-			byte[] hh = "PAYLOAD ENCRYPT".getBytes();
-			String hhh = new String(hh);
-			try
-			{
-				new FileOutputStream("C:/temp/t1_1.txt").write(hh);
-			}
-			catch (Exception e)
-			{}
-			try
-			{
-				new FileOutputStream("C:/temp/t1_2.txt").write(hhh.getBytes());
-			}
-			catch (Exception e)
-			{}
-
 		}
 		else
-		{
+		{	  
+//			When generating plaintext forward
+//			fragmented messages, the message generator uses a routing type of
+//			"FRAGMENT" (0x0103), an empty routing info, and prepends the
+//			following fields to the message body before compressing and
+//			fragmenting it:
+//
+//			         RS Routing size    2 octets
+//			         RT Routing type    2 octets
+//			         RI Routing info    (variable length; RS=Len(RI))
+			ExitInformation tri = MMRDescription.getExitInformation(m_recipient);
+			byte[] prepayload = ByteArrayUtil.conc(ByteArrayUtil.inttobyte(tri.m_Content.length,2), ByteArrayUtil.inttobyte(ExitInformation.TYPE_SMTP,2), tri.m_Content);
+			m_payload = ByteArrayUtil.conc(prepayload, m_payload);
+			compressPayload = MixMinionCryptoUtil.compressData(m_payload);
+	        LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+	                "[Message] Fragmented, new Compressed Size = " + compressPayload.length);
+	        if (compressPayload.length + SINGLETON_HEADER_LEN <= 28 * 1024) throw new RuntimeException("Fragmented Header nach Neukomprimierung mit Single-Länge");
+			
 //            Let FRAGMENTS = DIVIDE(M_C, 28KB-OVERHEAD-FRAGMENT_HEADER_LEN)
 //            Let ID = Rand(TAG_LEN)
 //            Let SZ = Int(32,Len(M_C))
@@ -156,7 +143,7 @@ public class Message
 //                  Flag 1 | Int(23,i) | Hash(ID | SZ | FRAGMENT_i ) | ID
 //                     | SZ | FRAGMENT_i
 //            return every PAYLOAD_i.
-			frags = divideIntoFragments(compressPayload, 28 * 1024 - FRAGMENT_HEADER_LEN, 4 / 3);
+            frags = divideIntoFragments(compressPayload);
 			byte[] id = MixMinionCryptoUtil.randomArray(20);
 			byte[] sz = ByteArrayUtil.inttobyte(compressPayload.length, 4);
 			byte[][] payloads = new byte[frags.length][28*1024];
@@ -176,13 +163,58 @@ public class Message
 		{
 			returnValue = false;
 		}
+		// Pfad für die Header erzeugen
+		// hops gerade machen
+        m_hops = ((m_hops+1) / 2)*2; 
+		//Pfad anlegen
+		MMRList mmrlist = new MMRList(new InfoServiceMMRListFetcher());
+		mmrlist.updateList();
+		Vector path = new Vector();
+		boolean isfragmented = false;
+		//für Singleton
+		if (frags.length == 1) {
+			Vector tv = mmrlist.getByRandomWithExit(m_hops);
+			path.addElement(tv);
+		}
+		// für jedes frag einen mit gleichem schluss-server
+		else {
+			path = mmrlist.getByRandomWithFrag(m_hops, frags.length);
+			isfragmented = true;
+		}
+		
 		for (int i_frag = 0; i_frag < frags.length; i_frag++)
 		{
-			System.out.println("   frag_i=" + i_frag);
+            LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+                    "[Message] make Header to Fragment_" + i_frag);
 
 			// Header machen
-			Header header1 = new Header(m_hops, m_recipient);
-			Header header2 = new Header(m_hops, m_recipient);
+            Vector wholepath = (Vector) path.elementAt(i_frag);
+            Vector path1 = MixMinionCryptoUtil.subVector(wholepath, 0, m_hops/2);
+            Vector path2 = MixMinionCryptoUtil.subVector(wholepath, m_hops/2, m_hops/2);
+                        
+			//zwei mal secrets bauen
+			Vector secrets1 = new Vector();
+			Vector secrets2 = new Vector();
+			for(int i=0; i<(m_hops/2); i++) {
+				secrets1.addElement(MixMinionCryptoUtil.randomArray(16));
+				secrets2.addElement(MixMinionCryptoUtil.randomArray(16));
+			}
+			//ExitInfos und Crossoverpoint definieren
+			ExitInformation exit2 = new ExitInformation();
+			if (isfragmented) {
+				exit2.m_Type = ExitInformation.TYPE_FRAGMENTED;
+				exit2.m_Content = new byte[0];
+			}
+			else {
+				exit2 = ((MMRDescription)path2.elementAt(0)).getExitInformation(m_recipient);
+			}
+			
+			ExitInformation exit1 = new ExitInformation();
+			exit1.m_Type = RoutingInformation.TYPE_SWAP_FORWARD_TO_HOST;
+			exit1.m_Content = ((ForwardInformation)((MMRDescription)path2.elementAt(0)).getRoutingInformation()).m_Content;
+			//Header erzeugen
+			Header header1 = new Header(path1, secrets1, (ExitInformation)exit1);
+			Header header2 = new Header(path2, secrets2, exit2);
 			byte[] H1 = header1.getAsByteArray();
 			byte[] H2 = header2.getAsByteArray();
 			byte[] P = frags[i_frag];
@@ -193,21 +225,14 @@ public class Message
 			// for i = N .. 1
 			//   P = SPRP_Encrypt(SK2_i, "PAYLOAD ENCRYPT", P)
 			// end
-			for (int i = header2.getSecrets().size() - 1; i >= 0; i--)
+			for (int i = secrets2.size() - 1; i >= 0; i--)
 			{
-				System.out.println("   s_keys=" + header2.getSecrets().size());
-				byte[] SK2_i = (byte[]) header2.getSecrets().elementAt(i);
+				byte[] SK2_i = (byte[]) secrets2.elementAt(i);
 				byte[] K = MixMinionCryptoUtil.hash(ByteArrayUtil.conc(SK2_i, "PAYLOAD ENCRYPT".getBytes()));
 				P = MixMinionCryptoUtil.SPRP_Encrypt(K, P);
-				try
-				{
-					new FileOutputStream("C:/temp/encrypt1_" + i + ".txt").write(P);
-				}
-				catch (Exception e)
-				{}
 			}
 
-			/** Phase 2: SPRP verschluesseln **/
+            /** Phase 2: SPRP verschluesseln **/
 			// H2 = SPRP_Encrypt(SHA1(P), "HIDE HEADER", H2)
 			// P = SPRP_Encrypt(SHA1(H2), "HIDE PAYLOAD", P)
 			// for i = N .. 1
@@ -220,83 +245,22 @@ public class Message
                     MixMinionCryptoUtil.hash(P), "HIDE HEADER".getBytes())), H2);
 			P = MixMinionCryptoUtil.SPRP_Encrypt(MixMinionCryptoUtil.hash(ByteArrayUtil.conc(
                     MixMinionCryptoUtil.hash(H2), "HIDE PAYLOAD".getBytes())), P);
-			for (int i = header1.getSecrets().size() - 1; i >= 0; i--)
+			for (int i = secrets1.size() - 1; i >= 0; i--)
 			{
-				System.out.println("   s_keys=" + header1.getSecrets().size());
-				byte[] SK1_i = (byte[]) header1.getSecrets().elementAt(i);
+				byte[] SK1_i = (byte[]) secrets1.elementAt(i);
 				H2 = MixMinionCryptoUtil.SPRP_Encrypt(MixMinionCryptoUtil.hash(ByteArrayUtil.conc(SK1_i,
 					"HEADER ENCRYPT".getBytes())), H2);
 				P = MixMinionCryptoUtil.SPRP_Encrypt(MixMinionCryptoUtil.hash(ByteArrayUtil.conc(SK1_i,
 					"PAYLOAD ENCRYPT".getBytes())), P);
-				try
-				{
-					new FileOutputStream("C:/temp/encrypt2_" + i + ".txt").write(P);
-				}
-				catch (Exception e)
-				{}
 			}
 			M = ByteArrayUtil.conc(H1, H2, P);
-			try
-			{
-				new FileOutputStream("C:/temp/M_toSend.txt").write(M);
-			}
-			catch (Exception e)
-			{}
+            LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+                    "[Message] the Messagesize = " + M.length + " Bytes");
 
-			System.out.println("   M=" + M.length);
-
-			boolean AntwortAusDerSendingMethode = false;
-			// an 1. Server schicken
-			try
-			{
-				Mixminion mixminion = Mixminion.getInstance();
-//                MMRList mmrl = new MMRList(new PlainMMRListFetcher());
-//                System.out.println("MMR-Liste aktualisiert: " + mmrl.updateList());
-
-//Jens: an den 1.Server aus Header und ncht an RandomServer schicken
-//                MMRDescription mmdescr = mmrl.getByRandom();
-				//MMRDescription mmdescr = (MMRDescription) header1.getRoute();
-
-				//FirstMMRConnection fMMRcon = new FirstMMRConnection(mmdescr, mixminion);
-				//System.out.println(mmdescr.toString());
-				// connect to first miminion-router
-
-				/** nur zum testen **/
-				MMRDescription mmdescr=new MMRDescription("141.76.46.90", "JAP", 48099,
-
-																Base64.decode("JzZdlwSPXEfncFH/tl+A5CZhGN4="),
-
-																Base64.decode("HR6d+Li3vbUBu9NKm500wadrnng="),
-																true, false);
-
-					mmdescr.setIdentityKey(Base64.decode("MIIBCgKCAQEA1XZi7436861AxxYgNEbnVyobQg+wPbuRZNlFJ5x2pDyRNFOQrLG2+pK8Z/AzVxMbEPvLNCIn5nAvuRZGn/aGryhy0bzlX/D0CHG44qagoVb36kGeXv4jvLy/aYu4nxLUrgoEdp0t+J3kWQScnOsOiBwF60l4Acc5+51T/YBctYvSO2OY8VpexB7S2+1pIGjT7rsXVXCK18G0Xms4dt/qPKK/2fzPw/kR06Ggf006JCyFKEDMfDrbZ6gvLS3BiUVZV7ZYACAeznv5Hj/dwRJtT7QGqvJyr6zrZi7epSD41J3Uqh8oYABu5g3cQEtdMc33WLBXdhmjAmTG0wcSZxGyeQIDAQAB"));
-
-					mmdescr.setPacketKey(Base64.decode("MIIBCgKCAQEAkoQcO+eFjs3blj9v1rzCXDjRPJc3pC/R7XyXaYGsqv9ps2KB92mSyFxpSp3XTGE2AWW463AKAV5nz3DksUfhuQ2I0ILccVza0Uey/zvLEI0HCdI52fLopyr9u5+m0zWuGonY7IZYxOcJnNBbeiZIuxK1lRXQwz1r2UGyjewpfb9Zwb7fG7WLVq9mo1EDcewNop2fuA3wy049168SZFWFOd7QrtbnBsRVeVo3ZS/FOVF7PjNU7lGc3uVIWMxaMdY1Y+XjDD8oD+xOXp5jad2qyeqbKbUHZS1CdWt8MmfOMcZ3df+43U4s/q3+1YeyADlRBPOdoo7ZCnY6QVvayXFUBQIDAQAB"));
-                FirstMMRConnection fMMRcon = new FirstMMRConnection(mmdescr, mixminion);
-				/** ende tesen**/
-
-
-				//
-				System.out.println("   connecting...");
-				fMMRcon.connect();
-
-				//send a junk-packet
-				System.out.println("   sending...");
-				AntwortAusDerSendingMethode = fMMRcon.sendMessage(M);
-				System.out.println("   Sende Message: " + AntwortAusDerSendingMethode);
-
-				//close connection
-				System.out.println("   Trenne Verbindung.");
-				fMMRcon.close();
-			}
-			catch (Exception e)
-			{
-				e.printStackTrace();
-				AntwortAusDerSendingMethode = false;
-			}
-			returnValue = returnValue && AntwortAusDerSendingMethode;
-		}
-		return returnValue;
+            // Message an 1. MixMinonServer schicken
+            returnValue = returnValue && sendToMixMinionServer(M, (MMRDescription) path1.elementAt(0));
+        }
+        return returnValue;
 	}
 
 	/////////////////////////////////// zusaetzliche Methoden ///////////////////////////////////
@@ -305,13 +269,17 @@ public class Message
 	/**
 	 * Diese Methode fragmentiert eine Nachricht (nach der E2E.txt)
 	 * @param M, the message to send
-	 * @param PS, payload sized (fixed)
-	 * @param EXF, expansion factor [Everyone must use the same EXF. The value of EXF is 4/3.]
 	 * @return the fragments of the Message
 	 */
-	byte[][] divideIntoFragments(byte[] M, int PS, double EXF)
+	byte[][] divideIntoFragments(byte[] M)
 	{
-		System.out.println("   beim Teilen");
+        int PS = 28*1024 - FRAGMENT_HEADER_LEN - OVERHEAD;
+        double EXF = 4.0 / 3.0;
+        
+		System.out.println("   divideIntoFragments");
+        System.out.println("      M   = " + M.length);
+        System.out.println("      PS  = " + PS);
+        System.out.println("      EXF = " + EXF);
 
 		double tmp;
 
@@ -327,28 +295,27 @@ public class Message
 		// Let NUM_CHUNKS = CEIL(M_SIZE / K)
 		int NUM_CHUNKS = (int) Math.ceil(M_SIZE / (double) K);
 
-		System.out.println("   beim Teilen 2");
-
 		// Let M = M | PRNG(Rand(KEY_LEN), Len(M) - NUM_CHUNKS*PS*K)
 		byte[] random = MixMinionCryptoUtil.randomArray(KEY_LEN);
 		int len = M.length - NUM_CHUNKS * PS * K;
 		System.out.println(len);
+        
+        // begin  FIXME this wasn't write in the E2E, but it seems to be right
+		    len = Math.abs(len);
+        // end    FIXME
+        
 		byte[] prng = MixMinionCryptoUtil.createPRNG(random, len);
 		M = ByteArrayUtil.conc(M, prng);
-
-		System.out.println("   beim Teilen 3");
 
 		// For i from 1 to NUM_CHUNKS:
 		//    Let CHUNK_i = M[(i-1)*PS*K : i*PS*K]
 		// End
-		String[] CHUNK = new String[NUM_CHUNKS];
+		byte[][] CHUNK = new byte[NUM_CHUNKS][PS];
 		for (int i = 1; i <= NUM_CHUNKS; i++)
 		{
-			byte[] b = ByteArrayUtil.copy(M, (int) ( (i - 1) * PS * K), (int) (i * PS * K));
-			CHUNK[i + 1] = new String(b);
+			byte[] b = ByteArrayUtil.copy(M, (int) ( (i - 1) * PS * K), (int) (/*i **/PS * K));
+			CHUNK[i - 1] = b;
 		}
-
-		System.out.println("   beim Teilen 4");
 
 		// Let N = Ceil(EXF*K)
 		int N = (int) Math.ceil(EXF * K);
@@ -359,7 +326,7 @@ public class Message
 		//    End loop
 		// End loop
 
-		System.out.println("   N,num" + N + " " + NUM_CHUNKS);
+		System.out.println("   N,num " + N + " " + NUM_CHUNKS);
 
 		byte[][] FRAGMENTS = new byte [NUM_CHUNKS * N][28*1024];
 		for (int i = 0; i <= NUM_CHUNKS - 1; i++)
@@ -374,20 +341,20 @@ public class Message
 	}
 
 	/**
-	 * soll den von der Nachricht m das i'te von N Paketen zurï¿½ckgeben
+	 * soll den von der Nachricht m das i'te von N Paketen zurueckgeben
 	 */
-	byte[] FRAGMENT(String M, int K, int N, int I, int PS)
+	byte[] FRAGMENT(byte[] M, int K, int N, int I, int PS)
 	{
 		//k = number of source packets to encode
 		//n = number of packets to encode to
 		//packetsize = 1024;
 		int packetsize = PS;
 
-		System.out.println("   " + M);
+//		System.out.println("   " + M);
 
 //        Random rand = new Random();
 
-		byte[] source = M.getBytes(); //new byte[K*packetsize]; //this is our source file
+		byte[] source = M;//new byte[K*packetsize]; //this is our source file
 
 		//NOTE:
 		//The source needs to split into k*packetsize sections
@@ -435,7 +402,149 @@ public class Message
 		fec.encode(sourceBuffer, srcOffs, repairBuffer, repairOffs, repairIndex, packetsize);
 		//encoded data is now contained in the repairBuffer/repair byte array
 
-		//FIXME FIXME überprüfen
-		return new String(repairBuffer[I], repairOffs[I], packetsize).getBytes();
+		return ByteArrayUtil.copy(repairBuffer[I], repairOffs[I], packetsize);
+//		return new String(repairBuffer[I], repairOffs[I], packetsize);
 	}
+    
+    
+    private boolean sendToMixMinionServer(byte[] message, MMRDescription description)
+    {
+        boolean returnValue = false;
+        
+        try
+        {
+            Mixminion mixminion = Mixminion.getInstance();
+            FirstMMRConnection fMMRcon = new FirstMMRConnection(description, mixminion);
+
+            System.out.println("   connecting...");
+            fMMRcon.connect();
+
+            System.out.println("   sending...");
+            returnValue = fMMRcon.sendMessage(message);
+            System.out.println("   Value of SendingMethod = " + returnValue);
+
+            System.out.println("   close connection");
+            fMMRcon.close();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return returnValue;
+    }
+    
+    
+    /**
+     * for testing
+     * @param args
+     */
+    public static void main(String[] args)
+    {
+        Message mmm = new Message(null, null, 0);
+        
+        byte[] M_original = MixMinionCryptoUtil.randomArray(80000);
+        byte[] M1 = (byte[]) M_original.clone();
+        byte[] M2 = (byte[]) M_original.clone();
+        
+        byte[][] f1 = mmm.divideIntoFragments(M1);
+        byte[][] f2 = mmm._divide_NACH_PYTHON_CODE(M2);
+        
+        System.out.println(f1);
+        System.out.println(f2);
+        
+        boolean eq = true;
+        for (int i=0; i<f1.length; i++)
+        {
+            boolean e = ByteArrayUtil.equal(f1[i], f2[i]);
+            System.out.println(e);
+            eq = eq && e;
+        }
+        System.out.println(eq);
+        
+    }
+    
+    
+    /**
+	* Diese Methode ist aus den PhytonCode übernommen und anschliessend 
+	* in Java umgeschrieben worden
+	*/
+    byte[][] _divide_NACH_PYTHON_CODE(byte[] M)
+    {
+        int length = M.length;
+        int fragCapacity = 28*1024 - FRAGMENT_HEADER_LEN - OVERHEAD;
+        // minimum number of payloads to hold msg, without fragmentation
+        // or padding.
+        int minFragments = ceilDiv(length, fragCapacity);
+        if (!(minFragments >= 2)) throw new RuntimeException("The minimum of Fragments must be 2.");
+        // Number of data fragments per chunk.
+        int k = 2;
+        while (k<minFragments  && k<MAX_FRAGMENTS_PER_CHUNK)
+        {
+            k *= 2;
+        }
+        // Number of chunks.
+        int nChunks = ceilDiv(minFragments, k);
+        // Number of total fragments per chunk.
+        int n = (int) Math.ceil(EXP_FACTOR * k);
+        // Data in  a single chunk
+        int chunkSize = fragCapacity * k;
+        // Length of data to fill chunks
+        int paddedLen = nChunks * fragCapacity * k;
+        // Length of padding needed to fill all chunks with data.
+        int paddingLen = paddedLen - length;
+
+        /** jetzt kommt der Fragment-Algo aus dem Python-Code **/
+        //def getFragments(self, s, paddingPRNG=None):
+        //    """Given a string of length self.length, whiten it, pad it,
+        //       and fragmment it.  Return a list of the fragments, in order.
+        //       (Note -- after building the fragment packets, be sure to shuffle
+        //       them into a random order.)"""
+
+        byte[] random = MixMinionCryptoUtil.randomArray(KEY_LEN);
+        byte[] s = ByteArrayUtil.conc(M, MixMinionCryptoUtil.createPRNG(random, paddingLen));
+        if (!(s.length==paddedLen)) throw new RuntimeException("The Common-Fragment has a wrong size.");
+
+        Vector chunks = new Vector();
+        for (int i=0; i<nChunks; i++)
+        {
+            byte[] b = ByteArrayUtil.copy(s, i*chunkSize, chunkSize);
+            chunks.add(b);
+        }
+
+        Vector fragments = new Vector();
+        for (int i=0; i<nChunks; i++)
+        {
+            Vector blocks = new Vector();
+            for (int j=0; j<k; j++)
+            {
+                byte[] b = ByteArrayUtil.copy((byte[])chunks.get(i), j*fragCapacity, fragCapacity);
+                blocks.add(b);
+            }
+            for (int j=0; j<n; j++)
+            {
+                byte[] b = FRAGMENT(s, k, n, j, fragCapacity);
+                fragments.add(b);
+            }
+        }
+        
+        byte[][] allFragments = new byte[fragments.size()][fragCapacity];
+        for (int i=0; i<fragments.size(); i++)
+        {
+            allFragments[i] = (byte[]) fragments.get(i);
+        }
+        return allFragments;
+    }
+    
+    /**
+     * rechte die Ganzzahl aus, welche grösser als a/b ist
+     * @param a
+     * @param b
+     * @return
+     */
+    private int ceilDiv(double a, double b)
+    {
+        return (int) Math.ceil(a / b);
+    }
+    
 }
