@@ -342,4 +342,9 @@ public class XMLPaymentOption implements IXMLEncodable
 		return (Vector)m_inputFields.clone();
 	}
 
+	public boolean isGeneric()
+	{
+		return true;
+	}
+
 }

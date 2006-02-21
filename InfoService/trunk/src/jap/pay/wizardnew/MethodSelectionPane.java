@@ -50,6 +50,8 @@ import gui.dialog.JAPDialog;
 import gui.dialog.WorkerContentPane;
 import jap.JAPController;
 import logging.LogType;
+import jap.JAPConstants;
+import java.util.StringTokenizer;
 
 public class MethodSelectionPane extends DialogContentPane implements IWizardSuitable, ActionListener
 {
@@ -60,6 +62,8 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		getName() + "_selectoption";
 	private static final String MSG_ERRSELECT = MethodSelectionPane.class.
 		getName() + "_errselect";
+	private static final String MSG_NOTSUPPORTED = MethodSelectionPane.class.
+		getName() + "_notsupported";
 
 	private ButtonGroup m_rbGroup;
 	private XMLPaymentOptions m_paymentOptions;
@@ -202,11 +206,29 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 	public CheckError[] checkYesOK()
 	{
 		CheckError[] error = new CheckError[1];
+		boolean supported = false;
 
 		if (m_selectedPaymentOption == null)
 		{
 			error[0] = new CheckError(JAPMessages.getString(MSG_ERRSELECT), LogType.PAY);
 			return error;
+		}
+	    else if (!m_selectedPaymentOption.isGeneric())
+		{
+			StringTokenizer st = new StringTokenizer(JAPConstants.PAYMENT_NONGENERIC, ",");
+			while (st.hasMoreTokens())
+			{
+				String supportedOption = st.nextToken();
+				if (m_selectedPaymentOption.getName().equalsIgnoreCase(supportedOption))
+				{
+					supported = true;
+				}
+			}
+			if (!supported)
+			{
+				error[0] = new CheckError(JAPMessages.getString(MSG_NOTSUPPORTED), LogType.PAY);
+				return error;
+			}
 		}
 
 		return null;

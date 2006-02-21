@@ -66,6 +66,7 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 	private String m_language;
 	private Vector m_inputFields;
 	private XMLPaymentOption m_selectedOption;
+	private XMLPaymentOptions m_paymentOptions;
 
 	public PassivePaymentPane(JAPDialog a_parentDialog, DialogContentPane a_previousContentPane)
 	{
@@ -96,15 +97,8 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		}
 	}
 
-	public void showForm()
+	public void showGenericForm()
 	{
-		XMLPaymentOption selectedOption = ( (MethodSelectionPane) getPreviousContentPane().
-										   getPreviousContentPane().
-										   getPreviousContentPane()).getSelectedPaymentOption();
-		m_selectedOption = selectedOption;
-		XMLPaymentOptions paymentOptions = (XMLPaymentOptions) ( (WorkerContentPane) getPreviousContentPane().
-			getPreviousContentPane().getPreviousContentPane().getPreviousContentPane()).getValue();
-
 		m_rootPanel.removeAll();
 		m_rootPanel = this.getContentPane();
 		m_c = new GridBagConstraints();
@@ -118,7 +112,7 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		m_c.anchor = m_c.NORTHWEST;
 		m_c.fill = m_c.NONE;
 		m_c.gridwidth = 2;
-		JLabel label = new JLabel("<html>" + selectedOption.getDetailedInfo(m_language) + "</html>");
+		JLabel label = new JLabel("<html>" + m_selectedOption.getDetailedInfo(m_language) + "</html>");
 		m_rootPanel.add(label, m_c);
 		m_c.gridwidth = 1;
 		m_c.gridy++;
@@ -128,7 +122,7 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		JComboBox comboBox = null;
 
 		m_inputFields = new Vector();
-		Vector inputFields = selectedOption.getInputFields();
+		Vector inputFields = m_selectedOption.getInputFields();
 
 		for (int i = 0; i < inputFields.size(); i++)
 		{
@@ -141,7 +135,7 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 				//that displays all accepted cards instead of a simple text field
 				if (field[0].equalsIgnoreCase("creditcardtype"))
 				{
-					String acceptedCards = paymentOptions.getAcceptedCreditCards();
+					String acceptedCards = m_paymentOptions.getAcceptedCreditCards();
 					StringTokenizer st = new StringTokenizer(acceptedCards, ",");
 					comboBox = new JComboBox();
 					comboBox.setName(field[0]);
@@ -229,6 +223,25 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 	{
 		showForm();
 		return null;
+	}
+
+	public void showForm()
+	{
+		m_selectedOption = ( (MethodSelectionPane) getPreviousContentPane().
+							getPreviousContentPane().
+							getPreviousContentPane()).getSelectedPaymentOption();
+		m_paymentOptions = (XMLPaymentOptions) ( (WorkerContentPane) getPreviousContentPane().
+												getPreviousContentPane().getPreviousContentPane().
+												getPreviousContentPane()).getValue();
+
+		if (m_selectedOption.isGeneric())
+		{
+			showGenericForm();
+		}
+		else
+		{
+			/** @todo Show special form according to payment type*/
+		}
 	}
 
 }
