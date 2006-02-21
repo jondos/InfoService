@@ -155,8 +155,6 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 			m_rootPanel.add(m_bttnCopy, m_c);
 
 			m_c.gridx++;
-			m_c.weightx = 1;
-			m_c.weighty = 1;
 			m_bttnOpen = new JButton(JAPMessages.getString(MSG_BUTTONOPEN));
 			m_bttnOpen.addActionListener(this);
 			m_rootPanel.add(m_bttnOpen, m_c);
