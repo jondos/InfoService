@@ -118,7 +118,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private static final String MSG_DISABLE_GOODBYE = JAPController.class.getName() +
 		"_disableGoodByMessage";
 	private static final String MSG_ERROR_SAVING_CONFIG = JAPController.class.getName() +
-	"_errorSavingConfig";
+		"_errorSavingConfig";
 
 	/**
 	 * Stores all MixCascades we know (information comes from infoservice or was entered by a user).
@@ -520,105 +520,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 					CONFIG_LISTENER_IS_LOCAL), true);
 				setHTTPListener(port, bListenerIsLocal, false);
 
-				/* load Payment settings */
-				try
-				{
-					if (loadPay)
-					{
-						Element elemPay = (Element) XMLUtil.getFirstChildByName(root,
-							JAPConstants.CONFIG_PAYMENT);
-
-						Element elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay,
-							JAPConstants.CONFIG_ENCRYPTED_DATA);
-
-						//Load known Payment instances
-						Node nodePIs = XMLUtil.getFirstChildByName(elemPay,
-							JAPConstants.CONFIG_PAYMENT_INSTANCES);
-						if (nodePIs != null)
-						{
-							Node nodePI = nodePIs.getFirstChild();
-							while (nodePI != null)
-							{
-								PayAccountsFile.getInstance().addKnownPI( (Element) nodePI);
-								nodePI = nodePI.getNextSibling();
-							}
-						}
-						// test: is account data encrypted?
-						if (elemAccounts != null)
-						{
-							// it is encrypted -> ask user for password
-							Element elemPlainTxt = null;
-
-							while (true)
-							{
-								JAPDialog d = new JAPDialog( (Component)null,
-									JAPMessages.getString(MSG_ACCPASSWORDENTERTITLE), true);
-								PasswordContentPane p = new PasswordContentPane(d,
-									PasswordContentPane.PASSWORD_ENTER,
-									JAPMessages.getString(MSG_ACCPASSWORDENTER));
-								p.updateDialog();
-								d.pack();
-								d.setVisible(true);
-								//Check if cancel button was pressed
-								if (!p.hasValidValue())
-								{
-									boolean yes = JAPDialog.showYesNoDialog(d,
-										JAPMessages.getString(MSG_LOSEACCOUNTDATA));
-									if (yes)
-									{
-										break;
-									}
-									else
-									{
-										continue;
-									}
-								}
-
-								setPaymentPassword(new String(p.getPassword()));
-
-								if (getPaymentPassword() != null && !getPaymentPassword().trim().equals(""))
-								{
-									try
-									{
-										elemPlainTxt = XMLEncryption.decryptElement(elemAccounts,
-											getPaymentPassword());
-									}
-									catch (Exception ex)
-									{
-										continue;
-									}
-									break ;
-								}
-
-							}
-
-							if (getPaymentPassword() != null)
-							{
-								PayAccountsFile.init(elemPlainTxt);
-							}
-						}
-						else
-						{
-							// accounts data is not encrypted
-							elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay,
-								JAPConstants.CONFIG_PAY_ACCOUNTS_FILE);
-							if (elemAccounts != null)
-							{
-								PayAccountsFile.init(elemAccounts);
-							}
-							else
-							{
-								PayAccountsFile.init(null);
-							}
-						}
-					}
-				}
-				catch (Exception e)
-				{
-					LogHolder.log(LogLevel.INFO, LogType.MISC,
-								  "JAPController: loadConfigFile: Error loading Payment configuration.");
-				}
-
 				//port = XMLUtil.parseAttribute(root, "portNumberSocks",
 				//  JAPModel.getSocksListenerPortNumber());
 				//setSocksPortNumber(port);
@@ -841,12 +742,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 						Element elemLevel = (Element) XMLUtil.getFirstChildByName(elemDebug,
 							JAPConstants.CONFIG_LEVEL);
 						JAPDebug.getInstance().setLogLevel(XMLUtil.parseValue(
-											  elemLevel, JAPDebug.getInstance().getLogLevel()));
+							elemLevel, JAPDebug.getInstance().getLogLevel()));
 
 						Element elemLogDetail = (Element) XMLUtil.getFirstChildByName(elemDebug,
 							JAPConstants.CONFIG_LOG_DETAIL);
 						LogHolder.setDetailLevel(
-											  XMLUtil.parseValue(elemLogDetail, LogHolder.getDetailLevel()));
+							XMLUtil.parseValue(elemLogDetail, LogHolder.getDetailLevel()));
 
 						Element elemType = (Element) XMLUtil.getFirstChildByName(elemDebug,
 							JAPConstants.CONFIG_TYPE);
@@ -926,6 +827,105 @@ public final class JAPController extends Observable implements IProxyListener, O
 				catch (Exception e)
 				{
 					LogHolder.log(LogLevel.ERR, LogType.MISC, e);
+				}
+
+				/* load Payment settings */
+				try
+				{
+					if (loadPay)
+					{
+						Element elemPay = (Element) XMLUtil.getFirstChildByName(root,
+							JAPConstants.CONFIG_PAYMENT);
+
+						Element elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay,
+							JAPConstants.CONFIG_ENCRYPTED_DATA);
+
+						//Load known Payment instances
+						Node nodePIs = XMLUtil.getFirstChildByName(elemPay,
+							JAPConstants.CONFIG_PAYMENT_INSTANCES);
+						if (nodePIs != null)
+						{
+							Node nodePI = nodePIs.getFirstChild();
+							while (nodePI != null)
+							{
+								PayAccountsFile.getInstance().addKnownPI( (Element) nodePI);
+								nodePI = nodePI.getNextSibling();
+							}
+						}
+						// test: is account data encrypted?
+						if (elemAccounts != null)
+						{
+							// it is encrypted -> ask user for password
+							Element elemPlainTxt = null;
+
+							while (true)
+							{
+								JAPDialog d = new JAPDialog( (Component)null,
+									JAPMessages.getString(MSG_ACCPASSWORDENTERTITLE), true);
+								PasswordContentPane p = new PasswordContentPane(d,
+									PasswordContentPane.PASSWORD_ENTER,
+									JAPMessages.getString(MSG_ACCPASSWORDENTER));
+								p.updateDialog();
+								d.pack();
+								d.setVisible(true);
+								//Check if cancel button was pressed
+								if (!p.hasValidValue())
+								{
+									boolean yes = JAPDialog.showYesNoDialog(d,
+										JAPMessages.getString(MSG_LOSEACCOUNTDATA));
+									if (yes)
+									{
+										break;
+									}
+									else
+									{
+										continue;
+									}
+								}
+
+								setPaymentPassword(new String(p.getPassword()));
+
+								if (getPaymentPassword() != null && !getPaymentPassword().trim().equals(""))
+								{
+									try
+									{
+										elemPlainTxt = XMLEncryption.decryptElement(elemAccounts,
+											getPaymentPassword());
+									}
+									catch (Exception ex)
+									{
+										continue;
+									}
+									break ;
+								}
+
+							}
+
+							if (getPaymentPassword() != null)
+							{
+								PayAccountsFile.init(elemPlainTxt);
+							}
+						}
+						else
+						{
+							// accounts data is not encrypted
+							elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay,
+								JAPConstants.CONFIG_PAY_ACCOUNTS_FILE);
+							if (elemAccounts != null)
+							{
+								PayAccountsFile.init(elemAccounts);
+							}
+							else
+							{
+								PayAccountsFile.init(null);
+							}
+						}
+					}
+				}
+				catch (Exception e)
+				{
+					LogHolder.log(LogLevel.INFO, LogType.MISC,
+								  "JAPController: loadConfigFile: Error loading Payment configuration.");
 				}
 
 				/*loading Tor settings*/
@@ -1745,12 +1745,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 					MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
 					m_proxyAnon.setMixCascade(currentMixCascade);
 					m_proxyAnon.setAutoReConnect(JAPModel.getAutoReConnect());
-					TorAnonServerDescription td=new TorAnonServerDescription(true,JAPModel.isPreCreateAnonRoutesEnabled());
+					TorAnonServerDescription td = new TorAnonServerDescription(true,
+						JAPModel.isPreCreateAnonRoutesEnabled());
 					td.setMaxRouteLen(JAPModel.getTorMaxRouteLen());
 					td.setMinRouteLen(JAPModel.getTorMinRouteLen());
 					td.setMaxConnectionsPerRoute(JAPModel.getTorMaxConnectionsPerRoute());
 					m_proxyAnon.setTorParams(td);
-					m_proxyAnon.setMixminionParams(new MixminionServiceDescription(JAPModel.getMixminionRouteLen()));
+					m_proxyAnon.setMixminionParams(new MixminionServiceDescription(JAPModel.
+						getMixminionRouteLen()));
 					m_proxyAnon.setProxyListener(m_Controller);
 					m_proxyAnon.setDummyTraffic(JAPModel.getDummyTraffic());
 					// -> we can try to start anonymity
@@ -1804,21 +1806,21 @@ public final class JAPController extends Observable implements IProxyListener, O
 					else if (ret == AnonProxy.E_MIX_PROTOCOL_NOT_SUPPORTED)
 					{
 						JAPDialog.showErrorDialog(m_View,
-								JAPMessages.getString("errorMixProtocolNotSupported"),
+												  JAPMessages.getString("errorMixProtocolNotSupported"),
 												  LogType.NET);
 					}
 //otte
 					else if (ret == AnonProxy.E_SIGNATURE_CHECK_FIRSTMIX_FAILED)
 					{
 						JAPDialog.showErrorDialog(m_View,
-								JAPMessages.getString("errorMixFirstMixSigCheckFailed"),
+												  JAPMessages.getString("errorMixFirstMixSigCheckFailed"),
 												  LogType.NET);
 					}
 
 					else if (ret == AnonProxy.E_SIGNATURE_CHECK_OTHERMIX_FAILED)
 					{
 						JAPDialog.showErrorDialog(m_View,
-								JAPMessages.getString("errorMixOtherMixSigCheckFailed"),
+												  JAPMessages.getString("errorMixOtherMixSigCheckFailed"),
 												  LogType.NET);
 					}
 					// ootte
@@ -1979,8 +1981,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 			/* simply enable the anonymous mode */
 			if (m_currentMixCascade.isCertified())
 			{
-			setAnonMode(true);
-		}
+				setAnonMode(true);
+			}
 			else
 			{
 
@@ -2031,7 +2033,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			if (bShowWarning)
 			{
 				JAPDialog.showMessageDialog(m_View,
-											  JAPMessages.getString("confmessageListernPortChanged"));
+											JAPMessages.getString("confmessageListernPortChanged"));
 			}
 			m_Controller.notifyJAPObservers();
 		}
@@ -2166,14 +2168,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 				JAPMessages.getString(MSG_DISABLE_GOODBYE),
 				JAPDialog.OPTION_TYPE_OK_CANCEL, JAPDialog.MESSAGE_TYPE_INFORMATION, checkBox);
 			if (returnValue == JAPDialog.RETURN_VALUE_OK)
-				{
+			{
 				m_Controller.mbGoodByMessageNeverRemind = checkBox.getState();
 			}
 		}
-			else
-			{
+		else
+		{
 			returnValue = JAPDialog.RETURN_VALUE_OK;
-			}
+		}
 
 		if (returnValue == JAPDialog.RETURN_VALUE_OK)
 		{
@@ -2182,11 +2184,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 			{
 				JAPDialog.showErrorDialog(m_View, JAPMessages.getString(MSG_ERROR_SAVING_CONFIG,
 					JAPModel.getInstance().getConfigFile()), LogType.MISC);
-		}
+			}
 
 			m_Controller.setAnonMode(false);
-		System.exit(0);
-	}
+			System.exit(0);
+		}
 	}
 
 	/** Shows the About dialog
@@ -2309,7 +2311,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				LogHolder.log(LogLevel.ERR, LogType.MISC,
 							  "JAPController: versionCheck: Could not get JAPVersionInfo.");
 				JAPDialog.showErrorDialog(m_View,
-											  JAPMessages.getString("downloadFailed") +
+										  JAPMessages.getString("downloadFailed") +
 										  JAPMessages.getString("infoURL"), LogType.MISC);
 				notifyJAPObservers();
 				/* update failed -> exit */
