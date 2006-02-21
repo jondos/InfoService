@@ -71,13 +71,11 @@ public class WindowsOS extends AbstractOS
 			}
 			catch (Exception ex)
 			{
-				return false;
 			}
 		}
 		if (!success)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot open URL in browser");
-			return false;
 		}
 		return success;
 	}
