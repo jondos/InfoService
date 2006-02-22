@@ -47,7 +47,7 @@ import anon.pay.xml.XMLPaymentOption;
 public class Configuration
 {
 	/** Versionsnummer --> Please update if you change anything*/
-	public static final String BEZAHLINSTANZ_VERSION = "BI.02.013";
+	public static final String BEZAHLINSTANZ_VERSION = "BI.02.014";
 	public static IMyPrivateKey getPrivateKey()
 	{
 		return m_privateKey;
@@ -465,7 +465,13 @@ public class Configuration
 			{
 				break;
 			}
-			XMLPaymentOption option = new XMLPaymentOption(name, type);
+			String generic = props.getProperty("option" + i + "generic");
+			if (generic == null)
+			{
+				generic = "true";
+			}
+
+			XMLPaymentOption option = new XMLPaymentOption(name, type, Boolean.valueOf(generic).booleanValue());
 
 			//Add headings
 			String heading;
