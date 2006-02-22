@@ -936,7 +936,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		if (methodSelectionPane.getSelectedPaymentOption() != null &&
 			passivePaymentPane.getButtonValue() == JAPDialog.RETURN_VALUE_OK)
 		{
-			if (methodSelectionPane.getSelectedPaymentOption().getName().equals("CreditCard"))
+			if (methodSelectionPane.getSelectedPaymentOption().getName().toLowerCase().indexOf("creditcard") !=
+				-1)
 			{
 				doGetStatement(selectedAccount);
 			}
@@ -1088,8 +1089,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			if (numAccounts < m_listAccounts.getModel().getSize())
 			{
 				/** Select new account and start charging wizard */
-				m_listAccounts.setSelectedIndex(m_listAccounts.getModel().getSize()-1);
-				doChargeAccount((PayAccount)m_listAccounts.getSelectedValue());
+				m_listAccounts.setSelectedIndex(m_listAccounts.getModel().getSize() - 1);
+				doChargeAccount( (PayAccount) m_listAccounts.getSelectedValue());
 			}
 		}
 	}

@@ -55,6 +55,10 @@ public class XMLPaymentOption implements IXMLEncodable
 	/** Option type (active|passive)*/
 	private String m_type;
 
+	/** Generic option? Non-generic options are handled by JAP and do not need
+	 * input fields for passive payment*/
+	private boolean m_generic;
+
 	/** This vector takes String[2] arrays while the first element is the heading
 	 * and the second element is the language identifier. E.g.: {"Money Transfer", "en"}
 	 */
@@ -86,10 +90,18 @@ public class XMLPaymentOption implements IXMLEncodable
 	{
 	}
 
+	public XMLPaymentOption(String a_name, String a_type, boolean a_generic)
+	{
+		m_name = a_name;
+		m_type = a_type;
+		m_generic = a_generic;
+	}
+
 	public XMLPaymentOption(String a_name, String a_type)
 	{
 		m_name = a_name;
 		m_type = a_type;
+		m_generic = true;
 	}
 
 	public void addHeading(String a_heading, String a_language)
@@ -136,6 +148,7 @@ public class XMLPaymentOption implements IXMLEncodable
 		Element elemRoot = a_doc.createElement("PaymentOption");
 		elemRoot.setAttribute("name", m_name);
 		elemRoot.setAttribute("type", m_type);
+		elemRoot.setAttribute("generic", String.valueOf(m_generic));
 
 		Element elem;
 
@@ -208,6 +221,14 @@ public class XMLPaymentOption implements IXMLEncodable
 
 		m_type = elemRoot.getAttribute("type");
 		m_name = elemRoot.getAttribute("name");
+		if (elemRoot.hasAttribute("generic"))
+		{
+			m_generic = Boolean.valueOf(elemRoot.getAttribute("generic")).booleanValue();
+		}
+		else
+		{
+			m_generic = true;
+		}
 
 		NodeList nodesHeadings = elemRoot.getElementsByTagName("Heading");
 		for (int i = 0; i < nodesHeadings.getLength(); i++)
@@ -215,7 +236,7 @@ public class XMLPaymentOption implements IXMLEncodable
 			String heading = nodesHeadings.item(i).getFirstChild().getNodeValue();
 			String language = ( (Element) nodesHeadings.item(i)).getAttribute("lang");
 			m_headings.addElement(new String[]
-						   {heading, language});
+								  {heading, language});
 		}
 
 		NodeList nodesDetailed = elemRoot.getElementsByTagName("DetailedInfo");
@@ -224,7 +245,7 @@ public class XMLPaymentOption implements IXMLEncodable
 			String info = nodesDetailed.item(i).getFirstChild().getNodeValue();
 			String language = ( (Element) nodesDetailed.item(i)).getAttribute("lang");
 			m_detailedInfos.addElement(new String[]
-								{info, language});
+									   {info, language});
 		}
 
 		NodeList nodesExtra = elemRoot.getElementsByTagName("ExtraInfo");
@@ -234,7 +255,7 @@ public class XMLPaymentOption implements IXMLEncodable
 			String language = ( (Element) nodesExtra.item(i)).getAttribute("lang");
 			String type = ( (Element) nodesExtra.item(i)).getAttribute("type");
 			m_extraInfos.addElement(new String[]
-							 {info, type, language});
+									{info, type, language});
 		}
 
 		NodeList nodesInput = elemRoot.getElementsByTagName("input");
@@ -247,7 +268,7 @@ public class XMLPaymentOption implements IXMLEncodable
 					"lang");
 				String ref = ( (Element) nodesInput.item(i)).getAttribute("ref");
 				m_inputFields.addElement(new String[]
-								  {ref, label, lang});
+										 {ref, label, lang});
 			}
 		}
 		catch (Exception e)
@@ -257,12 +278,12 @@ public class XMLPaymentOption implements IXMLEncodable
 
 		try
 		{
-		String imageLink = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, "ImageLink").
-											  getFirstChild(), "0");
-		if (!imageLink.equals("0"))
-		{
-			m_imageLink = imageLink;
-		}
+			String imageLink = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, "ImageLink").
+												  getFirstChild(), "0");
+			if (!imageLink.equals("0"))
+			{
+				m_imageLink = imageLink;
+			}
 		}
 		catch (Exception e)
 		{
@@ -339,12 +360,12 @@ public class XMLPaymentOption implements IXMLEncodable
 
 	public Vector getInputFields()
 	{
-		return (Vector)m_inputFields.clone();
+		return (Vector) m_inputFields.clone();
 	}
 
 	public boolean isGeneric()
 	{
-		return true;
+		return m_generic;
 	}
 
 }

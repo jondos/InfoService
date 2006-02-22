@@ -52,6 +52,9 @@ import gui.dialog.JAPDialog;
 import gui.dialog.WorkerContentPane;
 import jap.JAPController;
 import logging.LogType;
+import gui.JAPJIntField;
+import java.util.Date;
+import gui.GUIUtils;
 
 public class PassivePaymentPane extends DialogContentPane implements IWizardSuitable
 {
@@ -60,6 +63,20 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		getName() + "_enter";
 	private static final String MSG_ERRALLFIELDS = PassivePaymentPane.class.
 		getName() + "_errallfields";
+	private static final String MSG_CARDCOMPANY = PassivePaymentPane.class.
+		getName() + "_cardcompany";
+	private static final String MSG_CARDOWNER = PassivePaymentPane.class.
+		getName() + "_cardowner";
+	private static final String MSG_CARDVALIDITY = PassivePaymentPane.class.
+		getName() + "_cardvalidity";
+	private static final String MSG_CARDNUMBER = PassivePaymentPane.class.
+		getName() + "_cardnumber";
+	private static final String MSG_CARDCHECKNUMBER = PassivePaymentPane.class.
+		getName() + "_cardchecknumber";
+
+	/** Images */
+	public static final String IMG_CREDITCARDSECURITY = PassivePaymentPane.class.
+		getName() + "_creditcardsecurity.gif";
 
 	private Container m_rootPanel;
 	private GridBagConstraints m_c;
@@ -67,6 +84,12 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 	private Vector m_inputFields;
 	private XMLPaymentOption m_selectedOption;
 	private XMLPaymentOptions m_paymentOptions;
+
+	/** Fields for special credit card form */
+	private JComboBox m_cbCompany, m_cbMonth, m_cbYear;
+	private JTextField m_tfCardOwner;
+	private JAPJIntField m_tfCardNumber1, m_tfCardNumber2, m_tfCardNumber3, m_tfCardNumber4,
+		m_tfCardCheckNumber;
 
 	public PassivePaymentPane(JAPDialog a_parentDialog, DialogContentPane a_previousContentPane)
 	{
@@ -166,6 +189,52 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 
 	public XMLPassivePayment getEnteredInfo()
 	{
+		if (m_selectedOption.isGeneric())
+		{
+			return getEnteredGenericInfo();
+		}
+		if (m_selectedOption.getName().equalsIgnoreCase("creditcard"))
+		{
+			return getEnteredCreditCardInfo();
+		}
+
+		return null;
+	}
+
+	/**
+	 * getEnteredCreditCardInfo
+	 *
+	 * @return XMLPassivePayment
+	 */
+	private XMLPassivePayment getEnteredCreditCardInfo()
+	{
+		/** Construct PassivePayment object */
+		XMLTransCert transCert = (XMLTransCert) ( (WorkerContentPane) getPreviousContentPane().
+												 getPreviousContentPane()).
+			getValue();
+		String amount = ( (MethodSelectionPane) getPreviousContentPane().getPreviousContentPane().
+						 getPreviousContentPane()).getAmount();
+		String currency = ( (MethodSelectionPane) getPreviousContentPane().getPreviousContentPane().
+						   getPreviousContentPane()).getSelectedCurrency();
+		XMLPassivePayment pp = new XMLPassivePayment();
+		pp.setTransferNumber(transCert.getTransferNumber());
+		pp.setAmount(Util.parseFloat(amount));
+		pp.setCurrency(currency);
+		pp.setPaymentName(m_selectedOption.getName());
+
+		pp.addData("creditcardtype", (String) m_cbCompany.getSelectedItem());
+		pp.addData("number",
+				   m_tfCardNumber1.getText() + m_tfCardNumber2.getText() + m_tfCardNumber3.getText() +
+				   m_tfCardNumber4.getText());
+		pp.addData("owner", m_tfCardOwner.getText());
+		pp.addData("valid", (String) m_cbMonth.getSelectedItem() + "/" + (String) m_cbYear.getSelectedItem());
+		pp.addData("checknumber", m_tfCardCheckNumber.getText());
+
+		return pp;
+	}
+
+	public XMLPassivePayment getEnteredGenericInfo()
+	{
 		/** Construct PassivePayment object */
 		XMLTransCert transCert = (XMLTransCert) ( (WorkerContentPane) getPreviousContentPane().
 												 getPreviousContentPane()).
@@ -201,18 +270,59 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		CheckError error[] = new CheckError[1];
 		if (m_selectedOption.getType().equals(XMLPaymentOption.OPTION_PASSIVE))
 		{
-			Enumeration e = m_inputFields.elements();
-			while (e.hasMoreElements())
+			if (m_selectedOption.isGeneric())
 			{
-				Component c = (Component) e.nextElement();
-				if (c instanceof JTextField)
+				Enumeration e = m_inputFields.elements();
+				while (e.hasMoreElements())
 				{
-					JTextField tf = (JTextField) c;
-					if (tf.getText() == null || tf.getText().trim().equals(""))
+					Component c = (Component) e.nextElement();
+					if (c instanceof JTextField)
 					{
-						error[0] = new CheckError(JAPMessages.getString(MSG_ERRALLFIELDS), LogType.PAY);
-						return error;
+						JTextField tf = (JTextField) c;
+						if (tf.getText() == null || tf.getText().trim().equals(""))
+						{
+							error[0] = new CheckError(JAPMessages.getString(MSG_ERRALLFIELDS), LogType.PAY);
+							return error;
+						}
 					}
+				}
+			}
+			else
+			{
+				boolean ok = true;
+				if (m_tfCardCheckNumber.getText() == null || m_tfCardCheckNumber.getText().trim().equals(""))
+				{
+					ok = false;
+				}
+				if (m_tfCardNumber1.getText() == null || m_tfCardNumber1.getText().trim().equals(""))
+				{
+					ok = false;
+				}
+				if (m_tfCardNumber2.getText() == null || m_tfCardNumber2.getText().trim().equals(""))
+				{
+					ok = false;
+				}
+				if (m_tfCardNumber3.getText() == null || m_tfCardNumber3.getText().trim().equals(""))
+				{
+					ok = false;
+				}
+				if (m_tfCardNumber4.getText() == null || m_tfCardNumber4.getText().trim().equals(""))
+				{
+					ok = false;
+				}
+				if (m_tfCardOwner.getText() == null || m_tfCardOwner.getText().trim().equals(""))
+				{
+					ok = false;
+				}
+
+				if (!ok)
+				{
+					error[0] = new CheckError(JAPMessages.getString(MSG_ERRALLFIELDS), LogType.PAY);
+					return error;
+				}
+				else
+				{
+					return null;
 				}
 			}
 		}
@@ -240,8 +350,116 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		}
 		else
 		{
-			/** @todo Show special form according to payment type*/
+			if (m_selectedOption.getName().equalsIgnoreCase("creditcard"))
+			{
+				showCreditCardForm();
+			}
+			/** @todo Show special forms for other payment names*/
 		}
+	}
+
+	/**
+	 * showCreditCardForm
+	 */
+	private void showCreditCardForm()
+	{
+		m_rootPanel.removeAll();
+		m_rootPanel = this.getContentPane();
+		m_c = new GridBagConstraints();
+		m_rootPanel.setLayout(new GridBagLayout());
+		m_c = new GridBagConstraints();
+		m_c.gridx = 0;
+		m_c.gridy = 0;
+		m_c.weightx = 0;
+		m_c.weightx = 0;
+		m_c.insets = new Insets(5, 5, 5, 5);
+		m_c.anchor = m_c.NORTHWEST;
+		m_c.fill = m_c.NONE;
+		m_c.gridwidth = 5;
+		JLabel label = new JLabel("<html>" + m_selectedOption.getDetailedInfo(m_language) + "</html>");
+		m_rootPanel.add(label, m_c);
+		m_c.gridwidth = 1;
+		m_c.gridy++;
+
+		String acceptedCards = m_paymentOptions.getAcceptedCreditCards();
+		StringTokenizer st = new StringTokenizer(acceptedCards, ",");
+		m_cbCompany = new JComboBox();
+		while (st.hasMoreTokens())
+		{
+			m_cbCompany.addItem(st.nextToken());
+		}
+		m_rootPanel.add(m_cbCompany, m_c);
+
+		m_c.gridy++;
+		m_rootPanel.add(new JLabel(JAPMessages.getString(MSG_CARDNUMBER)), m_c);
+		m_c.gridx++;
+		m_c.gridwidth = 1;
+		m_tfCardNumber1 = new JAPJIntField(9999);
+		m_rootPanel.add(m_tfCardNumber1, m_c);
+
+		m_c.gridx++;
+		m_c.gridwidth = 1;
+		m_tfCardNumber2 = new JAPJIntField(9999);
+		m_rootPanel.add(m_tfCardNumber2, m_c);
+
+		m_c.gridx++;
+		m_c.gridwidth = 1;
+		m_tfCardNumber3 = new JAPJIntField(9999);
+		m_rootPanel.add(m_tfCardNumber3, m_c);
+
+		m_c.gridx++;
+		m_c.gridwidth = 1;
+		m_tfCardNumber4 = new JAPJIntField(9999);
+		m_rootPanel.add(m_tfCardNumber4, m_c);
+
+		m_c.gridx = 0;
+		m_c.gridy++;
+		m_c.gridwidth = 1;
+		m_rootPanel.add(new JLabel(JAPMessages.getString(MSG_CARDOWNER)), m_c);
+		m_c.gridx++;
+		m_c.gridwidth = 4;
+		m_c.fill = GridBagConstraints.HORIZONTAL;
+		m_tfCardOwner = new JTextField();
+		m_rootPanel.add(m_tfCardOwner, m_c);
+
+		m_c.gridx = 0;
+		m_c.gridy++;
+		m_c.gridwidth = 1;
+		m_c.fill = GridBagConstraints.NONE;
+		m_rootPanel.add(new JLabel(JAPMessages.getString(MSG_CARDVALIDITY)), m_c);
+		m_c.gridx++;
+		m_c.fill = GridBagConstraints.NONE;
+		m_cbMonth = new JComboBox();
+		for (int i = 1; i < 13; i++)
+		{
+			m_cbMonth.addItem(String.valueOf(i));
+		}
+		m_rootPanel.add(m_cbMonth, m_c);
+
+		m_c.gridx = 2;
+		Date date = new Date();
+		int thisYear = date.getYear() + 1900;
+		m_cbYear = new JComboBox();
+		for (int i = 0; i < 21; i++)
+		{
+			m_cbYear.addItem(String.valueOf(thisYear + i));
+		}
+		m_rootPanel.add(m_cbYear, m_c);
+
+		m_c.gridx = 0;
+		m_c.gridy++;
+		m_c.gridwidth = 1;
+		m_c.fill = GridBagConstraints.HORIZONTAL;
+		m_rootPanel.add(new JLabel(JAPMessages.getString(MSG_CARDCHECKNUMBER)), m_c);
+		m_c.gridx++;
+		m_c.gridwidth = 1;
+		m_tfCardCheckNumber = new JAPJIntField(9999);
+		m_rootPanel.add(m_tfCardCheckNumber, m_c);
+
+		m_c.gridx++;
+		m_c.gridwidth = 2;
+		m_rootPanel.add(new JLabel(GUIUtils.loadImageIcon(IMG_CREDITCARDSECURITY, true)), m_c);
+
 	}
 
 }
