@@ -34,10 +34,14 @@ public class AIControlChannel extends SyncControlChannel
 {
 	public static final int CHAN_ID = 2;
 	private static final int EVENT_UNREAL = 1;
+	/** How man milliseconds to wait before requesting a new account statement */
+	private static final long BALANCE_MILLISECONDS = 90000;
 
 	private MuxSocket m_MuxSocket;
 	private boolean m_bFirstBalance;
 	private static long m_totalBytes = 0;
+
+	private long m_lastBalanceUpdate = 0;
 
 	private Vector m_aiListeners = new Vector();
 
@@ -140,6 +144,8 @@ public class AIControlChannel extends SyncControlChannel
 		{
 			try
 			{
+				if(System.currentTimeMillis()-BALANCE_MILLISECONDS > m_lastBalanceUpdate)
+				{
 				// fetch new balance asynchronously
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetching new Balance from BI asynchronously");
 				new Thread(new Runnable()
@@ -157,7 +163,8 @@ public class AIControlChannel extends SyncControlChannel
 						}
 					}
 				}).start();
-
+					m_lastBalanceUpdate = System.currentTimeMillis();
+				}
 				PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
 				if ( (currentAccount == null) || (currentAccount.getAccountNumber() != cc.getAccountNumber()))
 				{

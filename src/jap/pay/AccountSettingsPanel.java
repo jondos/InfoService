@@ -188,8 +188,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		getName() + "_notsentpassive";
 	private static final String MSG_NEWCAPTCHA = AccountSettingsPanel.class.
 		getName() + "_newcaptcha";
-	private static final String MSG_NEWCAPTCHA_EASTER_EGG = AccountSettingsPanel.class.
-		getName() + "_newcaptchaEasterEgg";
 
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
@@ -635,12 +633,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		{
 			XMLBalance balance = accountInfo.getBalance();
 
-			m_labelCreationDate.setText(JAPUtil.formatTimestamp(selectedAccount.getCreationTime(), false));
-			m_labelStatementDate.setText(JAPUtil.formatTimestamp(balance.getTimestamp(), true));
+			m_labelCreationDate.setText(JAPUtil.formatTimestamp(selectedAccount.getCreationTime(), false, JAPController.getInstance().getLocale().getLanguage()));
+			m_labelStatementDate.setText(JAPUtil.formatTimestamp(balance.getTimestamp(), true, JAPController.getInstance().getLocale().getLanguage()));
 			m_labelDeposit.setText(JAPUtil.formatBytesValue(balance.getDeposit()));
 			m_labelSpent.setText(JAPUtil.formatBytesValue(balance.getSpent()));
 			m_labelBalance.setText(JAPUtil.formatBytesValue(balance.getDeposit() - balance.getSpent()));
-			m_labelValid.setText(JAPUtil.formatTimestamp(balance.getValidTime(), true));
+			m_labelValid.setText(JAPUtil.formatTimestamp(balance.getValidTime(), true, JAPController.getInstance().getLocale().getLanguage()));
 
 			long dep = selectedAccount.getDeposit();
 			long spe = selectedAccount.getSpent();
@@ -1022,7 +1020,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 			final CaptchaContentPane captcha = new CaptchaContentPane(d, panel2);
 			captcha.getButtonNo().setText(JAPMessages.getString(MSG_NEWCAPTCHA));
-			captcha.getButtonNo().setToolTipText(JAPMessages.getString(MSG_NEWCAPTCHA_EASTER_EGG));
 
 			PayAccountsFile.getInstance().addPaymentListener(captcha);
 			captcha.addComponentListener(new ComponentAdapter()

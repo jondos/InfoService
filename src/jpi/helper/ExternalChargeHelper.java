@@ -188,7 +188,7 @@ public class ExternalChargeHelper implements Runnable
 							double amount = Double.parseDouble(chargeLine[2]);
 							amount *= 100;
 							double ratePerMB = Configuration.getRatePerMB();
-							amount = 1024 * 1024 * (amount / ratePerMB);
+							amount = 1000 * 1000 * (amount / ratePerMB);
 							DBInterface db = DBSupplier.getDataBase();
 
 							LogHolder.log(LogLevel.INFO, LogType.PAY,
