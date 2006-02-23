@@ -221,14 +221,7 @@ public class XMLPaymentOption implements IXMLEncodable
 
 		m_type = elemRoot.getAttribute("type");
 		m_name = elemRoot.getAttribute("name");
-		if (elemRoot.hasAttribute("generic"))
-		{
-			m_generic = Boolean.valueOf(elemRoot.getAttribute("generic")).booleanValue();
-		}
-		else
-		{
-			m_generic = true;
-		}
+		m_generic = XMLUtil.parseAttribute(elemRoot, "generic", true);
 
 		NodeList nodesHeadings = elemRoot.getElementsByTagName("Heading");
 		for (int i = 0; i < nodesHeadings.getLength(); i++)
