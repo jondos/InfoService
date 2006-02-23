@@ -2734,24 +2734,30 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 */
 	public void updateAccountStatements()
 	{
-		/** Update account statements*/
-		Enumeration accounts = PayAccountsFile.getInstance().getAccounts();
-		while (accounts.hasMoreElements())
+		Runnable doIt = new Runnable()
 		{
-			PayAccount account = (PayAccount) accounts.nextElement();
-			try
+			public void run()
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-							  "Fetching statement for account: " + account.getAccountNumber());
-				account.fetchAccountInfo();
-			}
-			catch (Exception e)
-			{
-				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
-							  "Could not fetch statement for account: " + account.getAccountNumber());
-			}
-		}
+				Enumeration accounts = PayAccountsFile.getInstance().getAccounts();
 
+				while (accounts.hasMoreElements())
+				{
+					PayAccount account = (PayAccount) accounts.nextElement();
+					try
+					{
+						LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+									  "Fetching statement for account: " + account.getAccountNumber());
+						account.fetchAccountInfo();
+					}
+					catch (Exception e)
+					{
+						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+									  "Could not fetch statement for account: " + account.getAccountNumber());
+					}
+				}
+			}
+		};
+		new Thread(doIt).start();
 	}
 
 	public void packetMixed(long a_totalBytes)

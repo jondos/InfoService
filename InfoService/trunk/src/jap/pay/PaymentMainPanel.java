@@ -326,9 +326,7 @@ public class PaymentMainPanel extends FlippingPanel
 			{
 				m_spentThisSession = AIControlChannel.getBytes();
 				Timestamp t = balance.getTimestamp();
-				SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yy HH:mm");
-				String dateText = sdf.format(t);
-				m_lastUpdateLabel.setText(dateText);
+				m_lastUpdateLabel.setText(JAPUtil.formatTimestamp(t, true, JAPController.getInstance().getLocale().getLanguage()));
 				m_BalanceText.setEnabled(true);
 				m_BalanceText.setText(JAPUtil.formatBytesValue(activeAccount.getCertifiedCredit()));
 				m_BalanceTextSmall.setEnabled(true);
@@ -541,5 +539,9 @@ public class PaymentMainPanel extends FlippingPanel
 		m_labelTotalSpentHeader.setText(JAPMessages.getString(MSG_TOTALSPENT));
 		m_labelSessionSpentHeader.setText(JAPMessages.getString(MSG_SESSIONSPENT));
 		m_dateLabel.setText(JAPMessages.getString(MSG_LASTUPDATE));
+		XMLBalance balance = PayAccountsFile.getInstance().getActiveAccount().getBalance();
+		Timestamp t = balance.getTimestamp();
+		m_lastUpdateLabel.setText(JAPUtil.formatTimestamp(t, true, JAPController.getInstance().getLocale().getLanguage()));
+
 	}
 }

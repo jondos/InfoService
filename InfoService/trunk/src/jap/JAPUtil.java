@@ -427,19 +427,36 @@ public final class JAPUtil
 	 */
 	public static String formatTimestamp(Timestamp date, boolean withTime)
 	{
+		return formatTimestamp(date, withTime, null);
+	}
+
+	public static String formatTimestamp(Timestamp date, boolean withTime, String a_language)
+	{
 		SimpleDateFormat sdf;
-		//String str = date.getDate() + "." + (date.getMonth() + 1) + "." + (date.getYear() + 1900);
+		if (a_language.equalsIgnoreCase("en"))
+		{
+			if (withTime)
+			{
+				sdf = new SimpleDateFormat("dd/MM/yy - HH:mm");
+			}
+			else
+			{
+				sdf = new SimpleDateFormat("dd/MM/yy");
+			}
+			return sdf.format(date);
+		}
+		else
+		{
 		if (withTime)
 		{
-//			str += " - " + date.getHours() + ":" + date.getMinutes();
 			sdf = new SimpleDateFormat("dd.MM.yyyy - HH:mm");
 		}
 		else
 		{
 			sdf = new SimpleDateFormat("dd.MM.yyyy");
 		}
-		//return str;
 		return sdf.format(date);
+		}
 	}
 
 	/**

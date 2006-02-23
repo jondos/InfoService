@@ -77,7 +77,7 @@ public class DummyCreditCardHelper implements ICreditCardHelper
 						double ratePerMB = Configuration.getRatePerMB();
 						long cents = Long.parseLong(payment[3]) * 100;
 					double mb = cents / ratePerMB;
-						double amount = 1024 * 1024 * mb;
+						double amount = 1000 * 1000 * mb;
 						LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 									  "Charging account with transfernumber: " + payment[2]
 								  + " Amount: " + (long) amount);

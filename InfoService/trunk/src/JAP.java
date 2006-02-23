@@ -312,6 +312,8 @@ public class JAP extends Frame
 		splash.dispose();
 		// pre-initalize anon service
 		anon.server.AnonServiceImpl.init();
+		//Update account balance
+		m_controller.updateAccountStatements();
 		// initially start services
 		m_controller.initialRun();
 	}
