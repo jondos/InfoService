@@ -855,7 +855,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 			Element mixCascadeNode = (Element) (mixCascadeNodes.item(i));
 			/* check the signature */
 			if (SignatureVerifier.getInstance().verifyXml(mixCascadeNode,
-				SignatureVerifier.DOCUMENT_CLASS_MIX) == true)
+				SignatureVerifier.DOCUMENT_CLASS_MIX))
 			{
 				/* signature is valid */
 				try

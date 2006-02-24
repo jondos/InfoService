@@ -89,7 +89,7 @@ final public class MyDSAPublicKey extends AbstractPublicKey implements DSAPublic
 	{
 		try
 		{
-			MyDSASignature algorithm = new MyDSASignature(); ;
+			MyDSASignature algorithm = new MyDSASignature();
 			algorithm.initVerify(this);
 			return algorithm;
 		}

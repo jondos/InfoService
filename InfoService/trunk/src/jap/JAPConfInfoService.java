@@ -329,8 +329,9 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 								{
 									if (m_bError)
 									{
-										JAPDialog.showErrorDialog(getRootPanel(), JAPMessages.getString("settingsInfoServiceConfigBasicSettingsFetchInfoServicesError"),
-										  LogType.MISC);
+										JAPDialog.showErrorDialog(getRootPanel(),
+											JAPMessages.getString("settingsInfoServiceConfigBasicSettingsFetchInfoServicesError"),
+											LogType.MISC);
 									}
 									settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.
 										setEnabled(true);
@@ -768,6 +769,8 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 						}
 						m_hostLabel.setText(hosts);
 						m_portLabel.setText(ports);
+						m_hostLabel.getRootPane().invalidate();
+						m_hostLabel.getRootPane().revalidate();
 						m_hostLabel.getRootPane().repaint();
 
 						if (selectedInfoService.isUserDefined())
@@ -996,8 +999,8 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 				catch (Exception e)
 				{
 					JAPDialog.showErrorDialog(addInfoServicePanel,
-												  JAPMessages.getString(
-						"settingsInfoServiceConfigBasicSettingsAddInfoServiceAddError"),
+											  JAPMessages.getString(
+												  "settingsInfoServiceConfigBasicSettingsAddInfoServiceAddError"),
 											  LogType.MISC);
 				}
 			}

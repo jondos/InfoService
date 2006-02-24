@@ -27,6 +27,10 @@
  */
 package anon.crypto;
 
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
 /**
  * This class contains all basic signature operations.
  * @author Rolf Wendolsky
@@ -64,12 +68,28 @@ public final class ByteSignature
 	{
 		if (a_publicKey == null)
 		{
+			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+						  "ByteSignature:verify(byte[] message, byte] signature,IMyPublicKey key) key==null!");
 			return false;
 		}
 
 		//synchronized (a_publicKey.getSignatureAlgorithm())
 		{
-			return a_publicKey.getSignatureAlgorithm().verify(a_message, a_signature);
+			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+				"ByteSignature:verify(byte[] message, byte] signature,IMyPublicKey key) try to verify a message...");
+			ISignatureVerificationAlgorithm algorithm = a_publicKey.getSignatureAlgorithm();
+			if (algorithm != null)
+			{
+				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+							  "ByteSignature:verify(byte[] message, byte] signature,IMyPublicKey key) try to verify a message - using algorithm: " +
+							  algorithm.toString());
+			}
+			else
+			{
+				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "ByteSignature:verify(byte[] message, byte] signature,IMyPublicKey key) try to verify a message - unknown algorithm!");
+				return false;
+			}
+			return algorithm.verify(a_message, a_signature);
 		}
 	}
 

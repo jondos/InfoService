@@ -309,11 +309,12 @@
 <property category="runtime.5" name="application.class" value="jap.JAPiPAQ"/>
 <property category="runtime.5" name="jsprunner.launchuri" value="/"/>
 <property category="runtime.5" name="test.harness" value="junit.textui.TestRunner"/>
-<property category="runtime.6" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
-<property category="runtime.6" name="ConfigurationName" value="JAP mit loadPay"/>
+<property category="runtime.6" name="BuildTargetOnRun" value="&lt;None&gt;"/>
+<property category="runtime.6" name="ConfigurationName" value="JAP mit JView"/>
 <property category="runtime.6" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
 <property category="runtime.6" name="application.class" value="JAP"/>
-<property category="runtime.6" name="application.parameters" value="-pay -config h:\jap.conf"/>
+<property category="runtime.6" name="custom.jdk" value="java version 1_1_8_009"/>
+<property category="runtime.6" name="custom.override_jdk" value="1"/>
 <property category="runtime.7" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
 <property category="runtime.7" name="ConfigurationName" value="Mobile"/>
 <property category="runtime.7" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
@@ -358,10 +359,9 @@
 <property category="sys" name="EventMatch" value="false"/>
 <property category="sys" name="EventStyle" value="1"/>
 <property category="sys" name="ExcludeClassEnabled" value="0"/>
-<property category="sys" name="FallThrougs" value="1"/>
 <property category="sys" name="IncludeTestPath" value="1"/>
 <property category="sys" name="InstanceVisibility" value="0"/>
-<property category="sys" name="JDK" value="java version 1.5.0_06-b05"/>
+<property category="sys" name="JDK" value="java 1.1 mit jdk 1.3.1_15 "/>
 <property category="sys" name="LastTag" value="192"/>
 <property category="sys" name="Libraries" value="http;mac;Apache XML-RPC;BouncyCastleLightForJAP;JUnit;junitx;Swing;ApacheBzip2;Log4j;ApacheFTPClient;XML-1.1;XML-1.0"/>
 <property category="sys" name="MakeStable" value="0"/>
@@ -371,7 +371,6 @@
 <property category="sys" name="TestPath" value="test"/>
 <property category="sys" name="Title" value=""/>
 <property category="sys" name="TitleLabel" value="\u00dcberschrift:"/>
-<property category="sys" name="UncheckedGenerics" value="1"/>
 <property category="sys" name="Version" value="1.0"/>
 <property category="sys" name="VersionLabel" value="@version"/>
 <property category="sys" name="WorkingDirectory" value="."/>
