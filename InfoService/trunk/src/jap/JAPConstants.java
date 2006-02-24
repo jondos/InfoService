@@ -289,5 +289,5 @@ public final class JAPConstants
 	public final static String CONFIG_JAP_FORWARDING_SETTINGS = "JapForwardingSettings";
 
 	/** Supported non-generic payment names. Comma-separated list. e.g. "CreditCard,DirectDebit"*/
-	public final static String PAYMENT_NONGENERIC="";
+	public final static String PAYMENT_NONGENERIC="CreditCard";
 }
