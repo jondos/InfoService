@@ -56,6 +56,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import jap.JAPUtil;
+import jap.JAPModel;
 
 /** This dialog shows an overview of transaction numbers for an account
  *
@@ -175,7 +176,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 				BIConnection biConn = new BIConnection(m_account.getBI());
 				try
 				{
-					biConn.connect();
+					biConn.connect(JAPModel.getInstance().getProxyInterface());
 					biConn.authenticate(m_account.getAccountCertificate(), m_account.getSigningInstance());
 					overview = biConn.fetchTransactionOverview(overview);
 				}

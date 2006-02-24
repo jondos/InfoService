@@ -2747,7 +2747,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 									  "Fetching statement for account: " + account.getAccountNumber());
-						account.fetchAccountInfo();
+						account.fetchAccountInfo(JAPModel.getInstance().getProxyInterface());
 					}
 					catch (Exception e)
 					{

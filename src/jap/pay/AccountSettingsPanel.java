@@ -102,6 +102,7 @@ import jap.pay.wizardnew.PaymentInfoPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import jap.JAPModel;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -745,7 +746,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					BIConnection piConn = new BIConnection(pi);
 					LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 								  "Connecting to PI: " + pi.getHostName() + ":" + pi.getPortNumber());
-					piConn.connect();
+					piConn.connect(JAPModel.getInstance().getProxyInterface());
 					piConn.authenticate(PayAccountsFile.getInstance().getActiveAccount().
 										getAccountCertificate(),
 										PayAccountsFile.getInstance().getActiveAccount().
@@ -787,7 +788,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 									  "Fetching Transaction Certificate from Payment Instance");
 
-						m_transCert = selectedAccount.charge();
+						m_transCert = selectedAccount.charge(JAPModel.getInstance().getProxyInterface());
 					}
 					catch (Exception e)
 					{
@@ -856,7 +857,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				BIConnection biConn = new BIConnection(selectedAccount.getBI());
 				try
 				{
-					biConn.connect();
+					biConn.connect(JAPModel.getInstance().getProxyInterface());
 					biConn.authenticate(selectedAccount.getAccountCertificate(),
 										selectedAccount.getSigningInstance());
 					if (!biConn.sendPassivePayment(passivePaymentPane.getEnteredInfo()))
@@ -983,8 +984,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					m_bReady = false;
 					try
 					{
-						PayAccount p = PayAccountsFile.getInstance().createAccount(bi, true);
-						p.fetchAccountInfo();
+						PayAccount p = PayAccountsFile.getInstance().createAccount(bi, true, JAPModel.getInstance().getProxyInterface());
+						p.fetchAccountInfo(JAPModel.getInstance().getProxyInterface());
 					}
 					catch (Exception ex)
 					{
@@ -1168,7 +1169,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			{
 				try
 				{
-					a_selectedAccount.fetchAccountInfo();
+					a_selectedAccount.fetchAccountInfo(JAPModel.getInstance().getProxyInterface());
 					updateAccountList();
 				}
 				catch (Exception e)

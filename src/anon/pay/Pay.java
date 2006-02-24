@@ -30,6 +30,7 @@ package anon.pay;
 import java.util.Enumeration;
 
 import anon.server.impl.MuxSocket;
+import anon.infoservice.ImmutableProxyInterface;
 
 /**
  * This class is the high-level part of the communication with the BI.
@@ -54,13 +55,13 @@ public class Pay
 	 * @param thBI BI
 	 * @param accountsData Element the xml account configuration.
 	 */
-	public Pay(MuxSocket currentMuxSocket)
+	public Pay(MuxSocket currentMuxSocket, ImmutableProxyInterface a_proxy)
 	{
 		m_AccountsFile = PayAccountsFile.getInstance();
 
 		// register AI control channel
 		m_MuxSocket = currentMuxSocket;
-		m_AIControlChannel = new AIControlChannel(m_MuxSocket);
+		m_AIControlChannel = new AIControlChannel(m_MuxSocket, a_proxy);
 		m_MuxSocket.getControlChannelDispatcher().registerControlChannel(m_AIControlChannel);
 	}
 
@@ -81,13 +82,13 @@ public class Pay
 	 * Fetches AccountInfo XML structure for each account in the accountsFile.
 	 * @todo do not connect/disconnect everytime
 	 */
-	public void fetchAccountInfoForAllAccounts() throws Exception
+	public void fetchAccountInfoForAllAccounts(ImmutableProxyInterface a_proxy) throws Exception
 	{
 		Enumeration accounts = m_AccountsFile.getAccounts();
 		while (accounts.hasMoreElements())
 		{
 			PayAccount ac = (PayAccount) accounts.nextElement();
-			ac.fetchAccountInfo();
+			ac.fetchAccountInfo(a_proxy);
 		}
 	}
 }

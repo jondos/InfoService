@@ -142,7 +142,7 @@ final public class AnonServiceImpl implements AnonService, AnonServiceEventListe
 			{
 				return ret;
 			}
-			ret = m_MuxSocket.startService();
+			ret = m_MuxSocket.startService(m_proxyInterface);
 			if (ret != ErrorCodes.E_SUCCESS)
 			{
 				m_MuxSocket.stopService();

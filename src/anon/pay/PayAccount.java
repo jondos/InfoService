@@ -57,6 +57,7 @@ import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.infoservice.ImmutableProxyInterface;
 
 /**
  * This class encapsulates one account and all additional data associated to one
@@ -586,11 +587,11 @@ public class PayAccount implements IXMLEncodable
 	 * @return XMLAccountInfo
 	 * @todo switch SSL on
 	 */
-	public XMLAccountInfo fetchAccountInfo() throws Exception
+	public XMLAccountInfo fetchAccountInfo(ImmutableProxyInterface a_proxy) throws Exception
 	{
 		XMLAccountInfo info;
 		BIConnection biConn = new BIConnection(m_theBI);
-		biConn.connect();
+		biConn.connect(a_proxy);
 		biConn.authenticate(m_accountCertificate, m_signingInstance);
 		info = biConn.getAccountInfo();
 		biConn.disconnect();
@@ -607,10 +608,10 @@ public class PayAccount implements IXMLEncodable
 	 * @return xml transfer certificate
 	 * @throws Exception
 	 */
-	public XMLTransCert charge() throws Exception
+	public XMLTransCert charge(ImmutableProxyInterface a_proxy) throws Exception
 	{
 		BIConnection biConn = new BIConnection(m_theBI);
-		biConn.connect();
+		biConn.connect(a_proxy);
 		biConn.authenticate(m_accountCertificate, m_signingInstance);
 		XMLTransCert transcert = biConn.charge();
 		biConn.disconnect();
