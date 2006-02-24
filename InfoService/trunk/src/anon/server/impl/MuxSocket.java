@@ -1063,6 +1063,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 		m_numSentPackets++;
 		m_outStream.write(m_MixPacketSend);
 		m_outStream.flush();
+		updateBytesForAccounting(); // count bytes for payment
 	}
 
 	public synchronized void send(int channel, int type, byte[] buff, short len_and_flags) throws IOException
@@ -1208,7 +1209,6 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			//Send it...
 			sendMixPacket();
 			firePacketMixed();
-			updateBytesForAccounting(); // count bytes for payment
 			//JAPAnonService.increaseNrOfBytes(len);
 			//if(entry!=null&&entry.bIsSuspended)
 			//	return E_CHANNEL_SUSPENDED;
