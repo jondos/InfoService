@@ -80,6 +80,7 @@ public class Mixminion implements AnonService
 
 	public int setProxy(ImmutableProxyInterface a_Proxy)
 	{
+		m_proxyInterface=a_Proxy;
 		return 0;
 	}
 

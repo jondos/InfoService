@@ -32,12 +32,12 @@ import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.net.Socket;
 
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 import anon.AnonChannel;
 import anon.NotConnectedToMixException;
 import anon.ToManyOpenChannelsException;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 public final class AnonProxyRequest implements Runnable
 {
@@ -86,9 +86,9 @@ public final class AnonProxyRequest implements Runnable
 			{
 				newChannel = m_Proxy.createChannel(AnonChannel.SMTP);
 				m_iProtocol = IProxyListener.PROTOCOL_OTHER;
-				if(newChannel==null)
+				if (newChannel == null)
 				{
-					m_bRequestIsAlive=false;
+					closeRequest();
 					return;
 				}
 			}
@@ -97,20 +97,13 @@ public final class AnonProxyRequest implements Runnable
 				LogHolder.log(LogLevel.ERR, LogType.NET,
 							  "AnonProxyRequest - something was wrong with seting up a new SMTP channel -- Exception: " +
 							  to);
-				m_bRequestIsAlive = false;
+				closeRequest();
 				return;
 			}
 		}
 		catch (Throwable t)
 		{
-			m_bRequestIsAlive = false;
-			try
-			{
-				m_clientSocket.close();
-			}
-			catch (Throwable t1)
-			{
-			}
+			closeRequest();
 			return ;
 		}
 		if (newChannel == null) //no SMTP - maybe HTTP or SOCKS
@@ -150,7 +143,7 @@ public final class AnonProxyRequest implements Runnable
 					LogHolder.log(LogLevel.ERR, LogType.NET, "AnonProxyRequest - Connection to Mix lost");
 					if (!m_Proxy.reconnect())
 					{
-						m_bRequestIsAlive = false;
+						closeRequest();
 						return;
 					}
 				}
@@ -159,19 +152,19 @@ public final class AnonProxyRequest implements Runnable
 					LogHolder.log(LogLevel.ERR, LogType.NET,
 								  "AnonProxyRequest - something was wrong with seting up a new channel Exception: " +
 								  e);
-					m_bRequestIsAlive = false;
+					closeRequest();
 					return;
 				}
 			}
 			if (newChannel == null)
 			{
-				m_bRequestIsAlive = false;
+				closeRequest();
 				return;
 			}
 		}
 		int len = 0;
 		int aktPos = 0;
-		if (firstByte != 0)//only SOCKS and HTTP will read the first byte - but not SMTP!
+		if (firstByte != 0) //only SOCKS and HTTP will read the first byte - but not SMTP!
 		{
 			aktPos = 1;
 		}
@@ -190,7 +183,7 @@ public final class AnonProxyRequest implements Runnable
 		}
 		catch (Throwable t)
 		{
-			m_bRequestIsAlive = false;
+			closeRequest();
 			return;
 		}
 		m_Proxy.incNumChannels();
@@ -222,14 +215,39 @@ public final class AnonProxyRequest implements Runnable
 		catch (Exception e)
 		{
 		}
+		closeRequest();
+		m_Proxy.decNumChannels();
+	}
+
+	private void closeRequest()
+	{
 		m_bRequestIsAlive = false;
 		try
 		{
-			m_Channel.close();
+			if (m_Channel != null)
+			{
+				m_Channel.close();
+			}
 		}
-		catch (Exception e)
+		catch (Throwable t){}
+		try
+		{
+			m_InSocket.close();
+		}
+		catch (Throwable t)
 		{}
-		m_Proxy.decNumChannels();
+		try
+		{
+			m_OutSocket.close();
+		}
+		catch (Throwable t)
+		{}
+		try
+		{
+			m_clientSocket.close();
+		}
+		catch (Throwable t)
+		{}
 	}
 
 	final class Response implements Runnable

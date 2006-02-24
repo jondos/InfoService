@@ -168,7 +168,6 @@ public class MixminionSMTPChannel extends AbstractChannel
 //                //byte[] pl = "Dies ist Stefans Test...".getBytes();
 				//END
                 int hops = Mixminion.getRouteLen();
-                hops = 1;
                 Message m = new Message(eMail.getPayload().getBytes(), eMail.getReceiverAsVektor(), hops);
 
 				boolean success = m.send();
