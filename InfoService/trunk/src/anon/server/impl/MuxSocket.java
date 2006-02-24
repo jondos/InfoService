@@ -763,7 +763,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 		}
 	}
 
-	public int startService()
+	public int startService(ImmutableProxyInterface a_proxy)
 	{
 		synchronized (this)
 		{
@@ -807,7 +807,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 				}
 			}
 			// start Payment (2004-10-20 Bastian Voigt)
-			m_Pay = new Pay(this);
+			m_Pay = new Pay(this, a_proxy);
 			if (m_bPaymentRequired)
 			{
 				m_Pay.getAIControlChannel().sendAccountCert();

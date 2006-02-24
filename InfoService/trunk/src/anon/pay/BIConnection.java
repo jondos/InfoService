@@ -56,6 +56,7 @@ import anon.util.XMLUtil;
 import anon.util.captcha.ICaptchaSender;
 import anon.util.captcha.IImageEncodedCaptcha;
 import anon.util.captcha.ZipBinaryImageCaptchaClient;
+import anon.infoservice.ImmutableProxyInterface;
 
 public class BIConnection implements ICaptchaSender
 {
@@ -70,6 +71,8 @@ public class BIConnection implements ICaptchaSender
 
 	private boolean m_bSendNewCaptcha;
 	private boolean m_bFirstCaptcha = true;
+
+	ImmutableProxyInterface m_proxy = null;
 
 	/**
 	 * Constructor
@@ -87,9 +90,18 @@ public class BIConnection implements ICaptchaSender
 	 *
 	 * @throws Exception Wenn Fehler beim Verbindungsaufbau
 	 */
-	public void connect() throws Exception
+	public void connect(ImmutableProxyInterface a_proxy) throws Exception
 	{
-		TinyTLS tls = new TinyTLS(m_theBI.getHostName(), m_theBI.getPortNumber());
+		TinyTLS tls;
+		m_proxy = a_proxy;
+		if (a_proxy == null)
+		{
+			tls = new TinyTLS(m_theBI.getHostName(), m_theBI.getPortNumber());
+		}
+		else
+		{
+			tls = new TinyTLS(m_theBI.getHostName(), m_theBI.getPortNumber(), a_proxy);
+		}
 		tls.setSoTimeout(30000);
 		tls.setRootKey(m_theBI.getCertificate().getPublicKey());
 		tls.startHandshake();
@@ -203,7 +215,7 @@ public class BIConnection implements ICaptchaSender
 			if (!m_bFirstCaptcha)
 			{
 				this.disconnect();
-				this.connect();
+				this.connect(m_proxy);
 			}
 			// send our public key
 			m_httpClient.writeRequest(

@@ -20,6 +20,7 @@ import anon.server.impl.SyncControlChannel;
 import anon.util.XMLUtil;
 import java.util.Vector;
 import java.util.Enumeration;
+import anon.infoservice.ImmutableProxyInterface;
 
 /**
  * This control channel is used for communication with the AI (AccountingInstance or
@@ -45,11 +46,14 @@ public class AIControlChannel extends SyncControlChannel
 
 	private Vector m_aiListeners = new Vector();
 
-	public AIControlChannel(MuxSocket muxSocket)
+	private ImmutableProxyInterface m_proxy;
+
+	public AIControlChannel(MuxSocket muxSocket, ImmutableProxyInterface a_proxy)
 	{
 		super(CHAN_ID, true);
 		m_MuxSocket = muxSocket;
 		m_bFirstBalance = true;
+		m_proxy = a_proxy;
 	}
 
 	public void addAIListener(Object a_aiListener)
@@ -155,7 +159,7 @@ public class AIControlChannel extends SyncControlChannel
 						PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
 						try
 						{
-							currentAccount.fetchAccountInfo();
+								currentAccount.fetchAccountInfo(m_proxy);
 						}
 						catch (Exception ex)
 						{
@@ -235,7 +239,7 @@ public class AIControlChannel extends SyncControlChannel
 							PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
 							try
 							{
-								currentAccount.fetchAccountInfo();
+								currentAccount.fetchAccountInfo(m_proxy);
 								XMLBalance b = currentAccount.getBalance();
 								AIControlChannel.this.sendXMLMessage(XMLUtil.toXMLDocument(b));
 							}

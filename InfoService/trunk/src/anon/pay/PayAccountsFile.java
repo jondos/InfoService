@@ -49,7 +49,7 @@ import anon.util.captcha.IImageEncodedCaptcha;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-
+import anon.infoservice.ImmutableProxyInterface;
 
 /**
  * This class encapsulates a collection of accounts. One of the accounts in the collection
@@ -504,7 +504,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	 * AI implementation
 	 *
 	 */
-	public PayAccount createAccount(BI a_bi, boolean useDSA) throws Exception
+	public PayAccount createAccount(BI a_bi, boolean useDSA, ImmutableProxyInterface a_proxy) throws Exception
 	{
 		AsymmetricCryptoKeyPair keyPair;
 
@@ -527,7 +527,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 
 		BIConnection biConn = new BIConnection(a_bi);
 		biConn.addConnectionListener(this);
-		biConn.connect();
+		biConn.connect(a_proxy);
 		XMLAccountCertificate cert = biConn.register(xmlKey, signingInstance);
 		biConn.disconnect();
 
