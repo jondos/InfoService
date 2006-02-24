@@ -46,6 +46,9 @@ import anon.util.Base64;
 import anon.util.IXMLEncodable;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * This class stores and creates signatures of XML nodes. The signing and verification processes
@@ -391,6 +394,8 @@ public final class XMLSignature implements IXMLEncodable
 		signature = findXMLSignature(a_node);
 		if (signature == null)
 		{
+			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+						  "XMSignature:verify() Could not find the <Signature> node!");
 			return null;
 		}
 
@@ -398,24 +403,45 @@ public final class XMLSignature implements IXMLEncodable
 		try
 		{
 			// verify the signature against the appended certificates first
+			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+						  "XMSignature:verify() Locking for appended certificates...");
 			certificates = signature.getCertificates();
-			while (certificates!=null&&certificates.hasMoreElements())
+			if (certificates != null)
 			{
-				// get the next appended certificate
-				currentCertificate = (JAPCertificate) certificates.nextElement();
-				/* try to verify this appended certificate against the root certificates */
+				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+							  "XMSignature:verify() Found appended certificates!");
 
-				if (!currentCertificate.verify(a_rootCertificates))
+				while (certificates.hasMoreElements())
 				{
-					/* this certificate cannot be verified; therefore, we do not use it here */
-					continue;
-				}
+					// get the next appended certificate
+					currentCertificate = (JAPCertificate) certificates.nextElement();
+					/* try to verify this appended certificate against the root certificates */
+					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+						"XMSignature:verify() Try to verify appended certificate against root certificate...");
 
-				// check the signature against this certificate if it is not verified yet
-				if (!bVerified && verify(a_node, signature, currentCertificate.getPublicKey()))
-				{
-					// the signature has been verified successfully
-					bVerified = true;
+					if (!currentCertificate.verify(a_rootCertificates))
+					{
+						LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+							"XMSignature:verify() Try to verify appended certificate against root certificate - failed!");
+						/* this certificate cannot be verified; therefore, we do not use it here */
+						continue;
+					}
+					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+						"XMSignature:verify() Try to verify appende certifcate agains root certifcate - success!");
+					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+						"XMSignature:verify() Try to verify signature against appende certifcate...");
+
+					// check the signature against this certificate if it is not verified yet
+					if (verify(a_node, signature, currentCertificate.getPublicKey()))
+					{
+						LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+							"XMSignature:verify() Try to verify signature against appende certifcate -success!");
+						// the signature has been verified successfully
+						bVerified = true;
+						break;
+					}
+					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+						"XMSignature:verify() Try to verify signature against appende certifcate -failed!");
 				}
 			}
 		}
@@ -470,34 +496,34 @@ public final class XMLSignature implements IXMLEncodable
 	public static boolean verifyFast(Node a_node, IMyPublicKey a_publicKey)
 	{
 		try
-			{
-				return verify(a_node,findXMLSignature(a_node),a_publicKey) ;
-			}
-		catch(Throwable t)
+		{
+			return verify(a_node, findXMLSignature(a_node), a_publicKey);
+		}
+		catch (Throwable t)
 		{
 			return false;
 		}
 	}
 
 	/**
-		 * Verifies the signature of an XML node and creates a new XMLSignature from a valid
-		 * signature. This method is not as fast as verify(Node, X509Certificate) as a temporary
-		 * certificate has to be created from the public key. Therefore, it is not recommended.
-		 * @param a_node an XML node
-		 * @param a_publicKey a public key to verify the signature
-		 * @return the XMLSignature of the node; null if the node could not be verified
-		 * @exception XMLParseException if a signature element exists, but the element
-		 *                              has an invalid structure
-		 */
-		public static XMLSignature verify(Node a_node, IMyPublicKey a_publicKey) throws XMLParseException
-		{
-			JAPCertificate certificate;
+	 * Verifies the signature of an XML node and creates a new XMLSignature from a valid
+	 * signature. This method is not as fast as verify(Node, X509Certificate) as a temporary
+	 * certificate has to be created from the public key. Therefore, it is not recommended.
+	 * @param a_node an XML node
+	 * @param a_publicKey a public key to verify the signature
+	 * @return the XMLSignature of the node; null if the node could not be verified
+	 * @exception XMLParseException if a signature element exists, but the element
+	 *                              has an invalid structure
+	 */
+	public static XMLSignature verify(Node a_node, IMyPublicKey a_publicKey) throws XMLParseException
+	{
+		JAPCertificate certificate;
 
-			// transform the public key into a temporary certificate
-			certificate = JAPCertificate.getInstance(a_publicKey, new GregorianCalendar());
+		// transform the public key into a temporary certificate
+		certificate = JAPCertificate.getInstance(a_publicKey, new GregorianCalendar());
 
-			return verify(a_node, certificate);
-		}
+		return verify(a_node, certificate);
+	}
 
 	/**
 	 * Gets the signature from a node if present. The signature is not verified.

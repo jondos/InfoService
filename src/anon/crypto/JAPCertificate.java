@@ -658,6 +658,7 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 	{
 		if (a_verifyingCertificates == null)
 		{
+			LogHolder.log(LogLevel.DEBUG,LogType.CRYPTO,"XMSignature:verify(Vector certificates) certificates==NULL!" );
 			return false;
 		}
 
@@ -665,11 +666,14 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 		while (certificatesEnumerator.hasMoreElements())
 		{
 			JAPCertificate currentCertificate = (JAPCertificate) (certificatesEnumerator.nextElement());
+			LogHolder.log(LogLevel.DEBUG,LogType.CRYPTO,"XMSignature:verify(Vector certificates) try to verfiy against a certificate from given certificates..." );
 
 			if (verify(currentCertificate))
 			{
+				LogHolder.log(LogLevel.DEBUG,LogType.CRYPTO,"XMSignature:verify(Vector certificates) try to verfiy agains a certifcate from given certificates - success!" );
 				return true;
 			}
+			LogHolder.log(LogLevel.DEBUG,LogType.CRYPTO,"XMSignature:verify(Vector certificates) try to verfiy against a certificate from given certificates - failed!" );
 		}
 		return false;
 	}
@@ -685,6 +689,7 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 	{
 		if (a_certificate == null)
 		{
+			LogHolder.log(LogLevel.DEBUG,LogType.CRYPTO,"XMSignature:verify(JAPCertificate certificates) certificate==NULL!" );
 			return false;
 		}
 		return verify(a_certificate.getPublicKey());
@@ -698,14 +703,17 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 	{
 		if (a_publicKey == null)
 		{
+			LogHolder.log(LogLevel.DEBUG,LogType.CRYPTO,"XMSignature:verify(IMyPublicKey key) key==NULL!" );
 			return false;
 		}
 
 		// the cert is verified, too, if the public key is the same as the test key
+		LogHolder.log(LogLevel.DEBUG,LogType.CRYPTO,"XMSignature:verify(IMyPublicKey key) check if keys are equal..." );
 		if (getPublicKey().equals(a_publicKey))
 		{
 			return true;
 		}
+		LogHolder.log(LogLevel.DEBUG,LogType.CRYPTO,"XMSignature:verify(IMyPublicKey key) check if keys are equal - no!" );
 
 		try
 		{
@@ -717,6 +725,8 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 		}
 		catch (IOException a_e)
 		{
+			LogHolder.log(LogLevel.DEBUG,LogType.CRYPTO,"XMSignature:verify(IMyPublicKey key) Exception!");
+			LogHolder.log(LogLevel.DEBUG,LogType.CRYPTO,a_e);
 			// should not happen
 		}
 
