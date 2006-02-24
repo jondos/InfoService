@@ -462,6 +462,7 @@
 <node name="anon.mixminion.mmrdescription" type="Package"/>
 <node name="anon.pay" type="Package"/>
 <node name="anon.pay.xml" type="Package"/>
+<node name="anon.proxy" type="Package"/>
 <node name="anon.server" type="Package"/>
 <node name="anon.server.impl" type="Package"/>
 <node name="anon.tor" type="Package"/>

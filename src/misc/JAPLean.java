@@ -27,35 +27,23 @@
  */
 package misc;
 
-import jap.JAPConstants;
-import jap.JAPDebug;
-import jap.JAPModel;
-import jap.JAPController;
 import java.net.ServerSocket;
 import java.util.Properties;
 
+import anon.ErrorCodes;
+import anon.infoservice.HTTPConnectionFactory;
+import anon.infoservice.InfoServiceHolder;
+import anon.infoservice.MixCascade;
+import anon.proxy.AnonProxy;
+import anon.proxy.IProxyListener;
+import jap.JAPConstants;
+import jap.JAPController;
+import jap.JAPDebug;
+import jap.JAPModel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.proxy.AnonProxy;
-import anon.proxy.IProxyListener;
-import anon.ErrorCodes;
-import anon.infoservice.HTTPConnectionFactory;
-import anon.infoservice.InfoServiceDBEntry;
-import anon.infoservice.InfoServiceHolder;
-import anon.infoservice.ListenerInterface;
-import anon.infoservice.MixCascade;
-import java.net.Socket;
-//import java.net.InetSocketAddress;
-import anon.tor.ordescription.PlainORListFetcher;
-import anon.tor.ordescription.ORList;
-import anon.tor.ordescription.ORDescription;
-import anon.tor.Tor;
-import java.util.Vector;
-import java.io.FileOutputStream;
-import java.io.StringWriter;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+
 //import java.net.SocketTimeoutException;
 
 final class JAPLean implements IProxyListener
@@ -123,7 +111,7 @@ final class JAPLean implements IProxyListener
 
 	public static void main(String[] argv) throws Exception
 	{
-	if (argv == null || argv.length < 3)
+		if (argv == null || argv.length < 3)
 		{
 			System.err.println("Usage: JAPLean <listener_port> <first_mix_address> <first_mix_port>");
 			System.exit(1);
@@ -135,7 +123,7 @@ final class JAPLean implements IProxyListener
 						   portNumberMixCascade + "]");
 		try
 		{
-			new JAPLean((long) 1000 * 365 * 24 * 3600 * 1000);
+			new JAPLean( (long) 1000 * 365 * 24 * 3600 * 1000);
 		}
 		catch (Exception e1)
 		{
@@ -150,7 +138,7 @@ final class JAPLean implements IProxyListener
 	}
 
 	/* Implementation of Interface JAPAnonServiceListener */
-	public void transferedBytes(long bytes,int i)
+	public void transferedBytes(long bytes, int i)
 	{
 		nrOfBytes += bytes;
 	}

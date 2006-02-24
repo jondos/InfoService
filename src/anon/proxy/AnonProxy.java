@@ -43,15 +43,21 @@ import anon.NotConnectedToMixException;
 import anon.ToManyOpenChannelsException;
 import anon.infoservice.ImmutableProxyInterface;
 import anon.infoservice.MixCascade;
+import anon.mixminion.MixminionServiceDescription;
 import anon.server.AnonServiceImpl;
 import anon.server.impl.ProxyConnection;
-import anon.tor.Tor;
 import anon.tor.TorAnonServerDescription;
-import anon.mixminion.Mixminion;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.mixminion.MixminionServiceDescription;
+
+/** This calls implements a proxy one can use for convienient access to the provided anonymous communication primitives.
+ * Below you find an example which creates a proxy which uses the AN.ON mix cascade for anonymous web surfing.
+ * {@code AnonProxy theProxy=new AnonProxy(serverSocket,null);
+ *  theProxy.setMixCascade(new MixCascade(null, null, hostNameOfMixCascade, portNumberOfMixCascade));
+ *  theProxy.start();
+ * }
+ */
 
 final public class AnonProxy implements Runnable, AnonServiceEventListener
 {
@@ -409,13 +415,13 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		m_ProxyListener.channelsChanged(m_numChannels);
 	}
 
-	public synchronized void incNumChannels()
+	protected synchronized void incNumChannels()
 	{
 		m_numChannels++;
 		m_ProxyListener.channelsChanged(m_numChannels);
 	}
 
-	public synchronized void transferredBytes(long bytes, int protocolType)
+	protected synchronized void transferredBytes(long bytes, int protocolType)
 	{
 		m_ProxyListener.transferedBytes(bytes, protocolType);
 	}
