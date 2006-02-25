@@ -102,6 +102,7 @@ public class CaptchaContentPane extends DialogContentPane implements
 		m_tfSolution = new JTextField(20);
 		c.weighty = 1;
 		c.weightx = 1;
+		c.fill=GridBagConstraints.HORIZONTAL;
 		rootPanel.add(m_tfSolution, c);
 	}
 
