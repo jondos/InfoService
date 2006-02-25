@@ -27,18 +27,11 @@
  */
 package anon.crypto;
 
-import java.security.InvalidKeyException;
-import java.security.Key;
-import java.util.Enumeration;
-import java.util.Random;
-import java.util.Vector;
+import java.security.*;
+import java.util.*;
 
-import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
-import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
-import anon.util.ClassUtil;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
+import org.bouncycastle.asn1.pkcs.*;
+import org.bouncycastle.asn1.x509.*;
 
 /**
  * A key pair used for signing and encryption with an asymmetric cryptographic algorithm.
@@ -50,17 +43,17 @@ public class AsymmetricCryptoKeyPair
 	public static final int KEY_LENGTH_1024 = 1024;
 
 	// register the mandatory key classes so that they are compiled; do not remove!
-	private static final MyDSAPrivateKey dsaKey = null;
-	private static final MyRSAPrivateKey rsaKey = null;
+	//private static final MyDSAPrivateKey dsaKey = null;
+	//private static final MyRSAPrivateKey rsaKey = null;
 
 	/**
 	 * Stores all registered private key classes.
 	 */
-	private static Vector ms_privateKeyClasses;
+	//private static Vector ms_privateKeyClasses;
 	/**
 	 * Stores all registered public key classes.
 	 */
-	private static Vector ms_publicKeyClasses;
+	//private static Vector ms_publicKeyClasses;
 
 	private IMyPrivateKey m_privateKey;
 	private IMyPublicKey m_publicKey;
@@ -85,19 +78,28 @@ public class AsymmetricCryptoKeyPair
 	 * @see anon.util.ClassUtil#loadClasses()
 	 * @exception InvalidKeyException if no private key could be created from this key info
 	 */
-	public AsymmetricCryptoKeyPair(PrivateKeyInfo a_keyInfo)
-		throws InvalidKeyException
+	public AsymmetricCryptoKeyPair(PrivateKeyInfo a_keyInfo) throws InvalidKeyException
 	{
 		IMyPrivateKey privateKey;
 
 		try
 		{
-			privateKey =
-				(IMyPrivateKey) createAsymmetricCryptoKey(a_keyInfo, getPrivateKeyClasses());
+			privateKey = new MyDSAPrivateKey(a_keyInfo);
+			//privateKey =
+			//	(IMyPrivateKey) createAsymmetricCryptoKey(a_keyInfo, getPrivateKeyClasses());
 		}
-		catch (ClassCastException a_e)
+		catch (Exception a_e)
 		{
-			throw new InvalidKeyException("The key that was created was no private key!");
+			try
+			{
+				privateKey = new MyRSAPrivateKey(a_keyInfo);
+				//privateKey =
+				//	(IMyPrivateKey) createAsymmetricCryptoKey(a_keyInfo, getPrivateKeyClasses());
+			}
+			catch (Exception a_e1)
+			{
+				throw new InvalidKeyException("The key that was created was no private key!");
+			}
 		}
 
 		m_privateKey = privateKey;
@@ -115,18 +117,25 @@ public class AsymmetricCryptoKeyPair
 	 * @see anon.util.ClassUtil#loadClasses()
 	 * @see anon.crypto.IMyPublicKey
 	 */
-	public static final IMyPublicKey createPublicKey(SubjectPublicKeyInfo a_keyInfo)
-		throws InvalidKeyException
+	public static final IMyPublicKey createPublicKey(SubjectPublicKeyInfo a_keyInfo) throws
+		InvalidKeyException
 	{
 		IMyPublicKey publicKey;
 
 		try
 		{
-			publicKey = (IMyPublicKey) createAsymmetricCryptoKey(a_keyInfo, getPublicKeyClasses());
+			publicKey = new MyDSAPublicKey(a_keyInfo);
 		}
-		catch (ClassCastException a_e)
+		catch (Exception a_e)
 		{
-			throw new InvalidKeyException("The key that was created was no public key!");
+			try
+			{
+				publicKey = new MyRSAPublicKey(a_keyInfo);
+			}
+			catch (Exception a_e1)
+			{
+				throw new InvalidKeyException("The key that was created was no public key!");
+			}
 		}
 
 		return publicKey;
@@ -197,116 +206,75 @@ public class AsymmetricCryptoKeyPair
 		return true;
 	}
 
+	/*	private static Key createAsymmetricCryptoKey(Object a_keyInfo, Enumeration a_keyClasses)
+	  throws InvalidKeyException
+	 {*/
+	/*		Key key = null;
+	  Class keyClass;
+	  Class[] parameterTypes;
+	  Object[] parameters;
 
-	private static Key createAsymmetricCryptoKey(Object a_keyInfo, Enumeration a_keyClasses)
-		throws InvalidKeyException
-	{
-		Key key = null;
-		Class keyClass;
-		Class[] parameterTypes;
-		Object[] parameters;
+	  parameterTypes = new Class[1];
+	  parameters = new Object[1];
+	  parameterTypes[0] = a_keyInfo.getClass();
+	  parameters[0] = a_keyInfo;
 
-		parameterTypes = new Class[1];
-		parameters = new Object[1];
-		parameterTypes[0] = a_keyInfo.getClass();
-		parameters[0] = a_keyInfo;
+	  while (key == null && a_keyClasses.hasMoreElements())
+	  {
+	   keyClass = (Class)a_keyClasses.nextElement();
+	   try
+	   {
+	 key = (Key) keyClass.getConstructor(parameterTypes).newInstance(parameters);
+	   }
+	   catch (Throwable a_e)
+	   {
+	 // this is not the right key for this key info; ignore this error
+	   }
+	  }
+	 */
 
-		while (key == null && a_keyClasses.hasMoreElements())
-		{
-			keyClass = (Class)a_keyClasses.nextElement();
-			try
-			{
-				key = (Key) keyClass.getConstructor(parameterTypes).newInstance(parameters);
-			}
-			catch (Throwable a_e)
-			{
-				// this is not the right key for this key info; ignore this error
-			}
-		}
+	/*		if (key == null)
+	  {
+	   throw new InvalidKeyException("No key available for this key info!");
+	  }
 
-		if (key == null)
-		{
-			throw new InvalidKeyException("No key available for this key info!");
-		}
-
-		return key;
-	}
-
+	  return key;
+	 }
+	 */
 	/**
 	 * Returns all registered private key classes.
 	 * @return all registered private key classes
 	 * @see anon.util.ClassUtil#loadClasses()
 	 * @see anon.crypto.IMyPrivateKey
 	 */
-	private static Enumeration getPrivateKeyClasses()
-	{
-		if (ms_privateKeyClasses == null)
-		{
-			try
-			{
-				ms_privateKeyClasses = ClassUtil.findSubclasses(IMyPrivateKey.class);
-				ms_privateKeyClasses.removeElement(IMyPrivateKey.class);
-			}
-			catch (Throwable a_e)
-			{
-				LogHolder.log(LogLevel.EXCEPTION, LogType.CRYPTO, a_e);
-			}
-			if (ms_privateKeyClasses == null)
-			{
-				ms_privateKeyClasses = new Vector();
-			}
+	/*	private static Enumeration getPrivateKeyClasses()
+	 {
+	  if (ms_privateKeyClasses == null)
+	  {
 
-			if (ms_privateKeyClasses.size() < 2)
-			{
-				LogHolder.log(LogLevel.EXCEPTION, LogType.CRYPTO,
-							  "Private key classes have not been loaded automatically!");
-				// load them manually and prevent double references
-				ms_privateKeyClasses.removeElement(MyDSAPrivateKey.class);
-				ms_privateKeyClasses.removeElement(MyRSAPrivateKey.class);
-				ms_privateKeyClasses.addElement(MyDSAPrivateKey.class);
-				ms_privateKeyClasses.addElement(MyRSAPrivateKey.class);
-			}
-		}
+	   ms_privateKeyClasses = new Vector();
+	   ms_privateKeyClasses.addElement(MyDSAPrivateKey.class);
+	   ms_privateKeyClasses.addElement(MyRSAPrivateKey.class);
+	  }
 
-		return ms_privateKeyClasses.elements();
-	}
-
+	  return ms_privateKeyClasses.elements();
+	 }
+	 */
 	/**
 	 * Returns all registered public key classes.
 	 * @return all registered public key classes
 	 * @see anon.util.ClassUtil#loadClasses()
 	 * @see anon.crypto.IMyPublicKey
 	 */
-	private static Enumeration getPublicKeyClasses()
-	{
-		if (ms_publicKeyClasses == null)
-		{
-			try
-			{
-				ms_publicKeyClasses = ClassUtil.findSubclasses(IMyPublicKey.class);
-				ms_publicKeyClasses.removeElement(IMyPublicKey.class);
-			}
-			catch (Throwable a_e)
-			{
-				LogHolder.log(LogLevel.EXCEPTION, LogType.CRYPTO, a_e);
-			}
-			if (ms_publicKeyClasses == null)
-			{
-				ms_publicKeyClasses = new Vector();
-			}
+	/*	private static Enumeration getPublicKeyClasses()
+	 {
+	  if (ms_publicKeyClasses == null)
+	  {
+	   ms_publicKeyClasses = new Vector();
+	   ms_publicKeyClasses.addElement(MyDSAPublicKey.class);
+	   ms_publicKeyClasses.addElement(MyRSAPublicKey.class);
+	  }
 
-			if (ms_publicKeyClasses.size() < 2)
-			{
-				LogHolder.log(LogLevel.EXCEPTION, LogType.CRYPTO,
-							  "Public key classes have not been loaded automatically!");
-				// load them manually and prevent double references
-				ms_publicKeyClasses.removeElement(MyDSAPublicKey.class);
-				ms_publicKeyClasses.removeElement(MyRSAPublicKey.class);
-				ms_publicKeyClasses.addElement(MyDSAPublicKey.class);
-				ms_publicKeyClasses.addElement(MyRSAPublicKey.class);
-			}
-		}
-
-		return ms_publicKeyClasses.elements();
-	}
+	  return ms_publicKeyClasses.elements();
+	 }*/
 }
