@@ -91,13 +91,10 @@ final public class JAPDll
 	{
 		try
 		{
-			boolean b1 = setWindowIcon_dll(caption);
-			System.out.println("-----------------------setWindowIcon: " + b1);
-			return b1;
+			return setWindowIcon_dll(caption);
 		}
 		catch (Throwable t)
 		{
-			t.printStackTrace();
 			return false;
 		}
 	}

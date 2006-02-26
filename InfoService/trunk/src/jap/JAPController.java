@@ -711,13 +711,20 @@ public final class JAPController extends Observable implements IProxyListener, O
 								JAPConstants.CONFIG_MOVE_TO_SYSTRAY);
 							b = XMLUtil.parseValue(tmp, false);
 							setMoveToSystrayOnStartup(b);
-							if (b)
+							/*if (b)
 							{ ///todo: move to systray
 								if (m_View != null)
 								{
-									m_View.hideWindowInTaskbar();
+									b=m_View.hideWindowInTaskbar();
 								}
 							}
+							if(!b)
+							{
+								m_View.setVisible(true);
+		m_View.toFront();
+
+
+							}*/
 							tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow,
 								JAPConstants.CONFIG_DEFAULT_VIEW);
 							String strDefaultView = XMLUtil.parseValue(tmp, JAPConstants.CONFIG_NORMAL);
