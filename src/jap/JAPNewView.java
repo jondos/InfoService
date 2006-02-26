@@ -178,6 +178,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		this.m_bWithPayment = loadPay;
 		LogHolder.log(LogLevel.INFO, LogType.GUI, "JAPView:initializing...");
 		init();
+		setWindowIcon();
 //			LogHolder.log(LogLevel.DEBUG,LogType.GUI,"JAPView:initialization finished!");
 	}
 
@@ -191,7 +192,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		if (ii != null)
 		{
 			setIconImage(ii.getImage());
-
 			// Load Images for "Anonymity Meter"
 		}
 		loadMeterIcons();
