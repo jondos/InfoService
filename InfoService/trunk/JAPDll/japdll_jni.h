@@ -25,6 +25,14 @@ JNIEXPORT jboolean JNICALL Java_gui_JAPDll_hideWindowInTaskbar_1dll
 
 /*
  * Class:     gui_JAPDll
+ * Method:    setWindowIcon_dll
+ * Signature: (Ljava/lang/String;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_gui_JAPDll_setWindowIcon_1dll
+  (JNIEnv *, jclass, jstring);
+
+/*
+ * Class:     gui_JAPDll
  * Method:    onTraffic_dll
  * Signature: ()V
  */

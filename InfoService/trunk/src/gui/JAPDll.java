@@ -29,6 +29,8 @@ package gui;
 
 import java.awt.Window;
 import java.lang.reflect.Method;
+import jap.JAPController;
+
 final public class JAPDll
 {
 	private static boolean m_sbHasOnTraffic = true;
@@ -51,12 +53,12 @@ final public class JAPDll
 	{
 		try
 		{ //first we try the new setAlwaysOnTop method of Java 1.5
-			Class[] c=new Class[1];
-			c[0]=boolean.class;
-			Method m=Window.class.getMethod("setAlwaysOnTop",c);
-			Object[] args=new Object[1];
-			args[0]=new Boolean(onTop);
-			m.invoke(theWindow,args);
+			Class[] c = new Class[1];
+			c[0] = boolean.class;
+			Method m = Window.class.getMethod("setAlwaysOnTop", c);
+			Object[] args = new Object[1];
+			args[0] = new Boolean(onTop);
+			m.invoke(theWindow, args);
 			return true;
 		}
 		catch (Throwable t)
@@ -81,6 +83,21 @@ final public class JAPDll
 		}
 		catch (Throwable t)
 		{
+			return false;
+		}
+	}
+
+	static public boolean setWindowIcon(String caption)
+	{
+		try
+		{
+			boolean b1 = setWindowIcon_dll(caption);
+			System.out.println("-----------------------setWindowIcon: " + b1);
+			return b1;
+		}
+		catch (Throwable t)
+		{
+			t.printStackTrace();
 			return false;
 		}
 	}
@@ -115,9 +132,18 @@ final public class JAPDll
 		return null;
 	}
 
+	static public long showMainWindow()
+	{
+		JAPController.getView().setVisible(true);
+		JAPController.getView().toFront();
+		return 0;
+	}
+
 	native static private void setWindowOnTop_dll(String caption, boolean onTop);
 
 	native static private boolean hideWindowInTaskbar_dll(String caption);
+
+	native static private boolean setWindowIcon_dll(String caption);
 
 	native static private void onTraffic_dll();
 

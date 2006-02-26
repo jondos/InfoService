@@ -30,7 +30,11 @@ struct t_find_window_by_name
 	
 
 // globales Window Handle --> if !=null --> JAP is minimized
-HWND g_hWnd;
+HWND g_hWnd=NULL;
+
+//globales Handle fuer das Msg Window
+HWND g_hMsgWnd=NULL;
+
 
 // globales Moule Handle
 HINSTANCE hInstance;
@@ -38,22 +42,31 @@ HINSTANCE hInstance;
 //globale Icon Handles...
 HICON g_hiconJAP;
 HICON g_hiconJAPBlink;
+HICON g_hiconWindowSmall;
+HICON g_hiconWindowLarge;
 
 // Variable zur Sicherung der "alten" WndProc
-WNDPROC g_lpPrevWndFunc;
+//WNDPROC g_lpPrevWndFunc;
 
 HANDLE g_hThread; //Handle for the Blinking-Thread
 BOOL g_isBlinking;
 VOID ShowWindowFromTaskbar() ;
 
-
-
-DWORD WINAPI SetOldWndProcThread( LPVOID lpParam ) 
+JavaVM *gjavavm=NULL;
+DWORD WINAPI MsgProcThread( LPVOID lpParam ) 
 	{
-		Sleep(500);
-		SetWindowLongPtr(g_hWnd,GWL_WNDPROC,(LONG_PTR)g_lpPrevWndFunc);
-		g_hWnd=NULL;
-		return 0;
+		g_hMsgWnd=CreateWindow("JAPDllWndClass",NULL,0,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,NULL,NULL,hInstance,NULL);
+		if(g_hMsgWnd==NULL)
+			{
+				return FALSE;
+			}
+		MSG msg;
+		while(GetMessage(&msg,NULL,0,0))
+			{
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
+		return TRUE;
 	}
 
 /*
@@ -68,7 +81,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
  					ShowWindowFromTaskbar();
 				return 0;
 			}  
-    return CallWindowProc(g_lpPrevWndFunc,hwnd, msg, wParam, lParam);
+//  return CallWindowProc(g_lpPrevWndFunc,hwnd, msg, wParam, lParam);
+			return DefWindowProc(hwnd,msg,wParam,lParam);
+	}
+
+
+
+
+BOOL createMsgWindowClass()
+	{
+		WNDCLASSEX wndclass;
+		memset(&wndclass,0,sizeof(WNDCLASSEX));
+		wndclass.cbSize=sizeof(wndclass);
+		wndclass.lpfnWndProc=WndProc;
+		wndclass.cbClsExtra=0;
+		wndclass.cbWndExtra=0;
+		wndclass.hInstance=hInstance;
+		wndclass.hIcon=NULL;
+		wndclass.hbrBackground=(HBRUSH)GetStockObject(WHITE_BRUSH);
+		wndclass.hCursor=LoadCursor(NULL,IDC_ARROW);
+		wndclass.hIconSm=NULL;
+		wndclass.lpszClassName="JAPDllWndClass";
+		wndclass.style=0;
+		return (RegisterClassEx(&wndclass)!=0);
 	}
 
 BOOL APIENTRY DllMain( HINSTANCE hModule, 
@@ -81,14 +116,18 @@ BOOL APIENTRY DllMain( HINSTANCE hModule,
 					hInstance=hModule;
 					g_hThread=NULL;
 					g_hWnd=NULL;
-					g_hiconJAP=(HICON)LoadImage(hInstance,MAKEINTRESOURCE(IDI_JAP),IMAGE_ICON,16,16,LR_DEFAULTCOLOR);
+					g_hMsgWnd=NULL;
+					//g_hiconJAP=(HICON)LoadImage(hInstance,MAKEINTRESOURCE(IDI_JAP),IMAGE_ICON,16,16,LR_DEFAULTCOLOR);
 					g_hiconJAPBlink=(HICON)LoadImage(hInstance,MAKEINTRESOURCE(IDI_JAP_BLINK),IMAGE_ICON,16,16,LR_DEFAULTCOLOR);
-				break;
+					g_hiconWindowSmall=(HICON)LoadImage(hInstance,MAKEINTRESOURCE(IDI_WINDOW),IMAGE_ICON,16,16,LR_DEFAULTCOLOR);
+					g_hiconWindowLarge=(HICON)LoadImage(hInstance,MAKEINTRESOURCE(IDI_WINDOW),IMAGE_ICON,32,32,LR_DEFAULTCOLOR);
+					g_hiconJAP=g_hiconWindowSmall;
+					return createMsgWindowClass();
 				case DLL_THREAD_ATTACH:
 				break;
 				case DLL_THREAD_DETACH:
 				break;
-				case DLL_PROCESS_DETACH:
+				case DLL_PROCESS_DETACH:	
 				break;
 			}
     return TRUE;
@@ -102,27 +141,43 @@ VOID ShowWindowFromTaskbar()
 	{
 		if(g_hWnd==NULL)
 			return;
-		SetWindowPos(g_hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE|SWP_NOMOVE|SWP_SHOWWINDOW);
-		ShowWindow(g_hWnd, SW_SHOWNORMAL);
-
+		SetWindowPos(g_hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE|SWP_NOMOVE/*|SWP_SHOWWINDOW*/);
+		
+		//ShowWindow(g_hWnd, SW_SHOWNORMAL);
+		JNIEnv* env=NULL;
+		if(gjavavm!=NULL)
+			{
+				gjavavm->AttachCurrentThread((void**)&env,NULL);
+				if(env!=NULL)
+					{
+						jclass clazz=env->FindClass("gui/JAPDll");
+						if(clazz!=NULL)
+							{
+								jmethodID mid=env->GetStaticMethodID(clazz,"showMainWindow","()J");
+								if(mid!=NULL)
+									env->CallStaticVoidMethodA(clazz,mid,NULL);
+							}
+					}
+				gjavavm->DetachCurrentThread();
+			}
+		ShowWindow(g_hWnd,SW_SHOWNORMAL);
 		// Icondaten vorbereiten
 		NOTIFYICONDATA nid;
-		nid.hWnd = g_hWnd;
+		nid.hWnd = g_hMsgWnd;
 		nid.cbSize = NOTIFYICONDATA_SIZE;
 		nid.uID = IDI_JAP;
 		nid.uFlags = 0;
 
 		Shell_NotifyIcon(NIM_DELETE, &nid);
-		
-		//Async old WndProc wieder setzen
-		DWORD dwThreadId;
-		CreateThread(NULL, 0, SetOldWndProcThread, NULL, 0, &dwThreadId); 
+		DestroyWindow(g_hMsgWnd);
+		g_hMsgWnd=NULL;
+		g_hWnd=NULL;
 	}
 
 /*
  * Versteckt g_hWnd und erzeugt ein Icon im Taskbar.
  */
-bool HideWindowInTaskbar(HWND hWnd) 
+bool HideWindowInTaskbar(HWND hWnd,JNIEnv * env, jclass clazz)
 {
 	if(hWnd==NULL)
 		return false;
@@ -135,10 +190,20 @@ bool HideWindowInTaskbar(HWND hWnd)
 		}
 	if(g_hWnd!=NULL)
 		return false;
-
+	g_hMsgWnd=NULL;
+	DWORD dwThreadId;
+	CreateThread(NULL, 0, MsgProcThread, NULL, 0, &dwThreadId); 
+	i=10;
+	while(g_hMsgWnd==NULL&&i>0)
+		{
+			Sleep(50);
+			i--;
+		}
+	if(g_hMsgWnd==NULL)
+		return false;
 	// Icondaten vorbereiten
 	NOTIFYICONDATA nid;
-	nid.hWnd = hWnd;
+	nid.hWnd = g_hMsgWnd;//hWnd;
 	nid.cbSize = NOTIFYICONDATA_SIZE;
 	nid.uID = IDI_JAP;
 	nid.uFlags = NIF_MESSAGE | NIF_TIP | NIF_ICON;
@@ -146,33 +211,44 @@ bool HideWindowInTaskbar(HWND hWnd)
 	lstrcpy(nid.szTip, "JAP");
 	nid.hIcon = g_hiconJAP;
 
-	//LoadIcon(hInstance,MAKEINTRESOURCE(IDI_JAP));
-	if(nid.hIcon==NULL)
-		return false;
 	// Window verstecken
-	ShowWindow(hWnd, SW_HIDE);
-
+	env->GetJavaVM(&gjavavm);
+	//jmethodID mid=env->GetStaticMethodID(clazz,"hiddeMainWindow","()J");
+	//if(mid!=NULL)
+	//	env->CallStaticVoidMethodA(clazz,mid,NULL);
+	//else
+	//	ShowWindow(hWnd, SW_HIDE);
 	//Icon im Taskbar setzen
-
 	if(Shell_NotifyIcon(NIM_ADD, &nid)!=TRUE)
 		{
+			DestroyWindow(g_hMsgWnd);
+			g_hMsgWnd=NULL;
 			ShowWindow(hWnd, SW_SHOW);
 			return false;
 		}
-
-	//neu WndProc setzen
-	LONG_PTR tmpPtr=SetWindowLongPtr(hWnd,GWL_WNDPROC,(LONG_PTR)WndProc);
-	if(tmpPtr==NULL)
-		{
-			Shell_NotifyIcon(NIM_DELETE, &nid);
-			ShowWindow(hWnd, SW_SHOW);
-			return false;
-		}
-	//globales Handle und alte Prozedur setzen
-	g_lpPrevWndFunc = (WNDPROC) tmpPtr;
 	g_hWnd=hWnd;
-
 	return true;
+}
+
+/*
+ * Versteckt g_hWnd und erzeugt ein Icon im Taskbar.
+ */
+bool SetWindowIcon(HWND hWnd) 
+{
+	if(hWnd==NULL)
+		return false;
+	return SendMessage( 
+  hWnd,              // handle to destination window 
+  WM_SETICON,               // message to send
+  ICON_BIG,          // icon type
+  (LPARAM)g_hiconWindowLarge           // handle to icon (HICON)
+) &&	SendMessage( 
+  hWnd,              // handle to destination window 
+  WM_SETICON,               // message to send
+  ICON_SMALL,          // icon type
+  (LPARAM)g_hiconWindowSmall           // handle to icon (HICON)
+);
+
 }
 
 /*
@@ -200,7 +276,7 @@ BOOL CALLBACK FindWindowByCaption(HWND hWnd, LPARAM lParam)
 DWORD WINAPI BlinkThread( LPVOID lpParam ) 
 	{ 
 		NOTIFYICONDATA nid;
-		nid.hWnd = g_hWnd;
+		nid.hWnd = g_hMsgWnd;
 		nid.cbSize = NOTIFYICONDATA_SIZE;
 		nid.uID = IDI_JAP;
 		nid.uFlags = NIF_ICON;
@@ -210,17 +286,17 @@ DWORD WINAPI BlinkThread( LPVOID lpParam )
 				nid.hIcon = g_hiconJAPBlink;
 				Shell_NotifyIcon(NIM_MODIFY, &nid);
 				Sleep(BLINK_RATE);
-				if(g_hWnd==NULL)
+				if(g_hMsgWnd==NULL)
 					break;
 				nid.hIcon = g_hiconJAP;
 				Shell_NotifyIcon(NIM_MODIFY, &nid);
 				Sleep(BLINK_RATE);
-				if(g_hWnd==NULL)
+				if(g_hMsgWnd==NULL)
 					break;
 				nid.hIcon = g_hiconJAPBlink;
 				Shell_NotifyIcon(NIM_MODIFY, &nid);
 				Sleep(BLINK_RATE);
-				if(g_hWnd==NULL)
+				if(g_hMsgWnd==NULL)
 					break;
 				nid.hIcon = g_hiconJAP;
 				Shell_NotifyIcon(NIM_MODIFY, &nid);
@@ -239,6 +315,7 @@ VOID OnTraffic()
 			g_hThread = CreateThread(NULL, 0, BlinkThread, NULL, 0, &dwThreadId);                
 		}
 }
+
 
 
 /************************************************************************************
@@ -264,7 +341,7 @@ JNIEXPORT void JNICALL Java_gui_JAPDll_setWindowOnTop_1dll
 }
 
 JNIEXPORT jboolean JNICALL Java_gui_JAPDll_hideWindowInTaskbar_1dll
-  (JNIEnv * env, jclass, jstring s)
+  (JNIEnv * env, jclass javaclass, jstring s)
 {
 	t_find_window_by_name tmp;
 	tmp.name=env->GetStringUTFChars(s, 0);
@@ -272,13 +349,30 @@ JNIEXPORT jboolean JNICALL Java_gui_JAPDll_hideWindowInTaskbar_1dll
 	EnumWindows(&FindWindowByCaption, (LPARAM) &tmp);
 	jboolean ret=true;
 	if (tmp.hWnd!= NULL) 
-		ret=HideWindowInTaskbar(tmp.hWnd);
+		ret=HideWindowInTaskbar(tmp.hWnd,env,javaclass);
 	else
 		ret=false;
 	env->ReleaseStringUTFChars(s,tmp.name);
 	return ret;
 }
 
+
+JNIEXPORT jboolean JNICALL Java_gui_JAPDll_setWindowIcon_1dll (JNIEnv * env, jclass, jstring s)
+{
+	t_find_window_by_name tmp;
+	tmp.name=env->GetStringUTFChars(s, 0);
+  tmp.hWnd=NULL;
+	EnumWindows(&FindWindowByCaption, (LPARAM) &tmp);
+	jboolean ret=true;
+	if (tmp.hWnd!= NULL) 
+	{
+		ret=SetWindowIcon(tmp.hWnd);
+	}
+	else
+		ret=false;
+	env->ReleaseStringUTFChars(s,tmp.name);
+	return ret;
+}
 
 JNIEXPORT void JNICALL Java_gui_JAPDll_onTraffic_1dll
   (JNIEnv *, jclass) 

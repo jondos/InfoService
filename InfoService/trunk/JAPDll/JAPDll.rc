@@ -30,12 +30,13 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 // remains consistent on all systems.
 IDI_JAP                 ICON                    "jap.ico"
 IDI_JAP_BLINK           ICON                    "jap_blink.ico"
+IDI_WINDOW              ICON                    "jap_icon.ico"
 #endif    // Neutral resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// Englisch (USA) resources
+// English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
@@ -68,7 +69,7 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-#endif    // Englisch (USA) resources
+#endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
