@@ -272,6 +272,7 @@ public class JAP extends Frame
 		JAPNewView view = new JAPNewView(JAPConstants.TITLE, m_controller);
 		// Create the main frame
 		view.create(loadPay);
+		//view.setWindowIcon();
 		// Switch Debug Console Parent to MainView
 		JAPDebug.setConsoleParent(view);
 		// Add observer
@@ -287,8 +288,8 @@ public class JAP extends Frame
 		//		java.security.Security.addProvider(new cryptix.jce.provider.CryptixCrypto());
 		// Show main frame and dispose splash screen
 		//view.show();
-		view.setVisible(true);
-		view.toFront();
+		//view.setVisible(true);
+		//view.toFront();
 		boolean bSystray = JAPModel.getMoveToSystrayOnStartup();
 		if (m_arstrCmdnLnArgs != null && !bSystray)
 		{
@@ -303,11 +304,20 @@ public class JAP extends Frame
 		}
 		if (bSystray)
 		{
-			view.hideWindowInTaskbar();
+			if(!view.hideWindowInTaskbar())
+			{
+				view.setVisible(true);
+				view.toFront();
+			}
 		}
 		else if (JAPModel.getMinimizeOnStartup())
 		{
 			view.showIconifiedView();
+		}
+		else
+		{
+			view.setVisible(true);
+			view.toFront();
 		}
 		splash.dispose();
 		// pre-initalize anon service
