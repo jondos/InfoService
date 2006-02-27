@@ -66,9 +66,11 @@ public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 		synchronized (m_runnableValueUpdate) //updateValues may change the Titel of the Window!!
 		{
 			setTitle(Double.toString(Math.random())); //ensure that we have an uinque title
-			boolean b=JAPDll.hideWindowInTaskbar(getTitle());
-			if(b)
+			boolean b = JAPDll.hideWindowInTaskbar(getTitle());
+			if (b)
+			{
 				setVisible(false);
+			}
 			setTitle(m_Title);
 			return b;
 		}
@@ -79,7 +81,7 @@ public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 		synchronized (m_runnableValueUpdate) //updateValues may change the Titel of the Window!!
 		{
 			setTitle(Double.toString(Math.random())); //ensure that we have an uinque title
-			boolean b=JAPDll.setWindowIcon(getTitle());
+			boolean b = JAPDll.setWindowIcon(getTitle());
 			setTitle(m_Title);
 			return b;
 		}
