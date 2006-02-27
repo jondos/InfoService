@@ -175,7 +175,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	public void create(boolean loadPay)
 	{
-		this.m_bWithPayment = loadPay;
+		m_bWithPayment = loadPay;
 		LogHolder.log(LogLevel.INFO, LogType.GUI, "JAPView:initializing...");
 		init();
 		setWindowIcon();

@@ -10,7 +10,7 @@
 	#pragma once
 #endif // _MSC_VER > 1000
 
-#define JAPDLL_VERSION "00.01.006"
+#define JAPDLL_VERSION "00.02.001"
 
 // Fügen Sie hier Ihre Header-Dateien ein
 #include <windows.h>
@@ -119,8 +119,8 @@ BOOL APIENTRY DllMain( HINSTANCE hModule,
 					g_hMsgWnd=NULL;
 					//g_hiconJAP=(HICON)LoadImage(hInstance,MAKEINTRESOURCE(IDI_JAP),IMAGE_ICON,16,16,LR_DEFAULTCOLOR);
 					g_hiconJAPBlink=(HICON)LoadImage(hInstance,MAKEINTRESOURCE(IDI_JAP_BLINK),IMAGE_ICON,16,16,LR_DEFAULTCOLOR);
-					g_hiconWindowSmall=(HICON)LoadImage(hInstance,MAKEINTRESOURCE(IDI_WINDOW),IMAGE_ICON,16,16,LR_DEFAULTCOLOR);
-					g_hiconWindowLarge=(HICON)LoadImage(hInstance,MAKEINTRESOURCE(IDI_WINDOW),IMAGE_ICON,32,32,LR_DEFAULTCOLOR);
+					g_hiconWindowSmall=(HICON)LoadImage(hInstance,MAKEINTRESOURCE(IDI_JAP),IMAGE_ICON,16,16,LR_DEFAULTCOLOR);
+					g_hiconWindowLarge=(HICON)LoadImage(hInstance,MAKEINTRESOURCE(IDI_JAP),IMAGE_ICON,32,32,LR_DEFAULTCOLOR);
 					g_hiconJAP=g_hiconWindowSmall;
 					return createMsgWindowClass();
 				case DLL_THREAD_ATTACH:
@@ -147,7 +147,7 @@ VOID ShowWindowFromTaskbar()
 		JNIEnv* env=NULL;
 		if(gjavavm!=NULL)
 			{
-				gjavavm->AttachCurrentThread((void**)&env,NULL);
+				gjavavm->AttachCurrentThread(&env,NULL);
 				if(env!=NULL)
 					{
 						jclass clazz=env->FindClass("gui/JAPDll");

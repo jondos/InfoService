@@ -47,6 +47,7 @@ import java.awt.Frame;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import gui.JAPDll;
 
 /** This is the main class of the JAP project. It starts everything. It can be inherited by another
  *  class that wants to initialize platform dependend features, e.g. see
@@ -304,7 +305,19 @@ public class JAP extends Frame
 		}
 		if (bSystray)
 		{
-			if(!view.hideWindowInTaskbar())
+			/* The old JAPDll does return false even if hideWindowInTaskbar() succeeded - so we have to do this
+			 * to circumvent the bug...
+			 * @todo Remove if new DLL is deployed
+			 */
+			String s=JAPDll.getDllVersion();
+			boolean bOldDll=false;
+			if(s==null||s.compareTo("00.02.00")<0)
+			{
+				view.setVisible(true);
+				view.toFront();
+				bOldDll=true;
+			}
+			if(!view.hideWindowInTaskbar()&&!bOldDll)
 			{
 				view.setVisible(true);
 				view.toFront();
