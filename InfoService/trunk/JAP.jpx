@@ -152,7 +152,7 @@
 <property category="optimize.0" name="oicc.FilterFile" value="G:\projects\Jap\JAP.oif"/>
 <property category="optimize.0" name="oipr.FilterFile" value="G:\projects\Jap\JAP.oif"/>
 <property category="optimize.0" name="oira.FilterFile" value="G:\projects\Jap\JAP.oif"/>
-<property category="optimize.1" name="OptimizableType" value="intuitive.ide.borland.jb10.ThreadDBootstrap"/>
+<property category="optimize.1" name="OptimizableType" value="intuitive.ide.borland.jb10.ProfilerBootstrap"/>
 <property category="optimize.1" name="oicc.FilterFile" value="G:\projects\Jap\JAP.oif"/>
 <property category="optimize.1" name="oipr.FilterFile" value="G:\projects\Jap\JAP.oif"/>
 <property category="optimize.1" name="oira.FilterFile" value="G:\projects\Jap\JAP.oif"/>
@@ -166,6 +166,7 @@
 <property category="path" name="DefaultDiagram" value="diagrams"/>
 <property category="path" name="Diagram" value="diagrams"/>
 <property category="personality" name="personality" value="com.borland.jbuilder.personality.JBuilderUMLPersonality "/>
+<property category="runtime" name="ConfigurationCount" value="1"/>
 <property category="runtime.0" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
 <property category="runtime.0" name="ConfigurationName" value="JAP"/>
 <property category="runtime.0" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
@@ -192,10 +193,10 @@
 <property category="runtime.0" name="wsimonitor.targethost" value=""/>
 <property category="runtime.0" name="wsimonitor.targetport" value=""/>
 <property category="runtime.1" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
-<property category="runtime.1" name="ConfigurationName" value="JAP (SampleConfiguration)"/>
+<property category="runtime.1" name="ConfigurationName" value="JAP with JMX Monitoring "/>
 <property category="runtime.1" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
 <property category="runtime.1" name="application.class" value="JAP"/>
-<property category="runtime.1" name="application.parameters" value="-config jap.conf"/>
+<property category="runtime.1" name="application.vmparameters" value="-Dcom.sun.management.jmxremote"/>
 <property category="runtime.1" name="custom.init_required" value="0"/>
 <property category="runtime.1" name="custom.required.1" value="http"/>
 <property category="runtime.1" name="custom.required.2" value="mac"/>
@@ -206,8 +207,17 @@
 <property category="runtime.1" name="custom.required.7" value="JUnit"/>
 <property category="runtime.1" name="custom.required.8" value="junitx"/>
 <property category="runtime.1" name="custom.required.9" value="ApacheFTPClient"/>
+<property category="runtime.1" name="enable.tcpmonitor" value="0"/>
+<property category="runtime.1" name="enable.wsimonitor" value="0"/>
 <property category="runtime.1" name="jsprunner.launchuri" value="/"/>
+<property category="runtime.1" name="tcpmonitor.listenport" value=""/>
+<property category="runtime.1" name="tcpmonitor.targethost" value=""/>
+<property category="runtime.1" name="tcpmonitor.targetport" value=""/>
 <property category="runtime.1" name="test.harness" value="junit.textui.TestRunner"/>
+<property category="runtime.1" name="wsimonitor.listenport" value=""/>
+<property category="runtime.1" name="wsimonitor.logfile" value=""/>
+<property category="runtime.1" name="wsimonitor.targethost" value=""/>
+<property category="runtime.1" name="wsimonitor.targetport" value=""/>
 <property category="runtime.10" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
 <property category="runtime.10" name="ConfigurationName" value="TestXMLEncryption"/>
 <property category="runtime.10" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>

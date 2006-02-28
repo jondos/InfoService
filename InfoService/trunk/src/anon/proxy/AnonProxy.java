@@ -108,6 +108,18 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	 */
 	private int m_maxDummyTrafficInterval;
 
+	/**
+	 * Creates a new AnonProxy. This proxy uses as default only the AN.ON service. If you also want to use TOR and Mixminion you have
+	 * to enable them by calling setTorParams() and setMixmininoParams().
+	 *
+	 * @see setTorParams()
+	 * @see setMixminionParams()
+	 *
+	 * @param a_listener A ServerSocket, where the AnonProxy listens for new requests (e.g. from a
+	 *                   web browser).
+	 * @param a_proxyInterface  describes a proxy the AnonProxy should use to establish connections to the anon servers (e.g. if
+	 * you are behind some firewall etc.)
+	 */
 	public AnonProxy(ServerSocket listener, ImmutableProxyInterface a_proxyInterface)
 	{
 		m_socketListener = listener;
@@ -117,6 +129,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		m_Anon.setProxy(a_proxyInterface);
 		setDummyTraffic( -1);
 		m_forwardedConnection = false;
+		m_bAutoReconnect = false;
 		m_anonServiceListener = new Vector();
 		m_Anon.addEventListener(this);
 		//SOCKS\uFFFD
@@ -162,9 +175,10 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	}
 
 	/**
-	 * Sets the parameter for Tor. If null TOR proxy is disabled.
+	 * Sets the parameter for TOR (anonymous SOCKS). If NULL TOR proxy is disabled.
 	 *
-	 * @param newMixCascade The new MixCascade we are connected to.
+	 * @param newTorParams The new parameters for TOR.
+	 * @see TorAnonServerDescription
 	 */
 	public void setTorParams(TorAnonServerDescription newTorParams)
 	{
@@ -172,9 +186,10 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	}
 
 	/**
-	 * Sets the parameter for Tor. If null TOR proxy is disabled.
+	 * Sets the parameter for Mixminion (anonymous remailer). If NULL Mixminion proxy is disabled.
 	 *
-	 * @param newMixCascade The new MixCascade we are connected to.
+	 * @param newMixminionParams The new parameters for Mixminion. If NULL the Mixminion proxy is disabled.
+	 * @see MixminionServiceDescription
 	 */
 	public void setMixminionParams(MixminionServiceDescription newMixminionParams)
 	{
