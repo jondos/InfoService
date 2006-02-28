@@ -1,11 +1,5 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-<html>
-<head></head>
+package misc;
 
-<body bgcolor="white">This package implements a proxy for convienient use of the anonymous communication primitives provided by the ANON library.
-
-Example usage:
-<pre>
 import java.net.ServerSocket;
 import anon.proxy.AnonProxy;
 import anon.infoservice.MixCascade;
@@ -31,7 +25,7 @@ public class AnonProxyTest
 
 			//we need to disbale certificate checks (better: set valid root certifcates for productive environments!)
 			SignatureVerifier.getInstance().setCheckSignatures(false);
-			
+
 			theProxy.setMixCascade(new MixCascade(null, null, "mix.inf.tu-dresden.de", 6544));
 			theProxy.start();
 		}
@@ -41,6 +35,3 @@ public class AnonProxyTest
 		}
 	}
 }
-}
-</pre></body>
-</html>
