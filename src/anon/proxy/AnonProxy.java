@@ -424,21 +424,30 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		m_ProxyListener = l;
 	}
 
-	public synchronized void decNumChannels()
+	protected synchronized void decNumChannels()
 	{
 		m_numChannels--;
-		m_ProxyListener.channelsChanged(m_numChannels);
+		if (m_ProxyListener != null)
+		{
+			m_ProxyListener.channelsChanged(m_numChannels);
+		}
 	}
 
 	protected synchronized void incNumChannels()
 	{
 		m_numChannels++;
-		m_ProxyListener.channelsChanged(m_numChannels);
+		if (m_ProxyListener != null)
+		{
+			m_ProxyListener.channelsChanged(m_numChannels);
+		}
 	}
 
 	protected synchronized void transferredBytes(long bytes, int protocolType)
 	{
-		m_ProxyListener.transferedBytes(bytes, protocolType);
+		if (m_ProxyListener != null)
+		{
+			m_ProxyListener.transferedBytes(bytes, protocolType);
+		}
 	}
 
 	private void fireConnectionError()
