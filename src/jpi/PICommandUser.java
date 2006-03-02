@@ -466,10 +466,7 @@ public class PICommandUser implements PICommand
 	private IXMLEncodable getCreationChallengeXML() throws Exception
 	{
 		XMLChallenge xmlChallenge = (XMLChallenge) getChallengeXML();
-		XMLCaptcha captcha = new XMLCaptcha(xmlChallenge.toXmlElement(XMLUtil.createDocument()).
-											toString().getBytes(),
-											CAPTCHA_KEY_BITS, EXTRA_KEY_BITS
-			);
+		XMLCaptcha captcha = new XMLCaptcha(xmlChallenge.getChallengeForSigning(), CAPTCHA_KEY_BITS, EXTRA_KEY_BITS);
 		return captcha;
 	}
 

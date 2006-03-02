@@ -102,7 +102,6 @@ public class CaptchaContentPane extends DialogContentPane implements
 		m_tfSolution = new JTextField(20);
 		c.weighty = 1;
 		c.weightx = 1;
-		c.fill=GridBagConstraints.HORIZONTAL;
 		rootPanel.add(m_tfSolution, c);
 	}
 
@@ -186,7 +185,7 @@ public class CaptchaContentPane extends DialogContentPane implements
 	public void gotCaptcha(ICaptchaSender a_source, IImageEncodedCaptcha a_captcha)
 	{
 		getPreviousContentPane().getButtonCancel().setEnabled(true);
-		setCaptcha(a_captcha, "<Cha");
+		setCaptcha(a_captcha, "<Don");
 		m_captchaSource = a_source;
 		SwingUtilities.invokeLater(new Runnable()
 		{

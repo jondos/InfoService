@@ -47,6 +47,11 @@ public class DummyCreditCardHelper implements ICreditCardHelper
 	private static DummyCreditCardHelper ms_instance;
 	private Vector m_listeners;
 
+	/** This string must be included (non-case-sensitive) in the payment option's
+	 *  name to be supported by this helper class.
+	 */
+	private static final String CREDITCARD = "creditcard";
+
 	private DummyCreditCardHelper()
 	{
 		m_listeners = new Vector();
@@ -72,7 +77,7 @@ public class DummyCreditCardHelper implements ICreditCardHelper
 				for (int i = 0; i < payments.size(); i++)
 				{
 					String[] payment = (String[]) payments.elementAt(i);
-					if (payment[1].equalsIgnoreCase("CreditCard"))
+				if (payment[1].toLowerCase().indexOf(CREDITCARD) != -1)
 					{
 						double ratePerMB = Configuration.getRatePerMB();
 						long cents = Long.parseLong(payment[3]) * 100;

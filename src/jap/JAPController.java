@@ -445,7 +445,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 *  @param a_strJapConfFile - file containing the Configuration. If null $(user.home)/jap.conf or ./jap.conf is used.
 	 *  @param loadPay does this JAP support Payment ?
 	 */
-	public synchronized void loadConfigFile(String a_strJapConfFile, boolean loadPay)
+	public synchronized void loadConfigFile(String a_strJapConfFile, boolean loadPay, JAPSplash a_splash)
 	{
 		String japConfFile = a_strJapConfFile;
 		boolean success = false;
@@ -845,7 +845,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							JAPConstants.CONFIG_PAYMENT);
 
 						Element elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay,
-							JAPConstants.CONFIG_ENCRYPTED_DATA);
+							JAPConstants.CONFIG_PAY_ACCOUNTS_FILE);
 
 						//Load known Payment instances
 						Node nodePIs = XMLUtil.getFirstChildByName(elemPay,
@@ -859,14 +859,33 @@ public final class JAPController extends Observable implements IProxyListener, O
 								nodePI = nodePI.getNextSibling();
 							}
 						}
-						// test: is account data encrypted?
-						if (elemAccounts != null)
-						{
-							// it is encrypted -> ask user for password
-							Element elemPlainTxt = null;
 
-							while (true)
+						PayAccountsFile.init(elemAccounts);
+						Vector encrypted = PayAccountsFile.getInstance().getEncryptedAccounts();
+
+						a_splash.dispose();
+
+						for (int j = 0; j < encrypted.size(); j++)
+						{
+							boolean decrypted = false;
+							Element elemAccount = (Element) encrypted.elementAt(j);
+							Node elemAccountCert = XMLUtil.getFirstChildByName(elemAccount,
+								"AccountCertificate");
+							Node elemAccountNr = XMLUtil.getFirstChildByName(elemAccountCert, "AccountNumber");
+							long accNr = Long.parseLong(XMLUtil.parseValue(elemAccountNr, "-1"));
+
+							while (!decrypted)
 							{
+								if (getPaymentPassword() != null)
+								{
+									LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Decrypting account " + accNr);
+
+									if (PayAccountsFile.getInstance().decryptAccount(accNr,
+										getPaymentPassword()))
+							{
+										break;
+									}
+								}
 								JAPDialog d = new JAPDialog( (Component)null,
 									JAPMessages.getString(MSG_ACCPASSWORDENTERTITLE), true);
 								PasswordContentPane p = new PasswordContentPane(d,
@@ -882,50 +901,19 @@ public final class JAPController extends Observable implements IProxyListener, O
 										JAPMessages.getString(MSG_LOSEACCOUNTDATA));
 									if (yes)
 									{
-										break;
-									}
-									else
-									{
-										continue;
+										decrypted = true;
 									}
 								}
-
 								setPaymentPassword(new String(p.getPassword()));
+								LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Decrypting account " + accNr);
 
-								if (getPaymentPassword() != null && !getPaymentPassword().trim().equals(""))
-								{
-									try
+								if (PayAccountsFile.getInstance().decryptAccount(accNr,
+									getPaymentPassword()))
 									{
-										elemPlainTxt = XMLEncryption.decryptElement(elemAccounts,
-											getPaymentPassword());
-									}
-									catch (Exception ex)
-									{
-										continue;
-									}
-									break ;
+									decrypted = true;
 								}
-
 							}
 
-							if (getPaymentPassword() != null)
-							{
-								PayAccountsFile.init(elemPlainTxt);
-							}
-						}
-						else
-						{
-							// accounts data is not encrypted
-							elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay,
-								JAPConstants.CONFIG_PAY_ACCOUNTS_FILE);
-							if (elemAccounts != null)
-							{
-								PayAccountsFile.init(elemAccounts);
-							}
-							else
-							{
-								PayAccountsFile.init(null);
-							}
 						}
 					}
 				}
@@ -1210,14 +1198,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 					if (PayAccountsFile.getInstance().getNumAccounts() > 0)
 					{
-						Element elemAccounts = accounts.toXmlElement(doc);
+						Element elemAccounts = accounts.toXmlElement(doc, getPaymentPassword());
 						elemPayment.appendChild(elemAccounts);
-
-						if (getPaymentPassword() != null && !getPaymentPassword().equals(""))
-						{
-							// encrypt XML
-							XMLEncryption.encryptElement(elemAccounts, getPaymentPassword());
-						}
 					}
 				}
 			}

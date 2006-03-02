@@ -66,13 +66,7 @@ public class DataBase extends DBInterface
 		{
 		"TABLE ACCOUNTS", "TABLE COSTCONFIRMATIONS",
 		"TABLE TRANSFERS",
-		"TABLE RATES", "SEQUENCE RATES_ID_SEQ",
-		"SEQUENCE ACCOUNTS_ACCOUNTNUMBER_SEQ",
-		"SEQUENCE TRANSFERS_TRANSFERNUMBER_SEQ",
-		"SEQUENCE TRANSFERS_ACCOUNTNUMBER_SEQ",
-//		"SEQUENCE CASCADES_ACCOUNTNUMBER_SEQ",
-//		"SEQUENCE CASCADES_CASCADENUMBER_SEQ",
-//		"SEQUENCE CASCADENAMES_CASCADENUMBER_SEQ"
+		"TABLE PASSIVEPAYMENT"
 	};
 
 	// sql statements for creating the DB tables
@@ -119,14 +113,14 @@ public class DataBase extends DBInterface
 		"CURRENCY VARCHAR(10)," +
 		"DATA VARCHAR(2000)," +
 		"CHARGED BOOLEAN, " +
-		"TYPE VARCHAR(30))",
+		"TYPE VARCHAR(30));"
 
-		"CREATE TABLE RATES (" +
+		/*"CREATE TABLE RATES (" +
 		"ID SERIAL PRIMARY KEY," +
 		"NAME VARCHAR(32)," +
 		"AMOUNT NUMERIC, FIXED_AMOUNT BOOLEAN," +
 		"MBYTES INTEGER," +
-		"VALID_DAYS INTEGER, VALID_MONTHS INTEGER);"
+		"VALID_DAYS INTEGER, VALID_MONTHS INTEGER);"*/
 	};
 
 	// Documentation see DBInterface / wird hoffentlich nicht mehr gebraucht /
@@ -277,11 +271,11 @@ public class DataBase extends DBInterface
 								 new java.sql.Timestamp(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 60) +
 								 "'");
 
-					// delete old accounts that have not been used for
+					/*// delete old accounts that have not been used for
 					// more than half a year.
 					stmt.execute("DELETE FROM ACCOUNTS WHERE DEPOSITVALIDTIME < '" +
 								 new java.sql.Timestamp(System.currentTimeMillis() -
-						1000 * 60 * 60 * 24 * 150) + "'");
+						1000 * 60 * 60 * 24 * 150) + "'");*/
 
 					// routine maintenance commands for postgresql
 					stmt.execute("VACUUM"); // free unused diskspace
@@ -731,7 +725,7 @@ public class DataBase extends DBInterface
 				stmt = m_dbConn.createStatement();
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 							  "Dropping old Database " + db_tables[i]);
-				stmt.executeUpdate("DROP " + db_tables[i]);
+				stmt.executeUpdate("DROP " + db_tables[i] + " CASCADE");
 			}
 			catch (Exception e)
 			{

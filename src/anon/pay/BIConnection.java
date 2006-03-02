@@ -57,6 +57,10 @@ import anon.util.captcha.ICaptchaSender;
 import anon.util.captcha.IImageEncodedCaptcha;
 import anon.util.captcha.ZipBinaryImageCaptchaClient;
 import anon.infoservice.ImmutableProxyInterface;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+import org.w3c.dom.Element;
 
 public class BIConnection implements ICaptchaSender
 {
@@ -237,7 +241,17 @@ public class BIConnection implements ICaptchaSender
 			String challengeString = new String(m_captchaSolution);
 			int pos = challengeString.lastIndexOf(">");
 			challengeString = challengeString.substring(0, pos + 1);
-			Document challengeDoc = XMLUtil.toXMLDocument(challengeString);
+			int pos1 = challengeString.indexOf(">") + 1;
+			int pos2 = challengeString.lastIndexOf("<");
+			challengeString = challengeString.substring(pos1, pos2);
+
+			Document challengeDoc = XMLUtil.createDocument();
+			Element elemChallenge = challengeDoc.createElement("Challenge");
+			challengeDoc.appendChild(elemChallenge);
+			Element elem = challengeDoc.createElement("DontPanic");
+			XMLUtil.setValue(elem, challengeString);
+			elemChallenge.appendChild(elem);
+
 			XMLChallenge xmlchallenge = new XMLChallenge(challengeDoc);
 
 			// perform challenge-response authentication
@@ -303,7 +317,9 @@ public class BIConnection implements ICaptchaSender
 	 * @param a_passivePayment XMLPassivePayment
 	 * @throws Exception
 	 */
-	public boolean sendPassivePayment(XMLPassivePayment a_passivePayment) throws Exception
+	public boolean sendPassivePayment(XMLPassivePayment a_passivePayment)
+	{
+		try
 	{
 		m_httpClient.writeRequest("POST", "passivepayment",
 								  XMLUtil.toString(a_passivePayment.toXmlElement(XMLUtil.createDocument()
@@ -312,10 +328,17 @@ public class BIConnection implements ICaptchaSender
 		XMLErrorMessage err = new XMLErrorMessage(doc.getDocumentElement());
 		if (err.getErrorCode() == XMLErrorMessage.ERR_OK)
 		{
-			return true;
+return true;
 		}
 		else
 		{
+				return false;
+			}
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+								  "Could not send PassivePayment to payment instance: " + e);
 			return false;
 		}
 	}
