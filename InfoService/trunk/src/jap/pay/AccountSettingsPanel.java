@@ -868,6 +868,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				}
 				catch (Exception e)
 				{
+					m_successful = new Boolean(false);
 					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
 								  "Could not send PassivePayment to payment instance: " + e.getMessage());
 				}

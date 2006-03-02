@@ -58,6 +58,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.infoservice.ImmutableProxyInterface;
+import anon.crypto.XMLEncryption;
 
 /**
  * This class encapsulates one account and all additional data associated to one
@@ -262,6 +263,15 @@ public class PayAccount implements IXMLEncodable
 	 */
 	public Element toXmlElement(Document a_doc)
 	{
+		return this.toXmlElement(a_doc, null);
+	}
+
+	public Element toXmlElement(Document a_doc, String a_password)
+	{
+		if (a_password != null && a_password.trim().equals(""))
+		{
+			return this.toXmlElement(a_doc, null);
+		}
 		Element elemRoot = a_doc.createElement("Account");
 		elemRoot.setAttribute("version", "1.0");
 		Element elemTmp;
@@ -273,6 +283,19 @@ public class PayAccount implements IXMLEncodable
 		// import Private Key XML Representation
 		elemTmp = m_privateKey.toXmlElement(a_doc);
 		elemRoot.appendChild(elemTmp);
+
+		//Encrypt account key if password is given
+		if (a_password != null)
+		{
+			try
+			{
+				XMLEncryption.encryptElement(elemTmp, a_password);
+			}
+			catch (Exception e)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Could not encrypt account key: " + e);
+			}
+		}
 
 		// add transfer certificates
 		Element elemTransCerts = a_doc.createElement("TransferCertificates");
@@ -294,6 +317,7 @@ public class PayAccount implements IXMLEncodable
 		}
 
 		return elemRoot;
+
 	}
 
 	public void addTransCert(XMLTransCert cert) throws Exception
@@ -331,9 +355,9 @@ public class PayAccount implements IXMLEncodable
 			{
 				XMLEasyCC myCC = (XMLEasyCC) en.nextElement();
 				XMLEasyCC newCC = info.getCC(myCC.getAIName());
-				if ( (newCC != null) && (newCC.getTransferredBytes()>myCC.getTransferredBytes()) )
+				if ( (newCC != null) && (newCC.getTransferredBytes() > myCC.getTransferredBytes()))
 				{
-					if(newCC.verify(m_accountCertificate.getPublicKey()))
+					if (newCC.verify(m_accountCertificate.getPublicKey()))
 					{
 						addCostConfirmation(newCC);
 						fire = false; // the event is fired by ^^
@@ -345,7 +369,7 @@ public class PayAccount implements IXMLEncodable
 				}
 			}
 		}
-		if(fire==true)
+		if (fire == true)
 		{
 			fireChangeEvent();
 		}
@@ -358,7 +382,7 @@ public class PayAccount implements IXMLEncodable
 	 */
 	private JAPSignature getVerifyingInstance() throws Exception
 	{
-		if(m_verifyingInstance==null)
+		if (m_verifyingInstance == null)
 		{
 			m_verifyingInstance = new JAPSignature();
 			m_verifyingInstance.initVerify(m_accountCertificate.getPublicKey());
@@ -570,7 +594,7 @@ public class PayAccount implements IXMLEncodable
 	 */
 	public XMLBalance getBalance()
 	{
-		if (m_accountInfo == null )
+		if (m_accountInfo == null)
 		{
 			return null;
 		}

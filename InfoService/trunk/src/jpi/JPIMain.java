@@ -35,9 +35,10 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import logging.SystemErrLog;
-import jpi.helper.ICreditCardHelper;
 import java.util.Properties;
 import jpi.helper.ExternalChargeHelper;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 public class JPIMain
 {
@@ -125,9 +126,24 @@ public class JPIMain
 
 			if (newdb)
 			{ // drop and recreate all tables
+				String input = "";
+				System.out.print("This will drop ALL existing data! Continue? (y/n): ");
+				try
+				{
+					BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+					input = in.readLine();
+				}
+				catch (Exception e)
+				{
+					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Error while reading from keyboard.");
+
+				}
+				if (input.equalsIgnoreCase("y"))
+				{
 				LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Recreating database tables...");
 				DBSupplier.getDataBase().dropTables();
 				DBSupplier.getDataBase().createTables();
+			}
 			}
 
 			// launch database maintenance thread
@@ -184,7 +200,8 @@ public class JPIMain
 
 		// start ExternalChargeHelper thread for charge request acceptance
 		LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching ExternalChargeHelper thread");
-		ExternalChargeHelper external = new ExternalChargeHelper(Integer.parseInt(Configuration.getExternalChargePort()));
+		ExternalChargeHelper external = new ExternalChargeHelper(Integer.parseInt(Configuration.
+			getExternalChargePort()));
 		Thread externalThread = new Thread(external);
 		externalThread.start();
 

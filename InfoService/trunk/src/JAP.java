@@ -252,7 +252,7 @@ public class JAP extends Frame
 		}
 		JAPModel.getInstance().setForwardingStateModuleVisible(forwardingStateVisible);
 		// load settings from config file
-		m_controller.loadConfigFile(configFileName, loadPay);
+		m_controller.loadConfigFile(configFileName, loadPay, splash);
 		// Output some information about the system
 		LogHolder.log(
 			LogLevel.INFO,
