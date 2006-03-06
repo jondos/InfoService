@@ -39,11 +39,13 @@ import java.util.Properties;
 import jpi.helper.ExternalChargeHelper;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import anon.util.TimedOutputStream;
 
 public class JPIMain
 {
 	public static void main(String argv[])
 	{
+		TimedOutputStream.init();
 		try
 		{
 			/* for running in non-graphic environments, we need the awt headless support, it is only
