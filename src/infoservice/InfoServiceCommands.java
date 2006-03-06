@@ -128,10 +128,10 @@ public class InfoServiceCommands implements JWSInternalCommands
 			}
 			/*			else
 			   {
-				LogHolder.log(LogLevel.WARNING, LogType.NET,
-					 "Signature check failed for infoservice entry! XML: " + (new String(a_postData)));
-				httpResponse = new HttpResponseStructure(HttpResponseStructure.
-				 HTTP_RETURN_INTERNAL_SERVER_ERROR);
+			 LogHolder.log(LogLevel.WARNING, LogType.NET,
+			   "Signature check failed for infoservice entry! XML: " + (new String(a_postData)));
+			 httpResponse = new HttpResponseStructure(HttpResponseStructure.
+			  HTTP_RETURN_INTERNAL_SERVER_ERROR);
 			   }*/
 		}
 		catch (Exception e)
@@ -192,7 +192,7 @@ public class InfoServiceCommands implements JWSInternalCommands
 			Enumeration en = Database.getInstance(PaymentInstanceDBEntry.class).getEntrySnapshotAsEnumeration();
 			while (en.hasMoreElements())
 			{
-				PaymentInstanceDBEntry entry = (PaymentInstanceDBEntry)en.nextElement();
+				PaymentInstanceDBEntry entry = (PaymentInstanceDBEntry) en.nextElement();
 				if (entry.getId().equals(a_piID))
 				{
 					Document doc = XMLUtil.createDocument();
@@ -344,6 +344,8 @@ public class InfoServiceCommands implements JWSInternalCommands
 			{
 				MixInfo mixEntry = new MixInfo(mixNode);
 				Database.getInstance(MixInfo.class).update(mixEntry);
+				//extract possible last proxy addresses
+				VisibleProxyAddresses.addAddresses(mixNode);
 			}
 			else
 			{
@@ -814,36 +816,36 @@ public class InfoServiceCommands implements JWSInternalCommands
 	}
 
 	/**
-		 * Sends the complete list of all known mixminion nodes to the client. This command is used by the
-		 * JAP clients with mixminion integration. If we don't have a current mixminion nodes list, we return -1
-		 * and the client will get an http error. So the client will ask another infoservice.
-		 *
-		 * @return The HTTP response for the client.
-		 */
-		private HttpResponseStructure getMixminionNodesList()
+	 * Sends the complete list of all known mixminion nodes to the client. This command is used by the
+	 * JAP clients with mixminion integration. If we don't have a current mixminion nodes list, we return -1
+	 * and the client will get an http error. So the client will ask another infoservice.
+	 *
+	 * @return The HTTP response for the client.
+	 */
+	private HttpResponseStructure getMixminionNodesList()
+	{
+		/* this is only the default, if we don't have a TOR list */
+		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
+			HTTP_RETURN_NOT_FOUND);
+		Node mixminionNodesList = null;
+		mixminionNodesList = MixminionDirectoryAgent.getInstance().getMixminionNodesList();
+		if (mixminionNodesList != null)
 		{
-			/* this is only the default, if we don't have a TOR list */
-			HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
-				HTTP_RETURN_NOT_FOUND);
-			Node mixminionNodesList = null;
-			mixminionNodesList = MixminionDirectoryAgent.getInstance().getMixminionNodesList();
-			if (mixminionNodesList != null)
+			try
 			{
-				try
-				{
-					/* create xml document */
-					Document doc = XMLUtil.createDocument();
-					doc.appendChild(XMLUtil.importNode(doc, mixminionNodesList, true));
-					httpResponse = new HttpResponseStructure(doc);
-				}
-				catch (Exception e)
-				{
-					LogHolder.log(LogLevel.ERR, LogType.MISC, e);
-					httpResponse = new HttpResponseStructure(HttpResponseStructure.
-						HTTP_RETURN_INTERNAL_SERVER_ERROR);
-				}
+				/* create xml document */
+				Document doc = XMLUtil.createDocument();
+				doc.appendChild(XMLUtil.importNode(doc, mixminionNodesList, true));
+				httpResponse = new HttpResponseStructure(doc);
 			}
-			return httpResponse;
+			catch (Exception e)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.MISC, e);
+				httpResponse = new HttpResponseStructure(HttpResponseStructure.
+					HTTP_RETURN_INTERNAL_SERVER_ERROR);
+			}
+		}
+		return httpResponse;
 	}
 
 	/**
@@ -1069,11 +1071,10 @@ public class InfoServiceCommands implements JWSInternalCommands
 	}
 
 	/**
-	 * This function only for compatibility and will be removed soon. It sends the addresses of
+	 * This function sends the addresses of
 	 * the proxy servers at the end of the cascades as plain text to the client. The info about
-	 * the proxies is the unchanged line from the properties file. This function is used by some
-	 * steam-powered scripts written before world war II.
-	 * @todo remove it
+	 * the proxies comes from the configuration property file and from the information given
+	 * by Last Mixes.
 	 *
 	 * @return The HTTP response for the client.
 	 */
@@ -1082,10 +1083,25 @@ public class InfoServiceCommands implements JWSInternalCommands
 		/* this is only the default, if we don't know the proxy addresses */
 		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
 			HTTP_RETURN_NOT_FOUND);
-		if (Configuration.getInstance().getProxyAddresses() != null)
+		String strConfiguredProxies = Configuration.getInstance().getProxyAddresses();
+		String strReportedProxies = VisibleProxyAddresses.getVisibleAddresses();
+		if (strConfiguredProxies == null)
 		{
+			if (strReportedProxies != null)
+			{
+				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_PLAIN,
+					strReportedProxies);
+			}
+
+		}
+		else
+		{
+			if (strReportedProxies != null)
+			{
+				strConfiguredProxies += " " + strReportedProxies;
+			}
 			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_PLAIN,
-				Configuration.getInstance().getProxyAddresses());
+				strConfiguredProxies);
 		}
 		return httpResponse;
 	}
