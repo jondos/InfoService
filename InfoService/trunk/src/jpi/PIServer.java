@@ -37,6 +37,8 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import java.net.InetAddress;
+import anon.util.ThreadPool;
+import java.io.InterruptedIOException;
 
 /**
  * Serversocket der Bezahlinstanz.
@@ -48,6 +50,7 @@ public class PIServer implements Runnable
 	private ServerSocket m_serverSocket;
 	private boolean m_typeAI;
 	private int m_listenPort;
+	private ThreadPool m_threadPool;
 
 	/**
 	 * Konstruktor f\uFFFDr Serversocket. Es gibt zwei Arten von Serversockets:
@@ -68,6 +71,7 @@ public class PIServer implements Runnable
 			m_listenPort = Configuration.getJAPPort();
 		}
 		m_typeAI = typeai;
+
 	}
 
 	/**
@@ -96,6 +100,10 @@ public class PIServer implements Runnable
 
 		Socket acceptedSocket;
 		JPIConnection con;
+		String strDescription="AI Server Thread";
+		if(!m_typeAI)
+			strDescription="BI Server Thread";
+		m_threadPool=new ThreadPool(strDescription,50);
 		while (true)
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "JPIServer: waiting for conn");
@@ -118,7 +126,11 @@ public class PIServer implements Runnable
 				{
 				}
 				con = new JPIConnection(acceptedSocket, m_typeAI);
-				new Thread(con).start();
+				m_threadPool.addRequest(con);
+			}
+			catch(InterruptedIOException exi)
+			{
+				continue;
 			}
 			catch (Throwable e)
 			{

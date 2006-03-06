@@ -26,7 +26,7 @@
  * SPECIFICALLY DISCLAIMS ANY EXPRESS OR IMPLIED WARRANTY OF FITNESS FOR
  * HIGH RISK ACTIVITIES.
  */
-package infoservice;
+package anon.util;
 
 import java.util.Vector;
 
