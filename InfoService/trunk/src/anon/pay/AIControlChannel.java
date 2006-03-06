@@ -38,6 +38,9 @@ public class AIControlChannel extends SyncControlChannel
 	/** How man milliseconds to wait before requesting a new account statement */
 	private static final long BALANCE_MILLISECONDS = 90000;
 
+	/** Threshold for warning the user of too large number of transferred bytes in cc (0-1)*/
+	private static final double DIFFERENCE_THRESHOLD = 0.0;
+
 	private MuxSocket m_MuxSocket;
 	private boolean m_bFirstBalance;
 	private static long m_totalBytes = 0;
@@ -47,6 +50,9 @@ public class AIControlChannel extends SyncControlChannel
 	private Vector m_aiListeners = new Vector();
 
 	private ImmutableProxyInterface m_proxy;
+
+	private int m_diff = 0;
+	private long m_lastDiffBytes = 0;
 
 	public AIControlChannel(MuxSocket muxSocket, ImmutableProxyInterface a_proxy)
 	{
@@ -148,25 +154,25 @@ public class AIControlChannel extends SyncControlChannel
 		{
 			try
 			{
-				if(System.currentTimeMillis()-BALANCE_MILLISECONDS > m_lastBalanceUpdate)
+				if (System.currentTimeMillis() - BALANCE_MILLISECONDS > m_lastBalanceUpdate)
 				{
-				// fetch new balance asynchronously
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetching new Balance from BI asynchronously");
-				new Thread(new Runnable()
-				{
-					public void run()
+					// fetch new balance asynchronously
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetching new Balance from BI asynchronously");
+					new Thread(new Runnable()
 					{
-						PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
-						try
+						public void run()
 						{
+							PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
+							try
+							{
 								currentAccount.fetchAccountInfo(m_proxy);
+							}
+							catch (Exception ex)
+							{
+								LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
+							}
 						}
-						catch (Exception ex)
-						{
-							LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
-						}
-					}
-				}).start();
+					}).start();
 					m_lastBalanceUpdate = System.currentTimeMillis();
 				}
 				PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
@@ -202,17 +208,25 @@ public class AIControlChannel extends SyncControlChannel
 				{
 					/** If Jap crashed during the last session, CCs may have been lost.*/
 					long toSign = oldSpent + newBytes;
-					LogHolder.log(LogLevel.WARNING, LogType.PAY,
-								  "Unrealistic number of bytes to be signed. Spent bytes: " +
-								  oldSpent + " + new bytes we should sign: " + newBytes + " = " + toSign +
-								  " < bytes in last CC: " + cc.getTransferredBytes()); ;
-					this.fireAIEvent(EVENT_UNREAL, cc.getTransferredBytes() - oldSpent - newBytes);
-					//cc.setTransferredBytes(cc.getTransferredBytes()+newBytes);
+					m_diff += cc.getTransferredBytes() - oldSpent - newBytes;
+					double percent = ( (double) m_diff) / ( (double) (toSign - m_lastDiffBytes));
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+								  "Percentage of excessive transferred bytes is: " + percent);
+					if (percent > DIFFERENCE_THRESHOLD)
+					{
+						LogHolder.log(LogLevel.WARNING, LogType.PAY,
+									  "Unrealistic number of bytes to be signed. Spent bytes: " +
+									  oldSpent + " + new bytes we should sign: " + newBytes + " = " + toSign +
+									  " < bytes in last CC: " + cc.getTransferredBytes()); ;
+						this.fireAIEvent(EVENT_UNREAL, m_diff);
+						m_diff = 0;
+						m_lastDiffBytes = toSign;
+					}
 				}
 				cc.setPIID(currentAccount.getAccountCertificate().getPIID());
 				cc.sign(currentAccount.getPrivateKey());
-				this.sendXMLMessage(XMLUtil.toXMLDocument(cc));
 				currentAccount.addCostConfirmation(cc);
+				this.sendXMLMessage(XMLUtil.toXMLDocument(cc));
 			}
 			catch (Exception ex1)
 			{
