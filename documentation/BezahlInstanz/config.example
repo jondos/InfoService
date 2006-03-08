@@ -13,6 +13,10 @@
 
 id TestPaymentInstance
 
+#Concurrent connections
+aiconnections=10
+japconnections=25
+
 ##############################################################################
 # Some network settings
 #
@@ -23,7 +27,7 @@ id TestPaymentInstance
 # chargeport: Port , auf dem die Verbindung fuer externes Aufladen angenommen werden
 # chargepw=31:9F:4D:26:E3:C5:36:B5:DD:87:1B:B2:C5:2E:31:78 (Passwort  fuer die Aufladung, md5-gehashed, hier: PASSWORD)
 
-hostname 132.199.130.150 
+hostname 132.199.130.150
 japport 2342
 aiport 4223
 chargeport=9950
@@ -157,7 +161,7 @@ option1detailedinfolang2=en
 option1input1=Kreditkarte
 option1inputlang1=de
 option1inputref1=creditcardtype
-option1input2=Credit card 
+option1input2=Credit card
 option1inputlang2=en
 option1inputref2=creditcardtype
 option1input3=Nummer

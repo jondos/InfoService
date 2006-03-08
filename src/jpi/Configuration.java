@@ -104,15 +104,6 @@ public class Configuration
 		return m_Name;
 	}
 
-	/** holds the JPI hostname */
-	private static String m_hostName;
-
-	/** returns the JPI hostname */
-	public static String getHostName()
-	{
-		return m_hostName;
-	}
-
 	/** holds the database hostname */
 	private static String m_dbHostname;
 
@@ -198,7 +189,7 @@ public class Configuration
 		return ms_japConnections;
 	}
 
-	private static Vector ms_japListenerInterfaces;
+	private static Vector ms_japListenerInterfaces = new Vector();
 	private static ListenerInterface ms_aiListenerInterface;
 
 	private static IMyPrivateKey m_privateKey;
@@ -316,7 +307,6 @@ public class Configuration
 		m_Name = props.getProperty("name");
 
 		// parse network configuration
-		m_hostName = props.getProperty("hostname");
 		try
 		{
 			String japlisteners = props.getProperty("japlisteners");
