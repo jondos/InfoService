@@ -52,6 +52,8 @@ import anon.util.captcha.IImageEncodedCaptcha;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.infoservice.ListenerInterface;
+import org.w3c.dom.NodeList;
 
 /**
  * This class encapsulates a collection of accounts. One of the accounts in the collection
@@ -538,8 +540,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		XMLJapPublicKey xmlKey = new XMLJapPublicKey(keyPair.getPublic());
 
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-					  "Attempting to create account at PI " + a_bi.getHostName() + ":" +
-					  a_bi.getPortNumber());
+					  "Attempting to create account at PI " + a_bi.getName());
 
 		BIConnection biConn = new BIConnection(a_bi);
 		biConn.addConnectionListener(this);
@@ -622,8 +623,9 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	 */
 	public void addKnownPI(Element a_elemPI)
 	{
-		String biID, biName, biHost;
-		int biPort;
+		Vector listeners = new Vector();
+		ListenerInterface l = null;
+		String biID, biName;
 		JAPCertificate biCert;
 
 		Element elem = (Element) XMLUtil.getFirstChildByName(a_elemPI, "BIID");
@@ -632,22 +634,39 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		elem = (Element) XMLUtil.getFirstChildByName(a_elemPI, "BIName");
 		biName = XMLUtil.parseValue(elem, "-1");
 
-		elem = (Element) XMLUtil.getFirstChildByName(a_elemPI, "HostName");
-		biHost = XMLUtil.parseValue(elem, "-1");
-
-		elem = (Element) XMLUtil.getFirstChildByName(a_elemPI, "PortNumber");
-		biPort = XMLUtil.parseValue(elem, -1);
-
+		elem = (Element) XMLUtil.getFirstChildByName(a_elemPI, "ListenerInterfaces");
+		if (elem != null)
+		{
+			NodeList listenerNodes = elem.getChildNodes();
+			for (int i = 0; i < listenerNodes.getLength(); i++)
+			{
+				try
+				{
+					l = new ListenerInterface( (Element) listenerNodes.item(i));
+				}
+				catch (Exception e)
+				{
+					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+								  "Could not create listener interface while adding to known PIs");
+				}
+				if (l != null)
+				{
+					listeners.addElement(l);
+				}
+			}
+		}
 		elem = (Element) XMLUtil.getFirstChildByName(a_elemPI, "TestCertificate");
 		elem = (Element) XMLUtil.getFirstChildByName(elem, JAPCertificate.XML_ELEMENT_NAME);
 
 		biCert = JAPCertificate.getInstance(elem);
 
+		if (listeners.size() > 0)
+		{
 		BI bi = null;
 		try
 		{
 
-			bi = new BI(biID, biName, biHost, biPort, biCert);
+				bi = new BI(biID, biName, listeners, biCert);
 		}
 		catch (Exception e)
 		{
@@ -655,6 +674,12 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		}
 
 		addKnownPI(bi);
+		}
+		else
+		{
+			LogHolder.log(LogLevel.ERR, LogType.PAY,
+						  "Cannot create PI without listeners while adding known PIs ");
+		}
 	}
 
 	public BI getBI(String a_piID) throws Exception

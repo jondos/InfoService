@@ -340,7 +340,7 @@ public class InfoServiceCommands implements JWSInternalCommands
 			Element mixNode = (Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData),
 				MixInfo.getXmlElementName()));
 			/* verify the signature */
-			if (SignatureVerifier.getInstance().verifyXml(mixNode, SignatureVerifier.DOCUMENT_CLASS_MIX) == true)
+			if (SignatureVerifier.getInstance().verifyXml(mixNode, SignatureVerifier.DOCUMENT_CLASS_MIX))
 			{
 				MixInfo mixEntry = new MixInfo(mixNode);
 				Database.getInstance(MixInfo.class).update(mixEntry);

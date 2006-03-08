@@ -27,18 +27,18 @@
  */
 package jpi;
 
-import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 import anon.crypto.MyDSAPrivateKey;
 import anon.crypto.tinytls.TinyTLSServer;
+import anon.infoservice.ListenerInterface;
+import anon.util.ThreadPool;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.net.InetAddress;
-import anon.util.ThreadPool;
-import java.io.InterruptedIOException;
 
 /**
  * Serversocket der Bezahlinstanz.
@@ -49,7 +49,7 @@ public class PIServer implements Runnable
 {
 	private ServerSocket m_serverSocket;
 	private boolean m_typeAI;
-	private int m_listenPort;
+	private ListenerInterface m_listener;
 	private ThreadPool m_threadPool;
 
 	/**
@@ -60,18 +60,10 @@ public class PIServer implements Runnable
 	 *
 	 * @param typeai Socket f\uFFFDr AI- oder JAP-Verbindungen? (true = AI)
 	 */
-	public PIServer(boolean typeai)
+	public PIServer(boolean typeai, ListenerInterface a_listener)
 	{
-		if (typeai)
-		{
-			m_listenPort = Configuration.getAIPort();
-		}
-		else
-		{
-			m_listenPort = Configuration.getJAPPort();
-		}
+		m_listener = a_listener;
 		m_typeAI = typeai;
-
 	}
 
 	/**
@@ -83,8 +75,8 @@ public class PIServer implements Runnable
 		try
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-						  "PIServer starting up on port " + m_listenPort + ". TLS is on");
-			TinyTLSServer tlssock = new TinyTLSServer(m_listenPort);
+						  "PIServer starting up on port " + m_listener.getPort() + ". TLS is on");
+			TinyTLSServer tlssock = new TinyTLSServer(m_listener.getPort());
 			tlssock.setDSSParameters(Configuration.getOwnCertificate(),
 									 (MyDSAPrivateKey) Configuration.getPrivateKey());
 			m_serverSocket = tlssock;
@@ -100,10 +92,14 @@ public class PIServer implements Runnable
 
 		Socket acceptedSocket;
 		JPIConnection con;
-		String strDescription="AI Server Thread";
-		if(!m_typeAI)
-			strDescription="BI Server Thread";
-		m_threadPool=new ThreadPool(strDescription,50);
+		if (!m_typeAI)
+		{
+			m_threadPool = new ThreadPool("JAP Server Thread", Configuration.getMaxJapConnections());
+		}
+		else
+		{
+			m_threadPool = new ThreadPool("AI Server Thread", Configuration.getMaxAiConnections());
+		}
 		while (true)
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "JPIServer: waiting for conn");
@@ -128,7 +124,7 @@ public class PIServer implements Runnable
 				con = new JPIConnection(acceptedSocket, m_typeAI);
 				m_threadPool.addRequest(con);
 			}
-			catch(InterruptedIOException exi)
+			catch (InterruptedIOException exi)
 			{
 				continue;
 			}

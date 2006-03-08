@@ -39,6 +39,10 @@ import logging.LogLevel;
 import logging.LogType;
 import anon.pay.xml.XMLPaymentOptions;
 import anon.pay.xml.XMLPaymentOption;
+import java.util.Enumeration;
+import java.util.Vector;
+import java.util.StringTokenizer;
+import anon.infoservice.ListenerInterface;
 
 /**
  * Loads and stores all configuration data, keys
@@ -47,7 +51,7 @@ import anon.pay.xml.XMLPaymentOption;
 public class Configuration
 {
 	/** Versionsnummer --> Please update if you change anything*/
-	public static final String BEZAHLINSTANZ_VERSION = "BI.02.015";
+	public static final String BEZAHLINSTANZ_VERSION = "BI.02.020";
 	public static IMyPrivateKey getPrivateKey()
 	{
 		return m_privateKey;
@@ -181,14 +185,32 @@ public class Configuration
 		return m_AIPort;
 	}
 
-	/** holds the port where the JPI should listen for JAP connections */
-	private static int m_JAPPort;
+	/** holds maximum concurrent connections */
+	private static int ms_aiConnections;
+	public static int getMaxAiConnections()
+	{
+		return ms_aiConnections;
+	}
+
+	private static int ms_japConnections;
+	public static int getMaxJapConnections()
+	{
+		return ms_japConnections;
+	}
+
+	private static Vector ms_japListenerInterfaces;
+	private static ListenerInterface ms_aiListenerInterface;
+
 	private static IMyPrivateKey m_privateKey;
 
-	/** returns the port where the JPI should listen for JAP connections */
-	public static int getJAPPort()
+	public static Enumeration getJapListenerInterfaces()
 	{
-		return m_JAPPort;
+		return ms_japListenerInterfaces.elements();
+	}
+
+	public static ListenerInterface getAiListenerInterface()
+	{
+		return ms_aiListenerInterface;
 	}
 
 	private static int m_LogStderrThreshold;
@@ -297,8 +319,23 @@ public class Configuration
 		m_hostName = props.getProperty("hostname");
 		try
 		{
-			m_AIPort = Integer.parseInt(props.getProperty("aiport"));
-			m_JAPPort = Integer.parseInt(props.getProperty("japport"));
+			String japlisteners = props.getProperty("japlisteners");
+			StringTokenizer st = new StringTokenizer(japlisteners, ",");
+			while (st.hasMoreTokens())
+			{
+				String listener = st.nextToken();
+				StringTokenizer st2 = new StringTokenizer(listener, ":");
+				ListenerInterface l = new ListenerInterface(st2.nextToken(), Integer.parseInt(st2.nextToken()));
+				ms_japListenerInterfaces.addElement(l);
+			}
+
+			String ailistener = props.getProperty("ailistener");
+			st = new StringTokenizer(ailistener, ":");
+			while (st.hasMoreTokens())
+			{
+				ms_aiListenerInterface = new ListenerInterface(st.nextToken(), Integer.parseInt(st.nextToken()));
+			}
+
 		}
 		catch (Exception e)
 		{
@@ -559,6 +596,10 @@ public class Configuration
 
 		//Parse external charge port
 		ms_externalChargePort = props.getProperty("chargeport", "9950");
+
+		//Parse max connections
+		ms_aiConnections = Integer.parseInt(props.getProperty("aiconnections", "5"));
+		ms_japConnections = Integer.parseInt(props.getProperty("japconnections", "25"));
 
 		return true;
 	}

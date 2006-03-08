@@ -61,6 +61,9 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import org.w3c.dom.Element;
+import java.util.Enumeration;
+import anon.infoservice.ListenerInterface;
+import java.io.IOException;
 
 public class BIConnection implements ICaptchaSender
 {
@@ -94,23 +97,65 @@ public class BIConnection implements ICaptchaSender
 	 *
 	 * @throws Exception Wenn Fehler beim Verbindungsaufbau
 	 */
-	public void connect(ImmutableProxyInterface a_proxy) throws Exception
+	public void connect(ImmutableProxyInterface a_proxy) throws IOException
 	{
 		TinyTLS tls;
+		ListenerInterface li = null;
+		boolean connected = false;
 		m_proxy = a_proxy;
+		Enumeration listeners = m_theBI.getListenerInterfaces();
+		while (listeners.hasMoreElements())
+		{
+			li = (ListenerInterface) listeners.nextElement();
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+								  "Trying to connect to Payment Instance at " + li.getHost() + ":" +
+								  li.getPort() + ".");
+			try
+			{
 		if (a_proxy == null)
 		{
-			tls = new TinyTLS(m_theBI.getHostName(), m_theBI.getPortNumber());
+					tls = new TinyTLS(li.getHost(), li.getPort());
 		}
 		else
 		{
-			tls = new TinyTLS(m_theBI.getHostName(), m_theBI.getPortNumber(), a_proxy);
+					tls = new TinyTLS(li.getHost(), li.getPort(), a_proxy);
 		}
 		tls.setSoTimeout(30000);
 		tls.setRootKey(m_theBI.getCertificate().getPublicKey());
 		tls.startHandshake();
 		m_socket = tls;
 		m_httpClient = new HttpClient(m_socket);
+				connected = true;
+				break;
+			}
+			catch (Exception e)
+			{
+				if (listeners.hasMoreElements())
+				{
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+								  "Could not connect to Payment Instance at " + li.getHost() + ":" +
+								  li.getPort() + ". Trying next interface...");
+				}
+				else
+				{
+					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+								  "Could not connect to Payment Instance at " + li.getHost() + ":" +
+								  li.getPort() + ". No more interfaces left.");
+				}
+			}
+		}
+		if (!connected)
+		{
+			throw new IOException("Could not connect to Payment Instance");
+		}
+		else
+		{
+			LogHolder.log(LogLevel.INFO, LogType.PAY,
+						  "Connected to Payment Instance at " + li.getHost() + ":" +
+						  li.getPort() + ".");
+
+		}
+
 	}
 
 	/**
@@ -328,7 +373,7 @@ public class BIConnection implements ICaptchaSender
 		XMLErrorMessage err = new XMLErrorMessage(doc.getDocumentElement());
 		if (err.getErrorCode() == XMLErrorMessage.ERR_OK)
 		{
-return true;
+				return true;
 		}
 		else
 		{
