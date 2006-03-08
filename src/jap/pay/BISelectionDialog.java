@@ -217,8 +217,8 @@ public class BISelectionDialog extends JDialog implements ActionListener, ListSe
 	{
 		if (e.getSource() == m_biList)
 		{
-			m_biHost.setText( ( (BI) m_biList.getSelectedValue()).getHostName());
-			m_biPort.setText(String.valueOf( ( (BI) m_biList.getSelectedValue()).getPortNumber()));
+			/*m_biHost.setText( ( (BI) m_biList.getSelectedValue()).getHostName());
+			m_biPort.setText(String.valueOf( ( (BI) m_biList.getSelectedValue()).getPortNumber()));*/
 		}
 	}
 }
