@@ -27,7 +27,15 @@
  */
 package jpi;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.Enumeration;
+import java.util.Properties;
+
+import anon.infoservice.ListenerInterface;
+import anon.util.TimedOutputStream;
 import jpi.db.DBSupplier;
+import jpi.helper.ExternalChargeHelper;
 import jpi.helper.PayPalHelper;
 import logging.ChainedLog;
 import logging.FileLog;
@@ -35,11 +43,6 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import logging.SystemErrLog;
-import java.util.Properties;
-import jpi.helper.ExternalChargeHelper;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import anon.util.TimedOutputStream;
 
 public class JPIMain
 {
@@ -158,15 +161,20 @@ public class JPIMain
 			System.exit(0);
 		}
 
-		// start PIServer for JAP connections
+		// start PIServer(s) for JAP connections
 		LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching PIServer for JAP connections");
-		PIServer userServer = new PIServer(false);
+		Enumeration japListeners = Configuration.getJapListenerInterfaces();
+
+		while (japListeners.hasMoreElements())
+		{
+			PIServer userServer = new PIServer(false, (ListenerInterface) japListeners.nextElement());
 		Thread userThread = new Thread(userServer);
 		userThread.start();
+		}
 
 		// start PIServer for AI connections
 		LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching PIServer for AI connections on port ");
-		PIServer aiServer = new PIServer(true);
+		PIServer aiServer = new PIServer(true, Configuration.getAiListenerInterface());
 		Thread aiThread = new Thread(aiServer);
 		aiThread.start();
 

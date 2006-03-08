@@ -28,11 +28,10 @@
 
 package jpi;
 
+import HTTPClient.HTTPConnection;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.ListenerInterface;
-import HTTPClient.HTTPConnection;
 import anon.infoservice.PaymentInstanceDBEntry;
-import java.util.Vector;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -43,9 +42,6 @@ class InfoServiceThread implements Runnable
 	{
 		ListenerInterface is = new ListenerInterface(Configuration.getInfoServiceHost(),
 			Configuration.getInfoServicePort(), ListenerInterface.PROTOCOL_TYPE_HTTP);
-		ListenerInterface li = new ListenerInterface(Configuration.getHostName(),
-			Configuration.getJAPPort(), ListenerInterface.PROTOCOL_TYPE_HTTP);
-		Vector listenerInterfaces = li.toVector();
 		for (; ; )
 		{
 			try
@@ -54,7 +50,7 @@ class InfoServiceThread implements Runnable
 				HTTPConnection con = factory.createHTTPConnection(is);
 				PaymentInstanceDBEntry pi = new PaymentInstanceDBEntry(Configuration.getBiID(),
 					Configuration.getBiName(), Configuration.getOwnCertificate(),
-					listenerInterfaces,
+					Configuration.getJapListenerInterfaces(),
 					Configuration.BEZAHLINSTANZ_VERSION,
 					System.currentTimeMillis());
 				con.Post(pi.getPostFile(), pi.getPostData());
@@ -62,7 +58,7 @@ class InfoServiceThread implements Runnable
 			catch (Throwable e)
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.NET,
-							  "Could not sent payment instance info to InfoService!");
+							  "Could not send payment instance info to InfoService!");
 			}
 			try
 			{

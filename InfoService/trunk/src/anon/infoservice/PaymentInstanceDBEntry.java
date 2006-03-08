@@ -139,7 +139,7 @@ public class PaymentInstanceDBEntry extends AbstractDatabaseEntry implements IDi
 
 	}
 
-	public PaymentInstanceDBEntry(String id, String name, JAPCertificate a_cert, Vector listeners,
+	public PaymentInstanceDBEntry(String id, String name, JAPCertificate a_cert, Enumeration a_listeners,
 								  String software_version, long creationTime)
 	{
 		super(System.currentTimeMillis() + Constants.TIMEOUT_PAYMENT_INSTANCE);
@@ -159,10 +159,9 @@ public class PaymentInstanceDBEntry extends AbstractDatabaseEntry implements IDi
 		elemRoot.appendChild(elemNet);
 		Element elemListeners = doc.createElement("ListenerInterfaces");
 		elemNet.appendChild(elemListeners);
-		Enumeration enumer = listeners.elements();
-		while (enumer.hasMoreElements())
+		while (a_listeners.hasMoreElements())
 		{
-			ListenerInterface li = (ListenerInterface) enumer.nextElement();
+			ListenerInterface li = (ListenerInterface) a_listeners.nextElement();
 			elemListeners.appendChild(li.toXmlElement(doc));
 		}
 		Element elemLastUpdate = doc.createElement("LastUpdate");
@@ -245,12 +244,10 @@ public class PaymentInstanceDBEntry extends AbstractDatabaseEntry implements IDi
 	{
 		BI bi;
 
-		/** @todo More than one ListenerInterface possible?*/
 		try
 		{
-			ListenerInterface listener = (ListenerInterface) m_listenerInterfaces.firstElement();
 
-			bi = new BI(m_strPaymentInstanceId, m_name, listener.getHost(), listener.getPort(), m_cert);
+			bi = new BI(m_strPaymentInstanceId, m_name, m_listenerInterfaces, m_cert);
 		}
 		catch (Exception e)
 		{

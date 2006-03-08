@@ -1,16 +1,17 @@
 package anon.pay;
 
 import java.security.InvalidKeyException;
+import java.util.Enumeration;
+import java.util.Vector;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPSignature;
+import anon.infoservice.ListenerInterface;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 
 /**
  * This class represents a known BI with its unique name and x509 public
@@ -19,8 +20,7 @@ import logging.LogType;
  *
  * <BI version="1.0">
  *   <BIName> unique name </BIName>
- *   <HostName> www.bezahlinstanz.de </HostName>
- *   <PortNumber> 1234 </PortNumber>
+ *   <ListenerInterfaces> ... </ListenerInterfaces>
  *   <X509Certificate>
  *       ... the certificate (JAPCertificate)
  *   </X509Certificate>
@@ -33,22 +33,21 @@ public class BI implements IXMLEncodable
 {
 	private String m_biID;
 	private String m_biName;
-	private String m_hostName;
-	private int m_portNumber;
+	private Vector m_listenerInterfaces;
 
-	private JAPSignature m_veryfire;
+	private JAPSignature m_verifier;
 	private JAPCertificate m_cert;
 
 	public static final String XML_ELEMENT_NAME = "BI";
 
-	public BI(String a_biID, String a_biName, String a_hostName, int a_portNumber, JAPCertificate a_cert) throws
+	public BI(String a_biID, String a_biName, Vector a_listeners, JAPCertificate a_cert) throws
 		Exception
 	{
+		ListenerInterface l = (ListenerInterface) a_listeners.firstElement();
 		m_biID = a_biID;
 		m_cert = a_cert;
 		m_biName = a_biName;
-		m_hostName = a_hostName;
-		m_portNumber = a_portNumber;
+		m_listenerInterfaces = a_listeners;
 	}
 
 	public BI(Element elemRoot) throws Exception
@@ -59,18 +58,13 @@ public class BI implements IXMLEncodable
 	/** constructs a BI object from a binary X509 certificate
 	 * and some additional data
 	 */
-	public BI(byte[] barCert, String biName, String hostName, int portNumber)
+	public BI(byte[] barCert, String biName, Vector a_listeners)
 	{
 		JAPCertificate cert = JAPCertificate.getInstance(barCert);
 		m_cert = cert;
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-					  "BI biName=" + biName + ", Host=" + hostName + ", Port=" + portNumber);
-
 		/** @todo does this work? i don't believe it... */
 		m_biName = biName; //cert.getSubject().CN.toString();
-		//m_biID = biID;
-		m_hostName = hostName;
-		m_portNumber = portNumber;
+		m_listenerInterfaces = a_listeners;
 
 		/*		m_veryfire = new JAPSignature();
 		  try
@@ -85,6 +79,7 @@ public class BI implements IXMLEncodable
 
 	private void setValues(Element elemRoot) throws Exception
 	{
+		m_listenerInterfaces = new Vector();
 		String rootName = elemRoot.getTagName();
 		if (!rootName.equals(XML_ELEMENT_NAME))
 		{
@@ -96,11 +91,13 @@ public class BI implements IXMLEncodable
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "BIName");
 		m_biName = XMLUtil.parseValue(elem, null);
 
-		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "HostName");
-		m_hostName = XMLUtil.parseValue(elem, null);
-
-		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "PortNumber");
-		m_portNumber = XMLUtil.parseValue(elem, 0);
+		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "ListenerInterfaces");
+		NodeList listeners = elem.getChildNodes();
+		for (int i = 0; i < listeners.getLength(); i++)
+		{
+			ListenerInterface l = new ListenerInterface( (Element) listeners.item(i));
+			m_listenerInterfaces.addElement(l);
+		}
 
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "TestCertificate");
 		if (elem != null)
@@ -126,24 +123,12 @@ public class BI implements IXMLEncodable
 	/** returns a JAPSignature object for veriying this BI's signatures */
 	public JAPSignature getVerifier() throws InvalidKeyException
 	{
-		if (m_veryfire == null)
+		if (m_verifier == null)
 		{
-			m_veryfire = new JAPSignature();
-			m_veryfire.initVerify(m_cert.getPublicKey());
+			m_verifier = new JAPSignature();
+			m_verifier.initVerify(m_cert.getPublicKey());
 		}
-		return m_veryfire;
-	}
-
-	/** returns the hostname of the host on which this BI is running */
-	public String getHostName()
-	{
-		return m_hostName;
-	}
-
-	/** gets the port number */
-	public int getPortNumber()
-	{
-		return m_portNumber;
+		return m_verifier;
 	}
 
 	/**
@@ -166,13 +151,13 @@ public class BI implements IXMLEncodable
 		elemRoot.appendChild(elem);
 		XMLUtil.setValue(elem, m_biName);
 
-		elem = a_doc.createElement("HostName");
-		elemRoot.appendChild(elem);
-		XMLUtil.setValue(elem, m_hostName);
+		Element lElem = a_doc.createElement("ListenerInterfaces");
+		elemRoot.appendChild(lElem);
 
-		elem = a_doc.createElement("PortNumber");
-		elemRoot.appendChild(elem);
-		XMLUtil.setValue(elem, Integer.toString(m_portNumber));
+		for (int i = 0; i < m_listenerInterfaces.size(); i++)
+		{
+			lElem.appendChild( ( (ListenerInterface) m_listenerInterfaces.elementAt(i)).toXmlElement(a_doc));
+		}
 
 		elem = a_doc.createElement("TestCertificate");
 		elemRoot.appendChild(elem);
@@ -198,5 +183,10 @@ public class BI implements IXMLEncodable
 	public String getID()
 	{
 		return m_biID;
+	}
+
+	public Enumeration getListenerInterfaces()
+	{
+		return m_listenerInterfaces.elements();
 	}
 }
