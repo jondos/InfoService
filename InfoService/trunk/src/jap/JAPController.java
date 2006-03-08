@@ -2669,10 +2669,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 */
 	public BI getDefaultPI()
 	{
+		ListenerInterface li = new ListenerInterface(JAPConstants.PI_HOST, JAPConstants.PI_PORT);
 		try
 		{
-			return new BI(JAPConstants.PI_ID, JAPConstants.PI_NAME, JAPConstants.PI_HOST,
-						  JAPConstants.PI_PORT,
+			return new BI(JAPConstants.PI_ID, JAPConstants.PI_NAME, li.toVector(),
 						  JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.CERTSPATH +
 				JAPConstants.PI_CERT)));
 		}

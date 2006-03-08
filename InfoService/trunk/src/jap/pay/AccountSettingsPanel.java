@@ -103,6 +103,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import jap.JAPModel;
+import anon.infoservice.ListenerInterface;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -744,8 +745,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				{
 					BI pi = selectedAccount.getBI();
 					BIConnection piConn = new BIConnection(pi);
-					LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-								  "Connecting to PI: " + pi.getHostName() + ":" + pi.getPortNumber());
+
 					piConn.connect(JAPModel.getInstance().getProxyInterface());
 					piConn.authenticate(PayAccountsFile.getInstance().getActiveAccount().
 										getAccountCertificate(),
@@ -952,10 +952,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	{
 		int numAccounts = m_listAccounts.getModel().getSize();
 		BI theBI = null;
+		ListenerInterface li = new ListenerInterface(JAPConstants.PI_HOST, JAPConstants.PI_PORT);
 		try
 		{
-			theBI = new BI(JAPConstants.PI_ID, JAPConstants.PI_NAME, JAPConstants.PI_HOST,
-						   JAPConstants.PI_PORT,
+			theBI = new BI(JAPConstants.PI_ID, JAPConstants.PI_NAME, li.toVector(),
 						   JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.CERTSPATH +
 				JAPConstants.PI_CERT)));
 		}
@@ -1114,8 +1114,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		if (theBI != null)
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Selected Payment Instance is: " +
-						  theBI.getHostName() + ":" + theBI.getPortNumber());
+			/*LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Selected Payment Instance is: " +
+						  theBI.getHostName() + ":" + theBI.getPortNumber());*/
 		}
 		else
 		{
