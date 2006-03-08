@@ -8,6 +8,7 @@ import anon.crypto.IMyPrivateKey;
 import anon.crypto.JAPCertificate;
 import anon.crypto.MyDSAPrivateKey;
 import anon.crypto.MyRSAPrivateKey;
+import java.net.InetAddress;
 
 /**
  * @author stefan
@@ -32,6 +33,18 @@ public class TinyTLSServer extends ServerSocket
 	public TinyTLSServer(int port) throws IOException
 	{
 		super(port);
+	}
+
+	/**
+	 * Constructor
+	 * @param port port of the TLS Server
+	 * @param backlog the listen backlog
+	 * @param bindAddress the local InetAddress the server will bind to
+	 * @throws IOException
+	 */
+	public TinyTLSServer(int port,int backlog,InetAddress bindAddress) throws IOException
+	{
+		super(port,backlog,bindAddress);
 	}
 
 	/**

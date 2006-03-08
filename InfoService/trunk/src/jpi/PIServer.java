@@ -76,7 +76,15 @@ public class PIServer implements Runnable
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 						  "PIServer starting up on port " + m_listener.getPort() + ". TLS is on");
-			TinyTLSServer tlssock = new TinyTLSServer(m_listener.getPort());
+			InetAddress addr = null;
+			try
+			{
+				addr = InetAddress.getByName(m_listener.getHost());
+			}
+			catch (Exception ex2)
+			{
+			}
+			TinyTLSServer tlssock = new TinyTLSServer(m_listener.getPort(), 150, addr);
 			tlssock.setDSSParameters(Configuration.getOwnCertificate(),
 									 (MyDSAPrivateKey) Configuration.getPrivateKey());
 			m_serverSocket = tlssock;
