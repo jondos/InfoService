@@ -635,12 +635,15 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		{
 			XMLBalance balance = accountInfo.getBalance();
 
-			m_labelCreationDate.setText(JAPUtil.formatTimestamp(selectedAccount.getCreationTime(), false, JAPController.getInstance().getLocale().getLanguage()));
-			m_labelStatementDate.setText(JAPUtil.formatTimestamp(balance.getTimestamp(), true, JAPController.getInstance().getLocale().getLanguage()));
+			m_labelCreationDate.setText(JAPUtil.formatTimestamp(selectedAccount.getCreationTime(), false,
+				JAPController.getInstance().getLocale().getLanguage()));
+			m_labelStatementDate.setText(JAPUtil.formatTimestamp(balance.getTimestamp(), true,
+				JAPController.getInstance().getLocale().getLanguage()));
 			m_labelDeposit.setText(JAPUtil.formatBytesValue(balance.getDeposit()));
 			m_labelSpent.setText(JAPUtil.formatBytesValue(balance.getSpent()));
 			m_labelBalance.setText(JAPUtil.formatBytesValue(balance.getDeposit() - balance.getSpent()));
-			m_labelValid.setText(JAPUtil.formatTimestamp(balance.getValidTime(), true, JAPController.getInstance().getLocale().getLanguage()));
+			m_labelValid.setText(JAPUtil.formatTimestamp(balance.getValidTime(), true,
+				JAPController.getInstance().getLocale().getLanguage()));
 
 			long dep = selectedAccount.getDeposit();
 			long spe = selectedAccount.getSpent();
@@ -952,6 +955,21 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	{
 		int numAccounts = m_listAccounts.getModel().getSize();
 		BI theBI = null;
+
+		//First try and get the standard PI the preferred way
+		try
+		{
+			theBI = PayAccountsFile.getInstance().getBI(JAPConstants.PI_ID);
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
+		}
+
+		//Try and construct a new PI
+		if (theBI == null)
+		{
+
 		ListenerInterface li = new ListenerInterface(JAPConstants.PI_HOST, JAPConstants.PI_PORT);
 		try
 		{
@@ -963,6 +981,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		{
 			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Could not create Test-PI: " + e.getMessage());
 			theBI = getBIforAccountCreation();
+		}
 		}
 
 		if (theBI != null)
@@ -985,7 +1004,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					m_bReady = false;
 					try
 					{
-						PayAccount p = PayAccountsFile.getInstance().createAccount(bi, true, JAPModel.getInstance().getProxyInterface());
+						PayAccount p = PayAccountsFile.getInstance().createAccount(bi, true,
+							JAPModel.getInstance().getProxyInterface());
 						p.fetchAccountInfo(JAPModel.getInstance().getProxyInterface());
 					}
 					catch (Exception ex)

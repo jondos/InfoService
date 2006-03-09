@@ -99,7 +99,23 @@ public class BIConnection implements ICaptchaSender
 	 */
 	public void connect(ImmutableProxyInterface a_proxy) throws IOException
 	{
-		TinyTLS tls;
+		try
+			{
+				//Try to connect to BI...
+				connect_internal(a_proxy);
+			}
+		catch(Throwable t)
+		{
+			//Could not connect to BI
+			if(a_proxy!=null)
+			{//try without proxy
+				connect_internal(null);
+			}
+		}
+	}
+	private void connect_internal(ImmutableProxyInterface a_proxy) throws IOException
+	{
+		TinyTLS tls=null;
 		ListenerInterface li = null;
 		boolean connected = false;
 		m_proxy = a_proxy;
@@ -108,23 +124,23 @@ public class BIConnection implements ICaptchaSender
 		{
 			li = (ListenerInterface) listeners.nextElement();
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-								  "Trying to connect to Payment Instance at " + li.getHost() + ":" +
-								  li.getPort() + ".");
+						  "Trying to connect to Payment Instance at " + li.getHost() + ":" +
+						  li.getPort() + ".");
 			try
 			{
-		if (a_proxy == null)
-		{
+				if (a_proxy == null)
+				{
 					tls = new TinyTLS(li.getHost(), li.getPort());
-		}
-		else
-		{
+				}
+				else
+				{
 					tls = new TinyTLS(li.getHost(), li.getPort(), a_proxy);
-		}
-		tls.setSoTimeout(30000);
-		tls.setRootKey(m_theBI.getCertificate().getPublicKey());
-		tls.startHandshake();
-		m_socket = tls;
-		m_httpClient = new HttpClient(m_socket);
+				}
+				tls.setSoTimeout(30000);
+				tls.setRootKey(m_theBI.getCertificate().getPublicKey());
+				tls.startHandshake();
+				m_socket = tls;
+				m_httpClient = new HttpClient(m_socket);
 				connected = true;
 				break;
 			}
@@ -365,25 +381,25 @@ public class BIConnection implements ICaptchaSender
 	public boolean sendPassivePayment(XMLPassivePayment a_passivePayment)
 	{
 		try
-	{
-		m_httpClient.writeRequest("POST", "passivepayment",
-								  XMLUtil.toString(a_passivePayment.toXmlElement(XMLUtil.createDocument()
-			)));
-		Document doc = m_httpClient.readAnswer();
-		XMLErrorMessage err = new XMLErrorMessage(doc.getDocumentElement());
-		if (err.getErrorCode() == XMLErrorMessage.ERR_OK)
 		{
+			m_httpClient.writeRequest("POST", "passivepayment",
+									  XMLUtil.toString(a_passivePayment.toXmlElement(XMLUtil.createDocument()
+				)));
+			Document doc = m_httpClient.readAnswer();
+			XMLErrorMessage err = new XMLErrorMessage(doc.getDocumentElement());
+			if (err.getErrorCode() == XMLErrorMessage.ERR_OK)
+			{
 				return true;
-		}
-		else
-		{
+			}
+			else
+			{
 				return false;
 			}
 		}
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
-								  "Could not send PassivePayment to payment instance: " + e);
+						  "Could not send PassivePayment to payment instance: " + e);
 			return false;
 		}
 	}
