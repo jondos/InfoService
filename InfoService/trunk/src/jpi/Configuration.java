@@ -51,7 +51,7 @@ import anon.infoservice.ListenerInterface;
 public class Configuration
 {
 	/** Versionsnummer --> Please update if you change anything*/
-	public static final String BEZAHLINSTANZ_VERSION = "BI.02.020";
+	public static final String BEZAHLINSTANZ_VERSION = "BI.02.021";
 	public static IMyPrivateKey getPrivateKey()
 	{
 		return m_privateKey;
@@ -149,22 +149,13 @@ public class Configuration
 		return m_dbPort;
 	}
 
-	/** holds the infoservice hostname */
-	private static String m_isHostname;
+	/** Holds listener interfaces of infoservices */
+	private static Vector ms_isListenerInterfaces = new Vector();
 
-	/** returns the infoservice hostname */
-	public static String getInfoServiceHost()
+	/** Returns listener interfaces for infoservices */
+	public static Enumeration getInfoservices()
 	{
-		return m_isHostname;
-	}
-
-	/** holds the infoservice portnumber */
-	private static int m_isPort;
-
-	/** returns the info service portnumber */
-	public static int getInfoServicePort()
-	{
-		return m_isPort;
+		return ms_isListenerInterfaces.elements();
 	}
 
 	/** holds the port where the JPI should listen for AI connections */
@@ -176,71 +167,87 @@ public class Configuration
 		return m_AIPort;
 	}
 
-	/** holds maximum concurrent connections */
+	/** holds maximum concurrent connections for accounting instances*/
 	private static int ms_aiConnections;
+
+	/** returns maximum concurrent connections for accounting instances*/
 	public static int getMaxAiConnections()
 	{
 		return ms_aiConnections;
 	}
 
+	/** holds maximum concurrent connections for japs (per interface!)*/
 	private static int ms_japConnections;
+
+	/** holds maximum concurrent connections for japs (per interface!)*/
 	public static int getMaxJapConnections()
 	{
 		return ms_japConnections;
 	}
 
+	/** Holds listener interfaces for jap connections*/
 	private static Vector ms_japListenerInterfaces = new Vector();
+
+	/** Holds listener interface (only one!) for accounting instance connections*/
 	private static ListenerInterface ms_aiListenerInterface;
 
+	/** Holds the private key */
 	private static IMyPrivateKey m_privateKey;
 
+	/** Returns listener interfaces for jap connections*/
 	public static Enumeration getJapListenerInterfaces()
 	{
 		return ms_japListenerInterfaces.elements();
 	}
 
+	/** Returns listener interface (only one!) for accounting instance connections*/
 	public static ListenerInterface getAiListenerInterface()
 	{
 		return ms_aiListenerInterface;
 	}
 
+	/** Holds threshold for logging to stderr */
 	private static int m_LogStderrThreshold;
 
+	/** Returns threshold for logging to stderr */
 	public static int getLogStderrThreshold()
 	{
 		return m_LogStderrThreshold;
 	}
 
+	/** Holds threshold for logging to log file */
 	private static int m_LogFileThreshold;
 
+	/** Returns threshold for logging to log file */
 	public static int getLogFileThreshold()
 	{
 		return m_LogFileThreshold;
 	}
 
+	/** Holds log file name*/
 	private static String m_LogFileName = null;
+
+	/** Returns log file name*/
 	public static String getLogFileName()
 	{
 		return m_LogFileName;
 	}
 
-	private static String m_strPayURL = null;
-	public static String getPayUrl()
-	{
-		return m_strPayURL;
-	}
-
 	/** Holds the payment options*/
 	private static XMLPaymentOptions ms_paymentOptions = new XMLPaymentOptions();
+
+	/** Returns the payment options*/
 	public static XMLPaymentOptions getPaymentOptions()
 	{
 		return ms_paymentOptions;
 	}
 
 	/** Holds the credit card helper class name. The class is named *CreditCardHelper.
-	 * The configuration file must provide *
+	 * The configuration file must provide "*" (e.g. Dummy)
 	 */
 	private static String ms_creditCardHelper;
+
+	/** Returns the credit card helper class name*/
 	public static String getCreditCardHelper()
 	{
 		return ms_creditCardHelper;
@@ -248,21 +255,26 @@ public class Configuration
 
 	/**Holds the port where the JPI receives PayPal IPNs */
 	private static String ms_payPalport;
+
+	/**Returns the port where the JPI receives PayPal IPNs */
 	public static String getPayPalPort()
 	{
 		return ms_payPalport;
 	}
 
-	/** holds the rate per megabyte (in cents) */
+	/** Holds the rate per megabyte (in cents) */
 	private static double ms_ratePerMB;
 
+	/** Returns the rate per megabyte (in cents) */
 	public static double getRatePerMB()
 	{
 		return ms_ratePerMB;
 	}
 
-	/** password for external charging */
+	/** Holds password for external charging */
 	private static String ms_externalChargePassword;
+
+	/** Returns password for external charging */
 	public static String getExternalChargePassword()
 	{
 		return ms_externalChargePassword;
@@ -270,6 +282,8 @@ public class Configuration
 
 	/**Holds the port for external charging */
 	private static String ms_externalChargePort;
+
+	/**Returns the port for external charging */
 	public static String getExternalChargePort()
 	{
 		return ms_externalChargePort;
@@ -330,19 +344,12 @@ public class Configuration
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.PAY,
-						  "aiport and japport in configfile '" +
+						  "ailistener and japlisteners in configfile '" +
 						  configFileName +
-						  "' must be specified and must be NUMBERS!"
+						  "' must be specified and must be in this format: host:port(,host2:port2...). ailistener may only contain one interface"
 				);
 			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 			return false;
-		}
-
-		m_strPayURL = props.getProperty("webpayurl");
-		if (m_strPayURL == null)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.PAY,
-						  "WebPayURL not given configfile!");
 		}
 
 		// parse Logger Configuration
@@ -446,17 +453,29 @@ public class Configuration
 			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 			return false;
 		}
+
 		// parse infoservice configuration
-		m_isHostname = props.getProperty("infoservicehost");
 		try
 		{
-			m_isPort = Integer.parseInt(props.getProperty("infoserviceport"));
+			String islisteners = props.getProperty("infoservices");
+			StringTokenizer st = new StringTokenizer(islisteners, ",");
+			while (st.hasMoreTokens())
+			{
+				String listener = st.nextToken();
+				StringTokenizer st2 = new StringTokenizer(listener, ":");
+				ListenerInterface l = new ListenerInterface(st2.nextToken(), Integer.parseInt(st2.nextToken()),
+					ListenerInterface.PROTOCOL_TYPE_HTTP);
+				ms_isListenerInterfaces.addElement(l);
+			}
 		}
-		catch (NumberFormatException e)
+		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.PAY,
-						  "infoserviceport in configfile '" + configFileName +
-						  "' should be a NUMBER!");
+						  "infoservices in configfile '" +
+						  configFileName +
+						  "' must be specified and must be in this format: host:port(,host2:port2...)."
+				);
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 			return false;
 		}
 
