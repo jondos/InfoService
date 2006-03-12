@@ -35,30 +35,35 @@ import anon.infoservice.PaymentInstanceDBEntry;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.util.Enumeration;
 
 class InfoServiceThread implements Runnable
 {
 	public void run()
 	{
-		ListenerInterface is = new ListenerInterface(Configuration.getInfoServiceHost(),
-			Configuration.getInfoServicePort(), ListenerInterface.PROTOCOL_TYPE_HTTP);
 		for (; ; )
 		{
-			try
+			Enumeration infoservices = Configuration.getInfoservices();
+			while (infoservices.hasMoreElements())
 			{
-				HTTPConnectionFactory factory = HTTPConnectionFactory.getInstance();
-				HTTPConnection con = factory.createHTTPConnection(is);
-				PaymentInstanceDBEntry pi = new PaymentInstanceDBEntry(Configuration.getBiID(),
-					Configuration.getBiName(), Configuration.getOwnCertificate(),
-					Configuration.getJapListenerInterfaces(),
-					Configuration.BEZAHLINSTANZ_VERSION,
-					System.currentTimeMillis());
-				con.Post(pi.getPostFile(), pi.getPostData());
-			}
-			catch (Throwable e)
-			{
-				LogHolder.log(LogLevel.DEBUG, LogType.NET,
-							  "Could not send payment instance info to InfoService!");
+				ListenerInterface is = (ListenerInterface) infoservices.nextElement();
+				try
+				{
+					HTTPConnectionFactory factory = HTTPConnectionFactory.getInstance();
+					HTTPConnection con = factory.createHTTPConnection(is);
+					PaymentInstanceDBEntry pi = new PaymentInstanceDBEntry(Configuration.getBiID(),
+						Configuration.getBiName(), Configuration.getOwnCertificate(),
+						Configuration.getJapListenerInterfaces(),
+						Configuration.BEZAHLINSTANZ_VERSION,
+						System.currentTimeMillis());
+					con.Post(pi.getPostFile(), pi.getPostData());
+				}
+				catch (Throwable e)
+				{
+					LogHolder.log(LogLevel.DEBUG, LogType.NET,
+								  "Could not send payment instance info to InfoService " + is.getHost() + ":" +
+								  is.getPort());
+				}
 			}
 			try
 			{
@@ -67,6 +72,7 @@ class InfoServiceThread implements Runnable
 			catch (Throwable t)
 			{
 			}
+
 		}
 	}
 }
