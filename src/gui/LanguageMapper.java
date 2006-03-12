@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2005, The JAP-Team
+ Copyright (c) 2000 - 2006, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -63,6 +63,8 @@ public class LanguageMapper extends AbstractISOCodeMapper
 
 	private static final String MSG_CHOOSE_LANGUAGE = LanguageMapper.class.getName() + "_ChooseLanguage";
 
+	private Locale m_locale;
+
 	/**
 	 * Constructs an empty LanguageMapper object. Its toString() method
 	 * returns a message that requests to choose a valid language code.
@@ -71,6 +73,7 @@ public class LanguageMapper extends AbstractISOCodeMapper
 	public LanguageMapper()
 	{
 		super();
+		createLocale();
 	}
 
 	/**
@@ -82,6 +85,7 @@ public class LanguageMapper extends AbstractISOCodeMapper
 	public LanguageMapper(int a_maxTextLength)
 	{
 		super(a_maxTextLength);
+		createLocale();
 	}
 
 	/**
@@ -96,6 +100,7 @@ public class LanguageMapper extends AbstractISOCodeMapper
 		throws IllegalArgumentException
 	{
 		super(a_ISOCode, a_maxTextLength);
+		createLocale();
 	}
 
 	/**
@@ -109,6 +114,7 @@ public class LanguageMapper extends AbstractISOCodeMapper
 		throws IllegalArgumentException
 	{
 		super(a_ISOCode);
+		createLocale();
 	}
 
 	/**
@@ -123,6 +129,7 @@ public class LanguageMapper extends AbstractISOCodeMapper
 		throws IllegalArgumentException
 	{
 		super(a_ISOCode, a_locale);
+		createLocale();
 	}
 
 	/**
@@ -138,6 +145,31 @@ public class LanguageMapper extends AbstractISOCodeMapper
 		throws IllegalArgumentException
 	{
 		super(a_ISOCode, a_maxTextLength, a_locale);
+		createLocale();
+	}
+
+	/**
+	 * Returns a Locale object constructed from the language code.
+	 * @return a Locale object constructed from the language code
+	 */
+	public Locale getLocale()
+	{
+		return m_locale;
+	}
+
+	/**
+	 * Creates a Locale object from the language code and a given country code.
+	 * @param a_countryCode an ISO country code
+	 * @return a Locale object from the language code and a given country code
+	 * @see gui.CountryMapper
+	 */
+	public Locale getLocale(String a_countryCode)
+	{
+		if (getISOCode().length() == 0)
+		{
+			return null;
+		}
+		return new Locale(getISOCode(), a_countryCode);
 	}
 
 	/**
@@ -203,5 +235,16 @@ public class LanguageMapper extends AbstractISOCodeMapper
 	protected String getJRETransaltionOfISOCode(String a_ISOLanguageCode, Locale a_locale)
 	{
 		return new Locale(a_ISOLanguageCode, a_locale.getCountry()).getDisplayLanguage(a_locale);
+	}
+
+	/**
+	 * Creates the internal Locale object from the language code.
+	 */
+	private void createLocale()
+	{
+		if (getISOCode().length() > 0)
+		{
+			m_locale = new Locale(getISOCode(), "");
+		}
 	}
 }

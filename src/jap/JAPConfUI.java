@@ -46,11 +46,13 @@ import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.border.TitledBorder;
 
+import gui.JAPHelp;
+import gui.JAPMessages;
+import gui.dialog.JAPDialog;
+import gui.LanguageMapper;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import gui.*;
-import gui.dialog.JAPDialog;
 
 final class JAPConfUI extends AbstractJAPConfModule
 {
@@ -163,10 +165,10 @@ final class JAPConfUI extends AbstractJAPConfModule
 		c.weightx = 0;
 		p.add(l, c);
 		m_comboLanguage = new JComboBox();
-		m_comboLanguage.addItem("Deutsch");
-		m_comboLanguage.addItem("English");
-		m_comboLanguage.addItem("Fran\u00E7ais");
-		m_comboLanguage.addItem("PortuguŽs");
+		m_comboLanguage.addItem(new LanguageMapper("en"));
+		m_comboLanguage.addItem(new LanguageMapper("de"));
+		m_comboLanguage.addItem(new LanguageMapper("fr"));
+		m_comboLanguage.addItem(new LanguageMapper("pt"));
 		m_comboLanguage.addItemListener(new ItemListener()
 		{
 			public void itemStateChanged(ItemEvent e)
@@ -271,21 +273,9 @@ final class JAPConfUI extends AbstractJAPConfModule
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI,
 					  "m_comboLanguage: " + Integer.toString(m_comboLanguage.getSelectedIndex()));
-		if (m_comboLanguage.getSelectedIndex() == 0)
+		if (m_comboLanguage.getSelectedIndex() >= 0)
 		{
-			JAPController.setLocale(Locale.GERMAN);
-		}
-		else if (m_comboLanguage.getSelectedIndex() == 1)
-		{
-			JAPController.setLocale(Locale.ENGLISH);
-		}
-		else if (m_comboLanguage.getSelectedIndex() == 2)
-		{
-			JAPController.setLocale(Locale.FRENCH);
-		}
-		else
-		{
-			JAPController.setLocale(new Locale("pt", ""));
+			JAPController.setLocale(((LanguageMapper)m_comboLanguage.getSelectedItem()).getLocale());
 		}
 		JAPController.setSaveMainWindowPosition(m_cbSaveWindowPositions.isSelected());
 		int defaultView = JAPConstants.VIEW_NORMAL;
@@ -314,26 +304,31 @@ final class JAPConfUI extends AbstractJAPConfModule
 		updateGuiOutput();
 	}
 
-	private void updateGuiOutput()
+	private void setLanguageComboIndex(Locale a_locale)
 	{
+		LanguageMapper langMapper = new LanguageMapper(a_locale.getLanguage());
+		int i = 0;
+
 		m_bIgnoreComboLanguageEvents = true;
-		if (JAPController.getLocale().equals(Locale.ENGLISH))
+		for (; i < m_comboLanguage.getItemCount(); i++)
 		{
-			m_comboLanguage.setSelectedIndex(1);
+			if (m_comboLanguage.getItemAt(i).equals(langMapper))
+			{
+				m_comboLanguage.setSelectedIndex(i);
+				break;
+			}
 		}
-		else if (JAPController.getLocale().equals(Locale.FRENCH))
+		if (i == m_comboLanguage.getItemCount())
 		{
-			m_comboLanguage.setSelectedIndex(2);
-		}
-		else if (JAPController.getLocale().equals(Locale.GERMAN))
-		{
+			// the requested language was not found
 			m_comboLanguage.setSelectedIndex(0);
 		}
-		else
-		{
-			m_comboLanguage.setSelectedIndex(3);
-		}
 		m_bIgnoreComboLanguageEvents = false;
+	}
+
+	private void updateGuiOutput()
+	{
+		setLanguageComboIndex(JAPController.getLocale());
 		m_cbSaveWindowPositions.setSelected(JAPModel.getSaveMainWindowPosition());
 		m_rbViewNormal.setSelected(JAPModel.getDefaultView() == JAPConstants.VIEW_NORMAL);
 		m_rbViewSimplified.setSelected(JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED);
@@ -345,21 +340,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 
 	public void onResetToDefaultsPressed()
 	{
-		m_bIgnoreComboLanguageEvents = true;
-		Locale defaultLocale = Locale.getDefault();
-		if (Locale.GERMAN.equals(defaultLocale))
-		{
-			m_comboLanguage.setSelectedIndex(0);
-		}
-		else if (Locale.FRENCH.equals(defaultLocale))
-		{
-			m_comboLanguage.setSelectedIndex(2);
-		}
-		else
-		{
-			m_comboLanguage.setSelectedIndex(1);
-		}
-		m_bIgnoreComboLanguageEvents = false;
+		setLanguageComboIndex(Locale.getDefault());
 		LookAndFeelInfo lookandfeels[] = UIManager.getInstalledLookAndFeels();
 		for (int i = 0; i < lookandfeels.length; i++)
 		{

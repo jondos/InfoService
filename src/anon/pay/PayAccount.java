@@ -253,7 +253,14 @@ public class PayAccount implements IXMLEncodable
 		/** @todo get BI by supplying a bi-id */
 		Element biid = (Element) XMLUtil.getFirstChildByName(elemAccCert, "BiID");
 		String strBiID = XMLUtil.parseValue(biid, "-1");
-		m_theBI = PayAccountsFile.getInstance().getBI(strBiID);
+		try
+		{
+			m_theBI = PayAccountsFile.getInstance().getBI(strBiID);
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Could not get PI connection data while initializing account.");
+		}
 	}
 
 	/**
