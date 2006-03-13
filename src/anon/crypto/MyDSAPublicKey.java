@@ -54,7 +54,7 @@ import anon.util.XMLUtil;
 final public class MyDSAPublicKey extends AbstractPublicKey implements DSAPublicKey, IMyPublicKey
 {
 	private BigInteger m_Y;
-	private DSAParams m_params;
+	private MyDSAParams m_params;
 	private long m_hashValue = 0;
 
 	public MyDSAPublicKey(DSAPublicKeyParameters params)
@@ -106,6 +106,16 @@ final public class MyDSAPublicKey extends AbstractPublicKey implements DSAPublic
 	}
 
 	public DSAParams getParams()
+	{
+		return m_params;
+	}
+
+	public DSAPublicKeyParameters getPublicParams()
+	{
+		return new DSAPublicKeyParameters(m_Y,m_params);
+	}
+
+	public MyDSAParams getMyDASParams()
 	{
 		return m_params;
 	}
