@@ -75,7 +75,7 @@ public class JAP extends Frame
 
 	/** Initializes and starts the JAP.
 	 */
-	void startJAP()
+	public void startJAP()
 	{
 		final String msg =
 			"JAP must run with a 1.1.3 or higher version Java!\nYou will find more information at the JAP webpage!\nYour Java Version: ";
