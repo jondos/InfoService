@@ -55,7 +55,7 @@ import anon.util.XMLUtil;
 final public class MyDSAPrivateKey extends AbstractPrivateKey implements DSAPrivateKey, IMyPrivateKey
 {
 	private BigInteger m_X;
-	private DSAParams m_params;
+	private MyDSAParams m_params;
 
 	public MyDSAPrivateKey(PrivateKeyInfo privKeyInfo) throws InvalidKeyException
 	{
@@ -154,6 +154,17 @@ final public class MyDSAPrivateKey extends AbstractPrivateKey implements DSAPriv
 	{
 		return m_params;
 	}
+
+	public MyDSAParams getMyDSAParams()
+	{
+		return m_params;
+	}
+
+	public 	DSAPrivateKeyParameters getPrivateParams()
+		{
+			return new DSAPrivateKeyParameters(m_X,m_params);
+		}
+
 
 	/**
 	 * getXmlEncoded
