@@ -37,9 +37,12 @@ import gui.GUIUtils;
 /**
  * This is a dialog that executes a given Thread or Runnable if it is shown on screen. It has an optional
  * cancel button. A click on the dialog close button or on the cancel button will interrupt the Thread.
- * The Thread may watch for this event but does not need to. The default behaviour is that, if the Thread
- * is interrupted and has finished, the previous content pane is shown. If it is not interrupted and has
- * finished, the next content pane is shown.
+ * The Thread may watch for this event but does not need to. The behaviour if the Thread
+ * is interrupted (isInterrupted() returns true) and has finished is the same as if a user clicks the
+ * cancel button. You may therefore control this behaviour by defining another default button operation
+ * for the cancel button and by overwriting the isInterrupted() method of your Thread.
+ * If the Thread is not interrupted and has finished, the next content pane is shown. If there is no next
+ * content pane, the dialog is closed according to the ON_CLICK button operation. By default, it is disposed.
  * <P>Warning: The Thread should not call dispose() on the dialog, as this may lead to a deadlock or
  * an Exception!</P>
  *
@@ -54,7 +57,6 @@ public class WorkerContentPane extends DialogContentPane implements
 	private Thread m_workerThread;
 	private Runnable m_workerRunnable;
 	private Thread m_internalThread;
-	private boolean m_workerInterrupted;
 	private boolean m_bInterruptThreadSafe = true;
 
 	public WorkerContentPane(JAPDialog a_parentDialog, String a_strText, Runnable a_workerRunnable)
@@ -178,8 +180,10 @@ public class WorkerContentPane extends DialogContentPane implements
 	{
 		if (m_workerThread != null)
 		{
-			m_workerInterrupted = true;
-			m_workerThread.interrupt();
+			if (!m_workerThread.isInterrupted())
+			{
+				m_workerThread.interrupt();
+			}
 			if (isInterruptThreadSafe())
 			{
 				joinThread();
@@ -212,6 +216,17 @@ public class WorkerContentPane extends DialogContentPane implements
 			super.interrupt();
 		}
 
+		public boolean isInterrupted()
+		{
+			boolean bInterrupted = super.isInterrupted();
+
+			if (m_thread != null)
+			{
+				bInterrupted = bInterrupted || m_thread.isInterrupted();
+			}
+
+			return bInterrupted;
+		}
 	}
 
 	private class WorkerComponentListener extends ComponentAdapter implements Runnable
@@ -243,10 +258,7 @@ public class WorkerContentPane extends DialogContentPane implements
 		{
 			setButtonValue(RETURN_VALUE_UNINITIALIZED);
 
-			// clear interrupted flag
-			m_workerInterrupted = false;
 			m_workerThread = new InternalThread(m_workerRunnable);
-
 			try
 			{
 				// give the GUI some extra time to show up
@@ -260,7 +272,6 @@ public class WorkerContentPane extends DialogContentPane implements
 				notifyAll();
 				return;
 			}
-
 			m_workerThread.start();
 
 			try
@@ -271,14 +282,42 @@ public class WorkerContentPane extends DialogContentPane implements
 			{
 				interruptWorkerThread();
 			}
-			m_workerThread.interrupt();
-			m_workerThread = null;
 
-			if (!m_workerInterrupted)
+			if (m_workerThread.isInterrupted())
 			{
+				// don't do anything if the cancel (or any other) button was clicked
+				if (getButtonValue() == RETURN_VALUE_UNINITIALIZED)
+				{
+					if ( (getDefaultButtonOperation() &
+						  (ON_CLICK_DISPOSE_DIALOG | ON_CANCEL_DISPOSE_DIALOG)) > 0)
+					{
+						closeDialog(true);
+					}
+					else if ((getDefaultButtonOperation() &
+							  (ON_CLICK_HIDE_DIALOG | ON_CANCEL_HIDE_DIALOG)) > 0)
+					{
+						closeDialog(false);
+					}
+					else if ((getDefaultButtonOperation() &
+							  (ON_CLICK_SHOW_PREVIOUS_CONTENT | ON_CANCEL_SHOW_PREVIOUS_CONTENT)) > 0)
+					{
+						moveToPreviousContentPane();
+					}
+					else if ((getDefaultButtonOperation() &
+							  (ON_CLICK_SHOW_NEXT_CONTENT | ON_CANCEL_SHOW_NEXT_CONTENT)) > 0)
+					{
+						moveToNextContentPane();
+					}
+				}
+			}
+			else
+			{
+				interruptWorkerThread();
 				setButtonValue(RETURN_VALUE_OK);
 				moveToNextContentPane();
 			}
+
+			m_workerThread = null;
 			notifyAll();
 		}
 	}
