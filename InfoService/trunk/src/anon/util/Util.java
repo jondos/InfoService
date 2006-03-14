@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000, The JAP-Team
+ Copyright (c) 2000-2006, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -30,9 +30,14 @@ package anon.util;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Vector;
+import java.util.StringTokenizer;
+import java.util.NoSuchElementException;
 
 public final class Util
 {
+	/** Defines the format of version numbers in the AN.ON project. */
+	public static final String VERSION_FORMAT = "00.00.000";
+
 	/**
 	 * This class works without being initialised and is completely static.
 	 * Therefore, the constructor is not needed and private.
@@ -70,11 +75,8 @@ public final class Util
 	 */
 	public static String getStackTrace(Throwable a_t)
 	{
-		PrintWriter writer;
-		StringWriter strWriter;
-
-		strWriter = new StringWriter();
-		writer = new PrintWriter(strWriter);
+		StringWriter strWriter = new StringWriter();
+		PrintWriter writer = new PrintWriter(strWriter);
 
 		a_t.printStackTrace(writer);
 
@@ -387,5 +389,32 @@ public final class Util
 			case '\u00fc': a_transformedUmlauts[a_position] = "ue"; return true;
 			default: a_transformedUmlauts[a_position] = null; return false;
 		}
+	}
+
+	/**
+	 * Converts a version string of the form xx.xx.xxx to a number
+	 * @param a_version a version string of the form xx.xx.xxx
+	 * @return the given version string as number
+	 * @throws java.lang.NumberFormatException if the version has an illegal format
+	 */
+	public static long convertVersionStringToNumber(String a_version) throws NumberFormatException
+	{
+		if (a_version == null)
+		{
+			throw new NumberFormatException("Version string is null!");
+		}
+
+		long version = 0;
+		StringTokenizer st = new StringTokenizer(a_version, ".");
+		try
+		{
+			version = Long.parseLong(st.nextToken()) * 100000 + Long.parseLong(st.nextToken()) * 1000 +
+				Long.parseLong(st.nextToken());
+		}
+		catch (NoSuchElementException a_e)
+		{
+			throw new NumberFormatException("Version string is too short!");
+		}
+		return version;
 	}
 }

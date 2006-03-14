@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000, The JAP-Team
+ Copyright (c) 2000-2006, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -36,6 +36,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
+import anon.util.Util;
 
 /**
  * This class represents a payment option sent by the Payment Instance.
@@ -79,6 +80,9 @@ public class XMLPaymentOption implements IXMLEncodable
 	/** A link to an image */
 	private String m_imageLink;
 
+	/** JAP version since when the option does work (for non-generic options) */
+	private String m_japVersion;
+
 	public XMLPaymentOption(String xml) throws Exception
 	{
 		ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes());
@@ -95,6 +99,14 @@ public class XMLPaymentOption implements IXMLEncodable
 		m_name = a_name;
 		m_type = a_type;
 		m_generic = a_generic;
+	}
+
+	public XMLPaymentOption(String a_name, String a_type, boolean a_generic, String a_japVersion)
+	{
+		m_name = a_name;
+		m_type = a_type;
+		m_generic = a_generic;
+		m_japVersion = a_japVersion;
 	}
 
 	public XMLPaymentOption(String a_name, String a_type)
@@ -149,6 +161,7 @@ public class XMLPaymentOption implements IXMLEncodable
 		elemRoot.setAttribute("name", m_name);
 		elemRoot.setAttribute("type", m_type);
 		elemRoot.setAttribute("generic", String.valueOf(m_generic));
+		elemRoot.setAttribute("japversion", m_japVersion);
 
 		Element elem;
 
@@ -222,6 +235,7 @@ public class XMLPaymentOption implements IXMLEncodable
 		m_type = elemRoot.getAttribute("type");
 		m_name = elemRoot.getAttribute("name");
 		m_generic = XMLUtil.parseAttribute(elemRoot, "generic", true);
+		m_japVersion = XMLUtil.parseAttribute(elemRoot, "japversion", Util.VERSION_FORMAT);
 
 		NodeList nodesHeadings = elemRoot.getElementsByTagName("Heading");
 		for (int i = 0; i < nodesHeadings.getLength(); i++)
@@ -361,4 +375,20 @@ public class XMLPaymentOption implements IXMLEncodable
 		return m_generic;
 	}
 
-}
+	public void setJapVersion(String a_japVersion)
+	{
+		m_japVersion = a_japVersion;
+	}
+
+	public boolean worksWithJapVersion(String a_version)
+	{
+		if (m_japVersion != null)
+		{
+			if (Util.convertVersionStringToNumber(m_japVersion) > Util.convertVersionStringToNumber(a_version))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+};
