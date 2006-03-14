@@ -196,9 +196,24 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		m_paymentOptions = options;
 		Enumeration headings = options.getOptionHeadings(JAPController.getLocale().
 			getLanguage());
+
+		//Add all generic options and only non-genric options that work with this JAP version
 		while (headings.hasMoreElements())
 		{
-			addOption( (String) headings.nextElement());
+			String heading = (String) headings.nextElement();
+			if (!m_paymentOptions.getOption(heading, JAPController.getLocale().
+										   getLanguage()).isGeneric())
+			{
+				if (m_paymentOptions.getOption(heading, JAPController.getLocale().
+											   getLanguage()).worksWithJapVersion(JAPConstants.aktVersion))
+				{
+					addOption(heading);
+				}
+			}
+			else
+			{
+				addOption(heading);
+			}
 		}
 		addCurrencies(options.getCurrencies());
 	}
@@ -213,7 +228,7 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 			error[0] = new CheckError(JAPMessages.getString(MSG_ERRSELECT), LogType.PAY);
 			return error;
 		}
-	    else if (!m_selectedPaymentOption.isGeneric())
+		else if (!m_selectedPaymentOption.isGeneric())
 		{
 			StringTokenizer st = new StringTokenizer(JAPConstants.PAYMENT_NONGENERIC, ",");
 			while (st.hasMoreTokens())
