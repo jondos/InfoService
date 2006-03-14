@@ -41,6 +41,7 @@ import anon.pay.xml.XMLPaymentOptions;
 import anon.pay.xml.XMLPaymentOption;
 import java.util.Enumeration;
 import java.util.Vector;
+import anon.util.Util;
 import java.util.StringTokenizer;
 import anon.infoservice.ListenerInterface;
 
@@ -51,7 +52,7 @@ import anon.infoservice.ListenerInterface;
 public class Configuration
 {
 	/** Versionsnummer --> Please update if you change anything*/
-	public static final String BEZAHLINSTANZ_VERSION = "BI.02.021";
+	public static final String BEZAHLINSTANZ_VERSION = "BI.02.022";
 	public static IMyPrivateKey getPrivateKey()
 	{
 		return m_privateKey;
@@ -517,7 +518,13 @@ public class Configuration
 				generic = "true";
 			}
 
-			XMLPaymentOption option = new XMLPaymentOption(name, type, Boolean.valueOf(generic).booleanValue());
+			String japversion = props.getProperty("option" + i + "japversion");
+			if (japversion == null)
+			{
+				japversion = Util.VERSION_FORMAT;
+			}
+
+			XMLPaymentOption option = new XMLPaymentOption(name, type, Boolean.valueOf(generic).booleanValue(), japversion);
 
 			//Add headings
 			String heading;
