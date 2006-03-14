@@ -44,9 +44,13 @@ public final class JAPJIntField extends JTextField
 	/** choose this value if the integer text field should have no upper bound */
 	public static final int NO_MAXIMUM_BOUND = -1;
 
+	public static final int ALLOW_ZEROS_NONE = 0;
+	public static final int ALLOW_ZEROS_ONE = 1;
+	public static final int ALLOW_ZEROS_UNTIL_BOUND = 2;
+
 	private static final String MSG_NO_VALID_INTEGER = gui.JAPJIntField.class.getName() + "_noValidInteger";
 
-	private IntFieldBounds m_bounds;
+	private IIntFieldBounds m_bounds;
 	private boolean b_bAutoTransferFocus;
 
 	/**
@@ -81,7 +85,7 @@ public final class JAPJIntField extends JTextField
 	 * Creates a new JAPJIntField.
 	 * @param a_bounds the bounds (minimum/maximum value) for this integer text field
 	 */
-	public JAPJIntField(IntFieldBounds a_bounds)
+	public JAPJIntField(IIntFieldBounds a_bounds)
 	{
 		this(a_bounds, false);
 	}
@@ -92,9 +96,15 @@ public final class JAPJIntField extends JTextField
 	 * @param a_bAutoTransferFocus if the focus of the field should automatically be transfered if the
 	 * maximum value would be exceeded with the next input
 	 */
-	public JAPJIntField(IntFieldBounds a_bounds, boolean a_bAutoTransferFocus)
+	public JAPJIntField(IIntFieldBounds a_bounds, boolean a_bAutoTransferFocus)
 	{
 		super(parseNumberOfDigits(a_bounds.getMaximum()));
+
+		if (a_bounds.getAllowZeros() < ALLOW_ZEROS_NONE || a_bounds.getAllowZeros() > ALLOW_ZEROS_UNTIL_BOUND)
+		{
+			throw new IllegalArgumentException("getAllowZeros() returned an illegal value: " +
+				a_bounds.getAllowZeros());
+		}
 
 		m_bounds = a_bounds;
 		b_bAutoTransferFocus = a_bAutoTransferFocus;
@@ -126,25 +136,28 @@ public final class JAPJIntField extends JTextField
 		else
 		{
 			arguments[1] = getName();
-	}
+		}
 
 		try
-	{
-			integer = Integer.parseInt(getText());
-			if (integer < 0 || (!m_bounds.isZeroAllowed() && integer == 0) ||
-				(m_bounds.getMaximum() >= 0 && integer > m_bounds.getMaximum()))
 		{
+			integer = Integer.parseInt(getText());
+			if (integer < 0 || ((m_bounds.getAllowZeros() == ALLOW_ZEROS_NONE) && (integer == 0)) ||
+				(m_bounds.getMaximum() >= 0 && integer > m_bounds.getMaximum()))
+			{
 				arguments[0] = new Integer(integer);
 			}
-			return integer;
+			else
+			{
+				return integer;
+			}
 		}
 		catch (NumberFormatException a_e)
-			{
+		{
 			arguments[0] = getText();
 		}
 
 		throw new NumberFormatException(JAPMessages.getString(MSG_NO_VALID_INTEGER, arguments));
-			}
+	}
 
 	/**
 	 * Updates the text field with the current bounds. If the number entered in the text field is not
@@ -152,20 +165,20 @@ public final class JAPJIntField extends JTextField
 	 */
 	public void updateBounds()
 	{
-			try
-			{
+		try
+		{
 			if (getInt() > m_bounds.getMaximum())
 			{
 				setInt(m_bounds.getMaximum());
 			}
-			if (!m_bounds.isZeroAllowed() && getInt() == 0)
+			if ((m_bounds.getAllowZeros() == ALLOW_ZEROS_NONE) && (getInt() == 0))
 			{
 				setInt(1);
 			}
 		}
 		catch (NumberFormatException a_e)
 		{
-			if (m_bounds.isZeroAllowed())
+			if (m_bounds.getAllowZeros() > ALLOW_ZEROS_NONE)
 			{
 				setInt(0);
 			}
@@ -180,13 +193,18 @@ public final class JAPJIntField extends JTextField
 	 * This interface represents bounds for the integer text field, this means what numbers (max/min)
 	 * are allowed to enter.
 	 */
-	public static interface IntFieldBounds
+	public static interface IIntFieldBounds
 	{
 		/**
-		 * Returns if zero is allowed.
-		 * @return true if zero is allowed; false otherwise
+		 * Returns the number of allowed left-hand zeros as one of the following constants:
+		 * <ul>
+		 *   <li> ALLOW_ZEROS_NONE </li>
+		 *   <li> ALLOW_ZEROS_ONE </li>
+		 *   <li> ALLOW_ZEROS_UNTIL_BOUND </li>
+		 * </ul>
+		 * @return the number of allowed left-hand zeros as a constant
 		 */
-		boolean isZeroAllowed();
+		int getAllowZeros();
 
 		/**
 		 * Returns the maximum value that is allowed to enter.
@@ -194,31 +212,57 @@ public final class JAPJIntField extends JTextField
 		 * no upper bound
 		 */
 		int getMaximum();
-			}
+	}
 
-	/**
-	 * This bound does not allow zeros.
-	 */
-	public static final class IntFieldWithoutZeroBounds implements IntFieldBounds
-			{
+	public static abstract class AbstractIntFieldBounds implements IIntFieldBounds
+	{
 		private int m_maxValue;
 
-		public IntFieldWithoutZeroBounds(int a_maxValue)
+		public AbstractIntFieldBounds(int a_maxValue)
 		{
 			m_maxValue = a_maxValue;
 		}
 
-		/**
-		 * Zero is not allowed.
-		 * @return false
-		 */
-		public boolean isZeroAllowed()
-		{
-			return false;
-		}
-		public int getMaximum()
+		public final int getMaximum()
 		{
 			return m_maxValue;
+		}
+	}
+
+	public static final class IntFieldUnlimitedZerosBounds extends AbstractIntFieldBounds
+	{
+		public IntFieldUnlimitedZerosBounds(int a_maxValue)
+		{
+			super(a_maxValue);
+		}
+
+		/**
+		 * Allows left-hand zeros until the digit bound is reached.
+		 * @return ALLOW_ZEROS_UNTIL_BOUND
+		 */
+		public int getAllowZeros()
+		{
+			return ALLOW_ZEROS_UNTIL_BOUND;
+		}
+	}
+
+	/**
+	 * This bound does not allow zeros.
+	 */
+	public static final class IntFieldWithoutZeroBounds extends AbstractIntFieldBounds
+	{
+		public IntFieldWithoutZeroBounds(int a_maxValue)
+		{
+			super(a_maxValue);
+		}
+
+		/**
+		 * Left-hand zeros are not allowed.
+		 * @return ALLOW_ZEROS_NONE
+		 */
+		public int getAllowZeros()
+		{
+			return ALLOW_ZEROS_NONE;
 		}
 	}
 
@@ -227,27 +271,20 @@ public final class JAPJIntField extends JTextField
 		return new IntDocument();
 	}
 
-	private static final class DefaultBounds implements IntFieldBounds
+	private static final class DefaultBounds extends AbstractIntFieldBounds
 	{
-		private int m_maximum;
-
 		public DefaultBounds(int a_maximum)
 		{
-			m_maximum = a_maximum;
+			super(a_maximum);
 		}
 
 		/**
-		 * Zero is allowed.
-		 * @return true
+		 * One left-hand zero is allowed.
+		 * @return ALLOW_ZEROS_ONE
 		 */
-		public boolean isZeroAllowed()
+		public int getAllowZeros()
 		{
-			return true;
-			}
-
-		public int getMaximum()
-		{
-			return m_maximum;
+			return ALLOW_ZEROS_ONE;
 		}
 	}
 
@@ -268,38 +305,57 @@ public final class JAPJIntField extends JTextField
 				currentInt = Integer.parseInt(getText(0, getLength()) + string);
 			}
 			catch (NumberFormatException e)
-				{
-				return;
-				}
-
-			// do not allow to write more than one zero and a value higher than the maximum
-			if ((currentInt == 0 && offSet > 0) ||
-				(currentInt < 10 && offSet > 0))
 			{
 				return;
 			}
 
+
+			if (m_bounds.getAllowZeros() < ALLOW_ZEROS_UNTIL_BOUND)
+			{
+				// do not allow to write more than one zero
+				if (currentInt < 10 && offSet > 0)
+				{
+					return;
+				}
+			}
+			else
+			{
+				// do not write more than the length of the maximum bound
+				if (m_bounds.getMaximum() >= 0 && parseNumberOfDigits(m_bounds.getMaximum()) < (offSet + 1))
+				{
+					return;
+				}
+			}
+
+
+
 			// do not allow to write more than the maximum and check if zero is allowed
 			if (!(m_bounds.getMaximum() >= 0 && currentInt > m_bounds.getMaximum()) &&
-				(m_bounds.isZeroAllowed() || (!m_bounds.isZeroAllowed() && currentInt > 0)))
+				(m_bounds.getAllowZeros() > ALLOW_ZEROS_NONE ||
+				 (m_bounds.getAllowZeros() == ALLOW_ZEROS_NONE && currentInt > 0)))
 			{
 				super.insertString(offSet, string, attributeSet);
 			}
 
 			// if the maximum number length has been reached, move on to the next component
 			if (m_bounds.getMaximum() >= 0 && b_bAutoTransferFocus && getLength() > 0 &&
-				10 * Integer.parseInt(getText(0, getLength())) > m_bounds.getMaximum())
+				(offSet + 1) == parseNumberOfDigits(m_bounds.getMaximum()))
 			{
 				transferFocus();
 			}
 		}
-		}
+	}
 
 	private static int parseNumberOfDigits(int a_integer)
 		{
 			int digits;
 
-			for (digits = 1; a_integer > 0; digits++, a_integer /= 10);
+			for (digits = 0; a_integer > 0; digits++, a_integer /= 10);
+
+			if (digits == 0)
+			{
+				digits = 1;
+			}
 
 			return digits;
 	}

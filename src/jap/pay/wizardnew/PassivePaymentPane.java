@@ -363,6 +363,8 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 	 */
 	private void showCreditCardForm()
 	{
+		JAPJIntField.IIntFieldBounds bounds;
+
 		m_rootPanel.removeAll();
 		m_rootPanel = this.getContentPane();
 		m_c = new GridBagConstraints();
@@ -390,26 +392,27 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		}
 		m_rootPanel.add(m_cbCompany, m_c);
 
+		bounds = new JAPJIntField.IntFieldUnlimitedZerosBounds(9999);
 		m_c.gridy++;
 		m_rootPanel.add(new JLabel(JAPMessages.getString(MSG_CARDNUMBER)), m_c);
 		m_c.gridx++;
 		m_c.gridwidth = 1;
-		m_tfCardNumber1 = new JAPJIntField(9999);
+		m_tfCardNumber1 = new JAPJIntField(bounds, true);
 		m_rootPanel.add(m_tfCardNumber1, m_c);
 
 		m_c.gridx++;
 		m_c.gridwidth = 1;
-		m_tfCardNumber2 = new JAPJIntField(9999);
+		m_tfCardNumber2 = new JAPJIntField(bounds, true);
 		m_rootPanel.add(m_tfCardNumber2, m_c);
 
 		m_c.gridx++;
 		m_c.gridwidth = 1;
-		m_tfCardNumber3 = new JAPJIntField(9999);
+		m_tfCardNumber3 = new JAPJIntField(bounds, true);
 		m_rootPanel.add(m_tfCardNumber3, m_c);
 
 		m_c.gridx++;
 		m_c.gridwidth = 1;
-		m_tfCardNumber4 = new JAPJIntField(9999);
+		m_tfCardNumber4 = new JAPJIntField(bounds, true);
 		m_rootPanel.add(m_tfCardNumber4, m_c);
 
 		m_c.gridx = 0;
@@ -453,7 +456,7 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		m_rootPanel.add(new JLabel(JAPMessages.getString(MSG_CARDCHECKNUMBER)), m_c);
 		m_c.gridx++;
 		m_c.gridwidth = 1;
-		m_tfCardCheckNumber = new JAPJIntField(9999);
+		m_tfCardCheckNumber = new JAPJIntField(bounds, true);
 		m_rootPanel.add(m_tfCardCheckNumber, m_c);
 
 		m_c.gridx++;
@@ -461,5 +464,4 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		m_rootPanel.add(new JLabel(GUIUtils.loadImageIcon(IMG_CREDITCARDSECURITY, true)), m_c);
 
 	}
-
 }
