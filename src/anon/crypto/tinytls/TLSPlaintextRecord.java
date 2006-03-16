@@ -27,26 +27,38 @@
  */
 package anon.crypto.tinytls;
 
-
-/** This is the lowest layer packet*/
-public class TLSRecord
+/** This is the TLS plaintext record*/
+final public class TLSPlaintextRecord
 {
-	public int m_Type;
-	public int m_dataLen;
-	public byte[] m_Data;
-	public byte[] m_Header;
+	private int m_Type;
+	private int m_dataLen;
+	private byte[] m_Data;
+	private byte[] m_Header;
 
 	/**
 	 * Constructor
 	 *
 	 */
-	public TLSRecord()
+	public TLSPlaintextRecord()
 	{
 		m_Header = new byte[5];
 		m_Header[1] = TinyTLS.PROTOCOLVERSION[0];
 		m_Header[2] = TinyTLS.PROTOCOLVERSION[1];
-		m_Data = new byte[0xFFFF];
+		m_Data = new byte[0x2000]; //max 2^14 bytes for a TLS.plaintext record
 		m_dataLen = 0;
+		m_Type = 0;
+	}
+
+	/** Retruns the original buffer of the header of this TLS record!*/
+	public byte[] getHeader()
+	{
+		return m_Header;
+	}
+
+	/** Retruns the original buffer of the data of this TLS record!*/
+	public byte[] getData()
+	{
+		return m_Data;
 	}
 
 	/**
@@ -60,6 +72,14 @@ public class TLSRecord
 		m_Header[0] = (byte) (type & 0x00FF);
 	}
 
+	/** return the type of this tls record
+	 *
+	 */
+	public int getType()
+	{
+		return m_Type;
+	}
+
 	/**
 	 * sets the length of the tls record
 	 * @param len
@@ -70,6 +90,12 @@ public class TLSRecord
 		m_dataLen = len;
 		m_Header[3] = (byte) ( (len >> 8) & 0x00FF);
 		m_Header[4] = (byte) ( (len) & 0x00FF);
+	}
+
+	/** REturn the size of the payload data of this record.*/
+	public int getLength()
+	{
+		return m_dataLen;
 	}
 
 }
