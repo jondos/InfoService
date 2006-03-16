@@ -538,6 +538,42 @@ public class TinyTLS extends Socket
 					case 2:
 					{
 						this.gotServerHello(m_aktTLSRecord);
+						if (length < m_aktTLSRecord.m_dataLen - 4)
+						{
+							int aktIndex = 4;
+							aktIndex += length;
+							type = m_aktTLSRecord.m_Data[aktIndex];
+							length = ( (m_aktTLSRecord.m_Data[aktIndex + 1] & 0xFF) << 16) |
+								( (m_aktTLSRecord.m_Data[aktIndex + 2] & 0xFF) << 8) |
+								(m_aktTLSRecord.m_Data[aktIndex + 3] & 0xFF);
+
+							if (type == 11)
+							{
+								aktIndex += 4;
+								gotCertificate(m_aktTLSRecord.m_Data, aktIndex,
+											   m_aktTLSRecord.m_dataLen - aktIndex);
+								aktIndex += length;
+								type = m_aktTLSRecord.m_Data[aktIndex];
+								length = ( (m_aktTLSRecord.m_Data[aktIndex + 1] & 0xFF) << 16) |
+										( (m_aktTLSRecord.m_Data[aktIndex + 2] & 0xFF) << 8) |
+										(m_aktTLSRecord.m_Data[aktIndex + 3] & 0xFF);
+								if (type == 12)
+								{
+									aktIndex += 4;
+									gotServerKeyExchange(m_aktTLSRecord.m_Data, aktIndex,
+										m_aktTLSRecord.m_dataLen - aktIndex);
+									aktIndex += length;
+									type = m_aktTLSRecord.m_Data[aktIndex];
+									if(type==14)
+									{
+										aktIndex += 4;
+										gotServerHelloDone(m_aktTLSRecord.m_Data, aktIndex, m_aktTLSRecord.m_dataLen - aktIndex);
+									}
+
+								}
+							}
+
+						}
 						break;
 					}
 					//certificate
