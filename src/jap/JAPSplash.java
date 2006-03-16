@@ -38,7 +38,10 @@ import java.awt.Image;
 import java.awt.MediaTracker;
 import java.awt.Toolkit;
 import java.awt.Window;
-import gui.*;
+import gui.JAPMessages;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.Rectangle;
 
 final public class JAPSplash extends Window
 {
@@ -141,7 +144,7 @@ final public class JAPSplash extends Window
 		;
 		setVisible(true);
 		toFront();
-		JAPUtil.centerFrame(this);
+		centerOnScreen(this);
 	}
 
 	public void update(Graphics g)
@@ -169,6 +172,39 @@ final public class JAPSplash extends Window
 		goff.drawString(m_strLoading, 17, 140);
 		goff.drawString(m_strVersion, m_iXVersion, m_iYVersion);
 		g.drawImage(m_imgOffScreen, 0, 0, this);
+	}
+
+	/**
+	 * Centers a window relative to the screen.
+	 * @param a_window a Window
+	 * @note copied form GUIUtils - because we want to have the smallest possible dependencies for JAPSplash-Screen to make it load faster
+	 */
+	private static void centerOnScreen(Window a_window)
+	{
+		Rectangle screenBounds;
+		Dimension ownSize = a_window.getSize();
+
+		try
+		{
+			// try to center the window on the default screen; useful if there is more than one screen
+			Object graphicsEnvironment =
+				Class.forName("java.awt.GraphicsEnvironment").getMethod(
+						"getLocalGraphicsEnvironment", null).invoke(null, null);
+			Object graphicsDevice = graphicsEnvironment.getClass().getMethod(
+				 "getDefaultScreenDevice", null).invoke(graphicsEnvironment, null);
+			Object graphicsConfiguration = graphicsDevice.getClass().getMethod(
+				"getDefaultConfiguration", null).invoke(graphicsDevice, null);
+			screenBounds = (Rectangle)graphicsConfiguration.getClass().getMethod(
+				 "getBounds", null).invoke(graphicsConfiguration, null);
+		}
+		catch(Exception a_e)
+		{
+			// not all methods to get the default screen are available in JDKs < 1.3
+			screenBounds = new Rectangle(new Point(0,0), a_window.getToolkit().getScreenSize());
+		}
+
+		a_window.setLocation(screenBounds.x + ((screenBounds.width - ownSize.width) / 2),
+							 screenBounds.y + ((screenBounds.height - ownSize.height) / 2));
 	}
 
 }
