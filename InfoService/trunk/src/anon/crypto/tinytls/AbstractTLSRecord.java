@@ -25,68 +25,58 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
+/*
+ * based on tinySSL
+ * (http://www.ritlabs.com/en/products/tinyweb/tinyssl.php)
+ *
+ */
 package anon.crypto.tinytls;
 
-/** This is the TLS plaintext record*/
-final public class TLSPlaintextRecord extends AbstractTLSRecord
+abstract public class AbstractTLSRecord
 {
-	public final static int CONTENTTYPE_HANDSHAKE = 22;
+	protected int m_Type;
+	protected int m_dataLen;
+	protected byte[] m_Data;
+	protected byte[] m_Header;
 
-	public final static int HEADER_LENGTH = 5;
 
-	private int m_nextHandshakeRecordOffset;
+	/** Retruns the original buffer of the header of this TLS record!*/
+	public byte[] getHeader()
+	{
+		return m_Header;
+	}
+
+	/** Retruns the original buffer of the data of this TLS record!*/
+	public byte[] getData()
+	{
+		return m_Data;
+	}
 
 	/**
-	 * Constructor
+	 * sets the typeof the tls record
+	 * @param type
+	 * type
+	 */
+	public void setType(int type)
+	{
+		m_Type = type;
+		m_Header[0] = (byte) (type & 0x00FF);
+	}
+
+	/** return the type of this tls record
 	 *
 	 */
-	public TLSPlaintextRecord()
+	public int getType()
 	{
-		m_Header = new byte[HEADER_LENGTH];
-		m_Header[1] = TinyTLS.PROTOCOLVERSION[0];
-		m_Header[2] = TinyTLS.PROTOCOLVERSION[1];
-		m_Data = new byte[0x2000]; //max 2^14 bytes for a TLS.plaintext record
-		m_dataLen = 0;
-		m_Type = 0;
-		m_nextHandshakeRecordOffset = 0;
+		return m_Type;
 	}
 
-	public void clean()
+	/** Return the size of the payload data of this record.*/
+	public int getLength()
 	{
-		m_dataLen = 0;
-		m_Type = 0;
-		m_nextHandshakeRecordOffset = 0;
+		return m_dataLen;
 	}
 
-	public int getHeaderLength()
-	{
-		return HEADER_LENGTH;
-	}
-
-	/**
-	 * sets the length of the tls record
-	 * @param len
-	 * length
-	 */
-	public void setLength(int len)
-	{
-		m_dataLen = len;
-		m_Header[3] = (byte) ( (len >> 8) & 0x00FF);
-		m_Header[4] = (byte) ( (len) & 0x00FF);
-	}
-
-	/** Retruns true if this record contains in the payload some more handshake records.*/
-	public boolean hasMoreHandshakeRecords()
-	{
-		return (m_Type == CONTENTTYPE_HANDSHAKE) && (m_nextHandshakeRecordOffset < m_dataLen);
-	}
-
-	/** Retruns the next handshake record from inside the payload*/
-	public TLSHandshakeRecord getNextHandshakeRecord()
-	{
-		TLSHandshakeRecord handshake = new TLSHandshakeRecord(m_Data, m_nextHandshakeRecordOffset);
-		m_nextHandshakeRecordOffset += handshake.getLength() + TLSHandshakeRecord.HEADER_LENGTH;
-		return handshake;
-	}
+	abstract public int getHeaderLength();
 
 }
