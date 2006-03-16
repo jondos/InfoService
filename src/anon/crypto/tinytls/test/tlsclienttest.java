@@ -15,11 +15,12 @@ public class tlsclienttest
 	public static void main(String[] args) throws Exception
 	{
 		LogHolder.setLogInstance(new SystemErrLog());
-		Socket	tls = new Socket("localhost", 3456);
-//		TinyTLS tls = new TinyTLS("anon.inf.tu-dresden.de",443);
-		//tls.checkRootCertificate(true);
+		//Socket	tls = new Socket("localhost", 3456);
+		TinyTLS tls = new TinyTLS("localhost", 3456);
+//		TinyTLS tls = new TinyTLS("anon.inf.tu-dresden.de", 49876);
+		tls.checkRootCertificate(false);
 	//	tls.setRootKey(JAPCertificate.getInstance("testkey.cer").getPublicKey());
-	//	tls.startHandshake();
+		tls.startHandshake();
 //		OutputStream out=tls.getOutputStream();
 //		out.write("GET /index.html HTTP/1.0\r\n\r\n".getBytes());
 //		out.flush();
