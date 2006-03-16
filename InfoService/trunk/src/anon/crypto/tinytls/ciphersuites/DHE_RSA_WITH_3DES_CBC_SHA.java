@@ -39,7 +39,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
 import anon.crypto.MyRandom;
 import anon.crypto.tinytls.TLSException;
-import anon.crypto.tinytls.TLSRecord;
+import anon.crypto.tinytls.TLSPlaintextRecord;
 import anon.crypto.tinytls.keyexchange.DHE_RSA_Key_Exchange;
 import anon.util.ByteArrayUtil;
 
@@ -49,10 +49,6 @@ import anon.util.ByteArrayUtil;
  */
 public class DHE_RSA_WITH_3DES_CBC_SHA extends CipherSuite
 {
-
-	private CBCBlockCipher m_encryptcipher;
-	private MyRandom m_rand;
-
 	/**
 	 * Constuctor
 	 * @throws Exception
@@ -63,36 +59,7 @@ public class DHE_RSA_WITH_3DES_CBC_SHA extends CipherSuite
 			  {0x00, 0x16});
 		m_ciphersuitename = "TLS_DHE_RSA_WITH_3DES_CBC_SHA";
 		this.setKeyExchangeAlgorithm(new DHE_RSA_Key_Exchange());
-		m_rand = new MyRandom();
 	}
-
-	public void encode(TLSRecord msg)
-	{
-		HMac hmac = new HMac(new SHA1Digest());
-		hmac.reset();
-		hmac.init(new KeyParameter(m_clientmacsecret));
-		hmac.update(ByteArrayUtil.inttobyte(m_writesequenznumber, 8), 0, 8);
-		m_writesequenznumber++;
-		hmac.update(msg.m_Header, 0, msg.m_Header.length);
-		hmac.update(msg.m_Data, 0, msg.m_dataLen);
-		hmac.doFinal(msg.m_Data, msg.m_dataLen);
-		msg.m_dataLen += hmac.getMacSize();
-		//add padding as described in RFC2246 (6.2.3.2)
-		int paddingsize = m_rand.nextInt(240);
-		paddingsize = paddingsize +
-			(m_encryptcipher.getBlockSize() -
-			 ( (msg.m_dataLen + 1 + paddingsize) % m_encryptcipher.getBlockSize()));
-		for (int i = 0; i < paddingsize + 1; i++)
-		{
-			msg.m_Data[msg.m_dataLen++] = (byte) paddingsize;
-		}
-		for (int i = 0; i < msg.m_dataLen; i += m_encryptcipher.getBlockSize())
-		{
-			this.m_encryptcipher.processBlock(msg.m_Data, i, msg.m_Data, i);
-		}
-		msg.setLength(msg.m_dataLen);
-	}
-
 
 	protected void calculateKeys(byte[] keys, boolean forclient)
 	{

@@ -35,13 +35,14 @@ import java.math.BigInteger;
 
 import anon.crypto.JAPCertificate;
 import anon.crypto.tinytls.TLSException;
-import anon.crypto.tinytls.TLSRecord;
+import anon.crypto.tinytls.TLSPlaintextRecord;
 import anon.crypto.tinytls.keyexchange.Key_Exchange;
 import anon.util.ByteArrayUtil;
 import org.bouncycastle.crypto.macs.HMac;
 import org.bouncycastle.crypto.digests.SHA1Digest;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
+import anon.crypto.MyRandom;
 
 /**
  * @author stefan
@@ -57,8 +58,10 @@ public abstract class CipherSuite
 	private Key_Exchange m_keyexchangealgorithm = null;
 	private JAPCertificate m_servercertificate = null;
 	protected CBCBlockCipher m_decryptcipher;
-	private HMac m_hmac = new HMac(new SHA1Digest());
-
+	protected CBCBlockCipher m_encryptcipher;
+	private HMac m_hmacInput = new HMac(new SHA1Digest());
+	private HMac m_hmacOutput = new HMac(new SHA1Digest());
+	private MyRandom m_Random;
 	/**
 	 * writesequenznumber for packages
 	 */
@@ -103,10 +106,11 @@ public abstract class CipherSuite
 		{
 			throw new TLSException("wrong CipherSuiteCode ");
 		}
-		this.m_ciphersuitecode = code;
-		this.m_writesequenznumber = 0;
-		this.m_readsequenznumber = 0;
-	}
+		m_ciphersuitecode = code;
+		m_writesequenznumber = 0;
+		m_readsequenznumber = 0;
+		m_Random = new MyRandom();
+		}
 
 	/**
 	 * sets the key exchange algorithm
@@ -114,7 +118,7 @@ public abstract class CipherSuite
 	 */
 	protected void setKeyExchangeAlgorithm(Key_Exchange ke)
 	{
-		this.m_keyexchangealgorithm = ke;
+		m_keyexchangealgorithm = ke;
 	}
 
 	/**
@@ -124,7 +128,7 @@ public abstract class CipherSuite
 	 */
 	public Key_Exchange getKeyExchangeAlgorithm()
 	{
-		return this.m_keyexchangealgorithm;
+		return m_keyexchangealgorithm;
 	}
 
 	/**
@@ -154,7 +158,8 @@ public abstract class CipherSuite
 	{
 		this.m_keyexchangealgorithm.processClientKeyExchange(dh_y);
 		calculateKeys(this.m_keyexchangealgorithm.calculateKeys(), false);
-
+		m_hmacInput.init(new KeyParameter(m_servermacsecret));
+		m_hmacOutput.init(new KeyParameter(m_clientmacsecret));
 	}
 
 	/**
@@ -166,6 +171,8 @@ public abstract class CipherSuite
 	{
 		byte[] b = this.m_keyexchangealgorithm.calculateClientKeyExchange();
 		calculateKeys(this.m_keyexchangealgorithm.calculateKeys(), true);
+		m_hmacInput.init(new KeyParameter(m_servermacsecret));
+		m_hmacOutput.init(new KeyParameter(m_clientmacsecret));
 		return b;
 	}
 
@@ -174,10 +181,10 @@ public abstract class CipherSuite
 	 * @param finishedmessage the message that have to be valideted
 	 * @throws TLSException
 	 */
-	public void processServerFinished(TLSRecord msg, byte[] handshakemessages) throws TLSException
+	public void processServerFinished(TLSPlaintextRecord msg, byte[] handshakemessages) throws TLSException
 	{
 		decode(msg);
-		m_keyexchangealgorithm.processServerFinished(msg.m_Data, msg.m_dataLen, handshakemessages);
+		m_keyexchangealgorithm.processServerFinished(msg.getData(), msg.getLength(), handshakemessages);
 	}
 
 	/**
@@ -185,39 +192,67 @@ public abstract class CipherSuite
 	 * @param message message
 	 * @return encoded message
 	 */
-	public abstract void encode(TLSRecord msg) throws TLSException;
+	public void encode(TLSPlaintextRecord msg)
+	{
+		int dataLen=msg.getLength();
+		byte[] dataBuff=msg.getData();
+		byte[] header=msg.getHeader();
+		m_hmacOutput.reset();
+		m_hmacOutput.update(ByteArrayUtil.inttobyte(m_writesequenznumber, 8), 0, 8);
+		m_writesequenznumber++;
+		m_hmacOutput.update(header, 0,header.length);
+		m_hmacOutput.update(dataBuff, 0, dataLen);
+		m_hmacOutput.doFinal(dataBuff, dataLen);
+		dataLen +=m_hmacOutput.getMacSize();
+		//add padding as described in RFC2246 (6.2.3.2)
+		int paddingsize = m_Random.nextInt(240);
+		paddingsize = paddingsize +
+			(m_encryptcipher.getBlockSize() -
+			 ( (dataLen + 1 + paddingsize) % m_encryptcipher.getBlockSize()));
+		for (int i = 0; i < paddingsize + 1; i++)
+		{
+			dataBuff[dataLen++] = (byte) paddingsize;
+		}
+
+		for (int i = 0; i < dataLen; i += m_encryptcipher.getBlockSize())
+		{
+			m_encryptcipher.processBlock(dataBuff, i, dataBuff, i);
+		}
+		msg.setLength(dataLen);
+	}
 
 	/**
 	 * decodes a message with a symmetric key
 	 * @param message message
 	 * @return decoded message
 	 */
-	public void decode(TLSRecord msg) throws TLSException
+	public void decode(TLSPlaintextRecord msg) throws TLSException
 	{
-
-		if ( (msg.m_dataLen % m_decryptcipher.getBlockSize()) != 0 ||
-			msg.m_dataLen < m_hmac.getMacSize())
+		int dataLen=msg.getLength();
+		byte[] dataBuff=msg.getData();
+		if ( (dataLen % m_decryptcipher.getBlockSize()) != 0 ||
+			dataLen < m_hmacInput.getMacSize())
 		{
 			throw new TLSException("wrong payload len!");
 		}
-		for (int i = 0; i < msg.m_dataLen; i += m_decryptcipher.getBlockSize())
+		for (int i = 0; i < dataLen; i += m_decryptcipher.getBlockSize())
 		{
-			m_decryptcipher.processBlock(msg.m_Data, i, msg.m_Data, i);
+			m_decryptcipher.processBlock(dataBuff, i,dataBuff, i);
 		}
 		//remove padding and mac
-		int len = msg.m_dataLen - m_hmac.getMacSize() - 1;
-		byte paddingbyte=msg.m_Data[msg.m_dataLen - 1];
+		int len = dataLen - m_hmacInput.getMacSize() - 1;
+		byte paddingbyte=dataBuff[dataLen - 1];
 		int paddinglength = paddingbyte&0x00FF; //padding
-		if(paddinglength>msg.m_dataLen-2)
+		if(paddinglength>dataLen-2)
 		{
 			throw new TLSException("wrong Padding len detected", 2, 51);
 
 		}
 
 		//check if we've recieved the right padding
-		for (int i = msg.m_dataLen - 1; i > msg.m_dataLen - paddinglength - 2; i--)
+		for (int i = dataLen - 1; i > dataLen - paddinglength - 2; i--)
 		{
-			if (msg.m_Data[i] != paddingbyte)
+			if (dataBuff[i] != paddingbyte)
 			{
 				throw new TLSException("wrong Padding detected", 2, 51);
 			}
@@ -226,22 +261,17 @@ public abstract class CipherSuite
 		len -= paddinglength;
 		msg.setLength(len);
 
-		m_hmac.reset();
-		m_hmac.init(new KeyParameter(m_servermacsecret));
-		m_hmac.update(ByteArrayUtil.inttobyte(m_readsequenznumber, 8), 0, 8);
+		m_hmacInput.reset();
+		m_hmacInput.update(ByteArrayUtil.inttobyte(m_readsequenznumber, 8), 0, 8);
 		m_readsequenznumber++;
-		m_hmac.update(msg.m_Header, 0, msg.m_Header.length);
-		m_hmac.update(msg.m_Data, 0, len);
-		byte[] mac = new byte[m_hmac.getMacSize()];
-		m_hmac.doFinal(mac, 0);
+		byte[] header=msg.getHeader();
+		m_hmacInput.update(header, 0, header.length);
+		m_hmacInput.update(dataBuff, 0, len);
+		byte[] mac = new byte[m_hmacInput.getMacSize()];
+		m_hmacInput.doFinal(mac, 0);
 
-		for (int i = 0; i < mac.length; i++)
-		{
-			if (msg.m_Data[len + i] != mac[i])
-			{
+		if(!ByteArrayUtil.equal(dataBuff,len,mac,0,mac.length))
 				throw new TLSException("Wrong MAC detected!!!", 2, 20);
-			}
-		}
 	}
 
 	/**

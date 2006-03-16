@@ -113,7 +113,7 @@ public class TinyTLSServerSocket extends Socket
 		private DataInputStream m_stream;
 		private int m_aktPendOffset; //offest of next data to deliver
 		private int m_aktPendLen; // number of bytes we could deliver imedialy
-		private TLSRecord m_aktTLSRecord;
+		private TLSPlaintextRecord m_aktTLSRecord;
 		private int m_ReadRecordState;
 		final private static int STATE_START = 0;
 		final private static int STATE_VERSION = 1;
@@ -126,7 +126,7 @@ public class TinyTLSServerSocket extends Socket
 		 */
 		public TLSInputStream(InputStream istream)
 		{
-			m_aktTLSRecord = new TLSRecord();
+			m_aktTLSRecord = new TLSPlaintextRecord();
 			this.m_stream = new DataInputStream(istream);
 			this.m_aktPendOffset = 0;
 			this.m_aktPendLen = 0;
@@ -200,12 +200,13 @@ public class TinyTLSServerSocket extends Socket
 			}
 			if (m_ReadRecordState == STATE_PAYLOAD)
 			{
-				int len = m_aktTLSRecord.m_dataLen - m_aktPendOffset;
+				int len = m_aktTLSRecord.getLength() - m_aktPendOffset;
+				byte[] dataBuff=m_aktTLSRecord.getData();
 				while (len > 0)
 				{
 					try
 					{
-						int ret = m_stream.read(m_aktTLSRecord.m_Data, m_aktPendOffset, len);
+						int ret = m_stream.read(dataBuff, m_aktPendOffset, len);
 						if (ret < 0)
 						{
 							throw new EOFException();
@@ -247,7 +248,7 @@ public class TinyTLSServerSocket extends Socket
 				readRecord();
 				try
 				{
-					switch (m_aktTLSRecord.m_Type)
+					switch (m_aktTLSRecord.getType())
 					{
 						case 21:
 						{
@@ -257,7 +258,7 @@ public class TinyTLSServerSocket extends Socket
 						{
 							m_selectedciphersuite.decode(m_aktTLSRecord);
 							m_aktPendOffset = 0;
-							m_aktPendLen = m_aktTLSRecord.m_dataLen;
+							m_aktPendLen = m_aktTLSRecord.getLength();
 							break;
 						}
 						default:
@@ -273,7 +274,7 @@ public class TinyTLSServerSocket extends Socket
 				}
 			}
 			int l = Math.min(m_aktPendLen, len);
-			System.arraycopy(m_aktTLSRecord.m_Data, m_aktPendOffset, b, off, l);
+			System.arraycopy(m_aktTLSRecord.getData(), m_aktPendOffset, b, off, l);
 			m_aktPendOffset += l;
 			m_aktPendLen -= l;
 			return l;
@@ -295,7 +296,7 @@ public class TinyTLSServerSocket extends Socket
 			{
 				m_selectedciphersuite.decode(m_aktTLSRecord);
 			}
-			byte[] payload = m_aktTLSRecord.m_Data;
+			byte[] payload = m_aktTLSRecord.getData();
 			switch (payload[0])
 			{
 				// warning
@@ -336,21 +337,22 @@ public class TinyTLSServerSocket extends Socket
 		public void readClientHello() throws IOException
 		{
 			readRecord();
+			byte[] dataBuff=m_aktTLSRecord.getData();
 			//handshake message???
-			if (m_aktTLSRecord.m_Type == 22)
+			if (m_aktTLSRecord.getType() == 22)
 			{
 				//client hello???
-				if (m_aktTLSRecord.m_Data[0] == 1)
+				if (dataBuff[0] == 1)
 				{
 					//version = 3.1 (TLS) ???
-					if ( ( (m_aktTLSRecord.m_Data[4] << 8) | (m_aktTLSRecord.m_Data[5])) ==
+					if ( ( (dataBuff[4] << 8) | (dataBuff[5])) ==
 						PROTOCOLVERSION_SHORT)
 					{
 						//read client random
 						m_clientrandom = new byte[32];
-						System.arraycopy(m_aktTLSRecord.m_Data, 6, m_clientrandom, 0, 32);
+						System.arraycopy(dataBuff, 6, m_clientrandom, 0, 32);
 						//session id is not implemented
-						if (m_aktTLSRecord.m_Data[38] != 0)
+						if (dataBuff[38] != 0)
 						{
 							//maybe we implement it later
 							throw new TLSException(
@@ -359,8 +361,8 @@ public class TinyTLSServerSocket extends Socket
 						try
 						{
 							//read ciphersuites
-							int cslength = ( (m_aktTLSRecord.m_Data[39] & 0xFF) << 8) |
-								(m_aktTLSRecord.m_Data[40] & 0xFF);
+							int cslength = ( (dataBuff[39] & 0xFF) << 8) |
+								(dataBuff[40] & 0xFF);
 							int aktpos = 41;
 							while ( ( (cslength + 41) > aktpos) && (m_selectedciphersuite == null))
 							{
@@ -368,8 +370,8 @@ public class TinyTLSServerSocket extends Socket
 								{
 									CipherSuite cs = (CipherSuite) m_supportedciphersuites.elementAt(i);
 									byte[] b = cs.getCipherSuiteCode();
-									if (m_aktTLSRecord.m_Data[aktpos] == b[0] &&
-										m_aktTLSRecord.m_Data[aktpos + 1] == b[1])
+									if (dataBuff[aktpos] == b[0] &&
+										dataBuff[aktpos + 1] == b[1])
 									{
 										m_selectedciphersuite = cs;
 										if (cs.getKeyExchangeAlgorithm() instanceof DHE_DSS_Key_Exchange)
@@ -398,7 +400,7 @@ public class TinyTLSServerSocket extends Socket
 							}
 							//read compression
 							aktpos = cslength + 41;
-							int complength = m_aktTLSRecord.m_Data[aktpos];
+							int complength = dataBuff[aktpos];
 							if (complength == 0)
 							{
 								throw new TLSException(
@@ -409,10 +411,10 @@ public class TinyTLSServerSocket extends Socket
 							{
 								aktpos++;
 								//compression method : NO_COMPRESSION found
-								if (m_aktTLSRecord.m_Data[aktpos] == 0)
+								if (dataBuff[aktpos] == 0)
 								{
 									m_handshakemessages = ByteArrayUtil.conc(m_handshakemessages,
-										m_aktTLSRecord.m_Data, m_aktTLSRecord.m_dataLen);
+										dataBuff, m_aktTLSRecord.getLength());
 									LogHolder.log(LogLevel.DEBUG, LogType.TOR, "[CLIENT HELLO RECIEVED]");
 									return;
 								}
@@ -441,19 +443,20 @@ public class TinyTLSServerSocket extends Socket
 		public void readClientKeyExchange() throws IOException
 		{
 			readRecord();
+			byte[] dataBuff=m_aktTLSRecord.getData();
 			try
 			{
-				if (m_aktTLSRecord.m_Data[0] == 16)
+				if (dataBuff[0] == 16)
 				{
-					int length = ( (m_aktTLSRecord.m_Data[4] & 0xFF) << 8) | (m_aktTLSRecord.m_Data[5]);
-					byte[] publickey = ByteArrayUtil.copy(m_aktTLSRecord.m_Data, 6,
-						m_aktTLSRecord.m_dataLen - 6);
+					int length = ( (dataBuff[4] & 0xFF) << 8) | (dataBuff[5]);
+					byte[] publickey = ByteArrayUtil.copy(dataBuff, 6,
+						m_aktTLSRecord.getLength() - 6);
 					publickey = ByteArrayUtil.conc(new byte[]
 											{0}, publickey);
 					BigInteger dh_y = new BigInteger(publickey);
 					m_selectedciphersuite.processClientKeyExchange(dh_y);
-					m_handshakemessages = ByteArrayUtil.conc(m_handshakemessages, m_aktTLSRecord.m_Data,
-						m_aktTLSRecord.m_dataLen);
+					m_handshakemessages = ByteArrayUtil.conc(m_handshakemessages, dataBuff,
+						m_aktTLSRecord.getLength());
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_KEY_EXCHANGE]");
 					return;
 				}
@@ -474,7 +477,8 @@ public class TinyTLSServerSocket extends Socket
 		{
 
 			readRecord();
-			if (m_aktTLSRecord.m_Type == 20 && m_aktTLSRecord.m_dataLen == 1 && m_aktTLSRecord.m_Data[0] == 1)
+			byte[] dataBuff=m_aktTLSRecord.getData();
+			if (m_aktTLSRecord.getType() == 20 && m_aktTLSRecord.getLength() == 1 && dataBuff[0] == 1)
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_CHANGE_CIPHER_SPEC]");
 			}
@@ -487,13 +491,13 @@ public class TinyTLSServerSocket extends Socket
 			m_selectedciphersuite.decode(m_aktTLSRecord);
 			try
 			{
-				if (m_aktTLSRecord.m_Data[0] == 20)
+				if (dataBuff[0] == 20)
 				{
-					byte[] verify_data = ByteArrayUtil.copy(m_aktTLSRecord.m_Data, 4, 12);
+					byte[] verify_data = ByteArrayUtil.copy(dataBuff, 4, 12);
 					m_selectedciphersuite.getKeyExchangeAlgorithm().processClientFinished(verify_data,
 						m_handshakemessages);
-					m_handshakemessages = ByteArrayUtil.conc(m_handshakemessages, m_aktTLSRecord.m_Data,
-						m_aktTLSRecord.m_dataLen);
+					m_handshakemessages = ByteArrayUtil.conc(m_handshakemessages, dataBuff,
+						m_aktTLSRecord.getLength());
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_FINISHED]");
 					return;
 				}
@@ -517,7 +521,7 @@ public class TinyTLSServerSocket extends Socket
 	{
 
 		private DataOutputStream m_stream;
-		private TLSRecord m_aktTLSRecord;
+		private TLSPlaintextRecord m_aktTLSRecord;
 
 		/**
 		 * Constructor
@@ -525,7 +529,7 @@ public class TinyTLSServerSocket extends Socket
 		 */
 		public TLSOutputStream(OutputStream ostream)
 		{
-			m_aktTLSRecord = new TLSRecord();
+			m_aktTLSRecord = new TLSPlaintextRecord();
 			m_stream = new DataOutputStream(ostream);
 		}
 
@@ -558,15 +562,16 @@ public class TinyTLSServerSocket extends Socket
 		 */
 		private synchronized void send(int type, byte[] message, int offset, int len) throws IOException
 		{
-			System.arraycopy(message, offset, m_aktTLSRecord.m_Data, 0, len);
+			byte[] dataBuff=m_aktTLSRecord.getData();
+			System.arraycopy(message, offset, dataBuff, 0, len);
 			m_aktTLSRecord.setLength(len);
 			m_aktTLSRecord.setType(type);
 			if (m_encrypt)
 			{
 				m_selectedciphersuite.encode(m_aktTLSRecord);
 			}
-			m_stream.write(m_aktTLSRecord.m_Header);
-			m_stream.write(m_aktTLSRecord.m_Data, 0, m_aktTLSRecord.m_dataLen);
+			m_stream.write(m_aktTLSRecord.getHeader());
+			m_stream.write(dataBuff, 0, m_aktTLSRecord.getLength());
 			m_stream.flush();
 		}
 
