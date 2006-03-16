@@ -25,68 +25,31 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
+/*
+ * based on tinySSL
+ * (http://www.ritlabs.com/en/products/tinyweb/tinyssl.php)
+ *
+ */
 package anon.crypto.tinytls;
 
-/** This is the TLS plaintext record*/
-final public class TLSPlaintextRecord extends AbstractTLSRecord
+final public class TLSHandshakeRecord extends AbstractTLSRecord
 {
-	public final static int CONTENTTYPE_HANDSHAKE = 22;
+	public final static int HEADER_LENGTH = 4;
 
-	public final static int HEADER_LENGTH = 5;
-
-	private int m_nextHandshakeRecordOffset;
-
-	/**
-	 * Constructor
-	 *
-	 */
-	public TLSPlaintextRecord()
+	public TLSHandshakeRecord(byte[] data, int off)
 	{
 		m_Header = new byte[HEADER_LENGTH];
-		m_Header[1] = TinyTLS.PROTOCOLVERSION[0];
-		m_Header[2] = TinyTLS.PROTOCOLVERSION[1];
-		m_Data = new byte[0x2000]; //max 2^14 bytes for a TLS.plaintext record
-		m_dataLen = 0;
-		m_Type = 0;
-		m_nextHandshakeRecordOffset = 0;
-	}
-
-	public void clean()
-	{
-		m_dataLen = 0;
-		m_Type = 0;
-		m_nextHandshakeRecordOffset = 0;
+		System.arraycopy(data, off, m_Header, 0, 4);
+		m_Type = m_Header[0];
+		m_dataLen = ( (m_Header[1] & 0xFF) << 16) |
+			( (m_Header[2] & 0xFF) << 8) | (m_Header[3] & 0xFF);
+		m_Data = new byte[m_dataLen];
+		System.arraycopy(data, off + 4, m_Data, 0, m_dataLen);
 	}
 
 	public int getHeaderLength()
 	{
 		return HEADER_LENGTH;
-	}
-
-	/**
-	 * sets the length of the tls record
-	 * @param len
-	 * length
-	 */
-	public void setLength(int len)
-	{
-		m_dataLen = len;
-		m_Header[3] = (byte) ( (len >> 8) & 0x00FF);
-		m_Header[4] = (byte) ( (len) & 0x00FF);
-	}
-
-	/** Retruns true if this record contains in the payload some more handshake records.*/
-	public boolean hasMoreHandshakeRecords()
-	{
-		return (m_Type == CONTENTTYPE_HANDSHAKE) && (m_nextHandshakeRecordOffset < m_dataLen);
-	}
-
-	/** Retruns the next handshake record from inside the payload*/
-	public TLSHandshakeRecord getNextHandshakeRecord()
-	{
-		TLSHandshakeRecord handshake = new TLSHandshakeRecord(m_Data, m_nextHandshakeRecordOffset);
-		m_nextHandshakeRecordOffset += handshake.getLength() + TLSHandshakeRecord.HEADER_LENGTH;
-		return handshake;
 	}
 
 }

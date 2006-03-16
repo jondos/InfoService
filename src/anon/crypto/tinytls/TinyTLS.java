@@ -161,6 +161,7 @@ public class TinyTLS extends Socket
 		{
 			if (m_ReadRecordState == STATE_START)
 			{
+				m_aktTLSRecord.clean();
 				int contenttype;
 				try
 				{
@@ -220,7 +221,7 @@ public class TinyTLS extends Socket
 				{
 					try
 					{
-						byte[] buff=m_aktTLSRecord.getData();
+						byte[] buff = m_aktTLSRecord.getData();
 						int ret = m_stream.read(buff, m_aktPendOffset, len);
 						if (ret < 0)
 						{
@@ -306,11 +307,11 @@ public class TinyTLS extends Socket
 		 * @param bytes server hello message
 		 * @throws IOException
 		 */
-		private void gotServerHello(TLSPlaintextRecord msg) throws IOException
+		private void gotServerHello(TLSHandshakeRecord msg) throws IOException
 		{
 			byte[] b;
-			int aktIndex = 4;
-			byte[] dataBuff=m_aktTLSRecord.getData();
+			int aktIndex = 0;
+			byte[] dataBuff = msg.getData();
 
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 						  "[SERVER_HELLO] SSLVERSION :" + dataBuff[aktIndex] + "." + dataBuff[aktIndex +
@@ -358,8 +359,11 @@ public class TinyTLS extends Socket
 		 * @param bytes server certificate message
 		 * @throws IOException
 		 */
-		private void gotCertificate(byte[] bytes, int offset, int len) throws IOException
+		private void gotCertificate(TLSHandshakeRecord msg) throws IOException
 		{
+			byte[] bytes = msg.getData();
+			int offset = 0;
+			int len = msg.getLength();
 			Vector certificates = new Vector();
 			byte[] b = ByteArrayUtil.copy(bytes, offset, 3);
 			int certificateslength = ( (b[0] & 0xFF) << 16) | ( (b[1] & 0xFF) << 8) | (b[2] & 0xFF);
@@ -418,8 +422,11 @@ public class TinyTLS extends Socket
 		 * @throws IOException
 		 * @throws Exception
 		 */
-		private void gotServerKeyExchange(byte[] bytes, int offset, int len) throws IOException
+		private void gotServerKeyExchange(TLSHandshakeRecord msg) throws IOException
 		{
+			byte[] bytes = msg.getData();
+			int offset = 0;
+			int len = msg.getLength();
 			m_selectedciphersuite.getKeyExchangeAlgorithm().processServerKeyExchange(bytes, offset, len,
 				m_clientrandom, m_serverrandom, m_servercertificate);
 		}
@@ -428,8 +435,12 @@ public class TinyTLS extends Socket
 		 * handle certificate request
 		 * @param bytes certificate request message
 		 */
-		private void gotCertificateRequest(byte[] bytes, int offset, int len)
+		private void gotCertificateRequest(TLSHandshakeRecord msg)
 		{
+			byte[] bytes = msg.getData();
+			int offset = 0;
+			int len = msg.getLength();
+
 			m_certificaterequested = true;
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_CERTIFICATE_REQUEST]");
 			int length = bytes[offset];
@@ -445,7 +456,7 @@ public class TinyTLS extends Socket
 		 * handle server hello done message
 		 * @param bytes server hello done message
 		 */
-		private void gotServerHelloDone(byte[] bytes, int offset, int len)
+		private void gotServerHelloDone()
 		{
 			m_serverhellodone = true;
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_HELLO_DONE]");
@@ -507,113 +518,66 @@ public class TinyTLS extends Socket
 		 */
 		protected void readServerHandshakes() throws IOException
 		{
+			TLSHandshakeRecord handshakeRecord;
 			while (!m_serverhellodone)
 			{
-				readRecord();
-				switch (m_aktTLSRecord.getType())
+				if (!m_aktTLSRecord.hasMoreHandshakeRecords())
 				{
-					case 21:
+					readRecord();
+					switch (m_aktTLSRecord.getType())
 					{
-						handleAlert();
-						break;
-					}
-					case 22:
-					{
-						break;
-					}
-					default:
-					{
-						throw new TLSException("Error while shaking hands");
+						case 21:
+						{
+							handleAlert();
+							break;
+						}
+						case TLSPlaintextRecord.CONTENTTYPE_HANDSHAKE:
+						{
+							break;
+						}
+						default:
+						{
+							throw new TLSException("Error while shaking hands");
+						}
 					}
 				}
-				byte[] dataBuff=m_aktTLSRecord.getData();
+				handshakeRecord = m_aktTLSRecord.getNextHandshakeRecord();
+				byte[] dataBuff = handshakeRecord.getData();
 
-				int type = dataBuff[0];
-				int length = ( (dataBuff[1] & 0xFF) << 16) |
-					( (dataBuff[2] & 0xFF) << 8) | (dataBuff[3] & 0xFF);
-				m_handshakemessages = ByteArrayUtil.conc(m_handshakemessages, dataBuff,
-					m_aktTLSRecord.getLength());
+				int type = handshakeRecord.getType();
+				int length = handshakeRecord.getLength();
+				m_handshakemessages = ByteArrayUtil.conc(m_handshakemessages, handshakeRecord.getHeader(),TLSHandshakeRecord.HEADER_LENGTH);
+				m_handshakemessages = ByteArrayUtil.conc(m_handshakemessages, dataBuff,length);
 				switch (type)
 				{
 					//Server hello
 					case 2:
 					{
-						this.gotServerHello(m_aktTLSRecord);
-						if (length < m_aktTLSRecord.getLength() - 4)
-						{
-							int aktIndex = 4;
-							aktIndex += length;
-							type = dataBuff[aktIndex];
-							length = ( (dataBuff[aktIndex + 1] & 0xFF) << 16) |
-								( (dataBuff[aktIndex + 2] & 0xFF) << 8) |
-								(dataBuff[aktIndex + 3] & 0xFF);
-
-							if (type == 11)
-							{
-								aktIndex += 4;
-								gotCertificate(dataBuff, aktIndex,
-											   m_aktTLSRecord.getLength() - aktIndex);
-								aktIndex += length;
-								type =dataBuff[aktIndex];
-								length = ( (dataBuff[aktIndex + 1] & 0xFF) << 16) |
-										( (dataBuff[aktIndex + 2] & 0xFF) << 8) |
-										(dataBuff[aktIndex + 3] & 0xFF);
-								if (type == 12)
-								{
-									aktIndex += 4;
-									gotServerKeyExchange(dataBuff, aktIndex,
-										m_aktTLSRecord.getLength() - aktIndex);
-									aktIndex += length;
-									type =dataBuff[aktIndex];
-									if(type==14)
-									{
-										aktIndex += 4;
-										gotServerHelloDone(dataBuff, aktIndex, m_aktTLSRecord.getLength()- aktIndex);
-									}
-
-								}
-							}
-
-						}
+						gotServerHello(handshakeRecord);
 						break;
 					}
 					//certificate
 					case 11:
 					{
-						this.gotCertificate(dataBuff, 4, m_aktTLSRecord.getLength() - 4);
+						gotCertificate(handshakeRecord);
 						break;
 					}
 					//server key exchange
 					case 12:
 					{
-						this.gotServerKeyExchange(dataBuff, 4, m_aktTLSRecord.getLength() - 4);
+						gotServerKeyExchange(handshakeRecord);
 						break;
 					}
 					//certificate request
 					case 13:
 					{
-						int aktIndex = 4;
-						gotCertificateRequest(dataBuff, aktIndex,
-											  m_aktTLSRecord.getLength() - aktIndex);
-						aktIndex += length;
-						type = dataBuff[aktIndex];
-						length = ( (dataBuff[aktIndex + 1] & 0xFF) << 16) |
-							( (dataBuff[aktIndex + 2] & 0xFF) << 8) |
-							(dataBuff[aktIndex + 3] & 0xFF);
-						if (type != 14)
-						{
-							throw new TLSException(
-								"ServerHelloDone expected but Server has returned something else");
-						}
-						this.gotServerHelloDone(dataBuff, aktIndex + 4,
-												m_aktTLSRecord.getLength() - aktIndex - 4);
-
+						gotCertificateRequest(handshakeRecord);
 						break;
 					}
 					//server hello done
 					case 14:
 					{
-						this.gotServerHelloDone(dataBuff, 4, m_aktTLSRecord.getLength() - 4);
+						gotServerHelloDone();
 						break;
 					}
 					default:
@@ -632,7 +596,6 @@ public class TinyTLS extends Socket
 		protected void readServerFinished() throws IOException
 		{
 			readRecord();
-
 			switch (m_aktTLSRecord.getType())
 			{
 				case 20:
@@ -657,7 +620,7 @@ public class TinyTLS extends Socket
 
 			switch (m_aktTLSRecord.getType())
 			{
-				case 22:
+				case TLSPlaintextRecord.CONTENTTYPE_HANDSHAKE:
 				{
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_FINISHED]");
 					m_selectedciphersuite.processServerFinished(m_aktTLSRecord, m_handshakemessages);
@@ -746,7 +709,7 @@ public class TinyTLS extends Socket
 		 */
 		private synchronized void send(int type, byte[] message, int offset, int len) throws IOException
 		{
-			byte[] dataBuff=m_aktTLSRecord.getData();
+			byte[] dataBuff = m_aktTLSRecord.getData();
 			System.arraycopy(message, offset, dataBuff, 0, len);
 			m_aktTLSRecord.setLength(len);
 			m_aktTLSRecord.setType(type);
