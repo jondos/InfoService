@@ -501,6 +501,7 @@ public class TinyTLS extends Socket
 		 * @throws IOException
 		 * @throws CertificateException
 		 * @throws Exception
+		 * @todo VERY buggy - does not right handle the differnt layers of records!!!
 		 */
 		protected void readServerHandshakes() throws IOException
 		{
@@ -526,10 +527,6 @@ public class TinyTLS extends Socket
 				int type = m_aktTLSRecord.m_Data[0];
 				int length = ( (m_aktTLSRecord.m_Data[1] & 0xFF) << 16) |
 					( (m_aktTLSRecord.m_Data[2] & 0xFF) << 8) | (m_aktTLSRecord.m_Data[3] & 0xFF);
-				if (length != m_aktTLSRecord.m_dataLen - 4 && type != 13)
-				{
-					int h = 3;
-				}
 				m_handshakemessages = ByteArrayUtil.conc(m_handshakemessages, m_aktTLSRecord.m_Data,
 					m_aktTLSRecord.m_dataLen);
 				switch (type)
