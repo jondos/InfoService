@@ -27,15 +27,8 @@
  */
 package anon.crypto.tinytls;
 
-/**
- * <p>†berschrift: </p>
- * <p>Beschreibung: </p>
- * <p>Copyright: Copyright (c) 2001</p>
- * <p>Organisation: </p>
- * @author not attributable
- * @version 1.0
- */
 
+/** This is the lowest layer packet*/
 public class TLSRecord
 {
 	public int m_Type;
