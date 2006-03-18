@@ -47,7 +47,7 @@ import logging.LogType;
  */
 public class PIServer implements Runnable
 {
-	private ServerSocket m_serverSocket;
+	private TinyTLSServer m_serverSocket;
 	private boolean m_typeAI;
 	private ListenerInterface m_listener;
 	private ThreadPool m_threadPool;
@@ -150,5 +150,23 @@ public class PIServer implements Runnable
 				}
 			}
 		}
+	}
+
+	public String toString()
+	{
+		String s = "PI Server to/from JAP on Interface: ";
+		if (m_typeAI)
+		{
+			s = s = "PI Server to/from AI on Interface: ";
+		}
+		if (m_listener == null)
+		{
+			s += "unkown";
+		}
+		else
+		{
+			s += m_listener.getHost()+":"+m_listener.getPort();
+		}
+		return s;
 	}
 }

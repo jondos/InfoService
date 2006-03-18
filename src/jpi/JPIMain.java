@@ -73,7 +73,7 @@ public class JPIMain
 		SystemErrLog log1 = new SystemErrLog();
 		LogHolder.setLogInstance(log1);
 		log1.setLogType(LogType.ALL);
-		LogHolder.setDetailLevel(LogHolder.DETAIL_LEVEL_HIGHEST);
+		LogHolder.setDetailLevel(LogHolder.DETAIL_LEVEL_LOWEST);
 
 		// read config file
 		if (!Configuration.init(argv[0]))
@@ -175,7 +175,7 @@ public class JPIMain
 		// start PIServer for AI connections
 		LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching PIServer for AI connections on port ");
 		PIServer aiServer = new PIServer(true, Configuration.getAiListenerInterface());
-		Thread aiThread = new Thread(aiServer);
+		Thread aiThread = new Thread(aiServer,aiServer.toString());
 		aiThread.start();
 
 		//start the credit card helper
