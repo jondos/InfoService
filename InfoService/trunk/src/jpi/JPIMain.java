@@ -198,21 +198,21 @@ public class JPIMain
 		LogHolder.log(LogLevel.INFO, LogType.PAY,
 					  "JPIMain: Launching InfoService thread for InfoService connections");
 		InfoServiceThread infoServer = new InfoServiceThread();
-		Thread infoServiceThread = new Thread(infoServer);
+		Thread infoServiceThread = new Thread(infoServer,"InfoService connections");
 		infoServiceThread.start();
 		LogHolder.log(LogLevel.INFO, LogType.PAY, "Initialization complete, JPIMain Thread terminating");
 
 		// start PayPalHelper thread for IPN acceptance
 		LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching PayPalHelper thread");
 		PayPalHelper payPal = new PayPalHelper(Integer.parseInt(Configuration.getPayPalPort()));
-		Thread payPalThread = new Thread(payPal);
+		Thread payPalThread = new Thread(payPal,"PayPalHelper");
 		payPalThread.start();
 
 		// start ExternalChargeHelper thread for charge request acceptance
 		LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching ExternalChargeHelper thread");
 		ExternalChargeHelper external = new ExternalChargeHelper(Integer.parseInt(Configuration.
 			getExternalChargePort()));
-		Thread externalThread = new Thread(external);
+		Thread externalThread = new Thread(external,"ExternalChargeHelper");
 		externalThread.start();
 
 		LogHolder.log(LogLevel.INFO, LogType.PAY, "Initialization complete, JPIMain Thread terminating");
