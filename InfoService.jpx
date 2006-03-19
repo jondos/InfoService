@@ -27,6 +27,7 @@
   <property category="generalFormatting2" name="tabSize" value="4"/>
   <property category="generalFormatting2" name="useTabChar" value="1"/>
   <property category="javaFormatting" name="EventMatch" value="0"/>
+  <property category="javaFormatting" name="alwaysClasses" value="1"/>
   <property category="javaFormatting" name="classBraceNextLine" value="1"/>
   <property category="javaFormatting" name="extendsOnNewLine" value="0"/>
   <property category="javaFormatting" name="implementsOnNewLine" value="0"/>
@@ -123,7 +124,7 @@
   <property category="sys" name="DocPath" value="doc/javadoc;doc"/>
   <property category="sys" name="ExcludeClassEnabled" value="0"/>
   <property category="sys" name="IncludeTestPath" value="1"/>
-  <property category="sys" name="JDK" value="java version 1.4.2_04-b05"/>
+  <property category="sys" name="JDK" value="java 1.1 mit JDK 1.4.2"/>
   <property category="sys" name="LastTag" value="42"/>
   <property category="sys" name="Libraries" value="Log4j;XML-1.1;BouncyCastleLightForJAP;junitx;JUnit;http;JavaMail;Jama;ApacheBzip2;Log4j"/>
   <property category="sys" name="MakeStable" value="0"/>
@@ -148,18 +149,21 @@
   <property category="team" name="ignorePath.7" value="InfoService.vjp"/>
   <property category="team" name="ignorePath.8" value="TODOs.txt"/>
   <property category="team" name="ignorePath.9" value="codebase.dat"/>
-  <node name="anon.crypto" type="Package"/>
-  <node name="anon.infoservice" type="Package"/>
-  <node name="anon.util" type="Package"/>
-  <node name="captcha" type="Package"/>
-  <node name="infoservice" type="Package"/>
-  <node name="infoservice.tor" type="Package"/>
   <node name="certificates" type="NavigationDirectory">
     <property category="directorynode" name="url" value="certificates"/>
   </node>
   <node name="InfoService" type="NavigationDirectory">
     <property category="directorynode" name="url" value="documentation/InfoService"/>
   </node>
+  <node name="SampleConfiguration" type="NavigationDirectory">
+    <property category="directorynode" name="url" value="documentation/SampleConfiguration"/>
+  </node>
+  <node name="anon.crypto" type="Package"/>
+  <node name="anon.infoservice" type="Package"/>
+  <node name="anon.util" type="Package"/>
+  <node name="captcha" type="Package"/>
+  <node name="infoservice" type="Package"/>
+  <node name="infoservice.tor" type="Package"/>
   <node name="InfoService.jar" type="Archive">
     <property category="archiving" name="archiverClass" value="com.borland.jbuilder.wizard.archive.ApplicationArchiver"/>
     <property category="archiving" name="buildWithProject" value="0"/>
@@ -171,8 +175,5 @@
     <property category="archiving" name="targetCompressed" value="1"/>
     <property category="archiving" name="targetPath" value="InfoService.jar"/>
     <property category="archiving" name="usingRules" value="1"/>
-  </node>
-  <node name="SampleConfiguration" type="NavigationDirectory">
-    <property category="directorynode" name="url" value="documentation/SampleConfiguration"/>
   </node>
 </project>

@@ -27,30 +27,27 @@
  */
 package infoservice;
 
-import java.io.IOException;
 import java.io.FileInputStream;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.Enumeration;
 import java.util.Properties;
 
+import anon.infoservice.Constants;
 import anon.infoservice.Database;
 import anon.infoservice.ListenerInterface;
-import anon.infoservice.Constants;
+import anon.util.ThreadPool;
+import anon.util.TimedOutputStream;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.util.*;
 
 public class InfoService
 {
 
-	private JWSInternalCommands oicHandler;
+	protected JWSInternalCommands oicHandler;
 
-	private int m_connectionCounter;
+	private static int m_connectionCounter;
 
-	private ThreadPool m_ThreadPool;
+	protected ThreadPool m_ThreadPool;
 
 	public static void main(String[] argv)
 	{
@@ -143,126 +140,22 @@ public class InfoService
 		LogHolder.log(LogLevel.EMERG, LogType.MISC, System.getProperty("os.name"));
 		LogHolder.log(LogLevel.EMERG, LogType.MISC, System.getProperty("os.arch"));
 		LogHolder.log(LogLevel.EMERG, LogType.MISC, System.getProperty("os.version"));
-		m_ThreadPool = new ThreadPool("ISConnection", Configuration.getInstance().getNrOfConcurrentConnections());
+		m_ThreadPool = new ThreadPool("ISConnection",
+									  Configuration.getInstance().getNrOfConcurrentConnections());
 		TimedOutputStream.init();
 		Enumeration enumer = Configuration.getInstance().getHardwareListeners().elements();
 		while (enumer.hasMoreElements())
 		{
-			Server server = new Server( (ListenerInterface) (enumer.nextElement()));
-			Thread currentThread = new Thread(server);
+			InfoServiceServer server = new InfoServiceServer( (ListenerInterface) (enumer.nextElement()), this);
+			Thread currentThread = new Thread(server, server.toString());
 			currentThread.setDaemon(true);
 			currentThread.start();
 		}
 	}
 
-	private int getConnectionCounter()
+	protected static int getConnectionCounter()
 	{
-		int currentConnectionNumber = 0;
-		synchronized (this)
-		{
-			currentConnectionNumber = m_connectionCounter;
-			m_connectionCounter++;
-		}
-		return currentConnectionNumber;
-	}
-
-	final private class Server implements Runnable
-	{
-		ListenerInterface m_Listener;
-
-		public Server(ListenerInterface listener)
-		{
-			m_Listener = listener;
-		}
-
-		public void run()
-		{
-			String strInterface = m_Listener.getHost();
-			LogHolder.log(LogLevel.ALERT, LogType.ALL,
-						  "Server on interface: " + strInterface + " on port: " + m_Listener.getPort() +
-						  " starting...");
-			ServerSocket server = null;
-			Socket socket = null;
-			try
-			{
-				server = new ServerSocket(m_Listener.getPort(), 200, InetAddress.getByName(m_Listener.getHost()));
-				LogHolder.log(LogLevel.INFO, LogType.NET, "ServerSocket is listening!");
-				while (true)
-				{
-					try
-					{
-						socket = null;
-						socket = server.accept();
-					}
-					catch (IOException ioe)
-					{
-						LogHolder.log(LogLevel.EXCEPTION, LogType.NET, "Accept-Exception: " + ioe);
-						//Hack!!! [i do not know how to get oterwise notice of "Too many open Files"]
-						if (socket != null)
-						{
-							try
-							{
-								socket.close();
-							}
-							catch (Exception ie)
-							{
-							}
-						}
-						if (ioe.getMessage().equalsIgnoreCase("Too many open files"))
-						{
-							try
-							{
-								Thread.sleep(1000);
-							}
-							catch (Exception e)
-							{
-							}
-						}
-						continue;
-					}
-					try
-					{
-						InfoServiceConnection doIt = new InfoServiceConnection(socket, getConnectionCounter(),
-							oicHandler);
-						m_ThreadPool.addRequest(doIt);
-					}
-					catch (Exception e2)
-					{
-						if (socket != null)
-						{
-							try
-							{
-								socket.close();
-							}
-							catch (Exception ie)
-							{
-							}
-						}
-						LogHolder.log(LogLevel.EXCEPTION, LogType.THREAD, "Run-Loop-Exception: " + e2);
-					}
-				}
-			}
-			catch (Throwable t)
-			{
-				LogHolder.log(LogLevel.ALERT, LogType.THREAD,
-							  "Unexcpected Exception in Run-Loop (exiting): " + t);
-				try
-				{
-					if (socket != null)
-					{
-						socket.close();
-					}
-					server.close();
-				}
-				catch (Exception e2)
-				{
-				}
-				LogHolder.log(LogLevel.ERR, LogType.NET, "JWS Exception: " + t);
-			}
-			LogHolder.log(LogLevel.ALERT, LogType.THREAD,
-						  "Server on interface: " + strInterface + " on port: " + m_Listener.getPort());
-			LogHolder.log(LogLevel.EMERG, LogType.THREAD, "Exiting because of fatal Error!");
-		}
+		return m_connectionCounter++;
 	}
 
 }

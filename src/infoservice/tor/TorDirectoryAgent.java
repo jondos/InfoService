@@ -137,7 +137,7 @@ public class TorDirectoryAgent implements Runnable
 			{
 				m_updateInterval = a_updateInterval;
 				/* start the internal thread */
-				Thread fetchThread = new Thread(this);
+				Thread fetchThread = new Thread(this,"TorDirectoryAgent Update Thread");
 				fetchThread.setDaemon(true);
 				fetchThread.start();
 			}
