@@ -52,7 +52,7 @@ import anon.infoservice.ListenerInterface;
 public class Configuration
 {
 	/** Versionsnummer --> Please update if you change anything*/
-	public static final String BEZAHLINSTANZ_VERSION = "BI.02.022";
+	public static final String BEZAHLINSTANZ_VERSION = "BI.02.023";
 	public static IMyPrivateKey getPrivateKey()
 	{
 		return m_privateKey;
