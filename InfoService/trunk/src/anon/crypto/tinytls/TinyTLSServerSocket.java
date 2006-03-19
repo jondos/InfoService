@@ -61,6 +61,7 @@ import anon.util.ByteArrayUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.net.SocketException;
 
 /**
  * @author stefan
@@ -83,7 +84,10 @@ public class TinyTLSServerSocket extends Socket
 	private Vector m_supportedciphersuites;
 	private CipherSuite m_selectedciphersuite = null;
 
-	private Socket socket;
+//This is REALLY strange (so called WRONG)
+// TinyTLSServerSoket does extends soket - but in fact the following
+//member is the acutal socket used!
+	private Socket m_Socket;
 	private TLSInputStream m_istream;
 	private TLSOutputStream m_ostream;
 
@@ -190,9 +194,9 @@ public class TinyTLSServerSocket extends Socket
 					ioe.bytesTransferred = 0;
 					throw ioe;
 				}
-				if(length<0)
+				if (length < 0)
 				{
-					throw new TLSException("Wrong record len",2,70);
+					throw new TLSException("Wrong record len", 2, 70);
 				}
 				m_aktTLSRecord.setLength(length);
 				m_ReadRecordState = STATE_PAYLOAD;
@@ -201,7 +205,7 @@ public class TinyTLSServerSocket extends Socket
 			if (m_ReadRecordState == STATE_PAYLOAD)
 			{
 				int len = m_aktTLSRecord.getLength() - m_aktPendOffset;
-				byte[] dataBuff=m_aktTLSRecord.getData();
+				byte[] dataBuff = m_aktTLSRecord.getData();
 				while (len > 0)
 				{
 					try
@@ -337,7 +341,7 @@ public class TinyTLSServerSocket extends Socket
 		public void readClientHello() throws IOException
 		{
 			readRecord();
-			byte[] dataBuff=m_aktTLSRecord.getData();
+			byte[] dataBuff = m_aktTLSRecord.getData();
 			//handshake message???
 			if (m_aktTLSRecord.getType() == 22)
 			{
@@ -443,7 +447,7 @@ public class TinyTLSServerSocket extends Socket
 		public void readClientKeyExchange() throws IOException
 		{
 			readRecord();
-			byte[] dataBuff=m_aktTLSRecord.getData();
+			byte[] dataBuff = m_aktTLSRecord.getData();
 			try
 			{
 				if (dataBuff[0] == 16)
@@ -452,7 +456,7 @@ public class TinyTLSServerSocket extends Socket
 					byte[] publickey = ByteArrayUtil.copy(dataBuff, 6,
 						m_aktTLSRecord.getLength() - 6);
 					publickey = ByteArrayUtil.conc(new byte[]
-											{0}, publickey);
+						{0}, publickey);
 					BigInteger dh_y = new BigInteger(publickey);
 					m_selectedciphersuite.processClientKeyExchange(dh_y);
 					m_handshakemessages = ByteArrayUtil.conc(m_handshakemessages, dataBuff,
@@ -477,7 +481,7 @@ public class TinyTLSServerSocket extends Socket
 		{
 
 			readRecord();
-			byte[] dataBuff=m_aktTLSRecord.getData();
+			byte[] dataBuff = m_aktTLSRecord.getData();
 			if (m_aktTLSRecord.getType() == 20 && m_aktTLSRecord.getLength() == 1 && dataBuff[0] == 1)
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_CHANGE_CIPHER_SPEC]");
@@ -562,7 +566,7 @@ public class TinyTLSServerSocket extends Socket
 		 */
 		private synchronized void send(int type, byte[] message, int offset, int len) throws IOException
 		{
-			byte[] dataBuff=m_aktTLSRecord.getData();
+			byte[] dataBuff = m_aktTLSRecord.getData();
 			System.arraycopy(message, offset, dataBuff, 0, len);
 			m_aktTLSRecord.setLength(len);
 			m_aktTLSRecord.setType(type);
@@ -586,8 +590,8 @@ public class TinyTLSServerSocket extends Socket
 		public void sendHandshake(int type, byte[] message) throws IOException
 		{
 			byte[] senddata = ByteArrayUtil.conc(new byte[]
-										  { (byte) type},
-										  ByteArrayUtil.inttobyte(message.length, 3), message);
+												 { (byte) type},
+												 ByteArrayUtil.inttobyte(message.length, 3), message);
 			send(22, senddata, 0, senddata.length);
 			m_handshakemessages = ByteArrayUtil.conc(m_handshakemessages, senddata);
 		}
@@ -613,7 +617,8 @@ public class TinyTLSServerSocket extends Socket
 			rand.nextBytes(random);
 			m_serverrandom = ByteArrayUtil.conc(gmt_unix_time, random);
 
-			byte[] message = ByteArrayUtil.conc(PROTOCOLVERSION, m_serverrandom, sessionid, ciphersuite, compression);
+			byte[] message = ByteArrayUtil.conc(PROTOCOLVERSION, m_serverrandom, sessionid, ciphersuite,
+												compression);
 
 			sendHandshake(2, message);
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_HELLO]");
@@ -641,7 +646,8 @@ public class TinyTLSServerSocket extends Socket
 		public void sendServerKeyExchange() throws IOException
 		{
 			sendHandshake(12,
-						  m_selectedciphersuite.getKeyExchangeAlgorithm().generateServerKeyExchange(m_privatekey,
+						  m_selectedciphersuite.getKeyExchangeAlgorithm().generateServerKeyExchange(
+				m_privatekey,
 				m_clientrandom, m_serverrandom));
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_KEY_EXCHANGE]");
 		}
@@ -690,7 +696,8 @@ public class TinyTLSServerSocket extends Socket
 		public void sendServerFinished() throws IOException
 		{
 			sendHandshake(20,
-						  m_selectedciphersuite.getKeyExchangeAlgorithm().calculateServerFinished(m_handshakemessages));
+						  m_selectedciphersuite.getKeyExchangeAlgorithm().calculateServerFinished(
+				m_handshakemessages));
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_FINISHED]");
 		}
 	}
@@ -706,7 +713,7 @@ public class TinyTLSServerSocket extends Socket
 	 */
 	public TinyTLSServerSocket(Socket socket) throws IOException
 	{
-		this.socket = socket;
+		m_Socket = socket;
 		this.m_handshakecompleted = false;
 		this.m_encrypt = false;
 		this.m_supportedciphersuites = new Vector();
@@ -737,7 +744,7 @@ public class TinyTLSServerSocket extends Socket
 			else
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-					"[CIPHERSUITE NOT ADDED] : Please check if you've set the Certificate and the Private Key");
+							  "[CIPHERSUITE NOT ADDED] : Please check if you've set the Certificate and the Private Key");
 			}
 		}
 	}
@@ -829,8 +836,20 @@ public class TinyTLSServerSocket extends Socket
 
 	public void close() throws IOException
 	{
-		this.m_ostream.send(21, new byte[]
-							{1, 0}, 0, 2);
+		m_ostream.send(21, new byte[]
+					   {1, 0}, 0, 2);
+		if (m_Socket != null)
+		{
+			m_Socket.close();
+		}
+	}
+
+	public void setSoTimeout(int ms) throws SocketException
+		{
+		if (m_Socket != null)
+		{
+			m_Socket.setSoTimeout(ms);
+		}
 	}
 
 }
