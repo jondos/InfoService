@@ -90,6 +90,6 @@ final public class Constants
 	/**
 	 * This is the version number of the infoservice software.
 	 */
-	public static final String INFOSERVICE_VERSION = "IS.07.017"; //never change the layout of this line!
+	public static final String INFOSERVICE_VERSION = "IS.07.018"; //never change the layout of this line!
 
 }
