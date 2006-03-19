@@ -159,6 +159,7 @@ public class JPIConnection implements Runnable
 		catch (Exception ie)
 		{
 			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, ie);
+			try{m_socket.close();}catch(Throwable t){};
 		}
 	}
 
