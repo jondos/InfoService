@@ -145,10 +145,10 @@ public class JPIMain
 				}
 				if (input.equalsIgnoreCase("y"))
 				{
-				LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Recreating database tables...");
-				DBSupplier.getDataBase().dropTables();
-				DBSupplier.getDataBase().createTables();
-			}
+					LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Recreating database tables...");
+					DBSupplier.getDataBase().dropTables();
+					DBSupplier.getDataBase().createTables();
+				}
 			}
 
 			// launch database maintenance thread
@@ -168,31 +168,31 @@ public class JPIMain
 		while (japListeners.hasMoreElements())
 		{
 			PIServer userServer = new PIServer(false, (ListenerInterface) japListeners.nextElement());
-		Thread userThread = new Thread(userServer);
-		userThread.start();
+			Thread userThread = new Thread(userServer, userServer.toString());
+			userThread.start();
 		}
 
 		// start PIServer for AI connections
 		LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching PIServer for AI connections on port ");
 		PIServer aiServer = new PIServer(true, Configuration.getAiListenerInterface());
-		Thread aiThread = new Thread(aiServer,aiServer.toString());
+		Thread aiThread = new Thread(aiServer, aiServer.toString());
 		aiThread.start();
 
 		//start the credit card helper
 		/*String strHelperClass = "jpi.helper." + Configuration.getCreditCardHelper() + "CreditCardHelper";
-		LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching CreditCardHelper: " + strHelperClass);
-		try
-		{
-			Class helper = (Class) Class.forName(strHelperClass);
-			ICreditCardHelper helperObj = (ICreditCardHelper) helper.newInstance();
-			Thread helperThread = new Thread(helperObj);
-			helperThread.start();
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
-						  "JPIMain: Could not load helper class: " + strHelperClass);
-		}*/
+		 LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching CreditCardHelper: " + strHelperClass);
+		   try
+		   {
+		 Class helper = (Class) Class.forName(strHelperClass);
+		 ICreditCardHelper helperObj = (ICreditCardHelper) helper.newInstance();
+		 Thread helperThread = new Thread(helperObj);
+		 helperThread.start();
+		   }
+		   catch (Exception e)
+		   {
+		 LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+			  "JPIMain: Could not load helper class: " + strHelperClass);
+		   }*/
 
 		// start InfoService thread for InfoService connections
 		LogHolder.log(LogLevel.INFO, LogType.PAY,
