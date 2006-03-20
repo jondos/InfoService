@@ -223,7 +223,8 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 
 	public Element toXmlElement(Document a_doc, String a_password)
 	{
-
+		try
+		{
 		Element elemAccountsFile = a_doc.createElement("PayAccountsFile");
 		elemAccountsFile.setAttribute("version", "1.0");
 
@@ -240,6 +241,13 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 			elem.appendChild(elemAccount);
 		}
 		return elemAccountsFile;
+	}
+		catch (Exception ex)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+						  "Exception while creating PayAccountsFile XML: " + ex);
+			return null;
+		}
 	}
 
 	public boolean hasActiveAccount()

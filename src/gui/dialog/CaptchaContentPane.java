@@ -99,7 +99,8 @@ public class CaptchaContentPane extends DialogContentPane implements
 		rootPanel.add(m_imageLabel, c);
 
 		c.gridy++;
-		m_tfSolution = new JTextField(20);
+		m_tfSolution = new JTextField();
+		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weighty = 1;
 		c.weightx = 1;
 		rootPanel.add(m_tfSolution, c);
