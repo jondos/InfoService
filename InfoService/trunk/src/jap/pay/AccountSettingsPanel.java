@@ -213,6 +213,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private JList m_listAccounts;
 	private boolean m_bReady = true;
 	private boolean m_bCreatingAccount = false;
+	private boolean m_clicked = false;
 
 	public AccountSettingsPanel()
 	{
@@ -596,16 +597,14 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 */
 	private void doShowTransactions(PayAccount a_account)
 	{
-		if (checkPIReachable(a_account.getBI()))
+		if (!m_clicked)
 		{
-			TransactionOverviewDialog d = new TransactionOverviewDialog(GUIUtils.getParentWindow(this.
-				getRootPanel()),
+			m_clicked = true;
+			TransactionOverviewDialog d = new TransactionOverviewDialog(this,
 				JAPMessages.getString(MSG_TRANSACTION_OVERVIEW_DIALOG), true, a_account);
+			m_clicked = false;
 		}
-		else
-		{
-			showPIerror(GUIUtils.getParentWindow(getRootPanel()));
-		}
+
 	}
 
 	/**
@@ -725,6 +724,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 */
 	private void doChargeAccount(final PayAccount selectedAccount)
 	{
+		if (!m_clicked)
+		{
+			m_clicked = true;
 		if (selectedAccount == null)
 		{
 			return;
@@ -737,8 +739,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			return;
 		}
 
-		if (checkPIReachable(selectedAccount.getBI()))
-		{
 			final JAPDialog d = new JAPDialog(GUIUtils.getParentWindow(this.getRootPanel()),
 											  JAPMessages.getString(MSG_CHARGETITLE), true);
 			SimpleWizardContentPane welcomePane = new SimpleWizardContentPane(d,
@@ -747,6 +747,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			WorkerContentPane.ReturnThread fetchOptions = new WorkerContentPane.ReturnThread()
 			{
 				private XMLPaymentOptions m_paymentOptions;
+				private boolean m_interrupted = false;
 				public void run()
 				{
 					try
@@ -768,7 +769,18 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					{
 						LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
 									  "Error fetching payment options: " + e.getMessage());
+						showPIerror(d);
+						m_interrupted = true;
 					}
+				}
+
+				public boolean isInterrupted()
+				{
+					if (super.isInterrupted())
+					{
+						return true;
+					}
+					return m_interrupted;
 				}
 
 				public Object getValue()
@@ -777,10 +789,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				}
 			};
 
-			WorkerContentPane fetchOptionsPane = new WorkerContentPane(d,
+			final WorkerContentPane fetchOptionsPane = new WorkerContentPane(d,
 				JAPMessages.getString(MSG_FETCHINGOPTIONS), welcomePane,
 				fetchOptions);
 			fetchOptionsPane.setInterruptThreadSafe(false);
+
 			final MethodSelectionPane methodSelectionPane = new MethodSelectionPane(d, fetchOptionsPane);
 
 			WorkerContentPane.ReturnThread fetchTan = new WorkerContentPane.ReturnThread()
@@ -801,6 +814,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						{
 							LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
 										  "Error fetching TransCert: " + e.getMessage());
+							showPIerror(GUIUtils.getParentWindow(getRootPanel()));
 						}
 					}
 				}
@@ -878,6 +892,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						m_successful = new Boolean(false);
 						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
 									  "Could not send PassivePayment to payment instance: " + e.getMessage());
+						showPIerror(GUIUtils.getParentWindow(getRootPanel()));
+						d.dispose();
 					}
 				}
 
@@ -939,6 +955,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			welcomePane.updateDialogOptimalSized(welcomePane);
 			d.setLocationCenteredOnOwner();
 			d.setVisible(true);
+			m_clicked = false;
 
 			if (methodSelectionPane.getSelectedPaymentOption() != null &&
 				passivePaymentPane.getButtonValue() == JAPDialog.RETURN_VALUE_OK)
@@ -951,10 +968,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				}
 			}
 		}
-		else
-		{
-			showPIerror(GUIUtils.getParentWindow(getRootPanel()));
-		}
 	}
 
 	/**
@@ -963,9 +976,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 */
 	private void doCreateAccount()
 	{
+		if (!m_clicked)
+		{
+			m_clicked = true;
+			boolean reachable = true;
 		int numAccounts = m_listAccounts.getModel().getSize();
 		BI theBI = null;
-		boolean reachable = true;
 
 		//First try and get the standard PI the preferred way
 		try
@@ -984,19 +1000,31 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			try
 			{
 				theBI = new BI(JAPConstants.PI_ID, JAPConstants.PI_NAME, li.toVector(),
-							   JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.CERTSPATH +
+								   JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.
+						CERTSPATH +
 					JAPConstants.PI_CERT)));
 			}
 			catch (Exception e)
 			{
-				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Could not create Test-PI: " + e.getMessage());
+					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+								  "Could not create Test-PI: " + e.getMessage());
 				theBI = getBIforAccountCreation();
 			}
 		}
 
 		if (theBI != null)
 		{
-			reachable = checkPIReachable(theBI);
+				try
+				{
+					//Check if payment instance is reachable
+					BIConnection biconn = new BIConnection(theBI);
+					biconn.connect(JAPModel.getInstance().getProxyInterface());
+					biconn.disconnect();
+				}
+				catch (Exception e)
+				{
+					reachable = false;
+				}
 
 			if (reachable)
 			{
@@ -1010,7 +1038,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				final BI bi = theBI;
 				m_bReady = true;
 
-				Runnable doIt = new Runnable()
+					Thread doIt = new Thread()
 				{
 					public void run()
 					{
@@ -1028,7 +1056,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 							if (!ex.getMessage().equals("CAPTCHA"))
 							{
 								showPIerror(d);
-								d.dispose();
+									this.interrupt();
 							}
 						}
 						m_bCreatingAccount = false;
@@ -1118,6 +1146,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				d.setLocationCenteredOnOwner();
 				m_bCreatingAccount = false;
 				d.setVisible(true);
+					m_clicked = false;
+
 				updateAccountList();
 				if (pc != null && pc.getPassword() != null)
 				{
@@ -1130,12 +1160,14 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				{
 					/** Select new account and start charging wizard */
 					m_listAccounts.setSelectedIndex(m_listAccounts.getModel().getSize() - 1);
+						doExportAccount( (PayAccount) m_listAccounts.getSelectedValue());
 					doChargeAccount( (PayAccount) m_listAccounts.getSelectedValue());
 				}
 			}
 			else
 			{
-				showPIerror(GUIUtils.getParentWindow(getRootPanel()));
+					showPIerror(GUIUtils.getParentWindow(this.getRootPanel()));
+				}
 			}
 		}
 	}
@@ -1204,6 +1236,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 */
 	private void doGetStatement(final PayAccount a_selectedAccount)
 	{
+		if (!m_clicked)
+		{
+			m_clicked = true;
 		if (a_selectedAccount == null)
 		{
 			return;
@@ -1226,13 +1261,16 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				}
 			}
 		};
-		WorkerContentPane worker = new WorkerContentPane(busy, JAPMessages.getString(MSG_GETACCOUNTSTATEMENT),
+			WorkerContentPane worker = new WorkerContentPane(busy,
+				JAPMessages.getString(MSG_GETACCOUNTSTATEMENT),
 			t);
 		worker.setInterruptThreadSafe(false);
 		worker.updateDialog();
 		busy.pack();
 		busy.setLocationCenteredOnOwner();
 		busy.setVisible(true);
+			m_clicked = false;
+		}
 	}
 
 	/**
@@ -1603,30 +1641,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 								  LogType.PAY);
 	}
 
-	private void showPIerror(Component a_parent)
+	public void showPIerror(Component a_parent)
 	{
 		JAPDialog.showErrorDialog(a_parent,
 								  JAPMessages.getString(MSG_CREATEERROR),
 								  LogType.PAY);
 	}
-
-	/** Check if PI is reachable */
-	private boolean checkPIReachable(BI a_pi)
-	{
-		try
-		{
-			BIConnection biConn = new BIConnection(a_pi);
-			biConn.connect(JAPModel.getInstance().getProxyInterface());
-			biConn.disconnect();
-			return true;
-		}
-		catch (Exception e)
-		{
-			return false;
-		}
-
-	}
-
 }
 
 class CustomRenderer extends DefaultListCellRenderer

@@ -328,9 +328,17 @@ public class PaymentMainPanel extends FlippingPanel
 				Timestamp t = balance.getTimestamp();
 				m_lastUpdateLabel.setText(JAPUtil.formatTimestamp(t, true, JAPController.getInstance().getLocale().getLanguage()));
 				m_BalanceText.setEnabled(true);
+				if (activeAccount.getCertifiedCredit() < 0 )
+				{
+					m_BalanceText.setText(JAPUtil.formatBytesValue(0));
+					m_BalanceTextSmall.setText(JAPUtil.formatBytesValue(0));
+				}
+				else
+				{
 				m_BalanceText.setText(JAPUtil.formatBytesValue(activeAccount.getCertifiedCredit()));
-				m_BalanceTextSmall.setEnabled(true);
 				m_BalanceTextSmall.setText(JAPUtil.formatBytesValue(activeAccount.getCertifiedCredit()));
+				}
+				m_BalanceTextSmall.setEnabled(true);
 				m_labelSessionSpent.setText(JAPUtil.formatBytesValue(m_spentThisSession));
 				double deposit = (double) activeAccount.getDeposit();
 				double credit = (double) activeAccount.getCertifiedCredit();

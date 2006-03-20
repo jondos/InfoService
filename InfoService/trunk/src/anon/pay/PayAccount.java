@@ -112,6 +112,7 @@ public class PayAccount implements IXMLEncodable
 	 */
 	private long m_mySpent;
 	private BI m_theBI;
+	private String m_strBiID;
 	private JAPSignature m_verifyingInstance;
 
 	public PayAccount(byte[] xmlData) throws Exception
@@ -252,15 +253,8 @@ public class PayAccount implements IXMLEncodable
 
 		/** @todo get BI by supplying a bi-id */
 		Element biid = (Element) XMLUtil.getFirstChildByName(elemAccCert, "BiID");
-		String strBiID = XMLUtil.parseValue(biid, "-1");
-		try
-		{
-			m_theBI = PayAccountsFile.getInstance().getBI(strBiID);
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Could not get PI connection data while initializing account.");
-		}
+		m_strBiID = XMLUtil.parseValue(biid, "-1");
+		m_theBI = null;
 	}
 
 	/**
@@ -275,6 +269,8 @@ public class PayAccount implements IXMLEncodable
 
 	public Element toXmlElement(Document a_doc, String a_password)
 	{
+		try
+			{
 		if (a_password != null && a_password.trim().equals(""))
 		{
 			return this.toXmlElement(a_doc, null);
@@ -324,7 +320,12 @@ public class PayAccount implements IXMLEncodable
 		}
 
 		return elemRoot;
-
+			}
+			catch (Exception ex)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Exception while creating PayAccount XML: " + ex);
+				return null;
+			}
 	}
 
 	public void addTransCert(XMLTransCert cert) throws Exception
@@ -660,6 +661,14 @@ public class PayAccount implements IXMLEncodable
 
 	public BI getBI()
 	{
+		if(m_theBI==null)
+			try
+			{
+				m_theBI=PayAccountsFile.getInstance().getBI(m_strBiID);
+			}
+		catch(Exception e)
+		{
+		}
 		return m_theBI;
 	}
 }

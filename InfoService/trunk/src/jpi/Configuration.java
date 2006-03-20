@@ -41,7 +41,6 @@ import anon.pay.xml.XMLPaymentOptions;
 import anon.pay.xml.XMLPaymentOption;
 import java.util.Enumeration;
 import java.util.Vector;
-import anon.util.Util;
 import java.util.StringTokenizer;
 import anon.infoservice.ListenerInterface;
 
@@ -52,7 +51,7 @@ import anon.infoservice.ListenerInterface;
 public class Configuration
 {
 	/** Versionsnummer --> Please update if you change anything*/
-	public static final String BEZAHLINSTANZ_VERSION = "BI.02.023";
+	public static final String BEZAHLINSTANZ_VERSION = "BI.02.016";
 	public static IMyPrivateKey getPrivateKey()
 	{
 		return m_privateKey;
@@ -150,13 +149,22 @@ public class Configuration
 		return m_dbPort;
 	}
 
-	/** Holds listener interfaces of infoservices */
-	private static Vector ms_isListenerInterfaces = new Vector();
+	/** holds the infoservice hostname */
+	private static String m_isHostname;
 
-	/** Returns listener interfaces for infoservices */
-	public static Enumeration getInfoservices()
+	/** returns the infoservice hostname */
+	public static String getInfoServiceHost()
 	{
-		return ms_isListenerInterfaces.elements();
+		return m_isHostname;
+	}
+
+	/** holds the infoservice portnumber */
+	private static int m_isPort;
+
+	/** returns the info service portnumber */
+	public static int getInfoServicePort()
+	{
+		return m_isPort;
 	}
 
 	/** holds the port where the JPI should listen for AI connections */
@@ -186,13 +194,13 @@ public class Configuration
 		return ms_japConnections;
 	}
 
-	/** Holds listener interfaces for jap connections*/
+/** Holds listener interfaces for jap connections*/
 	private static Vector ms_japListenerInterfaces = new Vector();
 
-	/** Holds listener interface (only one!) for accounting instance connections*/
+/** Holds listener interface (only one!) for accounting instance connections*/
 	private static ListenerInterface ms_aiListenerInterface;
 
-	/** Holds the private key */
+/** Holds the private key */
 	private static IMyPrivateKey m_privateKey;
 
 	/** Returns listener interfaces for jap connections*/
@@ -207,7 +215,7 @@ public class Configuration
 		return ms_aiListenerInterface;
 	}
 
-	/** Holds threshold for logging to stderr */
+/** Holds threshold for logging to stderr */
 	private static int m_LogStderrThreshold;
 
 	/** Returns threshold for logging to stderr */
@@ -225,7 +233,7 @@ public class Configuration
 		return m_LogFileThreshold;
 	}
 
-	/** Holds log file name*/
+/** Holds log file name*/
 	private static String m_LogFileName = null;
 
 	/** Returns log file name*/
@@ -454,29 +462,17 @@ public class Configuration
 			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 			return false;
 		}
-
 		// parse infoservice configuration
+		m_isHostname = props.getProperty("infoservicehost");
 		try
 		{
-			String islisteners = props.getProperty("infoservices");
-			StringTokenizer st = new StringTokenizer(islisteners, ",");
-			while (st.hasMoreTokens())
-			{
-				String listener = st.nextToken();
-				StringTokenizer st2 = new StringTokenizer(listener, ":");
-				ListenerInterface l = new ListenerInterface(st2.nextToken(), Integer.parseInt(st2.nextToken()),
-					ListenerInterface.PROTOCOL_TYPE_HTTP);
-				ms_isListenerInterfaces.addElement(l);
+			m_isPort = Integer.parseInt(props.getProperty("infoserviceport"));
 			}
-		}
-		catch (Exception e)
+		catch (NumberFormatException e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.PAY,
-						  "infoservices in configfile '" +
-						  configFileName +
-						  "' must be specified and must be in this format: host:port(,host2:port2...)."
-				);
-			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
+						  "infoserviceport in configfile '" + configFileName +
+						  "' should be a NUMBER!");
 			return false;
 		}
 
@@ -518,13 +514,7 @@ public class Configuration
 				generic = "true";
 			}
 
-			String japversion = props.getProperty("option" + i + "japversion");
-			if (japversion == null)
-			{
-				japversion = Util.VERSION_FORMAT;
-			}
-
-			XMLPaymentOption option = new XMLPaymentOption(name, type, Boolean.valueOf(generic).booleanValue(), japversion);
+			XMLPaymentOption option = new XMLPaymentOption(name, type, Boolean.valueOf(generic).booleanValue());
 
 			//Add headings
 			String heading;

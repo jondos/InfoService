@@ -86,10 +86,14 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 	private JButton m_okButton, m_reloadButton;
 	private PayAccount m_account;
 	private JLabel m_fetchingLabel;
+	private AccountSettingsPanel m_parent;
 
-	public TransactionOverviewDialog(Window owner, String title, boolean modal, PayAccount a_account)
+	public TransactionOverviewDialog(AccountSettingsPanel a_parent, String title, boolean modal,
+									 PayAccount a_account)
 	{
-		super(owner, title, modal);
+		super(GUIUtils.getParentWindow(a_parent.getRootPanel()), title, modal);
+		m_parent = a_parent;
+
 		try
 		{
 			m_account = a_account;
@@ -179,15 +183,17 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 					biConn.connect(JAPModel.getInstance().getProxyInterface());
 					biConn.authenticate(m_account.getAccountCertificate(), m_account.getSigningInstance());
 					overview = biConn.fetchTransactionOverview(overview);
+					MyTableModel tableModel = new MyTableModel(overview);
+					m_tList.setEnabled(true);
+					m_tList.setModel(tableModel);
 				}
 				catch (Exception e)
 				{
 					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
 								  "Cannot connect to Payment Instance: " + e.getMessage());
+					m_parent.showPIerror(getRootPane());
 				}
-				MyTableModel tableModel = new MyTableModel(overview);
-				m_tList.setEnabled(true);
-				m_tList.setModel(tableModel);
+
 				m_okButton.setText(JAPMessages.getString(MSG_OK_BUTTON));
 				m_fetchingLabel.setVisible(false);
 				m_reloadButton.setEnabled(true);

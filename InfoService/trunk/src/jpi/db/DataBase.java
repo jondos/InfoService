@@ -75,11 +75,12 @@ public class DataBase extends DBInterface
 		"CREATE TABLE ACCOUNTS (" +
 		"ACCOUNTNUMBER BIGSERIAL PRIMARY KEY," +
 		"XMLPUBLICKEY VARCHAR(1000)," +
-		"DEPOSIT BIGINT," +
+		"DEPOSIT BIGINT CHECK (DEPOSIT >= 0)," +
 		"DEPOSITVALIDTIME TIMESTAMP (0)," +
-		"SPENT BIGINT," +
+		"SPENT BIGINT CHECK (SPENT >= 0)," +
 		"CREATION_TIME TIMESTAMP (0)," +
-		"ACCOUNTCERT VARCHAR(2000));",
+		"ACCOUNTCERT VARCHAR(2000), " +
+		"CONSTRAINT notnegative CHECK (DEPOSIT>=SPENT));",
 		/*		"CREATE TABLE CASCADENAMES (" +
 		   "CASCADENUMBER SERIAL PRIMARY KEY," +
 		   "NAME VARCHAR(20));",
@@ -94,7 +95,7 @@ public class DataBase extends DBInterface
 		"CREATE TABLE COSTCONFIRMATIONS (" +
 		"AiID VARCHAR(128)," +
 		"ACCOUNTNUMBER BIGINT," +
-		"TRANSFERREDBYTES BIGINT," +
+		"TRANSFERREDBYTES BIGINT CHECK (TRANSFERREDBYTES >= 0)," +
 		"XMLCC VARCHAR(1024))",
 
 		"CREATE TABLE TRANSFERS (" +
@@ -524,9 +525,24 @@ public class DataBase extends DBInterface
 			"(SELECT SUM(TRANSFERREDBYTES) FROM COSTCONFIRMATIONS WHERE ACCOUNTNUMBER=" +
 			cc.getAccountNumber() + ")" +
 			"WHERE ACCOUNTNUMBER=" + cc.getAccountNumber();
+		try
+		{
 		if (stmt.executeUpdate(query) != 1)
 		{
 			// error
+		}
+	}
+		catch (SQLException e)
+		{
+			//If the deposit>=spent constraint is violated, set balance to 0.
+			query = "SELECT  DEPOSIT FROM ACCOUNTS WHERE ACCOUNTNUMBER=" + cc.getAccountNumber();
+			rs = stmt.executeQuery(query);
+			if (rs.next())
+			{
+				long deposit = rs.getLong(1);
+				query = "UPDATE ACCOUNTS SET SPENT = " + deposit;
+				stmt.executeUpdate(query);
+			}
 		}
 	}
 
