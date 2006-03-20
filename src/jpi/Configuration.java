@@ -41,6 +41,7 @@ import anon.pay.xml.XMLPaymentOptions;
 import anon.pay.xml.XMLPaymentOption;
 import java.util.Enumeration;
 import java.util.Vector;
+import anon.util.Util;
 import java.util.StringTokenizer;
 import anon.infoservice.ListenerInterface;
 
@@ -51,7 +52,8 @@ import anon.infoservice.ListenerInterface;
 public class Configuration
 {
 	/** Versionsnummer --> Please update if you change anything*/
-	public static final String BEZAHLINSTANZ_VERSION = "BI.02.016";
+	public static final String BEZAHLINSTANZ_VERSION = "BI.02.023";
+
 	public static IMyPrivateKey getPrivateKey()
 	{
 		return m_privateKey;
@@ -149,22 +151,13 @@ public class Configuration
 		return m_dbPort;
 	}
 
-	/** holds the infoservice hostname */
-	private static String m_isHostname;
+	/** Holds listener interfaces of infoservices */
+	private static Vector ms_isListenerInterfaces = new Vector();
 
-	/** returns the infoservice hostname */
-	public static String getInfoServiceHost()
+	/** Returns listener interfaces for infoservices */
+	public static Enumeration getInfoservices()
 	{
-		return m_isHostname;
-	}
-
-	/** holds the infoservice portnumber */
-	private static int m_isPort;
-
-	/** returns the info service portnumber */
-	public static int getInfoServicePort()
-	{
-		return m_isPort;
+		return ms_isListenerInterfaces.elements();
 	}
 
 	/** holds the port where the JPI should listen for AI connections */
@@ -194,13 +187,13 @@ public class Configuration
 		return ms_japConnections;
 	}
 
-/** Holds listener interfaces for jap connections*/
+	/** Holds listener interfaces for jap connections*/
 	private static Vector ms_japListenerInterfaces = new Vector();
 
-/** Holds listener interface (only one!) for accounting instance connections*/
+	/** Holds listener interface (only one!) for accounting instance connections*/
 	private static ListenerInterface ms_aiListenerInterface;
 
-/** Holds the private key */
+	/** Holds the private key */
 	private static IMyPrivateKey m_privateKey;
 
 	/** Returns listener interfaces for jap connections*/
@@ -215,7 +208,7 @@ public class Configuration
 		return ms_aiListenerInterface;
 	}
 
-/** Holds threshold for logging to stderr */
+	/** Holds threshold for logging to stderr */
 	private static int m_LogStderrThreshold;
 
 	/** Returns threshold for logging to stderr */
@@ -233,7 +226,7 @@ public class Configuration
 		return m_LogFileThreshold;
 	}
 
-/** Holds log file name*/
+	/** Holds log file name*/
 	private static String m_LogFileName = null;
 
 	/** Returns log file name*/
@@ -296,6 +289,22 @@ public class Configuration
 	public static String getExternalChargePort()
 	{
 		return ms_externalChargePort;
+	}
+
+	/** Path to keyfile */
+	public static String ms_keyFile;
+	/** Returns the path to the keyfile */
+	public static String getKeyFile()
+	{
+		return ms_keyFile;
+	}
+
+	/** Keyfile password */
+	public static String ms_keyFilePassword;
+	/** Returns the keyfile password */
+	public static String getKeyFilePassword()
+	{
+		return ms_keyFilePassword;
 	}
 
 	/**
@@ -450,6 +459,8 @@ public class Configuration
 				new FileInputStream(keyFileName),
 				password.toCharArray()
 				);
+			ms_keyFile = keyFileName;
+			ms_keyFilePassword = password;
 			m_privateKey = ownPkcs12.getPrivateKey();
 			/* get the public certificate */
 			m_ownX509Certificate = JAPCertificate.getInstance(ownPkcs12.
@@ -462,17 +473,29 @@ public class Configuration
 			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 			return false;
 		}
+
 		// parse infoservice configuration
-		m_isHostname = props.getProperty("infoservicehost");
 		try
 		{
-			m_isPort = Integer.parseInt(props.getProperty("infoserviceport"));
+			String islisteners = props.getProperty("infoservices");
+			StringTokenizer st = new StringTokenizer(islisteners, ",");
+			while (st.hasMoreTokens())
+			{
+				String listener = st.nextToken();
+				StringTokenizer st2 = new StringTokenizer(listener, ":");
+				ListenerInterface l = new ListenerInterface(st2.nextToken(), Integer.parseInt(st2.nextToken()),
+					ListenerInterface.PROTOCOL_TYPE_HTTP);
+				ms_isListenerInterfaces.addElement(l);
 			}
-		catch (NumberFormatException e)
+		}
+		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.PAY,
-						  "infoserviceport in configfile '" + configFileName +
-						  "' should be a NUMBER!");
+						  "infoservices in configfile '" +
+						  configFileName +
+						  "' must be specified and must be in this format: host:port(,host2:port2...)."
+				);
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 			return false;
 		}
 
@@ -514,7 +537,21 @@ public class Configuration
 				generic = "true";
 			}
 
-			XMLPaymentOption option = new XMLPaymentOption(name, type, Boolean.valueOf(generic).booleanValue());
+			String japversion = props.getProperty("option" + i + "japversion");
+			if (japversion == null)
+			{
+				japversion = "00.00.000";
+			}
+
+			XMLPaymentOption option = new XMLPaymentOption(name, type, Boolean.valueOf(generic).booleanValue(),
+				japversion);
+			String japversion = props.getProperty("option" + i + "japversion");
+			if (japversion == null)
+			{
+				japversion = Util.VERSION_FORMAT;
+			}
+
+			XMLPaymentOption option = new XMLPaymentOption(name, type, Boolean.valueOf(generic).booleanValue(), japversion);
 
 			//Add headings
 			String heading;
