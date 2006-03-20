@@ -545,14 +545,14 @@ public class Configuration
 
 			XMLPaymentOption option = new XMLPaymentOption(name, type, Boolean.valueOf(generic).booleanValue(),
 				japversion);
-			String japversion = props.getProperty("option" + i + "japversion");
+/*			String japversion = props.getProperty("option" + i + "japversion");
 			if (japversion == null)
 			{
 				japversion = Util.VERSION_FORMAT;
 			}
 
 			XMLPaymentOption option = new XMLPaymentOption(name, type, Boolean.valueOf(generic).booleanValue(), japversion);
-
+*/
 			//Add headings
 			String heading;
 			String headingLang;
