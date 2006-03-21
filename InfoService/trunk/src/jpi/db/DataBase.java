@@ -540,7 +540,7 @@ public class DataBase extends DBInterface
 			if (rs.next())
 			{
 				long deposit = rs.getLong(1);
-				query = "UPDATE ACCOUNTS SET SPENT = " + deposit;
+				query = "UPDATE ACCOUNTS SET SPENT = " + deposit + " WHERE ACCOUNTNUMBER="+cc.getAccountNumber();
 				stmt.executeUpdate(query);
 			}
 		}
