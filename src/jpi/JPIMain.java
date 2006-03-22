@@ -224,4 +224,9 @@ public class JPIMain
 		System.exit(0);
 	}
 
+	public static String getHTMLServerInfo()
+	{
+		return "<html><body>AN.ON Payment Instance Test Page</body></html>";
+	}
+
 }
