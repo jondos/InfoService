@@ -622,6 +622,7 @@ public class PayAccount implements IXMLEncodable
 	public XMLAccountInfo fetchAccountInfo(ImmutableProxyInterface a_proxy) throws Exception
 	{
 		XMLAccountInfo info;
+		m_theBI = this.getBI();
 		BIConnection biConn = new BIConnection(m_theBI);
 		biConn.connect(a_proxy);
 		biConn.authenticate(m_accountCertificate, m_signingInstance);
