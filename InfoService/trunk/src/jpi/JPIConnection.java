@@ -128,7 +128,11 @@ public class JPIConnection implements Runnable
 					{
 						break;
 					}
-
+					if(request.method.equals("GET")&&request.url.equals("/info"))
+					{
+						server.writeAnswer(200, JPIMain.getHTMLServerInfo());
+						break;
+					}
 					answer = command.next(request);
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Now sending answer: "+XMLUtil.toString(XMLUtil.toXMLDocument(answer.getContent())));
 					server.writeAnswer(200, answer.getContent());

@@ -134,6 +134,8 @@ public class BIConnection implements ICaptchaSender
 				}
 				else
 				{
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY,"Using proxy at "+a_proxy.getHost()+
+								  ":"+a_proxy.getPort());
 					tls = new TinyTLS(li.getHost(), li.getPort(), a_proxy);
 				}
 				tls.setSoTimeout(30000);
@@ -146,6 +148,8 @@ public class BIConnection implements ICaptchaSender
 			}
 			catch (Exception e)
 			{
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY,"Exception while trying to connect to BI");
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY,e);
 				if (listeners.hasMoreElements())
 				{
 					LogHolder.log(LogLevel.DEBUG, LogType.PAY,

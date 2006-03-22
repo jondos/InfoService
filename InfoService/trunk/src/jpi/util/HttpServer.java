@@ -214,6 +214,25 @@ final public class HttpServer
 		m_dataOS.flush();
 	}
 
+	public void writeAnswer(int statuscode, String answer) throws IOException
+	{
+		m_dataOS.writeBytes("HTTP/1.1 " + statuscode + " " + m_errors.getDescription(statuscode) +
+							"\r\n");
+		String content= answer;
+		if (content != null)
+		{
+			m_dataOS.writeBytes("Content-Type: text/html\r\n");
+			m_dataOS.writeBytes("Content-Length: " + content.length() + "\r\n");
+			m_dataOS.writeBytes("\r\n");
+			m_dataOS.writeBytes(content);
+		}
+		else
+		{
+			m_dataOS.writeBytes("\r\n");
+		}
+		m_dataOS.flush();
+	}
+
 	/**
 	 * Sends a HTTP error code with the appropriate description and a XMLErrorMessage
 	 * structure as content.
