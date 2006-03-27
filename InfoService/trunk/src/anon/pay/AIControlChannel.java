@@ -93,6 +93,10 @@ public class AIControlChannel extends SyncControlChannel
 			{
 				processChallenge(new XMLChallenge(elemRoot));
 			}
+			else if(tagName.equals(XMLEasyCC.getXMLElementName()))
+			{
+				processInitialCC(new XMLEasyCC(elemRoot));
+			}
 			else
 			{
 				throw new Exception("AIControlChannel received unknown message '" + tagName + "'");
@@ -300,6 +304,28 @@ public class AIControlChannel extends SyncControlChannel
 	public static long getBytes()
 	{
 		return m_totalBytes;
+	}
+
+	private void processInitialCC(XMLEasyCC a_cc)
+	{
+		PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
+		if (a_cc.verify(currentAccount.getPublicKey()))
+		{
+			try
+			{
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "AI has sent a valid last cost confirmation. Adding it to account.");
+				currentAccount.addCostConfirmation(a_cc);
+			}
+			catch (Exception e)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Cannot add Cost confirmation: " + e);
+			}
+		}
+		else
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "AI has sent a INVALID last cost confirmation. Ignoring.");
+
+		}
 	}
 
 }
