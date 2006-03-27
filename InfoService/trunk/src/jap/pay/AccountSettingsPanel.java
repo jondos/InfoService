@@ -1486,13 +1486,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		if (!selectedAccount.hasAccountInfo())
 		{
-			int choice = JOptionPane.showOptionDialog(
-				view,
-				JAPMessages.getString("ngDeleteAccountStatement"),
-				JAPMessages.getString("ngDeleteAccount"),
-				JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
-				null, null, null);
-			if (choice == JOptionPane.YES_OPTION)
+			boolean yes = JAPDialog.showYesNoDialog(GUIUtils.getParentWindow(this.getRootPanel()),
+				JAPMessages.getString("ngDeleteAccountStatement"));
+
+			if (yes)
 			{
 				doGetStatement(selectedAccount);
 			}
@@ -1514,26 +1511,20 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 			if (accInfo.getBalance().getCredit() > 0)
 			{
-				int choice = JOptionPane.showOptionDialog(
-					view,
-					JAPMessages.getString("ngDeleteAccountCreditLeft"),
-					JAPMessages.getString("ngDeleteAccount"),
-					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
-					null, null, null);
-				if (choice == JOptionPane.YES_OPTION)
+				boolean yes = JAPDialog.showYesNoDialog(GUIUtils.getParentWindow(this.getRootPanel()),
+					JAPMessages.getString("ngDeleteAccountCreditLeft"));
+
+				if (yes)
 				{
 					reallyDelete = true;
 				}
 			}
 			else
 			{
-				int choice = JOptionPane.showOptionDialog(
-					view,
-					JAPMessages.getString("ngReallyDeleteAccount"),
-					JAPMessages.getString("ngDeleteAccount"),
-					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
-					null, null, null);
-				if (choice == JOptionPane.YES_OPTION)
+				boolean yes  = JAPDialog.showYesNoDialog(GUIUtils.getParentWindow(this.getRootPanel()),
+					JAPMessages.getString("ngReallyDeleteAccount"));
+
+				if (yes)
 				{
 					reallyDelete = true;
 				}
@@ -1541,13 +1532,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		}
 		else
 		{
-			int choice = JOptionPane.showOptionDialog(
-				view,
-				JAPMessages.getString("ngReallyDeleteAccount"),
-				JAPMessages.getString("ngDeleteAccount"),
-				JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
-				null, null, null);
-			if (choice == JOptionPane.YES_OPTION)
+			boolean yes = JAPDialog.showYesNoDialog(GUIUtils.getParentWindow(this.getRootPanel()),
+					JAPMessages.getString("ngReallyDeleteAccount"));
+
+			if (yes)
 			{
 				reallyDelete = true;
 			}
