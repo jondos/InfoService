@@ -213,7 +213,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private JList m_listAccounts;
 	private boolean m_bReady = true;
 	private boolean m_bCreatingAccount = false;
-	private boolean m_clicked = false;
 
 	public AccountSettingsPanel()
 	{
@@ -597,13 +596,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 */
 	private void doShowTransactions(PayAccount a_account)
 	{
-		if (!m_clicked)
-		{
-			m_clicked = true;
 			TransactionOverviewDialog d = new TransactionOverviewDialog(this,
 				JAPMessages.getString(MSG_TRANSACTION_OVERVIEW_DIALOG), true, a_account);
-			m_clicked = false;
-		}
 
 	}
 
@@ -724,12 +718,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 */
 	private void doChargeAccount(final PayAccount selectedAccount)
 	{
-		if (!m_clicked)
-		{
-			m_clicked = true;
 			if (selectedAccount == null)
 			{
-				m_clicked = false;
 				return;
 			}
 
@@ -737,7 +727,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			{
 				JAPDialog.showMessageDialog(GUIUtils.getParentWindow(getRootPanel()),
 											JAPMessages.getString(MSG_ACCOUNT_INVALID));
-				m_clicked = false;
 				return;
 			}
 
@@ -957,7 +946,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			welcomePane.updateDialogOptimalSized(welcomePane);
 			d.setLocationCenteredOnOwner();
 			d.setVisible(true);
-			m_clicked = false;
 
 			if (methodSelectionPane.getSelectedPaymentOption() != null &&
 				passivePaymentPane.getButtonValue() == JAPDialog.RETURN_VALUE_OK)
@@ -969,7 +957,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					doGetStatement(selectedAccount);
 				}
 			}
-		}
+
 	}
 
 	/**
@@ -978,9 +966,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 */
 	private void doCreateAccount()
 	{
-		if (!m_clicked)
-		{
-			m_clicked = true;
 			boolean reachable = true;
 			int numAccounts = m_listAccounts.getModel().getSize();
 			BI theBI = null;
@@ -1148,7 +1133,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					d.setLocationCenteredOnOwner();
 					m_bCreatingAccount = false;
 					d.setVisible(true);
-					m_clicked = false;
 
 					updateAccountList();
 					if (pc != null && pc.getPassword() != null)
@@ -1172,7 +1156,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				}
 			}
 		}
-	}
 
 	/**
 	 * Shows a window with all known Payment Instances and lets the user select one.
@@ -1238,9 +1221,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 */
 	private void doGetStatement(final PayAccount a_selectedAccount)
 	{
-		if (!m_clicked)
-		{
-			m_clicked = true;
 			if (a_selectedAccount == null)
 			{
 				return;
@@ -1271,9 +1251,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			busy.pack();
 			busy.setLocationCenteredOnOwner();
 			busy.setVisible(true);
-			m_clicked = false;
 		}
-	}
 
 	/**
 	 * doExportAccount
