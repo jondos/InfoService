@@ -281,11 +281,13 @@ public final class Database extends Observable implements Runnable
 				"Database cannot store entries of type " +
 				newEntry.getClass().getName() + "!");
 		}
+		boolean addEntry = false;
+		AbstractDatabaseEntry oldEntry = null;
 		synchronized (m_serviceDatabase)
 		{
 			/* we need exclusive access to the database */
-			AbstractDatabaseEntry oldEntry = (AbstractDatabaseEntry) (m_serviceDatabase.get(newEntry.getId()));
-			boolean addEntry = false;
+			oldEntry = (AbstractDatabaseEntry) (m_serviceDatabase.get(newEntry.getId()));
+			addEntry = false;
 			if (oldEntry == null)
 			{
 				/* this is a new unknown service */
@@ -368,20 +370,24 @@ public final class Database extends Observable implements Runnable
 									  "Cannot distribute database entries!");
 					}
 				}
-				/* there was an entry added or renewed in the database -> notify the observers */
-				setChanged();
-				if (oldEntry == null)
-				{
-					/* it was really a new entry */
-					notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_ADDED, newEntry));
-				}
-				else
-				{
-					/* there was already an entry with the same ID -> the entry was renewed */
-					notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_RENEWED, newEntry));
-				}
 			}
 		}
+		if (addEntry)
+		{
+			/* there was an entry added or renewed in the database -> notify the observers */
+			setChanged();
+			if (oldEntry == null)
+			{
+				/* it was really a new entry */
+				notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_ADDED, newEntry));
+			}
+			else
+			{
+				/* there was already an entry with the same ID -> the entry was renewed */
+				notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_RENEWED, newEntry));
+			}
+		}
+
 	}
 
 	/**
@@ -402,17 +408,22 @@ public final class Database extends Observable implements Runnable
 	{
 		if (deleteEntry != null)
 		{
+			Object removedEntry = null;
 			synchronized (m_serviceDatabase)
 			{
 				/* we need exclusive access to the database */
-				Object removedEntry = m_serviceDatabase.remove(deleteEntry.getId());
+				removedEntry = m_serviceDatabase.remove(deleteEntry.getId());
 				if (removedEntry != null)
 				{
 					m_timeoutList.removeElement(deleteEntry.getId());
-					/* an entry was removed -> notify the observers */
-					setChanged();
-					notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_REMOVED, removedEntry));
 				}
+			}
+			if (removedEntry != null)
+			{
+				m_timeoutList.removeElement(deleteEntry.getId());
+				/* an entry was removed -> notify the observers */
+				setChanged();
+				notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_REMOVED, removedEntry));
 			}
 		}
 	}
@@ -427,10 +438,10 @@ public final class Database extends Observable implements Runnable
 			/* we need exclusive access to the database */
 			m_serviceDatabase.clear();
 			m_timeoutList.removeAllElements();
-			/* database was cleared -> notify the observers */
-			setChanged();
-			notifyObservers(new DatabaseMessage(DatabaseMessage.ALL_ENTRIES_REMOVED));
 		}
+		/* database was cleared -> notify the observers */
+		setChanged();
+		notifyObservers(new DatabaseMessage(DatabaseMessage.ALL_ENTRIES_REMOVED));
 	}
 
 	/**
