@@ -732,6 +732,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 			final JAPDialog d = new JAPDialog(GUIUtils.getParentWindow(this.getRootPanel()),
 											  JAPMessages.getString(MSG_CHARGETITLE), true);
+			d.setResizable(true);
 			SimpleWizardContentPane welcomePane = new SimpleWizardContentPane(d,
 				JAPMessages.getString(MSG_CHARGEWELCOME), null, null);
 
@@ -1017,7 +1018,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				{
 					final JAPDialog d = new JAPDialog(getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
 					d.setDefaultCloseOperation(JAPDialog.DO_NOTHING_ON_CLOSE);
-					d.setResizable(false);
+					d.setResizable(true);
 
 					SimpleWizardContentPane panel1 = new SimpleWizardContentPane(d,
 						JAPMessages.getString("ngCreateKeyPair"), null, null);
