@@ -100,22 +100,23 @@ public class BIConnection implements ICaptchaSender
 	public void connect(ImmutableProxyInterface a_proxy) throws IOException
 	{
 		try
-			{
-				//Try to connect to BI...
-				connect_internal(a_proxy);
-			}
-		catch(Throwable t)
+		{
+			//Try to connect to BI...
+			connect_internal(a_proxy);
+		}
+		catch (Throwable t)
 		{
 			//Could not connect to BI
-			if(a_proxy!=null)
-			{//try without proxy
+			if (a_proxy != null)
+			{ //try without proxy
 				connect_internal(null);
 			}
 		}
 	}
+
 	private void connect_internal(ImmutableProxyInterface a_proxy) throws IOException
 	{
-		TinyTLS tls=null;
+		TinyTLS tls = null;
 		ListenerInterface li = null;
 		boolean connected = false;
 		m_proxy = a_proxy;
@@ -134,8 +135,8 @@ public class BIConnection implements ICaptchaSender
 				}
 				else
 				{
-					LogHolder.log(LogLevel.DEBUG, LogType.PAY,"Using proxy at "+a_proxy.getHost()+
-								  ":"+a_proxy.getPort());
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Using proxy at " + a_proxy.getHost() +
+								  ":" + a_proxy.getPort());
 					tls = new TinyTLS(li.getHost(), li.getPort(), a_proxy);
 				}
 				tls.setSoTimeout(30000);
@@ -148,8 +149,8 @@ public class BIConnection implements ICaptchaSender
 			}
 			catch (Exception e)
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY,"Exception while trying to connect to BI");
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY,e);
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Exception while trying to connect to BI");
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY, e);
 				if (listeners.hasMoreElements())
 				{
 					LogHolder.log(LogLevel.DEBUG, LogType.PAY,
@@ -283,7 +284,16 @@ public class BIConnection implements ICaptchaSender
 		{
 			if (!m_bFirstCaptcha)
 			{
-				this.disconnect();
+				try
+				{
+					this.disconnect();
+				}
+				catch (Exception e)
+				{
+
+					LogHolder.log(LogLevel.INFO, LogType.PAY,
+								  "Not connected to payment instance while trying to disconnect");
+				}
 				this.connect(m_proxy);
 			}
 			// send our public key
