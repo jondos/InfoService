@@ -231,7 +231,7 @@ public class CertificateStore extends Observable
 		return lockId;
 	}
 
-	public void removeCertificateLock(int a_lockId)
+	public synchronized void removeCertificateLock(int a_lockId)
 	{
 		synchronized (m_trustedCertificates)
 		{
@@ -269,7 +269,7 @@ public class CertificateStore extends Observable
 		}
 	}
 
-	public void removeCertificate(CertificateInfoStructure a_certificateStructure)
+	public synchronized void removeCertificate(CertificateInfoStructure a_certificateStructure)
 	{
 		CertificateContainer certificateToRemove = null;
 		synchronized (m_trustedCertificates)
