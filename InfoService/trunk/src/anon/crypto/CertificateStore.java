@@ -41,6 +41,13 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 
+/*** Implementation remark: The locking order (to avoid deadlocks) in this class is:
+ * 1. this
+ * 2. m_trustedCertificates
+ *
+ * DO NEVER EVER synchronize on m_trustedCertificates IF YOU DO NOT OWN A LOCK on this!
+ */
+
 public class CertificateStore extends Observable
 {
 
