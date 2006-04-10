@@ -174,6 +174,12 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 //		m_AICom.setAnonServer(newMixCascade);
 	}
 
+	/** Retruns the current Mix cascade*/
+	public MixCascade getMixCascade()
+	{
+		return m_currentMixCascade;
+	}
+
 	/**
 	 * Sets the parameter for TOR (anonymous SOCKS). If NULL TOR proxy is disabled.
 	 *
@@ -185,6 +191,11 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		m_currentTorParams = newTorParams;
 	}
 
+	public TorAnonServerDescription getTorParams()
+	{
+		return m_currentTorParams;
+	}
+
 	/**
 	 * Sets the parameter for Mixminion (anonymous remailer). If NULL Mixminion proxy is disabled.
 	 *
@@ -194,6 +205,11 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	public void setMixminionParams(MixminionServiceDescription newMixminionParams)
 	{
 		m_currentMixminionParams = newMixminionParams;
+	}
+
+	public MixminionServiceDescription  getMixminionParams()
+	{
+		return m_currentMixminionParams;
 	}
 
 	/**
