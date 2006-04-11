@@ -108,7 +108,6 @@ final public class DirectProxy implements Runnable
 				}
 				catch (SocketException e2)
 				{
-					e2.printStackTrace();
 					LogHolder.log(LogLevel.ERR, LogType.NET,
 								  "JAPDirectProxy:DirectProxy.run() accept socket excpetion: " + e2);
 					break;
