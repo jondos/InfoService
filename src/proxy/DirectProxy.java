@@ -49,9 +49,15 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.infoservice.ProxyInterface;
+import gui.dialog.JAPDialog;
+import jap.JAPController;
 
 final public class DirectProxy implements Runnable
 {
+	/** Messages */
+	private static final String MSG_ALLOWUNPROTECTED =
+		DirectProxy.class.getName() + "_allowunprotected";
+
 	private volatile boolean runFlag;
 	private boolean isRunningProxy = false;
 	private int portN;
@@ -59,6 +65,7 @@ final public class DirectProxy implements Runnable
 	private volatile Thread threadRunLoop;
 	private ThreadGroup threadgroupAll;
 	private boolean warnUser = true;
+	private boolean warnAgain = true;
 
 	public DirectProxy(ServerSocket s)
 	{
@@ -84,6 +91,8 @@ final public class DirectProxy implements Runnable
 
 	public void run()
 	{
+		Runnable doIt;
+
 		try
 		{
 			while (runFlag)
@@ -99,10 +108,12 @@ final public class DirectProxy implements Runnable
 				}
 				catch (SocketException e2)
 				{
+					e2.printStackTrace();
 					LogHolder.log(LogLevel.ERR, LogType.NET,
 								  "JAPDirectProxy:DirectProxy.run() accept socket excpetion: " + e2);
 					break;
 				}
+
 				try
 				{
 					socket.setSoTimeout(0); //Ensure socket is in Blocking Mode
@@ -118,27 +129,33 @@ final public class DirectProxy implements Runnable
 
 				if (warnUser && !JAPModel.isSmallDisplay())
 				{
-					SendAnonWarning doIt = new SendAnonWarning(socket);
+					doIt = new SendAnonWarning(socket);
 					Thread thread = new Thread(threadgroupAll, doIt);
 					thread.start();
-					warnUser = false;
+
+					if (warnAgain)
+					{
+						JAPDialog.LinkedCheckBox cb = new JAPDialog.LinkedCheckBox(false);
+						warnUser =  !(JAPDialog.showYesNoDialog(JAPController.getView(),
+							JAPMessages.getString(MSG_ALLOWUNPROTECTED), cb));
+						warnAgain = !cb.getState();
+					}
 				}
 				else
 				{
-					if (JAPModel.getInstance().getProxyInterface()!=null&&
+					if (JAPModel.getInstance().getProxyInterface() != null &&
 						JAPModel.getInstance().getProxyInterface().isValid() &&
-						JAPModel.getInstance().getProxyInterface().getProtocol()==ProxyInterface.PROTOCOL_TYPE_HTTP)
+						JAPModel.getInstance().getProxyInterface().getProtocol() ==
+						ProxyInterface.PROTOCOL_TYPE_HTTP)
 					{
-						DirectConViaHTTPProxy doIt = new DirectConViaHTTPProxy(socket);
-						Thread thread = new Thread(threadgroupAll, doIt);
-						thread.start();
+						doIt = new DirectConViaHTTPProxy(socket);
 					}
 					else
 					{
-						DirectProxyConnection doIt = new DirectProxyConnection(socket);
-						Thread thread = new Thread(threadgroupAll, doIt);
-						thread.start();
+						doIt = new DirectProxyConnection(socket);
 					}
+					Thread thread = new Thread(threadgroupAll, doIt);
+					thread.start();
 				}
 			}
 		}
@@ -215,6 +232,17 @@ final public class DirectProxy implements Runnable
 
 		public void run()
 		{
+			try
+			{
+				// read something so that the browser realises everything is OK
+				s.getInputStream().read();
+			}
+			catch (IOException a_e)
+			{
+				// ignored
+			}
+
+
 			try
 			{
 				String date = dateFormatHTTP.format(new Date());
