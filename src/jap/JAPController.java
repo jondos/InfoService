@@ -2685,16 +2685,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	public void unrealisticBytes(long a_bytes)
 	{
-		int choice = JOptionPane.showOptionDialog(
-			getView(),
-			"<html>" + JAPMessages.getString("unrealBytesDesc") + "<p>" +
-			JAPMessages.getString("unrealBytesDifference") + " " + a_bytes + "</html>",
-			JAPMessages.getString("unrealBytesTitle"),
-			JOptionPane.YES_NO_OPTION,
-			JOptionPane.QUESTION_MESSAGE,
-			null, null, null
+		JAPDll.setWindowOnTop(getView(), getView().getName(), true);
+		boolean choice = JAPDialog.showYesNoDialog(
+			  getView(),
+			  JAPMessages.getString("unrealBytesDesc") + "<p>" +
+			  JAPMessages.getString("unrealBytesDifference") + " " + a_bytes,
+			  JAPMessages.getString("unrealBytesTitle")
 			);
-		if (choice == JOptionPane.NO_OPTION)
+		JAPDll.setWindowOnTop(getView(), getView().getName(), false);
+		if (!choice)
 		{
 			this.setAnonMode(false);
 		}
