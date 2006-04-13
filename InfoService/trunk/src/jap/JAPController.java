@@ -2142,7 +2142,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	/** This (and only this) is the final exit procedure of JAP!
 	 * It shows a reminder to reset the proxy configurations and saves the current configuration.
-	 *	@param bShowConfigSaveErrorMsg if true shows an error message iff saving of
+	 *	@param bShowConfigSaveErrorMsg if true shows an error message if saving of
 	 * 			the current configuration goes wrong
 	 */
 	public static void goodBye(boolean bShowConfigSaveErrorMsg)

@@ -10,7 +10,7 @@ public class XMLRPCTestServer
 	public static void main(String[] args)
     {
       try{
-      AnonService lokal=AnonServiceFactory.getAnonServiceInstance("AN.ON");
+      AnonService lokal=AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_ANON);
       AnonServiceImplRemote remote=new AnonServiceImplRemote(lokal);
       lokal.initialize(new MixCascade(null,null,"mix.inf.tu-dresden.de",6544));
       remote.startService();}

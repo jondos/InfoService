@@ -46,34 +46,41 @@ import java.awt.event.MouseMotionListener;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.Icon;
 import javax.swing.JWindow;
-import javax.swing.OverlayLayout;
 import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
 
 import anon.infoservice.MixCascade;
 import anon.infoservice.StatusInfo;
+import anon.proxy.IProxyListener;
 import gui.JAPDll;
+import gui.JAPMessages;
+import gui.GUIUtils;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.proxy.IProxyListener;
-import gui.*;
 
 final public class JAPViewIconified extends JWindow implements ActionListener,
 	MouseMotionListener,
 	MouseListener,
 	JAPObserver
 {
-	private JAPController m_Controller;
-	private AbstractJAPMainView m_mainView;
-	private JLabel m_labelBytes, m_labelUsers, m_labelTraffic;
-	private Point m_startPoint;
-	private boolean m_bIsDragging = false;
-	private NumberFormat m_NumberFormat;
 	private static final Font m_fontDlg = new Font("Sans", Font.BOLD, 11);
 	private static final String STR_HIDDEN_WINDOW = Double.toString(Math.random());
 	private static final Frame m_frameParent = new Frame(STR_HIDDEN_WINDOW);
+	private static final Icon m_iconJAPpassive = GUIUtils.loadImageIcon(JAPConstants.IICON16FN, true);
+	private static final Icon m_iconJAPactive =
+		GUIUtils.loadImageIcon(JAPViewIconified.class.getName() + "_icon16red.gif", true);
+
+	private JAPController m_Controller;
+	private AbstractJAPMainView m_mainView;
+	private JLabel m_labelBytes, m_labelUsers, m_labelTraffic;
+	private JLabel m_lblJAPIcon;
+	private Point m_startPoint;
+	private boolean m_bIsDragging = false;
+	private NumberFormat m_NumberFormat;
+
 	private long m_lTrafficWWW, m_lTrafficOther;
 	final private class MyViewIconifiedUpdate implements Runnable
 	{
@@ -151,7 +158,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		la.setConstraints(m_labelTraffic, c);
 		pTop.add(m_labelTraffic);
 
-		JButton bttn = new JButton(JAPUtil.loadImageIcon(JAPConstants.ENLARGEYICONFN, true));
+		JButton bttn = new JButton(GUIUtils.loadImageIcon(JAPConstants.ENLARGEYICONFN, true));
 		bttn.setOpaque(false);
 		bttn.addActionListener(this);
 		bttn.setToolTipText(JAPMessages.getString("enlargeWindow"));
@@ -172,7 +179,8 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		p.add(pTop, BorderLayout.CENTER);
 		JPanel p2 = new JPanel();
 		//p2.setBackground(new Color(204, 204, 204));
-		p2.add(new JLabel(JAPUtil.loadImageIcon(JAPConstants.IICON16FN, true)));
+		m_lblJAPIcon = new JLabel(m_iconJAPpassive);
+		p2.add(m_lblJAPIcon);
 		p2.add(bttn);
 		p.add(p2, BorderLayout.SOUTH);
 		p.addMouseListener(this);
@@ -290,17 +298,63 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 	{
 	}
 
-	public void transferedBytes(long b, int protocolType)
-	{ //TODO: do it the right way --> it must be executed in the EventThread!!!
+	/**
+	 * Shows a blinking JAP icon.
+	 */
+	public void blink()
+	{
+		Thread blinkThread = new Thread()
+		{
+			public void run()
+			{
+				long startTime = System.currentTimeMillis();
+				synchronized(m_lblJAPIcon)
+				{
+					m_lblJAPIcon.setIcon(m_iconJAPactive);
+					try
+					{
+						m_lblJAPIcon.wait(1000);
+					}
+					catch (InterruptedException a_e)
+					{
+						// ignore
+					}
+					m_lblJAPIcon.setIcon(m_iconJAPpassive);
+				}
+			}
+		};
+		blinkThread.start();
+	}
+
+	public void transferedBytes(final long b, final int protocolType)
+	{
 		if (protocolType == IProxyListener.PROTOCOL_WWW)
 		{
-			m_lTrafficWWW = b;
+			m_lTrafficWWW = JAPModel.getInstance().getMixedBytes();
 		}
 		else if (protocolType == IProxyListener.PROTOCOL_OTHER)
 		{
 			m_lTrafficOther = b;
 		}
-		m_labelBytes.setText(JAPUtil.formatBytesValue(m_lTrafficWWW + m_lTrafficOther));
+
+		Runnable updateThread = new Runnable()
+		{
+			public void run()
+			{
+				m_labelBytes.setText(JAPUtil.formatBytesValue(m_lTrafficWWW + m_lTrafficOther));
+			}
+		};
+
+		if (SwingUtilities.isEventDispatchThread())
+		{
+			updateThread.run();
+		}
+		else
+		{
+			SwingUtilities.invokeLater(updateThread);
+		}
+
+		blink();
 	}
 
 	public void mouseExited(MouseEvent e)

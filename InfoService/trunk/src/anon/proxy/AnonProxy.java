@@ -125,7 +125,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		m_socketListener = listener;
 		m_proxyInterface = a_proxyInterface;
 		//HTTP
-		m_Anon = AnonServiceFactory.getAnonServiceInstance("AN.ON");
+		m_Anon = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_ANON);
 		m_Anon.setProxy(a_proxyInterface);
 		setDummyTraffic( -1);
 		m_forwardedConnection = false;
@@ -271,14 +271,14 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy.start(): AN.ON initialized");
 		if (m_currentTorParams != null)
 		{
-			m_Tor = AnonServiceFactory.getAnonServiceInstance("TOR");
+			m_Tor = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_TOR);
 			m_Tor.setProxy(m_proxyInterface);
 			m_Tor.initialize(m_currentTorParams);
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy.start(): Tor initialized");
 		}
 		if (m_currentMixminionParams != null)
 		{
-			m_Mixminion = AnonServiceFactory.getAnonServiceInstance("Mixminion");
+			m_Mixminion = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_MIXMINION);
 			m_Mixminion.setProxy(m_proxyInterface);
 			m_Mixminion.initialize(m_currentMixminionParams);
 		}
