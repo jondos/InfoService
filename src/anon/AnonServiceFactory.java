@@ -34,6 +34,10 @@ import anon.mixminion.Mixminion;
 
 final public class AnonServiceFactory
 {
+	public static final String SERVICE_ANON = "AN.ON";
+	public static final String SERVICE_TOR = "TOR";
+	public static final String SERVICE_MIXMINION = "Mixminion";
+
 	private static AnonService ms_AnonService = null;
 	private AnonServiceFactory()
 	{
@@ -52,7 +56,7 @@ final public class AnonServiceFactory
 		{
 			return null;
 		}
-		if (kind.equals("AN.ON"))
+		if (kind.equals(SERVICE_ANON))
 		{
 			if (ms_AnonService == null)
 			{
@@ -60,11 +64,11 @@ final public class AnonServiceFactory
 			}
 			return ms_AnonService; //AnonServiceImpl.create();
 		}
-		else if (kind.equals("TOR"))
+		else if (kind.equals(SERVICE_TOR))
 		{
 			return Tor.getInstance();
 		}
-		else if (kind.equals("Mixminion"))
+		else if (kind.equals(SERVICE_MIXMINION))
 		{
 			return Mixminion.getInstance();
 		}

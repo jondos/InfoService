@@ -28,8 +28,11 @@
 package proxy;
 
 import gui.JAPMessages;
+import gui.dialog.JAPDialog;
+import jap.JAPController;
 import jap.JAPModel;
 import jap.JAPUtil;
+import gui.JAPDll;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -49,8 +52,8 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.infoservice.ProxyInterface;
-import gui.dialog.JAPDialog;
-import jap.JAPController;
+
+
 
 final public class DirectProxy implements Runnable
 {
@@ -134,10 +137,15 @@ final public class DirectProxy implements Runnable
 
 					if (warnAgain)
 					{
+						JAPDll.setWindowOnTop(JAPController.getView(),
+											  JAPController.getView().getName() , true);
+
 						JAPDialog.LinkedCheckBox cb = new JAPDialog.LinkedCheckBox(false);
 						warnUser =  !(JAPDialog.showYesNoDialog(JAPController.getView(),
 							JAPMessages.getString(MSG_ALLOWUNPROTECTED), cb));
 						warnAgain = !cb.getState();
+						JAPDll.setWindowOnTop(JAPController.getView(),
+											  JAPController.getView().getName() , false);
 					}
 				}
 				else

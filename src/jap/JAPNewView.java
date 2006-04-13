@@ -98,6 +98,7 @@ import anon.proxy.IProxyListener;
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver
 {
+	private static final String MSG_SERVICE_NAME = JAPNewView.class.getName() + "_ngAnonymisierungsdienst";
 
 	//private JLabel meterLabel;
 	private JLabel m_labelCascadeName;
@@ -237,7 +238,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		GridBagConstraints c1 = new GridBagConstraints();
 
 		m_panelAnonService = new JPanel(gbl1);
-		m_labelAnonService = new JLabel(JAPMessages.getString("ngAnonymisierungsdienst"));
+		m_labelAnonService = new JLabel(JAPMessages.getString(MSG_SERVICE_NAME) + ":");
 		c1.insets = new Insets(0, 0, 0, 0);
 		c1.anchor = GridBagConstraints.WEST;
 		c1.weightx = 0;
@@ -1597,7 +1598,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		// Nr of Bytes transmitted anonymously
 		if (protocolType == IProxyListener.PROTOCOL_WWW)
 		{
-			m_lTrafficWWW = JAPController.getInstance().getMixedBytes();
+			m_lTrafficWWW = JAPModel.getInstance().getMixedBytes();
 		}
 		else if (protocolType == IProxyListener.PROTOCOL_OTHER)
 		{
