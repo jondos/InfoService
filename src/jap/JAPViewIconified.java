@@ -298,33 +298,6 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 	{
 	}
 
-	/**
-	 * Shows a blinking JAP icon.
-	 */
-	public void blink()
-	{
-		Thread blinkThread = new Thread()
-		{
-			public void run()
-			{
-				long startTime = System.currentTimeMillis();
-				synchronized(m_lblJAPIcon)
-				{
-					m_lblJAPIcon.setIcon(m_iconJAPactive);
-					try
-					{
-						m_lblJAPIcon.wait(1000);
-					}
-					catch (InterruptedException a_e)
-					{
-						// ignore
-					}
-					m_lblJAPIcon.setIcon(m_iconJAPpassive);
-				}
-			}
-		};
-		blinkThread.start();
-	}
 
 	public void transferedBytes(final long b, final int protocolType)
 	{
@@ -400,5 +373,32 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 			setLocation(aktLocation.x + endPoint.x - m_startPoint.x,
 						aktLocation.y + endPoint.y - m_startPoint.y);
 		}
+	}
+
+	/**
+	 * Shows a blinking JAP icon.
+	 */
+	private void blink()
+	{
+		Thread blinkThread = new Thread()
+		{
+			public void run()
+			{
+				synchronized(m_lblJAPIcon)
+				{
+					m_lblJAPIcon.setIcon(m_iconJAPactive);
+					try
+					{
+						m_lblJAPIcon.wait(1000);
+					}
+					catch (InterruptedException a_e)
+					{
+						// ignore
+					}
+					m_lblJAPIcon.setIcon(m_iconJAPpassive);
+				}
+			}
+		};
+		blinkThread.start();
 	}
 } //class ViewIconified
