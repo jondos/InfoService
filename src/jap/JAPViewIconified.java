@@ -72,6 +72,8 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 	private static final Icon m_iconJAPpassive = GUIUtils.loadImageIcon(JAPConstants.IICON16FN, true);
 	private static final Icon m_iconJAPactive =
 		GUIUtils.loadImageIcon(JAPViewIconified.class.getName() + "_icon16red.gif", true);
+	private static final Icon m_iconJAPdisconnected =
+		GUIUtils.loadImageIcon(JAPViewIconified.class.getName() + "_icon16discon.gif", true);
 
 	private JAPController m_Controller;
 	private AbstractJAPMainView m_mainView;
@@ -179,7 +181,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		p.add(pTop, BorderLayout.CENTER);
 		JPanel p2 = new JPanel();
 		//p2.setBackground(new Color(204, 204, 204));
-		m_lblJAPIcon = new JLabel(m_iconJAPpassive);
+		m_lblJAPIcon = new JLabel(m_iconJAPdisconnected);
 		p2.add(m_lblJAPIcon);
 		p2.add(bttn);
 		p.add(p2, BorderLayout.SOUTH);
@@ -252,12 +254,17 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 					{
 						m_labelTraffic.setText(JAPMessages.getString("iconifiedViewNA"));
 					}
+					synchronized(m_lblJAPIcon)
+					{
+						m_lblJAPIcon.setIcon(m_iconJAPpassive);
+					}
 				}
 				else
 				{
 					/* not in anonymity mode */
 					m_labelUsers.setText(JAPMessages.getString("iconifiedViewNA"));
 					m_labelTraffic.setText(JAPMessages.getString("iconifiedViewNA"));
+					m_lblJAPIcon.setIcon(m_iconJAPdisconnected);
 				}
 			}
 			catch (Throwable t)
@@ -395,7 +402,14 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 					{
 						// ignore
 					}
-					m_lblJAPIcon.setIcon(m_iconJAPpassive);
+					if (m_Controller.getAnonMode())
+					{
+						m_lblJAPIcon.setIcon(m_iconJAPpassive);
+					}
+					else
+					{
+						m_lblJAPIcon.setIcon(m_iconJAPdisconnected);
+					}
 				}
 			}
 		};
