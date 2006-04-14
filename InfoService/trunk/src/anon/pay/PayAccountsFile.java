@@ -509,13 +509,20 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		public void accountChanged(PayAccount acc)
 		{
 			// fire event
+			Enumeration enumListeners;
 			synchronized (m_paymentListeners)
 			{
-				Enumeration enumListeners = m_paymentListeners.elements();
-				while (enumListeners.hasMoreElements())
-				{
-					( (IPaymentListener) enumListeners.nextElement()).creditChanged(m_ActiveAccount);
-				}
+				/*
+				 *  Clone the vector and leave synchronisation block as otherwise there
+				 * would be a deadlock with fireChangeEvent in PayAccount:
+				 * PayAccount.m_accountListeners:Vector,
+				 * PayAccountsFile.m_paymentListeners:Vector
+				 */
+				enumListeners = ((Vector)m_paymentListeners.clone()).elements();
+			}
+			while (enumListeners.hasMoreElements())
+			{
+				( (IPaymentListener) enumListeners.nextElement()).creditChanged(m_ActiveAccount);
 			}
 		}
 	}

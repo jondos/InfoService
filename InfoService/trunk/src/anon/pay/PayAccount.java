@@ -585,13 +585,18 @@ public class PayAccount implements IXMLEncodable
 
 	private void fireChangeEvent()
 	{
+		Enumeration enumListeners;
 		synchronized (m_accountListeners)
 		{
-			Enumeration enumListeners = m_accountListeners.elements();
-			while (enumListeners.hasMoreElements())
-			{
-				( (IAccountListener) enumListeners.nextElement()).accountChanged(this);
-			}
+			/*
+			 * Clone the Vector as otherwise there would be a deadlock with at least
+			 * PayAccountsFile because of mutual listeners.
+			 */
+			enumListeners = ((Vector)m_accountListeners.clone()).elements();
+		}
+		while (enumListeners.hasMoreElements())
+		{
+			( (IAccountListener) enumListeners.nextElement()).accountChanged(this);
 		}
 	}
 
