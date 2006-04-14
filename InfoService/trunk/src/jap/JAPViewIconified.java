@@ -42,6 +42,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseMotionListener;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -182,6 +183,16 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		JPanel p2 = new JPanel();
 		//p2.setBackground(new Color(204, 204, 204));
 		m_lblJAPIcon = new JLabel(m_iconJAPdisconnected);
+		m_lblJAPIcon.addMouseListener(new MouseAdapter()
+		{
+			public void mouseClicked(MouseEvent a_event)
+			{
+				if (a_event.getButton() == MouseEvent.BUTTON1)
+				{
+					m_Controller.setAnonMode(!m_Controller.getAnonMode());
+				}
+			}
+		});
 		p2.add(m_lblJAPIcon);
 		p2.add(bttn);
 		p.add(p2, BorderLayout.SOUTH);
@@ -264,7 +275,10 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 					/* not in anonymity mode */
 					m_labelUsers.setText(JAPMessages.getString("iconifiedViewNA"));
 					m_labelTraffic.setText(JAPMessages.getString("iconifiedViewNA"));
-					m_lblJAPIcon.setIcon(m_iconJAPdisconnected);
+					synchronized(m_lblJAPIcon)
+					{
+						m_lblJAPIcon.setIcon(m_iconJAPdisconnected);
+					}
 				}
 			}
 			catch (Throwable t)
