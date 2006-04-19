@@ -85,19 +85,9 @@ public class StatusInfo extends AbstractDatabaseEntry implements IDistributable 
    * received). This XML description is also used by recent versions of the JAP client
    * (>= 00.02.016) when fetching the status info. We are using a string representation here
    * because it is much faster if we don't need to process the XML tree everytime a client
-   * requests the current status. 
+   * requests the current status.
    */
   private String m_statusXmlData;
-
-  /**
-   * Stores the XML description which we send to JAP clients if they ask for. This one is
-   * different from the normal one. It includes the calculated anonymity level and some more
-   * infos. This XML format is requested by old versions of the JAP client (< 00.02.016) when
-   * fetching the status info for a mixcascade.
-   * @todo remove it, only for compatibility with JAP client < 00.02.016
-   */
-  private String m_oldClientStatusXmlData;
-
 
   /**
    * Returns a new StatusInfo with dummy values (everything is set to -1). The LastUpdate time is
@@ -129,16 +119,9 @@ public class StatusInfo extends AbstractDatabaseEntry implements IDistributable 
    * should only be called within the context of the infoservice.
    *
    * @param a_statusNode The MixCascadeStatus node from an XML document.
-   * @param a_currentMinJapVersion The string representation of the currently minimum required JAP
-   *                               version. If this value is null, version 00.00.000 is used. This
-   *                               parameter is only needed for compatibility with JAP clients
-   *                               < 00.02.016.
-   * @todo remove a_currentMinJapVersion parameter, only for compatibility with JAP clients
-   *       < 00.02.016
    */
-  public StatusInfo(Element a_statusNode, String a_currentMinJapVersion) throws Exception {
+  public StatusInfo(Element a_statusNode) throws Exception {
     this(a_statusNode, -1);
-    m_oldClientStatusXmlData = generateClientStatusXml(a_currentMinJapVersion);
   }
 
   /**
@@ -173,7 +156,6 @@ public class StatusInfo extends AbstractDatabaseEntry implements IDistributable 
       m_anonLevel = (int) (userFactor * trafficFactor * mixFactor * 6.0);
     }
     m_statusXmlData = XMLUtil.toString(a_statusNode);
-    m_oldClientStatusXmlData = generateClientStatusXml(null);
   }
 
 
@@ -192,7 +174,7 @@ public class StatusInfo extends AbstractDatabaseEntry implements IDistributable 
     /* use always the timeout for the infoservice context, because the JAP client currently does
      * not have a database of status entries -> no timeout for the JAP client necessary
      */
-    super(System.currentTimeMillis() + Constants.TIMEOUT_STATUS);    
+    super(System.currentTimeMillis() + Constants.TIMEOUT_STATUS);
     m_mixCascadeId = a_mixCascadeId;
     m_lastUpdate = System.currentTimeMillis();
     m_nrOfActiveUsers = a_nrOfActiveUsers;
@@ -201,7 +183,6 @@ public class StatusInfo extends AbstractDatabaseEntry implements IDistributable 
     m_mixedPackets = a_mixedPackets;
     m_anonLevel = a_anonLevel;
     m_statusXmlData = XMLUtil.toString(generateXmlRepresentation());
-    m_oldClientStatusXmlData = generateClientStatusXml(null);
   }
 
 
@@ -307,17 +288,6 @@ public class StatusInfo extends AbstractDatabaseEntry implements IDistributable 
   }
 
   /**
-   * Returns this status entry as an XML structure in a format needed by old versions of the JAP
-   * client (JAP < 00.02.016).
-   *
-   * @return The XML data of this status entry in the old format for JAP clients < 00.02.016.
-   * @todo remove it, only for compatibility with JAP client < 00.02.016
-   */
-  public String getOldClientStatusXmlData() {
-    return m_oldClientStatusXmlData;
-  }
-
-  /**
    * Returns the XML structure of this status entry as we received it.
    *
    * @return The original XML data of this status entry.
@@ -400,51 +370,4 @@ public class StatusInfo extends AbstractDatabaseEntry implements IDistributable 
     mixCascadeStatusNode.setAttribute("LastUpdate", Long.toString(getLastUpdate()));
     return mixCascadeStatusNode;
   }
-
-  /**
-   * This is a helper method which creates the xml description for old JAP clients. The format
-   * of the XML structure for the client differs from the one for the infoservers because there
-   * is the anonymity level calculated for the clients, also some more information is included.
-   * @todo remove this method, only for compatibility with JAP client < 00.02.016
-   *
-   * @param a_currentMinJapVersion The string representation of the currently minimum required JAP
-   *                               version. If this value is null, version 00.00.000 is used.
-   *
-   * @return The String representation of the XML structure for old JAP clients.
-   */
-  private String generateClientStatusXml(String a_currentMinJapVersion) {
-    Document doc = XMLUtil.createDocument();
-    /* create the feedback element */
-    Element feedbackNode = doc.createElement("feedback");
-    /* create the attributes of the feedback node */
-    if (a_currentMinJapVersion == null) {
-      /* better than nothing, version 00.00.000 means, that every JAP version is up to date */
-      feedbackNode.setAttribute("isVersion", "00.00.000");
-    }
-    else {
-      feedbackNode.setAttribute("isVersion", a_currentMinJapVersion);
-    }
-    feedbackNode.setAttribute("anonServer", getId());
-    feedbackNode.setAttribute("nrOfActiveUsers", Integer.toString(getNrOfActiveUsers()));
-    feedbackNode.setAttribute("currentRisk", Integer.toString(getCurrentRisk()));
-    feedbackNode.setAttribute("trafficSituation", Integer.toString(getTrafficSituation()));
-    feedbackNode.setAttribute("mixedPackets", Long.toString(getMixedPackets()));
-    /* calculate then anonymity level */
-    int anonLevel = -1;
-    MixCascade mixCascadeEntry = (MixCascade) Database.getInstance(MixCascade.class).getEntryById(getId());
-    if (mixCascadeEntry != null) {
-      if ( (mixCascadeEntry.getNumberOfMixes() >= 0) && (getNrOfActiveUsers() >= 0) && (getTrafficSituation() >= 0)) {
-        double userFactor = Math.min( ( (double) getNrOfActiveUsers()) / 500.0, 1.0);
-        double trafficFactor = Math.min( ( (double) getTrafficSituation()) / 100.0, 1.0);
-        double mixFactor = 1.0 - Math.pow(0.5, mixCascadeEntry.getNumberOfMixes());
-        /* get the integer part of the product -> 0 <= anonLevel <= 5 because mixFactor is always < 1.0 */
-        anonLevel = (int) (userFactor * trafficFactor * mixFactor * 6.0);
-      }
-    }
-    feedbackNode.setAttribute("anonLevel", Integer.toString(anonLevel));
-    doc.appendChild(feedbackNode);
-    /* now make a string output of this xml document */
-    return XMLUtil.toString(doc);
-  }
-
 }

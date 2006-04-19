@@ -93,14 +93,6 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	private Element m_xmlStructure;
 
 	/**
-	 * Stores the XML description as a node which we send to JAP clients if they ask for. This one
-	 * is different to normal MixCascade XML structure. It includes a status entry for the cascade
-	 * and some more things. It is only for compatibility with old JAP clients.
-	 * TODO: remove it, only needed for compatibility with JAP clients < 00.02.016
-	 */
-	private Element m_oldClientXmlStructure;
-
-	/**
 	 * True, if this MixCascade is user defined, false if the Information comes from the
 	 * InfoService. This value is only meaningful within the context of the JAP client.
 	 */
@@ -270,10 +262,6 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		m_xmlStructure = a_mixCascadeNode;
 		/* set the current status to a dummy value */
 		m_currentStatus = StatusInfo.createDummyStatusInfo(getId());
-		/* create a XML structure compatible to old JAP clients
-		 * @todo remove it
-		 */
-		m_oldClientXmlStructure = generateOldClientXmlStructure();
 	}
 
 	/**
@@ -353,10 +341,6 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		/* create a dummy current status */
 		m_currentStatus = StatusInfo.createDummyStatusInfo(m_mixCascadeId);
 		m_xmlStructure = generateXmlRepresentation();
-		/* create a XML structure compatible to old JAP clients
-		 * @todo remove it
-		 */
-		m_oldClientXmlStructure = generateOldClientXmlStructure();
 	}
 
 	/**
@@ -639,18 +623,6 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	}
 
 	/**
-	 * Returns the XML structure for this MixCascade entry in a format needed by old versions of the
-	 * JAP client (< 00.02.016).
-	 * @todo remove it
-	 *
-	 * @return The MixCascade entry as XML structure in the old format.
-	 */
-	public Element getOldClientMixCascadeXmlStructure()
-	{
-		return m_oldClientXmlStructure;
-	}
-
-	/**
 	 * Returns the certificate appended to the signature of the MixCascade XML structure. If there
 	 * is no appended certificate or this MixCascade is user-defined, null is returned.
 	 *
@@ -708,101 +680,6 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		return mixCascadeNode;
 	}
 
-	/**
-	 * This is a helper method which creates the XML description for old versions of the JAP client
-	 * (< 00.02.016). The format of that XML structure differs from the normal one because a status
-	 * of the mixcascade and some more stuff is included.
-	 * @todo remove this method, only for compatibility with JAP clients < 00.02.016
-	 *
-	 * @return The XML structure for this mixcascade which is compatible to old versions of the JAP
-	 *         client.
-	 */
-	private Element generateOldClientXmlStructure()
-	{
-		Document doc = XMLUtil.createDocument();
-		/* Create the MixCascade element */
-		Element mixCascadeNode = doc.createElement("MixCascade");
-		mixCascadeNode.setAttribute("id", getId());
-		/* Create the childs of MixCascade */
-		Element nameNode = doc.createElement("Name");
-		nameNode.appendChild(doc.createTextNode(getName()));
-		/* we have to include Port, IP, Host of the first listener interface from the first mix of the cascade */
-		ListenerInterface firstListener = getListenerInterface(0);
-		Element portNode = doc.createElement("Port");
-		portNode.appendChild(doc.createTextNode(Integer.toString(firstListener.getPort())));
-		/* check for including ProxyPort */
-		Element proxyPortNode = null;
-		int i = 1;
-		while ( (i < getNumberOfListenerInterfaces()) && (proxyPortNode == null))
-		{
-			ListenerInterface currentListener = getListenerInterface(i);
-			if ( (currentListener.getPort() == 80) || (currentListener.getPort() == 443))
-			{
-				proxyPortNode = doc.createElement("ProxyPort");
-				proxyPortNode.appendChild(doc.createTextNode(Integer.toString(currentListener.getPort())));
-			}
-			i++;
-		}
-		/*String ipString = null;
-		   try
-		   {
-		 InetAddress interfaceAddress = InetAddress.getByName(firstListener.getHost());
-		 ipString = interfaceAddress.getHostAddress();
-		   }
-		   catch (Exception e)
-		   {
-		 // maybe inetHost is a hostname and no IP, but this solution is better than nothing
-		 ipString = firstListener.getHost();
-		   }
-		   Element ipNode = doc.createElement("IP");
-		   ipNode.appendChild(doc.createTextNode(ipString));*/
-		Element hostNode = doc.createElement("Host");
-		hostNode.appendChild(doc.createTextNode(firstListener.getHost()));
-		mixCascadeNode.appendChild(nameNode);
-		mixCascadeNode.appendChild(portNode);
-		if (proxyPortNode != null)
-		{
-			mixCascadeNode.appendChild(proxyPortNode);
-		}
-		//mixCascadeNode.appendChild(ipNode);
-		mixCascadeNode.appendChild(hostNode);
-		/* now do the same with all listener interfaces */
-		Element networkNode = doc.createElement("Network");
-		Element listenerInterfacesNode = doc.createElement("ListenerInterfaces");
-		for (int j = 0; j < getNumberOfListenerInterfaces(); j++)
-		{
-			ListenerInterface currentListener = getListenerInterface(j);
-			listenerInterfacesNode.appendChild(currentListener.toXmlElement(doc));
-		}
-		networkNode.appendChild(listenerInterfacesNode);
-		mixCascadeNode.appendChild(networkNode);
-		StatusInfo currentStatus = (StatusInfo) Database.getInstance(StatusInfo.class).getEntryById(getId());
-		if (currentStatus != null)
-		{
-			/* paste in the status entry */
-			try
-			{
-				Element currentStatusNode = (Element) (XMLUtil.importNode(doc,
-					currentStatus.generateMixCascadeCurrentStatus(), true));
-				mixCascadeNode.appendChild(currentStatusNode);
-			}
-			catch (Exception e)
-			{
-			}
-		}
-		/* paste in the mixes structure */
-		Element mixesNode = doc.createElement("Mixes");
-		mixesNode.setAttribute("count", Integer.toString(getNumberOfMixes()));
-		Enumeration allMixIds = m_mixIds.elements();
-		while (allMixIds.hasMoreElements())
-		{
-			Element mixNode = doc.createElement("Mix");
-			mixNode.setAttribute("id", (String) (allMixIds.nextElement()));
-			mixesNode.appendChild(mixNode);
-		}
-		mixCascadeNode.appendChild(mixesNode);
-		return mixCascadeNode;
-	}
 
 	public boolean isCertified()
 	{
