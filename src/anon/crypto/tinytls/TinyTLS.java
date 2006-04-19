@@ -649,7 +649,7 @@ public class TinyTLS extends Socket
 	class TLSOutputStream extends OutputStream
 	{
 
-		private DataOutputStream m_stream;
+		private OutputStream m_stream;
 		private TLSPlaintextRecord m_aktTLSRecord;
 
 		/**
@@ -659,7 +659,7 @@ public class TinyTLS extends Socket
 		public TLSOutputStream(OutputStream ostream)
 		{
 			m_aktTLSRecord = new TLSPlaintextRecord();
-			m_stream = new DataOutputStream(ostream);
+			m_stream = ostream;
 		}
 
 		/**
