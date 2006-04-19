@@ -68,6 +68,8 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	public final static int E_SIGNATURE_CHECK_FIRSTMIX_FAILED = ErrorCodes.E_SIGNATURE_CHECK_FIRSTMIX_FAILED;
 	public final static int E_SIGNATURE_CHECK_OTHERMIX_FAILED = ErrorCodes.E_SIGNATURE_CHECK_OTHERMIX_FAILED;
 
+	private static final int RECONNECT_INTERVAL = 5000;
+
 	private AnonService m_Anon;
 	private AnonService m_Tor;
 	private AnonService m_Mixminion;
@@ -414,8 +416,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		}
 		while (m_bIsRunning && m_bAutoReconnect)
 		{
-			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "JAPAnonProxy.run() Try reconnect to Mix");
+			LogHolder.log(LogLevel.ERR, LogType.NET, "Try reconnect to Mix");
 			int ret = m_Anon.initialize(m_currentMixCascade);
 			if (ret == ErrorCodes.E_SUCCESS)
 			{
@@ -423,7 +424,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			}
 			try
 			{
-				Thread.sleep(10000);
+				Thread.sleep(RECONNECT_INTERVAL);
 			}
 			catch (InterruptedException ex)
 			{

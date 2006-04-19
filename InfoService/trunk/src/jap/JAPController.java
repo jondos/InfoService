@@ -1141,15 +1141,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public boolean saveConfigFile()
 	{
 		boolean error = false;
-		LogHolder.log(LogLevel.INFO, LogType.MISC,
-					  "JAPModel:try saving configuration.");
+		LogHolder.log(LogLevel.INFO, LogType.MISC, "Try saving configuration.");
 		try
 		{
 			String sb = getConfigurationAsXmlString();
 			if (sb == null)
 			{
 				LogHolder.log(LogLevel.ERR, LogType.MISC,
-							  "JAPController:could not transform the configuration to a string.");
+							  "Could not transform the configuration to a string.");
 				error = true;
 			}
 			else
@@ -1250,14 +1249,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_LOOK_AND_FEEL,
 								 UIManager.getLookAndFeel().getClass().getName());
 
-			/*stores user defined MixCascades*/
+			/*stores MixCascades*/
 			Element elemCascades = doc.createElement(JAPConstants.CONFIG_MIX_CASCADES);
 			e.appendChild(elemCascades);
 			Enumeration enumer = m_vectorMixCascadeDatabase.elements();
 			while (enumer.hasMoreElements())
 			{
 				MixCascade entry = (MixCascade) enumer.nextElement();
-				if (entry.isUserDefined())
+				//if (entry.isUserDefined())
 				{
 					Element elem = entry.toXmlNode(doc);
 					elemCascades.appendChild(elem);
@@ -2240,15 +2239,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 */
 	public int versionCheck()
 	{
-		LogHolder.log(LogLevel.INFO, LogType.MISC,
-					  "JAPController: versionCheck: Checking for new version of JAP...");
-		int result = 0;
+		LogHolder.log(LogLevel.INFO, LogType.MISC, "Checking for new version of JAP...");
+
 		String currentVersionNumber = InfoServiceHolder.getInstance().getNewVersionNumber();
 		if (currentVersionNumber != null)
 		{
 			currentVersionNumber = currentVersionNumber.trim();
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-						  "JAPController: versionCheck: Local version: " + JAPConstants.aktVersion);
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Local version: " + JAPConstants.aktVersion);
 			if (currentVersionNumber.compareTo(JAPConstants.aktVersion) <= 0)
 			{
 				/* the local JAP version is up to date -> exit */
@@ -2257,11 +2254,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 			/* local version is not up to date, new version is available -> ask the user whether to
 			 * download the new version or not
 			 */
-			int answer = JOptionPane.showConfirmDialog(m_View,
+			boolean bAnswer = JAPDialog.showYesNoDialog(m_View,
 				JAPMessages.getString("newVersionAvailable"),
-				JAPMessages.getString("newVersionAvailableTitle"),
-				JOptionPane.YES_NO_OPTION);
-			if (answer == JOptionPane.YES_OPTION)
+				JAPMessages.getString("newVersionAvailableTitle"));
+			if (bAnswer)
 			{
 				/* User has elected to download new version of JAP -> Download, Alert, exit program */
 				JAPVersionInfo vi = InfoServiceHolder.getInstance().getJAPVersionInfo(JAPVersionInfo.
@@ -2319,15 +2315,16 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 		else
 		{
-			/* can't get the current version number from the infoservices -> Alert, and reset anon
-			 * mode to false
+			/* can't get the current version number from the infoservices (-> Alert, and reset anon
+			 * mode to false) Ignore this problem!
 			 */
 			LogHolder.log(LogLevel.ERR, LogType.MISC,
-						  "JAPController: versionCheck: Could not get the current JAP version number from infoservice.");
+						  "Could not get the current JAP version number from infoservice.");
+			/*
 			JAPDialog.showErrorDialog(m_View, JAPMessages.getString("errorConnectingInfoService"),
-									  LogType.NET);
+									  LogType.NET);*/
 			notifyJAPObservers();
-			return -1;
+			return 0;
 		}
 		/* this line should never be reached */
 	}
@@ -2651,9 +2648,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 		LogHolder.log(LogLevel.ERR, LogType.NET, "JAPController received connectionError");
 		if (!m_bConnectionErrorShown)
 		{
-			this.setAnonMode(false);
-			JAPDialog.showErrorDialog(m_View, JAPMessages.getString("cascadeLost"), LogType.MISC);
+			//this.setAnonMode(false); // prevents automatic reconnect
 			m_bConnectionErrorShown = true;
+			JAPDialog.showErrorDialog(m_View, JAPMessages.getString("cascadeLost"), LogType.MISC);
 		}
 	}
 
