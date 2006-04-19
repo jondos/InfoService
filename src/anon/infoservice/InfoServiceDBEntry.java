@@ -847,6 +847,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		{
 			throw (new Exception("InfoService: getMixCascades: Error in XML structure."));
 		}
+		//System.out.println(XMLUtil.toString(doc));
 		Element mixCascadesNode = (Element) (mixCascadesNodes.item(0));
 		NodeList mixCascadeNodes = mixCascadesNode.getElementsByTagName("MixCascade");
 		Vector mixCascades = new Vector();
@@ -865,8 +866,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 				catch (Exception e)
 				{
 					/* an error while parsing the node occured -> we don't use this mixcascade */
-					LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
-								  "InfoService: getMixCascades: Error in MixCascade XML node.");
+					LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Error in MixCascade XML node.");
 				}
 			}
 			else
@@ -881,8 +881,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 				catch (Exception e)
 				{
 					/* an error while parsing the node occured -> we don't use this mixcascade */
-					LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
-								  "InfoService: getMixCascades: Error in MixCascade XML node.");
+					LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Error in MixCascade XML node.");
 				}
 
 			}
