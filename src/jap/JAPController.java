@@ -1850,8 +1850,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 				m_proxyDirect = new DirectProxy(m_socketHTTPListener);
 				m_proxyDirect.startService();
 
-				getCurrentMixCascade().resetCurrentStatus();
-
+				// may be null if no cascade is available
+				if (getCurrentMixCascade() != null)
+				{
+					getCurrentMixCascade().resetCurrentStatus();
+				}
 				/* notify the forwarding system after! m_proxyAnon is set to null */
 				JAPModel.getInstance().getRoutingSettings().anonConnectionClosed();
 
