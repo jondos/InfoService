@@ -2613,7 +2613,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		else
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC,
-						  "JAPController: Constructor: Error loading default Mix root certificate.");
+						  "Error loading default Mix root certificate.");
 		}
 		defaultRootCert = JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.
 			CERTSPATH + JAPConstants.TRUSTEDINFOSERVICEROOTCERT));
@@ -2626,7 +2626,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		else
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC,
-						  "JAPController: Constructor: Error loading default InfoService root certificate.");
+						  "Error loading default InfoService root certificate.");
 		}
 
 		JAPCertificate updateMessagesCert = JAPCertificate.getInstance(ResourceLoader.loadResource(
@@ -2639,7 +2639,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		else
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC,
-						  "JAPController: Constructor: Error loading default update messages certificate.");
+						  "Error loading default update messages certificate.");
 		}
 	}
 
