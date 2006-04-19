@@ -482,19 +482,7 @@ public class InfoServiceCommands implements JWSInternalCommands
 			if (SignatureVerifier.getInstance().verifyXml(mixCascadeStatusNode,
 				SignatureVerifier.DOCUMENT_CLASS_MIX) == true)
 			{
-				/* the currently required minimum JAP version is only needed for compatibility with JAP
-				 * < 00.02.016
-				 * @todo remove it
-				 */
-				JAPMinVersion currentMinVersion = (JAPMinVersion) (Database.getInstance(JAPMinVersion.class).
-					getEntryById("JAPMinVersion"));
-				/* better than nothing, version 00.00.000 means, that every JAP version is up to date */
-				String minVersionString = "00.00.000";
-				if (currentMinVersion != null)
-				{
-					minVersionString = currentMinVersion.getJapSoftware().getVersion();
-				}
-				StatusInfo statusEntry = new StatusInfo(mixCascadeStatusNode, minVersionString);
+				StatusInfo statusEntry = new StatusInfo(mixCascadeStatusNode);
 				Database.getInstance(StatusInfo.class).update(statusEntry);
 				/* update the statistics, if they are not enabled or we know the received status message
 				 * already, nothing is done by this call

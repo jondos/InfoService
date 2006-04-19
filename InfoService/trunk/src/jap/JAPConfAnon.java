@@ -1050,8 +1050,20 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		 {
 		  if (m_listMixCascade.getSelectedIndex() > -1)
 		  {
-		   MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
-		   String cascadeId = cascade.getId();
+		   MixCascade cascade;
+		   String cascadeId;
+
+		   cascade = (MixCascade) m_listMixCascade.getSelectedValue();
+		   if (cascade == null)
+		   {
+			   // no cascade is available and selected
+			   m_showEditPanelButton.setEnabled(false);
+			   m_selectCascadeButton.setEnabled(false);
+			   m_showEditPanelButton.setEnabled(false);
+			   return;
+		   }
+		   cascadeId = cascade.getId();
+
 
 		   if (m_infoService != null)
 		   {

@@ -86,6 +86,7 @@ import gui.JAPMessages;
 import gui.JAPMixCascadeComboBox;
 import gui.MyProgressBarUI;
 import gui.StatusPanel;
+import gui.GUIUtils;
 import jap.forward.JAPRoutingRegistrationStatusObserver;
 import jap.forward.JAPRoutingServerStatisticsListener;
 import jap.forward.JAPRoutingSettings;
@@ -1439,14 +1440,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			m_comboAnonServices.setToolTipText(currentMixCascade.getName());
 
 			// Config panel
-			LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPView:Start updateValues");
+			LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Start updateValues");
 			// Meter panel
 			try
 			{
 				m_rbAnonOn.setSelected(m_Controller.getAnonMode());
 				m_rbAnonOff.setSelected(!m_Controller.getAnonMode());
 				m_cbAnonymityOn.setSelected(m_Controller.getAnonMode());
-				LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPView: update CascadeName");
+				LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Update CascadeName");
 				m_labelCascadeName.setText(currentMixCascade.getName());
 				m_labelCascadeName.setToolTipText(currentMixCascade.getName());
 				StatusInfo currentStatus = currentMixCascade.getCurrentStatus();
@@ -1518,7 +1519,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				m_cbForwardingSmall.setSelected(bForwaringServerOn);
 				Icon icon = null;
 				String strError = null;
-				String strText = null;
 				if (bForwaringServerOn)
 				{
 					/* update the server state label and the reason of error, if necessary */
@@ -1529,7 +1529,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					if (currentRegistrationState ==
 						JAPRoutingRegistrationStatusObserver.STATE_NO_REGISTRATION)
 					{
-						icon = JAPUtil.loadImageIcon(JAPConstants.IMAGE_WARNING, true);
+						icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_WARNING, true);
 						if (currentErrorCode ==
 							JAPRoutingRegistrationStatusObserver.ERROR_NO_KNOWN_PRIMARY_INFOSERVICES)
 						{
