@@ -40,6 +40,7 @@ import logging.LogLevel;
 import logging.LogType;
 import anon.crypto.tinytls.TinyTLSServerSocket;
 import anon.util.TimedOutputStream;
+import java.io.OutputStream;
 
 /**
  * Bedient eine Verbindung innerhalb eines Threads. Die Http-Requests werden
@@ -60,7 +61,7 @@ public class JPIConnection implements Runnable
 
 
 	private DataInputStream m_inStream;
-	private DataOutputStream m_outStream;
+	private OutputStream m_outStream;
 
 	/**
 	 * Creates a new JPIConnection over a plaintext-socket
@@ -91,7 +92,7 @@ public class JPIConnection implements Runnable
 				((TinyTLSServerSocket)m_socket).startHandshake();
 			}
 			m_inStream = new DataInputStream(m_socket.getInputStream());
-			m_outStream = new DataOutputStream(new TimedOutputStream(m_socket.getOutputStream(),30000));
+			m_outStream = new TimedOutputStream(m_socket.getOutputStream(),30000);
 			HttpServer server = new HttpServer(m_inStream, m_outStream);
 			PIRequest request;
 			if (!m_bIsAI)
