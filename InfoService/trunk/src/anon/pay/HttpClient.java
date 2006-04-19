@@ -38,12 +38,14 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 
 import anon.pay.xml.XMLDescription;
+import java.io.OutputStream;
+import java.io.BufferedOutputStream;
 
 final public class HttpClient
 {
 	private final static int MAX_LINE_LENGTH = 100;
 	private DataInputStream m_dataIS;
-	private DataOutputStream m_dataOS;
+	private BufferedOutputStream m_OS;
 	private Socket m_socket;
 
 	/**
@@ -56,7 +58,7 @@ final public class HttpClient
 	{
 		m_socket = socket;
 		m_dataIS = new DataInputStream(m_socket.getInputStream());
-		m_dataOS = new DataOutputStream(m_socket.getOutputStream());
+		m_OS = new BufferedOutputStream(m_socket.getOutputStream(),4096);
 	}
 
 	/**
@@ -85,18 +87,18 @@ final public class HttpClient
 	 */
 	public void writeRequest(String method, String url, String data) throws IOException
 	{
-		m_dataOS.writeBytes(method + " /" + url + " HTTP/1.1\r\n");
+		m_OS.write((method + " /" + url + " HTTP/1.1\r\n").getBytes());
 		if (method.equals("POST"))
 		{
-			m_dataOS.writeBytes("Content-Length: " + data.length() + "\r\n");
-			m_dataOS.writeBytes("\r\n");
-			m_dataOS.writeBytes(data);
+			m_OS.write(("Content-Length: " + data.length() + "\r\n").getBytes());
+			m_OS.write("\r\n".getBytes());
+			m_OS.write(data.getBytes());
 		}
 		else
 		{
-			m_dataOS.writeBytes("\r\n");
+			m_OS.write("\r\n".getBytes());
 		}
-		m_dataOS.flush();
+		m_OS.flush();
 	}
 
 	/**

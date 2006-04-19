@@ -38,6 +38,8 @@ import jpi.PIRequest;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.io.OutputStream;
+import java.io.BufferedOutputStream;
 
 /**
  * Simple & small http server
@@ -53,11 +55,11 @@ final public class HttpServer
 	private ErrorCodeMap m_errors;
 
 
-	public HttpServer(DataInputStream in, DataOutputStream out) throws IOException
+	public HttpServer(DataInputStream in, OutputStream out) throws IOException
 	{
 //		m_socket = socket;
 		m_dataIS = in;
-		m_dataOS = out;
+		m_dataOS = new DataOutputStream(new BufferedOutputStream(out,4096));
 
 		m_errors = ErrorCodeMap.getInstance();
 	}
