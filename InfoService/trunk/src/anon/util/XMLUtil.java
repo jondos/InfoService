@@ -66,6 +66,7 @@ public class XMLUtil
 	private final static String DEFAULT_FORMAT_SPACE = "    ";
 	private final static String XML_STR_BOOLEAN_TRUE = "true";
 	private final static String XML_STR_BOOLEAN_FALSE = "false";
+	private static final String PACKAGE_TRANSFORMER = "javax.xml.transform.";
 	private static DocumentBuilder ms_DocumentBuilder;
 
 	/**
@@ -905,20 +906,32 @@ public class XMLUtil
 		catch (Throwable t1)
 		{
 		}
+
 		try
 		{ //For JAXP 1.1 (for Instance Apache Crimson/Xalan shipped with Java 1.4)
-			//This seams to be realy stupid and compliecated...
-			//But if the do a simple t.transform(), a NoClassDefError is thrown, if
+			//This seams to be realy stupid and complicated...
+			//But if we do a simple t.transform(), a NoClassDefError is thrown, if
 			//the new JAXP1.1 is not present, even if we NOT call saveXMLDocument, but
 			//calling any other method within JAPUtil.
 			//Dont no why --> maybe this has something to to with Just in Time compiling ?
-			Object t =
-				javax.xml.transform.TransformerFactory.newInstance().newTransformer();
-			javax.xml.transform.Result r = new javax.xml.transform.stream.StreamResult(out);
-			javax.xml.transform.Source s = new javax.xml.transform.dom.DOMSource(node);
 
-			//this is to simply invoke t.transform(s,r)
-			Class c = t.getClass();
+			Class transformerFactory = Class.forName(PACKAGE_TRANSFORMER + "TransformerFactory");
+			Object transformerFactoryInstance =
+				transformerFactory.getMethod("newInstance", null).invoke(transformerFactory, null);
+			Object transformer = transformerFactory.getMethod("newTransformer", null).invoke(
+						 transformerFactoryInstance, null);
+			//Object transformer = javax.xml.transform.TransformerFactory.newInstance().newTransformer();
+
+			Class result = Class.forName(PACKAGE_TRANSFORMER + "stream.StreamResult");
+			Object r = result.getConstructor(new Class[]{OutputStream.class}).newInstance(new Object[]{out});
+			//javax.xml.transform.Result r = new javax.xml.transform.stream.StreamResult(out);
+			Class source = Class.forName(PACKAGE_TRANSFORMER + "dom.DOMSource");
+			Object s = source.getConstructor(new Class[]{Node.class}).newInstance(new Object[]{node});
+			//javax.xml.transform.Source s = new javax.xml.transform.dom.DOMSource(node);
+
+
+			//this is to simply invoke transformer.transform(s,r)
+			Class c = transformer.getClass();
 			Method m = null;
 			Method[] ms = c.getMethods();
 			for (int i = 0; i < ms.length; i++)
@@ -936,7 +949,7 @@ public class XMLUtil
 			Object[] p = new Object[2];
 			p[0] = s;
 			p[1] = r;
-			m.invoke(t, p);
+			m.invoke(transformer, p);
 			return out.toString();
 		}
 		catch (Throwable t2)
