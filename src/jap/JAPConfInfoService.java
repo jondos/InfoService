@@ -72,6 +72,7 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import gui.JAPMessages;
 import gui.JAPHelp;
+import gui.GUIUtils;
 import gui.dialog.JAPDialog;
 
 /**
@@ -196,13 +197,13 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 				if ( ( (InfoServiceDBEntry) a_value).isUserDefined())
 				{
 					returnLabel = new JLabel( ( (InfoServiceDBEntry) a_value).getName(),
-											 JAPUtil.loadImageIcon(JAPConstants.IMAGE_INFOSERVICE_MANUELL, true),
+											 GUIUtils.loadImageIcon(JAPConstants.IMAGE_INFOSERVICE_MANUELL, true),
 											 SwingConstants.LEFT);
 				}
 				else
 				{
 					returnLabel = new JLabel( ( (InfoServiceDBEntry) a_value).getName(),
-											 JAPUtil.loadImageIcon(JAPConstants.IMAGE_INFOSERVICE_INTERNET, true),
+											 GUIUtils.loadImageIcon(JAPConstants.IMAGE_INFOSERVICE_INTERNET, true),
 											 SwingConstants.LEFT);
 				}
 				returnLabel.setOpaque(true);

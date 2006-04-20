@@ -1353,25 +1353,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			Cursor c = getCursor();
 			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			m_dlgConfig = new JAPConf(this, m_bWithPayment);
-			m_dlgConfig.addComponentListener(new ComponentListener()
-			{
-				public void componentResized(ComponentEvent e)
-				{
-				}
-
-				public void componentMoved(ComponentEvent e)
-				{
-				}
-
-				public void componentShown(ComponentEvent e)
-				{
-				}
-
-				public void componentHidden(ComponentEvent e)
-				{
-					setEnabled(true);
-				}
-			});
 			setCursor(c);
 		}
 		if (card != null)
@@ -1379,8 +1360,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			m_dlgConfig.selectCard(card);
 		}
 		m_dlgConfig.updateValues();
-		setEnabled(false);
-		m_dlgConfig.showDialog();
+		m_dlgConfig.setVisible(true);
 	}
 
 	public JPanel getMainPanel()
