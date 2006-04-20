@@ -39,7 +39,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
-import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
@@ -49,7 +48,6 @@ import java.awt.event.ItemListener;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -82,12 +80,11 @@ import logging.LogLevel;
 import logging.LogType;
 import logging.LogHolder;
 
-final public class JAPConf extends JDialog implements ActionListener
+final public class JAPConf extends JAPDialog implements ActionListener
 {
 
 	/** Messages */
-	private static final String MSG_DETAILLEVEL = JAPConf.class.
-		getName() + "_detaillevel";
+	private static final String MSG_DETAILLEVEL = JAPConf.class.getName() + "_detaillevel";
 
 	final static public String PORT_TAB = "PORT_TAB";
 	final static public String UI_TAB = "UI_TAB";
@@ -161,14 +158,12 @@ final public class JAPConf extends JDialog implements ActionListener
 
 	public JAPConf(JFrame frmParent, boolean loadPay)
 	{
-		super(frmParent, false);
+		super(frmParent, JAPMessages.getString("settingsDialog"), true);
 		m_bWithPayment = loadPay;
 		m_bIsSimpleView = (JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED);
 		/* set the instance pointer */
 		ms_JapConfInstance = this;
 		m_Controller = JAPController.getInstance();
-		setModal(true);
-		setTitle(JAPMessages.getString("settingsDialog"));
 		JPanel pContainer = new JPanel();
 		m_fontControls = JAPController.getDialogFont();
 		GridBagLayout gbl = new GridBagLayout();
@@ -291,7 +286,6 @@ final public class JAPConf extends JDialog implements ActionListener
 		pContainer.add(buttonPanel);
 
 		setContentPane(pContainer);
-		setModal(false);
 		updateValues();
 		// largest tab to front
 		if (JAPModel.isSmallDisplay())
@@ -302,7 +296,6 @@ final public class JAPConf extends JDialog implements ActionListener
 		else
 		{
 			pack();
-			JAPUtil.centerFrame(this);
 		}
 	}
 
@@ -310,14 +303,17 @@ final public class JAPConf extends JDialog implements ActionListener
 	 * This method to show the Dialog We need it for
 	 * creating the module savepoints. After this, we call the parent setVisible(true) method.
 	 */
-	public void showDialog()
+	public void setVisible(boolean a_bVisible)
 	{
 		/* every time the configuration is set to visible, we need to create the savepoints for the
 		 * modules for the case that 'Cancel' is pressed later
 		 */
-		m_moduleSystem.createSavePoints();
+		if (a_bVisible)
+		{
+			m_moduleSystem.createSavePoints();
+		}
 		/* call the original method */
-		super.setVisible(true);
+		super.setVisible(a_bVisible);
 	}
 
 	public void actionPerformed(ActionEvent e)
@@ -700,7 +696,7 @@ final public class JAPConf extends JDialog implements ActionListener
 					{
 					}
 				}
-				int ret = fileChooser.showOpenDialog(ms_JapConfInstance);
+				int ret = fileChooser.showOpenDialog(ms_JapConfInstance.getContentPane());
 				if (ret == JFileChooser.APPROVE_OPTION)
 				{
 					try
@@ -1124,10 +1120,4 @@ final public class JAPConf extends JDialog implements ActionListener
 			m_tfProxyPortNumber.setText("");
 		}
 	}
-
-	public Window getView()
-	{
-		return (Window)this;
-	}
-
 }
