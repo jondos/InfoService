@@ -2491,18 +2491,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 		if (!m_bForwarderNotExplain && a_activate)
 		{
 			/* show a message box with the explanation of the forwarding stuff */
-			Object[] options =
-				{
-				JAPMessages.getString("okButton")};
-			JCheckBox checkboxRemindNever = new JCheckBox(JAPMessages.getString(
-				"disableActCntMessageNeverRemind"));
-			Object[] message =
-				{
-				JAPMessages.getString("forwardingExplainMessage"), checkboxRemindNever};
-			int ret = JOptionPane.showOptionDialog(getView(), (Object) message,
-				JAPMessages.getString("forwardingExplainMessageTitle"), JOptionPane.DEFAULT_OPTION,
-				JOptionPane.WARNING_MESSAGE, null, options, options[0]);
-			m_bForwarderNotExplain = checkboxRemindNever.isSelected();
+			JAPDialog.LinkedCheckBox checkbox = new JAPDialog.LinkedCheckBox(false);
+			JAPDialog.showMessageDialog(getView(), JAPMessages.getString("forwardingExplainMessage"),
+				JAPMessages.getString("forwardingExplainMessageTitle"), checkbox);
+
+			m_bForwarderNotExplain = checkbox.getState();
 		}
 		if (m_iStatusPanelMsgIdForwarderServerStatus != -1)
 		{

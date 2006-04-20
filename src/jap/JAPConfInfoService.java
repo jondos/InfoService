@@ -143,17 +143,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 
 			GridBagLayout rootPanelLayout = new GridBagLayout();
 			rootPanel.setLayout(rootPanelLayout);
-
-			GridBagConstraints rootPanelConstraints = new GridBagConstraints();
-			rootPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
-			rootPanelConstraints.fill = GridBagConstraints.BOTH;
-			rootPanelConstraints.weightx = 1.0;
-			rootPanelConstraints.weighty = 1.0;
-
-			rootPanelConstraints.gridx = 0;
-			rootPanelConstraints.gridy = 0;
-			rootPanelLayout.setConstraints(infoServiceTabPane, rootPanelConstraints);
-			rootPanel.add(infoServiceTabPane);
+			rootPanel.add(infoServiceTabPane, createTabbedRootPanelContraints());
 		}
 	}
 
