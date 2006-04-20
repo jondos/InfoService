@@ -91,6 +91,7 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 		m_Msgs = null;
 		m_lastMsg = null;
 		m_Thread = new Thread(this,"StatusPanel");
+		m_Thread.setDaemon(true);
 		m_bRun = true;
 		m_Thread.start();
 	}

@@ -116,7 +116,9 @@ public class ExternalChargeHelper implements Runnable
 							  "ExternalChargeHelper: connection from: " + strRemote);
 
 				externalCharge = new ExternalCharge(acceptedSocket);
-				new Thread(externalCharge).start();
+				Thread t=new Thread(externalCharge,"ExternalChargeHelper");
+				t.setDaemon(true);
+				t.start();
 			}
 			catch (Exception e)
 			{

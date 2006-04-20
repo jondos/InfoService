@@ -72,6 +72,7 @@ final class JAPFeedback implements Runnable
 		if (!runFlag)
 		{
 			m_threadRunLoop = new Thread(this, "JAP - Feedback");
+			m_threadRunLoop.setDaemon(true);
 			m_threadRunLoop.setPriority(Thread.MIN_PRIORITY);
 			m_threadRunLoop.start();
 		}

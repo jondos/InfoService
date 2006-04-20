@@ -66,7 +66,7 @@ public class UpdateInformationHandler implements Runnable {
     synchronized (UpdateInformationHandler.class) {
       if (ms_uihInstance == null) {
         ms_uihInstance = new UpdateInformationHandler();
-        Thread uihThread = new Thread(ms_uihInstance);
+        Thread uihThread = new Thread(ms_uihInstance,"UpdateInformationHandler");
         uihThread.setDaemon(true);
         uihThread.start();
       }
@@ -110,7 +110,7 @@ public class UpdateInformationHandler implements Runnable {
           if (releaseVersion != null) {
             /* we have found a old entry in the database -> better than nothing */
             InfoServiceDistributor.getInstance().addJob(releaseVersion);
-          } 
+          }
         }
         try {
           byte[] developmentJnlpData = readLocalFile(Configuration.getInstance().getJapDevelopmentJnlpFile());
@@ -129,7 +129,7 @@ public class UpdateInformationHandler implements Runnable {
           if (developmentVersion != null) {
             /* we have found a old entry in the database -> better than nothing */
             InfoServiceDistributor.getInstance().addJob(developmentVersion);
-          } 
+          }
         }
         try {
           byte[] minVersionData = readLocalFile(Configuration.getInstance().getJapMinVersionFile());
@@ -148,8 +148,8 @@ public class UpdateInformationHandler implements Runnable {
           if (minimumVersion != null) {
             /* we have found a old entry in the database -> better than nothing */
             InfoServiceDistributor.getInstance().addJob(minimumVersion);
-          } 
-        }   
+          }
+        }
       }
       else {
         /* we are not the root of update information, nevertheless we propagate the update
@@ -159,7 +159,7 @@ public class UpdateInformationHandler implements Runnable {
         JAPVersionInfo releaseVersion = (JAPVersionInfo)(Database.getInstance(JAPVersionInfo.class).getEntryById("/japRelease.jnlp"));
         if (releaseVersion != null) {
           InfoServiceDistributor.getInstance().addJob(releaseVersion);
-        } 
+        }
         JAPVersionInfo developmentVersion = (JAPVersionInfo)(Database.getInstance(JAPVersionInfo.class).getEntryById("/japDevelopment.jnlp"));
         if (developmentVersion != null) {
           InfoServiceDistributor.getInstance().addJob(developmentVersion);
@@ -167,8 +167,8 @@ public class UpdateInformationHandler implements Runnable {
         JAPMinVersion minimumVersion = (JAPMinVersion)(Database.getInstance(JAPMinVersion.class).getEntryById("JAPMinVersion"));
         if (minimumVersion != null) {
           InfoServiceDistributor.getInstance().addJob(minimumVersion);
-        }         
-      }  
+        }
+      }
       try {
         Thread.sleep(Constants.UPDATE_INFORMATION_ANNOUNCE_PERIOD);
       }

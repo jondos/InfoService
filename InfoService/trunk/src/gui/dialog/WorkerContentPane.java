@@ -197,7 +197,7 @@ public class WorkerContentPane extends DialogContentPane implements
 
 		public InternalThread(Runnable a_runnable)
 		{
-			super(a_runnable);
+			super(a_runnable,"WorkerContentPane - InternalThread");
 			if (a_runnable instanceof Thread)
 			{
 				m_thread = (Thread) a_runnable;
@@ -246,7 +246,8 @@ public class WorkerContentPane extends DialogContentPane implements
 		{
 			if (isVisible() && isReady())
 			{
-				m_internalThread = new Thread(this);
+				m_internalThread = new Thread(this,"WorkerContentPane - componentShown()");
+				m_internalThread.setDaemon(true);
 				m_internalThread.start();
 			}
 		}
@@ -269,6 +270,7 @@ public class WorkerContentPane extends DialogContentPane implements
 				notifyAll();
 				return;
 			}
+			m_workerThread.setDaemon(true);
 			m_workerThread.start();
 
 			try

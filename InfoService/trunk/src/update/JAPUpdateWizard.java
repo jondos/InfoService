@@ -136,7 +136,8 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 	private void startUpdateThread()
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Start update...");
-		updateThread = new Thread(this);
+		updateThread = new Thread(this,"JAPUpdateWizard");
+		updateThread.setDaemon(true);
 		updateThread.start();
 	}
 

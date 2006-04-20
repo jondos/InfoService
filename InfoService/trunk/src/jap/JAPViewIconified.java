@@ -427,6 +427,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 				}
 			}
 		};
+		blinkThread.setDaemon(true);
 		blinkThread.start();
 	}
 } //class ViewIconified

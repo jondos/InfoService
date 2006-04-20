@@ -200,7 +200,8 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 			}
 		};
 
-		Thread t = new Thread(fillList);
+		Thread t = new Thread(fillList,"TransactionOverviewDialog");
+		t.setDaemon(true);
 		t.start();
 
 	}

@@ -63,6 +63,7 @@ public final class AnonProxyRequest implements Runnable
 			m_InSocket = clientSocket.getInputStream();
 			m_OutSocket = clientSocket.getOutputStream();
 			m_threadRequest = new Thread(this, "JAP - AnonProxy Request");
+			m_threadRequest.setDaemon(true);
 			m_threadRequest.start();
 		}
 		catch (Exception e)
