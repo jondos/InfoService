@@ -1934,7 +1934,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						/* we don't have to wait for any previous job */
 						currentJob = new SetAnonModeAsync(a_anonModeSelected, null, this);
 					}
-					Thread currentThread = new Thread(currentJob);
+					Thread currentThread = new Thread(currentJob,"SetAnonModeAsync");
 					currentThread.setDaemon(true);
 					currentJob.setExecutionThread(currentThread);
 					m_changeAnonModeJobs.addElement(currentJob);
@@ -2182,6 +2182,17 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 
 			m_Controller.setAnonMode(false);
+			//Wait until all Jobs are finished....
+			while(m_Controller.m_changeAnonModeJobs.size()>0)
+			{
+				try
+				{
+					Thread.sleep(1000);
+				}
+				catch (InterruptedException ex)
+				{
+				}
+			}
 			System.exit(0);
 		}
 	}
