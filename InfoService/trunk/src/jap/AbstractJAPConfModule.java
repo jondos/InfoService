@@ -32,6 +32,8 @@ import java.awt.Font;
 import javax.swing.JPanel;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 
 /**
  * This is the generic implementation for a JAP configuration module.
@@ -113,6 +115,23 @@ public abstract class AbstractJAPConfModule
 		m_fontSetting = JAPController.getDialogFont();
 		m_savePoint = a_moduleSavePoint;
 		recreateRootPanel();
+	}
+
+	/**
+	 * Creates constraints for an equal alignment of a root panel with tabs.
+	 * @return GridBagConstraints
+	 */
+	public static GridBagConstraints createTabbedRootPanelContraints()
+	{
+		GridBagConstraints rootPanelConstraints = new GridBagConstraints();
+		rootPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
+		rootPanelConstraints.fill = GridBagConstraints.BOTH;
+		rootPanelConstraints.weightx = 1.0;
+		rootPanelConstraints.weighty = 1.0;
+
+		rootPanelConstraints.gridx = 0;
+		rootPanelConstraints.gridy = 0;
+		return rootPanelConstraints;
 	}
 
 	/**
@@ -256,7 +275,7 @@ public abstract class AbstractJAPConfModule
 
 	/**
 	 * This method can be overwritten by the children of AbstractJAPConfModule. It is called
-	 * every time the values of the model have changed and must be rereaded by the module.
+	 * every time the values of the model have changed and must be reread by the module.
 	 */
 	protected void onUpdateValues()
 	{

@@ -61,6 +61,10 @@
     <property category="directorynode" name="showSubdirectories" value="1"/>
     <property category="directorynode" name="url" value="."/>
   </node>
+  <node name="Jap" type="NavigationDirectory">
+    <property category="directorynode" name="showSubdirectories" value="1"/>
+    <property category="directorynode" name="url" value="."/>
+  </node>
   <node name="anon" type="Package"/>
   <node name="anon.crypto" type="Package"/>
   <node name="anon.crypto.test" type="Package"/>

@@ -62,7 +62,6 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JSeparator;
 import javax.swing.ListSelectionModel;
-import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -104,6 +103,8 @@ import logging.LogLevel;
 import logging.LogType;
 import jap.JAPModel;
 import anon.infoservice.ListenerInterface;
+import javax.swing.JTabbedPane;
+import javax.swing.JCheckBox;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -190,6 +191,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		getName() + "_newcaptcha";
 	private static final String MSG_NEWCAPTCHAEASTEREGG = AccountSettingsPanel.class.
 		getName() + "_newcaptchaEasterEgg";
+	private static final String MSG_SHOW_PAYMENT_CONFIRM_DIALOG = AccountSettingsPanel.class.
+		getName() + "_showPaymentConfirmDialog";
 
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
@@ -202,6 +205,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private JButton m_btnSelect;
 	private JButton m_btnPassword;
 	private JButton m_btnReload;
+	private JCheckBox m_cbxShowPaymentConfirmation;
 
 	private JLabel m_labelCreationDate;
 	private JLabel m_labelStatementDate;
@@ -237,8 +241,25 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		JPanel rootPanel = getRootPanel();
 		/* clear the whole root panel */
 		rootPanel.removeAll();
+
+		/* insert all components in the root panel */
+		JTabbedPane tabPane = new JTabbedPane();
+		tabPane.setFont(getFontSetting());
+		tabPane.insertTab(JAPMessages.getString("ngPseudonymAccounts"),
+						  null, createBasicSettingsTab(), null, 0);
+		tabPane.insertTab(JAPMessages.getString(
+			"settingsInfoServiceConfigAdvancedSettingsTabTitle"), null, createAdvancedSettingsTab(), null, 1);
+
+		GridBagLayout rootPanelLayout = new GridBagLayout();
+		rootPanel.setLayout(rootPanelLayout);
+		rootPanelLayout.setConstraints(tabPane, createTabbedRootPanelContraints());
+		rootPanel.add(tabPane);
+  }
+	private JPanel createBasicSettingsTab()
+	{
+		JPanel rootPanel = new JPanel();
+
 		rootPanel.setLayout(new GridBagLayout());
-		rootPanel.setBorder(new TitledBorder(JAPMessages.getString("ngPseudonymAccounts")));
 
 		m_listAccounts = new JList();
 		m_listAccounts.addListSelectionListener(this);
@@ -340,6 +361,33 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		updateAccountList();
 		enableDisableButtons();
+
+		return rootPanel;
+	}
+
+	private JPanel createAdvancedSettingsTab()
+	{
+		JPanel panelAdvanced = new JPanel();
+
+		m_cbxShowPaymentConfirmation = new JCheckBox(
+			JAPMessages.getString(MSG_SHOW_PAYMENT_CONFIRM_DIALOG));
+		m_cbxShowPaymentConfirmation.setFont(getFontSetting());
+		GridBagLayout advancedPanelLayout = new GridBagLayout();
+		panelAdvanced.setLayout(advancedPanelLayout);
+
+		GridBagConstraints advancedPanelConstraints = new GridBagConstraints();
+		advancedPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
+		advancedPanelConstraints.fill = GridBagConstraints.NONE;
+		advancedPanelConstraints.weightx = 1.0;
+
+		advancedPanelConstraints.gridx = 0;
+		advancedPanelConstraints.gridy = 0;
+		advancedPanelConstraints.weighty = 1.0;
+		advancedPanelConstraints.insets = new Insets(5, 5, 10, 5);
+
+		panelAdvanced.add(m_cbxShowPaymentConfirmation, advancedPanelConstraints);
+
+		return panelAdvanced;
 	}
 
 	/**
@@ -1547,6 +1595,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		//Register help context
 		JAPHelp.getInstance().getContextObj().setContext("payment");
 		updateAccountList();
+	 	m_cbxShowPaymentConfirmation.setSelected(!JAPController.getInstance().getDontAskPayment());
 	}
 
 	/**
@@ -1555,6 +1604,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 */
 	protected boolean onOkPressed()
 	{
+		JAPController.getInstance().setDontAskPayment(!m_cbxShowPaymentConfirmation.isSelected());
 		return true;
 	}
 
