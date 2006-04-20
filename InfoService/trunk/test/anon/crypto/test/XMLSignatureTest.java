@@ -257,7 +257,7 @@ public class XMLSignatureTest extends XtendedPrivateTestCase
 				  "private2", a_keyGen.createKeyPair(), new GregorianCalendar(), 0);
 		otherPkcs12Certificate.sign(pkcs12Certificate);
 		XMLSignature.removeSignatureFrom(doc);
-		signature = XMLSignature.sign(doc, otherPkcs12Certificate.getPrivKey());
+		signature = XMLSignature.sign(doc, otherPkcs12Certificate.getPrivateKey());
 		assertEquals(0, signature.countCertificates());
 
 		// verifying succeeds for the signing certificate, but not for the other one
@@ -365,7 +365,7 @@ public class XMLSignatureTest extends XtendedPrivateTestCase
 
 		// signer two does not append any certificate; validation is not possible
 		doc = XMLUtil.toXMLDocument(new DummyXMLEncodable(random));
-		XMLSignature.sign(doc, signerTwo.getPrivKey());
+		XMLSignature.sign(doc, signerTwo.getPrivateKey());
 		assertNull(XMLSignature.verify(doc, trustedCertificates, collectedCertificates));
 
 		// now signer two appends his certificate, too
@@ -380,12 +380,12 @@ public class XMLSignatureTest extends XtendedPrivateTestCase
 		 * can still be verified, as the certificates have been collected before.
 		 */
 		doc = XMLUtil.toXMLDocument(new DummyXMLEncodable(random));
-		signature = XMLSignature.sign(doc, signerOne.getPrivKey());
+		signature = XMLSignature.sign(doc, signerOne.getPrivateKey());
 		assertEquals(0, signature.countCertificates());
 		assertNotNull(XMLSignature.verify(doc, trustedCertificates, collectedCertificates));
 
 		doc = XMLUtil.toXMLDocument(new DummyXMLEncodable(random));
-		signature = XMLSignature.sign(doc, signerTwo.getPrivKey());
+		signature = XMLSignature.sign(doc, signerTwo.getPrivateKey());
 		assertEquals(0, signature.countCertificates());
 		assertNotNull(XMLSignature.verify(doc, trustedCertificates, collectedCertificates));
 	}
@@ -498,7 +498,7 @@ public class XMLSignatureTest extends XtendedPrivateTestCase
 			assertNull(i + "", XMLSignature.verify(doc, pkcs12Certificate.getX509Certificate()));
 
 			// sign with old and verify with old and new method
-			oldSignatureHandler.initSign(pkcs12Certificate.getPrivKey());
+			oldSignatureHandler.initSign(pkcs12Certificate.getPrivateKey());
 			oldSignatureHandler.signXmlDoc(doc);
 			oldSignatureHandler.initVerify(pkcs12Certificate.getX509Certificate().getPublicKey());
 			assertTrue(i + "", oldSignatureHandler.verifyXML(doc));
@@ -585,7 +585,7 @@ public class XMLSignatureTest extends XtendedPrivateTestCase
 
 			// sign with private key and verify with public key
 			XMLSignature.removeSignatureFrom(doc);
-			signature = XMLSignature.sign(doc, pkcs12Certificate.getPrivKey());
+			signature = XMLSignature.sign(doc, pkcs12Certificate.getPrivateKey());
 			assertNotNull(i + "", XMLSignature.getUnverified(doc));
 			signature =
 				XMLSignature.verify(doc, pkcs12Certificate.getX509Certificate().getPublicKey());

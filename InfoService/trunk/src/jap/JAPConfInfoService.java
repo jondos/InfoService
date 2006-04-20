@@ -244,11 +244,11 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		final JButton settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton = new JButton("   " +
 			JAPMessages.getString("settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton"));
 		//settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setFont(getFontSetting());
-		settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setIcon(JAPUtil.loadImageIcon(
+		settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setIcon(GUIUtils.loadImageIcon(
 			JAPConstants.IMAGE_RELOAD, true));
-		settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setDisabledIcon(JAPUtil.loadImageIcon(
+		settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setDisabledIcon(GUIUtils.loadImageIcon(
 			JAPConstants.IMAGE_RELOAD_DISABLED, true));
-		settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setPressedIcon(JAPUtil.loadImageIcon(
+		settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setPressedIcon(GUIUtils.loadImageIcon(
 			JAPConstants.IMAGE_RELOAD_ROLLOVER, true));
 		//settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setMargin(new Insets(1, 1, 1,
 		//	settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.getMargin().right));

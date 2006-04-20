@@ -33,6 +33,7 @@ import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
+import gui.GUIUtils;
 
 public final class JAPWaitSplash implements Runnable
 {
@@ -71,7 +72,7 @@ public final class JAPWaitSplash implements Runnable
 		l.setFont(JAPController.getDialogFont());
 		l.setIconTextGap(10);
 		dlgAbort.getContentPane().add("Center", l);
-		l = new JLabel(JAPUtil.loadImageIcon(JAPConstants.BUSYFN, true));
+		l = new JLabel(GUIUtils.loadImageIcon(JAPConstants.BUSYFN, true));
 		l.setBorder(new EmptyBorder(10, 10, 10, 10));
 		dlgAbort.getContentPane().add("South", l);
 		dlgAbort.pack();

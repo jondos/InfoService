@@ -30,8 +30,6 @@ package gui;
 
 import jap.JAPConstants;
 
-import jap.JAPUtil;
-
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -54,9 +52,9 @@ import javax.swing.JSeparator;
  */
 final public class ServerListPanel extends JPanel implements ActionListener
 {
-	private final static ImageIcon ms_iconServerBlau = JAPUtil.loadImageIcon(JAPConstants.IMAGE_SERVER_BLAU, true);
-	private final static ImageIcon ms_iconServerRed = JAPUtil.loadImageIcon(JAPConstants.IMAGE_SERVER_ROT, true);
-	private final static ImageIcon ms_iconServer = JAPUtil.loadImageIcon(JAPConstants.IMAGE_SERVER, true);
+	private final static ImageIcon ms_iconServerBlau = GUIUtils.loadImageIcon(JAPConstants.IMAGE_SERVER_BLAU, true);
+	private final static ImageIcon ms_iconServerRed = GUIUtils.loadImageIcon(JAPConstants.IMAGE_SERVER_ROT, true);
+	private final static ImageIcon ms_iconServer = GUIUtils.loadImageIcon(JAPConstants.IMAGE_SERVER, true);
 	private ButtonGroup m_bgMixe;
 	private int m_selectedIndex;
 	private Vector m_itemListeners;

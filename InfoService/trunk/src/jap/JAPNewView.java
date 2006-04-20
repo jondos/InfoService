@@ -190,7 +190,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_flippingpanelForward = new FlippingPanel(this);
 
 		// Load Icon in upper left corner of the frame window
-		ImageIcon ii = JAPUtil.loadImageIcon(JAPConstants.IICON16FN, true);
+		ImageIcon ii = GUIUtils.loadImageIcon(JAPConstants.IICON16FN, true);
 		if (ii != null)
 		{
 			setIconImage(ii.getImage());
@@ -198,7 +198,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 		loadMeterIcons();
 		// "NORTH": Image
-		ImageIcon northImage = JAPUtil.loadImageIcon(JAPMessages.getString("northPath"), true);
+		ImageIcon northImage = GUIUtils.loadImageIcon(JAPMessages.getString("northPath"), true);
 		JLabel northLabel = new JLabel(northImage);
 		JPanel northPanel = new JPanel();
 		GridBagLayout gbl = new GridBagLayout();
@@ -266,7 +266,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.weightx = 1;
 		m_panelAnonService.add(m_comboAnonServices, c1);
-		m_bttnReload = new JButton(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD, true));
+		m_bttnReload = new JButton(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD, true));
 		m_bttnReload.setOpaque(false);
 		LookAndFeel laf = UIManager.getLookAndFeel();
 		if (laf != null && UIManager.getCrossPlatformLookAndFeelClassName().equals(laf.getClass().getName())) //stupid but is necessary for JDK 1.5 and Metal L&F on Windows XP (and maybe others)
@@ -283,12 +283,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		});
 		m_bttnReload.setRolloverEnabled(true);
 		m_bttnReload.setToolTipText(JAPMessages.getString("ngCascadeReloadTooltip"));
-		ImageIcon tmpIcon = JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true);
+		ImageIcon tmpIcon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true);
 		m_bttnReload.setRolloverIcon(tmpIcon);
 		m_bttnReload.setSelectedIcon(tmpIcon);
 		m_bttnReload.setRolloverSelectedIcon(tmpIcon);
 		m_bttnReload.setPressedIcon(tmpIcon);
-		m_bttnReload.setDisabledIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true));
+		m_bttnReload.setDisabledIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true));
 		m_bttnReload.setBorder(new EmptyBorder(0, 0, 0, 0));
 		m_bttnReload.setFocusPainted(false);
 
@@ -688,7 +688,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_bttnHelp = new JButton(JAPMessages.getString("helpButton"));
 		m_bttnQuit = new JButton(JAPMessages.getString("quitButton"));
 		m_bttnConf = new JButton(JAPMessages.getString("confButton"));
-		m_bttnIconify = new JButton(JAPUtil.loadImageIcon(JAPConstants.ICONIFYICONFN, true));
+		m_bttnIconify = new JButton(GUIUtils.loadImageIcon(JAPConstants.ICONIFYICONFN, true));
 		m_bttnIconify.setToolTipText(JAPMessages.getString("iconifyWindow"));
 
 		// Add real buttons
@@ -722,7 +722,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		northPanel.add(buttonPanel, c);
 
 		// "West": Image
-		ImageIcon westImage = JAPUtil.loadImageIcon(JAPMessages.getString("westPath"), true);
+		ImageIcon westImage = GUIUtils.loadImageIcon(JAPMessages.getString("westPath"), true);
 		JLabel westLabel = new JLabel(westImage);
 
 		// "Center:" tabs
@@ -779,7 +779,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		fetchMixCascadesAsync(false);
 		valuesChanged(true);
 		setOptimalSize();
-		JAPUtil.centerFrame(this);
+		GUIUtils.centerOnScreen(this);
 		//Change size and location if the user requested to restore the old position/size
 		if (JAPModel.getSaveMainWindowPosition())
 		{
@@ -1214,7 +1214,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			for (int i = 0; i < JAPConstants.METERFNARRAY.length; i++)
 			{
-				meterIcons[i] = JAPUtil.loadImageIcon(JAPConstants.METERFNARRAY[i], false);
+				meterIcons[i] = GUIUtils.loadImageIcon(JAPConstants.METERFNARRAY[i], false);
 			}
 		}
 		else
@@ -1222,7 +1222,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			MediaTracker m = new MediaTracker(this);
 			for (int i = 0; i < JAPConstants.METERFNARRAY.length; i++)
 			{
-				Image tmp = JAPUtil.loadImageIcon(JAPConstants.METERFNARRAY[i], true).getImage();
+				Image tmp = GUIUtils.loadImageIcon(JAPConstants.METERFNARRAY[i], true).getImage();
 				int w = tmp.getWidth(null);
 				tmp = tmp.getScaledInstance( (int) (w * 0.75), -1, Image.SCALE_SMOOTH);
 				m.addImage(tmp, i);

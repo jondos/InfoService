@@ -28,7 +28,6 @@
 package gui;
 
 import jap.JAPConstants;
-import jap.JAPUtil;
 
 import java.awt.Dimension;
 import java.awt.Font;
@@ -50,13 +49,13 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 
 	private final static int ms_IconHeight = 15;
 	private final static int ms_IconWidth = 16;
-	private final static Image ms_imageWarning = JAPUtil.loadImageIcon(JAPConstants.IMAGE_WARNING, true).
+	private final static Image ms_imageWarning = GUIUtils.loadImageIcon(JAPConstants.IMAGE_WARNING, true).
 		getImage();
 
-	private final static Image ms_imageInformation = JAPUtil.loadImageIcon(JAPConstants.IMAGE_INFORMATION, true).
+	private final static Image ms_imageInformation = GUIUtils.loadImageIcon(JAPConstants.IMAGE_INFORMATION, true).
 		getImage();
 
-	private final static Image ms_imageError = JAPUtil.loadImageIcon(JAPConstants.IMAGE_ERROR, true).getImage();
+	private final static Image ms_imageError = GUIUtils.loadImageIcon(JAPConstants.IMAGE_ERROR, true).getImage();
 
 	final class MsgQueueEntry
 	{

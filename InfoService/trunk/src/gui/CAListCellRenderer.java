@@ -17,8 +17,8 @@ import java.util.Vector;
 
 final public class CAListCellRenderer extends JLabel implements ListCellRenderer
 {
-	final static ImageIcon enabledIcon = JAPUtil.loadImageIcon(JAPConstants.CERTENABLEDICON, false);
-	final static ImageIcon disabledIcon = JAPUtil.loadImageIcon(JAPConstants.CERTDISABLEDICON, false);
+	final static ImageIcon enabledIcon = GUIUtils.loadImageIcon(JAPConstants.CERTENABLEDICON, false);
+	final static ImageIcon disabledIcon = GUIUtils.loadImageIcon(JAPConstants.CERTDISABLEDICON, false);
 
 	// This is the only method defined by ListCellRenderer.
 	// We just reconfigure the JLabel each time we're called.

@@ -1164,7 +1164,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 */
 	private BI getBIforAccountCreation()
 	{
-		BISelectionDialog d = new BISelectionDialog();
+		BISelectionDialog d = new BISelectionDialog(getRootPanel());
 		BI theBI = d.getSelectedBI();
 
 		if (theBI != null)

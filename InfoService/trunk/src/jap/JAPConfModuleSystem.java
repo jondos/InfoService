@@ -125,8 +125,8 @@ public class JAPConfModuleSystem
 		DefaultTreeModel configurationTreeModel = new DefaultTreeModel(new DefaultMutableTreeNode("root"));
 
 		DefaultTreeCellRenderer configurationTreeRenderer = new DefaultTreeCellRenderer();
-		configurationTreeRenderer.setClosedIcon(JAPUtil.loadImageIcon("arrow.gif", true));
-		configurationTreeRenderer.setOpenIcon(JAPUtil.loadImageIcon("arrow90.gif", true));
+		configurationTreeRenderer.setClosedIcon(GUIUtils.loadImageIcon("arrow.gif", true));
+		configurationTreeRenderer.setOpenIcon(GUIUtils.loadImageIcon("arrow90.gif", true));
 		configurationTreeRenderer.setLeafIcon(null);
 
 		TreeSelectionModel configurationTreeSelectionModel = new DefaultTreeSelectionModel()

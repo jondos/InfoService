@@ -80,7 +80,7 @@ final class JAPAbout extends JDialog
 		});
 		setLocation( -380, -200);
 		setSize(10, 10);
-		ImageIcon imageSplash = JAPUtil.loadImageIcon(JAPConstants.ABOUTFN, true); //loading the Background Image
+		ImageIcon imageSplash = GUIUtils.loadImageIcon(JAPConstants.ABOUTFN, true); //loading the Background Image
 		byte[] buff = ResourceLoader.loadResource(JAPMessages.getString("htmlfileAbout"));
 		sp = new JAPAboutAutoScroller(ABOUT_DX, ABOUT_DY, imageSplash.getImage(), 5, 62, 210, 173 - 72,
 									  new String(buff)); //Creating a new scrolling HTML-Pane with the specified size

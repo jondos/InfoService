@@ -133,9 +133,9 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		c2.gridwidth = 2;
 		p.add(s, c2);
 		m_bttnFetchRouters = new JButton(JAPMessages.getString("torBttnFetchRouters"));
-		m_bttnFetchRouters.setIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD, true));
-		m_bttnFetchRouters.setDisabledIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true));
-		m_bttnFetchRouters.setPressedIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true));
+		m_bttnFetchRouters.setIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD, true));
+		m_bttnFetchRouters.setDisabledIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true));
+		m_bttnFetchRouters.setPressedIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true));
 
 		m_bttnFetchRouters.setActionCommand("fetchRouters");
 		m_bttnFetchRouters.addActionListener(this);

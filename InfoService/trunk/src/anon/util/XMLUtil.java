@@ -148,18 +148,6 @@ public class XMLUtil
 	}
 
 	/**
-	 *
-	 * @param n Node
-	 * @param defaultValue int
-	 * @return int
-	 * @deprecated use parseValue(); scheduled for removal on 04/12/12
-	 */
-	public static int parseNodeInt(Node n, int defaultValue)
-	{
-		return parseValue(n, defaultValue);
-	}
-
-	/**
 	 * Returns the value of the specified XML node as int.
 	 * @param a_node an XML node
 	 * @param a_defaultValue the default value
@@ -229,17 +217,6 @@ public class XMLUtil
 			}
 		}
 		return i;
-	}
-	/**
-	 *
-	 * @param n Node
-	 * @param defaultValue long
-	 * @return long
-	 * @deprecated use parseValue(); scheduled for removal on 04/12/12
-	 */
-	public static long parseNodeLong(Node n, long defaultValue)
-	{
-		return parseValue(n, defaultValue);
 	}
 
 	/**
@@ -320,32 +297,6 @@ public class XMLUtil
 		}
 
 		return i;
-	}
-
-	/**
-	 *
-	 * @param e Element
-	 * @param attr String
-	 * @param defaultValue boolean
-	 * @return boolean
-	 * @deprecated use parseAttribute(); scheduled for removal on 04/12/3
-	 */
-	public static boolean parseElementAttrBoolean(Element e, String attr, boolean defaultValue)
-	{
-		return parseAttribute(e, attr, defaultValue);
-	}
-
-	/**
-	 *
-	 * @param e Element
-	 * @param attr String
-	 * @param defaultValue int
-	 * @return int
-	 * @deprecated use parseAttribute(); scheduled for removal on 04/12/3
-	 */
-	public static int parseElementAttrInt(Element e, String attr, int defaultValue)
-	{
-		return parseAttribute(e, attr, defaultValue);
 	}
 
 	/**
@@ -430,34 +381,6 @@ public class XMLUtil
 			}
 		}
 		return s;
-	}
-
-	/**
-	 *
-	 * @param n Node
-	 * @param defaultValue boolean
-	 * @return boolean
-	 * @deprecated use parseValue(); scheduled for removal on 04/12/12
-	 */
-	public static boolean parseNodeBoolean(Node n, boolean defaultValue)
-	{
-		return parseValue(n, defaultValue);
-	}
-
-	/**
-	 * Gets the content of an Element or Text Node. The "content" of an Element Node is
-	 * the text between the opening and closing Element Tag. The content of an attribute node
-	 * is the value of the attribute. For all other nodes null is returned.
-	 * @param n text node, element node or attribute node
-	 * @param defaultValue value returned, if an error occured
-	 * @return null if this node has no "content"
-	 * @return defaultValue if an error occured
-	 * @return "content" of the node
-	 * @deprecated use parseValue(); scheduled for removal on 04/12/12
-	 */
-	public static String parseNodeString(Node n, String defaultValue)
-	{
-		return parseValue(n, defaultValue);
 	}
 
 	/**

@@ -50,11 +50,11 @@ import anon.mixminion.mmrdescription.MMRDescription;
 import anon.mixminion.mmrdescription.MMRList;
 import anon.mixminion.mmrdescription.InfoServiceMMRListFetcher;
 
-import java.util.Date;
 import gui.JAPMessages;
 import gui.JAPHelp;
 import gui.dialog.JAPDialog;
 import logging.LogType;
+import gui.GUIUtils;
 
 final class JAPConfMixminion extends AbstractJAPConfModule implements ActionListener
 {
@@ -130,9 +130,9 @@ final class JAPConfMixminion extends AbstractJAPConfModule implements ActionList
 		c2.gridwidth = 2;
 		p.add(s, c2);
 		m_bttnFetchRouters = new JButton(JAPMessages.getString("mixminionBttnFetchRouters"));
-		m_bttnFetchRouters.setIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD, true));
-		m_bttnFetchRouters.setDisabledIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true));
-		m_bttnFetchRouters.setPressedIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true));
+		m_bttnFetchRouters.setIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD, true));
+		m_bttnFetchRouters.setDisabledIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true));
+		m_bttnFetchRouters.setPressedIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true));
 
 		m_bttnFetchRouters.setActionCommand("fetchRouters");
 		m_bttnFetchRouters.addActionListener(this);
