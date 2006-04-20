@@ -77,6 +77,7 @@ public class FirstMMRConnectionThread implements Runnable
 	public TinyTLS getConnection() throws IOException
 	{
 		m_thread = new Thread(this, "FirstMMRConnectionThread");
+		m_thread.setDaemon(true);
 		m_thread.start();
 		synchronized (m_oNotifySync)
 		{

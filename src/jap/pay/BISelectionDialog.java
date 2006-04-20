@@ -192,6 +192,7 @@ public class BISelectionDialog extends JDialog implements ActionListener, ListSe
 		};
 
 		Thread t = new Thread(fillList);
+		t.setDaemon(true);
 		t.start();
 	}
 

@@ -285,6 +285,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			m_Mixminion.initialize(m_currentMixminionParams);
 		}
 		threadRun = new Thread(this, "JAP - AnonProxy");
+		threadRun.setDaemon(true);
 		threadRun.start();
 		return ErrorCodes.E_SUCCESS;
 	}

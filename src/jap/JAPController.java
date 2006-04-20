@@ -47,6 +47,7 @@ import java.awt.Font;
 import java.awt.Point;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 
@@ -59,7 +60,6 @@ import anon.AnonServiceEventListener;
 import anon.ErrorCodes;
 import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
-import anon.crypto.XMLEncryption;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
@@ -67,29 +67,32 @@ import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
 import anon.infoservice.ProxyInterface;
+import anon.mixminion.MixminionServiceDescription;
 import anon.pay.BI;
+import anon.pay.IAIEventListener;
+import anon.pay.PayAccount;
 import anon.pay.PayAccountsFile;
+import anon.proxy.AnonProxy;
+import anon.proxy.IProxyListener;
+import anon.tor.TorAnonServerDescription;
 import anon.util.IPasswordReader;
 import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
 import forward.server.ForwardServerManager;
-import platform.AbstractOS;
+import gui.JAPDll;
+import gui.JAPHelp;
+import gui.JAPMessages;
+import gui.dialog.JAPDialog;
+import gui.dialog.PasswordContentPane;
+import jap.forward.JAPRoutingEstablishForwardedConnectionDialog;
+import jap.forward.JAPRoutingMessage;
+import jap.forward.JAPRoutingSettings;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.proxy.AnonProxy;
+import platform.AbstractOS;
 import proxy.DirectProxy;
-import anon.proxy.IProxyListener;
 import update.JAPUpdateWizard;
-import jap.forward.*;
-import anon.pay.IAIEventListener;
-import gui.*;
-import anon.pay.PayAccount;
-import gui.dialog.JAPDialog;
-import gui.dialog.PasswordContentPane;
-import anon.mixminion.MixminionServiceDescription;
-import javax.swing.JOptionPane;
-import anon.tor.TorAnonServerDescription;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -596,7 +599,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 				catch (Exception a_e)
 				{
-					a_e.printStackTrace();
 					LogHolder.log(LogLevel.NOTICE, LogType.NET,
 								  "JAPController: could not load proxy settings: " + a_e);
 				}
@@ -712,19 +714,19 @@ public final class JAPController extends Observable implements IProxyListener, O
 							b = XMLUtil.parseValue(tmp, false);
 							setMoveToSystrayOnStartup(b);
 							/*if (b)
-							{ ///todo: move to systray
-								if (m_View != null)
-								{
-									b=m_View.hideWindowInTaskbar();
-								}
-							}
-							if(!b)
-							{
-								m_View.setVisible(true);
-		m_View.toFront();
+									{ ///todo: move to systray
+							 if (m_View != null)
+							 {
+							  b=m_View.hideWindowInTaskbar();
+							 }
+									}
+									if(!b)
+									{
+							 m_View.setVisible(true);
+							   m_View.toFront();
 
 
-							}*/
+									}*/
 							tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow,
 								JAPConstants.CONFIG_DEFAULT_VIEW);
 							String strDefaultView = XMLUtil.parseValue(tmp, JAPConstants.CONFIG_NORMAL);
@@ -863,8 +865,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 						PayAccountsFile.init(elemAccounts);
 						Vector encrypted = PayAccountsFile.getInstance().getEncryptedAccounts();
 
+						if(encrypted.size()>0)
+						{
 						a_splash.dispose();
-
+						}
 						for (int j = 0; j < encrypted.size(); j++)
 						{
 							boolean decrypted = false;
@@ -882,7 +886,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 									if (PayAccountsFile.getInstance().decryptAccount(accNr,
 										getPaymentPassword()))
-							{
+									{
 										break;
 									}
 								}
@@ -909,7 +913,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 								if (PayAccountsFile.getInstance().decryptAccount(accNr,
 									getPaymentPassword()))
-									{
+								{
 									decrypted = true;
 								}
 							}
@@ -2324,8 +2328,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 			LogHolder.log(LogLevel.ERR, LogType.MISC,
 						  "Could not get the current JAP version number from infoservice.");
 			/*
-			JAPDialog.showErrorDialog(m_View, JAPMessages.getString("errorConnectingInfoService"),
-									  LogType.NET);*/
+				JAPDialog.showErrorDialog(m_View, JAPMessages.getString("errorConnectingInfoService"),
+					LogType.NET);*/
 			notifyJAPObservers();
 			return 0;
 		}
@@ -2687,10 +2691,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 	{
 		JAPDll.setWindowOnTop(getView(), getView().getName(), true);
 		boolean choice = JAPDialog.showYesNoDialog(
-			  getView(),
-			  JAPMessages.getString("unrealBytesDesc") + "<p>" +
-			  JAPMessages.getString("unrealBytesDifference") + " " + a_bytes,
-			  JAPMessages.getString("unrealBytesTitle")
+			getView(),
+			JAPMessages.getString("unrealBytesDesc") + "<p>" +
+			JAPMessages.getString("unrealBytesDifference") + " " + a_bytes,
+			JAPMessages.getString("unrealBytesTitle")
 			);
 		JAPDll.setWindowOnTop(getView(), getView().getName(), false);
 		if (!choice)

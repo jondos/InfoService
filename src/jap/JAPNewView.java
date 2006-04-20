@@ -1658,8 +1658,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				});
 			}
 		};
-		Thread t = new Thread(doFetchMixCascades);
-		t.start();
+		Thread t = new Thread(doFetchMixCascades,"DoFetchMixCascades");
+	t.setDaemon(true);
+	t.start();
 	}
 
 }

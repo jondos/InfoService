@@ -264,6 +264,7 @@ public class FirstOnionRouterConnection implements Runnable
 		{
 			m_bRun = true;
 			m_readDataLoop = new Thread(this, "FirstOnionRouterConnection - " + m_description.getName());
+			m_readDataLoop.setDaemon(true);
 			m_readDataLoop.start();
 		}
 	}

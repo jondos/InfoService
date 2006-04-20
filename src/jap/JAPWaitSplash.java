@@ -81,7 +81,8 @@ public final class JAPWaitSplash implements Runnable
 		String sl = System.getProperty("os.name").substring(0, 3);
 		dlgAbort.setModal(!System.getProperty("os.name").substring(0, 3).equalsIgnoreCase("mac"));
 		dlgAbort.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-		t.start();
+	t.setDaemon(true);
+	t.start();
 	}
 
 	public void abort( /*Object oSync*/)

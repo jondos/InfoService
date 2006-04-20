@@ -162,7 +162,7 @@ public class AIControlChannel extends SyncControlChannel
 				{
 					// fetch new balance asynchronously
 					LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetching new Balance from BI asynchronously");
-					new Thread(new Runnable()
+					Thread t=new Thread(new Runnable()
 					{
 						public void run()
 						{
@@ -176,7 +176,9 @@ public class AIControlChannel extends SyncControlChannel
 								LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
 							}
 						}
-					}).start();
+					});
+					t.setDaemon(true);
+					t.start();
 					m_lastBalanceUpdate = System.currentTimeMillis();
 				}
 				PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
