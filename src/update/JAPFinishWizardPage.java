@@ -32,12 +32,12 @@ import gui.JAPMultilineLabel;
 import gui.wizard.BasicWizardPage;
 import jap.JAPConstants;
 import gui.JAPMessages;
-import jap.JAPUtil;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 
 import javax.swing.JLabel;
+import gui.GUIUtils;
 
 public class JAPFinishWizardPage extends BasicWizardPage
 {
@@ -46,7 +46,7 @@ public class JAPFinishWizardPage extends BasicWizardPage
 
 	public JAPFinishWizardPage()
 	{
-		setIcon(JAPUtil.loadImageIcon(JAPConstants.DOWNLOADFN, false));
+		setIcon(GUIUtils.loadImageIcon(JAPConstants.DOWNLOADFN, false));
 		setPageTitle(JAPMessages.getString("updateTitel_Update-WizardFertig"));
 		GridBagLayout gridBagFinish = new GridBagLayout();
 		GridBagConstraints constraintsFinish = new GridBagConstraints();

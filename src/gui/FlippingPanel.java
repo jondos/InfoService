@@ -66,8 +66,8 @@ public class FlippingPanel extends JPanel
 	private CardLayout m_Layout;
 	private Window m_Parent;
 	private boolean m_bIsFlipped;
-	private final static Icon ms_iconUp = JAPUtil.loadImageIcon("arrow.gif", true);
-	private final static Icon ms_iconDown = JAPUtil.loadImageIcon("arrow90.gif", true);
+	private final static Icon ms_iconUp = GUIUtils.loadImageIcon("arrow.gif", true);
+	private final static Icon ms_iconDown = GUIUtils.loadImageIcon("arrow90.gif", true);
 	private final static int ms_iBttnWidth = ms_iconUp.getIconWidth();
 	private final static int ms_iBttnHeight = ms_iconDown.getIconHeight();
 

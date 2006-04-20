@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000, The JAP-Team
+ Copyright (c) 2000-2006, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -45,6 +45,10 @@ import java.awt.Rectangle;
 
 final public class JAPSplash extends Window
 {
+	private static final String IMGPATHHICOLOR = "images/";
+	private static final String IMGPATHLOWCOLOR = "images/lowcolor/";
+	private static final String SPLASHFN = "splash.gif";
+
 	private Image m_imgSplash;
 	private Image m_imgBusy;
 	private Image m_imgOffScreen = null;
@@ -72,11 +76,11 @@ final public class JAPSplash extends Window
 		}
 		if (t.getColorModel().getPixelSize() <= 16)
 		{
-			in = c.getResourceAsStream(JAPConstants.IMGPATHLOWCOLOR + JAPConstants.SPLASHFN);
+			in = c.getResourceAsStream(IMGPATHLOWCOLOR + SPLASHFN);
 		}
 		if (in == null)
 		{
-			in = c.getResourceAsStream(JAPConstants.IMGPATHHICOLOR + JAPConstants.SPLASHFN);
+			in = c.getResourceAsStream(IMGPATHHICOLOR + SPLASHFN);
 		}
 		int len;
 		int aktIndex;
@@ -102,11 +106,11 @@ final public class JAPSplash extends Window
 		in = null;
 		if (t.getColorModel().getPixelSize() <= 16)
 		{
-			in = c.getResourceAsStream(JAPConstants.IMGPATHLOWCOLOR + JAPConstants.BUSYFN);
+			in = c.getResourceAsStream(IMGPATHLOWCOLOR + JAPConstants.BUSYFN);
 		}
 		if (in == null)
 		{
-			in = c.getResourceAsStream(JAPConstants.IMGPATHHICOLOR + JAPConstants.BUSYFN);
+			in = c.getResourceAsStream(IMGPATHHICOLOR + JAPConstants.BUSYFN);
 		}
 		if (in != null)
 		{

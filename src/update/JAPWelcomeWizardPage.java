@@ -32,7 +32,6 @@ import gui.JAPMultilineLabel;
 import gui.wizard.BasicWizardPage;
 import jap.JAPConstants;
 import gui.JAPMessages;
-import jap.JAPUtil;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -46,6 +45,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
+import gui.GUIUtils;
 
 public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListener
 {
@@ -66,7 +66,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 	public JAPWelcomeWizardPage()
 	{
 		//this.updateWizard = updateWizard;
-		setIcon(JAPUtil.loadImageIcon(JAPConstants.DOWNLOADFN, false));
+		setIcon(GUIUtils.loadImageIcon(JAPConstants.DOWNLOADFN, false));
 		setPageTitle(JAPMessages.getString("updateWelcomeWizardPageTitle"));
 
 		GridBagLayout m_panelComponentsLayout = new GridBagLayout();

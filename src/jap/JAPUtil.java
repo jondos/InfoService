@@ -262,16 +262,6 @@ public final class JAPUtil
 		return 0;
 	}
 
-	/** Loads an Image from a File or a Resource.
-	 *	@param strImage the Resource or filename of the Image
-	 *	@param sync true if the loading is synchron, false if it should be asynchron
-	 * @deprecated use GUIUtils.loadImageIcon instead
-	 */
-	public static ImageIcon loadImageIcon(String strImage, boolean sync)
-	{
-		return GUIUtils.loadImageIcon(strImage, sync);
-	}
-
 	/**
 	 *
 	 * @param f Window

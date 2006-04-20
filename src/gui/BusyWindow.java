@@ -76,7 +76,7 @@ public class BusyWindow extends JWindow implements ActionListener
 		label = new JLabel(JAPMessages.getString("pleaseWait"));
 		p.add(label, gbc);
 		gbc.gridy++;
-		ImageIcon img = JAPUtil.loadImageIcon(JAPConstants.BUSYFN, true);
+		ImageIcon img = GUIUtils.loadImageIcon(JAPConstants.BUSYFN, true);
 		MediaTracker mt = new MediaTracker(this);
 		mt.addImage(img.getImage(), 1);
 		try

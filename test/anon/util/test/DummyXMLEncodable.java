@@ -121,17 +121,17 @@ public class DummyXMLEncodable implements IXMLEncodable
 		{
 			m_id = XMLUtil.parseAttribute(a_element, ATTRIBUTE_ID, null);
 			element = (Element) XMLUtil.getFirstChildByName(a_element, NODE_STRING);
-			m_valueString = XMLUtil.parseNodeString(element, null);
+			m_valueString = XMLUtil.parseValue(element, null);
 			m_attributeBoolean = XMLUtil.parseAttribute(element, ATTRIBUTE_BOOLEAN, false);
 
 			element = (Element) XMLUtil.getFirstChildByName(a_element, NODE_CONTAINER);
 			m_attributeInt = XMLUtil.parseAttribute(element, ATTRIBUTE_INT, -1);
 
 			element = (Element)XMLUtil.getFirstChildByNameUsingDeepSearch(a_element, NODE_NUMBER);
-			m_valueInt = XMLUtil.parseNodeInt(element, -1);
+			m_valueInt = XMLUtil.parseValue(element, -1);
 
 			element = (Element)element.getNextSibling();
-			m_valueLong = XMLUtil.parseNodeLong(element, -1);
+			m_valueLong = XMLUtil.parseValue(element, -1l);
 
 			m_valueBoolean =
 				XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_element, NODE_BOOLEAN), false);

@@ -32,7 +32,6 @@ import gui.JAPMultilineLabel;
 import gui.wizard.BasicWizardPage;
 import jap.JAPConstants;
 import gui.JAPMessages;
-import jap.JAPUtil;
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -45,6 +44,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
+import gui.GUIUtils;
 
 public class JAPDownloadWizardPage extends BasicWizardPage
 {
@@ -68,12 +68,12 @@ public class JAPDownloadWizardPage extends BasicWizardPage
 		GridBagLayout gridBagDownload;
 		GridBagConstraints constraintsDownload;
 
-		setIcon(JAPUtil.loadImageIcon(JAPConstants.DOWNLOADFN, false));
+		setIcon(GUIUtils.loadImageIcon(JAPConstants.DOWNLOADFN, false));
 		setPageTitle("Download");
 
-		arrow = JAPUtil.loadImageIcon(JAPConstants.IMAGE_ARROW, false);
-		blank = JAPUtil.loadImageIcon(JAPConstants.IMAGE_BLANK, false);
-		stepfinished = JAPUtil.loadImageIcon(JAPConstants.IMAGE_STEPFINISHED, false);
+		arrow = GUIUtils.loadImageIcon(JAPConstants.IMAGE_ARROW, false);
+		blank = GUIUtils.loadImageIcon(JAPConstants.IMAGE_BLANK, false);
+		stepfinished = GUIUtils.loadImageIcon(JAPConstants.IMAGE_STEPFINISHED, false);
 
 		gridBagDownload = new GridBagLayout();
 		constraintsDownload = new GridBagConstraints();

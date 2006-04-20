@@ -28,7 +28,7 @@
 package jap.pay;
 
 import java.awt.FlowLayout;
-import java.awt.Frame;
+import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -36,7 +36,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -45,9 +44,8 @@ import javax.swing.event.ListSelectionListener;
 
 import anon.crypto.JAPCertificate;
 import anon.pay.BI;
-import jap.JAPConstants;
 import gui.JAPMessages;
-import jap.JAPUtil;
+import gui.dialog.JAPDialog;
 import java.util.Vector;
 import java.util.Enumeration;
 import anon.infoservice.InfoServiceHolder;
@@ -61,7 +59,7 @@ import logging.LogType;
  *
  *  @author Tobias Bayer
  */
-public class BISelectionDialog extends JDialog implements ActionListener, ListSelectionListener
+public class BISelectionDialog extends JAPDialog implements ActionListener, ListSelectionListener
 {
 	private JList m_biList;
 	private JButton m_okButton;
@@ -71,31 +69,16 @@ public class BISelectionDialog extends JDialog implements ActionListener, ListSe
 
 	private BI m_selectedBI;
 
-	public BISelectionDialog(Frame owner, String title, boolean modal)
+	public BISelectionDialog(Component a_owner)
 	{
-		super(owner, title, modal);
-		try
-		{
-			setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-			jbInit();
-			pack();
-			setModal(true);
-			setSize(400, 300);
-			JAPUtil.centerFrame(this);
-			show();
-		}
-		catch (Exception exception)
-		{
-			exception.printStackTrace();
-		}
+		super(a_owner, JAPMessages.getString("biSelectionDialog"), true);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		jbInit();
+		setSize(400, 300);
+		setVisible(true);
 	}
 
-	public BISelectionDialog()
-	{
-		this(new Frame(), JAPMessages.getString("biSelectionDialog"), false);
-	}
-
-	private void jbInit() throws Exception
+	private void jbInit()
 	{
 		JPanel panel1 = new JPanel(new GridBagLayout());
 		JPanel bttnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));

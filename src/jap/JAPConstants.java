@@ -36,7 +36,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.05.115"; //Never change the layout of this line!
+	public static final String aktVersion = "00.05.117"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -114,12 +114,9 @@ public final class JAPConstants
 	public static final String TITLE = "JAP";
 	public static final String TITLEOFICONIFIEDVIEW = "JAP";
 	static final String AUTHOR = "(c) 2000 The JAP-Team";
-	static final String IMGPATHHICOLOR = "images/";
-	static final String IMGPATHLOWCOLOR = "images/lowcolor/";
 	public static final String XMLCONFFN = "jap.conf";
 	public static final String MESSAGESFN = "JAPMessages";
 	public static final String BUSYFN = "busy.gif";
-	static final String SPLASHFN = "splash.gif";
 	static final String ABOUTFN = "info.gif";
 	public static final String DOWNLOADFN = "install.gif";
 	static final String IICON16FN = "icon16.gif";

@@ -457,7 +457,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		relativeBandwidthField.setDisabledTextColor(relativeBandwidthField.getForeground());
 		relativeBandwidthField.setEnabled(false);
 
-		final JButton increaseRelativeBandwidthButton = new JButton(JAPUtil.loadImageIcon("arrowUp.gif", true));
+		final JButton increaseRelativeBandwidthButton = new JButton(GUIUtils.loadImageIcon("arrowUp.gif", true));
 		//increaseRelativeBandwidthButton.setMargin(new Insets(1, 1, 1, 1));
 		//increaseRelativeBandwidthButton.setBackground(Color.gray); //this together with the next lines sems to be
 		//increaseRelativeBandwidthButton.setOpaque(false); //stupid but is necessary for JDK 1.5 on Windows XP (and maybe others)
@@ -483,7 +483,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 			}
 		});
 
-		final JButton decreaseRelativeBandwidthButton = new JButton(JAPUtil.loadImageIcon("arrowDown.gif", true));
+		final JButton decreaseRelativeBandwidthButton = new JButton(GUIUtils.loadImageIcon("arrowDown.gif", true));
 		//decreaseRelativeBandwidthButton.setMargin(new Insets(1, 1, 1, 1));
 		decreaseRelativeBandwidthButton.setBorder(new EmptyBorder(0, 1, 0, 1));
 		decreaseRelativeBandwidthButton.setFocusPainted(false);

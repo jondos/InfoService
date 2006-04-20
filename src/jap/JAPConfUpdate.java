@@ -104,9 +104,9 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		buttonPanel.add(m_bttnUpgrade);
 
 		m_bttnCheckForUpgrade = new JButton(JAPMessages.getString("confCheckForUpgrade"));
-		m_bttnCheckForUpgrade.setIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD, true));
-		m_bttnCheckForUpgrade.setDisabledIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true));
-		m_bttnCheckForUpgrade.setPressedIcon(JAPUtil.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true));
+		m_bttnCheckForUpgrade.setIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD, true));
+		m_bttnCheckForUpgrade.setDisabledIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true));
+		m_bttnCheckForUpgrade.setPressedIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true));
 		m_bttnCheckForUpgrade.addActionListener(this);
 		m_bttnCheckForUpgrade.setActionCommand(COMMAND_CHECKFORUPGRADE);
 		cButtons.anchor = GridBagConstraints.CENTER;
