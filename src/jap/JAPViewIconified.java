@@ -187,7 +187,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		{
 			public void mouseClicked(MouseEvent a_event)
 			{
-				if ((a_event.getModifiers() & MouseEvent.BUTTON1_MASK) == MouseEvent.BUTTON1_MASK)
+				if (GUIUtils.isMouseButton(a_event, MouseEvent.BUTTON1_MASK))
 				{
 					m_Controller.setAnonMode(!m_Controller.getAnonMode());
 				}
