@@ -31,15 +31,26 @@ import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import java.awt.Toolkit;
 import javax.swing.JLabel;
 import javax.swing.JPasswordField;
+import javax.swing.JPopupMenu;
+import javax.swing.JMenuItem;
 
 import gui.JAPMessages;
 import logging.LogType;
 import anon.util.IMiscPasswordReader;
 import anon.util.Util;
+import gui.GUIUtils;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.Clipboard;
 
 
 public class PasswordContentPane extends DialogContentPane implements IMiscPasswordReader,
@@ -53,6 +64,7 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 	public static final int PASSWORD_CHANGE = 3;
 	public static final int NO_MINIMUM_LENGTH = 0;
 
+	private static final int FIELD_LENGTH = 20;
 	private static final String MSG_TOO_SHORT = PasswordContentPane.class.getName() + "_tooShort";
 	private static final String MSG_WRONG_PASSWORD = PasswordContentPane.class.getName() + "_wrongPassword";
 	private static final String MSG_ENTER_PASSWORD_TITLE = PasswordContentPane.class.getName() + "_title";
@@ -61,6 +73,8 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 	private static final String MSG_ENTER_NEW_LBL = PasswordContentPane.class.getName() + "_enterNewPasswordLabel";
 	private static final String MSG_PASSWORDS_DONT_MATCH =
 		PasswordContentPane.class.getName() + "_passwordsDontMatch";
+	private static final String MSG_INSERT_FROM_CLIP =
+		PasswordContentPane.class.getName() + "_insertFromClipboard";
 
 	private JPasswordField m_textOldPasswd, m_textNewPasswd, m_textConfirmPasswd;
 	private char[] m_passwd = null;
@@ -70,6 +84,8 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 	private JLabel m_lblNew1;
 	private JLabel m_lblNew2;
 	private JLabel m_lblOld;
+	private JPopupMenu m_popup = new JPopupMenu();
+	private JPasswordField m_currentPopup;
 
 	public PasswordContentPane(JAPDialog a_parentDialog, int a_type, String a_strMessage, int a_minLength)
 	{
@@ -107,20 +123,59 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 		m_minLength = a_minLength;
 
 		GridBagLayout layout = new GridBagLayout();
-		getContentPane().setLayout(layout);
 		GridBagConstraints c = new GridBagConstraints();
+		JMenuItem itemInsertPasswort = new JMenuItem(JAPMessages.getString(MSG_INSERT_FROM_CLIP));
+		MouseAdapter popupListener = new MouseAdapter()
+		{
+			public void mouseClicked(MouseEvent a_event)
+			{
+				if (GUIUtils.isMouseButton(a_event, MouseEvent.BUTTON2_MASK) ||
+					GUIUtils.isMouseButton(a_event, MouseEvent.BUTTON3_MASK))
+				{
+					m_currentPopup = (JPasswordField)a_event.getComponent();
+					m_popup.show(a_event.getComponent(), a_event.getX(), a_event.getY());
+				}
+			}
+		};
+
+
+		getContentPane().setLayout(layout);
 		c.anchor = GridBagConstraints.WEST;
 		c.insets = new Insets(10, 10, 10, 10);
 		c.gridx = 0;
 		c.gridy = 0;
+
+		m_popup = new JPopupMenu();
+		itemInsertPasswort.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent a_event)
+			{
+				Clipboard clip = GUIUtils.getSystemClipboard();
+				Transferable data = clip.getContents(this);
+				if (data != null && data.isDataFlavorSupported(DataFlavor.stringFlavor))
+				{
+					try
+					{
+						m_currentPopup.setText( (String) data.getTransferData(DataFlavor.stringFlavor));
+					}
+					catch (Exception a_e)
+					{
+						// ignore it
+					}
+				}
+			}
+		});
+		m_popup.add(itemInsertPasswort);
+
 
 		if (a_type == PASSWORD_CHANGE)
 		{
 			m_lblOld = new JLabel(JAPMessages.getString(MSG_ENTER_OLD_LBL));
 			layout.setConstraints(m_lblOld, c);
 			getContentPane().add(m_lblOld);
-			m_textOldPasswd = new JPasswordField(20);
+			m_textOldPasswd = new JPasswordField(FIELD_LENGTH);
 			m_textOldPasswd.setEchoChar('*');
+			m_textOldPasswd.addMouseListener(popupListener);
 			c.gridx = 1;
 			c.weightx = 1;
 			c.fill = GridBagConstraints.HORIZONTAL;
@@ -135,8 +190,9 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 			c.weightx = 0;
 			c.fill = GridBagConstraints.NONE;
 			getContentPane().add(m_lblNew1, c);
-			m_textNewPasswd = new JPasswordField(20);
+			m_textNewPasswd = new JPasswordField(FIELD_LENGTH);
 			m_textNewPasswd.setEchoChar('*');
+			m_textNewPasswd.addMouseListener(popupListener);
 			c.fill = GridBagConstraints.HORIZONTAL;
 			c.gridx = 1;
 			c.weightx = 1;
@@ -149,14 +205,17 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 		c.gridy++;
 		c.weightx = 0;
 		getContentPane().add(m_lblNew2, c);
-		m_textConfirmPasswd = new JPasswordField(20);
+		m_textConfirmPasswd = new JPasswordField(FIELD_LENGTH);
 		m_textConfirmPasswd.setEchoChar('*');
+		m_textConfirmPasswd.addMouseListener(popupListener);
 
 		c.gridx = 1;
 		c.weightx = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		layout.setConstraints(m_textConfirmPasswd, c);
 		getContentPane().add(m_textConfirmPasswd);
+
+
 
 
 		addComponentListener(new SetFocusComponentAdapter());

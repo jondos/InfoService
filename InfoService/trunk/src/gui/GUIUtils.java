@@ -29,6 +29,8 @@ package gui;
 
 import java.net.URL;
 import java.util.Hashtable;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -42,12 +44,15 @@ import java.awt.Rectangle;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JTextPane;
+import javax.swing.JFrame;
 
 import anon.util.ResourceLoader;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import javax.swing.JOptionPane;
+import java.awt.event.MouseEvent;
+import java.awt.datatransfer.Clipboard;
 
 /**
  * This class contains helper methods for the GUI.
@@ -259,4 +264,52 @@ public final class GUIUtils
 		selectableLabel.setFont(new Font(jlFont.getName(),Font.BOLD, jlFont.getSize()));
 		return selectableLabel;
 	}
+
+	/**
+	 * Tests which mouse button was the cause for the specified MouseEvent.
+	 * Use the button masks from MouseEvent.
+	 * @param a_event a MouseEvent
+	 * @param a_buttonMask a button mask from MouseEvent
+	 * @return if the event was triggered by the given mouse button
+	 * @see java.awt.event.MouseEvent
+	 */
+	public static boolean isMouseButton(MouseEvent a_event, int a_buttonMask)
+	{
+		return ((a_event.getModifiers() & a_buttonMask) == a_buttonMask);
+	}
+
+	/**
+	 * Returns the system-wide clipboard.
+	 * @return the system-wide clipboard Clipboard
+	 */
+	public static Clipboard getSystemClipboard()
+	{
+		Clipboard r_cb = null;
+
+		try
+		{
+			Method getSystemSelection = Toolkit.class.getMethod("getSystemSelection", new Class[0]);
+			r_cb = (Clipboard) getSystemSelection.invoke(Toolkit.getDefaultToolkit(), new Object[0]);
+		}
+		catch (NoSuchMethodException nsme)
+		{
+			// JDK < 1.4 does not support getSystemSelection
+		}
+		catch (IllegalAccessException iae)
+		{
+			// this should not happen
+		}
+		catch (InvocationTargetException ite)
+		{
+			// this should not happen
+		}
+
+		// alternate way of retrieving the clipboard
+		if (r_cb == null)
+		{
+			r_cb = Toolkit.getDefaultToolkit().getSystemClipboard();
+		}
+		return r_cb;
+	}
+
 }
