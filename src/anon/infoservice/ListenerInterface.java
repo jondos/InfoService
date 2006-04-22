@@ -566,4 +566,9 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 		return listenerInterfaceNode;
 	}
 
+	public String toString()
+	{
+		return "ListenerInterface (Protocol: "+getProtocolAsString()+")- Host: "+getHost()+" Port: "+getPort();
+	}
+
 }

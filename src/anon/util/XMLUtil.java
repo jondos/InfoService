@@ -854,7 +854,8 @@ public class XMLUtil
 
 
 			//this is to simply invoke transformer.transform(s,r)
-			Class c = transformer.getClass();
+			Class c = Class.forName(PACKAGE_TRANSFORMER + "Transformer"); //use this class rather than transformter.getClass()
+			//- because this may be an unaccessible subclass
 			Method m = null;
 			Method[] ms = c.getMethods();
 			for (int i = 0; i < ms.length; i++)
@@ -873,7 +874,7 @@ public class XMLUtil
 			p[0] = s;
 			p[1] = r;
 			m.invoke(transformer, p);
-			return out.toString();
+			return out.toString("UTF8");
 		}
 		catch (Throwable t2)
 		{

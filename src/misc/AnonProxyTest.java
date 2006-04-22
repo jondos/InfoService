@@ -28,6 +28,10 @@ public class AnonProxyTest
 
 			theProxy.setMixCascade(new MixCascade(null, null, "mix.inf.tu-dresden.de", 6544));
 			theProxy.start();
+			synchronized(theProxy)
+				{
+					theProxy.wait();
+				}
 		}
 		catch (Exception e)
 		{

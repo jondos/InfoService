@@ -70,6 +70,7 @@ import logging.LogLevel;
 import logging.LogType;
 import java.io.IOException;
 import anon.pay.Pay;
+import anon.infoservice.ListenerInterface;
 
 public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 {
@@ -342,6 +343,14 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 	}
 
 	//2001-02-20(HF)
+	/**
+	 * Try to connect to a given MixCascade.
+	 * @param mixCascade MixCascade to connect to
+	 * @param a_proxyInterface ImmutableProxyInterface a proxy to use (or null if no proxy should be used)
+	 * @return int E_CONNECT, if a connection error occurs
+	 * E_SUCCESS if successful
+	 * E_ALREADY_CONNECTED if allready connected
+	 */
 	public int connectViaFirewall(MixCascade mixCascade, ImmutableProxyInterface a_proxyInterface)
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "MuxSocket.connectViaFirewall(): Start...");
@@ -361,11 +370,17 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 					/* HTTPConnection.Connect() supports proxy and non-proxy Socket connections -> tunneling
 					 * a proxy, if necessary, is no problem
 					 */
-					connectedSocket = HTTPConnectionFactory.getInstance().createHTTPConnection(mixCascade.
-						getListenerInterface(l), a_proxyInterface).Connect();
+					ListenerInterface li = mixCascade.getListenerInterface(l);
+					connectedSocket = HTTPConnectionFactory.getInstance().createHTTPConnection(li,
+						a_proxyInterface).Connect();
 					if (connectedSocket != null)
 					{
 						break;
+					}
+					else
+					{
+						LogHolder.log(LogLevel.ERR, LogType.NET,
+									  "MuxSocket:connectViaFirewall - could not connect to: " + li.toString());
 					}
 				}
 				catch (Throwable t)
@@ -430,7 +445,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			Node nodeSig = XMLUtil.getFirstChildByName(root, "Signature");
 			//Check Signature of whole XML struct --> First Mix Check
 			//---
-			if (SignatureVerifier.getInstance().verifyXml(root, SignatureVerifier.DOCUMENT_CLASS_MIX) == false)
+			if (!SignatureVerifier.getInstance().verifyXml(root, SignatureVerifier.DOCUMENT_CLASS_MIX))
 			{
 				return ErrorCodes.E_SIGNATURE_CHECK_FIRSTMIX_FAILED;
 			}
@@ -511,8 +526,12 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			{
 				return ErrorCodes.E_PROTOCOL_NOT_SUPPORTED;
 			}
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+						  "MuxSocket: processXmlKeys: Cascade uses Protocol: "+m_iMixProtocolVersion);
 			Element elemMixes = (Element) root.getElementsByTagName("Mixes").item(0);
 			m_iChainLen = Integer.parseInt(elemMixes.getAttribute("count"));
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+						  "MuxSocket: processXmlKeys: Cascade has: "+m_iChainLen+" Mixes.");
 			m_arMixParameters = new MixParameters[m_iChainLen];
 			int i = 0;
 			Element child = (Element) (elemMixes.getFirstChild());
@@ -585,6 +604,8 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			}
 			else
 			{
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+							  "MuxSocket: processXmlKeys: Constructing <JAPKeyExchange>-Message");
 				doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 				Element e = doc.createElement("JAPKeyExchange");
 				doc.appendChild(e);
@@ -604,7 +625,9 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 				XMLUtil.setValue(elemMixEnc, Base64.encode(mixKeys, true));
 				e.appendChild(elemMixEnc);
 				XMLEncryption.encryptElement(e, m_arMixParameters[0].m_ASymCipher.getPublicKey());
-				byte[] xml_buff = XMLUtil.toString(doc).getBytes();
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+						  "MuxSocket: processXmlKeys:  <JAPKeyExchange>-Message: "+XMLUtil.toString(doc));
+			byte[] xml_buff = XMLUtil.toString(doc).getBytes();
 				m_outStream.write( (xml_buff.length >> 8) & 0x00FF);
 				m_outStream.write(xml_buff.length & 0x00FF);
 				m_outStream.write(xml_buff);
@@ -619,6 +642,9 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 				int len = m_inDataStream.readShort();
 				byte[] mixSigBuff = new byte[len];
 				m_inDataStream.readFully(mixSigBuff);
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+							  "MuxSocket: processXmlKeys: Answer to <JAPKeyExchange>-Message from Mix received");
+
 				doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
 					ByteArrayInputStream(mixSigBuff));
 				root = doc.getDocumentElement();
@@ -643,6 +669,11 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 		}
 		catch (Exception e)
 		{
+	//		LogHolder.log(LogLevel.ERR, LogType.MISC,
+//						  "MuxSocket: processXmlKeys: Exception! "+e.getMessage());
+			if(e!=null)
+			e.printStackTrace();
+			LogHolder.log(LogLevel.ERR, LogType.MISC,e);
 			return ErrorCodes.E_UNKNOWN;
 		}
 	}

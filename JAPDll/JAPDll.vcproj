@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="Windows-1252"?>
+<?xml version="1.0" encoding = "Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.10"
+	Version="7.00"
 	Name="JAPDll"
 	ProjectGUID="{E329FC96-0CAD-40E3-B934-F0204FC198CE}"
 	Keyword="Win32Proj">
@@ -19,7 +19,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="G:\jdk1.1.8\include;G:\jdk1.1.8\include\win32;C:\Programme\JBuilder8\jdk1.4\include\win32;C:\Programme\JBuilder8\jdk1.4\include"
+				AdditionalIncludeDirectories="X:\Programme\jdk1.3.1_16\include\win32;X:\Programme\jdk1.3.1_16\include\;G:\jdk1.1.8\include;G:\jdk1.1.8\include\win32;C:\Programme\JBuilder8\jdk1.4\include\win32;C:\Programme\JBuilder8\jdk1.4\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;JAPDLL_EXPORTS"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -32,7 +32,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(OutDir)/JAPDll.dll"
+				OutputFile="X:\Programme\Jap/JAPDll.dll"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/JAPDll.pdb"
@@ -55,13 +55,7 @@
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
-				Name="VCXMLDataGeneratorTool"/>
-			<Tool
 				Name="VCWebDeploymentTool"/>
-			<Tool
-				Name="VCManagedWrapperGeneratorTool"/>
-			<Tool
-				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
@@ -118,13 +112,7 @@
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
-				Name="VCXMLDataGeneratorTool"/>
-			<Tool
 				Name="VCWebDeploymentTool"/>
-			<Tool
-				Name="VCManagedWrapperGeneratorTool"/>
-			<Tool
-				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="Debug_JDK1.4|Win32"
@@ -171,17 +159,9 @@
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
-				Name="VCXMLDataGeneratorTool"/>
-			<Tool
 				Name="VCWebDeploymentTool"/>
-			<Tool
-				Name="VCManagedWrapperGeneratorTool"/>
-			<Tool
-				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 	</Configurations>
-	<References>
-	</References>
 	<Files>
 		<Filter
 			Name="Source Files"
@@ -189,13 +169,13 @@
 			<File
 				RelativePath="japdll.cpp">
 			</File>
-			<File
-				RelativePath=".\japdll_jni.h">
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc">
+			<File
+				RelativePath="japdll_jni.h">
+			</File>
 			<File
 				RelativePath="resource.h">
 			</File>
@@ -204,13 +184,16 @@
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
 			<File
+				RelativePath="JAPDll.rc">
+			</File>
+			<File
 				RelativePath="jap.ico">
 			</File>
 			<File
 				RelativePath=".\jap_blink.ico">
 			</File>
 			<File
-				RelativePath="JAPDll.rc">
+				RelativePath="jap_icon.ico">
 			</File>
 		</Filter>
 	</Files>
