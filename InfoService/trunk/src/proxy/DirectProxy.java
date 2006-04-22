@@ -140,7 +140,8 @@ final public class DirectProxy implements Runnable
 						JAPDll.setWindowOnTop(JAPController.getView(),
 											  JAPController.getView().getName() , true);
 
-						JAPDialog.LinkedCheckBox cb = new JAPDialog.LinkedCheckBox(false);
+						JAPDialog.LinkedCheckBox cb = new JAPDialog.LinkedCheckBox(
+						  JAPMessages.getString(JAPDialog.LinkedCheckBox.MSG_REMEMBER_ANSWER), false);
 						warnUser =  !(JAPDialog.showYesNoDialog(JAPController.getView(),
 							JAPMessages.getString(MSG_ALLOWUNPROTECTED), cb));
 						warnAgain = !cb.getState();

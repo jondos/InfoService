@@ -49,8 +49,6 @@ import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
@@ -95,6 +93,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.proxy.IProxyListener;
+import gui.dialog.JAPDialog;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver
@@ -158,6 +157,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private boolean m_bIgnoreAnonComboEvents = false;
 	private FlippingPanel m_flippingPanelPayment;
 	private JLabel m_labelPayment;
+	boolean m_bConnectionErrorShown = false;
 
 	private long m_lTrafficWWW, m_lTrafficOther;
 
@@ -1240,7 +1240,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	/**Anon Level is >=0 amd <=5. If -1 no measure is available*/
 	private ImageIcon getMeterImage(int iAnonLevel)
 	{
-		if (m_Controller.getAnonMode())
+		if (m_Controller.getAnonMode() && m_Controller.isAnonConnected())
 		{
 			if (iAnonLevel >= 0 && iAnonLevel < 6)
 			{
@@ -1250,6 +1250,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				return meterIcons[1]; //No measure available
 			}
+		}
+		else if (m_Controller.getAnonMode() && !m_Controller.isAnonConnected() && m_bConnectionErrorShown)
+		{
+			return meterIcons[8]; // connection lost
 		}
 		else
 		{
@@ -1264,6 +1268,57 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			setVisible(false);
 			m_ViewIconified.setVisible(true);
 			m_ViewIconified.toFront();
+		}
+	}
+
+	public void connectionError()
+	{
+		m_bConnectionErrorShown = true;
+		Thread thread = new Thread()
+		{
+			public void run()
+			{
+				m_labelAnonMeter.setIcon(getMeterImage(-1));
+			}
+		};
+		if (SwingUtilities.isEventDispatchThread())
+		{
+			thread.run();
+		}
+		else
+		{
+			SwingUtilities.invokeLater(thread);
+		}
+
+
+		Thread updateThread = new Thread()
+		{
+			public void run()
+			{
+				// wait for auto-reconnect
+				int msgID = addStatusMsg(JAPMessages.getString("setAnonModeSplashConnect"),
+										 JAPDialog.MESSAGE_TYPE_INFORMATION, false);
+				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+				/** @todo implement this with a listener */
+				while(m_Controller.getAnonMode() && !m_Controller.isAnonConnected())
+				{
+					try
+					{
+						sleep(1000);
+					}
+					catch (InterruptedException a_e)
+					{
+					}
+				}
+				setCursor(Cursor.getDefaultCursor());
+				removeStatusMsg(msgID);
+				m_bConnectionErrorShown = false;
+				valuesChanged(false);
+			}
+		};
+		if (JAPModel.getAutoReConnect())
+		{
+			updateThread.start();
 		}
 	}
 
@@ -1444,8 +1499,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 				( (MyProgressBarUI) m_progressAnonLevel.getUI()).setFilledBarColor(color);
 				m_progressAnonLevel.setValue(anonLevel + 1);
-				if (m_Controller.getAnonMode())
+				if (m_Controller.getAnonMode() && m_Controller.isAnonConnected())
 				{
+					m_bConnectionErrorShown = false;
 					if (currentStatus.getNrOfActiveUsers() > -1)
 					{
 						// Nr of active users
@@ -1491,8 +1547,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					m_progressAnonTraffic.setValue(0);
 					m_labelAnonymityUser.setText("");
 					m_progressAnonLevel.setValue(0);
-					LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPView:Finished updateValues");
 				}
+				LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Finished updateValues");
 				boolean bForwaringServerOn = JAPModel.getInstance().getRoutingSettings().getRoutingMode() ==
 					JAPRoutingSettings.ROUTING_MODE_SERVER;
 				m_cbForwarding.setSelected(bForwaringServerOn);
