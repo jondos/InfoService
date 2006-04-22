@@ -946,7 +946,6 @@ public class XMLUtil
 	/**
 	 * Reformats an XML element into a human readable format.
 	 * @param a_element an xml element
-	 * @todo Debug for JDK < 1.4!
 	 */
 	public static Element formatHumanReadable(Element a_element)
 	{
@@ -1184,6 +1183,7 @@ public class XMLUtil
 	 * @param a_element an xml element
 	 * @param a_level the level of this element
 	 * @return the number of nodes added (0 or 1)
+	 * @todo Debug for JDK < 1.4! A lot of superfluous lines are added...
 	 */
 	private static int formatHumanReadable(Node a_element, int a_level)
 	{
