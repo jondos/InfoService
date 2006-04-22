@@ -137,6 +137,7 @@ public class XMLPaymentOptions implements IXMLEncodable
 	public Enumeration getOptionHeadings(String a_language)
 	{
 		Vector optionHeadings = new Vector();
+
 		for (int i = 0; i < m_paymentOptions.size(); i++)
 		{
 			try
