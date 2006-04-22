@@ -1627,7 +1627,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			m_executionThread = t;
 		}
 
-		/** @todo Still very bugy, because mode change is async done but not
+		/** @todo Still very buggy, because mode change is async done but not
 		 * all properties (like currentMixCascade etc.)are synchronized!!
 		 *
 		 */
@@ -1647,7 +1647,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					m_jobWasInterrupted = true;
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-								  "SetAnonModeAsync: run: Job for changing the anonymity mode to '" +
+								  "Job for changing the anonymity mode to '" +
 								  (new Boolean(m_startServer)).toString() + "' was canceled.");
 				}
 			}
@@ -1661,12 +1661,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_changeAnonModeJobs.removeElement(this);
 				}
 				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-							  "SetAnonModeAsync: run: Job for changing the anonymity mode to '" +
+							  "Job for changing the anonymity mode to '" +
 							  (new Boolean(m_startServer)).toString() + "' was executed.");
 			}
 		}
 
-		/** @todo Still very bugy, because mode change is async done but not
+		/** @todo Still very buggy, because mode change is async done but not
 		 * all properties (like currentMixCascade etc.)are synchronized!!
 		 *
 		 * @param anonModeSelected true, if anonymity should be started; false otherwise
@@ -1880,6 +1880,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 		return m_proxyAnon != null;
 	}
 
+	public boolean isAnonConnected()
+	{
+		return m_proxyAnon != null && m_proxyAnon.getAnonService().isConnected();
+	}
+
 	public void setAnonMode(boolean a_anonModeSelected)
 	{
 		if (a_anonModeSelected)
@@ -1980,7 +1985,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 			else
 			{
-
+				/** @todo ask if user wants to connect nevertheless!! */
 			}
 		}
 	}
@@ -2333,8 +2338,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 		else
 		{
-			/* can't get the current version number from the infoservices (-> Alert, and reset anon
-			 * mode to false) Ignore this problem!
+			/* can't get the current version number from the infoservices. Ignore this,
+			 * as this is not a problem!
 			 */
 			LogHolder.log(LogLevel.ERR, LogType.MISC,
 						  "Could not get the current JAP version number from infoservice.");
@@ -2657,12 +2662,20 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public void connectionError()
 	{
 		LogHolder.log(LogLevel.ERR, LogType.NET, "JAPController received connectionError");
-		if (!m_bConnectionErrorShown)
+		if (m_Model.getAutoReConnect())
 		{
-			//this.setAnonMode(false); // prevents automatic reconnect
-			m_bConnectionErrorShown = true;
-			JAPDialog.showErrorDialog(m_View, JAPMessages.getString("cascadeLost"), LogType.MISC);
+			if (!m_bConnectionErrorShown)
+			{
+				m_bConnectionErrorShown = true;
+			}
 		}
+		else
+		{
+			this.setAnonMode(false);
+		}
+
+		//JAPDialog.showErrorDialog(m_View, JAPMessages.getString("cascadeLost"), LogType.MISC);
+		getView().connectionError();
 	}
 
 	/** Be able to register as an event listener out of inner classes*/

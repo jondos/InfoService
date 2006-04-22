@@ -510,7 +510,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		{
 			// fire event
 			Enumeration enumListeners;
-			synchronized (m_paymentListeners)
+			//synchronized (m_paymentListeners) // deadly for jdk 1.1.8...
 			{
 				/*
 				 *  Clone the vector and leave synchronisation block as otherwise there

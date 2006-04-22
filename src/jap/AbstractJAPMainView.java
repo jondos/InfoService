@@ -33,8 +33,9 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import gui.JAPDll;
+import anon.AnonServiceEventListener;
 
-public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
+public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView, AnonServiceEventListener
 {
 	protected String m_Title;
 	protected MyViewUpdate m_runnableValueUpdate;
@@ -60,6 +61,15 @@ public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 	{
 		JAPController.goodBye(true); // call the final exit procedure of JAP
 	}
+
+	public void connectionError()
+	{
+	}
+
+	public void packetMixed(long a_totalBytes)
+	{
+	}
+
 
 	public boolean hideWindowInTaskbar()
 	{

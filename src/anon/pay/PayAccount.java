@@ -586,7 +586,8 @@ public class PayAccount implements IXMLEncodable
 	private void fireChangeEvent()
 	{
 		Enumeration enumListeners;
-		synchronized (m_accountListeners)
+
+		//synchronized (m_accountListeners) // deadly for jdk 1.1.8...
 		{
 			/*
 			 * Clone the Vector as otherwise there would be a deadlock with at least
@@ -594,6 +595,7 @@ public class PayAccount implements IXMLEncodable
 			 */
 			enumListeners = ((Vector)m_accountListeners.clone()).elements();
 		}
+
 		while (enumListeners.hasMoreElements())
 		{
 			( (IAccountListener) enumListeners.nextElement()).accountChanged(this);

@@ -151,8 +151,7 @@ final public class AnonServiceImpl implements AnonService, AnonServiceEventListe
 		}
 		catch (Throwable t)
 		{
-			LogHolder.log(LogLevel.EMERG, LogType.NET,
-						  "AnonServiceImpl.connect(): Exception - should never ever happen!");
+			LogHolder.log(LogLevel.EMERG, LogType.NET, "Exception - should never ever happen!");
 			LogHolder.log(LogLevel.EMERG, LogType.NET, t);
 			return ErrorCodes.E_UNKNOWN;
 		}

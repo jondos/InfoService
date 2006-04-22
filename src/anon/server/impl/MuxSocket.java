@@ -866,7 +866,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 				LogHolder.log(LogLevel.DEBUG, LogType.NET,
 							  "JAPMuxSocket:close() Hm...MuxSocket is still alive...");
 				threadRunLoop.stop();
-				runStoped();
+				runStopped();
 			}
 			threadRunLoop = null;
 			m_bisCrypted = false;
@@ -915,6 +915,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			}
 			catch (Exception e)
 			{
+				m_bIsConnected = false;
 				if (!m_bConnectionStoppedManually)
 				{
 					fireConnectionError();
@@ -1004,11 +1005,11 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 				   }*/
 			}
 		}
-		runStoped();
+		runStopped();
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "JAPMuxSocket:MuxSocket thread run exited...");
 	}
 
-	private void runStoped()
+	private void runStopped()
 	{
 		synchronized (this)
 		{

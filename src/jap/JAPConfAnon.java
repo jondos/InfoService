@@ -608,6 +608,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	private void updateMixCascadeCombo()
 	{
+		/** @todo Do this in the event thread only! */
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "-start");
 		Enumeration it = m_Controller.getMixCascadeDatabase().elements();
 		DefaultListModel listModel = new DefaultListModel();
