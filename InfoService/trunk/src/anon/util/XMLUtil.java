@@ -351,14 +351,16 @@ public class XMLUtil
 				if (a_node.getNodeType() == Node.ELEMENT_NODE)
 				{
 					a_node = a_node.getFirstChild();
+
 				}
-				if (a_node.getNodeType() == Node.TEXT_NODE)
+				if (a_node.getNodeType() == Node.TEXT_NODE ||
+					a_node.getNodeType() == Node.ENTITY_REFERENCE_NODE)
 				{
 					s = "";
 					while (a_node != null &&
 						   (a_node.getNodeType() == Node.ENTITY_REFERENCE_NODE ||
 							a_node.getNodeType() == Node.TEXT_NODE))
-					{ ///@todo parsing of Documents which contains quoted chars are wrong under JAXP 1.0
+					{ ///@todo parsing of Documents which contains quoted chars is wrong under JAXP 1.0
 						if (a_node.getNodeType() == Node.ENTITY_REFERENCE_NODE)
 						{
 							s += a_node.getFirstChild().getNodeValue();
@@ -935,19 +937,21 @@ public class XMLUtil
 	 * Reformats an XML document into a human readable format.
 	 * @param a_doc an xml document
 	 */
-	public static void formatHumanReadable(Document a_doc)
+	public static Document formatHumanReadable(Document a_doc)
 	{
 		formatHumanReadable(a_doc.getDocumentElement(), 0);
+		return a_doc;
 	}
 
 	/**
 	 * Reformats an XML element into a human readable format.
 	 * @param a_element an xml element
+	 * @todo Debug for JDK < 1.4!
 	 */
-	public static void formatHumanReadable(Element a_element)
+	public static Element formatHumanReadable(Element a_element)
 	{
-
 		formatHumanReadable(a_element, 0);
+		return a_element;
 	}
 
 	/**

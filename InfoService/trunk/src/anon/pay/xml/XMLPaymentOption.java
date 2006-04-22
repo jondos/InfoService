@@ -50,6 +50,8 @@ public class XMLPaymentOption implements IXMLEncodable
 	public static final String EXTRA_LINK = "link";
 	public static final String EXTRA_PHONE = "phone";
 
+	private static final String EXCEPTION_WRONG_XML_STRUCTURE = "XMLPaymentOption wrong XML structure";
+
 	/** Option name */
 	private String m_name;
 
@@ -229,7 +231,7 @@ public class XMLPaymentOption implements IXMLEncodable
 	{
 		if (!elemRoot.getTagName().equals("PaymentOption"))
 		{
-			throw new Exception("XMLPaymentOption wrong XML structure");
+			throw new Exception(EXCEPTION_WRONG_XML_STRUCTURE);
 		}
 
 		m_type = elemRoot.getAttribute("type");
@@ -240,8 +242,12 @@ public class XMLPaymentOption implements IXMLEncodable
 		NodeList nodesHeadings = elemRoot.getElementsByTagName("Heading");
 		for (int i = 0; i < nodesHeadings.getLength(); i++)
 		{
-			String heading = nodesHeadings.item(i).getFirstChild().getNodeValue();
+			String heading = XMLUtil.parseValue(nodesHeadings.item(i), null);
 			String language = ( (Element) nodesHeadings.item(i)).getAttribute("lang");
+			if (language == null || heading == null)
+			{
+				throw new Exception(EXCEPTION_WRONG_XML_STRUCTURE);
+			}
 			m_headings.addElement(new String[]
 								  {heading, language});
 		}
@@ -249,8 +255,13 @@ public class XMLPaymentOption implements IXMLEncodable
 		NodeList nodesDetailed = elemRoot.getElementsByTagName("DetailedInfo");
 		for (int i = 0; i < nodesDetailed.getLength(); i++)
 		{
-			String info = nodesDetailed.item(i).getFirstChild().getNodeValue();
+			String info = XMLUtil.parseValue(nodesDetailed.item(i), null);
 			String language = ( (Element) nodesDetailed.item(i)).getAttribute("lang");
+			if (language == null || info == null)
+			{
+				throw new Exception(EXCEPTION_WRONG_XML_STRUCTURE);
+			}
+
 			m_detailedInfos.addElement(new String[]
 									   {info, language});
 		}
@@ -258,29 +269,30 @@ public class XMLPaymentOption implements IXMLEncodable
 		NodeList nodesExtra = elemRoot.getElementsByTagName("ExtraInfo");
 		for (int i = 0; i < nodesExtra.getLength(); i++)
 		{
-			String info = nodesExtra.item(i).getFirstChild().getNodeValue();
+			String info = XMLUtil.parseValue(nodesExtra.item(i), null);
 			String language = ( (Element) nodesExtra.item(i)).getAttribute("lang");
 			String type = ( (Element) nodesExtra.item(i)).getAttribute("type");
+			if (language == null || info == null || type == null)
+			{
+				throw new Exception(EXCEPTION_WRONG_XML_STRUCTURE);
+			}
 			m_extraInfos.addElement(new String[]
 									{info, type, language});
 		}
 
 		NodeList nodesInput = elemRoot.getElementsByTagName("input");
-		try
+
+		for (int i = 0; i < nodesInput.getLength(); i++)
 		{
-			for (int i = 0; i < nodesInput.getLength(); i++)
+			String label = XMLUtil.parseValue(nodesInput.item(i).getFirstChild(), null);
+			String lang = ( (Element) nodesInput.item(i).getFirstChild()).getAttribute("lang");
+			String ref = ( (Element) nodesInput.item(i)).getAttribute("ref");
+			if (lang == null || label == null || ref == null)
 			{
-				String label = nodesInput.item(i).getFirstChild().getFirstChild().getNodeValue();
-				String lang = ( (Element) nodesInput.item(i).getFirstChild()).getAttribute(
-					"lang");
-				String ref = ( (Element) nodesInput.item(i)).getAttribute("ref");
-				m_inputFields.addElement(new String[]
-										 {ref, label, lang});
+				throw new Exception(EXCEPTION_WRONG_XML_STRUCTURE);
 			}
-		}
-		catch (Exception e)
-		{
-			m_inputFields = new Vector();
+			m_inputFields.addElement(new String[]
+									 {ref, label, lang});
 		}
 
 		try

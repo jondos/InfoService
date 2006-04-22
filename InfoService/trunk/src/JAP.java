@@ -126,8 +126,10 @@ public class JAP extends Frame
 				System.exit(0);
 			}
 		}
+
 		// Show splash screen
 		JAPSplash splash = new JAPSplash(this);
+
 		// Test for Swing
 		try
 		{
@@ -235,6 +237,7 @@ public class JAP extends Frame
 				}
 			}
 		}
+
 		/* check, whether there is the -forwarding_state parameter, which extends
 		 * the configuration dialog
 		 */
@@ -250,6 +253,7 @@ public class JAP extends Frame
 				}
 			}
 		}
+
 		JAPModel.getInstance().setForwardingStateModuleVisible(forwardingStateVisible);
 		// load settings from config file
 		m_controller.loadConfigFile(configFileName, loadPay, splash);
