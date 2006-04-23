@@ -800,8 +800,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 											getAccountCertificate(),
 											PayAccountsFile.getInstance().getActiveAccount().
 											getSigningInstance());
-						LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-									  "Fetching payment options");
+						LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetching payment options");
 						m_paymentOptions = piConn.getPaymentOptions();
 						piConn.disconnect();
 					}

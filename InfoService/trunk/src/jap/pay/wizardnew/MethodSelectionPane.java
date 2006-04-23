@@ -109,7 +109,8 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		m_c.insets = new Insets(0, 5, 0, 5);
 		m_c.gridy++;
 		m_c.gridwidth = 3;
-		JRadioButton rb = new JRadioButton("<html>" + a_name + "</html>");
+		//JRadioButton rb = new JRadioButton("<html><body>" + a_name + "</body></html>"); not for JDK 1.1.8..
+		JRadioButton rb = new JRadioButton(new gui.JAPHtmlMultiLineLabel(a_name).getHTMLDocumentText());
 		rb.setName(a_name);
 		rb.addActionListener(this);
 		m_rbGroup.add(rb);
@@ -194,8 +195,7 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		Object value = p.getValue();
 		XMLPaymentOptions options = (XMLPaymentOptions) value;
 		m_paymentOptions = options;
-		Enumeration headings = options.getOptionHeadings(JAPController.getLocale().
-			getLanguage());
+		Enumeration headings = options.getOptionHeadings(JAPController.getLocale().getLanguage());
 
 		//Add all generic options and only non-genric options that work with this JAP version
 		while (headings.hasMoreElements())
