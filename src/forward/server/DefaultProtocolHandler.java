@@ -35,12 +35,6 @@ import java.io.InputStream;
 import java.net.Socket;
 
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -48,55 +42,56 @@ import org.w3c.dom.NodeList;
 
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
+import anon.util.XMLUtil;
 import forward.ForwardUtils;
 
 /**
  * This is the implementation for the first version of the JAP routing protocol.
  */
 public class DefaultProtocolHandler implements IProtocolHandler {
-    
+
   /**
    * This is the version of the current protocol implementation. Interaction is only possible with
    * clients, which use the same protocol version.
    */
   private static final int PROTOCOL_VERSION = 2;
-    
+
   /**
    * This is the maximum net size of a protocol message in bytes. Bigger messages are not accepted
    * and causes an exception.
    */
   private static final int MAXIMUM_PROTOCOLMESSAGE_SIZE = 100000;
-  
+
   /**
    * This is the start signature of every protocol message.
    */
   private static final byte[] MESSAGE_START_SIGNATURE = {(byte)0xFF, (byte)0x00, (byte)0xF0, (byte)0x0F};
-  
+
   /**
    * This is the end signature of every protocol message.
    */
   private static final byte[] MESSAGE_END_SIGNATURE = {(byte)0xFF, (byte)0x00, (byte)0xE1, (byte)0x1E};
-  
+
   /**
    * This is the state after establishing the connection. In this state the protocol waits for the
    * request message from the client (or the infoservice validation request).
    */
   private static final int STATE_WAIT_FOR_CLIENT_REQUEST = 0;
-  
+
   /**
    * This is the state after we have gotten the connection request from a forwarding client (not
    * an infoservice) and sent the connection offer back to the client. In this state the protocol
    * waits for the answer (cascade selection) from the client.
-   */ 
+   */
   private static final int STATE_WAIT_FOR_CASCADE_SELECTION = 1;
-  
+
   /**
    * This is the state after we received the cascade selection from the client and built a
    * connection ton the selected cascade. We are forwarading all received packets between client
    * and cascade in this state.
    */
   private static final int STATE_CONNECTED_TO_MIX = 2;
-  
+
   /**
    * This is the state after the connection was closed (because of connection termination by
    * client or an error on the connection). In this state we wait for the removing from the
@@ -114,27 +109,27 @@ public class DefaultProtocolHandler implements IProtocolHandler {
    */
   private static final int STATE_WAIT_FOR_INFOSERVICE_CLOSE = 4;
 
-    
+
   /**
    * This stores the connection to the selected mixcascade. If this value is null, there is no
    * connection to a cascade and the protocol handles all incoming packets. If this value is
    * not null, all incoming packets are forwarded on this connection.
    */
   private Socket m_serverConnection;
-  
+
   /**
    * This buffer stores the parts of a incoming protocol message until we received the full
    * message. If we have finished the protocol phase, all packets are directly forwarded, so we
    * only need this buffer while doing the protocol stuff before the forwarding process.
    */
   private ByteArrayOutputStream m_incomingMessageBuffer;
-  
+
   /**
    * This stores the net length of a incoming message in the incoming message buffer. We get the
    * value from evaluating the message header.
    */
   private int m_incomingMessageLength;
-  
+
   /**
    * This is the for outgoing protocol messages to the client. The connection handler will read
    * the data from this buffer and sends them to the client. If we have finished the protocol
@@ -142,19 +137,19 @@ public class DefaultProtocolHandler implements IProtocolHandler {
    * need this buffer while doing the protocol stuff before the forwarding process.
    */
   private ByteArrayInputStream m_outgoingMessageBuffer;
-  
+
   /**
    * This stores the current protocol state. This state decides what to do with incoming messages.
    * Look at the constants in this class.
    */
   private int m_currentState;
-  
+
   /**
    * This stores the client connection this protocol handler belongs to.
    */
   private ForwardConnection m_parentConnection;
 
-  
+
   /**
    * Generates a new DefaultProtocolHandler.
    *
@@ -192,7 +187,7 @@ public class DefaultProtocolHandler implements IProtocolHandler {
     }
     return availableData;
   }
-  
+
   /**
    * Read a_buffer.length bytes from the server in the buffer a_buffer. This call blocks until
    * a_buffer.length bytes could be read. This call throws an exception, if there is something
@@ -220,7 +215,7 @@ public class DefaultProtocolHandler implements IProtocolHandler {
     }
     return bytesRead;
   }
-  
+
   /**
    * Writes the bytes in a_buffer to the server or the protocol handler. This call blocks until
    * the bytes could be written in the send queue. This call throws an exception, if there is
@@ -238,7 +233,7 @@ public class DefaultProtocolHandler implements IProtocolHandler {
       messageHandler(a_buffer);
     }
   }
-  
+
   /**
    * Closes the connection to the server and stops handling of protocol messages. All later calls
    * of available(), read(), write() will throw an exception.
@@ -256,7 +251,7 @@ public class DefaultProtocolHandler implements IProtocolHandler {
     m_outgoingMessageBuffer = null;
     m_currentState = STATE_CONNECTION_CLOSED;
   }
-  
+
   /**
    * This method checks, whether to byte arrays have identical content or not.
    *
@@ -285,16 +280,16 @@ public class DefaultProtocolHandler implements IProtocolHandler {
     }
     return identical;
   }
-      
+
   /**
    * This method handles all data packets received from the client. We evaluate the message
    * header, put the data in the incoming message buffer and call messageReceived() method, if
    * we received the full message. If we find a protocol error (wrong header/trailer, message
-   * to long, wrong message content, ...) this method throws an exception. 
+   * to long, wrong message content, ...) this method throws an exception.
    *
    * @param a_newData The data packet received from the client.
    */
-  private void messageHandler(byte[] a_newData) throws Exception {   
+  private void messageHandler(byte[] a_newData) throws Exception {
     if (m_incomingMessageBuffer.size() < MESSAGE_START_SIGNATURE.length + 4) {
       if (m_incomingMessageBuffer.size() < MESSAGE_START_SIGNATURE.length) {
         /* we must check for the message start signature */
@@ -310,7 +305,7 @@ public class DefaultProtocolHandler implements IProtocolHandler {
         }
       }
       else {
-        /* we have already a valid start signature in the m_incomingMessageBuffer */       
+        /* we have already a valid start signature in the m_incomingMessageBuffer */
         m_incomingMessageBuffer.write(a_newData);
       }
       if (m_incomingMessageBuffer.size() >= MESSAGE_START_SIGNATURE.length + 4) {
@@ -322,21 +317,21 @@ public class DefaultProtocolHandler implements IProtocolHandler {
         }
         catch (Exception e) {
           throw (new Exception("DefaultProtocolHandler: messageHandler: Error while reading message length."));
-        }        
+        }
         if ((m_incomingMessageLength < 0) || (m_incomingMessageLength > MAXIMUM_PROTOCOLMESSAGE_SIZE)) {
           m_incomingMessageLength = -1;
           /* something is wrong, this is not a message for us -> throw an exception */
           throw(new Exception("DefaultProtocolHandler: messageHandler: Protocol error (invalid length)."));
         }
-      }         
+      }
     }
     else {
-      /* we have already a valid start signature and the message length */       
+      /* we have already a valid start signature and the message length */
       m_incomingMessageBuffer.write(a_newData);
-    }  
+    }
     if (m_incomingMessageLength != -1) {
      /* check, whether we received the whole packet */
-      if (m_incomingMessageBuffer.size() >= MESSAGE_START_SIGNATURE.length + 4 + m_incomingMessageLength + MESSAGE_END_SIGNATURE.length) {     
+      if (m_incomingMessageBuffer.size() >= MESSAGE_START_SIGNATURE.length + 4 + m_incomingMessageLength + MESSAGE_END_SIGNATURE.length) {
         /* check the end signatue */
         byte[] messageEnd = new byte[MESSAGE_END_SIGNATURE.length];
         System.arraycopy(m_incomingMessageBuffer.toByteArray(), MESSAGE_START_SIGNATURE.length + 4 + m_incomingMessageLength, messageEnd, 0, MESSAGE_END_SIGNATURE.length);
@@ -362,14 +357,14 @@ public class DefaultProtocolHandler implements IProtocolHandler {
            * messageReceived(), this must be protocol messages too, because messageReceived() have to
            * clear this buffer, if the end of the protocol phase is reached and the transfer phase
            * starts -> try to handle those messages (stored in otherMessages)
-           */        
+           */
           m_incomingMessageBuffer.reset();
           messageHandler(otherMessages);
         }
       }
     }
   }
-  
+
   /**
    * This method handles and evaluates a whole message. The handleProtocol() method is called
    * after parsing the message. This method throws an exception, if there is an error while
@@ -388,7 +383,7 @@ public class DefaultProtocolHandler implements IProtocolHandler {
     Element japRoutingNode = (Element)(japRoutingNodes.item(0));
     handleProtocol(japRoutingNode);
   }
-  
+
   /**
    * This method handles the incoming XML messages. Dependent of the current prototcol state, it
    * calls the method needed for handling the expected message. This method throws an exception,
@@ -414,9 +409,9 @@ public class DefaultProtocolHandler implements IProtocolHandler {
         /* something is going wrong, we got an unexpected message */
         throw (new Exception("DefaultProtocolHandler: handleProtocol: Protocol error."));
       }
-    } 
+    }
   }
-  
+
   /**
    * This method handles the initial request messages from a client or an infoservice. The request
    * is parsed and if the request was from a client, we send the connection offer back. I the
@@ -445,7 +440,7 @@ public class DefaultProtocolHandler implements IProtocolHandler {
        * for backwards compatibility
        */
       /* change the protocol state and send back the connection offer to the client */
-      m_currentState = STATE_WAIT_FOR_CASCADE_SELECTION;      
+      m_currentState = STATE_WAIT_FOR_CASCADE_SELECTION;
       sendProtocolDataToClient(xmlToProtocolPacket(generateConnectionOfferXml()));
     }
     else {
@@ -453,14 +448,14 @@ public class DefaultProtocolHandler implements IProtocolHandler {
         /* it's the verify message from the infoservice -> send an acknowledgement */
         m_currentState = STATE_WAIT_FOR_INFOSERVICE_CLOSE;
         sendProtocolDataToClient(xmlToProtocolPacket(generateConnectionAcknowledgement()));
-      }            
+      }
       else {
         /* invalid request message */
         throw (new Exception("DefaultProtocolHandler: handleInitialRequestMessage: Error in XML structure (Request node, wrong msg)."));
       }
     }
-  }  
-  
+  }
+
   /**
    * This method handles the cascade select message from a forwarding client. If everything is ok,
    * it connects to the selected cascade, so forwarding can start. This method throws an exception,
@@ -508,7 +503,7 @@ public class DefaultProtocolHandler implements IProtocolHandler {
     }
     /* that's it */
   }
-    
+
   /**
    * This method tries to get a connection to a mixcascade (by probing all ListenerInterfaces).
    * The connection is made by calling the createConnection() method of ForwardUtils,
@@ -534,7 +529,7 @@ public class DefaultProtocolHandler implements IProtocolHandler {
     }
     return (m_serverConnection != null);
   }
-  
+
   /**
    * This method sends all data in our incoming message buffer to the server. This method is
    * called after we made a connection to a mixcascade to send the already received data to the
@@ -543,7 +538,7 @@ public class DefaultProtocolHandler implements IProtocolHandler {
   private void emptyBuffers() throws Exception {
     m_serverConnection.getOutputStream().write(m_incomingMessageBuffer.toByteArray());
   }
-  
+
   /**
    * Parses a byte-array with XML data.
    *
@@ -555,7 +550,7 @@ public class DefaultProtocolHandler implements IProtocolHandler {
     InputStream in = new ByteArrayInputStream(a_xmlData);
     return DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
   }
-  
+
   /**
    * Creates the connection offer XML structure. This structure is sent directly after the
    * connection request from the client. The client will find information about the used routing
@@ -585,7 +580,7 @@ public class DefaultProtocolHandler implements IProtocolHandler {
     Element guaranteedBandwidthNode = doc.createElement("GuaranteedBandwidth");
     guaranteedBandwidthNode.appendChild(doc.createTextNode(Integer.toString(m_parentConnection.getParentScheduler().getGuaranteedBandwidth())));
     qualityOfServiceNode.appendChild(guaranteedBandwidthNode);
-    requestNode.appendChild(qualityOfServiceNode);  
+    requestNode.appendChild(qualityOfServiceNode);
     /* append the info, whether we need dummy traffic */
     Element dummyTrafficNode = doc.createElement("DummyTraffic");
     dummyTrafficNode.setAttribute("interval", Integer.toString(ForwardServerManager.getInstance().getDummyTrafficInterval()));
@@ -616,7 +611,7 @@ public class DefaultProtocolHandler implements IProtocolHandler {
     doc.appendChild(japRoutingNode);
     return doc;
   }
-  
+
   /**
    * Put the specified data in the buffer for outgoing protocol messages to the client.
    *
@@ -632,7 +627,7 @@ public class DefaultProtocolHandler implements IProtocolHandler {
       System.arraycopy(a_data, 0, tempBuffer, tempBuffer.length - a_data.length, a_data.length);
       m_outgoingMessageBuffer = new ByteArrayInputStream(tempBuffer);
     }
-  }    
+  }
 
   /**
    * Creates a protocol packet from an XML structure.
@@ -642,14 +637,9 @@ public class DefaultProtocolHandler implements IProtocolHandler {
    * @return The protocol packet with the XML structure inside.
    */
   private byte[] xmlToProtocolPacket(Document a_doc) throws Exception {
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
-    Transformer t = TransformerFactory.newInstance().newTransformer();
-    Result r = new StreamResult(out);
-    Source s = new DOMSource(a_doc);
-    t.transform(s, r);
-    return createProtocolPacket(out.toByteArray());
+    return createProtocolPacket(XMLUtil.toByteArray(a_doc));
   }
-  
+
   /**
    * Creates a protocol packet from byte array with data. This method adds header and trailer to
    * the data and returns the whole packet.
@@ -670,7 +660,7 @@ public class DefaultProtocolHandler implements IProtocolHandler {
     }
     catch (Exception e) {
       /* this exception should never occur -> write invalid message length */
-      byte[] dummyLength = {(byte)0xFF, (byte)0xFF, (byte)0xFF, (byte)0xFF}; 
+      byte[] dummyLength = {(byte)0xFF, (byte)0xFF, (byte)0xFF, (byte)0xFF};
       System.arraycopy(dummyLength, 0, protocolPacket, MESSAGE_START_SIGNATURE.length, 4);
     }
     /* add the data */
@@ -679,5 +669,5 @@ public class DefaultProtocolHandler implements IProtocolHandler {
     System.arraycopy(MESSAGE_END_SIGNATURE, 0, protocolPacket, MESSAGE_START_SIGNATURE.length + 4 + a_data.length, MESSAGE_END_SIGNATURE.length);
     return protocolPacket;
   }
-   
+
 }
