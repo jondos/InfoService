@@ -1104,7 +1104,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 		{
 			if (!m_bIsConnected)
 			{
-				throw new NotConnectedToMixException("MuxSocket send: not connected");
+				throw new NotConnectedToMixException("Not connected!");
 			}
 			short len = (short) (len_and_flags & PAYLOAD_LEN_MASK);
 
@@ -1252,7 +1252,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "JAPMuxSocket:send() Exception (should never be here...)!: " + e.getMessage());
+						  "Exception (should never be here...)!: " + e.getMessage());
 			throw new IOException(e.getMessage());
 		}
 	}

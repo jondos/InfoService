@@ -1479,9 +1479,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 *
 	 * @return The active MixCascade.
 	 */
-	public MixCascade getCurrentMixCascade()
+	public synchronized MixCascade getCurrentMixCascade()
 	{
-		synchronized (this)
+		//synchronized (this) // Deadly for JDK 1.1.8...
 		{
 			/* return only consistent values */
 			return m_currentMixCascade;
