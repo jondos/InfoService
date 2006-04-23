@@ -186,6 +186,38 @@ public class JAPHtmlMultiLineLabel extends JLabel
 		return ((View)getClientProperty(CLIENT_PROPERTY_HTML)).getDocument().getLength();
 	}
 
+	/**
+	 * May be used to convert HTML text to unicode text.
+	 * @return the HTML text as unicode text
+	 */
+	public String getHTMLDocumentText()
+	{
+		HTMLDocument document;
+		String text;
+
+		document = (HTMLDocument)((View)getClientProperty(CLIENT_PROPERTY_HTML)).getDocument();
+		try
+		{
+			text = document.getText(0, document.getLength());
+			if ((int)(text.charAt(text.length() - 1)) == 10)
+			{
+				// this is a problem in JDK 1.1.8
+				text = text.substring(0, text.length() - 1);
+			}
+			if ((int)(text.charAt(0)) == 10)
+			{
+				// this is a problem in JDK 1.3_17
+				text = text.substring(1, text.length());
+			}
+		}
+		catch (BadLocationException a_e)
+		{
+			// should never happen
+			text = null;
+		}
+		return text;
+	}
+
 	public void cutHTMLDocument(int a_length)
 	{
 		HTMLDocument document;
