@@ -999,8 +999,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				passivePaymentPane.getButtonValue() == JAPDialog.RETURN_VALUE_OK)
 			{
 				if (methodSelectionPane.getSelectedPaymentOption().getName().toLowerCase().indexOf(
-					"creditcard") !=
-					-1)
+					"creditcard") != -1)
 				{
 					doGetStatement(selectedAccount);
 				}

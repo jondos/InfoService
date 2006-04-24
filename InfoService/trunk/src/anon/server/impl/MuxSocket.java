@@ -351,10 +351,10 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 	 * E_SUCCESS if successful
 	 * E_ALREADY_CONNECTED if allready connected
 	 */
-	public int connectViaFirewall(MixCascade mixCascade, ImmutableProxyInterface a_proxyInterface)
+	public synchronized int connectViaFirewall(MixCascade mixCascade, ImmutableProxyInterface a_proxyInterface)
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "MuxSocket.connectViaFirewall(): Start...");
-		synchronized (this)
+		//synchronized (this) // Deadly for JDK 1.1.8...
 		{
 
 			if (m_bIsConnected)
@@ -435,8 +435,8 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 	{
 		try
 		{
-			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
-				ByteArrayInputStream(buff));
+
+			Document doc = XMLUtil.toXMLDocument(buff);
 			Element root = doc.getDocumentElement();
 			if (!root.getNodeName().equals("MixCascade"))
 			{
@@ -606,7 +606,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 							  "MuxSocket: processXmlKeys: Constructing <JAPKeyExchange>-Message");
-				doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+				doc = XMLUtil.createDocument();
 				Element e = doc.createElement("JAPKeyExchange");
 				doc.appendChild(e);
 				e.setAttribute("version", "0.1");
@@ -645,8 +645,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 							  "MuxSocket: processXmlKeys: Answer to <JAPKeyExchange>-Message from Mix received");
 
-				doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
-					ByteArrayInputStream(mixSigBuff));
+				doc = XMLUtil.toXMLDocument(mixSigBuff);
 				root = doc.getDocumentElement();
 				if (!root.getNodeName().equals("Signature"))
 				{

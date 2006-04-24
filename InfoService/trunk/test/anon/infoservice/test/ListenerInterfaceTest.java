@@ -33,6 +33,7 @@ import org.w3c.dom.Document;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import anon.infoservice.ListenerInterface;
+import anon.util.XMLUtil;
 
 /**
  *  These are the tests for the ListenerInterface class.
@@ -139,7 +140,7 @@ public class ListenerInterfaceTest extends XtendedPrivateTestCase
 		ListenerInterface listenerOrigin, listenerFromXML;
 		Document doc;
 
-		doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		doc = XMLUtil.createDocument();
 		listenerOrigin = new ListenerInterface("127.0.0.1", 443, ListenerInterface.PROTOCOL_TYPE_HTTPS);
 		listenerFromXML = new ListenerInterface(listenerOrigin.toXmlElement(doc));
 		assertTrue(listenerOrigin.equals(listenerFromXML));

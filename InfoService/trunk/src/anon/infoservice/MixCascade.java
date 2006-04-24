@@ -566,9 +566,9 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 *
 	 * @return The current status of the mixcascade.
 	 */
-	public StatusInfo getCurrentStatus()
+	public synchronized StatusInfo getCurrentStatus()
 	{
-		synchronized (this)
+		//synchronized (this) Deadly for JDK 1.1.8...
 		{
 			/* get only consistent values */
 			return m_currentStatus;
