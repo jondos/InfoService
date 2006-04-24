@@ -2851,6 +2851,8 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 							classActiveEvent = null;
 						}
 						Object src = event.getSource();
+						if (src == getParentComponent())
+						System.out.println(event);
 						if (src == m_internalDialog)
 						{
 							if (event instanceof WindowEvent)
@@ -2894,6 +2896,13 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 						}
 						else if (src instanceof Component)
 						{
+							if (src == getParentComponent() && event instanceof WindowEvent &&
+								( (WindowEvent) event).getID() == WindowEvent.WINDOW_CLOSING)
+							{
+								// Prevent closing of parent Window. This will otherwise work in KDE systems.
+								continue;
+							}
+
 							try
 							{
 								( (Component) src).dispatchEvent(event);

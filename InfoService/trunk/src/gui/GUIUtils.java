@@ -216,13 +216,24 @@ public final class GUIUtils
     }
 
 	/**
-	 * Centers a window relative to the screen.
+	 * Moves the given Window to the upright corner of the default screen.
 	 * @param a_window a Window
 	 */
-	public static void centerOnScreen(Window a_window)
+	public static void moveToUpRightCorner(Window a_window)
+	{
+		Rectangle screenBounds = getScreenBounds(a_window);
+		Dimension ownSize = a_window.getSize();
+		a_window.setLocation( (screenBounds.width - ownSize.width), 0);
+	}
+
+	/**
+	 * Returns the bounds of the screen where a specified window is currently shown.
+	 * @param a_window a Window
+	 * @return the bounds of the screen where the specified window is currently shown
+	 */
+	public static Rectangle getScreenBounds(Window a_window)
 	{
 		Rectangle screenBounds;
-		Dimension ownSize = a_window.getSize();
 
 		try
 		{
@@ -242,6 +253,18 @@ public final class GUIUtils
 			// not all methods to get the default screen are available in JDKs < 1.3
 			screenBounds = new Rectangle(new Point(0,0), a_window.getToolkit().getScreenSize());
 		}
+		return screenBounds;
+	}
+
+
+	/**
+	 * Centers a window relative to the screen.
+	 * @param a_window a Window
+	 */
+	public static void centerOnScreen(Window a_window)
+	{
+		Rectangle screenBounds = getScreenBounds(a_window);
+		Dimension ownSize = a_window.getSize();
 
 		a_window.setLocation(screenBounds.x + ((screenBounds.width - ownSize.width) / 2),
 							 screenBounds.y + ((screenBounds.height - ownSize.height) / 2));

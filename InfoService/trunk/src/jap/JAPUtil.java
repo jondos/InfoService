@@ -49,23 +49,18 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Window;
 import javax.swing.AbstractButton;
-import javax.swing.ImageIcon;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 
 import anon.crypto.JAPCertificate;
+import gui.JAPMessages;
 import gui.SimpleFileFilter;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import gui.GUIUtils;
-import gui.*;
 
 /**
  * This class contains static utility functions for Jap
@@ -262,32 +257,6 @@ public final class JAPUtil
 		return 0;
 	}
 
-	/**
-	 *
-	 * @param f Window
-	 * @deprecated use GUIUtils.centerFrame(Window) instead
-	 */
-	public static void centerFrame(Window f)
-	{
-		GUIUtils.centerOnScreen(f);
-	}
-
-	public static void upRightFrame(Window f)
-	{
-		Dimension screenSize = f.getToolkit().getScreenSize();
-		Dimension ownSize = f.getSize();
-		f.setLocation( (screenSize.width - ownSize.width), 0);
-	}
-
-	public static void showMessageBox(JFrame parent, String messageID, String titleID,
-									  int jOptionPaneMessageType)
-	{
-		JOptionPane pane = new JOptionPane(JAPMessages.getString(messageID), jOptionPaneMessageType);
-		JDialog dialog = pane.createDialog(parent, JAPMessages.getString(titleID));
-		dialog.setFont(JAPController.getDialogFont());
-		dialog.setVisible(true);
-	}
-
 	/** Sets the mnemonic charcter of a component. The character must be set
 	 *  in the properties file under a name that is given in mnPropertyString.
 	 */
@@ -447,32 +416,5 @@ public final class JAPUtil
 		}
 		return sdf.format(date);
 		}
-	}
-
-	/**
-	 * Since JDK 1.1.8 does not provide String.replaceAll(),
-	 * this is an equivalent method.
-	 */
-	public static String replaceAll(String a_source, String a_toReplace, String a_replaceWith)
-	{
-		int position;
-
-		while ( (position = a_source.indexOf(a_toReplace)) != -1)
-		{
-			int position2 = a_source.indexOf(a_replaceWith);
-			if (a_replaceWith.indexOf(a_toReplace) != -1)
-			{
-				position2 += a_replaceWith.indexOf(a_toReplace);
-			}
-			if (position == position2)
-			{
-				break;
-			}
-			String before = a_source.substring(0, position);
-			String after = a_source.substring(position + a_toReplace.length(), a_source.length());
-			a_source = before + a_replaceWith + after;
-		}
-
-		return a_source;
 	}
 }
