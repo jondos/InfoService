@@ -1608,8 +1608,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			}
 			catch (Throwable t)
 			{
-				LogHolder.log(LogLevel.EMERG, LogType.GUI,
-							  "JAPVIew: Ooops... Crash in updateValues(): " + t.getMessage());
+				LogHolder.log(LogLevel.EMERG, LogType.GUI, t);
 			}
 		}
 	}

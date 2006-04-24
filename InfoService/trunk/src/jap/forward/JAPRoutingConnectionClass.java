@@ -230,14 +230,14 @@ public class JAPRoutingConnectionClass
 	 *
 	 * @return An XML node (ConnectionClass) with all settings of this connection class.
 	 */
-	public Element getSettingsAsXml(Document a_doc)
+	public synchronized Element getSettingsAsXml(Document a_doc)
 	{
 		Element connectionClassNode = a_doc.createElement("ConnectionClass");
 		Element classIdentifierNode = a_doc.createElement("ClassIdentifier");
 		Element maximumBandwidthNode = a_doc.createElement("MaximumBandwidth");
 		Element relativeBandwidthNode = a_doc.createElement("RelativeBandwidth");
 		XMLUtil.setValue(classIdentifierNode, getIdentifier());
-		synchronized (this)
+		//synchronized (this) Deadly for JDK 1.1.8
 		{
 			XMLUtil.setValue(maximumBandwidthNode, getMaximumBandwidth());
 			XMLUtil.setValue(relativeBandwidthNode, getRelativeBandwidth());

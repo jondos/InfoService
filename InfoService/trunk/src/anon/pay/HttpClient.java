@@ -40,6 +40,7 @@ import org.w3c.dom.Document;
 import anon.pay.xml.XMLDescription;
 import java.io.OutputStream;
 import java.io.BufferedOutputStream;
+import anon.util.XMLUtil;
 
 final public class HttpClient
 {
@@ -181,10 +182,7 @@ final public class HttpClient
 			throw new IOException(statusString);
 		}
 
-		Document doc = null;
-		doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
-				ByteArrayInputStream(data));
-		return doc;
+		return XMLUtil.toXMLDocument(data);
 	}
 
 	/**

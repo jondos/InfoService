@@ -30,7 +30,6 @@ package anon.infoservice.test;
 import junitx.framework.extension.XtendedPrivateTestCase;
 
 import org.w3c.dom.Document;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import anon.infoservice.ListenerInterface;
 import anon.util.XMLUtil;
