@@ -9,4 +9,10 @@
     <old-class-name>anon.util.pay.ICaptchaSender</old-class-name>
     <new-class-name>anon.util.captcha.ICaptchaSender</new-class-name>
   </rename-class>
+  <rename-method id="6AP0HITXJEME2ME75ULFK8Z" creation-time="Mon Apr 24 10:32:05.847 CEST 2006">
+    <declaring-class-name>gui.GUIUtils</declaring-class-name>
+    <declared-method-signature>(Ljava/awt/Window;)V</declared-method-signature>
+    <old-method-name>upRightFrame</old-method-name>
+    <new-method-name>moveToUpRightCorner</new-method-name>
+  </rename-method>
 </refactor>

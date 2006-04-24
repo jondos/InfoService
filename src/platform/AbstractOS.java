@@ -31,7 +31,6 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import gui.JAPHelp.IExternalURLCaller;
-import java.net.URL;
 
 /**
  * This abstract class provides access to OS-specific implementations of certain

@@ -201,7 +201,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		setContentPane(p);
 
 		pack();
-		JAPUtil.upRightFrame(this);
+		GUIUtils.moveToUpRightCorner(this);
 		m_labelBytes.setText(JAPMessages.getString("iconifiedViewZero"));
 		m_labelUsers.setText(JAPMessages.getString("iconifiedViewNA"));
 		m_labelTraffic.setText(JAPMessages.getString("iconifiedViewNA"));

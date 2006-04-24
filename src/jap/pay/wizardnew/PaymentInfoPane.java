@@ -47,6 +47,7 @@ import javax.swing.JLabel;
 
 import anon.pay.xml.XMLPaymentOption;
 import anon.pay.xml.XMLTransCert;
+import anon.util.Util;
 import gui.JAPMessages;
 import gui.dialog.DialogContentPane;
 import gui.dialog.DialogContentPane.IWizardSuitable;
@@ -134,10 +135,10 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		String extraInfo = selectedOption.getExtraInfo(m_language);
 		if (extraInfo != null)
 		{
-			extraInfo = JAPUtil.replaceAll(extraInfo, "%t", String.valueOf(transCert.getTransferNumber()));
-			extraInfo = JAPUtil.replaceAll(extraInfo, "%a", ( (MethodSelectionPane) getPreviousContentPane().
+			extraInfo = Util.replaceAll(extraInfo, "%t", String.valueOf(transCert.getTransferNumber()));
+			extraInfo = Util.replaceAll(extraInfo, "%a", ( (MethodSelectionPane) getPreviousContentPane().
 				getPreviousContentPane()).getAmount());
-			extraInfo = JAPUtil.replaceAll(extraInfo, "%c",
+			extraInfo = Util.replaceAll(extraInfo, "%c",
 										   ( (MethodSelectionPane) getPreviousContentPane().
 											getPreviousContentPane()).
 										   getSelectedCurrency());
@@ -181,8 +182,8 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		String link = a_label.getText();
 		if (link.indexOf("<html>") != -1)
 		{
-			link = JAPUtil.replaceAll(link, "<html>", "<html><font color=blue><u>");
-			link = JAPUtil.replaceAll(link, "</html>", "</u></font></html>");
+			link = Util.replaceAll(link, "<html>", "<html><font color=blue><u>");
+			link = Util.replaceAll(link, "</html>", "</u></font></html>");
 		}
 		else
 		{
@@ -200,18 +201,18 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		String link = m_extraInfoLabel.getText();
 		if (m_selectedOption.getExtraInfoType(m_language).equals(XMLPaymentOption.EXTRA_TEXT))
 		{
-			link = JAPUtil.replaceAll(link, "<br>", "\n");
-			link = JAPUtil.replaceAll(link, "<p>", "\n\n");
+			link = Util.replaceAll(link, "<br>", "\n");
+			link = Util.replaceAll(link, "<p>", "\n\n");
 		}
 		else
 		{
-			link = JAPUtil.replaceAll(link, "<br>", "");
-			link = JAPUtil.replaceAll(link, "<p>", "");
+			link = Util.replaceAll(link, "<br>", "");
+			link = Util.replaceAll(link, "<p>", "");
 		}
-		link = JAPUtil.replaceAll(link, "<html>", " ");
-		link = JAPUtil.replaceAll(link, "</html>", " ");
-		link = JAPUtil.replaceAll(link, "<font color=blue><u>", "");
-		link = JAPUtil.replaceAll(link, "</u></font>", "");
+		link = Util.replaceAll(link, "<html>", " ");
+		link = Util.replaceAll(link, "</html>", " ");
+		link = Util.replaceAll(link, "<font color=blue><u>", "");
+		link = Util.replaceAll(link, "</u></font>", "");
 		link = link.trim();
 
 		Transferable transfer = new StringSelection(link);
@@ -246,12 +247,12 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 	{
 		AbstractOS os = AbstractOS.getInstance();
 		String link = m_extraInfoLabel.getText();
-		link = JAPUtil.replaceAll(link, "<br>", "");
-		link = JAPUtil.replaceAll(link, "<p>", "");
-		link = JAPUtil.replaceAll(link, "<html>", " ");
-		link = JAPUtil.replaceAll(link, "</html>", " ");
-		link = JAPUtil.replaceAll(link, "<font color=blue><u>", "");
-		link = JAPUtil.replaceAll(link, "</u></font>", "");
+		link = Util.replaceAll(link, "<br>", "");
+		link = Util.replaceAll(link, "<p>", "");
+		link = Util.replaceAll(link, "<html>", " ");
+		link = Util.replaceAll(link, "</html>", " ");
+		link = Util.replaceAll(link, "<font color=blue><u>", "");
+		link = Util.replaceAll(link, "</u></font>", "");
 		link = link.trim();
 
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Opening " + link + " in browser.");

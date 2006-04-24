@@ -44,6 +44,7 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
+import gui.GUIUtils;
 
 // this shall become the browser/wizardhost providing class ...
 public class BasicWizardHost implements WizardHost,ActionListener
@@ -171,7 +172,7 @@ public class BasicWizardHost implements WizardHost,ActionListener
 				{
 					m_cardlayoutPages.first(m_panelPages);
 					m_Dialog.pack();
-					JAPUtil.centerFrame(m_Dialog);
+					GUIUtils.centerOnScreen(m_Dialog);
 					m_Dialog.show();
 				}
 			else

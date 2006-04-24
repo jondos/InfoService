@@ -55,7 +55,7 @@
   <property category="runtime.1" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
   <property category="runtime.1" name="ConfigurationName" value="GenerateKey"/>
   <property category="runtime.1" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
-  <property category="runtime.1" name="application.class" value="InfoService"/>
+  <property category="runtime.1" name="application.class" value="infoservice.InfoService"/>
   <property category="runtime.1" name="application.parameters" value="--generatekey"/>
   <property category="runtime.2" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
   <property category="runtime.2" name="ConfigurationName" value="TestSig"/>
@@ -124,7 +124,7 @@
   <property category="sys" name="DocPath" value="doc/javadoc;doc"/>
   <property category="sys" name="ExcludeClassEnabled" value="0"/>
   <property category="sys" name="IncludeTestPath" value="1"/>
-  <property category="sys" name="JDK" value="java version 1.4.2_04-b05"/>
+  <property category="sys" name="JDK" value="java 1.1 mit JDK 1.4.2"/>
   <property category="sys" name="LastTag" value="42"/>
   <property category="sys" name="Libraries" value="Log4j;XML-1.1;BouncyCastleLightForJAP;junitx;JUnit;http;JavaMail;Jama;ApacheBzip2;Log4j"/>
   <property category="sys" name="MakeStable" value="0"/>
@@ -141,8 +141,6 @@
   <property category="team" name="ignorePath.0" value="bak"/>
   <property category="team" name="ignorePath.1" value="classes"/>
   <property category="team" name="ignorePath.10" value="InfoService.log"/>
-  <property category="team" name="ignorePath.11" value="classes_all"/>
-  <property category="team" name="ignorePath.12" value="classes_infoservice"/>
   <property category="team" name="ignorePath.2" value="htdoc"/>
   <property category="team" name="ignorePath.3" value="InfoService.jar"/>
   <property category="team" name="ignorePath.4" value="InfoService.jpx.bak"/>
