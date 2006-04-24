@@ -1389,7 +1389,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 		catch (Throwable ex)
 		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "JAPModel:save() Exception: " + ex.getMessage());
+			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, ex);
 		}
 		return null;
 	}

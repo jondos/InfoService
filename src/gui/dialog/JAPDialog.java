@@ -2851,8 +2851,6 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 							classActiveEvent = null;
 						}
 						Object src = event.getSource();
-						if (src == getParentComponent())
-						System.out.println(event);
 						if (src == m_internalDialog)
 						{
 							if (event instanceof WindowEvent)

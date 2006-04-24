@@ -1006,6 +1006,7 @@ public class XMLUtil
 		Document doc;
 		try
 		{
+			/** @todo Seems to have synchronisation problems with JDK 1.1.8 */
 			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
 		}
 		catch (Exception a_e)
