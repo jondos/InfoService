@@ -55,6 +55,7 @@ import logging.LogType;
 import gui.JAPJIntField;
 import java.util.Date;
 import gui.GUIUtils;
+import gui.JAPMultilineLabel;
 
 public class PassivePaymentPane extends DialogContentPane implements IWizardSuitable
 {
@@ -93,7 +94,7 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 
 	public PassivePaymentPane(JAPDialog a_parentDialog, DialogContentPane a_previousContentPane)
 	{
-		super(a_parentDialog, "",
+		super(a_parentDialog, "Dummy Text",
 			  new Layout(JAPMessages.getString(MSG_ENTER), MESSAGE_TYPE_PLAIN),
 			  new Options(OPTION_TYPE_OK_CANCEL, a_previousContentPane));
 		setDefaultButtonOperation(ON_CLICK_DISPOSE_DIALOG | ON_YESOK_SHOW_NEXT_CONTENT |
@@ -134,14 +135,11 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		m_c.insets = new Insets(5, 5, 5, 5);
 		m_c.anchor = m_c.NORTHWEST;
 		m_c.fill = m_c.NONE;
-		m_c.gridwidth = 2;
-		JLabel label = new JLabel("<html>" + m_selectedOption.getDetailedInfo(m_language) + "</html>");
-		m_rootPanel.add(label, m_c);
 		m_c.gridwidth = 1;
-		m_c.gridy++;
+		setText(m_selectedOption.getDetailedInfo(m_language));
+		JLabel label;
 
 		JTextField textField = null;
-		label = null;
 		JComboBox comboBox = null;
 
 		m_inputFields = new Vector();
@@ -369,7 +367,6 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		m_rootPanel = this.getContentPane();
 		m_c = new GridBagConstraints();
 		m_rootPanel.setLayout(new GridBagLayout());
-		m_c = new GridBagConstraints();
 		m_c.gridx = 0;
 		m_c.gridy = 0;
 		m_c.weightx = 0;
@@ -377,11 +374,9 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		m_c.insets = new Insets(5, 5, 5, 5);
 		m_c.anchor = m_c.NORTHWEST;
 		m_c.fill = m_c.NONE;
-		m_c.gridwidth = 5;
-		JLabel label = new JLabel("<html>" + m_selectedOption.getDetailedInfo(m_language) + "</html>");
-		m_rootPanel.add(label, m_c);
+
+		setText(m_selectedOption.getDetailedInfo(m_language));
 		m_c.gridwidth = 1;
-		m_c.gridy++;
 
 		String acceptedCards = m_paymentOptions.getAcceptedCreditCards();
 		StringTokenizer st = new StringTokenizer(acceptedCards, ",");

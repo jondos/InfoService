@@ -80,7 +80,7 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 
 	public PaymentInfoPane(JAPDialog a_parentDialog, DialogContentPane a_previousContentPane)
 	{
-		super(a_parentDialog, "",
+		super(a_parentDialog, "Dummy",
 			  new Layout(JAPMessages.getString(MSG_INFOS), MESSAGE_TYPE_PLAIN),
 			  new Options(OPTION_TYPE_OK_CANCEL, a_previousContentPane));
 		setDefaultButtonOperation(ON_CLICK_DISPOSE_DIALOG | ON_YESOK_SHOW_NEXT_CONTENT |
@@ -129,8 +129,8 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		m_c.anchor = m_c.NORTHWEST;
 		m_c.fill = m_c.NONE;
 		m_c.gridwidth = 2;
-		JLabel label = new JLabel("<html>" + selectedOption.getDetailedInfo(m_language) + "</html>");
-		m_rootPanel.add(label, m_c);
+		setText(selectedOption.getDetailedInfo(m_language));
+
 
 		String extraInfo = selectedOption.getExtraInfo(m_language);
 		if (extraInfo != null)
