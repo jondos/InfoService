@@ -29,7 +29,6 @@
 package anon.server.impl;
 
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.InterruptedIOException;
 import java.io.PrintWriter;
@@ -38,14 +37,10 @@ import java.math.BigInteger;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.security.SecureRandom;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.TimeZone;
 import java.util.Vector;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

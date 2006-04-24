@@ -100,7 +100,6 @@ final public class AnonServiceImpl implements AnonService, AnonServiceEventListe
 			{
 				return rc;
 			}
-
 			return ErrorCodes.E_SUCCESS;
 		}
 		catch (Throwable e)
@@ -131,6 +130,7 @@ final public class AnonServiceImpl implements AnonService, AnonServiceEventListe
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.NET,
 							  "AnonServiceImpl.connect(): m_proxyConnection==null");
+				/** @todo JView exits here whenn connection to a cascade!! */
 				ret = m_MuxSocket.connectViaFirewall(mixCascade, m_proxyInterface);
 			}
 			else
