@@ -29,6 +29,7 @@ package gui;
 
 import java.awt.Window;
 import java.lang.reflect.Method;
+import jap.JAPController;
 
 final public class JAPDll
 {
@@ -127,6 +128,14 @@ final public class JAPDll
 		}
 		return null;
 	}
+
+	static public long showMainWindow()
+	{
+		JAPController.getView().setVisible(true);
+		JAPController.getView().toFront();
+		return 0;
+	}
+
 
 	native static private void setWindowOnTop_dll(String caption, boolean onTop);
 
