@@ -34,6 +34,8 @@ final public class TLSPlaintextRecord extends AbstractTLSRecord
 
 	public final static int HEADER_LENGTH = 5;
 
+	public final static int MAX_PAYLOAD_SIZE = 0x4000;//max 2^14 bytes for a TLS.plaintext record
+
 	private int m_nextHandshakeRecordOffset;
 
 	/**
@@ -45,7 +47,7 @@ final public class TLSPlaintextRecord extends AbstractTLSRecord
 		m_Header = new byte[HEADER_LENGTH];
 		m_Header[1] = TinyTLS.PROTOCOLVERSION[0];
 		m_Header[2] = TinyTLS.PROTOCOLVERSION[1];
-		m_Data = new byte[0x2000]; //max 2^14 bytes for a TLS.plaintext record
+		m_Data = new byte[MAX_PAYLOAD_SIZE]; //max 2^14 bytes for a TLS.plaintext record
 		m_dataLen = 0;
 		m_Type = 0;
 		m_nextHandshakeRecordOffset = 0;
@@ -61,6 +63,11 @@ final public class TLSPlaintextRecord extends AbstractTLSRecord
 	public int getHeaderLength()
 	{
 		return HEADER_LENGTH;
+	}
+
+	public int getMaxPayloadSize()
+	{
+		return MAX_PAYLOAD_SIZE;
 	}
 
 	/**
