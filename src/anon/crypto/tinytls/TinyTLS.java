@@ -106,9 +106,9 @@ public class TinyTLS extends Socket
 	private JAPCertificate m_servercertificate;
 	private IMyPublicKey m_trustedRoot;
 	private boolean m_checkTrustedRoot;
-	private DHParameters m_dhparams;
-	private DHPublicKeyParameters m_dhserverpub;
-	private byte[] m_serverparams;
+	//private DHParameters m_dhparams;
+	//private DHPublicKeyParameters m_dhserverpub;
+	//private byte[] m_serverparams;
 	private byte[] m_clientrandom;
 	private byte[] m_serverrandom;
 	private byte[] m_handshakemessages;
@@ -134,8 +134,8 @@ public class TinyTLS extends Socket
 		private int m_aktPendLen; // number of bytes we could deliver imedialy
 		private TLSPlaintextRecord m_aktTLSRecord;
 		private int m_ReadRecordState;
-		final private static int STATE_START = 0;
-		final private static int STATE_VERSION = 1;
+		private final static int STATE_START = 0;
+		private final static int STATE_VERSION = 1;
 		final private static int STATE_LENGTH = 2;
 		final private static int STATE_PAYLOAD = 3;
 
@@ -146,9 +146,9 @@ public class TinyTLS extends Socket
 		public TLSInputStream(InputStream istream)
 		{
 			m_aktTLSRecord = new TLSPlaintextRecord();
-			this.m_stream = new DataInputStream(istream);
-			this.m_aktPendOffset = 0;
-			this.m_aktPendLen = 0;
+			m_stream = new DataInputStream(istream);
+			m_aktPendOffset = 0;
+			m_aktPendLen = 0;
 			m_ReadRecordState = STATE_START;
 		}
 
@@ -200,7 +200,7 @@ public class TinyTLS extends Socket
 			}
 			if (m_ReadRecordState == STATE_LENGTH)
 			{
-				int length;
+				int length=0;
 				try
 				{
 					length = m_stream.readShort();
@@ -209,6 +209,10 @@ public class TinyTLS extends Socket
 				{
 					ioe.bytesTransferred = 0;
 					throw ioe;
+				}
+				if(length>TLSPlaintextRecord.MAX_PAYLOAD_SIZE)
+				{
+					throw new TLSException("Given size of TLSPlaintex record payload exceeds TLSPlaintextRecord.MAX_PAYLOAD_SIZE!");
 				}
 				m_aktTLSRecord.setLength(length);
 				m_ReadRecordState = STATE_PAYLOAD;
