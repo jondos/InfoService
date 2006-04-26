@@ -43,7 +43,7 @@ public final class JAPModel
 	private boolean m_bHttpListenerIsLocal = JAPConstants.DEFAULT_LISTENER_IS_LOCAL; // indicates whether listeners serve for localhost only or not
 	private ProxyInterface m_proxyInterface = null;
 	private boolean m_bAutoConnect = false; // autoconnect after program start
-	private boolean m_bAutoReConnect = false; // autoReconnects after loosing connection to mix
+	private boolean m_bAutoReConnect = true; // autoReconnects after loosing connection to mix
 
 	private int m_iDummyTrafficIntervall = -1; // indicates what Dummy Traffic should be generated or not
 
@@ -486,7 +486,7 @@ public final class JAPModel
 	{
 		m_MixminionRouteLen = i;
 	}
-	
+
 	public static int getMixminionRouteLen()
 	{
 		return ms_TheModel.m_MixminionRouteLen;
