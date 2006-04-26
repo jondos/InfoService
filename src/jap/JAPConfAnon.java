@@ -583,7 +583,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	{
 			int server = m_serverList.getSelectedIndex();
 		 MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
-		 if (!cascade.isUserDefined())
+		 if (cascade != null && !cascade.isUserDefined())
 		 {
 		  String selectedMixId = (String) cascade.getMixIds().elementAt(server);
 		  try

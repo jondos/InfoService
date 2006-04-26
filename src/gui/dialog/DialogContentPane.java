@@ -1102,6 +1102,33 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	}
 
 	/**
+	 * Returns if this content pane has a predecessor.
+	 * @return if this content pane has a predecessor
+	 */
+	public final boolean hasPreviousContentPane()
+	{
+		DialogContentPane contentPane = this;
+
+		while ((contentPane = contentPane.getPreviousContentPane()) != null)
+		{
+			try
+			{
+				if (!contentPane.isSkippedAsPreviousContentPane())
+				{
+					return true;
+				}
+			}
+			catch (Exception a_e)
+			{
+				// state is unknown and interpreted as false
+				return false;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Returns if this content pane has a successor.
 	 * @return if this content pane has a successor
 	 */
@@ -2560,7 +2587,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		}
 
 
-		//if (getPreviousContentPane() != null)
+		if (hasPreviousContentPane())
 		{
 			if (m_btnNo == null)
 			{
