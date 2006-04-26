@@ -80,13 +80,16 @@ public class CertificateStore extends Observable
 	public Vector getAllCertificates()
 	{
 		Vector returnedCertificates = new Vector();
-		synchronized (m_trustedCertificates)
+		synchronized (this)
 		{
-			Enumeration allCertificates = m_trustedCertificates.elements();
-			while (allCertificates.hasMoreElements())
+			synchronized (m_trustedCertificates)
 			{
-				returnedCertificates.addElement( ( (CertificateContainer) (allCertificates.nextElement())).
-												getInfoStructure());
+				Enumeration allCertificates = m_trustedCertificates.elements();
+				while (allCertificates.hasMoreElements())
+				{
+					returnedCertificates.addElement( ( (CertificateContainer) (allCertificates.nextElement())).
+						getInfoStructure());
+				}
 			}
 		}
 		return returnedCertificates;
