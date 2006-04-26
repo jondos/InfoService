@@ -29,6 +29,7 @@ package jap.pay;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.security.SecureRandom;
 import java.util.Date;
 import java.util.Enumeration;
 import javax.xml.parsers.DocumentBuilder;
@@ -52,6 +53,7 @@ import java.awt.event.WindowEvent;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -61,14 +63,17 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JSeparator;
+import javax.swing.JTabbedPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import anon.crypto.DSAKeyPair;
 import anon.crypto.JAPCertificate;
 import anon.crypto.XMLEncryption;
+import anon.infoservice.ListenerInterface;
 import anon.pay.BI;
 import anon.pay.BIConnection;
 import anon.pay.PayAccount;
@@ -94,6 +99,7 @@ import gui.dialog.WorkerContentPane;
 import jap.AbstractJAPConfModule;
 import jap.JAPConstants;
 import jap.JAPController;
+import jap.JAPModel;
 import jap.JAPUtil;
 import jap.pay.wizardnew.MethodSelectionPane;
 import jap.pay.wizardnew.PassivePaymentPane;
@@ -101,10 +107,6 @@ import jap.pay.wizardnew.PaymentInfoPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import jap.JAPModel;
-import anon.infoservice.ListenerInterface;
-import javax.swing.JTabbedPane;
-import javax.swing.JCheckBox;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -195,6 +197,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		getName() + "_showPaymentConfirmDialog";
 	private static final String MSG_TEST_PI_CONNECTION = AccountSettingsPanel.class.
 		getName() + "_testingPIConnection";
+	private static final String MSG_CREATE_KEY_PAIR = AccountSettingsPanel.class.getName() +
+		"_creatingKeyPair";
 
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
@@ -218,7 +222,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private JProgressBar m_coinstack;
 	private JList m_listAccounts;
 	private boolean m_bReady = true;
-	private boolean m_bCreatingAccount = false;
+	private boolean m_bCreatingAccountKey = false;
 
 	public AccountSettingsPanel()
 	{
@@ -1104,19 +1108,47 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					JAPMessages.getString("ngCreateKeyPair"), null,
 					new SimpleWizardContentPane.Options(PITestWorkerPane));
 
+
+				WorkerContentPane.ReturnThread keyCreationThread = new WorkerContentPane.ReturnThread()
+				{
+					private DSAKeyPair m_keyPair;
+					boolean m_bInterrupted = false;
+
+					public void run()
+					{
+						m_bCreatingAccountKey = true;
+						m_keyPair =
+							DSAKeyPair.getInstance(new SecureRandom(), DSAKeyPair.KEY_LENGTH_1024, 20);
+						if (m_keyPair == null)
+						{
+							m_bInterrupted = true;
+							showPIerror(GUIUtils.getParentWindow(getRootPanel()));
+						}
+						m_bCreatingAccountKey = false;
+					}
+
+					public Object getValue()
+					{
+						return m_keyPair;
+					}
+				};
+				final WorkerContentPane keyWorkerPane = new WorkerContentPane(
+					d, JAPMessages.getString(MSG_CREATE_KEY_PAIR) + "...", panel1, keyCreationThread);
+				keyWorkerPane.getButtonCancel().setEnabled(false);
+
 				final BI bi = theBI;
 				m_bReady = true;
-
 				Thread doIt = new Thread()
 				{
 					public void run()
 					{
-						m_bCreatingAccount = true;
 						m_bReady = false;
 						try
 						{
-							PayAccount p = PayAccountsFile.getInstance().createAccount(bi, true,
-								JAPModel.getInstance().getProxyInterface());
+							PayAccount p = PayAccountsFile.getInstance().createAccount(bi,
+								JAPModel.getInstance().getProxyInterface(),
+								(DSAKeyPair)keyWorkerPane.getValue());
+
 							p.fetchAccountInfo(JAPModel.getInstance().getProxyInterface());
 						}
 						catch (Exception ex)
@@ -1128,12 +1160,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 								this.interrupt();
 							}
 						}
-						m_bCreatingAccount = false;
 					}
 				};
-				WorkerContentPane panel2 = new WorkerContentPane(d,
-					JAPMessages.getString(MSG_ACCOUNTCREATEDESC), panel1,
-					doIt)
+				WorkerContentPane panel2 = new WorkerContentPane(
+					d, JAPMessages.getString(MSG_ACCOUNTCREATEDESC), keyWorkerPane, doIt)
 				{
 					public boolean isReady()
 					{
@@ -1145,8 +1175,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						return false;
 					}
 				};
-				panel2.setDefaultButtonOperation(WorkerContentPane.ON_CLICK_DISPOSE_DIALOG);
-				panel2.getButtonCancel().setEnabled(false);
 				panel2.setInterruptThreadSafe(false);
 
 				final CaptchaContentPane captcha = new CaptchaContentPane(d, panel2);
@@ -1166,7 +1194,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				{
 					public void componentShown(ComponentEvent a_event)
 					{
-						m_bCreatingAccount = false;
+						m_bCreatingAccountKey = false;
 					}
 				});
 
@@ -1201,7 +1229,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				{
 					public void windowClosing(WindowEvent e)
 					{
-						if (!m_bCreatingAccount)
+						if (!m_bCreatingAccountKey)
 						{
 							if (captcha.isVisible())
 							{
@@ -1214,7 +1242,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				});
 
 				d.setLocationCenteredOnOwner();
-				m_bCreatingAccount = false;
+				m_bCreatingAccountKey = false;
 				d.setVisible(true);
 
 				updateAccountList();
