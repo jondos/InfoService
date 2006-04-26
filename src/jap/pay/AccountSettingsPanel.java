@@ -1089,7 +1089,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 							m_bPiReachable = false;
 							if (!isInterrupted())
 							{
-								showPIerror(GUIUtils.getParentWindow(getRootPanel()));
+								showPIerror(d);
 							}
 						}
 					}
@@ -1122,7 +1122,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						if (m_keyPair == null)
 						{
 							m_bInterrupted = true;
-							showPIerror(GUIUtils.getParentWindow(getRootPanel()));
+							/** @todo correct error message */
+							showPIerror(d);
 						}
 						m_bCreatingAccountKey = false;
 					}
