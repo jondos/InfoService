@@ -534,25 +534,16 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	 *
 	 * At the moment, only DSA should be used, because RSA is not supported by the
 	 * AI implementation
+	 * @param a_keyPair RSA should not be used at the moment
 	 *
 	 */
-	public PayAccount createAccount(BI a_bi, boolean useDSA, ImmutableProxyInterface a_proxy) throws
+	public PayAccount createAccount(BI a_bi, ImmutableProxyInterface a_proxy,
+									AsymmetricCryptoKeyPair a_keyPair) throws
 		Exception
 	{
-		AsymmetricCryptoKeyPair keyPair;
-
-		if (useDSA)
-		{
-			keyPair = DSAKeyPair.getInstance(new SecureRandom(), DSAKeyPair.KEY_LENGTH_1024, 20);
-		}
-		else // use RSA (should not be used at the moment)
-		{
-			keyPair = RSAKeyPair.getInstance(new SecureRandom(), RSAKeyPair.KEY_LENGTH_1024, 20);
-		}
-
 		JAPSignature signingInstance = new JAPSignature();
-		signingInstance.initSign(keyPair.getPrivate());
-		XMLJapPublicKey xmlKey = new XMLJapPublicKey(keyPair.getPublic());
+		signingInstance.initSign(a_keyPair.getPrivate());
+		XMLJapPublicKey xmlKey = new XMLJapPublicKey(a_keyPair.getPublic());
 
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 					  "Attempting to create account at PI " + a_bi.getName());
@@ -567,7 +558,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		addKnownPI(a_bi);
 
 		// add the new account to the accountsFile
-		PayAccount newAccount = new PayAccount(cert, keyPair.getPrivate(), signingInstance, a_bi);
+		PayAccount newAccount = new PayAccount(cert, a_keyPair.getPrivate(), signingInstance, a_bi);
 		addAccount(newAccount);
 		return newAccount;
 	}
