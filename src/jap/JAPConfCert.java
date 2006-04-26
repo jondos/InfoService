@@ -617,16 +617,22 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 
 	public void update(Observable a_notifier, Object a_message)
 	{
+		/**
+		 * list init, add certificates by issuer name
+		 * It is important to place this here as otherwise a deadlock with
+		 * CertificateStore.removeCertificate is possible (this class is an observer...).
+		 * Therefore the lock on CertificateStore and on this class should not be mixed!
+		 */
+		Enumeration enumCerts = SignatureVerifier.getInstance().getVerificationCertificateStore().
+			getAllCertificates().elements();
+
 		synchronized (this)
 		{
 			if (a_notifier == SignatureVerifier.getInstance().getVerificationCertificateStore())
 			{
 				/* the message is from the SignatureVerifier trusted certificates store */
 				m_listmodelCertList.clear();
-
-				// list init, add certificates by issuer name
-				m_enumCerts = SignatureVerifier.getInstance().getVerificationCertificateStore().
-					getAllCertificates().elements();
+				m_enumCerts = enumCerts;
 				while (m_enumCerts.hasMoreElements())
 				{
 					CertificateInfoStructure j = (CertificateInfoStructure) m_enumCerts.nextElement();
