@@ -43,6 +43,7 @@ import jap.JAPSplash;
 import jap.JAPViewIconified;
 
 import java.awt.Frame;
+import javax.swing.SwingUtilities;
 
 import logging.LogHolder;
 import logging.LogLevel;
@@ -282,6 +283,7 @@ public class JAP extends Frame
 		JAPDebug.setConsoleParent(view);
 		// Add observer
 		m_controller.addJAPObserver(view);
+		m_controller.addEventListener(view);
 		// Register the Main view where they are needed
 		m_controller.registerMainView(view);
 		// Create the iconified view
@@ -342,7 +344,13 @@ public class JAP extends Frame
 		//Update account balance
 		m_controller.updateAccountStatements();
 		// initially start services
-		m_controller.initialRun();
+		SwingUtilities.invokeLater(new Thread()
+		{
+			public void run()
+			{
+				m_controller.initialRun();
+			}
+		});
 	}
 
 	public static void main(String[] argv)

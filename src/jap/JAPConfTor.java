@@ -346,6 +346,7 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 					m_tableRouters.setValueAt(ord.getAddress(), i, 1);
 					m_tableRouters.setValueAt(new Integer(ord.getPort()), i, 2);
 					m_tableRouters.setValueAt(ord.getSoftware(), i, 3);
+					m_tableRouters.invalidate();
 				}
 				Date published = ol.getPublished();
 				String strPublished = JAPMessages.getString("unknown");
@@ -355,7 +356,8 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 				}
 				m_labelAvailableRouters.setText(JAPMessages.getString("torBorderAvailableRouters") + " (" +
 												strPublished + "):");
-				getRootPanel().updateUI();
+				m_labelAvailableRouters.invalidate();
+				getRootPanel().validate();
 				m_bttnFetchRouters.setEnabled(true);
 			}
 		};

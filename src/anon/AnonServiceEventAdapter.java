@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000, The JAP-Team
+ Copyright (c) 2000-2006, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -27,11 +27,25 @@
  */
 package anon;
 
-public interface AnonServiceEventListener
+/**
+ * An adapter for the AnonServiceEventListener.
+ * @author Rolf Wendolsky
+ */
+public class AnonServiceEventAdapter implements AnonServiceEventListener
 {
-	public void connectionError();
+	public AnonServiceEventAdapter()
+	{
+	}
 
-	public void connectionEstablished();
+	public void connectionError()
+	{
+	}
 
-	public void packetMixed(long a_totalBytes);
+	public void connectionEstablished()
+	{
+	}
+
+	public void packetMixed(long a_totalBytes)
+	{
+	}
 }

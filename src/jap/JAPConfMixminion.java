@@ -249,10 +249,12 @@ final class JAPConfMixminion extends AbstractJAPConfModule implements ActionList
 					m_tableRouters.setValueAt(mmrd.getAddress(), i, 1);
 					m_tableRouters.setValueAt(new Integer(mmrd.getPort()), i, 2);
 					m_tableRouters.setValueAt(mmrd.getSoftwareVersion(), i, 3);
+					m_tableRouters.invalidate();
 				}
 
 				m_labelAvailableRouters.setText(JAPMessages.getString("mixminionBorderAvailableRouters:"));
-				getRootPanel().updateUI();
+				m_labelAvailableRouters.invalidate();
+				getRootPanel().validate();
 				m_bttnFetchRouters.setEnabled(true);
 			}
 		};

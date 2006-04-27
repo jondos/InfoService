@@ -62,7 +62,7 @@ public class AIControlChannel extends SyncControlChannel
 		m_proxy = a_proxy;
 	}
 
-	public void addAIListener(Object a_aiListener)
+	public void addAIListener(IAIEventListener a_aiListener)
 	{
 		if (!m_aiListeners.contains(a_aiListener))
 		{

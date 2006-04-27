@@ -156,8 +156,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private int m_iPreferredWidth;
 	private boolean m_bIgnoreAnonComboEvents = false;
 	private FlippingPanel m_flippingPanelPayment;
-	private JLabel m_labelPayment;
-	boolean m_bConnectionErrorShown = false;
+	private Object m_connectionEstablishedSync = new Object();
+	private boolean m_bConnectionErrorShown = false;
+
 
 	private long m_lTrafficWWW, m_lTrafficOther;
 
@@ -256,8 +257,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 				if (e.getStateChange() == ItemEvent.SELECTED)
 				{
-					MixCascade cascade = (MixCascade) m_comboAnonServices.getSelectedItem();
-					m_Controller.setCurrentMixCascade(cascade);
+					final MixCascade cascade = (MixCascade) m_comboAnonServices.getSelectedItem();
+					SwingUtilities.invokeLater(new Thread()
+					{
+						public void run()
+						{
+							m_Controller.setCurrentMixCascade(cascade);
+						}
+					});
 				}
 			}
 		});
@@ -1271,6 +1278,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 	}
 
+	public void connectionEstablished()
+	{
+		synchronized(m_connectionEstablishedSync)
+		{
+			m_connectionEstablishedSync.notifyAll();
+		}
+	}
+
 	public void connectionError()
 	{
 		m_bConnectionErrorShown = true;
@@ -1299,12 +1314,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				int msgID = addStatusMsg(JAPMessages.getString("setAnonModeSplashConnect"),
 										 JAPDialog.MESSAGE_TYPE_INFORMATION, false);
 				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-				/** @todo implement this with a listener */
-				while(m_Controller.getAnonMode() && !m_Controller.isAnonConnected())
+				//while(m_Controller.getAnonMode() && !m_Controller.isAnonConnected())
 				{
 					try
 					{
-						sleep(1000);
+						synchronized (m_connectionEstablishedSync)
+						{
+							m_connectionEstablishedSync.wait();
+						}
 					}
 					catch (InterruptedException a_e)
 					{

@@ -245,7 +245,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 				int aktIndex = 1;
 				len--;
 				int ret;
-				//We read all teh XML -- but do not use readFully do to "incorrect" timeout handling!
+				//We read all the XML -- but do not use readFully due to "incorrect" timeout handling!
 				while (len > 0)
 				{
 					try
@@ -331,6 +331,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 		}
 
 		m_bIsConnected = true;
+		fireConnectionEstablished();
 		m_ChannelList = new Hashtable();
 		m_ControlChannelDispatcher = new ControlChannelDispatcher(this);
 		m_transferredBytes = 0;
@@ -886,7 +887,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			{
 				//e.printStackTrace();
 			}
-			if (threadRunLoop.isAlive())
+			if (threadRunLoop != null && threadRunLoop.isAlive())
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.NET,
 							  "JAPMuxSocket:close() Hm...MuxSocket is still alive...");
@@ -946,12 +947,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 					fireConnectionError();
 				}
 				LogHolder.log(LogLevel.ERR, LogType.NET, "JAPMuxSocket:run() Exception while receiving!");
-				LogHolder.log(LogLevel.DEBUG, LogType.NET,
-							  "JAPMuxSocket:run() Exception was: " + e.getMessage());
-				StringWriter sw = new StringWriter();
-				e.printStackTrace(new PrintWriter(sw));
-				LogHolder.log(LogLevel.DEBUG, LogType.NET,
-							  "JAPMuxSocket:run() StackTrace was: " + sw.toString());
+				LogHolder.log(LogLevel.DEBUG, LogType.NET, e);
 				break;
 			}
 			if (flags == CHANNEL_DUMMY) //Dummies go to /dev/null ...
@@ -1330,6 +1326,15 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 		m_anonServiceListener.removeElement(l);
 	}
 
+	private void fireConnectionEstablished()
+	{
+		Enumeration e = m_anonServiceListener.elements();
+		while (e.hasMoreElements())
+		{
+			( (AnonServiceEventListener) e.nextElement()).connectionEstablished();
+		}
+	}
+
 	private void fireConnectionError()
 	{
 		Enumeration e = m_anonServiceListener.elements();
@@ -1337,7 +1342,6 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 		{
 			( (AnonServiceEventListener) e.nextElement()).connectionError();
 		}
-
 	}
 
 	private void firePacketMixed()

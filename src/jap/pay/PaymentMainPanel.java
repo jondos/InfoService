@@ -49,6 +49,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 
 import anon.pay.AIControlChannel;
 import anon.pay.PayAccount;
@@ -451,7 +452,15 @@ public class PaymentMainPanel extends FlippingPanel
 				if (yes)
 				{
 					JAPController.getInstance().setAnonMode(false);
-					m_view.showConfigDialog(JAPConf.PAYMENT_TAB);
+
+					SwingUtilities.invokeLater(new Thread()
+					{
+						public void run()
+						{
+							m_view.showConfigDialog(JAPConf.PAYMENT_TAB);
+						}
+					});
+
 				}
 				else
 				{

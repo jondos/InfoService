@@ -180,7 +180,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		if (m_manualPanel != null)
 		{
 			pRoot.remove(m_manualPanel);
-			pRoot.updateUI();
+			pRoot.validate();
 			m_manualPanel = null;
 		}
 		GridBagLayout layout = new GridBagLayout();
@@ -381,7 +381,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			m_serverInfoPanel = null;
 		}
 
-		pRoot.updateUI();
+		pRoot.validate();
 		m_rootPanelConstraints.gridx = 0;
 		m_rootPanelConstraints.gridy = 2;
 		m_rootPanelConstraints.weightx = 0;

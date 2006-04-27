@@ -89,7 +89,7 @@ final class JAPLean implements IProxyListener
 		}
 		japAnonProxy = new AnonProxy(listener, null);
 		japAnonProxy.setMixCascade(new MixCascade(null, null, hostNameMixCascade, portNumberMixCascade));
-		int returnCode = japAnonProxy.start();
+		int returnCode = japAnonProxy.start(false);
 		japAnonProxy.setProxyListener(this);
 		if (returnCode == ErrorCodes.E_SUCCESS)
 		{
