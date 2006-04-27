@@ -255,8 +255,9 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		}
 	}
 
-	public int start()
+	public int start(boolean a_bRetryOnError)
 	{
+		boolean m_bConnectionError = false;
 		m_numChannels = 0;
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy.start(): Try to initialize AN.ON");
 		if (m_Anon == null)
@@ -268,7 +269,14 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		int ret = m_Anon.initialize(m_currentMixCascade);
 		if (ret != ErrorCodes.E_SUCCESS)
 		{
-			return ret;
+			if (!a_bRetryOnError)
+			{
+				return ret;
+			}
+			else
+			{
+				m_bConnectionError = true;
+			}
 		}
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy.start(): AN.ON initialized");
 		if (m_currentTorParams != null)
@@ -286,7 +294,14 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		}
 		threadRun = new Thread(this, "JAP - AnonProxy");
 		threadRun.setDaemon(true);
+		m_bIsRunning = true;
 		threadRun.start();
+
+		if (m_bConnectionError)
+		{
+			connectionError();
+			return ErrorCodes.E_CONNECT;
+		}
 		return ErrorCodes.E_SUCCESS;
 	}
 
@@ -468,6 +483,16 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		}
 	}
 
+	private void fireConnectionEstablished()
+	{
+		Enumeration e = m_anonServiceListener.elements();
+		while (e.hasMoreElements())
+		{
+			( (AnonServiceEventListener) e.nextElement()).connectionEstablished();
+		}
+	}
+
+
 	private void fireConnectionError()
 	{
 		Enumeration e = m_anonServiceListener.elements();
@@ -477,10 +502,23 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		}
 	}
 
+	public void connectionEstablished()
+	{
+		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy received connectionEstablished.");
+		fireConnectionEstablished();
+}
+
 	public void connectionError()
 	{
 		LogHolder.log(LogLevel.ERR, LogType.NET, "AnonProxy received connectionError");
 		this.fireConnectionError();
+		new Thread()
+		{
+			public void run()
+			{
+				reconnect();
+			}
+		}.start();
 	}
 
 	public synchronized void addEventListener(AnonServiceEventListener l)

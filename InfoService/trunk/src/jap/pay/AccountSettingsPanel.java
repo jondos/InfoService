@@ -64,6 +64,7 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
+import javax.swing.SwingUtilities;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -199,6 +200,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		getName() + "_testingPIConnection";
 	private static final String MSG_CREATE_KEY_PAIR = AccountSettingsPanel.class.getName() +
 		"_creatingKeyPair";
+	private static final String MSG_KEY_PAIR_CREATE_ERROR = AccountSettingsPanel.class.getName() +
+		"_keyPairCreateError";
 
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
@@ -494,30 +497,50 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 	private void updateAccountList()
 	{
-		PayAccount account;
-		DefaultListModel listModel = new DefaultListModel();
-		Enumeration accounts = PayAccountsFile.getInstance().getAccounts();
-		int selectedItem = m_listAccounts.getSelectedIndex();
-
-		CustomRenderer cr = new CustomRenderer();
-		m_listAccounts.setCellRenderer(cr);
-
-		while (accounts.hasMoreElements())
+		Thread updateAccountThread = new Thread()
 		{
-			account = (PayAccount) accounts.nextElement();
-			listModel.addElement(account);
-		}
+			public void run()
+			{
+				PayAccount account;
+				DefaultListModel listModel = new DefaultListModel();
+				Enumeration accounts = PayAccountsFile.getInstance().getAccounts();
+				int selectedItem = m_listAccounts.getSelectedIndex();
+				CustomRenderer cr = new CustomRenderer();
+				m_listAccounts.setCellRenderer(cr);
 
-		m_listAccounts.setModel(listModel);
-		m_listAccounts.revalidate();
+				while (accounts.hasMoreElements())
+				{
+					account = (PayAccount) accounts.nextElement();
+					listModel.addElement(account);
+				}
 
-		if (selectedItem != -1)
+				m_listAccounts.setModel(listModel);
+				m_listAccounts.revalidate();
+
+				if (selectedItem != -1)
+				{
+					m_listAccounts.setSelectedIndex(selectedItem);
+				}
+				else
+				{
+					m_listAccounts.setSelectedIndex(0);
+				}
+			}
+		};
+		if (SwingUtilities.isEventDispatchThread())
 		{
-			m_listAccounts.setSelectedIndex(selectedItem);
+			updateAccountThread.run();
 		}
 		else
 		{
-			m_listAccounts.setSelectedIndex(0);
+			try
+			{
+				SwingUtilities.invokeAndWait(updateAccountThread);
+			}
+			catch (Exception a_e)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, a_e);
+			}
 		}
 	}
 
@@ -1122,8 +1145,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						if (m_keyPair == null)
 						{
 							m_bInterrupted = true;
-							/** @todo correct error message */
-							showPIerror(d);
+							JAPDialog.showErrorDialog(
+								d, JAPMessages.getString(MSG_KEY_PAIR_CREATE_ERROR), LogType.PAY);
 						}
 						m_bCreatingAccountKey = false;
 					}
@@ -1225,7 +1248,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 				PITestWorkerPane.updateDialogOptimalSized(PITestWorkerPane);
 
-
 				d.addWindowListener(new WindowAdapter()
 				{
 					public void windowClosing(WindowEvent e)
@@ -1241,7 +1263,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						}
 					}
 				});
-
 				d.setLocationCenteredOnOwner();
 				m_bCreatingAccountKey = false;
 				d.setVisible(true);
@@ -1252,10 +1273,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					JAPController.getInstance().setPaymentPassword(new String(pc.getPassword()));
 				}
 				PayAccountsFile.getInstance().removePaymentListener(captcha);
-
 				/** Did the user finish the account creation successfully? */
 				if (numAccounts < m_listAccounts.getModel().getSize())
 				{
+
 					/** Select new account and start charging wizard */
 					m_listAccounts.setSelectedIndex(m_listAccounts.getModel().getSize() - 1);
 					doExportAccount( (PayAccount) m_listAccounts.getSelectedValue());
@@ -1375,10 +1396,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			return;
 		}
 		JFrame view = JAPController.getView();
-
 		boolean yes = JAPDialog.showYesNoDialog(GUIUtils.getParentWindow(this.getRootPanel()),
 												JAPMessages.getString(MSG_EXPORTENCRYPT));
-
 		if (yes)
 		{
 			JAPDialog d = new JAPDialog(GUIUtils.getParentWindow(this.getRootPanel()),

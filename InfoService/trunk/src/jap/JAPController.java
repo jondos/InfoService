@@ -57,6 +57,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 import anon.AnonServiceEventListener;
+import anon.AnonServiceEventAdapter;
 import anon.ErrorCodes;
 import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
@@ -79,6 +80,7 @@ import anon.util.IPasswordReader;
 import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
 import forward.server.ForwardServerManager;
+import javax.swing.SwingUtilities;
 import gui.JAPDll;
 import gui.JAPHelp;
 import gui.JAPMessages;
@@ -162,7 +164,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private static JAPFeedback feedback = null;
 	private Locale m_Locale = null;
 	private Vector observerVector = null;
+	private Vector m_anonServiceListener;
 	private IPasswordReader m_passwordReader;
+	private boolean m_bInitialRun = true;
 
 	private static Font m_fontControls;
 	/** Holds the MsgID of the status message after the forwaring server was started.*/
@@ -197,6 +201,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 		m_Model = JAPModel.getInstance();
 		// Create observer object
 		observerVector = new Vector();
+		// create service listener object
+		m_anonServiceListener = new Vector();
+
 
 		/* set a default mixcascade */
 		try
@@ -279,6 +286,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	//---------------------------------------------------------------------
 	public void initialRun()
 	{
+		m_bInitialRun = true;
 		LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPModel:initial run of JAP...");
 		// start http listener object
 		/* if (JAPModel.isTorEnabled())
@@ -1599,10 +1607,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 		private Thread m_waitForThread;
 		private Thread m_executionThread;
 		private Object m_internalSynchronization;
-		private Object m_caller;
+		private IAIEventListener m_caller;
 		private boolean m_jobWasInterrupted;
 
-		public SetAnonModeAsync(boolean a_startServer, Thread a_waitForThread, Object a_caller)
+		public SetAnonModeAsync(boolean a_startServer, Thread a_waitForThread, IAIEventListener a_caller)
 		{
 			m_startServer = a_startServer;
 			m_waitForThread = a_waitForThread;
@@ -1645,6 +1653,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 		 */
 		public void run()
 		{
+			boolean bRetryOnError = m_bInitialRun && JAPModel.getAutoConnect();
+			m_bInitialRun = false;
+
 			synchronized (m_internalSynchronization)
 			{
 				m_executionThread = Thread.currentThread();
@@ -1666,7 +1677,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			if (!m_jobWasInterrupted)
 			{
 				/* job was not canceled -> we have to do it */
-				setServerMode(m_startServer);
+				setServerMode(m_startServer, bRetryOnError);
 				synchronized (m_changeAnonModeJobs)
 				{
 					/* remove ourself from the job-queue */
@@ -1682,8 +1693,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 		 * all properties (like currentMixCascade etc.)are synchronized!!
 		 *
 		 * @param anonModeSelected true, if anonymity should be started; false otherwise
+		 * @param a_bRetryOnConnectionError if in case of a connection error it is retried to
+		 * establish the connection
 		 */
-		private void setServerMode(boolean anonModeSelected)
+		private void setServerMode(boolean anonModeSelected, boolean a_bRetryOnConnectionError)
 		{
 			//JAPWaitSplash splash = null;
 			int msgIdConnect = 0;
@@ -1767,32 +1780,67 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_proxyDirect = null;
 					LogHolder.log(LogLevel.DEBUG, LogType.NET, "Try to start AN.ON service...");
 
-					int ret = m_proxyAnon.start();
-					if (ret != ErrorCodes.E_SUCCESS)
+					int ret = m_proxyAnon.start(a_bRetryOnConnectionError);
+					if (ret != ErrorCodes.E_SUCCESS && !a_bRetryOnConnectionError)
 					{
 						canStartService = false;
 						m_proxyAnon = null;
 					}
-					if (ret == ErrorCodes.E_SUCCESS)
+					if (ret == ErrorCodes.E_SUCCESS || a_bRetryOnConnectionError)
 					{
-						LogHolder.log(LogLevel.DEBUG, LogType.NET, "AN.ON service started successfull");
-						m_proxyAnon.getAnonService().getPay().getAIControlChannel().addAIListener(m_caller);
-
-						if (!mbActCntMessageNotRemind && !JAPModel.isSmallDisplay())
+						final AnonProxy proxyAnon = m_proxyAnon;
+						AnonServiceEventAdapter adapter = new AnonServiceEventAdapter()
 						{
-							JAPDialog.LinkedCheckBox checkBox = new JAPDialog.LinkedCheckBox(false);
-							JAPDialog.showWarningDialog(m_View, JAPMessages.getString("disableActCntMessage"),
-								JAPMessages.getString("disableActCntMessageTitle"),
-								checkBox);
-							// show a Reminder message that active contents should be disabled
-
-							mbActCntMessageNeverRemind = checkBox.getState();
-							mbDoNotAbuseReminder = checkBox.getState();
-							if (mbActCntMessageNeverRemind)
+							boolean bWaitingForConnection = true;
+							public synchronized void connectionEstablished()
 							{
-								mbActCntMessageNotRemind = true;
+								if (bWaitingForConnection)
+								{
+									try
+									{
+										proxyAnon.getAnonService().getPay().getAIControlChannel().
+											addAIListener(
+												m_caller);
+									}
+									catch (Exception a_e)
+									{
+										// do nothing
+									}
+									JAPController.getInstance().removeEventListener(this);
+									bWaitingForConnection = false;
+								}
+							}
+						};
+
+						if (ret == ErrorCodes.E_SUCCESS)
+						{
+							LogHolder.log(LogLevel.DEBUG, LogType.NET, "AN.ON service started successfully");
+							adapter.connectionEstablished();
+
+							if (!mbActCntMessageNotRemind && !JAPModel.isSmallDisplay())
+							{
+								JAPDialog.LinkedCheckBox checkBox = new JAPDialog.LinkedCheckBox(false);
+								JAPDialog.showWarningDialog(m_View,
+									JAPMessages.getString("disableActCntMessage"),
+									JAPMessages.getString("disableActCntMessageTitle"),
+									checkBox);
+								// show a Reminder message that active contents should be disabled
+
+								mbActCntMessageNeverRemind = checkBox.getState();
+								mbDoNotAbuseReminder = checkBox.getState();
+								if (mbActCntMessageNeverRemind)
+								{
+									mbActCntMessageNotRemind = true;
+								}
 							}
 						}
+						else
+						{
+							JAPController.getInstance().addEventListener(adapter);
+							LogHolder.log(LogLevel.INFO, LogType.NET,
+										  "AN.ON service not connected. Trying reconnect...");
+						}
+
 						// start feedback thread
 						feedback = new JAPFeedback();
 						feedback.startRequests();
@@ -1897,70 +1945,91 @@ public final class JAPController extends Observable implements IProxyListener, O
 		return m_proxyAnon != null && m_proxyAnon.getAnonService().isConnected();
 	}
 
-	public void setAnonMode(boolean a_anonModeSelected)
+	public void setAnonMode(final boolean a_anonModeSelected)
 	{
-		if (a_anonModeSelected)
+		final JAPController controller = this;
+		Thread anonModeThread = new Thread()
 		{
-			m_bConnectionErrorShown = false;
-		}
+			public void run()
+			{
 
-		synchronized (m_changeAnonModeJobs)
-		{
-			boolean newJob = true;
-			if (m_changeAnonModeJobs.size() > 0)
-			{
-				/* check whether this is job is different to the last one */
-				SetAnonModeAsync lastJob = (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement());
-				if (lastJob.isStartServerJob() == a_anonModeSelected)
+				if (a_anonModeSelected)
 				{
-					/* it's the same (enabling server / disabling server) as the last job */
-					newJob = false;
+					m_bConnectionErrorShown = false;
 				}
-			}
-			if (newJob)
-			{
-				/* it's a new job -> do something */
-				if ( (!a_anonModeSelected && (m_changeAnonModeJobs.size() >= 2)) ||
-					(m_changeAnonModeJobs.size() >= 3))
+
+				synchronized (m_changeAnonModeJobs)
 				{
-					/* because of enough previous jobs in the queue, we can ignore this job, if we also
-					 * interrupt and remove the previous one
-					 */
-					SetAnonModeAsync previousJob = (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement());
-					previousJob.interruptExecution();
-					m_changeAnonModeJobs.removeElement(previousJob);
-				}
-				else
-				{
-					/* we have to schedule this job */
-					if (!a_anonModeSelected && (m_changeAnonModeJobs.size() == 1))
-					{
-						/* there is a start-server job currently running -> try to interrupt it */
-						SetAnonModeAsync previousJob = (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement());
-						previousJob.interruptExecution();
-					}
-					SetAnonModeAsync currentJob = null;
+					boolean newJob = true;
 					if (m_changeAnonModeJobs.size() > 0)
 					{
-						/* wait until the previous job is done */
-						currentJob = new SetAnonModeAsync(a_anonModeSelected,
-							( (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement())).getExecutionThread(), this);
+						/* check whether this is job is different to the last one */
+						SetAnonModeAsync lastJob = (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement());
+						if (lastJob.isStartServerJob() == a_anonModeSelected)
+						{
+							/* it's the same (enabling server / disabling server) as the last job */
+							newJob = false;
+						}
 					}
-					else
+					if (newJob)
 					{
-						/* we don't have to wait for any previous job */
-						currentJob = new SetAnonModeAsync(a_anonModeSelected, null, this);
+						/* it's a new job -> do something */
+						if ( (!a_anonModeSelected && (m_changeAnonModeJobs.size() >= 2)) ||
+							(m_changeAnonModeJobs.size() >= 3))
+						{
+							/* because of enough previous jobs in the queue, we can ignore this job, if we also
+							 * interrupt and remove the previous one
+							 */
+							SetAnonModeAsync previousJob = (SetAnonModeAsync) (m_changeAnonModeJobs.
+								lastElement());
+							previousJob.interruptExecution();
+							m_changeAnonModeJobs.removeElement(previousJob);
+						}
+						else
+						{
+							/* we have to schedule this job */
+							if (!a_anonModeSelected && (m_changeAnonModeJobs.size() == 1))
+							{
+								/* there is a start-server job currently running -> try to interrupt it */
+								SetAnonModeAsync previousJob = (SetAnonModeAsync) (m_changeAnonModeJobs.
+									lastElement());
+								previousJob.interruptExecution();
+							}
+							SetAnonModeAsync currentJob = null;
+							if (m_changeAnonModeJobs.size() > 0)
+							{
+								/* wait until the previous job is done */
+								currentJob = new JAPController.SetAnonModeAsync(a_anonModeSelected,
+									( (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement())).
+									getExecutionThread(), controller);
+							}
+							else
+							{
+								/* we don't have to wait for any previous job */
+								currentJob = new JAPController.SetAnonModeAsync(
+									a_anonModeSelected, null, controller);
+							}
+							Thread currentThread = new Thread(currentJob, "SetAnonModeAsync");
+							currentThread.setDaemon(true);
+							currentJob.setExecutionThread(currentThread);
+							m_changeAnonModeJobs.addElement(currentJob);
+							currentThread.start();
+							LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+										  "JAPController: setAnonMode: Added a job for changing the anonymity mode to '" +
+										  (new Boolean(a_anonModeSelected)).toString() +
+										  "' to the job queue.");
+						}
 					}
-					Thread currentThread = new Thread(currentJob,"SetAnonModeAsync");
-					currentThread.setDaemon(true);
-					currentJob.setExecutionThread(currentThread);
-					m_changeAnonModeJobs.addElement(currentJob);
-					currentThread.start();
-					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-								  "JAPController: setAnonMode: Added a job for changing the anonymity mode to '" +
-								  (new Boolean(a_anonModeSelected)).toString() + "' to the job queue.");
 				}
 			}
+		};
+		if (SwingUtilities.isEventDispatchThread())
+		{
+			SwingUtilities.invokeLater(anonModeThread);
+		}
+		else
+		{
+			anonModeThread.run();
 		}
 	}
 
@@ -2168,49 +2237,66 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 *	@param bShowConfigSaveErrorMsg if true shows an error message if saving of
 	 * 			the current configuration goes wrong
 	 */
-	public static void goodBye(boolean bShowConfigSaveErrorMsg)
+	public static void goodBye(final boolean bShowConfigSaveErrorMsg)
 	{
-		int returnValue;
-		JAPDialog.LinkedCheckBox checkBox;
-		if (!m_Controller.mbGoodByMessageNeverRemind)
+		Thread stopThread = new Thread()
 		{
-			// show a Reminder message that active contents should be disabled
-			checkBox = new JAPDialog.LinkedCheckBox(false);
-			returnValue = JAPDialog.showConfirmDialog(getView(),
-				JAPMessages.getString(MSG_DISABLE_GOODBYE),
-				JAPDialog.OPTION_TYPE_OK_CANCEL, JAPDialog.MESSAGE_TYPE_INFORMATION, checkBox);
-			if (returnValue == JAPDialog.RETURN_VALUE_OK)
+			public void run()
 			{
-				m_Controller.mbGoodByMessageNeverRemind = checkBox.getState();
+				int returnValue;
+				JAPDialog.LinkedCheckBox checkBox;
+				if (!m_Controller.mbGoodByMessageNeverRemind)
+				{
+					// show a Reminder message that active contents should be disabled
+					checkBox = new JAPDialog.LinkedCheckBox(false);
+					returnValue = JAPDialog.showConfirmDialog(getView(),
+						JAPMessages.getString(MSG_DISABLE_GOODBYE),
+						JAPDialog.OPTION_TYPE_OK_CANCEL, JAPDialog.MESSAGE_TYPE_INFORMATION, checkBox);
+					if (returnValue == JAPDialog.RETURN_VALUE_OK)
+					{
+						getView().setEnabled(false);
+						m_Controller.mbGoodByMessageNeverRemind = checkBox.getState();
+					}
+				}
+				else
+				{
+					returnValue = JAPDialog.RETURN_VALUE_OK;
+				}
+
+				if (returnValue == JAPDialog.RETURN_VALUE_OK)
+				{
+					getView().setEnabled(false);
+					boolean error = m_Controller.saveConfigFile();
+					if (error && bShowConfigSaveErrorMsg)
+					{
+						JAPDialog.showErrorDialog(m_View, JAPMessages.getString(MSG_ERROR_SAVING_CONFIG,
+							JAPModel.getInstance().getConfigFile()), LogType.MISC);
+					}
+					getView().setEnabled(false);
+
+					m_Controller.setAnonMode(false);
+					//Wait until all Jobs are finished....
+					while (m_Controller.m_changeAnonModeJobs.size() > 0)
+					{
+						try
+						{
+							Thread.sleep(100);
+						}
+						catch (InterruptedException ex)
+						{
+						}
+					}
+					System.exit(0);
+				}
 			}
+		};
+		if (SwingUtilities.isEventDispatchThread())
+		{
+			stopThread.start();
 		}
 		else
 		{
-			returnValue = JAPDialog.RETURN_VALUE_OK;
-		}
-
-		if (returnValue == JAPDialog.RETURN_VALUE_OK)
-		{
-			boolean error = m_Controller.saveConfigFile();
-			if (error && bShowConfigSaveErrorMsg)
-			{
-				JAPDialog.showErrorDialog(m_View, JAPMessages.getString(MSG_ERROR_SAVING_CONFIG,
-					JAPModel.getInstance().getConfigFile()), LogType.MISC);
-			}
-
-			m_Controller.setAnonMode(false);
-			//Wait until all Jobs are finished....
-			while(m_Controller.m_changeAnonModeJobs.size()>0)
-			{
-				try
-				{
-					Thread.sleep(100);
-				}
-				catch (InterruptedException ex)
-				{
-				}
-			}
-			System.exit(0);
+			stopThread.run();
 		}
 	}
 
@@ -2375,6 +2461,26 @@ public final class JAPController extends Observable implements IProxyListener, O
 	{
 		return JAPController.m_View;
 	}
+
+	public synchronized void removeEventListener(AnonServiceEventListener a_listener)
+	{
+		m_anonServiceListener.removeElement(a_listener);
+	}
+
+	public synchronized void addEventListener(AnonServiceEventListener a_listener)
+	{
+		Enumeration e = m_anonServiceListener.elements();
+		while (e.hasMoreElements())
+		{
+			if (a_listener.equals(e.nextElement()))
+			{
+				return;
+			}
+		}
+		m_anonServiceListener.addElement(a_listener);
+	}
+
+
 
 	//---------------------------------------------------------------------
 	public void addJAPObserver(JAPObserver o)
@@ -2671,6 +2777,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 	}
 
+	public void connectionEstablished()
+	{
+		Enumeration e = m_anonServiceListener.elements();
+		while (e.hasMoreElements())
+		{
+			( (AnonServiceEventListener) e.nextElement()).connectionEstablished();
+		}
+	}
+
 	public void connectionError()
 	{
 		LogHolder.log(LogLevel.ERR, LogType.NET, "JAPController received connectionError");
@@ -2686,8 +2801,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 			this.setAnonMode(false);
 		}
 
-		//JAPDialog.showErrorDialog(m_View, JAPMessages.getString("cascadeLost"), LogType.MISC);
-		getView().connectionError();
+		Enumeration e = m_anonServiceListener.elements();
+		while (e.hasMoreElements())
+		{
+			( (AnonServiceEventListener) e.nextElement()).connectionError();
+		}
 	}
 
 	/** Be able to register as an event listener out of inner classes*/
@@ -2784,6 +2902,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public void packetMixed(long a_totalBytes)
 	{
 		JAPModel.getInstance().setMixedBytes(a_totalBytes);
+		Enumeration e = m_anonServiceListener.elements();
+		while (e.hasMoreElements())
+		{
+			( (AnonServiceEventListener) e.nextElement()).packetMixed(a_totalBytes);
+		}
 	}
 
 	public long getMixedBytes()

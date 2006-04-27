@@ -27,7 +27,7 @@ public class AnonProxyTest
 			SignatureVerifier.getInstance().setCheckSignatures(false);
 
 			theProxy.setMixCascade(new MixCascade(null, null, "mix.inf.tu-dresden.de", 6544));
-			theProxy.start();
+			theProxy.start(false);
 			synchronized(theProxy)
 				{
 					theProxy.wait();

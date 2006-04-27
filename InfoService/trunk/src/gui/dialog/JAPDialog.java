@@ -1093,11 +1093,12 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 				 * engine is interrupted, too, and the multi-line label shows always (0,0) as preferred size,
 				 * for example.
 				 */
-				final JAPHtmlMultiLineLabel runLabel = new JAPHtmlMultiLineLabel("Text");
 				SwingUtilities.invokeAndWait(new Runnable()
 				{
 					public void run()
 					{
+						// Instanciate the label here, as otherwise it might cause a NullPinterException...
+						JAPHtmlMultiLineLabel runLabel = new JAPHtmlMultiLineLabel("Text");
 						runLabel.setText(runLabel.getText());
 						runLabel.revalidate();
 					}

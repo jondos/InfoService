@@ -130,7 +130,6 @@ final public class AnonServiceImpl implements AnonService, AnonServiceEventListe
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.NET,
 							  "AnonServiceImpl.connect(): m_proxyConnection==null");
-				/** @todo JView exits here whenn connection to a cascade!! */
 				ret = m_MuxSocket.connectViaFirewall(mixCascade, m_proxyInterface);
 			}
 			else
@@ -244,6 +243,15 @@ final public class AnonServiceImpl implements AnonService, AnonServiceEventListe
 		return m_MuxSocket != null && m_MuxSocket.isConnected();
 	}
 
+	private void fireConnectionEstablished()
+	{
+		Enumeration e = m_anonServiceListener.elements();
+		while (e.hasMoreElements())
+		{
+			( (AnonServiceEventListener) e.nextElement()).connectionEstablished();
+		}
+	}
+
 	private void fireConnectionError()
 	{
 		Enumeration e = m_anonServiceListener.elements();
@@ -251,6 +259,12 @@ final public class AnonServiceImpl implements AnonService, AnonServiceEventListe
 		{
 			( (AnonServiceEventListener) e.nextElement()).connectionError();
 		}
+	}
+
+	public void connectionEstablished()
+	{
+		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonServiceImpl received connectionEstablished");
+		this.fireConnectionEstablished();
 	}
 
 	public void connectionError()
