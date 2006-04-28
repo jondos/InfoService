@@ -108,6 +108,7 @@ import jap.pay.wizardnew.PaymentInfoPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.proxy.ForbiddenIOException;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -154,8 +155,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		getName() + "_account_invalid";
 	private static final String MSG_ACCOUNTCREATE = AccountSettingsPanel.class.
 		getName() + "_accountcreate";
-	private static final String MSG_CREATEERROR = AccountSettingsPanel.class.
-		getName() + "_createerror";
+	private static final String MSG_CREATEERROR = AccountSettingsPanel.class.getName() +
+		"_createerror";
+	private static final String MSG_ERROR_FORBIDDEN = AccountSettingsPanel.class.getName() +
+		"_errorForbidden";
 	private static final String MSG_GETACCOUNTSTATEMENT = AccountSettingsPanel.class.
 		getName() + "_getaccountstatement";
 	private static final String MSG_GETACCOUNTSTATEMENTTITLE = AccountSettingsPanel.class.
@@ -848,7 +851,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					{
 						LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
 									  "Error fetching payment options: " + e.getMessage());
-						showPIerror(d);
+						showPIerror(d, e);
 						m_interrupted = true;
 					}
 				}
@@ -893,7 +896,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						{
 							LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
 										  "Error fetching TransCert: " + e.getMessage());
-							showPIerror(GUIUtils.getParentWindow(getRootPanel()));
+							showPIerror(GUIUtils.getParentWindow(getRootPanel()), e);
 						}
 					}
 				}
@@ -971,7 +974,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						m_successful = new Boolean(false);
 						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
 									  "Could not send PassivePayment to payment instance: " + e.getMessage());
-						showPIerror(GUIUtils.getParentWindow(getRootPanel()));
+						showPIerror(GUIUtils.getParentWindow(getRootPanel()), e);
 						d.dispose();
 					}
 				}
@@ -1112,7 +1115,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 							m_bPiReachable = false;
 							if (!isInterrupted())
 							{
-								showPIerror(d);
+								showPIerror(d, e);
 							}
 						}
 					}
@@ -1180,7 +1183,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 							//User has pressed cancel
 							if (!ex.getMessage().equals("CAPTCHA"))
 							{
-								showPIerror(d);
+								showPIerror(d, ex);
 								this.interrupt();
 							}
 						}
@@ -1366,7 +1369,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					}
 					catch (Exception e)
 					{
-						showPIerror(GUIUtils.getParentWindow(getRootPanel()));
+						showPIerror(GUIUtils.getParentWindow(getRootPanel()), e);
 						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Could not get account statement");
 					}
 				}
@@ -1730,16 +1733,28 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		}
 	}
 
-	private void showPIerror(JAPDialog a_parent)
+	public void showPIerror(JAPDialog a_parent, Exception a_e)
 	{
-		JAPDialog.showErrorDialog(a_parent,
-								  JAPMessages.getString(MSG_CREATEERROR),
-								  LogType.PAY);
+		if (a_e instanceof ForbiddenIOException)
+		{
+			JAPDialog.showErrorDialog(a_parent, JAPMessages.getString(MSG_ERROR_FORBIDDEN), LogType.PAY);
+		}
+		else
+		{
+			JAPDialog.showErrorDialog(a_parent, JAPMessages.getString(MSG_CREATEERROR), LogType.PAY);
+		}
 	}
 
-	public void showPIerror(Component a_parent)
+	public void showPIerror(Component a_parent, Exception a_e)
 	{
-		JAPDialog.showErrorDialog(a_parent, JAPMessages.getString(MSG_CREATEERROR), LogType.PAY);
+		if (a_e instanceof ForbiddenIOException)
+		{
+			JAPDialog.showErrorDialog(a_parent, JAPMessages.getString(MSG_ERROR_FORBIDDEN), LogType.PAY);
+		}
+		else
+		{
+			JAPDialog.showErrorDialog(a_parent, JAPMessages.getString(MSG_CREATEERROR), LogType.PAY);
+		}
 	}
 }
 

@@ -41,6 +41,7 @@ import org.w3c.dom.Document;
 import anon.crypto.JAPSignature;
 import anon.crypto.XMLSignature;
 import anon.crypto.tinytls.TinyTLS;
+import anon.proxy.ForbiddenIOException;
 import anon.pay.xml.XMLAccountCertificate;
 import anon.pay.xml.XMLAccountInfo;
 import anon.pay.xml.XMLBalance;
@@ -95,7 +96,8 @@ public class BIConnection implements ICaptchaSender
 	/**
 	 * Connects to the Payment Instance via TCP and inits the HttpClient.
 	 *
-	 * @throws Exception Wenn Fehler beim Verbindungsaufbau
+	 * @throws IOException if an error occured while connection
+	 * @throws ForbiddenIOException if it is assumed that the local provider forbids the connection
 	 */
 	public void connect(ImmutableProxyInterface a_proxy) throws IOException
 	{
@@ -116,6 +118,8 @@ public class BIConnection implements ICaptchaSender
 
 	private void connect_internal(ImmutableProxyInterface a_proxy) throws IOException
 	{
+		boolean bForbidden = false;
+
 		TinyTLS tls = null;
 		ListenerInterface li = null;
 		boolean connected = false;
@@ -149,6 +153,11 @@ public class BIConnection implements ICaptchaSender
 			}
 			catch (Exception e)
 			{
+				// try to recognize if the provider forbids the connection
+				if (e.getMessage().indexOf("403") >= 0 && e.getMessage().toLowerCase().indexOf("http") >0)
+				{
+					bForbidden = true;
+				}
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Exception while trying to connect to BI");
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY, e);
 				if (listeners.hasMoreElements())
@@ -167,7 +176,15 @@ public class BIConnection implements ICaptchaSender
 		}
 		if (!connected)
 		{
-			throw new IOException("Could not connect to Payment Instance");
+			String error = "Could not connect to Payment Instance";
+			if (bForbidden)
+			{
+				throw new ForbiddenIOException(error);
+			}
+			else
+			{
+				throw new IOException(error);
+			}
 		}
 		else
 		{

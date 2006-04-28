@@ -46,7 +46,6 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;

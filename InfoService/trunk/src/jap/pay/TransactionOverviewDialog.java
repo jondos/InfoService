@@ -191,7 +191,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 				{
 					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
 								  "Cannot connect to Payment Instance: " + e.getMessage());
-					m_parent.showPIerror(getRootPane());
+					m_parent.showPIerror(getRootPane(), e);
 				}
 
 				m_okButton.setText(JAPMessages.getString(MSG_OK_BUTTON));
