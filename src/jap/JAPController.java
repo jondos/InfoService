@@ -1942,7 +1942,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	public boolean isAnonConnected()
 	{
-		return m_proxyAnon != null && m_proxyAnon.getAnonService().isConnected();
+		return m_proxyAnon != null && m_proxyAnon.isConnected();
 	}
 
 	public void setAnonMode(final boolean a_anonModeSelected)
@@ -2286,6 +2286,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 						{
 						}
 					}
+					getView().dispose();
+					LogHolder.log(LogLevel.INFO, LogType.GUI, "View has been disposed. Finishing...");
 					System.exit(0);
 				}
 			}
