@@ -55,6 +55,7 @@ public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 		m_Controller = a_controller;
 		m_Title = s;
 		m_runnableValueUpdate = new MyViewUpdate();
+		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 	}
 
 	protected void exitProgram()
