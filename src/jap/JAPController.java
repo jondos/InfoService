@@ -84,6 +84,7 @@ import gui.JAPDll;
 import gui.JAPHelp;
 import gui.JAPMessages;
 import gui.dialog.JAPDialog;
+import gui.dialog.JAPDialog.LinkedCheckBox;
 import gui.dialog.PasswordContentPane;
 import jap.forward.JAPRoutingEstablishForwardedConnectionDialog;
 import jap.forward.JAPRoutingMessage;
@@ -2244,7 +2245,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			{
 				int returnValue;
 				JAPDialog.LinkedCheckBox checkBox;
-				if (!m_Controller.mbGoodByMessageNeverRemind)
+				if (!m_Controller.mbGoodByMessageNeverRemind && bShowConfigSaveErrorMsg)
 				{
 					// show a Reminder message that active contents should be disabled
 					checkBox = new JAPDialog.LinkedCheckBox(false);
@@ -2273,16 +2274,19 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 					getView().setEnabled(false);
 
-					m_Controller.setAnonMode(false);
-					//Wait until all Jobs are finished....
-					while (m_Controller.m_changeAnonModeJobs.size() > 0)
+					if (bShowConfigSaveErrorMsg) // make a hard shutdown in case of an update...
 					{
-						try
+						m_Controller.setAnonMode(false);
+						//Wait until all Jobs are finished....
+						while (m_Controller.m_changeAnonModeJobs.size() > 0)
 						{
-							Thread.sleep(100);
-						}
-						catch (InterruptedException ex)
-						{
+							try
+							{
+								Thread.sleep(100);
+							}
+							catch (InterruptedException ex)
+							{
+							}
 						}
 					}
 					getView().dispose();
