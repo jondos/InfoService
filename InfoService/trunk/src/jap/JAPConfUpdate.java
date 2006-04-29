@@ -51,6 +51,7 @@ import javax.swing.border.TitledBorder;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.JAPVersionInfo;
 import update.JAPUpdateWizard;
+import logging.*;
 import gui.*;
 
 final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListener, ItemListener, Runnable
@@ -155,7 +156,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, e);
 		}
 		l = new JLabel(strDate);
 		c.gridx = 1;
@@ -225,6 +226,10 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		m_comboType = new JComboBox();
 		m_comboType.addItem(JAPMessages.getString("updateReleaseVersion"));
 		m_comboType.addItem(JAPMessages.getString("updateDevelopmentVersion"));
+		if (!JAPConstants.m_bReleasedVersion)
+		{
+			m_comboType.setSelectedIndex(1);
+		}
 		m_comboType.setEnabled(false);
 		m_comboType.addItemListener(this);
 		c.gridx = 1;
@@ -295,7 +300,6 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		else
 		{
 			m_comboType.setEnabled(true);
-			m_comboType.setSelectedIndex(0);
 			String text = "";
 			if (JAPConstants.m_bReleasedVersion)
 			{
@@ -324,6 +328,16 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 				m_labelDate.setText(JAPMessages.getString("updateUnknown"));
 			}
 			m_bttnUpgrade.setEnabled(true);
+			if (JAPConstants.m_bReleasedVersion)
+			{
+				m_comboType.setSelectedIndex(0);
+			}
+			else
+			{
+				m_comboType.setSelectedIndex(1);
+			}
+			itemStateChanged(new ItemEvent(m_comboType, 0, m_comboType, ItemEvent.SELECTED));
+
 		}
 		m_bttnCheckForUpgrade.setEnabled(true);
 	}
