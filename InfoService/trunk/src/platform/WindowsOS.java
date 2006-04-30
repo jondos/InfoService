@@ -28,6 +28,9 @@
 package platform;
 
 import java.io.File;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.StringTokenizer;
 
 import logging.LogHolder;
 import logging.LogLevel;
@@ -86,12 +89,41 @@ public class WindowsOS extends AbstractOS
 		String dir = "";
 		if (vendor.trim().toLowerCase().startsWith("microsoft"))
 		{
-			dir = System.getProperty("user.dir", ".");
+			try
+			{
+				BufferedReader winPropertiesReader =
+					new BufferedReader(
+						new InputStreamReader(
+							Runtime.getRuntime().exec("CMD /C SET").getInputStream()));
+				String line;
+				while ((line = winPropertiesReader.readLine()) != null)
+				{
+					if (line.startsWith("USERPROFILE"))
+					{
+						break;
+					}
+				}
+				if (line != null)
+				{
+					StringTokenizer tokenizer = new StringTokenizer(line, "=");
+					tokenizer.nextToken();
+					dir = tokenizer.nextToken().trim();
+				}
+			}
+			catch (Exception a_e)
+			{
+			}
+			if (dir == null)
+			{
+				dir = System.getProperty("user.dir", ".");
+			}
 		}
 		else
 		{
 			dir = System.getProperty("user.home", ".");
 		}
+
+
 		return dir + File.separator;
 	}
 

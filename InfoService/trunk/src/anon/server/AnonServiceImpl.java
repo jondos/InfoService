@@ -137,6 +137,7 @@ final public class AnonServiceImpl implements AnonService, AnonServiceEventListe
 				/* the connection already exists */
 				ret = m_MuxSocket.initialize(m_proxyConnection);
 			}
+
 			if (ret != ErrorCodes.E_SUCCESS)
 			{
 				return ret;

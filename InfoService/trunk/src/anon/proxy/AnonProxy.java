@@ -40,7 +40,7 @@ import anon.AnonServiceEventListener;
 import anon.AnonServiceFactory;
 import anon.ErrorCodes;
 import anon.NotConnectedToMixException;
-import anon.ToManyOpenChannelsException;
+import anon.TooManyOpenChannelsException;
 import anon.infoservice.ImmutableProxyInterface;
 import anon.infoservice.MixCascade;
 import anon.mixminion.MixminionServiceDescription;
@@ -394,7 +394,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		m_bIsRunning = false;
 	}
 
-	AnonChannel createChannel(int type) throws ToManyOpenChannelsException,
+	AnonChannel createChannel(int type) throws TooManyOpenChannelsException,
 		NotConnectedToMixException,
 		Exception
 	{

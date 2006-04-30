@@ -168,8 +168,7 @@ public final class LogHolder
 	 *                           but also the name of the method in the class that has called this method;
 	 *                           false if only the name of the current method should be logged (default)
 	 */
-	public static synchronized void log(int logLevel, int logType, String message,
-										boolean a_bAddCallingClass)
+	public static void log(int logLevel, int logType, String message, boolean a_bAddCallingClass)
 	{
 		if (isLogged(logLevel, logType))
 		{

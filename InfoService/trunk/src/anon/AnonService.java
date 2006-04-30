@@ -70,7 +70,7 @@ public interface AnonService
 	 *  See {@link AnonChannel AnonChannel} for more information.
 	 *  @param type the type of the created channel
 	 *  @return AnonChannel, usefull for data transmisson
-	 *  @throws ConnectException, if the Channel could not created
+	 *  @throws ConnectException, if the Channel could not be created
 	 *  @throws ToManyOpenChannels, if there a to many open channels for this AnonService
 	 */
 	AnonChannel createChannel(int type) throws ConnectException;

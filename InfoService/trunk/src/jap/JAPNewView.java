@@ -1427,11 +1427,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			m_dlgConfig = new JAPConf(this, m_bWithPayment);
 			setCursor(c);
 		}
+		else
+		{
+			m_dlgConfig.updateValues();
+		}
 		if (card != null)
 		{
 			m_dlgConfig.selectCard(card);
 		}
-		m_dlgConfig.updateValues();
 		m_dlgConfig.setVisible(true);
 	}
 
@@ -1622,6 +1625,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 											   isConnectViaForwarder());
 				m_comboAnonServices.setEnabled(!JAPModel.getInstance().getRoutingSettings().
 											   isConnectViaForwarder());
+				validate();
 			}
 			catch (Throwable t)
 			{
@@ -1645,34 +1649,40 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 //			ownTrafficChannelsProgressBar.setString(String.valueOf(c));
 	}
 
-	public void transferedBytes(long c, int protocolType)
+	public void transferedBytes(final long c, final int protocolType)
 	{
-		// Nr of Bytes transmitted anonymously
-		if (protocolType == IProxyListener.PROTOCOL_WWW)
+		SwingUtilities.invokeLater(new Thread()
 		{
-			m_lTrafficWWW = JAPModel.getInstance().getMixedBytes();
-		}
-		else if (protocolType == IProxyListener.PROTOCOL_OTHER)
-		{
-			m_lTrafficOther = c;
+			public void run()
+			{
+				// Nr of Bytes transmitted anonymously
+				if (protocolType == IProxyListener.PROTOCOL_WWW)
+				{
+					m_lTrafficWWW = JAPModel.getInstance().getMixedBytes();
+				}
+				else if (protocolType == IProxyListener.PROTOCOL_OTHER)
+				{
+					m_lTrafficOther = c;
 
-		}
-		String unit = JAPUtil.formatBytesValueOnlyUnit(m_lTrafficWWW);
-		m_labelOwnTrafficUnitWWW.setText(unit);
-		String s = JAPUtil.formatBytesValueWithoutUnit(m_lTrafficWWW);
-		m_labelOwnTrafficBytesWWW.setText(s);
-		unit = JAPUtil.formatBytesValueOnlyUnit(m_lTrafficOther);
-		m_labelOwnTrafficUnitOther.setText(unit);
-		s = JAPUtil.formatBytesValueWithoutUnit(m_lTrafficOther);
-		m_labelOwnTrafficBytesOther.setText(s);
-		long sum = m_lTrafficWWW + m_lTrafficOther;
-		unit = JAPUtil.formatBytesValueOnlyUnit(sum);
-		m_labelOwnTrafficUnit.setText(unit);
-		m_labelOwnTrafficUnitSmall.setText(unit);
-		s = JAPUtil.formatBytesValueWithoutUnit(sum);
-		m_labelOwnTrafficBytes.setText(s);
-		this.m_labelOwnTrafficBytesSmall.setText(s);
-		JAPDll.onTraffic();
+				}
+				String unit = JAPUtil.formatBytesValueOnlyUnit(m_lTrafficWWW);
+				m_labelOwnTrafficUnitWWW.setText(unit);
+				String s = JAPUtil.formatBytesValueWithoutUnit(m_lTrafficWWW);
+				m_labelOwnTrafficBytesWWW.setText(s);
+				unit = JAPUtil.formatBytesValueOnlyUnit(m_lTrafficOther);
+				m_labelOwnTrafficUnitOther.setText(unit);
+				s = JAPUtil.formatBytesValueWithoutUnit(m_lTrafficOther);
+				m_labelOwnTrafficBytesOther.setText(s);
+				long sum = m_lTrafficWWW + m_lTrafficOther;
+				unit = JAPUtil.formatBytesValueOnlyUnit(sum);
+				m_labelOwnTrafficUnit.setText(unit);
+				m_labelOwnTrafficUnitSmall.setText(unit);
+				s = JAPUtil.formatBytesValueWithoutUnit(sum);
+				m_labelOwnTrafficBytes.setText(s);
+				m_labelOwnTrafficBytesSmall.setText(s);
+				JAPDll.onTraffic();
+			}
+		});
 	}
 
 	public Dimension getPreferredSize()

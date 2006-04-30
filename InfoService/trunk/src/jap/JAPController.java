@@ -1487,9 +1487,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 *
 	 * @return The active MixCascade.
 	 */
-	public synchronized MixCascade getCurrentMixCascade()
+	public MixCascade getCurrentMixCascade()
 	{
-		//synchronized (this) // Deadly for JDK 1.1.8...
+		//synchronized (this) // Deadly for JDK 1.1.8 and possible Deadlock...
 		{
 			/* return only consistent values */
 			return m_currentMixCascade;
@@ -1999,7 +1999,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							if (m_changeAnonModeJobs.size() > 0)
 							{
 								/* wait until the previous job is done */
-								currentJob = new JAPController.SetAnonModeAsync(a_anonModeSelected,
+								currentJob = new SetAnonModeAsync(a_anonModeSelected,
 									( (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement())).
 									getExecutionThread(), controller);
 							}
@@ -2342,7 +2342,17 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "JAPController: fetchMixCascades: success!");
 			//add all user added cascades
-			Enumeration enumer = m_vectorMixCascadeDatabase.elements();
+			Vector oldCascades =  ((Vector)m_vectorMixCascadeDatabase.clone());
+			boolean bEqual = true;
+			for (int i = 0; i < newMixCascades.size(); i++)
+			{
+				if (!m_vectorMixCascadeDatabase.contains(newMixCascades.elementAt(i)))
+				{
+					bEqual = false;
+					break;
+				}
+			}
+			Enumeration enumer = oldCascades.elements();
 			while (enumer.hasMoreElements())
 			{
 				MixCascade entry = (MixCascade) enumer.nextElement();
@@ -2351,8 +2361,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 					newMixCascades.addElement(entry);
 				}
 			}
-			m_vectorMixCascadeDatabase = newMixCascades;
-			notifyJAPObservers();
+			if (!bEqual || newMixCascades.size() != oldCascades.size())
+			{
+				m_vectorMixCascadeDatabase = newMixCascades;
+				notifyJAPObservers();
+			}
+
 		}
 	}
 

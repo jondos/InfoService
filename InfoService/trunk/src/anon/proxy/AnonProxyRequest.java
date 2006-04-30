@@ -34,7 +34,7 @@ import java.net.Socket;
 
 import anon.AnonChannel;
 import anon.NotConnectedToMixException;
-import anon.ToManyOpenChannelsException;
+import anon.TooManyOpenChannelsException;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -127,10 +127,10 @@ public final class AnonProxyRequest implements Runnable
 					}
 					break;
 				}
-				catch (ToManyOpenChannelsException te)
+				catch (TooManyOpenChannelsException te)
 				{
 					LogHolder.log(LogLevel.ERR, LogType.NET,
-								  "AnonProxyRequest - ToManyOpenChannelsExeption");
+								  "AnonProxyRequest - TooManyOpenChannelsExeption");
 					try
 					{
 						Thread.sleep(1000);

@@ -190,7 +190,7 @@ public class BIConnection implements ICaptchaSender
 		{
 			LogHolder.log(LogLevel.INFO, LogType.PAY,
 						  "Connected to Payment Instance at " + li.getHost() + ":" +
-						  li.getPort() + ".");
+						  li.getPort() + ".", true);
 
 		}
 
