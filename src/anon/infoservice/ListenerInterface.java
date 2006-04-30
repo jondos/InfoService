@@ -506,7 +506,7 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 		if (!isValidHostname(a_strHostname))
 		{
 			//throw (new IllegalArgumentException("ListenerInterface: Host is invalid."));
-			LogHolder.log(LogLevel.NOTICE, LogType.NET, "Invalid host name !");
+			LogHolder.log(LogLevel.NOTICE, LogType.NET, "Invalid host name: '" + a_strHostname + "'");
 			m_strHostname = "";
 		}
 		m_strHostname = a_strHostname;

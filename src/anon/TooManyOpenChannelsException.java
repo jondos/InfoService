@@ -29,6 +29,6 @@ package anon;
 
 import java.net.ConnectException;
 
-final public class ToManyOpenChannelsException extends ConnectException
+final public class TooManyOpenChannelsException extends ConnectException
 {
 }

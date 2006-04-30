@@ -49,7 +49,7 @@ import anon.AnonChannel;
 import anon.AnonServiceEventListener;
 import anon.ErrorCodes;
 import anon.NotConnectedToMixException;
-import anon.ToManyOpenChannelsException;
+import anon.TooManyOpenChannelsException;
 import anon.crypto.JAPCertificate;
 import anon.crypto.JAPSignature;
 import anon.crypto.SignatureVerifier;
@@ -70,7 +70,8 @@ import anon.infoservice.ListenerInterface;
 public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 {
 	private SecureRandom m_SecureRandom;
-	private Dictionary m_ChannelList;
+	private Dictionary m_ChannelList = new Hashtable();
+	private int m_waitingChannels = 0;
 	private BufferedOutputStream m_outStream;
 	private DataInputStream m_inDataStream;
 	private byte[] m_MixPacketSend;
@@ -95,6 +96,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 	private SymCipher m_cipherFirstMix;
 	private SymCipher m_cipherInAI;
 	private SymCipher m_cipherOutAI;
+
 
 	// 2004-10-18 (Bastian Voigt)
 	private volatile long m_transferredBytes; // accounting for payment
@@ -221,6 +223,18 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 	 */
 	public int initialize(ProxyConnection a_proxyConnection)
 	{
+	    synchronized (m_ChannelList)
+		{
+			Enumeration channels = m_ChannelList.keys();
+			Integer currentID;
+			while (channels.hasMoreElements())
+			{
+				currentID = ((Integer)channels.nextElement());
+				((ChannelListEntry)m_ChannelList.get(currentID)).channel.close();
+			}
+			m_ChannelList = new Hashtable();
+		}
+
 		int err = ErrorCodes.E_CONNECT;
 		m_ioSocket = a_proxyConnection;
 		try
@@ -332,7 +346,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 
 		m_bIsConnected = true;
 		fireConnectionEstablished();
-		m_ChannelList = new Hashtable();
+		//m_ChannelList;
 		m_ControlChannelDispatcher = new ControlChannelDispatcher(this);
 		m_transferredBytes = 0;
 		return ErrorCodes.E_SUCCESS;
@@ -352,7 +366,6 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "MuxSocket.connectViaFirewall(): Start...");
 		//synchronized (this) // Deadly for JDK 1.1.8...
 		{
-
 			if (m_bIsConnected)
 			{
 				return ErrorCodes.E_ALREADY_CONNECTED;
@@ -675,14 +688,54 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 
 	public Channel newChannel(int type) throws ConnectException
 	{
-		synchronized (this)
+		//synchronized (this)
 		{
-			if (m_bIsConnected)
+			synchronized (m_ChannelList)
 			{
-				if (m_ChannelList.size() > MAX_CHANNELS_PER_CONNECTION)
+				boolean bWaiting = false;
+				while (m_bIsConnected && m_ChannelList.size() > MAX_CHANNELS_PER_CONNECTION)
 				{
-					throw new ToManyOpenChannelsException();
+					//throw new ToManyOpenChannelsException();
+					if (!bWaiting)
+					{
+						m_waitingChannels++;
+						bWaiting = true;
+					}
+
+					LogHolder.log(LogLevel.INFO, LogType.NET,
+								  "Too many open channels! "  +
+								   m_waitingChannels + " channels waiting for open channel... ");
+					try
+					{
+						m_ChannelList.wait();
+					}
+					catch (InterruptedException a_e)
+					{
+						//ignore
+					}
 				}
+				if (bWaiting)
+				{
+					m_waitingChannels--;
+					LogHolder.log(LogLevel.INFO, LogType.NET,
+								  "Waiting channel has been released. " +
+								  m_waitingChannels + " waiting channels. ");
+				}
+
+				if (!m_bIsConnected)
+				{
+					m_ChannelList.notify();
+					if (m_bConnectionStoppedManually)
+					{
+						throw new ConnectException("Connection to mix stopped, no channels can be opened");
+					}
+					else
+					{
+						throw new NotConnectedToMixException(
+							"Lost connection to mix or not connected to a mix!");
+					}
+				}
+
 				try
 				{
 					int channelId = m_SecureRandom.nextInt();
@@ -697,12 +750,9 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 				}
 				catch (Exception e)
 				{
-					throw new ConnectException("Error trying open a new channel!");
+					m_ChannelList.notify();
+					throw new ConnectException("Error trying to open a new channel!");
 				}
-			}
-			else
-			{
-				throw new NotConnectedToMixException("Lost connection to mix or not connected to a mix!");
 			}
 		}
 	}
@@ -711,7 +761,11 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 	{
 		synchronized (this)
 		{
-			m_ChannelList.remove(new Integer(channel_id));
+			synchronized(m_ChannelList)
+			{
+				m_ChannelList.remove(new Integer(channel_id));
+				m_ChannelList.notifyAll();
+			}
 			try
 			{
 				send(channel_id, 0, null, (short) 0);
@@ -968,7 +1022,11 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			{
 				if (flags == CHANNEL_CLOSE)
 				{
-					m_ChannelList.remove(new Integer(channel));
+					synchronized (m_ChannelList)
+					{
+						m_ChannelList.remove(new Integer(channel));
+						m_ChannelList.notifyAll();
+					}
 					tmpEntry.channel.closedByPeer();
 				}
 				else if (flags == CHANNEL_DATA)
@@ -1034,21 +1092,26 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 	{
 		synchronized (this)
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.NET, "JAPMuxSocket:runStoped()");
+			LogHolder.log(LogLevel.DEBUG, LogType.NET, "JAPMuxSocket:runStopped()");
 			m_bRunFlag = false;
 			m_DummyTraffic.stop();
-			if (m_ChannelList != null)
+			synchronized (m_ChannelList)
 			{
-				Enumeration e = m_ChannelList.elements();
-				while (e.hasMoreElements())
+				if (!m_ChannelList.isEmpty())
 				{
-					ChannelListEntry entry = (ChannelListEntry) e.nextElement();
-					entry.channel.closedByPeer();
+					Enumeration e = m_ChannelList.elements();
+					while (e.hasMoreElements())
+					{
+						ChannelListEntry entry = (ChannelListEntry) e.nextElement();
+						entry.channel.closedByPeer();
+					}
 				}
+				m_bIsConnected = false;
+				m_ChannelList.notifyAll();
 			}
-			m_ChannelList = null;
-			LogHolder.log(LogLevel.DEBUG, LogType.NET, "JAPMuxSocket:MuxSocket all channels closed...");
-			m_bIsConnected = false;
+
+			LogHolder.log(LogLevel.INFO, LogType.NET, "JAPMuxSocket:MuxSocket all channels closed...");
+
 			try
 			{
 				m_inDataStream.close();

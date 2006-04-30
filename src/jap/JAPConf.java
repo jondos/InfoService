@@ -1119,5 +1119,6 @@ final public class JAPConf extends JAPDialog implements ActionListener
 		{
 			m_tfProxyPortNumber.setText("");
 		}
+		validate();
 	}
 }

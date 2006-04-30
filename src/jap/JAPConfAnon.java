@@ -385,10 +385,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_rootPanelConstraints.gridx = 0;
 		m_rootPanelConstraints.gridy = 2;
 		m_rootPanelConstraints.weightx = 0;
-		m_rootPanelConstraints.weighty = 0;
+		m_rootPanelConstraints.weighty = 1;
 		m_rootPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
-		m_rootPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
+		m_rootPanelConstraints.fill = GridBagConstraints.BOTH;
 		pRoot.add(m_manualPanel, m_rootPanelConstraints);
+		pRoot.validate();
 	}
 
 	private void drawCascadesPanel()
@@ -591,8 +592,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		   m_operatorLabel.setText(m_infoService.getOperator(selectedMixId));
 		   m_operatorLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
 		   m_locationLabel.setText(m_infoService.getLocation(selectedMixId));
-		   m_urlLabel.setText(URL_BEGIN + m_infoService.getUrl(selectedMixId)
-				  + URL_END);
+		   m_urlLabel.setText(URL_BEGIN + m_infoService.getUrl(selectedMixId) + URL_END);
 		  }
 		  catch (Exception ex)
 		  {
@@ -641,8 +641,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		m_listMixCascade.setModel(listModel);
 		m_listMixCascade.setSelectedIndex(0);
-		LogHolder.log(LogLevel.DEBUG, LogType.GUI,
-					  "- select First Item -- finished!");
+		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "- select First Item -- finished!");
 	}
 
 	/**
@@ -1070,23 +1069,33 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		   {
 			if (m_infoService.getNumOfMixes(cascadeId) == -1)
 			{
-			 drawServerPanel(3, "", false);
+				drawServerPanel(3, "", false);
 			}
 			else
 			{
 			 drawServerPanel(m_infoService.getNumOfMixes(cascadeId), cascade.getName(), true);
 			}
-			m_numOfUsersLabel.setText(m_infoService.getNumOfUsers(cascadeId));
-			m_reachableLabel.setText(m_infoService.getHosts(cascadeId));
-			m_portsLabel.setText(m_infoService.getPorts(cascadeId));
-					if (m_infoService.isPay(cascadeId))
-					{
-						m_payLabel.setText(JAPMessages.getString(MSG_PAYCASCADE));
-					}
-					else
-					{
-						m_payLabel.setText("");
-					}
+			if (cascade.isUserDefined())
+			{
+				m_numOfUsersLabel.setText("N/A");
+				m_reachableLabel.setText(cascade.getListenerInterface(0).getHost());
+				m_portsLabel.setText("" + cascade.getListenerInterface(0).getPort());
+				m_payLabel.setText("");
+			}
+			else
+			{
+				m_numOfUsersLabel.setText(m_infoService.getNumOfUsers(cascadeId));
+				m_reachableLabel.setText(m_infoService.getHosts(cascadeId));
+				m_portsLabel.setText(m_infoService.getPorts(cascadeId));
+				if (m_infoService.isPay(cascadeId))
+				{
+					m_payLabel.setText(JAPMessages.getString(MSG_PAYCASCADE));
+				}
+				else
+				{
+					m_payLabel.setText("");
+				}
+			}
 		   }
 		   drawServerInfoPanel(null, null, null);
 
@@ -1366,13 +1375,18 @@ final class InfoServiceTempLayer
 				for (int k = 0; k < mixIds.size(); k++)
 				{
 					String mixId = (String) mixIds.elementAt(k);
-					MixInfo mixInfo =
-						InfoServiceHolder.getInstance().getMixInfo(mixId);
+					MixInfo mixInfo = InfoServiceHolder.getInstance().getMixInfo(mixId);
+					if (mixInfo == null)
+					{
+						LogHolder.log(LogLevel.NOTICE, LogType.GUI,
+									  "Did not get Mix info from InfoService for Mix " + mixId + "!");
+						continue;
+					}
+
 					m_Mixes.addElement(new TempMix(mixId, mixInfo.getServiceOperator().getOrganisation(),
 						mixInfo.getServiceOperator().getUrl(),
 						mixInfo.getServiceLocation().getCity() + ", " +
 						mixInfo.getServiceLocation().getCountry()));
-
 				}
 			}
 		}

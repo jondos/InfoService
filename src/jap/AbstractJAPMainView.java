@@ -74,7 +74,7 @@ public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 
 	public boolean hideWindowInTaskbar()
 	{
-		synchronized (m_runnableValueUpdate) //updateValues may change the Titel of the Window!!
+		synchronized (m_runnableValueUpdate) //updateValues may change the Title of the Window!!
 		{
 			setTitle(Double.toString(Math.random())); //ensure that we have an uinque title
 			boolean b = JAPDll.hideWindowInTaskbar(getTitle());

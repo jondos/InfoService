@@ -366,7 +366,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 				/* if the Add button is pressed, show the add InfoService panel instead of the information
 				 * panel
 				 */
-				settingsInfoServiceConfigBasicSettingsAddButton.setEnabled(false);
+				//settingsInfoServiceConfigBasicSettingsAddButton.setEnabled(false);
 				settingsInfoServiceConfigBasicSettingsRemoveButton.setEnabled(false);
 				descriptionPanel.setVisible(false);
 				addInfoServiceHostField.setText("");
