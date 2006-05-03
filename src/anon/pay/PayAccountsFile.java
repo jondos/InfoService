@@ -722,7 +722,6 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 				theBI = possibleBI;
 			}
 		}
-
 		if (theBI == null)
 		{
 			throw new Exception("Cannot get payment instance neither from InfoService nor from config file");

@@ -579,7 +579,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				setInfoServiceDisabled(b);
 				int i = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_INFOSERVICE_TIMEOUT), -1);
 				try
-				{
+				{ //i = 5; /** @todo temp */
 					if ( (i >= 1) && (i <= 60))
 					{
 						HTTPConnectionFactory.getInstance().setTimeout(i);

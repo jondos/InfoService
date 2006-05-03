@@ -205,6 +205,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		"_creatingKeyPair";
 	private static final String MSG_KEY_PAIR_CREATE_ERROR = AccountSettingsPanel.class.getName() +
 		"_keyPairCreateError";
+	private static final String MSG_FETCHING_BIS = AccountSettingsPanel.class.getName() +
+		"_fetchingBIs";
 
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
@@ -1057,45 +1059,84 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private void doCreateAccount()
 	{
 			int numAccounts = m_listAccounts.getModel().getSize();
-			BI theBI = null;
 
-			//First try and get the standard PI the preferred way
-			try
-			{
-				theBI = PayAccountsFile.getInstance().getBI(JAPConstants.PI_ID);
-			}
-			catch (Exception e)
-			{
-				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
-			}
+			final JAPDialog d = new JAPDialog(getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
+			d.setDefaultCloseOperation(JAPDialog.DO_NOTHING_ON_CLOSE);
+			d.setResizable(true);
 
-			//Try and construct a new PI
-			if (theBI == null)
+			WorkerContentPane.ReturnThread fetchBIThread = new WorkerContentPane.ReturnThread()
 			{
-				ListenerInterface li = new ListenerInterface(JAPConstants.PI_HOST, JAPConstants.PI_PORT);
-				try
+				private BI theBI;
+				private boolean bBIfound = false;
+
+				public void run()
 				{
-					theBI = new BI(JAPConstants.PI_ID, JAPConstants.PI_NAME, li.toVector(),
-								   JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.
-						CERTSPATH +
-						JAPConstants.PI_CERT)));
+					bBIfound = true;
+					Exception biException = null;
+
+					//First try and get the standard PI the preferred way
+					try
+					{
+						theBI = PayAccountsFile.getInstance().getBI(JAPConstants.PI_ID);
+					}
+					catch (Exception e)
+					{
+						biException = e;
+						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
+					}
+
+					//Try and construct a new PI
+					if (theBI == null)
+					{
+						ListenerInterface li = new ListenerInterface(JAPConstants.PI_HOST,
+							JAPConstants.PI_PORT);
+						try
+						{
+							theBI = new BI(JAPConstants.PI_ID, JAPConstants.PI_NAME, li.toVector(),
+										   JAPCertificate.getInstance(ResourceLoader.loadResource(
+								JAPConstants.
+								CERTSPATH +
+								JAPConstants.PI_CERT)));
+						}
+						catch (Exception e)
+						{
+							if (biException == null || e instanceof ForbiddenIOException)
+							{
+								biException = e;
+							}
+							LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+										  "Could not create Test-PI: " + e.getMessage());
+							theBI = getBIforAccountCreation();
+						}
+					}
+					if (theBI == null)
+					{
+						// no valid BI could be found
+						showPIerror(d, biException);
+						bBIfound = false;
+					}
 				}
-				catch (Exception e)
+				public boolean isInterrupted()
 				{
-					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
-								  "Could not create Test-PI: " + e.getMessage());
-					theBI = getBIforAccountCreation();
+					return super.isInterrupted() || !bBIfound;
 				}
-			}
 
-			if (theBI != null)
-			{
-				final JAPDialog d =
-					new JAPDialog(getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
-				d.setDefaultCloseOperation(JAPDialog.DO_NOTHING_ON_CLOSE);
-				d.setResizable(true);
+				public void interrupt()
+				{
+					super.interrupt();
+					//new Exception().printStackTrace();
+					//System.out.println("interrupted:" + isInterrupted() + " alive:" + isAlive());
+					}
 
-				final BI testBI = theBI;
+				public Object getValue()
+				{
+					return theBI;
+				}
+
+			};
+			final WorkerContentPane fetchBiWorker =
+				new WorkerContentPane(d, JAPMessages.getString(MSG_FETCHING_BIS) + "...", fetchBIThread);
+
 				Thread piTestThread = new Thread()
 				{
 					private boolean m_bPiReachable;
@@ -1104,20 +1145,25 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					{
 						try
 						{
+							m_bPiReachable = true;
 							//Check if payment instance is reachable
-							BIConnection biconn = new BIConnection(testBI);
+							BIConnection biconn = new BIConnection((BI)fetchBiWorker.getValue());
 							biconn.connect(JAPModel.getInstance().getProxyInterface());
 							biconn.disconnect();
-							m_bPiReachable = true;
 						}
 						catch (Exception e)
 						{
-							m_bPiReachable = false;
 							if (!isInterrupted())
 							{
 								showPIerror(d, e);
 							}
+							m_bPiReachable = false;
 						}
+					}
+					public void interrupt()
+					{
+						m_bPiReachable = false;
+						super.interrupt();
 					}
 
 					public boolean isInterrupted()
@@ -1127,7 +1173,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				};
 
 				WorkerContentPane PITestWorkerPane = new WorkerContentPane(d,
-					JAPMessages.getString(MSG_TEST_PI_CONNECTION) + "...", piTestThread);
+					JAPMessages.getString(MSG_TEST_PI_CONNECTION) + "...",  fetchBiWorker, piTestThread);
 				PITestWorkerPane.setInterruptThreadSafe(false);
 
 				SimpleWizardContentPane panel1 = new SimpleWizardContentPane(d,
@@ -1163,7 +1209,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					d, JAPMessages.getString(MSG_CREATE_KEY_PAIR) + "...", panel1, keyCreationThread);
 				keyWorkerPane.getButtonCancel().setEnabled(false);
 
-				final BI bi = theBI;
 				m_bReady = true;
 				Thread doIt = new Thread()
 				{
@@ -1172,7 +1217,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						m_bReady = false;
 						try
 						{
-							PayAccount p = PayAccountsFile.getInstance().createAccount(bi,
+							PayAccount p = PayAccountsFile.getInstance().createAccount(
+								(BI)fetchBiWorker.getValue(),
 								JAPModel.getInstance().getProxyInterface(),
 								(DSAKeyPair)keyWorkerPane.getValue());
 
@@ -1249,7 +1295,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					pc.getButtonCancel().setEnabled(false);
 				}
 
-				PITestWorkerPane.updateDialogOptimalSized(PITestWorkerPane);
+				PITestWorkerPane.updateDialogOptimalSized(fetchBiWorker);
 
 				d.addWindowListener(new WindowAdapter()
 				{
@@ -1285,7 +1331,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					doExportAccount( (PayAccount) m_listAccounts.getSelectedValue());
 					doChargeAccount( (PayAccount) m_listAccounts.getSelectedValue());
 				}
-			}
 		}
 
 	/**

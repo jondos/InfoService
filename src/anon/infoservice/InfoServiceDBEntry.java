@@ -819,12 +819,11 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 			}
 			catch (InterruptedException e)
 			{
-				/* operation was interupted from the outside -> set the intterupted flag for the Thread
+				/* operation was interupted from the outside -> set the intterrupted flag for the Thread
 				 * again, so the caller of the methode can evaluate it, also interrupt the communication
 				 * thread, but don't wait for the end of that thread
 				 */
-				LogHolder.log(LogLevel.INFO, LogType.NET,
-							  "InfoServiceDBEntry: getXmlDocument: Current operation was interrupted.");
+				LogHolder.log(LogLevel.INFO, LogType.NET, "Current operation was interrupted.");
 				Thread.currentThread().interrupt();
 				communicationThread.interrupt();
 			}
