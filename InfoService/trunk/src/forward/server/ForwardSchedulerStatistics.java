@@ -24,7 +24,7 @@
  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
- */ 
+ */
 package forward.server;
 
 import java.util.Enumeration;
@@ -34,35 +34,35 @@ import java.util.Vector;
  * This is the implementation for the statistics of a ForwardScheduler.
  */
 public class ForwardSchedulerStatistics {
-  
+
   /**
    * The backwards interval in milliseconds over which the current bandwidth usage statistics are
    * created.
    */
   private static final long BANDWIDTH_STATISTICS_INTERVAL = 1000;
-  
+
   /**
    * Stores the number of rejected connections.
    */
   private int m_rejectedConnections;
-  
+
   /**
    * Stores the number of accepted connections.
    */
   private int m_acceptedConnections;
-  
+
   /**
    * Stores the number of transfered bytes.
    */
   private long m_transferedBytes;
-  
+
   /**
    * Stores the list with the last transfered byte amounts. See the constant in this class to
    * see how long every amount is in that list to create the bandwidth usage statistics.
    */
   private Vector m_lastTransferVolumes;
-  
-  
+
+
   /**
    * Creates a new ForwardSchedulerStatistics instance.
    */
@@ -72,8 +72,8 @@ public class ForwardSchedulerStatistics {
     m_transferedBytes = 0;
     m_lastTransferVolumes = new Vector();
   }
-  
-  
+
+
   /**
    * Increments the number of rejected connections by one.
    */
@@ -82,20 +82,18 @@ public class ForwardSchedulerStatistics {
       m_rejectedConnections++;
     }
   }
-  
+
   /**
    * Returns the number of rejected connections.
    *
    * @return The number of rejected connections.
    */
-  public int getRejectedConnections() {
+  public synchronized int getRejectedConnections() {
     int rejectedConnections = 0;
-    synchronized (this) {
-      rejectedConnections = m_rejectedConnections;
-    }
+	rejectedConnections = m_rejectedConnections;
     return rejectedConnections;
   }
-  
+
   /**
    * Increments the number of accepted connections by one.
    */
@@ -104,7 +102,7 @@ public class ForwardSchedulerStatistics {
       m_acceptedConnections++;
     }
   }
-  
+
   /**
    * Returns the number of accepted connections.
    *
@@ -117,7 +115,7 @@ public class ForwardSchedulerStatistics {
     }
     return acceptedConnections;
   }
-  
+
   /**
    * Increments the number of transfered bytes and adds the transfer volume to the list of
    * volumes for calculating the current bandwidth usage. Also outdated values from that list
@@ -138,7 +136,7 @@ public class ForwardSchedulerStatistics {
       m_transferedBytes = m_transferedBytes + (long)a_volume;
     }
   }
-  
+
   /**
    * Returns the current bandwidth usage. It is calculated from the list of currently transfered
    * volumes. See the constant in this class to get the time how long backwards the list stores
@@ -161,7 +159,7 @@ public class ForwardSchedulerStatistics {
     }
     return Math.round(((float)transferedBytes) * ((float)1000) / ((float)BANDWIDTH_STATISTICS_INTERVAL));
   }
-  
+
   /**
    * Returns the total number of transfered bytes.
    *
@@ -175,7 +173,7 @@ public class ForwardSchedulerStatistics {
     return transferedBytes;
   }
 
-  
+
   /**
    * Removes all outdated values from the list of currently transfered volumes.
    */
