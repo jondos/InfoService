@@ -41,7 +41,6 @@ import org.w3c.dom.Document;
 import anon.crypto.JAPSignature;
 import anon.crypto.XMLSignature;
 import anon.crypto.tinytls.TinyTLS;
-import anon.proxy.ForbiddenIOException;
 import anon.pay.xml.XMLAccountCertificate;
 import anon.pay.xml.XMLAccountInfo;
 import anon.pay.xml.XMLBalance;
@@ -65,6 +64,7 @@ import org.w3c.dom.Element;
 import java.util.Enumeration;
 import anon.infoservice.ListenerInterface;
 import java.io.IOException;
+import HTTPClient.ForbiddenIOException;
 
 public class BIConnection implements ICaptchaSender
 {
@@ -154,7 +154,7 @@ public class BIConnection implements ICaptchaSender
 			catch (Exception e)
 			{
 				// try to recognize if the provider forbids the connection
-				if (e.getMessage().indexOf("403") >= 0 && e.getMessage().toLowerCase().indexOf("http") >0)
+				if (e instanceof ForbiddenIOException)
 				{
 					bForbidden = true;
 				}
@@ -191,7 +191,6 @@ public class BIConnection implements ICaptchaSender
 			LogHolder.log(LogLevel.INFO, LogType.PAY,
 						  "Connected to Payment Instance at " + li.getHost() + ":" +
 						  li.getPort() + ".", true);
-
 		}
 
 	}
