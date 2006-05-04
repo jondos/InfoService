@@ -108,7 +108,7 @@ import jap.pay.wizardnew.PaymentInfoPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.proxy.ForbiddenIOException;
+import HTTPClient.ForbiddenIOException;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
