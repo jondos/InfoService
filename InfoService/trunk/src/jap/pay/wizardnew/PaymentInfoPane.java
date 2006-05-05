@@ -40,10 +40,7 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import javax.swing.JButton;
-import javax.swing.JLabel;
 
 import anon.pay.xml.XMLPaymentOption;
 import anon.pay.xml.XMLTransCert;
@@ -54,13 +51,12 @@ import gui.dialog.DialogContentPane.IWizardSuitable;
 import gui.dialog.JAPDialog;
 import gui.dialog.WorkerContentPane;
 import jap.JAPController;
-import jap.JAPUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
 
-public class PaymentInfoPane extends DialogContentPane implements IWizardSuitable, MouseListener,
+public class PaymentInfoPane extends DialogContentPane implements IWizardSuitable,
 	ActionListener
 {
 	/** Messages */
@@ -76,7 +72,7 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 	private JButton m_bttnCopy, m_bttnOpen;
 	private String m_language;
 	private XMLPaymentOption m_selectedOption;
-	private JLabel m_extraInfoLabel;
+	private String m_strExtraInfo;
 
 	public PaymentInfoPane(JAPDialog a_parentDialog, DialogContentPane a_previousContentPane)
 	{
@@ -97,14 +93,16 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		m_c.insets = new Insets(5, 5, 5, 5);
 		m_c.anchor = m_c.NORTHWEST;
 		m_c.fill = m_c.NONE;
+		m_c.gridy++;
 
 		//Add some dummy labels for dialog sizing
+		/*
 		for (int i = 0; i < 12; i++)
 		{
 			m_rootPanel.add(new JLabel("..................................................."),
 							m_c);
 			m_c.gridy++;
-		}
+		}*/
 
 		getButtonCancel().setVisible(false);
 	}
@@ -115,6 +113,7 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 										   getPreviousContentPane()).getSelectedPaymentOption();
 		XMLTransCert transCert = (XMLTransCert) ( (WorkerContentPane) getPreviousContentPane()).
 			getValue();
+		String htmlExtraInfo = "";
 		m_selectedOption = selectedOption;
 		m_rootPanel.removeAll();
 		m_rootPanel = this.getContentPane();
@@ -128,29 +127,24 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		m_c.insets = new Insets(5, 5, 5, 5);
 		m_c.anchor = m_c.NORTHWEST;
 		m_c.fill = m_c.NONE;
-		m_c.gridwidth = 2;
-		setText(selectedOption.getDetailedInfo(m_language));
+
+		//setText(selectedOption.getDetailedInfo(m_language));
 
 
-		String extraInfo = selectedOption.getExtraInfo(m_language);
-		if (extraInfo != null)
+		m_strExtraInfo = selectedOption.getExtraInfo(m_language);
+		if (m_strExtraInfo != null)
 		{
-			extraInfo = Util.replaceAll(extraInfo, "%t", String.valueOf(transCert.getTransferNumber()));
-			extraInfo = Util.replaceAll(extraInfo, "%a", ( (MethodSelectionPane) getPreviousContentPane().
-				getPreviousContentPane()).getAmount());
-			extraInfo = Util.replaceAll(extraInfo, "%c",
+			m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%t",
+											 String.valueOf(transCert.getTransferNumber()));
+			m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%a",
+											 ( (MethodSelectionPane) getPreviousContentPane().
+											   getPreviousContentPane()).getAmount());
+			m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%c",
 										   ( (MethodSelectionPane) getPreviousContentPane().
 											getPreviousContentPane()).
 										   getSelectedCurrency());
-			extraInfo = "<html>" + extraInfo + "</html>";
-
-			m_extraInfoLabel = new JLabel();
-			m_extraInfoLabel.setText(extraInfo);
-			m_c.gridy++;
-			m_rootPanel.add(m_extraInfoLabel, m_c);
 
 			m_c.gridy++;
-			m_c.gridwidth = 1;
 			m_bttnCopy = new JButton(JAPMessages.getString(MSG_BUTTONCOPY));
 			m_bttnCopy.addActionListener(this);
 			m_rootPanel.add(m_bttnCopy, m_c);
@@ -161,35 +155,23 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 			m_rootPanel.add(m_bttnOpen, m_c);
 			m_bttnOpen.setVisible(false);
 
-			if (selectedOption.getExtraInfoType(m_language).equalsIgnoreCase(XMLPaymentOption.
-				EXTRA_LINK))
+
+			if (selectedOption.getExtraInfoType(m_language).equalsIgnoreCase(XMLPaymentOption.EXTRA_LINK))
 			{
-				/** Make label clickable */
-				makeLabelClickable(m_extraInfoLabel);
+				/** @todo Make label clickable */
 				m_bttnOpen.setVisible(true);
+				htmlExtraInfo = "<br> <font color=blue><u><b>" + m_strExtraInfo + "</b></u></font>";
 			}
 			else
 			{
 				m_bttnOpen.setVisible(false);
+				htmlExtraInfo = "<br> <b>" + m_strExtraInfo + "</b>";
 			}
 		}
 
-	}
+		setText(selectedOption.getDetailedInfo(m_language) + htmlExtraInfo);
 
-	private void makeLabelClickable(JLabel a_label)
-	{
-		a_label.addMouseListener(this);
-		String link = a_label.getText();
-		if (link.indexOf("<html>") != -1)
-		{
-			link = Util.replaceAll(link, "<html>", "<html><font color=blue><u>");
-			link = Util.replaceAll(link, "</html>", "</u></font></html>");
-		}
-		else
-		{
-			link = "<html><font color=blue><u>" + link + "</u></font></html>";
-		}
-		a_label.setText(link);
+
 	}
 
 	/**
@@ -198,7 +180,7 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 	private void copyExtraInfoToClipboard()
 	{
 		Clipboard sysClip = Toolkit.getDefaultToolkit().getSystemClipboard();
-		String link = m_extraInfoLabel.getText();
+		String link = m_strExtraInfo;
 		if (m_selectedOption.getExtraInfoType(m_language).equals(XMLPaymentOption.EXTRA_TEXT))
 		{
 			link = Util.replaceAll(link, "<br>", "\n");
@@ -219,34 +201,10 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		sysClip.setContents(transfer, null);
 	}
 
-	public void mousePressed(MouseEvent e)
-	{
-	}
-
-	public void mouseReleased(MouseEvent e)
-	{
-	}
-
-	public void mouseEntered(MouseEvent e)
-	{
-	}
-
-	public void mouseExited(MouseEvent e)
-	{
-	}
-
-	public void mouseClicked(MouseEvent e)
-	{
-		if (e.getSource() == m_extraInfoLabel)
-		{
-			openURL();
-		}
-	}
-
 	public void openURL()
 	{
 		AbstractOS os = AbstractOS.getInstance();
-		String link = m_extraInfoLabel.getText();
+		String link = m_strExtraInfo;
 		link = Util.replaceAll(link, "<br>", "");
 		link = Util.replaceAll(link, "<p>", "");
 		link = Util.replaceAll(link, "<html>", " ");
