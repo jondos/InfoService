@@ -113,12 +113,12 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		m_c.fill = m_c.NONE;
 
 		//Add some dummy labels for dialog sizing
-		for (int i = 0; i < 12; i++)
+/*		for (int i = 0; i < 12; i++)
 		{
 			m_rootPanel.add(new JLabel("..................................................."),
 							m_c);
 			m_c.gridy++;
-		}
+		}*/
 	}
 
 	public void showGenericForm()
