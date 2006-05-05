@@ -436,7 +436,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		}
 
 		init(a_parentDialog, a_layout.getTitle(), a_strText, SwingConstants.CENTER, a_options.getOptionType(),
-			 a_layout.getMessageType(), a_layout.getIcon(), a_options.getHelpContext(),
+			 a_layout.getMessageType(), a_layout.getIcon(), a_layout.isCentered(), a_options.getHelpContext(),
 			 a_options.getPreviousContentPane());
 	}
 
@@ -454,14 +454,17 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 * @param a_optionType one of the available option types the define the type and number of buttons
 	 * @param a_messageType one of the available message types that define the message layout
 	 * @param a_icon an Icon; if null, the icon will be chosen automatically depending on the message type
+	 * @param a_bCentered if the text and content should be centered on the panel; otherwise, the content
+	 * is expanded to fill the panel
 	 * @param a_helpContext a IHelpContext; if it returns an other help context value than null,
 	 * a help button is shown that opens the context;
 	 * @param a_previousContentPane A DialogContentPane that will be linked with this one; it gets this
 	 * content pane as next content pane. Call moveToNextContentPane() and moveToPreviousContentPane() to
 	 * move between the panes.
+	 * @todo implement the expansion on !a_bCentered
 	 */
 	private void init(RootPaneContainer a_parentDialog, String a_strTitle, String a_strText, int a_alignment,
-					  int a_optionType, int a_messageType, Icon a_icon,
+					  int a_optionType, int a_messageType, Icon a_icon, boolean a_bCentered,
 					  JAPHelpContext.IHelpContext a_helpContext, DialogContentPane a_previousContentPane)
 	{
 		if (a_parentDialog == null)
@@ -537,13 +540,32 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		// set the contraints for the text label; they are used later
 		m_textConstraints = new GridBagConstraints();
 		m_textConstraints.gridx = 0;
-		m_textConstraints.gridy = 0;
+		m_textConstraints.gridy = 1;
 		m_textConstraints.weightx = 1;
 		m_textConstraints.weighty = 0;
 		m_textConstraints.anchor = GridBagConstraints.NORTH;
 		m_textConstraints.fill = GridBagConstraints.HORIZONTAL;
 		m_textConstraints.insets =
 			new Insets(SPACE_AROUND_TEXT, SPACE_AROUND_TEXT, SPACE_AROUND_TEXT, SPACE_AROUND_TEXT);
+
+		if (a_bCentered)
+		{
+			// center text and content vertically
+			GridBagConstraints contraints = new GridBagConstraints();
+			contraints.gridx = 0;
+			contraints.gridy = 0;
+			contraints.weightx = 0;
+			contraints.weighty = 10;
+			contraints.anchor = GridBagConstraints.NORTH;
+			contraints.fill = GridBagConstraints.VERTICAL;
+			m_titlePane.add(new JPanel(), contraints);
+			contraints.gridy = 4;
+			m_titlePane.add(new JPanel(), contraints);
+		}
+		else
+		{
+			// expand the content; does not work on JDK 1.1.8...
+		}
 
 		// construct the chain of content panes
 		if (m_previousContentPane != null)
@@ -877,6 +899,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		private String m_strTitle;
 		private int m_messageType;
 		private Icon m_icon;
+		private boolean m_bCentered;
 
 		/**
 		 * Creates a new Layout for the dialog content pane. The title is empty, therefore a status bar
@@ -966,6 +989,12 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			m_strTitle = a_strTitle;
 			m_messageType = a_messageType;
 			m_icon = a_icon;
+			m_bCentered = true;
+		}
+
+		public boolean isCentered()
+		{
+			return m_bCentered;
 		}
 
 		/**
@@ -1350,9 +1379,10 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	{
 		GridBagConstraints contraints = new GridBagConstraints();
 		contraints.gridx = 0;
-		contraints.gridy = 2;
+		contraints.gridy = 3;
 		contraints.weightx = 1;
-		contraints.weighty = 1;
+		//contraints.weighty = 1;
+		contraints.weighty = 0;
 		contraints.anchor = GridBagConstraints.NORTH;
 		contraints.fill = GridBagConstraints.BOTH;
 
@@ -1616,8 +1646,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 				{
 					// the width of the label must be restricted to make the pack() operation possible
 					m_lblText.setPreferredWidth(Math.max(m_lblText.getMinimumSize().width,
-						Math.max(m_contentPane.getWidth() - 2 * SPACE_AROUND_TEXT,
-								 a_maxTextWidth)));
+						Math.max(m_contentPane.getWidth() - 2 * SPACE_AROUND_TEXT, a_maxTextWidth)));
 				}
 			}
 
@@ -1896,6 +1925,8 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 * The new text will not influence the current size or the preferred size of the content pane and
 	 * the dialog. If the text is too big to show it completely, a link is generated that opens an
 	 * extra dialog to view the text.
+	 * @todo Look for a better measure; it sems that there is enough space, but the text is not displayed
+	 * fully
 	 * @param a_strText a new text for this content pane
 	 */
 	public synchronized void setText(String a_strText)
@@ -1917,7 +1948,9 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			RootPaneContainer ownerDialog = getDialog();
 			boolean bWasActive = isActive();
 			boolean bWasUnlimitedSize = false;
-			int preferredWidth = m_contentPane.getSize().width - 2 * SPACE_AROUND_TEXT;
+			// do not use m_contentPane as this may have a size of zero...
+			int preferredWidth;
+
 			int currentCut, bestCut;
 			int totalLength;
 			boolean bCutFound = false;
@@ -1938,6 +1971,8 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 												"This is not allowed when changing the text.");
 			}
 			dialog.setSize(dialogSize);
+
+			preferredWidth = getDialogContentPane().getSize().width - 2 * SPACE_AROUND_TEXT;
 
 			// remove and add the text field, as it may have been removed in a prior call to this method
 			if (m_lblText != null)
@@ -1971,6 +2006,8 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 				m_lblSeeFullText = null;
 			}
 			updateDialog(false);
+			//System.out.println(dialog.getContentPane().getSize().height);
+			//System.out.println(dialog.getContentPane().getPreferredSize().height);
 
 			if (dialog.getContentPane().getSize().height < dialog.getContentPane().getPreferredSize().height)
 			{
@@ -1996,7 +2033,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 					}
 				});
 				contraints = (GridBagConstraints)m_textConstraints.clone();
-				contraints.gridy = 1;
+				contraints.gridy = 2;
 				contraints.insets = new Insets(0, 0, 0, 0);
 				m_titlePane.add(m_lblSeeFullText, contraints);
 
@@ -2050,13 +2087,19 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 					   currentCut += currentCut / 2;
 				   }
 				}
+				if (bCutFound && bestCut >= totalLength)
+				{
+					// found an illegal cut; happens in JDK 1.3.x if everything fits in; Why??
+					m_lblText.setText(m_strText);
+					m_titlePane.remove(m_lblSeeFullText);
+				}
 			}
 
 			if (m_lblText != null)
 			{
 				m_lblText.setText("<font color=#000000>" +
-				  JAPHtmlMultiLineLabel.removeHTMLHEADAndBODYTags(m_lblText.getText())
-				    + "</font>");
+								  JAPHtmlMultiLineLabel.removeHTMLHEADAndBODYTags(m_lblText.getText())
+								  + "</font>");
 				m_lblText.setPreferredWidth(preferredWidth);
 			}
 
@@ -2082,6 +2125,15 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	public RootPaneContainer getDialog()
 	{
 		return m_parentDialog;
+	}
+
+	private Container getDialogContentPane()
+	{
+		if (m_parentDialog instanceof JAPDialog)
+		{
+			return ((JAPDialog) m_parentDialog).getContentPane();
+		}
+		return ((JDialog) m_parentDialog).getContentPane();
 	}
 
 	/**
