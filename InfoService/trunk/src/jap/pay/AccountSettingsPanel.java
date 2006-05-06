@@ -1309,7 +1309,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				if (JAPController.getInstance().saveConfigFile())
 				{
 					// an error occured while saving the configuration
-					JAPDialog.showErrorDialog(d, JAPMessages.getString(JAPController.MSG_ERROR_SAVING_CONFIG),
+					JAPDialog.showErrorDialog(d, JAPMessages.getString(
+									   JAPController.MSG_ERROR_SAVING_CONFIG,
+									   JAPModel.getInstance().getConfigFile()),
 											  LogType.MISC);
 					try
 					{
