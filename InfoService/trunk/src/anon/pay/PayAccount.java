@@ -258,6 +258,32 @@ public class PayAccount implements IXMLEncodable
 	}
 
 	/**
+	 * An interface that returns a PayAccount.
+	 */
+	public static interface IPayAccountGetter
+	{
+		/**
+		 * Returns null or a PayAccount.
+		 * @return null or a PayAccount
+		 */
+		public PayAccount getPayAccount();
+	}
+
+	public static final class PayAccountGetter implements IPayAccountGetter
+	{
+		private PayAccount m_payAccount;
+
+		public PayAccountGetter(PayAccount a_payAccount)
+		{
+			m_payAccount = a_payAccount;
+		}
+		public PayAccount getPayAccount()
+		{
+			return m_payAccount;
+		}
+	}
+
+	/**
 	 * Returns the xml representation of the account
 	 *
 	 * @return XML-Document
