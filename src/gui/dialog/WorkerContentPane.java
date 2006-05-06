@@ -54,6 +54,8 @@ public class WorkerContentPane extends DialogContentPane implements
 	/** @todo rename the image according to coding standards */
 	public static final String IMG_BUSY = "busy.gif";
 
+	public static final String DOTS = "...";
+
 	private Thread m_workerThread;
 	private Runnable m_workerRunnable;
 	private Thread m_internalThread;
@@ -197,36 +199,9 @@ public class WorkerContentPane extends DialogContentPane implements
 	 */
 	private class InternalThread extends Thread
 	{
-		private Thread m_thread;
-
 		public InternalThread(Runnable a_runnable)
 		{
 			super(a_runnable,"WorkerContentPane - InternalThread");
-			if (a_runnable instanceof Thread)
-			{
-				m_thread = (Thread) a_runnable;
-			}
-		}
-
-		public void interrupt()
-		{
-			if (m_thread != null)
-			{
-				m_thread.interrupt();
-			}
-			super.interrupt();
-		}
-
-		public boolean isInterrupted()
-		{
-			boolean bInterrupted = super.isInterrupted();
-
-			if (m_thread != null)
-			{
-				bInterrupted = bInterrupted || m_thread.isInterrupted();
-			}
-
-			return bInterrupted;
 		}
 	}
 

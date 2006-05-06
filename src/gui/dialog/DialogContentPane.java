@@ -1140,6 +1140,10 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 
 		while ((contentPane = contentPane.getPreviousContentPane()) != null)
 		{
+			if (!contentPane.isMoveBackAllowed())
+			{
+				return false;
+			}
 			try
 			{
 				if (!contentPane.isSkippedAsPreviousContentPane())
@@ -1322,6 +1326,18 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	public boolean isSkippedAsNextContentPane()
 	{
 		return false;
+	}
+
+	/**
+	 * Returns if a move back to the direction of this content pane is allowed in a wizard.
+	 * Stronger than isSkippedAsPreviousContentPane(), as this method does not allow to access previous
+	 * content panes, either. hasPreviousContentPane() will return 'false' for all content panes after
+	 * this one if isMoveBackAllowed() returns false
+	 * @return if a move back to the direction of this content pane is allowed in a wizard
+	 */
+	public boolean isMoveBackAllowed()
+	{
+		return true;
 	}
 
 	/**
