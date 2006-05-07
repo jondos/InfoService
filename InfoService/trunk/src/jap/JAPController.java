@@ -102,8 +102,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 {
 
 	/** Messages */
-	public static final String MSG_ERROR_SAVING_CONFIG = JAPController.class.getName() +
-		"_errorSavingConfig";
 	private static final String MSG_DIALOG_ACCOUNT_PASSWORD = JAPController.class.
 		getName() + "_dialog_account_password";
 	private static final String MSG_ACCOUNT_PASSWORD = JAPController.class.
@@ -124,6 +122,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 		getName() + "_loseaccountdata";
 	private static final String MSG_DISABLE_GOODBYE = JAPController.class.getName() +
 		"_disableGoodByMessage";
+	private static final String MSG_ERROR_SAVING_CONFIG = JAPController.class.getName() +
+		"_errorSavingConfig";
 
 	/**
 	 * Stores all MixCascades we know (information comes from infoservice or was entered by a user).
@@ -1161,7 +1161,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 			notifyJAPObservers();
 		}
 	}
-
 
 	public boolean saveConfigFile()
 	{
@@ -2445,7 +2444,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 			else
 			{
-				/* User has elected not to download -> Alert, we shouldn't start the system due to
+				/* User has elected not to download -> Alert, we should'nt start the system due to
 				 * possible compatibility problems
 				 */
 				JAPDialog.showWarningDialog(m_View, JAPMessages.getString("youShouldUpdate") +

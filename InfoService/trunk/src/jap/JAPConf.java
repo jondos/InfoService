@@ -936,62 +936,51 @@ final public class JAPConf extends JAPDialog implements ActionListener
 			return;
 		}
 		setVisible(false);
-
-		// We are in event dispatch thread!!
-		new Thread()
+		// Misc settings
+		int[] availableLogTypes = LogType.getAvailableLogTypes();
+		int logType = LogType.NUL;
+		for (int i = 0; i < m_cbLogTypes.length; i++)
 		{
-			public void run()
-			{
-				// Misc settings
-				int[] availableLogTypes = LogType.getAvailableLogTypes();
-				int logType = LogType.NUL;
-				for (int i = 0; i < m_cbLogTypes.length; i++)
-				{
-					logType |= (m_cbLogTypes[i].isSelected() ? availableLogTypes[i] : LogType.NUL);
-				}
+			logType |= (m_cbLogTypes[i].isSelected() ? availableLogTypes[i] : LogType.NUL);
+		}
 
-				JAPDebug.getInstance().setLogType(logType);
-				JAPDebug.getInstance().setLogLevel(m_sliderDebugLevel.getValue());
-				String strFilename = m_tfDebugFileName.getText().trim();
-				if (!m_cbDebugToFile.isSelected())
-				{
-					strFilename = null;
-				}
-				JAPDebug.setLogToFile(strFilename);
-				m_Controller.setHTTPListener(m_tfListenerPortNumber.getInt(),
-											 m_cbListenerIsLocal.isSelected(), true);
-				//m_Controller.setSocksPortNumber(m_tfListenerPortNumberSocks.getInt());
-				// Firewall settings
-				int port = -1;
-				try
-				{
-					port = Integer.parseInt(m_tfProxyPortNumber.getText().trim());
-				}
-				catch (Exception e)
-				{}
-				;
-				int firewallType = ImmutableListenerInterface.PROTOCOL_TYPE_HTTP;
-				if (m_comboProxyType.getSelectedIndex() == 1)
-				{
-					firewallType = ImmutableListenerInterface.PROTOCOL_TYPE_SOCKS;
-				}
-				m_Controller.changeProxyInterface(
-					new ProxyInterface(m_tfProxyHost.getText().trim(),
-									   port,
-									   firewallType,
-									   m_tfProxyAuthenticationUserID.getText().trim(),
-									   m_Controller.getPasswordReader(),
-									   m_cbProxyAuthentication.isSelected(),
-									   m_cbProxy.isSelected()),
-					m_cbProxyAuthentication.isSelected());
+		JAPDebug.getInstance().setLogType(logType);
+		JAPDebug.getInstance().setLogLevel(m_sliderDebugLevel.getValue());
+		String strFilename = m_tfDebugFileName.getText().trim();
+		if (!m_cbDebugToFile.isSelected())
+		{
+			strFilename = null;
+		}
+		JAPDebug.setLogToFile(strFilename);
+		m_Controller.setHTTPListener(m_tfListenerPortNumber.getInt(),
+									 m_cbListenerIsLocal.isSelected(), true);
+		//m_Controller.setSocksPortNumber(m_tfListenerPortNumberSocks.getInt());
+		// Firewall settings
+		int port = -1;
+		try
+		{
+			port = Integer.parseInt(m_tfProxyPortNumber.getText().trim());
+		}
+		catch (Exception e)
+		{}
+		;
+		int firewallType = ImmutableListenerInterface.PROTOCOL_TYPE_HTTP;
+		if (m_comboProxyType.getSelectedIndex() == 1)
+		{
+			firewallType = ImmutableListenerInterface.PROTOCOL_TYPE_SOCKS;
+		}
+		m_Controller.changeProxyInterface(
+			new ProxyInterface(m_tfProxyHost.getText().trim(),
+							   port,
+							   firewallType,
+							   m_tfProxyAuthenticationUserID.getText().trim(),
+							   m_Controller.getPasswordReader(),
+							   m_cbProxyAuthentication.isSelected(),
+							   m_cbProxy.isSelected()),
+			m_cbProxyAuthentication.isSelected());
 
-				// save configuration
-				m_Controller.saveConfigFile();
-				// force notifying the observers set the right server name
-				m_Controller.notifyJAPObservers(); // this should be the last line of okPressed() !!!
-			}
-		}.start();
-
+		// force notifying the observers set the right server name
+		m_Controller.notifyJAPObservers(); // this should be the last line of okPressed() !!!
 		// ... manual settings stuff finished
 	}
 
