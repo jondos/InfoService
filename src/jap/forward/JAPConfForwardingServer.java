@@ -1446,7 +1446,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		final Vector fetchedCascades = new Vector();
 		final Vector errorOccured = new Vector();
 
-		final Runnable fetchMixCascadesThread = new Runnable()
+		final Thread fetchMixCascadesThread = new Thread(new Runnable()
 		{
 			public void run()
 			{
@@ -1478,7 +1478,8 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 						fetchedCascades.addElement(cascade);
 					}
 				}
-		}};
+			}
+		});
 
 		WorkerContentPane worker = new WorkerContentPane(fetchMixCascadesDialog,
 			JAPMessages.getString(
