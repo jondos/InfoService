@@ -108,6 +108,11 @@ public final class ResourceLoader
 		byte[] buffer;
 		int readDataLength = 1;
 
+		if (a_iStream == null)
+		{
+			throw new IOException("Stream is null!");
+		}
+
 		data = new byte[0];
 		// if readDataLength >= 0 there are more bytes available to read
 		while (readDataLength >= 0)
@@ -218,7 +223,7 @@ public final class ResourceLoader
 	 * @param a_strRelativeResourcePath a relative filename for the resource
 	 * @return the contents of the resource or null if resource could not be loaded
 	 */
-	public static byte[] loadResource(String a_strRelativeResourcePath)
+	public static InputStream loadResourceAsStream(String a_strRelativeResourcePath)
 	{
 		InputStream in;
 
@@ -256,6 +261,32 @@ public final class ResourceLoader
 				// load resource from the current directory
 				in = new FileInputStream(a_strRelativeResourcePath);
 			}
+			return in;
+		}
+		catch (IOException a_e)
+		{
+			return null;
+		}
+	}
+
+	/**
+	 * Loads a resource from the classpath or the current directory.
+	 * The resource may be contained in an archive (ZIP,JAR) or a directory structure.
+	 * If the resource could not be found in the classpath, it is loaded from the current
+	 * directory. Loads a single resource only, therefore directory specifications like
+	 * "home/dir/" are not allowed.
+	 * @param a_strRelativeResourcePath a relative filename for the resource
+	 * @return the contents of the resource or null if resource could not be loaded
+	 */
+	public static byte[] loadResource(String a_strRelativeResourcePath)
+	{
+		InputStream in = loadResourceAsStream(a_strRelativeResourcePath);
+		if (in == null)
+		{
+			return null;
+		}
+		try
+		{
 			return getStreamAsBytes(in);
 		}
 		catch (IOException a_e)

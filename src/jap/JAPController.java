@@ -185,18 +185,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	private JAPController()
 	{
-		/** @todo Debug Controller for JDK 1.2.2 */
-		/*
-		  try
-											  {
-												  Thread.sleep(10000);
-											  }
-											  catch (Exception a_e)
-											  {
-
-			  }
-
-		 */
 		m_changeAnonModeJobs = new Vector();
 		m_Model = JAPModel.getInstance();
 		// Create observer object
@@ -222,7 +210,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
 			LogHolder.log(LogLevel.EMERG, LogType.NET,
 						  "JAPController: Constructor - default mix cascade: " + e.getMessage());
 			LogHolder.log(LogLevel.EMERG, LogType.NET, e);
