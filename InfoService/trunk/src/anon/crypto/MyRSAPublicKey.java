@@ -37,6 +37,7 @@ import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.PublicKey;
 
+import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
@@ -46,10 +47,8 @@ import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
 import anon.util.Base64;
 import anon.util.XMLUtil;
-import org.bouncycastle.asn1.ASN1InputStream;
 
 final public class MyRSAPublicKey extends AbstractPublicKey implements IMyPublicKey
 {

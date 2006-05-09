@@ -47,13 +47,14 @@ import java.security.SecureRandom;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.Vector;
 import java.util.Hashtable;
+import java.util.Vector;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1OctetString;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1TaggedObject;
 import org.bouncycastle.asn1.DERBitString;
 import org.bouncycastle.asn1.DEREncodableVector;
@@ -66,27 +67,25 @@ import org.bouncycastle.asn1.DERTags;
 import org.bouncycastle.asn1.DERUTCTime;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.pkcs.SignedData;
-import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.asn1.x509.TBSCertificateStructure;
 import org.bouncycastle.asn1.x509.V3TBSCertificateGenerator;
 import org.bouncycastle.asn1.x509.X509CertificateStructure;
-import org.bouncycastle.asn1.x509.X509Name;
-import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.asn1.x509.X509Extension;
+import org.bouncycastle.asn1.x509.X509Extensions;
+import org.bouncycastle.asn1.x509.X509Name;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-
 import anon.util.Base64;
-import anon.util.IXMLEncodable;
-import anon.util.XMLUtil;
 import anon.util.IResourceInstantiator;
+import anon.util.IXMLEncodable;
 import anon.util.ResourceLoader;
+import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import org.bouncycastle.asn1.ASN1InputStream;
 
 /**
  * A certificate class.
@@ -658,7 +657,8 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 	{
 		if (a_verifyingCertificates == null)
 		{
-			LogHolder.log(LogLevel.DEBUG,LogType.CRYPTO,"XMSignature:verify(Vector certificates) certificates==NULL!" );
+			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+						  "XMSignature:verify(Vector certificates) certificates==NULL!");
 			return false;
 		}
 
@@ -666,14 +666,16 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 		while (certificatesEnumerator.hasMoreElements())
 		{
 			JAPCertificate currentCertificate = (JAPCertificate) (certificatesEnumerator.nextElement());
-			LogHolder.log(LogLevel.DEBUG,LogType.CRYPTO,"XMSignature:verify(Vector certificates) try to verfiy against a certificate from given certificates..." );
+			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+				"XMSignature:verify(Vector certificates) try to verfiy against a certificate from given certificates...");
 
 			if (verify(currentCertificate))
 			{
-				LogHolder.log(LogLevel.DEBUG,LogType.CRYPTO,"XMSignature:verify(Vector certificates) try to verfiy agains a certifcate from given certificates - success!" );
+				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+					"XMSignature:verify(Vector certificates) try to verfiy agains a certifcate from given certificates - success!");
 				return true;
 			}
-			LogHolder.log(LogLevel.DEBUG,LogType.CRYPTO,"XMSignature:verify(Vector certificates) try to verfiy against a certificate from given certificates - failed!" );
+			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "XMSignature:verify(Vector certificates) try to verfiy against a certificate from given certificates - failed!");
 		}
 		return false;
 	}
@@ -689,7 +691,8 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 	{
 		if (a_certificate == null)
 		{
-			LogHolder.log(LogLevel.DEBUG,LogType.CRYPTO,"XMSignature:verify(JAPCertificate certificates) certificate==NULL!" );
+			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+						  "XMSignature:verify(JAPCertificate certificates) certificate==NULL!");
 			return false;
 		}
 		return verify(a_certificate.getPublicKey());
@@ -703,17 +706,19 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 	{
 		if (a_publicKey == null)
 		{
-			LogHolder.log(LogLevel.DEBUG,LogType.CRYPTO,"XMSignature:verify(IMyPublicKey key) key==NULL!" );
+			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "XMSignature:verify(IMyPublicKey key) key==NULL!");
 			return false;
 		}
 
 		// the cert is verified, too, if the public key is the same as the test key
-		LogHolder.log(LogLevel.DEBUG,LogType.CRYPTO,"XMSignature:verify(IMyPublicKey key) check if keys are equal..." );
+		LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+					  "XMSignature:verify(IMyPublicKey key) check if keys are equal...");
 		if (getPublicKey().equals(a_publicKey))
 		{
 			return true;
 		}
-		LogHolder.log(LogLevel.DEBUG,LogType.CRYPTO,"XMSignature:verify(IMyPublicKey key) check if keys are equal - no!" );
+		LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+					  "XMSignature:verify(IMyPublicKey key) check if keys are equal - no!");
 
 		try
 		{
@@ -725,8 +730,8 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 		}
 		catch (IOException a_e)
 		{
-			LogHolder.log(LogLevel.DEBUG,LogType.CRYPTO,"XMSignature:verify(IMyPublicKey key) Exception!");
-			LogHolder.log(LogLevel.DEBUG,LogType.CRYPTO,a_e);
+			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "XMSignature:verify(IMyPublicKey key) Exception!");
+			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, a_e);
 			// should not happen
 		}
 
