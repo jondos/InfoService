@@ -29,6 +29,7 @@ package gui.dialog;
 
 import java.util.EventListener;
 import java.util.Vector;
+import java.util.Enumeration;
 import java.lang.reflect.InvocationTargetException;
 import javax.accessibility.Accessible;
 import javax.accessibility.AccessibleContext;
@@ -145,6 +146,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	private boolean m_bBlockParentWindow = false;
 	private int m_defaultCloseOperation;
 	private Vector m_windowListeners = new Vector();
+	private Vector m_componentListeners = new Vector();
 	private DialogWindowAdapter m_dialogWindowAdapter;
 	private boolean m_bForceApplicationModality;
 
@@ -2216,6 +2218,26 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 
 		synchronized (m_internalDialog.getTreeLock())
 		{
+			Enumeration listeners = m_windowListeners.elements();
+			while (listeners.hasMoreElements())
+			{
+				((WindowListener)listeners.nextElement()).windowClosed(
+								new WindowEvent(m_internalDialog, WindowEvent.WINDOW_CLOSED));
+			}
+			m_windowListeners.clear();
+
+			listeners = ((Vector)m_componentListeners.clone()).elements();
+			while (listeners.hasMoreElements())
+			{
+				removeComponentListener((ComponentListener)listeners.nextElement());
+			}
+			m_componentListeners.clear();
+
+			m_internalDialog.removeWindowListener(m_dialogWindowAdapter);
+			m_dialogWindowAdapter = null;
+			m_internalDialog.getContentPane().removeAll();
+			m_internalDialog.getRootPane().removeAll();
+			m_internalDialog.getLayeredPane().removeAll();
 			m_internalDialog.getTreeLock().notifyAll();
 		}
 	}
@@ -2419,8 +2441,10 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	{
 		if (a_listener != null)
 		{
-			m_windowListeners.addElement(a_listener);
-
+			synchronized (m_internalDialog.getTreeLock())
+			{
+				m_windowListeners.addElement(a_listener);
+			}
 		}
 	}
 
@@ -2431,7 +2455,14 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 */
 	public final void addComponentListener(ComponentListener a_listener)
 	{
-		m_internalDialog.addComponentListener(a_listener);
+		synchronized (m_internalDialog.getTreeLock())
+		{
+			if (a_listener != null && !m_componentListeners.contains(a_listener))
+			{
+				m_componentListeners.addElement(a_listener);
+				m_internalDialog.addComponentListener(a_listener);
+			}
+		}
 	}
 
 	/**
@@ -2441,7 +2472,11 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 */
 	public final void removeComponentListener(ComponentListener a_listener)
 	{
-		m_internalDialog.removeComponentListener(a_listener);
+		synchronized (m_internalDialog.getTreeLock())
+		{
+			m_componentListeners.removeElement(a_listener);
+			m_internalDialog.removeComponentListener(a_listener);
+		}
 	}
 
 	/**
@@ -2451,7 +2486,10 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 */
 	public final void removeWindowListener(WindowListener a_listener)
 	{
-		m_windowListeners.removeElement(a_listener);
+		synchronized (m_internalDialog.getTreeLock())
+		{
+			m_windowListeners.removeElement(a_listener);
+		}
 	}
 
 	/**
@@ -2521,14 +2559,14 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 
 
 		public void windowClosed(WindowEvent a_event)
-		{
+		{/* Does not work... Do this in the dispose method!
 			Vector listeners = (Vector)m_windowListeners.clone();
 			{
 				for (int i = 0; i < listeners.size(); i++)
 				{
 					( (WindowListener) listeners.elementAt(i)).windowClosed(a_event);
 				}
-			}
+			}*/
 		}
 
 		/**

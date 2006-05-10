@@ -28,6 +28,7 @@
 package gui.dialog;
 
 import java.util.Vector;
+import java.util.Enumeration;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
@@ -95,11 +96,12 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	static
 	{
 		// preload java dialog icons
-		new JOptionPane("", MESSAGE_TYPE_ERROR).createDialog(null, "");
-		new JOptionPane("", MESSAGE_TYPE_INFORMATION).createDialog(null, "");
-		new JOptionPane("", MESSAGE_TYPE_WARNING).createDialog(null, "");
-		new JOptionPane("", MESSAGE_TYPE_PLAIN).createDialog(null, "");
-		new JOptionPane("", MESSAGE_TYPE_QUESTION).createDialog(null, "");
+
+		new JOptionPane("", MESSAGE_TYPE_ERROR).createDialog(null, "").dispose();
+		new JOptionPane("", MESSAGE_TYPE_INFORMATION).createDialog(null, "").dispose();
+		new JOptionPane("", MESSAGE_TYPE_WARNING).createDialog(null, "").dispose();
+		new JOptionPane("", MESSAGE_TYPE_PLAIN).createDialog(null, "").dispose();
+		new JOptionPane("", MESSAGE_TYPE_QUESTION).createDialog(null, "").dispose();
 	}
 
 	public static final int ON_CLICK_DO_NOTHING = 0;
@@ -1140,6 +1142,10 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 
 		while ((contentPane = contentPane.getPreviousContentPane()) != null)
 		{
+			if (!contentPane.isMoveBackAllowed())
+			{
+				return false;
+			}
 			try
 			{
 				if (!contentPane.isSkippedAsPreviousContentPane())
@@ -1322,6 +1328,18 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	public boolean isSkippedAsNextContentPane()
 	{
 		return false;
+	}
+
+	/**
+	 * Returns if a move back to the direction of this content pane is allowed in a wizard.
+	 * Stronger than isSkippedAsPreviousContentPane(), as this method does not allow to access previous
+	 * content panes, either. hasPreviousContentPane() will return 'false' for all content panes after
+	 * this one if isMoveBackAllowed() returns false
+	 * @return if a move back to the direction of this content pane is allowed in a wizard
+	 */
+	public boolean isMoveBackAllowed()
+	{
+		return true;
 	}
 
 	/**
@@ -2184,7 +2202,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 * @todo Find a way so that the componentShown method has full functionality in JDialogs; is there a way?
 	 * I propose to use JAPDialog if you want this...
 	 */
-	public void addComponentListener(ComponentListener a_listener)
+	public synchronized void addComponentListener(ComponentListener a_listener)
 	{
 		if (a_listener != null)
 		{
@@ -2196,7 +2214,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 * Removes a component listener.
 	 * @param a_listener a ComponentListener
 	 */
-	public void removeComponentListener(ComponentListener a_listener)
+	public synchronized void removeComponentListener(ComponentListener a_listener)
 	{
 		m_componentListeners.removeElement(a_listener);
 	}
@@ -2248,6 +2266,44 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		{
 			((JAPDialog)m_parentDialog).removeWindowListener(a_listener);
 		}
+	}
+
+	public void dispose()
+	{
+		m_titlePane.removeAll();
+		m_titlePane = null;
+		m_rootPane.removeAll();
+		m_rootPane = null;
+		m_contentPane.removeAll();
+		m_contentPane = null;
+		m_panelOptions.removeAll();
+		m_panelOptions = null;
+		m_parentDialog = null;
+		m_lblText = null;
+		m_componentListeners.clear();
+		if (m_btnCancel != null)
+		{
+			m_btnCancel.removeActionListener(m_buttonListener);
+		}
+		if (m_btnYesOK != null)
+		{
+			m_btnYesOK.removeActionListener(m_buttonListener);
+		}
+		if (m_btnNo != null)
+		{
+			m_btnNo.removeActionListener(m_buttonListener);
+		}
+		if (m_btnHelp != null)
+		{
+			m_btnHelp.removeActionListener(m_buttonListener);
+		}
+
+		m_buttonListener = null;
+		m_currentlyActiveContentPane.removeComponentListener(m_currentlyActiveContentPaneComponentListener);
+		m_currentlyActiveContentPaneComponentListener = null;
+		m_currentlyActiveContentPane = null;
+		m_nextContentPane = null;
+		m_previousContentPane = null;
 	}
 
 	/**
@@ -2727,6 +2783,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 				listener.componentHidden(new ComponentEvent(
 								m_currentlyActiveContentPane, ComponentEvent.COMPONENT_HIDDEN));
 			}
+			dispose();
 		}
 		public void windowOpened(WindowEvent a_event)
 		{

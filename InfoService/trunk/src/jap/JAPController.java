@@ -102,6 +102,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 {
 
 	/** Messages */
+	public static final String MSG_ERROR_SAVING_CONFIG = JAPController.class.getName() +
+		"_errorSavingConfig";
 	private static final String MSG_DIALOG_ACCOUNT_PASSWORD = JAPController.class.
 		getName() + "_dialog_account_password";
 	private static final String MSG_ACCOUNT_PASSWORD = JAPController.class.
@@ -122,8 +124,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 		getName() + "_loseaccountdata";
 	private static final String MSG_DISABLE_GOODBYE = JAPController.class.getName() +
 		"_disableGoodByMessage";
-	private static final String MSG_ERROR_SAVING_CONFIG = JAPController.class.getName() +
-		"_errorSavingConfig";
 
 	/**
 	 * Stores all MixCascades we know (information comes from infoservice or was entered by a user).
