@@ -825,6 +825,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 			final JAPDialog d = new JAPDialog(GUIUtils.getParentWindow(this.getRootPanel()),
 											  JAPMessages.getString(MSG_CHARGETITLE), true);
+			d.setDefaultCloseOperation(JAPDialog.DISPOSE_ON_CLOSE);
 			d.setResizable(true);
 			SimpleWizardContentPane welcomePane = new SimpleWizardContentPane(d,
 				JAPMessages.getString(MSG_CHARGEWELCOME), null, null);
@@ -1049,7 +1050,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					doGetStatement(selectedAccount);
 				}
 			}
-
 	}
 
 	/**

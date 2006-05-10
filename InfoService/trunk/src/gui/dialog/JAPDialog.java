@@ -1155,9 +1155,11 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		int minLabelWidth;
 
 		// get the minimum width and height that is needed to display this dialog without any text
-		minSize = new Dimension(
-			  new JOptionPane("", a_messageType, a_optionType, a_icon).
-			  createDialog(a_parentComponent, a_title).getContentPane().getSize());
+		JDialog tempDialog = new JOptionPane("", a_messageType, a_optionType, a_icon).
+			createDialog(a_parentComponent, a_title);
+		minSize = new Dimension(tempDialog.getContentPane().getSize());
+		tempDialog.dispose();
+		tempDialog = null;
 		minSize.setSize(minSize.width / 2, minSize.height);
 
 		// set the maximum width that is allowed for the content pane

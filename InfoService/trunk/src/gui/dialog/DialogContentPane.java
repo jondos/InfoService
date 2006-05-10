@@ -188,6 +188,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	private int m_defaultButton;
 	private String m_strText;
 	private String m_strTitle;
+	private JDialog m_tempDialog; // this is a temporary dialog used to construct the content pane
 
 	/**
 	 * Contructs a new dialog content pane. Its layout is predefined, but may change if the content pane
@@ -1621,7 +1622,6 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 */
 	private final synchronized CheckError[] updateDialog(int a_maxTextWidth, boolean a_bCallCheckUpdate)
 	{
-		JDialog dialog;
 		JOptionPane pane;
 		Object[] options;
 		CheckError[] errors;
@@ -1648,8 +1648,12 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			m_titlePane.remove(m_lblText);
 		}
 		pane = new JOptionPane(m_rootPane, m_messageType, 0, m_icon, options );
-		dialog = pane.createDialog(null, "");
-		dialog.pack();
+		if (m_tempDialog != null)
+		{
+			m_tempDialog.dispose();
+		}
+		m_tempDialog = pane.createDialog(null, "");
+		m_tempDialog.pack();
 		if (m_lblText != null)
 		{
 			if (isDialogVisible())
@@ -1679,7 +1683,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			m_currentlyActiveContentPane.removeComponentListener(
 						 m_currentlyActiveContentPaneComponentListener);
 		}
-		m_currentlyActiveContentPane = dialog.getContentPane();
+		m_currentlyActiveContentPane = m_tempDialog.getContentPane();
 		m_currentlyActiveContentPaneComponentListener = new ContentPaneComponentListener();
 		m_currentlyActiveContentPane.addComponentListener(m_currentlyActiveContentPaneComponentListener);
 		m_parentDialog.setContentPane(m_currentlyActiveContentPane);
@@ -2270,6 +2274,11 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 
 	public void dispose()
 	{
+		if (m_tempDialog != null)
+		{
+			m_tempDialog.dispose();
+		}
+
 		m_titlePane.removeAll();
 		m_titlePane = null;
 		m_rootPane.removeAll();
