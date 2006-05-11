@@ -227,7 +227,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 		/* this Vector contains the fetched captcha, if no error occured while fetching */
 		final Vector fetchedCaptcha = new Vector();
 
-		final Thread infoserviceThread = new Thread(new Runnable()
+		final Runnable infoserviceThread = new Runnable()
 		{
 			public void run()
 			{
@@ -261,7 +261,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 						JAPMessages.getString("settingsRoutingClientGrabCaptchaUnknownError"));
 				}
 			}
-		});
+		};
 
 		WorkerContentPane worker = new WorkerContentPane(infoserviceDialog,
 			JAPMessages.getString("settingsRoutingClientConfigDialogInfoServiceLabel"), infoserviceThread);
@@ -755,7 +755,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 		/* this Vector contains a message, if an error occured. */
 		final Vector occuredError = new Vector();
 
-		final Thread connectThread = new Thread(new Runnable()
+		final Runnable connectThread = new Runnable()
 		{
 			public void run()
 			{
@@ -769,7 +769,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 						JAPMessages.getString("settingsRoutingClientConfigConnectToForwarderError"));
 				}
 			}
-		});
+		};
 
 		ListenerInterface currentForwarder = JAPModel.getInstance().getRoutingSettings().getForwarder();
 		String currentForwarderString = "";
@@ -826,7 +826,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 		/* this Vector contains the fetched connection descriptor */
 		final Vector fetchedDescriptor = new Vector();
 
-		final Thread offerThread = new Thread(new Runnable()
+		final Runnable offerThread = new Runnable()
 		{
 			public void run()
 			{
@@ -861,7 +861,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 				}
 				offerDialog.dispose();
 			}
-		});
+		};
 
 		WorkerContentPane worker = new WorkerContentPane(offerDialog,
 			JAPMessages.getString("settingsRoutingClientConfigDialogGetOfferLabel"), offerThread);
@@ -1100,7 +1100,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 		/* this Vector contains a message, if an error occured. */
 		final Vector occuredError = new Vector();
 
-		final Thread announceThread = new Thread(new Runnable()
+		final Runnable announceThread = new Runnable()
 		{
 			public void run()
 			{
@@ -1126,7 +1126,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 					}
 				}
 			}
-		});
+		};
 
 		WorkerContentPane worker = new WorkerContentPane(announceDialog,
 			JAPMessages.getString("settingsRoutingClientConfigDialogAnnounceCascadeLabel"), announceThread);

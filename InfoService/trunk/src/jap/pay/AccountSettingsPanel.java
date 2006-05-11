@@ -167,12 +167,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		getName() + "_accountcreatedesc";
 	private static final String MSG_ACCPASSWORDTITLE = AccountSettingsPanel.class.
 		getName() + "_accpasswordtitle";
+	private static final String MSG_EXPORTENCRYPT = AccountSettingsPanel.class.
+		getName() + "_exportencrypt";
 	private static final String MSG_ACCPASSWORD = AccountSettingsPanel.class.
 		getName() + "_accpassword";
 	private static final String MSG_OLDSTATEMENT = AccountSettingsPanel.class.
 		getName() + "_oldstatement";
-	private static final String MSG_EXPORTENCRYPT = AccountSettingsPanel.class.
-		getName() + "_exportencrypt";
 	private static final String MSG_EXPORTED = AccountSettingsPanel.class.
 		getName() + "_exported";
 	private static final String MSG_NOTEXPORTED = AccountSettingsPanel.class.
@@ -207,6 +207,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		"_keyPairCreateError";
 	private static final String MSG_FETCHING_BIS = AccountSettingsPanel.class.getName() +
 		"_fetchingBIs";
+	private static final String MSG_SAVE_CONFIG = AccountSettingsPanel.class.getName() +
+		"_savingConfig";
+
 
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
@@ -230,7 +233,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private JProgressBar m_coinstack;
 	private JList m_listAccounts;
 	private boolean m_bReady = true;
-	private boolean m_bCreatingAccountKey = false;
+	private boolean m_bDoNotCloseDialog = false;
 
 	public AccountSettingsPanel()
 	{
@@ -502,7 +505,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 	private void updateAccountList()
 	{
-		Thread updateAccountThread = new Thread()
+		Runnable updateAccountThread = new Runnable()
 		{
 			public void run()
 			{
@@ -830,7 +833,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			SimpleWizardContentPane welcomePane = new SimpleWizardContentPane(d,
 				JAPMessages.getString(MSG_CHARGEWELCOME), null, null);
 
-			WorkerContentPane.ReturnThread fetchOptions = new WorkerContentPane.ReturnThread()
+			WorkerContentPane.IReturnRunnable fetchOptions = new WorkerContentPane.IReturnRunnable()
 			{
 				private XMLPaymentOptions m_paymentOptions;
 				private boolean m_interrupted = false;
@@ -861,7 +864,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 				public boolean isInterrupted()
 				{
-					if (super.isInterrupted())
+					if (Thread.currentThread().isInterrupted())
 					{
 						return true;
 					}
@@ -881,7 +884,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 			final MethodSelectionPane methodSelectionPane = new MethodSelectionPane(d, fetchOptionsPane);
 
-			WorkerContentPane.ReturnThread fetchTan = new WorkerContentPane.ReturnThread()
+			WorkerContentPane.IReturnRunnable fetchTan = new WorkerContentPane.IReturnRunnable()
 			{
 				private XMLTransCert m_transCert;
 				public void run()
@@ -953,7 +956,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				}
 			};
 
-			WorkerContentPane.ReturnThread sendPassive = new WorkerContentPane.ReturnThread()
+			WorkerContentPane.IReturnRunnable sendPassive = new WorkerContentPane.IReturnRunnable()
 			{
 				private Boolean m_successful = new Boolean(true);
 
@@ -1064,14 +1067,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			d.setDefaultCloseOperation(JAPDialog.DO_NOTHING_ON_CLOSE);
 			d.setResizable(true);
 
-			WorkerContentPane.ReturnThread fetchBIThread = new WorkerContentPane.ReturnThread()
+			WorkerContentPane.IReturnRunnable fetchBIThread = new WorkerContentPane.IReturnRunnable()
 			{
 				private BI theBI;
-				private boolean bBIfound = false;
 
 				public void run()
 				{
-					bBIfound = true;
 					Exception biException = null;
 
 					//First try and get the standard PI the preferred way
@@ -1109,24 +1110,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 							theBI = getBIforAccountCreation();
 						}
 					}
-					if (theBI == null)
+					if (theBI == null &&!Thread.currentThread().isInterrupted())
 					{
 						// no valid BI could be found
 						showPIerror(d, biException);
-						bBIfound = false;
+						Thread.currentThread().interrupt();
 					}
 				}
-				public boolean isInterrupted()
-				{
-					return super.isInterrupted() || !bBIfound;
-				}
-
-				public void interrupt()
-				{
-					super.interrupt();
-					//new Exception().printStackTrace();
-					//System.out.println("interrupted:" + isInterrupted() + " alive:" + isAlive());
-					}
 
 				public Object getValue()
 				{
@@ -1137,15 +1127,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			final WorkerContentPane fetchBiWorker =
 				new WorkerContentPane(d, JAPMessages.getString(MSG_FETCHING_BIS) + "...", fetchBIThread);
 
-				Thread piTestThread = new Thread()
+				Runnable piTestThread = new Runnable()
 				{
-					private boolean m_bPiReachable;
-
 					public void run()
 					{
 						try
 						{
-							m_bPiReachable = true;
 							//Check if payment instance is reachable
 							BIConnection biconn = new BIConnection((BI)fetchBiWorker.getValue());
 							biconn.connect(JAPModel.getInstance().getProxyInterface());
@@ -1153,22 +1140,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						}
 						catch (Exception e)
 						{
-							if (!isInterrupted())
+							if (!Thread.currentThread().isInterrupted())
 							{
 								showPIerror(d, e);
 							}
-							m_bPiReachable = false;
+							Thread.currentThread().interrupt();
 						}
-					}
-					public void interrupt()
-					{
-						m_bPiReachable = false;
-						super.interrupt();
-					}
-
-					public boolean isInterrupted()
-					{
-						return super.isInterrupted() || !m_bPiReachable;
 					}
 				};
 
@@ -1181,14 +1158,14 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					new SimpleWizardContentPane.Options(PITestWorkerPane));
 
 
-				WorkerContentPane.ReturnThread keyCreationThread = new WorkerContentPane.ReturnThread()
+				WorkerContentPane.IReturnRunnable keyCreationThread = new WorkerContentPane.IReturnRunnable()
 				{
 					private DSAKeyPair m_keyPair;
 					boolean m_bInterrupted = false;
 
 					public void run()
 					{
-						m_bCreatingAccountKey = true;
+						m_bDoNotCloseDialog = true;
 						m_keyPair =
 							DSAKeyPair.getInstance(new SecureRandom(), DSAKeyPair.KEY_LENGTH_1024, 20);
 						if (m_keyPair == null)
@@ -1197,7 +1174,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 							JAPDialog.showErrorDialog(
 								d, JAPMessages.getString(MSG_KEY_PAIR_CREATE_ERROR), LogType.PAY);
 						}
-						m_bCreatingAccountKey = false;
+						m_bDoNotCloseDialog = false;
 					}
 
 					public Object getValue()
@@ -1210,7 +1187,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				keyWorkerPane.getButtonCancel().setEnabled(false);
 
 				m_bReady = true;
-				Thread doIt = new Thread()
+				Runnable doIt = new Runnable()
 				{
 					public void run()
 					{
@@ -1227,10 +1204,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						catch (Exception ex)
 						{
 							//User has pressed cancel
-							if (!ex.getMessage().equals("CAPTCHA"))
+							if (!Thread.currentThread().isInterrupted() && !ex.getMessage().equals("CAPTCHA"))
 							{
 								showPIerror(d, ex);
-								this.interrupt();
+								Thread.currentThread().interrupt();
 							}
 						}
 					}
@@ -1267,7 +1244,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				{
 					public void componentShown(ComponentEvent a_event)
 					{
-						m_bCreatingAccountKey = false;
+						m_bDoNotCloseDialog = false;
 					}
 				});
 
@@ -1301,7 +1278,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				{
 					public void windowClosing(WindowEvent e)
 					{
-						if (!m_bCreatingAccountKey)
+						if (!m_bDoNotCloseDialog)
 						{
 							if (captcha.isVisible())
 							{
@@ -1313,7 +1290,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					}
 				});
 				d.setLocationCenteredOnOwner();
-				m_bCreatingAccountKey = false;
+				m_bDoNotCloseDialog = false;
 				d.setVisible(true);
 
 				updateAccountList();

@@ -2278,14 +2278,25 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		{
 			m_tempDialog.dispose();
 		}
-
-		m_titlePane.removeAll();
+		if (m_titlePane != null)
+		{
+			m_titlePane.removeAll();
+		}
 		m_titlePane = null;
-		m_rootPane.removeAll();
+		if (m_rootPane != null)
+		{
+			m_rootPane.removeAll();
+		}
 		m_rootPane = null;
-		m_contentPane.removeAll();
+		if (m_contentPane != null)
+		{
+			m_contentPane.removeAll();
+		}
 		m_contentPane = null;
-		m_panelOptions.removeAll();
+		if (m_panelOptions != null)
+		{
+			m_panelOptions.removeAll();
+		}
 		m_panelOptions = null;
 		m_parentDialog = null;
 		m_lblText = null;
@@ -2308,7 +2319,11 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		}
 
 		m_buttonListener = null;
-		m_currentlyActiveContentPane.removeComponentListener(m_currentlyActiveContentPaneComponentListener);
+		if (m_currentlyActiveContentPane != null)
+		{
+			m_currentlyActiveContentPane.removeComponentListener(
+				m_currentlyActiveContentPaneComponentListener);
+		}
 		m_currentlyActiveContentPaneComponentListener = null;
 		m_currentlyActiveContentPane = null;
 		m_nextContentPane = null;
