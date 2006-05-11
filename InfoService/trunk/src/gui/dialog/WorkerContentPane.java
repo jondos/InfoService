@@ -45,7 +45,7 @@ import gui.GUIUtils;
  * content pane, the dialog is closed according to the ON_CLICK button operation. By default, it is disposed.
  * <P>Warning: The Thread should not call dispose() on the dialog, as this may lead to a deadlock or
  * an Exception!</P>
- *
+ * @todo Modify the class so that a status bar (0-100%) can be shown, too.
  * @author Rolf Wendolsky
  */
 public class WorkerContentPane extends DialogContentPane implements
@@ -53,6 +53,8 @@ public class WorkerContentPane extends DialogContentPane implements
 {
 	/** @todo rename the image according to coding standards */
 	public static final String IMG_BUSY = "busy.gif";
+
+	public static final String DOTS = "...";
 
 	private Thread m_workerThread;
 	private Runnable m_workerRunnable;
