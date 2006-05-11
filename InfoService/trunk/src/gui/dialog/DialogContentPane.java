@@ -189,6 +189,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	private String m_strText;
 	private String m_strTitle;
 	private JDialog m_tempDialog; // this is a temporary dialog used to construct the content pane
+	private boolean m_bDisposed = false;
 
 	/**
 	 * Contructs a new dialog content pane. Its layout is predefined, but may change if the content pane
@@ -1626,6 +1627,11 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		Object[] options;
 		CheckError[] errors;
 
+		if (isDisposed())
+		{
+			return null;
+		}
+
 		if (a_bCallCheckUpdate)
 		{
 			errors = checkUpdate();
@@ -2272,8 +2278,15 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		}
 	}
 
-	public void dispose()
+	public boolean isDisposed()
 	{
+		return m_bDisposed;
+	}
+
+	public synchronized void dispose()
+	{
+		m_bDisposed = true;
+
 		if (m_tempDialog != null)
 		{
 			m_tempDialog.dispose();
@@ -2336,33 +2349,43 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 */
 	public final void closeDialog(boolean a_bDispose)
 	{
-		if (a_bDispose)
+		try
 		{
-			if (m_parentDialog instanceof JDialog)
+			if (a_bDispose)
 			{
-				((JDialog)m_parentDialog).dispose();
+				if (m_parentDialog instanceof JDialog)
+				{
+					( (JDialog) m_parentDialog).dispose();
+				}
+				else
+				{
+					try
+					{
+						( (JAPDialog) m_parentDialog).dispose();
+					}
+					catch (IllegalMonitorStateException a_e)
+					{
+						LogHolder.log(LogLevel.DEBUG, LogType.GUI, a_e);
+					}
+				}
 			}
 			else
 			{
-				try
+				if (m_parentDialog instanceof JDialog)
 				{
-					( (JAPDialog) m_parentDialog).dispose();
+					( (JDialog) m_parentDialog).setVisible(false);
 				}
-				catch (IllegalMonitorStateException a_e)
+				else
 				{
-					LogHolder.log(LogLevel.DEBUG, LogType.GUI, a_e);
+					( (JAPDialog) m_parentDialog).setVisible(false);
 				}
 			}
 		}
-		else
+		catch (NullPointerException a_e)
 		{
-			if (m_parentDialog instanceof JDialog)
+			if (!isDisposed())
 			{
-				((JDialog)m_parentDialog).setVisible(false);
-			}
-			else
-			{
-				((JAPDialog)m_parentDialog).setVisible(false);
+				throw a_e;
 			}
 		}
 	}
@@ -2807,7 +2830,10 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 				listener.componentHidden(new ComponentEvent(
 								m_currentlyActiveContentPane, ComponentEvent.COMPONENT_HIDDEN));
 			}
-			dispose();
+			if (!isDisposed())
+			{
+				dispose();
+			}
 		}
 		public void windowOpened(WindowEvent a_event)
 		{

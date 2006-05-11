@@ -175,14 +175,14 @@ public class WorkerContentPane extends DialogContentPane implements
 		return null;
 	}
 
-	public void dispose()
+	public synchronized void dispose()
 	{
+		super.dispose();
 		setInterruptThreadSafe(false);
 		interruptWorkerThread();
-		m_workerThread = null;
-		m_workerRunnable = null;
+		//m_workerThread = null;
+		//m_workerRunnable = null;
 		m_internalThread = null;
-		super.dispose();
 	}
 
 
@@ -193,7 +193,7 @@ public class WorkerContentPane extends DialogContentPane implements
 	{
 		if (m_workerThread != null)
 		{
-			while (m_workerThread.isAlive() && !m_workerThread.isInterrupted())
+			if (m_workerThread.isAlive() && !m_workerThread.isInterrupted())
 			{
 				m_workerThread.interrupt();
 			}
@@ -246,6 +246,7 @@ public class WorkerContentPane extends DialogContentPane implements
 		{
 			setButtonValue(RETURN_VALUE_UNINITIALIZED);
 			m_workerThread = new InternalThread(m_workerRunnable);
+			m_workerThread.setPriority(Thread.MIN_PRIORITY);
 			try
 			{
 				// give the GUI some extra time to show up
@@ -272,7 +273,8 @@ public class WorkerContentPane extends DialogContentPane implements
 				interruptWorkerThread();
 			}
 
-			if (m_workerThread.isInterrupted())
+			if (m_workerThread.isInterrupted() || getButtonValue() == RETURN_VALUE_CANCEL ||
+				getButtonValue() == RETURN_VALUE_CLOSED)
 			{
 				// don't do anything if the cancel (or any other) button was clicked
 				if (getButtonValue() == RETURN_VALUE_UNINITIALIZED)
