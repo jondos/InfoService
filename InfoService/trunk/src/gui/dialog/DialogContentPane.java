@@ -28,7 +28,6 @@
 package gui.dialog;
 
 import java.util.Vector;
-import java.util.Enumeration;
 
 import java.awt.BorderLayout;
 import java.awt.Container;

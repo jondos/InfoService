@@ -209,6 +209,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		"_fetchingBIs";
 	private static final String MSG_SAVE_CONFIG = AccountSettingsPanel.class.getName() +
 		"_savingConfig";
+	private static final String MSG_CREATED_ACCOUNT_NOT_SAVED = AccountSettingsPanel.class.getName() +
+		"_createdAccountNotSaved";
 
 
 	private JButton m_btnCreateAccount;
@@ -1062,264 +1064,338 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 */
 	private void doCreateAccount()
 	{
-			int numAccounts = m_listAccounts.getModel().getSize();
+		final JAPDialog d = new JAPDialog(getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
+		d.setDefaultCloseOperation(JAPDialog.DO_NOTHING_ON_CLOSE);
+		d.setResizable(true);
 
-			final JAPDialog d = new JAPDialog(getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
-			d.setDefaultCloseOperation(JAPDialog.DO_NOTHING_ON_CLOSE);
-			d.setResizable(true);
+		WorkerContentPane.IReturnRunnable fetchBIThread = new WorkerContentPane.IReturnRunnable()
+		{
+			private BI theBI;
 
-			WorkerContentPane.IReturnRunnable fetchBIThread = new WorkerContentPane.IReturnRunnable()
+			public void run()
 			{
-				private BI theBI;
+				Exception biException = null;
 
-				public void run()
+				//First try and get the standard PI the preferred way
+				try
 				{
-					Exception biException = null;
+					theBI = PayAccountsFile.getInstance().getBI(JAPConstants.PI_ID);
+				}
+				catch (Exception e)
+				{
+					biException = e;
+					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
+				}
 
-					//First try and get the standard PI the preferred way
+				//Try and construct a new PI
+				if (theBI == null)
+				{
+					ListenerInterface li = new ListenerInterface(JAPConstants.PI_HOST,
+						JAPConstants.PI_PORT);
 					try
 					{
-						theBI = PayAccountsFile.getInstance().getBI(JAPConstants.PI_ID);
+						theBI = new BI(JAPConstants.PI_ID, JAPConstants.PI_NAME, li.toVector(),
+									   JAPCertificate.getInstance(ResourceLoader.loadResource(
+										   JAPConstants.
+										   CERTSPATH +
+										   JAPConstants.PI_CERT)));
 					}
 					catch (Exception e)
 					{
-						biException = e;
-						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
-					}
-
-					//Try and construct a new PI
-					if (theBI == null)
-					{
-						ListenerInterface li = new ListenerInterface(JAPConstants.PI_HOST,
-							JAPConstants.PI_PORT);
-						try
+						if (biException == null || e instanceof ForbiddenIOException)
 						{
-							theBI = new BI(JAPConstants.PI_ID, JAPConstants.PI_NAME, li.toVector(),
-										   JAPCertificate.getInstance(ResourceLoader.loadResource(
-								JAPConstants.
-								CERTSPATH +
-								JAPConstants.PI_CERT)));
+							biException = e;
 						}
-						catch (Exception e)
-						{
-							if (biException == null || e instanceof ForbiddenIOException)
-							{
-								biException = e;
-							}
-							LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
-										  "Could not create Test-PI: " + e.getMessage());
-							theBI = getBIforAccountCreation();
-						}
-					}
-					if (theBI == null)
-					{
-						// no valid BI could be found
-						if (!Thread.currentThread().isInterrupted())
-						{
-							showPIerror(d, biException);
-							Thread.currentThread().interrupt();
-						}
+						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+									  "Could not create Test-PI: " + e.getMessage());
+						theBI = getBIforAccountCreation();
 					}
 				}
-
-				public Object getValue()
+				if (theBI == null)
 				{
-					return theBI;
+					// no valid BI could be found
+					if (!Thread.currentThread().isInterrupted())
+					{
+						showPIerror(d, biException);
+						Thread.currentThread().interrupt();
+					}
 				}
+			}
 
+			public Object getValue()
+			{
+				return theBI;
+			}
+
+		};
+		final WorkerContentPane fetchBiWorker =
+			new WorkerContentPane(d, JAPMessages.getString(MSG_FETCHING_BIS) + "...", fetchBIThread);
+
+		Runnable piTestThread = new Runnable()
+		{
+			public void run()
+			{
+				if (fetchBiWorker.getValue() == null)
+				{
+					Thread.currentThread().interrupt();
+					return;
+				}
+				try
+				{
+					//Check if payment instance is reachable
+					BIConnection biconn = new BIConnection( (BI) fetchBiWorker.getValue());
+					biconn.connect(JAPModel.getInstance().getProxyInterface());
+					biconn.disconnect();
+				}
+				catch (Exception e)
+				{
+					if (!Thread.currentThread().isInterrupted())
+					{
+						showPIerror(d, e);
+						Thread.currentThread().interrupt();
+					}
+				}
+			}
+		};
+
+		WorkerContentPane PITestWorkerPane = new WorkerContentPane(d,
+			JAPMessages.getString(MSG_TEST_PI_CONNECTION) + "...", fetchBiWorker, piTestThread);
+		PITestWorkerPane.setInterruptThreadSafe(false);
+
+		SimpleWizardContentPane panel1 = new SimpleWizardContentPane(d,
+			JAPMessages.getString("ngCreateKeyPair"), null,
+			new SimpleWizardContentPane.Options(PITestWorkerPane));
+
+		WorkerContentPane.IReturnRunnable keyCreationThread = new WorkerContentPane.IReturnRunnable()
+		{
+			private DSAKeyPair m_keyPair;
+			boolean m_bInterrupted = false;
+
+			public void run()
+			{
+				m_bDoNotCloseDialog = true;
+				m_keyPair =
+					DSAKeyPair.getInstance(new SecureRandom(), DSAKeyPair.KEY_LENGTH_1024, 20);
+				if (m_keyPair == null)
+				{
+					m_bInterrupted = true;
+					JAPDialog.showErrorDialog(
+						d, JAPMessages.getString(MSG_KEY_PAIR_CREATE_ERROR), LogType.PAY);
+				}
+				m_bDoNotCloseDialog = false;
+			}
+
+			public Object getValue()
+			{
+				return m_keyPair;
+			}
+		};
+		final WorkerContentPane keyWorkerPane = new WorkerContentPane(
+			d, JAPMessages.getString(MSG_CREATE_KEY_PAIR) + "...", panel1, keyCreationThread);
+		keyWorkerPane.getButtonCancel().setEnabled(false);
+
+		m_bReady = true;
+		final WorkerContentPane.IReturnRunnable doIt = new WorkerContentPane.IReturnRunnable()
+		{
+			PayAccount m_payAccount;
+			public void run()
+			{
+				m_bReady = false;
+				try
+				{
+					m_payAccount = PayAccountsFile.getInstance().createAccount(
+						(BI) fetchBiWorker.getValue(),
+						JAPModel.getInstance().getProxyInterface(),
+						(DSAKeyPair) keyWorkerPane.getValue());
+
+					m_payAccount.fetchAccountInfo(JAPModel.getInstance().getProxyInterface());
+				}
+				catch (Exception ex)
+				{
+					//User has pressed cancel
+					if (!Thread.currentThread().isInterrupted() && ex.getMessage() != null &&
+						!ex.getMessage().equals("CAPTCHA"))
+					{
+						showPIerror(d, ex);
+						Thread.currentThread().interrupt();
+					}
+				}
+			}
+
+			public Object getValue()
+			{
+				return m_payAccount;
+			}
+		};
+		WorkerContentPane panel2 = new WorkerContentPane(
+			d, JAPMessages.getString(MSG_ACCOUNTCREATEDESC), keyWorkerPane, doIt)
+		{
+			public boolean isReady()
+			{
+				return m_bReady;
+			}
+
+			public boolean isSkippedAsPreviousContentPane()
+			{
+				return false;
+			}
+		};
+		panel2.setInterruptThreadSafe(false);
+
+		final CaptchaContentPane captcha = new CaptchaContentPane(d, panel2);
+		Date today = new Date();
+		if ( ( (today.getDate() == 27 && today.getMonth() == 8) ||
+			  (today.getDate() == 4 && today.getMonth() == 10)))
+		{
+			captcha.getButtonNo().setText(JAPMessages.getString(MSG_NEWCAPTCHAEASTEREGG));
+		}
+		else
+		{
+			captcha.getButtonNo().setText(JAPMessages.getString(MSG_NEWCAPTCHA));
+		}
+
+		PayAccountsFile.getInstance().addPaymentListener(captcha);
+		captcha.addComponentListener(new ComponentAdapter()
+		{
+			public void componentShown(ComponentEvent a_event)
+			{
+				m_bDoNotCloseDialog = false;
+			}
+	});
+
+		PasswordContentPane pc = null;
+		//First account, ask for password
+		if (PayAccountsFile.getInstance().getNumAccounts() == 0)
+		{
+			pc = new PasswordContentPane(d, captcha,
+										 PasswordContentPane.PASSWORD_NEW,
+										 JAPMessages.getString(MSG_ACCPASSWORD))
+			{
+				public CheckError[] checkYesOK()
+				{
+					if (getPassword() != null)
+					{
+						JAPController.getInstance().setPaymentPassword(new String(getPassword()));
+					}
+					else
+					{
+						JAPController.getInstance().setPaymentPassword("");
+					}
+					return super.checkYesOK();
+				}
 			};
-			final WorkerContentPane fetchBiWorker =
-				new WorkerContentPane(d, JAPMessages.getString(MSG_FETCHING_BIS) + "...", fetchBIThread);
+		}
 
-				Runnable piTestThread = new Runnable()
+		final WorkerContentPane.IReturnRunnable exportThread = new WorkerContentPane.IReturnRunnable()
+		{
+			private Boolean m_bAccountSaved = new Boolean(false);
+
+			public void run()
+			{
+				// save all accounts to the config file
+				m_bDoNotCloseDialog = true;
+				if (JAPController.getInstance().saveConfigFile())
 				{
-					public void run()
+					// an error occured while saving the configuration
+					JAPDialog.showErrorDialog(d, JAPMessages.getString(
+						JAPController.MSG_ERROR_SAVING_CONFIG,
+						JAPModel.getInstance().getConfigFile()),  LogType.MISC);
+					try
 					{
-						if (fetchBiWorker.getValue() == null)
+						if (exportAccount( (PayAccount) doIt.getValue(), d.getContentPane(),
+										   JAPController.getInstance().getPaymentPassword()))
 						{
-							Thread.currentThread().interrupt();
-							return;
+							m_bAccountSaved = new Boolean(true);
 						}
-						try
+						else
 						{
-							//Check if payment instance is reachable
-							BIConnection biconn = new BIConnection((BI)fetchBiWorker.getValue());
-							biconn.connect(JAPModel.getInstance().getProxyInterface());
-							biconn.disconnect();
-						}
-						catch (Exception e)
-						{
-							if (!Thread.currentThread().isInterrupted())
-							{
-								showPIerror(d, e);
-								Thread.currentThread().interrupt();
-							}
+							m_bAccountSaved = new Boolean(false);
 						}
 					}
-				};
-
-				WorkerContentPane PITestWorkerPane = new WorkerContentPane(d,
-					JAPMessages.getString(MSG_TEST_PI_CONNECTION) + "...",  fetchBiWorker, piTestThread);
-				PITestWorkerPane.setInterruptThreadSafe(false);
-
-				SimpleWizardContentPane panel1 = new SimpleWizardContentPane(d,
-					JAPMessages.getString("ngCreateKeyPair"), null,
-					new SimpleWizardContentPane.Options(PITestWorkerPane));
-
-
-				WorkerContentPane.IReturnRunnable keyCreationThread = new WorkerContentPane.IReturnRunnable()
-				{
-					private DSAKeyPair m_keyPair;
-					boolean m_bInterrupted = false;
-
-					public void run()
+					catch (Exception a_e)
 					{
-						m_bDoNotCloseDialog = true;
-						m_keyPair =
-							DSAKeyPair.getInstance(new SecureRandom(), DSAKeyPair.KEY_LENGTH_1024, 20);
-						if (m_keyPair == null)
-						{
-							m_bInterrupted = true;
-							JAPDialog.showErrorDialog(
-								d, JAPMessages.getString(MSG_KEY_PAIR_CREATE_ERROR), LogType.PAY);
-						}
-						m_bDoNotCloseDialog = false;
+						LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
 					}
-
-					public Object getValue()
-					{
-						return m_keyPair;
-					}
-				};
-				final WorkerContentPane keyWorkerPane = new WorkerContentPane(
-					d, JAPMessages.getString(MSG_CREATE_KEY_PAIR) + "...", panel1, keyCreationThread);
-				keyWorkerPane.getButtonCancel().setEnabled(false);
-
-				m_bReady = true;
-				Runnable doIt = new Runnable()
-				{
-					public void run()
-					{
-						m_bReady = false;
-						try
-						{
-							PayAccount p = PayAccountsFile.getInstance().createAccount(
-								(BI)fetchBiWorker.getValue(),
-								JAPModel.getInstance().getProxyInterface(),
-								(DSAKeyPair)keyWorkerPane.getValue());
-
-							p.fetchAccountInfo(JAPModel.getInstance().getProxyInterface());
-						}
-						catch (Exception ex)
-						{
-							//User has pressed cancel
-							if (!Thread.currentThread().isInterrupted() && ex.getMessage() != null &&
-								!ex.getMessage().equals("CAPTCHA"))
-							{
-								showPIerror(d, ex);
-								Thread.currentThread().interrupt();
-							}
-						}
-					}
-				};
-				WorkerContentPane panel2 = new WorkerContentPane(
-					d, JAPMessages.getString(MSG_ACCOUNTCREATEDESC), keyWorkerPane, doIt)
-				{
-					public boolean isReady()
-					{
-						return m_bReady;
-					}
-
-					public boolean isSkippedAsPreviousContentPane()
-					{
-						return false;
-					}
-				};
-				panel2.setInterruptThreadSafe(false);
-
-				final CaptchaContentPane captcha = new CaptchaContentPane(d, panel2);
-				Date today = new Date();
-				if ( ( (today.getDate() == 27 && today.getMonth() == 8) ||
-					  (today.getDate() == 4 && today.getMonth() == 10)))
-				{
-					captcha.getButtonNo().setText(JAPMessages.getString(MSG_NEWCAPTCHAEASTEREGG));
 				}
 				else
 				{
-					captcha.getButtonNo().setText(JAPMessages.getString(MSG_NEWCAPTCHA));
+					m_bAccountSaved = new Boolean(true);
 				}
-
-				PayAccountsFile.getInstance().addPaymentListener(captcha);
-				captcha.addComponentListener(new ComponentAdapter()
-				{
-					public void componentShown(ComponentEvent a_event)
-					{
-						m_bDoNotCloseDialog = false;
-					}
-				});
-
-				PasswordContentPane pc = null;
-				//First account, ask for password
-				if (PayAccountsFile.getInstance().getNumAccounts() == 0)
-				{
-					pc = new PasswordContentPane(d, captcha,
-												 PasswordContentPane.PASSWORD_NEW,
-												 JAPMessages.getString(MSG_ACCPASSWORD))
-					{
-						public boolean isSkippedAsNextContentPane()
-						{
-							if (PayAccountsFile.getInstance().getNumAccounts() > 0)
-							{
-								return false;
-							}
-							else
-							{
-								return true;
-							}
-						}
-					};
-					pc.getButtonNo().setEnabled(false);
-					pc.getButtonCancel().setEnabled(false);
-				}
-
-				PITestWorkerPane.updateDialogOptimalSized(fetchBiWorker);
-
-				d.addWindowListener(new WindowAdapter()
-				{
-					public void windowClosing(WindowEvent e)
-					{
-						if (!m_bDoNotCloseDialog)
-						{
-							if (captcha.isVisible())
-							{
-								captcha.setButtonValue(IDialogOptions.RETURN_VALUE_CLOSED);
-								captcha.checkCancel();
-							}
-							d.dispose();
-						}
-					}
-				});
-				d.setLocationCenteredOnOwner();
 				m_bDoNotCloseDialog = false;
-				d.setVisible(true);
-
-				updateAccountList();
-				if (pc != null && pc.getPassword() != null)
-				{
-					JAPController.getInstance().setPaymentPassword(new String(pc.getPassword()));
-				}
-				PayAccountsFile.getInstance().removePaymentListener(captcha);
-				/** Did the user finish the account creation successfully? */
-				if (numAccounts < m_listAccounts.getModel().getSize())
-				{
-
-					/** Select new account and start charging wizard */
-					m_listAccounts.setSelectedIndex(m_listAccounts.getModel().getSize() - 1);
-					doExportAccount( (PayAccount) m_listAccounts.getSelectedValue());
-					doChargeAccount( (PayAccount) m_listAccounts.getSelectedValue());
-				}
+			}
+			public Object getValue()
+			{
+				return m_bAccountSaved;
+			}
+		};
+		DialogContentPane saveConfigPrevious = pc;
+		WorkerContentPane saveConfig;
+		if (saveConfigPrevious == null)
+		{
+			saveConfigPrevious = captcha;
 		}
+		saveConfig = new WorkerContentPane(d, JAPMessages.getString(MSG_SAVE_CONFIG) + WorkerContentPane.DOTS,
+										   saveConfigPrevious, exportThread)
+		{
+			public boolean isMoveBackAllowed()
+			{
+				return false;
+			}
+		};
+		saveConfig.getButtonCancel().setEnabled(false);
+		DialogContentPane saveErrorPane = new SimpleWizardContentPane(
+			  d, "<Font color=\"red\">" + JAPMessages.getString(MSG_CREATED_ACCOUNT_NOT_SAVED) + "</Font>",
+			  new DialogContentPane.Layout("", DialogContentPane.MESSAGE_TYPE_ERROR),
+			  new DialogContentPane.Options(saveConfig))
+		{
+			public boolean isSkippedAsNextContentPane()
+			{
+				return ((Boolean)exportThread.getValue()).booleanValue();
+			}
 
+			public boolean isSkippedAsPreviousContentPane()
+			{
+				return true;
+			}
+		};
+		saveErrorPane.getButtonCancel().setVisible(false);
+
+		PITestWorkerPane.updateDialogOptimalSized(fetchBiWorker);
+
+		d.addWindowListener(new WindowAdapter()
+		{
+			public void windowClosing(WindowEvent e)
+			{
+				if (!m_bDoNotCloseDialog)
+				{
+					if (captcha.isVisible())
+					{
+						captcha.setButtonValue(IDialogOptions.RETURN_VALUE_CLOSED);
+						captcha.checkCancel();
+					}
+					d.dispose();
+				}
+			}
+
+			public void windowClosed(WindowEvent a_event)
+			{
+				PayAccountsFile.getInstance().removePaymentListener(captcha);
+				updateAccountList();
+				if (doIt.getValue() != null)
+				{
+					/** Select new account */
+					m_listAccounts.setSelectedValue(doIt.getValue(), true);
+					if (((Boolean)exportThread.getValue()).booleanValue())
+					{
+						doChargeAccount( (PayAccount) doIt.getValue());
+					}
+				}
+			}
+	});
+		d.setLocationCenteredOnOwner();
+		m_bDoNotCloseDialog = false;
+		d.setVisible(true);
+	}
 	/**
 	 * Shows a window with all known Payment Instances and lets the user select one.
 	 * @return BI
@@ -1420,29 +1496,22 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			busy.setVisible(true);
 		}
 
-	/**
-	 * doExportAccount
-	 *
-	 * @param payAccount PayAccount
-	 */
-	private void doExportAccount(PayAccount selectedAccount)
-	{
-		boolean encrypt = false;
-		String strPassword = null;
-
-		if (selectedAccount == null)
+		/**
+		 * doExportAccount
+		 *
+		 * @param payAccount PayAccount
+		 */
+		private void doExportAccount(PayAccount selectedAccount)
 		{
-			return;
-		}
-		JFrame view = JAPController.getView();
-		boolean yes = JAPDialog.showYesNoDialog(GUIUtils.getParentWindow(this.getRootPanel()),
-												JAPMessages.getString(MSG_EXPORTENCRYPT));
-		if (yes)
-		{
+			if (selectedAccount == null)
+			{
+				return;
+			}
 			JAPDialog d = new JAPDialog(GUIUtils.getParentWindow(this.getRootPanel()),
 										JAPMessages.getString(MSG_ACCPASSWORDTITLE), true);
 
-			PasswordContentPane p = new PasswordContentPane(d, PasswordContentPane.PASSWORD_NEW, "");
+			PasswordContentPane p = new PasswordContentPane(d, PasswordContentPane.PASSWORD_NEW,
+				JAPMessages.getString(MSG_EXPORTENCRYPT));
 			p.updateDialog();
 			d.pack();
 			d.setVisible(true);
@@ -1450,45 +1519,51 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				p.getButtonValue() != PasswordContentPane.RETURN_VALUE_CLOSED)
 			{
 
-				strPassword = new String(p.getPassword());
-				encrypt = true;
+				exportAccount(selectedAccount, this.getRootPanel(), new String(p.getPassword()));
 			}
 		}
-		JFileChooser chooser = new JFileChooser();
-		MyFileFilter filter = new MyFileFilter();
-		chooser.setFileFilter(filter);
-		int returnVal = chooser.showSaveDialog(view);
-		if (returnVal == JFileChooser.APPROVE_OPTION)
-		{
-			try
-			{
-				File f = chooser.getSelectedFile();
-				Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-				Element elemRoot = doc.createElement("root");
-				elemRoot.setAttribute("filetype", "JapAccountFile");
-				elemRoot.setAttribute("version", "1.0");
 
-				doc.appendChild(elemRoot);
-				Element elemAccount = selectedAccount.toXmlElement(doc);
-				elemRoot.appendChild(elemAccount);
-				if (encrypt)
-				{
-					XMLEncryption.encryptElement(elemAccount, strPassword);
-				}
-				String strOutput = XMLUtil.toString(doc);
-				FileOutputStream outStream = new FileOutputStream(f);
-				outStream.write(strOutput.getBytes());
-				outStream.close();
-				JAPDialog.showMessageDialog(GUIUtils.getParentWindow(this.getRootPanel()),
-											JAPMessages.getString(MSG_EXPORTED));
-			}
-			catch (Exception e)
+		private boolean exportAccount(PayAccount selectedAccount, Component a_parent, String strPassword)
+		{
+			JFileChooser chooser = new JFileChooser();
+			MyFileFilter filter = new MyFileFilter();
+			chooser.setFileFilter(filter);
+			int returnVal = chooser.showSaveDialog(a_parent);
+			if (returnVal == JFileChooser.APPROVE_OPTION)
 			{
-				JAPDialog.showErrorDialog(GUIUtils.getParentWindow(this.getRootPanel()),
-										  JAPMessages.getString(MSG_NOTEXPORTED) + ": " + e, LogType.PAY);
+				try
+				{
+					File f = chooser.getSelectedFile();
+					Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+					Element elemRoot = doc.createElement("root");
+					elemRoot.setAttribute("filetype", "JapAccountFile");
+					elemRoot.setAttribute("version", "1.0");
+
+					doc.appendChild(elemRoot);
+					Element elemAccount = selectedAccount.toXmlElement(doc);
+					elemRoot.appendChild(elemAccount);
+					if (strPassword != null && strPassword.length() > 0)
+					{
+						XMLEncryption.encryptElement(elemAccount, strPassword);
+					}
+					String strOutput = XMLUtil.toString(doc);
+					FileOutputStream outStream = new FileOutputStream(f);
+					outStream.write(strOutput.getBytes());
+					outStream.close();
+					JAPDialog.showMessageDialog(GUIUtils.getParentWindow(this.getRootPanel()),
+												JAPMessages.getString(MSG_EXPORTED));
+					return true;
+				}
+				catch (Exception e)
+				{
+					JAPDialog.showErrorDialog(GUIUtils.getParentWindow(a_parent),
+											  JAPMessages.getString(MSG_NOTEXPORTED) + ": " + e, LogType.PAY);
+				}
 			}
+
+			return false;
+
 		}
-	}
 
 	/**
 	 * Filefilter for the import function

@@ -61,19 +61,22 @@ final public class DirectProxy implements Runnable
 	private static final String MSG_ALLOWUNPROTECTED =
 		DirectProxy.class.getName() + "_allowunprotected";
 
+	private static final int REMEMBER_NOTHING = 0;
+	private static final int REMEMBER_WARNING = 1;
+	private static final int REMEMBER_NO_WARNING = 2;
+	private static final int TEMPORARY_REMEMBER_TIME = 2000;
+
 	private volatile boolean runFlag;
 	private boolean isRunningProxy = false;
 	private int portN;
 	private ServerSocket m_socketListener;
 	private volatile Thread threadRunLoop;
 	private ThreadGroup threadgroupAll;
-	private boolean warnUser = true;
-	private boolean warnAgain = true;
+	private boolean m_temporaryRemember;
 
 	public DirectProxy(ServerSocket s)
 	{
 		m_socketListener = s;
-		warnUser = true;
 		isRunningProxy = false;
 	}
 
@@ -94,7 +97,10 @@ final public class DirectProxy implements Runnable
 
 	public void run()
 	{
+		int remember = REMEMBER_NOTHING;
+		boolean bShowHtmlWarning = true;
 		Runnable doIt;
+		m_temporaryRemember = false;
 
 		try
 		{
@@ -123,33 +129,54 @@ final public class DirectProxy implements Runnable
 				catch (SocketException soex)
 				{
 					LogHolder.log(LogLevel.ERR, LogType.NET,
-								  "JAPDirectProxy:DirectProxy.run() Colud not set sockt to blocking mode! Excpetion: " +
+								  "JAPDirectProxy:DirectProxy.run() Could not set sockt to blocking mode! Excpetion: " +
 								  soex);
 					socket = null;
 					continue;
 				}
 
-				if (warnUser && !JAPModel.isSmallDisplay())
+				if (remember == REMEMBER_NOTHING && !JAPModel.isSmallDisplay() && !m_temporaryRemember)
 				{
-					doIt = new SendAnonWarning(socket);
-					Thread thread = new Thread(threadgroupAll, doIt);
-					thread.start();
-
-					if (warnAgain)
+					JAPDll.setWindowOnTop(JAPController.getView(),
+										  JAPController.getView().getName(), true);
+					JAPDialog.LinkedCheckBox cb = new JAPDialog.LinkedCheckBox(
+						JAPMessages.getString(JAPDialog.LinkedCheckBox.MSG_REMEMBER_ANSWER), false);
+					bShowHtmlWarning = ! (JAPDialog.showYesNoDialog(JAPController.getView(),
+						JAPMessages.getString(MSG_ALLOWUNPROTECTED), cb));
+					JAPDll.setWindowOnTop(JAPController.getView(),
+										  JAPController.getView().getName(), false);
+					if (cb.getState())
 					{
-						JAPDll.setWindowOnTop(JAPController.getView(),
-											  JAPController.getView().getName() , true);
-
-						JAPDialog.LinkedCheckBox cb = new JAPDialog.LinkedCheckBox(
-						  JAPMessages.getString(JAPDialog.LinkedCheckBox.MSG_REMEMBER_ANSWER), false);
-						warnUser =  !(JAPDialog.showYesNoDialog(JAPController.getView(),
-							JAPMessages.getString(MSG_ALLOWUNPROTECTED), cb));
-						warnAgain = !cb.getState();
-						JAPDll.setWindowOnTop(JAPController.getView(),
-											  JAPController.getView().getName() , false);
+						if (bShowHtmlWarning)
+						{
+							remember = REMEMBER_WARNING;
+						}
+						else
+						{
+							remember = REMEMBER_NO_WARNING;
+						}
+					}
+					else
+					{
+						new Thread()
+						{
+							public void run()
+							{
+								m_temporaryRemember = true;
+								try
+								{
+									sleep(TEMPORARY_REMEMBER_TIME);
+								}
+								catch (InterruptedException a_e)
+								{
+								}
+								m_temporaryRemember = false;
+							}
+						}.start();
 					}
 				}
-				else
+
+				if (!bShowHtmlWarning && !JAPModel.isSmallDisplay())
 				{
 					if (JAPModel.getInstance().getProxyInterface() != null &&
 						JAPModel.getInstance().getProxyInterface().isValid() &&
@@ -165,6 +192,12 @@ final public class DirectProxy implements Runnable
 					Thread thread = new Thread(threadgroupAll, doIt);
 					thread.start();
 				}
+				else
+				{
+					Thread thread = new Thread(threadgroupAll, new SendAnonWarning(socket));
+					thread.start();
+				}
+
 			}
 		}
 		catch (Exception e)
