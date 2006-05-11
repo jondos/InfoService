@@ -149,6 +149,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	private Vector m_componentListeners = new Vector();
 	private DialogWindowAdapter m_dialogWindowAdapter;
 	private boolean m_bForceApplicationModality;
+	private boolean m_bDisposed = false;
 
 	/**
 	 * Stores the instance of JDialog for internal use.
@@ -2085,6 +2086,11 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 */
 	public final void setVisible(boolean a_bVisible, boolean a_bCenterOnParentComponent)
 	{
+		if (isDisposed())
+		{
+			return;
+		}
+
 		if (a_bVisible)
 		{
 			if (!m_bLocationSetManually && !isVisible())
@@ -2196,6 +2202,11 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		return m_internalDialog.isResizable();
 	}
 
+	public boolean isDisposed()
+	{
+		return m_bDisposed;
+	}
+
 	/**
 	 * Disposes the dialog (set it to invisible and releases all resources).
 	 * @todo Causes a Thread deadlock or throws an exception if called from Threads other than the main
@@ -2205,6 +2216,8 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 */
 	public final void dispose()
 	{
+		m_bDisposed = true;
+
 		if (m_bBlockParentWindow)
 		{
 			m_bBlockParentWindow = false;
@@ -2221,10 +2234,25 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		synchronized (m_internalDialog.getTreeLock())
 		{
 			Enumeration listeners = m_windowListeners.elements();
+
 			while (listeners.hasMoreElements())
 			{
-				((WindowListener)listeners.nextElement()).windowClosed(
-								new WindowEvent(m_internalDialog, WindowEvent.WINDOW_CLOSED));
+				final WindowListener currrentListener = (WindowListener)listeners.nextElement();
+				// do this trick to bypass deadlocks
+				new Thread()
+				{
+					public void run()
+					{
+						SwingUtilities.invokeLater(new Runnable()
+						{
+							public void run()
+							{
+								currrentListener.windowClosed(
+									new WindowEvent(m_internalDialog, WindowEvent.WINDOW_CLOSED));
+							}
+						});
+					}
+				}.start();
 			}
 			m_windowListeners.removeAllElements();
 

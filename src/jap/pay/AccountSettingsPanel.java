@@ -836,7 +836,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			WorkerContentPane.IReturnRunnable fetchOptions = new WorkerContentPane.IReturnRunnable()
 			{
 				private XMLPaymentOptions m_paymentOptions;
-				private boolean m_interrupted = false;
 				public void run()
 				{
 					try
@@ -855,20 +854,14 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					}
 					catch (Exception e)
 					{
-						LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
-									  "Error fetching payment options: " + e.getMessage());
-						showPIerror(d, e);
-						m_interrupted = true;
+						if (!Thread.currentThread().isInterrupted())
+						{
+							LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
+										  "Error fetching payment options: " + e.getMessage());
+							showPIerror(d, e);
+							Thread.currentThread().interrupt();
+						}
 					}
-				}
-
-				public boolean isInterrupted()
-				{
-					if (Thread.currentThread().isInterrupted())
-					{
-						return true;
-					}
-					return m_interrupted;
 				}
 
 				public Object getValue()
@@ -900,9 +893,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						}
 						catch (Exception e)
 						{
-							LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
-										  "Error fetching TransCert: " + e.getMessage());
-							showPIerror(GUIUtils.getParentWindow(getRootPanel()), e);
+							if (!Thread.currentThread().isInterrupted())
+							{
+								LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
+											  "Error fetching TransCert: " + e.getMessage());
+								showPIerror(GUIUtils.getParentWindow(getRootPanel()), e);
+								Thread.currentThread().interrupt();
+							}
 						}
 					}
 				}
@@ -978,10 +975,14 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					catch (Exception e)
 					{
 						m_successful = new Boolean(false);
-						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
-									  "Could not send PassivePayment to payment instance: " + e.getMessage());
-						showPIerror(GUIUtils.getParentWindow(getRootPanel()), e);
-						d.dispose();
+						if (!Thread.currentThread().isInterrupted())
+						{
+							LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+										  "Could not send PassivePayment to payment instance: " +
+										  e.getMessage());
+							showPIerror(GUIUtils.getParentWindow(getRootPanel()), e);
+							Thread.currentThread().interrupt();
+						}
 					}
 				}
 
@@ -1110,11 +1111,14 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 							theBI = getBIforAccountCreation();
 						}
 					}
-					if (theBI == null &&!Thread.currentThread().isInterrupted())
+					if (theBI == null)
 					{
 						// no valid BI could be found
-						showPIerror(d, biException);
-						Thread.currentThread().interrupt();
+						if (!Thread.currentThread().isInterrupted())
+						{
+							showPIerror(d, biException);
+							Thread.currentThread().interrupt();
+						}
 					}
 				}
 
@@ -1131,6 +1135,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				{
 					public void run()
 					{
+						if (fetchBiWorker.getValue() == null)
+						{
+							Thread.currentThread().interrupt();
+							return;
+						}
 						try
 						{
 							//Check if payment instance is reachable
@@ -1143,8 +1152,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 							if (!Thread.currentThread().isInterrupted())
 							{
 								showPIerror(d, e);
+								Thread.currentThread().interrupt();
 							}
-							Thread.currentThread().interrupt();
 						}
 					}
 				};
@@ -1204,7 +1213,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						catch (Exception ex)
 						{
 							//User has pressed cancel
-							if (!Thread.currentThread().isInterrupted() && !ex.getMessage().equals("CAPTCHA"))
+							if (!Thread.currentThread().isInterrupted() && ex.getMessage() != null &&
+								!ex.getMessage().equals("CAPTCHA"))
 							{
 								showPIerror(d, ex);
 								Thread.currentThread().interrupt();
@@ -1391,8 +1401,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					}
 					catch (Exception e)
 					{
-						showPIerror(GUIUtils.getParentWindow(getRootPanel()), e);
-						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Could not get account statement");
+						if (!Thread.currentThread().isInterrupted())
+						{
+							showPIerror(GUIUtils.getParentWindow(getRootPanel()), e);
+							LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Could not get account statement");
+							Thread.currentThread().interrupt();
+						}
 					}
 				}
 			};
