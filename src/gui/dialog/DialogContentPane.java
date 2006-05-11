@@ -2289,7 +2289,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		m_panelOptions = null;
 		m_parentDialog = null;
 		m_lblText = null;
-		m_componentListeners.clear();
+		m_componentListeners.removeAllElements();
 		if (m_btnCancel != null)
 		{
 			m_btnCancel.removeActionListener(m_buttonListener);
