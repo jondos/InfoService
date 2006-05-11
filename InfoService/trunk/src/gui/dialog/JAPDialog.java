@@ -2226,14 +2226,14 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 				((WindowListener)listeners.nextElement()).windowClosed(
 								new WindowEvent(m_internalDialog, WindowEvent.WINDOW_CLOSED));
 			}
-			m_windowListeners.clear();
+			m_windowListeners.removeAllElements();
 
 			listeners = ((Vector)m_componentListeners.clone()).elements();
 			while (listeners.hasMoreElements())
 			{
 				removeComponentListener((ComponentListener)listeners.nextElement());
 			}
-			m_componentListeners.clear();
+			m_componentListeners.removeAllElements();
 
 			m_internalDialog.removeWindowListener(m_dialogWindowAdapter);
 			m_dialogWindowAdapter = null;
