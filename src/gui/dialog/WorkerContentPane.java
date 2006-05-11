@@ -173,6 +173,17 @@ public class WorkerContentPane extends DialogContentPane implements
 		return null;
 	}
 
+	public void dispose()
+	{
+		setInterruptThreadSafe(false);
+		interruptWorkerThread();
+		m_workerThread = null;
+		m_workerRunnable = null;
+		m_internalThread = null;
+		super.dispose();
+	}
+
+
 	/**
 	 * Interrupts the thread.
 	 */
@@ -197,36 +208,9 @@ public class WorkerContentPane extends DialogContentPane implements
 	 */
 	private class InternalThread extends Thread
 	{
-		private Thread m_thread;
-
 		public InternalThread(Runnable a_runnable)
 		{
-			super(a_runnable,"WorkerContentPane - InternalThread");
-			if (a_runnable instanceof Thread)
-			{
-				m_thread = (Thread) a_runnable;
-			}
-		}
-
-		public void interrupt()
-		{
-			if (m_thread != null)
-			{
-				m_thread.interrupt();
-			}
-			super.interrupt();
-		}
-
-		public boolean isInterrupted()
-		{
-			boolean bInterrupted = super.isInterrupted();
-
-			if (m_thread != null)
-			{
-				bInterrupted = bInterrupted || m_thread.isInterrupted();
-			}
-
-			return bInterrupted;
+			super(a_runnable, "WorkerContentPane - InternalThread");
 		}
 	}
 
@@ -325,11 +309,16 @@ public class WorkerContentPane extends DialogContentPane implements
 		}
 	}
 
+	/**
+	 * If an instance of IReturnRunnable is run, this method returns the result of IReturnRunnable.getValue().
+	 * Otherwise, <code>null</code> is returned.
+	 * @return the result of IReturnRunnable.getValue()
+	 */
 	public Object getValue()
 	{
-		if (m_workerRunnable instanceof ReturnThread)
+		if (m_workerRunnable instanceof IReturnRunnable)
 		{
-			return ( (ReturnThread) m_workerRunnable).getValue();
+			return ( (IReturnRunnable) m_workerRunnable).getValue();
 		}
 		else
 		{
@@ -337,9 +326,12 @@ public class WorkerContentPane extends DialogContentPane implements
 		}
 	}
 
-	public static abstract class ReturnThread extends Thread
+	/**
+	 * Implement this interface if you want your runnable object to return some kind of value.
+	 */
+	public static interface IReturnRunnable extends Runnable
 	{
-		public abstract Object getValue();
+		public Object getValue();
 	}
 
 }
