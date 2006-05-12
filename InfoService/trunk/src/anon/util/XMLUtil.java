@@ -42,6 +42,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.util.StringTokenizer;
 import java.lang.reflect.Method;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -68,6 +69,8 @@ public class XMLUtil
 	private final static String XML_STR_BOOLEAN_FALSE = "false";
 	private static final String PACKAGE_TRANSFORMER = "javax.xml.transform.";
 	private static DocumentBuilder ms_DocumentBuilder;
+	private static boolean m_bCheckedHumanReadableFormatting = false;
+	private static boolean m_bNeedsHumanReadableFormatting = true;
 
 	/**
 	 * Throws an XMLParseException if the given XML node is null.
@@ -1005,7 +1008,6 @@ public class XMLUtil
 		Document doc;
 		try
 		{
-			/** @todo Seems to have synchronisation problems with JDK 1.1.8 */
 			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
 		}
 		catch (Exception a_e)
@@ -1218,7 +1220,6 @@ public class XMLUtil
 	 * @param a_element an xml element
 	 * @param a_level the level of this element
 	 * @return the number of nodes added (0 or 1)
-	 * @todo Debug for JDK < 1.4! A lot of superfluous lines are added...
 	 */
 	private static int formatHumanReadable(Node a_element, int a_level)
 	{
@@ -1226,6 +1227,30 @@ public class XMLUtil
 		Node node;
 		int added = 0;
 		String space;
+
+		if (!m_bCheckedHumanReadableFormatting)
+		{
+			StringTokenizer tokenizer;
+			int lines;
+			Document doc = createDocument();
+			Element test = doc.createElement("test1");
+			doc.appendChild(test);
+			test.appendChild(doc.createElement("test2"));
+			test.appendChild(doc.createElement("test3"));
+			tokenizer = new StringTokenizer(toString(test), "\n");
+			for (lines = 0; tokenizer.hasMoreTokens(); lines++, tokenizer.nextToken());
+			if (lines == 4)
+			{
+				// formatting is done automatically by JDKs < 1.4
+				m_bNeedsHumanReadableFormatting = false;
+			}
+
+			m_bCheckedHumanReadableFormatting = true;
+		}
+		if (!m_bNeedsHumanReadableFormatting)
+		{
+			return 0;
+		}
 
 		// call the function recursive for all child nodes
 		if (a_element.hasChildNodes())
