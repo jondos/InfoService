@@ -117,8 +117,7 @@ public class PayAccount implements IXMLEncodable
 
 	public PayAccount(byte[] xmlData) throws Exception
 	{
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
-			ByteArrayInputStream(xmlData));
+		Document doc = XMLUtil.toXMLDocument(xmlData);
 		Element elemRoot = doc.getDocumentElement();
 		setValues(elemRoot);
 	}
