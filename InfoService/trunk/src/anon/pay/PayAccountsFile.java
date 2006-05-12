@@ -212,6 +212,13 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	}
 
 	/**
+	 * Thrown if an account with same account number was already existing when trying to add it.
+	 */
+	public static class AccountAlreadyExisting extends Exception
+	{
+	}
+
+	/**
 	 * constructs the xml structure
 	 *
 	 * @return Element
@@ -403,7 +410,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 			tmp = (PayAccount) enumer.nextElement();
 			if (tmp.getAccountNumber() == account.getAccountNumber())
 			{
-				throw new Exception("Account with same accountnumber was already added");
+				throw new AccountAlreadyExisting();
 			}
 		}
 		account.addAccountListener(m_MyAccountListener);

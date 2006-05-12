@@ -42,7 +42,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -1014,7 +1013,7 @@ public class XMLUtil
 			throw new XMLParseException(XMLParseException.ROOT_TAG,
 										"Could not transform bytes into an XML document.");
 		}
-
+		removeComments(doc);
 		return doc;
 	}
 

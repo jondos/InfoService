@@ -55,6 +55,7 @@ import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -211,6 +212,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		"_savingConfig";
 	private static final String MSG_CREATED_ACCOUNT_NOT_SAVED = AccountSettingsPanel.class.getName() +
 		"_createdAccountNotSaved";
+	private static final String MSG_ACCOUNT_IMPORT_FAILED = AccountSettingsPanel.class.getName() +
+		"_accountImportFailed";
+	private static final String MSG_ACCOUNT_ALREADY_EXISTING = AccountSettingsPanel.class.getName() +
+		"_accountAlreadyExisting";
 
 
 	private JButton m_btnCreateAccount;
@@ -1534,6 +1539,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				try
 				{
 					File f = chooser.getSelectedFile();
+					if (!f.getName().toLowerCase().endsWith(MyFileFilter.ACCOUNT_EXTENSION))
+					{
+						f = new File(f.getParent(), f.getName() + MyFileFilter.ACCOUNT_EXTENSION);
+					}
+
 					Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 					Element elemRoot = doc.createElement("root");
 					elemRoot.setAttribute("filetype", "JapAccountFile");
@@ -1571,10 +1581,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 * @author Bastian Voigt
 	 * @version 1.0
 	 */
-	private class MyFileFilter extends javax.swing.filechooser.FileFilter
+	private static class MyFileFilter extends FileFilter
 	{
-		private String m_strDesc = "JAP Accountfile (*.account)";
-		private String m_strExtension = ".account";
+		public static final String ACCOUNT_EXTENSION = ".acc";
+		private final String ACCOUNT_DESCRIPTION = "JAP Accountfile (*" + ACCOUNT_EXTENSION + ")";
+
 		private int filterType;
 
 		public int getFilterType()
@@ -1584,12 +1595,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		public boolean accept(File f)
 		{
-			return f.isDirectory() || f.getName().endsWith(m_strExtension);
+			return f.isDirectory() || f.getName().endsWith(ACCOUNT_EXTENSION);
 		}
 
 		public String getDescription()
 		{
-			return m_strDesc;
+			return ACCOUNT_DESCRIPTION;
 		}
 	}
 
@@ -1657,17 +1668,14 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			}
 			catch (Exception e)
 			{
-				JOptionPane.showMessageDialog(
-					view,
-					JAPMessages.getString("ngImportFailed"),
-					JAPMessages.getString("error"),
-					JOptionPane.ERROR_MESSAGE
-					);
+				JAPDialog.showErrorDialog(getRootPanel(),
+										  JAPMessages.getString(MSG_ACCOUNT_IMPORT_FAILED), LogType.MISC, e);
 			}
 			try
 			{
 				if (elemAccount != null)
 				{
+					XMLUtil.removeComments(elemAccount);
 					importedAccount = new PayAccount(elemAccount);
 					PayAccountsFile accounts = PayAccountsFile.getInstance();
 					accounts.addAccount(importedAccount);
@@ -1676,13 +1684,15 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			}
 			catch (Exception ex)
 			{
-				JOptionPane.showMessageDialog(
-					view,
-					"<html>" + JAPMessages.getString("ngImportFailed") + "<br>" +
-					ex.getMessage() + "</html>",
-					JAPMessages.getString("error"),
-					JOptionPane.ERROR_MESSAGE
-					);
+				String message = "";
+
+				if (ex instanceof PayAccountsFile.AccountAlreadyExisting)
+				{
+					message =  "<br><br>" + JAPMessages.getString(MSG_ACCOUNT_ALREADY_EXISTING);
+				}
+				JAPDialog.showErrorDialog(getRootPanel(),
+										  JAPMessages.getString(MSG_ACCOUNT_IMPORT_FAILED) + message,
+										  LogType.MISC, ex);
 			}
 		}
 	}
