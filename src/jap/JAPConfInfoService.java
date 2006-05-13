@@ -80,6 +80,8 @@ import gui.dialog.JAPDialog;
  */
 public class JAPConfInfoService extends AbstractJAPConfModule
 {
+	private static final String MSG_ALLOW_DIRECT_CONNECTION = JAPConfInfoService.class.getName() +
+		"_allowDirectConnection";
 
 	/**
 	 * This is the internal message system of this module.
@@ -101,6 +103,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 	private JPanel addInfoServicePanel;
 	private JPanel descriptionPanel;
 	private JButton settingsInfoServiceConfigBasicSettingsRemoveButton;
+	private JCheckBox m_cbxAllowNonAnonymousConnection;
 
 	private boolean mb_newInfoService = true;
 
@@ -1321,10 +1324,15 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 			settingsInfoServiceConfigAdvancedSettingsEnableAutomaticRequestsBox, advancedPanelConstraints);
 		advancedPanel.add(settingsInfoServiceConfigAdvancedSettingsEnableAutomaticRequestsBox);
 
-		advancedPanelConstraints.gridx = 0;
 		advancedPanelConstraints.gridy = 1;
+		m_cbxAllowNonAnonymousConnection = new JCheckBox(JAPMessages.getString(MSG_ALLOW_DIRECT_CONNECTION),
+			JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed());
+		advancedPanel.add(m_cbxAllowNonAnonymousConnection, advancedPanelConstraints);
+
+		advancedPanelConstraints.gridx = 0;
+		advancedPanelConstraints.gridy = 2;
 		advancedPanelConstraints.weighty = 1.0;
-		advancedPanelConstraints.insets = new Insets(0, 5, 20, 5);
+		//advancedPanelConstraints.insets = new Insets(0, 5, 20, 5);
 		advancedPanelLayout.setConstraints(
 			settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox, advancedPanelConstraints);
 		advancedPanel.add(settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox);
@@ -1339,6 +1347,13 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		//Select the preferred InfoService
 		m_listKnownInfoServices.setSelectedValue(InfoServiceHolder.getInstance().
 												 getPreferredInfoService(), true);
+		m_cbxAllowNonAnonymousConnection.setSelected(
+			  JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed());
 	}
 
+	protected boolean onOkPressed()
+	{
+		JAPModel.getInstance().allowInfoServiceViaDirectConnection(m_cbxAllowNonAnonymousConnection.isSelected());
+		return true;
+	}
 }
