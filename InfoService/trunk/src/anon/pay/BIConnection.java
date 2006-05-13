@@ -80,7 +80,7 @@ public class BIConnection implements ICaptchaSender
 	private boolean m_bSendNewCaptcha;
 	private boolean m_bFirstCaptcha = true;
 
-	ImmutableProxyInterface m_proxy = null;
+	ImmutableProxyInterface[] m_proxys = null;
 
 	/**
 	 * Constructor
@@ -99,21 +99,32 @@ public class BIConnection implements ICaptchaSender
 	 * @throws IOException if an error occured while connection
 	 * @throws ForbiddenIOException if it is assumed that the local provider forbids the connection
 	 */
-	public void connect(ImmutableProxyInterface a_proxy) throws IOException
+	public void connect(ImmutableProxyInterface[] a_proxys) throws IOException
 	{
-		try
+		IOException exception = new IOException("No valid proxy available");
+
+		m_proxys = a_proxys;
+
+		if (a_proxys == null || a_proxys.length == 0)
 		{
-			//Try to connect to BI...
-			connect_internal(a_proxy);
+			throw exception;
 		}
-		catch (Throwable t)
+		for (int i = 0; i < a_proxys.length; i++)
 		{
-			//Could not connect to BI
-			if (a_proxy != null)
-			{ //try without proxy
-				connect_internal(null);
+			try
+			{
+				//Try to connect to BI...
+				connect_internal(a_proxys[i]);
 			}
+			catch (IOException a_t)
+			{
+				//Could not connect to BI
+				exception = a_t;
+			}
+			return;
 		}
+
+		throw exception;
 	}
 
 	private void connect_internal(ImmutableProxyInterface a_proxy) throws IOException
@@ -123,7 +134,7 @@ public class BIConnection implements ICaptchaSender
 		TinyTLS tls = null;
 		ListenerInterface li = null;
 		boolean connected = false;
-		m_proxy = a_proxy;
+
 		Enumeration listeners = m_theBI.getListenerInterfaces();
 		while (listeners.hasMoreElements())
 		{
@@ -310,7 +321,7 @@ public class BIConnection implements ICaptchaSender
 					LogHolder.log(LogLevel.INFO, LogType.PAY,
 								  "Not connected to payment instance while trying to disconnect");
 				}
-				this.connect(m_proxy);
+				this.connect(m_proxys);
 			}
 			// send our public key
 			m_httpClient.writeRequest(

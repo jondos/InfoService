@@ -159,6 +159,7 @@ final public class JAPConf extends JAPDialog implements ActionListener
 	public JAPConf(JFrame frmParent, boolean loadPay)
 	{
 		super(frmParent, JAPMessages.getString("settingsDialog"), true);
+		setDefaultCloseOperation(HIDE_ON_CLOSE);
 		m_bWithPayment = loadPay;
 		m_bIsSimpleView = (JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED);
 		/* set the instance pointer */

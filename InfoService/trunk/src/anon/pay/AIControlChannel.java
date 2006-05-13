@@ -76,17 +76,17 @@ public class AIControlChannel extends SyncControlChannel
 
 	private Vector m_aiListeners = new Vector();
 
-	private ImmutableProxyInterface m_proxy;
+	private ImmutableProxyInterface[] m_proxys;
 
 	private int m_diff = 0;
 	private long m_lastDiffBytes = 0;
 
-	public AIControlChannel(MuxSocket muxSocket, ImmutableProxyInterface a_proxy)
+	public AIControlChannel(MuxSocket muxSocket, ImmutableProxyInterface[] a_proxys)
 	{
 		super(CHAN_ID, true);
 		m_MuxSocket = muxSocket;
 		m_bFirstBalance = true;
-		m_proxy = a_proxy;
+		m_proxys = a_proxys;
 	}
 
 	public void addAIListener(IAIEventListener a_aiListener)
@@ -196,7 +196,7 @@ public class AIControlChannel extends SyncControlChannel
 							PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
 							try
 							{
-								currentAccount.fetchAccountInfo(m_proxy);
+								currentAccount.fetchAccountInfo(m_proxys);
 							}
 							catch (Exception ex)
 							{
@@ -286,7 +286,7 @@ public class AIControlChannel extends SyncControlChannel
 							PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
 							try
 							{
-								currentAccount.fetchAccountInfo(m_proxy);
+								currentAccount.fetchAccountInfo(m_proxys);
 								XMLBalance b = currentAccount.getBalance();
 								AIControlChannel.this.sendXMLMessage(XMLUtil.toXMLDocument(b));
 							}

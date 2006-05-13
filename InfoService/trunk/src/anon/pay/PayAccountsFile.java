@@ -544,7 +544,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	 * @param a_keyPair RSA should not be used at the moment
 	 *
 	 */
-	public PayAccount createAccount(BI a_bi, ImmutableProxyInterface a_proxy,
+	public PayAccount createAccount(BI a_bi, ImmutableProxyInterface[] a_proxys,
 									AsymmetricCryptoKeyPair a_keyPair) throws
 		Exception
 	{
@@ -557,7 +557,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 
 		BIConnection biConn = new BIConnection(a_bi);
 		biConn.addConnectionListener(this);
-		biConn.connect(a_proxy);
+		biConn.connect(a_proxys);
 		XMLAccountCertificate cert = biConn.register(xmlKey, signingInstance);
 		biConn.disconnect();
 

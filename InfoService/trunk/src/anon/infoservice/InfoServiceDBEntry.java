@@ -702,6 +702,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	 *
 	 * @return HTTPConnectionDescriptor with a connection to the next ListenerInterface in the list
 	 *         or to the preferedListenerInterface, if you supplied null.
+	 * @todo Create the connections via a changing proxy interface!!
 	 */
 	private HTTPConnectionDescriptor connectToInfoService(HTTPConnectionDescriptor lastConnectionDescriptor)
 	{

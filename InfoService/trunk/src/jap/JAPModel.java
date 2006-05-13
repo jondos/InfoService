@@ -39,6 +39,8 @@ import jap.forward.JAPRoutingSettings;
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel
 {
+	public final static String DLL_VERSION_UPDATE = "dllVersionUpdate";
+
 	private int m_HttpListenerPortNumber = JAPConstants.DEFAULT_PORT_NUMBER; // port number of HTTP  listener
 	private boolean m_bHttpListenerIsLocal = JAPConstants.DEFAULT_LISTENER_IS_LOCAL; // indicates whether listeners serve for localhost only or not
 	private ProxyInterface m_proxyInterface = null;
@@ -56,6 +58,7 @@ public final class JAPModel
 	private boolean m_bSaveMainWindowPosition = JAPConstants.DEFAULT_SAVE_MAIN_WINDOW_POSITION;
 	private Dimension m_OldMainWindowSize = null;
 	private Point m_OldMainWindowLocation = null;
+	private boolean m_bAllowPaymentViaDirectConnection;
 
 	private static JAPModel ms_TheModel = null;
 
@@ -69,6 +72,7 @@ public final class JAPModel
 	private int m_MixminionRouteLen = JAPConstants.DEFAULT_MIXMINION_ROUTE_LEN;
 	private boolean m_bPreCreateAnonRoutes = JAPConstants.DEFAULT_TOR_PRECREATE_ROUTES;
 	private boolean m_bUseProxyAuthentication = false;
+	private JAPController.AnonConnectionChecker m_connectionChecker;
 
 	/**
 	 * Stores the instance with the routing settings.
@@ -93,6 +97,9 @@ public final class JAPModel
 
 	/** Stores the number of total mixed bytes in this session*/
 	private long m_mixedBytes;
+
+	/** Boolen value which describes if a dll update is necessary */
+	private boolean m_bUpdateDll = false;
 
 	private JAPModel()
 	{
@@ -232,6 +239,54 @@ public final class JAPModel
 	protected void setHttpListenerPortNumber(int p)
 	{
 		m_HttpListenerPortNumber = p;
+	}
+
+	public void setAnonConnectionChecker(JAPController.AnonConnectionChecker a_connectionChecker)
+	{
+		m_connectionChecker = a_connectionChecker;
+	}
+
+	public boolean isAnonConnected()
+	{
+		return m_connectionChecker.checkAnonConnected();
+	}
+
+	public boolean isPaymentViaDirectConnectionAllowed()
+	{
+		return m_bAllowPaymentViaDirectConnection;
+	}
+
+	public void allowPaymentViaDirectConnection(boolean a_bAllowPaymentViaDirectConnection)
+	{
+		m_bAllowPaymentViaDirectConnection = a_bAllowPaymentViaDirectConnection;
+	}
+
+	public ProxyInterface[] getPaymentProxyInterface()
+	{
+		ProxyInterface[] interfaces = new ProxyInterface[4];
+		interfaces[0] = getProxyInterface();
+		interfaces[1] = null;
+		interfaces[2] = new ProxyInterface("localhost", getHttpListenerPortNumber(), null); // AN.ON
+		interfaces[3] = new ProxyInterface("localhost", getHttpListenerPortNumber(),
+										   ProxyInterface.PROTOCOL_TYPE_SOCKS, null); // TOR
+		if (!isPaymentViaDirectConnectionAllowed())
+		{
+			// do not allow direct connections to BI and InfoService
+			if (!m_connectionChecker.checkAnonConnected())
+			{
+				// no anonymous connection available...
+				return null;
+			}
+			// ok, use an anonymous connection
+			return new ProxyInterface[]{interfaces[2], interfaces[3]};
+		}
+		else if (!m_connectionChecker.checkAnonConnected())
+		{
+			// return only direct connections
+			return new ProxyInterface[]{interfaces[0], interfaces[1]};
+		}
+
+		return interfaces;
 	}
 
 	public static int getHttpListenerPortNumber()
@@ -520,5 +575,13 @@ public final class JAPModel
 	public long getMixedBytes()
 	{
 		return m_mixedBytes;
+	}
+
+	public void setDLLupdate(boolean a_update) {
+		m_bUpdateDll = a_update;
+    }
+
+	public boolean getDLLupdate() {
+		return m_bUpdateDll;
 	}
 }

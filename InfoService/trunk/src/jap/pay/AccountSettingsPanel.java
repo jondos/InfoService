@@ -158,6 +158,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		getName() + "_accountcreate";
 	private static final String MSG_CREATEERROR = AccountSettingsPanel.class.getName() +
 		"_createerror";
+	private static final String MSG_DIRECT_CONNECTION_FORBIDDEN = AccountSettingsPanel.class.getName() +
+		"_directConnectionForbidden";
+	private static final String MSG_NO_ANONYMITY_POSSIBLY_BLOCKED = AccountSettingsPanel.class.getName() +
+		"_noAnonymityPossiblyBlocked";
 	private static final String MSG_ERROR_FORBIDDEN = AccountSettingsPanel.class.getName() +
 		"_errorForbidden";
 	private static final String MSG_GETACCOUNTSTATEMENT = AccountSettingsPanel.class.
@@ -216,6 +220,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		"_accountImportFailed";
 	private static final String MSG_ACCOUNT_ALREADY_EXISTING = AccountSettingsPanel.class.getName() +
 		"_accountAlreadyExisting";
+	private static final String MSG_ALLOW_DIRECT_CONNECTION = AccountSettingsPanel.class.getName() +
+		"_allowDirectConnection";
 
 
 	private JButton m_btnCreateAccount;
@@ -230,6 +236,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private JButton m_btnPassword;
 	private JButton m_btnReload;
 	private JCheckBox m_cbxShowPaymentConfirmation;
+	private JCheckBox m_cbxAllowNonAnonymousConnection;
 
 	private JLabel m_labelCreationDate;
 	private JLabel m_labelStatementDate;
@@ -406,10 +413,15 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		advancedPanelConstraints.gridx = 0;
 		advancedPanelConstraints.gridy = 0;
-		advancedPanelConstraints.weighty = 1.0;
 		advancedPanelConstraints.insets = new Insets(5, 5, 10, 5);
 
 		panelAdvanced.add(m_cbxShowPaymentConfirmation, advancedPanelConstraints);
+
+		m_cbxAllowNonAnonymousConnection = new  JCheckBox(
+			  JAPMessages.getString(MSG_ALLOW_DIRECT_CONNECTION));
+		advancedPanelConstraints.gridy = 1;
+		advancedPanelConstraints.weighty = 1.0;
+		panelAdvanced.add(m_cbxAllowNonAnonymousConnection, advancedPanelConstraints);
 
 		return panelAdvanced;
 	}
@@ -850,7 +862,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						BI pi = selectedAccount.getBI();
 						BIConnection piConn = new BIConnection(pi);
 
-						piConn.connect(JAPModel.getInstance().getProxyInterface());
+						piConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
 						piConn.authenticate(PayAccountsFile.getInstance().getActiveAccount().
 											getAccountCertificate(),
 											PayAccountsFile.getInstance().getActiveAccount().
@@ -865,7 +877,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						{
 							LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
 										  "Error fetching payment options: " + e.getMessage());
-							showPIerror(d, e);
+							showPIerror(d.getContentPane(), e);
 							Thread.currentThread().interrupt();
 						}
 					}
@@ -896,7 +908,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 							LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 										  "Fetching Transaction Certificate from Payment Instance");
 
-							m_transCert = selectedAccount.charge(JAPModel.getInstance().getProxyInterface());
+							m_transCert = selectedAccount.charge(
+								JAPModel.getInstance().getPaymentProxyInterface());
 						}
 						catch (Exception e)
 						{
@@ -970,7 +983,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					BIConnection biConn = new BIConnection(selectedAccount.getBI());
 					try
 					{
-						biConn.connect(JAPModel.getInstance().getProxyInterface());
+						biConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
 						biConn.authenticate(selectedAccount.getAccountCertificate(),
 											selectedAccount.getSigningInstance());
 						if (!biConn.sendPassivePayment(passivePaymentPane.getEnteredInfo()))
@@ -1121,7 +1134,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					// no valid BI could be found
 					if (!Thread.currentThread().isInterrupted())
 					{
-						showPIerror(d, biException);
+						showPIerror(d.getContentPane(), biException);
 						Thread.currentThread().interrupt();
 					}
 				}
@@ -1149,14 +1162,14 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				{
 					//Check if payment instance is reachable
 					BIConnection biconn = new BIConnection( (BI) fetchBiWorker.getValue());
-					biconn.connect(JAPModel.getInstance().getProxyInterface());
+					biconn.connect(JAPModel.getInstance().getPaymentProxyInterface());
 					biconn.disconnect();
 				}
 				catch (Exception e)
 				{
 					if (!Thread.currentThread().isInterrupted())
 					{
-						showPIerror(d, e);
+						showPIerror(d.getContentPane(), e);
 						Thread.currentThread().interrupt();
 					}
 				}
@@ -1210,10 +1223,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				{
 					m_payAccount = PayAccountsFile.getInstance().createAccount(
 						(BI) fetchBiWorker.getValue(),
-						JAPModel.getInstance().getProxyInterface(),
+						JAPModel.getInstance().getPaymentProxyInterface(),
 						(DSAKeyPair) keyWorkerPane.getValue());
 
-					m_payAccount.fetchAccountInfo(JAPModel.getInstance().getProxyInterface());
+					m_payAccount.fetchAccountInfo(JAPModel.getInstance().getPaymentProxyInterface());
 				}
 				catch (Exception ex)
 				{
@@ -1221,7 +1234,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					if (!Thread.currentThread().isInterrupted() && ex.getMessage() != null &&
 						!ex.getMessage().equals("CAPTCHA"))
 					{
-						showPIerror(d, ex);
+						showPIerror(d.getContentPane(), ex);
 						Thread.currentThread().interrupt();
 					}
 				}
@@ -1477,7 +1490,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				{
 					try
 					{
-						a_selectedAccount.fetchAccountInfo(JAPModel.getInstance().getProxyInterface());
+						a_selectedAccount.fetchAccountInfo(JAPModel.getInstance().getPaymentProxyInterface());
 						updateAccountList();
 					}
 					catch (Exception e)
@@ -1796,7 +1809,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		//Register help context
 		JAPHelp.getInstance().getContextObj().setContext("payment");
 		updateAccountList();
-	 	m_cbxShowPaymentConfirmation.setSelected(!JAPController.getInstance().getDontAskPayment());
+		m_cbxShowPaymentConfirmation.setSelected(!JAPController.getInstance().getDontAskPayment());
+		m_cbxAllowNonAnonymousConnection.setSelected(
+			  JAPModel.getInstance().isPaymentViaDirectConnectionAllowed());
 	}
 
 	/**
@@ -1806,6 +1821,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	protected boolean onOkPressed()
 	{
 		JAPController.getInstance().setDontAskPayment(!m_cbxShowPaymentConfirmation.isSelected());
+		JAPModel.getInstance().allowPaymentViaDirectConnection(m_cbxAllowNonAnonymousConnection.isSelected());
 		return true;
 	}
 
@@ -1854,21 +1870,20 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		}
 	}
 
-	public void showPIerror(JAPDialog a_parent, Exception a_e)
-	{
-		if (a_e instanceof ForbiddenIOException)
-		{
-			JAPDialog.showErrorDialog(a_parent, JAPMessages.getString(MSG_ERROR_FORBIDDEN), LogType.PAY);
-		}
-		else
-		{
-			JAPDialog.showErrorDialog(a_parent, JAPMessages.getString(MSG_CREATEERROR), LogType.PAY);
-		}
-	}
-
 	public void showPIerror(Component a_parent, Exception a_e)
 	{
-		if (a_e instanceof ForbiddenIOException)
+		if (!JAPModel.getInstance().isAnonConnected() &&
+			!JAPModel.getInstance().isPaymentViaDirectConnectionAllowed())
+		{
+			JAPDialog.showErrorDialog(a_parent,
+									  JAPMessages.getString(MSG_DIRECT_CONNECTION_FORBIDDEN), LogType.PAY);
+		}
+		else if (!JAPModel.getInstance().isAnonConnected())
+		{
+			JAPDialog.showErrorDialog(a_parent,
+									  JAPMessages.getString(MSG_NO_ANONYMITY_POSSIBLY_BLOCKED), LogType.PAY);
+		}
+		else if (a_e instanceof ForbiddenIOException)
 		{
 			JAPDialog.showErrorDialog(a_parent, JAPMessages.getString(MSG_ERROR_FORBIDDEN), LogType.PAY);
 		}
