@@ -33,6 +33,8 @@ import java.awt.Point;
 import anon.crypto.JAPCertificate;
 import anon.infoservice.ProxyInterface;
 import anon.util.ResourceLoader;
+import anon.infoservice.InfoServiceDBEntry;
+import anon.infoservice.ImmutableProxyInterface;
 import gui.JAPDll;
 import jap.forward.JAPRoutingSettings;
 
@@ -59,6 +61,7 @@ public final class JAPModel
 	private Dimension m_OldMainWindowSize = null;
 	private Point m_OldMainWindowLocation = null;
 	private boolean m_bAllowPaymentViaDirectConnection;
+	private boolean m_bAllowInfoServiceViaDirectConnection;
 
 	private static JAPModel ms_TheModel = null;
 
@@ -256,12 +259,38 @@ public final class JAPModel
 		return m_bAllowPaymentViaDirectConnection;
 	}
 
+	public boolean isInfoServiceViaDirectConnectionAllowed()
+	{
+		return m_bAllowInfoServiceViaDirectConnection;
+	}
+
+	public void allowInfoServiceViaDirectConnection(boolean a_bAllowInfoServiceViaDirectConnection)
+	{
+		m_bAllowInfoServiceViaDirectConnection = a_bAllowInfoServiceViaDirectConnection;
+	}
+
 	public void allowPaymentViaDirectConnection(boolean a_bAllowPaymentViaDirectConnection)
 	{
 		m_bAllowPaymentViaDirectConnection = a_bAllowPaymentViaDirectConnection;
 	}
 
-	public ProxyInterface[] getPaymentProxyInterface()
+	public InfoServiceDBEntry.MutableProxyInterface getInfoServiceProxyInterface()
+	{
+		return new InfoServiceDBEntry.MutableProxyInterface()
+		{
+			public ImmutableProxyInterface[] getProxyInterfaces()
+			{
+				return getProxyInterface(false);
+			}
+		};
+	}
+
+	public ImmutableProxyInterface[] getPaymentProxyInterface()
+	{
+		return getProxyInterface(true);
+	}
+
+	private ImmutableProxyInterface[] getProxyInterface(boolean a_bPayment)
 	{
 		ProxyInterface[] interfaces = new ProxyInterface[4];
 		interfaces[0] = getProxyInterface();
@@ -269,7 +298,8 @@ public final class JAPModel
 		interfaces[2] = new ProxyInterface("localhost", getHttpListenerPortNumber(), null); // AN.ON
 		interfaces[3] = new ProxyInterface("localhost", getHttpListenerPortNumber(),
 										   ProxyInterface.PROTOCOL_TYPE_SOCKS, null); // TOR
-		if (!isPaymentViaDirectConnectionAllowed())
+		if ((a_bPayment && !isPaymentViaDirectConnectionAllowed()) ||
+			(!a_bPayment && !isInfoServiceViaDirectConnectionAllowed()))
 		{
 			// do not allow direct connections to BI and InfoService
 			if (!m_connectionChecker.checkAnonConnected())

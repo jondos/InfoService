@@ -124,7 +124,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private static final String MSG_DISABLE_GOODBYE = JAPController.class.getName() +
 		"_disableGoodByMessage";
 
-	private static final String XML_PAYMENT_ALLOW_NON_ANONYMOUS_CONNECTION = "AllowNonAnonymousConnection";
+	private static final String XML_ALLOW_NON_ANONYMOUS_CONNECTION = "AllowNonAnonymousConnection";
 
 	/**
 	 * Stores all MixCascades we know (information comes from infoservice or was entered by a user).
@@ -189,6 +189,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 		m_changeAnonModeJobs = new Vector();
 		m_Model = JAPModel.getInstance();
 		m_Model.setAnonConnectionChecker(new AnonConnectionChecker());
+		InfoServiceDBEntry.setMutableProxyInterface(m_Model.getInfoServiceProxyInterface());
+
 		// Create observer object
 		observerVector = new Vector();
 		// create service listener object
@@ -844,6 +846,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					Element infoserviceManagementNode = (Element) (XMLUtil.getFirstChildByName(root,
 						InfoServiceHolder.getXmlSettingsRootNodeName()));
+					JAPModel.getInstance().allowInfoServiceViaDirectConnection(
+					   XMLUtil.parseAttribute(infoserviceManagementNode,
+											  XML_ALLOW_NON_ANONYMOUS_CONNECTION, true));
 					if (infoserviceManagementNode != null)
 					{
 						InfoServiceHolder.getInstance().loadSettingsFromXml(infoserviceManagementNode);
@@ -866,7 +871,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						Element elemPay = (Element) XMLUtil.getFirstChildByName(root,
 							JAPConstants.CONFIG_PAYMENT);
 						JAPModel.getInstance().allowPaymentViaDirectConnection(
-							XMLUtil.parseAttribute(elemPay, XML_PAYMENT_ALLOW_NON_ANONYMOUS_CONNECTION, true));
+							XMLUtil.parseAttribute(elemPay, XML_ALLOW_NON_ANONYMOUS_CONNECTION, true));
 
 						Element elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay,
 							JAPConstants.CONFIG_PAY_ACCOUNTS_FILE);
@@ -1212,7 +1217,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				if (accounts != null)
 				{
 					Element elemPayment = doc.createElement(JAPConstants.CONFIG_PAYMENT);
-					XMLUtil.setAttribute(elemPayment, XML_PAYMENT_ALLOW_NON_ANONYMOUS_CONNECTION,
+					XMLUtil.setAttribute(elemPayment, XML_ALLOW_NON_ANONYMOUS_CONNECTION,
 										 JAPModel.getInstance().isPaymentViaDirectConnectionAllowed());
 					e.appendChild(elemPayment);
 
@@ -1372,7 +1377,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 			e.appendChild(SignatureVerifier.getInstance().getSettingsAsXml(doc));
 
 			/* adding infoservice settings */
-			e.appendChild(InfoServiceHolder.getInstance().getSettingsAsXml(doc));
+			Element elemIS = InfoServiceHolder.getInstance().getSettingsAsXml(doc);
+			XMLUtil.setAttribute(elemIS, XML_ALLOW_NON_ANONYMOUS_CONNECTION,
+								 JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed());
+			e.appendChild(elemIS);
+
 
 			/** add tor*/
 			Element elemTor = doc.createElement(JAPConstants.CONFIG_TOR);

@@ -57,6 +57,10 @@ import anon.crypto.SignatureCreator;
  */
 public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistributable, IXMLEncodable
 {
+	/**
+	 * A proxy interface that is used for all connections and may change over time.
+	 */
+	private static MutableProxyInterface m_proxyInterface;
 
 	/**
 	 * This is the ID of this infoservice.
@@ -434,6 +438,19 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	}
 
 	/**
+	 * A proxy interface with multiple proxies that may change over time.
+	 */
+	public static interface MutableProxyInterface
+	{
+		public ImmutableProxyInterface[] getProxyInterfaces();
+	}
+
+	public static void setMutableProxyInterface(MutableProxyInterface a_proxyInterface)
+	{
+		m_proxyInterface = a_proxyInterface;
+	}
+
+	/**
 	 * Generates the XML representation for this InfoServiceDBEntry. That XML representation is
 	 * returnded when calling the toXmlElement method.
 	 *
@@ -704,7 +721,8 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	 *         or to the preferedListenerInterface, if you supplied null.
 	 * @todo Create the connections via a changing proxy interface!!
 	 */
-	private HTTPConnectionDescriptor connectToInfoService(HTTPConnectionDescriptor lastConnectionDescriptor)
+	private HTTPConnectionDescriptor connectToInfoService(HTTPConnectionDescriptor lastConnectionDescriptor,
+		ImmutableProxyInterface a_proxy)
 	{
 		int nextIndex = m_preferedListenerInterface;
 		if (lastConnectionDescriptor != null)
@@ -716,7 +734,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		m_preferedListenerInterface = nextIndex;
 		/* create the connection descriptor */
 		ListenerInterface target = (ListenerInterface) (m_listenerInterfaces.elementAt(nextIndex));
-		HTTPConnection connection = HTTPConnectionFactory.getInstance().createHTTPConnection(target);
+		HTTPConnection connection = HTTPConnectionFactory.getInstance().createHTTPConnection(target, a_proxy);
 		return new HTTPConnectionDescriptor(connection, target);
 	}
 
@@ -732,101 +750,119 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	 */
 	private Document getXmlDocument(final HttpRequestStructure a_httpRequest) throws Exception
 	{
-		/* make sure, that we are connected */
+		/* make sure that we are connected */
 		int connectionCounter = 0;
 		HTTPConnectionDescriptor currentConnectionDescriptor = null;
-		while ( (connectionCounter < m_listenerInterfaces.size()) && (Thread.currentThread().isInterrupted() == false))
+		ImmutableProxyInterface[] proxies;
+		int proxyCounter;
+		while ( (connectionCounter < m_listenerInterfaces.size()) && !Thread.currentThread().isInterrupted())
 		{
 			/* update the connectionCounter */
 			connectionCounter++;
-			/* get the next connection descriptor by supplying the last one */
-			currentConnectionDescriptor = connectToInfoService(currentConnectionDescriptor);
-			final HTTPConnection currentConnection = currentConnectionDescriptor.getConnection();
-
-			/* use a Vector as storage for the the result of the communication */
-			final Vector responseStorage = new Vector();
-			/* we need the possibility to interrupt the infoservice communication, but also we need to
-			 * know whether the operation was interupted by an external call of Thread.interrupt() or
-			 * a timeout, thus it is not enough to catch the InteruptedIOException because that
-			 * Exception is thrown in both cases, so we cannot distinguish the both -> solution make
-			 * an extra Thread for the communication
-			 */
-			Thread communicationThread = new Thread(new Runnable()
+			if (m_proxyInterface != null)
 			{
-				public void run()
+				proxies = m_proxyInterface.getProxyInterfaces();
+			}
+			else
+			{
+				proxies = new ImmutableProxyInterface[]{null};
+			}
+			for (proxyCounter = 0;
+				 proxyCounter < proxies.length && !Thread.currentThread().isInterrupted(); proxyCounter++)
+			{
+				/* get the next connection descriptor by supplying the last one */
+				currentConnectionDescriptor = connectToInfoService(currentConnectionDescriptor,
+					proxies[proxyCounter]);
+				final HTTPConnection currentConnection = currentConnectionDescriptor.getConnection();
+
+				/* use a Vector as storage for the the result of the communication */
+				final Vector responseStorage = new Vector();
+				/* we need the possibility to interrupt the infoservice communication, but also we need to
+				 * know whether the operation was interupted by an external call of Thread.interrupt() or
+				 * a timeout, thus it is not enough to catch the InteruptedIOException because that
+				 * Exception is thrown in both cases, so we cannot distinguish the both -> solution make
+				 * an extra Thread for the communication
+				 */
+				Thread communicationThread = new Thread(new Runnable()
 				{
-					try
+					public void run()
 					{
-						if (a_httpRequest.getRequestCommand() == HttpRequestStructure.HTTP_COMMAND_GET)
+						try
 						{
-							LogHolder.log(LogLevel.DEBUG, LogType.NET,
-										  "InfoServiceDBEntry: getXmlDocument: Get: " +
-										  currentConnection.getHost() + ":" +
-										  Integer.toString(currentConnection.getPort()) +
-										  a_httpRequest.getRequestFileName());
-							responseStorage.addElement(currentConnection.Get(a_httpRequest.getRequestFileName()));
-						}
-						else
-						{
-							if (a_httpRequest.getRequestCommand() == HttpRequestStructure.HTTP_COMMAND_POST)
+							if (a_httpRequest.getRequestCommand() == HttpRequestStructure.HTTP_COMMAND_GET)
 							{
 								LogHolder.log(LogLevel.DEBUG, LogType.NET,
-											  "InfoServiceDBEntry: getXmlDocument: Post: " +
+											  "InfoServiceDBEntry: getXmlDocument: Get: " +
 											  currentConnection.getHost() + ":" +
 											  Integer.toString(currentConnection.getPort()) +
 											  a_httpRequest.getRequestFileName());
-								String postData = "";
-								if (a_httpRequest.getRequestPostDocument() != null)
-								{
-									postData = XMLUtil.toString(a_httpRequest.getRequestPostDocument());
-								}
-								responseStorage.addElement(currentConnection.Post(a_httpRequest.
-									getRequestFileName(), postData));
+								responseStorage.addElement(currentConnection.Get(a_httpRequest.
+									getRequestFileName()));
 							}
 							else
 							{
-								throw (new Exception(
-									"InfoServiceDBEntry: getXmlDocument: Invalid HTTP command."));
+								if (a_httpRequest.getRequestCommand() ==
+									HttpRequestStructure.HTTP_COMMAND_POST)
+								{
+									LogHolder.log(LogLevel.DEBUG, LogType.NET,
+												  "InfoServiceDBEntry: getXmlDocument: Post: " +
+												  currentConnection.getHost() + ":" +
+												  Integer.toString(currentConnection.getPort()) +
+												  a_httpRequest.getRequestFileName());
+									String postData = "";
+									if (a_httpRequest.getRequestPostDocument() != null)
+									{
+										postData = XMLUtil.toString(a_httpRequest.getRequestPostDocument());
+									}
+									responseStorage.addElement(currentConnection.Post(a_httpRequest.
+										getRequestFileName(), postData));
+								}
+								else
+								{
+									throw (new Exception(
+										"InfoServiceDBEntry: getXmlDocument: Invalid HTTP command."));
+								}
 							}
 						}
+						catch (Exception e)
+						{
+							LogHolder.log(LogLevel.ERR, LogType.NET,
+										  "InfoServiceDBEntry: getXmlDocument: Connection to infoservice interface failed: " +
+										  currentConnection.getHost() + ":" +
+										  Integer.toString(currentConnection.getPort()) +
+										  a_httpRequest.getRequestFileName() + " Reason: " + e.toString());
+						}
 					}
-					catch (Exception e)
-					{
-						LogHolder.log(LogLevel.ERR, LogType.NET,
-									  "InfoServiceDBEntry: getXmlDocument: Connection to infoservice interface failed: " +
-									  currentConnection.getHost() + ":" +
-									  Integer.toString(currentConnection.getPort()) +
-									  a_httpRequest.getRequestFileName() + " Reason: " + e.toString());
-					}
-				}
-			});
-			communicationThread.setDaemon(true);
-			communicationThread.start();
-			try
-			{
-				communicationThread.join();
+				});
+				communicationThread.setDaemon(true);
+				communicationThread.start();
 				try
 				{
-					HTTPResponse response = (HTTPResponse) (responseStorage.firstElement());
-					Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(response.
-						getInputStream());
-					/* fetching the document was successful, leave this method */
-					return doc;
+					communicationThread.join();
+					try
+					{
+						HTTPResponse response = (HTTPResponse) (responseStorage.firstElement());
+						Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
+							response.
+							getInputStream());
+						/* fetching the document was successful, leave this method */
+						return doc;
+					}
+					catch (NoSuchElementException e)
+					{
+						/* fetching the information was not successful -> do nothing */
+					}
 				}
-				catch (NoSuchElementException e)
+				catch (InterruptedException e)
 				{
-					/* fetching the information was not successful -> do nothing */
+					/* operation was interupted from the outside -> set the intterrupted flag for the Thread
+					 * again, so the caller of the methode can evaluate it, also interrupt the communication
+					 * thread, but don't wait for the end of that thread
+					 */
+					LogHolder.log(LogLevel.INFO, LogType.NET, "Current operation was interrupted.");
+					Thread.currentThread().interrupt();
+					communicationThread.interrupt();
 				}
-			}
-			catch (InterruptedException e)
-			{
-				/* operation was interupted from the outside -> set the intterrupted flag for the Thread
-				 * again, so the caller of the methode can evaluate it, also interrupt the communication
-				 * thread, but don't wait for the end of that thread
-				 */
-				LogHolder.log(LogLevel.INFO, LogType.NET, "Current operation was interrupted.");
-				Thread.currentThread().interrupt();
-				communicationThread.interrupt();
 			}
 		}
 		/* all interfaces tested, we can't find a valid interface */
