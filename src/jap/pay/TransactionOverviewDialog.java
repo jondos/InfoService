@@ -180,7 +180,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 				BIConnection biConn = new BIConnection(m_account.getBI());
 				try
 				{
-					biConn.connect(JAPModel.getInstance().getProxyInterface());
+					biConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
 					biConn.authenticate(m_account.getAccountCertificate(), m_account.getSigningInstance());
 					overview = biConn.fetchTransactionOverview(overview);
 					MyTableModel tableModel = new MyTableModel(overview);
@@ -191,6 +191,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 				{
 					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
 								  "Cannot connect to Payment Instance: " + e.getMessage());
+					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 					m_parent.showPIerror(getRootPane(), e);
 				}
 

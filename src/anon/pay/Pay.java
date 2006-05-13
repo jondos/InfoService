@@ -27,13 +27,11 @@
  */
 package anon.pay;
 
-import java.util.Enumeration;
-
 import anon.server.impl.MuxSocket;
 import anon.infoservice.ImmutableProxyInterface;
 
 /**
- * This class is the high-level part of the communication with the BI.
+ * This class is the high-level part of the communication with the AI.
  * It contains functions for creating accounts, charging, etc.
  *
  * @author Andreas Mueller, Grischan Glaenzel, Bastian Voigt
@@ -41,9 +39,6 @@ import anon.infoservice.ImmutableProxyInterface;
  */
 public class Pay
 {
-	/** the accounts file, an object that holds accounts configuration data */
-	private PayAccountsFile m_AccountsFile;
-
 	/** the MuxSocket, needed for counting the bytes */
 	private MuxSocket m_MuxSocket;
 
@@ -57,11 +52,9 @@ public class Pay
 	 */
 	public Pay(MuxSocket currentMuxSocket, ImmutableProxyInterface a_proxy)
 	{
-		m_AccountsFile = PayAccountsFile.getInstance();
-
 		// register AI control channel
 		m_MuxSocket = currentMuxSocket;
-		m_AIControlChannel = new AIControlChannel(m_MuxSocket, a_proxy);
+		m_AIControlChannel = new AIControlChannel(m_MuxSocket, new ImmutableProxyInterface[]{a_proxy});
 		m_MuxSocket.getControlChannelDispatcher().registerControlChannel(m_AIControlChannel);
 	}
 
@@ -76,19 +69,5 @@ public class Pay
 	public void shutdown()
 	{
 		m_MuxSocket.getControlChannelDispatcher().removeControlChannel(m_AIControlChannel);
-	}
-
-	/**
-	 * Fetches AccountInfo XML structure for each account in the accountsFile.
-	 * @todo do not connect/disconnect everytime
-	 */
-	public void fetchAccountInfoForAllAccounts(ImmutableProxyInterface a_proxy) throws Exception
-	{
-		Enumeration accounts = m_AccountsFile.getAccounts();
-		while (accounts.hasMoreElements())
-		{
-			PayAccount ac = (PayAccount) accounts.nextElement();
-			ac.fetchAccountInfo(a_proxy);
-		}
 	}
 }

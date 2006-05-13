@@ -100,7 +100,6 @@ import update.JAPUpdateWizard;
 public final class JAPController extends Observable implements IProxyListener, Observer,
 	AnonServiceEventListener, IAIEventListener
 {
-
 	/** Messages */
 	public static final String MSG_ERROR_SAVING_CONFIG = JAPController.class.getName() +
 		"_errorSavingConfig";
@@ -124,6 +123,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 		getName() + "_loseaccountdata";
 	private static final String MSG_DISABLE_GOODBYE = JAPController.class.getName() +
 		"_disableGoodByMessage";
+
+	private static final String XML_PAYMENT_ALLOW_NON_ANONYMOUS_CONNECTION = "AllowNonAnonymousConnection";
 
 	/**
 	 * Stores all MixCascades we know (information comes from infoservice or was entered by a user).
@@ -187,6 +188,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	{
 		m_changeAnonModeJobs = new Vector();
 		m_Model = JAPModel.getInstance();
+		m_Model.setAnonConnectionChecker(new AnonConnectionChecker());
 		// Create observer object
 		observerVector = new Vector();
 		// create service listener object
@@ -260,6 +262,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 		return m_Controller;
 	}
+
+	public class AnonConnectionChecker
+	{
+		public boolean checkAnonConnected()
+		{
+			return isAnonConnected();
+		}
+}
 
 	/**
 	 * Returns the password reader.
@@ -524,7 +534,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 				setDefaultView(JAPConstants.VIEW_NORMAL);
 
 				String strVersion = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_VERSION), null);
-				int port = XMLUtil.parseAttribute(root, JAPConstants.CONFIG_PORT_NUMBER,
+
+	            m_Model.setDLLupdate(XMLUtil.parseValue(n.getNamedItem(m_Model.DLL_VERSION_UPDATE), false));
+
+	            int port = XMLUtil.parseAttribute(root, JAPConstants.CONFIG_PORT_NUMBER,
 												  JAPModel.getHttpListenerPortNumber());
 				boolean bListenerIsLocal = XMLUtil.parseValue(n.getNamedItem(JAPConstants.
 					CONFIG_LISTENER_IS_LOCAL), true);
@@ -852,6 +865,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						Element elemPay = (Element) XMLUtil.getFirstChildByName(root,
 							JAPConstants.CONFIG_PAYMENT);
+						JAPModel.getInstance().allowPaymentViaDirectConnection(
+							XMLUtil.parseAttribute(elemPay, XML_PAYMENT_ALLOW_NON_ANONYMOUS_CONNECTION, true));
 
 						Element elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay,
 							JAPConstants.CONFIG_PAY_ACCOUNTS_FILE);
@@ -1188,7 +1203,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 			Element e = doc.createElement("JAP");
 			doc.appendChild(e);
-			XMLUtil.setAttribute(e, JAPConstants.CONFIG_VERSION, "0.22");
+			XMLUtil.setAttribute(e, JAPConstants.CONFIG_VERSION, "0.23");
+			XMLUtil.setAttribute(e, m_Model.DLL_VERSION_UPDATE, m_Model.getDLLupdate());
 			/* save payment configuration */
 			try
 			{
@@ -1196,6 +1212,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 				if (accounts != null)
 				{
 					Element elemPayment = doc.createElement(JAPConstants.CONFIG_PAYMENT);
+					XMLUtil.setAttribute(elemPayment, XML_PAYMENT_ALLOW_NON_ANONYMOUS_CONNECTION,
+										 JAPModel.getInstance().isPaymentViaDirectConnectionAllowed());
 					e.appendChild(elemPayment);
 
 					//Save the known PIs
@@ -2892,7 +2910,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 									  "Fetching statement for account: " + account.getAccountNumber());
-						account.fetchAccountInfo(JAPModel.getInstance().getProxyInterface());
+						account.fetchAccountInfo(JAPModel.getInstance().getPaymentProxyInterface());
 					}
 					catch (Exception e)
 					{

@@ -117,8 +117,7 @@ final public class DirectProxy implements Runnable
 				}
 				catch (SocketException e2)
 				{
-					LogHolder.log(LogLevel.ERR, LogType.NET,
-								  "JAPDirectProxy:DirectProxy.run() accept socket excpetion: " + e2);
+					LogHolder.log(LogLevel.ERR, LogType.NET, "Accept socket excpetion: " + e2);
 					break;
 				}
 
@@ -129,8 +128,7 @@ final public class DirectProxy implements Runnable
 				catch (SocketException soex)
 				{
 					LogHolder.log(LogLevel.ERR, LogType.NET,
-								  "JAPDirectProxy:DirectProxy.run() Could not set sockt to blocking mode! Excpetion: " +
-								  soex);
+								  "Could not set socket to blocking mode! Excpetion: " + soex);
 					socket = null;
 					continue;
 				}
