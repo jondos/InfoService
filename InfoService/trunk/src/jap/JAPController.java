@@ -2906,6 +2906,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 */
 	public void updateAccountStatements()
 	{
+		if (JAPModel.getInstance().isPaymentDisabled())
+		{
+			return;
+		}
 		Runnable doIt = new Runnable()
 		{
 			public void run()
