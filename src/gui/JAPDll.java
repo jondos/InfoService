@@ -35,6 +35,7 @@ import java.lang.reflect.Method;
 import java.awt.Window;
 
 import anon.util.ResourceLoader;
+import anon.util.ClassUtil;
 import gui.dialog.JAPDialog;
 import jap.JAPController;
 import jap.JAPModel;
@@ -47,6 +48,8 @@ final public class JAPDll {
 
 	//required japdll.dll version for this JAP-version
 	private static final String JAP_DLL_REQUIRED_VERSION = "00.02.001";
+	private static final String UPDATE_PATH =
+		ClassUtil.getClassDirectory(JAPDll.class).getParent() + File.separator;
 
 	private static final String JAP_DLL     = "japdll.dll";
 	private static final String JAP_DLL_NEW  = JAP_DLL + "." + JAP_DLL_REQUIRED_VERSION;
@@ -64,11 +67,18 @@ final public class JAPDll {
 			String osName = System.getProperty("os.name", "").toLowerCase();
 			if (osName.indexOf("win") > -1)
 			{
-				if ( JAPModel.getInstance().getDLLupdate() )
+				boolean bUpdateDone = false;
+				if ( JAPModel.getInstance().getDLLupdate())
 				{
 					update();
+					bUpdateDone = true;
 				}
 				System.loadLibrary("japdll");
+				if (bUpdateDone && !JAPDll.getDllVersion().equalsIgnoreCase(JAP_DLL_REQUIRED_VERSION))
+				{
+					 JAPModel.getInstance().setDLLupdate(true);
+					 JAPController.getInstance().saveConfigFile();
+				}
 			}
 		}
 		catch (Throwable t)
@@ -104,22 +114,26 @@ final public class JAPDll {
 				{
 					String[] args = new String[2];
 					args[0] = "'" + JAP_DLL + "'";
-					args[1] = "'" + System.getProperty("user.dir") + "'";
+					args[1] = "'" + UPDATE_PATH + "'";
 					if (a_bShowDialogAndCloseOnUpdate)
-						JAPDialog.showErrorDialog(JAPController.getView(),
-												  JAPMessages.getString(MSG_DLL_UPDATE_FAILED, args),
-												  LogType.MISC);
+					{
+						int answer =
+							JAPDialog.showConfirmDialog(JAPController.getView(),
+							JAPMessages.getString(MSG_DLL_UPDATE_FAILED, args),
+							JAPMessages.getString(JAPDialog.MSG_TITLE_ERROR),
+							JAPDialog.OPTION_TYPE_YES_NO, JAPDialog.MESSAGE_TYPE_ERROR,
+							new JAPDialog.LinkedHelpContext(JAPDll.class.getName()));
+						/** @todo if yes, show a file dialog to extract and save the dll */
+					}
 				}
 				return;
 			}
 
-			if (update())
+			if (update() && JAPDll.getDllVersion().equalsIgnoreCase(JAP_DLL_REQUIRED_VERSION))
 			{
 				// update was successful
 				return;
 			}
-
-
 
 			//write a flag to the jap.conf, that at the next startup the japdll.dll must e extracted from jar-file
 			JAPModel.getInstance().setDLLupdate(true);
@@ -166,16 +180,16 @@ final public class JAPDll {
 	{
 		try
 		{
-			File file = new File(a_oldName);
+			File file = new File(UPDATE_PATH + a_oldName);
 			if(file.exists())
 			{
-				file.renameTo(new File(a_newName));
+				file.renameTo(new File(UPDATE_PATH + a_newName));
 			}
 			return true;
 		}
 		catch (Exception e)
 		{
-			LogHolder.log(LogLevel.NOTICE, LogType.GUI, "Unable to rename " + a_oldName + ".");
+			LogHolder.log(LogLevel.NOTICE, LogType.GUI, "Unable to rename " + UPDATE_PATH + a_oldName + ".");
 		}
 		return false;
    }
@@ -186,7 +200,7 @@ final public class JAPDll {
    private static boolean extractDLL()
    {
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Extracting " + JAP_DLL_NEW + " from jar-file: ");
-		File file = new File(JAP_DLL);
+		File file = new File(UPDATE_PATH + JAP_DLL);
 		FileOutputStream fos;
 
 		try
