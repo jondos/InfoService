@@ -353,7 +353,7 @@ public class JAP extends Frame
 		});
 
 		//WP: check japdll.dll version
-		JAPDll.checkDllVersion();
+		JAPDll.checkDllVersion(true);
 
 	}
 
