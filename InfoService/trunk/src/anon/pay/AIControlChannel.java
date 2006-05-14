@@ -62,7 +62,7 @@ public class AIControlChannel extends SyncControlChannel
 {
 	public static final int CHAN_ID = 2;
 	private static final int EVENT_UNREAL = 1;
-	/** How man milliseconds to wait before requesting a new account statement */
+	/** How many milliseconds to wait before requesting a new account statement */
 	private static final long BALANCE_MILLISECONDS = 90000;
 
 	/** Threshold for warning the user of too large number of transferred bytes in cc (0-1)*/
