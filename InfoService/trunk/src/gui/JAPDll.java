@@ -66,15 +66,7 @@ final public class JAPDll {
 			{
 				if ( JAPModel.getInstance().getDLLupdate() )
 				{
-					if (renameDLL(JAP_DLL, JAP_DLL_OLD) && extractDLL())
-					{
-						JAPModel.getInstance().setDLLupdate(false);
-						JAPController.getInstance().saveConfigFile();
-					}
-					else
-					{
-						renameDLL(JAP_DLL_OLD, JAP_DLL);
-					}
+					update();
 				}
 				System.loadLibrary("japdll");
 			}
@@ -92,8 +84,10 @@ final public class JAPDll {
 	 * If the japdll.dll has the wrong version, a backup of the old file is created and
 	 * the suitable japdll.dll is extracted from the JAP.jar.
 	 * In this case the user must restart the JAP.
+	 * @param a_bShowDIalogAndCloseOnUpdate if, in case of a neccessary update, a dialog is shown and JAP
+	 * is closed
 	 */
-	static public void checkDllVersion()
+	public static void checkDllVersion(boolean a_bShowDialogAndCloseOnUpdate)
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Existing " + JAP_DLL + " version: " + JAPDll.getDllVersion());
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Required " + JAP_DLL + " version: " + JAP_DLL_REQUIRED_VERSION);
@@ -106,22 +100,38 @@ final public class JAPDll {
 			// test if we already tried to update
 			if (JAPModel.getInstance().getDLLupdate())
 			{
-				String[] args = new String[2];
-				args[0] = "'" + JAP_DLL + "'";
-				args[1] = "'" + System.getProperty("user.dir") + "'";
-				JAPDialog.showErrorDialog(JAPController.getView(),
-										  JAPMessages.getString(MSG_DLL_UPDATE_FAILED, args), LogType.MISC);
+				if (a_bShowDialogAndCloseOnUpdate)
+				{
+					String[] args = new String[2];
+					args[0] = "'" + JAP_DLL + "'";
+					args[1] = "'" + System.getProperty("user.dir") + "'";
+					if (a_bShowDialogAndCloseOnUpdate)
+						JAPDialog.showErrorDialog(JAPController.getView(),
+												  JAPMessages.getString(MSG_DLL_UPDATE_FAILED, args),
+												  LogType.MISC);
+				}
 				return;
 			}
+
+			if (update())
+			{
+				// update was successful
+				return;
+			}
+
+
 
 			//write a flag to the jap.conf, that at the next startup the japdll.dll must e extracted from jar-file
 			JAPModel.getInstance().setDLLupdate(true);
 			JAPController.getInstance().saveConfigFile();
-			//Inform the User about the necessary JAP restart
-			JAPDialog.showMessageDialog(JAPController.getView(),
-										JAPMessages.getString(MSG_DLL_UPDATE, "'" + JAP_DLL + "'") );
-			//close JAP
-			JAPController.getInstance().goodBye(false);
+			if (a_bShowDialogAndCloseOnUpdate)
+			{
+				//Inform the User about the necessary JAP restart
+				JAPDialog.showMessageDialog(JAPController.getView(),
+											JAPMessages.getString(MSG_DLL_UPDATE, "'" + JAP_DLL + "'"));
+				//close JAP
+				JAPController.getInstance().goodBye(false);
+			}
 		}
 		else
 		{
@@ -130,6 +140,21 @@ final public class JAPDll {
 			JAPController.getInstance().saveConfigFile();
 		}
 		//else -> noting to do
+	}
+
+	private static boolean update()
+	{
+		if (renameDLL(JAP_DLL, JAP_DLL_OLD) && extractDLL())
+		{
+			JAPModel.getInstance().setDLLupdate(false);
+			JAPController.getInstance().saveConfigFile();
+			return true;
+		}
+		else
+		{
+			renameDLL(JAP_DLL_OLD, JAP_DLL);
+			return false;
+		}
 	}
 
 	/**
@@ -142,7 +167,10 @@ final public class JAPDll {
 		try
 		{
 			File file = new File(a_oldName);
-			file.renameTo(new File(a_newName));
+			if(file.exists())
+			{
+				file.renameTo(new File(a_newName));
+			}
 			return true;
 		}
 		catch (Exception e)

@@ -2280,6 +2280,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				if (returnValue == JAPDialog.RETURN_VALUE_OK)
 				{
 					getView().setEnabled(false);
+					JAPDll.checkDllVersion(false);
 					boolean error = m_Controller.saveConfigFile();
 					if (error && bShowConfigSaveErrorMsg)
 					{
