@@ -351,6 +351,10 @@ public class JAP extends Frame
 				m_controller.initialRun();
 			}
 		});
+
+		//WP: check japdll.dll version
+		JAPDll.checkDllVersion();
+
 	}
 
 	public static void main(String[] argv)

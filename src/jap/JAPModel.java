@@ -249,6 +249,8 @@ public final class JAPModel
 		m_connectionChecker = a_connectionChecker;
 	}
 
+
+
 	public boolean isAnonConnected()
 	{
 		return m_connectionChecker.checkAnonConnected();
@@ -357,6 +359,11 @@ public final class JAPModel
 	protected void setInfoServiceDisabled(boolean b)
 	{
 		m_bInfoServiceDisabled = b;
+	}
+
+	public boolean isPaymentDisabled()
+	{
+		return false;
 	}
 
 	public static boolean isInfoServiceDisabled()

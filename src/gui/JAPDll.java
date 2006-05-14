@@ -27,12 +27,35 @@
  */
 package gui;
 
-import java.awt.Window;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.lang.reflect.Method;
-import jap.JAPController;
 
-final public class JAPDll
-{
+import java.awt.Window;
+
+import anon.util.ResourceLoader;
+import gui.dialog.JAPDialog;
+import jap.JAPController;
+import jap.JAPModel;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
+
+final public class JAPDll {
+
+	//required japdll.dll version for this JAP-version
+	private static final String JAP_DLL_REQUIRED_VERSION = "00.02.001";
+
+	private static final String JAP_DLL     = "japdll.dll";
+	private static final String JAP_DLL_NEW  = JAP_DLL + "." + JAP_DLL_REQUIRED_VERSION;
+	private static final String JAP_DLL_OLD = "japdll.old";
+
+	/** Message */
+	private static final String MSG_DLL_UPDATE = JAPDll.class.getName() + "_updateRestartMessage";
+	private static final String MSG_DLL_UPDATE_FAILED = JAPDll.class.getName() + "_updateFailed";
+
 	private static boolean m_sbHasOnTraffic = true;
 	static
 	{
@@ -41,12 +64,133 @@ final public class JAPDll
 			String osName = System.getProperty("os.name", "").toLowerCase();
 			if (osName.indexOf("win") > -1)
 			{
+				if ( JAPModel.getInstance().getDLLupdate() )
+				{
+					if (renameDLL(JAP_DLL, JAP_DLL_OLD) && extractDLL())
+					{
+						JAPModel.getInstance().setDLLupdate(false);
+						JAPController.getInstance().saveConfigFile();
+					}
+					else
+					{
+						renameDLL(JAP_DLL_OLD, JAP_DLL);
+					}
+				}
 				System.loadLibrary("japdll");
 			}
 		}
 		catch (Throwable t)
 		{
 		}
+	}
+
+
+	/**
+	 * This method should be invoked on every JAP-start:
+	 * It will check if the existing japdll.dll has the right version to work
+	 * propper with this JAP version. If no japdll.dll exists at all, nothing will haben.
+	 * If the japdll.dll has the wrong version, a backup of the old file is created and
+	 * the suitable japdll.dll is extracted from the JAP.jar.
+	 * In this case the user must restart the JAP.
+	 */
+	static public void checkDllVersion()
+	{
+		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Existing " + JAP_DLL + " version: " + JAPDll.getDllVersion());
+		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Required " + JAP_DLL + " version: " + JAP_DLL_REQUIRED_VERSION);
+
+		// checks, if the japdll.dll must (and can) be extracted from jar-file.
+		if (! (JAPDll.getDllVersion() == null) &&
+			!JAPDll.getDllVersion().equalsIgnoreCase(JAP_DLL_REQUIRED_VERSION) &&
+			ResourceLoader.getResourceURL(JAP_DLL_NEW) != null)
+		{
+			// test if we already tried to update
+			if (JAPModel.getInstance().getDLLupdate())
+			{
+				String[] args = new String[2];
+				args[0] = "'" + JAP_DLL + "'";
+				args[1] = "'" + System.getProperty("user.dir") + "'";
+				JAPDialog.showErrorDialog(JAPController.getView(),
+										  JAPMessages.getString(MSG_DLL_UPDATE_FAILED, args), LogType.MISC);
+				return;
+			}
+
+			//write a flag to the jap.conf, that at the next startup the japdll.dll must e extracted from jar-file
+			JAPModel.getInstance().setDLLupdate(true);
+			JAPController.getInstance().saveConfigFile();
+			//Inform the User about the necessary JAP restart
+			JAPDialog.showMessageDialog(JAPController.getView(),
+										JAPMessages.getString(MSG_DLL_UPDATE, "'" + JAP_DLL + "'") );
+			//close JAP
+			JAPController.getInstance().goodBye(false);
+		}
+		else
+		{
+			// version status OK
+			JAPModel.getInstance().setDLLupdate(false);
+			JAPController.getInstance().saveConfigFile();
+		}
+		//else -> noting to do
+	}
+
+	/**
+	 * Renames the existing japdll.dll to japdll.old before the new DLL is extracted from jar-file
+	 * @param a_oldName old name of the file
+	 * @param a_newName new name of the file
+	 */
+	private static boolean renameDLL(String a_oldName, String a_newName)
+	{
+		try
+		{
+			File file = new File(a_oldName);
+			file.renameTo(new File(a_newName));
+			return true;
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.NOTICE, LogType.GUI, "Unable to rename " + a_oldName + ".");
+		}
+		return false;
+   }
+
+   /**
+	* Extracts the japdll.dll from the jar-file
+	*/
+   private static boolean extractDLL()
+   {
+		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Extracting " + JAP_DLL_NEW + " from jar-file: ");
+		File file = new File(JAP_DLL);
+		FileOutputStream fos;
+
+		try
+		{
+			InputStream is = ResourceLoader.loadResourceAsStream(JAP_DLL_NEW);
+			if (is == null)
+			{
+				return false;
+			}
+			fos = new FileOutputStream(file);
+
+			int b;
+			while (true)
+			{
+				b = is.read();
+				if (b == -1)
+				{
+					break;
+				}
+				fos.write(b);
+			}
+			fos.flush();
+			fos.close();
+			is.close();
+			return true;
+
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, e);
+		}
+		return false;
 	}
 
 	static public boolean setWindowOnTop(Window theWindow, String caption, boolean onTop)
