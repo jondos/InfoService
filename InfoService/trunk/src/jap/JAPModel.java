@@ -292,6 +292,13 @@ public final class JAPModel
 		return getProxyInterface(true);
 	}
 
+	/**
+	 *
+	 * @param a_bPayment if the proxy interface for Payment should be returned; otherwise, return
+	 * the one for the InfoService
+	 * @return ImmutableProxyInterface[] one or more proxy interfaces or null if there is no
+	 * proxy available that is allowed
+	 */
 	private ImmutableProxyInterface[] getProxyInterface(boolean a_bPayment)
 	{
 		ProxyInterface[] interfaces = new ProxyInterface[4];
@@ -303,19 +310,30 @@ public final class JAPModel
 		if ((a_bPayment && !isPaymentViaDirectConnectionAllowed()) ||
 			(!a_bPayment && !isInfoServiceViaDirectConnectionAllowed()))
 		{
-			// do not allow direct connections to BI and InfoService
+			// force anonymous connections to BI and InfoService
 			if (!m_connectionChecker.checkAnonConnected())
 			{
-				// no anonymous connection available...
+				// no anonymous connection available... it is not possible to connect!
 				return null;
 			}
-			// ok, use an anonymous connection
+			// ok, there seems to be an anonymous channel
 			return new ProxyInterface[]{interfaces[2], interfaces[3]};
 		}
 		else if (!m_connectionChecker.checkAnonConnected())
 		{
 			// return only direct connections
+			if (interfaces[0] == null)
+			{
+				// no proxy/firewall is set
+				return new ProxyInterface[]{interfaces[1]};
+			}
 			return new ProxyInterface[]{interfaces[0], interfaces[1]};
+		}
+
+		if (interfaces[0] == null)
+		{
+			// no proxy/firewall is set
+			return new ProxyInterface[]{interfaces[1], interfaces[2], interfaces[3]};
 		}
 
 		return interfaces;
