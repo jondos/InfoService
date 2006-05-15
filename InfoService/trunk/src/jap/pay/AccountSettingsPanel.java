@@ -1129,6 +1129,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						theBI = getBIforAccountCreation();
 					}
 				}
+
+				if (Thread.currentThread().isInterrupted())
+				{
+					theBI = null;
+				}
+
 				if (theBI == null)
 				{
 					// no valid BI could be found
@@ -1187,7 +1193,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		WorkerContentPane.IReturnRunnable keyCreationThread = new WorkerContentPane.IReturnRunnable()
 		{
 			private DSAKeyPair m_keyPair;
-			boolean m_bInterrupted = false;
 
 			public void run()
 			{
@@ -1196,9 +1201,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					DSAKeyPair.getInstance(new SecureRandom(), DSAKeyPair.KEY_LENGTH_1024, 20);
 				if (m_keyPair == null)
 				{
-					m_bInterrupted = true;
 					JAPDialog.showErrorDialog(
-						d, JAPMessages.getString(MSG_KEY_PAIR_CREATE_ERROR), LogType.PAY);
+									   d, JAPMessages.getString(MSG_KEY_PAIR_CREATE_ERROR), LogType.PAY);
 				}
 				m_bDoNotCloseDialog = false;
 			}
