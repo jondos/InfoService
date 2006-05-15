@@ -103,7 +103,8 @@ final public class JAPDll {
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Required " + JAP_DLL + " version: " + JAP_DLL_REQUIRED_VERSION);
 
 		// checks, if the japdll.dll must (and can) be extracted from jar-file.
-		if (! (JAPDll.getDllVersion() == null) &&
+		//@todo FixMe!!
+		if (false&&! (JAPDll.getDllVersion() == null) &&
 			!JAPDll.getDllVersion().equalsIgnoreCase(JAP_DLL_REQUIRED_VERSION) &&
 			ResourceLoader.getResourceURL(JAP_DLL_NEW) != null)
 		{
@@ -128,7 +129,7 @@ final public class JAPDll {
 				}
 				return;
 			}
-
+//@todo FixMe JAPDll.getDllVersion()==NULL!
 			if (update() && JAPDll.getDllVersion().equalsIgnoreCase(JAP_DLL_REQUIRED_VERSION))
 			{
 				// update was successful
@@ -315,6 +316,26 @@ final public class JAPDll {
 		return null;
 	}
 
+	/** Returns the Filename of the JAPDll.
+	 * @ret filename pf the JAP dll
+	 * @ret null if getting the file name fails
+	 */
+
+	static public String getDllFileName()
+	{
+		try
+		{
+			String s=getDllFileName_dll();
+			if(s==null||s.length()==0)
+				return null;
+			return s;
+		}
+		catch (Throwable t)
+		{
+		}
+		return null;
+	}
+
 	static public long showMainWindow()
 	{
 		JAPController.getView().setVisible(true);
@@ -332,4 +353,6 @@ final public class JAPDll {
 	native static private void onTraffic_dll();
 
 	native static private String getDllVersion_dll();
+
+	native static private String getDllFileName_dll();
 }

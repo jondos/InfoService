@@ -47,6 +47,14 @@ JNIEXPORT void JNICALL Java_gui_JAPDll_onTraffic_1dll
 JNIEXPORT jstring JNICALL Java_gui_JAPDll_getDllVersion_1dll
   (JNIEnv *, jclass);
 
+/*
+ * Class:     gui_JAPDll
+ * Method:    getDllfileName_dll
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_gui_JAPDll_getDllFileName_1dll
+  (JNIEnv *, jclass);
+
 #ifdef __cplusplus
 }
 #endif

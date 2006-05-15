@@ -10,7 +10,7 @@
 	#pragma once
 #endif // _MSC_VER > 1000
 
-#define JAPDLL_VERSION "00.02.001"
+#define JAPDLL_VERSION "00.02.002"
 
 // Fügen Sie hier Ihre Header-Dateien ein
 #include <windows.h>
@@ -51,6 +51,9 @@ HICON g_hiconWindowLarge;
 HANDLE g_hThread; //Handle for the Blinking-Thread
 BOOL g_isBlinking;
 VOID ShowWindowFromTaskbar() ;
+
+//Stores the Filename of the DLL
+TCHAR strModuleFileName[4100];
 
 JavaVM *gjavavm=NULL;
 DWORD WINAPI MsgProcThread( LPVOID lpParam ) 
@@ -110,6 +113,7 @@ BOOL APIENTRY DllMain( HINSTANCE hModule,
                        DWORD  ul_reason_for_call, 
                        LPVOID lpReserved)
 	{
+		int ret=0;
     switch (ul_reason_for_call)
 			{
 				case DLL_PROCESS_ATTACH:
@@ -122,6 +126,11 @@ BOOL APIENTRY DllMain( HINSTANCE hModule,
 					g_hiconWindowSmall=(HICON)LoadImage(hInstance,MAKEINTRESOURCE(IDI_JAP),IMAGE_ICON,16,16,LR_DEFAULTCOLOR);
 					g_hiconWindowLarge=(HICON)LoadImage(hInstance,MAKEINTRESOURCE(IDI_JAP),IMAGE_ICON,32,32,LR_DEFAULTCOLOR);
 					g_hiconJAP=g_hiconWindowSmall;
+					ret=GetModuleFileName(hModule,strModuleFileName,4096);
+					if(ret==0||ret==4096)
+						{
+							memset(strModuleFileName,0,4096*sizeof(TCHAR));
+						}
 					return createMsgWindowClass();
 				case DLL_THREAD_ATTACH:
 				break;
@@ -387,4 +396,10 @@ JNIEXPORT jstring JNICALL Java_gui_JAPDll_getDllVersion_1dll
   (JNIEnv * env, jclass)
 	{
 		return env->NewStringUTF(JAPDLL_VERSION);
+	}
+
+JNIEXPORT jstring JNICALL Java_gui_JAPDll_getDllFileName_1dll
+  (JNIEnv * env, jclass)
+	{
+		return env->NewStringUTF(strModuleFileName);
 	}
