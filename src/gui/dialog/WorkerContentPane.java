@@ -210,9 +210,22 @@ public class WorkerContentPane extends DialogContentPane implements
 	 */
 	private class InternalThread extends Thread
 	{
+		private Runnable m_runnable;
+		private boolean m_bInterrupted = false;
+
 		public InternalThread(Runnable a_runnable)
 		{
 			super(a_runnable, "WorkerContentPane - InternalThread");
+			m_runnable = a_runnable;
+		}
+		public void run()
+		{
+			m_runnable.run();
+			m_bInterrupted = isInterrupted();
+		}
+		public boolean isInterrupted()
+		{
+			return super.isInterrupted() ||  m_bInterrupted;
 		}
 	}
 
@@ -260,7 +273,7 @@ public class WorkerContentPane extends DialogContentPane implements
 				notifyAll();
 				return;
 			}
-			m_workerThread.setDaemon(true);
+			//m_workerThread.setDaemon(true);
 			m_workerThread.start();
 
 
@@ -272,6 +285,7 @@ public class WorkerContentPane extends DialogContentPane implements
 			{
 				interruptWorkerThread();
 			}
+
 
 			if (m_workerThread.isInterrupted() || getButtonValue() == RETURN_VALUE_CANCEL ||
 				getButtonValue() == RETURN_VALUE_CLOSED)

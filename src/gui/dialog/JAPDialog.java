@@ -1011,7 +1011,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 * @param a_optionType use the option types from JOptionPane
 	 * @param a_linkedInformation a clickable information message that is appended to the text
 	 * @return The value the user has selected. RETURN_VALUE_UNINITIALIZED implies
-	 * the user has not yet made a choice.
+	 * the user has not yet made a choice or that the current thread has been interrupted
 	 * @see javax.swing.JOptionPane
 	 */
 	public static int showConfirmDialog(Component a_parentComponent, String a_message, String a_title,
@@ -1115,14 +1115,36 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		{
 		}
 		// test if labels will be formatted correctly
-		label = new JAPHtmlMultiLineLabel("Text");
+		try
+		{
+				label = new JAPHtmlMultiLineLabel("Text");
+		}
+		catch (NullPointerException a_e)
+		{
+			if (Thread.currentThread().isInterrupted())
+			{
+				return RETURN_VALUE_UNINITIALIZED;
+			}
+			throw a_e;
+		}
 		if (label.getPreferredSize().width == 0 || label.getPreferredSize().height == 0)
 		{
 			LogHolder.log(LogLevel.EMERG, LogType.GUI,
 						  "Dialog label size is invalid! This dialog might not show any label!");
 		}
-		label = new JAPHtmlMultiLineLabel(message);
-		label.setFontStyle(JAPHtmlMultiLineLabel.FONT_STYLE_PLAIN);
+		try
+		{
+			label = new JAPHtmlMultiLineLabel(message);
+			label.setFontStyle(JAPHtmlMultiLineLabel.FONT_STYLE_PLAIN);
+		}
+		catch (NullPointerException a_e)
+		{
+			if (Thread.currentThread().isInterrupted())
+			{
+				return RETURN_VALUE_UNINITIALIZED;
+			}
+			throw a_e;
+		}
 
 		dummyBox = new PreferredWidthBoxPanel();
 		if (strLinkedInformation != null &&
@@ -1164,7 +1186,25 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		minSize.setSize(minSize.width / 2, minSize.height);
 
 		// set the maximum width that is allowed for the content pane
-		int maxWidth = (int)GUIUtils.getParentWindow(a_parentComponent).getSize().width;
+		int maxWidth = 0;
+		try
+		{
+			Component parentWindow = GUIUtils.getParentWindow(a_parentComponent);
+			if (parentWindow == null)
+			{
+				return RETURN_VALUE_UNINITIALIZED;
+			}
+			maxWidth = (int) parentWindow.getSize().width;
+		}
+		catch (NullPointerException a_e)
+		{
+			if (Thread.currentThread().isInterrupted())
+			{
+				return RETURN_VALUE_UNINITIALIZED;
+			}
+			throw a_e;
+
+		}
 		if (maxWidth < minSize.width * 4)
 		{
 			maxWidth = minSize.width * 4;
@@ -1253,8 +1293,20 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		 * Recreate the dialog and set its final size.
 		 */
 		dummyBox = new PreferredWidthBoxPanel();
-		label = new JAPHtmlMultiLineLabel("<font color=#000000>" + a_message + "</font>");
-		label.setFontStyle(JAPHtmlMultiLineLabel.FONT_STYLE_PLAIN);
+		try
+		{
+			label = new JAPHtmlMultiLineLabel("<font color=#000000>" + a_message + "</font>");
+			label.setFontStyle(JAPHtmlMultiLineLabel.FONT_STYLE_PLAIN);
+		}
+		catch (NullPointerException a_e)
+		{
+			if (Thread.currentThread().isInterrupted())
+			{
+				return RETURN_VALUE_UNINITIALIZED;
+			}
+			throw a_e;
+		}
+
 		dummyBox.add(label);
 		linkLabel = null;
 		if (strLinkedInformation != null)
