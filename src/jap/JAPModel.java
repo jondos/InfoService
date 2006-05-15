@@ -398,7 +398,14 @@ public final class JAPModel
 		String s = JAPDll.getDllVersion();
 		if (s != null)
 		{
-			buff.append("Using JAPDll: ");
+			buff.append("Using JAPDll Version: ");
+			buff.append(s);
+			buff.append("\n");
+		}
+		s=JAPDll.getDllFileName();
+		if(s!=null)
+		{
+			buff.append("Using JAPDll File: ");
 			buff.append(s);
 			buff.append("\n");
 		}
