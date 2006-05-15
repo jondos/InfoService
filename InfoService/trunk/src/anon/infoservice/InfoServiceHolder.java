@@ -196,7 +196,7 @@ public class InfoServiceHolder extends Observable
 	 *
 	 * @return The preferred InfoService or null, if no preferred InfoService is set.
 	 */
-	public synchronized InfoServiceDBEntry getPreferredInfoService()
+	public InfoServiceDBEntry getPreferredInfoService()
 	{
 		return m_preferredInfoService;
 	}
