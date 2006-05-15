@@ -64,8 +64,7 @@ final public class JAPDll {
 	{
 		try
 		{
-			String osName = System.getProperty("os.name", "").toLowerCase();
-			if (osName.indexOf("win") > -1)
+			if (System.getProperty("os.name", "").toLowerCase().indexOf("win") > -1)
 			{
 				boolean bUpdateDone = false;
 				if ( JAPModel.getInstance().getDLLupdate())
@@ -74,7 +73,8 @@ final public class JAPDll {
 					bUpdateDone = true;
 				}
 				System.loadLibrary("japdll");
-				if (bUpdateDone && !JAPDll.getDllVersion().equalsIgnoreCase(JAP_DLL_REQUIRED_VERSION))
+				if (bUpdateDone && (JAPDll.getDllVersion() == null || // == null means there are problems...
+									JAPDll.getDllVersion().compareTo(JAP_DLL_REQUIRED_VERSION) < 0))
 				{
 					 JAPModel.getInstance().setDLLupdate(true);
 					 JAPController.getInstance().saveConfigFile();
@@ -99,13 +99,18 @@ final public class JAPDll {
 	 */
 	public static void checkDllVersion(boolean a_bShowDialogAndCloseOnUpdate)
 	{
+		if (System.getProperty("os.name", "").toLowerCase().indexOf("win") < 0)
+		{
+			return;
+		}
+
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Existing " + JAP_DLL + " version: " + JAPDll.getDllVersion());
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Required " + JAP_DLL + " version: " + JAP_DLL_REQUIRED_VERSION);
 
 		// checks, if the japdll.dll must (and can) be extracted from jar-file.
-		//@todo FixMe!!
-		if (false&&! (JAPDll.getDllVersion() == null) &&
-			!JAPDll.getDllVersion().equalsIgnoreCase(JAP_DLL_REQUIRED_VERSION) &&
+		/** @todo remove this 'false' to make it run */
+		if (false&& JAPDll.getDllVersion() != null && // != null means that there is a loaded dll
+			JAPDll.getDllVersion().compareTo(JAP_DLL_REQUIRED_VERSION) < 0 &&
 			ResourceLoader.getResourceURL(JAP_DLL_NEW) != null)
 		{
 			// test if we already tried to update
@@ -129,8 +134,9 @@ final public class JAPDll {
 				}
 				return;
 			}
-//@todo FixMe JAPDll.getDllVersion()==NULL!
-			if (update() && JAPDll.getDllVersion().equalsIgnoreCase(JAP_DLL_REQUIRED_VERSION))
+
+			if (update() && JAPDll.getDllVersion() != null && // == null means that there are problems...
+				JAPDll.getDllVersion().compareTo(JAP_DLL_REQUIRED_VERSION) < 0)
 			{
 				// update was successful
 				return;
@@ -151,10 +157,12 @@ final public class JAPDll {
 		else
 		{
 			// version status OK
-			JAPModel.getInstance().setDLLupdate(false);
-			JAPController.getInstance().saveConfigFile();
+			if (JAPModel.getInstance().getDLLupdate())
+			{
+				JAPModel.getInstance().setDLLupdate(false);
+				JAPController.getInstance().saveConfigFile();
+			}
 		}
-		//else -> noting to do
 	}
 
 	private static boolean update()
