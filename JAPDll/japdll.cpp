@@ -10,7 +10,7 @@
 	#pragma once
 #endif // _MSC_VER > 1000
 
-#define JAPDLL_VERSION "00.02.002"
+#define JAPDLL_VERSION "00.02.003"
 
 // Fügen Sie hier Ihre Header-Dateien ein
 #include <windows.h>
