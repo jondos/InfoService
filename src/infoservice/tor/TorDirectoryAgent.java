@@ -137,7 +137,7 @@ public class TorDirectoryAgent implements Runnable
 			{
 				m_updateInterval = a_updateInterval;
 				/* start the internal thread */
-				Thread fetchThread = new Thread(this,"TorDirectoryAgent Update Thread");
+				Thread fetchThread = new Thread(this, "TorDirectoryAgent Update Thread");
 				fetchThread.setDaemon(true);
 				fetchThread.start();
 			}
@@ -189,134 +189,157 @@ public class TorDirectoryAgent implements Runnable
 		TorDirectoryServer preferedDirectoryServer = null;
 		while (true)
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.NET,
-						  "TorDirectoryAgent: run: Try to fetch the tor nodes list from the known tor directory servers.");
-			Vector torServers = Database.getInstance(TorDirectoryServer.class).getEntryList();
-			if (preferedDirectoryServer != null)
+			try
 			{
-				/* remove the occurence of the prefered directoy server from the list, if there is one */
-				boolean preferedServerFound = false;
-				int i = 0;
-				while ( (i < torServers.size()) && (preferedServerFound == false))
+				LogHolder.log(LogLevel.DEBUG, LogType.NET,
+							  "TorDirectoryAgent: run: Try to fetch the tor nodes list from the known tor directory servers.");
+				Database db = Database.getInstance(TorDirectoryServer.class);
+				Vector torServers = null;
+				if (db == null || (torServers = db.getEntryList()) == null)
 				{
-					if ( ( (TorDirectoryServer) (torServers.elementAt(i))).getId().equals(
-						preferedDirectoryServer.getId()))
+					LogHolder.log(LogLevel.DEBUG, LogType.NET,
+								  "TorDirectoryAgent: run: No TorDirectoryServer DB!");
+					try
 					{
-						torServers.removeElementAt(i);
-						preferedServerFound = true;
+						Thread.sleep(m_updateInterval);
 					}
-					i++;
-				}
-				/* add the prefered directory server at the top of the list, so it is used first */
-				torServers.insertElementAt(preferedDirectoryServer, 0);
-			}
-			Element torNodesListNode = null;
-			Element torNodesListCompressedNode = null;
-			//all servers timed out --> restart with configured ones...
-			//if(torServers.size()==0)
-			//{
-			//}
-			while ( (torNodesListNode == null) && (torServers.size() > 0))
-			{
-				TorDirectoryServer currentDirectoryServer = (TorDirectoryServer) (torServers.firstElement());
-				String torNodesListInformation = currentDirectoryServer.downloadTorNodesInformation();
-				torServers.removeElementAt(0);
-				if (torNodesListInformation != null)
-				{
-					/* we have gotten a structure of TOR nodes, try to parse it */
-					ORList torNodes = new ORList(new DummyORListFetcher(torNodesListInformation));
-					if (torNodes.updateList())
+					catch (Exception e)
 					{
-						/* we have a parsed list of TOR nodes, use it to update the database of known TOR
-						 * directory servers
-						 */
-						Enumeration runningTorNodes = torNodes.getList().elements();
-						while (runningTorNodes.hasMoreElements())
+					}
+					continue;
+				}
+				if (preferedDirectoryServer != null)
+				{
+					/* remove the occurence of the prefered directoy server from the list, if there is one */
+					boolean preferedServerFound = false;
+					int i = 0;
+					while ( (i < torServers.size()) && (preferedServerFound == false))
+					{
+						if ( ( (TorDirectoryServer) (torServers.elementAt(i))).getId().equals(
+							preferedDirectoryServer.getId()))
 						{
-							ORDescription currentTorNode = (ORDescription) (runningTorNodes.nextElement());
-							if (currentTorNode.getDirPort() > 0)
-							{
-								/* that is a TOR directory server, add it to the database with a timeout of
-								 * 1,5 * update interval
-								 */
-								addTorDirectoryServer(new TorDirectoryServer(new TorDirectoryServerUrl(
-									currentTorNode.getAddress(), currentTorNode.getDirPort(),
-									DEFAULT_DIRECTORY_FILE), (3 * m_updateInterval) / 2, false));
-							}
+							torServers.removeElementAt(i);
+							preferedServerFound = true;
 						}
-
-						try
+						i++;
+					}
+					/* add the prefered directory server at the top of the list, so it is used first */
+					torServers.insertElementAt(preferedDirectoryServer, 0);
+				}
+				Element torNodesListNode = null;
+				Element torNodesListCompressedNode = null;
+				//all servers timed out --> restart with configured ones...
+				//if(torServers.size()==0)
+				//{
+				//}
+				while ( (torNodesListNode == null) && (torServers.size() > 0))
+				{
+					TorDirectoryServer currentDirectoryServer = (TorDirectoryServer) (torServers.firstElement());
+					String torNodesListInformation = currentDirectoryServer.downloadTorNodesInformation();
+					torServers.removeElementAt(0);
+					if (torNodesListInformation != null)
+					{
+						/* we have gotten a structure of TOR nodes, try to parse it */
+						ORList torNodes = new ORList(new DummyORListFetcher(torNodesListInformation));
+						if (torNodes.updateList())
 						{
-							/* create the TorNodesList XML structure for the clients */
-							/* create the TorNodesList element */
-							torNodesListNode = XMLUtil.createDocument().createElement("TorNodesList");
-							torNodesListNode.setAttribute("xml:space", "preserve");
-							XMLUtil.setValue(torNodesListNode, torNodesListInformation);
-							/* create also a compressed version, which needs less transfer capacity */
-							/* create the TorNodesListCompressed element */
-							torNodesListCompressedNode = XMLUtil.createDocument().createElement(
-								"TorNodesListCompressed");
-							torNodesListCompressedNode.setAttribute("xml:space", "preserve");
-							String bzip2CompressedTorNodesList = Base64.encode(BZip2Tools.compress(
-								torNodesListInformation.getBytes()), false);
-							XMLUtil.setValue(torNodesListCompressedNode, bzip2CompressedTorNodesList);
-							/* downloading the information was successful from that server, so update the prefered
-							 * TOR directory server entry, if it was another one
+							/* we have a parsed list of TOR nodes, use it to update the database of known TOR
+							 * directory servers
 							 */
-							if (preferedDirectoryServer != null)
+							Enumeration runningTorNodes = torNodes.getList().elements();
+							while (runningTorNodes.hasMoreElements())
 							{
-								if (preferedDirectoryServer.getId().equals(currentDirectoryServer.getId()) == false)
+								ORDescription currentTorNode = (ORDescription) (runningTorNodes.nextElement());
+								if (currentTorNode.getDirPort() > 0)
 								{
+									/* that is a TOR directory server, add it to the database with a timeout of
+									 * 1,5 * update interval
+									 */
+									addTorDirectoryServer(new TorDirectoryServer(new TorDirectoryServerUrl(
+										currentTorNode.getAddress(), currentTorNode.getDirPort(),
+										DEFAULT_DIRECTORY_FILE), (3 * m_updateInterval) / 2, false));
+								}
+							}
+
+							try
+							{
+								/* create the TorNodesList XML structure for the clients */
+								/* create the TorNodesList element */
+								torNodesListNode = XMLUtil.createDocument().createElement("TorNodesList");
+								torNodesListNode.setAttribute("xml:space", "preserve");
+								XMLUtil.setValue(torNodesListNode, torNodesListInformation);
+								/* create also a compressed version, which needs less transfer capacity */
+								/* create the TorNodesListCompressed element */
+								torNodesListCompressedNode = XMLUtil.createDocument().createElement(
+									"TorNodesListCompressed");
+								torNodesListCompressedNode.setAttribute("xml:space", "preserve");
+								String bzip2CompressedTorNodesList = Base64.encode(BZip2Tools.compress(
+									torNodesListInformation.getBytes()), false);
+								XMLUtil.setValue(torNodesListCompressedNode, bzip2CompressedTorNodesList);
+								/* downloading the information was successful from that server, so update the prefered
+								 * TOR directory server entry, if it was another one
+								 */
+								if (preferedDirectoryServer != null)
+								{
+									if (preferedDirectoryServer.getId().equals(currentDirectoryServer.getId()) == false)
+									{
+										preferedDirectoryServer = currentDirectoryServer;
+										LogHolder.log(LogLevel.INFO, LogType.NET,
+											"TorDirectoryAgent: run: Prefered TOR directory server is now: " +
+											preferedDirectoryServer.getId());
+									}
+								}
+								else
+								{
+									/* there was no prefered directory server until yet */
 									preferedDirectoryServer = currentDirectoryServer;
 									LogHolder.log(LogLevel.INFO, LogType.NET,
 												  "TorDirectoryAgent: run: Prefered TOR directory server is now: " +
 												  preferedDirectoryServer.getId());
 								}
 							}
-							else
+							catch (Exception e)
 							{
-								/* there was no prefered directory server until yet */
-								preferedDirectoryServer = currentDirectoryServer;
-								LogHolder.log(LogLevel.INFO, LogType.NET,
-											  "TorDirectoryAgent: run: Prefered TOR directory server is now: " +
-											  preferedDirectoryServer.getId());
+								LogHolder.log(LogLevel.ERR, LogType.MISC,
+											  "TorDirectoryAgent: run: Error while creating the XML structure with the TOR nodes list: " +
+											  e.toString());
+								torNodesListNode = null;
 							}
-						}
-						catch (Exception e)
-						{
-							LogHolder.log(LogLevel.ERR, LogType.MISC,
-										  "TorDirectoryAgent: run: Error while creating the XML structure with the TOR nodes list: " +
-										  e.toString());
-							torNodesListNode = null;
 						}
 					}
 				}
-			}
-			if (torNodesListNode == null)
-			{
-				LogHolder.log(LogLevel.ERR, LogType.NET,
-							  "TorDirectoryAgent: run: Could not fetch the tor nodes list from the known tor directory servers.");
-				if (preferedDirectoryServer != null)
+				if (torNodesListNode == null)
 				{
-					/* remove the prefered directory server, because it is not working any more */
-					preferedDirectoryServer = null;
-					LogHolder.log(LogLevel.INFO, LogType.NET,
-								  "TorDirectoryAgent: run: Prefered TOR directory server reset.");
+					LogHolder.log(LogLevel.ERR, LogType.NET,
+								  "TorDirectoryAgent: run: Could not fetch the tor nodes list from the known tor directory servers.");
+					if (preferedDirectoryServer != null)
+					{
+						/* remove the prefered directory server, because it is not working any more */
+						preferedDirectoryServer = null;
+						LogHolder.log(LogLevel.INFO, LogType.NET,
+									  "TorDirectoryAgent: run: Prefered TOR directory server reset.");
+					}
+					/** @todo maybe it would be a good idea to ask all neighbour infoservices */
 				}
-				/** @todo maybe it would be a good idea to ask all neighbour infoservices */
+				if (torNodesListNode != null)
+				{
+					LogHolder.log(LogLevel.DEBUG, LogType.NET,
+								  "TorDirectoryAgent: run: Fetched the list of tor nodes successfully.");
+				}
+				synchronized (this)
+				{
+					/* we need exclusive access, if we don't have a new tor nodes list, we set the value to
+					 * null -> asking clients get a http error and ask another infoservice
+					 */
+					m_currentTorNodesList = torNodesListNode;
+					m_currentCompressedTorNodesList = torNodesListCompressedNode;
+				}
 			}
-			if (torNodesListNode != null)
+			catch (Throwable t)
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.NET,
-							  "TorDirectoryAgent: run: Fetched the list of tor nodes successfully.");
-			}
-			synchronized (this)
-			{
-				/* we need exclusive access, if we don't have a new tor nodes list, we set the value to
-				 * null -> asking clients get a http error and ask another infoservice
-				 */
-				m_currentTorNodesList = torNodesListNode;
-				m_currentCompressedTorNodesList = torNodesListCompressedNode;
+							  "TorDirectoryAgent: run: Exception!");
+				LogHolder.log(LogLevel.DEBUG, LogType.NET, t);
 			}
 			try
 			{
