@@ -668,40 +668,31 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 */
 	private void doChangePassword()
 	{
+		JAPDialog d = new JAPDialog(GUIUtils.getParentWindow(this.getRootPanel()),
+									JAPMessages.getString(MSG_ACCPASSWORDTITLE), true);
+		PasswordContentPane p;
+
 		if (JAPController.getInstance().getPaymentPassword() != null)
 		{
-			JAPDialog d = new JAPDialog(GUIUtils.getParentWindow(this.getRootPanel()),
-										JAPMessages.getString(MSG_ACCPASSWORDTITLE), true);
-			PasswordContentPane p = new PasswordContentPane(d, PasswordContentPane.PASSWORD_CHANGE, "")
+			p = new PasswordContentPane(d, PasswordContentPane.PASSWORD_CHANGE, "")
 			{
 				public char[] getComparedPassword()
 				{
 					return JAPController.getInstance().getPaymentPassword().toCharArray();
 				}
 			};
-
-			p.updateDialog();
-			d.pack();
-			d.setVisible(true);
-			if (p.getButtonValue() != PasswordContentPane.RETURN_VALUE_CANCEL &&
-				p.getButtonValue() != PasswordContentPane.RETURN_VALUE_CLOSED)
-			{
-				JAPController.getInstance().setPaymentPassword(new String(p.getPassword()));
-			}
 		}
 		else
 		{
-			JAPDialog d = new JAPDialog(GUIUtils.getParentWindow(this.getRootPanel()),
-										JAPMessages.getString(MSG_ACCPASSWORDTITLE), true);
-			PasswordContentPane p = new PasswordContentPane(d, PasswordContentPane.PASSWORD_NEW, "");
-			p.updateDialog();
-			d.pack();
-			d.setVisible(true);
-			if (p.getButtonValue() != PasswordContentPane.RETURN_VALUE_CANCEL &&
-				p.getButtonValue() != PasswordContentPane.RETURN_VALUE_CLOSED)
-			{
-				JAPController.getInstance().setPaymentPassword(new String(p.getPassword()));
-			}
+			p = new PasswordContentPane(d, PasswordContentPane.PASSWORD_NEW, "");
+		}
+		p.updateDialog();
+		d.pack();
+		d.setVisible(true);
+		if (p.getButtonValue() != PasswordContentPane.RETURN_VALUE_CANCEL &&
+			p.getButtonValue() != PasswordContentPane.RETURN_VALUE_CLOSED)
+		{
+			JAPController.getInstance().setPaymentPassword(new String(p.getPassword()));
 		}
 	}
 
@@ -1295,15 +1286,21 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			{
 				public CheckError[] checkYesOK()
 				{
-					if (getPassword() != null)
+					CheckError[] errors = super.checkYesOK();
+
+					if (errors == null || errors.length == 0)
 					{
-						JAPController.getInstance().setPaymentPassword(new String(getPassword()));
+						setButtonValue(RETURN_VALUE_OK);
+						if (getPassword() != null)
+						{
+							JAPController.getInstance().setPaymentPassword(new String(getPassword()));
+						}
+						else
+						{
+							JAPController.getInstance().setPaymentPassword("");
+						}
 					}
-					else
-					{
-						JAPController.getInstance().setPaymentPassword("");
-					}
-					return super.checkYesOK();
+					return errors;
 				}
 			};
 		}

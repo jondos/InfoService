@@ -134,6 +134,19 @@ public final class LogHolder
 	 */
 	public static synchronized void log(int a_logLevel, int a_logType, Throwable a_throwable)
 	{
+		log(a_logLevel, a_logType, null, a_throwable);
+	}
+
+	/**
+	 * Write the log data for a Throwable to the Log instance.
+	 *
+	 * @param a_logLevel The log level (see constants in class LogLevel).
+	 * @param a_logType The log type (see constants in class LogType).
+	 * @param a_message an (optional) log message
+	 * @param a_throwable a Throwable to log
+	 */
+	public static synchronized void log(int a_logLevel, int a_logType, String a_message, Throwable a_throwable)
+	{
 		if (a_throwable == null)
 		{
 			log(a_logLevel, a_logType, (String)null);
@@ -142,6 +155,10 @@ public final class LogHolder
 
 		if (isLogged(a_logLevel, a_logType))
 		{
+			if (a_message != null && a_message.length() > 0)
+			{
+				getInstance().getLogInstance().log(a_logLevel, a_logType, a_message);
+			}
 			if (m_messageDetailLevel == DETAIL_LEVEL_LOWEST)
 			{
 				getInstance().getLogInstance().log(a_logLevel, a_logType, a_throwable.getMessage());
