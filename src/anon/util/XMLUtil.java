@@ -1134,9 +1134,9 @@ public class XMLUtil
 
 			Class transformerFactory = Class.forName(PACKAGE_TRANSFORMER + "TransformerFactory");
 			Object transformerFactoryInstance =
-				transformerFactory.getMethod("newInstance", null).invoke(transformerFactory, null);
-			Object transformer = transformerFactory.getMethod("newTransformer", null).invoke(
-						 transformerFactoryInstance, null);
+				transformerFactory.getMethod("newInstance", (Class[])null).invoke(transformerFactory,(Object[]) null);
+			Object transformer = transformerFactory.getMethod("newTransformer", (Class[])null).invoke(
+						 transformerFactoryInstance,(Object[]) null);
 			//Object transformer = javax.xml.transform.TransformerFactory.newInstance().newTransformer();
 
 			Class result = Class.forName(PACKAGE_TRANSFORMER + "stream.StreamResult");
