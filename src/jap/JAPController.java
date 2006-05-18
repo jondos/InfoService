@@ -38,7 +38,6 @@ import java.util.Locale;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import java.awt.Component;
 import java.awt.Cursor;
@@ -52,7 +51,6 @@ import javax.swing.UIManager.LookAndFeelInfo;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 import anon.AnonServiceEventListener;
@@ -121,6 +119,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 		getName() + "_accpasswordenter";
 	private static final String MSG_LOSEACCOUNTDATA = JAPController.class.
 		getName() + "_loseaccountdata";
+	private static final String MSG_REPEAT_ENTER_ACCOUNT_PASSWORD = JAPController.class.getName() +
+		"_repeatEnterAccountPassword";
 	private static final String MSG_DISABLE_GOODBYE = JAPController.class.getName() +
 		"_disableGoodByMessage";
 
@@ -519,30 +519,20 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			try
 			{
-				FileInputStream f = new FileInputStream(JAPModel.getInstance().getConfigFile());
-				Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(f);
-				try
-				{
-					f.close();
-				}
-				catch (Exception ex2)
-				{}
-
+				Document doc = XMLUtil.readXMLDocument(new File(JAPModel.getInstance().getConfigFile()));
 				Element root = doc.getDocumentElement();
 				XMLUtil.removeComments(root);
-				NamedNodeMap n = root.getAttributes();
 
 				//
 				setDefaultView(JAPConstants.VIEW_NORMAL);
 
-				String strVersion = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_VERSION), null);
-
-	            m_Model.setDLLupdate(XMLUtil.parseValue(n.getNamedItem(m_Model.DLL_VERSION_UPDATE), false));
+				String strVersion = XMLUtil.parseAttribute(root, JAPConstants.CONFIG_VERSION, null);
+	            m_Model.setDLLupdate(XMLUtil.parseAttribute(root, m_Model.DLL_VERSION_UPDATE, false));
 
 	            int port = XMLUtil.parseAttribute(root, JAPConstants.CONFIG_PORT_NUMBER,
 												  JAPModel.getHttpListenerPortNumber());
-				boolean bListenerIsLocal = XMLUtil.parseValue(n.getNamedItem(JAPConstants.
-					CONFIG_LISTENER_IS_LOCAL), true);
+				boolean bListenerIsLocal = XMLUtil.parseAttribute(root,
+					JAPConstants.CONFIG_LISTENER_IS_LOCAL, true);
 				setHTTPListener(port, bListenerIsLocal, false);
 
 				//port = XMLUtil.parseAttribute(root, "portNumberSocks",
@@ -553,21 +543,21 @@ public final class JAPController extends Observable implements IProxyListener, O
 				// load settings for the reminder message in setAnonMode
 				try
 				{
-					mbActCntMessageNeverRemind = XMLUtil.parseValue(n.getNamedItem(
-						JAPConstants.CONFIG_NEVER_REMIND_ACTIVE_CONTENT), false);
-					mbDoNotAbuseReminder = XMLUtil.parseValue(n.getNamedItem(JAPConstants.
-						CONFIG_DO_NOT_ABUSE_REMINDER), false);
+					mbActCntMessageNeverRemind = XMLUtil.parseAttribute(root,
+						JAPConstants.CONFIG_NEVER_REMIND_ACTIVE_CONTENT, false);
+					mbDoNotAbuseReminder =
+						XMLUtil.parseAttribute(root, JAPConstants.CONFIG_DO_NOT_ABUSE_REMINDER, false);
 					if (mbActCntMessageNeverRemind && mbDoNotAbuseReminder)
 					{
 						mbActCntMessageNotRemind = true;
 						// load settings for the reminder message before goodBye
 					}
-					mbGoodByMessageNeverRemind = XMLUtil.parseValue(n.getNamedItem(JAPConstants.
-						CONFIG_NEVER_REMIND_GOODBYE), false);
-					m_bForwarderNotExplain = XMLUtil.parseValue(n.getNamedItem(JAPConstants.
-						CONFIG_NEVER_EXPLAIN_FORWARD), false);
-					m_bPayCascadeNoAsk = XMLUtil.parseValue(n.getNamedItem(JAPConstants.
-						CONFIG_NEVER_ASK_PAYMENT), false);
+					mbGoodByMessageNeverRemind =
+						XMLUtil.parseAttribute(root, JAPConstants.CONFIG_NEVER_REMIND_GOODBYE, false);
+					m_bForwarderNotExplain =
+						XMLUtil.parseAttribute(root, JAPConstants.CONFIG_NEVER_EXPLAIN_FORWARD, false);
+					m_bPayCascadeNoAsk =
+						XMLUtil.parseAttribute(root, JAPConstants.CONFIG_NEVER_ASK_PAYMENT, false);
 
 				}
 				catch (Exception ex)
@@ -576,10 +566,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 								  "JAPController: loadConfigFile: Error loading reminder message ins setAnonMode.");
 				}
 				/* infoservice configuration options */
-				boolean b = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_INFOSERVICE_DISABLED),
-											   JAPModel.isInfoServiceDisabled());
+				boolean b = XMLUtil.parseAttribute(root, JAPConstants.CONFIG_INFOSERVICE_DISABLED,
+					JAPModel.isInfoServiceDisabled());
 				setInfoServiceDisabled(b);
-				int i = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_INFOSERVICE_TIMEOUT), -1);
+				int i = XMLUtil.parseAttribute(root, JAPConstants.CONFIG_INFOSERVICE_TIMEOUT, -1);
 				try
 				{ //i = 5; /** @todo temp */
 					if ( (i >= 1) && (i <= 60))
@@ -598,8 +588,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 				try
 				{
-					String proxyType = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_TYPE),
-						ListenerInterface.PROTOCOL_STR_TYPE_HTTP);
+					String proxyType = XMLUtil.parseAttribute(root, JAPConstants.CONFIG_PROXY_TYPE,
+															  ListenerInterface.PROTOCOL_STR_TYPE_HTTP);
 					if (proxyType.equalsIgnoreCase("HTTP"))
 					{
 						proxyType = ListenerInterface.PROTOCOL_STR_TYPE_HTTP;
@@ -608,16 +598,16 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						proxyType = ListenerInterface.PROTOCOL_STR_TYPE_SOCKS;
 					}
-					JAPModel.getInstance().setUseProxyAuthentication(XMLUtil.parseValue(n.getNamedItem(
-						JAPConstants.CONFIG_PROXY_AUTHORIZATION), false));
+					JAPModel.getInstance().setUseProxyAuthentication(
+					   XMLUtil.parseAttribute(root, JAPConstants.CONFIG_PROXY_AUTHORIZATION, false));
 					proxyInterface = new ProxyInterface(
-						XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_HOST_NAME), null),
+						XMLUtil.parseAttribute(root, JAPConstants.CONFIG_PROXY_HOST_NAME, null),
 						XMLUtil.parseAttribute(root, JAPConstants.CONFIG_PROXY_PORT_NUMBER, -1),
 						proxyType,
-						XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_AUTH_USER_ID), null),
+						XMLUtil.parseAttribute(root, JAPConstants.CONFIG_PROXY_AUTH_USER_ID, null),
 						getPasswordReader(),
 						JAPModel.getInstance().isProxyAuthenticationUsed(),
-						XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_PROXY_MODE), false));
+						XMLUtil.parseAttribute(root, JAPConstants.CONFIG_PROXY_MODE, false));
 				}
 				catch (Exception a_e)
 				{
@@ -627,8 +617,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 				// check if something has changed
 				changeProxyInterface(proxyInterface,
-									 XMLUtil.parseValue(n.getNamedItem(JAPConstants.
-					CONFIG_PROXY_AUTHORIZATION), false));
+									 XMLUtil.parseAttribute(
+					root,JAPConstants.CONFIG_PROXY_AUTHORIZATION, false));
 
 				/* try to get the info from the MixCascade node */
 				MixCascade defaultMixCascade = null;
@@ -668,20 +658,20 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 				setDummyTraffic(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_DUMMY_TRAFFIC_INTERVALL,
 					-1));
-				setAutoConnect(XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_AUTO_CONNECT), false));
-				setAutoReConnect(XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_AUTO_RECONNECT), false));
-				m_Model.setMinimizeOnStartup(XMLUtil.parseValue(n.getNamedItem(JAPConstants.
-					CONFIG_MINIMIZED_STARTUP), false));
+				setAutoConnect(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_AUTO_CONNECT, false));
+				setAutoReConnect(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_AUTO_RECONNECT, false));
+				m_Model.setMinimizeOnStartup(
+								XMLUtil.parseAttribute(root, JAPConstants.CONFIG_MINIMIZED_STARTUP, false));
 				//Load Locale-Settings
-				String strLocale = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_LOCALE),
-					m_Locale.getLanguage());
+				String strLocale =
+					XMLUtil.parseAttribute(root, JAPConstants.CONFIG_LOCALE,	m_Locale.getLanguage());
 				Locale locale = new Locale(strLocale, "");
 				setLocale(locale);
 				//Load look-and-feel settings (not changed if SmmallDisplay!
 				if (!JAPModel.isSmallDisplay())
 				{
-					String lf = XMLUtil.parseValue(n.getNamedItem(JAPConstants.CONFIG_LOOK_AND_FEEL),
-						JAPConstants.CONFIG_UNKNOWN);
+					String lf = XMLUtil.parseAttribute(
+									   root, JAPConstants.CONFIG_LOOK_AND_FEEL, JAPConstants.CONFIG_UNKNOWN);
 					LookAndFeelInfo[] lfi = UIManager.getInstalledLookAndFeels();
 					for (i = 0; i < lfi.length; i++)
 					{
@@ -892,19 +882,22 @@ public final class JAPController extends Observable implements IProxyListener, O
 						PayAccountsFile.init(elemAccounts);
 						Vector encrypted = PayAccountsFile.getInstance().getEncryptedAccounts();
 
-						if(encrypted.size()>0)
+						if (encrypted.size() > 0)
 						{
-						a_splash.dispose();
+							a_splash.dispose();
 						}
+						boolean bAlreadyDecrypted = false;
 						for (int j = 0; j < encrypted.size(); j++)
 						{
 							boolean decrypted = false;
 							Element elemAccount = (Element) encrypted.elementAt(j);
-							Node elemAccountCert = XMLUtil.getFirstChildByName(elemAccount,
-								"AccountCertificate");
+							Node elemAccountCert =
+								XMLUtil.getFirstChildByName(elemAccount, "AccountCertificate");
 							Node elemAccountNr = XMLUtil.getFirstChildByName(elemAccountCert, "AccountNumber");
 							long accNr = Long.parseLong(XMLUtil.parseValue(elemAccountNr, "-1"));
-
+							JAPDialog d;
+							PasswordContentPane p;
+							/** @todo cache given passwords, if there are accounts encrypted with different passwords */
 							while (!decrypted)
 							{
 								if (getPaymentPassword() != null)
@@ -917,41 +910,52 @@ public final class JAPController extends Observable implements IProxyListener, O
 										break;
 									}
 								}
-								JAPDialog d = new JAPDialog( (Component)null,
-									JAPMessages.getString(MSG_ACCPASSWORDENTERTITLE), true);
-								PasswordContentPane p = new PasswordContentPane(d,
-									PasswordContentPane.PASSWORD_ENTER,
-									JAPMessages.getString(MSG_ACCPASSWORDENTER));
+								d = new JAPDialog( (Component)null,
+												  JAPMessages.getString(MSG_ACCPASSWORDENTERTITLE), true);
+								if (!bAlreadyDecrypted)
+								{
+									p = new PasswordContentPane(d, PasswordContentPane.PASSWORD_ENTER,
+										JAPMessages.getString(MSG_ACCPASSWORDENTER));
+
+								}
+								else
+								{
+									p = new PasswordContentPane(d, PasswordContentPane.PASSWORD_ENTER,
+										JAPMessages.getString(MSG_REPEAT_ENTER_ACCOUNT_PASSWORD));
+
+								}
+
 								p.updateDialog();
 								d.pack();
 								d.setVisible(true);
 								//Check if cancel button was pressed
 								if (!p.hasValidValue())
 								{
-									boolean yes = JAPDialog.showYesNoDialog(d,
-										JAPMessages.getString(MSG_LOSEACCOUNTDATA));
-									if (yes)
+									if (JAPDialog.showYesNoDialog(
+										d, JAPMessages.getString(MSG_LOSEACCOUNTDATA)))
 									{
 										decrypted = true;
+									}
+									else
+									{
+										continue;
 									}
 								}
 								setPaymentPassword(new String(p.getPassword()));
 								LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Decrypting account " + accNr);
 
-								if (PayAccountsFile.getInstance().decryptAccount(accNr,
-									getPaymentPassword()))
+								if (PayAccountsFile.getInstance().decryptAccount(accNr, getPaymentPassword()))
 								{
+									bAlreadyDecrypted = true;
 									decrypted = true;
 								}
 							}
-
 						}
 					}
 				}
 				catch (Exception e)
 				{
-					LogHolder.log(LogLevel.INFO, LogType.MISC,
-								  "JAPController: loadConfigFile: Error loading Payment configuration.");
+					LogHolder.log(LogLevel.INFO, LogType.MISC, "Error loading Payment configuration.");
 				}
 
 				/*loading Tor settings*/
@@ -1205,7 +1209,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		// beim Abspeichern gibt es dann aber einen Fehler!
 		try
 		{
-			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+			Document doc = XMLUtil.createDocument();
 			Element e = doc.createElement("JAP");
 			doc.appendChild(e);
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_VERSION, "0.23");
@@ -1225,20 +1229,17 @@ public final class JAPController extends Observable implements IProxyListener, O
 					Element elemPIs = doc.createElement(JAPConstants.CONFIG_PAYMENT_INSTANCES);
 					elemPayment.appendChild(elemPIs);
 					Enumeration pis = accounts.getKnownPIs();
+
 					while (pis.hasMoreElements())
 					{
 						elemPIs.appendChild( ( (BI) pis.nextElement()).toXmlElement(doc));
 					}
-					if (PayAccountsFile.getInstance().getNumAccounts() > 0)
-					{
-						Element elemAccounts = accounts.toXmlElement(doc, getPaymentPassword());
-						elemPayment.appendChild(elemAccounts);
-					}
+					elemPayment.appendChild(accounts.toXmlElement(doc, getPaymentPassword()));
 				}
 			}
 			catch (Exception ex)
 			{
-				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Error saving payment configuration");
+				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Error saving payment configuration", ex);
 				return null;
 			}
 

@@ -941,7 +941,17 @@ public class XMLUtil
 	 */
 	public static Document readXMLDocument(File a_file) throws IOException, XMLParseException
 	{
-		return readXMLDocument(new FileInputStream(a_file));
+		FileInputStream inputStream = new FileInputStream(a_file);
+		Document doc = readXMLDocument(inputStream);
+		try
+		{
+				inputStream.close();
+		}
+		catch (IOException a_e)
+		{
+			// never mind
+		}
+		return doc;
 	}
 
 	/**
