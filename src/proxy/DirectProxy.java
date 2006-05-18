@@ -64,7 +64,7 @@ final public class DirectProxy implements Runnable
 	private static final int REMEMBER_NOTHING = 0;
 	private static final int REMEMBER_WARNING = 1;
 	private static final int REMEMBER_NO_WARNING = 2;
-	private static final int TEMPORARY_REMEMBER_TIME = 2000;
+	private static final int TEMPORARY_REMEMBER_TIME = 5000;
 
 	private volatile boolean runFlag;
 	private boolean isRunningProxy = false;
