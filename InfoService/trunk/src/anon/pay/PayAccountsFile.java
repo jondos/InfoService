@@ -231,30 +231,39 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	public Element toXmlElement(Document a_doc, String a_password)
 	{
 		try
-		{
-		Element elemAccountsFile = a_doc.createElement("PayAccountsFile");
-		elemAccountsFile.setAttribute("version", "1.0");
+			{
+				Element elemAccount;
+				Element elemAccountsFile = a_doc.createElement("PayAccountsFile");
 
-		Element elem = a_doc.createElement("ActiveAccountNumber");
-		XMLUtil.setValue(elem, Long.toString(getActiveAccountNumber()));
-		elemAccountsFile.appendChild(elem);
+				elemAccountsFile.setAttribute("version", "1.0");
 
-		elem = a_doc.createElement("Accounts");
-		elemAccountsFile.appendChild(elem);
-		for (int i = 0; i < m_Accounts.size(); i++)
-		{
-			PayAccount account = (PayAccount) m_Accounts.elementAt(i);
-			Element elemAccount = account.toXmlElement(a_doc, a_password);
-			elem.appendChild(elemAccount);
-		}
-		return elemAccountsFile;
-	}
-		catch (Exception ex)
-		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
-						  "Exception while creating PayAccountsFile XML: " + ex);
-			return null;
-		}
+				Element elem = a_doc.createElement("ActiveAccountNumber");
+				XMLUtil.setValue(elem, Long.toString(getActiveAccountNumber()));
+				elemAccountsFile.appendChild(elem);
+
+				elem = a_doc.createElement("Accounts");
+				elemAccountsFile.appendChild(elem);
+
+				for (int i = 0; i < m_Accounts.size(); i++)
+				{
+					PayAccount account = (PayAccount) m_Accounts.elementAt(i);
+					elemAccount = account.toXmlElement(a_doc, a_password);
+					elem.appendChild(elemAccount);
+				}
+				for (int i = 0; i < m_encryptedAccounts.size(); i++)
+				{
+					elemAccount = (Element)m_encryptedAccounts.elementAt(i);
+					elem.appendChild(XMLUtil.importNode(a_doc, elemAccount, true));
+				}
+
+				return elemAccountsFile;
+			}
+			catch (Exception ex)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+							  "Exception while creating PayAccountsFile XML: " + ex);
+				return null;
+			}
 	}
 
 	public boolean hasActiveAccount()

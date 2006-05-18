@@ -254,7 +254,7 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 
 	/**
 	 * Returns the password that the user has entered.
-	 * @return null if uninitialised; otherwise, the password that the user has entered
+	 * @return null if getButtonValue() is not OK; otherwise, the password that the user has entered
 	 */
 	public char[] getPassword()
 	{
@@ -310,6 +310,10 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 		return null;
 	}
 
+	/**
+	 * Saves the user input.
+	 * @return CheckError[]
+	 */
 	public CheckError[] checkYesOK()
 	{
 		CheckError[] errors = new CheckError[0];
