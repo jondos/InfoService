@@ -31,6 +31,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileFilter;
 
 import java.awt.Window;
 
@@ -47,17 +49,20 @@ import logging.LogType;
 final public class JAPDll {
 
 	//required japdll.dll version for this JAP-version
-	private static final String JAP_DLL_REQUIRED_VERSION = "00.02.001";
+	private static final String JAP_DLL_REQUIRED_VERSION = "00.02.002";
 	private static final String UPDATE_PATH =
 		ClassUtil.getClassDirectory(JAPDll.class).getParent() + File.separator;
 
-	private static final String JAP_DLL     = "japdll.dll";
+	private static final String DLL_LIBRARY_NAME = "japdll";
+	private static final String JAP_DLL     = DLL_LIBRARY_NAME + ".dll";
 	private static final String JAP_DLL_NEW  = JAP_DLL + "." + JAP_DLL_REQUIRED_VERSION;
-	private static final String JAP_DLL_OLD = "japdll.old";
+	private static final String JAP_DLL_OLD = DLL_LIBRARY_NAME + ".old";
 
-	/** Message */
+	/** Messages */
 	private static final String MSG_DLL_UPDATE = JAPDll.class.getName() + "_updateRestartMessage";
 	private static final String MSG_DLL_UPDATE_FAILED = JAPDll.class.getName() + "_updateFailed";
+	private static final String MSG_CONFIRM_OVERWRITE = JAPDll.class.getName() + "_confirmOverwrite";
+	private static final String MSG_PERMISSION_PROBLEM = JAPDll.class.getName() + "_permissionProblem";
 
 	private static boolean m_sbHasOnTraffic = true;
 	static
@@ -72,10 +77,11 @@ final public class JAPDll {
 					update();
 					bUpdateDone = true;
 				}
-				System.loadLibrary("japdll");
-				if (bUpdateDone && (JAPDll.getDllVersion() == null || // == null means there are problems...
+				System.loadLibrary(DLL_LIBRARY_NAME);
+				if (bUpdateDone && (JAPDll.getDllVersion() == null || // == null means there were problems...
 									JAPDll.getDllVersion().compareTo(JAP_DLL_REQUIRED_VERSION) < 0))
 				{
+					// update was not successful
 					 JAPModel.getInstance().setDLLupdate(true);
 					 JAPController.getInstance().saveConfigFile();
 				}
@@ -90,11 +96,11 @@ final public class JAPDll {
 	/**
 	 * This method should be invoked on every JAP-start:
 	 * It will check if the existing japdll.dll has the right version to work
-	 * propper with this JAP version. If no japdll.dll exists at all, nothing will haben.
+	 * proper with this JAP version. If no japdll.dll exists at all, nothing will happen.
 	 * If the japdll.dll has the wrong version, a backup of the old file is created and
 	 * the suitable japdll.dll is extracted from the JAP.jar.
 	 * In this case the user must restart the JAP.
-	 * @param a_bShowDIalogAndCloseOnUpdate if, in case of a neccessary update, a dialog is shown and JAP
+	 * @param a_bShowDialogAndCloseOnUpdate if, in case of a neccessary update, a dialog is shown and JAP
 	 * is closed
 	 */
 	public static void checkDllVersion(boolean a_bShowDialogAndCloseOnUpdate)
@@ -104,59 +110,68 @@ final public class JAPDll {
 			return;
 		}
 
-		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Existing " + JAP_DLL + " version: " + JAPDll.getDllVersion());
-		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Required " + JAP_DLL + " version: " + JAP_DLL_REQUIRED_VERSION);
+		LogHolder.log(LogLevel.INFO, LogType.GUI, "Existing " + JAP_DLL + " version: " + JAPDll.getDllVersion());
+		LogHolder.log(LogLevel.INFO, LogType.GUI, "Required " + JAP_DLL + " version: " + JAP_DLL_REQUIRED_VERSION);
+
 
 		// checks, if the japdll.dll must (and can) be extracted from jar-file.
-		/** @todo remove this 'false' to make it run */
-		if (false&& JAPDll.getDllVersion() != null && // != null means that there is a loaded dll
+		if (JAPDll.getDllVersion() != null && // != null means that there is a loaded dll
 			JAPDll.getDllVersion().compareTo(JAP_DLL_REQUIRED_VERSION) < 0 &&
-			ResourceLoader.getResourceURL(JAP_DLL_NEW) != null)
+			ResourceLoader.getResourceURL(JAP_DLL_NEW) != null) // null means there is no new dll available
 		{
-			// test if we already tried to update
+
+			// check, if NO japdll.dll exists in jar-path
+			File file = new File(UPDATE_PATH + JAP_DLL);
+			if (!file.exists())
+			{
+				askUserWhatToDo();
+				return;
+			}
+
+			// tried to updated AND there is still a problem
 			if (JAPModel.getInstance().getDLLupdate())
 			{
 				if (a_bShowDialogAndCloseOnUpdate)
 				{
-					String[] args = new String[2];
-					args[0] = "'" + JAP_DLL + "'";
-					args[1] = "'" + UPDATE_PATH + "'";
-					if (a_bShowDialogAndCloseOnUpdate)
-					{
-						int answer =
-							JAPDialog.showConfirmDialog(JAPController.getView(),
-							JAPMessages.getString(MSG_DLL_UPDATE_FAILED, args),
-							JAPMessages.getString(JAPDialog.MSG_TITLE_ERROR),
-							JAPDialog.OPTION_TYPE_YES_NO, JAPDialog.MESSAGE_TYPE_ERROR,
-							new JAPDialog.LinkedHelpContext(JAPDll.class.getName()));
-						/** @todo if yes, show a file dialog to extract and save the dll */
-					}
+					askUserWhatToDo();
 				}
 				return;
 			}
 
-			if (update() && JAPDll.getDllVersion() != null && // == null means that there are problems...
+			// try to update, perhaps it even works right now when the dll is loaded
+			if (update() && JAPDll.getDllVersion() != null && // == null means that there were problems...
 				JAPDll.getDllVersion().compareTo(JAP_DLL_REQUIRED_VERSION) < 0)
 			{
 				// update was successful
-				return;
+				LogHolder.log(LogLevel.INFO, LogType.GUI,
+							  "Update successful, existing " + JAP_DLL + " version: " + JAPDll.getDllVersion());
+				System.loadLibrary(DLL_LIBRARY_NAME);
+				if ( JAPDll.getDllVersion().compareTo(JAP_DLL_REQUIRED_VERSION) < 0 )
+				{
+					JAPModel.getInstance().setDLLupdate(true);
+					JAPController.getInstance().saveConfigFile();
+					informUserAboutJapRestart();
+
+				}
+				else
+				{
+					return;
+				}
 			}
 
-			//write a flag to the jap.conf, that at the next startup the japdll.dll must e extracted from jar-file
+			//write a flag to the jap.conf, that at the next startup the dll must be extracted from jar-file
 			JAPModel.getInstance().setDLLupdate(true);
 			JAPController.getInstance().saveConfigFile();
 			if (a_bShowDialogAndCloseOnUpdate)
 			{
-				//Inform the User about the necessary JAP restart
-				JAPDialog.showMessageDialog(JAPController.getView(),
-											JAPMessages.getString(MSG_DLL_UPDATE, "'" + JAP_DLL + "'"));
-				//close JAP
-				JAPController.getInstance().goodBye(false);
+				informUserAboutJapRestart();
 			}
 		}
 		else
 		{
 			// version status OK
+			// OR no dll loaded
+			// OR no new-dll in jar-file
 			if (JAPModel.getInstance().getDLLupdate())
 			{
 				JAPModel.getInstance().setDLLupdate(false);
@@ -167,7 +182,8 @@ final public class JAPDll {
 
 	private static boolean update()
 	{
-		if (renameDLL(JAP_DLL, JAP_DLL_OLD) && extractDLL())
+		if (renameDLL(JAP_DLL, JAP_DLL_OLD) &&
+			extractDLL(new File(UPDATE_PATH + JAP_DLL )))
 		{
 			JAPModel.getInstance().setDLLupdate(false);
 			JAPController.getInstance().saveConfigFile();
@@ -193,8 +209,13 @@ final public class JAPDll {
 			if(file.exists())
 			{
 				file.renameTo(new File(UPDATE_PATH + a_newName));
+				return true;
 			}
-			return true;
+			else {
+				//if the file dose not exist, but a dll was loaded
+				return false;
+			}
+
 		}
 		catch (Exception e)
 		{
@@ -204,12 +225,13 @@ final public class JAPDll {
    }
 
    /**
-	* Extracts the japdll.dll from the jar-file
+	* Extracts the japdll.dll from the jar-file to the given file
+	* @param a_file File
+	* @return boolean
 	*/
-   private static boolean extractDLL()
+   private static boolean extractDLL(File a_file)
    {
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Extracting " + JAP_DLL_NEW + " from jar-file: ");
-		File file = new File(UPDATE_PATH + JAP_DLL);
 		FileOutputStream fos;
 
 		try
@@ -219,7 +241,7 @@ final public class JAPDll {
 			{
 				return false;
 			}
-			fos = new FileOutputStream(file);
+			fos = new FileOutputStream(a_file);
 
 			int b;
 			while (true)
@@ -240,8 +262,112 @@ final public class JAPDll {
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, e);
+			//unable to write to file, perhaps a permissions problem
+			//JAPDialog.showMessageDialog( JAPController.getView(),
+			//JAPMessages.getString(MSG_PERMISSION_PROBLEM, "'" + a_file + "'") );
 		}
 		return false;
+	}
+
+	/**
+	 * This method should be invoked if there was no possibility to so a successfull dll update:
+	 * Reasons can be:
+	 * - japdll.dll cannot be written (e.g. not enough user privileges)
+	 * - a japdll.dll is loaded, but there is no japdll.dll in the jar-path (japdll.dll is e.g. in Windows-System-Directory)
+	 * - japdll.dll update was successfull, but the version loaded is still the wrong
+	 *   (this can be happen, if there is a old japdll.dll in the Windows-System-Directory AND in the jar-path
+	 */
+	private static void askUserWhatToDo()
+	{
+		String[] args = new String[2];
+		args[0] = "'" + JAP_DLL + "'";
+		args[1] = "'" + UPDATE_PATH + "'";
+		int answer =
+			JAPDialog.showConfirmDialog(JAPController.getView(),
+										JAPMessages.getString(MSG_DLL_UPDATE_FAILED, args),
+										JAPMessages.getString(JAPDialog.MSG_TITLE_ERROR),
+										JAPDialog.OPTION_TYPE_YES_NO, JAPDialog.MESSAGE_TYPE_ERROR,
+										new JAPDialog.LinkedHelpContext(JAPDll.class.getName()));
+
+		if ( answer == JAPDialog.RETURN_VALUE_YES )
+		{
+			chooseAndSave();
+		}
+	}
+
+	/**
+	 * Choose where to save the file and save it
+	 */
+	private static void chooseAndSave()
+	{
+		boolean b_extractOK = false;
+		final JFileChooser chooser = new JFileChooser();
+		chooser.setSelectedFile(new File(UPDATE_PATH + JAP_DLL));
+		MyFileFilter filter = new MyFileFilter();
+		chooser.setFileFilter(filter);
+		int returnVal = chooser.showSaveDialog(JAPController.getView());
+
+		// "OK" is pressed at the file chooser
+		if (returnVal == JFileChooser.APPROVE_OPTION)
+		{
+			try
+			{
+				File f = chooser.getSelectedFile();
+				if (!f.getName().toLowerCase().endsWith(MyFileFilter.ACCOUNT_EXTENSION))
+				{
+					f = new File(f.getParent(), f.getName() + MyFileFilter.ACCOUNT_EXTENSION);
+				}
+
+				//confirm overwrite if file exists
+				if (f.exists())
+				{
+					int answer = JAPDialog.showConfirmDialog(JAPController.getView(),
+						JAPMessages.getString(MSG_CONFIRM_OVERWRITE, "'" + f + "'"),
+						JAPDialog.MSG_TITLE_CONFIRMATION,
+						JAPDialog.OPTION_TYPE_YES_NO, JAPDialog.MESSAGE_TYPE_WARNING);
+					if (answer == 0) b_extractOK = extractDLL(f);
+					if (answer == 1) b_extractOK = false;
+
+				}
+				//if file dose not exist -> extract
+				else
+				{
+					b_extractOK = extractDLL(f);
+				}
+
+			}
+			catch (Exception e)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, e);
+			}
+		}
+
+		// "Cancel" is pressed at the file chooser
+		else if (returnVal == JFileChooser.CANCEL_OPTION)
+		{
+			askUserWhatToDo();
+			return;
+		}
+
+		if (!b_extractOK)
+		{
+			chooseAndSave();
+		}
+   }
+
+
+
+	/**
+	 * informs the user, that the JAP must be restarted, in order to finish the update
+	 */
+	private static void informUserAboutJapRestart()
+	{
+		System.out.println(getDllVersion());
+		//Inform the User about the necessary JAP restart
+		JAPDialog.showMessageDialog(JAPController.getView(),
+									JAPMessages.getString(MSG_DLL_UPDATE, "'" + JAP_DLL + "'"));
+		//close JAP
+		JAPController.getInstance().goodBye(false);
 	}
 
 	static public boolean setWindowOnTop(Window theWindow, String caption, boolean onTop)
@@ -363,4 +489,40 @@ final public class JAPDll {
 	native static private String getDllVersion_dll();
 
 	native static private String getDllFileName_dll();
+
+
+
+
+
+
+
+	/**
+	 * Filefilter for the import function
+	 *
+	 * @author Bastian Voigt
+	 * @version 1.0
+	 */
+	private static class MyFileFilter extends FileFilter
+	{
+		public static final String ACCOUNT_EXTENSION = ".dll";
+		private final String ACCOUNT_DESCRIPTION = "JAP dll file (*" + ACCOUNT_EXTENSION + ")";
+
+		private int filterType;
+
+		public int getFilterType()
+		{
+			return filterType;
+		}
+
+		public boolean accept(File f)
+		{
+			return f.isDirectory() || f.getName().endsWith(ACCOUNT_EXTENSION);
+		}
+
+		public String getDescription()
+		{
+			return ACCOUNT_DESCRIPTION;
+		}
+	}
+
 }
