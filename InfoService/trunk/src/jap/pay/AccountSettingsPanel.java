@@ -856,8 +856,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						piConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
 						piConn.authenticate(PayAccountsFile.getInstance().getActiveAccount().
 											getAccountCertificate(),
-											PayAccountsFile.getInstance().getActiveAccount().
-											getSigningInstance());
+											PayAccountsFile.getInstance().getActiveAccount().getPrivateKey());
 						LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetching payment options");
 						m_paymentOptions = piConn.getPaymentOptions();
 						piConn.disconnect();
@@ -976,7 +975,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					{
 						biConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
 						biConn.authenticate(selectedAccount.getAccountCertificate(),
-											selectedAccount.getSigningInstance());
+											selectedAccount.getPrivateKey());
 						if (!biConn.sendPassivePayment(passivePaymentPane.getEnteredInfo()))
 						{
 							m_successful = new Boolean(false);

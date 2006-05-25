@@ -24,7 +24,7 @@ import org.bouncycastle.asn1.x509.X509CertificateStructure;
 import org.bouncycastle.jce.X509Principal;
 
 import anon.crypto.JAPCertificate;
-import anon.crypto.JAPSignature;
+import anon.crypto.ByteSignature;
 import org.bouncycastle.asn1.ASN1InputStream;
 
 /**
@@ -59,7 +59,6 @@ public class PKCS7SignedData implements PKCSObjectIdentifiers
 	private JAPCertificate signCert;
 	private byte[] digest;
 	private String digestAlgorithm, digestEncryptionAlgorithm;
-	private JAPSignature sig;
 
 	//private transient PrivateKey privKey;
 
@@ -206,9 +205,6 @@ public class PKCS7SignedData implements PKCSObjectIdentifiers
 		{
 			throw new NoSuchAlgorithmException("Signature Algorithm unknown!");
 		}
-		sig = new JAPSignature();
-
-		sig.initVerify(signCert.getPublicKey());
 	}
 
 	/**
@@ -367,30 +363,6 @@ public class PKCS7SignedData implements PKCSObjectIdentifiers
 	}
 
 	/**
-	 * Resets the PKCS7SignedData object to it's initial state, ready
-	 * to sign or verify a new buffer.
-	 */
-	public void reset()
-	{
-		try
-		{
-			//          if (privKey==null)
-			{
-				sig.initVerify(signCert.getPublicKey());
-			}
-			/*          else
-			 {
-			  sig.initSign(privKey);
-			 }
-			 */
-		}
-		catch (Exception e)
-		{
-			throw new RuntimeException(e.toString());
-		}
-	}
-
-	/**
 	 * Get the X.509 certificates associated with this PKCS#7 object
 	 */
 	public JAPCertificate[] getCertificates()
@@ -455,7 +427,7 @@ public class PKCS7SignedData implements PKCSObjectIdentifiers
 	 */
 	public boolean verify(byte[] msg) throws SignatureException
 	{
-		return sig.verify(msg, digest);
+		return ByteSignature.verify(msg, digest, signCert.getPublicKey());
 	}
 
 	/**

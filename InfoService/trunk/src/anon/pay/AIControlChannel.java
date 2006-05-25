@@ -36,6 +36,7 @@ import logging.LogType;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import anon.crypto.ByteSignature;
 import anon.pay.xml.XMLBalance;
 import anon.pay.xml.XMLChallenge;
 import anon.pay.xml.XMLEasyCC;
@@ -153,7 +154,7 @@ public class AIControlChannel extends SyncControlChannel
 		{
 			throw new Exception("Received Challenge from AI but ActiveAccount not set!");
 		}
-		byte[] arbSig = acc.getSigningInstance().signBytes(arbChal);
+		byte[] arbSig = ByteSignature.sign(arbChal, acc.getPrivateKey());
 		XMLResponse response = new XMLResponse(arbSig);
 		this.sendXMLMessage(XMLUtil.toXMLDocument(response));
 	}

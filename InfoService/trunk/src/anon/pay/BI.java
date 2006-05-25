@@ -1,6 +1,5 @@
 package anon.pay;
 
-import java.security.InvalidKeyException;
 import java.util.Enumeration;
 import java.util.Vector;
 
@@ -8,7 +7,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import anon.crypto.JAPCertificate;
-import anon.crypto.JAPSignature;
 import anon.infoservice.ListenerInterface;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
@@ -35,7 +33,6 @@ public class BI implements IXMLEncodable
 	private String m_biName;
 	private Vector m_listenerInterfaces;
 
-	private JAPSignature m_verifier;
 	private JAPCertificate m_cert;
 
 	public static final String XML_ELEMENT_NAME = "BI";
@@ -118,17 +115,6 @@ public class BI implements IXMLEncodable
 	public String getName()
 	{
 		return m_biName;
-	}
-
-	/** returns a JAPSignature object for veriying this BI's signatures */
-	public JAPSignature getVerifier() throws InvalidKeyException
-	{
-		if (m_verifier == null)
-		{
-			m_verifier = new JAPSignature();
-			m_verifier.initVerify(m_cert.getPublicKey());
-		}
-		return m_verifier;
 	}
 
 	/**

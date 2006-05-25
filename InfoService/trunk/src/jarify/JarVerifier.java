@@ -309,7 +309,7 @@ final public class JarVerifier
 
 				// Check the .SF against the signature in the signature block file
 				PKCS7SignedData block = (PKCS7SignedData) aliasSBF.get(alias);
-				block.reset();
+
 				sig_ok = block.verify(sfBytes);
 				if (!sig_ok)
 				{

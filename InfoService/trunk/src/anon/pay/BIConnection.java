@@ -33,14 +33,21 @@ package anon.pay;
  *
  * @author Grischan Glaenzel, Bastian Voigt, Tobias Bayer
  */
+import java.io.IOException;
 import java.net.Socket;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.Vector;
 
 import org.w3c.dom.Document;
-import anon.crypto.JAPSignature;
+import org.w3c.dom.Element;
+import HTTPClient.ForbiddenIOException;
+import anon.crypto.ByteSignature;
+import anon.crypto.IMyPrivateKey;
 import anon.crypto.XMLSignature;
 import anon.crypto.tinytls.TinyTLS;
+import anon.infoservice.ImmutableProxyInterface;
+import anon.infoservice.ListenerInterface;
 import anon.pay.xml.XMLAccountCertificate;
 import anon.pay.xml.XMLAccountInfo;
 import anon.pay.xml.XMLBalance;
@@ -56,15 +63,9 @@ import anon.util.XMLUtil;
 import anon.util.captcha.ICaptchaSender;
 import anon.util.captcha.IImageEncodedCaptcha;
 import anon.util.captcha.ZipBinaryImageCaptchaClient;
-import anon.infoservice.ImmutableProxyInterface;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import org.w3c.dom.Element;
-import java.util.Enumeration;
-import anon.infoservice.ListenerInterface;
-import java.io.IOException;
-import HTTPClient.ForbiddenIOException;
 
 public class BIConnection implements ICaptchaSender
 {
@@ -247,7 +248,7 @@ public class BIConnection implements ICaptchaSender
 		Document doc = m_httpClient.readAnswer();
 		info = new XMLAccountInfo(doc);
 		XMLBalance bal = info.getBalance();
-		if (m_theBI.getVerifier().verifyXML(XMLUtil.toXMLDocument(bal)) == false)
+		if (XMLSignature.verify(XMLUtil.toXMLDocument(bal), m_theBI.getCertificate()) == null)
 		{
 			throw new Exception("The BI's signature under the balance certificate is Invalid!");
 		}
@@ -269,7 +270,7 @@ public class BIConnection implements ICaptchaSender
 	}
 
 	/** performs challenge-response authentication */
-	public void authenticate(XMLAccountCertificate accountCert, JAPSignature signer) throws Exception
+	public void authenticate(XMLAccountCertificate accountCert, IMyPrivateKey a_privateKey) throws Exception
 	{
 		String StrAccountCert = XMLUtil.toString(XMLUtil.toXMLDocument(accountCert));
 		m_httpClient.writeRequest("POST", "authenticate", StrAccountCert);
@@ -279,7 +280,7 @@ public class BIConnection implements ICaptchaSender
 		{
 			XMLChallenge xmlchallenge = new XMLChallenge(doc);
 			byte[] challenge = xmlchallenge.getChallengeForSigning();
-			byte[] response = signer.signBytes(challenge);
+			byte[] response = ByteSignature.sign(challenge, a_privateKey);
 			XMLResponse xmlResponse = new XMLResponse(response);
 			String strResponse = XMLUtil.toString(XMLUtil.toXMLDocument(xmlResponse));
 			m_httpClient.writeRequest("POST", "response", strResponse);
@@ -303,7 +304,7 @@ public class BIConnection implements ICaptchaSender
 	 * @return XMLAccountCertificate the certificate issued by the BI
 	 * @throws Exception if an error occurs or the signature or public key is wrong
 	 */
-	public XMLAccountCertificate register(XMLJapPublicKey pubKey, JAPSignature signKey) throws Exception
+	public XMLAccountCertificate register(XMLJapPublicKey pubKey, IMyPrivateKey a_privateKey) throws Exception
 	{
 		Document doc;
 		m_bSendNewCaptcha = true;
@@ -360,7 +361,7 @@ public class BIConnection implements ICaptchaSender
 			XMLAccountCertificate xmlCert = null;
 
 			byte[] challenge = xmlchallenge.getChallengeForSigning();
-			byte[] response = signKey.signBytes(challenge);
+			byte[] response = ByteSignature.sign(challenge, a_privateKey);
 			XMLResponse xmlResponse = new XMLResponse(response);
 			String strResponse = XMLUtil.toString(XMLUtil.toXMLDocument(xmlResponse));
 			m_httpClient.writeRequest("POST", "response", strResponse);
