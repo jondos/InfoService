@@ -33,7 +33,6 @@ import java.util.Vector;
 
 import org.w3c.dom.Document;
 import anon.crypto.JAPCertificate;
-import anon.crypto.JAPSignature;
 import anon.crypto.PKCS12;
 import anon.crypto.XMLSignature;
 import anon.util.XMLUtil;
@@ -53,16 +52,6 @@ public class XMLSignatureTest extends XtendedPrivateTestCase
 	{
 		super(a_name);
 		m_random = new SecureRandom();
-	}
-
-	/**
-	 * Tests if XML nodes can successfully be signed and verified with the DSA algorithm.
-	 * @throws Exception if an error occurs
-	 */
-	public void testSignAndVerifyDSAOld() throws Exception
-	{
-		m_random.setSeed(903832733);
-		testSignAndVerifyOld(new DSATestKeyPairGenerator(m_random));
 	}
 
 	public void testSignAndVerifyDSA() throws Exception
@@ -232,7 +221,7 @@ public class XMLSignatureTest extends XtendedPrivateTestCase
 		assertEquals(1, signature.countCertificates());
 		assertTrue(signature.containsCertificate(pkcs12Certificate.getX509Certificate()));
 		assertEquals(pkcs12Certificate.getX509Certificate(),
-					 (JAPCertificate)signature.getCertificates().nextElement());
+					 (JAPCertificate)signature.getCertificates().elementAt(0));
 
 		// append other certificates; these certificates are not suitable to verify the signature
 		signature.addCertificate((JAPCertificate)certificates.elementAt(0));
@@ -243,7 +232,7 @@ public class XMLSignatureTest extends XtendedPrivateTestCase
 		signature = XMLSignature.verify(doc, pkcs12Certificate.getX509Certificate().getPublicKey());
 		assertEquals(1, signature.countCertificates());
 		assertEquals(pkcs12Certificate.getX509Certificate().getId(),
-					 ((JAPCertificate)signature.getCertificates().nextElement()).getId());
+					 ((JAPCertificate)signature.getCertificates().elementAt(0)).getId());
 		assertTrue(signature.containsCertificate(pkcs12Certificate.getX509Certificate()));
 
 
@@ -443,92 +432,6 @@ public class XMLSignatureTest extends XtendedPrivateTestCase
 		assertFalse(signature.appendSignatureTo(doc));
 		assertNull(XMLSignature.verify(doc, pkcs12Certificate.getX509Certificate()));
 	}
-
-	/**
-	 * Tests if XML nodes can successfully be signed and verified with the same certificates
-	 * that signed them. The new classes and methods are verified with the old classes and methods.
-	 * @param a_keyPairGenerator AbstractTestKeyPairGenerator
-	 * @throws Exception
-	 * @todo this test will be replaced by testSignAndVerify when the old signature methods are
-	 *       removed;
-	 */
-	private void testSignAndVerifyOld(AbstractTestKeyPairGenerator a_keyPairGenerator) throws Exception
-	{
-		XMLSignature signature = null;
-		PKCS12 pkcs12Certificate;
-		JAPCertificate x509certificate;
-		Document doc = null;
-		JAPSignature oldSignatureHandler;
-
-		oldSignatureHandler = new JAPSignature();
-
-
-		// test with several keys (respective certificates)
-		for (int i = 0; i < 3; i++)
-		{
-			doc = XMLUtil.toXMLDocument(new DummyXMLEncodable());
-
-			// create a private certificate
-			pkcs12Certificate = new PKCS12("ImportantOwner:" + i,
-										   a_keyPairGenerator.createKeyPair(),
-										   new GregorianCalendar(), 0);
-
-			// remove any previous signature and test with old method
-			XMLSignature.removeSignatureFrom(doc);
-			assertNull(i + "", XMLSignature.getUnverified(doc));
-			oldSignatureHandler.initVerify(pkcs12Certificate.getX509Certificate().getPublicKey());
-			assertFalse(i + "", oldSignatureHandler.verifyXML(doc));
-
-			// sign with new and verify with old and new method
-			signature = XMLSignature.sign(doc, pkcs12Certificate);
-			assertNotNull(i + "", signature);
-			oldSignatureHandler.initVerify(pkcs12Certificate.getX509Certificate().getPublicKey());
-			assertTrue(i + "", oldSignatureHandler.verifyXML(doc));
-			signature = XMLSignature.verify(doc, pkcs12Certificate.getX509Certificate());
-			assertNotNull(i + "", signature);
-
-			// modify the document and try to verify it with old and new method (fails)
-			XMLUtil.setAttribute(doc.getDocumentElement(), "modified", true);
-			oldSignatureHandler.initVerify(pkcs12Certificate.getX509Certificate().getPublicKey());
-			assertFalse(i + "", oldSignatureHandler.verifyXML(doc));
-			assertNull(i + "", XMLSignature.verify(doc, pkcs12Certificate.getX509Certificate()));
-
-			// remove any previous signature and test with new method
-			XMLSignature.removeSignatureFrom(doc);
-			assertNull(i + "", XMLSignature.verify(doc, pkcs12Certificate.getX509Certificate()));
-
-			// sign with old and verify with old and new method
-			oldSignatureHandler.initSign(pkcs12Certificate.getPrivateKey());
-			oldSignatureHandler.signXmlDoc(doc);
-			oldSignatureHandler.initVerify(pkcs12Certificate.getX509Certificate().getPublicKey());
-			assertTrue(i + "", oldSignatureHandler.verifyXML(doc));
-			signature = XMLSignature.verify(doc, pkcs12Certificate.getX509Certificate());
-			assertNotNull(i + "", signature);
-
-			// remove any previous signature and test with new method
-			XMLSignature.removeSignatureFrom(doc);
-			assertNull(i + "", XMLSignature.verify(doc, pkcs12Certificate.getX509Certificate()));
-
-			// sign and verify with new methods
-			signature = XMLSignature.sign(doc, pkcs12Certificate);
-			signature = XMLSignature.sign(doc, pkcs12Certificate); // sign twice
-			assertNotNull(i + "", signature);
-			signature = XMLSignature.verify(doc, pkcs12Certificate.getX509Certificate());
-			assertNotNull(i + "", signature);
-
-			// take other random keys and test the signature; it must fail
-			x509certificate = JAPCertificate.getInstance("NewOwner:1",
-				a_keyPairGenerator.createKeyPair(), new GregorianCalendar(), 0);
-			oldSignatureHandler.initVerify(x509certificate.getPublicKey());
-			assertFalse(i + "", oldSignatureHandler.verifyXML(doc));
-			assertNull(i + "", XMLSignature.verify(doc, x509certificate));
-			x509certificate = JAPCertificate.getInstance("NewOwner:2",
-				a_keyPairGenerator.createKeyPair(), new GregorianCalendar(), 0);
-			assertNull(i + "", XMLSignature.verify(doc, x509certificate));
-
-		}
-	}
-
 
 	/**
 	 * Tests if XML nodes can successfully be signed and verified with the same certificates

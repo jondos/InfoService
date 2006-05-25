@@ -181,7 +181,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 				try
 				{
 					biConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
-					biConn.authenticate(m_account.getAccountCertificate(), m_account.getSigningInstance());
+					biConn.authenticate(m_account.getAccountCertificate(), m_account.getPrivateKey());
 					overview = biConn.fetchTransactionOverview(overview);
 					MyTableModel tableModel = new MyTableModel(overview);
 					m_tList.setEnabled(true);

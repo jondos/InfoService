@@ -48,7 +48,8 @@ import anon.AnonServiceEventListener;
 import anon.ErrorCodes;
 import anon.NotConnectedToMixException;
 import anon.crypto.JAPCertificate;
-import anon.crypto.JAPSignature;
+import anon.crypto.IMyPublicKey;
+import anon.crypto.ByteSignature;
 import anon.crypto.SignatureVerifier;
 import anon.crypto.XMLEncryption;
 import anon.crypto.XMLSignature;
@@ -441,14 +442,13 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 	{
 		try
 		{
-
 			Document doc = XMLUtil.toXMLDocument(buff);
 			Element root = doc.getDocumentElement();
 			if (!root.getNodeName().equals("MixCascade"))
 			{
 				return ErrorCodes.E_UNKNOWN;
 			}
-			Node nodeSig = XMLUtil.getFirstChildByName(root, "Signature");
+
 			//Check Signature of whole XML struct --> First Mix Check
 			//---
 			if (!SignatureVerifier.getInstance().verifyXml(root, SignatureVerifier.DOCUMENT_CLASS_MIX))
@@ -459,29 +459,33 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			/* get the appended certificate of the signature and store it in the certificate store
 			 * (needed for verification of the MixCascadeStatus messages)
 			 */
+			XMLSignature documentSignature = XMLSignature.getUnverified(root);
+			Vector appendedCertificates = documentSignature.getCertificates();
 			try
 			{
-				XMLSignature documentSignature = XMLSignature.getUnverified(root);
-				Enumeration appendedCertificates = documentSignature.getCertificates();
 				/* add the first certificate (there should be only one) to the certificate store */
-				if (appendedCertificates.hasMoreElements())
+				/** @todo Add a certificate chain to the store! */
+				if (appendedCertificates.size() > 0)
 				{
 					m_mixCascadeCertificateLock = SignatureVerifier.getInstance().
 						getVerificationCertificateStore().addCertificateWithVerification( (JAPCertificate) (
-							appendedCertificates.nextElement()), JAPCertificate.CERTIFICATE_TYPE_MIX, false);
-					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "MuxSocket: processXmlKeys: Added appended certificate from the MixCascade structure to the certificate store.");
+							appendedCertificates.elementAt(0)), JAPCertificate.CERTIFICATE_TYPE_MIX, false);
+					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+								  "Added appended certificate from the MixCascade structure to the certificate store.");
 				}
 				else
 				{
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-								  "MuxSocket: processXmlKeys: No appended certificates in the MixCascade structure.");
+								  "No appended certificates in the MixCascade structure.");
+					return ErrorCodes.E_UNKNOWN;
 				}
 			}
 			catch (Exception e)
 			{
 				LogHolder.log(LogLevel.ERR, LogType.MISC,
-							  "MuxSocket: processXmlKeys: Error while looking for appended certificates in the MixCascade structure: " +
+							  "Error while looking for appended certificates in the MixCascade structure: " +
 							  e.toString());
+				return ErrorCodes.E_UNKNOWN;
 			}
 			Element elemMixProtocolVersion = (Element) root.getElementsByTagName("MixProtocolVersion").item(0);
 			if (elemMixProtocolVersion == null)
@@ -533,11 +537,11 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 				return ErrorCodes.E_PROTOCOL_NOT_SUPPORTED;
 			}
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-						  "MuxSocket: processXmlKeys: Cascade uses Protocol: "+m_iMixProtocolVersion);
+						  "Cascade uses Protocol: "+m_iMixProtocolVersion);
 			Element elemMixes = (Element) root.getElementsByTagName("Mixes").item(0);
 			m_iChainLen = Integer.parseInt(elemMixes.getAttribute("count"));
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-						  "MuxSocket: processXmlKeys: Cascade has: "+m_iChainLen+" Mixes.");
+						  "Cascade has: "+m_iChainLen+" Mixes.");
 			m_arMixParameters = new MixParameters[m_iChainLen];
 			int i = 0;
 			Element child = (Element) (elemMixes.getFirstChild());
@@ -573,7 +577,6 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 							{
 								return ErrorCodes.E_PROTOCOL_NOT_SUPPORTED;
 							}
-
 						}
 					}
 					//---
@@ -610,8 +613,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 			}
 			else
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-							  "MuxSocket: processXmlKeys: Constructing <JAPKeyExchange>-Message");
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Constructing <JAPKeyExchange>-Message");
 				doc = XMLUtil.createDocument();
 				Element e = doc.createElement("JAPKeyExchange");
 				doc.appendChild(e);
@@ -632,15 +634,15 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 				e.appendChild(elemMixEnc);
 				XMLEncryption.encryptElement(e, m_arMixParameters[0].m_ASymCipher.getPublicKey());
 				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-						  "MuxSocket: processXmlKeys:  <JAPKeyExchange>-Message: "+XMLUtil.toString(doc));
-			byte[] xml_buff = XMLUtil.toString(doc).getBytes();
+							  "<JAPKeyExchange>-Message: "+XMLUtil.toString(doc));
+				byte[] xml_buff = XMLUtil.toString(doc).getBytes();
 				m_outStream.write( (xml_buff.length >> 8) & 0x00FF);
 				m_outStream.write(xml_buff.length & 0x00FF);
 				m_outStream.write(xml_buff);
 				m_outStream.flush();
 				m_cipherFirstMix.setEncryptionKeyAES(mixKeys, 0, 32);
 				setEncryptionKeys(linkKeys, 64);
-				// Checking Signature send from Mix
+				// Checking Signature sent from Mix
 				byte[] tmpBuff = new byte[xml_buff.length + 2];
 				System.arraycopy(xml_buff, 0, tmpBuff, 2, xml_buff.length);
 				tmpBuff[0] = (byte) ( (xml_buff.length >> 8) & 0x00FF);
@@ -649,7 +651,7 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 				byte[] mixSigBuff = new byte[len];
 				m_inDataStream.readFully(mixSigBuff);
 				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-							  "MuxSocket: processXmlKeys: Answer to <JAPKeyExchange>-Message from Mix received");
+							  "Answer to <JAPKeyExchange>-Message from Mix received");
 
 				doc = XMLUtil.toXMLDocument(mixSigBuff);
 				root = doc.getDocumentElement();
@@ -660,10 +662,13 @@ public final class MuxSocket implements Runnable, IReplayCtrlChannelMsgListener
 				Node elemSigValue = XMLUtil.getFirstChildByName(root, "SignatureValue");
 				String strSigValue = XMLUtil.parseValue(elemSigValue, null);
 				byte[] sigValue = Base64.decode(strSigValue);
-				JAPCertificate certs[] = JAPSignature.getAppendedCertificates(nodeSig);
-				JAPSignature sig = new JAPSignature();
-				sig.initVerify(certs[0].getPublicKey());
-				if (!sig.verify(tmpBuff, sigValue, true))
+				IMyPublicKey verificationKey =
+					((JAPCertificate)appendedCertificates.elementAt(0)).getPublicKey();
+				verificationKey.getSignatureAlgorithm().decodeForXMLSignature(sigValue);
+
+				if (!ByteSignature.verify(tmpBuff,
+										  verificationKey.getSignatureAlgorithm().decodeForXMLSignature(sigValue),
+										  verificationKey))
 				{
 					return ErrorCodes.E_UNKNOWN;
 				}

@@ -27,24 +27,21 @@
  */
 package anon.pay;
 
-import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-
 import org.bouncycastle.crypto.params.DSAParameters;
 import org.bouncycastle.crypto.params.DSAPrivateKeyParameters;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
 import anon.crypto.IMyPrivateKey;
 import anon.crypto.IMyPublicKey;
-import anon.crypto.JAPSignature;
 import anon.crypto.MyDSAPrivateKey;
 import anon.crypto.MyRSAPrivateKey;
+import anon.crypto.XMLEncryption;
+import anon.infoservice.ImmutableProxyInterface;
 import anon.pay.xml.XMLAccountCertificate;
 import anon.pay.xml.XMLAccountInfo;
 import anon.pay.xml.XMLBalance;
@@ -57,8 +54,6 @@ import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.infoservice.ImmutableProxyInterface;
-import anon.crypto.XMLEncryption;
 
 /**
  * This class encapsulates one account and all additional data associated to one
@@ -97,7 +92,7 @@ public class PayAccount implements IXMLEncodable
 	private IMyPrivateKey m_privateKey;
 
 	/** the signing instance */
-	private JAPSignature m_signingInstance;
+	//private JAPSignature m_signingInstance;
 
 	/** the number of bytes which have been used bot not confirmed yet */
 	private long m_currentBytes;
@@ -113,7 +108,6 @@ public class PayAccount implements IXMLEncodable
 	private long m_mySpent;
 	private BI m_theBI;
 	private String m_strBiID;
-	private JAPSignature m_verifyingInstance;
 
 	public PayAccount(byte[] xmlData) throws Exception
 	{
@@ -142,11 +136,9 @@ public class PayAccount implements IXMLEncodable
 	 */
 	public PayAccount(XMLAccountCertificate certificate,
 					  IMyPrivateKey privateKey,
-					  JAPSignature signingInstance,
 					  BI theBI) throws Exception
 	{
 		m_accountCertificate = certificate;
-		m_signingInstance = signingInstance;
 		m_privateKey = privateKey;
 		m_transCerts = new Vector();
 		m_theBI = theBI;
@@ -245,10 +237,6 @@ public class PayAccount implements IXMLEncodable
 		{
 			throw new Exception("No RSA and no DSA private key found");
 		}
-
-		// set signing instance
-		m_signingInstance = new JAPSignature();
-		m_signingInstance.initSign(m_privateKey);
 
 		/** @todo get BI by supplying a bi-id */
 		Element biid = (Element) XMLUtil.getFirstChildByName(elemAccCert, "BiID");
@@ -383,21 +371,6 @@ public class PayAccount implements IXMLEncodable
 	}
 
 	/**
-	 * getVerifyingInstance
-	 *
-	 * @return JAPSignature
-	 */
-	private JAPSignature getVerifyingInstance() throws Exception
-	{
-		if (m_verifyingInstance == null)
-		{
-			m_verifyingInstance = new JAPSignature();
-			m_verifyingInstance.initVerify(m_accountCertificate.getPublicKey());
-		}
-		return m_verifyingInstance;
-	}
-
-	/**
 	 * Returns the account's accountnumber
 	 *
 	 * @return accountnumber
@@ -449,11 +422,6 @@ public class PayAccount implements IXMLEncodable
 	public IMyPrivateKey getPrivateKey()
 	{
 		return m_privateKey;
-	}
-
-	public JAPSignature getSigningInstance()
-	{
-		return m_signingInstance;
 	}
 
 	public IMyPublicKey getPublicKey()
@@ -631,7 +599,7 @@ public class PayAccount implements IXMLEncodable
 		m_theBI = this.getBI();
 		BIConnection biConn = new BIConnection(m_theBI);
 		biConn.connect(a_proxys);
-		biConn.authenticate(m_accountCertificate, m_signingInstance);
+		biConn.authenticate(m_accountCertificate, m_privateKey);
 		info = biConn.getAccountInfo();
 		biConn.disconnect();
 
@@ -651,7 +619,7 @@ public class PayAccount implements IXMLEncodable
 	{
 		BIConnection biConn = new BIConnection(m_theBI);
 		biConn.connect(a_proxys);
-		biConn.authenticate(m_accountCertificate, m_signingInstance);
+		biConn.authenticate(m_accountCertificate, m_privateKey);
 		XMLTransCert transcert = biConn.charge();
 		biConn.disconnect();
 		m_transCerts.addElement(transcert);

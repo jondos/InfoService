@@ -27,21 +27,19 @@
  */
 package anon.pay;
 
-import java.security.SecureRandom;
 import java.util.Enumeration;
 import java.util.Vector;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import anon.crypto.AsymmetricCryptoKeyPair;
-import anon.crypto.DSAKeyPair;
 import anon.crypto.JAPCertificate;
-import anon.crypto.JAPSignature;
-import anon.crypto.RSAKeyPair;
 import anon.crypto.XMLEncryption;
 import anon.infoservice.ImmutableProxyInterface;
 import anon.infoservice.InfoServiceHolder;
+import anon.infoservice.ListenerInterface;
 import anon.pay.xml.XMLAccountCertificate;
 import anon.pay.xml.XMLErrorMessage;
 import anon.pay.xml.XMLJapPublicKey;
@@ -52,8 +50,6 @@ import anon.util.captcha.IImageEncodedCaptcha;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.infoservice.ListenerInterface;
-import org.w3c.dom.NodeList;
 
 /**
  * This class encapsulates a collection of accounts. One of the accounts in the collection
@@ -557,8 +553,6 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 									AsymmetricCryptoKeyPair a_keyPair) throws
 		Exception
 	{
-		JAPSignature signingInstance = new JAPSignature();
-		signingInstance.initSign(a_keyPair.getPrivate());
 		XMLJapPublicKey xmlKey = new XMLJapPublicKey(a_keyPair.getPublic());
 
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
@@ -567,14 +561,14 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		BIConnection biConn = new BIConnection(a_bi);
 		biConn.addConnectionListener(this);
 		biConn.connect(a_proxys);
-		XMLAccountCertificate cert = biConn.register(xmlKey, signingInstance);
+		XMLAccountCertificate cert = biConn.register(xmlKey, a_keyPair.getPrivate());
 		biConn.disconnect();
 
 		//Add PI to the list of known PIs
 		addKnownPI(a_bi);
 
 		// add the new account to the accountsFile
-		PayAccount newAccount = new PayAccount(cert, a_keyPair.getPrivate(), signingInstance, a_bi);
+		PayAccount newAccount = new PayAccount(cert, a_keyPair.getPrivate(), a_bi);
 		addAccount(newAccount);
 		return newAccount;
 	}

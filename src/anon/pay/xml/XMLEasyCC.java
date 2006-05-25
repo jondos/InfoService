@@ -34,7 +34,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import anon.crypto.JAPSignature;
+import anon.crypto.PKCS12;
 import anon.util.XMLUtil;
 import anon.util.IXMLEncodable;
 import anon.crypto.IMyPrivateKey;
@@ -76,7 +76,7 @@ public class XMLEasyCC implements IXMLEncodable
 		return ms_strElemName;
 	}
 
-	public XMLEasyCC(String aiName, long accountNumber, long transferred, JAPSignature signer) throws
+	public XMLEasyCC(String aiName, long accountNumber, long transferred, PKCS12 a_certificate) throws
 		Exception
 	{
 		m_strAiName = aiName;
@@ -85,9 +85,9 @@ public class XMLEasyCC implements IXMLEncodable
 		m_docTheEasyCC = XMLUtil.createDocument();
 		m_docTheEasyCC.appendChild(internal_toXmlElement(m_docTheEasyCC));
 
-		if (signer != null)
+		if (a_certificate != null)
 		{
-			signer.signXmlDoc(m_docTheEasyCC);
+			XMLSignature.sign(m_docTheEasyCC, a_certificate);
 		}
 	}
 

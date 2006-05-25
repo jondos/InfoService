@@ -216,8 +216,8 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 			XMLSignature documentSignature = XMLSignature.getUnverified(a_mixCascadeNode);
 			if (documentSignature != null)
 			{
-				Enumeration appendedCertificates = documentSignature.getCertificates();
-				/* store the first certificate (there should be only one) -> needed fro verification of the
+				Enumeration appendedCertificates = documentSignature.getCertificates().elements();
+				/* store the first certificate (there should be only one) -> needed for verification of the
 				 * MixCascadeStatus XML structure */
 				if (appendedCertificates.hasMoreElements())
 				{
