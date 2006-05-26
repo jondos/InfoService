@@ -44,42 +44,42 @@ import anon.AnonChannel;
 import anon.TooMuchDataForPacketException;
 
 
-/** 
+/**
  * @author Stefan Lieske
  */
 public abstract class AbstractDataChain implements AnonChannel, Observer, Runnable {
-  
+
   private DataChainInputStreamImplementation m_inputStream;
-  
+
   private DataChainOutputStreamImplementation m_outputStream;
-      
+
   private Vector m_messageQueuesNotifications;
-    
+
   private IDataChannelCreator m_channelCreator;
-  
+
   private boolean m_chainClosed;
-  
+
   private Thread m_downstreamThread;
-  
-  
+
+
   private class DataChainOutputStreamImplementation extends OutputStream {
-    
+
     private boolean m_closed;
-    
+
     private Object m_internalStreamSynchronization;
-    
-    
+
+
     public DataChainOutputStreamImplementation() {
       m_closed = false;
       m_internalStreamSynchronization = new Object();
     }
-    
-    
+
+
     public void write(int a_byte) throws IOException {
       byte[] byteAsArray = {(byte)a_byte};
-      write(byteAsArray);   
+      write(byteAsArray);
     }
-    
+
     public void write(byte[] a_buffer, int a_offset, int a_length) throws IOException {
       synchronized (m_internalStreamSynchronization) {
         if (m_closed) {
@@ -127,24 +127,24 @@ public abstract class AbstractDataChain implements AnonChannel, Observer, Runnab
           m_closed = true;
           outputStreamClosed();
         }
-      }     
-    }  
+      }
+    }
   }
 
 
   private class DataChainInputStreamImplementation extends InputStream {
-    
+
     private boolean m_closed;
-    
+
     private Vector m_queueEntries;
-    
-    
+
+
     private DataChainInputStreamImplementation() {
       m_queueEntries = new Vector();
       m_closed = false;
     }
-    
-    
+
+
     public int read() throws IOException {
       byte[] buffer = new byte[1];
       int bytesRead = 0;
@@ -157,7 +157,7 @@ public abstract class AbstractDataChain implements AnonChannel, Observer, Runnab
       }
       return returnedByte;
     }
-    
+
     public int read(byte[] a_buffer, int a_offset, int a_length) throws IOException {
       int bytesRead = 0;
       /* to prevent later exceptions, we check (and - if necessary - alter) offset and
@@ -210,7 +210,7 @@ public abstract class AbstractDataChain implements AnonChannel, Observer, Runnab
                       currentEntry = currentEntry = (DataChainInputStreamQueueEntry)(m_queueEntries.firstElement());
                     }
                   }
-                }   
+                }
                 break;
               }
               case DataChainInputStreamQueueEntry.TYPE_IO_EXCEPTION: {
@@ -228,7 +228,7 @@ public abstract class AbstractDataChain implements AnonChannel, Observer, Runnab
       }
       return bytesRead;
     }
-    
+
     public int available() throws IOException {
       int availableBytes = 0;
       synchronized (m_queueEntries) {
@@ -261,19 +261,19 @@ public abstract class AbstractDataChain implements AnonChannel, Observer, Runnab
       }
       return availableBytes;
     }
-       
+
     public void close() {
       if (!m_closed) {
         synchronized (m_queueEntries) {
           m_closed = true;
           /* clear all entries in the queue */
-          m_queueEntries.clear();
+          m_queueEntries.removeAllElements();
           /* wake up waiting threads (normally there should be no one) */
           m_queueEntries.notifyAll();
         }
-      }     
+      }
     }
-       
+
     public void addToQueue(DataChainInputStreamQueueEntry a_entry) {
       synchronized (m_queueEntries) {
         boolean addEntry = true;
@@ -296,10 +296,10 @@ public abstract class AbstractDataChain implements AnonChannel, Observer, Runnab
           m_queueEntries.notify();
         }
       }
-    }   
+    }
   }
 
-  
+
   public AbstractDataChain(IDataChannelCreator a_channelCreator) {
     m_channelCreator = a_channelCreator;
     m_inputStream = new DataChainInputStreamImplementation();
@@ -310,8 +310,8 @@ public abstract class AbstractDataChain implements AnonChannel, Observer, Runnab
     m_downstreamThread.setDaemon(true);
     m_downstreamThread.start();
   }
-  
-  
+
+
   public InputStream getInputStream() {
     return m_inputStream;
   }
@@ -355,35 +355,35 @@ public abstract class AbstractDataChain implements AnonChannel, Observer, Runnab
       }
     }
   }
-  
-  
+
+
   protected Vector getMessageQueuesNotificationsList() {
     return m_messageQueuesNotifications;
   }
-  
+
   protected void addInputStreamQueueEntry(DataChainInputStreamQueueEntry a_entry) {
     m_inputStream.addToQueue(a_entry);
   }
-    
+
   protected AbstractDataChannel createDataChannel() {
     return m_channelCreator.createDataChannel(this);
   }
-    
+
   protected void interruptDownstreamThread() {
     m_downstreamThread.interrupt();
   }
-  
+
   public abstract int getOutputBlockSize();
-  
+
   public abstract void createPacketPayload(DataChainSendOrderStructure a_order);
-  
+
   public abstract void run();
-  
-  
+
+
   protected abstract void orderPacket(DataChainSendOrderStructure a_order);
-  
+
   protected abstract void outputStreamClosed() throws IOException;
-  
+
   protected abstract void closeDataChain();
-  
+
 }
