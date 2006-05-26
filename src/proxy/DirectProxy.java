@@ -57,14 +57,12 @@ import anon.infoservice.ProxyInterface;
 
 final public class DirectProxy implements Runnable
 {
-	/** Messages */
-	private static final String MSG_ALLOWUNPROTECTED =
-		DirectProxy.class.getName() + "_allowunprotected";
-
 	private static final int REMEMBER_NOTHING = 0;
 	private static final int REMEMBER_WARNING = 1;
 	private static final int REMEMBER_NO_WARNING = 2;
 	private static final int TEMPORARY_REMEMBER_TIME = 5000;
+
+	private static AllowUnprotectedConnectionCallback ms_callback;
 
 	private volatile boolean runFlag;
 	private boolean isRunningProxy = false;
@@ -79,6 +77,37 @@ final public class DirectProxy implements Runnable
 		m_socketListener = s;
 		isRunningProxy = false;
 	}
+
+	public static void setAllowUnprotectedConnectionCallback(AllowUnprotectedConnectionCallback a_callback)
+	{
+		ms_callback = a_callback;
+	}
+
+	public static abstract class AllowUnprotectedConnectionCallback
+	{
+		public static class Answer
+		{
+			private boolean m_bRemembered;
+			private boolean m_bAllow;
+
+			public Answer(boolean a_bAllow, boolean a_bRemembered)
+			{
+				m_bAllow = a_bAllow;
+				m_bRemembered = a_bRemembered;
+			}
+			public boolean isRemembered()
+			{
+				return m_bRemembered;
+			}
+			public boolean isAllowed()
+			{
+				return m_bAllow;
+			}
+		}
+
+		public abstract Answer callback();
+}
+
 
 	public synchronized boolean startService()
 	{
@@ -135,15 +164,20 @@ final public class DirectProxy implements Runnable
 
 				if (remember == REMEMBER_NOTHING && !JAPModel.isSmallDisplay() && !m_temporaryRemember)
 				{
-					JAPDll.setWindowOnTop(JAPController.getView(),
-										  JAPController.getView().getName(), true);
-					JAPDialog.LinkedCheckBox cb = new JAPDialog.LinkedCheckBox(
-						JAPMessages.getString(JAPDialog.LinkedCheckBox.MSG_REMEMBER_ANSWER), false);
-					bShowHtmlWarning = ! (JAPDialog.showYesNoDialog(JAPController.getView(),
-						JAPMessages.getString(MSG_ALLOWUNPROTECTED), cb));
-					JAPDll.setWindowOnTop(JAPController.getView(),
-										  JAPController.getView().getName(), false);
-					if (cb.getState())
+					AllowUnprotectedConnectionCallback.Answer answer;
+					AllowUnprotectedConnectionCallback callback = ms_callback;
+					if (callback != null)
+					{
+						answer = callback.callback();
+					}
+					else
+					{
+						answer = new AllowUnprotectedConnectionCallback.Answer(false, false);
+					}
+					bShowHtmlWarning = !answer.isAllowed();
+
+
+					if (answer.isRemembered())
 					{
 						if (bShowHtmlWarning)
 						{
