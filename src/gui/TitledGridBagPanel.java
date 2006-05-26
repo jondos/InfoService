@@ -142,6 +142,15 @@ public final class TitledGridBagPanel extends JPanel
 	}
 
 	/**
+	 * Add a row with one component.
+	 * @param a_component a Component (may be null)
+	 */
+	public void addRow(Component a_component)
+	{
+		addRow(a_component, null);
+	}
+
+	/**
 	 * Add a row with two components.
 	 * @param a_component a Component (may be null)
 	 * @param a_otherComponent an other Component (may be null)

@@ -70,7 +70,7 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 	private TitledBorder m_borderCert;
 	private JLabel m_labelDate, m_labelCN, m_labelE, m_labelCSTL, m_labelO, m_labelOU;
 	private JLabel m_labelDateData, m_labelCNData, m_labelEData, m_labelCSTLData, m_labelOData, m_labelOUData;
-	private JButton m_bttnCertInsert, m_bttnCertRemove, m_bttnCertStatus;
+	private JButton m_bttnCertInsert, m_bttnCertRemove, m_bttnCertStatus; //m_bttnCertDetails;
 	private DefaultListModel m_listmodelCertList;
 	private JList m_listCert;
 	private JScrollPane m_scrpaneList;
@@ -308,7 +308,6 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 					updateInfoPanel(null);
 					m_bttnCertRemove.setEnabled(false);
 					m_bttnCertStatus.setEnabled(false);
-
 				}
 				else
 				{
@@ -322,10 +321,10 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 					else
 					{
 						m_bttnCertStatus.setText(JAPMessages.getString("certBttnEnable"));
-
 					}
 					m_bttnCertStatus.setEnabled(true);
-					m_bttnCertRemove.setEnabled(true);
+					/* if the cert is not removable, the Remove Button is not enabled */
+					m_bttnCertRemove.setEnabled(!j.isNotRemovable());
 				} // else
 
 			} // valuechanged
@@ -339,7 +338,7 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		panelConstraintsCA.anchor = GridBagConstraints.NORTHWEST;
 		panelConstraintsCA.weightx = 1.0;
 		panelConstraintsCA.weighty = 1.0;
-		panelConstraintsCA.gridwidth = 3;
+		panelConstraintsCA.gridwidth = 4;
 		panelConstraintsCA.insets = new Insets(0, 10, 10, 10);
 		panelConstraintsCA.fill = GridBagConstraints.BOTH;
 		panelLayoutCA.setConstraints(m_scrpaneList, panelConstraintsCA);
@@ -433,6 +432,19 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 			}
 		});
 
+	    /*m_bttnCertDetails = new JButton("Details...");
+		m_bttnCertDetails.setFont(getFontSetting());
+		m_bttnCertDetails.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				CertDetailsDialog dialog = new CertDetailsDialog(getParent(), m_cert.getX509Certificate(),
+						isCertificateVerifyable());
+					dialog.setVisible(true);
+
+			}
+		});*/
+
 		panelConstraintsCA.gridx = 0;
 		panelConstraintsCA.gridy = 1;
 		panelConstraintsCA.weightx = 0.0;
@@ -452,6 +464,11 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		panelConstraintsCA.gridy = 1;
 		panelLayoutCA.setConstraints(m_bttnCertStatus, panelConstraintsCA);
 		r_panelCA.add(m_bttnCertStatus);
+
+	    /*panelConstraintsCA.gridx = 3;
+		panelConstraintsCA.gridy = 1;
+		panelLayoutCA.setConstraints(m_bttnCertDetails, panelConstraintsCA);
+		r_panelCA.add(m_bttnCertDetails);*/
 
 		return r_panelCA;
 	}
@@ -631,6 +648,7 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 			if (a_notifier == SignatureVerifier.getInstance().getVerificationCertificateStore())
 			{
 				/* the message is from the SignatureVerifier trusted certificates store */
+				int lastIndex = m_listCert.getSelectedIndex();
 				m_listmodelCertList.clear();
 				m_enumCerts = enumCerts;
 				while (m_enumCerts.hasMoreElements())
@@ -642,9 +660,11 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 						m_listmodelCertList.addElement(j);
 					}
 				}
-				if (m_listmodelCertList.getSize() > 0)
+				/* select the item again that was selected */
+				lastIndex = Math.min(m_listCert.getComponentCount() - 1, lastIndex);
+				if (lastIndex >= 0)
 				{
-					m_listCert.setSelectedIndex(0);
+					m_listCert.setSelectedIndex(lastIndex);
 				}
 			}
 		}

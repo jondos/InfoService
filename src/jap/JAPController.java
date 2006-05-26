@@ -35,6 +35,7 @@ import java.net.ServerSocket;
 import java.text.MessageFormat;
 import java.util.Enumeration;
 import java.util.Locale;
+import java.util.Hashtable;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
@@ -149,7 +150,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private boolean mbActCntMessageNotRemind = false; // indicates if Warning message in setAnonMode has been deactivated for the session
 	private boolean mbActCntMessageNeverRemind = false; // indicates if Warning message in setAnonMode has been deactivated forever
 	private boolean mbDoNotAbuseReminder = false; // indicates if new warning message in setAnonMode (containing Do no abuse) has been shown
-	private boolean mbGoodByMessageNeverRemind = false; // indicates if Warning message before exit has been deactivated forever
 	private boolean m_bForwarderNotExplain = false; //indicates if the warning message about forwarding should be shown
 	private boolean m_bPayCascadeNoAsk = false;
 
@@ -552,8 +552,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 						mbActCntMessageNotRemind = true;
 						// load settings for the reminder message before goodBye
 					}
-					mbGoodByMessageNeverRemind =
-						XMLUtil.parseAttribute(root, JAPConstants.CONFIG_NEVER_REMIND_GOODBYE, false);
+					m_Model.setNeverRemindGoodbye(
+						XMLUtil.parseAttribute(root, JAPConstants.CONFIG_NEVER_REMIND_GOODBYE, false));
 					m_bForwarderNotExplain =
 						XMLUtil.parseAttribute(root, JAPConstants.CONFIG_NEVER_EXPLAIN_FORWARD, false);
 					m_bPayCascadeNoAsk =
@@ -1279,7 +1279,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_NEVER_EXPLAIN_FORWARD, m_bForwarderNotExplain);
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_NEVER_ASK_PAYMENT, m_bPayCascadeNoAsk);
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_DO_NOT_ABUSE_REMINDER, mbDoNotAbuseReminder);
-			XMLUtil.setAttribute(e, JAPConstants.CONFIG_NEVER_REMIND_GOODBYE, mbGoodByMessageNeverRemind);
+			XMLUtil.setAttribute(e, JAPConstants.CONFIG_NEVER_REMIND_GOODBYE,
+								 JAPModel.getInstance().isNeverRemindGoodbye());
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_LOCALE, m_Locale.getLanguage());
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_LOOK_AND_FEEL,
 								 UIManager.getLookAndFeel().getClass().getName());
@@ -2260,7 +2261,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			{
 				int returnValue;
 				JAPDialog.LinkedCheckBox checkBox;
-				if (!m_Controller.mbGoodByMessageNeverRemind && bShowConfigSaveErrorMsg)
+				if (!JAPModel.getInstance().isNeverRemindGoodbye() && bShowConfigSaveErrorMsg)
 				{
 					// show a Reminder message that active contents should be disabled
 					checkBox = new JAPDialog.LinkedCheckBox(false);
@@ -2270,7 +2271,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					if (returnValue == JAPDialog.RETURN_VALUE_OK)
 					{
 						getView().setEnabled(false);
-						m_Controller.mbGoodByMessageNeverRemind = checkBox.getState();
+						JAPModel.getInstance().setNeverRemindGoodbye(checkBox.getState());
 					}
 				}
 				else
@@ -2772,18 +2773,22 @@ public final class JAPController extends Observable implements IProxyListener, O
 	/** load the default certificates */
 	static public void addDefaultCertificates()
 	{
-		JAPCertificate defaultRootCert = JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.
-			CERTSPATH + JAPConstants.TRUSTEDMIXROOTCERT));
-		if (defaultRootCert != null)
+		JAPCertificate defaultRootCert = null;
+		/* each certificate in the directory for the default mix-certs is loaded */
+	    Enumeration mixCertificates = JAPCertificate.getInstance(JAPConstants.CERTSPATH + JAPConstants.MIX_CERTSPATH, true).elements();
+		while(mixCertificates.hasMoreElements())
 		{
+			defaultRootCert = (JAPCertificate)mixCertificates.nextElement();
 			SignatureVerifier.getInstance().getVerificationCertificateStore().
-				addCertificateWithoutVerification(defaultRootCert, JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX, true, false);
+			addCertificateWithoutVerification(defaultRootCert, JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX, true, true);
 		}
-		else
+		/* no elements were found */
+		if (defaultRootCert == null)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC,
-						  "Error loading default Mix root certificate.");
+						  "Error loading default Mix root certificates.");
 		}
+
 		defaultRootCert = JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.
 			CERTSPATH + JAPConstants.TRUSTEDINFOSERVICEROOTCERT));
 		if (defaultRootCert != null)
