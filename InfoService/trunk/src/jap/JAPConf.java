@@ -85,6 +85,7 @@ final public class JAPConf extends JAPDialog implements ActionListener
 
 	/** Messages */
 	private static final String MSG_DETAILLEVEL = JAPConf.class.getName() + "_detaillevel";
+	private static final String MSG_BTN_SAVE = JAPConf.class.getName() + "_btnSave";
 
 	final static public String PORT_TAB = "PORT_TAB";
 	final static public String UI_TAB = "UI_TAB";
@@ -251,12 +252,23 @@ final public class JAPConf extends JAPDialog implements ActionListener
 			}
 		});
 		buttonPanel.add(m_bttnCancel);
+		JButton bttnSave = new JButton(JAPMessages.getString(MSG_BTN_SAVE));
+		bttnSave.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				okPressed(false);
+			}
+		});
+
+		buttonPanel.add(bttnSave);
+
 		JButton ok = new JButton(JAPMessages.getString("okButton"));
 		ok.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				okPressed();
+				okPressed(true);
 			}
 		});
 		ok.setFont(m_fontControls);
@@ -361,7 +373,7 @@ final public class JAPConf extends JAPDialog implements ActionListener
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				okPressed();
+				okPressed(false);
 			}
 		});
 		m_cbListenerIsLocal = new JCheckBox(JAPMessages.getString("settingsListenerCheckBox"));
@@ -478,14 +490,14 @@ final public class JAPConf extends JAPDialog implements ActionListener
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				okPressed();
+				okPressed(false);
 			}
 		});
 		m_tfProxyPortNumber.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				okPressed();
+				okPressed(false);
 			}
 		});
 		m_cbProxyAuthentication = new JCheckBox(JAPMessages.getString("settingsProxyAuthenticationCheckBox"));
@@ -926,7 +938,7 @@ final public class JAPConf extends JAPDialog implements ActionListener
 		m_cbDebugToFile.setSelected(false);
 	}
 
-	void okPressed()
+	private void okPressed(boolean m_bCloseConfiguration)
 	{
 		if (!checkValues())
 		{
@@ -936,8 +948,10 @@ final public class JAPConf extends JAPDialog implements ActionListener
 		{
 			return;
 		}
-		setVisible(false);
-
+		if (m_bCloseConfiguration)
+		{
+			setVisible(false);
+		}
 		// We are in event dispatch thread!!
 		new Thread()
 		{
