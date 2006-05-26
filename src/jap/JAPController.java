@@ -167,7 +167,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private static AbstractJAPMainView m_View = null;
 	private static JAPController m_Controller = null;
 	private static JAPModel m_Model = null;
-	private static JAPFeedback feedback = null;
+	private static JAPFeedback m_feedback = null;
 	private Locale m_Locale = null;
 	private Vector observerVector = null;
 	private Vector m_anonServiceListener;
@@ -1897,8 +1897,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 						}
 
 						// start feedback thread
-						feedback = new JAPFeedback();
-						feedback.startRequests();
+						JAPFeedback feedback = m_feedback;
+						if (feedback != null)
+						{
+							feedback.stopRequests();
+						}
+						m_feedback = new JAPFeedback();
+						m_feedback.startRequests();
 					}
 					else if (ret == AnonProxy.E_BIND)
 					{
@@ -1985,10 +1990,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_proxyAnon.stop();
 				}
 				m_proxyAnon = null;
-				if (feedback != null)
+				if (m_feedback != null)
 				{
-					feedback.stopRequests();
-					feedback = null;
+					m_feedback.stopRequests();
+					m_feedback = null;
 				}
 				m_proxyDirect = new DirectProxy(m_socketHTTPListener);
 				m_proxyDirect.startService();
@@ -2509,11 +2514,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 				message = JAPMessages.getString(MSG_NEW_OPTIONAL_VERSION, updateVersionNumber + "-dev)");
 				checkbox = new JAPDialog.LinkedCheckBox(false);
 			}
-
+			JAPDll.setWindowOnTop(getView(),  JAPController.getView().getName(), true);
 			boolean bAnswer = JAPDialog.showYesNoDialog(m_View,
 														message,
 														JAPMessages.getString("newVersionAvailableTitle"),
 														checkbox);
+			JAPDll.setWindowOnTop(getView(),  JAPController.getView().getName(), false);
 			if (checkbox != null)
 			{
 				JAPModel.getInstance().setReminderForOptionalUpdate(!checkbox.getState());
