@@ -77,16 +77,28 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 //ok pressed
 	protected boolean onOkPressed()
 	{
-
+		int dummyTraffic;
 		if (m_cbDummyTraffic.isSelected())
 		{
-			m_Controller.setDummyTraffic(m_sliderDummyTrafficIntervall.getValue() * 1000);
+			dummyTraffic = m_sliderDummyTrafficIntervall.getValue() * 1000;
 		}
 		else
 		{
-			m_Controller.setDummyTraffic( -1);
+			dummyTraffic = - 1;
 			// Listener settings
 		}
+		/*
+		 * Set DT asynchronous; otherwise, the Event Thread is locked while the AnonClient connects
+		 */
+		final int dtAsync = dummyTraffic;
+		new Thread()
+		{
+			public void run()
+			{
+				m_Controller.setDummyTraffic(dtAsync);
+			}
+		}.start();
+
 		// Anonservice settings
 		m_Controller.setAutoConnect(m_cbAutoConnect.isSelected());
 		m_Controller.setAutoReConnect(m_cbAutoReConnect.isSelected());

@@ -32,7 +32,7 @@ import java.net.Socket;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.ImmutableProxyInterface;
 import anon.infoservice.ListenerInterface;
-import anon.server.impl.ProxyConnection;
+import anon.shared.ProxyConnection;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -123,5 +123,5 @@ public class ForwardUtils {
     }
     return newSocket;
   }
-  
+
 }

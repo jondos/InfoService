@@ -5,15 +5,15 @@
  are permitted provided that the following conditions are met:
 
  - Redistributions of source code must retain the above copyright notice,
-   this list of conditions and the following disclaimer.
+ this list of conditions and the following disclaimer.
 
  - Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation and/or
-  other materials provided with the distribution.
+ this list of conditions and the following disclaimer in the documentation and/or
+ other materials provided with the distribution.
 
  - Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-   may be used to endorse or promote products derived from this software without specific
-  prior written permission.
+ may be used to endorse or promote products derived from this software without specific
+ prior written permission.
 
 
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
@@ -34,284 +34,257 @@ import java.net.Socket;
 
 import anon.AnonChannel;
 import anon.NotConnectedToMixException;
-import anon.TooManyOpenChannelsException;
+import anon.TooMuchDataForPacketException;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 
-public final class AnonProxyRequest implements Runnable
-{
-	private InputStream m_InChannel;
-	private OutputStream m_OutChannel;
-	private InputStream m_InSocket;
-	private OutputStream m_OutSocket;
-	Socket m_clientSocket;
-	Thread m_threadResponse;
-	Thread m_threadRequest;
-	AnonChannel m_Channel;
-	AnonProxy m_Proxy;
-	volatile boolean m_bRequestIsAlive;
-	int m_iProtocol;
+public final class AnonProxyRequest implements Runnable {
+  private InputStream m_InChannel;
 
-	AnonProxyRequest(AnonProxy proxy, Socket clientSocket)
-	{
-		try
-		{
-			m_Proxy = proxy;
-			m_clientSocket = clientSocket;
-			m_clientSocket.setSoTimeout(1000); //just to ensure that threads will stop
-			m_InSocket = clientSocket.getInputStream();
-			m_OutSocket = clientSocket.getOutputStream();
-			m_threadRequest = new Thread(this, "JAP - AnonProxy Request");
-			m_threadRequest.setDaemon(true);
-			m_threadRequest.start();
-		}
-		catch (Exception e)
-		{
-		}
-	}
+  private OutputStream m_OutChannel;
 
-	public void run()
-	{
-		m_bRequestIsAlive = true;
-		AnonChannel newChannel = null;
-		//Check for type
-		int firstByte = 0;
-		try
-		{
-			firstByte = m_InSocket.read();
-		}
-		catch (InterruptedIOException ex)
-		{ //no request received so fare - asume SMTP, where we have to sent something first
-			try
-			{
-				newChannel = m_Proxy.createChannel(AnonChannel.SMTP);
-				m_iProtocol = IProxyListener.PROTOCOL_OTHER;
-				if (newChannel == null)
-				{
-					closeRequest();
-					return;
-				}
-			}
-			catch (Throwable to)
-			{
-				LogHolder.log(LogLevel.ERR, LogType.NET,
-							  "AnonProxyRequest - something was wrong with seting up a new SMTP channel -- Exception: " +
-							  to);
-				closeRequest();
-				return;
-			}
-		}
-		catch (Throwable t)
-		{
-			closeRequest();
-			return ;
-		}
-		if (newChannel == null) //no SMTP - maybe HTTP or SOCKS
-		{
-			firstByte &= 0x00FF;
-			for (; ; )
-			{
-				try
-				{
-					newChannel = null;
-					if (firstByte == 4 || firstByte == 5) //SOCKS
-					{
-						newChannel = m_Proxy.createChannel(AnonChannel.SOCKS);
-						m_iProtocol = IProxyListener.PROTOCOL_OTHER;
-					}
-					else
-					{
-						newChannel = m_Proxy.createChannel(AnonChannel.HTTP);
-						m_iProtocol = IProxyListener.PROTOCOL_WWW;
-					}
-					break;
-				}
-				catch (TooManyOpenChannelsException te)
-				{
-					LogHolder.log(LogLevel.ERR, LogType.NET,
-								  "AnonProxyRequest - TooManyOpenChannelsExeption");
-					try
-					{
-						Thread.sleep(1000);
-					}
-					catch (InterruptedException ex)
-					{
-					}
-				}
-				catch (NotConnectedToMixException ec)
-				{
-					LogHolder.log(LogLevel.ERR, LogType.NET, "AnonProxyRequest - Connection to Mix lost");
-					if (!m_Proxy.reconnect())
-					{
-						closeRequest();
-						return;
-					}
-				}
-				catch (Exception e)
-				{
-					LogHolder.log(LogLevel.ERR, LogType.NET,
-								  "AnonProxyRequest - something was wrong with seting up a new channel Exception: " +
-								  e);
-					closeRequest();
-					return;
-				}
-			}
-			if (newChannel == null)
-			{
-				closeRequest();
-				return;
-			}
-		}
-		int len = 0;
-		int aktPos = 0;
-		if (firstByte != 0) //only SOCKS and HTTP will read the first byte - but not SMTP!
-		{
-			aktPos = 1;
-		}
-		byte[] buff = null;
-		try
-		{
-			m_InChannel = newChannel.getInputStream();
-			m_OutChannel = newChannel.getOutputStream();
-			m_Channel = newChannel;
+  private InputStream m_InSocket;
 
-			m_threadResponse = new Thread(new Response(), "JAP - AnonProxy Response");
-			m_threadResponse.start();
+  private OutputStream m_OutSocket;
 
-			buff = new byte[1900];
-			buff[0] = (byte) firstByte;
-		}
-		catch (Throwable t)
-		{
-			closeRequest();
-			return;
-		}
-		m_Proxy.incNumChannels();
-		try
-		{
-			for (; ; )
-			{
-				try
-				{
-					len = Math.min(m_Channel.getOutputBlockSize(), 1900);
-					len -= aktPos;
-					len = m_InSocket.read(buff, aktPos, len);
-					len += aktPos;
-				}
-				catch (InterruptedIOException ioe)
-				{
-					continue;
-				}
-				if (len <= 0)
-				{
-					break;
-				}
-				m_OutChannel.write(buff, 0, len);
-//				LogHolder.log(LogLevel.DEBUG,LogType.NET,"Channel "+Integer.toString(m_Channel.hashCode())+" Request Len: "+re+" Read: "+len);
-				m_Proxy.transferredBytes(len, m_iProtocol);
-				aktPos = 0;
-			}
-		}
-		catch (Exception e)
-		{
-		}
-		closeRequest();
-		m_Proxy.decNumChannels();
-	}
+  Socket m_clientSocket;
 
-	private void closeRequest()
-	{
-		m_bRequestIsAlive = false;
-		try
-		{
-			if (m_Channel != null)
-			{
-				m_Channel.close();
-			}
-		}
-		catch (Throwable t){}
-		try
-		{
-			m_InSocket.close();
-		}
-		catch (Throwable t)
-		{}
-		try
-		{
-			m_OutSocket.close();
-		}
-		catch (Throwable t)
-		{}
-		try
-		{
-			m_clientSocket.close();
-		}
-		catch (Throwable t)
-		{}
-	}
+  Thread m_threadResponse;
 
-	final class Response implements Runnable
-	{
-		Response()
-		{
-		}
+  Thread m_threadRequest;
 
-		public void run()
-		{
-			int len = 0;
-			byte[] buff = new byte[2900];
-			try
-			{
-				while ( (len = m_InChannel.read(buff, 0, 1000)) > 0)
-				{
-					int count = 0;
-					for (; ; )
-					{
-						try
-						{
-							m_OutSocket.write(buff, 0, len);
-							m_OutSocket.flush();
-							break;
-						}
-						catch (InterruptedIOException ioe)
-						{
-							LogHolder.log(LogLevel.EMERG, LogType.NET,
-										  "Should never be here: Timeout in sending to Browser!");
-						}
-						count++;
-						if (count > 3)
-						{
-							throw new Exception("Could not send to Browser...");
-						}
-					}
-					m_Proxy.transferredBytes(len, m_iProtocol);
-				}
-			}
-			catch (Exception e)
-			{}
-			try
-			{
-				m_clientSocket.close();
-			}
-			catch (Exception e)
-			{}
-			try
-			{
-				Thread.sleep(500);
-			}
-			catch (Exception e)
-			{}
-			if (m_bRequestIsAlive)
-			{
-				try
-				{
-					m_threadRequest.interrupt();
-				}
-				catch (Exception e)
-				{}
-			}
-		}
+  AnonChannel m_Channel;
 
-	}
+  AnonProxy m_Proxy;
+
+  volatile boolean m_bRequestIsAlive;
+
+  int m_iProtocol;
+
+  AnonProxyRequest(AnonProxy proxy, Socket clientSocket) {
+    try {
+      m_Proxy = proxy;
+      m_clientSocket = clientSocket;
+      m_clientSocket.setSoTimeout(1000); // just to ensure that threads will
+                                          // stop
+      m_InSocket = clientSocket.getInputStream();
+      m_OutSocket = clientSocket.getOutputStream();
+      m_threadRequest = new Thread(this, "JAP - AnonProxy Request");
+      m_threadRequest.setDaemon(true);
+      m_threadRequest.start();
+    }
+    catch (Exception e) {
+    }
+  }
+
+  public void run() {
+    m_bRequestIsAlive = true;
+    AnonChannel newChannel = null;
+    // Check for type
+    int firstByte = 0;
+    try {
+      firstByte = m_InSocket.read();
+    }
+    catch (InterruptedIOException ex) { // no request received so fare - asume
+                                        // SMTP, where we have to sent something
+                                        // first
+      try {
+        newChannel = m_Proxy.createChannel(AnonChannel.SMTP);
+        m_iProtocol = IProxyListener.PROTOCOL_OTHER;
+        if (newChannel == null) {
+          closeRequest();
+          return;
+        }
+      }
+      catch (Throwable to) {
+        LogHolder.log(LogLevel.ERR, LogType.NET, "AnonProxyRequest - something was wrong with seting up a new SMTP channel -- Exception: " + to);
+        closeRequest();
+        return;
+      }
+    }
+    catch (Throwable t) {
+      closeRequest();
+      return;
+    }
+    if (newChannel == null) // no SMTP - maybe HTTP or SOCKS
+    {
+      firstByte &= 0x00FF;
+      for (;;) {
+        try {
+          newChannel = null;
+          if (firstByte == 4 || firstByte == 5) // SOCKS
+          {
+            newChannel = m_Proxy.createChannel(AnonChannel.SOCKS);
+            m_iProtocol = IProxyListener.PROTOCOL_OTHER;
+          }
+          else {
+            newChannel = m_Proxy.createChannel(AnonChannel.HTTP);
+            m_iProtocol = IProxyListener.PROTOCOL_WWW;
+          }
+          break;
+        }
+        catch (NotConnectedToMixException ec) {
+          LogHolder.log(LogLevel.ERR, LogType.NET, "AnonProxyRequest - Connection to Mix lost");
+          if (!m_Proxy.reconnect()) {
+            closeRequest();
+            return;
+          }
+        }
+        catch (Exception e) {
+          LogHolder.log(LogLevel.ERR, LogType.NET, "AnonProxyRequest - something was wrong with seting up a new channel Exception: " + e);
+          closeRequest();
+          return;
+        }
+      }
+      if (newChannel == null) {
+        closeRequest();
+        return;
+      }
+    }
+    int len = 0;
+    int aktPos = 0;
+    if (firstByte != 0) // only SOCKS and HTTP will read the first byte - but
+                        // not SMTP!
+    {
+      aktPos = 1;
+    }
+    byte[] buff = null;
+    try {
+      m_InChannel = newChannel.getInputStream();
+      m_OutChannel = newChannel.getOutputStream();
+      m_Channel = newChannel;
+
+      m_threadResponse = new Thread(new Response(), "JAP - AnonProxy Response");
+      m_threadResponse.start();
+
+      buff = new byte[1900];
+      buff[0] = (byte)firstByte;
+    }
+    catch (Throwable t) {
+      closeRequest();
+      return;
+    }
+    m_Proxy.incNumChannels();
+    try {
+      for (;;) {
+        try {
+          len = Math.min(m_Channel.getOutputBlockSize(), 1900);
+          len -= aktPos;
+          len = m_InSocket.read(buff, aktPos, len);
+          len += aktPos;
+        }
+        catch (InterruptedIOException ioe) {
+          aktPos = aktPos + ioe.bytesTransferred;
+          continue;
+        }
+        if (len <= 0) {
+          break;
+        }
+        try {
+          m_OutChannel.write(buff, 0, len);
+          /* everything was OK */
+          aktPos = 0;
+        }
+        catch (TooMuchDataForPacketException e) {
+          /* The implementation could not send all bytes.
+           * Reason: AnonChannel.getOutputBlockSize() is sometimes only a hint
+           * about the estimated size, the available size can be smaller (also
+           * some implementations need to know, whether there are more bytes
+           * available -> they request more bytes than they can send to find
+           * it out).
+           * Solution: Send the remaining bytes again in the next write-call.
+           */
+          byte[] tempBuff = new byte[buff.length - e.getBytesSent()];
+          System.arraycopy(buff, e.getBytesSent(), tempBuff, 0, tempBuff.length);
+          System.arraycopy(tempBuff, 0, buff, 0, tempBuff.length);
+          aktPos = tempBuff.length;
+        }
+        // LogHolder.log(LogLevel.DEBUG,LogType.NET,"Channel
+        // "+Integer.toString(m_Channel.hashCode())+" Request Len: "+re+" Read:
+        // "+len);
+        m_Proxy.transferredBytes(len - aktPos, m_iProtocol);
+      }
+    }
+    catch (Exception e) {
+    }
+    closeRequest();
+    m_Proxy.decNumChannels();
+  }
+
+  private void closeRequest() {
+    m_bRequestIsAlive = false;
+    try {
+      if (m_Channel != null) {
+        m_Channel.close();
+      }
+    }
+    catch (Throwable t) {
+    }
+    try {
+      m_InSocket.close();
+    }
+    catch (Throwable t) {
+    }
+    try {
+      m_OutSocket.close();
+    }
+    catch (Throwable t) {
+    }
+    try {
+      m_clientSocket.close();
+    }
+    catch (Throwable t) {
+    }
+  }
+
+  final class Response implements Runnable {
+    Response() {
+    }
+
+    public void run() {
+      int len = 0;
+      byte[] buff = new byte[2900];
+      try {
+        while ((len = m_InChannel.read(buff, 0, 1000)) > 0) {
+          int count = 0;
+          for (;;) {
+            try {
+              m_OutSocket.write(buff, 0, len);
+              m_OutSocket.flush();
+              break;
+            }
+            catch (InterruptedIOException ioe) {
+              LogHolder.log(LogLevel.EMERG, LogType.NET, "Should never be here: Timeout in sending to Browser!");
+            }
+            count++;
+            if (count > 3) {
+              throw new Exception("Could not send to Browser...");
+            }
+          }
+          m_Proxy.transferredBytes(len, m_iProtocol);
+        }
+      }
+      catch (Exception e) {
+      }
+      try {
+        m_clientSocket.close();
+      }
+      catch (Exception e) {
+      }
+      try {
+        Thread.sleep(500);
+      }
+      catch (Exception e) {
+      }
+      if (m_bRequestIsAlive) {
+        try {
+          m_threadRequest.interrupt();
+        }
+        catch (Exception e) {
+        }
+      }
+    }
+
+  }
 }

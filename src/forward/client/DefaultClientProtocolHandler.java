@@ -52,7 +52,7 @@ import org.w3c.dom.NodeList;
 
 import anon.crypto.SignatureVerifier;
 import anon.infoservice.MixCascade;
-import anon.server.impl.ProxyConnection;
+import anon.shared.ProxyConnection;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
 

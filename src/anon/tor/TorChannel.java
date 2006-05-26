@@ -32,7 +32,7 @@ package anon.tor;
 
 import java.io.IOException;
 
-import anon.server.impl.AbstractChannel;
+import anon.shared.AbstractChannel;
 import anon.tor.cells.RelayCell;
 import anon.util.ByteArrayUtil;
 import logging.LogHolder;

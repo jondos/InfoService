@@ -32,7 +32,7 @@ import java.io.IOException;
 import java.util.Vector;
 
 import anon.mixminion.message.Message;
-import anon.server.impl.AbstractChannel;
+import anon.shared.AbstractChannel;
 import anon.util.ByteArrayUtil;
 
 /** This class implements a channel,which speaks SMTP*/

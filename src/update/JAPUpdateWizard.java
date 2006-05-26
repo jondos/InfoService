@@ -209,7 +209,6 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
 			downloadPage.showInformationDialog(e.toString());
 			return;
 		}

@@ -41,6 +41,11 @@ import org.w3c.dom.Element;
 public interface IXMLEncodable
 {
 	/**
+	 * The version attribute used for a lot of tags.
+	 */
+	public static final String XML_VERSION = "version";
+
+	/**
 	 * The name of the XML element constructed by this class.
 	 */
 	// public static final String XML_ELEMENT_NAME = "ElementName";

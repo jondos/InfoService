@@ -43,6 +43,10 @@ public final class JAPModel
 {
 	public final static String DLL_VERSION_UPDATE = "dllVersionUpdate";
 
+	private static final int DIRECT_CONNECTION_INFOSERVICE = 0;
+	private static final int DIRECT_CONNECTION_PAYMENT = 1;
+	private static final int DIRECT_CONNECTION_UPDATE = 2;
+
 	private int m_HttpListenerPortNumber = JAPConstants.DEFAULT_PORT_NUMBER; // port number of HTTP  listener
 	private boolean m_bHttpListenerIsLocal = JAPConstants.DEFAULT_LISTENER_IS_LOCAL; // indicates whether listeners serve for localhost only or not
 	private ProxyInterface m_proxyInterface = null;
@@ -60,8 +64,11 @@ public final class JAPModel
 	private boolean m_bSaveMainWindowPosition = JAPConstants.DEFAULT_SAVE_MAIN_WINDOW_POSITION;
 	private Dimension m_OldMainWindowSize = null;
 	private Point m_OldMainWindowLocation = null;
+
 	private boolean m_bAllowPaymentViaDirectConnection;
 	private boolean m_bAllowInfoServiceViaDirectConnection;
+	private boolean m_bAllowUpdateViaDirectConnection;
+
 
 	private static JAPModel ms_TheModel = null;
 
@@ -261,6 +268,13 @@ public final class JAPModel
 		return m_bAllowPaymentViaDirectConnection;
 	}
 
+	public boolean isUpdateViaDirectConnectionAllowed()
+	{
+		return false;
+		//return m_bAllowUpdateViaDirectConnection;
+	}
+
+
 	public boolean isInfoServiceViaDirectConnectionAllowed()
 	{
 		return m_bAllowInfoServiceViaDirectConnection;
@@ -282,14 +296,19 @@ public final class JAPModel
 		{
 			public ImmutableProxyInterface[] getProxyInterfaces()
 			{
-				return getProxyInterface(false);
+				return getProxyInterface(DIRECT_CONNECTION_INFOSERVICE);
 			}
 		};
 	}
 
 	public ImmutableProxyInterface[] getPaymentProxyInterface()
 	{
-		return getProxyInterface(true);
+		return getProxyInterface(DIRECT_CONNECTION_PAYMENT);
+	}
+
+	public ImmutableProxyInterface[] getUpdateProxyInterface()
+	{
+		return getProxyInterface(DIRECT_CONNECTION_UPDATE);
 	}
 
 	/**
@@ -299,7 +318,7 @@ public final class JAPModel
 	 * @return ImmutableProxyInterface[] one or more proxy interfaces or null if there is no
 	 * proxy available that is allowed
 	 */
-	private ImmutableProxyInterface[] getProxyInterface(boolean a_bPayment)
+	private ImmutableProxyInterface[] getProxyInterface(int a_component)
 	{
 		ProxyInterface[] interfaces = new ProxyInterface[4];
 		interfaces[0] = getProxyInterface();
@@ -307,8 +326,9 @@ public final class JAPModel
 		interfaces[2] = new ProxyInterface("localhost", getHttpListenerPortNumber(), null); // AN.ON
 		interfaces[3] = new ProxyInterface("localhost", getHttpListenerPortNumber(),
 										   ProxyInterface.PROTOCOL_TYPE_SOCKS, null); // TOR
-		if ((a_bPayment && !isPaymentViaDirectConnectionAllowed()) ||
-			(!a_bPayment && !isInfoServiceViaDirectConnectionAllowed()))
+		if ((DIRECT_CONNECTION_PAYMENT == a_component && !isPaymentViaDirectConnectionAllowed()) ||
+			(DIRECT_CONNECTION_INFOSERVICE == a_component && !isInfoServiceViaDirectConnectionAllowed()) ||
+			(DIRECT_CONNECTION_UPDATE == a_component && !isUpdateViaDirectConnectionAllowed()))
 		{
 			// force anonymous connections to BI and InfoService
 			if (!m_connectionChecker.checkAnonConnected())
