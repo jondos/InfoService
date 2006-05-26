@@ -118,7 +118,7 @@ public class JAPVersionInfo extends AbstractDatabaseEntry implements IDistributa
     super(System.currentTimeMillis() + DATABASE_TIMEOUT);
     m_versionInfoType = a_versionInfoType;
     /* parse the document */
-    m_version = a_jnlpRootNode.getAttribute("version");
+    m_version = XMLUtil.parseAttribute(a_jnlpRootNode, "version", "");
     try {
       String strDate = a_jnlpRootNode.getAttribute("releaseDate") + " GMT";
       m_releaseDate = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss z").parse(strDate);

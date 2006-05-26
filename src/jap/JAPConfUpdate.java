@@ -42,6 +42,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -50,12 +51,22 @@ import javax.swing.border.TitledBorder;
 
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.JAPVersionInfo;
+import gui.GUIUtils;
+import gui.JAPHelp;
+import gui.JAPMessages;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 import update.JAPUpdateWizard;
-import logging.*;
-import gui.*;
 
 final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListener, ItemListener, Runnable
 {
+	private static final String COMMAND_UPGRADE = "UPGRADE";
+	private static final String COMMAND_CHECKFORUPGRADE = "CHECKFORUPGRADE";
+
+	private static final String MSG_ALLOW_DIRECT_CONN = JAPConfUpdate.class.getName() +
+		"_allowDirectConnection";
+
 	//private JDialog m_Dialog;
 	private JTextArea m_taInfo;
 	private JLabel m_labelVersion, m_labelDate;
@@ -63,14 +74,12 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 	// private JAPController japController;
 	private JComboBox m_comboType;
 	private JButton m_bttnUpgrade, m_bttnCheckForUpgrade;
+	private JCheckBox m_cbxAllowDirectUpdate;
 
 	private Thread m_threadGetVersionInfo;
 	private JAPVersionInfo m_devVersion;
 	private JAPVersionInfo m_releaseVersion;
 	private DateFormat m_DateFormat;
-
-	private final String COMMAND_UPGRADE = "UPGRADE";
-	private final String COMMAND_CHECKFORUPGRADE = "CHECKFORUPGRADE";
 
 	public JAPConfUpdate()
 	{
@@ -263,11 +272,14 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		cFrame.gridx = 1;
 		cFrame.gridy = 0;
 		cFrame.anchor = GridBagConstraints.NORTHEAST;
-		gridBagFrame.setConstraints(latestPanel, cFrame);
-		panelRoot.add(latestPanel);
+		panelRoot.add(latestPanel, cFrame);
 
 		cFrame.gridx = 0;
-		cFrame.gridy = 1;
+		cFrame.gridy = 2;
+		m_cbxAllowDirectUpdate = new JCheckBox(JAPMessages.getString(MSG_ALLOW_DIRECT_CONN));
+		panelRoot.add(m_cbxAllowDirectUpdate, cFrame);
+
+		cFrame.gridy = 3;
 		cFrame.gridwidth = 2;
 		cFrame.anchor = GridBagConstraints.CENTER;
 		cFrame.fill = GridBagConstraints.BOTH;
@@ -277,12 +289,28 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		panelRoot.add(infoPanel);
 
 		cFrame.gridx = 0;
-		cFrame.gridy = 2;
+		cFrame.gridy = 4;
 		cFrame.weighty = 0;
 		cFrame.fill = GridBagConstraints.HORIZONTAL;
 		cFrame.anchor = GridBagConstraints.SOUTH;
 		gridBagFrame.setConstraints(buttonPanel, cFrame);
 		panelRoot.add(buttonPanel);
+	}
+
+	protected boolean onOkPressed()
+	{
+		JAPModel.getInstance().allowUpdateViaDirectConnection(m_cbxAllowDirectUpdate.isSelected());
+		return true;
+	}
+
+	public void onResetToDefaultsPressed()
+	{
+		m_cbxAllowDirectUpdate.setSelected(true);
+	}
+
+	protected void onUpdateValues()
+	{
+		m_cbxAllowDirectUpdate.setSelected(JAPModel.getInstance().isUpdateViaDirectConnectionAllowed());
 	}
 
 	public void run()

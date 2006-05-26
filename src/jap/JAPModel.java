@@ -272,8 +272,12 @@ public final class JAPModel
 
 	public boolean isUpdateViaDirectConnectionAllowed()
 	{
-		return false;
-		//return m_bAllowUpdateViaDirectConnection;
+		return m_bAllowUpdateViaDirectConnection;
+	}
+
+	public void allowUpdateViaDirectConnection(boolean a_bAllow)
+	{
+		m_bAllowUpdateViaDirectConnection = a_bAllow;
 	}
 
 

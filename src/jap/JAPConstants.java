@@ -36,7 +36,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.05.178"; //Never change the layout of this line!
+	public static final String aktVersion = "00.05.179"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -109,6 +109,7 @@ public final class JAPConstants
 	static final boolean DEFAULT_SAVE_MAIN_WINDOW_POSITION = false;
 	static final boolean DEFAULT_MOVE_TO_SYSTRAY_ON_STARTUP = false;
 	static final boolean DEFAULT_MINIMIZE_ON_STARTUP = false;
+	static final boolean DEFAULT_WARN_ON_CLOSE = true;
 
 	static final String JAPLocalFilename = "JAP.jar";
 	public static final String TITLE = "JAP";
