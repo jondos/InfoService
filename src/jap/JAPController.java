@@ -127,7 +127,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private static final String MSG_NEW_OPTIONAL_VERSION = JAPController.class.getName() +
 		"_newOptionalVersion";
 
-
 	private static final String XML_ALLOW_NON_ANONYMOUS_CONNECTION = "AllowNonAnonymousConnection";
 	private static final String XML_ALLOW_NON_ANONYMOUS_UPDATE = "AllowNonAnonymousUpdate";
 
@@ -535,8 +534,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 	            m_Model.setDLLupdate(XMLUtil.parseAttribute(root, m_Model.DLL_VERSION_UPDATE, false));
 
 				JAPModel.getInstance().allowUpdateViaDirectConnection(
-								XMLUtil.parseAttribute(root,
-					XML_ALLOW_NON_ANONYMOUS_UPDATE, true));
+								XMLUtil.parseAttribute(root, XML_ALLOW_NON_ANONYMOUS_UPDATE, true));
+				JAPModel.getInstance().setReminderForOptionalUpdate(
+								XMLUtil.parseAttribute(root, JAPModel.XML_REMIND_OPTIONAL_UPDATE, true));
+
 
 
 	            int port = XMLUtil.parseAttribute(root, JAPConstants.CONFIG_PORT_NUMBER,
@@ -1228,6 +1229,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 			XMLUtil.setAttribute(e, XML_ALLOW_NON_ANONYMOUS_UPDATE,
 								 JAPModel.getInstance().isUpdateViaDirectConnectionAllowed());
+			XMLUtil.setAttribute(e, JAPModel.XML_REMIND_OPTIONAL_UPDATE,
+								 JAPModel.getInstance().isReminderForOptionalUpdateActivated());
 
 			/* save payment configuration */
 			try
@@ -1732,6 +1735,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			//JAPWaitSplash splash = null;
 			int msgIdConnect = 0;
 			boolean canStartService = true;
+			int versionCheck = 0;
 
 			//setAnonMode--> async!!
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:setAnonMode(" + anonModeSelected + ")");
@@ -1752,7 +1756,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					 * forwarding protocol will support direct connections to the infoservice too and not
 					 * via the mixcascade -> we will be able to do the version check here)
 					 */
-					int versionCheck = versionCheck(true);
+					versionCheck = versionCheck(true);
 					if (versionCheck == -1)
 					{
 						// -> we can't start anonymity
@@ -1932,7 +1936,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					if (!m_bAlreadyCheckedForNewVersion && !JAPModel.isInfoServiceDisabled())
 					{
-						int versionCheck = versionCheck(true);
+						versionCheck = versionCheck(true);
 						if (versionCheck == -1)
 						{
 							// -> we must stop anonymity
@@ -1945,7 +1949,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 				}
 
-				if (!m_bAlreadyCheckedForNewDevVersion && !JAPConstants.m_bReleasedVersion)
+				if (versionCheck != -1 && !m_bAlreadyCheckedForNewDevVersion &&
+					JAPModel.getInstance().isReminderForOptionalUpdateActivated())
 				{
 					versionCheck(false);
 					m_bAlreadyCheckedForNewDevVersion = true;
@@ -2345,6 +2350,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							}
 						}
 					}
+					// do not show any dialogs in this state
 					getView().dispose();
 					LogHolder.log(LogLevel.INFO, LogType.GUI, "View has been disposed. Finishing...");
 					System.exit(0);
@@ -2434,18 +2440,25 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 *             new version found, version check failed.
 	 *          1, if no version check could be done
 	 */
-	public int versionCheck(boolean a_bRelease)
+	public int versionCheck(boolean a_bForced)
 	{
 		LogHolder.log(LogLevel.INFO, LogType.MISC, "Checking for new version of JAP...");
 		JAPVersionInfo vi = null;
 		String updateVersionNumber = null;
-		if (a_bRelease)
+		if (a_bForced)
 		{
 			updateVersionNumber = InfoServiceHolder.getInstance().getNewVersionNumber();
 		}
 		else
 		{
-			vi = InfoServiceHolder.getInstance().getJAPVersionInfo(JAPVersionInfo.JAP_DEVELOPMENT_VERSION);
+			if (JAPConstants.m_bReleasedVersion)
+			{
+				vi = InfoServiceHolder.getInstance().getJAPVersionInfo(JAPVersionInfo.JAP_RELEASE_VERSION);
+			}
+			else
+			{
+				vi = InfoServiceHolder.getInstance().getJAPVersionInfo(JAPVersionInfo.JAP_DEVELOPMENT_VERSION);
+			}
 			if (vi != null)
 			{
 				updateVersionNumber = vi.getJapVersion();
@@ -2466,21 +2479,29 @@ public final class JAPController extends Observable implements IProxyListener, O
 			 * download the new version or not
 			 */
 			String message;
-			if (a_bRelease)
+			JAPDialog.LinkedCheckBox checkbox = null;
+			if (a_bForced)
 			{
 				message = JAPMessages.getString("newVersionAvailable", updateVersionNumber);
 			}
 			else
 			{
 				message = JAPMessages.getString(MSG_NEW_OPTIONAL_VERSION, updateVersionNumber + "-dev)");
+				checkbox = new JAPDialog.LinkedCheckBox(false);
 			}
+
 			boolean bAnswer = JAPDialog.showYesNoDialog(m_View,
 														message,
-														JAPMessages.getString("newVersionAvailableTitle"));
+														JAPMessages.getString("newVersionAvailableTitle"),
+														checkbox);
+			if (checkbox != null)
+			{
+				JAPModel.getInstance().setReminderForOptionalUpdate(!checkbox.getState());
+			}
 			if (bAnswer)
 			{
 				/* User has selected to download new version of JAP -> Download, Alert, exit program */
-				if (a_bRelease)
+				if (a_bForced)
 				{
 					vi = InfoServiceHolder.getInstance().getJAPVersionInfo(JAPVersionInfo.JAP_RELEASE_VERSION);
 				}
@@ -2501,7 +2522,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						JAPDialog.showErrorDialog(m_View,
 												  JAPMessages.getString("downloadFailed") +
 												  JAPMessages.getString("infoURL"), LogType.MISC);
-						if (a_bRelease)
+						if (a_bForced)
 						{
 							notifyJAPObservers();
 						}
@@ -2521,7 +2542,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				JAPDialog.showErrorDialog(m_View,
 										  JAPMessages.getString("downloadFailed") +
 										  JAPMessages.getString("infoURL"), LogType.MISC);
-				if (a_bRelease)
+				if (a_bForced)
 				{
 					notifyJAPObservers();
 				}
@@ -2533,7 +2554,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				/* User has selected not to download -> Alert, we should'nt start the system due to
 				 * possible compatibility problems
 				 */
-				if (a_bRelease)
+				if (a_bForced)
 				{
 					JAPDialog.showWarningDialog(m_View, JAPMessages.getString("youShouldUpdate") +
 												JAPMessages.getString("infoURL"));

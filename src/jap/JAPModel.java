@@ -42,6 +42,7 @@ import jap.forward.JAPRoutingSettings;
 public final class JAPModel
 {
 	public final static String DLL_VERSION_UPDATE = "dllVersionUpdate";
+	public static final String XML_REMIND_OPTIONAL_UPDATE = "remindOptionalUpdate";
 
 	private static final int DIRECT_CONNECTION_INFOSERVICE = 0;
 	private static final int DIRECT_CONNECTION_PAYMENT = 1;
@@ -70,6 +71,8 @@ public final class JAPModel
 	private boolean m_bAllowPaymentViaDirectConnection;
 	private boolean m_bAllowInfoServiceViaDirectConnection;
 	private boolean m_bAllowUpdateViaDirectConnection;
+
+	private boolean m_bRemindOptionalUpdate;
 
 
 	private static JAPModel ms_TheModel = null;
@@ -258,7 +261,15 @@ public final class JAPModel
 		m_connectionChecker = a_connectionChecker;
 	}
 
+	public boolean isReminderForOptionalUpdateActivated()
+	{
+		return m_bRemindOptionalUpdate;
+	}
 
+	public void setReminderForOptionalUpdate(boolean a_bRemind)
+	{
+		m_bRemindOptionalUpdate = a_bRemind;
+	}
 
 	public boolean isAnonConnected()
 	{
