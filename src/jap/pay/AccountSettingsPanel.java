@@ -402,7 +402,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		m_cbxShowPaymentConfirmation = new JCheckBox(
 			JAPMessages.getString(MSG_SHOW_PAYMENT_CONFIRM_DIALOG),
-			JAPController.getInstance().getDontAskPayment());
+			!JAPController.getInstance().getDontAskPayment());
 		m_cbxShowPaymentConfirmation.setFont(getFontSetting());
 		GridBagLayout advancedPanelLayout = new GridBagLayout();
 		panelAdvanced.setLayout(advancedPanelLayout);
