@@ -126,6 +126,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		"_disableGoodByMessage";
 	private static final String MSG_NEW_OPTIONAL_VERSION = JAPController.class.getName() +
 		"_newOptionalVersion";
+	private static final String MSG_ALLOWUNPROTECTED = JAPController.class.getName() + "_allowunprotected";
 
 	private static final String XML_ALLOW_NON_ANONYMOUS_CONNECTION = "AllowNonAnonymousConnection";
 	private static final String XML_ALLOW_NON_ANONYMOUS_UPDATE = "AllowNonAnonymousUpdate";
@@ -200,6 +201,24 @@ public final class JAPController extends Observable implements IProxyListener, O
 		// create service listener object
 		m_anonServiceListener = new Vector();
 
+		// initialise HTTP proxy
+		DirectProxy.setAllowUnprotectedConnectionCallback(
+			new DirectProxy.AllowUnprotectedConnectionCallback()
+		{
+			public DirectProxy.AllowUnprotectedConnectionCallback.Answer callback()
+			{
+				boolean bShowHtmlWarning;
+				JAPDll.setWindowOnTop(JAPController.getView(),
+									  JAPController.getView().getName(), true);
+				JAPDialog.LinkedCheckBox cb = new JAPDialog.LinkedCheckBox(
+					JAPMessages.getString(JAPDialog.LinkedCheckBox.MSG_REMEMBER_ANSWER), false);
+				bShowHtmlWarning = ! (JAPDialog.showYesNoDialog(JAPController.getView(),
+					JAPMessages.getString(MSG_ALLOWUNPROTECTED), cb));
+				JAPDll.setWindowOnTop(JAPController.getView(),
+									  JAPController.getView().getName(), false);
+				return new Answer(!bShowHtmlWarning, cb.getState());
+			}
+		});
 
 		/* set a default mixcascade */
 		try
@@ -1738,7 +1757,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			int versionCheck = 0;
 
 			//setAnonMode--> async!!
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:setAnonMode(" + anonModeSelected + ")");
+			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "setAnonMode(" + anonModeSelected + ")");
 			if ( (m_proxyAnon == null) && (anonModeSelected))
 			{ //start Anon Mode
 				m_View.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
@@ -2334,6 +2353,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							JAPModel.getInstance().getConfigFile()), LogType.MISC);
 					}
 					getView().setEnabled(false);
+					DirectProxy.setAllowUnprotectedConnectionCallback(null);
 
 					if (bShowConfigSaveErrorMsg) // make a hard shutdown in case of an update...
 					{
