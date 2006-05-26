@@ -1051,8 +1051,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC,
-						  "JAPController: loadConfigFile: Configuration file \"" + a_configFile +
-						  "\" not found.");
+						  "Configuration file \"" + a_configFile +  "\" not found.");
 			return false;
 		}
 	}
@@ -1065,7 +1064,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	{
 		String japConfFile = AbstractOS.getInstance().getConfigPath() + JAPConstants.XMLCONFFN;
 		LogHolder.log(LogLevel.INFO, LogType.MISC,
-					  "JAPController: loadConfigFile: Trying to load configuration from: " + japConfFile);
+					  "Trying to load configuration from: " + japConfFile);
 		try
 		{
 			FileInputStream f = new FileInputStream(japConfFile);

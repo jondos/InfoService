@@ -46,6 +46,7 @@ import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.border.TitledBorder;
 
+import gui.TitledGridBagPanel;
 import gui.JAPHelp;
 import gui.JAPMessages;
 import gui.dialog.JAPDialog;
@@ -56,11 +57,15 @@ import logging.LogType;
 
 final class JAPConfUI extends AbstractJAPConfModule
 {
+	private static final String MSG_ON_CLOSING_JAP = JAPConfUI.class.getName() + "_onClosingJAP";
+	private static final String MSG_WARNING_ON_CLOSING_JAP = JAPConfUI.class.getName() + "_warningOnClosingJAP";
+
 	private TitledBorder m_borderLookAndFeel, m_borderView;
 	private JComboBox m_comboLanguage, m_comboUI;
 	private boolean m_bIgnoreComboLanguageEvents = false, m_bIgnoreComboUIEvents = false;
 	private JCheckBox m_cbSaveWindowPositions, m_cbAfterStart;
 	private JRadioButton m_rbViewSimplified, m_rbViewNormal, m_rbViewMini, m_rbViewSystray;
+	private JCheckBox m_cbWarnOnClose;
 
 	public JAPConfUI()
 	{
@@ -99,7 +104,10 @@ final class JAPConfUI extends AbstractJAPConfModule
 		if (!bSimpleView)
 		{
 			panelRoot.add(pStartup, c1);
+			c1.gridy++;
 		}
+
+		panelRoot.add(createAfterShutdownPanel(), c1);
 
 		c1.gridy++;
 		c1.anchor = GridBagConstraints.NORTHWEST;
@@ -232,6 +240,14 @@ final class JAPConfUI extends AbstractJAPConfModule
 		return p;
 	}
 
+	private JPanel createAfterShutdownPanel()
+	{
+		TitledGridBagPanel panel = new TitledGridBagPanel(JAPMessages.getString(MSG_ON_CLOSING_JAP));
+		m_cbWarnOnClose = new JCheckBox(JAPMessages.getString(MSG_WARNING_ON_CLOSING_JAP));
+		panel.addRow(m_cbWarnOnClose, null);
+		return panel;
+	}
+
 	private JPanel createAfterStartupPanel()
 	{
 		GridBagLayout gbl = new GridBagLayout();
@@ -288,6 +304,8 @@ final class JAPConfUI extends AbstractJAPConfModule
 			m_cbAfterStart.isSelected());
 		JAPController.getInstance().setMoveToSystrayOnStartup(m_rbViewSystray.isSelected() &&
 			m_cbAfterStart.isSelected());
+		JAPModel.getInstance().setNeverRemindGoodbye(!m_cbWarnOnClose.isSelected());
+
 		try
 		{
 			UIManager.setLookAndFeel(UIManager.getInstalledLookAndFeels()[m_comboUI
@@ -334,6 +352,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		m_rbViewSimplified.setSelected(JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED);
 		m_rbViewSystray.setSelected(JAPModel.getMoveToSystrayOnStartup());
 		m_rbViewMini.setSelected(JAPModel.getMinimizeOnStartup());
+		m_cbWarnOnClose.setSelected(!JAPModel.getInstance().isNeverRemindGoodbye());
 		boolean b = JAPModel.getMoveToSystrayOnStartup() || JAPModel.getMinimizeOnStartup();
 		updateThirdPanel(b);
 	}
