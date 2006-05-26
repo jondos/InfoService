@@ -27,61 +27,80 @@
  */
 package anon.crypto;
 
-public class CertificateInfoStructure {  
-  
-  private JAPCertificate m_certificate;
+public class CertificateInfoStructure
+{
 
-  private JAPCertificate m_parentCertificate;
-    
-  private int m_certificateType;
-      
-  private boolean m_enabled;
+	private JAPCertificate m_certificate;
 
-  private boolean m_certificateNeedsVerification;
-    
-  private boolean m_onlyHardRemovable;
-    
-  
-  public CertificateInfoStructure(JAPCertificate a_certificate, JAPCertificate a_parentCertificate, int a_certificateType, boolean a_enabled, boolean a_certificateNeedsVerification, boolean a_onlyHardRemovable) {
-    m_certificate = a_certificate;
-    m_parentCertificate = a_parentCertificate;
-    m_certificateType = a_certificateType;
-    m_enabled = a_enabled;
-    m_certificateNeedsVerification = a_certificateNeedsVerification;
-    m_onlyHardRemovable = a_onlyHardRemovable;
-  }
-  
-  
-  public JAPCertificate getCertificate() {
-    return m_certificate;
-  }
-  
-  public JAPCertificate getParentCertificate() {
-    return m_parentCertificate;
-  }
-  
-  public int getCertificateType() {
-    return m_certificateType;
-  }
-  
-  public boolean getCertificateNeedsVerification() {
-    return m_certificateNeedsVerification;
-  }
-  
-  public boolean isAvailable() {
-    boolean returnValue = false;
-    synchronized (this) {
-      returnValue = ((!m_certificateNeedsVerification) || (m_parentCertificate != null)) && m_enabled;
-    }
-    return returnValue;
-  }
-  
-  public boolean isOnlyHardRemovable() {
-    return m_onlyHardRemovable;
-  }
-  
-  public boolean isEnabled() {
-    return m_enabled;
-  }
+	private JAPCertificate m_parentCertificate;
 
-} 
+	private int m_certificateType;
+
+	private boolean m_enabled;
+
+	private boolean m_certificateNeedsVerification;
+
+	private boolean m_onlyHardRemovable;
+
+	private boolean m_bNotRemovable;
+
+	public CertificateInfoStructure(JAPCertificate a_certificate, JAPCertificate a_parentCertificate,
+									int a_certificateType, boolean a_enabled,
+									boolean a_certificateNeedsVerification, boolean a_onlyHardRemovable,
+									boolean a_notRemovable)
+	{
+		m_certificate = a_certificate;
+		m_parentCertificate = a_parentCertificate;
+		m_certificateType = a_certificateType;
+		m_enabled = a_enabled;
+		m_certificateNeedsVerification = a_certificateNeedsVerification;
+		m_onlyHardRemovable = a_onlyHardRemovable;
+		m_bNotRemovable = a_notRemovable;
+	}
+
+	public JAPCertificate getCertificate()
+	{
+		return m_certificate;
+	}
+
+	public JAPCertificate getParentCertificate()
+	{
+		return m_parentCertificate;
+	}
+
+	public int getCertificateType()
+	{
+		return m_certificateType;
+	}
+
+	public boolean getCertificateNeedsVerification()
+	{
+		return m_certificateNeedsVerification;
+	}
+
+	public boolean isAvailable()
+	{
+		boolean returnValue = false;
+		synchronized (this)
+		{
+			returnValue = ( (!m_certificateNeedsVerification) || (m_parentCertificate != null)) && m_enabled;
+		}
+		return returnValue;
+	}
+
+	public boolean isOnlyHardRemovable()
+	{
+		return m_onlyHardRemovable;
+	}
+
+	public boolean isNotRemovable()
+	{
+		return m_bNotRemovable;
+	}
+
+	public boolean isEnabled()
+	{
+		return m_enabled;
+	}
+
+}

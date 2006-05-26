@@ -36,7 +36,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.05.176"; //Never change the layout of this line!
+	public static final String aktVersion = "00.05.177"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -198,7 +198,7 @@ public final class JAPConstants
 	public final static int PI_PORT = 2342;
 	public final static String PI_CERT = "bi.cer";
 	public final static String CERTSPATH = "certificates/";
-	public final static String TRUSTEDMIXROOTCERT = "japmixroot.cer";
+	public final static String MIX_CERTSPATH = "acceptedMixCAs/";
 	public final static String TRUSTEDINFOSERVICEROOTCERT = "japinfoserviceroot.cer";
 	public final static String CERT_JAPCODESIGNING = "japcodesigning.cer";
 	public final static String CERT_JAPINFOSERVICEMESSAGES = "japupdatemessages.cer";

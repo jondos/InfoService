@@ -65,6 +65,8 @@ public final class JAPModel
 	private Dimension m_OldMainWindowSize = null;
 	private Point m_OldMainWindowLocation = null;
 
+	private boolean m_bGoodByMessageNeverRemind = false; // indicates if Warning message before exit has been deactivated forever
+
 	private boolean m_bAllowPaymentViaDirectConnection;
 	private boolean m_bAllowInfoServiceViaDirectConnection;
 	private boolean m_bAllowUpdateViaDirectConnection;
@@ -392,6 +394,16 @@ public final class JAPModel
 	public static boolean isSmallDisplay()
 	{
 		return ms_TheModel.m_bSmallDisplay;
+	}
+
+	public boolean isNeverRemindGoodbye()
+	{
+		return m_bGoodByMessageNeverRemind;
+	}
+
+	public void setNeverRemindGoodbye(boolean a_bGoodByMessageNeverRemind)
+	{
+		m_bGoodByMessageNeverRemind = a_bGoodByMessageNeverRemind;
 	}
 
 	protected void setInfoServiceDisabled(boolean b)

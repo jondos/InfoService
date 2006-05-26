@@ -360,7 +360,7 @@ public class CertificateContainer implements IXMLEncodable
 	public CertificateInfoStructure getInfoStructure()
 	{
 		return (new CertificateInfoStructure(m_certificate, m_parentCertificate, m_certificateType, m_enabled,
-											 m_certificateNeedsVerification, m_onlyHardRemovable));
+											 m_certificateNeedsVerification, m_onlyHardRemovable, m_bNotRemovable));
 	}
 
 	/**
