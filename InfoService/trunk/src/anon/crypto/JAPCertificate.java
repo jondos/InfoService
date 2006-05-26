@@ -255,7 +255,6 @@ final public class JAPCertificate extends X509CertificateStructure implements IX
 		}
 		catch (Exception a_e)
 		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
 			return null;
 		}
 	}
