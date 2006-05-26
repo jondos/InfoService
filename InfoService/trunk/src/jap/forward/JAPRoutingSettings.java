@@ -39,7 +39,7 @@ import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
 import anon.infoservice.ProxyInterface;
-import anon.server.impl.ProxyConnection;
+import anon.shared.ProxyConnection;
 import anon.util.XMLUtil;
 import forward.ForwardUtils;
 import forward.client.ClientForwardException;

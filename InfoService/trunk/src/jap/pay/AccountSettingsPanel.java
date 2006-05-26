@@ -401,7 +401,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		JPanel panelAdvanced = new JPanel();
 
 		m_cbxShowPaymentConfirmation = new JCheckBox(
-			JAPMessages.getString(MSG_SHOW_PAYMENT_CONFIRM_DIALOG));
+			JAPMessages.getString(MSG_SHOW_PAYMENT_CONFIRM_DIALOG),
+			JAPController.getInstance().getDontAskPayment());
 		m_cbxShowPaymentConfirmation.setFont(getFontSetting());
 		GridBagLayout advancedPanelLayout = new GridBagLayout();
 		panelAdvanced.setLayout(advancedPanelLayout);
@@ -418,7 +419,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		panelAdvanced.add(m_cbxShowPaymentConfirmation, advancedPanelConstraints);
 
 		m_cbxAllowNonAnonymousConnection = new  JCheckBox(
-			  JAPMessages.getString(MSG_ALLOW_DIRECT_CONNECTION));
+			  JAPMessages.getString(MSG_ALLOW_DIRECT_CONNECTION),
+			  JAPModel.getInstance().isPaymentViaDirectConnectionAllowed());
 		advancedPanelConstraints.gridy = 1;
 		advancedPanelConstraints.weighty = 1.0;
 		panelAdvanced.add(m_cbxAllowNonAnonymousConnection, advancedPanelConstraints);
@@ -1557,7 +1559,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						f = new File(f.getParent(), f.getName() + MyFileFilter.ACCOUNT_EXTENSION);
 					}
 
-					Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+					Document doc = XMLUtil.createDocument();
 					Element elemRoot = doc.createElement("root");
 					elemRoot.setAttribute("filetype", "JapAccountFile");
 					elemRoot.setAttribute("version", "1.0");
@@ -1569,7 +1571,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					{
 						XMLEncryption.encryptElement(elemAccount, strPassword);
 					}
-					String strOutput = XMLUtil.toString(doc);
+					String strOutput = XMLUtil.toString(XMLUtil.formatHumanReadable(doc));
 					FileOutputStream outStream = new FileOutputStream(f);
 					outStream.write(strOutput.getBytes());
 					outStream.close();
@@ -1634,10 +1636,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			File f = chooser.getSelectedFile();
 			try
 			{
-				DocumentBuilder b = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-				Document doc = b.parse(f);
+				Document doc = XMLUtil.readXMLDocument(f);
+				XMLUtil.removeComments(doc);
 				Element elemRoot = doc.getDocumentElement();
-				elemAccount = (Element) XMLUtil.getFirstChildByName(elemRoot, "Account");
+				elemAccount = (Element) XMLUtil.getFirstChildByName(elemRoot, PayAccount.XML_ELEMENT_NAME);
 
 				// maybe it was encrypted
 				if (elemAccount == null)

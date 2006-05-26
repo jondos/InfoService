@@ -75,17 +75,6 @@ public interface AnonService
 	 */
 	AnonChannel createChannel(int type) throws ConnectException;
 
-	/** Creates a new AnonChannel, which could be used like a normal TCP/IP connection
-	 *  to host:port.
-	 *  @param host Address of the server, which should be contacted
-	 *  @param port Port, to which connect to
-	 *  @return AnonChannel useful for exchange data with host:port
-	 *  @throws ConnectException if the Channel could not created
-	 *  @throws ToManyOpenChannels if there a to many open channels for the AnonService
-	 *
-	 */
-	AnonChannel createChannel(String host, int port) throws ConnectException;
-
 	/** Adds an AnonServiceEventListener. This listener will receive events like:
 	 *  ... For more information see {@link AnonServiceEventListener AnonServiceEventListener}.
 	 *  @param l Listener to add

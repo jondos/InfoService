@@ -33,7 +33,7 @@ import org.apache.xmlrpc.WebServer;
 import org.apache.xmlrpc.XmlRpcHandler;
 import anon.AnonChannel;
 import anon.AnonService;
-import anon.server.impl.AbstractChannel;
+import anon.shared.AbstractChannel;
 
 public class AnonServiceImplRemote implements XmlRpcHandler
 {

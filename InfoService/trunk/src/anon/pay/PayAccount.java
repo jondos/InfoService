@@ -5,15 +5,15 @@
  are permitted provided that the following conditions are met:
 
  - Redistributions of source code must retain the above copyright notice,
-  this list of conditions and the following disclaimer.
+ this list of conditions and the following disclaimer.
 
  - Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation and/or
-  other materials provided with the distribution.
+ this list of conditions and the following disclaimer in the documentation and/or
+ other materials provided with the distribution.
 
  - Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-  may be used to endorse or promote products derived from this software without specific
-  prior written permission.
+ may be used to endorse or promote products derived from this software without specific
+ prior written permission.
 
 
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
@@ -36,6 +36,7 @@ import org.bouncycastle.crypto.params.DSAParameters;
 import org.bouncycastle.crypto.params.DSAPrivateKeyParameters;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import anon.client.PacketCounter;
 import anon.crypto.IMyPrivateKey;
 import anon.crypto.IMyPublicKey;
 import anon.crypto.MyDSAPrivateKey;
@@ -47,7 +48,6 @@ import anon.pay.xml.XMLAccountInfo;
 import anon.pay.xml.XMLBalance;
 import anon.pay.xml.XMLEasyCC;
 import anon.pay.xml.XMLTransCert;
-import anon.server.impl.MuxSocket;
 import anon.util.Base64;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
@@ -59,6 +59,7 @@ import logging.LogType;
  * This class encapsulates one account and all additional data associated to one
  * account. This includes the key pair, the account number, the transfer certificates
  * for charging the account, cost confirmations and a balance certificate.
+
  *
  * For storing the account data in a file the {@link toXmlElement()}
  * method is provided. It is recommended to encrypt the output of this method
@@ -79,6 +80,8 @@ import logging.LogType;
  */
 public class PayAccount implements IXMLEncodable
 {
+	public static final String XML_ELEMENT_NAME = "Account";
+
 	/** contains zero ore more xml transfer certificates as XMLTransCert */
 	private Vector m_transCerts;
 
@@ -91,22 +94,21 @@ public class PayAccount implements IXMLEncodable
 	/** contains the private key associated with this account */
 	private IMyPrivateKey m_privateKey;
 
-	/** the signing instance */
-	//private JAPSignature m_signingInstance;
-
 	/** the number of bytes which have been used bot not confirmed yet */
 	private long m_currentBytes;
 
 	private Vector m_accountListeners = new Vector();
 
 	/**
-	 * internal value for spent bytes. Basically this is the same as spent in {@link anon.pay.xml.XMLBalance},
-	 * but the value in XMLBalance is calculated by the BI while this here is calculated
-	 * by the Jap. So the value here might be more up to date in case the XMLBalance
-	 * certificate is old.
+	 * internal value for spent bytes. Basically this is the same as spent in
+	 * {@link anon.pay.xml.XMLBalance}, but the value in XMLBalance is calculated
+	 * by the BI while this here is calculated by the Jap. So the value here might
+	 * be more up to date in case the XMLBalance certificate is old.
 	 */
 	private long m_mySpent;
+
 	private BI m_theBI;
+
 	private String m_strBiID;
 
 	public PayAccount(byte[] xmlData) throws Exception
@@ -128,15 +130,15 @@ public class PayAccount implements IXMLEncodable
 	}
 
 	/**
-	 * Creates a {@link PayAccount} Objekt from the account certificate and
-	 * the private key.
+	 * Creates a {@link PayAccount} Objekt from the account certificate and the
+	 * private key.
 	 *
-	 * @param certificate account certificate issued by the BI
-	 * @param privateKey the private key
+	 * @param certificate
+	 *          account certificate issued by the BI
+	 * @param privateKey
+	 *          the private key
 	 */
-	public PayAccount(XMLAccountCertificate certificate,
-					  IMyPrivateKey privateKey,
-					  BI theBI) throws Exception
+	public PayAccount(XMLAccountCertificate certificate, IMyPrivateKey privateKey, BI theBI) throws Exception
 	{
 		m_accountCertificate = certificate;
 		m_privateKey = privateKey;
@@ -146,7 +148,8 @@ public class PayAccount implements IXMLEncodable
 
 	private void setValues(Element elemRoot) throws Exception
 	{
-		if (! (elemRoot.getTagName().equals("Account") && (elemRoot.getAttribute("version").equals("1.0"))))
+		if (! (elemRoot.getTagName().equals(XML_ELEMENT_NAME) &&
+			   (elemRoot.getAttribute(XML_VERSION).equals("1.0"))))
 		{
 			throw new Exception("PayAccount wrong XML format");
 		}
@@ -209,8 +212,7 @@ public class PayAccount implements IXMLEncodable
 			str = XMLUtil.parseValue(elem, null);
 			BigInteger qInv = new BigInteger(Base64.decode(str));
 
-			m_privateKey = new MyRSAPrivateKey(modulus, publicExponent, privateExponent, p, q, dP, dQ,
-											   qInv);
+			m_privateKey = new MyRSAPrivateKey(modulus, publicExponent, privateExponent, p, q, dP, dQ, qInv);
 		}
 		else if (elemDsaKey != null)
 		{
@@ -229,8 +231,7 @@ public class PayAccount implements IXMLEncodable
 			elem = (Element) XMLUtil.getFirstChildByName(elemDsaKey, "X");
 			str = XMLUtil.parseValue(elem, null);
 			BigInteger x = new BigInteger(Base64.decode(str));
-			DSAPrivateKeyParameters param = new DSAPrivateKeyParameters(
-				x, new DSAParameters(p, q, g));
+			DSAPrivateKeyParameters param = new DSAPrivateKeyParameters(x, new DSAParameters(p, q, g));
 			m_privateKey = new MyDSAPrivateKey(param);
 		}
 		else
@@ -257,62 +258,62 @@ public class PayAccount implements IXMLEncodable
 	public Element toXmlElement(Document a_doc, String a_password)
 	{
 		try
-			{
-		if (a_password != null && a_password.trim().equals(""))
 		{
-			return this.toXmlElement(a_doc, null);
-		}
-		Element elemRoot = a_doc.createElement("Account");
-		elemRoot.setAttribute("version", "1.0");
-		Element elemTmp;
-
-		// import AccountCertificate XML Representation
-		elemTmp = m_accountCertificate.toXmlElement(a_doc);
-		elemRoot.appendChild(elemTmp);
-
-		// import Private Key XML Representation
-		elemTmp = m_privateKey.toXmlElement(a_doc);
-		elemRoot.appendChild(elemTmp);
-
-		//Encrypt account key if password is given
-		if (a_password != null)
-		{
-			try
+			if (a_password != null && a_password.trim().equals(""))
 			{
-				XMLEncryption.encryptElement(elemTmp, a_password);
+				return this.toXmlElement(a_doc, null);
 			}
-			catch (Exception e)
-			{
-				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Could not encrypt account key: " + e);
-			}
-		}
+			Element elemRoot = a_doc.createElement(XML_ELEMENT_NAME);
+			elemRoot.setAttribute(XML_VERSION, "1.0");
+			Element elemTmp;
 
-		// add transfer certificates
-		Element elemTransCerts = a_doc.createElement("TransferCertificates");
-		elemRoot.appendChild(elemTransCerts);
-		if (m_transCerts != null)
-		{
-			Enumeration enumer = m_transCerts.elements();
-			while (enumer.hasMoreElements())
-			{
-				XMLTransCert cert = (XMLTransCert) enumer.nextElement();
-				elemTransCerts.appendChild(cert.toXmlElement(a_doc));
-			}
-		}
-
-		if (m_accountInfo != null)
-		{
-			elemTmp = m_accountInfo.toXmlElement(a_doc);
+			// import AccountCertificate XML Representation
+			elemTmp = m_accountCertificate.toXmlElement(a_doc);
 			elemRoot.appendChild(elemTmp);
-		}
 
-		return elemRoot;
-			}
-			catch (Exception ex)
+			// import Private Key XML Representation
+			elemTmp = m_privateKey.toXmlElement(a_doc);
+			elemRoot.appendChild(elemTmp);
+
+			// Encrypt account key if password is given
+			if (a_password != null)
 			{
-				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Exception while creating PayAccount XML: " + ex);
-				return null;
+				try
+				{
+					XMLEncryption.encryptElement(elemTmp, a_password);
+				}
+				catch (Exception e)
+				{
+					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Could not encrypt account key: " + e);
+				}
 			}
+
+			// add transfer certificates
+			Element elemTransCerts = a_doc.createElement("TransferCertificates");
+			elemRoot.appendChild(elemTransCerts);
+			if (m_transCerts != null)
+			{
+				Enumeration enumer = m_transCerts.elements();
+				while (enumer.hasMoreElements())
+				{
+					XMLTransCert cert = (XMLTransCert) enumer.nextElement();
+					elemTransCerts.appendChild(cert.toXmlElement(a_doc));
+				}
+			}
+
+			if (m_accountInfo != null)
+			{
+				elemTmp = m_accountInfo.toXmlElement(a_doc);
+				elemRoot.appendChild(elemTmp);
+			}
+
+			return elemRoot;
+		}
+		catch (Exception ex)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Exception while creating PayAccount XML: " + ex);
+			return null;
+		}
 	}
 
 	public void addTransCert(XMLTransCert cert) throws Exception
@@ -323,7 +324,9 @@ public class PayAccount implements IXMLEncodable
 	/**
 	 * This is not just a setter method. If an accountInfo is already present,
 	 * only older information is overwritten with newer information.
-	 * @param info XMLAccountInfo
+	 *
+	 * @param info
+	 *          XMLAccountInfo
 	 */
 	public void setAccountInfo(XMLAccountInfo info) throws Exception
 	{
@@ -381,9 +384,9 @@ public class PayAccount implements IXMLEncodable
 	}
 
 	/**
-	 * Returns true when an accountInfo object exists.
-	 * New accounts don't have this, it is created when we first
-	 * fetch a balance certificate or sign the first CC.
+	 * Returns true when an accountInfo object exists. New accounts don't have
+	 * this, it is created when we first fetch a balance certificate or sign the
+	 * first CC.
 	 */
 	public boolean hasAccountInfo()
 	{
@@ -444,8 +447,8 @@ public class PayAccount implements IXMLEncodable
 	}
 
 	/**
-	 * Returns the initial amount of the account (i. e. the sum of all
-	 * incoming payment)
+	 * Returns the initial amount of the account (i. e. the sum of all incoming
+	 * payment)
 	 *
 	 * @return Gesamtsumme
 	 */
@@ -460,8 +463,8 @@ public class PayAccount implements IXMLEncodable
 
 	/**
 	 * Returns the current credit (i. e. deposit - spent) as certified by the BI.
-	 * It is possible that this value is outdated, so it may be a good idea to call
-	 * {@link Pay.fetchAccountInfo(long)} first.
+	 * It is possible that this value is outdated, so it may be a good idea to
+	 * call {@link Pay.fetchAccountInfo(long)} first.
 	 *
 	 * @return Guthaben
 	 */
@@ -476,8 +479,9 @@ public class PayAccount implements IXMLEncodable
 
 	/**
 	 * Returns the current credit (i. e. deposit - spent) as counted by the Jap
-	 * itself. It is possible that this value is outdated, so it may be a good idea
-	 * to call {@link updateCurrentBytes()} first.
+	 * itself. It is possible that this value is outdated, so it may be a good
+	 * idea to call {@link updateCurrentBytes()} first.
+	 *
 	 * @return long
 	 */
 	public long getCurrentCredit()
@@ -505,11 +509,12 @@ public class PayAccount implements IXMLEncodable
 	}
 
 	/**
-	 * Asks the MuxSocket for the current number of transferred bytes and
+	 * Asks the PacketCounter for the current number of transferred bytes and
 	 * updates the internal value.
+	 *
 	 * @return the updated currentBytes value
 	 */
-	public long updateCurrentBytes(MuxSocket currentMuxSock) throws Exception
+	public long updateCurrentBytes(PacketCounter a_packetCounter) throws Exception
 	{
 		// am I the active account?
 		if (PayAccountsFile.getInstance().getActiveAccount() != this)
@@ -517,7 +522,7 @@ public class PayAccount implements IXMLEncodable
 			throw new Exception("Error: Inactive account called to count used bytes!");
 		}
 
-		long tmp = currentMuxSock.getAndResetTransferredBytes();
+		long tmp = a_packetCounter.getAndResetBytesForPayment();
 		if (tmp > 0)
 		{
 			m_currentBytes += tmp;
@@ -554,13 +559,13 @@ public class PayAccount implements IXMLEncodable
 	{
 		Enumeration enumListeners;
 
-		//synchronized (m_accountListeners) // deadly for jdk 1.1.8...
+		// synchronized (m_accountListeners) // deadly for jdk 1.1.8...
 		{
 			/*
 			 * Clone the Vector as otherwise there would be a deadlock with at least
 			 * PayAccountsFile because of mutual listeners.
 			 */
-			enumListeners = ((Vector)m_accountListeners.clone()).elements();
+			enumListeners = ( (Vector) m_accountListeners.clone()).elements();
 		}
 
 		while (enumListeners.hasMoreElements())
@@ -611,7 +616,8 @@ public class PayAccount implements IXMLEncodable
 	/**
 	 * Request a transfer certificate from the BI
 	 *
-	 * @param accountNumber account number
+	 * @param accountNumber
+	 *          account number
 	 * @return xml transfer certificate
 	 * @throws Exception
 	 */
@@ -626,7 +632,7 @@ public class PayAccount implements IXMLEncodable
 		return transcert;
 	}
 
-	/**
+/**
 	 * Marks the account as updated so a ChangeEvent gets fired
 	 */
 	public void updated()
@@ -636,14 +642,14 @@ public class PayAccount implements IXMLEncodable
 
 	public BI getBI()
 	{
-		if(m_theBI==null)
+		if (m_theBI == null)
 			try
 			{
-				m_theBI=PayAccountsFile.getInstance().getBI(m_strBiID);
+				m_theBI = PayAccountsFile.getInstance().getBI(m_strBiID);
 			}
-		catch(Exception e)
-		{
-		}
+			catch (Exception e)
+			{
+			}
 		return m_theBI;
 	}
 }

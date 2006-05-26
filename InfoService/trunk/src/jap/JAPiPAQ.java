@@ -71,8 +71,6 @@ final public class JAPiPAQ
 		m_controller.addJAPObserver(view);
 		// Register the views where they are needed
 		m_controller.registerMainView(view);
-		// pre-initalize anon service
-		anon.server.AnonServiceImpl.init();
 		// initially start services
 		m_controller.initialRun();
 

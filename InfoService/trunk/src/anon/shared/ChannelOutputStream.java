@@ -1,5 +1,4 @@
-/*
- Copyright (c) 2000, The JAP-Team
+/* Copyright (c) 2000, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -25,10 +24,50 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package anon;
+package anon.shared;
 
-import java.net.ConnectException;
+import java.io.IOException;
+import java.io.OutputStream;
 
-final public class TooManyOpenChannelsException extends ConnectException
+final class ChannelOutputStream extends OutputStream
 {
+	//boolean m_bIsClosedByPeer=false;
+	boolean m_bIsClosed = false;
+	AbstractChannel m_channel = null;
+
+	protected ChannelOutputStream(AbstractChannel c)
+	{
+		m_channel = c;
+	}
+
+	//OutputStream Methods
+	public void write(int i) throws IOException
+	{
+		if ( /*m_bIsClosedByPeer||*/m_bIsClosed)
+		{
+			throw new IOException("Channel closed by peer");
+		}
+		byte[] buff = new byte[1];
+		buff[0] = (byte) i;
+		m_channel.send(buff, 1);
+	}
+
+	public void write(byte[] buff, int start, int len) throws IOException
+	{
+		if ( /*m_bIsClosedByPeer||*/m_bIsClosed)
+		{
+			throw new IOException("Channel closed by peer");
+		}
+		m_channel.send(buff, (short) len);
+	}
+
+	public void close()
+	{
+		m_bIsClosed = true;
+	}
+
+	void closedByPeer()
+	{
+		m_bIsClosed = true;
+	}
 }

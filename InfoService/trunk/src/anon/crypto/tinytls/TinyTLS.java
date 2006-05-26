@@ -61,7 +61,7 @@ import anon.crypto.MyRSASignature;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.ImmutableProxyInterface;
 import anon.infoservice.ListenerInterface;
-import anon.server.impl.ProxyConnection;
+import anon.shared.ProxyConnection;
 import anon.crypto.tinytls.ciphersuites.CipherSuite;
 import anon.crypto.tinytls.ciphersuites.DHE_DSS_WITH_3DES_CBC_SHA;
 import anon.crypto.tinytls.ciphersuites.DHE_DSS_WITH_AES_128_CBC_SHA;

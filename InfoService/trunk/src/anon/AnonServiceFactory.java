@@ -27,7 +27,7 @@
  */
 package anon;
 
-import anon.server.AnonServiceImpl;
+import anon.client.AnonClient;
 import anon.tor.Tor;
 import anon.xmlrpc.client.AnonServiceImplProxy;
 import anon.mixminion.Mixminion;
@@ -60,7 +60,7 @@ final public class AnonServiceFactory
 		{
 			if (ms_AnonService == null)
 			{
-				ms_AnonService = new AnonServiceImpl();
+				ms_AnonService = new AnonClient();
 			}
 			return ms_AnonService; //AnonServiceImpl.create();
 		}

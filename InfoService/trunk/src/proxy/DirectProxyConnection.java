@@ -52,7 +52,7 @@ import org.apache.commons.net.ftp.FTPFile;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.ProxyInterface;
-import anon.server.impl.ProxyConnection;
+import anon.shared.ProxyConnection;
 
 final class DirectProxyConnection implements Runnable
 {
