@@ -92,7 +92,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(OutDir)/JAPDll.dll"
+				OutputFile="$(OutDir)/japdll.dll"
 				Version="00.02.002"
 				LinkIncremental="1"
 				IgnoreAllDefaultLibraries="FALSE"
