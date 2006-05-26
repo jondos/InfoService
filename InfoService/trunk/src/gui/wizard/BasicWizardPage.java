@@ -36,8 +36,9 @@ import java.awt.Insets;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+
+import gui.dialog.JAPDialog;
 
 public  class BasicWizardPage extends JPanel implements WizardPage
 	{
@@ -122,10 +123,9 @@ public  class BasicWizardPage extends JPanel implements WizardPage
 		}
 
 	public void showInformationDialog(String message)
-		{
-			JOptionPane.showMessageDialog(this, message,JAPMessages.getString("information"),
-																		JOptionPane.INFORMATION_MESSAGE);
-		}
+	{
+		JAPDialog.showMessageDialog(this, message);
+	}
 
 	public ImageIcon getIcon()
 		{

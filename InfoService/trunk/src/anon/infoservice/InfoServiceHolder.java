@@ -179,10 +179,16 @@ public class InfoServiceHolder extends Observable
 				 * that some values of the infoservice, like listener interfaces or the name have been
 				 * changed, so we always update the internal stored pererred infoservice
 				 */
+				if (m_preferredInfoService == null || !m_preferredInfoService.equals(a_preferredInfoService))
+				{
+					/** Todo: find out why default InfoService is switched */
+					//new Exception().printStackTrace();
+				}
 				m_preferredInfoService = a_preferredInfoService;
 				setChanged();
 				notifyObservers(new InfoServiceHolderMessage(InfoServiceHolderMessage.
 					PREFERRED_INFOSERVICE_CHANGED, m_preferredInfoService));
+
 			LogHolder.log(LogLevel.INFO, LogType.NET,
 						  "Preferred InfoService is now: " + m_preferredInfoService.getName());
 		}
@@ -304,8 +310,7 @@ public class InfoServiceHolder extends Observable
 				/* take a new one from the list */
 				currentInfoService = (InfoServiceDBEntry) (infoServiceList.firstElement());
 				LogHolder.log(LogLevel.INFO, LogType.NET,
-							  "InfoServiceHolder: fetchInformation: Trying InfoService: " +
-							  currentInfoService.getName());
+							  "Trying InfoService: " + currentInfoService.getName());
 			}
 			try
 			{
@@ -362,7 +367,7 @@ public class InfoServiceHolder extends Observable
 				InfoServiceDBEntry preferredInfoService = getPreferredInfoService();
 				if (preferredInfoService != null)
 				{
-					if (!currentInfoService.getId().equals(preferredInfoService.getId()))
+					if (!currentInfoService.equals(preferredInfoService))
 					{
 						/* update only, if it is another infoservice */
 						setPreferredInfoService(currentInfoService);
@@ -386,7 +391,7 @@ public class InfoServiceHolder extends Observable
 		}
 		/* could not find an infoservice with the needed information */
 		throw (new Exception(
-			"InfoServiceHolder: fetchInformation: No InfoService with the needed information available."));
+			"No InfoService with the needed information available."));
 	}
 
 	/**
@@ -543,7 +548,7 @@ public class InfoServiceHolder extends Observable
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "InfoServiceHolder: getNewVersionNumber: No InfoService with the needed information available.");
+						  "No InfoService with the needed information available.");
 			return null;
 		}
 	}

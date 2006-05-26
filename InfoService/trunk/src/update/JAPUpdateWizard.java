@@ -41,6 +41,7 @@ import HTTPClient.HTTPResponse;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.ListenerInterface;
+import anon.infoservice.ImmutableProxyInterface;
 import gui.JAPMessages;
 import gui.wizard.BasicWizard;
 import gui.wizard.BasicWizardHost;
@@ -158,7 +159,16 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 		{
 			if (!updateAborted)
 			{
-				downloadPage.showInformationDialog(JAPMessages.getString("updateInformationMsgStep2"));
+				if (!JAPModel.getInstance().isUpdateViaDirectConnectionAllowed() &&
+					!JAPController.getInstance().isAnonConnected())
+				{
+					downloadPage.showInformationDialog(JAPMessages.getString("updateInformationMsgStep2")
+						+ "<br>" +  JAPMessages.getString("updateInformationMsgStep2_noDirectConn"));
+				}
+				else
+				{
+					downloadPage.showInformationDialog(JAPMessages.getString("updateInformationMsgStep2"));
+				}
 			}
 			resetChanges();
 			return;
@@ -438,10 +448,29 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 				/* HTTPConnectionFactory has the right proxy settings, it is updated for the infoservice.
 				 * This connection is like the infoservice connection not anonymized by the JAP.
 				 */
-				HTTPConnection connection = HTTPConnectionFactory.getInstance().createHTTPConnection(
-					targetInterface);
-				HTTPResponse response = connection.Get(fileName);
-				if (response.getStatusCode() != 200)
+				HTTPConnection connection;
+				HTTPResponse response = null;
+				ImmutableProxyInterface[] proxyInterfaces = JAPModel.getInstance().getUpdateProxyInterface();
+
+				for (int i = 0; i < proxyInterfaces.length; i++)
+				{
+					try
+					{
+						connection = HTTPConnectionFactory.getInstance().createHTTPConnection(
+							targetInterface, proxyInterfaces[i]);
+						response = connection.Get(fileName);
+					}
+					catch (Exception a_e)
+					{
+						LogHolder.log(LogLevel.WARNING, LogType.NET, a_e);
+						continue;
+					}
+					if (response.getStatusCode() == 200)
+					{
+						break;
+					}
+				}
+				if (response == null || response.getStatusCode() != 200)
 				{
 					/* if someone waiting for the end of the download, notify him */
 					synchronized (this)
