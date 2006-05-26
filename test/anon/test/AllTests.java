@@ -53,7 +53,6 @@ public class AllTests
 		suite.addTest(anon.infoservice.test.AllTests.suite());
 		suite.addTest(anon.util.test.AllTests.suite());
 		suite.addTest(anon.crypto.test.AllTests.suite());
-		suite.addTest(anon.server.impl.test.AllTests.suite());
 		return suite;
 	}
 
