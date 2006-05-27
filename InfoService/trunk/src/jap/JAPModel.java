@@ -337,12 +337,13 @@ public final class JAPModel
 	 */
 	private ImmutableProxyInterface[] getProxyInterface(int a_component)
 	{
-		ProxyInterface[] interfaces = new ProxyInterface[4];
+		//ProxyInterface[] interfaces = new ProxyInterface[4];
+		ProxyInterface[] interfaces = new ProxyInterface[3];
 		interfaces[0] = getProxyInterface();
 		interfaces[1] = null;
 		interfaces[2] = new ProxyInterface("localhost", getHttpListenerPortNumber(), null); // AN.ON
-		interfaces[3] = new ProxyInterface("localhost", getHttpListenerPortNumber(),
-										   ProxyInterface.PROTOCOL_TYPE_SOCKS, null); // TOR
+		//interfaces[3] = new ProxyInterface("localhost", getHttpListenerPortNumber(),
+			//							   ProxyInterface.PROTOCOL_TYPE_SOCKS, null); // TOR
 		if ((DIRECT_CONNECTION_PAYMENT == a_component && !isPaymentViaDirectConnectionAllowed()) ||
 			(DIRECT_CONNECTION_INFOSERVICE == a_component && !isInfoServiceViaDirectConnectionAllowed()) ||
 			(DIRECT_CONNECTION_UPDATE == a_component && !isUpdateViaDirectConnectionAllowed()))
@@ -354,7 +355,8 @@ public final class JAPModel
 				return null;
 			}
 			// ok, there seems to be an anonymous channel
-			return new ProxyInterface[]{interfaces[2], interfaces[3]};
+			//return new ProxyInterface[]{interfaces[2], interfaces[3]};
+			return new ProxyInterface[]{interfaces[2]};
 		}
 		else if (!m_connectionChecker.checkAnonConnected())
 		{
@@ -370,7 +372,8 @@ public final class JAPModel
 		if (interfaces[0] == null)
 		{
 			// no proxy/firewall is set
-			return new ProxyInterface[]{interfaces[1], interfaces[2], interfaces[3]};
+			//return new ProxyInterface[]{interfaces[1], interfaces[2], interfaces[3]};
+			return new ProxyInterface[]{interfaces[1], interfaces[2]};
 		}
 
 		return interfaces;
