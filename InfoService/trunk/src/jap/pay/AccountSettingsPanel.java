@@ -50,6 +50,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -222,6 +223,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		"_accountAlreadyExisting";
 	private static final String MSG_ALLOW_DIRECT_CONNECTION = AccountSettingsPanel.class.getName() +
 		"_allowDirectConnection";
+	private static final String MSG_BI_CONNECTION_LOST = AccountSettingsPanel.class.getName() +
+		"_biConnectionLost";
 
 
 	private JButton m_btnCreateAccount;
@@ -923,8 +926,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			};
 
 			WorkerContentPane fetchTanPane = new WorkerContentPane(d, JAPMessages.getString(MSG_FETCHINGTAN),
-				methodSelectionPane,
-				fetchTan);
+				methodSelectionPane, fetchTan);
 			fetchTanPane.setInterruptThreadSafe(false);
 
 			final PaymentInfoPane paymentInfoPane = new PaymentInfoPane(d, fetchTanPane)
@@ -1005,9 +1007,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			};
 
 			final WorkerContentPane sendPassivePane = new WorkerContentPane(d,
-				JAPMessages.getString(MSG_SENDINGPASSIVE),
-				passivePaymentPane,
-				sendPassive)
+				JAPMessages.getString(MSG_SENDINGPASSIVE), passivePaymentPane, sendPassive)
 			{
 				public boolean isSkippedAsNextContentPane()
 				{
@@ -1022,7 +1022,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					}
 				}
 			};
-			sendPassivePane.getButtonCancel().setVisible(false);
 
 			final SimpleWizardContentPane sentPane = new SimpleWizardContentPane(d,
 				JAPMessages.getString(MSG_SENTPASSIVE), null, new Options(sendPassivePane))
@@ -1060,8 +1059,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			if (methodSelectionPane.getSelectedPaymentOption() != null &&
 				passivePaymentPane.getButtonValue() == JAPDialog.RETURN_VALUE_OK)
 			{
-				if (methodSelectionPane.getSelectedPaymentOption().getName().toLowerCase().indexOf(
-					"creditcard") != -1)
+				if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
+					XMLPaymentOption.OPTION_ACTIVE))
 				{
 					doGetStatement(selectedAccount);
 				}
@@ -1209,35 +1208,54 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		keyWorkerPane.getButtonCancel().setEnabled(false);
 
 		m_bReady = true;
+
 		final WorkerContentPane.IReturnRunnable doIt = new WorkerContentPane.IReturnRunnable()
 		{
-			PayAccount m_payAccount;
+			private PayAccount m_payAccount;
+			private IOException m_connectionError;
+
 			public void run()
 			{
 				m_bReady = false;
-				try
-				{
-					m_payAccount = PayAccountsFile.getInstance().createAccount(
-						(BI) fetchBiWorker.getValue(),
-						JAPModel.getInstance().getPaymentProxyInterface(),
-						(DSAKeyPair) keyWorkerPane.getValue());
 
-					m_payAccount.fetchAccountInfo(JAPModel.getInstance().getPaymentProxyInterface());
-				}
-				catch (Exception ex)
+				while (!Thread.currentThread().isInterrupted())
 				{
-					//User has pressed cancel
-					if (!Thread.currentThread().isInterrupted() && ex.getMessage() != null &&
-						!ex.getMessage().equals("CAPTCHA"))
+					try
 					{
-						showPIerror(d.getContentPane(), ex);
-						Thread.currentThread().interrupt();
+						m_payAccount = PayAccountsFile.getInstance().createAccount(
+							(BI) fetchBiWorker.getValue(),
+							JAPModel.getInstance().getPaymentProxyInterface(),
+							(DSAKeyPair) keyWorkerPane.getValue());
+
+						m_payAccount.fetchAccountInfo(JAPModel.getInstance().getPaymentProxyInterface());
+						break;
+					}
+					catch (IOException a_e)
+					{
+						m_connectionError = a_e;
+					}
+					catch (Exception ex)
+					{
+
+						if (!Thread.currentThread().isInterrupted() && ex.getMessage() != null &&
+							!ex.getMessage().equals("CAPTCHA"))
+						{
+							//User has not pressed cancel and no io exception occured
+							showPIerror(d.getContentPane(), ex);
+							Thread.currentThread().interrupt();
+							break;
+						}
 					}
 				}
+				m_connectionError = null;
 			}
 
 			public Object getValue()
 			{
+				if (m_connectionError != null)
+				{
+					return m_connectionError;
+				}
 				return m_payAccount;
 			}
 		};
@@ -1273,6 +1291,18 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		{
 			public void componentShown(ComponentEvent a_event)
 			{
+				try
+				{
+					if (doIt.getValue() instanceof IOException)
+					{
+						captcha.printErrorStatusMessage(
+											  JAPMessages.getString(MSG_BI_CONNECTION_LOST), LogType.NET);
+					}
+				}
+				catch (Exception a_e)
+				{
+
+				}
 				m_bDoNotCloseDialog = false;
 			}
 	});
