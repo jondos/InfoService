@@ -2433,7 +2433,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			}
 
 			clearStatusMessage();
-			bestSize = strMessage.length();
+			bestSize = 0;
 			currentSize = strMessage.length() / 2;
 			for (int i = 0; currentSize > 1; i++)
 			{
@@ -2445,14 +2445,15 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 				dummyLabel.setText(strMessage.substring(0, currentSize) + MORE_POINTS);
 				if (dummyLabel.getPreferredSize().width <= m_lblMessage.getSize().width)
 				{
-					bestSize = currentSize;
-					currentSize = bestSize + (bestSize / (i + 2));
+					bestSize = Math.max(bestSize, currentSize);
+					currentSize += (currentSize / (i + 2));
 				}
 				else
 				{
 					currentSize /= 2;
 				}
 			}
+
 			if (bestSize <= 5)
 			{
 				strMessage = MORE_POINTS;
@@ -2461,6 +2462,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			{
 				strMessage = strMessage.substring(0, bestSize) + MORE_POINTS;
 			}
+
 			strHref =  " href=\"\"";
 			m_lblMessage.setToolTipText(JAPMessages.getString(MSG_SEE_FULL_MESSAGE));
 			m_linkedDialog = new LinkedDialog(a_strMessage, strMessageTitle,
