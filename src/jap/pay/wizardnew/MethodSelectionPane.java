@@ -28,6 +28,7 @@
 package jap.pay.wizardnew;
 
 import java.util.Enumeration;
+import java.util.StringTokenizer;
 import java.util.Vector;
 
 import java.awt.Container;
@@ -48,10 +49,9 @@ import gui.dialog.DialogContentPane;
 import gui.dialog.DialogContentPane.IWizardSuitable;
 import gui.dialog.JAPDialog;
 import gui.dialog.WorkerContentPane;
+import jap.JAPConstants;
 import jap.JAPController;
 import logging.LogType;
-import jap.JAPConstants;
-import java.util.StringTokenizer;
 
 public class MethodSelectionPane extends DialogContentPane implements IWizardSuitable, ActionListener
 {
