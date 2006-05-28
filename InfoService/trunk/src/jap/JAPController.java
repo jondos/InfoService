@@ -77,6 +77,7 @@ import anon.tor.TorAnonServerDescription;
 import anon.util.IPasswordReader;
 import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
+import anon.util.IMiscPasswordReader;
 import forward.server.ForwardServerManager;
 import javax.swing.SwingUtilities;
 import gui.JAPDll;
@@ -94,6 +95,7 @@ import logging.LogType;
 import platform.AbstractOS;
 import proxy.DirectProxy;
 import update.JAPUpdateWizard;
+import java.security.SecureRandom;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -490,7 +492,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 *  @param a_strJapConfFile - file containing the Configuration. If null $(user.home)/jap.conf or ./jap.conf is used.
 	 *  @param loadPay does this JAP support Payment ?
 	 */
-	public synchronized void loadConfigFile(String a_strJapConfFile, boolean loadPay, JAPSplash a_splash)
+	public synchronized void loadConfigFile(String a_strJapConfFile, boolean loadPay, final JAPSplash a_splash)
 	{
 		String japConfFile = a_strJapConfFile;
 		boolean success = false;
@@ -911,77 +913,96 @@ public final class JAPController extends Observable implements IProxyListener, O
 							}
 						}
 
-						PayAccountsFile.init(elemAccounts);
-						Vector encrypted = PayAccountsFile.getInstance().getEncryptedAccounts();
+						final JAPDialog dialog = new JAPDialog(a_splash,
+							JAPMessages.getString(MSG_ACCPASSWORDENTERTITLE), true);
+						dialog.setDefaultCloseOperation(JAPDialog.HIDE_ON_CLOSE);
+						PasswordContentPane temp = new PasswordContentPane(
+											  dialog, PasswordContentPane.PASSWORD_ENTER,
+											  JAPMessages.getString(
+							MSG_ACCPASSWORDENTER, new Long(Long.MAX_VALUE)));
+						temp.updateDialog();
+						dialog.pack();
+						final Hashtable cachedPasswords = new Hashtable();
+						IMiscPasswordReader passwordReader = new IMiscPasswordReader()
+						{
+							private Vector passwordsToTry = new Vector();
 
-						if (encrypted.size() > 0)
-						{
-							a_splash.dispose();
-						}
-						boolean bAlreadyDecrypted = false;
-						for (int j = 0; j < encrypted.size(); j++)
-						{
-							boolean decrypted = false;
-							Element elemAccount = (Element) encrypted.elementAt(j);
-							Node elemAccountCert =
-								XMLUtil.getFirstChildByName(elemAccount, "AccountCertificate");
-							Node elemAccountNr = XMLUtil.getFirstChildByName(elemAccountCert, "AccountNumber");
-							long accNr = Long.parseLong(XMLUtil.parseValue(elemAccountNr, "-1"));
-							JAPDialog d;
-							PasswordContentPane p;
-							/** @todo cache given passwords, if there are accounts encrypted with different passwords */
-							while (!decrypted)
+							public String readPassword(Object a_message)
 							{
-								if (getPaymentPassword() != null)
-								{
-									LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Decrypting account " + accNr);
+								PasswordContentPane panePassword;
+								String password;
+								panePassword = new PasswordContentPane(
+									dialog, PasswordContentPane.PASSWORD_ENTER,
+									JAPMessages.getString(MSG_ACCPASSWORDENTER, a_message));
+								panePassword.setDefaultButtonOperation(PasswordContentPane.
+										ON_CLICK_HIDE_DIALOG);
 
-									if (PayAccountsFile.getInstance().decryptAccount(accNr,
-										getPaymentPassword()))
-									{
-										break;
-									}
+								if (passwordsToTry == null)
+								{
+									return null;
 								}
-								d = new JAPDialog( (Component)null,
-												  JAPMessages.getString(MSG_ACCPASSWORDENTERTITLE), true);
-								if (!bAlreadyDecrypted)
-								{
-									p = new PasswordContentPane(d, PasswordContentPane.PASSWORD_ENTER,
-										JAPMessages.getString(MSG_ACCPASSWORDENTER));
 
+								if (cachedPasswords.containsKey(a_message) || cachedPasswords.size() == 0)
+								{
+									while (true)
+									{
+										JAPDll.setWindowOnTop(a_splash, a_splash.getName(), true);
+										password = panePassword.readPassword(null);
+										JAPDll.setWindowOnTop(a_splash, a_splash.getName(), false);
+										if (password == null)
+										{
+											if (JAPDialog.showYesNoDialog(
+												dialog, JAPMessages.getString(MSG_LOSEACCOUNTDATA)))
+											{
+												// user clicked cancel
+												passwordsToTry = null;
+												// do not use the password from this account
+												cachedPasswords.remove(a_message);
+												break;
+											}
+											else
+											{
+												continue;
+											}
+										}
+										else
+										{
+											break;
+										}
+									}
+									if (password != null)
+									{
+										cachedPasswords.put(a_message, password);
+									}
 								}
 								else
 								{
-									p = new PasswordContentPane(d, PasswordContentPane.PASSWORD_ENTER,
-										JAPMessages.getString(MSG_REPEAT_ENTER_ACCOUNT_PASSWORD));
-
-								}
-
-								p.updateDialog();
-								d.pack();
-								d.setVisible(true);
-								//Check if cancel button was pressed
-								if (!p.hasValidValue())
-								{
-									if (JAPDialog.showYesNoDialog(
-										d, JAPMessages.getString(MSG_LOSEACCOUNTDATA)))
+									if (passwordsToTry.size() == 0)
 									{
-										decrypted = true;
+										Enumeration enumCachedPasswords = cachedPasswords.elements();
+										while (enumCachedPasswords.hasMoreElements())
+										{
+											passwordsToTry.addElement(enumCachedPasswords.nextElement());
+										}
 									}
-									else
+									password = (String)passwordsToTry.elementAt(passwordsToTry.size() - 1);
+									passwordsToTry.removeElementAt(passwordsToTry.size() - 1);
+
+									if (passwordsToTry.size() == 0)
 									{
-										continue;
+										cachedPasswords.put(a_message, password);
 									}
 								}
-								setPaymentPassword(new String(p.getPassword()));
-								LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Decrypting account " + accNr);
 
-								if (PayAccountsFile.getInstance().decryptAccount(accNr, getPaymentPassword()))
-								{
-									bAlreadyDecrypted = true;
-									decrypted = true;
-								}
+								return password;
 							}
+						};
+						PayAccountsFile.init(elemAccounts, passwordReader);
+						dialog.dispose();
+						if (cachedPasswords.size() > 0)
+						{
+							// choose any password from the working ones
+							setPaymentPassword((String)cachedPasswords.elements().nextElement());
 						}
 					}
 				}
@@ -1730,7 +1751,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 			if (!m_jobWasInterrupted)
 			{
 				/* job was not canceled -> we have to do it */
-				setServerMode(m_startServer, bRetryOnError);
+				try
+				{
+					setServerMode(m_startServer, bRetryOnError);
+				}
+				catch (Throwable a_e)
+				{
+					LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
+								  "Error while setting server mode to " + m_startServer + "!", a_e);
+				}
 				synchronized (m_changeAnonModeJobs)
 				{
 					/* remove ourself from the job-queue */
@@ -2358,6 +2387,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 							JAPModel.getInstance().getConfigFile()), LogType.MISC);
 					}
 					getView().setEnabled(false);
+					// disallow InfoService traffic
+					JAPModel.getInstance().setInfoServiceDisabled(true);
+					// do not show direct connection warning dialog
 					DirectProxy.setAllowUnprotectedConnectionCallback(null);
 
 					if (bShowConfigSaveErrorMsg) // make a hard shutdown in case of an update...

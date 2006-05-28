@@ -51,9 +51,12 @@ import org.w3c.dom.Element;
 
 import anon.util.Base64;
 import anon.util.XMLUtil;
+import anon.util.XMLParseException;
 
 final public class MyDSAPrivateKey extends AbstractPrivateKey implements DSAPrivateKey, IMyPrivateKey
 {
+	public static final String XML_ELEMENT_NAME = "DSAPrivateKey";
+
 	private BigInteger m_X;
 	private MyDSAParams m_params;
 
@@ -72,7 +75,32 @@ final public class MyDSAPrivateKey extends AbstractPrivateKey implements DSAPriv
 		{
 			throw new InvalidKeyException("IOException while decoding private key");
 		}
+	}
 
+	public MyDSAPrivateKey(Element a_xmlElement) throws InvalidKeyException, XMLParseException
+	{
+		if (a_xmlElement == null || !a_xmlElement.getNodeName().equals(XML_ELEMENT_NAME))
+		{
+			throw new XMLParseException(XML_ELEMENT_NAME, "Element is null or has wrong name!");
+		}
+
+		Element elem = (Element) XMLUtil.getFirstChildByName(a_xmlElement, "G");
+		String str = XMLUtil.parseValue(elem, null);
+		BigInteger g = new BigInteger(Base64.decode(str));
+
+		elem = (Element) XMLUtil.getFirstChildByName(a_xmlElement, "P");
+		str = XMLUtil.parseValue(elem, null);
+		BigInteger p = new BigInteger(Base64.decode(str));
+
+		elem = (Element) XMLUtil.getFirstChildByName(a_xmlElement, "Q");
+		str = XMLUtil.parseValue(elem, null);
+		BigInteger q = new BigInteger(Base64.decode(str));
+
+		elem = (Element) XMLUtil.getFirstChildByName(a_xmlElement, "X");
+		str = XMLUtil.parseValue(elem, null);
+		m_X = new BigInteger(Base64.decode(str));
+		m_params = new MyDSAParams(
+			  new DSAPrivateKeyParameters(m_X, new DSAParameters(p, q, g)).getParameters());
 	}
 
 	public MyDSAPrivateKey(DSAPrivateKeyParameters keyParams)
@@ -173,7 +201,7 @@ final public class MyDSAPrivateKey extends AbstractPrivateKey implements DSAPriv
 	 */
 	public Element toXmlElement(Document a_doc)
 	{
-		Element elemPrivKey = a_doc.createElement("DSAPrivateKey");
+		Element elemPrivKey = a_doc.createElement(XML_ELEMENT_NAME);
 		Element elem = a_doc.createElement("G");
 		elemPrivKey.appendChild(elem);
 		XMLUtil.setValue(elem, Base64.encodeBytes(m_params.getG().toByteArray()));

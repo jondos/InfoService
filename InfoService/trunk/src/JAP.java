@@ -32,23 +32,25 @@
  *  on a Macintosh to register the MRJ Handler.
  *
  */
-import gui.JAPAWTMsgBox;
-import jap.JAPConstants;
-import jap.JAPController;
-import jap.JAPDebug;
-import gui.JAPMessages;
-import jap.JAPModel;
-import jap.JAPNewView;
-import jap.JAPSplash;
-import jap.JAPViewIconified;
+import java.security.SecureRandom;
 
 import java.awt.Frame;
 import javax.swing.SwingUtilities;
 
+import anon.client.crypto.KeyPool;
+import gui.JAPAWTMsgBox;
+import gui.JAPDll;
+import gui.JAPMessages;
+import jap.JAPConstants;
+import jap.JAPController;
+import jap.JAPDebug;
+import jap.JAPModel;
+import jap.JAPNewView;
+import jap.JAPSplash;
+import jap.JAPViewIconified;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import gui.JAPDll;
 
 /** This is the main class of the JAP project. It starts everything. It can be inherited by another
  *  class that wants to initialize platform dependend features, e.g. see
@@ -130,6 +132,18 @@ public class JAP extends Frame
 
 		// Show splash screen
 		JAPSplash splash = new JAPSplash(this);
+
+		// initialise secure random generators
+		Thread secureRandomThread = new Thread()
+		{
+			public void run()
+			{
+				KeyPool.start();
+				new SecureRandom().nextInt();
+			}
+		};
+		secureRandomThread.setPriority(Thread.MIN_PRIORITY);
+		secureRandomThread.start();
 
 		// Test for Swing
 		try
@@ -308,6 +322,14 @@ public class JAP extends Frame
 					break;
 				}
 			}
+		}
+		try
+		{
+				secureRandomThread.join();
+		}
+		catch (InterruptedException a_e)
+		{
+			LogHolder.log(LogLevel.NOTICE, LogType.CRYPTO, a_e);
 		}
 		if (bSystray)
 		{

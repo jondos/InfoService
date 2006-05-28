@@ -51,9 +51,13 @@ import org.w3c.dom.Node;
 
 import anon.util.Base64;
 import anon.util.XMLUtil;
+import anon.util.IMiscPasswordReader;
+import anon.util.SingleStringPasswordReader;
 
 final public class XMLEncryption
 {
+	public static final String XML_ELEMENT_NAME = "EncryptedData";
+
 	private static final int SALT_SIZE = 20;
 	private static final int MIN_ITERATIONS = 1000;
 	private XMLEncryption()
@@ -100,7 +104,7 @@ final public class XMLEncryption
 		// initialize XML-Encryption-Standard structure
 		Document doc = elemPlain.getOwnerDocument();
 		Node nodeParent = elemPlain.getParentNode();
-		Element elemCrypt = doc.createElement("EncryptedData");
+		Element elemCrypt = doc.createElement(XML_ELEMENT_NAME);
 		elemCrypt.setAttribute("Type", "http://www.w3.org/2001/04/xmlenc#Element");
 		elemCrypt.setAttribute("xmlns", "http://www.w3.org/2001/04/xmlenc#");
 		Element elemAlgo = doc.createElement("EncryptionMethod");
@@ -228,10 +232,21 @@ final public class XMLEncryption
 	 * @return Element
 	 * @author Bastian Voigt
 	 */
-	public static Element decryptElement(Element elemCrypt, String password) throws Exception
+	public static Element decryptElement(Element elemCrypt, final String password) throws Exception
+	{
+		return decryptElement(elemCrypt, new SingleStringPasswordReader(password));
+	}
+
+
+	public static Element decryptElement(Element elemCrypt, IMiscPasswordReader a_passwordReader) throws Exception
 	{
 		Document doc = elemCrypt.getOwnerDocument();
 		Node nodeParent = elemCrypt.getParentNode();
+
+		if (a_passwordReader == null)
+		{
+			a_passwordReader = new SingleStringPasswordReader("");
+		}
 
 		// get actual ciphertext from xml structure
 		String strType = elemCrypt.getAttribute("Type");
@@ -255,22 +270,31 @@ final public class XMLEncryption
 		byte[] barOutput = null;
 		Document doc2 = null;
 		Element elemPlain = null;
-		try
+		String password;
+		Exception ex = null;
+		while ((password = a_passwordReader.readPassword(null)) != null)
 		{
-			// decrypt
-			barOutput = codeDataCTS(false, barInput, generatePBEKey(password, barSalt));
+			try
+			{
 
-			// parse decrypted XML
-			DocumentBuilder parser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-			doc2 = parser.parse(new ByteArrayInputStream(barOutput));
+				// decrypt
+				barOutput = codeDataCTS(false, barInput, generatePBEKey(password, barSalt));
 
-			elemPlain = (Element) XMLUtil.importNode(doc, doc2.getDocumentElement(), true);
+				// parse decrypted XML
+				doc2 = XMLUtil.toXMLDocument(barOutput);
+				elemPlain = (Element) XMLUtil.importNode(doc, doc2.getDocumentElement(), true);
+				ex = null;
+				break;
+			}
+			catch (Exception a_e)
+			{
+				ex = a_e;
+			}
 		}
-		catch (Exception ex)
+		if (ex != null)
 		{
 			throw new IOException("Exception while decrypting (maybe password wrong): " + ex.toString());
 		}
-
 		// remove ciphertext from document and add plaintext at the right position
 		nodeParent.removeChild(elemCrypt);
 		nodeParent.appendChild(elemPlain);
@@ -331,8 +355,9 @@ final public class XMLEncryption
 
 		// initialize XML-Encryption-Standard structure
 		Document doc = elemPlain.getOwnerDocument();
+
 		Node nodeParent = elemPlain.getParentNode();
-		Element elemCrypt = doc.createElement("EncryptedData");
+		Element elemCrypt = doc.createElement(XML_ELEMENT_NAME);
 		elemCrypt.setAttribute("Type", "http://www.w3.org/2001/04/xmlenc#Element");
 		elemCrypt.setAttribute("xmlns", "http://www.w3.org/2001/04/xmlenc#");
 		Element elemAlgo = doc.createElement("EncryptionMethod");
@@ -357,6 +382,7 @@ final public class XMLEncryption
 		elemValue = doc.createElement("CipherValue");
 		elemCipher.appendChild(elemValue);
 		XMLUtil.setValue(elemValue, Base64.encodeBytes(barOutput));
+
 
 		nodeParent.removeChild(elemPlain);
 		nodeParent.appendChild(elemCrypt);
