@@ -157,7 +157,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_cbDummyTraffic.setSelected(false);
 		m_sliderDummyTrafficIntervall.setEnabled(false);
 		m_cbAutoConnect.setSelected(false);
-		m_cbAutoReConnect.setSelected(false);
+		m_cbAutoReConnect.setSelected(true);
 	}
 
 	protected void onRootPanelShown()

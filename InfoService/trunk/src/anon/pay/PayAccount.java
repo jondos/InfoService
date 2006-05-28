@@ -546,15 +546,21 @@ public class PayAccount implements IXMLEncodable
 
 	/**
 	 * Requests an AccountInfo XML structure from the BI.
-	 *
+	 * @param a_bForce if the update is forced; if not, it might be prevented by
+	 * PayAccountsFile.isBalanceAutoUpdateEnabled()
 	 * @throws Exception
 	 * @return XMLAccountInfo
 	 * @todo switch SSL on
 	 * @throws java.lang.SecurityException if the account is encrypted an not usable
 	 */
-	public XMLAccountInfo fetchAccountInfo(ImmutableProxyInterface[] a_proxys)
+	public XMLAccountInfo fetchAccountInfo(ImmutableProxyInterface[] a_proxys, boolean a_bForce)
 		throws SecurityException, Exception
 	{
+		if (!a_bForce && !PayAccountsFile.getInstance().isBalanceAutoUpdateEnabled())
+		{
+			return null;
+		}
+
 		if (getPrivateKey() == null)
 		{
 			throw new SecurityException("Account is encrypted and not usable!");

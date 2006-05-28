@@ -179,11 +179,6 @@ public class InfoServiceHolder extends Observable
 				 * that some values of the infoservice, like listener interfaces or the name have been
 				 * changed, so we always update the internal stored pererred infoservice
 				 */
-				if (m_preferredInfoService == null || !m_preferredInfoService.equals(a_preferredInfoService))
-				{
-					/** Todo: find out why default InfoService is switched */
-					//new Exception().printStackTrace();
-				}
 				m_preferredInfoService = a_preferredInfoService;
 				setChanged();
 				notifyObservers(new InfoServiceHolderMessage(InfoServiceHolderMessage.
@@ -370,7 +365,8 @@ public class InfoServiceHolder extends Observable
 					if (!currentInfoService.equals(preferredInfoService))
 					{
 						/* update only, if it is another infoservice */
-						setPreferredInfoService(currentInfoService);
+						//setPreferredInfoService(currentInfoService);
+						/** @todo Weird, this switches the preferred IS!! Find out why this was done...*/
 					}
 				}
 				else
