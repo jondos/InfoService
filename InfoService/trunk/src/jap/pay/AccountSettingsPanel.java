@@ -1070,8 +1070,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			}
 		};
 
+
+
 		final SimpleWizardContentPane sentPane = new SimpleWizardContentPane(d,
-			JAPMessages.getString(MSG_SENTPASSIVE), null, new Options(sendPassivePane))
+			JAPMessages.getString(MSG_SENTPASSIVE), null,
+			new Options(createUpdateAccountPane(selectedAccount, methodSelectionPane, d, sendPassivePane)))
 		{
 			public boolean isSkippedAsNextContentPane()
 			{
@@ -1103,18 +1106,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		d.setLocationCenteredOnOwner();
 		d.setVisible(true);
 
-		if (methodSelectionPane.getSelectedPaymentOption() != null &&
-			passivePaymentPane.getButtonValue() == JAPDialog.RETURN_VALUE_OK)
-		{
-			if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
-				XMLPaymentOption.OPTION_ACTIVE))
-			{
-				doGetStatement(selectedAccount);
-			}
-		}
 	}
 
-/**
+	/**
 	 *
 	 * @return boolean
 	 */
@@ -1554,17 +1548,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		updateAccountList();
 	}
 
-	/**
-	 * doGetStatement - fetches an account statement
-	 */
-	private void doGetStatement(final PayAccount a_selectedAccount)
+	private DialogContentPane createUpdateAccountPane(final PayAccount a_selectedAccount,
+		final MethodSelectionPane a_methodSelectionPane,
+		JAPDialog a_parentDialog, DialogContentPane a_previousContentPane)
 	{
-		if (a_selectedAccount == null)
-		{
-			return;
-		}
-		JAPDialog busy = new JAPDialog(GUIUtils.getParentWindow(this.getRootPanel()),
-									   JAPMessages.getString(MSG_GETACCOUNTSTATEMENTTITLE), true);
 		Thread t = new Thread()
 		{
 			public void run()
@@ -1585,10 +1572,45 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				}
 			}
 		};
-		WorkerContentPane worker = new WorkerContentPane(busy,
-			JAPMessages.getString(MSG_GETACCOUNTSTATEMENT),
-			t);
+		WorkerContentPane worker = new WorkerContentPane(a_parentDialog,
+			JAPMessages.getString(MSG_GETACCOUNTSTATEMENT), a_previousContentPane, t)
+		{
+			public boolean isSkippedAsNextContentPane()
+			{
+				if (a_methodSelectionPane == null ||
+					a_methodSelectionPane.getSelectedPaymentOption() == null ||
+					a_methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
+									   XMLPaymentOption.OPTION_PASSIVE))
+				{
+					return false;
+				}
+				else
+				{
+					return true;
+				}
+			}
+
+			public boolean isSkippedAsPreviousContentPane()
+			{
+				return isSkippedAsNextContentPane();
+			}
+		};
 		worker.setInterruptThreadSafe(false);
+		return worker;
+	}
+
+	/**
+	 * doGetStatement - fetches an account statement
+	 */
+	private void doGetStatement(final PayAccount a_selectedAccount)
+	{
+		if (a_selectedAccount == null)
+		{
+			return;
+		}
+		JAPDialog busy = new JAPDialog(GUIUtils.getParentWindow(getRootPanel()),
+									   JAPMessages.getString(MSG_GETACCOUNTSTATEMENTTITLE), true);
+		DialogContentPane worker = createUpdateAccountPane(a_selectedAccount, null, busy, null);
 		worker.updateDialog();
 		busy.pack();
 		busy.setLocationCenteredOnOwner();
