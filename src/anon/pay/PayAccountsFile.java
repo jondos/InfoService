@@ -32,17 +32,16 @@ import java.util.Vector;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import anon.crypto.AsymmetricCryptoKeyPair;
 import anon.crypto.JAPCertificate;
-import anon.crypto.XMLEncryption;
 import anon.infoservice.ImmutableProxyInterface;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.ListenerInterface;
 import anon.pay.xml.XMLAccountCertificate;
 import anon.pay.xml.XMLErrorMessage;
 import anon.pay.xml.XMLJapPublicKey;
+import anon.util.IMiscPasswordReader;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
 import anon.util.captcha.ICaptchaSender;
@@ -86,22 +85,20 @@ import logging.LogType;
  */
 public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 {
-	private final static String CONFIG_ENCRYPTED_DATA = "EncryptedData";
-
 	private boolean m_bIsInitialized = false;
+	private boolean m_bIgnoreAIAccountErrorMessages = false;
 
 	/** contains a vector of PayAccount objects, one for each account */
-	protected Vector m_Accounts = new Vector();
+	private Vector m_Accounts = new Vector();
 
 	/** the active account */
-	protected PayAccount m_ActiveAccount = null;
+	private PayAccount m_ActiveAccount = null;
 
 	/** the one and only accountsfile */
 	private static PayAccountsFile ms_AccountsFile = null;
 
 	private Vector m_paymentListeners = new Vector();
 	private Vector m_knownPIs = new Vector();
-	private static Vector m_encryptedAccounts = new Vector();
 
 	private MyAccountListener m_MyAccountListener = new MyAccountListener();
 
@@ -138,11 +135,17 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		return ms_AccountsFile;
 	}
 
+	public void ignoreAIAccountErrorMessages(boolean a_bIgnore)
+	{
+		m_bIgnoreAIAccountErrorMessages = a_bIgnore;
+	}
+
 	/**
 	 * Performs the initialization.
+	 * @param a_passwordReader  a password reader for encrypted account files; message: AccountNumber
 	 * @return boolean succeeded?
 	 */
-	public static boolean init(Element elemAccountsFile)
+	public static boolean init(Element elemAccountsFile, IMiscPasswordReader a_passwordReader)
 	{
 		if (ms_AccountsFile == null)
 		{
@@ -161,20 +164,9 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 			{
 				try
 				{
-					if (XMLUtil.getFirstChildByName(elemAccount, CONFIG_ENCRYPTED_DATA) != null)
-					{
-						//Account key is encrypted. Add account to encrypted accounts
-						LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Account Key is encrypted");
-						m_encryptedAccounts.addElement(elemAccount);
-						elemAccount = (Element) elemAccount.getNextSibling();
-					}
-					else
-					{
-						//Key is not encrypted, init account
-					PayAccount theAccount = new PayAccount(elemAccount);
+					PayAccount theAccount = new PayAccount(elemAccount, a_passwordReader);
 					ms_AccountsFile.addAccount(theAccount);
 					elemAccount = (Element) elemAccount.getNextSibling();
-				}
 				}
 				catch (Exception e)
 				{
@@ -246,11 +238,6 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 					elemAccount = account.toXmlElement(a_doc, a_password);
 					elem.appendChild(elemAccount);
 				}
-				for (int i = 0; i < m_encryptedAccounts.size(); i++)
-				{
-					elemAccount = (Element)m_encryptedAccounts.elementAt(i);
-					elem.appendChild(XMLUtil.importNode(a_doc, elemAccount, true));
-				}
 
 				return elemAccountsFile;
 			}
@@ -279,9 +266,21 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 
 	public void setActiveAccount(PayAccount account)
 	{
-		if (account != null)
+		if (account != null && account.getPrivateKey() != null)
 		{
 			m_ActiveAccount = account;
+			synchronized (m_paymentListeners)
+			{
+				Enumeration enumListeners = m_paymentListeners.elements();
+				while (enumListeners.hasMoreElements())
+				{
+					( (IPaymentListener) enumListeners.nextElement()).accountActivated(m_ActiveAccount);
+				}
+			}
+		}
+		else if (account == null)
+		{
+			m_ActiveAccount = null;
 			synchronized (m_paymentListeners)
 			{
 				Enumeration enumListeners = m_paymentListeners.elements();
@@ -348,13 +347,20 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 					m_Accounts.removeElementAt(i);
 					if (m_ActiveAccount == tmp)
 					{
+						m_ActiveAccount = null;
 						if (m_Accounts.size() > 0)
 						{
-							m_ActiveAccount = (PayAccount) m_Accounts.firstElement();
+							for (int j = 0; j < m_Accounts.size(); j++)
+							{
+								if (((PayAccount)m_Accounts.elementAt(j)).getPrivateKey() != null)
+								{
+									setActiveAccount((PayAccount)m_Accounts.elementAt(j));
+								}
+							}
 						}
 						else
 						{
-							m_ActiveAccount = null;
+							setActiveAccount(null);
 						}
 					}
 					break;
@@ -421,7 +427,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		account.addAccountListener(m_MyAccountListener);
 		m_Accounts.addElement(account);
 
-		if (m_ActiveAccount == null)
+		if (m_ActiveAccount == null && account.getPrivateKey() != null)
 		{
 			m_ActiveAccount = account;
 			activeChanged = true;
@@ -595,6 +601,11 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	 */
 	public void signalAccountError(XMLErrorMessage msg)
 	{
+		if (m_bIgnoreAIAccountErrorMessages)
+		{
+			return;
+		}
+
 		synchronized (m_paymentListeners)
 		{
 			Enumeration enumListeners = m_paymentListeners.elements();
@@ -757,53 +768,5 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 			}
 		}
 
-	}
-
-	public Vector getEncryptedAccounts()
-	{
-		return (Vector) m_encryptedAccounts.clone();
-	}
-
-	public boolean decryptAccount(long a_accountnumber, String a_password)
-	{
-		Vector tmp = (Vector) m_encryptedAccounts.clone();
-		for (int i = 0; i < tmp.size(); i++)
-		{
-			Element elemAccount = (Element) tmp.elementAt(i);
-			Node elemAccountCert = XMLUtil.getFirstChildByName(elemAccount, "AccountCertificate");
-			Node elemAccountNr = XMLUtil.getFirstChildByName(elemAccountCert, "AccountNumber");
-			long accNr = Long.parseLong(XMLUtil.parseValue(elemAccountNr, "-1"));
-
-			if (accNr == a_accountnumber)
-			{
-				//Decrypt private key
-				Node privateKey = XMLUtil.getFirstChildByName(elemAccount, CONFIG_ENCRYPTED_DATA);
-				try
-				{
-					XMLEncryption.decryptElement( (Element) privateKey, a_password);
-				}
-				catch (Exception e)
-				{
-					LogHolder.log(LogLevel.ERR, LogType.PAY,
-								  "Could not decrypt key for account " + accNr);
-					return false;
-				}
-				m_encryptedAccounts.removeElement(elemAccount);
-				try
-				{
-					PayAccount account = new PayAccount(elemAccount);
-					this.addAccount(account);
-				}
-				catch (Exception e)
-				{
-					LogHolder.log(LogLevel.ERR, LogType.PAY,
-								  "Could not add decrypted account " + accNr + " to accounts file: " + e);
-					return false;
-				}
-				return true;
-			}
-
-		}
-		return false;
 	}
 }

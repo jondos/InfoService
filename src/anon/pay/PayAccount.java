@@ -27,15 +27,13 @@
  */
 package anon.pay;
 
-import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import org.bouncycastle.crypto.params.DSAParameters;
-import org.bouncycastle.crypto.params.DSAPrivateKeyParameters;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import anon.client.PacketCounter;
 import anon.crypto.IMyPrivateKey;
 import anon.crypto.IMyPublicKey;
@@ -48,8 +46,9 @@ import anon.pay.xml.XMLAccountInfo;
 import anon.pay.xml.XMLBalance;
 import anon.pay.xml.XMLEasyCC;
 import anon.pay.xml.XMLTransCert;
-import anon.util.Base64;
+import anon.util.IMiscPasswordReader;
 import anon.util.IXMLEncodable;
+import anon.util.XMLParseException;
 import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -67,7 +66,7 @@ import logging.LogType;
  *
  * The XML structure is as follows:
  *
- *  <Account version="1.0">
+ *  <Account version="1.1" active="true|false">
  * 		<AccountCertificate>...</AccountCertificate> // see anon.pay.xml.XMLAccountCertificate
  * 		<RSAPrivateKey>...</RSAPrivateKey> // the secret key. this can be either RSA or DSA
  *      <DSAPrivateKey>...</DSAPrivateKey>
@@ -81,8 +80,11 @@ import logging.LogType;
 public class PayAccount implements IXMLEncodable
 {
 	public static final String XML_ELEMENT_NAME = "Account";
+	private static final String XML_ATTR_ACTIVE = "active";
 
-	/** contains zero ore more xml transfer certificates as XMLTransCert */
+	private static final String VERSION = "1.1";
+
+	/** contains zero or more xml transfer certificates as XMLTransCert */
 	private Vector m_transCerts;
 
 	/** contains the account certificate */
@@ -93,6 +95,8 @@ public class PayAccount implements IXMLEncodable
 
 	/** contains the private key associated with this account */
 	private IMyPrivateKey m_privateKey;
+
+	private Document m_encryptedPrivateKey;
 
 	/** the number of bytes which have been used bot not confirmed yet */
 	private long m_currentBytes;
@@ -111,22 +115,9 @@ public class PayAccount implements IXMLEncodable
 
 	private String m_strBiID;
 
-	public PayAccount(byte[] xmlData) throws Exception
+	public PayAccount(Element elemRoot, IMiscPasswordReader a_passwordReader) throws Exception
 	{
-		Document doc = XMLUtil.toXMLDocument(xmlData);
-		Element elemRoot = doc.getDocumentElement();
-		setValues(elemRoot);
-	}
-
-	public PayAccount(Element elemRoot) throws Exception
-	{
-		setValues(elemRoot);
-	}
-
-	public PayAccount(Document doc) throws Exception
-	{
-		Element elemRoot = doc.getDocumentElement();
-		setValues(elemRoot);
+		setValues(elemRoot, a_passwordReader);
 	}
 
 	/**
@@ -146,13 +137,21 @@ public class PayAccount implements IXMLEncodable
 		m_theBI = theBI;
 	}
 
-	private void setValues(Element elemRoot) throws Exception
+	/**
+	 *
+	 * @param elemRoot Element
+	 * @param a_passwordReader a password reader; this method adds the account number as message object
+	 * @throws Exception
+	 */
+	private void setValues(Element elemRoot, final IMiscPasswordReader a_passwordReader) throws Exception
 	{
-		if (! (elemRoot.getTagName().equals(XML_ELEMENT_NAME) &&
-			   (elemRoot.getAttribute(XML_VERSION).equals("1.0"))))
+		if (elemRoot == null || !(elemRoot.getTagName().equals(XML_ELEMENT_NAME) ))
+//								||  (elemRoot.getAttribute(XML_VERSION).compareTo(VERSION)) > 0))
 		{
-			throw new Exception("PayAccount wrong XML format");
+			throw new XMLParseException("PayAccount wrong XML format");
 		}
+		boolean bActive = XMLUtil.parseAttribute(elemRoot, XML_ATTR_ACTIVE, true);
+
 
 		// fill vector with transfer certificates
 		m_transCerts = new Vector();
@@ -175,74 +174,12 @@ public class PayAccount implements IXMLEncodable
 			m_accountInfo = new XMLAccountInfo(elemAccInfo);
 		}
 
-		// set private key
-		Element elemRsaKey = (Element) XMLUtil.getFirstChildByName(elemRoot, "RSAPrivateKey");
-		Element elemDsaKey = (Element) XMLUtil.getFirstChildByName(elemRoot, "DSAPrivateKey");
-		if (elemRsaKey != null)
-		{
-			Element elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "Modulus");
-			String str = XMLUtil.parseValue(elem, null);
-			BigInteger modulus = new BigInteger(Base64.decode(str));
-
-			elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "PublicExponent");
-			str = XMLUtil.parseValue(elem, null);
-			BigInteger publicExponent = new BigInteger(Base64.decode(str));
-
-			elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "PrivateExponent");
-			str = XMLUtil.parseValue(elem, null);
-			BigInteger privateExponent = new BigInteger(Base64.decode(str));
-
-			elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "P");
-			str = XMLUtil.parseValue(elem, null);
-			BigInteger p = new BigInteger(Base64.decode(str));
-
-			elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "Q");
-			str = XMLUtil.parseValue(elem, null);
-			BigInteger q = new BigInteger(Base64.decode(str));
-
-			elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "dP");
-			str = XMLUtil.parseValue(elem, null);
-			BigInteger dP = new BigInteger(Base64.decode(str));
-
-			elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "dQ");
-			str = XMLUtil.parseValue(elem, null);
-			BigInteger dQ = new BigInteger(Base64.decode(str));
-
-			elem = (Element) XMLUtil.getFirstChildByName(elemRsaKey, "QInv");
-			str = XMLUtil.parseValue(elem, null);
-			BigInteger qInv = new BigInteger(Base64.decode(str));
-
-			m_privateKey = new MyRSAPrivateKey(modulus, publicExponent, privateExponent, p, q, dP, dQ, qInv);
-		}
-		else if (elemDsaKey != null)
-		{
-			Element elem = (Element) XMLUtil.getFirstChildByName(elemDsaKey, "G");
-			String str = XMLUtil.parseValue(elem, null);
-			BigInteger g = new BigInteger(Base64.decode(str));
-
-			elem = (Element) XMLUtil.getFirstChildByName(elemDsaKey, "P");
-			str = XMLUtil.parseValue(elem, null);
-			BigInteger p = new BigInteger(Base64.decode(str));
-
-			elem = (Element) XMLUtil.getFirstChildByName(elemDsaKey, "Q");
-			str = XMLUtil.parseValue(elem, null);
-			BigInteger q = new BigInteger(Base64.decode(str));
-
-			elem = (Element) XMLUtil.getFirstChildByName(elemDsaKey, "X");
-			str = XMLUtil.parseValue(elem, null);
-			BigInteger x = new BigInteger(Base64.decode(str));
-			DSAPrivateKeyParameters param = new DSAPrivateKeyParameters(x, new DSAParameters(p, q, g));
-			m_privateKey = new MyDSAPrivateKey(param);
-		}
-		else
-		{
-			throw new Exception("No RSA and no DSA private key found");
-		}
-
 		/** @todo get BI by supplying a bi-id */
 		Element biid = (Element) XMLUtil.getFirstChildByName(elemAccCert, "BiID");
 		m_strBiID = XMLUtil.parseValue(biid, "-1");
 		m_theBI = null;
+
+		decryptPrivateKey(elemRoot, a_passwordReader, !bActive);
 	}
 
 	/**
@@ -264,7 +201,7 @@ public class PayAccount implements IXMLEncodable
 				return this.toXmlElement(a_doc, null);
 			}
 			Element elemRoot = a_doc.createElement(XML_ELEMENT_NAME);
-			elemRoot.setAttribute(XML_VERSION, "1.0");
+			elemRoot.setAttribute(XML_VERSION, VERSION);
 			Element elemTmp;
 
 			// import AccountCertificate XML Representation
@@ -272,19 +209,29 @@ public class PayAccount implements IXMLEncodable
 			elemRoot.appendChild(elemTmp);
 
 			// import Private Key XML Representation
-			elemTmp = m_privateKey.toXmlElement(a_doc);
-			elemRoot.appendChild(elemTmp);
-
-			// Encrypt account key if password is given
-			if (a_password != null)
+			if (m_encryptedPrivateKey != null)
 			{
-				try
+				XMLUtil.setAttribute(elemRoot, XML_ATTR_ACTIVE, false);
+				elemTmp = (Element)XMLUtil.importNode(
+					a_doc, m_encryptedPrivateKey.getDocumentElement(), true);
+				elemRoot.appendChild(elemTmp);
+			}
+			else
+			{
+				XMLUtil.setAttribute(elemRoot, XML_ATTR_ACTIVE, true);
+				elemTmp = m_privateKey.toXmlElement(a_doc);
+				elemRoot.appendChild(elemTmp);
+				// Encrypt account key if password is given
+				if (a_password != null)
 				{
-					XMLEncryption.encryptElement(elemTmp, a_password);
-				}
-				catch (Exception e)
-				{
-					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Could not encrypt account key: " + e);
+					try
+					{
+						XMLEncryption.encryptElement(elemTmp, a_password);
+					}
+					catch (Exception e)
+					{
+						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Could not encrypt account key: " + e);
+					}
 				}
 			}
 
@@ -422,6 +369,10 @@ public class PayAccount implements IXMLEncodable
 		return m_accountCertificate.getCreationTime();
 	}
 
+	/**
+	 * Returns the private key or null if the account is encrypted and not usable.
+	 * @return the private key or null if the account is encrypted and not usable
+	 */
 	public IMyPrivateKey getPrivateKey()
 	{
 		return m_privateKey;
@@ -507,6 +458,8 @@ public class PayAccount implements IXMLEncodable
 	{
 		return m_transCerts;
 	}
+
+
 
 	/**
 	 * Asks the PacketCounter for the current number of transferred bytes and
@@ -597,9 +550,16 @@ public class PayAccount implements IXMLEncodable
 	 * @throws Exception
 	 * @return XMLAccountInfo
 	 * @todo switch SSL on
+	 * @throws java.lang.SecurityException if the account is encrypted an not usable
 	 */
-	public XMLAccountInfo fetchAccountInfo(ImmutableProxyInterface[] a_proxys) throws Exception
+	public XMLAccountInfo fetchAccountInfo(ImmutableProxyInterface[] a_proxys)
+		throws SecurityException, Exception
 	{
+		if (getPrivateKey() == null)
+		{
+			throw new SecurityException("Account is encrypted and not usable!");
+		}
+
 		XMLAccountInfo info;
 		m_theBI = this.getBI();
 		BIConnection biConn = new BIConnection(m_theBI);
@@ -620,9 +580,15 @@ public class PayAccount implements IXMLEncodable
 	 *          account number
 	 * @return xml transfer certificate
 	 * @throws Exception
+	 * @throws java.lang.SecurityException if the account is encrypted an not usable
 	 */
-	public XMLTransCert charge(ImmutableProxyInterface[] a_proxys) throws Exception
+	public XMLTransCert charge(ImmutableProxyInterface[] a_proxys) throws SecurityException, Exception
 	{
+		if (getPrivateKey() == null)
+		{
+			throw new SecurityException("Account is encrypted and not usable!");
+		}
+
 		BIConnection biConn = new BIConnection(m_theBI);
 		biConn.connect(a_proxys);
 		biConn.authenticate(m_accountCertificate, m_privateKey);
@@ -651,5 +617,97 @@ public class PayAccount implements IXMLEncodable
 			{
 			}
 		return m_theBI;
+	}
+
+	public void decryptPrivateKey(IMiscPasswordReader a_passwordReader) throws Exception
+	{
+		if (m_encryptedPrivateKey != null)
+		{
+			decryptPrivateKey(m_encryptedPrivateKey, a_passwordReader, false);
+		}
+	}
+
+	private void decryptPrivateKey(Node a_elemRoot, final IMiscPasswordReader a_passwordReader,
+								   boolean a_bDeactivated)
+		throws Exception
+	{
+		if (m_privateKey != null || a_elemRoot == null)
+		{
+			return;
+		}
+
+		Element elemKey = (Element) XMLUtil.getFirstChildByName(a_elemRoot, XMLEncryption.XML_ELEMENT_NAME);
+		if (elemKey != null)
+		{
+			try
+			{
+				if (a_bDeactivated)
+				{
+					deactivate(elemKey);
+					return;
+				}
+
+				IMiscPasswordReader passwordReader;
+				if (a_passwordReader != null)
+				{
+					passwordReader = new IMiscPasswordReader()
+					{
+						public String readPassword(Object a_message)
+						{
+							return a_passwordReader.readPassword(
+								new String("" + m_accountCertificate.getAccountNumber()));
+						}
+					};
+				}
+				else
+				{
+					passwordReader = a_passwordReader;
+				}
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+							  "Decrypting account " + m_accountCertificate.getAccountNumber());
+				XMLEncryption.decryptElement(elemKey, passwordReader);
+			}
+			catch (Exception a_e)
+			{
+				deactivate(elemKey);
+				return;
+			}
+		}
+
+		// set private key
+		Element elemRsaKey = (Element) XMLUtil.getFirstChildByName(a_elemRoot, MyRSAPrivateKey.XML_ELEMENT_NAME);
+		Element elemDsaKey = (Element) XMLUtil.getFirstChildByName(a_elemRoot, MyDSAPrivateKey.XML_ELEMENT_NAME);
+		if (elemRsaKey != null)
+		{
+			if (a_bDeactivated)
+			{
+				deactivate(elemRsaKey);
+				return;
+			}
+
+			m_privateKey = new MyRSAPrivateKey(elemRsaKey);
+		}
+		else if (elemDsaKey != null)
+		{
+			if (a_bDeactivated)
+			{
+				deactivate(elemDsaKey);
+				return;
+			}
+
+			m_privateKey = new MyDSAPrivateKey(elemDsaKey);
+		}
+		else
+		{
+			throw new XMLParseException("No RSA and no DSA private key found");
+		}
+		m_encryptedPrivateKey = null;
+	}
+
+	private void deactivate(Element elemKey) throws Exception
+	{
+		m_privateKey = null;
+		m_encryptedPrivateKey = XMLUtil.createDocument();
+		m_encryptedPrivateKey.appendChild(XMLUtil.importNode(m_encryptedPrivateKey, elemKey, true));
 	}
 }

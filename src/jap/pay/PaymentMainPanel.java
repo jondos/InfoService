@@ -34,7 +34,6 @@ package jap.pay;
  * @version 1.0
  */
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -91,6 +90,9 @@ public class PaymentMainPanel extends FlippingPanel
 		"_totalspent";
 	private static final String MSG_ACCOUNTEMPTY = PaymentMainPanel.class.getName() +
 		"_accountempty";
+	private static final String MSG_NO_ACTIVE_ACCOUNT = PaymentMainPanel.class.getName() +
+		"_noActiveAccount";
+
 
 	/**
 	 * Icons for the account icon display
@@ -447,29 +449,36 @@ public class PaymentMainPanel extends FlippingPanel
 			PayAccountsFile accounts = PayAccountsFile.getInstance();
 			if (accounts.getNumAccounts() == 0)
 			{
-				boolean yes = JAPDialog.showYesNoDialog(JAPController.getView(),
-					JAPMessages.getString("payCreateAccountQuestion"));
-				if (yes)
+				JAPController.getInstance().setAnonMode(false);
+
+				SwingUtilities.invokeLater(new Thread()
+				{
+					public void run()
+					{
+						boolean answer = JAPDialog.showYesNoDialog(JAPController.getView(),
+							JAPMessages.getString("payCreateAccountQuestion"));
+						if (answer)
+						{
+							m_view.showConfigDialog(JAPConf.PAYMENT_TAB);
+						}
+					}
+				});
+			}
+			else
+			{
+				if (accounts.getActiveAccount() == null)
 				{
 					JAPController.getInstance().setAnonMode(false);
-
 					SwingUtilities.invokeLater(new Thread()
 					{
 						public void run()
 						{
-							m_view.showConfigDialog(JAPConf.PAYMENT_TAB);
+							JAPDialog.showErrorDialog(JAPController.getView(),
+								JAPMessages.getString(MSG_NO_ACTIVE_ACCOUNT), LogType.PAY);
 						}
 					});
-
 				}
-				else
-				{
-					JAPController.getInstance().setAnonMode(false);
-				}
-			}
-			else
-			{
-				if (accounts.getActiveAccount() != null && !JAPController.getInstance().getDontAskPayment())
+				else if (!JAPController.getInstance().getDontAskPayment())
 				{
 					JAPDialog.LinkedCheckBox checkBox = new JAPDialog.LinkedCheckBox(false);
 
@@ -485,10 +494,11 @@ public class PaymentMainPanel extends FlippingPanel
 					}
 				}
 			}
+			/*
 			if (accounts.getActiveAccount() != null)
 			{
 				accounts.getActiveAccount().updated();
-			}
+			}*/
 		}
 
 		/**
