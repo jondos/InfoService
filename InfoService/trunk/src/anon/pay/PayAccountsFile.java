@@ -191,6 +191,8 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		{
 			ms_AccountsFile.m_bIgnoreAIAccountErrorMessages =
 				XMLUtil.parseAttribute(elemAccountsFile, XML_ATTR_IGNORE_AI_ERRORS, false);
+			ms_AccountsFile.m_bEnableBalanceAutoUpdate =
+				XMLUtil.parseAttribute(elemAccountsFile, XML_ATTR_ENABLE_BALANCE_AUTO_UPDATE, true);
 			Element elemActiveAccount = (Element) XMLUtil.getFirstChildByName(elemAccountsFile,
 				"ActiveAccountNumber");
 			long activeAccountNumber = Long.parseLong(XMLUtil.parseValue(elemActiveAccount, "0"));
@@ -263,6 +265,9 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 				elemAccountsFile.setAttribute(XML_VERSION, "1.0");
 				XMLUtil.setAttribute(elemAccountsFile, XML_ATTR_IGNORE_AI_ERRORS,
 									 m_bIgnoreAIAccountErrorMessages);
+				XMLUtil.setAttribute(elemAccountsFile, XML_ATTR_ENABLE_BALANCE_AUTO_UPDATE,
+									 m_bEnableBalanceAutoUpdate);
+
 
 				Element elem = a_doc.createElement("ActiveAccountNumber");
 				XMLUtil.setValue(elem, Long.toString(getActiveAccountNumber()));
