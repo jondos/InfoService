@@ -186,7 +186,7 @@ public class AIControlChannel extends XmlControlChannel {
             public void run() {
               PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
               try {
-                currentAccount.fetchAccountInfo(m_proxys);
+                currentAccount.fetchAccountInfo(m_proxys, false);
               }
               catch (Exception ex) {
                 LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
@@ -257,7 +257,7 @@ public class AIControlChannel extends XmlControlChannel {
             public void run() {
               PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
               try {
-                currentAccount.fetchAccountInfo(m_proxys);
+                currentAccount.fetchAccountInfo(m_proxys, false);
                 XMLBalance b = currentAccount.getBalance();
                 AIControlChannel.this.sendXmlMessage(XMLUtil.toXMLDocument(b));
               }

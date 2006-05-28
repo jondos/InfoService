@@ -85,8 +85,15 @@ import logging.LogType;
  */
 public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 {
+	public static final String XML_ELEMENT_NAME = "PayAccountsFile";
+
+	private static final String XML_ATTR_IGNORE_AI_ERRORS = "ignoreAIErrors";
+	private static final String XML_ATTR_ENABLE_BALANCE_AUTO_UPDATE = "enableBalanceAutoUpdate";
+
 	private boolean m_bIsInitialized = false;
 	private boolean m_bIgnoreAIAccountErrorMessages = false;
+	private boolean m_bEnableBalanceAutoUpdate = true;
+
 
 	/** contains a vector of PayAccount objects, one for each account */
 	private Vector m_Accounts = new Vector();
@@ -135,9 +142,37 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		return ms_AccountsFile;
 	}
 
-	public void ignoreAIAccountErrorMessages(boolean a_bIgnore)
+	/**
+	 * Defined if error messages from the AI should be ignored. The connection mightbe closed, but the
+	 * listeners will not get informed about the problem.
+	 * @param a_bIgnore boolean
+	 */
+	public void setIgnoreAIAccountError(boolean a_bIgnore)
 	{
 		m_bIgnoreAIAccountErrorMessages = a_bIgnore;
+	}
+
+	/**
+	 * Returns if account balances are automatically updated.
+	 * @return if account balances are automatically updated
+	 */
+	public boolean isBalanceAutoUpdateEnabled()
+	{
+		return m_bEnableBalanceAutoUpdate;
+	}
+
+	public void setBalanceAutoUpdateEnabled(boolean a_bEnable)
+	{
+		m_bEnableBalanceAutoUpdate = a_bEnable;
+	}
+
+	/**
+	 * Returns if error messages from the AI should be ignored.
+	 * @return boolean
+	 */
+	public boolean isAIAccountErrorIgnored()
+	{
+		return m_bIgnoreAIAccountErrorMessages;
 	}
 
 	/**
@@ -152,8 +187,10 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 			ms_AccountsFile = new PayAccountsFile();
 		}
 		//ms_AccountsFile.m_theBI = theBI;
-		if (elemAccountsFile != null)
+		if (elemAccountsFile != null && elemAccountsFile.getNodeName().equals(XML_ELEMENT_NAME))
 		{
+			ms_AccountsFile.m_bIgnoreAIAccountErrorMessages =
+				XMLUtil.parseAttribute(elemAccountsFile, XML_ATTR_IGNORE_AI_ERRORS, false);
 			Element elemActiveAccount = (Element) XMLUtil.getFirstChildByName(elemAccountsFile,
 				"ActiveAccountNumber");
 			long activeAccountNumber = Long.parseLong(XMLUtil.parseValue(elemActiveAccount, "0"));
@@ -221,9 +258,11 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		try
 			{
 				Element elemAccount;
-				Element elemAccountsFile = a_doc.createElement("PayAccountsFile");
+				Element elemAccountsFile = a_doc.createElement(XML_ELEMENT_NAME);
 
-				elemAccountsFile.setAttribute("version", "1.0");
+				elemAccountsFile.setAttribute(XML_VERSION, "1.0");
+				XMLUtil.setAttribute(elemAccountsFile, XML_ATTR_IGNORE_AI_ERRORS,
+									 m_bIgnoreAIAccountErrorMessages);
 
 				Element elem = a_doc.createElement("ActiveAccountNumber");
 				XMLUtil.setValue(elem, Long.toString(getActiveAccountNumber()));

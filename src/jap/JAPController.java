@@ -3068,10 +3068,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 */
 	public void updateAccountStatements()
 	{
-		if (JAPModel.getInstance().isPaymentDisabled())
-		{
-			return;
-		}
 		Runnable doIt = new Runnable()
 		{
 			public void run()
@@ -3085,7 +3081,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 									  "Fetching statement for account: " + account.getAccountNumber());
-						account.fetchAccountInfo(JAPModel.getInstance().getPaymentProxyInterface());
+						account.fetchAccountInfo(JAPModel.getInstance().getPaymentProxyInterface(), false);
 					}
 					catch (Exception e)
 					{

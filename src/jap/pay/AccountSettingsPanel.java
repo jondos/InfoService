@@ -240,7 +240,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		"_activationSuccessful";
 	private static final String MSG_ACTIVATION_FAILED = AccountSettingsPanel.class.getName() +
 		"_activationFailed";
-
+	private static final String MSG_SHOW_AI_ERRORS = AccountSettingsPanel.class.getName() +
+		"_showAIErrors";
 
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
@@ -254,6 +255,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private JButton m_btnActivate;
 	private JCheckBox m_cbxShowPaymentConfirmation;
 	private JCheckBox m_cbxAllowNonAnonymousConnection;
+	private JCheckBox m_cbxShowAIErrors;
 
 	private JLabel m_labelCreationDate;
 	private JLabel m_labelStatementDate;
@@ -433,9 +435,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	{
 		JPanel panelAdvanced = new JPanel();
 
-		m_cbxShowPaymentConfirmation = new JCheckBox(
-			JAPMessages.getString(MSG_SHOW_PAYMENT_CONFIRM_DIALOG),
-			!JAPController.getInstance().getDontAskPayment());
+		m_cbxShowPaymentConfirmation = new JCheckBox(JAPMessages.getString(MSG_SHOW_PAYMENT_CONFIRM_DIALOG));
 		m_cbxShowPaymentConfirmation.setFont(getFontSetting());
 		GridBagLayout advancedPanelLayout = new GridBagLayout();
 		panelAdvanced.setLayout(advancedPanelLayout);
@@ -451,12 +451,15 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		panelAdvanced.add(m_cbxShowPaymentConfirmation, advancedPanelConstraints);
 
-		m_cbxAllowNonAnonymousConnection = new JCheckBox(
-			JAPMessages.getString(MSG_ALLOW_DIRECT_CONNECTION),
-			JAPModel.getInstance().isPaymentViaDirectConnectionAllowed());
+		m_cbxAllowNonAnonymousConnection = new JCheckBox(JAPMessages.getString(MSG_ALLOW_DIRECT_CONNECTION));
 		advancedPanelConstraints.gridy = 1;
-		advancedPanelConstraints.weighty = 1.0;
 		panelAdvanced.add(m_cbxAllowNonAnonymousConnection, advancedPanelConstraints);
+
+		advancedPanelConstraints.gridy = 2;
+		advancedPanelConstraints.weighty = 1.0;
+		m_cbxShowAIErrors = new JCheckBox(JAPMessages.getString(MSG_SHOW_AI_ERRORS));
+		panelAdvanced.add(m_cbxShowAIErrors, advancedPanelConstraints);
+
 
 		return panelAdvanced;
 	}
@@ -1268,7 +1271,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 							JAPModel.getInstance().getPaymentProxyInterface(),
 							(DSAKeyPair) keyWorkerPane.getValue());
 
-						m_payAccount.fetchAccountInfo(JAPModel.getInstance().getPaymentProxyInterface());
+						m_payAccount.fetchAccountInfo(
+											  JAPModel.getInstance().getPaymentProxyInterface(), true);
 						break;
 					}
 					catch (IOException a_e)
@@ -1558,7 +1562,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			{
 				try
 				{
-					a_selectedAccount.fetchAccountInfo(JAPModel.getInstance().getPaymentProxyInterface());
+					a_selectedAccount.fetchAccountInfo(
+									   JAPModel.getInstance().getPaymentProxyInterface(), true);
 					updateAccountList();
 				}
 				catch (Exception e)
@@ -1967,9 +1972,6 @@ return true;
 		//Register help context
 		JAPHelp.getInstance().getContextObj().setContext("payment");
 		updateAccountList();
-		m_cbxShowPaymentConfirmation.setSelected(!JAPController.getInstance().getDontAskPayment());
-		m_cbxAllowNonAnonymousConnection.setSelected(
-			JAPModel.getInstance().isPaymentViaDirectConnectionAllowed());
 	}
 
 	/**
@@ -1980,6 +1982,8 @@ return true;
 	{
 		JAPController.getInstance().setDontAskPayment(!m_cbxShowPaymentConfirmation.isSelected());
 		JAPModel.getInstance().allowPaymentViaDirectConnection(m_cbxAllowNonAnonymousConnection.isSelected());
+		PayAccountsFile.getInstance().setIgnoreAIAccountError(!m_cbxShowAIErrors.isSelected());
+
 		return true;
 	}
 
@@ -1993,7 +1997,7 @@ return true;
 		// it does not make sense to do anything here IMO...
 	}
 
-/**
+	/**
 	 * This method can be overwritten by the children of AbstractJAPConfModule. It is called
 	 * every time the user presses "Reset to defaults" in the configuration dialog after the
 	 * restoring of the default configuration from the savepoint (if there is a savepoint for
@@ -2001,19 +2005,29 @@ return true;
 	 */
 	protected void onResetToDefaultsPressed()
 	{
+		m_cbxShowPaymentConfirmation.setSelected(true);
+		m_cbxAllowNonAnonymousConnection.setSelected(true);
+		m_cbxShowAIErrors.setSelected(true);
 	}
 
-/**
+	/**
 	 * Fetches new (changed) account data from the PayAccountsFile
 	 */
 	protected void onUpdateValues()
 	{
+		m_cbxShowPaymentConfirmation.setSelected(!JAPController.getInstance().getDontAskPayment());
+		m_cbxAllowNonAnonymousConnection.setSelected(
+			  JAPModel.getInstance().isPaymentViaDirectConnectionAllowed());
+		m_cbxShowAIErrors.setSelected(!PayAccountsFile.getInstance().isAIAccountErrorIgnored());
+
+
+		/*
 		PayAccountsFile accounts = PayAccountsFile.getInstance();
 		Enumeration enumAccounts = accounts.getAccounts();
 		while (enumAccounts.hasMoreElements())
 		{
 			PayAccount a = (PayAccount) enumAccounts.nextElement();
-		}
+		}*/
 	}
 
 	public void valueChanged(ListSelectionEvent e)

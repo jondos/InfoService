@@ -429,11 +429,6 @@ public final class JAPModel
 		m_bInfoServiceDisabled = b;
 	}
 
-	public boolean isPaymentDisabled()
-	{
-		return false;
-	}
-
 	public static boolean isInfoServiceDisabled()
 	{
 		return ms_TheModel.m_bInfoServiceDisabled;
