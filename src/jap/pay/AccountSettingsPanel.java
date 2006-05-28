@@ -242,6 +242,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		"_activationFailed";
 	private static final String MSG_SHOW_AI_ERRORS = AccountSettingsPanel.class.getName() +
 		"_showAIErrors";
+	private static final String MSG_BALANCE_AUTO_UPDATE_ENABLED = AccountSettingsPanel.class.getName() +
+		"_balanceAutoUpdateEnabled";
+
 
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
@@ -256,6 +259,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private JCheckBox m_cbxShowPaymentConfirmation;
 	private JCheckBox m_cbxAllowNonAnonymousConnection;
 	private JCheckBox m_cbxShowAIErrors;
+	private JCheckBox m_cbxBalanceAutoUpdateEnabled;
 
 	private JLabel m_labelCreationDate;
 	private JLabel m_labelStatementDate;
@@ -456,10 +460,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		panelAdvanced.add(m_cbxAllowNonAnonymousConnection, advancedPanelConstraints);
 
 		advancedPanelConstraints.gridy = 2;
-		advancedPanelConstraints.weighty = 1.0;
 		m_cbxShowAIErrors = new JCheckBox(JAPMessages.getString(MSG_SHOW_AI_ERRORS));
 		panelAdvanced.add(m_cbxShowAIErrors, advancedPanelConstraints);
 
+		advancedPanelConstraints.gridy = 3;
+		advancedPanelConstraints.weighty = 1.0;
+		m_cbxBalanceAutoUpdateEnabled = new JCheckBox(JAPMessages.getString(MSG_BALANCE_AUTO_UPDATE_ENABLED));
+		panelAdvanced.add(m_cbxBalanceAutoUpdateEnabled, advancedPanelConstraints);
 
 		return panelAdvanced;
 	}
@@ -1983,6 +1990,7 @@ return true;
 		JAPController.getInstance().setDontAskPayment(!m_cbxShowPaymentConfirmation.isSelected());
 		JAPModel.getInstance().allowPaymentViaDirectConnection(m_cbxAllowNonAnonymousConnection.isSelected());
 		PayAccountsFile.getInstance().setIgnoreAIAccountError(!m_cbxShowAIErrors.isSelected());
+		PayAccountsFile.getInstance().setBalanceAutoUpdateEnabled(m_cbxBalanceAutoUpdateEnabled.isSelected());
 
 		return true;
 	}
@@ -2008,6 +2016,7 @@ return true;
 		m_cbxShowPaymentConfirmation.setSelected(true);
 		m_cbxAllowNonAnonymousConnection.setSelected(true);
 		m_cbxShowAIErrors.setSelected(true);
+		m_cbxBalanceAutoUpdateEnabled.setSelected(true);
 	}
 
 	/**
@@ -2019,7 +2028,7 @@ return true;
 		m_cbxAllowNonAnonymousConnection.setSelected(
 			  JAPModel.getInstance().isPaymentViaDirectConnectionAllowed());
 		m_cbxShowAIErrors.setSelected(!PayAccountsFile.getInstance().isAIAccountErrorIgnored());
-
+		m_cbxBalanceAutoUpdateEnabled.setSelected(PayAccountsFile.getInstance().isBalanceAutoUpdateEnabled());
 
 		/*
 		PayAccountsFile accounts = PayAccountsFile.getInstance();
