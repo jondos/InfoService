@@ -37,6 +37,7 @@ import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.ImmutableProxyInterface;
 import gui.JAPDll;
 import jap.forward.JAPRoutingSettings;
+import anon.infoservice.InfoServiceHolder;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel
@@ -51,8 +52,8 @@ public final class JAPModel
 	private int m_HttpListenerPortNumber = JAPConstants.DEFAULT_PORT_NUMBER; // port number of HTTP  listener
 	private boolean m_bHttpListenerIsLocal = JAPConstants.DEFAULT_LISTENER_IS_LOCAL; // indicates whether listeners serve for localhost only or not
 	private ProxyInterface m_proxyInterface = null;
-	private boolean m_bAutoConnect = false; // autoconnect after program start
-	private boolean m_bAutoReConnect = true; // autoReconnects after loosing connection to mix
+	private boolean m_bAutoConnect; // autoconnect after program start
+	private boolean m_bAutoReConnect; // autoReconnects after loosing connection to mix
 
 	private int m_iDummyTrafficIntervall = -1; // indicates what Dummy Traffic should be generated or not
 

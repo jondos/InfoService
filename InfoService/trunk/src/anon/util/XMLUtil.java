@@ -847,6 +847,10 @@ public class XMLUtil
 	 */
 	public static void removeComments(Node a_node)
 	{
+		if (a_node == null)
+		{
+			return;
+		}
 		if (a_node.getNodeType() != Document.COMMENT_NODE)
 		{
 			removeCommentsInternal(a_node, a_node);

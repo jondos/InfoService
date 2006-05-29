@@ -37,7 +37,10 @@ import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.IOException;
 import java.util.Enumeration;
+import java.security.SignatureException;
+import java.security.InvalidKeyException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -92,8 +95,17 @@ public class KeyExchangeManager {
 
   private SymCipher m_multiplexerOutputStreamCipher;
 
-
-  public KeyExchangeManager(InputStream a_inputStream, OutputStream a_outputStream) throws Exception {
+  /**
+   * @todo allow to connect if one or more mixes (user specified) cannot be verified
+   * @param a_inputStream InputStream
+   * @param a_outputStream OutputStream
+   * @throws XMLParseException
+   * @throws SignatureException
+   * @throws IOException
+   * @throws UnknownProtocolVersionException
+   */
+  public KeyExchangeManager(InputStream a_inputStream, OutputStream a_outputStream)
+	  throws XMLParseException, SignatureException, IOException, UnknownProtocolVersionException {
     try {
       m_mixCascadeCertificateLock = -1;
       m_internalSynchronization = new Object();
@@ -105,7 +117,7 @@ public class KeyExchangeManager {
       while (xmlDataLength > 0) {
         int bytesRead = a_inputStream.read(xmlData, xmlData.length - xmlDataLength, xmlDataLength);
         if (bytesRead == -1) {
-          throw new EOFException("KeyExchangeManger: Constructor: EOF detected while reading initial XML structure.");
+          throw new EOFException("EOF detected while reading initial XML structure.");
         }
         else {
           xmlDataLength = xmlDataLength - bytesRead;
@@ -115,14 +127,14 @@ public class KeyExchangeManager {
       Document doc = XMLUtil.toXMLDocument(xmlData);
       Element mixCascadeNode = doc.getDocumentElement();
       if (mixCascadeNode == null) {
-        throw (new XMLParseException(XMLParseException.ROOT_TAG, "KeyExchangeManager: Constructor: No document element in received XML structure."));
+        throw (new XMLParseException(XMLParseException.ROOT_TAG, "No document element in received XML structure."));
       }
       if (!mixCascadeNode.getNodeName().equals("MixCascade")) {
-        throw (new XMLParseException(XMLParseException.ROOT_TAG, "KeyExchangeManager: Constructor: MixCascade node expected in received XML structure."));
+        throw (new XMLParseException(XMLParseException.ROOT_TAG, "MixCascade node expected in received XML structure."));
       }
       /* verify the signature */
       if (SignatureVerifier.getInstance().verifyXml(mixCascadeNode, SignatureVerifier.DOCUMENT_CLASS_MIX) == false) {
-        throw (new Exception("KeyExchangeManger: Constructor: Received XML structure has an invalid signature."));
+        throw (new SignatureException("Received XML structure has an invalid signature."));
       }
       /*
        * get the appended certificate of the signature and store it in the
@@ -140,25 +152,26 @@ public class KeyExchangeManager {
         if (appendedCertificates.hasMoreElements()) {
           firstMixCertificate = (JAPCertificate)(appendedCertificates.nextElement());
           m_mixCascadeCertificateLock = SignatureVerifier.getInstance().getVerificationCertificateStore().addCertificateWithVerification(firstMixCertificate, JAPCertificate.CERTIFICATE_TYPE_MIX, false);
-          LogHolder.log(LogLevel.DEBUG, LogType.MISC, "KeyExchangeManager: Constructor: Added appended certificate from the MixCascade structure to the certificate store.");
+          LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Added appended certificate from the MixCascade structure to the certificate store.");
         }
         else {
-          LogHolder.log(LogLevel.DEBUG, LogType.MISC, "KeyExchangeManager: Constructor: No appended certificates in the MixCascade structure.");
+          LogHolder.log(LogLevel.DEBUG, LogType.MISC, "No appended certificates in the MixCascade structure.");
         }
       }
       catch (Exception e) {
-        LogHolder.log(LogLevel.ERR, LogType.MISC, "KeyExchangeManager: Constructor: Error while looking for appended certificates in the MixCascade structure: " + e.toString());
+        LogHolder.log(LogLevel.ERR, LogType.MISC, "Error while looking for appended certificates in the MixCascade structure: " + e.toString());
       }
       /* get the used channel protocol version */
       NodeList channelMixProtocolVersionNodes = mixCascadeNode.getElementsByTagName("MixProtocolVersion");
       if (channelMixProtocolVersionNodes.getLength() == 0) {
-        throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "KeyExchangeManager: Constructor: MixProtocolVersion (channel) node expected in received XML structure."));
+        throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "MixProtocolVersion (channel) node expected in received XML structure."));
       }
       /* there should be only one channel mix protocol version node */
       Element channelMixProtocolVersionNode = (Element)(channelMixProtocolVersionNodes.item(0));
       String channelMixProtocolVersionValue = XMLUtil.parseValue(channelMixProtocolVersionNode, null);
       if (channelMixProtocolVersionValue == null) {
-        throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "KeyExchangeManager: Constructor: MixProtocolVersion (channel) node has no value."));
+        throw (new XMLParseException(XMLParseException.NODE_NULL_TAG,
+									 "MixProtocolVersion (channel) node has no value."));
       }
       channelMixProtocolVersionValue = channelMixProtocolVersionValue.trim();
       m_protocolWithTimestamp = false;
@@ -168,7 +181,8 @@ public class KeyExchangeManager {
        * lower protocol versions not listed here are obsolete and not supported
        * any more
        */
-      LogHolder.log(LogLevel.DEBUG, LogType.NET, "KeyExchangeManager: Constructor: Cascade is using channel-protocol version '" + channelMixProtocolVersionValue + "'.");
+      LogHolder.log(LogLevel.DEBUG, LogType.NET,
+					"Cascade is using channel-protocol version '" + channelMixProtocolVersionValue + "'.");
       if (channelMixProtocolVersionValue.equals("0.2")) {
         /* no modifications of the default-settings required */
       }
@@ -184,18 +198,20 @@ public class KeyExchangeManager {
         m_paymentRequired = true;
       }
       else {
-        throw (new UnknownProtocolVersionException("KeyExchangeManager: Constructor: Unknown channel protocol version used ('" + channelMixProtocolVersionValue + "')."));
+        throw (new UnknownProtocolVersionException(
+			  "Unknown channel protocol version used ('" + channelMixProtocolVersionValue + "')."));
       }
       /* get the information about the mixes in the cascade */
       NodeList mixesNodes = mixCascadeNode.getElementsByTagName("Mixes");
       if (mixesNodes.getLength() == 0) {
-        throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "KeyExchangeManager: Constructor: Mixes node expected in received XML structure."));
+        throw (new XMLParseException(XMLParseException.NODE_NULL_TAG,
+									 "Mixes node expected in received XML structure."));
       }
       /* there should be only one mixes node */
       Element mixesNode = (Element)(mixesNodes.item(0));
       NodeList mixNodes = mixesNode.getElementsByTagName("Mix");
       if (mixNodes.getLength() == 0) {
-        throw (new Exception("KeyExchangeManager: Constructor: No information about mixes found in the received XML structure."));
+        throw (new XMLParseException("No information about mixes found in the received XML structure."));
       }
       m_mixParameters = new MixParameters[mixNodes.getLength()];
       for (int i = 0; i < mixNodes.getLength(); i++) {
@@ -206,29 +222,32 @@ public class KeyExchangeManager {
            * signature is checked with the MixCascade node)
            */
           if (!SignatureVerifier.getInstance().verifyXml(currentMixNode, SignatureVerifier.DOCUMENT_CLASS_MIX)) {
-            throw (new Exception("KeyExchangeManger: Constructor: Received XML structure has an invalid signature for Mix " + Integer.toString(i) + "."));
+            throw (new SignatureException("Received XML structure has an invalid signature for Mix " + Integer.toString(i) + "."));
           }
         }
         /* get the mix parameters */
         String currentMixId = XMLUtil.parseAttribute(currentMixNode, "id", null);
         if (currentMixId == null) {
-          throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "KeyExchangeManager: Constructor: XML structure of Mix " + Integer.toString(i) + " does not contain a Mix-ID."));
+          throw (new XMLParseException(XMLParseException.NODE_NULL_TAG,
+									   "XML structure of Mix " + Integer.toString(i) + " does not contain a Mix-ID."));
         }
         m_mixParameters[i] = new MixParameters(currentMixId, new ASymCipher());
         if (m_mixParameters[i].getMixCipher().setPublicKey(currentMixNode) != ErrorCodes.E_SUCCESS) {
-          throw (new Exception("KeyExchangeManager: Constructor: Received XML structure contains an invalid public key for Mix " + Integer.toString(i) + "."));
+          throw (new XMLParseException("Received XML structure contains an invalid public key for Mix " + Integer.toString(i) + "."));
         }
         if (i == (mixNodes.getLength() - 1)) {
           /* get the chain protocol version from the last mix */
           NodeList chainMixProtocolVersionNodes = currentMixNode.getElementsByTagName("MixProtocolVersion");
           if (chainMixProtocolVersionNodes.getLength() == 0) {
-            throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "KeyExchangeManager: Constructor: MixProtocolVersion (chain) node expected in received XML structure."));
+            throw (new XMLParseException(XMLParseException.NODE_NULL_TAG,
+										 "MixProtocolVersion (chain) node expected in received XML structure."));
           }
           /* there should be only one chain mix protocol version node */
           Element chainMixProtocolVersionNode = (Element)(chainMixProtocolVersionNodes.item(0));
           String chainMixProtocolVersionValue = XMLUtil.parseValue(chainMixProtocolVersionNode, null);
           if (chainMixProtocolVersionValue == null) {
-            throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "KeyExchangeManager: Constructor: MixProtocolVersion (chain) node has no value."));
+            throw (new XMLParseException(XMLParseException.NODE_NULL_TAG,
+										 "MixProtocolVersion (chain) node has no value."));
           }
           chainMixProtocolVersionValue = chainMixProtocolVersionValue.trim();
           m_chainProtocolWithFlowControl = false;
@@ -237,7 +256,8 @@ public class KeyExchangeManager {
            * lower protocol versions not listed here are obsolete and not
            * supported any more
            */
-          LogHolder.log(LogLevel.DEBUG, LogType.NET, "KeyExchangeManager: Constructor: Cascade is using chain-protocol version '" + chainMixProtocolVersionValue + "'.");
+          LogHolder.log(LogLevel.DEBUG, LogType.NET,
+						"Cascade is using chain-protocol version '" + chainMixProtocolVersionValue + "'.");
           if (chainMixProtocolVersionValue.equals("0.3")) {
             /* no modification of the default settings required */
           }
@@ -248,13 +268,14 @@ public class KeyExchangeManager {
             /* simulated 1:n channels */
             NodeList downstreamPacketsNodes = currentMixNode.getElementsByTagName("DownstreamPackets");
             if (downstreamPacketsNodes.getLength() == 0) {
-              throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "KeyExchangeManager: Constructor: DownstreamPackets node expected in received XML structure."));
+              throw (new XMLParseException(XMLParseException.NODE_NULL_TAG,
+										   "DownstreamPackets node expected in received XML structure."));
             }
             /* there should be only one downstream packets node */
             Element downstreamPacketsNode = (Element)(downstreamPacketsNodes.item(0));
             int downstreamPackets = XMLUtil.parseValue(downstreamPacketsNode, -1);
             if (downstreamPackets < 1) {
-              throw (new Exception("KeyExchangeManager: Constructor: DownstreamPackets node has an invalid value."));
+              throw (new XMLParseException("DownstreamPackets node has an invalid value."));
             }
             NodeList channelTimeoutNodes = currentMixNode.getElementsByTagName("ChannelTimeout");
             if (channelTimeoutNodes.getLength() == 0) {
@@ -264,7 +285,7 @@ public class KeyExchangeManager {
             Element channelTimeoutNode = (Element)(channelTimeoutNodes.item(0));
             long channelTimeout = XMLUtil.parseValue(channelTimeoutNode, -1);
             if (channelTimeout < 1) {
-              throw (new Exception("KeyExchangeManager: Constructor: ChannelTimeout node has an invalid value."));
+              throw (new XMLParseException("ChannelTimeout node has an invalid value."));
             }
             channelTimeout = 1000L * channelTimeout;
             NodeList chainTimeoutNodes = currentMixNode.getElementsByTagName("ChainTimeout");
@@ -275,13 +296,14 @@ public class KeyExchangeManager {
             Element chainTimeoutNode = (Element)(chainTimeoutNodes.item(0));
             long chainTimeout = XMLUtil.parseValue(chainTimeoutNode, -1);
             if (chainTimeout < 1) {
-              throw (new Exception("KeyExchangeManager: Constructor: ChainTimeout node has an invalid value."));
+              throw (new XMLParseException("ChainTimeout node has an invalid value."));
             }
             chainTimeout = 1000L * chainTimeout;
             m_fixedRatioChannelsDescription = new FixedRatioChannelsDescription(downstreamPackets, channelTimeout, chainTimeout);
           }
           else {
-            throw (new UnknownProtocolVersionException("KeyExchangeManager: Constructor: Unknown chain protocol version used ('" + chainMixProtocolVersionValue + "')."));
+            throw (new UnknownProtocolVersionException(
+				  "Unknown chain protocol version used ('" + chainMixProtocolVersionValue + "')."));
           }
         }
       }
@@ -314,7 +336,7 @@ public class KeyExchangeManager {
          */
         Document keyDoc = XMLUtil.createDocument();
         if (keyDoc == null) {
-          throw (new Exception("KeyExchangeManager: Constructor: Cannot create XML document for key exchange."));
+          throw (new XMLParseException("Cannot create XML document for key exchange."));
         }
         Element japKeyExchangeNode = keyDoc.createElement("JAPKeyExchange");
         japKeyExchangeNode.setAttribute("version", "0.1");
@@ -368,7 +390,7 @@ public class KeyExchangeManager {
         while (keySignatureXmlDataLength > 0) {
           int bytesRead = a_inputStream.read(keySignatureXmlData, keySignatureXmlData.length - keySignatureXmlDataLength, keySignatureXmlDataLength);
           if (bytesRead == -1) {
-            throw new EOFException("KeyExchangeManger: Constructor: EOF detected while reading symmetric key signature XML structure.");
+            throw new EOFException("EOF detected while reading symmetric key signature XML structure.");
           }
           else {
             keySignatureXmlDataLength = keySignatureXmlDataLength - bytesRead;
@@ -377,24 +399,25 @@ public class KeyExchangeManager {
         Document keySignatureDoc = XMLUtil.toXMLDocument(keySignatureXmlData);
         Element keySignatureNode = keySignatureDoc.getDocumentElement();
         if (keySignatureNode == null) {
-          throw (new XMLParseException(XMLParseException.ROOT_TAG, "KeyExchangeManager: Constructor: No document element in received symmetric key signature XML structure."));
+          throw (new XMLParseException(XMLParseException.ROOT_TAG, "No document element in received symmetric key signature XML structure."));
         }
         if (!keySignatureNode.getNodeName().equals("Signature")) {
-          throw (new XMLParseException(XMLParseException.ROOT_TAG, "KeyExchangeManager: Constructor: Signature node expected in received symmetric key signature XML structure."));
+          throw (new XMLParseException(XMLParseException.ROOT_TAG, "Signature node expected in received symmetric key signature XML structure."));
         }
         NodeList keySignatureValueNodes = keySignatureNode.getElementsByTagName("SignatureValue");
         if (keySignatureValueNodes.getLength() == 0) {
-          throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "KeyExchangeManager: Constructor: SignatureValue node expected in received symmetric key signature XML structure."));
+          throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "SignatureValue node expected in received symmetric key signature XML structure."));
         }
         /* there should be only one SignatureValue node */
         Element keySignatureValueNode = (Element)(keySignatureValueNodes.item(0));
         String keySignatureValue = XMLUtil.parseValue(keySignatureValueNode, null);
         if (keySignatureValue == null) {
-          throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "KeyExchangeManager: Constructor: SignatureValue node in symmetric key signature XML structure has no value."));
+          throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "SignatureValue node in symmetric key signature XML structure has no value."));
         }
         byte[] keySignatureData = Base64.decode(keySignatureValue);
         if (keySignatureData == null) {
-          throw (new Exception("KeyExchangeManager: Constructor: SignatureValue node in symmetric key signature XML structure has an invalid value."));
+          throw (new SignatureException(
+				"SignatureValue node in symmetric key signature XML structure has an invalid value."));
         }
         /*
          * now take the certificate of the first mix from the origin MixCascade
@@ -402,13 +425,20 @@ public class KeyExchangeManager {
          * against that certificate
          */
         JAPSignature signatureVerificationInstance = new JAPSignature();
-        signatureVerificationInstance.initVerify(firstMixCertificate.getPublicKey());
+		try
+		{
+			signatureVerificationInstance.initVerify(firstMixCertificate.getPublicKey());
+		}
+		catch (InvalidKeyException a_e)
+		{
+			throw new SignatureException(a_e.getMessage());
+		}
         if (!signatureVerificationInstance.verify(keyExchangeData, keySignatureData, true)) {
-          throw (new Exception("KeyExchangeManger: Constructor: Invalid symmetric keys signature received."));
+          throw (new SignatureException("Invalid symmetric keys signature received."));
         }
       }
     }
-    catch (Exception e) {
+    catch (SignatureException e) {
       /* clean up */
       removeCertificateLock();
       throw e;

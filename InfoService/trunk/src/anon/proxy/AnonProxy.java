@@ -286,17 +286,18 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	{
 		boolean m_bConnectionError = false;
 		m_numChannels = 0;
-		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy.start(): Try to initialize AN.ON");
+		LogHolder.log(LogLevel.DEBUG, LogType.NET, "Try to initialize AN.ON");
 		if (m_Anon == null)
 		{
 			LogHolder.log(LogLevel.EMERG, LogType.NET,
-						  "AnonProxy.start(): m_Anon is NULL - should never ever happen!");
+						  " m_Anon is NULL - should never ever happen!");
 			return ErrorCodes.E_INVALID_SERVICE;
 		}
 		int ret = m_Anon.initialize(m_currentMixCascade);
 		if (ret != ErrorCodes.E_SUCCESS)
 		{
-			if (!a_bRetryOnError)
+			if (!a_bRetryOnError || ret == E_SIGNATURE_CHECK_FIRSTMIX_FAILED ||
+				ret == E_SIGNATURE_CHECK_OTHERMIX_FAILED)
 			{
 				return ret;
 			}
@@ -305,13 +306,13 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				m_bConnectionError = true;
 			}
 		}
-		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy.start(): AN.ON initialized");
+		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AN.ON initialized");
 		if (m_currentTorParams != null)
 		{
 			m_Tor = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_TOR);
 			m_Tor.setProxy(m_proxyInterface);
 			m_Tor.initialize(m_currentTorParams);
-			LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy.start(): Tor initialized");
+			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Tor initialized");
 		}
 		if (m_currentMixminionParams != null)
 		{

@@ -1337,18 +1337,30 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 			settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox, advancedPanelConstraints);
 		advancedPanel.add(settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox);
 
+
+
 		return advancedPanel;
+	}
+
+	public void onResetToDefaultsPressed()
+	{
+		m_cbxAllowNonAnonymousConnection.setSelected(
+			  JAPConstants.DEFAULT_ALLOW_INFOSERVICE_NON_ANONYMOUS_CONNECTION);
+	}
+
+	protected void onUpdateValues()
+	{
+		m_cbxAllowNonAnonymousConnection.setSelected(
+			  JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed());
+		//Select the preferred InfoService
+		m_listKnownInfoServices.setSelectedValue(InfoServiceHolder.getInstance().
+												 getPreferredInfoService(), true);
 	}
 
 	protected void onRootPanelShown()
 	{
 		//Register help context
 		JAPHelp.getInstance().getContextObj().setContext("infoservice");
-		//Select the preferred InfoService
-		m_listKnownInfoServices.setSelectedValue(InfoServiceHolder.getInstance().
-												 getPreferredInfoService(), true);
-		m_cbxAllowNonAnonymousConnection.setSelected(
-			  JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed());
 	}
 
 	protected boolean onOkPressed()

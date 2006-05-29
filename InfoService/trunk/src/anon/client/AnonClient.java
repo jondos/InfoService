@@ -57,6 +57,7 @@ import anon.pay.Pay;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.security.SignatureException;
 
 /**
  * @author Stefan Lieske
@@ -372,33 +373,20 @@ public class AnonClient implements AnonService, Observer
 		catch (UnknownProtocolVersionException e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET, e);
-			synchronized (m_internalSynchronizationForSocket)
-			{
-				if (m_socketHandler != null)
-				{
-					/* we have to check for null because the socket could be closed by another
-					 * thread in the meantime
-					 */
-					m_socketHandler.closeSocket();
-					m_socketHandler = null;
-				}
-			}
+			closeSocketHandler();
 			return ErrorCodes.E_PROTOCOL_NOT_SUPPORTED;
+		}
+		catch (SignatureException a_e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.CRYPTO, a_e);
+			closeSocketHandler();
+			/** @todo Make this more transparent... */
+			return ErrorCodes.E_SIGNATURE_CHECK_FIRSTMIX_FAILED;
 		}
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET, e);
-			synchronized (m_internalSynchronizationForSocket)
-			{
-				if (m_socketHandler != null)
-				{
-					/* we have to check for null because the socket could be closed by another
-					 * thread in the meantime
-					 */
-					m_socketHandler.closeSocket();
-					m_socketHandler = null;
-				}
-			}
+			closeSocketHandler();
 			return ErrorCodes.E_UNKNOWN;
 		}
 		m_multiplexer = new Multiplexer(m_socketHandler.getInputStream(), m_socketHandler.getOutputStream(),
@@ -492,6 +480,21 @@ public class AnonClient implements AnonService, Observer
 			aiControlChannel.sendAccountCert();
 		}
 		return ErrorCodes.E_SUCCESS;
+	}
+
+	private void closeSocketHandler()
+	{
+		synchronized (m_internalSynchronizationForSocket)
+		{
+			if (m_socketHandler != null)
+			{
+				/* we have to check for null because the socket could be closed by another
+				 * thread in the meantime
+				 */
+				m_socketHandler.closeSocket();
+				m_socketHandler = null;
+			}
+		}
 	}
 
 }

@@ -36,7 +36,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.05.186"; //Never change the layout of this line!
+	public static final String aktVersion = "00.05.187"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -67,8 +67,7 @@ public final class JAPConstants
 	static final boolean DEFAULT_LISTENER_IS_LOCAL = true;
 	static final String DEFAULT_ANON_NAME = "Dresden-Dresden";
 	static final String DEFAULT_ANON_ID = "141.76.1.120%3A6544";
-	static final String DEFAULT_ANON_HOST = "mix.inf.tu-dresden.de";
-	static final String DEFAULT_ANON_IP = "141.76.1.120"; //only used for fallback,
+	static final String[] DEFAULT_ANON_HOSTS = {"mix.inf.tu-dresden.de", "141.76.1.120"};
 	static final int DEFAULT_ANON_PORT_NUMBERS[] =
 		{
 		22, 80, 443, 6544};
@@ -98,6 +97,12 @@ public final class JAPConstants
 	 */
 	public static final int DEFAULT_INFOSERVICE_TIMEOUT = 30;
 
+	public static final boolean DEFAULT_ALLOW_INFOSERVICE_NON_ANONYMOUS_CONNECTION = true;
+	public static final boolean DEFAULT_ALLOW_PAYMENT_NON_ANONYMOUS_CONNECTION = true;
+	public static final boolean DEFAULT_ALLOW_UPDATE_NON_ANONYMOUS_CONNECTION = true;
+
+	public static final boolean REMIND_OPTIONAL_UPDATE = true;
+
 	static final int SMALL_FONT_SIZE = 9;
 	static final int SMALL_FONT_STYLE = Font.PLAIN;
 	static final Insets SMALL_BUTTON_MARGIN = new Insets(1, 1, 1, 1);
@@ -123,9 +128,6 @@ public final class JAPConstants
 	static final String IICON16FN = "icon16.gif";
 	static final String ICONFN = "icon.gif";
 
-	//static final String   JAPTXTFN                     = "japtxt.gif";
-	static final String JAPEYEFN = "japeye.gif";
-	static final String JAPICONFN = "japi.gif";
 
 	//static final String   CONFIGICONFN                 = "icoc.gif";
 	static final String ICONIFYICONFN = "iconify.gif";
