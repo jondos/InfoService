@@ -46,7 +46,6 @@ import logging.LogType;
  */
 public class InfoServiceHolder extends Observable
 {
-
 	/**
 	 * Function number for fetchInformation() - getMixCascades().
 	 */

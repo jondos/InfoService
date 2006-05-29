@@ -30,6 +30,7 @@ package jap;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.text.MessageFormat;
@@ -95,7 +96,6 @@ import logging.LogType;
 import platform.AbstractOS;
 import proxy.DirectProxy;
 import update.JAPUpdateWizard;
-import java.security.SecureRandom;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -138,6 +138,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 * This list may or may not include the current active MixCascade.
 	 */
 	private Vector m_vectorMixCascadeDatabase = null;
+
+	private boolean m_bShutdown = false;
 
 	/**
 	 * Stores the active MixCascade.
@@ -226,11 +228,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 		try
 		{
 			Vector listeners = new Vector();
-			for (int i = 0; i < JAPConstants.DEFAULT_ANON_PORT_NUMBERS.length; i++)
+			for (int j = 0; j < JAPConstants.DEFAULT_ANON_HOSTS.length; j++)
 			{
-				listeners.addElement(new ListenerInterface(JAPConstants.DEFAULT_ANON_HOST,
-					JAPConstants.DEFAULT_ANON_PORT_NUMBERS[i],
-					ListenerInterface.PROTOCOL_TYPE_RAW_TCP));
+				for (int i = 0; i < JAPConstants.DEFAULT_ANON_PORT_NUMBERS.length; i++)
+				{
+					listeners.addElement(new ListenerInterface(JAPConstants.DEFAULT_ANON_HOSTS[j],
+						JAPConstants.DEFAULT_ANON_PORT_NUMBERS[i],
+						ListenerInterface.PROTOCOL_TYPE_RAW_TCP));
+				}
 			}
 			m_currentMixCascade = new MixCascade(JAPConstants.DEFAULT_ANON_NAME,
 												 JAPConstants.DEFAULT_ANON_ID,
@@ -540,11 +545,29 @@ public final class JAPController extends Observable implements IProxyListener, O
 					JAPConstants.XMLCONFFN);
 			}
 		}
+		Document doc = null;
+
 		if (success)
 		{
 			try
 			{
-				Document doc = XMLUtil.readXMLDocument(new File(JAPModel.getInstance().getConfigFile()));
+				doc = XMLUtil.readXMLDocument(new File(JAPModel.getInstance().getConfigFile()));
+			}
+			catch (Exception a_e)
+			{
+				LogHolder.log(LogLevel.NOTICE, LogType.MISC, "Error while loading the configuration file!");
+			}
+		}
+		if (doc == null)
+		{
+			doc = XMLUtil.createDocument();
+		}
+
+
+		//if (success)
+		{
+			try
+			{
 				Element root = doc.getDocumentElement();
 				XMLUtil.removeComments(root);
 
@@ -555,9 +578,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 	            m_Model.setDLLupdate(XMLUtil.parseAttribute(root, m_Model.DLL_VERSION_UPDATE, false));
 
 				JAPModel.getInstance().allowUpdateViaDirectConnection(
-								XMLUtil.parseAttribute(root, XML_ALLOW_NON_ANONYMOUS_UPDATE, true));
+								XMLUtil.parseAttribute(root, XML_ALLOW_NON_ANONYMOUS_UPDATE,
+								JAPConstants.DEFAULT_ALLOW_UPDATE_NON_ANONYMOUS_CONNECTION));
 				JAPModel.getInstance().setReminderForOptionalUpdate(
-								XMLUtil.parseAttribute(root, JAPModel.XML_REMIND_OPTIONAL_UPDATE, true));
+								XMLUtil.parseAttribute(root, JAPModel.XML_REMIND_OPTIONAL_UPDATE,
+								JAPConstants.REMIND_OPTIONAL_UPDATE));
 
 
 
@@ -693,7 +718,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				setDummyTraffic(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_DUMMY_TRAFFIC_INTERVALL,
 					-1));
 				setAutoConnect(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_AUTO_CONNECT, false));
-				setAutoReConnect(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_AUTO_RECONNECT, false));
+				setAutoReConnect(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_AUTO_RECONNECT, true));
 				m_Model.setMinimizeOnStartup(
 								XMLUtil.parseAttribute(root, JAPConstants.CONFIG_MINIMIZED_STARTUP, false));
 				//Load Locale-Settings
@@ -836,7 +861,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					catch (Exception ex)
 					{
 						LogHolder.log(LogLevel.INFO, LogType.MISC,
-									  "JAPController: loadConfigFile: Error loading Debug Settings.");
+									  " Error loading Debug Settings.");
 					}
 				}
 
@@ -872,14 +897,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 						InfoServiceHolder.getXmlSettingsRootNodeName()));
 					JAPModel.getInstance().allowInfoServiceViaDirectConnection(
 					   XMLUtil.parseAttribute(infoserviceManagementNode,
-											  XML_ALLOW_NON_ANONYMOUS_CONNECTION, true));
+											  XML_ALLOW_NON_ANONYMOUS_CONNECTION,
+											  JAPConstants.DEFAULT_ALLOW_INFOSERVICE_NON_ANONYMOUS_CONNECTION));
 					if (infoserviceManagementNode != null)
 					{
 						InfoServiceHolder.getInstance().loadSettingsFromXml(infoserviceManagementNode);
 					}
 					else
 					{
-						throw (new Exception("JAPController: loadConfigFile: No InfoServiceManagement node found. Using default settings for infoservice management in InfoServiceHolder."));
+						throw (new Exception("No InfoServiceManagement node found. Using default settings for infoservice management in InfoServiceHolder."));
 					}
 				}
 				catch (Exception e)
@@ -895,7 +921,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 						Element elemPay = (Element) XMLUtil.getFirstChildByName(root,
 							JAPConstants.CONFIG_PAYMENT);
 						JAPModel.getInstance().allowPaymentViaDirectConnection(
-							XMLUtil.parseAttribute(elemPay, XML_ALLOW_NON_ANONYMOUS_CONNECTION, true));
+											  XMLUtil.parseAttribute(elemPay, XML_ALLOW_NON_ANONYMOUS_CONNECTION,
+							JAPConstants.DEFAULT_ALLOW_PAYMENT_NON_ANONYMOUS_CONNECTION));
 
 						Element elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay,
 							JAPConstants.CONFIG_PAY_ACCOUNTS_FILE);
@@ -1865,12 +1892,47 @@ public final class JAPController extends Observable implements IProxyListener, O
 					LogHolder.log(LogLevel.DEBUG, LogType.NET, "Try to start AN.ON service...");
 
 					int ret = m_proxyAnon.start(a_bRetryOnConnectionError);
-					if (ret != ErrorCodes.E_SUCCESS && !a_bRetryOnConnectionError)
+
+					if (ret == AnonProxy.E_BIND)
 					{
 						canStartService = false;
 						m_proxyAnon = null;
+
+						Object[] args =
+							{
+							new Integer(JAPModel.getHttpListenerPortNumber())};
+						String msg = MessageFormat.format(JAPMessages.getString("errorListenerPort"),
+							args);
+						JAPDialog.showErrorDialog(m_View, msg, LogType.NET);
+						JAPController.getView().disableSetAnonMode();
 					}
-					if (ret == ErrorCodes.E_SUCCESS || a_bRetryOnConnectionError)
+					else if (ret == AnonProxy.E_MIX_PROTOCOL_NOT_SUPPORTED)
+					{
+						canStartService = false;
+						m_proxyAnon = null;
+						JAPDialog.showErrorDialog(m_View,
+												  JAPMessages.getString("errorMixProtocolNotSupported"),
+												  LogType.NET);
+					}
+					//otte
+					else if (ret == AnonProxy.E_SIGNATURE_CHECK_FIRSTMIX_FAILED)
+					{
+						canStartService = false;
+						m_proxyAnon = null;
+						JAPDialog.showErrorDialog(m_View,
+												  JAPMessages.getString("errorMixFirstMixSigCheckFailed"),
+												  LogType.NET);
+					}
+
+					else if (ret == AnonProxy.E_SIGNATURE_CHECK_OTHERMIX_FAILED)
+					{
+						canStartService = false;
+						m_proxyAnon = null;
+						JAPDialog.showErrorDialog(m_View,
+												  JAPMessages.getString("errorMixOtherMixSigCheckFailed"),
+												  LogType.NET);
+					}
+					else if (ret == ErrorCodes.E_SUCCESS || a_bRetryOnConnectionError)
 					{
 						final AnonProxy proxyAnon = m_proxyAnon;
 						AnonServiceEventAdapter adapter = new AnonServiceEventAdapter()
@@ -1903,19 +1965,26 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 							if (!mbActCntMessageNotRemind && !JAPModel.isSmallDisplay())
 							{
-								JAPDialog.LinkedCheckBox checkBox = new JAPDialog.LinkedCheckBox(false);
-								JAPDialog.showWarningDialog(m_View,
-									JAPMessages.getString("disableActCntMessage"),
-									JAPMessages.getString("disableActCntMessageTitle"),
-									checkBox);
-								// show a Reminder message that active contents should be disabled
-
-								mbActCntMessageNeverRemind = checkBox.getState();
-								mbDoNotAbuseReminder = checkBox.getState();
-								if (mbActCntMessageNeverRemind)
+								SwingUtilities.invokeLater(new Runnable()
 								{
-									mbActCntMessageNotRemind = true;
-								}
+									public void run()
+									{
+										JAPDialog.LinkedCheckBox checkBox = new JAPDialog.LinkedCheckBox(false);
+										JAPDialog.showWarningDialog(m_View,
+											JAPMessages.getString("disableActCntMessage"),
+											JAPMessages.getString("disableActCntMessageTitle"),
+											checkBox);
+										// show a Reminder message that active contents should be disabled
+
+										mbActCntMessageNeverRemind = checkBox.getState();
+										mbDoNotAbuseReminder = checkBox.getState();
+										if (mbActCntMessageNeverRemind)
+										{
+											mbActCntMessageNotRemind = true;
+										}
+									}
+								});
+
 							}
 						}
 						else
@@ -1934,39 +2003,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 						m_feedback = new JAPFeedback();
 						m_feedback.startRequests();
 					}
-					else if (ret == AnonProxy.E_BIND)
-					{
-						Object[] args =
-							{
-							new Integer(JAPModel.getHttpListenerPortNumber())};
-						String msg = MessageFormat.format(JAPMessages.getString("errorListenerPort"),
-							args);
-						JAPDialog.showErrorDialog(m_View, msg, LogType.NET);
-						JAPController.getView().disableSetAnonMode();
-					}
-					else if (ret == AnonProxy.E_MIX_PROTOCOL_NOT_SUPPORTED)
-					{
-						JAPDialog.showErrorDialog(m_View,
-												  JAPMessages.getString("errorMixProtocolNotSupported"),
-												  LogType.NET);
-					}
-					//otte
-					else if (ret == AnonProxy.E_SIGNATURE_CHECK_FIRSTMIX_FAILED)
-					{
-						JAPDialog.showErrorDialog(m_View,
-												  JAPMessages.getString("errorMixFirstMixSigCheckFailed"),
-												  LogType.NET);
-					}
-
-					else if (ret == AnonProxy.E_SIGNATURE_CHECK_OTHERMIX_FAILED)
-					{
-						JAPDialog.showErrorDialog(m_View,
-												  JAPMessages.getString("errorMixOtherMixSigCheckFailed"),
-												  LogType.NET);
-					}
 					// ootte
 					else
 					{
+						canStartService = false;
+						m_proxyAnon = null;
 						if (!JAPModel.isSmallDisplay())
 						{
 							LogHolder.log(LogLevel.ERR, LogType.NET,
@@ -2073,6 +2114,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 				synchronized (m_changeAnonModeJobs)
 				{
+					if (a_anonModeSelected && m_bShutdown)
+					{
+						// do not make new connection during shutdown
+						return;
+					}
 					boolean newJob = true;
 					if (m_changeAnonModeJobs.size() > 0)
 					{
@@ -2119,7 +2165,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							else
 							{
 								/* we don't have to wait for any previous job */
-								currentJob = new JAPController.SetAnonModeAsync(
+								currentJob = new SetAnonModeAsync(
 									a_anonModeSelected, null, controller);
 							}
 							Thread currentThread = new Thread(currentJob, "SetAnonModeAsync");
@@ -2386,6 +2432,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						JAPDialog.showErrorDialog(m_View, JAPMessages.getString(MSG_ERROR_SAVING_CONFIG,
 							JAPModel.getInstance().getConfigFile()), LogType.MISC);
 					}
+					m_Controller.m_bShutdown = true;
 					getView().setEnabled(false);
 					// disallow InfoService traffic
 					JAPModel.getInstance().setInfoServiceDisabled(true);
@@ -2396,14 +2443,26 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						m_Controller.setAnonMode(false);
 						//Wait until all Jobs are finished....
-						while (m_Controller.m_changeAnonModeJobs.size() > 0)
+						long waitingTime = System.currentTimeMillis() + 10000;
+
+						synchronized (m_Controller.m_changeAnonModeJobs)
 						{
-							try
+							while (m_Controller.m_changeAnonModeJobs.size() > 0)
 							{
-								Thread.sleep(100);
-							}
-							catch (InterruptedException ex)
-							{
+								try
+								{
+									m_Controller.m_changeAnonModeJobs.notify();
+									m_Controller.m_changeAnonModeJobs.wait(500);
+								}
+								catch (InterruptedException ex)
+								{
+								}
+								if (System.currentTimeMillis() > waitingTime)
+								{
+									LogHolder.log(LogLevel.INFO, LogType.GUI,
+												  "Could not make a clean finish!");
+									break;
+								}
 							}
 						}
 					}

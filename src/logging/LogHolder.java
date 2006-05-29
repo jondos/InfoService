@@ -57,6 +57,7 @@ public final class LogHolder
 	public static final int DETAIL_LEVEL_HIGHEST = 3;
 
 	private static final String TRACED_LOG_MESSAGE = "[Traced log Message]:";
+	private static final String LOGGED_THROWABLE = " Logged Throwable: ";
 	private static final int LINE_LENGTH_HIGH_DETAIL = 40;
 	private static final int LINE_LENGTH_HIGHEST_DETAIL = 80;
 
@@ -155,22 +156,60 @@ public final class LogHolder
 
 		if (isLogged(a_logLevel, a_logType))
 		{
+			String message = "";
 			if (a_message != null && a_message.length() > 0)
 			{
-				getInstance().getLogInstance().log(a_logLevel, a_logType, a_message);
+				message = a_message;
 			}
-			if (m_messageDetailLevel == DETAIL_LEVEL_LOWEST)
+
+			if (m_messageDetailLevel <= DETAIL_LEVEL_LOWEST)
 			{
 				getInstance().getLogInstance().log(a_logLevel, a_logType, a_throwable.getMessage());
 			}
 			else if (m_messageDetailLevel > DETAIL_LEVEL_LOWEST &&
 					 m_messageDetailLevel < DETAIL_LEVEL_HIGHEST)
 			{
+				if (message.length() == 0)
+				{
+					message =  a_throwable.getMessage();
+				}
+				else
+				{
+					message += "\n" + LOGGED_THROWABLE +  a_throwable.getMessage();
+				}
+
 				getInstance().getLogInstance().log(a_logLevel, a_logType, a_throwable.toString());
 			}
-			else if (m_messageDetailLevel == DETAIL_LEVEL_HIGHEST)
+			else if (m_messageDetailLevel == DETAIL_LEVEL_HIGH)
 			{
-				getInstance().getLogInstance().log(a_logLevel, a_logType, Util.getStackTrace(a_throwable));
+				if (message.length() == 0)
+				{
+					message =  a_throwable.toString();
+				}
+				else
+				{
+					message +=  "\n" + LOGGED_THROWABLE + a_throwable.toString();
+				}
+
+				getInstance().getLogInstance().log(a_logLevel, a_logType,
+					Util.normaliseString(getCallingClassFile(false) + ": ", LINE_LENGTH_HIGH_DETAIL) +
+					message);
+			}
+			else if (m_messageDetailLevel >= DETAIL_LEVEL_HIGHEST)
+			{
+				if (message.length() == 0)
+				{
+					message = Util.getStackTrace(a_throwable);
+				}
+				else
+				{
+					message += "\n" + LOGGED_THROWABLE + Util.getStackTrace(a_throwable);
+				}
+
+				getInstance().getLogInstance().log(a_logLevel, a_logType,
+					Util.normaliseString(
+									   getCallingMethod(false) + ": ", LINE_LENGTH_HIGHEST_DETAIL) +
+					message);
 			}
 		}
 	}
@@ -189,7 +228,7 @@ public final class LogHolder
 	{
 		if (isLogged(logLevel, logType))
 		{
-			if (m_messageDetailLevel == DETAIL_LEVEL_LOWEST)
+			if (m_messageDetailLevel <= DETAIL_LEVEL_LOWEST)
 			{
 				getInstance().getLogInstance().log(logLevel, logType, message);
 			}
@@ -199,31 +238,31 @@ public final class LogHolder
 				{
 					getInstance().getLogInstance().log(logLevel, logType,
 						Util.normaliseString(
-											  getCallingClassFile(false) + ": ", LINE_LENGTH_HIGH_DETAIL)
+							getCallingClassFile(false) + ": ", LINE_LENGTH_HIGH_DETAIL)
 						+ TRACED_LOG_MESSAGE);
 
 				}
 				getInstance().getLogInstance().log(logLevel, logType,
-				Util.normaliseString(
-								getCallingClassFile(a_bAddCallingClass) + ": ", LINE_LENGTH_HIGH_DETAIL)
-			+ message);
+												   Util.normaliseString(
+					getCallingClassFile(a_bAddCallingClass) + ": ", LINE_LENGTH_HIGH_DETAIL)
+												   + message);
 			}
 			else
 			{
 				if (a_bAddCallingClass)
 				{
-				getInstance().getLogInstance().log(logLevel, logType,
-					Util.normaliseString(
-											  getCallingMethod(false) + ": ", LINE_LENGTH_HIGHEST_DETAIL)
+					getInstance().getLogInstance().log(logLevel, logType,
+						Util.normaliseString(
+							getCallingMethod(false) + ": ", LINE_LENGTH_HIGHEST_DETAIL)
 						+ TRACED_LOG_MESSAGE);
 				}
 				getInstance().getLogInstance().log(logLevel, logType,
-					Util.normaliseString(
-							   getCallingMethod(a_bAddCallingClass) + ": ", LINE_LENGTH_HIGHEST_DETAIL)
-			+ message);
-			}
+												   Util.normaliseString(
+					getCallingMethod(a_bAddCallingClass) + ": ", LINE_LENGTH_HIGHEST_DETAIL)
+												   + message);
 			}
 		}
+	}
 
 	/**
 	 * Write the log data to the Log instance.
