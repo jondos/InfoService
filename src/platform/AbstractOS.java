@@ -42,10 +42,9 @@ public abstract class AbstractOS implements IExternalURLCaller
 	/**
 	 * Make sure that the default OS is the last OS in the array.
 	 */
-	private static String[] REGISTERED_PLATFORM_CLASSES =
+	private static Class[] REGISTERED_PLATFORM_CLASSES =
 		{
-		"platform.LinuxOS", "platform.WindowsOS", "platform.MacOS",
-		"platform.DefaultOS"};
+		LinuxOS.class, WindowsOS.class, MacOS.class, DefaultOS.class};
 
 	/**
 	 * The instanciated operation system class.
@@ -65,7 +64,7 @@ public abstract class AbstractOS implements IExternalURLCaller
 			try
 			{
 				ms_operatingSystem =
-					(AbstractOS) Class.forName(REGISTERED_PLATFORM_CLASSES[i]).newInstance();
+					(AbstractOS) REGISTERED_PLATFORM_CLASSES[i].newInstance();
 			}
 			catch (Exception a_e)
 			{

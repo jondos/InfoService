@@ -46,7 +46,7 @@ public class LinuxOS extends AbstractOS
 	public LinuxOS() throws Exception
 	{
 		String osName = System.getProperty("os.name", "").toLowerCase();
-		if (osName.indexOf("linux") == -1)
+		if (osName.toLowerCase().indexOf("linux") == -1)
 		{
 			throw new Exception("Operating system is not Linux");
 		}
