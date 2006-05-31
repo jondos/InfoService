@@ -31,8 +31,9 @@ import java.awt.Window;
 import javax.swing.JPanel;
 
 import gui.IStatusLine;
+import anon.AnonServiceEventListener;
 
-public interface IJAPMainView extends JAPObserver, IStatusLine
+public interface IJAPMainView extends JAPObserver, IStatusLine, AnonServiceEventListener
 {
 	public void create(boolean bWithPay);
 

@@ -205,7 +205,8 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		m_labelBytes.setText(JAPMessages.getString("iconifiedViewZero"));
 		m_labelUsers.setText(JAPMessages.getString("iconifiedViewNA"));
 		m_labelTraffic.setText(JAPMessages.getString("iconifiedViewNA"));
-		JAPDll.setWindowOnTop(this,STR_HIDDEN_WINDOW, true);
+		//JAPDll.setWindowOnTop(this,STR_HIDDEN_WINDOW, true);
+		JAPDll.setWindowOnTop(this, true);
 	}
 
 	void switchBackToMainView()

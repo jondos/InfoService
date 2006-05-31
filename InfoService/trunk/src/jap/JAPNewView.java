@@ -1339,70 +1339,87 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 	}
 
-	public void actionPerformed(ActionEvent event)
+	public void actionPerformed(final ActionEvent event)
 	{
 		//		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"GetEvent: "+event.getSource());
-		Object source = event.getSource();
-		if (source == m_bttnQuit)
+		final JAPNewView view = this;
+		Thread doIt = new Thread()
 		{
-			exitProgram();
-		}
-		else if (source == m_bttnIconify)
-		{
-			showIconifiedView();
-		}
-		else if (source == m_bttnConf)
-		{
-			showConfigDialog();
-			/*else if (event.getSource() == portB)
-			 showConfigDialog(JAPConf.PORT_TAB);
-			  else if (event.getSource() == httpB)
-			 showConfigDialog(JAPConf.HTTP_TAB);
-			  else if (event.getSource() == isB)
-			 showConfigDialog(JAPConf.INFO_TAB);
-			  else if (event.getSource() == anonB)
-			 showConfigDialog(JAPConf.ANON_TAB);*/
-		}
-		//else if (source == m_bttnAnonConf)
-		//{
-		//showConfigDialog(JAPConf.ANON_TAB);
-		//}
-		else if (source == m_bttnInfo)
-		{
-			JAPController.aboutJAP();
-		}
-		else if (source == m_bttnHelp)
-		{
-			showHelpWindow();
-			//else if (event.getSource() == anonCheckBox)
-			//	controller.setAnonMode(anonCheckBox.isSelected());
-		}
-		else if (source == m_rbAnonOn || source == m_rbAnonOff)
-		{
-			if (m_rbAnonOn.isSelected())
+			public void run()
 			{
-				m_Controller.startAnonymousMode(this);
-			}
-			else
-			{
-				m_Controller.setAnonMode(false);
-			}
-		}
-		else if (source == m_cbAnonymityOn)
-		{
-			if (m_cbAnonymityOn.isSelected())
-			{
-				m_Controller.startAnonymousMode(this);
-			}
-			else
-			{
-				m_Controller.setAnonMode(false);
-			}
-		}
 
+				Object source = event.getSource();
+				if (source == m_bttnQuit)
+				{
+					exitProgram();
+				}
+				else if (source == m_bttnIconify)
+				{
+					showIconifiedView();
+				}
+				else if (source == m_bttnConf)
+				{
+					showConfigDialog();
+					/*else if (event.getSource() == portB)
+					 showConfigDialog(JAPConf.PORT_TAB);
+					  else if (event.getSource() == httpB)
+					 showConfigDialog(JAPConf.HTTP_TAB);
+					  else if (event.getSource() == isB)
+					 showConfigDialog(JAPConf.INFO_TAB);
+					  else if (event.getSource() == anonB)
+					 showConfigDialog(JAPConf.ANON_TAB);*/
+				}
+				//else if (source == m_bttnAnonConf)
+				//{
+				//showConfigDialog(JAPConf.ANON_TAB);
+				//}
+				else if (source == m_bttnInfo)
+				{
+					JAPController.aboutJAP();
+				}
+				else if (source == m_bttnHelp)
+				{
+					showHelpWindow();
+					//else if (event.getSource() == anonCheckBox)
+					//	controller.setAnonMode(anonCheckBox.isSelected());
+				}
+				else if (source == m_rbAnonOn || source == m_rbAnonOff)
+				{
+					if (m_rbAnonOn.isSelected())
+					{
+						m_Controller.startAnonymousMode(view);
+					}
+					else
+					{
+						m_Controller.setAnonMode(false);
+					}
+				}
+				else if (source == m_cbAnonymityOn)
+				{
+					if (m_cbAnonymityOn.isSelected())
+					{
+						m_Controller.startAnonymousMode(view);
+					}
+					else
+					{
+						m_Controller.setAnonMode(false);
+					}
+				}
+
+				else
+				{
+					LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Event ?????: " + event.getSource());
+				}
+			}
+		};
+
+		if (SwingUtilities.isEventDispatchThread())
+		{
+			SwingUtilities.invokeLater(doIt);
+		}
 		else
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Event ?????: " + event.getSource());
+			doIt.run();
 		}
 	}
 

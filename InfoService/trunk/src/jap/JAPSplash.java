@@ -146,9 +146,8 @@ final public class JAPSplash extends Window
 		catch (Exception e)
 		{}
 		;
-		setVisible(true);
-		toFront();
 		centerOnScreen(this);
+		toFront();
 	}
 
 	public void update(Graphics g)

@@ -141,6 +141,8 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 
 	private static final int NUMBER_OF_HEURISTIC_ITERATIONS = 6;
 
+	private static boolean ms_bConsoleOnly = false;
+
 	private boolean m_bLocationSetManually = false;
 	private boolean m_bModal;
 	private boolean m_bBlockParentWindow = false;
@@ -165,6 +167,20 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 * This stores the parent window of this dialog.
 	 */
 	private Window m_parentWindow;
+
+	/**
+	 * Disables the output of static dialog methods. All those method will return RETURN_VALUE_UNINITIALIZED.
+	 * @param a_bConsoleOnly if the output of static dialog methods should be disabled
+	 */
+	public static void setConsoleOnly(boolean a_bConsoleOnly)
+	{
+		ms_bConsoleOnly = a_bConsoleOnly;
+	}
+
+	public static boolean isConsoleOnly()
+	{
+		return ms_bConsoleOnly;
+	}
 
 	/**
 	 * Creates a new instance of JAPDialog. It is user-resizable.
@@ -1028,6 +1044,13 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		PreferredWidthBoxPanel dummyBox;
 		JComponent linkLabel;
 		boolean bForceApplicationModality = false;
+
+		if (ms_bConsoleOnly)
+		{
+			LogHolder.log(LogLevel.ALERT, LogType.GUI, a_message);
+			return RETURN_VALUE_UNINITIALIZED;
+		}
+
 
 		if (a_message == null)
 		{

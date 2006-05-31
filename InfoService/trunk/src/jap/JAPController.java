@@ -90,6 +90,7 @@ import gui.dialog.PasswordContentPane;
 import jap.forward.JAPRoutingEstablishForwardedConnectionDialog;
 import jap.forward.JAPRoutingMessage;
 import jap.forward.JAPRoutingSettings;
+import jap.IJAPMainView;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -168,7 +169,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private long m_nrOfBytesWWW = 0;
 	private long m_nrOfBytesOther = 0;
 
-	private static AbstractJAPMainView m_View = null;
+	private static IJAPMainView m_View = null;
 	private static JAPController m_Controller = null;
 	private static JAPModel m_Model = null;
 	private static JAPFeedback m_feedback = null;
@@ -211,15 +212,18 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			public DirectProxy.AllowUnprotectedConnectionCallback.Answer callback()
 			{
+				if (JAPController.getView() == null)
+				{
+					return new Answer(false, false);
+				}
+
 				boolean bShowHtmlWarning;
-				JAPDll.setWindowOnTop(JAPController.getView(),
-									  JAPController.getView().getName(), true);
+				JAPDll.setWindowOnTop(JAPController.getView(), true);
 				JAPDialog.LinkedCheckBox cb = new JAPDialog.LinkedCheckBox(
 					JAPMessages.getString(JAPDialog.LinkedCheckBox.MSG_REMEMBER_ANSWER), false);
 				bShowHtmlWarning = ! (JAPDialog.showYesNoDialog(JAPController.getView(),
 					JAPMessages.getString(MSG_ALLOWUNPROTECTED), cb));
-				JAPDll.setWindowOnTop(JAPController.getView(),
-									  JAPController.getView().getName(), false);
+				JAPDll.setWindowOnTop(JAPController.getView(), false);
 				return new Answer(!bShowHtmlWarning, cb.getState());
 			}
 		});
@@ -329,9 +333,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 				new Integer(JAPModel.getHttpListenerPortNumber())};
 			String msg = MessageFormat.format(JAPMessages.getString("errorListenerPort"), args);
 			// output error message
-			JAPDialog.showErrorDialog(m_View, msg, LogType.NET);
+			JAPDialog.showErrorDialog(getView(), msg, LogType.NET);
 			m_Controller.status1 = JAPMessages.getString("statusCannotStartListener");
-			getView().disableSetAnonMode();
+			m_View.disableSetAnonMode();
 			notifyJAPObservers();
 		}
 		else
@@ -727,7 +731,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				Locale locale = new Locale(strLocale, "");
 				setLocale(locale);
 				//Load look-and-feel settings (not changed if SmmallDisplay!
-				if (!JAPModel.isSmallDisplay())
+				if (!JAPModel.isSmallDisplay() && !JAPDialog.isConsoleOnly())
 				{
 					String lf = XMLUtil.parseAttribute(
 									   root, JAPConstants.CONFIG_LOOK_AND_FEEL, JAPConstants.CONFIG_UNKNOWN);
@@ -848,11 +852,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 						if (elemOutput != null)
 						{
 							String strConsole = XMLUtil.parseValue(elemOutput, "");
-							if (strConsole != null)
+							if (strConsole != null && getView() != null)
 							{
 								strConsole.trim();
 								JAPDebug.showConsole(strConsole.equalsIgnoreCase(JAPConstants.CONFIG_CONSOLE),
-									m_View);
+									getView());
 							}
 							Node elemFile = XMLUtil.getLastChildByName(elemOutput, JAPConstants.CONFIG_FILE);
 							JAPDebug.setLogToFile(XMLUtil.parseValue(elemFile, null));
@@ -939,93 +943,114 @@ public final class JAPController extends Observable implements IProxyListener, O
 								nodePI = nodePI.getNextSibling();
 							}
 						}
-
-						final JAPDialog dialog = new JAPDialog(a_splash,
-							JAPMessages.getString(MSG_ACCPASSWORDENTERTITLE), true);
-						dialog.setDefaultCloseOperation(JAPDialog.HIDE_ON_CLOSE);
-						PasswordContentPane temp = new PasswordContentPane(
-											  dialog, PasswordContentPane.PASSWORD_ENTER,
-											  JAPMessages.getString(
-							MSG_ACCPASSWORDENTER, new Long(Long.MAX_VALUE)));
-						temp.updateDialog();
-						dialog.pack();
+						/** @todo implement password reader for console */
+						IMiscPasswordReader passwordReader;
 						final Hashtable cachedPasswords = new Hashtable();
-						IMiscPasswordReader passwordReader = new IMiscPasswordReader()
+						JAPDialog tempDialog = null;
+
+						if (JAPDialog.isConsoleOnly())
 						{
-							private Vector passwordsToTry = new Vector();
-
-							public String readPassword(Object a_message)
+							passwordReader = new IMiscPasswordReader()
 							{
-								PasswordContentPane panePassword;
-								String password;
-								panePassword = new PasswordContentPane(
-									dialog, PasswordContentPane.PASSWORD_ENTER,
-									JAPMessages.getString(MSG_ACCPASSWORDENTER, a_message));
-								panePassword.setDefaultButtonOperation(PasswordContentPane.
-										ON_CLICK_HIDE_DIALOG);
-
-								if (passwordsToTry == null)
+								public String readPassword(Object a_message)
 								{
 									return null;
 								}
+							};
+						}
+						else
+						{
+							final JAPDialog dialog = new JAPDialog(a_splash,
+								JAPMessages.getString(MSG_ACCPASSWORDENTERTITLE), true);
+							tempDialog = dialog;
+							dialog.setDefaultCloseOperation(JAPDialog.HIDE_ON_CLOSE);
+							PasswordContentPane temp = new PasswordContentPane(
+								dialog, PasswordContentPane.PASSWORD_ENTER,
+								JAPMessages.getString(
+									MSG_ACCPASSWORDENTER, new Long(Long.MAX_VALUE)));
+							temp.updateDialog();
+							dialog.pack();
 
-								if (cachedPasswords.containsKey(a_message) || cachedPasswords.size() == 0)
+							passwordReader = new IMiscPasswordReader()
+							{
+								private Vector passwordsToTry = new Vector();
+
+								public String readPassword(Object a_message)
 								{
-									while (true)
+									PasswordContentPane panePassword;
+									String password;
+									panePassword = new PasswordContentPane(
+										dialog, PasswordContentPane.PASSWORD_ENTER,
+										JAPMessages.getString(MSG_ACCPASSWORDENTER, a_message));
+									panePassword.setDefaultButtonOperation(PasswordContentPane.
+																		   ON_CLICK_HIDE_DIALOG);
+									if (passwordsToTry == null)
 									{
-										JAPDll.setWindowOnTop(a_splash, a_splash.getName(), true);
-										password = panePassword.readPassword(null);
-										JAPDll.setWindowOnTop(a_splash, a_splash.getName(), false);
-										if (password == null)
+										return null;
+									}
+
+									if (cachedPasswords.containsKey(a_message) || cachedPasswords.size() == 0)
+									{
+										while (true)
 										{
-											if (JAPDialog.showYesNoDialog(
-												dialog, JAPMessages.getString(MSG_LOSEACCOUNTDATA)))
+											JAPDll.setWindowOnTop(a_splash, true);
+											password = panePassword.readPassword(null);
+											JAPDll.setWindowOnTop(a_splash, false);
+											if (password == null)
 											{
-												// user clicked cancel
-												passwordsToTry = null;
-												// do not use the password from this account
-												cachedPasswords.remove(a_message);
-												break;
+												if (JAPDialog.showYesNoDialog(
+													dialog, JAPMessages.getString(MSG_LOSEACCOUNTDATA)))
+												{
+													// user clicked cancel
+													passwordsToTry = null;
+													// do not use the password from this account
+													cachedPasswords.remove(a_message);
+													break;
+												}
+												else
+												{
+													continue;
+												}
 											}
 											else
 											{
-												continue;
+												break;
 											}
 										}
-										else
+										if (password != null)
 										{
-											break;
+											cachedPasswords.put(a_message, password);
 										}
 									}
-									if (password != null)
+									else
 									{
-										cachedPasswords.put(a_message, password);
-									}
-								}
-								else
-								{
-									if (passwordsToTry.size() == 0)
-									{
-										Enumeration enumCachedPasswords = cachedPasswords.elements();
-										while (enumCachedPasswords.hasMoreElements())
+										if (passwordsToTry.size() == 0)
 										{
-											passwordsToTry.addElement(enumCachedPasswords.nextElement());
+											Enumeration enumCachedPasswords = cachedPasswords.elements();
+											while (enumCachedPasswords.hasMoreElements())
+											{
+												passwordsToTry.addElement(enumCachedPasswords.nextElement());
+											}
+										}
+										password = (String) passwordsToTry.elementAt(passwordsToTry.size() -
+											1);
+										passwordsToTry.removeElementAt(passwordsToTry.size() - 1);
+
+										if (passwordsToTry.size() == 0)
+										{
+											cachedPasswords.put(a_message, password);
 										}
 									}
-									password = (String)passwordsToTry.elementAt(passwordsToTry.size() - 1);
-									passwordsToTry.removeElementAt(passwordsToTry.size() - 1);
 
-									if (passwordsToTry.size() == 0)
-									{
-										cachedPasswords.put(a_message, password);
-									}
+									return password;
 								}
-
-								return password;
-							}
-						};
+							};
+						}
 						PayAccountsFile.init(elemAccounts, passwordReader);
-						dialog.dispose();
+						if (tempDialog != null)
+						{
+							tempDialog.dispose();
+						}
 						if (cachedPasswords.size() > 0)
 						{
 							// choose any password from the working ones
@@ -1396,19 +1421,19 @@ public final class JAPController extends Observable implements IProxyListener, O
 			e.appendChild(elemGUI);
 			Element elemMainWindow = doc.createElement(JAPConstants.CONFIG_MAIN_WINDOW);
 			elemGUI.appendChild(elemMainWindow);
-			if (JAPModel.getSaveMainWindowPosition())
+			if (JAPModel.getSaveMainWindowPosition() && getView() != null)
 			{
 				Element tmp = doc.createElement(JAPConstants.CONFIG_SET_ON_STARTUP);
 				elemMainWindow.appendChild(tmp);
 				XMLUtil.setValue(tmp, true);
 				tmp = doc.createElement(JAPConstants.CONFIG_LOCATION);
 				elemMainWindow.appendChild(tmp);
-				Point p = m_View.getLocation();
+				Point p = getView().getLocation();
 				tmp.setAttribute(JAPConstants.CONFIG_X, Integer.toString(p.x));
 				tmp.setAttribute(JAPConstants.CONFIG_Y, Integer.toString(p.y));
 				tmp = doc.createElement(JAPConstants.CONFIG_SIZE);
 				elemMainWindow.appendChild(tmp);
-				Dimension d = m_View.getSize();
+				Dimension d = getView().getSize();
 				tmp.setAttribute(JAPConstants.CONFIG_DX, Integer.toString(d.width));
 				tmp.setAttribute(JAPConstants.CONFIG_DY, Integer.toString(d.height));
 			}
@@ -1816,7 +1841,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "setAnonMode(" + anonModeSelected + ")");
 			if ( (m_proxyAnon == null) && (anonModeSelected))
 			{ //start Anon Mode
-				m_View.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+				if (getView() != null)
+				{
+					getView().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+				}
 				msgIdConnect = m_View.addStatusMsg(JAPMessages.getString("setAnonModeSplashConnect"),
 					JAPDialog.MESSAGE_TYPE_INFORMATION, false);
 				if ( (!m_bAlreadyCheckedForNewVersion) && (!JAPModel.isInfoServiceDisabled()) &&
@@ -1903,14 +1931,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 							new Integer(JAPModel.getHttpListenerPortNumber())};
 						String msg = MessageFormat.format(JAPMessages.getString("errorListenerPort"),
 							args);
-						JAPDialog.showErrorDialog(m_View, msg, LogType.NET);
-						JAPController.getView().disableSetAnonMode();
+						JAPDialog.showErrorDialog(getView(), msg, LogType.NET);
+						JAPController.m_View.disableSetAnonMode();
 					}
 					else if (ret == AnonProxy.E_MIX_PROTOCOL_NOT_SUPPORTED)
 					{
 						canStartService = false;
 						m_proxyAnon = null;
-						JAPDialog.showErrorDialog(m_View,
+						JAPDialog.showErrorDialog(getView(),
 												  JAPMessages.getString("errorMixProtocolNotSupported"),
 												  LogType.NET);
 					}
@@ -1919,7 +1947,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						canStartService = false;
 						m_proxyAnon = null;
-						JAPDialog.showErrorDialog(m_View,
+						JAPDialog.showErrorDialog(getView(),
 												  JAPMessages.getString("errorMixFirstMixSigCheckFailed"),
 												  LogType.NET);
 					}
@@ -1928,7 +1956,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						canStartService = false;
 						m_proxyAnon = null;
-						JAPDialog.showErrorDialog(m_View,
+						JAPDialog.showErrorDialog(getView(),
 												  JAPMessages.getString("errorMixOtherMixSigCheckFailed"),
 												  LogType.NET);
 					}
@@ -1970,7 +1998,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 									public void run()
 									{
 										JAPDialog.LinkedCheckBox checkBox = new JAPDialog.LinkedCheckBox(false);
-										JAPDialog.showWarningDialog(m_View,
+										JAPDialog.showWarningDialog(getView(),
 											JAPMessages.getString("disableActCntMessage"),
 											JAPMessages.getString("disableActCntMessageTitle"),
 											checkBox);
@@ -2013,12 +2041,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 							LogHolder.log(LogLevel.ERR, LogType.NET,
 										  "Error starting AN.ON service! - ErrorCode: " +
 										  Integer.toString(ret));
-							JAPDialog.showErrorDialog(m_View, JAPMessages.getString("errorConnectingFirstMix"),
+							JAPDialog.showErrorDialog(getView(), JAPMessages.getString("errorConnectingFirstMix"),
 								LogType.NET);
 						}
 					}
 				}
-				m_View.setCursor(Cursor.getDefaultCursor());
+				if (getView() != null)
+				{
+					getView().setCursor(Cursor.getDefaultCursor());
+				}
 				notifyJAPObservers();
 				//splash.abort();
 				m_View.removeStatusMsg(msgIdConnect);
@@ -2102,93 +2133,79 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public void setAnonMode(final boolean a_anonModeSelected)
 	{
 		final JAPController controller = this;
-		Thread anonModeThread = new Thread()
+
+		if (a_anonModeSelected)
 		{
-			public void run()
+			m_bConnectionErrorShown = false;
+		}
+
+		synchronized (m_changeAnonModeJobs)
+		{
+			if (a_anonModeSelected && m_bShutdown)
 			{
-
-				if (a_anonModeSelected)
+				// do not make new connection during shutdown
+				return;
+			}
+			boolean newJob = true;
+			if (m_changeAnonModeJobs.size() > 0)
+			{
+				/* check whether this is job is different to the last one */
+				SetAnonModeAsync lastJob = (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement());
+				if (lastJob.isStartServerJob() == a_anonModeSelected)
 				{
-					m_bConnectionErrorShown = false;
-				}
-
-				synchronized (m_changeAnonModeJobs)
-				{
-					if (a_anonModeSelected && m_bShutdown)
-					{
-						// do not make new connection during shutdown
-						return;
-					}
-					boolean newJob = true;
-					if (m_changeAnonModeJobs.size() > 0)
-					{
-						/* check whether this is job is different to the last one */
-						SetAnonModeAsync lastJob = (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement());
-						if (lastJob.isStartServerJob() == a_anonModeSelected)
-						{
-							/* it's the same (enabling server / disabling server) as the last job */
-							newJob = false;
-						}
-					}
-					if (newJob)
-					{
-						/* it's a new job -> do something */
-						if ( (!a_anonModeSelected && (m_changeAnonModeJobs.size() >= 2)) ||
-							(m_changeAnonModeJobs.size() >= 3))
-						{
-							/* because of enough previous jobs in the queue, we can ignore this job, if we also
-							 * interrupt and remove the previous one
-							 */
-							SetAnonModeAsync previousJob = (SetAnonModeAsync) (m_changeAnonModeJobs.
-								lastElement());
-							previousJob.interruptExecution();
-							m_changeAnonModeJobs.removeElement(previousJob);
-						}
-						else
-						{
-							/* we have to schedule this job */
-							if (!a_anonModeSelected && (m_changeAnonModeJobs.size() == 1))
-							{
-								/* there is a start-server job currently running -> try to interrupt it */
-								SetAnonModeAsync previousJob = (SetAnonModeAsync) (m_changeAnonModeJobs.
-									lastElement());
-								previousJob.interruptExecution();
-							}
-							SetAnonModeAsync currentJob = null;
-							if (m_changeAnonModeJobs.size() > 0)
-							{
-								/* wait until the previous job is done */
-								currentJob = new SetAnonModeAsync(a_anonModeSelected,
-									( (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement())).
-									getExecutionThread(), controller);
-							}
-							else
-							{
-								/* we don't have to wait for any previous job */
-								currentJob = new SetAnonModeAsync(
-									a_anonModeSelected, null, controller);
-							}
-							Thread currentThread = new Thread(currentJob, "SetAnonModeAsync");
-							currentThread.setDaemon(true);
-							currentJob.setExecutionThread(currentThread);
-							m_changeAnonModeJobs.addElement(currentJob);
-							currentThread.start();
-							LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-										  "JAPController: setAnonMode: Added a job for changing the anonymity mode to '" +
-										  (new Boolean(a_anonModeSelected)).toString() +
-										  "' to the job queue.");
-						}
-					}
+					/* it's the same (enabling server / disabling server) as the last job */
+					newJob = false;
 				}
 			}
-		};
-		if (SwingUtilities.isEventDispatchThread())
-		{
-			SwingUtilities.invokeLater(anonModeThread);
-		}
-		else
-		{
-			anonModeThread.run();
+			if (newJob)
+			{
+				/* it's a new job -> do something */
+				if ( (!a_anonModeSelected && (m_changeAnonModeJobs.size() >= 2)) ||
+					(m_changeAnonModeJobs.size() >= 3))
+				{
+					/* because of enough previous jobs in the queue, we can ignore this job, if we also
+					 * interrupt and remove the previous one
+					 */
+					SetAnonModeAsync previousJob = (SetAnonModeAsync) (m_changeAnonModeJobs.
+	lastElement());
+					previousJob.interruptExecution();
+					m_changeAnonModeJobs.removeElement(previousJob);
+				}
+				else
+				{
+					/* we have to schedule this job */
+					if (!a_anonModeSelected && (m_changeAnonModeJobs.size() == 1))
+					{
+						/* there is a start-server job currently running -> try to interrupt it */
+						SetAnonModeAsync previousJob = (SetAnonModeAsync) (m_changeAnonModeJobs.
+							lastElement());
+						previousJob.interruptExecution();
+					}
+					SetAnonModeAsync currentJob = null;
+					if (m_changeAnonModeJobs.size() > 0)
+					{
+						/* wait until the previous job is done */
+						currentJob = new SetAnonModeAsync(a_anonModeSelected,
+							( (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement())).
+							getExecutionThread(), controller);
+					}
+					else
+					{
+						/* we don't have to wait for any previous job */
+						currentJob = new SetAnonModeAsync(
+							a_anonModeSelected, null, controller);
+					}
+					Thread currentThread = new Thread(currentJob, "SetAnonModeAsync");
+					currentThread.setDaemon(true);
+					currentJob.setExecutionThread(currentThread);
+					m_changeAnonModeJobs.addElement(currentJob);
+					currentThread.start();
+					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+								  "JAPController: setAnonMode: Added a job for changing the anonymity mode to '" +
+								  (new Boolean(a_anonModeSelected)).toString() +
+								  "' to the job queue.");
+				}
+			}
 		}
 	}
 
@@ -2272,7 +2289,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:HTTP listener settings changed");
 			if (bShowWarning)
 			{
-				JAPDialog.showMessageDialog(m_View,
+				JAPDialog.showMessageDialog(getView(),
 											JAPMessages.getString("confmessageListernPortChanged"));
 			}
 			m_Controller.notifyJAPObservers();
@@ -2429,7 +2446,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					boolean error = m_Controller.saveConfigFile();
 					if (error && bShowConfigSaveErrorMsg)
 					{
-						JAPDialog.showErrorDialog(m_View, JAPMessages.getString(MSG_ERROR_SAVING_CONFIG,
+						JAPDialog.showErrorDialog(getView(), JAPMessages.getString(MSG_ERROR_SAVING_CONFIG,
 							JAPModel.getInstance().getConfigFile()), LogType.MISC);
 					}
 					m_Controller.m_bShutdown = true;
@@ -2489,11 +2506,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 	{
 		try
 		{
-			new JAPAbout(m_View);
+			new JAPAbout(getView());
 		}
 		catch (Throwable t)
 		{
-			t.printStackTrace();
+			LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, t);
 		}
 	}
 
@@ -2512,7 +2529,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						  "JAPController: fetchMixCascades: No connection to infoservices.");
 			if (!JAPModel.isSmallDisplay() && bShowError)
 			{
-				JAPDialog.showErrorDialog(m_View, JAPMessages.getString("errorConnectingInfoService"),
+				JAPDialog.showErrorDialog(getView(), JAPMessages.getString("errorConnectingInfoService"),
 										  LogType.NET);
 			}
 		}
@@ -2605,12 +2622,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 				message = JAPMessages.getString(MSG_NEW_OPTIONAL_VERSION, updateVersionNumber + "-dev)");
 				checkbox = new JAPDialog.LinkedCheckBox(false);
 			}
-			JAPDll.setWindowOnTop(getView(),  JAPController.getView().getName(), true);
-			boolean bAnswer = JAPDialog.showYesNoDialog(m_View,
+			JAPDll.setWindowOnTop(getView(), true);
+			boolean bAnswer = JAPDialog.showYesNoDialog(getView(),
 														message,
 														JAPMessages.getString("newVersionAvailableTitle"),
 														checkbox);
-			JAPDll.setWindowOnTop(getView(),  JAPController.getView().getName(), false);
+			JAPDll.setWindowOnTop(getView(), false);
 			if (checkbox != null)
 			{
 				JAPModel.getInstance().setReminderForOptionalUpdate(!checkbox.getState());
@@ -2636,7 +2653,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						/* Download failed -> alert, and reset anon mode to false */
 						LogHolder.log(LogLevel.ERR, LogType.MISC, "Some update problem.");
-						JAPDialog.showErrorDialog(m_View,
+						JAPDialog.showErrorDialog(getView(),
 												  JAPMessages.getString("downloadFailed") +
 												  JAPMessages.getString("infoURL"), LogType.MISC);
 						if (a_bForced)
@@ -2656,7 +2673,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				 * reset anon mode to false
 				 */
 				LogHolder.log(LogLevel.ERR, LogType.MISC, "Could not get JAPVersionInfo.");
-				JAPDialog.showErrorDialog(m_View,
+				JAPDialog.showErrorDialog(getView(),
 										  JAPMessages.getString("downloadFailed") +
 										  JAPMessages.getString("infoURL"), LogType.MISC);
 				if (a_bForced)
@@ -2673,7 +2690,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				 */
 				if (a_bForced)
 				{
-					JAPDialog.showWarningDialog(m_View, JAPMessages.getString("youShouldUpdate") +
+					JAPDialog.showWarningDialog(getView(), JAPMessages.getString("youShouldUpdate") +
 												JAPMessages.getString("infoURL"));
 					notifyJAPObservers();
 					return -1;
@@ -2701,15 +2718,22 @@ public final class JAPController extends Observable implements IProxyListener, O
 	}
 
 	//---------------------------------------------------------------------
-	public void registerMainView(AbstractJAPMainView v)
+	public void registerMainView(IJAPMainView v)
 	{
 		m_View = v;
-		JAPHelp.init(v, AbstractOS.getInstance());
+		if (getView() != null)
+		{
+			JAPHelp.init(getView(), AbstractOS.getInstance());
+		}
 	}
 
 	public static AbstractJAPMainView getView()
 	{
-		return JAPController.m_View;
+		if (m_View instanceof AbstractJAPMainView)
+		{
+			return (AbstractJAPMainView)JAPController.m_View;
+		}
+		return null;
 	}
 
 	public synchronized void removeEventListener(AnonServiceEventListener a_listener)
@@ -2903,7 +2927,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							{
 								case JAPRoutingSettings.REGISTRATION_NO_INFOSERVICES:
 								{
-									JAPDialog.showErrorDialog(m_View,
+									JAPDialog.showErrorDialog(getView(),
 										JAPMessages.getString(
 											"settingsRoutingServerRegistrationEmptyListError"),
 										LogType.MISC);
@@ -2911,14 +2935,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 								}
 								case JAPRoutingSettings.REGISTRATION_UNKNOWN_ERRORS:
 								{
-									JAPDialog.showErrorDialog(m_View,
+									JAPDialog.showErrorDialog(getView(),
 										JAPMessages.getString("settingsRoutingServerRegistrationUnknownError"),
 										LogType.MISC);
 									break;
 								}
 								case JAPRoutingSettings.REGISTRATION_INFOSERVICE_ERRORS:
 								{
-									JAPDialog.showErrorDialog(m_View,
+									JAPDialog.showErrorDialog(getView(),
 										JAPMessages.getString(
 											"settingsRoutingServerRegistrationInfoservicesError"),
 										LogType.MISC);
@@ -2926,7 +2950,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 								}
 								case JAPRoutingSettings.REGISTRATION_VERIFY_ERRORS:
 								{
-									JAPDialog.showErrorDialog(m_View,
+									JAPDialog.showErrorDialog(getView(),
 										JAPMessages.getString(
 											"settingsRoutingServerRegistrationVerificationError"),
 										LogType.MISC);
@@ -2950,7 +2974,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					/* opening the server port was not successful -> show an error message */
 					m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(JAPMessages.getString(
 						"controllerStatusMsgRoutingStartServerError"), JAPDialog.MESSAGE_TYPE_ERROR, true);
-					JAPDialog.showErrorDialog(m_View, JAPMessages.getString("settingsRoutingStartServerError"),
+					JAPDialog.showErrorDialog(getView(), JAPMessages.getString("settingsRoutingStartServerError"),
 											  LogType.MISC);
 
 				}
@@ -3090,14 +3114,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	public void unrealisticBytes(long a_bytes)
 	{
-		JAPDll.setWindowOnTop(getView(), getView().getName(), true);
+		JAPDll.setWindowOnTop(getView(), true);
 		boolean choice = JAPDialog.showYesNoDialog(
 			getView(),
 			JAPMessages.getString("unrealBytesDesc") + "<p>" +
 			JAPMessages.getString("unrealBytesDifference") + " " + a_bytes,
 			JAPMessages.getString("unrealBytesTitle")
 			);
-		JAPDll.setWindowOnTop(getView(), getView().getName(), false);
+		JAPDll.setWindowOnTop(getView(),false);
 		if (!choice)
 		{
 			this.setAnonMode(false);
