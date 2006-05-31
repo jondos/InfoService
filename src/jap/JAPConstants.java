@@ -28,7 +28,6 @@
 package jap;
 
 import java.awt.Font;
-import java.awt.Insets;
 
 import anon.tor.Circuit;
 import anon.tor.Tor;
@@ -36,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.05.190"; //Never change the layout of this line!
+	public static final String aktVersion = "00.05.191"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,

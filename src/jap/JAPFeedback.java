@@ -33,9 +33,8 @@ import logging.LogType;
 
 final class JAPFeedback implements Runnable
 {
-
+	private final Object THREAD_SYNC = new Object();
 	private JAPController controller;
-	private volatile boolean runFlag;
 
 	private Thread m_threadRunLoop;
 
@@ -43,14 +42,11 @@ final class JAPFeedback implements Runnable
 	{
 		LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPFeedback:initializing...");
 		controller = JAPController.getInstance();
-		m_threadRunLoop = null;
-		runFlag = false;
 	}
 
 	public void run()
 	{
-		runFlag = true;
-		while (runFlag)
+		while (!Thread.currentThread().isInterrupted())
 		{
 			if (controller.getAnonMode() && !JAPModel.isInfoServiceDisabled())
 			{
@@ -59,38 +55,57 @@ final class JAPFeedback implements Runnable
 			}
 			try
 			{
-				Thread.sleep(60000);
+				synchronized (m_threadRunLoop)
+				{
+					m_threadRunLoop.wait(60000);
+				}
 				//Thread.sleep(6000); // for testing only
 			}
-			catch (Exception e)
-			{}
+			catch (InterruptedException a_e)
+			{
+				break;
+			}
 		}
 	}
 
 	public void startRequests()
 	{
-		if (!runFlag)
+		synchronized (THREAD_SYNC)
 		{
-			m_threadRunLoop = new Thread(this, "JAP - Feedback");
-			m_threadRunLoop.setDaemon(true);
-			m_threadRunLoop.setPriority(Thread.MIN_PRIORITY);
-			m_threadRunLoop.start();
+			if (m_threadRunLoop == null)
+			{
+				m_threadRunLoop = new Thread(this, "JAP - Feedback");
+				m_threadRunLoop.setDaemon(true);
+				m_threadRunLoop.setPriority(Thread.MIN_PRIORITY);
+				m_threadRunLoop.start();
+			}
 		}
 	}
 
 	public void stopRequests()
 	{
-		runFlag = false;
-		if (m_threadRunLoop != null)
+		synchronized (THREAD_SYNC)
 		{
-			m_threadRunLoop.interrupt();
-			try
+			if (m_threadRunLoop != null)
 			{
-				m_threadRunLoop.join();
+				while (m_threadRunLoop.isAlive())
+				{
+					try
+					{
+						synchronized (m_threadRunLoop)
+						{
+							m_threadRunLoop.interrupt();
+							m_threadRunLoop.notify();
+						}
+						m_threadRunLoop.join(1000);
+					}
+					catch (InterruptedException a_e)
+					{
+						// ignore
+					}
+				}
+				m_threadRunLoop = null;
 			}
-			catch (Exception e)
-			{}
-			m_threadRunLoop = null;
 		}
 	}
 
