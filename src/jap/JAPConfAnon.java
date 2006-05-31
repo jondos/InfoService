@@ -84,6 +84,7 @@ import javax.swing.ScrollPaneConstants;
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener, Observer
 {
+	private static final Insets SMALL_BUTTON_MARGIN = new Insets(1, 1, 1, 1);
 
 	/** Messages */
 	private static final String MSG_BUTTONEDITSHOW = JAPConfAnon.class.
@@ -157,7 +158,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_bttnFetchCascades.setFont(font);
 		if (JAPModel.isSmallDisplay())
 		{
-			m_bttnFetchCascades.setMargin(JAPConstants.SMALL_BUTTON_MARGIN);
+			m_bttnFetchCascades.setMargin(SMALL_BUTTON_MARGIN);
 		}
 		m_bttnFetchCascades.addActionListener(new ActionListener()
 		{

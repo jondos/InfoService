@@ -33,20 +33,21 @@
  *
  */
 import java.security.SecureRandom;
-
 import java.awt.Frame;
-import javax.swing.SwingUtilities;
 
 import anon.client.crypto.KeyPool;
 import gui.JAPAWTMsgBox;
 import gui.JAPDll;
 import gui.JAPMessages;
+import gui.dialog.JAPDialog;
 import jap.JAPConstants;
 import jap.JAPController;
 import jap.JAPDebug;
 import jap.JAPModel;
 import jap.JAPNewView;
 import jap.JAPSplash;
+import jap.IJAPMainView;
+import jap.ConsoleJAPMainView;
 import jap.JAPViewIconified;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -57,11 +58,15 @@ import logging.LogType;
  *  <A HREF="JAPMacintosh.html">JAPMacintosh.html</A>
  *  as an example.
  */
-public class JAP extends Frame
+public class JAP
 {
+	private static final String MSG_ERROR_NEED_NEWER_JAVA = "errorNeedNewerJava";
+
 	// um pay funktionalitaet ein oder auszuschalten
+	private boolean bConsoleOnly = false;
 	private boolean loadPay = true;
 	private JAPController m_controller;
+	private Frame ownerFrame = null;
 
 	String[] m_arstrCmdnLnArgs = null;
 	public JAP()
@@ -99,6 +104,15 @@ public class JAP extends Frame
 			System.out.println(msg + javaVersion);
 			System.exit(0);
 		}
+		if (isArgumentSet("-console"))
+		{
+			bConsoleOnly = true;
+		}
+		else
+		{
+			ownerFrame = new Frame();
+		}
+
 		// Init Messages....
 		JAPMessages.init(JAPConstants.MESSAGESFN);
 		// Test (part 2) for right JVM....
@@ -106,10 +120,17 @@ public class JAP extends Frame
 		{ // Kaffe
 			if (javaVersion.compareTo("1.0.5") <= 0)
 			{
-				JAPAWTMsgBox.MsgBox(
-					this,
-					JAPMessages.getString("errorNeedNewerJava"),
-					JAPMessages.getString("error"));
+				if (bConsoleOnly)
+				{
+					System.out.println(JAPMessages.getString(MSG_ERROR_NEED_NEWER_JAVA));
+				}
+				else
+				{
+					JAPAWTMsgBox.MsgBox(
+						ownerFrame,
+						JAPMessages.getString(MSG_ERROR_NEED_NEWER_JAVA),
+						JAPMessages.getString("error"));
+				}
 				System.exit(0);
 			}
 		}
@@ -122,16 +143,32 @@ public class JAP extends Frame
 			}
 			if (javaVersion.compareTo("1.1.2") <= 0)
 			{
-				JAPAWTMsgBox.MsgBox(
-					this,
-					JAPMessages.getString("errorNeedNewerJava"),
-					JAPMessages.getString("error"));
+				if (bConsoleOnly)
+				{
+					System.out.println(JAPMessages.getString(MSG_ERROR_NEED_NEWER_JAVA));
+				}
+				else
+				{
+					JAPAWTMsgBox.MsgBox(
+						ownerFrame,
+						JAPMessages.getString(MSG_ERROR_NEED_NEWER_JAVA),
+						JAPMessages.getString("error"));
+				}
 				System.exit(0);
 			}
 		}
-
 		// Show splash screen
-		JAPSplash splash = new JAPSplash(this);
+		JAPSplash splash = null;
+
+		if (bConsoleOnly)
+		{
+			JAPDialog.setConsoleOnly(true);
+		}
+		else
+		{
+			splash = new JAPSplash(ownerFrame);
+			splash.setVisible(true);
+		}
 
 		// initialise secure random generators
 		Thread secureRandomThread = new Thread()
@@ -146,18 +183,21 @@ public class JAP extends Frame
 		secureRandomThread.start();
 
 		// Test for Swing
-		try
+		if (!bConsoleOnly)
 		{
-			Object o = new javax.swing.JLabel();
-			o = null;
-		}
-		catch (NoClassDefFoundError e)
-		{
-			JAPAWTMsgBox.MsgBox(
-				this,
-				JAPMessages.getString("errorSwingNotInstalled"),
-				JAPMessages.getString("error"));
-			System.exit(0);
+			try
+			{
+				Object o = new javax.swing.JLabel();
+				o = null;
+			}
+			catch (NoClassDefFoundError e)
+			{
+				JAPAWTMsgBox.MsgBox(
+					ownerFrame,
+					JAPMessages.getString("errorSwingNotInstalled"),
+					JAPMessages.getString("error"));
+				System.exit(0);
+			}
 		}
 		// Create debugger object and set the LogHolder to JAPDebug
 		LogHolder.setLogInstance(JAPDebug.getInstance());
@@ -165,7 +205,7 @@ public class JAP extends Frame
 		JAPDebug.getInstance().setLogLevel(LogLevel.WARNING);
 
 		// Set the default Look-And-Feel
-		if (!os.regionMatches(true, 0, "mac", 0, 3))
+		if (!bConsoleOnly && !os.regionMatches(true, 0, "mac", 0, 3))
 		{
 			LogHolder.log(
 				LogLevel.DEBUG,
@@ -220,17 +260,7 @@ public class JAP extends Frame
 		  }
 		 */
 		// um pay funktionalitaet ein oder auszuschalten
-		if (m_arstrCmdnLnArgs != null)
-		{
-			for (int i = 0; i < m_arstrCmdnLnArgs.length; i++)
-			{
-				if (m_arstrCmdnLnArgs[i].equalsIgnoreCase("-pay"))
-				{
-					loadPay = true;
-					break;
-				}
-			}
-		}
+
 
 		// Create the controller object
 		m_controller = JAPController.getInstance();
@@ -257,16 +287,9 @@ public class JAP extends Frame
 		 * the configuration dialog
 		 */
 		boolean forwardingStateVisible = false;
-		if (m_arstrCmdnLnArgs != null)
+		if (isArgumentSet("-forwarding_state"))
 		{
-			for (int i = 0; i < m_arstrCmdnLnArgs.length; i++)
-			{
-				if (m_arstrCmdnLnArgs[i].equalsIgnoreCase("-forwarding_state"))
-				{
-					forwardingStateVisible = true;
-					break;
-				}
-			}
+			forwardingStateVisible = true;
 		}
 
 		JAPModel.getInstance().setForwardingStateModuleVisible(forwardingStateVisible);
@@ -289,22 +312,39 @@ public class JAP extends Frame
 				"JAP:MRJ Version is " + mrjVersion + ".");
 			//initalisiere PayInstance
 		}
-		JAPNewView view = new JAPNewView(JAPConstants.TITLE, m_controller);
-		// Create the main frame
-		view.create(loadPay);
-		//view.setWindowIcon();
-		// Switch Debug Console Parent to MainView
-		JAPDebug.setConsoleParent(view);
+		IJAPMainView view;
+
+
+		if (!bConsoleOnly)
+		{
+			view = new JAPNewView(JAPConstants.TITLE, m_controller);
+
+			// Create the main frame
+			view.create(loadPay);
+			//view.setWindowIcon();
+			// Switch Debug Console Parent to MainView
+			JAPDebug.setConsoleParent((JAPNewView)view);
+		}
+		else
+		{
+			view = new ConsoleJAPMainView();
+		}
 		// Add observer
 		m_controller.addJAPObserver(view);
 		m_controller.addEventListener(view);
 		// Register the Main view where they are needed
 		m_controller.registerMainView(view);
+
 		// Create the iconified view
-		JAPViewIconified viewIconified = new JAPViewIconified();
-		m_controller.addJAPObserver(viewIconified);
-		// Register the views where they are needed
-		view.registerViewIconified(viewIconified);
+		if (!bConsoleOnly)
+		{
+			JAPViewIconified viewIconified;
+			viewIconified = new JAPViewIconified();
+			m_controller.addJAPObserver(viewIconified);
+			// Register the views where they are needed
+			view.registerViewIconified(viewIconified);
+		}
+
 		//Init Crypto...
 		//		java.security.Security.addProvider(new cryptix.jce.provider.CryptixCrypto());
 		// Show main frame and dispose splash screen
@@ -312,17 +352,11 @@ public class JAP extends Frame
 		//view.setVisible(true);
 		//view.toFront();
 		boolean bSystray = JAPModel.getMoveToSystrayOnStartup();
-		if (m_arstrCmdnLnArgs != null && !bSystray)
+		if (isArgumentSet("-minimized"))
 		{
-			for (int i = 0; i < m_arstrCmdnLnArgs.length; i++)
-			{
-				if (m_arstrCmdnLnArgs[i].equalsIgnoreCase("-minimized"))
-				{
-					bSystray = true;
-					break;
-				}
-			}
+			bSystray = true;
 		}
+
 		try
 		{
 				secureRandomThread.join();
@@ -331,50 +365,74 @@ public class JAP extends Frame
 		{
 			LogHolder.log(LogLevel.NOTICE, LogType.CRYPTO, a_e);
 		}
-		if (bSystray)
+		if (!bConsoleOnly)
 		{
-			/* The old JAPDll does return false even if hideWindowInTaskbar() succeeded - so we have to do this
-			 * to circumvent the bug...
-			 * @todo Remove if new DLL is deployed
-			 */
-			String s=JAPDll.getDllVersion();
-			boolean bOldDll=false;
-			if(s==null||s.compareTo("00.02.00")<0)
+			JAPNewView frameView = (JAPNewView)view;
+			if (bSystray)
 			{
-				view.setVisible(true);
-				view.toFront();
-				bOldDll=true;
+				/* The old JAPDll does return false even if hideWindowInTaskbar() succeeded - so we have to do this
+				 * to circumvent the bug...
+				 * @todo Remove if new DLL is deployed
+				 */
+				String s = JAPDll.getDllVersion();
+				boolean bOldDll = false;
+				if (s == null || s.compareTo("00.02.00") < 0)
+				{
+					frameView.setVisible(true);
+					frameView.toFront();
+					bOldDll = true;
+				}
+				if (!frameView.hideWindowInTaskbar() && !bOldDll)
+				{
+					frameView.setVisible(true);
+					frameView.toFront();
+				}
 			}
-			if(!view.hideWindowInTaskbar()&&!bOldDll)
+			else if (JAPModel.getMinimizeOnStartup())
 			{
-				view.setVisible(true);
-				view.toFront();
+				frameView.showIconifiedView();
 			}
+			else
+			{
+				frameView.setVisible(true);
+				frameView.toFront();
+			}
+			splash.dispose();
 		}
-		else if (JAPModel.getMinimizeOnStartup())
-		{
-			view.showIconifiedView();
-		}
-		else
-		{
-			view.setVisible(true);
-			view.toFront();
-		}
-		splash.dispose();
+
+
+
 		//Update account balance
 		m_controller.updateAccountStatements();
 		// initially start services
-		SwingUtilities.invokeLater(new Thread()
-		{
-			public void run()
-			{
-				m_controller.initialRun();
-			}
-		});
 
+		m_controller.initialRun();
 		//WP: check japdll.dll version
 		JAPDll.checkDllVersion(true);
 
+		try
+		{
+			new java.io.BufferedReader(new java.io.InputStreamReader(System.in)).readLine();
+		}
+		catch (java.io.IOException a_e)
+		{
+		}
+
+	}
+
+	public boolean isArgumentSet(String a_argument)
+	{
+		if (m_arstrCmdnLnArgs != null)
+		{
+			for (int i = 0; i < m_arstrCmdnLnArgs.length; i++)
+			{
+				if (m_arstrCmdnLnArgs[i].equalsIgnoreCase(a_argument))
+				{
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	public static void main(String[] argv)
