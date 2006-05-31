@@ -1747,10 +1747,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			return m_startServer;
 		}
 
-		/** @todo Still very buggy, because mode change is async done but not
-		 * all properties (like currentMixCascade etc.)are synchronized!!
-		 *
-		 */
+
 		public void run()
 		{
 			boolean bRetryOnError;
@@ -1795,9 +1792,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 		}
 
-		/** @todo Still very buggy, because mode change is async done but not
-		 * all properties (like currentMixCascade etc.)are synchronized!!
-		 *
+		/**
 		 * @param anonModeSelected true, if anonymity should be started; false otherwise
 		 * @param a_bRetryOnConnectionError if in case of a connection error it is retried to
 		 * establish the connection
