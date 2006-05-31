@@ -410,14 +410,16 @@ public class JAP
 		//WP: check japdll.dll version
 		JAPDll.checkDllVersion(true);
 
+		if (bConsoleOnly)
+		{
 		try
-		{
-			new java.io.BufferedReader(new java.io.InputStreamReader(System.in)).readLine();
+			{
+				new java.io.BufferedReader(new java.io.InputStreamReader(System.in)).readLine();
+			}
+			catch (java.io.IOException a_e)
+			{
+			}
 		}
-		catch (java.io.IOException a_e)
-		{
-		}
-
 	}
 
 	public boolean isArgumentSet(String a_argument)
