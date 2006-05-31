@@ -35,7 +35,7 @@ import javax.swing.SwingUtilities;
 import gui.JAPDll;
 import anon.AnonServiceEventListener;
 
-public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView, AnonServiceEventListener
+public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 {
 	protected String m_Title;
 	protected MyViewUpdate m_runnableValueUpdate;
@@ -63,10 +63,6 @@ public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 		JAPController.goodBye(true); // call the final exit procedure of JAP
 	}
 
-	public void connectionError()
-	{
-	}
-
 	public void packetMixed(long a_totalBytes)
 	{
 	}
@@ -89,7 +85,7 @@ public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 
 	public boolean setWindowIcon()
 	{
-		synchronized (m_runnableValueUpdate) //updateValues may change the Titel of the Window!!
+		synchronized (m_runnableValueUpdate) //updateValues may change the Titke of the Window!!
 		{
 			setTitle(Double.toString(Math.random())); //ensure that we have an uinque title
 			boolean b = JAPDll.setWindowIcon(getTitle());
