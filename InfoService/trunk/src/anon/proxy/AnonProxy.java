@@ -82,11 +82,11 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	private Thread threadRun;
 
-	private volatile boolean m_bIsRunning;
-
 	private ServerSocket m_socketListener;
 
 	private ImmutableProxyInterface m_proxyInterface;
+
+	private final Object THREAD_SYNC = new Object();
 
 	/**
 	 * Stores the MixCascade we are connected to.
@@ -284,82 +284,102 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	public int start(boolean a_bRetryOnError)
 	{
-		boolean m_bConnectionError = false;
-		m_numChannels = 0;
-		LogHolder.log(LogLevel.DEBUG, LogType.NET, "Try to initialize AN.ON");
-		if (m_Anon == null)
+		synchronized (THREAD_SYNC)
 		{
-			LogHolder.log(LogLevel.EMERG, LogType.NET,
-						  " m_Anon is NULL - should never ever happen!");
-			return ErrorCodes.E_INVALID_SERVICE;
-		}
-		int ret = m_Anon.initialize(m_currentMixCascade);
-		if (ret != ErrorCodes.E_SUCCESS)
-		{
-			if (!a_bRetryOnError || ret == E_SIGNATURE_CHECK_FIRSTMIX_FAILED ||
-				ret == E_SIGNATURE_CHECK_OTHERMIX_FAILED)
+			if (threadRun != null)
 			{
-				return ret;
+				return ErrorCodes.E_SUCCESS;
 			}
-			else
-			{
-				m_bConnectionError = true;
-			}
-		}
-		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AN.ON initialized");
-		if (m_currentTorParams != null)
-		{
-			m_Tor = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_TOR);
-			m_Tor.setProxy(m_proxyInterface);
-			m_Tor.initialize(m_currentTorParams);
-			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Tor initialized");
-		}
-		if (m_currentMixminionParams != null)
-		{
-			m_Mixminion = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_MIXMINION);
-			m_Mixminion.setProxy(m_proxyInterface);
-			m_Mixminion.initialize(m_currentMixminionParams);
-		}
-		threadRun = new Thread(this, "JAP - AnonProxy");
-		threadRun.setDaemon(true);
-		m_bIsRunning = true;
-		threadRun.start();
 
-		if (m_bConnectionError)
-		{
-			connectionError();
-			return ErrorCodes.E_CONNECT;
+			boolean m_bConnectionError = false;
+			m_numChannels = 0;
+			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Try to initialize AN.ON");
+			if (m_Anon == null)
+			{
+				LogHolder.log(LogLevel.EMERG, LogType.NET,
+							  " m_Anon is NULL - should never ever happen!");
+				return ErrorCodes.E_INVALID_SERVICE;
+			}
+			int ret = m_Anon.initialize(m_currentMixCascade);
+			if (ret != ErrorCodes.E_SUCCESS)
+			{
+				if (!a_bRetryOnError || ret == E_SIGNATURE_CHECK_FIRSTMIX_FAILED ||
+					ret == E_SIGNATURE_CHECK_OTHERMIX_FAILED)
+				{
+					return ret;
+				}
+				else
+				{
+					m_bConnectionError = true;
+				}
+			}
+			LogHolder.log(LogLevel.DEBUG, LogType.NET, "AN.ON initialized");
+			if (m_currentTorParams != null)
+			{
+				m_Tor = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_TOR);
+				m_Tor.setProxy(m_proxyInterface);
+				m_Tor.initialize(m_currentTorParams);
+				LogHolder.log(LogLevel.DEBUG, LogType.NET, "Tor initialized");
+			}
+			if (m_currentMixminionParams != null)
+			{
+				m_Mixminion = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_MIXMINION);
+				m_Mixminion.setProxy(m_proxyInterface);
+				m_Mixminion.initialize(m_currentMixminionParams);
+			}
+			threadRun = new Thread(this, "JAP - AnonProxy");
+			threadRun.setDaemon(true);
+			threadRun.start();
+
+			if (m_bConnectionError)
+			{
+				connectionError();
+				return ErrorCodes.E_CONNECT;
+			}
+			return ErrorCodes.E_SUCCESS;
 		}
-		return ErrorCodes.E_SUCCESS;
 	}
 
 	public void stop()
 	{
-		m_Anon.shutdown();
-		if (m_Tor != null)
+		synchronized (THREAD_SYNC)
 		{
-			m_Tor.shutdown();
-		}
-		if (m_Mixminion != null)
-		{
-			m_Mixminion.shutdown();
-		}
-		m_bIsRunning = false;
+			if (threadRun == null)
+			{
+				return;
+			}
 
-		try
-		{
-			threadRun.join();
+			m_Anon.shutdown();
+			if (m_Tor != null)
+			{
+				m_Tor.shutdown();
+			}
+			if (m_Mixminion != null)
+			{
+				m_Mixminion.shutdown();
+			}
+
+			while (threadRun.isAlive())
+			{
+				try
+				{
+					threadRun.interrupt();
+					threadRun.join(1000);
+
+				}
+				catch (InterruptedException e)
+				{
+				}
+			}
+			m_Tor = null;
+			m_Mixminion = null;
+			threadRun = null;
+			THREAD_SYNC.notify();
 		}
-		catch (Exception e)
-		{
-		}
-		m_Tor = null;
-		m_Mixminion = null;
 	}
 
 	public void run()
 	{
-		m_bIsRunning = true;
 		int oldTimeOut = 0;
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy: AnonProxy is running as Thread");
 
@@ -380,7 +400,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		}
 		try
 		{
-			while (m_bIsRunning)
+			while (!Thread.currentThread().isInterrupted())
 			{
 				Socket socket = null;
 				try
@@ -425,7 +445,6 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		{
 		}
 		LogHolder.log(LogLevel.INFO, LogType.NET, "JAPAnonProxyServer stopped.");
-		m_bIsRunning = false;
 	}
 
 	AnonChannel createChannel(int type) throws NotConnectedToMixException, Exception
@@ -453,32 +472,36 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	synchronized boolean reconnect()
 	{
-		if (m_Anon.isConnected())
+		synchronized (THREAD_SYNC)
 		{
-			return true;
-		}
-		if (!m_bAutoReconnect)
-		{
-			m_bIsRunning = false;
-			return false;
-		}
-		while (m_bIsRunning && m_bAutoReconnect)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.NET, "Try reconnect to Mix");
-			int ret = m_Anon.initialize(m_currentMixCascade);
-			if (ret == ErrorCodes.E_SUCCESS)
+			if (m_Anon.isConnected())
 			{
 				return true;
 			}
-			try
+			if (!m_bAutoReconnect)
 			{
-				Thread.sleep(RECONNECT_INTERVAL);
+				stop();
+				return false;
 			}
-			catch (InterruptedException ex)
+			while (threadRun != null && m_bAutoReconnect)
 			{
+				LogHolder.log(LogLevel.ERR, LogType.NET, "Try reconnect to Mix");
+				int ret = m_Anon.initialize(m_currentMixCascade);
+				if (ret == ErrorCodes.E_SUCCESS)
+				{
+					return true;
+				}
+				try
+				{
+					THREAD_SYNC.wait(RECONNECT_INTERVAL);
+				}
+				catch (InterruptedException ex)
+				{
+					break;
+				}
 			}
+			return false;
 		}
-		return false;
 	}
 
 	protected IProxyListener m_ProxyListener;

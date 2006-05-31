@@ -178,6 +178,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private Vector m_anonServiceListener;
 	private IPasswordReader m_passwordReader;
 	private boolean m_bInitialRun = true;
+	private Object ms_inititalRunSync = new Object();
 
 	private static Font m_fontControls;
 	/** Holds the MsgID of the status message after the forwaring server was started.*/
@@ -1727,22 +1728,17 @@ public final class JAPController extends Observable implements IProxyListener, O
 	//---------------------------------------------------------------------
 	//---------------------------------------------------------------------
 	//---------------------------------------------------------------------
-	private final class SetAnonModeAsync implements Runnable
+	private final class SetAnonModeAsync extends Thread
 	{
 		private boolean m_startServer;
 		private Thread m_waitForThread;
-		private Thread m_executionThread;
-		private Object m_internalSynchronization;
 		private IAIEventListener m_caller;
-		private boolean m_jobWasInterrupted;
 
 		public SetAnonModeAsync(boolean a_startServer, Thread a_waitForThread, IAIEventListener a_caller)
 		{
+			super("SetAnonModeAsync");
 			m_startServer = a_startServer;
 			m_waitForThread = a_waitForThread;
-			m_executionThread = null;
-			m_internalSynchronization = new Object();
-			m_jobWasInterrupted = false;
 			m_caller = a_caller;
 		}
 
@@ -1751,42 +1747,19 @@ public final class JAPController extends Observable implements IProxyListener, O
 			return m_startServer;
 		}
 
-		public void interruptExecution()
-		{
-			synchronized (m_internalSynchronization)
-			{
-				m_jobWasInterrupted = true;
-				if (m_executionThread != null)
-				{
-					m_executionThread.interrupt();
-				}
-			}
-		}
-
-		public Thread getExecutionThread()
-		{
-			return m_executionThread;
-		}
-
-		public void setExecutionThread(Thread t)
-		{
-			m_executionThread = t;
-		}
-
 		/** @todo Still very buggy, because mode change is async done but not
 		 * all properties (like currentMixCascade etc.)are synchronized!!
 		 *
 		 */
 		public void run()
 		{
-			boolean bRetryOnError = m_bInitialRun && JAPModel.getAutoConnect();
-			m_bInitialRun = false;
-
-			synchronized (m_internalSynchronization)
+			boolean bRetryOnError;
+			synchronized (ms_inititalRunSync)
 			{
-				m_executionThread = Thread.currentThread();
+				bRetryOnError = m_bInitialRun && JAPModel.getAutoConnect();
+				m_bInitialRun = false;
 			}
-			if ( (!m_jobWasInterrupted) && (m_waitForThread != null))
+			if (m_waitForThread != null)
 			{
 				try
 				{
@@ -1794,13 +1767,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 				catch (InterruptedException e)
 				{
-					m_jobWasInterrupted = true;
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 								  "Job for changing the anonymity mode to '" +
 								  (new Boolean(m_startServer)).toString() + "' was canceled.");
 				}
 			}
-			if (!m_jobWasInterrupted)
+			if (!isInterrupted())
 			{
 				/* job was not canceled -> we have to do it */
 				try
@@ -1830,7 +1802,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		 * @param a_bRetryOnConnectionError if in case of a connection error it is retried to
 		 * establish the connection
 		 */
-		private void setServerMode(boolean anonModeSelected, boolean a_bRetryOnConnectionError)
+		private synchronized void setServerMode(boolean anonModeSelected, boolean a_bRetryOnConnectionError)
 		{
 			//JAPWaitSplash splash = null;
 			int msgIdConnect = 0;
@@ -2130,6 +2102,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 		return m_proxyAnon != null && m_proxyAnon.isConnected();
 	}
 
+	public void setAnonModeNew(final boolean a_anonModeSelected)
+	{
+
+}
+
 	public void setAnonMode(final boolean a_anonModeSelected)
 	{
 		final JAPController controller = this;
@@ -2161,33 +2138,31 @@ public final class JAPController extends Observable implements IProxyListener, O
 			{
 				/* it's a new job -> do something */
 				if ( (!a_anonModeSelected && (m_changeAnonModeJobs.size() >= 2)) ||
-					(m_changeAnonModeJobs.size() >= 3))
+					 (m_changeAnonModeJobs.size() >= 3))
 				{
 					/* because of enough previous jobs in the queue, we can ignore this job, if we also
 					 * interrupt and remove the previous one
 					 */
-					SetAnonModeAsync previousJob = (SetAnonModeAsync) (m_changeAnonModeJobs.
-	lastElement());
-					previousJob.interruptExecution();
+					SetAnonModeAsync previousJob = (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement());
+					previousJob.interrupt();
 					m_changeAnonModeJobs.removeElement(previousJob);
 				}
+
 				else
 				{
 					/* we have to schedule this job */
 					if (!a_anonModeSelected && (m_changeAnonModeJobs.size() == 1))
 					{
 						/* there is a start-server job currently running -> try to interrupt it */
-						SetAnonModeAsync previousJob = (SetAnonModeAsync) (m_changeAnonModeJobs.
-							lastElement());
-						previousJob.interruptExecution();
+						SetAnonModeAsync previousJob = (SetAnonModeAsync)m_changeAnonModeJobs.lastElement();
+						previousJob.interrupt();
 					}
 					SetAnonModeAsync currentJob = null;
 					if (m_changeAnonModeJobs.size() > 0)
 					{
 						/* wait until the previous job is done */
 						currentJob = new SetAnonModeAsync(a_anonModeSelected,
-							( (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement())).
-							getExecutionThread(), controller);
+							( (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement())), controller);
 					}
 					else
 					{
@@ -2195,11 +2170,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 						currentJob = new SetAnonModeAsync(
 							a_anonModeSelected, null, controller);
 					}
-					Thread currentThread = new Thread(currentJob, "SetAnonModeAsync");
-					currentThread.setDaemon(true);
-					currentJob.setExecutionThread(currentThread);
+
+					currentJob.setDaemon(true);
+					currentJob.start();
 					m_changeAnonModeJobs.addElement(currentJob);
-					currentThread.start();
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 								  "JAPController: setAnonMode: Added a job for changing the anonymity mode to '" +
 								  (new Boolean(a_anonModeSelected)).toString() +
@@ -2460,28 +2434,27 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						m_Controller.setAnonMode(false);
 						//Wait until all Jobs are finished....
-						long waitingTime = System.currentTimeMillis() + 10000;
-
-						synchronized (m_Controller.m_changeAnonModeJobs)
+						if (m_Controller.m_changeAnonModeJobs.size() > 0)
 						{
-							while (m_Controller.m_changeAnonModeJobs.size() > 0)
+							Vector vecJobs = (Vector)m_Controller.m_changeAnonModeJobs.clone();
+							Enumeration jobs = vecJobs.elements();
+							while (jobs.hasMoreElements())
 							{
-								try
+								((SetAnonModeAsync)jobs.nextElement()).interrupt();
+							}
+						/*	try
+							{
+								if (m_Controller.m_changeAnonModeJobs.size() > 0)
 								{
-									m_Controller.m_changeAnonModeJobs.notify();
-									m_Controller.m_changeAnonModeJobs.wait(500);
-								}
-								catch (InterruptedException ex)
-								{
-								}
-								if (System.currentTimeMillis() > waitingTime)
-								{
-									LogHolder.log(LogLevel.INFO, LogType.GUI,
-												  "Could not make a clean finish!");
-									break;
+									sleep(1000);
 								}
 							}
+							catch (InterruptedException a_e)
+							{
+								// ignore
+							}*/
 						}
+
 					}
 					// do not show any dialogs in this state
 					getView().dispose();
