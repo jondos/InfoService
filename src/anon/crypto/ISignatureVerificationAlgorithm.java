@@ -38,7 +38,7 @@ public interface ISignatureVerificationAlgorithm
 	 * @param a_signature a signature
 	 * @return true if the signature of a specified message is valid; false otherwiese
 	 */
-	boolean verify(byte[] a_message, byte[] a_signature);
+	public boolean verify(byte[] a_message, byte[] a_signature);
 
 	/**
 	 * Tests if the signature of a specified message is valid.
@@ -50,8 +50,8 @@ public interface ISignatureVerificationAlgorithm
 	 * @param signature_len length of signature
 	 * @return true if the signature of a specified message is valid; false otherwiese
 	 */
-	boolean verify(byte[] a_message, int message_offset,int message_len,
-				   byte[] a_signature,int signature_offset,int signature_len);
+	 public boolean verify(byte[] a_message, int message_offset,int message_len,
+						   byte[] a_signature,int signature_offset,int signature_len);
 
 
 	/**
@@ -62,7 +62,7 @@ public interface ISignatureVerificationAlgorithm
 	 * @return the decoded signature or null if an error occured
 	 * @see http://www.w3.org/TR/xmldsig-core/#sec-SignatureAlg
 	 */
-	byte[] decodeForXMLSignature(byte[] a_encodedSignature);
+	public byte[] decodeForXMLSignature(byte[] a_encodedSignature);
 
 	/**
 	 * Returns a description of the the signature algorithm for XML signatures as defined in
@@ -71,6 +71,6 @@ public interface ISignatureVerificationAlgorithm
 	 * @return a description of the the signature algorithm for XML signatures
 	 * @see http://www.w3.org/TR/xmldsig-core/#sec-AlgID
 	 */
-	String getXMLSignatureAlgorithmReference();
+	public String getXMLSignatureAlgorithmReference();
 
 }

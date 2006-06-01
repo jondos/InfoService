@@ -37,7 +37,6 @@ import anon.crypto.IMyPrivateKey;
 import anon.crypto.IMyPublicKey;
 import anon.crypto.IMySignature;
 import anon.util.Util;
-import anon.util.ByteArrayUtil;
 
 
 public class DummySignatureAlgorithm implements IMySignature
@@ -86,23 +85,51 @@ public class DummySignatureAlgorithm implements IMySignature
 	/**
 	 * Tests if the signature of a specified message is valid.
 	 * @param a_message a message
+	 * @param message_offset start of message
+	 * @param message_len length of message
+	 * @param a_signature a signature
+	 * @param signature_offset start of signature
+	 * @param signature_len length of signature
+	 * @return true if the signature of a specified message is valid; false otherwiese
+	 */
+	 public boolean verify(byte[] a_message, int message_offset,int message_len,
+						   byte[] a_signature,int signature_offset,int signature_len)
+	 {
+		 boolean bValid;
+		 if (message_offset < 0 || signature_offset < 0 || message_len < 0 || signature_len < 0 ||
+			 message_len + message_offset > a_message.length ||
+			 signature_len + signature_offset > a_signature.length)
+		 {
+			 return false;
+		 }
+
+		 byte[] message = new byte[message_len];
+		 byte[] signature = new byte[signature_len];
+
+		 System.arraycopy(a_message, message_offset, message, 0, message_len);
+		 System.arraycopy(a_signature, signature_offset, signature, 0, signature_len);
+
+		 if (!m_bVerify)
+		 {
+			 return false;
+		 }
+
+		 m_bSign = true;
+		 bValid = Util.arraysEqual(sign(message), signature);
+		 m_bSign = false;
+
+		return bValid;
+}
+
+	/**
+	 * Tests if the signature of a specified message is valid.
+	 * @param a_message a message
 	 * @param a_signature a signature
 	 * @return true if the signature of a specified message is valid; false otherwiese
 	 */
 	public boolean verify(byte[] a_message, byte[] a_signature)
 	{
-		boolean bValid;
-
-		if (!m_bVerify)
-		{
-			return false;
-		}
-
-		m_bSign = true;
-		bValid = ByteArrayUtil.equal(sign(a_message), a_signature);
-		m_bSign = false;
-
-		return bValid;
+		return verify(a_message, 0, a_message.length, a_signature, 0, a_signature.length);
 	}
 
 	/**
@@ -175,12 +202,6 @@ public class DummySignatureAlgorithm implements IMySignature
 	public String getXMLSignatureAlgorithmReference()
 	{
 		return "Dummy";
-	}
-
-	public boolean verify(byte[] a_message, int message_offset, int message_len, byte[] a_signature,
-						  int signature_offset, int signature_len)
-	{
-		return false;
 	}
 
 }

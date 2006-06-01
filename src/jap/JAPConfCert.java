@@ -102,9 +102,9 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 
 		StringBuffer strBuff = new StringBuffer();
 		SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
-		strBuff.append(sdf.format(a_cert.getStartDate().getDate()));
+		strBuff.append(sdf.format(a_cert.getValidity().getValidFrom()));
 		strBuff.append(" - ");
-		strBuff.append(sdf.format(a_cert.getEndDate().getDate()));
+		strBuff.append(sdf.format(a_cert.getValidity().getValidTo()));
 		m_labelDateData.setText(strBuff.toString());
 
 		X509NameTokenizer x509TokenIssuer = new X509NameTokenizer(a_cert.getIssuer().toString());

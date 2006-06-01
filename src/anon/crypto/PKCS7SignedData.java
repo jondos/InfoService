@@ -1,4 +1,4 @@
-package jarify;
+package anon.crypto;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -23,8 +23,8 @@ import org.bouncycastle.asn1.pkcs.SignerInfo;
 import org.bouncycastle.asn1.x509.X509CertificateStructure;
 import org.bouncycastle.jce.X509Principal;
 
-import anon.crypto.JAPCertificate;
-import anon.crypto.ByteSignature;
+
+
 import org.bouncycastle.asn1.ASN1InputStream;
 
 /**
@@ -181,8 +181,8 @@ public class PKCS7SignedData implements PKCSObjectIdentifiers
 		for (Enumeration enumer = certs.elements(); enumer.hasMoreElements(); )
 		{
 			JAPCertificate cert = (JAPCertificate) enumer.nextElement();
-			boolean bS = serialNumber.equals(cert.getSerialNumber().getValue());
-			if (bS && issuer.equals(new X509Principal(cert.getIssuer())))
+			boolean bS = serialNumber.equals(cert.getSerialNumber());
+			if (bS && issuer.equals(new X509Principal(cert.getIssuer().getX509Name())))
 			{
 				signCert = cert;
 				break;

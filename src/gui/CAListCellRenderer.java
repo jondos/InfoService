@@ -1,19 +1,14 @@
 package gui;
 
-import jap.JAPConstants;
-import jap.JAPUtil;
-
 import java.awt.Color;
 import java.awt.Component;
-
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 
 import anon.crypto.CertificateInfoStructure;
-import org.bouncycastle.asn1.x509.X509Name;
-import java.util.Vector;
+import jap.JAPConstants;
 
 final public class CAListCellRenderer extends JLabel implements ListCellRenderer
 {
@@ -31,26 +26,10 @@ final public class CAListCellRenderer extends JLabel implements ListCellRenderer
 		boolean cellHasFocus) // the list and the cell have the focus
 	{
 		CertificateInfoStructure j = (CertificateInfoStructure) value;
-		X509Name name = j.getCertificate().getSubject();
-		Vector oids = name.getOIDs();
-		int index = 0;
-		boolean found = false;
-		for (index = 0; index < oids.size(); index++)
+		String subjectCN = j.getCertificate().getSubject().getCommonName();
+		if (subjectCN == null)
 		{
-			if (oids.elementAt(index).equals(X509Name.CN))
-			{
-				found = true;
-				break;
-			}
-		}
-		String subjectCN;
-		if (found)
-		{
-			subjectCN = (String) name.getValues().elementAt(index);
-		}
-		else
-		{
-			subjectCN = name.toString();
+			subjectCN = j.getCertificate().getSubject().toString();
 		}
 		setText(subjectCN);
 		setEnabled(list.isEnabled());

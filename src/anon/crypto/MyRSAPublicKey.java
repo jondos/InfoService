@@ -52,9 +52,11 @@ import anon.util.XMLUtil;
 
 final public class MyRSAPublicKey extends AbstractPublicKey implements IMyPublicKey
 {
+	private MyRSASignature m_algorithm = new MyRSASignature();
 	private BigInteger m_n;
 	private BigInteger m_e;
 	private long m_hashValue = 0;
+	private int m_keyLength = 0;
 
 	public MyRSAPublicKey(BigInteger modulus, BigInteger exponent)
 	{
@@ -103,8 +105,9 @@ final public class MyRSAPublicKey extends AbstractPublicKey implements IMyPublic
 		try
 		{
 			return new MyRSAPublicKey(
-				new RSAPublicKeyStructure( (ASN1Sequence)new ASN1InputStream(new ByteArrayInputStream(encoded)).
-										  readObject())
+						 new RSAPublicKeyStructure( (
+											   ASN1Sequence)new ASN1InputStream(
+				new ByteArrayInputStream(encoded)).readObject())
 				);
 		}
 		catch (Throwable t)
@@ -122,15 +125,14 @@ final public class MyRSAPublicKey extends AbstractPublicKey implements IMyPublic
 	{
 		try
 		{
-			MyRSASignature algorithm = new MyRSASignature();
-			algorithm.initVerify(this);
-			return algorithm;
+		m_algorithm.initVerify(this);
+
 		}
 		catch (InvalidKeyException a_e)
 		{
 			// not possible
 		}
-		return null;
+		return m_algorithm;
 	}
 
 	public BigInteger getModulus()
@@ -153,6 +155,10 @@ final public class MyRSAPublicKey extends AbstractPublicKey implements IMyPublic
 		return "X.509";
 	}
 
+	public int getKeyLength()
+	{
+		return getModulus().bitLength();
+	}
 	public SubjectPublicKeyInfo getAsSubjectPublicKeyInfo()
 	{
 		AlgorithmIdentifier algID = new AlgorithmIdentifier(new DERObjectIdentifier("1.2.840.113549.1.1.1")); //RSA

@@ -42,6 +42,7 @@ import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.util.encoders.Base64;
 
 import anon.crypto.JAPCertificate;
+import anon.crypto.*;
 
 /**
  * Verfies the authencity of a signed jar file.

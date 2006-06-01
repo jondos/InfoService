@@ -27,78 +27,48 @@
  */
 package anon.crypto;
 
-import java.util.Hashtable;
+import java.util.Vector;
 
-import org.w3c.dom.Node;
+import org.bouncycastle.asn1.DERSequence;
 
-public class SignatureCreator
+import anon.util.Util;
+import gui.*;
+
+/**
+ * This extension is instantiated if the type is unknown. Missing extensions should be implemented
+ * when needed.
+ * @author Rolf Wendolsky
+ */
+public final class X509UnknownExtension extends AbstractX509Extension
 {
+	/** The identifier is unknown and contains null. */
+	public static final String IDENTIFIER = null;
 
 	/**
-	 * Stores the instance of SignatureCreator (Singleton).
+	 * Creates an extension from a BouncyCastle DER sequence. For internal use only.
+	 * @param a_extension a DERSequence
 	 */
-	private static SignatureCreator ms_scInstance;
-
-	private Hashtable m_signatureKeys;
-
-	/**
-	 * Returns the instance of SignatureCreator (Singleton). If there is no instance, there is a
-	 * new one created.
-	 *
-	 * @return The SignatureCreator instance.
-	 */
-	public static SignatureCreator getInstance()
+	X509UnknownExtension(DERSequence a_extension)
 	{
-		synchronized (SignatureCreator.class)
-		{
-			if (ms_scInstance == null)
-			{
-				ms_scInstance = new SignatureCreator();
-			}
-		}
-		return ms_scInstance;
+		super(a_extension);
 	}
 
 	/**
-	 * Creates a new instance of SignatureVerifier.
+	 * Returns "UnknownExtension".
+	 * @return "UnknownExtension"
 	 */
-	private SignatureCreator()
+	public String getName()
 	{
-		m_signatureKeys = new Hashtable();
+		return "UnknownExtension";
 	}
 
-	public void setSigningKey(int a_purpose, PKCS12 a_signatureKey)
+	/**
+	 * Returns the value of this extension a a single String object in a Vector. The value does
+	 * not need to be human-readable.
+	 * @return a Vector containing the value of this extension as single String object
+	 */
+	public Vector getValues()
 	{
-		synchronized (m_signatureKeys)
-		{
-			m_signatureKeys.put(new Integer(a_purpose), a_signatureKey);
-		}
-	}
-
-	public boolean signXml(int a_documentClass, Node a_nodeToSign)
-	{
-		boolean nodeSigned = false;
-		PKCS12 signatureKey = null;
-		synchronized (m_signatureKeys)
-		{
-			signatureKey = (PKCS12) (m_signatureKeys.get(new Integer(a_documentClass)));
-		}
-		if (signatureKey != null)
-		{
-			XMLSignature createdSignature = null;
-			try
-			{
-				createdSignature = XMLSignature.sign(a_nodeToSign, signatureKey);
-			}
-			catch (Exception e)
-			{
-			}
-			if (createdSignature != null)
-			{
-				/* signing the node was successful */
-				nodeSigned = true;
-			}
-		}
-		return nodeSigned;
+		return Util.toVector(getDEROctets());
 	}
 }
