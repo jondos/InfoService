@@ -31,6 +31,8 @@ public interface AnonServiceEventListener
 {
 	public void connectionError();
 
+	public void disconnected();
+
 	public void connectionEstablished();
 
 	public void packetMixed(long a_totalBytes);

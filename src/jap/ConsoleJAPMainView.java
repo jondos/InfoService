@@ -72,6 +72,11 @@ public class ConsoleJAPMainView implements IJAPMainView
 	{
 	}
 
+	public void disconnected()
+	{
+		LogHolder.log(LogLevel.ALERT, LogType.NET, "Disconnected!");
+	}
+
 	public void connectionError()
 	{
 		LogHolder.log(LogLevel.ALERT, LogType.NET, "Disconnected because of connection error!");

@@ -31,11 +31,13 @@
  */
 package anon.client;
 
+import java.io.InterruptedIOException;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.security.SecureRandom;
+import java.security.SignatureException;
 import java.util.Enumeration;
 import java.util.Observable;
 import java.util.Observer;
@@ -57,7 +59,6 @@ import anon.pay.Pay;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.security.SignatureException;
 
 /**
  * @author Stefan Lieske
@@ -321,13 +322,21 @@ public class AnonClient implements AnonService, Observer
 					  a_mixCascade.toString() + "'...");
 		Socket connectedSocket = null;
 		int i = 0;
-		while ( (i < a_mixCascade.getNumberOfListenerInterfaces()) && (connectedSocket == null))
+		while ((i < a_mixCascade.getNumberOfListenerInterfaces()) && (connectedSocket == null) && (!Thread.currentThread().isInterrupted()))
 		{
 			/* try out all interfaces of the mixcascade until we have a connection */
 			try
 			{
 				connectedSocket = HTTPConnectionFactory.getInstance().createHTTPConnection(a_mixCascade.
 					getListenerInterface(i), a_proxyInterface).Connect();
+			}
+			catch (InterruptedIOException e)
+			{
+				/* Thread.interrupt() was called while connection-establishment
+				 * -> stop all activities
+				 */
+				LogHolder.log(LogLevel.NOTICE, LogType.NET, "AnonClient: connectMixCascade(): Interrupted while connecting to MixCascade '" + a_mixCascade.toString() + "'.");
+				break;
 			}
 			catch (Exception e)
 			{

@@ -1286,57 +1286,51 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 	}
 
+	public void disconnected()
+	{
+		synchronized(m_connectionEstablishedSync)
+		{
+			m_connectionEstablishedSync.notifyAll();
+		}
+	}
+
 	public void connectionError()
 	{
-		m_bConnectionErrorShown = true;
-		Thread thread = new Thread()
+		synchronized (m_connectionEstablishedSync)
 		{
-			public void run()
-			{
-				m_labelAnonMeter.setIcon(getMeterImage(-1));
-			}
-		};
-		if (SwingUtilities.isEventDispatchThread())
-		{
-			thread.run();
+			m_connectionEstablishedSync.notifyAll();
 		}
-		else
-		{
-			SwingUtilities.invokeLater(thread);
-		}
-
 
 		Thread updateThread = new Thread()
 		{
 			public void run()
 			{
-				// wait for auto-reconnect
-				int msgID = addStatusMsg(JAPMessages.getString("setAnonModeSplashConnect"),
-										 JAPDialog.MESSAGE_TYPE_INFORMATION, false);
-				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-				//while(m_Controller.getAnonMode() && !m_Controller.isAnonConnected())
+				synchronized (m_connectionEstablishedSync)
 				{
-					try
+					if (m_Controller.getAnonMode() && !m_Controller.isAnonConnected())
 					{
-						synchronized (m_connectionEstablishedSync)
+						m_bConnectionErrorShown = true;
+						valuesChanged(true);
+						// wait for auto-reconnect
+						int msgID = addStatusMsg(JAPMessages.getString("setAnonModeSplashConnect"),
+												 JAPDialog.MESSAGE_TYPE_INFORMATION, false);
+						setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+						try
 						{
 							m_connectionEstablishedSync.wait();
 						}
-					}
-					catch (InterruptedException a_e)
-					{
+						catch (InterruptedException a_e)
+						{
+						}
+						setCursor(Cursor.getDefaultCursor());
+						removeStatusMsg(msgID);
+						m_bConnectionErrorShown = false;
+						valuesChanged(false);
 					}
 				}
-				setCursor(Cursor.getDefaultCursor());
-				removeStatusMsg(msgID);
-				m_bConnectionErrorShown = false;
-				valuesChanged(false);
 			}
 		};
-		if (JAPModel.getAutoReConnect())
-		{
-			updateThread.start();
-		}
+		updateThread.start();
 	}
 
 	public void actionPerformed(final ActionEvent event)
@@ -1721,11 +1715,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private synchronized void fetchMixCascadesAsync(final boolean bShowError)
 	{
-		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		Runnable doFetchMixCascades = new Runnable()
 		{
 			public void run()
 			{
+				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 				m_Controller.fetchMixCascades(bShowError);
 				setCursor(Cursor.getDefaultCursor());
 				SwingUtilities.invokeLater(new Runnable()
@@ -1737,9 +1731,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				});
 			}
 		};
-		Thread t = new Thread(doFetchMixCascades,"DoFetchMixCascades");
-	t.setDaemon(true);
-	t.start();
+		Thread t = new Thread(doFetchMixCascades, "DoFetchMixCascades");
+		t.setDaemon(true);
+		t.start();
 	}
-
 }
