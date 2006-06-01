@@ -37,6 +37,11 @@ public class AnonServiceEventAdapter implements AnonServiceEventListener
 	{
 	}
 
+	public void disconnected()
+	{
+
+}
+
 	public void connectionError()
 	{
 	}
