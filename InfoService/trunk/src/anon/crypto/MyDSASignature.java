@@ -86,8 +86,8 @@ public final class MyDSASignature implements IMySignature
 	{
 		try
 		{
-			//if (m_initKey == null || m_initKey != k)
-			//{
+		//if (m_initKey == null || m_initKey != k)
+		//{
 			MyDSAPublicKey k1 = (MyDSAPublicKey) k;
 			m_SignatureAlgorithm.init(false, k1.getPublicParams());
 			m_Digest.reset();
@@ -106,7 +106,7 @@ public final class MyDSASignature implements IMySignature
 		try
 		{
 			//if (m_initKey == null || m_initKey != k)
-			//{
+		//{
 			MyDSAPrivateKey k1 = (MyDSAPrivateKey) k;
 			m_SignatureAlgorithm.init(true, k1.getPrivateParams());
 			m_initKey = k;

@@ -53,7 +53,7 @@ public abstract class AbstractPublicKey implements IMyPublicKey
 	}
 
 	/**
-	 * Returns the key in a byte encoded form that is defined be the result of the method
+	 * Returns the key in a byte encoded form that is defined to be the result of the method
 	 * <Code> getAsSubjectPublicKeyInfo() </Code>.
 	 * @return the key in a byte encoded form
 	 * @see getAsSubjectPublicKeyInfo()

@@ -197,4 +197,10 @@ final public class MyDSAPublicKey extends AbstractPublicKey implements DSAPublic
 
 		return (int) m_hashValue;
 	}
+
+	public int getKeyLength()
+	{
+		return m_params.getP().bitCount();
+	}
+
 }

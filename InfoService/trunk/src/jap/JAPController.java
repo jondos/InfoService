@@ -178,7 +178,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private Vector m_anonServiceListener;
 	private IPasswordReader m_passwordReader;
 	private boolean m_bInitialRun = true;
-	private Object ms_inititalRunSync = new Object();
+	private Object m_inititalRunSync = new Object();
+	private Object m_finishSync = new Object();
 
 	private static Font m_fontControls;
 	/** Holds the MsgID of the status message after the forwaring server was started.*/
@@ -1751,7 +1752,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		public void run()
 		{
 			boolean bRetryOnError;
-			synchronized (ms_inititalRunSync)
+			synchronized (m_inititalRunSync)
 			{
 				bRetryOnError = m_bInitialRun && JAPModel.getAutoConnect();
 				m_bInitialRun = false;
@@ -2418,38 +2419,61 @@ public final class JAPController extends Observable implements IProxyListener, O
 						JAPDialog.showErrorDialog(getView(), JAPMessages.getString(MSG_ERROR_SAVING_CONFIG,
 							JAPModel.getInstance().getConfigFile()), LogType.MISC);
 					}
+					JAPDialog.setConsoleOnly(true); // do not show any dialogs now
 					m_Controller.m_bShutdown = true;
-					getView().setEnabled(false);
 					// disallow InfoService traffic
 					JAPModel.getInstance().setInfoServiceDisabled(true);
 					// do not show direct connection warning dialog
 					DirectProxy.setAllowUnprotectedConnectionCallback(null);
 
-					if (bShowConfigSaveErrorMsg) // make a hard shutdown in case of an update...
+					try
 					{
 						m_Controller.setAnonMode(false);
+						// Wait until anon mode is disabled
+						synchronized (m_Controller.m_finishSync)
+						{
+							if (m_Controller.getAnonMode() || m_Controller.isAnonConnected())
+							{
+								try
+								{
+									m_Controller.m_finishSync.wait();
+								}
+								catch (InterruptedException a_e)
+								{
+
+								}
+							}
+						}
+
+
 						//Wait until all Jobs are finished....
-						if (m_Controller.m_changeAnonModeJobs.size() > 0)
+						for (int i = 0; i < 5 && m_Controller.m_changeAnonModeJobs.size() > 0; i++)
 						{
 							Vector vecJobs = (Vector)m_Controller.m_changeAnonModeJobs.clone();
 							Enumeration jobs = vecJobs.elements();
+							SetAnonModeAsync job;
 							while (jobs.hasMoreElements())
 							{
-								((SetAnonModeAsync)jobs.nextElement()).interrupt();
-							}
-						/*	try
-							{
-								if (m_Controller.m_changeAnonModeJobs.size() > 0)
+								job = (SetAnonModeAsync)jobs.nextElement();
+								if (job.isStartServerJob())
 								{
-									sleep(1000);
+									( (SetAnonModeAsync) jobs.nextElement()).interrupt();
 								}
+							}
+
+							try
+							{
+								sleep(500);
 							}
 							catch (InterruptedException a_e)
 							{
 								// ignore
-							}*/
+							}
 						}
-
+					}
+					catch (Throwable a_e)
+					{
+						LogHolder.log(LogLevel.EMERG, LogType.MISC, a_e);
 					}
 					// do not show any dialogs in this state
 					getView().dispose();
@@ -3034,11 +3058,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	public void disconnected()
 	{
-		m_proxyAnon = null;
-		Enumeration e = m_anonServiceListener.elements();
-		while (e.hasMoreElements())
+		synchronized (m_finishSync)
 		{
-			( (AnonServiceEventListener) e.nextElement()).disconnected();
+			m_proxyAnon = null;
+			Enumeration e = m_anonServiceListener.elements();
+			while (e.hasMoreElements())
+			{
+				( (AnonServiceEventListener) e.nextElement()).disconnected();
+			}
+			m_finishSync.notifyAll();
 		}
 	}
 

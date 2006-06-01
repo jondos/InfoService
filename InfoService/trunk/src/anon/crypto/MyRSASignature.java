@@ -37,6 +37,7 @@ import java.io.ByteArrayOutputStream;
 import java.security.InvalidKeyException;
 import java.security.Key;
 
+import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1Null;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERObjectIdentifier;
@@ -47,7 +48,6 @@ import org.bouncycastle.asn1.x509.X509ObjectIdentifiers;
 import org.bouncycastle.crypto.digests.SHA1Digest;
 import org.bouncycastle.crypto.encodings.PKCS1Encoding;
 import org.bouncycastle.crypto.engines.RSAEngine;
-import org.bouncycastle.asn1.ASN1InputStream;
 
 /*** SHA1withRSA Signature as described in RFC 2313 */
 public final class MyRSASignature implements IMySignature
@@ -59,23 +59,23 @@ public final class MyRSASignature implements IMySignature
 	/**
 	 * The key with that this algorithm has been initialised.
 	 */
-	//private Key m_initKey;
+	private Key m_initKey;
 	private SHA1Digest m_Digest;
-	private final static AlgorithmIdentifier ms_AlgID =
-		new AlgorithmIdentifier(X509ObjectIdentifiers.id_SHA1, null);
+	private final static AlgorithmIdentifier ms_AlgID=
+		new AlgorithmIdentifier(X509ObjectIdentifiers.id_SHA1,null);
 
 	public MyRSASignature()
 	{
 		m_SignatureAlgorithm = new PKCS1Encoding(new RSAEngine());
-		m_Digest = new SHA1Digest();
+		m_Digest=new SHA1Digest();
 	}
 
 	synchronized public void initVerify(IMyPublicKey k) throws InvalidKeyException
 	{
 		//if (m_initKey == null || m_initKey != k)
 		//{
-		m_SignatureAlgorithm.init(false, ( (MyRSAPublicKey) k).getParams());
-		//m_initKey = k;
+			m_SignatureAlgorithm.init(false, ( (MyRSAPublicKey) k).getParams());
+			m_initKey = k;
 		//}
 	}
 
@@ -83,8 +83,8 @@ public final class MyRSASignature implements IMySignature
 	{
 		//if (m_initKey == null || m_initKey != k)
 		//{
-		m_SignatureAlgorithm.init(true, ( (MyRSAPrivateKey) k).getParams());
-		//m_initKey = k;
+			m_SignatureAlgorithm.init(true, ( (MyRSAPrivateKey) k).getParams());
+			m_initKey = k;
 		//}
 	}
 
@@ -143,12 +143,12 @@ public final class MyRSASignature implements IMySignature
 		}
 	}
 
+
 	/** Verifyes a signature for a given hash*/
 	synchronized public boolean verifyPlain(byte[] hash, byte[] sig)
 	{
 		try
 		{
-
 			byte[] sigHash = m_SignatureAlgorithm.processBlock(sig, 0, sig.length);
 
 			if (hash.length != sigHash.length)
@@ -176,16 +176,16 @@ public final class MyRSASignature implements IMySignature
 	{
 		try
 		{
-			byte[] hash = new byte[m_Digest.getDigestSize()];
+			byte[]  hash = new byte[m_Digest.getDigestSize()];
 			m_Digest.reset();
-			m_Digest.update(bytesToSign, 0, bytesToSign.length);
+			m_Digest.update(bytesToSign,0,bytesToSign.length);
 			m_Digest.doFinal(hash, 0);
 
-			ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-			DEROutputStream dOut = new DEROutputStream(bOut);
-			DigestInfo dInfo = new DigestInfo(ms_AlgID, hash);
-			dOut.writeObject(dInfo);
-			byte[] bytes = bOut.toByteArray();
+			ByteArrayOutputStream   bOut = new ByteArrayOutputStream();
+			DEROutputStream         dOut = new DEROutputStream(bOut);
+			DigestInfo              dInfo = new DigestInfo(ms_AlgID, hash);
+	  	  	dOut.writeObject(dInfo);
+	  		byte[]  bytes= bOut.toByteArray();
 
 			return m_SignatureAlgorithm.processBlock(bytes, 0, bytes.length);
 		}

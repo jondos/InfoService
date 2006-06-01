@@ -55,6 +55,7 @@ import anon.util.XMLParseException;
 
 final public class MyDSAPrivateKey extends AbstractPrivateKey implements DSAPrivateKey, IMyPrivateKey
 {
+
 	public static final String XML_ELEMENT_NAME = "DSAPrivateKey";
 
 	private BigInteger m_X;
@@ -145,15 +146,15 @@ final public class MyDSAPrivateKey extends AbstractPrivateKey implements DSAPriv
 
 		DERObject derParam =
 			new DSAParameter(
-				m_params.getP(),
-				m_params.getQ(),
-				m_params.getG())
+			m_params.getP(),
+			m_params.getQ(),
+			m_params.getG())
 			.getDERObject();
 
 		info = new PrivateKeyInfo(
 			new AlgorithmIdentifier(
-				X9ObjectIdentifiers.id_dsa,
-				derParam),
+			X9ObjectIdentifiers.id_dsa,
+			derParam),
 			new DERInteger(getX()));
 
 		return info;

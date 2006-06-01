@@ -41,6 +41,7 @@ import anon.crypto.IMyPrivateKey;
 import anon.crypto.IMyPublicKey;
 import anon.crypto.IMySignature;
 import anon.crypto.ISignatureCreationAlgorithm;
+import anon.util.Util;
 
 /**
  * This is a dummy implementation of a private key.
@@ -48,6 +49,8 @@ import anon.crypto.ISignatureCreationAlgorithm;
  */
 public class DummyPrivateKey extends DummySignatureKey implements IMyPrivateKey
 {
+	private static final AlgorithmIdentifier IDENTIFIER =
+		new AlgorithmIdentifier(new DERObjectIdentifier("0.0.0.0.0.0.1"));
 	private IMySignature m_algorithm = new DummySignatureAlgorithm();
 
 	/**
@@ -62,6 +65,11 @@ public class DummyPrivateKey extends DummySignatureKey implements IMyPrivateKey
 	public DummyPrivateKey(PrivateKeyInfo a_keyInfo) throws IOException
 	{
 		super(((DERInteger)a_keyInfo.getPrivateKey()).getValue().longValue());
+		if (!Util.arraysEqual(a_keyInfo.getAlgorithmId().getEncoded(),
+			IDENTIFIER.getEncoded()))
+		{
+			throw new IOException("Not a dummy private key!");
+		}
 	}
 
 
@@ -93,8 +101,7 @@ public class DummyPrivateKey extends DummySignatureKey implements IMyPrivateKey
 
 	public PrivateKeyInfo getAsPrivateKeyInfo()
 	{
-		AlgorithmIdentifier algID = new AlgorithmIdentifier(new DERObjectIdentifier("0.0.0.0.0.0.0"));
-		return new PrivateKeyInfo(algID, new DERInteger(BigInteger.valueOf(getKeyValue())));
+		return new PrivateKeyInfo(IDENTIFIER, new DERInteger(BigInteger.valueOf(getKeyValue())));
 	}
 
 	public byte[] getEncoded()

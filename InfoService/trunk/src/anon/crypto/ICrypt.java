@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000, The JAP-Team
+ Copyright (c) 2000 - 2005, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -27,47 +27,28 @@
  */
 package anon.crypto;
 
-import java.security.PublicKey;
-
-import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
-
-import anon.util.IXMLEncodable;
+import java.security.NoSuchAlgorithmException;
 
 /**
- * Represents the public part of an asymmetric cryptographic key pair.
+ * Provides methods that implement the Unix crypt command for creation of password hashes.
  */
-public interface IMyPublicKey extends PublicKey, IXMLEncodable
+public interface ICrypt
 {
 	/**
-	 * Gets the signature algorithm object that is held and initialised with this key.
-	 * It is ready to verify messages and does not need to be reinitialised by the caller.
-	 * Therefore, this method must make sure that the algorithm is initialised with this key.
-	 * @return the signature algorithm object that is held and initialised by this key
+	 * Creates a UNIX/BSD/Linux-compatible hash value from a password String.
+	 * @param a_password a password as String
+	 * @return a hash value for the password
+	 * @throws NoSuchAlgorithmException if the hash algorithm is not available on the current system
 	 */
-	public ISignatureVerificationAlgorithm getSignatureAlgorithm();
+	public String crypt(String a_password) throws NoSuchAlgorithmException;
 
 	/**
-	 * Gets the key as a SubjectPublicKeyInfo object.
-	 * @return the key as a SubjectPublicKeyInfo object
+	 * Creates a UNIX/BSD/Linux-compatible hash value from a password String and a salt value.
+	 * The maximum length of the salt may vary with the algorithm
+	 * @param a_password a password as String
+	 * @param a_salt a salt as String; the maximum length may vary
+	 * @return a hash value for the password
+	 * @throws NoSuchAlgorithmException if the hash algorithm is not available on the current system
 	 */
-	public SubjectPublicKeyInfo getAsSubjectPublicKeyInfo();
-
-	/**
-	 * Returns the length of the key. The length of the key often corresponds with the security it provides.
-	 * @return the length of the key
-	 */
-	public int getKeyLength();
-
-	/**
-	 * This method returns if two public keys have the same public key parameters.
-	 * @param a_object an other public key
-	 * @return true if the keys have the same public key parameters; false otherwise
-	 */
-	public boolean equals(Object a_object);
-
-	/**
-	 * @return the public key`s hash code
-	 * @see java.lang.Object#hashCode()
-	 */
-	public int hashCode();
+	public String crypt(String a_password, String a_salt) throws NoSuchAlgorithmException;
 }

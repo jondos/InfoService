@@ -52,7 +52,7 @@ import anon.util.XMLParseException;
 final public class MyRSAPrivateKey extends AbstractPrivateKey implements IMyPrivateKey
 {
 	public static final String XML_ELEMENT_NAME = "RSAPrivateKey";
-
+	private MyRSASignature m_algorithm = new MyRSASignature();
 	private RSAPrivateCrtKeyParameters m_Params;
 
 	public MyRSAPrivateKey(CipherParameters cipherparams) throws Exception
@@ -139,15 +139,13 @@ final public class MyRSAPrivateKey extends AbstractPrivateKey implements IMyPriv
 	{
 		try
 		{
-			MyRSASignature algorithm = new MyRSASignature();
-			algorithm.initSign(this);
-			return algorithm;
+			m_algorithm.initSign(this);
 		}
 		catch (InvalidKeyException a_e)
 		{
 			// not possible
 		}
-		return null;
+		return m_algorithm;
 	}
 
 	/**
@@ -218,13 +216,13 @@ final public class MyRSAPrivateKey extends AbstractPrivateKey implements IMyPriv
 	{
 		PrivateKeyInfo privKey =
 			new PrivateKeyInfo(
-				new AlgorithmIdentifier(
-					new DERObjectIdentifier("1.2.840.113549.1.1.1")
-				),
-				new RSAPrivateKeyStructure(m_Params.getModulus(), m_Params.getPublicExponent(),
-										   m_Params.getExponent(), m_Params.getP(), m_Params.getQ(),
-										   m_Params.getDP(), m_Params.getDQ(), m_Params.getQInv()).
-				getDERObject());
+			new AlgorithmIdentifier(
+			new DERObjectIdentifier("1.2.840.113549.1.1.1")
+			),
+			new RSAPrivateKeyStructure(m_Params.getModulus(), m_Params.getPublicExponent(),
+									   m_Params.getExponent(), m_Params.getP(), m_Params.getQ(),
+									   m_Params.getDP(), m_Params.getDQ(), m_Params.getQInv()).
+			getDERObject());
 
 		return privKey;
 	}

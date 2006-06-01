@@ -30,17 +30,17 @@ package anon.crypto;
 public class CertificateInfoStructure
 {
 
-	private JAPCertificate m_certificate;
+  private JAPCertificate m_certificate;
 
-	private JAPCertificate m_parentCertificate;
+  private JAPCertificate m_parentCertificate;
 
-	private int m_certificateType;
+  private int m_certificateType;
 
-	private boolean m_enabled;
+  private boolean m_enabled;
 
-	private boolean m_certificateNeedsVerification;
+  private boolean m_certificateNeedsVerification;
 
-	private boolean m_onlyHardRemovable;
+  private boolean m_onlyHardRemovable;
 
 	private boolean m_bNotRemovable;
 

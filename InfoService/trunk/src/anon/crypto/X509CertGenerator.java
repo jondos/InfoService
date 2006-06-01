@@ -86,7 +86,7 @@ public final class X509CertGenerator extends V3TBSCertificateGenerator
 
 	public X509CertificateStructure sign(PKCS12 a_pkcs12Certificate)
 	{
-		return sign(a_pkcs12Certificate.getX509Certificate().getSubject(),
+		return sign(a_pkcs12Certificate.getX509Certificate().getSubject().getX509Name(),
 					a_pkcs12Certificate.getPrivateKey());
 	}
 

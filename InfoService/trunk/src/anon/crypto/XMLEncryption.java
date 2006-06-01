@@ -27,12 +27,8 @@
  */
 package anon.crypto;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.SecureRandom;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.bouncycastle.asn1.pkcs.PKCS12PBEParams;
 import org.bouncycastle.crypto.BufferedBlockCipher;
@@ -48,11 +44,10 @@ import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-
 import anon.util.Base64;
-import anon.util.XMLUtil;
 import anon.util.IMiscPasswordReader;
 import anon.util.SingleStringPasswordReader;
+import anon.util.XMLUtil;
 
 final public class XMLEncryption
 {

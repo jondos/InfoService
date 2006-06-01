@@ -40,6 +40,7 @@ import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import anon.crypto.IMyPublicKey;
 import anon.crypto.IMySignature;
 import anon.crypto.ISignatureVerificationAlgorithm;
+import anon.util.Util;
 
 /**
  * This is a dummy implementation of a public key.
@@ -47,6 +48,9 @@ import anon.crypto.ISignatureVerificationAlgorithm;
  */
 public class DummyPublicKey extends DummySignatureKey implements IMyPublicKey
 {
+	private static final AlgorithmIdentifier IDENTIFIER =
+		new AlgorithmIdentifier(new DERObjectIdentifier("0.0.0.0.0.0.2"));
+
 	private IMySignature m_algorithm = new DummySignatureAlgorithm();
 
 	/**
@@ -61,6 +65,11 @@ public class DummyPublicKey extends DummySignatureKey implements IMyPublicKey
 	public DummyPublicKey(SubjectPublicKeyInfo a_keyInfo) throws IOException
 	{
 		super(((DERInteger)a_keyInfo.getPublicKey()).getValue().longValue());
+		if (!Util.arraysEqual(a_keyInfo.getAlgorithmId().getEncoded(),
+			IDENTIFIER.getEncoded()))
+		{
+			throw new IOException("Not a dummy private key!");
+		}
 	}
 
 	/**
@@ -82,9 +91,15 @@ public class DummyPublicKey extends DummySignatureKey implements IMyPublicKey
 
 	public SubjectPublicKeyInfo getAsSubjectPublicKeyInfo()
 	{
-		AlgorithmIdentifier algID = new AlgorithmIdentifier(new DERObjectIdentifier("0.0.0.0.0.0.0"));
-		return new SubjectPublicKeyInfo(algID, new DERInteger(BigInteger.valueOf(getKeyValue())));
+		return new SubjectPublicKeyInfo(IDENTIFIER,
+										new DERInteger(BigInteger.valueOf(getKeyValue())));
 	}
+
+	public int getKeyLength()
+	{
+		return 1;
+	}
+
 
 	public byte[] getEncoded()
 	{
