@@ -1928,7 +1928,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 												  JAPMessages.getString("errorMixOtherMixSigCheckFailed"),
 												  LogType.NET);
 					}
-					else if (ret == ErrorCodes.E_SUCCESS || a_bRetryOnConnectionError)
+					else if (ret == ErrorCodes.E_SUCCESS ||
+							 (ret != ErrorCodes.E_INTERRUPTED && a_bRetryOnConnectionError))
 					{
 						final AnonProxy proxyAnon = m_proxyAnon;
 						AnonServiceEventAdapter adapter = new AnonServiceEventAdapter()
@@ -2004,7 +2005,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						canStartService = false;
 						m_proxyAnon = null;
-						if (!JAPModel.isSmallDisplay())
+						if (!JAPModel.isSmallDisplay() && ret != ErrorCodes.E_INTERRUPTED)
 						{
 							LogHolder.log(LogLevel.ERR, LogType.NET,
 										  "Error starting AN.ON service! - ErrorCode: " +
@@ -2476,6 +2477,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						LogHolder.log(LogLevel.EMERG, LogType.MISC, a_e);
 					}
+					try
+					{
+						m_Controller.m_proxyDirect.stopService();
+					}
+					catch (NullPointerException a_e)
+					{
+						// ignore
+					}
+
 					// do not show any dialogs in this state
 					getView().dispose();
 					LogHolder.log(LogLevel.INFO, LogType.GUI, "View has been disposed. Finishing...");
@@ -3175,7 +3185,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 					catch (Exception e)
 					{
-						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+						LogHolder.log(LogLevel.ERR, LogType.PAY,
 									  "Could not fetch statement for account: " + account.getAccountNumber());
 					}
 				}

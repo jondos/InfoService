@@ -40,5 +40,6 @@ public final class ErrorCodes
 	public final static int E_INVALID_KEY = -21;
 	public final static int E_SIGNATURE_CHECK_FIRSTMIX_FAILED = -22;
 	public final static int E_SIGNATURE_CHECK_OTHERMIX_FAILED = -23;
+	public final static int E_INTERRUPTED = -24;
 	public final static int E_SPACE=-31;
 }

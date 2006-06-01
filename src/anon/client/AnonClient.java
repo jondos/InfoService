@@ -141,7 +141,14 @@ public class AnonClient implements AnonService, Observer
 			}
 			else
 			{
-				socketToMixCascade = connectMixCascade(mixCascade, m_proxyInterface);
+				try
+				{
+					socketToMixCascade = connectMixCascade(mixCascade, m_proxyInterface);
+				}
+				catch (InterruptedIOException a_e)
+				{
+					return ErrorCodes.E_INTERRUPTED;
+				}
 			}
 			if (socketToMixCascade == null)
 			{
@@ -316,6 +323,7 @@ public class AnonClient implements AnonService, Observer
 	}
 
 	private Socket connectMixCascade(MixCascade a_mixCascade, ImmutableProxyInterface a_proxyInterface)
+		throws InterruptedIOException
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.NET,
 					  "AnonClient: connectMixCascade(): Trying to connect to MixCascade '" +
@@ -336,7 +344,7 @@ public class AnonClient implements AnonService, Observer
 				 * -> stop all activities
 				 */
 				LogHolder.log(LogLevel.NOTICE, LogType.NET, "AnonClient: connectMixCascade(): Interrupted while connecting to MixCascade '" + a_mixCascade.toString() + "'.");
-				break;
+				throw e;
 			}
 			catch (Exception e)
 			{
