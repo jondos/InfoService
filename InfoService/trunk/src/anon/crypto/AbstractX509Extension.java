@@ -50,6 +50,12 @@ import logging.LogType;
  */
 public abstract class AbstractX509Extension
 {
+	private static AbstractX509Extension[] AVAILABLE_EXTENSIONS = new AbstractX509Extension[]
+		{(X509UnknownExtension)null, (X509SubjectKeyIdentifier)null,
+	   (X509SubjectAlternativeName)null, (X509IssuerAlternativeName)null };
+
+
+
 	/** Each subclass must contain this individual identifier. */
 	public static final String IDENTIFIER = null;
 
@@ -141,19 +147,10 @@ public abstract class AbstractX509Extension
 				ms_classExtensions = new Vector();
 			}
 
-			if (ms_classExtensions == null || ms_classExtensions.size() < 4)
+			if (ms_classExtensions == null || ms_classExtensions.size() < AVAILABLE_EXTENSIONS.length)
 			{
 				LogHolder.log(LogLevel.EXCEPTION, LogType.CRYPTO,
-							  "X509 extension classes have not been loaded automatically!");
-				// load them manually and prevent double references
-				ms_classExtensions.removeElement(X509UnknownExtension.class);
-				ms_classExtensions.removeElement(X509SubjectKeyIdentifier.class);
-				ms_classExtensions.removeElement(X509SubjectAlternativeName.class);
-				ms_classExtensions.removeElement(X509IssuerAlternativeName.class);
-				ms_classExtensions.addElement(X509UnknownExtension.class);
-				ms_classExtensions.addElement(X509SubjectKeyIdentifier.class);
-				ms_classExtensions.addElement(X509SubjectAlternativeName.class);
-				ms_classExtensions.addElement(X509IssuerAlternativeName.class);
+							  "X509 extension classes have not been loaded!");
 			}
 		}
 
