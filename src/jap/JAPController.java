@@ -2058,7 +2058,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 						JAPDialog.MESSAGE_TYPE_INFORMATION, false);
 					m_proxyAnon.stop();
 				}
-				m_proxyAnon = null;
+
+				synchronized (m_finishSync)
+				{
+					m_proxyAnon = null;
+					m_finishSync.notifyAll();
+				}
+
 				if (m_feedback != null)
 				{
 					m_feedback.stopRequests();
@@ -2097,11 +2103,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 	{
 		return m_proxyAnon != null && m_proxyAnon.isConnected();
 	}
-
-	public void setAnonModeNew(final boolean a_anonModeSelected)
-	{
-
-}
 
 	public void setAnonMode(final boolean a_anonModeSelected)
 	{
