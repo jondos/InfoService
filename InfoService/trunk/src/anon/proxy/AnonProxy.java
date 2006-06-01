@@ -374,6 +374,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			m_Tor = null;
 			m_Mixminion = null;
 			threadRun = null;
+			disconnected();
 			THREAD_SYNC.notify();
 		}
 	}
@@ -539,6 +540,15 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		}
 	}
 
+	private void fireDisconnected()
+	{
+		Enumeration e = m_anonServiceListener.elements();
+		while (e.hasMoreElements())
+		{
+			( (AnonServiceEventListener) e.nextElement()).disconnected();
+		}
+	}
+
 	private void fireConnectionEstablished()
 	{
 		Enumeration e = m_anonServiceListener.elements();
@@ -561,6 +571,12 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy received connectionEstablished.");
 		fireConnectionEstablished();
+	}
+
+	public void disconnected()
+	{
+		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy was disconnected.");
+		fireDisconnected();
 	}
 
 	public void connectionError()

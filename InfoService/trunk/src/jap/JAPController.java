@@ -3032,6 +3032,16 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 	}
 
+	public void disconnected()
+	{
+		m_proxyAnon = null;
+		Enumeration e = m_anonServiceListener.elements();
+		while (e.hasMoreElements())
+		{
+			( (AnonServiceEventListener) e.nextElement()).disconnected();
+		}
+	}
+
 	public void connectionError()
 	{
 		LogHolder.log(LogLevel.ERR, LogType.NET, "JAPController received connectionError");
