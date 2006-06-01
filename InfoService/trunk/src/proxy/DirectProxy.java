@@ -27,13 +27,6 @@
  */
 package proxy;
 
-import gui.JAPMessages;
-import gui.dialog.JAPDialog;
-import jap.JAPController;
-import jap.JAPModel;
-import jap.JAPUtil;
-import gui.JAPDll;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,10 +41,13 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import anon.infoservice.ProxyInterface;
+import gui.JAPMessages;
+import jap.JAPModel;
+import jap.JAPUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.infoservice.ProxyInterface;
 
 
 
@@ -70,7 +66,6 @@ final public class DirectProxy implements Runnable
 	private ServerSocket m_socketListener;
 	private volatile Thread threadRunLoop;
 	private ThreadGroup threadgroupAll;
-	private boolean m_temporaryRemember;
 
 	public DirectProxy(ServerSocket s)
 	{
@@ -129,7 +124,7 @@ final public class DirectProxy implements Runnable
 		int remember = REMEMBER_NOTHING;
 		boolean bShowHtmlWarning = true;
 		Runnable doIt;
-		m_temporaryRemember = false;
+		long rememberTime = 0;
 
 		try
 		{
@@ -162,7 +157,8 @@ final public class DirectProxy implements Runnable
 					continue;
 				}
 
-				if (remember == REMEMBER_NOTHING && !JAPModel.isSmallDisplay() && !m_temporaryRemember)
+				if (remember == REMEMBER_NOTHING && !JAPModel.isSmallDisplay() &&
+					rememberTime < System.currentTimeMillis())
 				{
 					AllowUnprotectedConnectionCallback.Answer answer;
 					AllowUnprotectedConnectionCallback callback = ms_callback;
@@ -190,21 +186,7 @@ final public class DirectProxy implements Runnable
 					}
 					else
 					{
-						new Thread()
-						{
-							public void run()
-							{
-								m_temporaryRemember = true;
-								try
-								{
-									sleep(TEMPORARY_REMEMBER_TIME);
-								}
-								catch (InterruptedException a_e)
-								{
-								}
-								m_temporaryRemember = false;
-							}
-						}.start();
+						rememberTime = System.currentTimeMillis() + TEMPORARY_REMEMBER_TIME;
 					}
 				}
 
