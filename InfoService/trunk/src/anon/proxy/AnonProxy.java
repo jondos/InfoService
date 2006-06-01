@@ -304,7 +304,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			if (ret != ErrorCodes.E_SUCCESS)
 			{
 				if (!a_bRetryOnError || ret == E_SIGNATURE_CHECK_FIRSTMIX_FAILED ||
-					ret == E_SIGNATURE_CHECK_OTHERMIX_FAILED)
+					ret == E_SIGNATURE_CHECK_OTHERMIX_FAILED || ret == ErrorCodes.E_INTERRUPTED)
 				{
 					return ret;
 				}

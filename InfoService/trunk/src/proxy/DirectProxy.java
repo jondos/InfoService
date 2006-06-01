@@ -60,17 +60,13 @@ final public class DirectProxy implements Runnable
 
 	private static AllowUnprotectedConnectionCallback ms_callback;
 
-	private volatile boolean runFlag;
-	private boolean isRunningProxy = false;
-	private int portN;
 	private ServerSocket m_socketListener;
+	private final Object THREAD_SYNC = new Object();
 	private volatile Thread threadRunLoop;
-	private ThreadGroup threadgroupAll;
 
 	public DirectProxy(ServerSocket s)
 	{
 		m_socketListener = s;
-		isRunningProxy = false;
 	}
 
 	public static void setAllowUnprotectedConnectionCallback(AllowUnprotectedConnectionCallback a_callback)
@@ -110,13 +106,14 @@ final public class DirectProxy implements Runnable
 		{
 			return false;
 		}
-		threadgroupAll = new ThreadGroup("directproxy");
-		threadRunLoop = new Thread(this, "JAP - Direct Proxy");
-		threadRunLoop.setDaemon(true);
-		runFlag = true;
-		threadRunLoop.start();
-		isRunningProxy = true;
-		return true;
+		synchronized (THREAD_SYNC)
+		{
+			stopService();
+			threadRunLoop = new Thread(this, "JAP - Direct Proxy");
+			threadRunLoop.setDaemon(true);
+			threadRunLoop.start();
+			return true;
+		}
 	}
 
 	public void run()
@@ -128,7 +125,7 @@ final public class DirectProxy implements Runnable
 
 		try
 		{
-			while (runFlag)
+			while (!Thread.currentThread().isInterrupted())
 			{
 				Socket socket = null;
 				try
@@ -203,71 +200,47 @@ final public class DirectProxy implements Runnable
 					{
 						doIt = new DirectProxyConnection(socket);
 					}
-					Thread thread = new Thread(threadgroupAll, doIt);
+					Thread thread = new Thread(doIt);
 					thread.start();
 				}
 				else
 				{
-					Thread thread = new Thread(threadgroupAll, new SendAnonWarning(socket));
+					Thread thread = new Thread(new SendAnonWarning(socket));
 					thread.start();
 				}
 
 			}
+			LogHolder.log(LogLevel.INFO, LogType.NET, "Direct Proxy Server stopped.");
 		}
 		catch (Exception e)
 		{
-			LogHolder.log(LogLevel.ERR, LogType.NET, "JAPDirectProxy:DirectProxy.run() Exception: " + e);
+			LogHolder.log(LogLevel.ERR, LogType.NET, e);
 		}
-		isRunningProxy = false;
-		LogHolder.log(LogLevel.INFO, LogType.NET, "JAPDirect:DircetProxyServer stopped.");
 	}
 
 	public synchronized void stopService()
 	{
-		runFlag = false;
-		try
+		synchronized (THREAD_SYNC)
 		{
-			int timeToWait = 0;
-			try
+			if (threadRunLoop == null)
 			{
-				timeToWait = m_socketListener.getSoTimeout();
+				return;
 			}
-			catch (Exception ex)
-			{}
-			if (timeToWait <= 0)
+			threadRunLoop.interrupt();
+			while (threadRunLoop.isAlive())
 			{
-				timeToWait = 3000;
+				try
+				{
+					threadRunLoop.join(1000);
+				}
+				catch (InterruptedException e)
+				{
+					//LogHolder.log(LogLevel.ERR, LogType.NET, "Direct Proxy Server could not be stopped!!!");
+				}
 			}
-			timeToWait += 1000;
-			threadRunLoop.join(timeToWait);
+			threadRunLoop = null;
 		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.NET, "JAPDirect:DirectProxyServer could not be stopped!!!");
-		}
-		if (threadgroupAll != null)
-		{
-			try //Hack for kaffe!
-			{
-				threadgroupAll.stop();
-				threadgroupAll.destroy();
-			}
-			catch (Exception e)
-			{
-			}
-		}
-		threadgroupAll = null;
-		threadRunLoop = null;
 	}
-
-	//	try {
-	//		socketListener.close();
-	//	}
-	//	catch(Exception e) {
-	//		LogHolder.log(LogLevel.EXCEPTION,LogLevel.NET,"JAPProxyServer:stopService() Exception: " +e);
-	//	}
-	//}
-
 
 	/**
 	 *  This class is used to inform the user that he tries to
