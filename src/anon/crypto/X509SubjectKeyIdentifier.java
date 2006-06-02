@@ -36,7 +36,7 @@ import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
 import org.bouncycastle.asn1.DEROctetString;
-import org.bouncycastle.asn1.DERInputStream;
+import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.DEROutputStream;
 
 import anon.util.Util;
@@ -133,7 +133,6 @@ public final class X509SubjectKeyIdentifier extends AbstractX509Extension
 		}
 		catch (Exception a_e)
 		{
-			a_e.printStackTrace();
 			// should never happen
 			throw new RuntimeException("Could not write DER object to bytes!");
 		}
@@ -147,7 +146,7 @@ public final class X509SubjectKeyIdentifier extends AbstractX509Extension
 
 		try
 		{
-			 identifier = ((DEROctetString)new DERInputStream(
+			 identifier = ((DEROctetString)new ASN1InputStream(
 						 new ByteArrayInputStream(getDEROctets())).readObject()).getOctets();
 		}
 		catch (Exception a_e)

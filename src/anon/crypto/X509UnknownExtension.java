@@ -32,7 +32,6 @@ import java.util.Vector;
 import org.bouncycastle.asn1.DERSequence;
 
 import anon.util.Util;
-import gui.*;
 
 /**
  * This extension is instantiated if the type is unknown. Missing extensions should be implemented
