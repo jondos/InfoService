@@ -34,7 +34,6 @@ package anon.crypto;
 
 import org.bouncycastle.crypto.engines.AESFastEngine;
 import org.bouncycastle.crypto.params.KeyParameter;
-import gui.*;
 
 /**
  * This class is a wrapper for doing AES decryption stuff.

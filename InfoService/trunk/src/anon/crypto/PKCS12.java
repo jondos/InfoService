@@ -40,20 +40,15 @@ import java.io.OutputStream;
 import java.security.SecureRandom;
 import java.util.Calendar;
 import java.util.Enumeration;
-import java.util.Vector;
-import java.math.BigInteger;
 
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
 import org.bouncycastle.asn1.ASN1TaggedObject;
 import org.bouncycastle.asn1.BERConstructedOctetString;
-import org.bouncycastle.asn1.BERInputStream;
 import org.bouncycastle.asn1.BEROutputStream;
 import org.bouncycastle.asn1.DERBMPString;
-import org.bouncycastle.asn1.DERConstructedSet;
 import org.bouncycastle.asn1.DEREncodableVector;
-import org.bouncycastle.asn1.DERInputStream;
 import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DEROctetString;
@@ -94,9 +89,6 @@ import org.bouncycastle.crypto.params.DESParameters;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.bouncycastle.crypto.params.ParametersWithRandom;
-
-import anon.util.IMiscPasswordReader;
-import anon.util.SingleStringPasswordReader;
 
 /**
  * This class creates and handles PKCS12 certificates, that include a private key,
