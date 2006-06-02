@@ -281,7 +281,8 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 				}
 				for (int i = 0; i < ms_IconHeight + 1 && m_bRun; i++)
 				{
-					paint(getGraphics());
+					//paint(getGraphics());
+					repaint();
 					try
 					{
 						if (!bInterrupted)
