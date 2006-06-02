@@ -1053,7 +1053,7 @@ public final class JAPCertificate // extends X509CertificateStructure
 
 		try
 		{
-			if (a_bytes[0] != (DERInputStream.SEQUENCE | DERInputStream.CONSTRUCTED))
+			if (a_bytes[0] != (ASN1DERInputStream.SEQUENCE | ASN1InputStream.CONSTRUCTED))
 			{
 				// Probably a Base64 encoded certificate
 				BufferedReader in =
