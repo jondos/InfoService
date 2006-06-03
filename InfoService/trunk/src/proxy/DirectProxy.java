@@ -108,7 +108,8 @@ final public class DirectProxy implements Runnable
 		}
 		synchronized (THREAD_SYNC)
 		{
-			stopService();
+			//stopService();
+			//threadRunLoop.join();
 			threadRunLoop = new Thread(this, "JAP - Direct Proxy");
 			threadRunLoop.setDaemon(true);
 			threadRunLoop.start();
@@ -125,97 +126,104 @@ final public class DirectProxy implements Runnable
 
 		try
 		{
-			while (!Thread.currentThread().isInterrupted())
+			m_socketListener.setSoTimeout(2000);
+		}
+		catch (Exception e1)
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Could not set accept time out!" , e1);
+		}
+
+		while (!Thread.currentThread().isInterrupted())
+		{
+			Socket socket = null;
+			try
 			{
-				Socket socket = null;
-				try
-				{
-					socket = m_socketListener.accept();
-				}
-				catch (InterruptedIOException e1)
-				{
-					continue;
-				}
-				catch (SocketException e2)
-				{
-					LogHolder.log(LogLevel.ERR, LogType.NET, "Accept socket excpetion: " + e2);
-					break;
-				}
+				socket = m_socketListener.accept();
+			}
+			catch (InterruptedIOException e1)
+			{
+				continue;
+			}
+			catch (SocketException e2)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.NET, "Accept socket excpetion: " + e2);
+				break;
+			}
+			catch (IOException a_e)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.NET, "Socket could not accept!" + a_e);
+				break;
+			}
 
-				try
-				{
-					socket.setSoTimeout(0); //Ensure socket is in Blocking Mode
-				}
-				catch (SocketException soex)
-				{
-					LogHolder.log(LogLevel.ERR, LogType.NET,
-								  "Could not set socket to blocking mode! Excpetion: " + soex);
-					socket = null;
-					continue;
-				}
+			try
+			{
+				socket.setSoTimeout(0); //Ensure socket is in Blocking Mode
+			}
+			catch (SocketException soex)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.NET,
+							  "Could not set socket to blocking mode! Excpetion: " + soex);
+				socket = null;
+				continue;
+			}
 
-				if (remember == REMEMBER_NOTHING && !JAPModel.isSmallDisplay() &&
-					rememberTime < System.currentTimeMillis())
+			if (remember == REMEMBER_NOTHING && !JAPModel.isSmallDisplay() &&
+				rememberTime < System.currentTimeMillis())
+			{
+				AllowUnprotectedConnectionCallback.Answer answer;
+				AllowUnprotectedConnectionCallback callback = ms_callback;
+				if (callback != null)
 				{
-					AllowUnprotectedConnectionCallback.Answer answer;
-					AllowUnprotectedConnectionCallback callback = ms_callback;
-					if (callback != null)
-					{
-						answer = callback.callback();
-					}
-					else
-					{
-						answer = new AllowUnprotectedConnectionCallback.Answer(false, false);
-					}
-					bShowHtmlWarning = !answer.isAllowed();
-
-
-					if (answer.isRemembered())
-					{
-						if (bShowHtmlWarning)
-						{
-							remember = REMEMBER_WARNING;
-						}
-						else
-						{
-							remember = REMEMBER_NO_WARNING;
-						}
-					}
-					else
-					{
-						rememberTime = System.currentTimeMillis() + TEMPORARY_REMEMBER_TIME;
-					}
-				}
-
-				if (!bShowHtmlWarning && !JAPModel.isSmallDisplay())
-				{
-					if (JAPModel.getInstance().getProxyInterface() != null &&
-						JAPModel.getInstance().getProxyInterface().isValid() &&
-						JAPModel.getInstance().getProxyInterface().getProtocol() ==
-						ProxyInterface.PROTOCOL_TYPE_HTTP)
-					{
-						doIt = new DirectConViaHTTPProxy(socket);
-					}
-					else
-					{
-						doIt = new DirectProxyConnection(socket);
-					}
-					Thread thread = new Thread(doIt);
-					thread.start();
+					answer = callback.callback();
 				}
 				else
 				{
-					Thread thread = new Thread(new SendAnonWarning(socket));
-					thread.start();
+					answer = new AllowUnprotectedConnectionCallback.Answer(false, false);
 				}
+				bShowHtmlWarning = !answer.isAllowed();
 
+				if (answer.isRemembered())
+				{
+					if (bShowHtmlWarning)
+					{
+						remember = REMEMBER_WARNING;
+					}
+					else
+					{
+						remember = REMEMBER_NO_WARNING;
+					}
+				}
+				else
+				{
+					rememberTime = System.currentTimeMillis() + TEMPORARY_REMEMBER_TIME;
+				}
 			}
-			LogHolder.log(LogLevel.INFO, LogType.NET, "Direct Proxy Server stopped.");
+
+			if (!bShowHtmlWarning && !JAPModel.isSmallDisplay())
+			{
+				if (JAPModel.getInstance().getProxyInterface() != null &&
+					JAPModel.getInstance().getProxyInterface().isValid() &&
+					JAPModel.getInstance().getProxyInterface().getProtocol() ==
+					ProxyInterface.PROTOCOL_TYPE_HTTP)
+				{
+					doIt = new DirectConViaHTTPProxy(socket);
+				}
+				else
+				{
+					doIt = new DirectProxyConnection(socket);
+				}
+				Thread thread = new Thread(doIt);
+				thread.start();
+			}
+			else
+			{
+				Thread thread = new Thread(new SendAnonWarning(socket));
+				thread.start();
+			}
+
 		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.NET, e);
-		}
+		LogHolder.log(LogLevel.INFO, LogType.NET, "Direct Proxy Server stopped.");
+
 	}
 
 	public synchronized void stopService()
@@ -226,9 +234,10 @@ final public class DirectProxy implements Runnable
 			{
 				return;
 			}
-			threadRunLoop.interrupt();
+
 			while (threadRunLoop.isAlive())
 			{
+				threadRunLoop.interrupt();
 				try
 				{
 					threadRunLoop.join(1000);
