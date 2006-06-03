@@ -55,9 +55,9 @@ final class JAPFeedback implements Runnable
 			}
 			try
 			{
-				synchronized (m_threadRunLoop)
+				synchronized (Thread.currentThread())
 				{
-					m_threadRunLoop.wait(60000);
+					Thread.currentThread().wait(60000);
 				}
 				//Thread.sleep(6000); // for testing only
 			}
@@ -94,8 +94,8 @@ final class JAPFeedback implements Runnable
 					{
 						synchronized (m_threadRunLoop)
 						{
+							m_threadRunLoop.notifyAll();
 							m_threadRunLoop.interrupt();
-							m_threadRunLoop.notify();
 						}
 						m_threadRunLoop.join(1000);
 					}

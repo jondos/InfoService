@@ -2306,9 +2306,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					s = new ServerSocket(port);
 				}
-				LogHolder.log(LogLevel.INFO, LogType.NET,
-							  "Listener on port " + port +
-							  " started.");
+				LogHolder.log(LogLevel.INFO, LogType.NET, "Started listener on port " + port + ".");
+				/*
 				try
 				{
 					s.setSoTimeout(2000);
@@ -2318,7 +2317,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					LogHolder.log(LogLevel.DEBUG, LogType.NET,
 								  "Could not set listener accept timeout: Exception: " +
 								  e1.getMessage());
-				}
+				}*/
 				break ;
 			}
 			catch (Exception e)

@@ -382,7 +382,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	public void run()
 	{
 		int oldTimeOut = 0;
-		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy: AnonProxy is running as Thread");
+		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy is running as Thread");
 
 		try
 		{
