@@ -766,7 +766,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "InfoServiceHolder: getPaymentInstance: No InfoService with the needed information available.");
+						  "No InfoService with the needed information available.");
 		}
 
 		if (theBI != null)
