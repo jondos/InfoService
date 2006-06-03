@@ -255,85 +255,31 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 				{
 					public void run()
 					{
-						boolean bError = false;
-						synchronized (InfoServiceHolder.getInstance())
+						boolean bError = !JAPController.getInstance().updateInfoServices();
+						/* re-enable the fetch infoservices button */
+						final class RunnableSwing implements Runnable
 						{
-							Vector downloadedInfoServices = InfoServiceHolder.getInstance().getInfoServices();
-							if (downloadedInfoServices == null)
+							final private boolean m_bError;
+							RunnableSwing(boolean b)
 							{
-								bError = true;
-							}
-							else
-							{
-								/* we have successfully downloaded the list of running infoservices -> update the
-								 * internal database of known infoservices
-								 */
-								Enumeration infoservices = downloadedInfoServices.elements();
-								while (infoservices.hasMoreElements())
-								{
-									InfoServiceDBEntry currentInfoService = (InfoServiceDBEntry) (
-										infoservices.
-										nextElement());
-									Database.getInstance(InfoServiceDBEntry.class).update(currentInfoService);
-									InfoServiceDBEntry preferredInfoService = InfoServiceHolder.getInstance().
-										getPreferredInfoService();
-									if (preferredInfoService != null)
-									{
-										/* if the current infoservice is equal to the preferred infoservice, update the
-										 * preferred infoservice also
-										 */
-										if (preferredInfoService.equals(currentInfoService))
-										{
-											InfoServiceHolder.getInstance().setPreferredInfoService(
-												currentInfoService);
-										}
-									}
-								}
-								/* now remove all non user-defined infoservices, which were not updated, from the
-								 * database of known infoservices
-								 */
-								Enumeration knownInfoServices = Database.getInstance(InfoServiceDBEntry.class).
-									getEntryList().elements();
-								while (knownInfoServices.hasMoreElements())
-								{
-									InfoServiceDBEntry currentInfoService = (InfoServiceDBEntry) (
-										knownInfoServices.nextElement());
-									if (!currentInfoService.isUserDefined() &&
-										!downloadedInfoServices.contains(currentInfoService))
-									{
-										/* the InfoService was fetched from the Internet earlier, but it is not in the list
-										 * fetched from the Internet this time -> remove that InfoService from the database
-										 * of known InfoServices
-										 */
-										Database.getInstance(InfoServiceDBEntry.class).remove(
-											currentInfoService);
-									}
-								}
-							}
-							/* re-enable the fetch infoservices button */
-							final class RunnableSwing implements Runnable
-							{
-								final private boolean m_bError;
-								RunnableSwing(boolean b)
-								{
-									m_bError = b;
-								}
-
-								public void run()
-								{
-									if (m_bError)
-									{
-										JAPDialog.showErrorDialog(getRootPanel(),
-											JAPMessages.getString("settingsInfoServiceConfigBasicSettingsFetchInfoServicesError"),
-											LogType.MISC);
-									}
-									settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.
-										setEnabled(true);
-								}
+								m_bError = b;
 							}
 
-							SwingUtilities.invokeLater(new RunnableSwing(bError));
+							public void run()
+							{
+								if (m_bError)
+								{
+									JAPDialog.showErrorDialog(getRootPanel(),
+										JAPMessages.getString(
+										"settingsInfoServiceConfigBasicSettingsFetchInfoServicesError"),
+										LogType.MISC);
+								}
+								settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.
+									setEnabled(true);
+							}
 						}
+
+						SwingUtilities.invokeLater(new RunnableSwing(bError));
 					}
 				});
 				fetchInfoServicesThread.setDaemon(true);

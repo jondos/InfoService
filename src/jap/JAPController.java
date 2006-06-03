@@ -64,6 +64,8 @@ import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.JAPVersionInfo;
+import anon.infoservice.IDistributor;
+import anon.infoservice.IDistributable;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
 import anon.infoservice.ProxyInterface;
@@ -151,6 +153,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	private DirectProxy m_proxyDirect = null; // service object for direct access (bypass anon service)
 	private AnonProxy m_proxyAnon = null; // service object for anon access
+
+	private InfoServiceUpdater m_InfoServiceUpdater;
 
 	private boolean isRunningHTTPListener = false; // true if a HTTP listener is running
 
@@ -323,6 +327,17 @@ public final class JAPController extends Observable implements IProxyListener, O
 	{
 		m_bInitialRun = true;
 		LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPModel:initial run of JAP...");
+
+		// start IS update thread
+		anon.infoservice.Database.registerDistributor(new IDistributor()
+		{
+			public void addJob(IDistributable a_distributable)
+			{
+
+			}
+		});
+		m_InfoServiceUpdater = new InfoServiceUpdater();
+
 		// start http listener object
 		/* if (JAPModel.isTorEnabled())
 		 {
@@ -2427,6 +2442,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_Controller.m_bShutdown = true;
 					// disallow InfoService traffic
 					JAPModel.getInstance().setInfoServiceDisabled(true);
+					m_Controller.m_InfoServiceUpdater.stop();
 					// do not show direct connection warning dialog
 					DirectProxy.setAllowUnprotectedConnectionCallback(null);
 
@@ -2520,6 +2536,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, t);
 		}
+	}
+
+	/**
+	 * Updates the list of known InfoServices.
+	 * @return true if the update was successful; false otherwise
+	 */
+	public boolean updateInfoServices()
+	{
+		return m_InfoServiceUpdater.update();
 	}
 
 	/**
