@@ -98,7 +98,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 	public JAPViewIconified()
 	{
 		super(m_frameParent);
-		setName(JAPConstants.TITLE);
+		setName(STR_HIDDEN_WINDOW);
 		m_mainView = JAPController.getView();
 		m_frameParent.setIconImage(m_mainView.getIconImage());
 		LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPViewIconified:initializing...");
