@@ -2412,7 +2412,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 				if (returnValue == JAPDialog.RETURN_VALUE_OK)
 				{
-					getView().setEnabled(false);
+					if (getView() != null)
+					{
+						getView().setEnabled(false);
+					}
 					//JAPDll.checkDllVersion(false);
 					boolean error = m_Controller.saveConfigFile();
 					if (error && bShowConfigSaveErrorMsg)
@@ -2486,7 +2489,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 
 					// do not show any dialogs in this state
-					getView().dispose();
+					if (getView() != null)
+					{
+						getView().dispose();
+					}
 					LogHolder.log(LogLevel.INFO, LogType.GUI, "View has been disposed. Finishing...");
 					System.exit(0);
 				}

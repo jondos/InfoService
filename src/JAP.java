@@ -415,6 +415,7 @@ public class JAP
 		try
 			{
 				new java.io.BufferedReader(new java.io.InputStreamReader(System.in)).readLine();
+				m_controller.goodBye(true);
 			}
 			catch (java.io.IOException a_e)
 			{
