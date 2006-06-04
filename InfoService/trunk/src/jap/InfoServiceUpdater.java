@@ -29,6 +29,8 @@ package jap;
 
 import java.util.Enumeration;
 import java.util.Vector;
+import java.util.Observer;
+import java.util.Observable;
 
 import anon.infoservice.Database;
 import anon.infoservice.InfoServiceDBEntry;
@@ -38,17 +40,22 @@ import logging.LogLevel;
 import logging.LogType;
 
 /**
- *
- *
+ * Updates the known InfoServices. This may be done automatically (by a background thread) and manually
+ * by method call. The automatic update is only done if this is allowed by the model.
  * @author Rolf Wendolsky
  */
-public class InfoServiceUpdater
+public class InfoServiceUpdater implements Observer
 {
 	private Thread m_updateThread;
 	private boolean m_successfulUpdate = false;
+	private boolean m_bISAutoUpdateChanged = false;
 
+	/**
+	 * Initialises and starts the InoService update thread.
+	 */
 	public InfoServiceUpdater()
 	{
+		JAPModel.getInstance().addObserver(this);
 		m_updateThread = new Thread(new Runnable()
 		{
 			public void run()
@@ -57,28 +64,32 @@ public class InfoServiceUpdater
 				{
 					synchronized (Thread.currentThread())
 					{
-						try
+						m_bISAutoUpdateChanged = true; // this is important to switch waiting times
+						while (m_bISAutoUpdateChanged)
 						{
-							Thread.currentThread().notify();
-							if (JAPModel.getInstance().isInfoServiceDisabled())
+							m_bISAutoUpdateChanged = false; // normally, this should be false after first call
+							try
 							{
-								Thread.currentThread().wait();
+								Thread.currentThread().notify();
+								if (JAPModel.getInstance().isInfoServiceDisabled())
+								{
+									Thread.currentThread().wait();
+								}
+								else
+								{
+									Thread.currentThread().wait(60000);
+								}
 							}
-							else
+							catch (InterruptedException a_e)
 							{
-								Thread.currentThread().wait(60000);
+								Thread.currentThread().notifyAll();
+								break;
 							}
-						}
-
-						catch (InterruptedException a_e)
-						{
-							Thread.currentThread().notifyAll();
-							break;
-						}
-						if (Thread.currentThread().isInterrupted())
-						{
-							Thread.currentThread().notifyAll();
-							break;
+							if (Thread.currentThread().isInterrupted())
+							{
+								Thread.currentThread().notifyAll();
+								break;
+							}
 						}
 					}
 
@@ -111,8 +122,8 @@ public class InfoServiceUpdater
 									getPreferredInfoService();
 								if (preferredInfoService != null)
 								{
-									/* if the current infoservice is equal to the preferred infoservice, update the
-									 * preferred infoservice also
+									/* if the current infoservice is equal to the preferred infoservice,
+									 * update the preferred infoservice also
 									 */
 									if (preferredInfoService.equals(currentInfoService))
 									{
@@ -133,12 +144,11 @@ public class InfoServiceUpdater
 								if (!currentInfoService.isUserDefined() &&
 									!downloadedInfoServices.contains(currentInfoService))
 								{
-									/* the InfoService was fetched from the Internet earlier, but it is not in the list
-									 * fetched from the Internet this time -> remove that InfoService from the database
-									 * of known InfoServices
+									/* the InfoService was fetched from the Internet earlier, but it is not
+									 * in the list fetched from the Internet this time
+									 * -> remove that InfoService from the database of known InfoServices
 									 */
-									Database.getInstance(InfoServiceDBEntry.class).remove(
-										currentInfoService);
+									Database.getInstance(InfoServiceDBEntry.class).remove(currentInfoService);
 								}
 							}
 						}
@@ -151,11 +161,33 @@ public class InfoServiceUpdater
 		m_updateThread.start();
 	}
 
+	public synchronized void update(Observable a_observable, Object a_argument)
+	{
+		if (a_observable == null || !(a_observable instanceof JAPModel) || a_argument == null ||
+			!(a_argument instanceof Integer) ||
+			!((Integer)a_argument).equals(JAPModel.CHANGED_INFO_SERVICE_AUTO_UPDATE))
+		{
+			return;
+		}
+		else
+		{
+			synchronized (m_updateThread)
+			{
+				m_bISAutoUpdateChanged = true;
+				m_updateThread.notify();
+			}
+		}
+	}
 
+	/**
+	 * Force an update of the known InfoServices.
+	 * @return true if the update was  successful, false otherwise
+	 */
 	public synchronized boolean update()
 	{
 		synchronized (m_updateThread)
 		{
+			m_bISAutoUpdateChanged = false;
 			m_updateThread.notify();
 			try
 			{
@@ -169,12 +201,17 @@ public class InfoServiceUpdater
 		}
 	}
 
+	/**
+	 * Stops the update thread. No further updates are possible.
+	 */
 	public void stop()
 	{
+		JAPModel.getInstance().deleteObserver(this);
 		while (m_updateThread.isAlive())
 		{
 			synchronized (m_updateThread)
 			{
+				m_bISAutoUpdateChanged = false;
 				m_updateThread.notifyAll();
 				m_updateThread.interrupt();
 			}

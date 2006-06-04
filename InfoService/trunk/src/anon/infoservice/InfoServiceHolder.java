@@ -492,7 +492,7 @@ public class InfoServiceHolder extends Observable
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "InfoServiceHolder: getMixInfo: No InfoService with the needed information available.");
+						  "No InfoService with the needed information available.");
 			return null;
 		}
 	}

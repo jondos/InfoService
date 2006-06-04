@@ -40,6 +40,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -181,6 +183,16 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		Font f = m_listKnownInfoServices.getFont();
 		m_listKnownInfoServices.setFixedCellWidth(15 *
 												  m_listKnownInfoServices.getFontMetrics(f).charWidth('W'));
+		m_listKnownInfoServices.addMouseListener(new MouseAdapter()
+		{
+			public void mouseClicked(MouseEvent a_event)
+			{
+				if (a_event.getClickCount() == 2)
+				{
+					setPreferredInfoService();
+				}
+			}
+		});
 		m_listKnownInfoServices.setCellRenderer(new ListCellRenderer()
 		{
 			public Component getListCellRendererComponent(JList a_list, Object a_value, int a_index,
@@ -294,14 +306,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 		{
 			public void actionPerformed(ActionEvent a_event)
 			{
-				/* set the selected infoservice as prefered infoservice */
-				InfoServiceDBEntry selectedInfoService = (InfoServiceDBEntry) (m_listKnownInfoServices.
-					getSelectedValue());
-				if (selectedInfoService != null)
-				{
-					/* change the prefered infoservice only, if something is selected */
-					InfoServiceHolder.getInstance().setPreferredInfoService(selectedInfoService);
-				}
+				setPreferredInfoService();
 			}
 		});
 
@@ -1313,5 +1318,17 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 	{
 		JAPModel.getInstance().allowInfoServiceViaDirectConnection(m_cbxAllowNonAnonymousConnection.isSelected());
 		return true;
+	}
+
+	private void setPreferredInfoService()
+	{
+		/* set the selected infoservice as prefered infoservice */
+		InfoServiceDBEntry selectedInfoService = (InfoServiceDBEntry) (m_listKnownInfoServices.
+			getSelectedValue());
+		if (selectedInfoService != null)
+		{
+			/* change the prefered infoservice only, if something is selected */
+			InfoServiceHolder.getInstance().setPreferredInfoService(selectedInfoService);
+		}
 	}
 }
