@@ -98,7 +98,12 @@ public class InfoServiceUpdater implements Observer
 					synchronized (InfoServiceHolder.getInstance())
 					{
 						Vector downloadedInfoServices = InfoServiceHolder.getInstance().getInfoServices();
-						if (downloadedInfoServices == null)
+						if (Thread.currentThread().isInterrupted())
+						{
+							// this thread is being stopped; ignore this error
+							m_successfulUpdate = true;
+						}
+						else if (downloadedInfoServices == null)
 						{
 							LogHolder.log(LogLevel.ERR, LogType.THREAD, "InfoService update failed!");
 							m_successfulUpdate = false;
