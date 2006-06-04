@@ -30,13 +30,12 @@ package jap;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.text.MessageFormat;
 import java.util.Enumeration;
-import java.util.Locale;
 import java.util.Hashtable;
+import java.util.Locale;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
@@ -48,6 +47,7 @@ import java.awt.Font;
 import java.awt.Point;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 
@@ -55,17 +55,18 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
-import anon.AnonServiceEventListener;
 import anon.AnonServiceEventAdapter;
+import anon.AnonServiceEventListener;
 import anon.ErrorCodes;
 import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
+import anon.infoservice.Database;
 import anon.infoservice.HTTPConnectionFactory;
+import anon.infoservice.IDistributable;
+import anon.infoservice.IDistributor;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.JAPVersionInfo;
-import anon.infoservice.IDistributor;
-import anon.infoservice.IDistributable;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
 import anon.infoservice.ProxyInterface;
@@ -77,12 +78,11 @@ import anon.pay.PayAccountsFile;
 import anon.proxy.AnonProxy;
 import anon.proxy.IProxyListener;
 import anon.tor.TorAnonServerDescription;
+import anon.util.IMiscPasswordReader;
 import anon.util.IPasswordReader;
 import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
-import anon.util.IMiscPasswordReader;
 import forward.server.ForwardServerManager;
-import javax.swing.SwingUtilities;
 import gui.JAPDll;
 import gui.JAPHelp;
 import gui.JAPMessages;
@@ -92,12 +92,12 @@ import gui.dialog.PasswordContentPane;
 import jap.forward.JAPRoutingEstablishForwardedConnectionDialog;
 import jap.forward.JAPRoutingMessage;
 import jap.forward.JAPRoutingSettings;
-import jap.IJAPMainView;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
 import proxy.DirectProxy;
+import proxy.DirectProxy.AllowUnprotectedConnectionCallback;
 import update.JAPUpdateWizard;
 
 /* This is the Controller of All. It's a Singleton!*/
@@ -204,12 +204,16 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	private JAPController()
 	{
-		anon.infoservice.Database.registerDistributor(new IDistributor()
+		// simulate database distributor
+		Database.registerDistributor(new IDistributor()
 		{
 			public void addJob(IDistributable a_distributable)
 			{
 			}
 		});
+
+		// initialise IS update thread
+		m_InfoServiceUpdater = new InfoServiceUpdater();
 
 		m_changeAnonModeJobs = new Vector();
 		m_Model = JAPModel.getInstance();
@@ -337,8 +341,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 		m_bInitialRun = true;
 		LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPModel:initial run of JAP...");
 
-		// start IS update thread
-		m_InfoServiceUpdater = new InfoServiceUpdater();
+		// start InfoService update thread
+		m_InfoServiceUpdater.start();
 
 		// start http listener object
 		/* if (JAPModel.isTorEnabled())
@@ -996,6 +1000,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 								public String readPassword(Object a_message)
 								{
+									a_splash.dispose();
+
 									PasswordContentPane panePassword;
 									String password;
 									panePassword = new PasswordContentPane(
@@ -1012,9 +1018,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 									{
 										while (true)
 										{
-											JAPDll.setWindowOnTop(a_splash, true);
 											password = panePassword.readPassword(null);
-											JAPDll.setWindowOnTop(a_splash, false);
 											if (password == null)
 											{
 												if (JAPDialog.showYesNoDialog(

@@ -310,11 +310,10 @@ public class JAP
 				LogLevel.INFO,
 				LogType.MISC,
 				"JAP:MRJ Version is " + mrjVersion + ".");
-			//initalisiere PayInstance
+
 		}
+
 		IJAPMainView view;
-
-
 		if (!bConsoleOnly)
 		{
 			view = new JAPNewView(JAPConstants.TITLE, m_controller);
