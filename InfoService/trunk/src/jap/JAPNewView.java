@@ -285,7 +285,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			public void actionPerformed(ActionEvent e)
 			{
 				m_bttnReload.setEnabled(false);
-				fetchMixCascadesAsync(true);
+				fetchMixCascadesAsync(true, true);
 			}
 		});
 		m_bttnReload.setRolloverEnabled(true);
@@ -783,7 +783,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						 m_flippingpanelForward.getPreferredSize().width),
 				m_flippingpanelAnon.getPreferredSize().width)));
 		m_bttnReload.setEnabled(false);
-		fetchMixCascadesAsync(false);
+		fetchMixCascadesAsync(false, false);
 		valuesChanged(true);
 		setOptimalSize();
 		GUIUtils.centerOnScreen(this);
@@ -1713,13 +1713,18 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_StatusPanel.removeStatusMsg(id);
 	}
 
-	private synchronized void fetchMixCascadesAsync(final boolean bShowError)
+	private synchronized void fetchMixCascadesAsync(final boolean bShowError,
+		final boolean a_bPreloadInfoServices)
 	{
 		Runnable doFetchMixCascades = new Runnable()
 		{
 			public void run()
 			{
 				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+				if (a_bPreloadInfoServices)
+				{
+					m_Controller.updateInfoServices();
+				}
 				m_Controller.fetchMixCascades(bShowError);
 				setCursor(Cursor.getDefaultCursor());
 				SwingUtilities.invokeLater(new Runnable()
