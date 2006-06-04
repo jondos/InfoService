@@ -413,7 +413,12 @@ public class JAP
 		{
 		try
 			{
-				new java.io.BufferedReader(new java.io.InputStreamReader(System.in)).readLine();
+				String entered = null;
+				while (entered == null || !entered.equals("exit"))
+				{
+					System.out.println("Type 'exit' to quit.");
+					entered = new java.io.BufferedReader(new java.io.InputStreamReader(System.in)).readLine();
+				}
 				m_controller.goodBye(true);
 			}
 			catch (java.io.IOException a_e)
