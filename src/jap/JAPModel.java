@@ -36,14 +36,17 @@ import anon.util.ResourceLoader;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.ImmutableProxyInterface;
 import gui.JAPDll;
+import java.util.Observable;
 import jap.forward.JAPRoutingSettings;
-import anon.infoservice.InfoServiceHolder;
 
 /* This is the Model of All. It's a Singelton!*/
-public final class JAPModel
+public final class JAPModel extends Observable
 {
-	public final static String DLL_VERSION_UPDATE = "dllVersionUpdate";
+	public static final String DLL_VERSION_UPDATE = "dllVersionUpdate";
 	public static final String XML_REMIND_OPTIONAL_UPDATE = "remindOptionalUpdate";
+
+	//
+	public static final Integer CHANGED_INFO_SERVICE_AUTO_UPDATE = new Integer(0);
 
 	private static final int DIRECT_CONNECTION_INFOSERVICE = 0;
 	private static final int DIRECT_CONNECTION_PAYMENT = 1;
@@ -340,8 +343,8 @@ public final class JAPModel
 	{
 		//ProxyInterface[] interfaces = new ProxyInterface[4];
 		ProxyInterface[] interfaces = new ProxyInterface[3];
-		interfaces[0] = getProxyInterface();
-		interfaces[1] = null;
+		interfaces[0] = getProxyInterface(); // try direct connection via proxy, if present
+		interfaces[1] = null; // try direct connection without proxy
 		interfaces[2] = new ProxyInterface("localhost", getHttpListenerPortNumber(), null); // AN.ON
 		//interfaces[3] = new ProxyInterface("localhost", getHttpListenerPortNumber(),
 			//							   ProxyInterface.PROTOCOL_TYPE_SOCKS, null); // TOR
@@ -427,7 +430,15 @@ public final class JAPModel
 
 	protected void setInfoServiceDisabled(boolean b)
 	{
-		m_bInfoServiceDisabled = b;
+		synchronized (this)
+		{
+			if (m_bInfoServiceDisabled != b)
+			{
+				m_bInfoServiceDisabled = b;
+				setChanged();
+			}
+		}
+		notifyObservers(CHANGED_INFO_SERVICE_AUTO_UPDATE);
 	}
 
 	public static boolean isInfoServiceDisabled()

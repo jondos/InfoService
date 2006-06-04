@@ -202,6 +202,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	private JAPController()
 	{
+		anon.infoservice.Database.registerDistributor(new IDistributor()
+		{
+			public void addJob(IDistributable a_distributable)
+			{
+			}
+		});
+
 		m_changeAnonModeJobs = new Vector();
 		m_Model = JAPModel.getInstance();
 		m_Model.setAnonConnectionChecker(new AnonConnectionChecker());
@@ -329,13 +336,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 		LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPModel:initial run of JAP...");
 
 		// start IS update thread
-		anon.infoservice.Database.registerDistributor(new IDistributor()
-		{
-			public void addJob(IDistributable a_distributable)
-			{
-
-			}
-		});
 		m_InfoServiceUpdater = new InfoServiceUpdater();
 
 		// start http listener object
@@ -2558,8 +2558,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		Vector newMixCascades = InfoServiceHolder.getInstance().getMixCascades();
 		if (newMixCascades == null)
 		{
-			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "JAPController: fetchMixCascades: No connection to infoservices.");
+			LogHolder.log(LogLevel.ERR, LogType.NET, "No connection to infoservices.");
 			if (!JAPModel.isSmallDisplay() && bShowError)
 			{
 				JAPDialog.showErrorDialog(getView(), JAPMessages.getString("errorConnectingInfoService"),
