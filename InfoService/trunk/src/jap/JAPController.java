@@ -132,6 +132,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private static final String MSG_NEW_OPTIONAL_VERSION = JAPController.class.getName() +
 		"_newOptionalVersion";
 	private static final String MSG_ALLOWUNPROTECTED = JAPController.class.getName() + "_allowunprotected";
+	private static final String MSG_IS_NOT_ALLOWED = JAPController.class.getName() + "_isNotAllowed";
+
 
 	private static final String XML_ALLOW_NON_ANONYMOUS_CONNECTION = "AllowNonAnonymousConnection";
 	private static final String XML_ALLOW_NON_ANONYMOUS_UPDATE = "AllowNonAnonymousUpdate";
@@ -2561,8 +2563,17 @@ public final class JAPController extends Observable implements IProxyListener, O
 			LogHolder.log(LogLevel.ERR, LogType.NET, "No connection to infoservices.");
 			if (!JAPModel.isSmallDisplay() && bShowError)
 			{
-				JAPDialog.showErrorDialog(getView(), JAPMessages.getString("errorConnectingInfoService"),
-										  LogType.NET);
+				String message;
+
+				if (!JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed() && !isAnonConnected())
+				{
+					message = JAPMessages.getString(MSG_IS_NOT_ALLOWED);
+				}
+				else
+				{
+					message = JAPMessages.getString("errorConnectingInfoService");
+				}
+				JAPDialog.showErrorDialog(getView(), message, LogType.NET);
 			}
 		}
 		else
