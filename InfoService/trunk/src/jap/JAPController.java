@@ -2531,7 +2531,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 			}
 		};
-		if (SwingUtilities.isEventDispatchThread())
+		if (!JAPDialog.isConsoleOnly() && SwingUtilities.isEventDispatchThread())
 		{
 			stopThread.start();
 		}
