@@ -365,7 +365,17 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{ // listender has started correctly
 			m_Controller.status1 = JAPMessages.getString("statusRunning");
 			// initial setting of anonMode
-			setAnonMode(JAPModel.getAutoConnect());
+			if (JAPModel.getAutoConnect() &&
+				JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder())
+			{
+				/* show the connect via forwarder dialog -> the dialog will do the remaining things */
+				new JAPRoutingEstablishForwardedConnectionDialog(getView(), getDialogFont());
+				notifyObservers();
+			}
+			else
+			{
+				setAnonMode(JAPModel.getAutoConnect());
+			}
 		}
 	}
 
@@ -2032,6 +2042,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 										  "Error starting AN.ON service! - ErrorCode: " +
 										  Integer.toString(ret));
 							JAPDialog.showErrorDialog(getView(), JAPMessages.getString("errorConnectingFirstMix"),
+								JAPMessages.getString("errorConnectingFirstMixTitle"),
 								LogType.NET);
 						}
 					}
@@ -2229,11 +2240,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 		else
 		{
 			/* simply enable the anonymous mode */
-			if (m_currentMixCascade.isCertified())
+			//if (m_currentMixCascade.isCertified())
 			{
 				setAnonMode(true);
 			}
-			else
+			//else
 			{
 				/** @todo ask if user wants to connect nevertheless!! */
 			}

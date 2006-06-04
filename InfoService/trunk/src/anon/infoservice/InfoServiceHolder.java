@@ -377,6 +377,9 @@ public class InfoServiceHolder extends Observable
 			}
 			catch (Exception e)
 			{
+				LogHolder.log(LogLevel.INFO, LogType.NET,
+							  "Contacting IS " + currentInfoService.getName() + " produced an error!");
+				LogHolder.log(LogLevel.DEBUG, LogType.NET, e);
 				/* if there was an error, remove currentInfoService from the list and try another
 				 * infoservice
 				 */

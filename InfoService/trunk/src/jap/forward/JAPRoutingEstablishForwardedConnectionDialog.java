@@ -27,6 +27,7 @@
  */
 package jap.forward;
 
+import java.io.ByteArrayInputStream;
 import java.util.Vector;
 
 import java.awt.Component;
@@ -38,13 +39,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.WindowConstants;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -53,6 +51,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.WindowConstants;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
@@ -67,19 +66,20 @@ import javax.swing.text.PlainDocument;
 
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
+import anon.util.captcha.IImageEncodedCaptcha;
 import forward.client.ClientForwardException;
 import forward.client.ForwardConnectionDescriptor;
 import forward.client.ForwarderInformationGrabber;
-import anon.util.captcha.IImageEncodedCaptcha;
 import gui.JAPHtmlMultiLineLabel;
+import gui.JAPMessages;
+import gui.dialog.JAPDialog;
+import gui.dialog.WorkerContentPane;
+import jap.JAPConstants;
+import jap.JAPController;
+import jap.JAPModel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import jap.*;
-import gui.dialog.JAPDialog;
-import gui.*;
-import gui.dialog.*;
-import java.io.ByteArrayInputStream;
 
 /**
  * This is implementation of the dialog shown when starting a forwarded connection. The dialog is
@@ -88,6 +88,7 @@ import java.io.ByteArrayInputStream;
  */
 public class JAPRoutingEstablishForwardedConnectionDialog
 {
+	private boolean m_bForwardingSuccessful = false;
 
 	/**
 	 * Stores the parent component over which all windows of this dialog are centered.
@@ -117,7 +118,17 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 		while (endOfDialogReached == false)
 		{
 			/* show all steps of the dialog, until it is done */
-			IImageEncodedCaptcha fetchedCaptcha = showConfigClientDialogStep1();
+			IImageEncodedCaptcha fetchedCaptcha = null;
+
+			if (JAPModel.getInstance().getRoutingSettings().getForwardInfoService() == false)
+			{
+				fetchedCaptcha = showConfigClientDialogGetForwarderInfo();
+			}
+			if (fetchedCaptcha == null)
+			{
+				fetchedCaptcha = showConfigClientDialogViaMail();
+			}
+
 			if (fetchedCaptcha == null)
 			{
 				/* no captcha could be fetched -> stop the dialog */
@@ -155,7 +166,9 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 								 * while loop
 								 */
 								/* if the final step is successful, we can close the dialog */
-								endOfDialogReached = showConfigClientDialogAnnounceCascade(selectedMixCascade);
+								m_bForwardingSuccessful =
+									showConfigClientDialogAnnounceCascade(selectedMixCascade);
+								endOfDialogReached = m_bForwardingSuccessful;
 							}
 						}
 					}
@@ -163,6 +176,11 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 			}
 		}
 		/* forwarding successful enabled or the dialog was canceled by the user */
+	}
+
+	public boolean isForwardingSuccessful()
+	{
+		return m_bForwardingSuccessful;
 	}
 
 	/**
@@ -183,30 +201,6 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 	private Font getFontSetting()
 	{
 		return m_fontSetting;
-	}
-
-	/**
-	 * This method selects the correct connection method to get the forwarder information from
-	 * the infoservice. The decision depends on the JAPRoutingSettings.getForwardInfoService()
-	 * value.
-	 *
-	 * @return The captcha fetched via the selected connection method. This value is null, if no
-	 *         captcha could fetched (e.g. if the user pressed 'cancel').
-	 */
-	private IImageEncodedCaptcha showConfigClientDialogStep1()
-	{
-		IImageEncodedCaptcha returnValue = null;
-
-		if (JAPModel.getInstance().getRoutingSettings().getForwardInfoService() == false)
-		{
-			returnValue = showConfigClientDialogGetForwarderInfo();
-		}
-		else
-		{
-			returnValue = showConfigClientDialogViaMail();
-		}
-
-		return returnValue;
 	}
 
 	/**
@@ -278,10 +272,11 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 		}
 		else if (occuredError.size() > 0)
 		{
-			/* there occured an error while fetching the information about a forwarder from the
+			/** there occured an error while fetching the information about a forwarder from the
 			 * InfoServices
+			 * @todo show this error in the next dialog (mail)
 			 */
-			JAPDialog.showErrorDialog(m_parentComponent, (String) (occuredError.firstElement()), LogType.NET);
+			LogHolder.log(LogLevel.ERR, LogType.NET, (String) (occuredError.firstElement()));
 		}
 
 		return returnValue;
@@ -859,7 +854,6 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 							JAPMessages.getString("settingsRoutingClientGetOfferUnknownError"));
 					}
 				}
-				offerDialog.dispose();
 			}
 		};
 
@@ -881,6 +875,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 		worker.updateDialog();
 		offerDialog.pack();
 		offerDialog.setVisible(true);
+		offerDialog.dispose();
 
 		ForwardConnectionDescriptor returnValue = null;
 
@@ -896,6 +891,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 			 */
 			JAPDialog.showErrorDialog(getRootComponent(), (String) (occuredError.firstElement()), LogType.NET);
 		}
+
 
 		return returnValue;
 	}
