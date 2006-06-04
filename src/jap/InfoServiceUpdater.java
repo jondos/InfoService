@@ -46,9 +46,12 @@ import logging.LogType;
  */
 public class InfoServiceUpdater implements Observer
 {
+	private static final int UPDATE_INTERVAL_MS = 5 * 60000;
+
 	private Thread m_updateThread;
 	private boolean m_successfulUpdate = false;
 	private boolean m_bISAutoUpdateChanged = false;
+	private boolean m_bInitialRun = true;
 
 	/**
 	 * Initialises and starts the InoService update thread.
@@ -60,6 +63,7 @@ public class InfoServiceUpdater implements Observer
 		{
 			public void run()
 			{
+				LogHolder.log(LogLevel.INFO, LogType.THREAD, "InfoService update thread started.");
 				while (!Thread.currentThread().isInterrupted())
 				{
 					synchronized (Thread.currentThread())
@@ -71,13 +75,13 @@ public class InfoServiceUpdater implements Observer
 							try
 							{
 								Thread.currentThread().notify();
-								if (JAPModel.getInstance().isInfoServiceDisabled())
+								if (JAPModel.getInstance().isInfoServiceDisabled() || m_bInitialRun)
 								{
 									Thread.currentThread().wait();
 								}
 								else
 								{
-									Thread.currentThread().wait(60000);
+									Thread.currentThread().wait(UPDATE_INTERVAL_MS);
 								}
 							}
 							catch (InterruptedException a_e)
@@ -168,7 +172,7 @@ public class InfoServiceUpdater implements Observer
 
 	public synchronized void update(Observable a_observable, Object a_argument)
 	{
-		if (a_observable == null || !(a_observable instanceof JAPModel) || a_argument == null ||
+		if (!(a_observable instanceof JAPModel) || a_argument == null ||
 			!(a_argument instanceof Integer) ||
 			!((Integer)a_argument).equals(JAPModel.CHANGED_INFO_SERVICE_AUTO_UPDATE))
 		{
@@ -179,8 +183,22 @@ public class InfoServiceUpdater implements Observer
 			synchronized (m_updateThread)
 			{
 				m_bISAutoUpdateChanged = true;
+				m_bInitialRun = false;
 				m_updateThread.notify();
 			}
+		}
+	}
+
+	/**
+	 * Starts the thread if it has not already started or has been stopped before.
+	 */
+	public synchronized void start()
+	{
+		synchronized (m_updateThread)
+		{
+			m_bISAutoUpdateChanged = true;
+			m_bInitialRun = false;
+			m_updateThread.notify();
 		}
 	}
 
@@ -217,6 +235,7 @@ public class InfoServiceUpdater implements Observer
 			synchronized (m_updateThread)
 			{
 				m_bISAutoUpdateChanged = false;
+				m_bInitialRun = false;
 				m_updateThread.notifyAll();
 				m_updateThread.interrupt();
 			}
