@@ -57,6 +57,8 @@ import anon.crypto.SignatureCreator;
  */
 public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistributable, IXMLEncodable
 {
+	private static final int GET_XML_CONNECTION_TIMEOUT = 5000;
+
 	/**
 	 * A proxy interface that is used for all connections and may change over time.
 	 */
@@ -773,7 +775,9 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 				/* get the next connection descriptor by supplying the last one */
 				currentConnectionDescriptor = connectToInfoService(currentConnectionDescriptor,
 					proxies[proxyCounter]);
+
 				final HTTPConnection currentConnection = currentConnectionDescriptor.getConnection();
+				currentConnection.setTimeout(GET_XML_CONNECTION_TIMEOUT);
 
 				/* use a Vector as storage for the the result of the communication */
 				final Vector responseStorage = new Vector();
