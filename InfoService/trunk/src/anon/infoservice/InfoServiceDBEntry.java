@@ -51,13 +51,16 @@ import logging.LogType;
 import java.util.zip.GZIPInputStream;
 import java.io.ByteArrayInputStream;
 import anon.crypto.SignatureCreator;
+import java.io.ByteArrayOutputStream;
+import java.io.InterruptedIOException;
+import java.io.InputStream;
 
 /**
  * Holds the information for an infoservice.
  */
 public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistributable, IXMLEncodable
 {
-	private static final int GET_XML_CONNECTION_TIMEOUT = 5000;
+	private static final int GET_XML_CONNECTION_TIMEOUT = 30000;
 
 	/**
 	 * A proxy interface that is used for all connections and may change over time.
@@ -740,16 +743,6 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		return new HTTPConnectionDescriptor(connection, target);
 	}
 
-	/**
-	 * Fetches the specified XML document from the infoservice. If a ListenerInterface can't be
-	 * reached, automatically a new one is chosen. If we can't reach the infoservice at all, an
-	 * Exception is thrown. If the operation is interrupted via the Thread instance, this method
-	 * ends immediately but also the interrupted flag of the Thread is set.
-	 *
-	 * @param a_httpRequest The structure with the HTTP request.
-	 *
-	 * @return The specified XML document.
-	 */
 	private Document getXmlDocument(final HttpRequestStructure a_httpRequest) throws Exception
 	{
 		/* make sure that we are connected */
@@ -767,10 +760,12 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 			}
 			else
 			{
-				proxies = new ImmutableProxyInterface[]{null};
+				proxies = new ImmutableProxyInterface[]
+					{
+					null};
 			}
-			for (proxyCounter = 0;
-				 proxyCounter < proxies.length && !Thread.currentThread().isInterrupted(); proxyCounter++)
+			for (proxyCounter = 0; proxyCounter < proxies.length && !Thread.currentThread().isInterrupted();
+				 proxyCounter++)
 			{
 				/* get the next connection descriptor by supplying the last one */
 				currentConnectionDescriptor = connectToInfoService(currentConnectionDescriptor,
@@ -781,11 +776,13 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 
 				/* use a Vector as storage for the the result of the communication */
 				final Vector responseStorage = new Vector();
-				/* we need the possibility to interrupt the infoservice communication, but also we need to
-				 * know whether the operation was interupted by an external call of Thread.interrupt() or
-				 * a timeout, thus it is not enough to catch the InteruptedIOException because that
-				 * Exception is thrown in both cases, so we cannot distinguish the both -> solution make
-				 * an extra Thread for the communication
+				/*
+				 * we need the possibility to interrupt the infoservice communication,
+				 * but also we need to know whether the operation was interupted by an
+				 * external call of Thread.interrupt() or a timeout, thus it is not
+				 * enough to catch the InteruptedIOException because that Exception is
+				 * thrown in both cases, so we cannot distinguish the both -> solution
+				 * make an extra Thread for the communication
 				 */
 				Thread communicationThread = new Thread(new Runnable()
 				{
@@ -793,6 +790,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 					{
 						try
 						{
+							HTTPResponse response = null;
 							if (a_httpRequest.getRequestCommand() == HttpRequestStructure.HTTP_COMMAND_GET)
 							{
 								LogHolder.log(LogLevel.DEBUG, LogType.NET,
@@ -800,8 +798,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 											  currentConnection.getHost() + ":" +
 											  Integer.toString(currentConnection.getPort()) +
 											  a_httpRequest.getRequestFileName());
-								responseStorage.addElement(currentConnection.Get(a_httpRequest.
-									getRequestFileName()));
+								response = currentConnection.Get(a_httpRequest.getRequestFileName());
 							}
 							else
 							{
@@ -818,8 +815,8 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 									{
 										postData = XMLUtil.toString(a_httpRequest.getRequestPostDocument());
 									}
-									responseStorage.addElement(currentConnection.Post(a_httpRequest.
-										getRequestFileName(), postData));
+									response = currentConnection.Post(a_httpRequest.getRequestFileName(),
+										postData);
 								}
 								else
 								{
@@ -827,11 +824,35 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 										"InfoServiceDBEntry: getXmlDocument: Invalid HTTP command."));
 								}
 							}
+							if (response != null)
+							{
+								InputStream responseStream = response.getInputStream();
+								ByteArrayOutputStream tempStream = new ByteArrayOutputStream();
+								byte[] tempBuffer = new byte[1000];
+								while (!Thread.interrupted())
+								{
+									int bytesRead = responseStream.read(tempBuffer, 0, tempBuffer.length);
+									if (bytesRead != -1)
+									{
+										tempStream.write(tempBuffer, 0, bytesRead);
+									}
+									else
+									{
+										/* end of stream reached -> stop reading */
+										tempStream.flush();
+										responseStorage.addElement(tempStream.toByteArray());
+										/* stop this thread by leaving the run() method */
+										return;
+									}
+								}
+								/* thread was interrupted */
+								throw (new InterruptedIOException("Communication was interrupted."));
+							}
 						}
 						catch (Exception e)
 						{
 							LogHolder.log(LogLevel.ERR, LogType.NET,
-										  "InfoServiceDBEntry: getXmlDocument: Connection to infoservice interface failed: " +
+								"InfoServiceDBEntry: getXmlDocument: Connection to infoservice interface failed: " +
 										  currentConnection.getHost() + ":" +
 										  Integer.toString(currentConnection.getPort()) +
 										  a_httpRequest.getRequestFileName() + " Reason: " + e.toString());
@@ -845,10 +866,8 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 					communicationThread.join();
 					try
 					{
-						HTTPResponse response = (HTTPResponse) (responseStorage.firstElement());
-						Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
-							response.
-							getInputStream());
+						Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
+							ByteArrayInputStream( (byte[]) (responseStorage.firstElement())));
 						/* fetching the document was successful, leave this method */
 						return doc;
 					}
@@ -859,12 +878,19 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 				}
 				catch (InterruptedException e)
 				{
-					/* operation was interupted from the outside -> set the intterrupted flag for the Thread
-					 * again, so the caller of the methode can evaluate it, also interrupt the communication
-					 * thread, but don't wait for the end of that thread
+					/*
+					 * operation was interupted from the outside -> set the intterrupted
+					 * flag for the Thread again, so the caller of the methode can
+					 * evaluate it, also interrupt the communication thread, but don't
+					 * wait for the end of that thread
 					 */
 					LogHolder.log(LogLevel.INFO, LogType.NET, "Current operation was interrupted.");
 					Thread.currentThread().interrupt();
+					/* try to stop all activities of the HTTPConnection -> should stop
+					 * nearly all running requests with an exception
+					 */
+					currentConnection.stop();
+					/* interrupt also the communication thread (just to be sure) */
 					communicationThread.interrupt();
 				}
 			}
@@ -872,6 +898,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		/* all interfaces tested, we can't find a valid interface */
 		throw (new Exception("Can't connect to infoservice. Connections to all ListenerInterfaces failed."));
 	}
+
 
 	/**
 	 * Get a Vector of all mixcascades the infoservice knows. If we can't get a connection with
