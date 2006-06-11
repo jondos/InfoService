@@ -60,7 +60,7 @@ import java.io.InputStream;
  */
 public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistributable, IXMLEncodable
 {
-	private static final int GET_XML_CONNECTION_TIMEOUT = 30000;
+	private static final int GET_XML_CONNECTION_TIMEOUT = 15000;
 
 	/**
 	 * A proxy interface that is used for all connections and may change over time.
