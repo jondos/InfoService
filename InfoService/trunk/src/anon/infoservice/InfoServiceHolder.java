@@ -174,14 +174,14 @@ public class InfoServiceHolder extends Observable
 	{
 		if (a_preferredInfoService != null)
 		{
-				/* also if m_preferredInfoService.equals(a_preferredInfoService), there is the possibility
-				 * that some values of the infoservice, like listener interfaces or the name have been
-				 * changed, so we always update the internal stored pererred infoservice
-				 */
-				m_preferredInfoService = a_preferredInfoService;
-				setChanged();
-				notifyObservers(new InfoServiceHolderMessage(InfoServiceHolderMessage.
-					PREFERRED_INFOSERVICE_CHANGED, m_preferredInfoService));
+			/* also if m_preferredInfoService.equals(a_preferredInfoService), there is the possibility
+			 * that some values of the infoservice, like listener interfaces or the name have been
+			 * changed, so we always update the internal stored pererred infoservice
+			 */
+			m_preferredInfoService = a_preferredInfoService;
+			setChanged();
+			notifyObservers(new InfoServiceHolderMessage(InfoServiceHolderMessage.
+				PREFERRED_INFOSERVICE_CHANGED, m_preferredInfoService));
 
 			LogHolder.log(LogLevel.INFO, LogType.NET,
 						  "Preferred InfoService is now: " + m_preferredInfoService.getName());
@@ -410,7 +410,7 @@ public class InfoServiceHolder extends Observable
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "InfoServiceHolder: getMixCascades: No InfoService with the needed information available.");
+						  "No InfoService with the needed information available.");
 			return null;
 		}
 	}
@@ -469,7 +469,7 @@ public class InfoServiceHolder extends Observable
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "InfoServiceHolder: getInfoServices: No InfoService with the needed information available.");
+						  "No InfoService with the needed information available.");
 			return null;
 		}
 	}
@@ -524,7 +524,7 @@ public class InfoServiceHolder extends Observable
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "InfoServiceHolder: getStatusInfo: No InfoService with the needed information available.");
+						  "No InfoService with the needed information available.");
 			return null;
 		}
 	}
@@ -619,6 +619,7 @@ public class InfoServiceHolder extends Observable
 			return null;
 		}
 	}
+
 	/**
 	 * Downloads a forwarder entry from a infoservice. If that infoservice has no forwarder list,
 	 * it will ask another infoservice with such a list and returns the answer to us. If we can't

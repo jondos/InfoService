@@ -86,7 +86,7 @@ public class ForwardCascadeDatabase {
       /* get always consisten values */
       Enumeration cascades = m_allowedCascades.elements();
       while (cascades.hasMoreElements()) {
-        allowedCascadesNode.appendChild(((MixCascade)(cascades.nextElement())).toXmlNode(doc));
+        allowedCascadesNode.appendChild(((MixCascade)(cascades.nextElement())).toXmlElement(doc));
       }
     }
     return allowedCascadesNode;

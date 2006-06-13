@@ -46,7 +46,7 @@ public final class JAPModel extends Observable
 	public static final String XML_REMIND_OPTIONAL_UPDATE = "remindOptionalUpdate";
 
 	//
-	public static final Integer CHANGED_INFO_SERVICE_AUTO_UPDATE = new Integer(0);
+	public static final Integer CHANGED_INFOSERVICE_AUTO_UPDATE = new Integer(0);
 
 	private static final int DIRECT_CONNECTION_INFOSERVICE = 0;
 	private static final int DIRECT_CONNECTION_PAYMENT = 1;
@@ -438,7 +438,7 @@ public final class JAPModel extends Observable
 				setChanged();
 			}
 		}
-		notifyObservers(CHANGED_INFO_SERVICE_AUTO_UPDATE);
+		notifyObservers(CHANGED_INFOSERVICE_AUTO_UPDATE);
 	}
 
 	public static boolean isInfoServiceDisabled()

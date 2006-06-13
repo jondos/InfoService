@@ -60,6 +60,9 @@ import java.io.InputStream;
  */
 public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistributable, IXMLEncodable
 {
+	public static final String XML_ELEMENT_CONTAINER_NAME = "InfoServices";
+	public static final String XML_ELEMENT_NAME = "InfoService";
+
 	private static final int GET_XML_CONNECTION_TIMEOUT = 15000;
 
 	/**
@@ -128,7 +131,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 
 	/**
 	 * Creates an XML node (InfoServices node) with all infoservices from the database inside.
-	 * The Database does not need to the one registered in the central registry.
+	 * The Database does not need to be the one registered in the central registry.
 	 *
 	 * @param a_doc The XML document, which is the environment for the created XML node.
 	 * @param a_database the database that contains the InfoServiceDBEntries
@@ -139,7 +142,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	{
 		Object dbentry;
 
-		Element infoServicesNode = a_doc.createElement("InfoServices");
+		Element infoServicesNode = a_doc.createElement(XML_ELEMENT_CONTAINER_NAME);
 		Vector infoServices = a_database.getEntryList();
 		Enumeration it = infoServices.elements();
 		while (it.hasMoreElements())
@@ -161,7 +164,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	 */
 	public static void loadFromXml(Element infoServicesNode, Database a_database)
 	{
-		NodeList infoServiceNodes = infoServicesNode.getElementsByTagName("InfoService");
+		NodeList infoServiceNodes = infoServicesNode.getElementsByTagName(XML_ELEMENT_NAME);
 		for (int i = 0; i < infoServiceNodes.getLength(); i++)
 		{
 			/* add all childs to the database */
@@ -175,16 +178,6 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 				/* if there was an error, it does not matter */
 			}
 		}
-	}
-
-	/**
-	 * Returns the name of the XML element constructed by this class.
-	 *
-	 * @return the name of the XML element constructed by this class
-	 */
-	public static String getXmlElementName()
-	{
-		return "InfoService";
 	}
 
 	/**
@@ -465,7 +458,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	{
 		Document doc = XMLUtil.createDocument();
 		/* Create the InfoService element */
-		Element infoServiceNode = doc.createElement(getXmlElementName());
+		Element infoServiceNode = doc.createElement(XML_ELEMENT_NAME);
 		XMLUtil.setAttribute(infoServiceNode, "id", m_strInfoServiceId);
 		/* Create the child nodes of InfoService */
 		Element nameNode = doc.createElement("Name");
@@ -569,7 +562,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	/**
 	 * Returns, whether this infoservice keeps a list of JAP forwarders (true) or not (false).
 	 *
-	 * @return Whethet this infoservice keeps a list of JAP forwarders.
+	 * @return Whether this infoservice keeps a list of JAP forwarders.
 	 */
 	public boolean hasPrimaryForwarderList()
 	{
@@ -909,14 +902,14 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	public Vector getMixCascades() throws Exception
 	{
 		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/cascades"));
-		NodeList mixCascadesNodes = doc.getElementsByTagName("MixCascades");
+		NodeList mixCascadesNodes = doc.getElementsByTagName(MixCascade.XML_ELEMENT_CONTAINER_NAME);
 		if (mixCascadesNodes.getLength() == 0)
 		{
-			throw (new Exception("InfoService: getMixCascades: Error in XML structure."));
+			throw (new XMLParseException(MixCascade.XML_ELEMENT_CONTAINER_NAME, "Node missing!"));
 		}
 		//System.out.println(XMLUtil.toString(doc));
 		Element mixCascadesNode = (Element) (mixCascadesNodes.item(0));
-		NodeList mixCascadeNodes = mixCascadesNode.getElementsByTagName("MixCascade");
+		NodeList mixCascadeNodes = mixCascadesNode.getElementsByTagName(MixCascade.XML_ELEMENT_NAME);
 		Vector mixCascades = new Vector();
 		for (int i = 0; i < mixCascadeNodes.getLength(); i++)
 		{
@@ -928,7 +921,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 				/* signature is valid */
 				try
 				{
-					mixCascades.addElement(new MixCascade(mixCascadeNode, true));
+					mixCascades.addElement(new MixCascade(mixCascadeNode, true, Long.MAX_VALUE));
 				}
 				catch (Exception e)
 				{
@@ -950,7 +943,6 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 					/* an error while parsing the node occured -> we don't use this mixcascade */
 					LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Error in MixCascade XML node.");
 				}
-
 			}
 		}
 		return mixCascades;
@@ -1008,13 +1000,13 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	public Vector getInfoServices() throws Exception
 	{
 		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/infoservices"));
-		NodeList infoServicesNodes = doc.getElementsByTagName("InfoServices");
+		NodeList infoServicesNodes = doc.getElementsByTagName(XML_ELEMENT_CONTAINER_NAME);
 		if (infoServicesNodes.getLength() == 0)
 		{
 			throw (new Exception("InfoService: getInfoServices: Error in XML structure."));
 		}
 		Element infoServicesNode = (Element) (infoServicesNodes.item(0));
-		NodeList infoServiceNodes = infoServicesNode.getElementsByTagName("InfoService");
+		NodeList infoServiceNodes = infoServicesNode.getElementsByTagName(XML_ELEMENT_NAME);
 		Vector infoServices = new Vector();
 		for (int i = 0; i < infoServiceNodes.getLength(); i++)
 		{
@@ -1071,7 +1063,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 				XMLUtil.toString(mixNode)));
 		}
 		/* signature was valid */
-		return new MixInfo(mixNode);
+		return new MixInfo(mixNode, Long.MAX_VALUE);
 	}
 
 	/**
@@ -1210,7 +1202,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		if (list == null)
 		{
 			throw (new Exception(
-				"InfoServiceDBEntry: getTorNodesList: Error while parsing the TOR nodes list XML structure."));
+				"Error while parsing the TOR nodes list XML structure."));
 		}
 		return list;
 	}
@@ -1248,7 +1240,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		if (list == null)
 		{
 			throw (new Exception(
-				"InfoServiceDBEntry: getMixminionNodesList: Error while parsing the TOR nodes list XML structure."));
+				"Error while parsing the TOR nodes list XML structure."));
 		}
 		return list;
 	}

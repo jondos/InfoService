@@ -363,7 +363,7 @@ final public class JAPRoutingUseableMixCascades extends Observable implements Ob
 			while (allowedMixCascades.hasMoreElements())
 			{
 				allowedMixCascadesNode.appendChild( ( (MixCascade) (allowedMixCascades.nextElement())).
-					toXmlNode(a_doc));
+					toXmlElement(a_doc));
 			}
 		}
 		allowedMixCascadesSettingsNode.appendChild(allowAllAvailableMixCascadesNode);
@@ -485,7 +485,7 @@ final public class JAPRoutingUseableMixCascades extends Observable implements Ob
 			}
 		}
 		/* the update mixcascades list thread was stopped -> clear the list of currently running
-		 * mixcascades and also th database of useable mixcascades for the clients of the local
+		 * mixcascades and also the database of useable mixcascades for the clients of the local
 		 * forwarding server
 		 */
 		synchronized (m_currentlyRunningMixCascades)

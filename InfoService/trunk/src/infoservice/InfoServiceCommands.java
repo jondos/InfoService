@@ -75,7 +75,7 @@ public class InfoServiceCommands implements JWSInternalCommands
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Infoserver received: XML: " + (new String(a_postData)));
 			Element infoServiceNode = (Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData),
-				InfoServiceDBEntry.getXmlElementName()));
+				InfoServiceDBEntry.XML_ELEMENT_NAME));
 			/* verify the signature --> if requested */
 			if (!Configuration.getInstance().isInfoServiceMessageSignatureCheckEnabled() ||
 				SignatureVerifier.getInstance().verifyXml(infoServiceNode,
@@ -263,7 +263,7 @@ public class InfoServiceCommands implements JWSInternalCommands
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
 						  "MixCascade HELO received: XML: " + (new String(a_postData)));
 			Element mixCascadeNode = (Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData),
-				MixCascade.getXmlElementName()));
+				MixCascade.XML_ELEMENT_NAME));
 			/* verify the signature */
 			if (SignatureVerifier.getInstance().verifyXml(mixCascadeNode,
 				SignatureVerifier.DOCUMENT_CLASS_MIX) == true)
@@ -308,7 +308,7 @@ public class InfoServiceCommands implements JWSInternalCommands
 			while (knownMixCascades.hasMoreElements())
 			{
 				/* import the MixCascade XML structure in this document */
-				Element mixCascadeNode = ( (MixCascade) (knownMixCascades.nextElement())).toXmlNode(doc);
+				Element mixCascadeNode = ( (MixCascade) (knownMixCascades.nextElement())).toXmlElement(doc);
 				mixCascadesNode.appendChild(mixCascadeNode);
 			}
 			doc.appendChild(mixCascadesNode);

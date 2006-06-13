@@ -132,7 +132,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private static final String MSG_NEW_OPTIONAL_VERSION = JAPController.class.getName() +
 		"_newOptionalVersion";
 	private static final String MSG_ALLOWUNPROTECTED = JAPController.class.getName() + "_allowunprotected";
-	private static final String MSG_IS_NOT_ALLOWED = JAPController.class.getName() + "_isNotAllowed";
+	public static final String MSG_IS_NOT_ALLOWED = JAPController.class.getName() + "_isNotAllowed";
 
 
 	private static final String XML_ALLOW_NON_ANONYMOUS_CONNECTION = "AllowNonAnonymousConnection";
@@ -142,7 +142,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 * Stores all MixCascades we know (information comes from infoservice or was entered by a user).
 	 * This list may or may not include the current active MixCascade.
 	 */
-	private Vector m_vectorMixCascadeDatabase = null;
+	//private Vector m_vectorMixCascadeDatabase = null;
 
 	private boolean m_bShutdown = false;
 
@@ -157,6 +157,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private AnonProxy m_proxyAnon = null; // service object for anon access
 
 	private InfoServiceUpdater m_InfoServiceUpdater;
+	private MixCascadeUpdater m_MixCascadeUpdater;
 
 	private boolean isRunningHTTPListener = false; // true if a HTTP listener is running
 
@@ -214,6 +215,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 		// initialise IS update thread
 		m_InfoServiceUpdater = new InfoServiceUpdater();
+		m_MixCascadeUpdater = new MixCascadeUpdater();
 
 		m_changeAnonModeJobs = new Vector();
 		m_Model = JAPModel.getInstance();
@@ -291,7 +293,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 		HTTPConnectionFactory.getInstance().setTimeout(JAPConstants.DEFAULT_INFOSERVICE_TIMEOUT);
 
-		m_vectorMixCascadeDatabase = new Vector();
 		m_proxyDirect = null;
 		m_proxyAnon = null;
 		//m_proxySocks = null;
@@ -341,8 +342,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 		m_bInitialRun = true;
 		LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPModel:initial run of JAP...");
 
-		// start InfoService update thread
+		// start update threads
 		m_InfoServiceUpdater.start();
+		m_MixCascadeUpdater.start();
 
 		// start http listener object
 		/* if (JAPModel.isTorEnabled())
@@ -719,7 +721,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				/* try to get the info from the MixCascade node */
 				MixCascade defaultMixCascade = null;
 				Element mixCascadeNode = (Element) XMLUtil.getFirstChildByName(root,
-					JAPConstants.CONFIG_MIX_CASCADE);
+					MixCascade.XML_ELEMENT_NAME);
 				try
 				{
 					defaultMixCascade = new MixCascade( (Element) mixCascadeNode);
@@ -732,18 +734,18 @@ public final class JAPController extends Observable implements IProxyListener, O
 				setCurrentMixCascade(defaultMixCascade);
 
 				/* try to load information about user defined cascades */
-				Node nodeCascades = XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_MIX_CASCADES);
+				Node nodeCascades = XMLUtil.getFirstChildByName(root, MixCascade.XML_ELEMENT_CONTAINER_NAME);
 				if (nodeCascades != null)
 				{
 					Node nodeCascade = nodeCascades.getFirstChild();
 					while (nodeCascade != null)
 					{
-						if (nodeCascade.getNodeName().equals(JAPConstants.CONFIG_MIX_CASCADE))
+						if (nodeCascade.getNodeName().equals(MixCascade.XML_ELEMENT_NAME))
 						{
 							try
 							{
-								MixCascade cascade = new MixCascade( (Element) nodeCascade);
-								m_vectorMixCascadeDatabase.addElement(cascade);
+								Database.getInstance(MixCascade.class).update(
+									new MixCascade((Element)nodeCascade, Long.MAX_VALUE));
 							}
 							catch (Exception e)
 							{}
@@ -1429,15 +1431,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 								 UIManager.getLookAndFeel().getClass().getName());
 
 			/*stores MixCascades*/
-			Element elemCascades = doc.createElement(JAPConstants.CONFIG_MIX_CASCADES);
+			Element elemCascades = doc.createElement(MixCascade.XML_ELEMENT_CONTAINER_NAME);
 			e.appendChild(elemCascades);
-			Enumeration enumer = m_vectorMixCascadeDatabase.elements();
+			Enumeration enumer = Database.getInstance(MixCascade.class).getEntrySnapshotAsEnumeration();
 			while (enumer.hasMoreElements())
 			{
 				MixCascade entry = (MixCascade) enumer.nextElement();
 				//if (entry.isUserDefined())
 				{
-					Element elem = entry.toXmlNode(doc);
+					Element elem = entry.toXmlElement(doc);
 					elemCascades.appendChild(elem);
 				}
 			}
@@ -1445,7 +1447,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			MixCascade defaultMixCascade = getCurrentMixCascade();
 			if (defaultMixCascade != null)
 			{
-				Element elem = defaultMixCascade.toXmlNode(doc);
+				Element elem = defaultMixCascade.toXmlElement(doc);
 				e.appendChild(elem);
 			}
 
@@ -1618,7 +1620,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 */
 	public void setCurrentMixCascade(MixCascade newMixCascade)
 	{
-		if (newMixCascade != null && !m_currentMixCascade.getId().equals(newMixCascade.getId()))
+		if (newMixCascade == null)
+		{
+			return;
+		}
+
+		if (!m_currentMixCascade.equals(newMixCascade))
 		{
 			synchronized (this)
 			{
@@ -1639,6 +1646,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 			notifyJAPObservers();
 		}
+		else
+		{
+			m_currentMixCascade = newMixCascade;
+		}
+
 	}
 
 	/**
@@ -1657,7 +1669,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	public Vector getMixCascadeDatabase()
 	{
-		return m_vectorMixCascadeDatabase;
+		return Database.getInstance(MixCascade.class).getEntryList();
 	}
 
 	public void applyProxySettingsToInfoService(boolean a_bUseAuth)
@@ -2106,11 +2118,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 				m_proxyDirect = new DirectProxy(m_socketHTTPListener);
 				m_proxyDirect.startService();
 
-				// may be null if no cascade is available
-				if (getCurrentMixCascade() != null)
-				{
-					getCurrentMixCascade().resetCurrentStatus();
-				}
 				/* notify the forwarding system after! m_proxyAnon is set to null */
 				JAPModel.getInstance().getRoutingSettings().anonConnectionClosed();
 
@@ -2459,6 +2466,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_Controller.m_bShutdown = true;
 					// disallow InfoService traffic
 					JAPModel.getInstance().setInfoServiceDisabled(true);
+					m_Controller.m_MixCascadeUpdater.stop();
 					m_Controller.m_InfoServiceUpdater.stop();
 					// do not show direct connection warning dialog
 					DirectProxy.setAllowUnprotectedConnectionCallback(null);
@@ -2572,54 +2580,33 @@ public final class JAPController extends Observable implements IProxyListener, O
 	{
 		LogHolder.log(LogLevel.INFO, LogType.MISC,
 					  "JAPController: fetchMixCascades: Trying to fetch mixcascades from infoservice.");
-		Vector newMixCascades = InfoServiceHolder.getInstance().getMixCascades();
-		if (newMixCascades == null)
+
+		while (!m_MixCascadeUpdater.update())
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET, "No connection to infoservices.");
-			if (!JAPModel.isSmallDisplay() && bShowError)
+			if (!JAPModel.isSmallDisplay() && (bShowError ||
+											   Database.getInstance(
+				MixCascade.class).getNumberofEntries() == 0))
 			{
-				String message;
-
 				if (!JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed() && !isAnonConnected())
 				{
-					message = JAPMessages.getString(MSG_IS_NOT_ALLOWED);
+					int returnValue =
+						JAPDialog.showConfirmDialog(getView(), JAPMessages.getString(MSG_IS_NOT_ALLOWED),
+						JAPDialog.OPTION_TYPE_YES_NO, JAPDialog.MESSAGE_TYPE_ERROR);
+					if (returnValue == JAPDialog.RETURN_VALUE_YES)
+					{
+						JAPModel.getInstance().allowInfoServiceViaDirectConnection(true);
+						updateInfoServices();
+						continue;
+					}
 				}
 				else
 				{
-					message = JAPMessages.getString("errorConnectingInfoService");
-				}
-				JAPDialog.showErrorDialog(getView(), message, LogType.NET);
-			}
-		}
-		else
-		{
-			LogHolder.log(LogLevel.DEBUG, LogType.NET, "JAPController: fetchMixCascades: success!");
-			//add all user added cascades
-			Vector oldCascades =  ((Vector)m_vectorMixCascadeDatabase.clone());
-			boolean bEqual = true;
-			for (int i = 0; i < newMixCascades.size(); i++)
-			{
-				if (!m_vectorMixCascadeDatabase.contains(newMixCascades.elementAt(i)))
-				{
-					bEqual = false;
-					break;
+					JAPDialog.showErrorDialog(getView(), JAPMessages.getString("errorConnectingInfoService"),
+											  LogType.NET);
 				}
 			}
-			Enumeration enumer = oldCascades.elements();
-			while (enumer.hasMoreElements())
-			{
-				MixCascade entry = (MixCascade) enumer.nextElement();
-				if (entry.isUserDefined())
-				{
-					newMixCascades.addElement(entry);
-				}
-			}
-			if (!bEqual || newMixCascades.size() != oldCascades.size())
-			{
-				m_vectorMixCascadeDatabase = newMixCascades;
-				notifyJAPObservers();
-			}
-
+			break;
 		}
 	}
 

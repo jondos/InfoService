@@ -29,6 +29,7 @@ package anon.infoservice;
 
 import java.util.Enumeration;
 import java.util.Vector;
+import java.util.Observable;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -40,6 +41,7 @@ import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
 import anon.crypto.XMLSignature;
 import anon.util.XMLUtil;
+import anon.util.IXMLEncodable;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -47,8 +49,11 @@ import logging.LogType;
 /**
  * Holds the information for a mixcascade.
  */
-public class MixCascade extends AbstractDatabaseEntry implements IDistributable, AnonServerDescription
+public class MixCascade extends AbstractDatabaseEntry implements IDistributable, AnonServerDescription,
+		IXMLEncodable
 {
+	public static final String XML_ELEMENT_NAME = "MixCascade";
+	public static final String XML_ELEMENT_CONTAINER_NAME = "MixCascades";
 
 	/**
 	 * This is the ID of the mixcascade.
@@ -78,11 +83,6 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	private Vector m_mixIds;
 
 	/**
-	 * Holds the current status of this cascade.
-	 */
-	private StatusInfo m_currentStatus;
-
-	/**
 	 * Stores the certificate for verifying the status messages of the mixcascade.
 	 */
 	private JAPCertificate m_mixCascadeCertificate;
@@ -108,19 +108,15 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 */
 	private boolean m_isCertified = true;
 
-	/**
-	 * Returns the name of the XML element constructed by this class.
-	 *
-	 * @return The name of the XML element constructed by this class (MixCascade).
-	 */
-	public static String getXmlElementName()
-	{
-		return "MixCascade";
-	}
-
 	public MixCascade(Element a_mixCascadeNode, boolean a_isCertified) throws Exception
 	{
 		this(a_mixCascadeNode);
+		m_isCertified = a_isCertified;
+	}
+
+	public MixCascade(Element a_mixCascadeNode, boolean a_isCertified, long a_expireTime) throws Exception
+	{
+		this(a_mixCascadeNode, a_expireTime);
 		m_isCertified = a_isCertified;
 	}
 
@@ -131,10 +127,21 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 */
 	public MixCascade(Element a_mixCascadeNode) throws Exception
 	{
+		this(a_mixCascadeNode, 0);
+	}
+
+	/**
+	 * Creates a new MixCascade from XML description (MixCascade node).
+	 *
+	 * @param a_mixCascadeNode The MixCascade node from an XML document.
+	 * @param a_expireTime forces a specific expire time; takes default expire time if <= 0
+	 */
+	public MixCascade(Element a_mixCascadeNode, long a_expireTime) throws Exception
+	{
 		/* use always the timeout for the infoservice context, because the JAP client currently does
 		 * not have a database of mixcascade entries -> no timeout for the JAP client necessary
 		 */
-		super(System.currentTimeMillis() + Constants.TIMEOUT_MIXCASCADE);
+		super(a_expireTime <= 0 ? (System.currentTimeMillis() + Constants.TIMEOUT_MIXCASCADE) : a_expireTime);
 		/* get the ID */
 		m_mixCascadeId = a_mixCascadeNode.getAttribute("id");
 		/* get the name */
@@ -260,8 +267,6 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 
 		/* store the xml structure */
 		m_xmlStructure = a_mixCascadeNode;
-		/* set the current status to a dummy value */
-		m_currentStatus = StatusInfo.createDummyStatusInfo(getId());
 	}
 
 	/**
@@ -338,8 +343,6 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		/* some more values */
 		m_userDefined = true;
 		m_mixCascadeCertificate = null;
-		/* create a dummy current status */
-		m_currentStatus = StatusInfo.createDummyStatusInfo(m_mixCascadeId);
 		m_xmlStructure = generateXmlRepresentation();
 	}
 
@@ -352,7 +355,7 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 *
 	 * @return The MixCascade XML node.
 	 */
-	public Element toXmlNode(Document a_doc)
+	public Element toXmlElement(Document a_doc)
 	{
 		Element importedXmlStructure = null;
 		try
@@ -544,17 +547,17 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 					addCertificateWithVerification(m_mixCascadeCertificate,
 					JAPCertificate.CERTIFICATE_TYPE_MIX, false);
 			}
-			m_currentStatus = InfoServiceHolder.getInstance().getStatusInfo(getId(), getNumberOfMixes());
+			StatusInfo statusInfo =
+				InfoServiceHolder.getInstance().getStatusInfo(getId(), getNumberOfMixes());
+			if (statusInfo != null)
+			{
+				Database.getInstance(StatusInfo.class).update(statusInfo);
+			}
 			if (certificateLock != -1)
 			{
 				/* remove the lock on the certificate */
 				SignatureVerifier.getInstance().getVerificationCertificateStore().removeCertificateLock(
 					certificateLock);
-			}
-			if (m_currentStatus == null)
-			{
-				/* no status information available */
-				m_currentStatus = StatusInfo.createDummyStatusInfo(getId());
 			}
 		}
 	}
@@ -568,25 +571,13 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 */
 	public StatusInfo getCurrentStatus()
 	{
-		//synchronized (this) Deadly for JDK 1.1.8 and not needed...
+		StatusInfo statusInfo = (StatusInfo)Database.getInstance(StatusInfo.class).getEntryById(getId());
+		if (statusInfo == null)
 		{
-			/* get only consistent values */
-			return m_currentStatus;
+			statusInfo = StatusInfo.createDummyStatusInfo(getId());
 		}
-	}
+		return statusInfo;
 
-	/**
-	 * Resets the current status. This method should be called, if you stop the periodical call of
-	 * fetchCurrentStatus(). Every call of getCurrentStatus() will then return a dummy StatusInfo
-	 * (every value = -1) until you call fetchCurrentStatus() again.
-	 */
-	public void resetCurrentStatus()
-	{
-		synchronized (this)
-		{
-			/* be always consistent */
-			m_currentStatus = StatusInfo.createDummyStatusInfo(getId());
-		}
 	}
 
 	/**
@@ -641,7 +632,7 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	private Element generateXmlRepresentation()
 	{
 		Document doc = XMLUtil.createDocument();
-		Element mixCascadeNode = doc.createElement("MixCascade");
+		Element mixCascadeNode = doc.createElement(XML_ELEMENT_NAME);
 		XMLUtil.setAttribute(mixCascadeNode, "id", getId());
 		/* Create the child nodes of MixCascade (Name, Network, Mixes, LastUpdate) */
 		Element nameNode = doc.createElement("Name");

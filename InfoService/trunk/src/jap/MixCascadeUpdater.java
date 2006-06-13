@@ -30,44 +30,36 @@ package jap;
 import java.util.Vector;
 
 import anon.infoservice.AbstractDatabaseEntry;
-import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
+import anon.infoservice.MixCascade;
 
 /**
- * Updates the known InfoServices. This may be done automatically (by a background thread) and manually
- * by method call. The automatic update is only done if this is allowed by the model.
+ * Updates the list of available MixCascades.
  * @author Rolf Wendolsky
  */
-public class InfoServiceUpdater extends AbstractDatabaseUpdater
+public class MixCascadeUpdater extends AbstractDatabaseUpdater
 {
 	public Class getUpdatedClass()
 	{
-		return InfoServiceDBEntry.class;
+		return MixCascade.class;
 	}
 
 	protected AbstractDatabaseEntry getPreferredEntry()
 	{
-		return InfoServiceHolder.getInstance().getPreferredInfoService();
+		return JAPController.getInstance().getCurrentMixCascade();
 	}
 
 	protected void setPreferredEntry(AbstractDatabaseEntry a_preferredEntry)
 	{
-		if (a_preferredEntry instanceof InfoServiceDBEntry)
+		if (a_preferredEntry instanceof MixCascade)
 		{
-			InfoServiceHolder.getInstance().setPreferredInfoService((InfoServiceDBEntry)a_preferredEntry);
-		}
-	}
-
-	protected void updateInternal()
-	{
-		synchronized (InfoServiceHolder.getInstance())
-		{
-			super.updateInternal();
+			JAPController.getInstance().setCurrentMixCascade((MixCascade)a_preferredEntry);
 		}
 	}
 
 	public Vector getUpdatedEntries()
 	{
-		return  InfoServiceHolder.getInstance().getInfoServices();
+		return  InfoServiceHolder.getInstance().getMixCascades();
 	}
+
 }
