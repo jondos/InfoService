@@ -222,7 +222,9 @@ public class SignatureVerifier
                                          */
                                         int rootType=JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX;
                                         if(a_documentClass == DOCUMENT_CLASS_INFOSERVICE)
-                                                rootType=JAPCertificate.CERTIFICATE_TYPE_ROOT_INFOSERVICE;
+										{
+											rootType = JAPCertificate.CERTIFICATE_TYPE_ROOT_INFOSERVICE;
+										}
                                         Vector rootCertificateInfoStructures = m_trustedCertificates.
                                                 getAvailableCertificatesByType(rootType);
                                         Enumeration rootCertificatesEnumerator = rootCertificateInfoStructures.elements();

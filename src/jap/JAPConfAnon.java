@@ -59,6 +59,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -66,6 +67,11 @@ import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
 import anon.infoservice.MixInfo;
+import anon.infoservice.StatusInfo;
+import anon.infoservice.ServiceLocation;
+import anon.infoservice.ServiceOperator;
+import anon.infoservice.Database;
+import anon.infoservice.DatabaseMessage;
 import gui.GUIUtils;
 import gui.JAPHelp;
 import gui.JAPJIntField;
@@ -78,7 +84,6 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
-import javax.swing.SwingConstants;
 import javax.swing.ScrollPaneConstants;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
@@ -94,8 +99,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	private static final String URL_BEGIN = "<html><font color=blue><u>";
 	private static final String URL_END = "</u></font></html>";
-
-	private boolean bErr;
 
 	private InfoServiceTempLayer m_infoService;
 
@@ -149,6 +152,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_infoService = new InfoServiceTempLayer(false);
 		/* observe JAPRoutingSettings to get a notification, if connect-via-forwarder is enabled */
 		JAPModel.getInstance().getRoutingSettings().addObserver(this);
+		Database.getInstance(MixCascade.class).addObserver(this);
+		Database.getInstance(StatusInfo.class).addObserver(this);
+		Database.getInstance(MixInfo.class).addObserver(this);
 	}
 
 	public void recreateRootPanel()
@@ -164,7 +170,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				fetchCascades(true);
+				fetchCascades(true, true);
 			}
 		});
 		m_listMixCascade = new JList();
@@ -620,14 +626,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		while (it.hasMoreElements())
 		{
 			MixCascade cascade = (MixCascade) it.nextElement();
-			//if (cascade.isUserDefined())
-			{
-				listModel.addElement(cascade);
-			}
-			//else
-			//{
-			//	listModel.addElement(cascade);
-			//}
+			listModel.addElement(cascade);
 			if (cascade.equals(currentCascade))
 			{
 				bCurrentAlreadyAdded = true;
@@ -673,36 +672,34 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		updateMixCascadeCombo();
 	}
 
-	private void fetchCascades(boolean bShowError)
+	private void fetchCascades(final boolean bErr, final boolean a_bForceCascadeUpdate)
 	{
-		bErr = bShowError;
 		m_reloadCascadesButton.setEnabled(false);
 		Runnable doIt = new Runnable()
 		{
 			public void run()
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf:m_bttnFetchCascades");
-
 				// fetch available mix cascades from the Internet
 				Cursor c = getRootPanel().getCursor();
 				getRootPanel().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
-				m_Controller.fetchMixCascades(bErr);
+				if (a_bForceCascadeUpdate)
+				{
+					m_Controller.fetchMixCascades(bErr);
+				}
 				//Update the temporary infoservice database
-				updateFromInfoservice();
+				m_infoService.fill();
 				updateMixCascadeCombo();
-
-				LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf: finished updateMixCascadeCombo()");
 
 				getRootPanel().setCursor(c);
 
 				if (m_Controller.getMixCascadeDatabase().size() == 0)
 				{
-					if (!JAPModel.isSmallDisplay() && bErr)
+					if (!JAPModel.isSmallDisplay() && false)
 					{
-						JAPDialog.showErrorDialog(getRootPanel(),
-												  JAPMessages.getString("settingsNoServersAvailable"),
-												  LogType.MISC);
+						JAPDialog.showMessageDialog(getRootPanel(),
+							JAPMessages.getString("settingsNoServersAvailable"),
+							JAPMessages.getString("settingsNoServersAvailableTitle"));
 					}
 					//No mixcascades returned by Infoservice
 					deactivate();
@@ -710,9 +707,18 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				else
 				{
 					// show a window containing all available cascades
-					LogHolder.log(LogLevel.DEBUG, LogType.GUI, "JAPConf: setting old cursor()");
 					m_listMixCascade.setEnabled(true);
 				}
+				try
+				{
+					m_listMixCascade.setSelectedValue(m_Controller.getCurrentMixCascade(), true);
+					valueChanged(new ListSelectionEvent(m_listMixCascade, 0,
+						m_listMixCascade.getModel().getSize(), false));
+				}
+				catch (Exception e)
+				{
+				}
+
 				LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Enabling reload button");
 				m_reloadCascadesButton.setEnabled(true);
 			}
@@ -721,12 +727,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		t.start();
 	}
 
-	/** Deactivates GUI when no cascades are returned by the Infoservice
-	 *
+	/**
+	 * Deactivates GUI when no cascades are returned by the Infoservice
 	 */
 	private void deactivate()
 	{
-
 		m_listMixCascade.removeAll();
 		DefaultListModel model = new DefaultListModel();
 		model.addElement(JAPMessages.getString("noCascadesAvail"));
@@ -761,7 +766,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		else if (e.getSource() == m_reloadCascadesButton)
 		{
-			fetchCascades(false);
+			fetchCascades(false, true);
 		}
 		else if (e.getSource() == m_selectCascadeButton)
 		{
@@ -990,51 +995,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			if (!m_infoService.isFilled())
 			{
-				m_reloadCascadesButton.setEnabled(false);
-				Runnable doIt = new Runnable()
-				{
-					public void run()
-					{
-						Cursor c = getRootPanel().getCursor();
-						getRootPanel().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-
-						m_Controller.fetchMixCascades(bErr);
-						//Update the temporary infoservice database
-						updateFromInfoservice();
-						updateMixCascadeCombo();
-
-						getRootPanel().setCursor(c);
-
-						if (m_Controller.getMixCascadeDatabase().size() == 0)
-						{
-							if (!JAPModel.isSmallDisplay() && bErr)
-							{
-								JAPDialog.showMessageDialog(getRootPanel(),
-									JAPMessages.getString("settingsNoServersAvailable"),
-									JAPMessages.getString("settingsNoServersAvailableTitle"));
-							}
-							//No mixcascades returned by Infoservice
-							deactivate();
-						}
-						else
-						{
-							// show a window containing all available cascades
-							m_listMixCascade.setEnabled(true);
-						}
-						m_reloadCascadesButton.setEnabled(true);
-					}
-				};
-				Thread t = new Thread(doIt);
-				t.start();
-				try
-				{
-					m_listMixCascade.setSelectedValue(m_Controller.getCurrentMixCascade(), true);
-					valueChanged(new ListSelectionEvent(m_listMixCascade, 0,
-						m_listMixCascade.getModel().getSize(), false));
-				}
-				catch (Exception e)
-				{
-				}
+				fetchCascades(false, false);
 			}
 		}
 	}
@@ -1045,59 +1006,58 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	 */
 	public void valueChanged(ListSelectionEvent e)
 	{
-			m_showEditPanelButton.setEnabled(false);
-		 //Object source = e.getSource();
-		 if (!e.getValueIsAdjusting())
-		 {
-		  if (m_listMixCascade.getSelectedIndex() > -1)
-		  {
-		   MixCascade cascade;
-		   String cascadeId;
+		m_showEditPanelButton.setEnabled(false);
+		//Object source = e.getSource();
+		if (!e.getValueIsAdjusting())
+		{
+			if (m_listMixCascade.getSelectedIndex() > -1)
+			{
+				MixCascade cascade;
+				String cascadeId;
 
-		   cascade = (MixCascade) m_listMixCascade.getSelectedValue();
-		   if (cascade == null)
-		   {
-			   // no cascade is available and selected
-			   m_showEditPanelButton.setEnabled(false);
-			   m_selectCascadeButton.setEnabled(false);
-			   m_showEditPanelButton.setEnabled(false);
-			   return;
-		   }
-		   cascadeId = cascade.getId();
-
-
-		   if (m_infoService != null)
-		   {
-			if (m_infoService.getNumOfMixes(cascadeId) == -1)
-			{
-				drawServerPanel(3, "", false);
-			}
-			else
-			{
-			 drawServerPanel(m_infoService.getNumOfMixes(cascadeId), cascade.getName(), true);
-			}
-			if (cascade.isUserDefined())
-			{
-				m_numOfUsersLabel.setText("N/A");
-				m_reachableLabel.setText(cascade.getListenerInterface(0).getHost());
-				m_portsLabel.setText("" + cascade.getListenerInterface(0).getPort());
-				m_payLabel.setText("");
-			}
-			else
-			{
-				m_numOfUsersLabel.setText(m_infoService.getNumOfUsers(cascadeId));
-				m_reachableLabel.setText(m_infoService.getHosts(cascadeId));
-				m_portsLabel.setText(m_infoService.getPorts(cascadeId));
-				if (m_infoService.isPay(cascadeId))
+				cascade = (MixCascade) m_listMixCascade.getSelectedValue();
+				if (cascade == null)
 				{
-					m_payLabel.setText(JAPMessages.getString(MSG_PAYCASCADE));
+					// no cascade is available and selected
+					m_showEditPanelButton.setEnabled(false);
+					m_selectCascadeButton.setEnabled(false);
+					m_showEditPanelButton.setEnabled(false);
+					return;
 				}
-				else
+				cascadeId = cascade.getId();
+
+				if (m_infoService != null)
 				{
-					m_payLabel.setText("");
+					if (m_infoService.getNumOfMixes(cascadeId) == -1)
+					{
+						drawServerPanel(3, "", false);
+					}
+					else
+					{
+						drawServerPanel(m_infoService.getNumOfMixes(cascadeId), cascade.getName(), true);
+					}
+					if (cascade.isUserDefined())
+					{
+						m_numOfUsersLabel.setText("N/A");
+						m_reachableLabel.setText(cascade.getListenerInterface(0).getHost());
+						m_portsLabel.setText("" + cascade.getListenerInterface(0).getPort());
+						m_payLabel.setText("");
+					}
+					else
+					{
+						m_numOfUsersLabel.setText(m_infoService.getNumOfUsers(cascadeId));
+						m_reachableLabel.setText(m_infoService.getHosts(cascadeId));
+						m_portsLabel.setText(m_infoService.getPorts(cascadeId));
+						if (m_infoService.isPay(cascadeId))
+						{
+							m_payLabel.setText(JAPMessages.getString(MSG_PAYCASCADE));
+						}
+						else
+						{
+							m_payLabel.setText("");
+						}
+					}
 				}
-			}
-		   }
 		   drawServerInfoPanel(null, null, null);
 
 		   if (cascade.isUserDefined())
@@ -1179,7 +1139,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	 * @param a_message The reason of the notification, should be a JAPRoutingMessage.
 	 *
 	 */
-	public void update(Observable a_notifier, Object a_message)
+	public void update(Observable a_notifier, final Object a_message)
 	{
 		try
 		{
@@ -1199,19 +1159,31 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					}
 				}
 			}
+			else if (a_message != null && a_message instanceof DatabaseMessage)
+			{
+				SwingUtilities.invokeLater(
+				new Runnable()
+				{
+					public void run()
+					{
+						DatabaseMessage message = (DatabaseMessage)a_message;
+						if (message.getMessageData() instanceof MixCascade &&
+							(message.getMessageCode() == DatabaseMessage.ENTRY_ADDED ||
+							 message.getMessageCode() == DatabaseMessage.ENTRY_REMOVED ||
+							 message.getMessageCode() == DatabaseMessage.ALL_ENTRIES_REMOVED))
+						{
+							updateMixCascadeCombo();
+						}
+						valueChanged(new ListSelectionEvent(m_listMixCascade, 0,
+							m_listMixCascade.getModel().getSize(), false));
+					}
+				});
+			}
 		}
 		catch (Exception e)
 		{
 			/* should not happen, but better than throwing a runtime exception */
 		}
-	}
-
-	/**
-	 * Refresh the temporary infoservice database
-	 */
-	private void updateFromInfoservice()
-	{
-		m_infoService = new InfoServiceTempLayer(true);
 	}
 }
 
@@ -1286,13 +1258,11 @@ final class CustomRenderer extends DefaultListCellRenderer
 final class InfoServiceTempLayer
 {
 	private Vector m_Cascades;
-	private Vector m_Mixes;
 	private boolean m_isFilled = false;
 
 	public InfoServiceTempLayer(boolean a_autoFill)
 	{
 		m_Cascades = new Vector();
-		m_Mixes = new Vector();
 		if (a_autoFill)
 		{
 			this.fill();
@@ -1309,23 +1279,22 @@ final class InfoServiceTempLayer
 	 */
 	public void fill()
 	{
-		m_Mixes = new Vector();
 		m_Cascades = new Vector();
 
 		try
 		{
-			Vector c = InfoServiceHolder.getInstance().getMixCascades();
+			Vector c = Database.getInstance(MixCascade.class).getEntryList();
 			for (int j = 0; j < c.size(); j++)
 			{
 				MixCascade cascade = (MixCascade) c.elementAt(j);
 				/* fetch the current cascade state */
-				cascade.fetchCurrentStatus();
+				if (!cascade.isUserDefined())
+				{
+					cascade.fetchCurrentStatus();
+				}
 				//Get cascade id
 				String id = cascade.getId();
-				//Get number of mixes in cascade
-				int numOfMixes = cascade.getNumberOfMixes();
-				// Get the number of users on the cascade
-				String numOfUsers = Integer.toString(cascade.getCurrentStatus().getNrOfActiveUsers());
+
 				// Get hostnames and ports
 				String interfaces = "";
 				String ports = "";
@@ -1343,7 +1312,6 @@ final class InfoServiceTempLayer
 					{
 						interfaces += "\n";
 					}
-
 				}
 
 				// Sort the array containing the port numbers and put the numbers into a string
@@ -1369,9 +1337,12 @@ final class InfoServiceTempLayer
 					}
 
 				}
-				m_Cascades.addElement(new TempCascade(id, numOfUsers, interfaces, ports, numOfMixes,
-					cascade.isPayment()));
+				m_Cascades.addElement(new TempCascade(id, interfaces, ports));
 				//Get mixes in cascade
+				if (cascade.isUserDefined())
+				{
+					continue;
+				}
 				Vector mixIds = cascade.getMixIds();
 				for (int k = 0; k < mixIds.size(); k++)
 				{
@@ -1383,11 +1354,7 @@ final class InfoServiceTempLayer
 									  "Did not get Mix info from InfoService for Mix " + mixId + "!");
 						continue;
 					}
-
-					m_Mixes.addElement(new TempMix(mixId, mixInfo.getServiceOperator().getOrganisation(),
-						mixInfo.getServiceOperator().getUrl(),
-						mixInfo.getServiceLocation().getCity() + ", " +
-						mixInfo.getServiceLocation().getCountry()));
+					Database.getInstance(MixInfo.class).update(mixInfo);
 				}
 			}
 		}
@@ -1405,15 +1372,12 @@ final class InfoServiceTempLayer
 	 */
 	public int getNumOfMixes(String a_cascadeId)
 	{
-		for (int i = 0; i < m_Cascades.size(); i++)
+		MixCascade cascade = getMixCascade(a_cascadeId);
+		if (cascade != null)
 		{
-			if ( ( (TempCascade) m_Cascades.elementAt(i)).getId().equalsIgnoreCase(a_cascadeId))
-			{
-				return ( (TempCascade) m_Cascades.elementAt(i)).getNumOfMixes();
-			}
+			return cascade.getNumberOfMixes();
 		}
 		return -1;
-
 	}
 
 	/**
@@ -1423,12 +1387,10 @@ final class InfoServiceTempLayer
 	 */
 	public String getNumOfUsers(String a_cascadeId)
 	{
-		for (int i = 0; i < m_Cascades.size(); i++)
+		StatusInfo statusInfo = getStatusInfo(a_cascadeId);
+		if (statusInfo != null)
 		{
-			if ( ( (TempCascade) m_Cascades.elementAt(i)).getId().equalsIgnoreCase(a_cascadeId))
-			{
-				return ( (TempCascade) m_Cascades.elementAt(i)).getNumOfUsers();
-			}
+			return "" + statusInfo.getNrOfActiveUsers();
 		}
 		return "N/A";
 	}
@@ -1474,14 +1436,17 @@ final class InfoServiceTempLayer
 	 */
 	public String getOperator(String a_mixId)
 	{
-		for (int i = 0; i < m_Mixes.size(); i++)
+		ServiceOperator operator = getServiceOperator(a_mixId);
+		String strOperator = null;
+		if (operator != null)
 		{
-			if ( ( (TempMix) m_Mixes.elementAt(i)).getId().equalsIgnoreCase(a_mixId))
-			{
-				return ( (TempMix) m_Mixes.elementAt(i)).getOperator();
-			}
+			strOperator = operator.getOrganisation();
 		}
-		return "N/A";
+		if (strOperator == null)
+		{
+			return "N/A";
+		}
+		return strOperator;
 	}
 
 	/**
@@ -1491,14 +1456,17 @@ final class InfoServiceTempLayer
 	 */
 	public String getUrl(String a_mixId)
 	{
-		for (int i = 0; i < m_Mixes.size(); i++)
+		ServiceOperator operator = getServiceOperator(a_mixId);
+		String strUrl = null;
+		if (operator != null)
 		{
-			if ( ( (TempMix) m_Mixes.elementAt(i)).getId().equalsIgnoreCase(a_mixId))
-			{
-				return ( (TempMix) m_Mixes.elementAt(i)).getUrl();
-			}
+			strUrl = operator.getUrl();
 		}
-		return "N/A";
+		if (strUrl == null)
+		{
+			return "N/A";
+		}
+		return strUrl;
 	}
 
 	/**
@@ -1508,14 +1476,17 @@ final class InfoServiceTempLayer
 	 */
 	public String getLocation(String a_mixId)
 	{
-		for (int i = 0; i < m_Mixes.size(); i++)
+		ServiceLocation location = getServiceLocation(a_mixId);
+		String strCountry = null;
+		if (location != null)
 		{
-			if ( ( (TempMix) m_Mixes.elementAt(i)).getId().equalsIgnoreCase(a_mixId))
-			{
-				return ( (TempMix) m_Mixes.elementAt(i)).getLocation();
-			}
+			strCountry = location.getCountry();
 		}
-		return "N/A";
+		if (strCountry == null)
+		{
+			return "N/A";
+		}
+		return strCountry;
 	}
 
 	/**
@@ -1525,16 +1496,50 @@ final class InfoServiceTempLayer
 	 */
 	public boolean isPay(String a_cascadeId)
 	{
-		for (int i = 0; i < m_Cascades.size(); i++)
+		MixCascade cascade = getMixCascade(a_cascadeId);
+		if (cascade != null)
 		{
-			if ( ( (TempCascade) m_Cascades.elementAt(i)).getId().equalsIgnoreCase(a_cascadeId))
-			{
-				return ( (TempCascade) m_Cascades.elementAt(i)).isPay();
-			}
+			return cascade.isPayment();
 		}
 		return false;
 	}
 
+	private StatusInfo getStatusInfo(String a_cascadeId)
+	{
+		return (StatusInfo)Database.getInstance(StatusInfo.class).getEntryById(a_cascadeId);
+}
+
+	private MixCascade getMixCascade(String a_cascadeId)
+	{
+		return (MixCascade)Database.getInstance(MixCascade.class).getEntryById(a_cascadeId);
+	}
+
+	private ServiceLocation getServiceLocation(String a_mixId)
+	{
+		MixInfo info = getMixInfo(a_mixId);
+
+		if (info != null)
+		{
+			return info.getServiceLocation();
+		}
+		return null;
+	}
+
+	private ServiceOperator getServiceOperator(String a_mixId)
+	{
+		MixInfo info = getMixInfo(a_mixId);
+
+		if (info != null)
+		{
+			return info.getServiceOperator();
+		}
+		return null;
+	}
+
+	private MixInfo getMixInfo(String a_mixId)
+	{
+		return (MixInfo)Database.getInstance(MixInfo.class).getEntryById(a_mixId);
+	}
 }
 
 /**
@@ -1544,41 +1549,19 @@ final class InfoServiceTempLayer
 final class TempCascade
 {
 	private String m_id;
-	private String m_users;
 	private String m_ports;
 	private String m_hosts;
-	private boolean m_bIsPay = false;
-	private int m_numOfMixes;
 
-	public TempCascade(String a_id, String a_numOfUsers, String a_hosts, String a_ports, int a_numOfMixes,
-					   boolean a_isPay)
+	public TempCascade(String a_id, String a_hosts, String a_ports)
 	{
 		m_id = a_id;
-		m_users = a_numOfUsers;
 		m_hosts = a_hosts;
 		m_ports = a_ports;
-		m_numOfMixes = a_numOfMixes;
-		m_bIsPay = a_isPay;
 	}
 
 	public String getId()
 	{
 		return m_id;
-	}
-
-	public boolean isPay()
-	{
-		return m_bIsPay;
-	}
-
-	public int getNumOfMixes()
-	{
-		return m_numOfMixes;
-	}
-
-	public String getNumOfUsers()
-	{
-		return m_users;
 	}
 
 	public String getPorts()
@@ -1589,46 +1572,6 @@ final class TempCascade
 	public String getHosts()
 	{
 		return m_hosts;
-	}
-
-}
-
-/**
- * Mix database entry for the temporary cascade
- */
-final class TempMix
-{
-	private String m_id;
-	private String m_operator;
-	private String m_url;
-	private String m_location;
-
-	public TempMix(String a_id, String a_operator, String a_url, String a_location)
-	{
-		m_id = a_id;
-		m_operator = a_operator;
-		m_url = a_url;
-		m_location = a_location;
-	}
-
-	public String getId()
-	{
-		return m_id;
-	}
-
-	public String getOperator()
-	{
-		return m_operator;
-	}
-
-	public String getUrl()
-	{
-		return m_url;
-	}
-
-	public String getLocation()
-	{
-		return m_location;
 	}
 
 }

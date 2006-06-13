@@ -211,7 +211,7 @@ final class JAPMixCascadeComboBoxListCellRender implements ListCellRenderer
 				}
 				else
 				{
-			l = m_componentAvailableCascade;
+					l = m_componentAvailableCascade;
 				}
 			}
 			else

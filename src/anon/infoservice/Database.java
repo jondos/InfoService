@@ -253,8 +253,7 @@ public final class Database extends Observable implements Runnable
 					{
 						m_serviceDatabase.wait();
 						LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-									  "First entry in the database. " +
-									  "Look when it expires. Wake up...");
+									  "First entry in the database. Look when it expires. Wake up...");
 					}
 					catch (Exception e)
 					{
@@ -262,6 +261,15 @@ public final class Database extends Observable implements Runnable
 				}
 			}
 		}
+	}
+
+
+	/**
+	 * Informs the observers that all database entries have been renewed.
+	 */
+	public void sendAllEntriesRenewed()
+	{
+		notifyObservers(new DatabaseMessage(DatabaseMessage.ALL_ENTRIES_RENEWED, getEntryList()));
 	}
 
 	/**
@@ -272,14 +280,19 @@ public final class Database extends Observable implements Runnable
 	 * @param newEntry The database entry to update.
 	 * @exception IllegalArgumentException if the database entry is not of the type the Database
 	 * can store
+	 * @return if the database has been changed
 	 */
-	public void update(AbstractDatabaseEntry newEntry) throws IllegalArgumentException
+	public boolean update(AbstractDatabaseEntry newEntry) throws IllegalArgumentException
 	{
+		if (newEntry == null)
+		{
+			throw new IllegalArgumentException("Database entry is null!");
+		}
+
 		if (!m_DatabaseEntryClass.isAssignableFrom(newEntry.getClass()))
 		{
 			throw new IllegalArgumentException(
-				"Database cannot store entries of type " +
-				newEntry.getClass().getName() + "!");
+				"Database cannot store entries of type " + newEntry.getClass().getName() + "!");
 		}
 		boolean addEntry = false;
 		AbstractDatabaseEntry oldEntry = null;
@@ -306,7 +319,8 @@ public final class Database extends Observable implements Runnable
 				{
 					LogHolder.log(LogLevel.INFO, LogType.NET, "Received an expired db entry: '" +
 								  newEntry.getId() + "'. It was dropped immediatly.");
-					Object removedEntry = m_serviceDatabase.remove(newEntry.getId());
+					AbstractDatabaseEntry removedEntry =
+						(AbstractDatabaseEntry)m_serviceDatabase.remove(newEntry.getId());
 					if (removedEntry != null)
 					{
 						/* There was an entry with a lower version number in the database, which was not
@@ -314,10 +328,10 @@ public final class Database extends Observable implements Runnable
 						 */
 						setChanged();
 						notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_REMOVED, removedEntry));
+						return true;
 					}
-					return;
+					return false;
 				}
-
 				// add the entry to the database
 				m_serviceDatabase.put(newEntry.getId(), newEntry);
 
@@ -386,8 +400,9 @@ public final class Database extends Observable implements Runnable
 				/* there was already an entry with the same ID -> the entry was renewed */
 				notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_RENEWED, newEntry));
 			}
+			return true;
 		}
-
+		return false;
 	}
 
 	/**
@@ -403,16 +418,17 @@ public final class Database extends Observable implements Runnable
 	 * Removes an entry from the database.
 	 *
 	 * @param deleteEntry The entry to remove. If it is not in the database, nothing is done.
+	 * @return if the database has been changed
 	 */
-	public void remove(AbstractDatabaseEntry deleteEntry)
+	public boolean remove(AbstractDatabaseEntry deleteEntry)
 	{
 		if (deleteEntry != null)
 		{
-			Object removedEntry = null;
+			AbstractDatabaseEntry removedEntry;
 			synchronized (m_serviceDatabase)
 			{
 				/* we need exclusive access to the database */
-				removedEntry = m_serviceDatabase.remove(deleteEntry.getId());
+				removedEntry = (AbstractDatabaseEntry)m_serviceDatabase.remove(deleteEntry.getId());
 				if (removedEntry != null)
 				{
 					m_timeoutList.removeElement(deleteEntry.getId());
@@ -420,12 +436,13 @@ public final class Database extends Observable implements Runnable
 			}
 			if (removedEntry != null)
 			{
-				m_timeoutList.removeElement(deleteEntry.getId());
 				/* an entry was removed -> notify the observers */
 				setChanged();
 				notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_REMOVED, removedEntry));
+				return true;
 			}
 		}
+		return false;
 	}
 
 	/**
@@ -452,11 +469,14 @@ public final class Database extends Observable implements Runnable
 	public Vector getEntryList()
 	{
 		Vector entryList = new Vector();
-		/* get the actual values */
-		Enumeration serviceDatabaseElements = m_serviceDatabase.elements();
-		while (serviceDatabaseElements.hasMoreElements())
+		synchronized (m_serviceDatabase)
 		{
-			entryList.addElement(serviceDatabaseElements.nextElement());
+			/* get the actual values */
+			Enumeration serviceDatabaseElements = m_serviceDatabase.elements();
+			while (serviceDatabaseElements.hasMoreElements())
+			{
+				entryList.addElement(serviceDatabaseElements.nextElement());
+			}
 		}
 		return entryList;
 	}
@@ -468,7 +488,10 @@ public final class Database extends Observable implements Runnable
 	 */
 	public Enumeration getEntrySnapshotAsEnumeration()
 	{
-		return m_serviceDatabase.elements();
+		synchronized (m_serviceDatabase)
+		{
+			return getEntryList().elements();
+		}
 	}
 
 	/**

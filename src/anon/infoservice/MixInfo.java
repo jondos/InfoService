@@ -97,10 +97,22 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable {
    * @param a_mixNode The Mix node from an XML document.
    */
   public MixInfo(Element a_mixNode) throws Exception {
+	  this (a_mixNode, 0);
+  }
+
+
+  /**
+   * Creates a new MixInfo from XML description (Mix node). The state of the mix will be set to
+   * non-free (only meaningful within the context of the infoservice).
+   *
+   * @param a_mixNode The Mix node from an XML document.
+   * @param a_expireTime forces a specific expire time; takes default expire time if <= 0
+   */
+  public MixInfo(Element a_mixNode, long a_expireTime) throws Exception {
     /* use always the timeout for the infoservice context, because the JAP client currently does
      * not have a database of mixcascade entries -> no timeout for the JAP client necessary
      */
-    super(System.currentTimeMillis() + Constants.TIMEOUT_MIX);
+    super(a_expireTime <= 0 ? System.currentTimeMillis() + Constants.TIMEOUT_MIX : a_expireTime);
     /* get the ID */
     m_mixId = a_mixNode.getAttribute("id");
     /* get the name */

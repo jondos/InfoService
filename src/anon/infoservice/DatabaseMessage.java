@@ -59,13 +59,18 @@ public class DatabaseMessage extends AbstractMessage {
    * will be no appended object in this case.
    */
   public static final int ALL_ENTRIES_REMOVED = 4;
-  
+
   /**
    * This message is sent, if an observer registrates at the database. The appended object will be
    * a Vector of all database entries. This will be always the first message after the
    * registration.
    */
   public static final int INITIAL_OBSERVER_MESSAGE = 5;
+
+  /**
+   * Should be sent if all entries of a database have been renewed.
+   */
+  public static final int ALL_ENTRIES_RENEWED = 6;
 
 
   /**

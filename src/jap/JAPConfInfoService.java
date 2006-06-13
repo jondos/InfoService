@@ -267,33 +267,49 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 				{
 					public void run()
 					{
-						boolean bError = !JAPController.getInstance().updateInfoServices();
-						/* re-enable the fetch infoservices button */
-						final class RunnableSwing implements Runnable
+						while (!JAPController.getInstance().updateInfoServices())
 						{
-							final private boolean m_bError;
-							RunnableSwing(boolean b)
+							if (!JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed() &&
+								!JAPController.getInstance().isAnonConnected())
 							{
-								m_bError = b;
-							}
-
-							public void run()
-							{
-								if (m_bError)
+								int returnValue =
+									JAPDialog.showConfirmDialog(getRootPanel(),
+									JAPMessages.getString(JAPController.MSG_IS_NOT_ALLOWED),
+									JAPDialog.OPTION_TYPE_YES_NO, JAPDialog.MESSAGE_TYPE_ERROR);
+								if (returnValue == JAPDialog.RETURN_VALUE_YES)
 								{
-									JAPDialog.showErrorDialog(getRootPanel(),
-										JAPMessages.getString(
-										"settingsInfoServiceConfigBasicSettingsFetchInfoServicesError"),
-										LogType.MISC);
+									JAPModel.getInstance().allowInfoServiceViaDirectConnection(true);
+									JAPController.getInstance().updateInfoServices();
+									continue;
 								}
-								settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.
-									setEnabled(true);
 							}
+							else
+							{
+								JAPDialog.showErrorDialog(getRootPanel(),
+									JAPMessages.getString(
+										"settingsInfoServiceConfigBasicSettingsFetchInfoServicesError"),
+									LogType.MISC);
+							}
+							break;
 						}
-
-						SwingUtilities.invokeLater(new RunnableSwing(bError));
+						try
+						{
+							SwingUtilities.invokeAndWait(new Runnable()
+							{
+								public void run()
+								{
+									/* re-enable the fetch infoservices button */
+									settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.
+										setEnabled(true);
+								}
+							});
+						}
+						catch (Exception a_e)
+						{
+							// ignore
+						}
 					}
-				});
+					});
 				fetchInfoServicesThread.setDaemon(true);
 				fetchInfoServicesThread.start();
 			}

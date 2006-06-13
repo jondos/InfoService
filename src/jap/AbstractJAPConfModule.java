@@ -33,7 +33,6 @@ import javax.swing.JPanel;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 
 /**
  * This is the generic implementation for a JAP configuration module.
@@ -65,7 +64,6 @@ public abstract class AbstractJAPConfModule
 	 */
 	private class RootPanelAncestorListener implements AncestorListener
 	{
-
 		/**
 		 * This method is called when the root panel is set to visible. This only happens if the whole
 		 * configuration tab of this module is set to visible.
@@ -74,7 +72,10 @@ public abstract class AbstractJAPConfModule
 		 */
 		public void ancestorAdded(AncestorEvent event)
 		{
-			onRootPanelShown();
+			if(event.getAncestor() == m_rootPanel)
+			{
+				onRootPanelShown();
+			}
 		}
 
 		/**
