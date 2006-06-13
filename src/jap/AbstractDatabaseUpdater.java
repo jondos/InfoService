@@ -108,6 +108,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 							  getUpdatedClassName() + "update thread stopped.");
 			}
 		}, getUpdatedClassName() + "Update Thread");
+		m_updateThread.setPriority(Thread.MIN_PRIORITY);
 		m_updateThread.setDaemon(true);
 		m_updateThread.start();
 	}
