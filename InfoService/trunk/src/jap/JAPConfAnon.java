@@ -59,6 +59,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -640,6 +641,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			listModel.addElement(currentCascade);
 		}
 		m_listMixCascade.setModel(listModel);
+		m_listMixCascade.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		m_listMixCascade.setSelectedIndex(0);
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "- select First Item -- finished!");
 	}
