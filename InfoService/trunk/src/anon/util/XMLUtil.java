@@ -1139,12 +1139,21 @@ public class XMLUtil
 		}
 
 		try
-		{ //For JAXP 1.1 (for Instance Apache Crimson/Xalan shipped with Java 1.4)
+		{
+			//For JAXP 1.1 (for Instance Apache Crimson/Xalan shipped with Java 1.4)
 			//This seams to be realy stupid and complicated...
 			//But if we do a simple t.transform(), a NoClassDefError is thrown, if
 			//the new JAXP1.1 is not present, even if we NOT call saveXMLDocument, but
 			//calling any other method within JAPUtil.
 			//Dont no why --> maybe this has something to to with Just in Time compiling ?
+			/* DO NOT delete the following:
+			javax.xml.transform.Transformer transformer = javax.xml.transform.TransformerFactory.newInstance().newTransformer();
+			javax.xml.transform.Result r = new javax.xml.transform.stream.StreamResult(out);
+			javax.xml.transform.Source s = new javax.xml.transform.dom.DOMSource(node);
+			javax.xml.transform.Source s = new javax.xml.transform.dom.DOMSource(node);
+			transformer.transform(s,r);
+   */
+
 
 			Class transformerFactory = Class.forName(PACKAGE_TRANSFORMER + "TransformerFactory");
 			Object transformerFactoryInstance =
