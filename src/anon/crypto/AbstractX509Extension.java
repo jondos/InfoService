@@ -50,14 +50,12 @@ import logging.LogType;
  */
 public abstract class AbstractX509Extension
 {
-	private static AbstractX509Extension[] AVAILABLE_EXTENSIONS = new AbstractX509Extension[]
-		{(X509UnknownExtension)null, (X509SubjectKeyIdentifier)null,
-	   (X509SubjectAlternativeName)null, (X509IssuerAlternativeName)null };
-
-
-
 	/** Each subclass must contain this individual identifier. */
 	public static final String IDENTIFIER = null;
+
+	private static Class[] AVAILABLE_EXTENSIONS = new Class[]
+		{X509UnknownExtension.class, X509SubjectKeyIdentifier.class,
+		X509SubjectAlternativeName.class, X509IssuerAlternativeName.class};
 
 	private static Vector ms_classExtensions;
 
@@ -147,12 +145,21 @@ public abstract class AbstractX509Extension
 				ms_classExtensions = new Vector();
 			}
 
-			if (ms_classExtensions == null || ms_classExtensions.size() < AVAILABLE_EXTENSIONS.length)
+			if (ms_classExtensions.size() < AVAILABLE_EXTENSIONS.length)
 			{
 				LogHolder.log(LogLevel.EXCEPTION, LogType.CRYPTO,
-							  "X509 extension classes have not been loaded!");
+							  "X509 extension classes have not been loaded automatically!");
+				for (int i = 0; i < AVAILABLE_EXTENSIONS.length; i++)
+				{
+					if (!ms_classExtensions.contains(AVAILABLE_EXTENSIONS[i]))
+					{
+						ms_classExtensions.addElement(AVAILABLE_EXTENSIONS[i]);
+					}
+				}
+
 			}
 		}
+
 
 		classes = ms_classExtensions.elements();
 		while (classes.hasMoreElements())

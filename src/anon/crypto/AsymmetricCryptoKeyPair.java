@@ -182,10 +182,17 @@ public class AsymmetricCryptoKeyPair
 		dummySignature = new byte[signature.length];
 		random.nextBytes(dummySignature);
 
-		if (ByteSignature.verify(message, dummySignature, a_keyPair))
+		try
 		{
-			// verifying of the dummy signature must fail!
-			return false;
+			if (ByteSignature.verify(message, dummySignature, a_keyPair))
+			{
+				// verifying of the dummy signature must fail!
+				return false;
+			}
+		}
+		catch (Exception a_e)
+		{
+			// ignore any exception here
 		}
 
 		if (!ByteSignature.verify(message, signature, a_keyPair))
