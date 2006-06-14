@@ -357,7 +357,7 @@ public final class ResourceLoader
 			loadResources(a_strResourceSearchPath, (File) classPathFiles.nextElement(),
 						  a_instantiator, a_bRecursive, false, resources);
 		}
-		loadResources(a_strResourceSearchPath, new File(System.getProperty("user.dir")),
+		loadResources(a_strResourceSearchPath, new File(ClassUtil.getUserDir()),
 					  a_instantiator, a_bRecursive, false, resources);
 
 		return resources;
@@ -1118,17 +1118,17 @@ public final class ResourceLoader
 			/**@todo Ihis lock has almost no effect; or has it? Check the code!*/
 			synchronized (ms_classpathResourceLock)
 			{
-			StringTokenizer tokenizer;
+				StringTokenizer tokenizer;
 
-			ms_classpath = classpath;
-			ms_classpathFiles = new Vector();
+				ms_classpath = classpath;
+				ms_classpathFiles = new Vector();
 				ms_classpathResourceTypes = new Vector();
 
 				tokenizer = new StringTokenizer(ms_classpath, File.pathSeparator);
-			while (tokenizer.hasMoreTokens())
-			{
+				while (tokenizer.hasMoreTokens())
+				{
 					ms_classpathFiles.addElement(
-					   new File(new File(tokenizer.nextToken()).getAbsolutePath()));
+						new File(new File(tokenizer.nextToken()).getAbsolutePath()));
 					ms_classpathResourceTypes.addElement( (String)null);
 				}
 			}

@@ -194,12 +194,37 @@ public final class ClassUtil
 	}
 
 	/**
+	 * Returns the content of the system property user.dir
+	 * @return the content of the system property user.dir
+	 */
+	public static String getUserDir()
+	{
+		try
+		{
+			return System.getProperty("user.dir");
+		}
+		catch (SecurityException a_e)
+		{
+			// application runs as applet
+			return new File(".").toString();
+		}
+	}
+
+	/**
 	 * Returns the current java class path.
 	 * @return the current java class path
 	 */
 	public static String getClassPath()
 	{
-		return System.getProperty("java.class.path");
+		try
+		{
+			return System.getProperty("java.class.path");
+		}
+		catch (SecurityException a_e)
+		{
+			// application runs as applet
+			return getClassDirectory(ClassUtil.class).toString();
+		}
 	}
 
 	/**
@@ -216,27 +241,27 @@ public final class ClassUtil
 	 * @return all known subclasses of the given class
 	 */
 	public static Vector findSubclasses(Class a_class)
-	  {
+	{
 		Enumeration classes;
 		Vector subclasses;
 		Class possibleSubclass;
 
-	 loadClasses(a_class);
-	 classes = loadClasses(getCallingClassStatic());
-	 subclasses = new Vector();
+		loadClasses(a_class);
+		classes = loadClasses(getCallingClassStatic());
+		subclasses = new Vector();
 
-	 while (classes.hasMoreElements())
-	 {
-	  possibleSubclass = (Class) classes.nextElement();
+		while (classes.hasMoreElements())
+		{
+			possibleSubclass = (Class) classes.nextElement();
 
-	  if (a_class.isAssignableFrom(possibleSubclass))
-	  {
-	   subclasses.addElement(possibleSubclass);
-	  }
-	 }
+			if (a_class.isAssignableFrom(possibleSubclass))
+			{
+				subclasses.addElement(possibleSubclass);
+			}
+		}
 
-	 return subclasses;
-	  }
+		return subclasses;
+	}
 
 	/**
 	 * Loads all classes into cache that are in the same file structure as this class
@@ -246,16 +271,16 @@ public final class ClassUtil
 	 * @return all loaded classes
 	 */
 	public static Enumeration loadClasses()
-	  {
+	{
 		Class callingClass;
 
-	 callingClass = getCallingClassStatic();
+		callingClass = getCallingClassStatic();
 
-	 // load all classes for this class and the calling class
-	 loadClasses(callingClass);
+		// load all classes for this class and the calling class
+		loadClasses(callingClass);
 
-	 return ms_loadedClasses.elements();
-	  }
+		return ms_loadedClasses.elements();
+	}
 
 	/**
 	 * Loads all classes into cache that are in the same file structure as
@@ -265,48 +290,48 @@ public final class ClassUtil
 	 * @return all loaded classes
 	 */
 	public static Enumeration loadClasses(Class a_rootClass)
-	  {
+	{
 		PrintStream syserror;
-	 PrintStream dummyStream = new PrintStream(new ByteArrayOutputStream());
+		PrintStream dummyStream = new PrintStream(new ByteArrayOutputStream());
 		Class thisClass, callingClass;
 
-	 thisClass = getClassStatic();
-	 callingClass = getCallingClassStatic();
+		thisClass = getClassStatic();
+		callingClass = getCallingClassStatic();
 
-	 // temporarily deactivate standard error to suppress printStackStrace() messages
-	 syserror = System.err;
-	 try
-	 {
+		// temporarily deactivate standard error to suppress printStackStrace() messages
+		syserror = System.err;
+		try
+		{
 			System.setErr(dummyStream);
 
-	  // load all classes for the specified class
-	  loadClassesInternal(a_rootClass);
+			// load all classes for the specified class
+			loadClassesInternal(a_rootClass);
 
 			// reactivate standard error
 			System.setErr(syserror);
 
-	  // load all classes for this class
-	  loadClassesInternal(thisClass);
+			// load all classes for this class
+			loadClassesInternal(thisClass);
 
-	  // load all classes for the calling class
-	  if (callingClass != a_rootClass && callingClass != thisClass)
-	  {
-	   loadClassesInternal(callingClass);
-	  }
-	 }
-	 catch (Throwable a_e)
-	 {
-	  System.setErr(syserror);
-	  if (a_e instanceof Exception && !(a_e instanceof RuntimeException))
-	  {
+			// load all classes for the calling class
+			if (callingClass != a_rootClass && callingClass != thisClass)
+			{
+				loadClassesInternal(callingClass);
+			}
+		}
+		catch (Throwable a_e)
+		{
+			System.setErr(syserror);
+			if (a_e instanceof Exception && !(a_e instanceof RuntimeException))
+			{
 				/** @todo throw the exception */
-	   a_e.printStackTrace();
-	  }
-	 }
+				a_e.printStackTrace();
+			}
+		}
 
 
-	 return ms_loadedClasses.elements();
-	  }
+		return ms_loadedClasses.elements();
+	}
 
 	/**
 	 * Returns the class directory of the specified class. The class directory is either the
@@ -431,26 +456,26 @@ public final class ClassUtil
 	 * @throws IOException if an I/O error occurs
 	 */
 	private static void loadClassesInternal(Class a_rootClass) throws IOException
-	  {
+	{
 		File file;
 
 		if ((file = getClassDirectory(a_rootClass)) == null)
-	 {
-	  return;
-	 }
+		{
+			return;
+		}
 
-	 // look in the cache if the class directory has already been read
-	 if (ms_loadedDirectories.contains(file.getAbsolutePath()))
-	 {
-	  // do not load the classes again
-	  return;
-	 }
-	 ms_loadedDirectories.addElement(file.getAbsolutePath());
+		// look in the cache if the class directory has already been read
+		if (ms_loadedDirectories.contains(file.getAbsolutePath()))
+		{
+			// do not load the classes again
+			return;
+		}
+		ms_loadedDirectories.addElement(file.getAbsolutePath());
 
-	 // read all classes in the directory
-	 ResourceLoader.loadResources("/", file, new ClassInstantiator(),
+		// read all classes in the directory
+		ResourceLoader.loadResources("/", file, new ClassInstantiator(),
 									 true, false, ms_loadedClasses);
-	  }
+	}
 
 	/**
 	 * Turns class files into Class objects.
