@@ -152,7 +152,7 @@ public class JAPHtmlMultiLineLabel extends JLabel
 		{
 			// other JLabels use this method as expected (important for superclass calls)
 			m_bInitialised = true;
-			super.setText(a_newText);
+			super.setText(formatTextAsHTML(a_newText, getFont()));
 		}
 		else
 		{
