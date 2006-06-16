@@ -263,15 +263,6 @@ public final class Database extends Observable implements Runnable
 		}
 	}
 
-
-	/**
-	 * Informs the observers that all database entries have been renewed.
-	 */
-	public void sendAllEntriesRenewed()
-	{
-		notifyObservers(new DatabaseMessage(DatabaseMessage.ALL_ENTRIES_RENEWED, getEntryList()));
-	}
-
 	/**
 	 * Updates an entry in the database. If the entry is an unknown or if it is newer then the
 	 * one stored in the database for this service, the new entry is stored in the database and
@@ -417,21 +408,21 @@ public final class Database extends Observable implements Runnable
 	/**
 	 * Removes an entry from the database.
 	 *
-	 * @param deleteEntry The entry to remove. If it is not in the database, nothing is done.
+	 * @param a_entryID The ID of the entry to remove. If it is not in the database, nothing is done.
 	 * @return if the database has been changed
 	 */
-	public boolean remove(AbstractDatabaseEntry deleteEntry)
+	public boolean remove(String a_entryID)
 	{
-		if (deleteEntry != null)
+		if (a_entryID != null)
 		{
 			AbstractDatabaseEntry removedEntry;
 			synchronized (m_serviceDatabase)
 			{
 				/* we need exclusive access to the database */
-				removedEntry = (AbstractDatabaseEntry)m_serviceDatabase.remove(deleteEntry.getId());
+				removedEntry = (AbstractDatabaseEntry) m_serviceDatabase.remove(a_entryID);
 				if (removedEntry != null)
 				{
-					m_timeoutList.removeElement(deleteEntry.getId());
+					m_timeoutList.removeElement(a_entryID);
 				}
 			}
 			if (removedEntry != null)
@@ -441,6 +432,21 @@ public final class Database extends Observable implements Runnable
 				notifyObservers(new DatabaseMessage(DatabaseMessage.ENTRY_REMOVED, removedEntry));
 				return true;
 			}
+		}
+		return false;
+	}
+
+	/**
+	 * Removes an entry from the database.
+	 *
+	 * @param a_deleteEntry The entry to remove. If it is not in the database, nothing is done.
+	 * @return if the database has been changed
+	 */
+	public boolean remove(AbstractDatabaseEntry a_deleteEntry)
+	{
+		if (a_deleteEntry != null && m_DatabaseEntryClass.isAssignableFrom(a_deleteEntry.getClass()))
+		{
+			return remove(a_deleteEntry.getId());
 		}
 		return false;
 	}

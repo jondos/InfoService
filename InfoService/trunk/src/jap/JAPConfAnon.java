@@ -32,6 +32,7 @@ import java.util.Enumeration;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
+import java.util.Hashtable;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -590,30 +591,29 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	public void itemStateChanged(ItemEvent e)
 	{
-			int server = m_serverList.getSelectedIndex();
-		 MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
-		 if (cascade != null && !cascade.isUserDefined())
-		 {
-		  String selectedMixId = (String) cascade.getMixIds().elementAt(server);
-		  try
-		  {
-		   m_operatorLabel.setText(m_infoService.getOperator(selectedMixId));
-		   m_operatorLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
-		   m_locationLabel.setText(m_infoService.getLocation(selectedMixId));
-		   m_urlLabel.setText(URL_BEGIN + m_infoService.getUrl(selectedMixId) + URL_END);
-		  }
-		  catch (Exception ex)
-		  {
-		   LogHolder.log(LogLevel.ERR, LogType.GUI, "Could not retrieve information from Infoservice");
-		   m_operatorLabel.setText("");
-		   m_operatorLabel.setToolTipText("");
-		   m_locationLabel.setText("");
-		   m_urlLabel.setText("");
-		  }
-		 }
-
+		int server = m_serverList.getSelectedIndex();
+		MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
+		if (cascade != null && !cascade.isUserDefined())
+		{
+			String selectedMixId = (String) cascade.getMixIds().elementAt(server);
+			try
+			{
+				m_operatorLabel.setText(m_infoService.getOperator(selectedMixId));
+				m_operatorLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
+				m_locationLabel.setText(m_infoService.getLocation(selectedMixId));
+				m_urlLabel.setText(URL_BEGIN + m_infoService.getUrl(selectedMixId) + URL_END);
+			}
+			catch (Exception ex)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.GUI, "Could not retrieve information from Infoservice");
+				m_operatorLabel.setText("");
+				m_operatorLabel.setToolTipText("");
+				m_locationLabel.setText("");
+				m_urlLabel.setText("");
+			}
+		}
+		pRoot.validate();
 	}
-
 	private void updateMixCascadeCombo()
 	{
 		/** @todo Do this in the event thread only! */
@@ -1008,8 +1008,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	 */
 	public void valueChanged(ListSelectionEvent e)
 	{
-		m_showEditPanelButton.setEnabled(false);
-		//Object source = e.getSource();
 		if (!e.getValueIsAdjusting())
 		{
 			if (m_listMixCascade.getSelectedIndex() > -1)
@@ -1030,7 +1028,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 				if (m_infoService != null)
 				{
-					if (m_infoService.getNumOfMixes(cascadeId) == -1)
+					if (cascade.isUserDefined() || m_infoService.getNumOfMixes(cascadeId) <= 0)
 					{
 						drawServerPanel(3, "", false);
 					}
@@ -1038,46 +1036,40 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					{
 						drawServerPanel(m_infoService.getNumOfMixes(cascadeId), cascade.getName(), true);
 					}
-					if (cascade.isUserDefined())
+					m_numOfUsersLabel.setText(m_infoService.getNumOfUsers(cascadeId));
+					m_reachableLabel.setText(m_infoService.getHosts(cascadeId));
+					m_portsLabel.setText(m_infoService.getPorts(cascadeId));
+					if (m_infoService.isPay(cascadeId))
 					{
-						m_numOfUsersLabel.setText("N/A");
-						m_reachableLabel.setText(cascade.getListenerInterface(0).getHost());
-						m_portsLabel.setText("" + cascade.getListenerInterface(0).getPort());
-						m_payLabel.setText("");
+						m_payLabel.setText(JAPMessages.getString(MSG_PAYCASCADE));
 					}
 					else
 					{
-						m_numOfUsersLabel.setText(m_infoService.getNumOfUsers(cascadeId));
-						m_reachableLabel.setText(m_infoService.getHosts(cascadeId));
-						m_portsLabel.setText(m_infoService.getPorts(cascadeId));
-						if (m_infoService.isPay(cascadeId))
-						{
-							m_payLabel.setText(JAPMessages.getString(MSG_PAYCASCADE));
-						}
-						else
-						{
-							m_payLabel.setText("");
-						}
+						m_payLabel.setText("");
 					}
 				}
-		   drawServerInfoPanel(null, null, null);
+				drawServerInfoPanel(null, null, null);
 
-		   if (cascade.isUserDefined())
-		   {
-			m_showEditPanelButton.setEnabled(true);
-		   }
+				if (cascade.isUserDefined())
+				{
+					m_showEditPanelButton.setEnabled(true);
+				}
+				else
+				{
+					m_showEditPanelButton.setEnabled(false);
+				}
 
-		   if (m_Controller.getCurrentMixCascade().getName().equalsIgnoreCase(cascade.getName()))
-		   {
-			m_selectCascadeButton.setEnabled(false);
-		   }
-		   else
-		   {
-			m_selectCascadeButton.setEnabled(true);
-		   }
-		   itemStateChanged(null);
-		  }
-		 }
+				if (m_Controller.getCurrentMixCascade().getName().equalsIgnoreCase(cascade.getName()))
+				{
+					m_selectCascadeButton.setEnabled(false);
+				}
+				else
+				{
+					m_selectCascadeButton.setEnabled(true);
+				}
+				itemStateChanged(null);
+			}
+		}
 	}
 
 	/**
@@ -1141,7 +1133,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	 * @param a_message The reason of the notification, should be a JAPRoutingMessage.
 	 *
 	 */
-	public void update(Observable a_notifier, final Object a_message)
+	public void update(final Observable a_notifier, final Object a_message)
 	{
 		try
 		{
@@ -1163,16 +1155,90 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			}
 			else if (a_message != null && a_message instanceof DatabaseMessage)
 			{
+				boolean bDatabaseChanged = false;
+				DatabaseMessage message = (DatabaseMessage) a_message;
+				if (message.getMessageData() instanceof MixCascade)
+				{
+					if (message.getMessageCode() == DatabaseMessage.ENTRY_ADDED ||
+						message.getMessageCode() == DatabaseMessage.ENTRY_REMOVED ||
+						message.getMessageCode() == DatabaseMessage.ALL_ENTRIES_REMOVED)
+					{
+						bDatabaseChanged = true;
+					}
+
+
+					if (message.getMessageCode() == DatabaseMessage.ALL_ENTRIES_REMOVED)
+					{
+						Database.getInstance(MixInfo.class).removeAll();
+					}
+					else if (message.getMessageCode() == DatabaseMessage.ENTRY_REMOVED)
+					{
+						try
+						{
+							MixCascade cascade =
+								(MixCascade) ( (DatabaseMessage) a_message).getMessageData();
+							m_infoService.removeCascade(cascade);
+							Vector mixIDs = (cascade).getMixIds();
+							for (int i = 0; i < mixIDs.size(); i++)
+							{
+								Database.getInstance(MixInfo.class).remove(
+									(String) mixIDs.elementAt(i));
+							}
+						}
+						catch (Exception a_e)
+						{
+							LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
+						}
+					}
+					else if (message.getMessageCode() == DatabaseMessage.ENTRY_ADDED)
+					{
+						try
+						{
+							MixCascade cascade =
+								(MixCascade) ( (DatabaseMessage) a_message).getMessageData();
+							m_infoService.updateCascade(cascade);
+
+							Vector mixIDs = (cascade).getMixIds();
+							for (int i = 0; i < mixIDs.size(); i++)
+							{
+								String mixId = (String) mixIDs.elementAt(i);
+								MixInfo mixInfo = InfoServiceHolder.getInstance().getMixInfo(mixId);
+								if (mixInfo == null)
+								{
+									LogHolder.log(LogLevel.NOTICE, LogType.GUI,
+												  "Did not get Mix info from InfoService for Mix " + mixId +
+												  "!");
+									continue;
+								}
+								Database.getInstance(MixInfo.class).update(mixInfo);
+							}
+						}
+						catch (Exception a_e)
+						{
+							LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
+						}
+					}
+					else if (message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED)
+					{
+						try
+						{
+							m_infoService.updateCascade(
+								(MixCascade) ( (DatabaseMessage) a_message).getMessageData());
+						}
+						catch (Exception a_e)
+						{
+							LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
+						}
+					}
+
+				}
+				final boolean bFinalDatabaseChanged = bDatabaseChanged;
 				SwingUtilities.invokeLater(
-				new Runnable()
+					new Runnable()
 				{
 					public void run()
 					{
-						DatabaseMessage message = (DatabaseMessage)a_message;
-						if (message.getMessageData() instanceof MixCascade &&
-							(message.getMessageCode() == DatabaseMessage.ENTRY_ADDED ||
-							 message.getMessageCode() == DatabaseMessage.ENTRY_REMOVED ||
-							 message.getMessageCode() == DatabaseMessage.ALL_ENTRIES_REMOVED))
+						if (bFinalDatabaseChanged)
 						{
 							updateMixCascadeCombo();
 						}
@@ -1187,393 +1253,406 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			/* should not happen, but better than throwing a runtime exception */
 		}
 	}
-}
 
-/*
- * Allows usage of icons in elements of the MixCascade list
- */
-final class CustomRenderer extends DefaultListCellRenderer
-{
-	public Component getListCellRendererComponent(JList list, Object value,
-												  int index, boolean isSelected, boolean cellHasFocus)
+
+	/*
+	 * Allows usage of icons in elements of the MixCascade list
+	 */
+	final class CustomRenderer extends DefaultListCellRenderer
 	{
-		JLabel l;
-		Component comp = super.getListCellRendererComponent(list, value,
-			index, isSelected, cellHasFocus);
-		if (comp instanceof JComponent && value != null && value instanceof MixCascade)
+		public Component getListCellRendererComponent(JList list, Object value,
+			int index, boolean isSelected, boolean cellHasFocus)
 		{
-			if ( ( (MixCascade) value).isUserDefined())
+			JLabel l;
+			Component comp = super.getListCellRendererComponent(list, value,
+				index, isSelected, cellHasFocus);
+			if (comp instanceof JComponent && value != null && value instanceof MixCascade)
 			{
-				l = new JLabel( ( (MixCascade) value).getName(),
-							   GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_MANUELL, true), LEFT);
-			}
-			else if ( ( (MixCascade) value).isPayment())
-			{
-				l = new JLabel( ( (MixCascade) value).getName(),
-							   GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_PAYMENT, true), LEFT);
+				if ( ( (MixCascade) value).isUserDefined())
+				{
+					l = new JLabel( ( (MixCascade) value).getName(),
+								   GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_MANUELL, true), LEFT);
+				}
+				else if ( ( (MixCascade) value).isPayment())
+				{
+					l = new JLabel( ( (MixCascade) value).getName(),
+								   GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_PAYMENT, true), LEFT);
+				}
+				else
+				{
+					l = new JLabel( ( (MixCascade) value).getName(),
+								   GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_INTERNET, true), LEFT);
+				}
+
+				l.setToolTipText( ( (MixCascade) value).getName());
+				if (isSelected)
+				{
+					l.setOpaque(true);
+					l.setBackground(Color.lightGray);
+				}
+				JAPController c = JAPController.getInstance();
+				Font f = l.getFont();
+				if ( ( (MixCascade) value).equals(c.getCurrentMixCascade()))
+				{
+					l.setFont(new Font(f.getName(), Font.BOLD, f.getSize()));
+				}
+				else
+				{
+					l.setFont(new Font(f.getName(), Font.PLAIN, f.getSize()));
+				}
 			}
 			else
 			{
-				l = new JLabel( ( (MixCascade) value).getName(),
-							   GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_INTERNET, true), LEFT);
+				if (value != null)
+				{
+					l = new JLabel(value.toString());
+
+				}
+				else
+				{
+					l = new JLabel();
+				}
+
 			}
 
-			l.setToolTipText( ( (MixCascade) value).getName());
-			if (isSelected)
-			{
-				l.setOpaque(true);
-				l.setBackground(Color.lightGray);
-			}
-			JAPController c = JAPController.getInstance();
-			Font f = l.getFont();
-			if ( ( (MixCascade) value).equals(c.getCurrentMixCascade()))
-			{
-				l.setFont(new Font(f.getName(), Font.BOLD, f.getSize()));
-			}
-			else
-			{
-				l.setFont(new Font(f.getName(), Font.PLAIN, f.getSize()));
-			}
+			return l;
 		}
-		else
-		{
-			if (value != null)
-			{
-				l = new JLabel(value.toString());
-
-			}
-			else
-			{
-				l = new JLabel();
-			}
-
-		}
-
-		return l;
 	}
-}
 
 /**
- * Temporary image of relevant infoservice entries. For better response time
- * of the GUI.
- */
-final class InfoServiceTempLayer
-{
-	private Vector m_Cascades;
-	private boolean m_isFilled = false;
-
-	public InfoServiceTempLayer(boolean a_autoFill)
-	{
-		m_Cascades = new Vector();
-		if (a_autoFill)
-		{
-			this.fill();
-		}
-	}
-
-	public boolean isFilled()
-	{
-		return m_isFilled;
-	}
-
-	/**
-	 * Fills the temporary database by requesting info from the infoservice.
+	 * Temporary image of relevant infoservice entries. For better response time
+	 * of the GUI.
 	 */
-	public void fill()
+	final class InfoServiceTempLayer
 	{
-		m_Cascades = new Vector();
+		private Hashtable m_Cascades;
+		private boolean m_isFilled = false;
 
-		try
+		public InfoServiceTempLayer(boolean a_autoFill)
 		{
-			Vector c = Database.getInstance(MixCascade.class).getEntryList();
-			for (int j = 0; j < c.size(); j++)
+			m_Cascades = new Hashtable();
+			if (a_autoFill)
 			{
-				MixCascade cascade = (MixCascade) c.elementAt(j);
-				/* fetch the current cascade state */
-				if (!cascade.isUserDefined())
+				this.fill();
+			}
+		}
+
+		public boolean isFilled()
+		{
+			return m_isFilled;
+		}
+
+		public synchronized void removeCascade(MixCascade a_cascade)
+		{
+			if (a_cascade == null)
+			{
+				return;
+			}
+			m_Cascades.remove(a_cascade.getId());
+		}
+
+		/**
+		 * Adds or updates cached cascade information concerning ports and hosts.
+		 * @param a_cascade the cascade that should be updated
+		 */
+		public synchronized void updateCascade(MixCascade a_cascade)
+		{
+			if (a_cascade == null)
+			{
+				return;
+			}
+
+			//Get cascade id
+			String id = a_cascade.getId();
+
+			// Get hostnames and ports
+			String interfaces = "";
+			String ports = "";
+			int[] portsArray = new int[a_cascade.getNumberOfListenerInterfaces()];
+
+			for (int i = 0; i < a_cascade.getNumberOfListenerInterfaces(); i++)
+			{
+				if (interfaces.indexOf(a_cascade.getListenerInterface(i).getHost()) == -1)
 				{
-					cascade.fetchCurrentStatus();
+					interfaces += a_cascade.getListenerInterface(i).getHost();
 				}
-				//Get cascade id
-				String id = cascade.getId();
+				portsArray[i] = a_cascade.getListenerInterface(i).getPort();
 
-				// Get hostnames and ports
-				String interfaces = "";
-				String ports = "";
-				int[] portsArray = new int[cascade.getNumberOfListenerInterfaces()];
-
-				for (int i = 0; i < cascade.getNumberOfListenerInterfaces(); i++)
+				if (i != a_cascade.getNumberOfListenerInterfaces() - 1)
 				{
-					if (interfaces.indexOf(cascade.getListenerInterface(i).getHost()) == -1)
+					interfaces += "\n";
+				}
+			}
+
+			// Sort the array containing the port numbers and put the numbers into a string
+			for (int i = 0; i < portsArray.length; i++)
+			{
+				for (int k = i + 1; k < portsArray.length; k++)
+				{
+					if (portsArray[i] > portsArray[k])
 					{
-						interfaces += cascade.getListenerInterface(i).getHost();
+						int tmp = portsArray[k];
+						portsArray[k] = portsArray[i];
+						portsArray[i] = tmp;
 					}
-					portsArray[i] = cascade.getListenerInterface(i).getPort();
+				}
+			}
 
-					if (i != cascade.getNumberOfListenerInterfaces() - 1)
+			for (int i = 0; i < portsArray.length; i++)
+			{
+				ports += String.valueOf(portsArray[i]);
+				if (i != portsArray.length - 1)
+				{
+					ports += ", ";
+				}
+
+			}
+			m_Cascades.put(id, new TempCascade(id, interfaces, ports));
+		}
+
+		/**
+		 * Fills the temporary database by requesting info from the infoservice.
+		 */
+		public synchronized void fill()
+		{
+			m_Cascades = new Hashtable();
+
+			try
+			{
+				Vector c = Database.getInstance(MixCascade.class).getEntryList();
+				for (int j = 0; j < c.size(); j++)
+				{
+					MixCascade cascade = (MixCascade) c.elementAt(j);
+					/* fetch the current cascade state */
+					if (!cascade.isUserDefined())
 					{
-						interfaces += "\n";
+						cascade.fetchCurrentStatus();
 					}
-				}
+					// update hosts and ports
+					updateCascade(cascade);
 
-				// Sort the array containing the port numbers and put the numbers into a string
-				for (int i = 0; i < portsArray.length; i++)
-				{
-					for (int k = i + 1; k < portsArray.length; k++)
+					//Get mixes in cascade
+					if (cascade.isUserDefined())
 					{
-						if (portsArray[i] > portsArray[k])
-						{
-							int tmp = portsArray[k];
-							portsArray[k] = portsArray[i];
-							portsArray[i] = tmp;
-						}
-					}
-				}
-
-				for (int i = 0; i < portsArray.length; i++)
-				{
-					ports += String.valueOf(portsArray[i]);
-					if (i != portsArray.length - 1)
-					{
-						ports += ", ";
-					}
-
-				}
-				m_Cascades.addElement(new TempCascade(id, interfaces, ports));
-				//Get mixes in cascade
-				if (cascade.isUserDefined())
-				{
-					continue;
-				}
-				Vector mixIds = cascade.getMixIds();
-				for (int k = 0; k < mixIds.size(); k++)
-				{
-					String mixId = (String) mixIds.elementAt(k);
-					MixInfo mixInfo = InfoServiceHolder.getInstance().getMixInfo(mixId);
-					if (mixInfo == null)
-					{
-						LogHolder.log(LogLevel.NOTICE, LogType.GUI,
-									  "Did not get Mix info from InfoService for Mix " + mixId + "!");
 						continue;
 					}
-					Database.getInstance(MixInfo.class).update(mixInfo);
+					// update MixInfo for each mix in cascade
+					update(Database.getInstance(MixCascade.class),
+						   new DatabaseMessage(DatabaseMessage.ENTRY_ADDED, cascade));
 				}
 			}
-		}
-		catch (Exception a_e)
-		{
-		}
-
-		m_isFilled = true;
-	}
-
-	/**
-	 * Get the number of mixes in a cascade.
-	 * @param a_cascadeId String
-	 * @return int
-	 */
-	public int getNumOfMixes(String a_cascadeId)
-	{
-		MixCascade cascade = getMixCascade(a_cascadeId);
-		if (cascade != null)
-		{
-			return cascade.getNumberOfMixes();
-		}
-		return -1;
-	}
-
-	/**
-	 * Get the number of users in a cascade as a String.
-	 * @param a_cascadeId String
-	 * @return String
-	 */
-	public String getNumOfUsers(String a_cascadeId)
-	{
-		StatusInfo statusInfo = getStatusInfo(a_cascadeId);
-		if (statusInfo != null)
-		{
-			return "" + statusInfo.getNrOfActiveUsers();
-		}
-		return "N/A";
-	}
-
-	/**
-	 * Get the hostnames of a cascade.
-	 * @param a_cascadeId String
-	 * @return String
-	 */
-	public String getHosts(String a_cascadeId)
-	{
-		for (int i = 0; i < m_Cascades.size(); i++)
-		{
-			if ( ( (TempCascade) m_Cascades.elementAt(i)).getId().equalsIgnoreCase(a_cascadeId))
+			catch (Exception a_e)
 			{
-				return ( (TempCascade) m_Cascades.elementAt(i)).getHosts();
 			}
-		}
-		return "N/A";
-	}
 
-	/**
-	 * Get the ports of a cascade.
-	 * @param a_cascadeId String
-	 * @return String
-	 */
-	public String getPorts(String a_cascadeId)
-	{
-		for (int i = 0; i < m_Cascades.size(); i++)
+			m_isFilled = true;
+		}
+
+		/**
+		 * Get the number of mixes in a cascade.
+		 * @param a_cascadeId String
+		 * @return int
+		 */
+		public int getNumOfMixes(String a_cascadeId)
 		{
-			if ( ( (TempCascade) m_Cascades.elementAt(i)).getId().equalsIgnoreCase(a_cascadeId))
+			MixCascade cascade = getMixCascade(a_cascadeId);
+			if (cascade != null)
 			{
-				return ( (TempCascade) m_Cascades.elementAt(i)).getPorts();
+				return cascade.getNumberOfMixes();
 			}
+			return -1;
 		}
-		return "N/A";
-	}
 
-	/**
-	 * Get the operator name of a cascade.
-	 * @param a_mixId String
-	 * @return String
-	 */
-	public String getOperator(String a_mixId)
-	{
-		ServiceOperator operator = getServiceOperator(a_mixId);
-		String strOperator = null;
-		if (operator != null)
+		/**
+		 * Get the number of users in a cascade as a String.
+		 * @param a_cascadeId String
+		 * @return String
+		 */
+		public String getNumOfUsers(String a_cascadeId)
 		{
-			strOperator = operator.getOrganisation();
-		}
-		if (strOperator == null)
-		{
+			StatusInfo statusInfo = getStatusInfo(a_cascadeId);
+			if (statusInfo != null)
+			{
+				return "" + statusInfo.getNrOfActiveUsers();
+			}
 			return "N/A";
 		}
-		return strOperator;
+
+		/**
+		 * Get the hostnames of a cascade.
+		 * @param a_cascadeId String
+		 * @return String
+		 */
+		public String getHosts(String a_cascadeId)
+		{
+			TempCascade cascade = (TempCascade)m_Cascades.get(a_cascadeId);
+			if (cascade == null)
+			{
+				return "N/A";
+			}
+
+			return cascade.getHosts();
+		}
+
+		/**
+		 * Get the ports of a cascade.
+		 * @param a_cascadeId String
+		 * @return String
+		 */
+		public String getPorts(String a_cascadeId)
+		{
+			TempCascade cascade = (TempCascade)m_Cascades.get(a_cascadeId);
+			if (cascade == null)
+			{
+				return "N/A";
+			}
+			return cascade.getPorts();
+		}
+
+		/**
+		 * Get the operator name of a cascade.
+		 * @param a_mixId String
+		 * @return String
+		 */
+		public String getOperator(String a_mixId)
+		{
+			ServiceOperator operator = getServiceOperator(a_mixId);
+			String strOperator = null;
+			if (operator != null)
+			{
+				strOperator = operator.getOrganisation();
+			}
+			if (strOperator == null)
+			{
+				return "N/A";
+			}
+			return strOperator;
+		}
+
+		/**
+		 * Get the web URL of a cascade.
+		 * @param a_mixId String
+		 * @return String
+		 */
+		public String getUrl(String a_mixId)
+		{
+			ServiceOperator operator = getServiceOperator(a_mixId);
+			String strUrl = null;
+			if (operator != null)
+			{
+				strUrl = operator.getUrl();
+			}
+			if (strUrl == null)
+			{
+				return "N/A";
+			}
+			return strUrl;
+		}
+
+		/**
+		 * Get the location of a cascade.
+		 * @param a_mixId String
+		 * @return String
+		 */
+		public String getLocation(String a_mixId)
+		{
+			ServiceLocation location = getServiceLocation(a_mixId);
+			String strCountry = null;
+			if (location != null)
+			{
+				strCountry = location.getCountry();
+			}
+			if (strCountry == null)
+			{
+				return "N/A";
+			}
+			return strCountry;
+		}
+
+		/**
+		 * Get payment property of a cascade.
+		 * @param a_cascadeId String
+		 * @return boolean
+		 */
+		public boolean isPay(String a_cascadeId)
+		{
+			MixCascade cascade = getMixCascade(a_cascadeId);
+			if (cascade != null)
+			{
+				return cascade.isPayment();
+			}
+			return false;
+		}
+
+		private StatusInfo getStatusInfo(String a_cascadeId)
+		{
+			return (StatusInfo) Database.getInstance(StatusInfo.class).getEntryById(a_cascadeId);
+		}
+
+		private MixCascade getMixCascade(String a_cascadeId)
+		{
+			return (MixCascade) Database.getInstance(MixCascade.class).getEntryById(a_cascadeId);
+		}
+
+		private ServiceLocation getServiceLocation(String a_mixId)
+		{
+			MixInfo info = getMixInfo(a_mixId);
+
+			if (info != null)
+			{
+				return info.getServiceLocation();
+			}
+			return null;
+		}
+
+		private ServiceOperator getServiceOperator(String a_mixId)
+		{
+			MixInfo info = getMixInfo(a_mixId);
+
+			if (info != null)
+			{
+				return info.getServiceOperator();
+			}
+			return null;
+		}
+
+		private MixInfo getMixInfo(String a_mixId)
+		{
+			return (MixInfo) Database.getInstance(MixInfo.class).getEntryById(a_mixId);
+		}
 	}
 
 	/**
-	 * Get the web URL of a cascade.
-	 * @param a_mixId String
-	 * @return String
+	 *
+	 * Cascade database entry for the temporary infoservice.
 	 */
-	public String getUrl(String a_mixId)
+	final class TempCascade
 	{
-		ServiceOperator operator = getServiceOperator(a_mixId);
-		String strUrl = null;
-		if (operator != null)
+		private String m_id;
+		private String m_ports;
+		private String m_hosts;
+
+		public TempCascade(String a_id, String a_hosts, String a_ports)
 		{
-			strUrl = operator.getUrl();
+			m_id = a_id;
+			m_hosts = a_hosts;
+			m_ports = a_ports;
 		}
-		if (strUrl == null)
+
+		public String getId()
 		{
-			return "N/A";
+			return m_id;
 		}
-		return strUrl;
-	}
 
-	/**
-	 * Get the location of a cascade.
-	 * @param a_mixId String
-	 * @return String
-	 */
-	public String getLocation(String a_mixId)
-	{
-		ServiceLocation location = getServiceLocation(a_mixId);
-		String strCountry = null;
-		if (location != null)
+		public String getPorts()
 		{
-			strCountry = location.getCountry();
+			return m_ports;
 		}
-		if (strCountry == null)
+
+		public String getHosts()
 		{
-			return "N/A";
+			return m_hosts;
 		}
-		return strCountry;
+
 	}
-
-	/**
-	 * Get payment property of a cascade.
-	 * @param a_cascadeId String
-	 * @return boolean
-	 */
-	public boolean isPay(String a_cascadeId)
-	{
-		MixCascade cascade = getMixCascade(a_cascadeId);
-		if (cascade != null)
-		{
-			return cascade.isPayment();
-		}
-		return false;
-	}
-
-	private StatusInfo getStatusInfo(String a_cascadeId)
-	{
-		return (StatusInfo)Database.getInstance(StatusInfo.class).getEntryById(a_cascadeId);
-}
-
-	private MixCascade getMixCascade(String a_cascadeId)
-	{
-		return (MixCascade)Database.getInstance(MixCascade.class).getEntryById(a_cascadeId);
-	}
-
-	private ServiceLocation getServiceLocation(String a_mixId)
-	{
-		MixInfo info = getMixInfo(a_mixId);
-
-		if (info != null)
-		{
-			return info.getServiceLocation();
-		}
-		return null;
-	}
-
-	private ServiceOperator getServiceOperator(String a_mixId)
-	{
-		MixInfo info = getMixInfo(a_mixId);
-
-		if (info != null)
-		{
-			return info.getServiceOperator();
-		}
-		return null;
-	}
-
-	private MixInfo getMixInfo(String a_mixId)
-	{
-		return (MixInfo)Database.getInstance(MixInfo.class).getEntryById(a_mixId);
-	}
-}
-
-/**
- *
- * Cascade database entry for the temporary infoservice.
- */
-final class TempCascade
-{
-	private String m_id;
-	private String m_ports;
-	private String m_hosts;
-
-	public TempCascade(String a_id, String a_hosts, String a_ports)
-	{
-		m_id = a_id;
-		m_hosts = a_hosts;
-		m_ports = a_ports;
-	}
-
-	public String getId()
-	{
-		return m_id;
-	}
-
-	public String getPorts()
-	{
-		return m_ports;
-	}
-
-	public String getHosts()
-	{
-		return m_hosts;
-	}
-
 }

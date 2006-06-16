@@ -68,12 +68,6 @@ public class DatabaseMessage extends AbstractMessage {
   public static final int INITIAL_OBSERVER_MESSAGE = 5;
 
   /**
-   * Should be sent if all entries of a database have been renewed.
-   */
-  public static final int ALL_ENTRIES_RENEWED = 6;
-
-
-  /**
    * This creates a new DatabaseMessage. The message data is set to null.
    *
    * @param a_messageCode The message code. See the constants in this class.
