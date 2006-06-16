@@ -1166,8 +1166,19 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 						bDatabaseChanged = true;
 					}
 
-
-					if (message.getMessageCode() == DatabaseMessage.ALL_ENTRIES_REMOVED)
+					if (message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED)
+					{/*
+						try
+						{
+							m_infoService.updateCascade(
+								(MixCascade) ( (DatabaseMessage) a_message).getMessageData());
+						}
+						catch (Exception a_e)
+						{
+							LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
+						}*/
+					}
+					else if (message.getMessageCode() == DatabaseMessage.ALL_ENTRIES_REMOVED)
 					{
 						Database.getInstance(MixInfo.class).removeAll();
 					}
@@ -1218,19 +1229,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 							LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
 						}
 					}
-					else if (message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED)
-					{
-						try
-						{
-							m_infoService.updateCascade(
-								(MixCascade) ( (DatabaseMessage) a_message).getMessageData());
-						}
-						catch (Exception a_e)
-						{
-							LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
-						}
-					}
-
 				}
 				final boolean bFinalDatabaseChanged = bDatabaseChanged;
 				SwingUtilities.invokeLater(
