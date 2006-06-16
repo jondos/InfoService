@@ -1119,6 +1119,7 @@ public final class ResourceLoader
 			synchronized (ms_classpathResourceLock)
 			{
 				StringTokenizer tokenizer;
+				File tempPath;
 
 				ms_classpath = classpath;
 				ms_classpathFiles = new Vector();
@@ -1127,8 +1128,12 @@ public final class ResourceLoader
 				tokenizer = new StringTokenizer(ms_classpath, File.pathSeparator);
 				while (tokenizer.hasMoreTokens())
 				{
-					ms_classpathFiles.addElement(
-						new File(new File(tokenizer.nextToken()).getAbsolutePath()));
+					tempPath = new File(new File(tokenizer.nextToken()).getAbsolutePath());
+					if (ms_classpathFiles.contains(tempPath))
+					{
+						continue;
+					}
+					ms_classpathFiles.addElement(tempPath);
 					ms_classpathResourceTypes.addElement( (String)null);
 				}
 			}

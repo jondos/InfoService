@@ -218,11 +218,12 @@ public final class ClassUtil
 	{
 		try
 		{
-			return System.getProperty("java.class.path");
+			return getClassDirectory(ClassUtil.class).toString() + File.pathSeparator +
+				System.getProperty("java.class.path");
 		}
 		catch (SecurityException a_e)
 		{
-			// application runs as applet
+			// application runs as unsigned applet
 			return getClassDirectory(ClassUtil.class).toString();
 		}
 	}
