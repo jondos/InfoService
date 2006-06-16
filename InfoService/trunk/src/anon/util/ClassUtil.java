@@ -216,16 +216,7 @@ public final class ClassUtil
 	 */
 	public static String getClassPath()
 	{
-		try
-		{
-			return getClassDirectory(ClassUtil.class).toString() + File.pathSeparator +
-				System.getProperty("java.class.path");
-		}
-		catch (SecurityException a_e)
-		{
-			// application runs as unsigned applet
-			return getClassDirectory(ClassUtil.class).toString();
-		}
+		return getClassPath(false);
 	}
 
 	/**
@@ -432,6 +423,35 @@ public final class ClassUtil
 		}
 
 		return null;
+	}
+
+	/**
+	 * Returns the current java class path.
+	 * @param a_bPreventLoop true if a loop with calls in the ResourceLoader must be prevented
+	 * @return the current java class path
+	 */
+	protected static String getClassPath(boolean a_bPreventLoop)
+	{
+		String thisClass = "";
+
+		if (!a_bPreventLoop)
+		{
+			/* this is a fix for JDKs < 1.2;
+			 * Note that this will fail when running an applet under 1.1.8!! It seems impossible to get the
+			 * class directory in this case.
+			 */
+			thisClass = getClassDirectory(ClassUtil.class).toString() + File.pathSeparator;
+		}
+
+		try
+		{
+			return thisClass + System.getProperty("java.class.path");
+		}
+		catch (SecurityException a_e)
+		{
+			// application runs as unsigned applet
+			return thisClass;
+		}
 	}
 
 	/**

@@ -177,7 +177,7 @@ public final class ResourceLoader
 		}
 
 		if (resourceURL == null && ms_parentResourceFile != null &&
-			!readFilesFromClasspath().contains(ms_parentResourceFile))
+			!readFilesFromClasspath(false).contains(ms_parentResourceFile))
 		{
 			/**
 			 * The parent resource file is not contained in the class path.
@@ -239,7 +239,7 @@ public final class ResourceLoader
 		try
 		{
 			if (in == null && ms_parentResourceFile != null
-				&& !readFilesFromClasspath().contains(ms_parentResourceFile))
+				&& !readFilesFromClasspath(false).contains(ms_parentResourceFile))
 			{
 				/**
 				 * The parent resource file is not contained in the class path. Try to load the
@@ -350,13 +350,14 @@ public final class ResourceLoader
 										  boolean a_bRecursive)
 	{
 		Hashtable resources = new Hashtable();
-		Enumeration classPathFiles = readFilesFromClasspath().elements();
+		Enumeration classPathFiles = readFilesFromClasspath(false).elements();
 
 		while (classPathFiles.hasMoreElements())
 		{
 			loadResources(a_strResourceSearchPath, (File) classPathFiles.nextElement(),
 						  a_instantiator, a_bRecursive, false, resources);
 		}
+
 		loadResources(a_strResourceSearchPath, new File(ClassUtil.getUserDir()),
 					  a_instantiator, a_bRecursive, false, resources);
 
@@ -498,7 +499,8 @@ public final class ResourceLoader
 		// try to interpret the [id] as an integer number
 		try
 		{
-			return (File) readFilesFromClasspath().elementAt(Integer.parseInt(a_systemResource));
+			int resource = Integer.parseInt(a_systemResource); // separate for performance reasons
+			return (File) readFilesFromClasspath(true).elementAt(resource);
 		}
 		catch (Exception a_e)
 		{
@@ -1107,11 +1109,12 @@ public final class ResourceLoader
 	/**
 	 * Reads all resources from the classpath and stores them as files.
 	 * The method does nothing if the classpath has not changed since the last call.
+	 * @param a_bPreventLoop set true in case there may be an endless loop by calling ClassUtil.getClassPath()
 	 * @return all resources from the classpath as files
 	 */
-	private static Vector readFilesFromClasspath()
+	private static Vector readFilesFromClasspath(boolean a_bPreventLoop)
 	{
-		String classpath = ClassUtil.getClassPath();
+		String classpath = ClassUtil.getClassPath(a_bPreventLoop);
 
 		if (ms_classpath == null || !ms_classpath.equals(classpath))
 		{
