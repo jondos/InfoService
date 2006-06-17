@@ -130,31 +130,33 @@ public class KeyExchangeManager {
 		  }
 		  /* process the received XML structure */
 		  MixCascade cascade = new MixCascade(XMLUtil.toXMLDocument(xmlData).getDocumentElement(), 0, true);
-		  MixCascade cascadeInDB =
-			  (MixCascade)Database.getInstance(MixCascade.class).getEntryById(cascade.getId());
-		  if (cascadeInDB != null && !cascade.isUserDefined())
+		  if (!cascade.isUserDefined())
 		  {
-			  // check if the cascade has changed its composition since the last update
-			  if (cascadeInDB.getNumberOfMixes() != cascade.getNumberOfMixes())
+			  MixCascade cascadeInDB =
+				  (MixCascade) Database.getInstance(MixCascade.class).getEntryById(cascade.getId());
+			  if (cascadeInDB != null)
 			  {
-				  Database.getInstance(MixCascade.class).remove(cascadeInDB);
-			  }
-			  else
-			  {
-				  Vector mixIDs = cascade.getMixIds();
-				  Vector mixIDsDB = cascadeInDB.getMixIds();
-
-				  for (int i = 0; i < mixIDs.size(); i++)
+				  // check if the cascade has changed its composition since the last update
+				  if (cascadeInDB.getNumberOfMixes() != cascade.getNumberOfMixes())
 				  {
-					  if (!mixIDs.elementAt(i).equals(mixIDsDB.elementAt(i)))
+					  Database.getInstance(MixCascade.class).remove(cascadeInDB);
+				  }
+				  else
+				  {
+					  Vector mixIDs = cascade.getMixIds();
+					  Vector mixIDsDB = cascadeInDB.getMixIds();
+
+					  for (int i = 0; i < mixIDs.size(); i++)
 					  {
-						  Database.getInstance(MixCascade.class).remove(cascadeInDB);
-						  break;
+						  if (!mixIDs.elementAt(i).equals(mixIDsDB.elementAt(i)))
+						  {
+							  Database.getInstance(MixCascade.class).remove(cascadeInDB);
+							  break;
+						  }
 					  }
 				  }
 			  }
 		  }
-
 		  /* verify the signature */
 		  if (SignatureVerifier.getInstance().verifyXml(cascade.getXmlStructure(),
 			  SignatureVerifier.DOCUMENT_CLASS_MIX) == false)
