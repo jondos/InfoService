@@ -2099,7 +2099,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 						m_bAlreadyCheckedForNewDevVersion = true;
 					}
 				}
-
 			}
 			else if ( (m_proxyDirect == null) && (!anonModeSelected))
 			{
