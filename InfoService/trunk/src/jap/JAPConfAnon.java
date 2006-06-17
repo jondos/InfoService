@@ -318,8 +318,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			try
 			{
+				/** @todo what does this?
 				MixCascade dummyCascade = new MixCascade(JAPMessages.getString("dummyCascade"), 0);
-				m_Controller.getMixCascadeDatabase().addElement(dummyCascade);
+				m_Controller.getMixCascadeDatabase().addElement(dummyCascade);*/
 				this.updateMixCascadeCombo();
 				m_listMixCascade.setSelectedIndex(m_listMixCascade.getModel().getSize() - 1);
 				//m_manHostField.selectAll();
@@ -618,7 +619,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	{
 		/** @todo Do this in the event thread only! */
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "-start");
-		Enumeration it = m_Controller.getMixCascadeDatabase().elements();
+		Enumeration it = Database.getInstance(MixCascade.class).getEntrySnapshotAsEnumeration();
 		DefaultListModel listModel = new DefaultListModel();
 		CustomRenderer cr = new CustomRenderer();
 		m_listMixCascade.setCellRenderer(cr);
@@ -695,7 +696,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 				getRootPanel().setCursor(c);
 
-				if (m_Controller.getMixCascadeDatabase().size() == 0)
+				if (Database.getInstance(MixCascade.class).getNumberofEntries() == 0)
 				{
 					if (!JAPModel.isSmallDisplay() && false)
 					{
@@ -835,7 +836,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			MixCascade c = new MixCascade(m_manHostField.getText(),
 										  Integer.parseInt(m_manPortField.getText()));
 			//Check if this cascade already exists
-			Vector db = m_Controller.getMixCascadeDatabase();
+			Vector db = Database.getInstance(MixCascade.class).getEntryList();
 			for (int i = 0; i < db.size(); i++)
 			{
 				MixCascade mc = (MixCascade) db.elementAt(i);
@@ -852,14 +853,14 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 			if (valid)
 			{
-				m_Controller.getMixCascadeDatabase().addElement(c);
+				Database.getInstance(MixCascade.class).update(c);
 				if (m_Controller.getCurrentMixCascade().equals(oldCascade))
 				{
 					m_Controller.setCurrentMixCascade(c);
 					JAPDialog.showMessageDialog(this.getRootPanel(),
 												JAPMessages.getString("activeCascadeEdited"));
 				}
-				m_Controller.getMixCascadeDatabase().removeElement(oldCascade);
+				Database.getInstance(MixCascade.class).remove(oldCascade);
 
 				this.updateMixCascadeCombo();
 				m_listMixCascade.setSelectedIndex(m_listMixCascade.getModel().getSize() - 1);
@@ -895,7 +896,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			}
 			else
 			{
-				m_Controller.getMixCascadeDatabase().removeElement(cascade);
+				Database.getInstance(MixCascade.class).remove(cascade);
 				this.updateMixCascadeCombo();
 			}
 		}
@@ -916,7 +917,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			MixCascade c = new MixCascade(m_manHostField.getText(),
 										  Integer.parseInt(m_manPortField.getText()));
 
-			m_Controller.getMixCascadeDatabase().addElement(c);
+			Database.getInstance(MixCascade.class).update(c);
 			this.updateMixCascadeCombo();
 			m_listMixCascade.setSelectedIndex(m_listMixCascade.getModel().getSize() - 1);
 			m_enterCascadeButton.setVisible(false);
