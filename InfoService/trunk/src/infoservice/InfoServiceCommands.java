@@ -338,7 +338,7 @@ public class InfoServiceCommands implements JWSInternalCommands
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Mix HELO received: XML: " + (new String(a_postData)));
 			Element mixNode = (Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData),
-				MixInfo.getXmlElementName()));
+				MixInfo.XML_ELEMENT_NAME));
 			/* verify the signature */
 			if (SignatureVerifier.getInstance().verifyXml(mixNode, SignatureVerifier.DOCUMENT_CLASS_MIX))
 			{
@@ -381,7 +381,7 @@ public class InfoServiceCommands implements JWSInternalCommands
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
 						  "Mix Configure received: XML: " + (new String(a_postData)));
 			Element mixNode = (Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData),
-				MixInfo.getXmlElementName()));
+				MixInfo.XML_ELEMENT_NAME));
 			/* verify the signature */
 			if (SignatureVerifier.getInstance().verifyXml(mixNode, SignatureVerifier.DOCUMENT_CLASS_MIX) == true)
 			{

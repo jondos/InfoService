@@ -31,11 +31,16 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import anon.util.XMLUtil;
+import anon.util.IXMLEncodable;
+import org.w3c.dom.Document;
 
 /**
  * Holds the information of one single mix.
  */
-public class MixInfo extends AbstractDatabaseEntry implements IDistributable {
+public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IXMLEncodable
+{
+	public static final String XML_ELEMENT_CONTAINER_NAME = "Mixes";
+	public static final String XML_ELEMENT_NAME = "Mix";
 
   /**
    * This is the ID of the mix.
@@ -78,17 +83,6 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable {
    * Stores the XML structure for this mix.
    */
   private Element m_xmlStructure;
-
-
-  /**
-   * Returns the name of the XML element constructed by this class.
-   *
-   * @return The name of the XML element constructed by this class (Mix).
-   */
-  public static String getXmlElementName() {
-    return "Mix";
-  }
-
 
   /**
    * Creates a new MixInfo from XML description (Mix node). The state of the mix will be set to
@@ -281,5 +275,26 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable {
   public Element getXmlStructure() {
     return m_xmlStructure;
   }
+
+  /**
+   * Returns an XML node for this MixInfo. This structure includes a Signature node if the
+   * MixInfo information was created by the corresponding Mix itself.
+   *
+   * @param a_doc The XML document, which is the environment for the created XML node.
+   *
+   * @return The MixInfo XML node.
+   */
+  public Element toXmlElement(Document a_doc)
+  {
+	  Element importedXmlStructure = null;
+	  try
+	  {
+		  importedXmlStructure = (Element) (XMLUtil.importNode(a_doc, m_xmlStructure, true));
+	  }
+	  catch (Exception e)
+	  {
+	  }
+	  return importedXmlStructure;
+	}
 
 }

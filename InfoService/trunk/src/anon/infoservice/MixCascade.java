@@ -109,13 +109,16 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 */
 	private boolean m_isCertified = true;
 
-	public MixCascade(Element a_mixCascadeNode, boolean a_isCertified) throws Exception
+	private String m_mixProtocolVersion;
+
+	public MixCascade(Element a_mixCascadeNode, boolean a_isCertified) throws XMLParseException
 	{
 		this(a_mixCascadeNode);
 		m_isCertified = a_isCertified;
 	}
 
-	public MixCascade(Element a_mixCascadeNode, boolean a_isCertified, long a_expireTime) throws Exception
+	public MixCascade(Element a_mixCascadeNode, boolean a_isCertified, long a_expireTime)
+		throws XMLParseException
 	{
 		this(a_mixCascadeNode, a_expireTime);
 		m_isCertified = a_isCertified;
@@ -126,9 +129,20 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 *
 	 * @param a_mixCascadeNode The MixCascade node from an XML document.
 	 */
-	public MixCascade(Element a_mixCascadeNode) throws Exception
+	public MixCascade(Element a_mixCascadeNode) throws XMLParseException
 	{
 		this(a_mixCascadeNode, 0);
+	}
+
+	/**
+		 * Creates a new MixCascade from XML description (MixCascade node).
+		 *
+		 * @param a_mixCascadeNode The MixCascade node from an XML document.
+		 * @param a_expireTime forces a specific expire time; takes default expire time if <= 0
+		 */
+	public MixCascade(Element a_mixCascadeNode, long a_expireTime) throws XMLParseException
+	{
+		this(a_mixCascadeNode, a_expireTime, false);
 	}
 
 	/**
@@ -136,22 +150,34 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 *
 	 * @param a_mixCascadeNode The MixCascade node from an XML document.
 	 * @param a_expireTime forces a specific expire time; takes default expire time if <= 0
+	 * @param a_bFromCascade if this is a MixCascade node directly received from a cascade (it is stripped)
 	 */
-	public MixCascade(Element a_mixCascadeNode, long a_expireTime) throws Exception
+	public MixCascade(Element a_mixCascadeNode, long a_expireTime, boolean a_bFromCascade)
+		throws XMLParseException
 	{
 		/* use always the timeout for the infoservice context, because the JAP client currently does
 		 * not have a database of mixcascade entries -> no timeout for the JAP client necessary
 		 */
 		super(a_expireTime <= 0 ? (System.currentTimeMillis() + Constants.TIMEOUT_MIXCASCADE) : a_expireTime);
 		/* get the ID */
+		if (a_mixCascadeNode == null || !a_mixCascadeNode.getNodeName().equals(XML_ELEMENT_NAME))
+		{
+			throw new XMLParseException(XML_ELEMENT_NAME);
+		}
 		m_mixCascadeId = a_mixCascadeNode.getAttribute("id");
 		/* get the name */
 		m_strName = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_mixCascadeNode, "Name"), null);
-		if (m_strName == null)
+		if (m_strName == null && !a_bFromCascade)
 		{
 			throw (new XMLParseException("Name"));
 		}
 
+		m_mixProtocolVersion =
+			XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_mixCascadeNode, "MixProtocolVersion"), null);
+		if (m_mixProtocolVersion != null)
+		{
+			m_mixProtocolVersion = m_mixProtocolVersion.trim();
+		}
 		/* get payment info */
 		Node payNode = XMLUtil.getFirstChildByName(a_mixCascadeNode, "Payment");
 		if (payNode != null)
@@ -163,42 +189,45 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 			m_isPayment = false;
 		}
 
-		/* get the listener interfaces */
-		NodeList networkNodes = a_mixCascadeNode.getElementsByTagName("Network");
-		if (networkNodes.getLength() == 0)
+		if (!a_bFromCascade)
 		{
-			throw (new Exception("MixCascade: Error in XML structure."));
-		}
-		Element networkNode = (Element) (networkNodes.item(0));
-		NodeList listenerInterfacesNodes = networkNode.getElementsByTagName("ListenerInterfaces");
-		if (listenerInterfacesNodes.getLength() == 0)
-		{
-			throw (new Exception("MixCascade: Error in XML structure."));
-		}
-		Element listenerInterfacesNode = (Element) (listenerInterfacesNodes.item(0));
-		NodeList listenerInterfaceNodes = listenerInterfacesNode.getElementsByTagName("ListenerInterface");
-		if (listenerInterfaceNodes.getLength() == 0)
-		{
-			throw (new Exception("MixCascade: Error in XML structure."));
-		}
-		m_listenerInterfaces = new Vector();
-		for (int i = 0; i < listenerInterfaceNodes.getLength(); i++)
-		{
-			Element listenerInterfaceNode = (Element) (listenerInterfaceNodes.item(i));
-			m_listenerInterfaces.addElement(new ListenerInterface(listenerInterfaceNode));
+			/* get the listener interfaces */
+			NodeList networkNodes = a_mixCascadeNode.getElementsByTagName("Network");
+			if (networkNodes.getLength() == 0)
+			{
+				throw new XMLParseException("Network");
+			}
+			Element networkNode = (Element) (networkNodes.item(0));
+			NodeList listenerInterfacesNodes = networkNode.getElementsByTagName("ListenerInterfaces");
+			if (listenerInterfacesNodes.getLength() == 0)
+			{
+				throw new XMLParseException("ListenerInterfaces");
+			}
+			Element listenerInterfacesNode = (Element) (listenerInterfacesNodes.item(0));
+			NodeList listenerInterfaceNodes = listenerInterfacesNode.getElementsByTagName("ListenerInterface");
+			if (listenerInterfaceNodes.getLength() == 0)
+			{
+				throw new XMLParseException("ListenerInterface");
+			}
+			m_listenerInterfaces = new Vector();
+			for (int i = 0; i < listenerInterfaceNodes.getLength(); i++)
+			{
+				Element listenerInterfaceNode = (Element) (listenerInterfaceNodes.item(i));
+				m_listenerInterfaces.addElement(new ListenerInterface(listenerInterfaceNode));
+			}
 		}
 		/* get the IDs of all mixes in the cascade */
 		NodeList mixesNodes = a_mixCascadeNode.getElementsByTagName("Mixes");
 		if (mixesNodes.getLength() == 0)
 		{
-			throw (new Exception("MixCascade: Error in XML structure."));
+			throw new XMLParseException("Mixes");
 		}
 		Element mixesNode = (Element) (mixesNodes.item(0));
 		int nrOfMixes = Integer.parseInt(mixesNode.getAttribute("count"));
 		NodeList mixNodes = mixesNode.getElementsByTagName("Mix");
 		if ( (mixNodes.getLength() == 0) || (nrOfMixes != mixNodes.getLength()))
 		{
-			throw (new Exception("MixCascade: Error in XML structure."));
+			throw (new XMLParseException("Mix"));
 		}
 		m_mixIds = new Vector();
 		for (int i = 0; i < mixNodes.getLength(); i++)
@@ -206,15 +235,17 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 			Element mixNode = (Element) (mixNodes.item(i));
 			m_mixIds.addElement(mixNode.getAttribute("id"));
 		}
-		/* get the LastUpdate timestamp */
-		NodeList lastUpdateNodes = a_mixCascadeNode.getElementsByTagName("LastUpdate");
-		if (lastUpdateNodes.getLength() == 0)
+		if (!a_bFromCascade)
 		{
-			throw (new Exception("MixCascade: Error in XML structure."));
+			/* get the LastUpdate timestamp */
+			NodeList lastUpdateNodes = a_mixCascadeNode.getElementsByTagName("LastUpdate");
+			if (lastUpdateNodes.getLength() == 0)
+			{
+				throw new XMLParseException("LastUpdate");
+			}
+			Element lastUpdateNode = (Element) (lastUpdateNodes.item(0));
+			m_lastUpdate = Long.parseLong(lastUpdateNode.getFirstChild().getNodeValue());
 		}
-		Element lastUpdateNode = (Element) (lastUpdateNodes.item(0));
-		m_lastUpdate = Long.parseLong(lastUpdateNode.getFirstChild().getNodeValue());
-
 		/* try to get the certificate from the Signature node */
 		try
 		{
@@ -232,19 +263,19 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 				else
 				{
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-								  "MixCascade: Constructor: No appended certificates in the MixCascade structure.");
+								  "No appended certificates in the MixCascade structure.");
 				}
 			}
 			else
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-							  "MixCascade: Constructor: No signature node found while looking for MixCascade certificate.");
+							  "No signature node found while looking for MixCascade certificate.");
 			}
 		}
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC,
-						  "MixCascade: Constructor: Error while looking for appended certificates in the MixCascade structure: " +
+						  "Error while looking for appended certificates in the MixCascade structure: " +
 						  e.toString());
 		}
 
@@ -375,6 +406,16 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	public String getId()
 	{
 		return m_mixCascadeId;
+	}
+
+	/**
+	 * Returns the cascade protocol version, but only if this cascade entry was received directly from a
+	 * first mix.
+	 * @return String
+	 */
+	public String getMixProtocolVersion()
+	{
+		return m_mixProtocolVersion;
 	}
 
 	/**

@@ -892,6 +892,27 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		throw (new Exception("Can't connect to infoservice. Connections to all ListenerInterfaces failed."));
 	}
 
+	/**
+	 * Gets information about a specific cascade from the InfoService.
+	 * @param a_cascadeID String
+	 * @return MixCascade
+	 * @throws Exception
+	 */
+	public MixCascade getMixCascadeInfo(String a_cascadeID) throws Exception
+	{
+		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/cascadeinfo/" + a_cascadeID));
+		Element mixNode = doc.getDocumentElement();
+
+		/* check the signature */
+		if (SignatureVerifier.getInstance().verifyXml(mixNode, SignatureVerifier.DOCUMENT_CLASS_MIX) == false)
+		{
+			/* signature is invalid -> throw an exception */
+			throw (new Exception(
+				"Cannot verify the signature for MixCascade entry: " + XMLUtil.toString(mixNode)));
+		}
+		/* signature was valid */
+		return new MixCascade(mixNode, Long.MAX_VALUE);
+	}
 
 	/**
 	 * Get a Vector of all mixcascades the infoservice knows. If we can't get a connection with

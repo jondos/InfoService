@@ -38,9 +38,8 @@ import java.io.EOFException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
-import java.util.Enumeration;
+import java.util.Vector;
 import java.security.SignatureException;
-import java.security.InvalidKeyException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -54,6 +53,8 @@ import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
 import anon.crypto.XMLEncryption;
 import anon.crypto.XMLSignature;
+import anon.infoservice.Database;
+import anon.infoservice.MixCascade;
 import anon.util.Base64;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
@@ -128,20 +129,34 @@ public class KeyExchangeManager {
 			  }
 		  }
 		  /* process the received XML structure */
-		  Document doc = XMLUtil.toXMLDocument(xmlData);
-		  Element mixCascadeNode = doc.getDocumentElement();
-		  if (mixCascadeNode == null)
+		  MixCascade cascade = new MixCascade(XMLUtil.toXMLDocument(xmlData).getDocumentElement(), 0, true);
+		  MixCascade cascadeInDB =
+			  (MixCascade)Database.getInstance(MixCascade.class).getEntryById(cascade.getId());
+		  if (cascadeInDB != null && !cascade.isUserDefined())
 		  {
-			  throw (new XMLParseException(XMLParseException.ROOT_TAG,
-										   "No document element in received XML structure."));
+			  // check if the cascade has changed its composition since the last update
+			  if (cascadeInDB.getNumberOfMixes() != cascade.getNumberOfMixes())
+			  {
+				  Database.getInstance(MixCascade.class).remove(cascadeInDB);
+			  }
+			  else
+			  {
+				  Vector mixIDs = cascade.getMixIds();
+				  Vector mixIDsDB = cascadeInDB.getMixIds();
+
+				  for (int i = 0; i < mixIDs.size(); i++)
+				  {
+					  if (!mixIDs.elementAt(i).equals(mixIDsDB.elementAt(i)))
+					  {
+						  Database.getInstance(MixCascade.class).remove(cascadeInDB);
+						  break;
+					  }
+				  }
+			  }
 		  }
-		  if (!mixCascadeNode.getNodeName().equals("MixCascade"))
-		  {
-			  throw (new XMLParseException(XMLParseException.ROOT_TAG,
-										   "MixCascade node expected in received XML structure."));
-		  }
+
 		  /* verify the signature */
-		  if (SignatureVerifier.getInstance().verifyXml(mixCascadeNode,
+		  if (SignatureVerifier.getInstance().verifyXml(cascade.getXmlStructure(),
 			  SignatureVerifier.DOCUMENT_CLASS_MIX) == false)
 		  {
 			  throw (new SignatureException("Received XML structure has an invalid signature."));
@@ -152,93 +167,66 @@ public class KeyExchangeManager {
 		   * certificate store (needed for verification of the MixCascadeStatus
 		   * messages)
 		   */
-		  JAPCertificate firstMixCertificate = null;
-		  try
+		  if (cascade.getMixCascadeCertificate() != null)
 		  {
-			  XMLSignature documentSignature = XMLSignature.getUnverified(mixCascadeNode);
-			  Enumeration appendedCertificates = documentSignature.getCertificates().elements();
-			  /*
-			   * add the first certificate (there should be only one) to the
-			   * certificate store for later verification of MixCascadeStatus messages
-			   */
-			  if (appendedCertificates.hasMoreElements())
-			  {
-				  firstMixCertificate = (JAPCertificate) (appendedCertificates.nextElement());
-				  m_mixCascadeCertificateLock = SignatureVerifier.getInstance().
-					  getVerificationCertificateStore().addCertificateWithVerification(firstMixCertificate,
+			  m_mixCascadeCertificateLock = SignatureVerifier.getInstance().
+				  getVerificationCertificateStore().addCertificateWithVerification(
+					  cascade.getMixCascadeCertificate(),
 					  JAPCertificate.CERTIFICATE_TYPE_MIX, false);
-				  LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-					  "Added appended certificate from the MixCascade structure to the certificate store.");
-			  }
-			  else
-			  {
-				  LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-								"No appended certificates in the MixCascade structure.");
-			  }
+			  LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+							"Added appended certificate from the MixCascade structure to the certificate store.");
 		  }
-		  catch (Exception e)
+		  else
 		  {
-			  LogHolder.log(LogLevel.ERR, LogType.MISC,
-							"Error while looking for appended certificates in the MixCascade structure!", e);
+			  LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+								"No appended certificates in the MixCascade structure.");
 		  }
+
 		  /* get the used channel protocol version */
-		  NodeList channelMixProtocolVersionNodes = mixCascadeNode.getElementsByTagName(
-			  "MixProtocolVersion");
-		  if (channelMixProtocolVersionNodes.getLength() == 0)
+
+		  if (cascade.getMixProtocolVersion() == null)
 		  {
 			  throw (new XMLParseException(XMLParseException.NODE_NULL_TAG,
 				  "MixProtocolVersion (channel) node expected in received XML structure."));
 		  }
 		  /* there should be only one channel mix protocol version node */
-		  Element channelMixProtocolVersionNode = (Element) (channelMixProtocolVersionNodes.item(0));
-		  String channelMixProtocolVersionValue = XMLUtil.parseValue(channelMixProtocolVersionNode, null);
-		  if (channelMixProtocolVersionValue == null)
-		  {
-			  throw (new XMLParseException(XMLParseException.NODE_NULL_TAG,
-										   "MixProtocolVersion (channel) node has no value."));
-		  }
-		  channelMixProtocolVersionValue = channelMixProtocolVersionValue.trim();
+
 		  m_protocolWithTimestamp = false;
 
-		  m_paymentRequired = XMLUtil.parseAttribute(XMLUtil.getFirstChildByName(mixCascadeNode, "Payment"),
-													 "required", false);
+		  m_paymentRequired = cascade.isPayment();
 		  m_firstMixSymmetricCipher = null;
 		  /*
 		   * lower protocol versions not listed here are obsolete and not supported
 		   * any more
 		   */
 		  LogHolder.log(LogLevel.DEBUG, LogType.NET,
-						"Cascade is using channel-protocol version '" + channelMixProtocolVersionValue +
+						"Cascade is using channel-protocol version '" + cascade.getMixProtocolVersion() +
 						"'.");
-		  if (channelMixProtocolVersionValue.equals("0.2"))
+		  if (cascade.getMixProtocolVersion().equals("0.2"))
 		  {
 			  /* no modifications of the default-settings required */
 		  }
-		  else if (channelMixProtocolVersionValue.equals("0.4"))
+		  else if (cascade.getMixProtocolVersion().equals("0.4"))
 		  {
 			  m_firstMixSymmetricCipher = new SymCipher();
 		  }
-		  else if (channelMixProtocolVersionValue.equals("0.8"))
+		  else if (cascade.getMixProtocolVersion().equals("0.8"))
 		  {
 			  m_protocolWithTimestamp = true;
 			  m_firstMixSymmetricCipher = new SymCipher();
 		  }
-		  else if (channelMixProtocolVersionValue.equalsIgnoreCase("0.9"))
+		  else if (cascade.getMixProtocolVersion().equalsIgnoreCase("0.9"))
 		  {
 			  m_firstMixSymmetricCipher = new SymCipher();
 		  }
 		  else
 		  {
 			  throw (new UnknownProtocolVersionException(
-				  "Unknown channel protocol version used ('" + channelMixProtocolVersionValue + "')."));
+				  "Unknown channel protocol version used ('" + cascade.getMixProtocolVersion() + "')."));
 		  }
 		  /* get the information about the mixes in the cascade */
-		  NodeList mixesNodes = mixCascadeNode.getElementsByTagName("Mixes");
-		  if (mixesNodes.getLength() == 0)
-		  {
-			  throw (new XMLParseException(XMLParseException.NODE_NULL_TAG,
-										   "Mixes node expected in received XML structure."));
-		  }
+		  NodeList mixesNodes = cascade.getXmlStructure().getElementsByTagName("Mixes");
+
 		  /* there should be only one mixes node */
 		  Element mixesNode = (Element) (mixesNodes.item(0));
 		  NodeList mixNodes = mixesNode.getElementsByTagName("Mix");
@@ -247,6 +235,7 @@ public class KeyExchangeManager {
 			  throw (new XMLParseException(
 				  "No information about mixes found in the received XML structure."));
 		  }
+
 		  m_mixParameters = new MixParameters[mixNodes.getLength()];
 		  for (int i = 0; i < mixNodes.getLength(); i++)
 		  {
@@ -331,13 +320,13 @@ public class KeyExchangeManager {
 					  int downstreamPackets = XMLUtil.parseValue(downstreamPacketsNode, -1);
 					  if (downstreamPackets < 1)
 					  {
-						  throw (new XMLParseException("DownstreamPackets node has an invalid value."));
+						  throw (new XMLParseException("DownstreamPackets", "Node has an invalid value."));
 					  }
 					  NodeList channelTimeoutNodes = currentMixNode.getElementsByTagName("ChannelTimeout");
 					  if (channelTimeoutNodes.getLength() == 0)
 					  {
 						  throw (new XMLParseException(XMLParseException.NODE_NULL_TAG,
-							  "KeyExchangeManager: Constructor: ChannelTimeout node expected in received XML structure."));
+							  "ChannelTimeout node expected in received XML structure."));
 					  }
 					  /* there should be only one channel timeout node */
 					  Element channelTimeoutNode = (Element) (channelTimeoutNodes.item(0));
@@ -351,14 +340,14 @@ public class KeyExchangeManager {
 					  if (chainTimeoutNodes.getLength() == 0)
 					  {
 						  throw (new XMLParseException(XMLParseException.NODE_NULL_TAG,
-							  "KeyExchangeManager: Constructor: ChainTimeout node expected in received XML structure."));
+							  "ChainTimeout node expected in received XML structure."));
 					  }
 					  /* there should be only one chain timeout node */
 					  Element chainTimeoutNode = (Element) (chainTimeoutNodes.item(0));
 					  long chainTimeout = XMLUtil.parseValue(chainTimeoutNode, -1);
 					  if (chainTimeout < 1)
 					  {
-						  throw (new XMLParseException("ChainTimeout node has an invalid value."));
+						  throw (new XMLParseException("ChainTimeout", "Node has an invalid value."));
 					  }
 					  chainTimeout = 1000L * chainTimeout;
 					  m_fixedRatioChannelsDescription = new FixedRatioChannelsDescription(downstreamPackets,
@@ -482,7 +471,7 @@ public class KeyExchangeManager {
 
 			  keyDoc.getDocumentElement().appendChild(XMLUtil.importNode(keyDoc, keySignatureNode, true));
 
-			  if (XMLSignature.verify(keyDoc, firstMixCertificate) == null)
+			  if (XMLSignature.verify(keyDoc, cascade.getMixCascadeCertificate()) == null)
 			  {
 				  throw (new SignatureException("Invalid symmetric keys signature received."));
 			  }

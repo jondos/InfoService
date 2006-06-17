@@ -34,6 +34,8 @@ import java.util.Vector;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import anon.util.XMLUtil;
+import anon.util.Util;
+import anon.infoservice.MixCascade;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -100,6 +102,8 @@ public class InfoServiceHolder extends Observable
 	 * Function number for fetchInformation() - getMixminionNodesList().
 	 */
 	private static final int GET_MIXMINIONNODESLIST = 11;
+
+	private static final int GET_CASCADEINFO = 12;
 
 	/**
 	 * Stores the name of the root node of the XML settings for this class.
@@ -356,6 +360,10 @@ public class InfoServiceHolder extends Observable
 				{
 					result = currentInfoService.getPaymentInstance( (String) arguments.firstElement());
 				}
+				else if (functionNumber == GET_CASCADEINFO)
+				{
+					result = currentInfoService.getMixCascadeInfo((String) arguments.firstElement());
+				}
 
 				/* no error occured -> success -> update the preferred infoservice and exit */
 				InfoServiceDBEntry preferredInfoService = getPreferredInfoService();
@@ -573,7 +581,7 @@ public class InfoServiceHolder extends Observable
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "InfoServiceHolder: getJAPVersionInfo: No InfoService with the needed information available.");
+						  "No InfoService with the needed information available.");
 			return null;
 		}
 	}
@@ -594,10 +602,24 @@ public class InfoServiceHolder extends Observable
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "InfoServiceHolder: getTorNodesList: No InfoService with the needed information available.");
+						  "No InfoService with the needed information available.");
 			return null;
 		}
 	}
+
+	public MixCascade getMixCascadeInfo(String a_cascadeID)
+	{
+		try
+		{
+			return (MixCascade) (fetchInformation(GET_CASCADEINFO, Util.toVector(a_cascadeID)));
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.NET,
+						  "No InfoService with the needed information available.");
+			return null;
+		}
+}
 
 	/**
 	 * Get the list with the mixminion nodes from the infoservice. If we can't get a the information from
