@@ -92,6 +92,7 @@ import gui.dialog.PasswordContentPane;
 import jap.forward.JAPRoutingEstablishForwardedConnectionDialog;
 import jap.forward.JAPRoutingMessage;
 import jap.forward.JAPRoutingSettings;
+import jap.JAPUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -1846,7 +1847,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			//JAPWaitSplash splash = null;
 			int msgIdConnect = 0;
 			boolean canStartService = true;
-			int versionCheck = 0;
+			int versionCheck = 1;
 
 			//setAnonMode--> async!!
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "setAnonMode(" + anonModeSelected + ")");
@@ -1873,8 +1874,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 					versionCheck = versionCheck(true);
 					if (versionCheck == -1)
 					{
-						// -> we can't start anonymity
-						canStartService = false;
+						// update failed or new mandatory release version available
+						m_bAlreadyCheckedForNewDevVersion = true;
 					}
 					else if (versionCheck == 0)
 					{
@@ -2072,13 +2073,16 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 				else
 				{
-					if (!m_bAlreadyCheckedForNewVersion && !JAPModel.isInfoServiceDisabled())
+					if (versionCheck == 1 && !m_bAlreadyCheckedForNewVersion &&
+						!JAPModel.isInfoServiceDisabled())
 					{
 						versionCheck = versionCheck(true);
 						if (versionCheck == -1)
 						{
+							// update failed, check for optional update will not work, either
+							m_bAlreadyCheckedForNewDevVersion = true;
 							// -> we must stop anonymity
-							setAnonMode(false);
+							//setAnonMode(false);
 						}
 						else if (versionCheck == 0)
 						{
@@ -2090,8 +2094,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 				if (versionCheck != -1 && !m_bAlreadyCheckedForNewDevVersion &&
 					JAPModel.getInstance().isReminderForOptionalUpdateActivated())
 				{
-					versionCheck(false);
-					m_bAlreadyCheckedForNewDevVersion = true;
+					if (versionCheck(false) != 1)
+					{
+						m_bAlreadyCheckedForNewDevVersion = true;
+					}
 				}
 
 			}
@@ -2664,7 +2670,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 			else
 			{
-				message = JAPMessages.getString(MSG_NEW_OPTIONAL_VERSION, updateVersionNumber + "-dev)");
+				String dev = ")";
+				if (!JAPConstants.m_bReleasedVersion)
+				{
+					dev = "-dev)";
+				}
+				message = JAPMessages.getString(MSG_NEW_OPTIONAL_VERSION, updateVersionNumber + dev);
 				checkbox = new JAPDialog.LinkedCheckBox(false);
 			}
 			JAPDll.setWindowOnTop(getView(), true);
@@ -2735,15 +2746,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 				 */
 				if (a_bForced)
 				{
-					JAPDialog.showWarningDialog(getView(), JAPMessages.getString("youShouldUpdate") +
-												JAPMessages.getString("infoURL"));
-					notifyJAPObservers();
+
+
+					JAPDialog.showWarningDialog(getView(), JAPMessages.getString("youShouldUpdate"),
+												JAPUtil.createDialogBrowserLink(JAPMessages.getString("infoURL")));
+					//notifyJAPObservers();
 					return -1;
 				}
-				else
-				{
-					return 0;
-				}
+				return 0;
 			}
 		}
 		else

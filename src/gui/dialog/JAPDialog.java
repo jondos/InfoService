@@ -922,6 +922,37 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 
 	/**
 	 * Displays a warning message dialog. Words are wrapped automatically if a message line is too long.
+	 * @param a_parentDialog The parent dialog for this dialog. If it is null,
+	 *                       the dialog's parent frame is the default frame.
+	 * @param a_message The message to be displayed. It is interpreted as HTML. You do not need to put in
+	 * formatting tags, as the text will be auto-formatted in a way that the dialog's size is very close
+	 * to the golden ratio.
+	 * @param a_linkedInformation a clickable information message that is appended to the text
+	 */
+	public static void showWarningDialog(JAPDialog a_parentDialog, String a_message,
+										 ILinkedInformation a_linkedInformation)
+	{
+		showWarningDialog(getInternalDialog(a_parentDialog), a_message, null, a_linkedInformation);
+	}
+
+	/**
+	 * Displays a warning message dialog. Words are wrapped automatically if a message line is too long.
+	 * @param a_parentComponent The parent component for this dialog. If it is null or the parent
+	 *                          component is not within a frame, the dialog's parent frame is the
+	 *                          default frame.
+	 * @param a_message The message to be displayed. It is interpreted as HTML. You do not need to put in
+	 * formatting tags, as the text will be auto-formatted in a way that the dialog's size is very close
+	 * to the golden ratio.
+	 * @param a_linkedInformation a clickable information message that is appended to the text
+	 */
+	public static void showWarningDialog(Component a_parentComponent, String a_message,
+										 ILinkedInformation a_linkedInformation)
+	{
+		showWarningDialog(a_parentComponent, a_message, null, a_linkedInformation);
+	}
+
+	/**
+	 * Displays a warning message dialog. Words are wrapped automatically if a message line is too long.
 	 * @param a_parentComponent The parent component for this dialog. If it is null or the parent
 	 *                          component is not within a frame, the dialog's parent frame is the
 	 *                          default frame.
