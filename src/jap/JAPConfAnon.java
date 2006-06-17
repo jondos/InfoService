@@ -1166,19 +1166,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 						bDatabaseChanged = true;
 					}
 
-					if (message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED)
-					{
-						try
-						{
-							m_infoService.updateCascade(
-								(MixCascade) ( (DatabaseMessage) a_message).getMessageData());
-						}
-						catch (Exception a_e)
-						{
-							LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
-						}
-					}
-					else if (message.getMessageCode() == DatabaseMessage.ALL_ENTRIES_REMOVED)
+					if (message.getMessageCode() == DatabaseMessage.ALL_ENTRIES_REMOVED)
 					{
 						Database.getInstance(MixInfo.class).removeAll();
 					}
@@ -1201,26 +1189,28 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 							LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
 						}
 					}
-					else if (message.getMessageCode() == DatabaseMessage.ENTRY_ADDED)
+					else if (message.getMessageCode() == DatabaseMessage.ENTRY_ADDED ||
+							 message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED)
 					{
 						try
 						{
-							MixCascade cascade =
-								(MixCascade) ( (DatabaseMessage) a_message).getMessageData();
+							MixCascade cascade = (MixCascade) ( (DatabaseMessage) a_message).getMessageData();
+							MixInfo mixinfo;
+							String mixId;
 							m_infoService.updateCascade(cascade);
 
 							Vector mixIDs = (cascade).getMixIds();
 							for (int i = 0; i < mixIDs.size(); i++)
 							{
-								String mixId = (String) mixIDs.elementAt(i);
-								if (Database.getInstance(MixInfo.class).getEntryById(mixId) == null)
+								mixId = (String) mixIDs.elementAt(i);
+								mixinfo = (MixInfo)Database.getInstance(MixInfo.class).getEntryById(mixId);
+								if (mixinfo == null && !cascade.isUserDefined())
 								{
 									MixInfo mixInfo = InfoServiceHolder.getInstance().getMixInfo(mixId);
 									if (mixInfo == null)
 									{
 										LogHolder.log(LogLevel.NOTICE, LogType.GUI,
-											"Did not get Mix info from InfoService for Mix " + mixId +
-											"!");
+											"Did not get Mix info from InfoService for Mix " + mixId + "!");
 										continue;
 									}
 									Database.getInstance(MixInfo.class).update(mixInfo);
@@ -1418,32 +1408,37 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			m_Cascades = new Hashtable();
 
-			try
+			Vector c = Database.getInstance(MixCascade.class).getEntryList();
+			for (int j = 0; j < c.size(); j++)
 			{
-				Vector c = Database.getInstance(MixCascade.class).getEntryList();
-				for (int j = 0; j < c.size(); j++)
-				{
-					MixCascade cascade = (MixCascade) c.elementAt(j);
-					/* fetch the current cascade state */
-					if (!cascade.isUserDefined())
-					{
-						cascade.fetchCurrentStatus();
-					}
-					// update hosts and ports
-					updateCascade(cascade);
-
-					//Get mixes in cascade
-					if (cascade.isUserDefined())
-					{
-						continue;
-					}
-					// update MixInfo for each mix in cascade
-					update(Database.getInstance(MixCascade.class),
-						   new DatabaseMessage(DatabaseMessage.ENTRY_ADDED, cascade));
-				}
+				MixCascade cascade = (MixCascade) c.elementAt(j);
+				// update hosts and ports
+				updateCascade(cascade);
 			}
-			catch (Exception a_e)
+
+
+			for (int j = 0; j < c.size(); j++)
 			{
+				MixCascade cascade = (MixCascade) c.elementAt(j);
+				/* fetch the current cascade state */
+				if (!cascade.isUserDefined())
+				{
+					cascade.fetchCurrentStatus();
+				}
+				// update hosts and ports
+				updateCascade(cascade);
+			}
+			for (int j = 0; j < c.size(); j++)
+			{
+				MixCascade cascade = (MixCascade) c.elementAt(j);
+				//Get mixes in cascade
+				if (cascade.isUserDefined())
+				{
+					continue;
+				}
+				// update MixInfo for each mix in cascade
+				update(Database.getInstance(MixCascade.class),
+					   new DatabaseMessage(DatabaseMessage.ENTRY_ADDED, cascade));
 			}
 
 			m_isFilled = true;

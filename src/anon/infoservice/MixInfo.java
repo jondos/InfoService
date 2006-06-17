@@ -37,7 +37,6 @@ import anon.crypto.XMLSignature;
 import logging.LogHolder;
 import logging.LogLevel;
 import anon.crypto.JAPCertificate;
-import anon.crypto.CertificateContainer;
 import logging.LogType;
 import java.util.Enumeration;
 
