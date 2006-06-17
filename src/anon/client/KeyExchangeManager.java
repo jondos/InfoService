@@ -199,7 +199,9 @@ public class KeyExchangeManager {
 		  }
 		  channelMixProtocolVersionValue = channelMixProtocolVersionValue.trim();
 		  m_protocolWithTimestamp = false;
-		  m_paymentRequired = false;
+
+		  m_paymentRequired = XMLUtil.parseAttribute(XMLUtil.getFirstChildByName(mixCascadeNode, "Payment"),
+													 "required", false);
 		  m_firstMixSymmetricCipher = null;
 		  /*
 		   * lower protocol versions not listed here are obsolete and not supported
@@ -224,7 +226,6 @@ public class KeyExchangeManager {
 		  else if (channelMixProtocolVersionValue.equalsIgnoreCase("0.9"))
 		  {
 			  m_firstMixSymmetricCipher = new SymCipher();
-			  m_paymentRequired = true;
 		  }
 		  else
 		  {
