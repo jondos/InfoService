@@ -29,7 +29,6 @@ package anon.infoservice;
 
 import java.util.Enumeration;
 import java.util.Vector;
-import java.util.Observable;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
