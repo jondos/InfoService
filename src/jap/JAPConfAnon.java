@@ -1167,7 +1167,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					}
 
 					if (message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED)
-					{/*
+					{
 						try
 						{
 							m_infoService.updateCascade(
@@ -1176,7 +1176,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 						catch (Exception a_e)
 						{
 							LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
-						}*/
+						}
 					}
 					else if (message.getMessageCode() == DatabaseMessage.ALL_ENTRIES_REMOVED)
 					{
@@ -1213,15 +1213,18 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 							for (int i = 0; i < mixIDs.size(); i++)
 							{
 								String mixId = (String) mixIDs.elementAt(i);
-								MixInfo mixInfo = InfoServiceHolder.getInstance().getMixInfo(mixId);
-								if (mixInfo == null)
+								if (Database.getInstance(MixInfo.class).getEntryById(mixId) == null)
 								{
-									LogHolder.log(LogLevel.NOTICE, LogType.GUI,
-												  "Did not get Mix info from InfoService for Mix " + mixId +
-												  "!");
-									continue;
+									MixInfo mixInfo = InfoServiceHolder.getInstance().getMixInfo(mixId);
+									if (mixInfo == null)
+									{
+										LogHolder.log(LogLevel.NOTICE, LogType.GUI,
+											"Did not get Mix info from InfoService for Mix " + mixId +
+											"!");
+										continue;
+									}
+									Database.getInstance(MixInfo.class).update(mixInfo);
 								}
-								Database.getInstance(MixInfo.class).update(mixInfo);
 							}
 						}
 						catch (Exception a_e)
