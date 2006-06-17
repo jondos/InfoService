@@ -34,6 +34,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.MalformedURLException;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -56,7 +58,9 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 
 import anon.crypto.JAPCertificate;
+import platform.AbstractOS;
 import gui.JAPMessages;
+import gui.dialog.JAPDialog;
 import gui.SimpleFileFilter;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -67,6 +71,43 @@ import logging.LogType;
  */
 public final class JAPUtil
 {
+
+	public static JAPDialog.ILinkedInformation createDialogBrowserLink(String a_strUrl)
+	{
+		URL url;
+		try
+		{
+			url = new URL(a_strUrl);
+		}
+		catch (MalformedURLException a_e)
+		{
+			return null;
+		}
+		final URL myUrl = url;
+
+		return new JAPDialog.ILinkedInformation()
+		{
+			public String getMessage()
+			{
+				return myUrl.toString();
+			}
+
+			public boolean isApplicationModalityForced()
+			{
+				return false;
+			}
+
+			public int getType()
+			{
+				return JAPDialog.ILinkedInformation.TYPE_SELECTABLE_LINK;
+			}
+
+			public void clicked(boolean a_bState)
+			{
+				AbstractOS.getInstance().openURL(myUrl);
+			}
+		};
+	}
 
 	/** Returns the desired unit for this amount of Bytes (Bytes, kBytes, MBytes,GBytes)*/
 	public static String formatBytesValueOnlyUnit(long c)
