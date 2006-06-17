@@ -41,6 +41,7 @@ import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
 import anon.crypto.XMLSignature;
 import anon.util.XMLUtil;
+import anon.util.XMLParseException;
 import anon.util.IXMLEncodable;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -145,13 +146,11 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		/* get the ID */
 		m_mixCascadeId = a_mixCascadeNode.getAttribute("id");
 		/* get the name */
-		NodeList nameNodes = a_mixCascadeNode.getElementsByTagName("Name");
-		if (nameNodes.getLength() == 0)
+		m_strName = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_mixCascadeNode, "Name"), null);
+		if (m_strName == null)
 		{
-			throw (new Exception("MixCascade: Error in XML structure."));
+			throw (new XMLParseException("Name"));
 		}
-		Element nameNode = (Element) (nameNodes.item(0));
-		m_strName = nameNode.getFirstChild().getNodeValue();
 
 		/* get payment info */
 		Node payNode = XMLUtil.getFirstChildByName(a_mixCascadeNode, "Payment");
