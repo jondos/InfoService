@@ -69,6 +69,7 @@ import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
+import anon.infoservice.MixInfo;
 import anon.infoservice.ProxyInterface;
 import anon.mixminion.MixminionServiceDescription;
 import anon.pay.BI;
@@ -755,6 +756,26 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 				}
 
+				/* try to load information about user defined mixes */
+				Node nodeMixes = XMLUtil.getFirstChildByName(root, MixInfo.XML_ELEMENT_CONTAINER_NAME);
+				if (nodeMixes != null)
+				{
+					Node nodeMix = nodeMixes.getFirstChild();
+					while (nodeMix != null)
+					{
+						if (nodeMix.getNodeName().equals(MixInfo.XML_ELEMENT_NAME))
+						{
+							try
+							{
+								Database.getInstance(MixInfo.class).update(
+									new MixInfo((Element)nodeMix, Long.MAX_VALUE));
+							}
+							catch (Exception e)
+							{}
+						}
+						nodeMix = nodeMix.getNextSibling();
+					}
+				}
 				setDummyTraffic(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_DUMMY_TRAFFIC_INTERVALL,
 					-1));
 				setAutoConnect(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_AUTO_CONNECT, false));
@@ -1437,12 +1458,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 			Enumeration enumer = Database.getInstance(MixCascade.class).getEntrySnapshotAsEnumeration();
 			while (enumer.hasMoreElements())
 			{
-				MixCascade entry = (MixCascade) enumer.nextElement();
-				//if (entry.isUserDefined())
-				{
-					Element elem = entry.toXmlElement(doc);
-					elemCascades.appendChild(elem);
-				}
+				elemCascades.appendChild(((MixCascade) enumer.nextElement()).toXmlElement(doc));
+			}
+			/*stores mixes */
+			Element elemMixes = doc.createElement(MixInfo.XML_ELEMENT_CONTAINER_NAME);
+			e.appendChild(elemMixes);
+			Enumeration enumerMixes = Database.getInstance(MixInfo.class).getEntrySnapshotAsEnumeration();
+			while (enumerMixes.hasMoreElements())
+			{
+					elemMixes.appendChild(((MixInfo) enumerMixes.nextElement()).toXmlElement(doc));
 			}
 			/* store the current MixCascade */
 			MixCascade defaultMixCascade = getCurrentMixCascade();
@@ -2099,6 +2123,27 @@ public final class JAPController extends Observable implements IProxyListener, O
 						m_bAlreadyCheckedForNewDevVersion = true;
 					}
 				}
+
+				if (canStartService && !JAPModel.isInfoServiceDisabled())
+				{
+					MixCascade cascade = null;
+					try
+					{
+						cascade = m_proxyAnon.getMixCascade();
+					}
+					catch (NullPointerException a_e)
+					{
+					}
+					if (cascade != null)
+					{
+						if (Database.getInstance(MixCascade.class).getEntryById(cascade.getId()) == null)
+						{
+							Database.getInstance(MixCascade.class).update(
+								InfoServiceHolder.getInstance().getMixCascadeInfo(cascade.getId()));
+						}
+					}
+				}
+
 			}
 			else if ( (m_proxyDirect == null) && (!anonModeSelected))
 			{

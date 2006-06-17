@@ -43,6 +43,8 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
 
+import HTTPClient.ThreadInterruptedIOException;
+
 import anon.AnonChannel;
 import anon.AnonServerDescription;
 import anon.AnonService;
@@ -340,11 +342,16 @@ public class AnonClient implements AnonService, Observer
 			}
 			catch (InterruptedIOException e)
 			{
-				/* Thread.interrupt() was called while connection-establishment
-				 * -> stop all activities
-				 */
-				LogHolder.log(LogLevel.NOTICE, LogType.NET, "AnonClient: connectMixCascade(): Interrupted while connecting to MixCascade '" + a_mixCascade.toString() + "'.");
-				throw e;
+				if (e instanceof ThreadInterruptedIOException)
+				{
+					/* Thread.interrupt() was called while connection-establishment
+					 * -> stop all activities
+					 */
+					LogHolder.log(LogLevel.NOTICE, LogType.NET,
+								  "Interrupted while connecting to MixCascade '" + a_mixCascade.toString() +
+								  "'.");
+					throw e;
+				}
 			}
 			catch (Exception e)
 			{
