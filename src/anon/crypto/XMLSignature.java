@@ -50,6 +50,7 @@ import anon.util.Util;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.io.DataOutputStream;
 
 /**
  * This class stores and creates signatures of XML nodes. The signing and verification processes
@@ -123,31 +124,39 @@ public final class XMLSignature implements IXMLEncodable
 		node = XMLUtil.getFirstChildByName(m_elemSignature, ELEM_SIGNED_INFO);
 		if (node == null)
 		{
-			throw new XMLParseException(ELEM_SIGNED_INFO);
+
+			m_signedInfoCanonical = toCanonicalDeprecated(m_elemSignature);
+			if (m_signedInfoCanonical == null)
+			{
+				throw new XMLParseException(ELEM_SIGNED_INFO);
+			}
 		}
-		m_signedInfoCanonical = toCanonical(node);
-
-		/** @todo SIGNATURE_METHOD is optional due to compatibility reasons; make this mandatory */
-		subnode = XMLUtil.getFirstChildByName(node, ELEM_SIGNATURE_METHOD);
-		m_signatureMethod = XMLUtil.parseValue(subnode, "");
-
-		node = XMLUtil.getFirstChildByName(node, ELEM_REFERENCE);
-		if (node == null)
+		else
 		{
-			throw new XMLParseException(ELEM_REFERENCE);
-		}
-		m_referenceURI = XMLUtil.parseAttribute( (Element) node, ATTR_URI, "");
+			m_signedInfoCanonical = toCanonical(node);
+			/** @todo SIGNATURE_METHOD is optional due to compatibility reasons; make this mandatory */
+			subnode = XMLUtil.getFirstChildByName(node, ELEM_SIGNATURE_METHOD);
+			m_signatureMethod = XMLUtil.parseValue(subnode, "");
 
-		/** @todo DIGEST_METHOD is optional due to compatibility reasons; make this mandatory */
-		subnode = XMLUtil.getFirstChildByName(node, ELEM_DIGEST_METHOD);
-		m_digestMethod = XMLUtil.parseValue(subnode, "");
+			node = XMLUtil.getFirstChildByName(node, ELEM_REFERENCE);
+			if (node == null)
+			{
+				throw new XMLParseException(ELEM_REFERENCE);
+			}
+			m_referenceURI = XMLUtil.parseAttribute( (Element) node, ATTR_URI, "");
 
-		node = XMLUtil.getFirstChildByName(node, ELEM_DIGEST_VALUE);
-		if (node == null)
-		{
-			throw new XMLParseException(ELEM_DIGEST_VALUE);
+			/** @todo DIGEST_METHOD is optional due to compatibility reasons; make this mandatory */
+			subnode = XMLUtil.getFirstChildByName(node, ELEM_DIGEST_METHOD);
+			m_digestMethod = XMLUtil.parseValue(subnode, "");
+
+			node = XMLUtil.getFirstChildByName(node, ELEM_DIGEST_VALUE);
+			if (node == null)
+			{
+				throw new XMLParseException(ELEM_DIGEST_VALUE);
+			}
+			m_digestValue = XMLUtil.parseValue(node, "");
 		}
-		m_digestValue = XMLUtil.parseValue(node, "");
+
 
 		node = XMLUtil.getFirstChildByName(m_elemSignature, ELEM_SIGNATURE_VALUE);
 		if (node == null)
@@ -1008,7 +1017,43 @@ public final class XMLSignature implements IXMLEncodable
 		return out.toByteArray();
 
 	}
+	/**
+	 * Is only used if no digest value is found. Then, the entire document is verified against the signature.
+	 * @todo mark this as deprecated and remove
+	 * @param a_inputNode Node
+	 * @return byte[]
+	 */
+	private static byte[] toCanonicalDeprecated(Node a_inputNode)
+	{
+		if (a_inputNode == null || a_inputNode.getPreviousSibling() == null)
+		{
+			return null;
+		}
 
+		byte[] dataToVerify;
+		Node parent;
+
+		parent = a_inputNode.getParentNode();
+		parent.removeChild(a_inputNode);
+		dataToVerify = XMLUtil.toByteArray(parent.getOwnerDocument());
+		parent.appendChild(a_inputNode);
+
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		DataOutputStream dataOut = new DataOutputStream(out);
+		try
+		{
+			dataOut.writeShort(dataToVerify.length);
+			dataOut.flush();
+			out.write(dataToVerify);
+			out.flush();
+			return out.toByteArray();
+		}
+		catch (IOException a_e)
+		{
+			LogHolder.log(LogLevel.NOTICE, LogType.CRYPTO, "Could not make xml data canonical!", a_e);
+			return null;
+		}
+	}
 	/**
 	 * Creates a byte array from an XML node tree.
 	 * @param inputNode The node (incl. the whole tree) which is flattened to a byte array.
@@ -1021,8 +1066,7 @@ public final class XMLSignature implements IXMLEncodable
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		if (makeCanonical(inputNode, out, false, null) == -1)
 		{
-			throw new XMLParseException(inputNode.getNodeName(),
-										"Could not make the node canonical!");
+			throw new XMLParseException(inputNode.getNodeName(), "Could not make the node canonical!");
 		}
 
 		try
@@ -1194,7 +1238,15 @@ public final class XMLSignature implements IXMLEncodable
 
 		try
 		{
-			sha1 = MessageDigest.getInstance("SHA-1");
+			if (a_signature.getDigestMethod() == null)
+			{
+				// no digest was used; message is verified directly
+				return true;
+			}
+			else
+			{
+				sha1 = MessageDigest.getInstance("SHA-1");
+			}
 		}
 		catch (NoSuchAlgorithmException a_e)
 		{

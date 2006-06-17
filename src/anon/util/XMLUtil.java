@@ -68,6 +68,7 @@ public class XMLUtil
 	private final static String XML_STR_BOOLEAN_TRUE = "true";
 	private final static String XML_STR_BOOLEAN_FALSE = "false";
 	private static final String PACKAGE_TRANSFORMER = "javax.xml.transform.";
+	private static final String HIERARCHY_REQUEST_ERR = "HIERARCHY_REQUEST_ERR: ";
 	private static DocumentBuilder ms_DocumentBuilder;
 	private static boolean m_bCheckedHumanReadableFormatting = false;
 	private static boolean m_bNeedsHumanReadableFormatting = true;
@@ -577,9 +578,12 @@ public class XMLUtil
 	 * @throws Exception if an error occurs
 	 * @return a copy of the source node with the given document as owner document
 	 */
-	public static Node importNode(Document a_doc, Node a_source, boolean a_bDeep) throws Exception
+	public static Node importNode(Document a_doc, Node a_source, boolean a_bDeep) throws XMLParseException
 	{
-
+		if (a_doc == null || a_source == null)
+		{
+			return null;
+		}
 		Node newnode = null;
 
 		// Sigh. This doesn't work; too many nodes have private data that
@@ -655,7 +659,7 @@ public class XMLUtil
 				  newentity.setNotationName(srcentity.getNotationName());
 				  // Kids carry additional value
 				  newnode = newentity;*/
-				throw new Exception("HIERARCHY_REQUEST_ERR");
+				throw new XMLParseException(a_source.getNodeName(), HIERARCHY_REQUEST_ERR + "Entity");
 				//break;
 			}
 
@@ -705,7 +709,7 @@ public class XMLUtil
 				 // that here. Arguably we should. Consider. ?????
 				 newnode = newdoctype;
 				 break;*/
-				throw new Exception("HIERARCHY_REQUEST_ERR");
+				throw new XMLParseException(a_source.getNodeName(), HIERARCHY_REQUEST_ERR + "DocumentType");
 
 			}
 
@@ -727,14 +731,14 @@ public class XMLUtil
 				   newnode = newnotation;
 				   // No name, no value
 				   break;*/
-				throw new Exception("HIERARCHY_REQUEST_ERR");
+				throw new XMLParseException(a_source.getNodeName(), HIERARCHY_REQUEST_ERR + "Notation");
 
 			}
 
 			case Node.DOCUMENT_NODE: // Document can't be child of Document
 			default:
 			{ // Unknown node type
-				throw new Exception("HIERARCHY_REQUEST_ERR");
+				throw new XMLParseException(a_source.getNodeName(), HIERARCHY_REQUEST_ERR + "Document");
 			}
 		}
 
