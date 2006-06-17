@@ -1692,11 +1692,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 	}
 
-	public Vector getMixCascadeDatabase()
-	{
-		return Database.getInstance(MixCascade.class).getEntryList();
-	}
-
 	public void applyProxySettingsToInfoService(boolean a_bUseAuth)
 	{
 		if (m_Model.getProxyInterface() != null && m_Model.getProxyInterface().isValid())

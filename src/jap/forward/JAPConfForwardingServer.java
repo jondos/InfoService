@@ -81,6 +81,7 @@ import logging.LogLevel;
 import logging.LogType;
 import gui.*;
 import gui.dialog.*;
+import anon.infoservice.Database;
 
 /**
  * This is the configuration GUI for the JAP forwarding server component.
@@ -1469,7 +1470,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 					}
 				}
 				//Add manual cascades
-				cascades = JAPController.getInstance().getMixCascadeDatabase().elements();
+				cascades = Database.getInstance(MixCascade.class).getEntrySnapshotAsEnumeration();
 				while (cascades.hasMoreElements())
 				{
 					MixCascade cascade = ( (MixCascade) cascades.nextElement());
@@ -1523,7 +1524,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		m_knownInfoServicesListModel.clear();
 
 		//Fill cascades-list
-		Enumeration it = JAPController.getInstance().getMixCascadeDatabase().elements();
+		Enumeration it = Database.getInstance(MixCascade.class).getEntrySnapshotAsEnumeration();
 		MixCascade currentCascade = JAPController.getInstance().getCurrentMixCascade();
 		boolean bCurrentAlreadyAdded = false;
 		while (it.hasMoreElements())

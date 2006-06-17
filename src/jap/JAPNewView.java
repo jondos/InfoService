@@ -94,6 +94,7 @@ import logging.LogLevel;
 import logging.LogType;
 import anon.proxy.IProxyListener;
 import gui.dialog.JAPDialog;
+import anon.infoservice.Database;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver
@@ -1477,7 +1478,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
 			//String strCascadeName = currentMixCascade.getName();
-			Vector v = m_Controller.getMixCascadeDatabase();
+			Vector v = Database.getInstance(MixCascade.class).getEntryList();
 			m_bIgnoreAnonComboEvents = true;
 			boolean bMixCascadeAlreadyIncluded = false;
 			m_comboAnonServices.removeAllItems();
