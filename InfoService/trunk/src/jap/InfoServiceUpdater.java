@@ -66,7 +66,11 @@ public class InfoServiceUpdater extends AbstractDatabaseUpdater
 		}
 	}
 
-	public Vector getUpdatedEntries()
+	protected void doCleanup()
+	{
+	}
+
+	protected Vector getUpdatedEntries()
 	{
 		return  InfoServiceHolder.getInstance().getInfoServices();
 	}

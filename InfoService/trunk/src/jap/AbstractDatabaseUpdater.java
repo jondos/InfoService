@@ -264,12 +264,16 @@ public abstract class AbstractDatabaseUpdater implements Observer
 				}
 			}
 
+			doCleanup();
+
 			if (getUpdatedClass() == MixCascade.class && updated)
 			{
 				JAPController.getInstance().notifyJAPObservers();
 			}
 		}
 	}
+
+	protected abstract void doCleanup();
 
 	protected abstract AbstractDatabaseEntry getPreferredEntry();
 	protected abstract void setPreferredEntry(AbstractDatabaseEntry a_preferredEntry);
