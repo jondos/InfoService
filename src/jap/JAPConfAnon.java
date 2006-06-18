@@ -104,7 +104,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	private InfoServiceTempLayer m_infoService;
 
-	private JButton m_bttnFetchCascades;
 	private JList m_listMixCascade;
 
 	private JAPController m_Controller;
@@ -162,19 +161,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	public void recreateRootPanel()
 	{
 		Font font = getFontSetting();
-		m_bttnFetchCascades = new JButton(JAPMessages.getString("settingsAnonFetch"));
-		m_bttnFetchCascades.setFont(font);
-		if (JAPModel.isSmallDisplay())
-		{
-			m_bttnFetchCascades.setMargin(SMALL_BUTTON_MARGIN);
-		}
-		m_bttnFetchCascades.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				fetchCascades(true, true);
-			}
-		});
 		m_listMixCascade = new JList();
 		m_listMixCascade.addListSelectionListener(this);
 		m_listMixCascade.addMouseListener(this);
@@ -686,6 +672,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private void fetchCascades(final boolean bErr, final boolean a_bForceCascadeUpdate)
 	{
 		m_reloadCascadesButton.setEnabled(false);
+		final Component component = getRootPanel();
 		Runnable doIt = new Runnable()
 		{
 			public void run()
@@ -696,7 +683,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 				if (a_bForceCascadeUpdate)
 				{
-					m_Controller.fetchMixCascades(bErr);
+					m_Controller.fetchMixCascades(bErr, component);
 				}
 				//Update the temporary infoservice database
 				m_infoService.fill();
@@ -777,7 +764,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		else if (e.getSource() == m_reloadCascadesButton)
 		{
-			fetchCascades(false, true);
+			fetchCascades(true, true);
 		}
 		else if (e.getSource() == m_selectCascadeButton)
 		{

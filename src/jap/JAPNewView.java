@@ -46,6 +46,7 @@ import java.awt.Insets;
 import java.awt.MediaTracker;
 import java.awt.Point;
 import java.awt.Toolkit;
+import java.awt.Component;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -1718,6 +1719,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private synchronized void fetchMixCascadesAsync(final boolean bShowError)
 	{
 		m_bttnReload.setEnabled(false);
+		final Component component = this;
 		Runnable doFetchMixCascades = new Runnable()
 		{
 			public void run()
@@ -1725,7 +1727,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
 				m_Controller.updateInfoServices();
-				m_Controller.fetchMixCascades(bShowError);
+				m_Controller.fetchMixCascades(bShowError, component);
 				setCursor(Cursor.getDefaultCursor());
 				SwingUtilities.invokeLater(new Runnable()
 				{

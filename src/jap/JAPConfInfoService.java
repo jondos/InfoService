@@ -80,7 +80,7 @@ import gui.dialog.JAPDialog;
 /**
  * This is the configuration GUI for the infoservice.
  */
-public class JAPConfInfoService extends AbstractJAPConfModule
+public class JAPConfInfoService extends AbstractJAPConfModule implements Observer
 {
 	private static final String MSG_ALLOW_DIRECT_CONNECTION = JAPConfInfoService.class.getName() +
 		"_allowDirectConnection";
@@ -112,6 +112,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 	public JAPConfInfoService()
 	{
 		super(new JAPConfInfoServiceSavePoint());
+		JAPModel.getInstance().addObserver(this);
 	}
 
 	/**
@@ -161,6 +162,15 @@ public class JAPConfInfoService extends AbstractJAPConfModule
 	{
 		return JAPMessages.getString("confTreeInfoServiceLeaf");
 	}
+
+	public void update(Observable a_notifier, Object a_message)
+	{
+		if (a_message != null && a_message.equals(JAPModel.CHANGED_ALLOW_INFOSERVICE_DIRECT_CONNECTION))
+		{
+			m_cbxAllowNonAnonymousConnection.setSelected(
+						 JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed());
+		}
+}
 
 	/**
 	 * Creates the infoservice configuration panel with all components.
