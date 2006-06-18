@@ -185,16 +185,13 @@ public class KeyExchangeManager {
 		  }
 
 		  /* get the used channel protocol version */
-
 		  if (cascade.getMixProtocolVersion() == null)
 		  {
 			  throw (new XMLParseException(XMLParseException.NODE_NULL_TAG,
 				  "MixProtocolVersion (channel) node expected in received XML structure."));
 		  }
-		  /* there should be only one channel mix protocol version node */
 
 		  m_protocolWithTimestamp = false;
-
 		  m_paymentRequired = cascade.isPayment();
 		  m_firstMixSymmetricCipher = null;
 		  /*

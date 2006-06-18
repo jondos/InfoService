@@ -32,6 +32,9 @@ import java.util.Vector;
 import anon.infoservice.AbstractDatabaseEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.MixCascade;
+import anon.infoservice.MixInfo;
+import anon.infoservice.Database;
+import logging.*;
 
 /**
  * Updates the list of available MixCascades.
@@ -57,7 +60,44 @@ public class MixCascadeUpdater extends AbstractDatabaseUpdater
 		}
 	}
 
-	public Vector getUpdatedEntries()
+	/**
+	 * Removes all MixInfo entries that exist without a cascade.
+	 */
+	protected void doCleanup()
+	{
+		LogHolder.log(LogLevel.NOTICE, LogType.MISC, "Do MixInfo database cleanup.");
+
+		Vector mixes = Database.getInstance(MixInfo.class).getEntryList();
+		Vector cascades = Database.getInstance(MixCascade.class).getEntryList();
+		MixInfo currentMix;
+		Vector currentCascadeMixes;
+
+		loop:
+		for (int i = 0; i < mixes.size(); i++)
+		{
+			currentMix = (MixInfo)mixes.elementAt(i);
+			if (Database.getInstance(MixCascade.class).getEntryById(currentMix.getId()) != null)
+			{
+				continue;
+			}
+			for (int j = 0; j < cascades.size(); j++)
+			{
+				currentCascadeMixes = ((MixCascade)cascades.elementAt(j)).getMixIds();
+				for (int k = 1; k < currentCascadeMixes.size(); k++)
+				{
+					if (currentCascadeMixes.elementAt(k).equals(currentMix.getId()))
+					{
+						continue loop;
+					}
+				}
+			}
+			Database.getInstance(MixInfo.class).remove(currentMix);
+			LogHolder.log(LogLevel.INFO, LogType.MISC, "Cleaned MixInfo DB entry: " + currentMix.getId());
+		}
+
+}
+
+	protected Vector getUpdatedEntries()
 	{
 		return  InfoServiceHolder.getInstance().getMixCascades();
 	}

@@ -149,6 +149,7 @@ public final class JAPCertificate // extends X509CertificateStructure
 
 
 	private IMyPublicKey m_PubKey;
+	private String m_id;
 	private String m_sha1Fingerprint;
 	private String m_md5Fingerprint;
 	private Validity m_validity;
@@ -190,6 +191,7 @@ public final class JAPCertificate // extends X509CertificateStructure
 		m_subject = new X509DistinguishedName(m_bcCertificate.getSubject());
 		m_issuer = new X509DistinguishedName(m_bcCertificate.getIssuer());
 		m_extensions = new X509Extensions(m_bcCertificate.getTBSCertificate().getExtensions());
+		m_id = m_sha1Fingerprint + m_issuer + m_validity.getValidFrom() + m_validity.getValidTo();
 	}
 
 	/**
@@ -633,7 +635,7 @@ public final class JAPCertificate // extends X509CertificateStructure
 	 */
 	public String getId()
 	{
-		return m_sha1Fingerprint;
+		return m_id;
 	}
 
 	/** Returns the public key of the certificate.
