@@ -103,6 +103,7 @@ public class KeyExchangeManager {
    * @throws SignatureException
    * @throws IOException
    * @throws UnknownProtocolVersionException
+   * @todo remove MixInfo entries when changes in the certificate ID of a mix are discovered
    */
   public KeyExchangeManager(InputStream a_inputStream, OutputStream a_outputStream) throws
 	  XMLParseException, SignatureException, IOException, UnknownProtocolVersionException
