@@ -45,8 +45,9 @@ public final class JAPModel extends Observable
 	public static final String DLL_VERSION_UPDATE = "dllVersionUpdate";
 	public static final String XML_REMIND_OPTIONAL_UPDATE = "remindOptionalUpdate";
 
-	//
+	// observer messages
 	public static final Integer CHANGED_INFOSERVICE_AUTO_UPDATE = new Integer(0);
+	public static final Integer CHANGED_ALLOW_INFOSERVICE_DIRECT_CONNECTION = new Integer(1);
 
 	private static final int DIRECT_CONNECTION_INFOSERVICE = 0;
 	private static final int DIRECT_CONNECTION_PAYMENT = 1;
@@ -303,7 +304,15 @@ public final class JAPModel extends Observable
 
 	public void allowInfoServiceViaDirectConnection(boolean a_bAllowInfoServiceViaDirectConnection)
 	{
-		m_bAllowInfoServiceViaDirectConnection = a_bAllowInfoServiceViaDirectConnection;
+		synchronized (this)
+		{
+			if (m_bAllowInfoServiceViaDirectConnection != a_bAllowInfoServiceViaDirectConnection)
+			{
+				m_bAllowInfoServiceViaDirectConnection = a_bAllowInfoServiceViaDirectConnection;
+				setChanged();
+			}
+		}
+		notifyObservers(CHANGED_ALLOW_INFOSERVICE_DIRECT_CONNECTION);
 	}
 
 	public void allowPaymentViaDirectConnection(boolean a_bAllowPaymentViaDirectConnection)

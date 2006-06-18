@@ -2621,22 +2621,20 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 * Get all available mixcascades from the infoservice and store it in the database.
 	 * @param bShowError should an Error Message be displayed if something goes wrong ?
 	 */
-	public void fetchMixCascades(boolean bShowError)
+	public void fetchMixCascades(boolean bShowError, Component a_view)
 	{
-		LogHolder.log(LogLevel.INFO, LogType.MISC,
-					  "JAPController: fetchMixCascades: Trying to fetch mixcascades from infoservice.");
+		LogHolder.log(LogLevel.INFO, LogType.MISC, "Trying to fetch mixcascades from infoservice.");
 
 		while (!m_MixCascadeUpdater.update())
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET, "No connection to infoservices.");
-			if (!JAPModel.isSmallDisplay() && (bShowError ||
-											   Database.getInstance(
-				MixCascade.class).getNumberofEntries() == 0))
+			if (!JAPModel.isSmallDisplay() &&
+				(bShowError || Database.getInstance(MixCascade.class).getNumberofEntries() == 0))
 			{
 				if (!JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed() && !isAnonConnected())
 				{
 					int returnValue =
-						JAPDialog.showConfirmDialog(getView(), JAPMessages.getString(MSG_IS_NOT_ALLOWED),
+						JAPDialog.showConfirmDialog(a_view, JAPMessages.getString(MSG_IS_NOT_ALLOWED),
 						JAPDialog.OPTION_TYPE_YES_NO, JAPDialog.MESSAGE_TYPE_ERROR);
 					if (returnValue == JAPDialog.RETURN_VALUE_YES)
 					{
@@ -2647,7 +2645,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 				else
 				{
-					JAPDialog.showErrorDialog(getView(), JAPMessages.getString("errorConnectingInfoService"),
+					JAPDialog.showErrorDialog(a_view, JAPMessages.getString("errorConnectingInfoService"),
 											  LogType.NET);
 				}
 			}
