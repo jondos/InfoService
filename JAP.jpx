@@ -134,6 +134,7 @@
   <property category="java.sapient" name="UMM" value="true"/>
   <property category="java.sapient" name="URSP" value="true"/>
   <property category="javaFormatting" name="EventMatch" value="0"/>
+  <property category="javaFormatting" name="alwaysClasses" value="1"/>
   <property category="javaFormatting" name="classBraceNextLine" value="1"/>
   <property category="javaFormatting" name="extendsOnNewLine" value="0"/>
   <property category="javaFormatting" name="identCase" value="1"/>
@@ -651,7 +652,13 @@
     <property category="archiving" name="contentRules.245" value="F:help/update_pt.html;help/update_pt.html"/>
     <property category="archiving" name="contentRules.246" value="F:images/meterNoConnection.gif;images/meterNoConnection.gif"/>
     <property category="archiving" name="contentRules.247" value="F:certificates/acceptedMixCAs/japmixroot.cer;certificates/acceptedMixCAs/japmixroot.cer"/>
+    <property category="archiving" name="contentRules.248" value="F:images/cert.gif;images/cert.gif"/>
+    <property category="archiving" name="contentRules.249" value="F:images/certdisabled.gif;images/certdisabled.gif"/>
     <property category="archiving" name="contentRules.25" value="F:help/IEProxyConfHTTPS_en.gif;help/IEProxyConfHTTPS_en.gif"/>
+    <property category="archiving" name="contentRules.250" value="F:images/certinactive.gif;images/certinactive.gif"/>
+    <property category="archiving" name="contentRules.251" value="F:images/certinvalid.gif;images/certinvalid.gif"/>
+    <property category="archiving" name="contentRules.252" value="F:images/certinvalidinactive.gif;images/certinvalidinactive.gif"/>
+    <property category="archiving" name="contentRules.253" value="F:images/jap.pay.AccountSettingsPanel_coins-disabled.gif;images/jap.pay.AccountSettingsPanel_coins-disabled.gif"/>
     <property category="archiving" name="contentRules.26" value="F:help/index_de.html;help/index_de.html"/>
     <property category="archiving" name="contentRules.27" value="F:help/index_en.html;help/index_en.html"/>
     <property category="archiving" name="contentRules.28" value="F:help/infoservice_de.html;help/infoservice_de.html"/>
