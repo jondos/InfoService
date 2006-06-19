@@ -113,14 +113,14 @@ public abstract class AbstractDatabaseUpdater implements Observer
 		m_updateThread.start();
 	}
 
-	public synchronized void update(Observable a_observable, Object a_argument)
+	public void update(Observable a_observable, Object a_argument)
 	{
 		if (!(a_argument instanceof Integer) ||
 			!((Integer)a_argument).equals(JAPModel.CHANGED_INFOSERVICE_AUTO_UPDATE))
 		{
 			return;
 		}
-		else
+		synchronized (this)
 		{
 			synchronized (m_updateThread)
 			{
