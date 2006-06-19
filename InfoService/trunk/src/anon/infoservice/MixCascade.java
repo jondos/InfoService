@@ -245,6 +245,10 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 			Element lastUpdateNode = (Element) (lastUpdateNodes.item(0));
 			m_lastUpdate = Long.parseLong(lastUpdateNode.getFirstChild().getNodeValue());
 		}
+		else
+		{
+			m_lastUpdate = 0;
+		}
 		/* try to get the certificate from the Signature node */
 		try
 		{

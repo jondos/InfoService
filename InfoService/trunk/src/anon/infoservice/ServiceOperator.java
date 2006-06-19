@@ -30,6 +30,8 @@ package anon.infoservice;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import anon.util.XMLParseException;
+
 /**
  * Holds the information about the operator of a service.
  */
@@ -51,13 +53,13 @@ public class ServiceOperator
 	 *
 	 * @param operatorNode The Operator node from an XML document.
 	 */
-	public ServiceOperator(Element operatorNode) throws Exception
+	public ServiceOperator(Element operatorNode) throws XMLParseException
 	{
 		/* get the organisation name */
 		NodeList organisationNodes = operatorNode.getElementsByTagName("Organisation");
 		if (organisationNodes.getLength() == 0)
 		{
-			throw (new Exception("ServiceOperator: Error in XML structure."));
+			throw (new XMLParseException("Organisation"));
 		}
 		Element organisationNode = (Element) (organisationNodes.item(0));
 		organisation = organisationNode.getFirstChild().getNodeValue();
@@ -65,7 +67,7 @@ public class ServiceOperator
 		NodeList urlNodes = operatorNode.getElementsByTagName("URL");
 		if (urlNodes.getLength() == 0)
 		{
-			throw (new Exception("ServiceOperator: Error in XML structure."));
+			throw (new XMLParseException("URL"));
 		}
 		Element urlNode = (Element) (urlNodes.item(0));
 		url = urlNode.getFirstChild().getNodeValue();
