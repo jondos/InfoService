@@ -32,6 +32,7 @@ import org.w3c.dom.NodeList;
 
 import anon.util.XMLUtil;
 import anon.util.IXMLEncodable;
+import anon.util.XMLParseException;
 import org.w3c.dom.Document;
 import anon.crypto.XMLSignature;
 import logging.LogHolder;
@@ -98,10 +99,9 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
    *
    * @param a_mixNode The Mix node from an XML document.
    */
-  public MixInfo(Element a_mixNode) throws Exception {
+  public MixInfo(Element a_mixNode) throws XMLParseException {
 	  this (a_mixNode, 0);
   }
-
 
   /**
    * Creates a new MixInfo from XML description (Mix node). The state of the mix will be set to
@@ -110,54 +110,86 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
    * @param a_mixNode The Mix node from an XML document.
    * @param a_expireTime forces a specific expire time; takes default expire time if <= 0
    */
-  public MixInfo(Element a_mixNode, long a_expireTime) throws Exception
+  public MixInfo(Element a_mixNode, long a_expireTime) throws XMLParseException
+  {
+	  this(a_mixNode, a_expireTime, false);
+  }
+
+  /**
+   * Creates a new MixInfo from XML description (Mix node). The state of the mix will be set to
+   * non-free (only meaningful within the context of the infoservice).
+   *
+   * @param a_mixNode The Mix node from an XML document.
+   * @param a_expireTime forces a specific expire time; takes default expire time if <= 0
+   * @param a_bFromCascade if this is a MixInfo node directly received from a cascade (it is stripped)
+   * if true, the last update value is set to 0
+   */
+  public MixInfo(Element a_mixNode, long a_expireTime, boolean a_bFromCascade) throws XMLParseException
   {
 	  /* use always the timeout for the infoservice context, because the JAP client currently does
 	   * not have a database of mixcascade entries -> no timeout for the JAP client necessary
 	   */
 	  super(a_expireTime <= 0 ? System.currentTimeMillis() + Constants.TIMEOUT_MIX : a_expireTime);
 	  /* get the ID */
-	  m_mixId = a_mixNode.getAttribute("id");
-	  /* get the name */
-	  NodeList nameNodes = a_mixNode.getElementsByTagName("Name");
-	  if (nameNodes.getLength() == 0)
+	  m_mixId = XMLUtil.parseAttribute(a_mixNode, "id", null);
+	  if (m_mixId == null)
 	  {
-		  throw (new Exception("MixInfo: Error in XML structure."));
+		  throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "id"));
 	  }
-	  Element nameNode = (Element) (nameNodes.item(0));
-	  m_name = nameNode.getFirstChild().getNodeValue();
-	  /* get the location */
-	  NodeList locationNodes = a_mixNode.getElementsByTagName("Location");
-	  if (locationNodes.getLength() == 0)
+
+	  if (!a_bFromCascade)
 	  {
-		  throw (new Exception("MixInfo: Error in XML structure."));
+		  /* get the name */
+		  NodeList nameNodes = a_mixNode.getElementsByTagName("Name");
+		  if (nameNodes.getLength() == 0)
+		  {
+			  throw (new XMLParseException("Name"));
+		  }
+		  else
+		  {
+			  Element nameNode = (Element) (nameNodes.item(0));
+			  m_name = nameNode.getFirstChild().getNodeValue();
+		  }
+
+		  /* get the location */
+		  NodeList locationNodes = a_mixNode.getElementsByTagName("Location");
+		  if (locationNodes.getLength() == 0)
+		  {
+			  throw (new XMLParseException("Location", m_mixId));
+		  }
+		  Element locationNode = (Element) (locationNodes.item(0));
+		  m_mixLocation = new ServiceLocation(locationNode);
+		  /* get the operator */
+		  NodeList operatorNodes = a_mixNode.getElementsByTagName("Operator");
+		  if (operatorNodes.getLength() == 0)
+		  {
+			  throw (new XMLParseException("Operator", m_mixId));
+		  }
+		  Element operatorNode = (Element) (operatorNodes.item(0));
+		  m_mixOperator = new ServiceOperator(operatorNode);
+
+		  /* get the software information */
+		  NodeList softwareNodes = a_mixNode.getElementsByTagName("Software");
+		  if (softwareNodes.getLength() == 0)
+		  {
+			  throw (new XMLParseException("Software", m_mixId));
+		  }
+		  Element softwareNode = (Element) (softwareNodes.item(0));
+		  m_mixSoftware = new ServiceSoftware(softwareNode);
+
+		  /* get LastUpdate information */
+		  NodeList lastUpdateNodes = a_mixNode.getElementsByTagName("LastUpdate");
+		  if (lastUpdateNodes.getLength() == 0)
+		  {
+			  throw (new XMLParseException("LastUpdate", m_mixId));
+		  }
+		  Element lastUpdateNode = (Element) (lastUpdateNodes.item(0));
+		  m_lastUpdate = Long.parseLong(lastUpdateNode.getFirstChild().getNodeValue());
 	  }
-	  Element locationNode = (Element) (locationNodes.item(0));
-	  m_mixLocation = new ServiceLocation(locationNode);
-	  /* get the operator */
-	  NodeList operatorNodes = a_mixNode.getElementsByTagName("Operator");
-	  if (operatorNodes.getLength() == 0)
+	  else
 	  {
-		  throw (new Exception("MixInfo: Error in XML structure."));
+		  m_lastUpdate = 0;
 	  }
-	  Element operatorNode = (Element) (operatorNodes.item(0));
-	  m_mixOperator = new ServiceOperator(operatorNode);
-	  /* get the software information */
-	  NodeList softwareNodes = a_mixNode.getElementsByTagName("Software");
-	  if (softwareNodes.getLength() == 0)
-	  {
-		  throw (new Exception("MixInfo: Error in XML structure."));
-	  }
-	  Element softwareNode = (Element) (softwareNodes.item(0));
-	  m_mixSoftware = new ServiceSoftware(softwareNode);
-	  /* get LastUpdate information */
-	  NodeList lastUpdateNodes = a_mixNode.getElementsByTagName("LastUpdate");
-	  if (lastUpdateNodes.getLength() == 0)
-	  {
-		  throw (new Exception("MixInfo: Error in XML structure."));
-	  }
-	  Element lastUpdateNode = (Element) (lastUpdateNodes.item(0));
-	  m_lastUpdate = Long.parseLong(lastUpdateNode.getFirstChild().getNodeValue());
 
 	  /* try to get the certificate from the Signature node */
 	  try

@@ -28,6 +28,7 @@
 package jap;
 
 import java.net.URL;
+import java.net.MalformedURLException;
 import java.util.Enumeration;
 import java.util.Observable;
 import java.util.Observer;
@@ -81,6 +82,7 @@ import gui.JAPMessages;
 import gui.JAPMultilineLabel;
 import gui.ServerListPanel;
 import gui.dialog.JAPDialog;
+import gui.CountryMapper;
 import jap.forward.JAPRoutingMessage;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -88,9 +90,16 @@ import logging.LogType;
 import platform.AbstractOS;
 import javax.swing.ScrollPaneConstants;
 
+/* for opening a CertDetailsDialog with the certificate data of the selected server*/
+import anon.crypto.JAPCertificate;
+import gui.CertDetailsDialog;
+
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener, Observer
 {
+	private static final String MSG_LABEL_CERTIFICATE = JAPConfAnon.class.getName() + "_certificate";
+	private static final String MSG_SHOW_CERTIFICATE = JAPConfAnon.class.getName() + "_showCertificate";
+
 	private static final Insets SMALL_BUTTON_MARGIN = new Insets(1, 1, 1, 1);
 
 	/** Messages */
@@ -127,6 +136,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private JLabel m_urlLabel;
 	private JLabel m_locationLabel;
 	private JLabel m_payLabel;
+	private JLabel m_viewCertLabel;
 
 	private JButton m_manualCascadeButton;
 	private JButton m_reloadCascadesButton;
@@ -137,6 +147,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private JButton m_cancelCascadeButton;
 	private JButton m_showEditPanelButton;
 
+
 	private JTextField m_manHostField;
 	private JTextField m_manPortField;
 
@@ -145,6 +156,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	private String m_oldCascadeHost;
 	private String m_oldCascadePort;
+
+	/** the Certificate of the selected Mix-Server */
+	private JAPCertificate m_serverCert;
 
 	protected JAPConfAnon(IJAPConfSavePoint savePoint)
 	{
@@ -213,8 +227,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			a_strCascadeName = a_strCascadeName.substring(0, 65);
 			a_strCascadeName = a_strCascadeName + "...";
 		}
-		JAPMultilineLabel label = new JAPMultilineLabel(JAPMessages.getString("infoAboutCascade")
-			+ "\n" + a_strCascadeName);
+		JAPMultilineLabel label = new JAPMultilineLabel("<html><u>" + JAPMessages.getString("infoAboutCascade")
+			+ ":</html></u>" + "\n" + a_strCascadeName);
 		m_serverPanel.add(label, c);
 
 		m_serverList = new ServerListPanel(a_numberOfMixes, a_enabled);
@@ -248,7 +262,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		m_serverInfoPanel.setLayout(layout);
 
-		JLabel l = new JLabel(JAPMessages.getString("infoAboutMix"));
+		JLabel l = new JLabel("<html><u>"+JAPMessages.getString("infoAboutMix")+":</html></u>");
 		c.insets = new Insets(5, 10, 5, 5);
 		c.gridx = 0;
 		c.gridy = 0;
@@ -290,6 +304,16 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_locationLabel = new JLabel(a_location);
 		c.gridx = 1;
 		m_serverInfoPanel.add(m_locationLabel, c);
+
+		l = new JLabel(JAPMessages.getString(MSG_LABEL_CERTIFICATE) + ":");
+		c.gridx = 0;
+		c.gridy = 4;
+		m_serverInfoPanel.add(l, c);
+
+		m_viewCertLabel = new JLabel();
+		m_viewCertLabel.addMouseListener(this);
+		c.gridx = 1;
+		m_serverInfoPanel.add(m_viewCertLabel, c);
 
 	}
 
@@ -575,29 +599,47 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		drawServerInfoPanel("", "", "");
 	}
 
-	public void itemStateChanged(ItemEvent e)
+	public synchronized void itemStateChanged(ItemEvent e)
 	{
 		int server = m_serverList.getSelectedIndex();
+
 		MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
-		if (cascade != null && !cascade.isUserDefined())
+		String selectedMixId = null;
+
+		if (cascade != null)
 		{
-			String selectedMixId = (String) cascade.getMixIds().elementAt(server);
-			try
-			{
-				m_operatorLabel.setText(m_infoService.getOperator(selectedMixId));
-				m_operatorLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
-				m_locationLabel.setText(m_infoService.getLocation(selectedMixId));
-				m_urlLabel.setText(URL_BEGIN + m_infoService.getUrl(selectedMixId) + URL_END);
-			}
-			catch (Exception ex)
-			{
-				LogHolder.log(LogLevel.ERR, LogType.GUI, "Could not retrieve information from Infoservice");
-				m_operatorLabel.setText("");
-				m_operatorLabel.setToolTipText("");
-				m_locationLabel.setText("");
-				m_urlLabel.setText("");
-			}
+			selectedMixId = (String) cascade.getMixIds().elementAt(server);
 		}
+
+		String operator = m_infoService.getOperator(selectedMixId);
+		if (operator != null && operator.length() > 82)
+		{
+			operator = operator.substring(0, 82) + "...";
+		}
+		m_operatorLabel.setText(operator);
+		m_operatorLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
+		try
+		{
+			m_locationLabel.setText(new CountryMapper(m_infoService.getLocation(selectedMixId),
+													  JAPController.getInstance().getLocale()).toString());
+		}
+		catch (IllegalArgumentException a_e)
+		{
+			m_locationLabel.setText(m_infoService.getLocation(selectedMixId));
+		}
+		m_urlLabel.setText(URL_BEGIN + m_infoService.getUrl(selectedMixId) + URL_END);
+
+		m_serverCert = m_infoService.getMixCertificate(selectedMixId);
+		if (m_serverCert != null)
+		{
+			m_viewCertLabel.setText(
+				URL_BEGIN + JAPMessages.getString(MSG_SHOW_CERTIFICATE) + "..." + URL_END);
+		}
+		else
+		{
+			m_viewCertLabel.setText(URL_BEGIN + "N/A" + URL_END);
+		}
+
 		pRoot.validate();
 	}
 	private void updateMixCascadeCombo()
@@ -957,6 +999,17 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				m_listMixCascade.repaint();
 			}
 		}
+		else if (e.getSource() == m_viewCertLabel)
+		{
+			if (m_serverCert != null)
+			{
+				CertDetailsDialog dialog = new CertDetailsDialog(getRootPanel().getParent(),
+					m_serverCert.getX509Certificate(), true,
+					JAPController.getInstance().getLocale());
+				dialog.pack();
+				dialog.setVisible(true);
+			}
+		}
 	}
 
 	public void mousePressed(MouseEvent e)
@@ -969,7 +1022,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	public void mouseEntered(MouseEvent e)
 	{
-		if (e.getSource() == m_urlLabel)
+		if (e.getSource() == m_urlLabel || e.getSource() == m_viewCertLabel)
 		{
 			this.getRootPanel().setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		}
@@ -977,7 +1030,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	public void mouseExited(MouseEvent e)
 	{
-		if (e.getSource() == m_urlLabel)
+		if (e.getSource() == m_urlLabel || e.getSource() == m_viewCertLabel)
 		{
 			this.getRootPanel().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 		}
@@ -1042,7 +1095,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 						m_payLabel.setText("");
 					}
 				}
-				drawServerInfoPanel(null, null, null);
+				drawServerInfoPanel("", "", "");
 
 				if (cascade.isUserDefined())
 				{
@@ -1198,7 +1251,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 							{
 								mixId = (String) mixIDs.elementAt(i);
 								mixinfo = (MixInfo)Database.getInstance(MixInfo.class).getEntryById(mixId);
-								if (mixinfo == null && !cascade.isUserDefined())
+								if (mixinfo == null || mixinfo.getLastUpdate() == 0)
 								{
 									MixInfo mixInfo = InfoServiceHolder.getInstance().getMixInfo(mixId);
 									if (mixInfo == null)
@@ -1216,22 +1269,21 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 							LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
 						}
 					}
-
-					final boolean bFinalDatabaseChanged = bDatabaseChanged;
-					SwingUtilities.invokeLater(
-						new Runnable()
-					{
-						public void run()
-						{
-							if (bFinalDatabaseChanged)
-							{
-								updateMixCascadeCombo();
-							}
-							valueChanged(new ListSelectionEvent(m_listMixCascade, 0,
-								m_listMixCascade.getModel().getSize(), false));
-						}
-					});
 				}
+				final boolean bFinalDatabaseChanged = bDatabaseChanged;
+				SwingUtilities.invokeLater(
+					new Runnable()
+				{
+					public void run()
+					{
+						if (bFinalDatabaseChanged)
+						{
+							updateMixCascadeCombo();
+						}
+						valueChanged(new ListSelectionEvent(m_listMixCascade, 0,
+							m_listMixCascade.getModel().getSize(), false));
+					}
+				});
 			}
 		}
 		catch (Exception e)
@@ -1501,6 +1553,17 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			return cascade.getPorts();
 		}
 
+		public JAPCertificate getMixCertificate(String a_mixID)
+		{
+			MixInfo mixinfo = (MixInfo) Database.getInstance(MixInfo.class).getEntryById(a_mixID);
+			JAPCertificate certificate = null;
+			if (mixinfo != null)
+			{
+				certificate = mixinfo.getMixCertificate();
+			}
+			return certificate;
+		}
+
 		/**
 		 * Get the operator name of a cascade.
 		 * @param a_mixId String
@@ -1533,6 +1596,14 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			if (operator != null)
 			{
 				strUrl = operator.getUrl();
+			}
+			try
+			{
+				new URL(strUrl);
+			}
+			catch(MalformedURLException a_e)
+			{
+				strUrl = null;
 			}
 			if (strUrl == null)
 			{

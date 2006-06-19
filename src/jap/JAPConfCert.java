@@ -37,13 +37,18 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -53,10 +58,7 @@ import anon.crypto.CertificateInfoStructure;
 import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
 import gui.CAListCellRenderer;
-import javax.swing.JCheckBox;
-import javax.swing.JSeparator;
-import java.awt.event.ItemListener;
-import java.awt.event.ItemEvent;
+import gui.CertDetailsDialog;
 import gui.JAPMessages;
 import gui.JAPHelp;
 import gui.dialog.JAPDialog;
@@ -67,10 +69,12 @@ import gui.dialog.JAPDialog;
 
 final class JAPConfCert extends AbstractJAPConfModule implements Observer
 {
+	private static final String MSG_DETAILS = JAPConfCert.class.getName() + "_details";
+
 	private TitledBorder m_borderCert;
 	private JLabel m_labelDate, m_labelCN, m_labelE, m_labelCSTL, m_labelO, m_labelOU;
 	private JLabel m_labelDateData, m_labelCNData, m_labelEData, m_labelCSTLData, m_labelOData, m_labelOUData;
-	private JButton m_bttnCertInsert, m_bttnCertRemove, m_bttnCertStatus; //m_bttnCertDetails;
+	private JButton m_bttnCertInsert, m_bttnCertRemove, m_bttnCertStatus, m_bttnCertDetails;
 	private DefaultListModel m_listmodelCertList;
 	private JList m_listCert;
 	private JScrollPane m_scrpaneList;
@@ -85,6 +89,8 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		SignatureVerifier.getInstance().getVerificationCertificateStore().addObserver(this);
 		/* tricky: initialize the components by calling the observer */
 		update(SignatureVerifier.getInstance().getVerificationCertificateStore(), null);
+		/* set the selected index of the list to the first item to avoid exceptions */
+	    m_listCert.setSelectedIndex(0);
 	}
 
 	private void updateInfoPanel(JAPCertificate a_cert)
@@ -229,7 +235,6 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		JLabel labelTrust1 = new JLabel(JAPMessages.getString("certTrust1"));
 		JLabel labelTrust2 = new JLabel(JAPMessages.getString("certTrust2"));
 		labelTrust1.setFont(getFontSetting());
-		labelTrust2 = new JLabel(JAPMessages.getString("certTrust2"));
 		labelTrust2.setFont(getFontSetting());
 
 		m_cbCertCheckEnabled = new JCheckBox();
@@ -254,6 +259,7 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 				m_bttnCertInsert.setEnabled(b);
 				m_bttnCertRemove.setEnabled(b);
 				m_bttnCertStatus.setEnabled(b);
+				m_bttnCertDetails.setEnabled(b);
 				m_listCert.setEnabled(b);
 				m_panelCAInfo.setEnabled(b);
 				m_panelCAList.setEnabled(b);
@@ -297,7 +303,8 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		m_listmodelCertList = new DefaultListModel();
 
 		m_listCert = new JList(m_listmodelCertList);
-		m_listCert.setCellRenderer(new CAListCellRenderer());
+		m_listCert.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+	    m_listCert.setCellRenderer(new CAListCellRenderer());
 		m_listCert.addListSelectionListener(new ListSelectionListener()
 		{
 			public void valueChanged(ListSelectionEvent e)
@@ -432,18 +439,19 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 			}
 		});
 
-	    /*m_bttnCertDetails = new JButton("Details...");
+	    m_bttnCertDetails = new JButton(JAPMessages.getString(MSG_DETAILS));
 		m_bttnCertDetails.setFont(getFontSetting());
 		m_bttnCertDetails.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				CertDetailsDialog dialog = new CertDetailsDialog(getParent(), m_cert.getX509Certificate(),
-						isCertificateVerifyable());
+				CertDetailsDialog dialog = new CertDetailsDialog(getRootPanel().getParent(),
+					((CertificateInfoStructure)m_listCert.getSelectedValue()).getCertificate().getX509Certificate(),
+					true, JAPController.getInstance().getLocale());
+					dialog.pack();
 					dialog.setVisible(true);
-
 			}
-		});*/
+		});
 
 		panelConstraintsCA.gridx = 0;
 		panelConstraintsCA.gridy = 1;
@@ -465,10 +473,10 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		panelLayoutCA.setConstraints(m_bttnCertStatus, panelConstraintsCA);
 		r_panelCA.add(m_bttnCertStatus);
 
-	    /*panelConstraintsCA.gridx = 3;
+	    panelConstraintsCA.gridx = 3;
 		panelConstraintsCA.gridy = 1;
 		panelLayoutCA.setConstraints(m_bttnCertDetails, panelConstraintsCA);
-		r_panelCA.add(m_bttnCertDetails);*/
+		r_panelCA.add(m_bttnCertDetails);
 
 		return r_panelCA;
 	}
@@ -487,7 +495,7 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		panelConstraintsInfo.gridy = 0;
 		panelConstraintsInfo.gridwidth = 2;
 
-		JLabel l = new JLabel(JAPMessages.getString("certInfoBorder"));
+		JLabel l = new JLabel("<html><u>" + JAPMessages.getString("certInfoBorder") + ":</html></u>");
 		r_panelInfo.add(l, panelConstraintsInfo);
 
 		m_labelDate = new JLabel(JAPMessages.getString("certDate"));
@@ -661,8 +669,9 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 					}
 				}
 				/* select the item again that was selected */
-				lastIndex = Math.min(m_listCert.getComponentCount() - 1, lastIndex);
-				if (lastIndex >= 0)
+				//lastIndex = Math.min(m_listCert.getComponentCount() - 1, lastIndex);
+				//if (lastIndex >= 0)
+				if (m_listmodelCertList.getSize() > 0 && lastIndex >= 0)
 				{
 					m_listCert.setSelectedIndex(lastIndex);
 				}

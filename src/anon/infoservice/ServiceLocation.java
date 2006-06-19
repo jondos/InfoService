@@ -31,6 +31,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import anon.util.XMLUtil;
+import anon.util.XMLParseException;
 
 /**
  * Holds the information of the location of a service.
@@ -70,10 +71,10 @@ public class ServiceLocation
 	 *
 	 * @param locationNode The Location node from an XML document.
 	 */
-	public ServiceLocation(Element locationNode) throws Exception
+	public ServiceLocation(Element locationNode) throws XMLParseException
 	{
 		Node node;
-	
+
 		/* get the city */
 		node = XMLUtil.getFirstChildByName(locationNode, "City");
 		city = XMLUtil.parseValue(node, "");
@@ -81,7 +82,7 @@ public class ServiceLocation
 		/* get the state */
 		node = XMLUtil.getFirstChildByName(locationNode, "State");
 		state = XMLUtil.parseValue(node, "");
-		
+
 		/* get the country */
 		node = XMLUtil.getFirstChildByName(locationNode, "Country");
 		country = XMLUtil.parseValue(node, "");

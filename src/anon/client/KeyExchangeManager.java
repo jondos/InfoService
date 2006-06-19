@@ -55,6 +55,7 @@ import anon.crypto.XMLEncryption;
 import anon.crypto.XMLSignature;
 import anon.infoservice.Database;
 import anon.infoservice.MixCascade;
+import anon.infoservice.MixInfo;
 import anon.util.Base64;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
@@ -131,33 +132,31 @@ public class KeyExchangeManager {
 		  }
 		  /* process the received XML structure */
 		  MixCascade cascade = new MixCascade(XMLUtil.toXMLDocument(xmlData).getDocumentElement(), 0, true);
-		  if (!cascade.isUserDefined())
+		  MixCascade cascadeInDB =
+			  (MixCascade) Database.getInstance(MixCascade.class).getEntryById(cascade.getId());
+		  if (cascadeInDB != null && !cascadeInDB.isUserDefined())
 		  {
-			  MixCascade cascadeInDB =
-				  (MixCascade) Database.getInstance(MixCascade.class).getEntryById(cascade.getId());
-			  if (cascadeInDB != null)
+			  // check if the cascade has changed its composition since the last update
+			  if (cascadeInDB.getNumberOfMixes() != cascade.getNumberOfMixes())
 			  {
-				  // check if the cascade has changed its composition since the last update
-				  if (cascadeInDB.getNumberOfMixes() != cascade.getNumberOfMixes())
-				  {
-					  Database.getInstance(MixCascade.class).remove(cascadeInDB);
-				  }
-				  else
-				  {
-					  Vector mixIDs = cascade.getMixIds();
-					  Vector mixIDsDB = cascadeInDB.getMixIds();
+				  Database.getInstance(MixCascade.class).remove(cascadeInDB);
+			  }
+			  else
+			  {
+				  Vector mixIDs = cascade.getMixIds();
+				  Vector mixIDsDB = cascadeInDB.getMixIds();
 
-					  for (int i = 0; i < mixIDs.size(); i++)
+				  for (int i = 0; i < mixIDs.size(); i++)
+				  {
+					  if (!mixIDs.elementAt(i).equals(mixIDsDB.elementAt(i)))
 					  {
-						  if (!mixIDs.elementAt(i).equals(mixIDsDB.elementAt(i)))
-						  {
-							  Database.getInstance(MixCascade.class).remove(cascadeInDB);
-							  break;
-						  }
+						  Database.getInstance(MixCascade.class).remove(cascadeInDB);
+						  break;
 					  }
 				  }
 			  }
 		  }
+
 		  /* verify the signature */
 		  if (SignatureVerifier.getInstance().verifyXml(cascade.getXmlStructure(),
 			  SignatureVerifier.DOCUMENT_CLASS_MIX) == false)
@@ -236,7 +235,7 @@ public class KeyExchangeManager {
 				  "No information about mixes found in the received XML structure."));
 		  }
 
-		  m_mixParameters = new MixParameters[mixNodes.getLength()];
+		 m_mixParameters = new MixParameters[mixNodes.getLength()];
 		  for (int i = 0; i < mixNodes.getLength(); i++)
 		  {
 			  Element currentMixNode = (Element) (mixNodes.item(i));
@@ -254,15 +253,18 @@ public class KeyExchangeManager {
 						  "."));
 				  }
 			  }
-			  /* get the mix parameters */
-			  String currentMixId = XMLUtil.parseAttribute(currentMixNode, "id", null);
-			  if (currentMixId == null)
-			  {
-				  throw (new XMLParseException(XMLParseException.NODE_NULL_TAG,
-											   "XML structure of Mix " + Integer.toString(i) +
-											   " does not contain a Mix-ID."));
-			  }
-			  m_mixParameters[i] = new MixParameters(currentMixId, new ASymCipher());
+
+			  MixInfo mixinfo = new MixInfo(currentMixNode, Long.MAX_VALUE, true);
+			 MixInfo oldMixinfo = (MixInfo)Database.getInstance(MixInfo.class).getEntryById(mixinfo.getId());
+			 if (mixinfo.getMixCertificate() != null &&
+				 (oldMixinfo == null || !oldMixinfo.getMixCertificate().equals(mixinfo.getMixCertificate())))
+			 {
+				 // update the database so the the (new) certificate gets available
+				 Database.getInstance(MixInfo.class).update(mixinfo);
+			 }
+
+
+			  m_mixParameters[i] = new MixParameters(mixinfo.getId(), new ASymCipher());
 			  if (m_mixParameters[i].getMixCipher().setPublicKey(currentMixNode) != ErrorCodes.E_SUCCESS)
 			  {
 				  throw (new XMLParseException(
