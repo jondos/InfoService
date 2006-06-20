@@ -412,7 +412,19 @@ public final class X509DistinguishedName
 
 	public boolean equals(Object a_object)
 	{
-		return m_bcX509Name.equals(a_object);
+		if (a_object == null)
+		{
+			return false;
+		}
+		if (a_object instanceof X509DistinguishedName)
+		{
+			return m_bcX509Name.equals( ( (X509DistinguishedName) a_object).m_bcX509Name);
+		}
+		else if (a_object instanceof X509Name)
+		{
+			return m_bcX509Name.equals((X509Name) a_object);
+		}
+		return false;
 	}
 
 	/**
