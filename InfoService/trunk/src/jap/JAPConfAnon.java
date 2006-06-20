@@ -240,7 +240,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	}
 
-	private void drawServerInfoPanel(String a_operator, String a_url, String a_location)
+	private void drawServerInfoPanel()
 	{
 		GridBagLayout layout = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
@@ -279,7 +279,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.insets = new Insets(5, 30, 5, 5);
 		m_serverInfoPanel.add(l, c);
 
-		m_operatorLabel = new JLabel(a_operator);
+		m_operatorLabel = new JLabel();
 		c.weightx = 1;
 		c.gridx = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -291,7 +291,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.weightx = 0;
 		m_serverInfoPanel.add(l, c);
 
-		m_urlLabel = new JLabel(a_url);
+		m_urlLabel = new JLabel();
 		m_urlLabel.addMouseListener(this);
 		c.gridx = 1;
 		m_serverInfoPanel.add(m_urlLabel, c);
@@ -301,7 +301,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.gridy = 3;
 		m_serverInfoPanel.add(l, c);
 
-		m_locationLabel = new JLabel(a_location);
+		m_locationLabel = new JLabel();
 		c.gridx = 1;
 		m_serverInfoPanel.add(m_locationLabel, c);
 
@@ -596,7 +596,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		drawCascadesPanel();
 		drawServerPanel(3, "", false);
-		drawServerInfoPanel("", "", "");
+		drawServerInfoPanel();
 	}
 
 	public synchronized void itemStateChanged(ItemEvent e)
@@ -784,7 +784,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_payLabel.setText("");
 		drawServerPanel(3, "", false);
 
-		drawServerInfoPanel("", "", "");
+		drawServerInfoPanel();
 		m_serverInfoPanel.setEnabled(false);
 
 	}
@@ -1095,7 +1095,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 						m_payLabel.setText("");
 					}
 				}
-				drawServerInfoPanel("", "", "");
+				drawServerInfoPanel();
 
 				if (cascade.isUserDefined())
 				{
