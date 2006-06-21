@@ -106,7 +106,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	//private JLabel meterLabel;
 	private JLabel m_labelCascadeName;
 	private JPanel m_panelMain;
-	private JButton m_bttnInfo, m_bttnHelp, m_bttnQuit, m_bttnIconify, m_bttnConf;
+	private JButton m_bttnHelp, m_bttnQuit, m_bttnIconify, m_bttnConf;
 	//private JButton m_bttnAnonConf;
 	//private JCheckBox m_cbAnon;
 	//private JProgressBar userProgressBar;
@@ -693,7 +693,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		gbl1 = new GridBagLayout();
 		c1 = new GridBagConstraints();
 		JPanel buttonPanel = new JPanel(gbl1);
-		m_bttnInfo = new JButton(JAPMessages.getString("infoButton"));
 		m_bttnHelp = new JButton(JAPMessages.getString("helpButton"));
 		m_bttnQuit = new JButton(JAPMessages.getString("quitButton"));
 		m_bttnConf = new JButton(JAPMessages.getString("confButton"));
@@ -718,12 +717,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		buttonPanel.add(m_bttnQuit, c1);
 		m_bttnIconify.addActionListener(this);
 		m_bttnConf.addActionListener(this);
-		m_bttnInfo.addActionListener(this);
 		m_bttnHelp.addActionListener(this);
 		m_bttnQuit.addActionListener(this);
 		JAPUtil.setMnemonic(m_bttnIconify, JAPMessages.getString("iconifyButtonMn"));
 		JAPUtil.setMnemonic(m_bttnConf, JAPMessages.getString("confButtonMn"));
-		JAPUtil.setMnemonic(m_bttnInfo, JAPMessages.getString("infoButtonMn"));
 		JAPUtil.setMnemonic(m_bttnHelp, JAPMessages.getString("helpButtonMn"));
 		JAPUtil.setMnemonic(m_bttnQuit, JAPMessages.getString("quitButtonMn"));
 
@@ -1148,12 +1145,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	 */
 	public void localeChanged()
 	{
-		m_bttnInfo.setText(JAPMessages.getString("infoButton"));
 		m_bttnHelp.setText(JAPMessages.getString("helpButton"));
 		m_bttnQuit.setText(JAPMessages.getString("quitButton"));
 		m_bttnConf.setText(JAPMessages.getString("confButton"));
 		JAPUtil.setMnemonic(m_bttnConf, JAPMessages.getString("confButtonMn"));
-		JAPUtil.setMnemonic(m_bttnInfo, JAPMessages.getString("infoButtonMn"));
 		JAPUtil.setMnemonic(m_bttnHelp, JAPMessages.getString("helpButtonMn"));
 		JAPUtil.setMnemonic(m_bttnQuit, JAPMessages.getString("quitButtonMn"));
 
@@ -1375,10 +1370,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				//{
 				//showConfigDialog(JAPConf.ANON_TAB);
 				//}
-				else if (source == m_bttnInfo)
-				{
-					JAPController.aboutJAP();
-				}
 				else if (source == m_bttnHelp)
 				{
 					showHelpWindow();
