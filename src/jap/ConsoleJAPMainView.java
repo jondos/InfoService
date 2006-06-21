@@ -32,6 +32,8 @@ import java.awt.Window;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.infoservice.MixCascade;
+import anon.AnonServerDescription;
 
 /**
  *
@@ -82,14 +84,33 @@ public class ConsoleJAPMainView implements IJAPMainView
 		LogHolder.log(LogLevel.ALERT, LogType.NET, "Disconnected because of connection error!");
 	}
 
-	/**
-	 * connectionEstablished
-	 *
-	 * @todo Diese anon.AnonServiceEventListener-Methode implementieren
-	 */
-	public void connectionEstablished()
+	public void connecting(AnonServerDescription a_serverDescription)
 	{
-		LogHolder.log(LogLevel.ALERT, LogType.NET, "Connected!");
+		if (a_serverDescription instanceof MixCascade)
+		{
+			MixCascade cascade = (MixCascade)a_serverDescription;
+			LogHolder.log(LogLevel.ALERT, LogType.NET, "Connecting to" +
+						  cascade.getId() + "(" + cascade.getName() + ")" + "...");
+		}
+		else
+		{
+			LogHolder.log(LogLevel.ALERT, LogType.NET, "Connecting...");
+		}
+	}
+
+
+	public void connectionEstablished(AnonServerDescription a_serverDescription)
+	{
+		if (a_serverDescription instanceof MixCascade)
+		{
+			MixCascade cascade = (MixCascade)a_serverDescription;
+			LogHolder.log(LogLevel.ALERT, LogType.NET, "Connected to" +
+						  cascade.getId() + "(" + cascade.getName() + ")" + "!");
+		}
+		else
+		{
+			LogHolder.log(LogLevel.ALERT, LogType.NET, "Connected!");
+		}
 	}
 
 	/**

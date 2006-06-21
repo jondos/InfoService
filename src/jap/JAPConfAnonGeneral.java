@@ -31,6 +31,8 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import javax.swing.JCheckBox;
@@ -38,14 +40,18 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.SwingConstants;
 
-import anon.crypto.SignatureVerifier;
-import gui.*;
+import gui.JAPHelp;
+import gui.JAPMessages;
 
 final class JAPConfAnonGeneral extends AbstractJAPConfModule
 {
+	private static final String MSG_AUTO_CHOOSE_CASCADES = JAPConfAnonGeneral.class.getName() +
+		"_autoChooseCascades";
+
 	private JCheckBox m_cbDummyTraffic;
 	private JCheckBox m_cbAutoConnect;
 	private JCheckBox m_cbAutoReConnect;
+	private JCheckBox m_cbAutoChooseCascades;
 	private JSlider m_sliderDummyTrafficIntervall;
 	private JAPController m_Controller;
 
@@ -72,6 +78,8 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_sliderDummyTrafficIntervall.setEnabled(iTmp > -1);
 		m_cbAutoConnect.setSelected(JAPModel.getAutoConnect());
 		m_cbAutoReConnect.setSelected(JAPModel.getAutoReConnect());
+		m_cbAutoChooseCascades.setSelected(JAPModel.getInstance().isCascadeConnectionChosenAutomatically());
+		m_cbAutoChooseCascades.setEnabled(JAPModel.getAutoReConnect());
 	}
 
 //ok pressed
@@ -102,6 +110,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		// Anonservice settings
 		m_Controller.setAutoConnect(m_cbAutoConnect.isSelected());
 		m_Controller.setAutoReConnect(m_cbAutoReConnect.isSelected());
+		JAPModel.getInstance().setChooseCascadeConnectionAutomatically(m_cbAutoChooseCascades.isSelected());
 		return true;
 	}
 
@@ -114,6 +123,16 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_cbAutoConnect.setFont(font);
 		m_cbAutoReConnect = new JCheckBox(JAPMessages.getString("settingsautoReConnectCheckBox"));
 		m_cbAutoReConnect.setFont(font);
+		m_cbAutoChooseCascades = new JCheckBox(JAPMessages.getString(MSG_AUTO_CHOOSE_CASCADES));
+		m_cbAutoChooseCascades.setFont(font);
+		m_cbAutoReConnect.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent a_event)
+			{
+				m_cbAutoChooseCascades.setEnabled(m_cbAutoReConnect.isSelected());
+			}
+		});
+
 		m_cbDummyTraffic = new JCheckBox(JAPMessages.getString("ngConfAnonGeneralSendDummy"));
 		m_cbDummyTraffic.addItemListener(new ItemListener()
 		{
@@ -139,6 +158,8 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		c.gridy++;
 		panelRoot.add(m_cbAutoReConnect, c);
 		c.gridy++;
+		panelRoot.add(m_cbAutoChooseCascades, c);
+		c.gridy++;
 		panelRoot.add(m_cbDummyTraffic, c);
 		c.gridy++;
 		c.weighty = 1.0;
@@ -158,6 +179,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_sliderDummyTrafficIntervall.setEnabled(false);
 		m_cbAutoConnect.setSelected(false);
 		m_cbAutoReConnect.setSelected(true);
+		m_cbAutoChooseCascades.setSelected(true);
 	}
 
 	protected void onRootPanelShown()

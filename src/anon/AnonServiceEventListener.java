@@ -33,7 +33,9 @@ public interface AnonServiceEventListener
 
 	public void disconnected();
 
-	public void connectionEstablished();
+	public void connecting(AnonServerDescription a_serverDescription);
+
+	public void connectionEstablished(AnonServerDescription a_serverDescription);
 
 	public void packetMixed(long a_totalBytes);
 }

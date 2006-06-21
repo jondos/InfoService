@@ -136,11 +136,14 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	 */
 	public synchronized void start()
 	{
-		synchronized (m_updateThread)
+		if (m_bInitialRun)
 		{
-			m_bAutoUpdateChanged = true;
-			m_bInitialRun = false;
-			m_updateThread.notify();
+			synchronized (m_updateThread)
+			{
+				m_bAutoUpdateChanged = true;
+				m_bInitialRun = false;
+				m_updateThread.notify();
+			}
 		}
 	}
 

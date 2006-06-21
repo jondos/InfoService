@@ -43,12 +43,14 @@ import anon.NotConnectedToMixException;
 import anon.client.AnonClient;
 import anon.infoservice.ImmutableProxyInterface;
 import anon.infoservice.MixCascade;
+import anon.infoservice.AbstractMixCascadeContainer;
 import anon.mixminion.MixminionServiceDescription;
 import anon.shared.ProxyConnection;
 import anon.tor.TorAnonServerDescription;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.AnonServerDescription;
 
 /**
  * This calls implements a proxy one can use for convienient access to the
@@ -91,7 +93,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	/**
 	 * Stores the MixCascade we are connected to.
 	 */
-	private MixCascade m_currentMixCascade;
+	private AbstractMixCascadeContainer m_currentMixCascade = new DummyMixCascadeContainer();
 
 	/**
 	 * Stores the Tor params.
@@ -187,16 +189,23 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	 * @param newMixCascade
 	 *          The new MixCascade we are connected to.
 	 */
-	public void setMixCascade(MixCascade newMixCascade)
+	public void setMixCascade(AbstractMixCascadeContainer newMixCascade)
 	{
-		m_currentMixCascade = newMixCascade;
+		if (newMixCascade == null)
+		{
+			m_currentMixCascade = new DummyMixCascadeContainer();
+		}
+		else
+		{
+			m_currentMixCascade = newMixCascade;
+		}
 		// m_AICom.setAnonServer(newMixCascade);
 	}
 
-	/** Retruns the current Mix cascade */
+	/** Returns the current Mix cascade */
 	public MixCascade getMixCascade()
 	{
-		return m_currentMixCascade;
+		return m_currentMixCascade.getCurrentMixCascade();
 	}
 
 	/**
@@ -300,7 +309,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 							  " m_Anon is NULL - should never ever happen!");
 				return ErrorCodes.E_INVALID_SERVICE;
 			}
-			int ret = m_Anon.initialize(m_currentMixCascade);
+			int ret = m_Anon.initialize(m_currentMixCascade.getNextMixCascade());
 			if (ret != ErrorCodes.E_SUCCESS)
 			{
 				if (!a_bRetryOnError || ret == E_SIGNATURE_CHECK_FIRSTMIX_FAILED ||
@@ -312,6 +321,10 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				{
 					m_bConnectionError = true;
 				}
+			}
+			else
+			{
+				m_currentMixCascade.keepCurrentCascade();
 			}
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "AN.ON initialized");
 			if (m_currentTorParams != null)
@@ -487,9 +500,10 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			while (threadRun != null && m_bAutoReconnect)
 			{
 				LogHolder.log(LogLevel.ERR, LogType.NET, "Try reconnect to Mix");
-				int ret = m_Anon.initialize(m_currentMixCascade);
+				int ret = m_Anon.initialize(m_currentMixCascade.getNextMixCascade());
 				if (ret == ErrorCodes.E_SUCCESS)
 				{
+					m_currentMixCascade.keepCurrentCascade();
 					return true;
 				}
 				try
@@ -542,35 +556,65 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	private void fireDisconnected()
 	{
-		Enumeration e = m_anonServiceListener.elements();
-		while (e.hasMoreElements())
+		synchronized(m_anonServiceListener)
 		{
-			( (AnonServiceEventListener) e.nextElement()).disconnected();
+			Enumeration e = m_anonServiceListener.elements();
+			while (e.hasMoreElements())
+			{
+				( (AnonServiceEventListener) e.nextElement()).disconnected();
+			}
 		}
 	}
 
-	private void fireConnectionEstablished()
+	private void fireConnecting(AnonServerDescription a_serverDescription)
 	{
-		Enumeration e = m_anonServiceListener.elements();
-		while (e.hasMoreElements())
+		synchronized(m_anonServiceListener)
 		{
-			( (AnonServiceEventListener) e.nextElement()).connectionEstablished();
+			Enumeration e = m_anonServiceListener.elements();
+			while (e.hasMoreElements())
+			{
+				( (AnonServiceEventListener) e.nextElement()).connecting(
+					a_serverDescription);
+			}
+		}
+	}
+
+	private void fireConnectionEstablished(AnonServerDescription a_serverDescription)
+	{
+		synchronized(m_anonServiceListener)
+		{
+			Enumeration e = m_anonServiceListener.elements();
+			while (e.hasMoreElements())
+			{
+				( (AnonServiceEventListener) e.nextElement()).connectionEstablished(
+					a_serverDescription);
+			}
 		}
 	}
 
 	private void fireConnectionError()
 	{
-		Enumeration e = m_anonServiceListener.elements();
-		while (e.hasMoreElements())
+		synchronized(m_anonServiceListener)
 		{
-			( (AnonServiceEventListener) e.nextElement()).connectionError();
+			Enumeration e = m_anonServiceListener.elements();
+			while (e.hasMoreElements())
+			{
+				( (AnonServiceEventListener) e.nextElement()).connectionError();
+			}
 		}
 	}
 
-	public void connectionEstablished()
+	public void connecting(AnonServerDescription a_serverDescription)
+	{
+		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy received connecting.");
+		fireConnecting(a_serverDescription);
+	}
+
+
+	public void connectionEstablished(AnonServerDescription a_serverDescription)
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy received connectionEstablished.");
-		fireConnectionEstablished();
+		fireConnectionEstablished(a_serverDescription);
 	}
 
 	public void disconnected()
@@ -594,15 +638,18 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	public synchronized void addEventListener(AnonServiceEventListener l)
 	{
-		Enumeration e = m_anonServiceListener.elements();
-		while (e.hasMoreElements())
+		synchronized(m_anonServiceListener)
 		{
-			if (l.equals(e.nextElement()))
+			Enumeration e = m_anonServiceListener.elements();
+			while (e.hasMoreElements())
 			{
-				return;
+				if (l.equals(e.nextElement()))
+				{
+					return;
+				}
 			}
+			m_anonServiceListener.addElement(l);
 		}
-		m_anonServiceListener.addElement(l);
 	}
 
 	public synchronized void removeEventListener(AnonServiceEventListener l)
@@ -630,4 +677,18 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	}
 
+	private class DummyMixCascadeContainer extends AbstractMixCascadeContainer
+	{
+		public MixCascade getNextMixCascade()
+		{
+			return null;
+		}
+		public MixCascade getCurrentMixCascade()
+		{
+			return null;
+		}
+	}
 }
+
+
+

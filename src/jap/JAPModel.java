@@ -79,6 +79,8 @@ public final class JAPModel extends Observable
 
 	private boolean m_bRemindOptionalUpdate;
 
+	private boolean m_bChooseCascasdeConnectionAutomatically;
+
 
 	private static JAPModel ms_TheModel = null;
 
@@ -274,6 +276,16 @@ public final class JAPModel extends Observable
 	public void setReminderForOptionalUpdate(boolean a_bRemind)
 	{
 		m_bRemindOptionalUpdate = a_bRemind;
+	}
+
+	public void setChooseCascadeConnectionAutomatically(boolean a_bChooseCascasdeConnectionAutomatically)
+	{
+		m_bChooseCascasdeConnectionAutomatically = a_bChooseCascasdeConnectionAutomatically;
+	}
+
+	public boolean isCascadeConnectionChosenAutomatically()
+	{
+		return m_bChooseCascasdeConnectionAutomatically;
 	}
 
 	public boolean isAnonConnected()
