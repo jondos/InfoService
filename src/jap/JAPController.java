@@ -219,7 +219,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 		});
 
-		// initialise IS update thread
+		// initialise IS update threads
+		m_feedback = new JAPFeedback();
 		m_InfoServiceUpdater = new InfoServiceUpdater();
 		m_MixCascadeUpdater = new MixCascadeUpdater();
 
@@ -342,6 +343,16 @@ public final class JAPController extends Observable implements IProxyListener, O
 		return m_passwordReader;
 	}
 
+	public void chooseRandomMixCascade()
+	{
+		if (JAPModel.getInstance().isCascadeConnectionChosenAutomatically())
+		{
+			AutoSwitchedMixCascadeContainer cascadeSwitcher = new AutoSwitchedMixCascadeContainer();
+			cascadeSwitcher.getNextMixCascade();
+			setCurrentMixCascade(cascadeSwitcher.getNextMixCascade());
+		}
+	}
+
 	//---------------------------------------------------------------------
 	public void initialRun()
 	{
@@ -349,6 +360,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPModel:initial run of JAP...");
 
 		// start update threads
+		m_feedback.start();
 		m_InfoServiceUpdater.start();
 		m_MixCascadeUpdater.start();
 
@@ -765,12 +777,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 						}
 						nodeCascade = nodeCascade.getNextSibling();
 					}
-				}
-				if (JAPModel.getInstance().isCascadeConnectionChosenAutomatically())
-				{
-					AutoSwitchedMixCascadeContainer cascadeSwitcher = new AutoSwitchedMixCascadeContainer();
-					cascadeSwitcher.getNextMixCascade();
-					setCurrentMixCascade(cascadeSwitcher.getNextMixCascade());
 				}
 
 				/* try to load information about user defined mixes */
@@ -2071,13 +2077,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						}
 
 						// start feedback thread
-						JAPFeedback feedback = m_feedback;
-						if (feedback != null)
-						{
-							feedback.stopRequests();
-						}
-						m_feedback = new JAPFeedback();
-						m_feedback.startRequests();
+						//m_feedback.update();
 					}
 					// ootte
 					else
@@ -2171,11 +2171,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_finishSync.notifyAll();
 				}
 
-				if (m_feedback != null)
-				{
-					m_feedback.stopRequests();
-					m_feedback = null;
-				}
 				m_proxyDirect = new DirectProxy(m_socketHTTPListener);
 				m_proxyDirect.startService();
 
@@ -2527,6 +2522,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_Controller.m_bShutdown = true;
 					// disallow InfoService traffic
 					JAPModel.getInstance().setInfoServiceDisabled(true);
+					m_Controller.m_feedback.stop();
 					m_Controller.m_MixCascadeUpdater.stop();
 					m_Controller.m_InfoServiceUpdater.stop();
 					// do not show direct connection warning dialog
@@ -3188,6 +3184,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	public void connectionEstablished(AnonServerDescription a_serverDescription)
 	{
+		m_feedback.update();
 		synchronized (m_anonServiceListener)
 		{
 			Enumeration e = m_anonServiceListener.elements();

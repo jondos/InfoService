@@ -364,6 +364,9 @@ public class JAP
 		{
 			LogHolder.log(LogLevel.NOTICE, LogType.CRYPTO, a_e);
 		}
+
+		m_controller.chooseRandomMixCascade();
+
 		if (!bConsoleOnly)
 		{
 			JAPNewView frameView = (JAPNewView)view;

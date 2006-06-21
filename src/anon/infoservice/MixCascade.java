@@ -578,7 +578,7 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 * Fetches the current status of the mixcascade from the InfoService. The StatusInfo is
 	 * available by calling getCurrentStatus().
 	 */
-	public void fetchCurrentStatus()
+	public StatusInfo fetchCurrentStatus()
 	{
 		synchronized (this)
 		{
@@ -592,16 +592,14 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 			}
 			StatusInfo statusInfo =
 				InfoServiceHolder.getInstance().getStatusInfo(getId(), getNumberOfMixes());
-			if (statusInfo != null)
-			{
-				Database.getInstance(StatusInfo.class).update(statusInfo);
-			}
+
 			if (certificateLock != -1)
 			{
 				/* remove the lock on the certificate */
 				SignatureVerifier.getInstance().getVerificationCertificateStore().removeCertificateLock(
 					certificateLock);
 			}
+			return statusInfo;
 		}
 	}
 

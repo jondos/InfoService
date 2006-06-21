@@ -30,11 +30,13 @@ package jap;
 import java.util.Vector;
 
 import anon.infoservice.AbstractDatabaseEntry;
+import anon.infoservice.Database;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.MixCascade;
 import anon.infoservice.MixInfo;
-import anon.infoservice.Database;
-import logging.*;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * Updates the list of available MixCascades.
@@ -42,6 +44,13 @@ import logging.*;
  */
 public class MixCascadeUpdater extends AbstractDatabaseUpdater
 {
+	private static final int UPDATE_INTERVAL_MS = 5 * 60000;
+
+	public MixCascadeUpdater()
+	{
+		super(UPDATE_INTERVAL_MS);
+	}
+
 	public Class getUpdatedClass()
 	{
 		return MixCascade.class;
@@ -63,8 +72,10 @@ public class MixCascadeUpdater extends AbstractDatabaseUpdater
 	/**
 	 * Removes all MixInfo entries that exist without a cascade.
 	 */
-	protected void doCleanup()
+	protected boolean doCleanup(Vector a_newEntries)
 	{
+		boolean bUpdated = super.doCleanup(a_newEntries);
+
 		LogHolder.log(LogLevel.NOTICE, LogType.MISC, "Do MixInfo database cleanup.");
 
 		Vector mixes = Database.getInstance(MixInfo.class).getEntryList();
@@ -95,7 +106,8 @@ public class MixCascadeUpdater extends AbstractDatabaseUpdater
 			LogHolder.log(LogLevel.INFO, LogType.MISC, "Cleaned MixInfo DB entry: " + currentMix.getId());
 		}
 
-}
+		return bUpdated;
+	}
 
 	protected Vector getUpdatedEntries()
 	{

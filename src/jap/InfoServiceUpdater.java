@@ -40,6 +40,14 @@ import anon.infoservice.InfoServiceHolder;
  */
 public class InfoServiceUpdater extends AbstractDatabaseUpdater
 {
+	private static final int UPDATE_INTERVAL_MS = 5 * 60000;
+
+	public InfoServiceUpdater()
+	{
+		super(UPDATE_INTERVAL_MS);
+	}
+
+
 	public Class getUpdatedClass()
 	{
 		return InfoServiceDBEntry.class;

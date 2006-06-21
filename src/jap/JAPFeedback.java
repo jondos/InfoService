@@ -27,86 +27,58 @@
  */
 package jap;
 
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
+import java.util.Vector;
 
-final class JAPFeedback implements Runnable
+import anon.infoservice.AbstractDatabaseEntry;
+import anon.infoservice.StatusInfo;
+import anon.util.Util;
+
+final class JAPFeedback extends AbstractDatabaseUpdater
 {
-	private final Object THREAD_SYNC = new Object();
-	private JAPController controller;
+	private static final int UPDATE_INTERVAL_MS = 6000;
 
-	private Thread m_threadRunLoop;
 
 	public JAPFeedback()
 	{
-		LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPFeedback:initializing...");
-		controller = JAPController.getInstance();
+		super(UPDATE_INTERVAL_MS);
 	}
 
-	public void run()
+	protected AbstractDatabaseEntry getPreferredEntry()
 	{
-		while (!Thread.currentThread().isInterrupted())
+		return null;
+	}
+	protected void setPreferredEntry(AbstractDatabaseEntry a_preferredEntry)
+	{
+		// do nothing
+	}
+
+	public Class getUpdatedClass()
+	{
+		return StatusInfo.class;
+	}
+
+	protected boolean doCleanup(Vector a_newEntries)
+	{
+		// no cleanup is needed as the status info has a short timeout
+		return false;
+	}
+
+	protected Vector getUpdatedEntries()
+	{
+		if (!JAPController.getInstance().getAnonMode() ||
+			JAPController.getInstance().getCurrentMixCascade().isUserDefined())
 		{
-			if (controller.getAnonMode() && !JAPModel.isInfoServiceDisabled())
-			{
-				controller.getCurrentMixCascade().fetchCurrentStatus();
-				controller.notifyJAPObservers();
-			}
-			try
-			{
-				synchronized (Thread.currentThread())
-				{
-					Thread.currentThread().wait(60000);
-				}
-				//Thread.sleep(6000); // for testing only
-			}
-			catch (InterruptedException a_e)
-			{
-				break;
-			}
+			return new Vector();
+		}
+
+		StatusInfo info = JAPController.getInstance().getCurrentMixCascade().fetchCurrentStatus();
+		if (info == null)
+		{
+			return new Vector();
+		}
+		else
+		{
+			return Util.toVector(info);
 		}
 	}
-
-	public void startRequests()
-	{
-		synchronized (THREAD_SYNC)
-		{
-			if (m_threadRunLoop == null)
-			{
-				m_threadRunLoop = new Thread(this, "JAP - Feedback");
-				m_threadRunLoop.setDaemon(true);
-				m_threadRunLoop.setPriority(Thread.MIN_PRIORITY);
-				m_threadRunLoop.start();
-			}
-		}
-	}
-
-	public void stopRequests()
-	{
-		synchronized (THREAD_SYNC)
-		{
-			if (m_threadRunLoop != null)
-			{
-				while (m_threadRunLoop.isAlive())
-				{
-					try
-					{
-						synchronized (m_threadRunLoop)
-						{
-							m_threadRunLoop.notifyAll();
-							m_threadRunLoop.interrupt();
-						}
-						m_threadRunLoop.join(1000);
-					}
-					catch (InterruptedException a_e)
-					{
-						// ignore
-					}
-				}
-				m_threadRunLoop = null;
-			}
-		}
-	}
-
 }

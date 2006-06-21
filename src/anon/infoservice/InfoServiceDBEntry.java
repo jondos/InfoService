@@ -1103,7 +1103,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		NodeList mixCascadeStatusNodes = doc.getElementsByTagName("MixCascadeStatus");
 		if (mixCascadeStatusNodes.getLength() == 0)
 		{
-			throw (new Exception("InfoService: getStatusInfo: Error in XML structure."));
+			throw (new Exception("Error in XML structure."));
 		}
 		Element mixCascadeStatusNode = (Element) (mixCascadeStatusNodes.item(0));
 		/* check the signature */
@@ -1112,7 +1112,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		{
 			/* signature is invalid -> throw an exception */
 			throw (new Exception(
-				"InfoServiceDBEntry: getStatusInfo: Cannot verify the signature for MixCascadeStatus entry: " +
+				"Cannot verify the signature for MixCascadeStatus entry: " +
 				XMLUtil.toString(mixCascadeStatusNode)));
 		}
 		/* signature was valid */
