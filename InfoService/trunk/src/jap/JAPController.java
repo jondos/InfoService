@@ -39,6 +39,7 @@ import java.util.Locale;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
+import java.util.Random;
 
 import java.awt.Component;
 import java.awt.Cursor;
@@ -55,6 +56,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
+import anon.AnonServerDescription;
 import anon.AnonServiceEventAdapter;
 import anon.AnonServiceEventListener;
 import anon.ErrorCodes;
@@ -71,6 +73,7 @@ import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
 import anon.infoservice.MixInfo;
 import anon.infoservice.ProxyInterface;
+import anon.infoservice.SimpleMixCascadeContainer;
 import anon.mixminion.MixminionServiceDescription;
 import anon.pay.BI;
 import anon.pay.IAIEventListener;
@@ -93,7 +96,6 @@ import gui.dialog.PasswordContentPane;
 import jap.forward.JAPRoutingEstablishForwardedConnectionDialog;
 import jap.forward.JAPRoutingMessage;
 import jap.forward.JAPRoutingSettings;
-import jap.JAPUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -101,6 +103,7 @@ import platform.AbstractOS;
 import proxy.DirectProxy;
 import proxy.DirectProxy.AllowUnprotectedConnectionCallback;
 import update.JAPUpdateWizard;
+import anon.infoservice.AbstractMixCascadeContainer;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -139,6 +142,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	private static final String XML_ALLOW_NON_ANONYMOUS_CONNECTION = "AllowNonAnonymousConnection";
 	private static final String XML_ALLOW_NON_ANONYMOUS_UPDATE = "AllowNonAnonymousUpdate";
+	private static final String XML_ATTR_AUTO_CHOOSE_CASCADES = "AutoChooseCascades";
 
 	/**
 	 * Stores all MixCascades we know (information comes from infoservice or was entered by a user).
@@ -624,8 +628,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 				JAPModel.getInstance().setReminderForOptionalUpdate(
 								XMLUtil.parseAttribute(root, JAPModel.XML_REMIND_OPTIONAL_UPDATE,
 								JAPConstants.REMIND_OPTIONAL_UPDATE));
-
-
+				JAPModel.getInstance().setChooseCascadeConnectionAutomatically(
+								XMLUtil.parseAttribute(root, XML_ATTR_AUTO_CHOOSE_CASCADES, true));
 
 	            int port = XMLUtil.parseAttribute(root, JAPConstants.CONFIG_PORT_NUMBER,
 												  JAPModel.getHttpListenerPortNumber());
@@ -663,7 +667,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				catch (Exception ex)
 				{
 					LogHolder.log(LogLevel.INFO, LogType.MISC,
-								  "JAPController: loadConfigFile: Error loading reminder message ins setAnonMode.");
+								  "Error loading reminder message ins setAnonMode.");
 				}
 				/* infoservice configuration options */
 				boolean b = XMLUtil.parseAttribute(root, JAPConstants.CONFIG_INFOSERVICE_DISABLED,
@@ -720,20 +724,27 @@ public final class JAPController extends Observable implements IProxyListener, O
 									 XMLUtil.parseAttribute(
 					root,JAPConstants.CONFIG_PROXY_AUTHORIZATION, false));
 
+				setDummyTraffic(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_DUMMY_TRAFFIC_INTERVALL,
+					-1));
+				setAutoConnect(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_AUTO_CONNECT, false));
+				setAutoReConnect(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_AUTO_RECONNECT, true));
+				m_Model.setMinimizeOnStartup(
+					XMLUtil.parseAttribute(root, JAPConstants.CONFIG_MINIMIZED_STARTUP, false));
+
+
 				/* try to get the info from the MixCascade node */
-				MixCascade defaultMixCascade = null;
 				Element mixCascadeNode = (Element) XMLUtil.getFirstChildByName(root,
 					MixCascade.XML_ELEMENT_NAME);
 				try
 				{
-					defaultMixCascade = new MixCascade( (Element) mixCascadeNode);
+					m_currentMixCascade = new MixCascade( (Element) mixCascadeNode,  Long.MAX_VALUE);
 				}
 				catch (Exception e)
 				{
 					/* take the current mixcascade as the default */
-					defaultMixCascade = getCurrentMixCascade();
+					m_currentMixCascade = getCurrentMixCascade();
 				}
-				setCurrentMixCascade(defaultMixCascade);
+				Database.getInstance(MixCascade.class).update(getCurrentMixCascade());
 
 				/* try to load information about user defined cascades */
 				Node nodeCascades = XMLUtil.getFirstChildByName(root, MixCascade.XML_ELEMENT_CONTAINER_NAME);
@@ -754,6 +765,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 						}
 						nodeCascade = nodeCascade.getNextSibling();
 					}
+				}
+				if (JAPModel.getInstance().isCascadeConnectionChosenAutomatically())
+				{
+					AutoSwitchedMixCascadeContainer cascadeSwitcher = new AutoSwitchedMixCascadeContainer();
+					cascadeSwitcher.getNextMixCascade();
+					setCurrentMixCascade(cascadeSwitcher.getNextMixCascade());
 				}
 
 				/* try to load information about user defined mixes */
@@ -776,12 +793,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						nodeMix = nodeMix.getNextSibling();
 					}
 				}
-				setDummyTraffic(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_DUMMY_TRAFFIC_INTERVALL,
-					-1));
-				setAutoConnect(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_AUTO_CONNECT, false));
-				setAutoReConnect(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_AUTO_RECONNECT, true));
-				m_Model.setMinimizeOnStartup(
-								XMLUtil.parseAttribute(root, JAPConstants.CONFIG_MINIMIZED_STARTUP, false));
+
 				//Load Locale-Settings
 				String strLocale =
 					XMLUtil.parseAttribute(root, JAPConstants.CONFIG_LOCALE,	m_Locale.getLanguage());
@@ -1380,6 +1392,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 								 JAPModel.getInstance().isUpdateViaDirectConnectionAllowed());
 			XMLUtil.setAttribute(e, JAPModel.XML_REMIND_OPTIONAL_UPDATE,
 								 JAPModel.getInstance().isReminderForOptionalUpdateActivated());
+			XMLUtil.setAttribute(e, XML_ATTR_AUTO_CHOOSE_CASCADES,
+								 JAPModel.getInstance().isCascadeConnectionChosenAutomatically());
 
 			/* save payment configuration */
 			try
@@ -1661,7 +1675,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					setAnonMode(false);
 					m_currentMixCascade = newMixCascade;
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-								  "JAPController: setCurrentMixCascade: MixCascade changed while in anonymity mode.");
+								  "MixCascade changed while in anonymity mode.");
 					setAnonMode(true);
 				}
 				else
@@ -1929,8 +1943,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 						}
 
 					}
-					MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
-					m_proxyAnon.setMixCascade(currentMixCascade);
+
+					//m_proxyAnon.setMixCascade(new SimpleMixCascadeContainer(
+						//			   m_Controller.getCurrentMixCascade()));
+					m_proxyAnon.setMixCascade(new AutoSwitchedMixCascadeContainer());
 					m_proxyAnon.setAutoReConnect(JAPModel.getAutoReConnect());
 					TorAnonServerDescription td = new TorAnonServerDescription(true,
 						JAPModel.isPreCreateAnonRoutesEnabled());
@@ -1998,15 +2014,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 						AnonServiceEventAdapter adapter = new AnonServiceEventAdapter()
 						{
 							boolean bWaitingForConnection = true;
-							public synchronized void connectionEstablished()
+							public synchronized void connectionEstablished(
+								AnonServerDescription a_serverDescription)
 							{
 								if (bWaitingForConnection)
 								{
 									try
 									{
 										proxyAnon.getAnonService().getPay().getAIControlChannel().
-											addAIListener(
-												m_caller);
+											addAIListener(m_caller);
 									}
 									catch (Exception a_e)
 									{
@@ -2021,7 +2037,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						if (ret == ErrorCodes.E_SUCCESS)
 						{
 							LogHolder.log(LogLevel.DEBUG, LogType.NET, "AN.ON service started successfully");
-							adapter.connectionEstablished();
+							adapter.connectionEstablished(proxyAnon.getMixCascade());
 
 							if (!mbActCntMessageNotRemind && !JAPModel.isSmallDisplay())
 							{
@@ -2129,7 +2145,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					catch (NullPointerException a_e)
 					{
 					}
-					if (cascade != null)
+					if (cascade != null && !cascade.isUserDefined())
 					{
 						if (Database.getInstance(MixCascade.class).getEntryById(cascade.getId()) == null)
 						{
@@ -2828,22 +2844,25 @@ public final class JAPController extends Observable implements IProxyListener, O
 		return null;
 	}
 
-	public synchronized void removeEventListener(AnonServiceEventListener a_listener)
+	public void removeEventListener(AnonServiceEventListener a_listener)
 	{
 		m_anonServiceListener.removeElement(a_listener);
 	}
 
-	public synchronized void addEventListener(AnonServiceEventListener a_listener)
+	public void addEventListener(AnonServiceEventListener a_listener)
 	{
-		Enumeration e = m_anonServiceListener.elements();
-		while (e.hasMoreElements())
+		synchronized (m_anonServiceListener)
 		{
-			if (a_listener.equals(e.nextElement()))
+			Enumeration e = m_anonServiceListener.elements();
+			while (e.hasMoreElements())
 			{
-				return;
+				if (a_listener.equals(e.nextElement()))
+				{
+					return;
+				}
 			}
+			m_anonServiceListener.addElement(a_listener);
 		}
-		m_anonServiceListener.addElement(a_listener);
 	}
 
 
@@ -3147,12 +3166,36 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 	}
 
-	public void connectionEstablished()
+	public void connecting(AnonServerDescription a_serverDescription)
 	{
-		Enumeration e = m_anonServiceListener.elements();
-		while (e.hasMoreElements())
+		if (a_serverDescription instanceof MixCascade &&
+			!m_currentMixCascade.equals(a_serverDescription))
 		{
-			( (AnonServiceEventListener) e.nextElement()).connectionEstablished();
+			m_currentMixCascade = (MixCascade)a_serverDescription;
+			notifyJAPObservers();
+		}
+		synchronized (m_anonServiceListener)
+		{
+			Enumeration e = m_anonServiceListener.elements();
+			while (e.hasMoreElements())
+			{
+				( (AnonServiceEventListener) e.nextElement()).connecting(
+								a_serverDescription);
+			}
+		}
+	}
+
+
+	public void connectionEstablished(AnonServerDescription a_serverDescription)
+	{
+		synchronized (m_anonServiceListener)
+		{
+			Enumeration e = m_anonServiceListener.elements();
+			while (e.hasMoreElements())
+			{
+				( (AnonServiceEventListener) e.nextElement()).connectionEstablished(
+								a_serverDescription);
+			}
 		}
 	}
 
@@ -3161,10 +3204,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 		synchronized (m_finishSync)
 		{
 			m_proxyAnon = null;
-			Enumeration e = m_anonServiceListener.elements();
-			while (e.hasMoreElements())
+			synchronized (m_anonServiceListener)
 			{
-				( (AnonServiceEventListener) e.nextElement()).disconnected();
+				Enumeration e = m_anonServiceListener.elements();
+				while (e.hasMoreElements())
+				{
+					( (AnonServiceEventListener) e.nextElement()).disconnected();
+				}
 			}
 			m_finishSync.notifyAll();
 		}
@@ -3185,10 +3231,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 			this.setAnonMode(false);
 		}
 
-		Enumeration e = m_anonServiceListener.elements();
-		while (e.hasMoreElements())
+		synchronized (m_anonServiceListener)
 		{
-			( (AnonServiceEventListener) e.nextElement()).connectionError();
+			Enumeration e = m_anonServiceListener.elements();
+			while (e.hasMoreElements())
+			{
+				( (AnonServiceEventListener) e.nextElement()).connectionError();
+			}
 		}
 	}
 
@@ -3286,10 +3335,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public void packetMixed(long a_totalBytes)
 	{
 		JAPModel.getInstance().setMixedBytes(a_totalBytes);
-		Enumeration e = m_anonServiceListener.elements();
-		while (e.hasMoreElements())
+		synchronized (m_anonServiceListener)
 		{
-			( (AnonServiceEventListener) e.nextElement()).packetMixed(a_totalBytes);
+			Enumeration e = m_anonServiceListener.elements();
+			while (e.hasMoreElements())
+			{
+				( (AnonServiceEventListener) e.nextElement()).packetMixed(a_totalBytes);
+			}
 		}
 	}
 
@@ -3308,4 +3360,125 @@ public final class JAPController extends Observable implements IProxyListener, O
 		m_bPayCascadeNoAsk = a_payCascadeNoAsk;
 	}
 
+	/**
+	 * This class returns a new random cascade from all currently available cascades every time
+	 * getNextCascade() is called. If all available cascades have been returned once, this class starts
+	 * again by choosing the random cascades from all available ones.
+	 * @author Rolf Wendolsky
+	 */
+	private class AutoSwitchedMixCascadeContainer extends AbstractMixCascadeContainer
+	{
+		private Hashtable m_alreadyTriedCascades;
+		private Random m_random;
+		private MixCascade m_initialCascade;
+		private MixCascade m_currentCascade;
+		private boolean m_bKeepCurrentCascade;
+
+		public AutoSwitchedMixCascadeContainer()
+		{
+			m_alreadyTriedCascades = new Hashtable();
+			m_random = new Random();
+			m_initialCascade = JAPController.getInstance().getCurrentMixCascade();
+			m_bKeepCurrentCascade = false;
+		}
+		public MixCascade getNextMixCascade()
+		{
+			synchronized (m_alreadyTriedCascades)
+			{
+				if (!JAPModel.getAutoReConnect() ||
+					!JAPModel.getInstance().isCascadeConnectionChosenAutomatically())
+				{
+					m_alreadyTriedCascades.clear();
+					m_bKeepCurrentCascade = false;
+					if (m_currentCascade == null)
+					{
+						m_currentCascade = m_initialCascade;
+					}
+				}
+				else if (m_bKeepCurrentCascade)
+				{
+					// do not check if this cascade has been used before
+					m_bKeepCurrentCascade = false;
+					if (m_currentCascade == null)
+					{
+						m_currentCascade = m_initialCascade;
+					}
+					if (m_currentCascade != null)
+					{
+						m_alreadyTriedCascades.put(m_currentCascade.getId(), m_currentCascade);
+					}
+				}
+				else if (m_initialCascade == null ||
+						 m_alreadyTriedCascades.containsKey(m_initialCascade.getId()))
+				{
+					MixCascade currentCascade = null;
+					Vector availableCascades = Database.getInstance(MixCascade.class).getEntryList();
+					if (availableCascades.size() > 0)
+					{
+						int chosenCascadeIndex = m_random.nextInt();
+						if (chosenCascadeIndex < 0)
+						{
+							// only positive numers are allowed
+							chosenCascadeIndex *= -1;
+						}
+						// chose an index from the vector
+						chosenCascadeIndex %= availableCascades.size();
+
+						/* Go through all indices until a suitable MixCascade is found or the original index
+						 * is reached.
+						 */
+						boolean bFirstRun = true;
+						int currentCascadeIndex = chosenCascadeIndex;
+						while (bFirstRun || currentCascadeIndex < chosenCascadeIndex)
+						{
+							bFirstRun = false;
+							currentCascade = (MixCascade) availableCascades.elementAt(chosenCascadeIndex);
+							// this is the logic that decides whether to use a cascade or not
+							if (!m_alreadyTriedCascades.containsKey(currentCascade.getId()))
+							{
+								m_alreadyTriedCascades.put(currentCascade.getId(), currentCascade);
+								if (!(currentCascade.isPayment() &&
+									  (!JAPController.getInstance().getDontAskPayment() ||
+									   PayAccountsFile.getInstance().getNumAccounts() == 0)))
+								{
+									break;
+								}
+								currentCascade = null;
+							}
+							currentCascadeIndex = (currentCascadeIndex + 1) % availableCascades.size();
+						}
+					}
+					else if (m_initialCascade == null)
+					{
+						// no cascade is available
+						return null;
+					}
+					if (currentCascade == null)
+					{
+						m_alreadyTriedCascades.clear();
+						m_currentCascade = getNextMixCascade();
+					}
+					m_currentCascade = currentCascade;
+				}
+				else
+				{
+					m_alreadyTriedCascades.put(m_initialCascade.getId(), m_initialCascade);
+					m_currentCascade = m_initialCascade;
+				}
+			}
+			return m_currentCascade;
+		}
+		public MixCascade getCurrentMixCascade()
+		{
+			return m_currentCascade;
+		}
+
+		public void keepCurrentCascade()
+		{
+			synchronized (m_alreadyTriedCascades)
+			{
+				m_bKeepCurrentCascade = true;
+			}
+		}
+	}
 }

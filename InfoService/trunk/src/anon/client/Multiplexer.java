@@ -46,26 +46,26 @@ import logging.LogLevel;
 import logging.LogType;
 
 
-/** 
+/**
  * @author Stefan Lieske
  */
 public class Multiplexer extends Observable implements Runnable {
 
   private Vector m_sendJobQueue;
-  
+
   private ChannelTable m_channelTable;
-  
+
   private InputStream m_inputStream;
-  
+
   private OutputStream m_outputStream;
-  
+
   private SymCipher m_inputStreamCipher;
 
   private SymCipher m_outputStreamCipher;
-  
+
   private Object m_internalEventSynchronization;
-  
-  
+
+
   public Multiplexer(InputStream a_inputStream, OutputStream a_outputStream, KeyExchangeManager a_keyExchangeManager, SecureRandom a_channelIdGenerator) {
     m_internalEventSynchronization = new Object();
     m_sendJobQueue = new Vector();
@@ -78,8 +78,8 @@ public class Multiplexer extends Observable implements Runnable {
     downstreamThread.setDaemon(true);
     downstreamThread.start();
   }
-  
-  
+
+
   public void sendPacket(MixPacket a_mixPacket) throws IOException {
     Object ownSynchronizationObject = new Object();
     synchronized (ownSynchronizationObject) {
@@ -106,7 +106,7 @@ public class Multiplexer extends Observable implements Runnable {
               if (m_sendJobQueue.size() > 1) {
                 /* there are more threads waiting to send packets */
                 nextLockObject = m_sendJobQueue.elementAt(1);
-              }             
+              }
             }
             m_sendJobQueue.removeElement(ownSynchronizationObject);
           }
@@ -126,7 +126,7 @@ public class Multiplexer extends Observable implements Runnable {
     /* first call all SendCallbackHandlers to finalize the packet */
     Enumeration sendCallbackHandlers = a_mixPacket.getSendCallbackHandlers().elements();
     while (sendCallbackHandlers.hasMoreElements()) {
-      ((ISendCallbackHandler)(sendCallbackHandlers.nextElement())).finalizePacket(a_mixPacket);      
+      ((ISendCallbackHandler)(sendCallbackHandlers.nextElement())).finalizePacket(a_mixPacket);
     }
     byte[] packetData = a_mixPacket.getRawPacket();
     /* do stream-encoding */
@@ -168,7 +168,7 @@ public class Multiplexer extends Observable implements Runnable {
       }
     }
   }
- 
+
   public void run() {
     try {
       while (true) {
@@ -191,7 +191,7 @@ public class Multiplexer extends Observable implements Runnable {
         }
         else {
           /* we don't know a channel with the specified ID - maybe it's already closed */
-          LogHolder.log(LogLevel.INFO, LogType.NET, "Multiplexer: run(): Received a packet for unknown channel '" + Integer.toString(receivedPacket.getChannelId()) + "'.");
+          LogHolder.log(LogLevel.INFO, LogType.NET, "Received a packet for unknown channel '" + Integer.toString(receivedPacket.getChannelId()) + "'.");
           synchronized (m_internalEventSynchronization) {
             setChanged();
             if (m_channelTable.isControlChannelId(receivedPacket.getChannelId())) {
@@ -212,9 +212,9 @@ public class Multiplexer extends Observable implements Runnable {
     /* close the channel-table (notifies also all open channels) */
     m_channelTable.closeChannelTable();
   }
-  
+
   public ChannelTable getChannelTable() {
     return m_channelTable;
   }
-   
+
 }

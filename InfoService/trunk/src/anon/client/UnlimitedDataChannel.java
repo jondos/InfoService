@@ -37,30 +37,30 @@ import logging.LogType;
 import anon.client.crypto.MixCipherChain;
 
 
-/** 
+/**
  * @author Stefan Lieske
  */
 public class UnlimitedDataChannel extends AbstractDataChannel {
 
   private static final short FLAG_CHANNEL_DATA  = 0x0000;
-  
+
   private static final short FLAG_CHANNEL_CLOSE = 0x0001;
 
   private static final short FLAG_CHANNEL_OPEN  = 0x0008;
 
-  
+
   private Object m_internalSynchronization;
-  
+
   private boolean m_channelOpened;
-    
-  
+
+
   public UnlimitedDataChannel(int a_channelId, Multiplexer a_parentMultiplexer, AbstractDataChain a_parentDataChain, MixCipherChain a_mixCipherChain) {
     super(a_channelId, a_parentMultiplexer, a_parentDataChain, a_mixCipherChain);
     m_internalSynchronization = new Object();
     m_channelOpened = false;
   }
-  
-  
+
+
   public void organizeChannelClose() {
     synchronized (m_internalSynchronization) {
       if (m_channelOpened) {
@@ -83,9 +83,9 @@ public class UnlimitedDataChannel extends AbstractDataChannel {
       deleteChannel();
       /* send a close-channel message via the message-queue */
       getChannelMessageQueue().addChannelMessage(new InternalChannelMessage(InternalChannelMessage.CODE_CHANNEL_CLOSED, null));
-    }   
+    }
   }
- 
+
   public boolean processSendOrder(DataChainSendOrderStructure a_order) {
     synchronized (m_internalSynchronization) {
       if (!m_channelOpened) {
@@ -102,11 +102,11 @@ public class UnlimitedDataChannel extends AbstractDataChannel {
   public void multiplexerClosed() {
     LogHolder.log(LogLevel.ERR, LogType.NET, "UnlimitedDataChannel: multiplexerClosed(): Multiplexer closed while channel was still active.");
     /* send an exception and a channel-close message */
-    getChannelMessageQueue().addChannelMessage(new InternalChannelMessage(InternalChannelMessage.CODE_CHANNEL_EXCEPTION, null));        
+    getChannelMessageQueue().addChannelMessage(new InternalChannelMessage(InternalChannelMessage.CODE_CHANNEL_EXCEPTION, null));
     getChannelMessageQueue().addChannelMessage(new InternalChannelMessage(InternalChannelMessage.CODE_CHANNEL_CLOSED, null));
   }
 
-  
+
   protected void handleReceivedPacket(MixPacket a_mixPacket) {
     if ((a_mixPacket.getChannelFlags() & FLAG_CHANNEL_CLOSE) == FLAG_CHANNEL_CLOSE) {
       /* send a close-channel message via the message-queue */

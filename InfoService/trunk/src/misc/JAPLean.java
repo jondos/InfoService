@@ -34,6 +34,7 @@ import anon.ErrorCodes;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.MixCascade;
+import anon.infoservice.SimpleMixCascadeContainer;
 import anon.proxy.AnonProxy;
 import anon.proxy.IProxyListener;
 import jap.JAPConstants;
@@ -88,7 +89,8 @@ final class JAPLean implements IProxyListener
 			System.exit(0);
 		}
 		japAnonProxy = new AnonProxy(listener, null);
-		japAnonProxy.setMixCascade(new MixCascade(null, null, hostNameMixCascade, portNumberMixCascade));
+		japAnonProxy.setMixCascade(new SimpleMixCascadeContainer(
+			  new MixCascade(null, null, hostNameMixCascade, portNumberMixCascade)));
 		int returnCode = japAnonProxy.start(false);
 		japAnonProxy.setProxyListener(this);
 		if (returnCode == ErrorCodes.E_SUCCESS)

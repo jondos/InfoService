@@ -96,6 +96,7 @@ import logging.LogType;
 import anon.proxy.IProxyListener;
 import gui.dialog.JAPDialog;
 import anon.infoservice.Database;
+import anon.AnonServerDescription;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver
@@ -1281,7 +1282,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 	}
 
-	public void connectionEstablished()
+	public void connecting(AnonServerDescription a_serverDescription)
+	{
+	}
+
+	public void connectionEstablished(AnonServerDescription a_serverDescription)
 	{
 		synchronized(m_connectionEstablishedSync)
 		{

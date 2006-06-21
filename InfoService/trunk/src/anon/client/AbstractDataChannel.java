@@ -39,33 +39,33 @@ import logging.LogLevel;
 import logging.LogType;
 
 
-/** 
+/**
  * @author Stefan Lieske
  */
 public abstract class AbstractDataChannel extends AbstractChannel {
 
   private final static short FLAG_CHANNEL_DUMMY = 0x0010;
- 
-  
+
+
   private MixCipherChain m_mixCipherChain;
-  
+
   private AbstractDataChain m_parentDataChain;
-  
+
   private InternalChannelMessageQueue m_channelMessageQueue;
-  
-  
+
+
   public AbstractDataChannel(int a_channelId, Multiplexer a_parentMultiplexer, AbstractDataChain a_parentDataChain, MixCipherChain a_mixCipherChain) {
     super(a_channelId, a_parentMultiplexer);
     m_parentDataChain = a_parentDataChain;
     m_mixCipherChain = a_mixCipherChain;
     m_channelMessageQueue = new InternalChannelMessageQueue();
-  }  
-  
-  
+  }
+
+
   public InternalChannelMessageQueue getChannelMessageQueue() {
     return m_channelMessageQueue;
   }
-  
+
   public void processReceivedPacket(MixPacket a_mixPacket) {
     /* do decryption */
     m_mixCipherChain.decryptPacket(a_mixPacket.getPayloadData());
@@ -73,7 +73,7 @@ public abstract class AbstractDataChannel extends AbstractChannel {
     if ((a_mixPacket.getChannelFlags() & FLAG_CHANNEL_DUMMY) == FLAG_CHANNEL_DUMMY) {
       /* we haven't ordered any dummies -> normally we shouldn't receive any
        */
-      LogHolder.log(LogLevel.INFO, LogType.NET, "AbstractDataChannel: processReceivedPacket(): Catched an unexpected dummy-paket on channel '" + Integer.toString(a_mixPacket.getChannelId()) + "'.");      
+      LogHolder.log(LogLevel.INFO, LogType.NET, "AbstractDataChannel: processReceivedPacket(): Catched an unexpected dummy-paket on channel '" + Integer.toString(a_mixPacket.getChannelId()) + "'.");
     }
     else {
       /* further handling is done by the channel-implementation */
@@ -88,8 +88,8 @@ public abstract class AbstractDataChannel extends AbstractChannel {
     }
     return recommandedSize;
   }
-  
-  
+
+
   protected void createAndSendMixPacket(DataChainSendOrderStructure a_order, short a_channelFlags) {
     MixPacket packet = createEmptyMixPacket();
     packet.setChannelFlags(a_channelFlags);
@@ -118,13 +118,13 @@ public abstract class AbstractDataChannel extends AbstractChannel {
     }
     a_order.processingDone();
   }
-    
-  
+
+
   public abstract boolean processSendOrder(DataChainSendOrderStructure a_order);
-  
+
   public abstract void organizeChannelClose() throws IOException;
 
-  
+
   protected abstract void handleReceivedPacket(MixPacket a_mixPacket);
-  
+
 }

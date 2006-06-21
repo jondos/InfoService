@@ -156,7 +156,7 @@ public class AnonClient implements AnonService, Observer
 			{
 				return ErrorCodes.E_CONNECT;
 			}
-			return initializeProtocol(socketToMixCascade);
+			return initializeProtocol(socketToMixCascade, a_mixCascade);
 		}
 	}
 
@@ -278,7 +278,7 @@ public class AnonClient implements AnonService, Observer
 							( (AnonServiceEventListener) (eventListenersList.nextElement())).connectionError();
 						}
 					}
-				}, "AnonClient: ConnectionError notification");
+				}, "ConnectionError notification");
 				notificationThread.setDaemon(true);
 				notificationThread.start();
 			}
@@ -324,12 +324,31 @@ public class AnonClient implements AnonService, Observer
 		return m_paymentInstance;
 	}
 
-	private Socket connectMixCascade(MixCascade a_mixCascade, ImmutableProxyInterface a_proxyInterface)
+	private Socket connectMixCascade(final MixCascade a_mixCascade, ImmutableProxyInterface a_proxyInterface)
 		throws InterruptedIOException
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.NET,
-					  "AnonClient: connectMixCascade(): Trying to connect to MixCascade '" +
-					  a_mixCascade.toString() + "'...");
+					  "Trying to connect to MixCascade '" + a_mixCascade.toString() + "'...");
+
+		Thread notificationThread = new Thread(new Runnable()
+		{
+			public void run()
+			{
+				synchronized (m_eventListeners)
+				{
+					Enumeration eventListenersList = m_eventListeners.elements();
+					while (eventListenersList.hasMoreElements())
+					{
+						( (AnonServiceEventListener) (eventListenersList.nextElement())).
+							connecting(a_mixCascade);
+					}
+				}
+			}
+		}, "AnonClient: Connecting notification");
+		notificationThread.setDaemon(true);
+		notificationThread.start();
+
+
 		Socket connectedSocket = null;
 		int i = 0;
 		while ((i < a_mixCascade.getNumberOfListenerInterfaces()) && (connectedSocket == null) && (!Thread.currentThread().isInterrupted()))
@@ -362,19 +381,19 @@ public class AnonClient implements AnonService, Observer
 		if (connectedSocket != null)
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
-						  "AnonClient: connectMixCascade(): Connection to MixCascade '" +
+						  "Connection to MixCascade '" +
 						  a_mixCascade.toString() + "' successfully established - starting key-exchange...");
 		}
 		else
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "AnonClient: connectMixCascade(): Failed to connect to MixCascade '" +
-						  a_mixCascade.toString() + "'.");
+						  "Failed to connect to MixCascade '" + a_mixCascade.toString() + "'.");
 		}
 		return connectedSocket;
 	}
 
-	private int initializeProtocol(Socket a_connectedSocket)
+	private int initializeProtocol(Socket a_connectedSocket,
+								   final AnonServerDescription a_mixCascade)
 	{
 		try
 		{
@@ -441,23 +460,25 @@ public class AnonClient implements AnonService, Observer
 		{
 			/* ignore it */
 		}
-		synchronized (m_eventListeners)
+
+		Thread notificationThread = new Thread(new Runnable()
 		{
-			final Enumeration eventListenersList = m_eventListeners.elements();
-			Thread notificationThread = new Thread(new Runnable()
+			public void run()
 			{
-				public void run()
+				synchronized (m_eventListeners)
 				{
+					Enumeration eventListenersList = m_eventListeners.elements();
 					while (eventListenersList.hasMoreElements())
 					{
 						( (AnonServiceEventListener) (eventListenersList.nextElement())).
-							connectionEstablished();
+							connectionEstablished(a_mixCascade);
 					}
 				}
-			}, "AnonClient: ConnectionEstablished notification");
-			notificationThread.setDaemon(true);
-			notificationThread.start();
-		}
+			}
+		}, "AnonClient: ConnectionEstablished notification");
+		notificationThread.setDaemon(true);
+		notificationThread.start();
+
 		/* AnonClient successfully started */
 		m_connected = true;
 		return ErrorCodes.E_SUCCESS;
@@ -488,8 +509,7 @@ public class AnonClient implements AnonService, Observer
 			catch (Exception e)
 			{
 				LogHolder.log(LogLevel.ERR, LogType.NET,
-					"AnonClient: finishInitialization(): Fetching of timestamps failed - closing connection. Reason: " +
-							  e.toString());
+					"Fetching of timestamps failed - closing connection.", e);
 				return ErrorCodes.E_UNKNOWN;
 			}
 		}
