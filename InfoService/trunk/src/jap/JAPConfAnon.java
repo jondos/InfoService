@@ -1472,7 +1472,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				/* fetch the current cascade state */
 				if (!cascade.isUserDefined())
 				{
-					cascade.fetchCurrentStatus();
+					Database.getInstance(StatusInfo.class).update(cascade.fetchCurrentStatus());
 				}
 				// update hosts and ports
 				updateCascade(cascade);

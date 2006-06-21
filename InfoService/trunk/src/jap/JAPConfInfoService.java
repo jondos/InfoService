@@ -170,7 +170,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 			m_cbxAllowNonAnonymousConnection.setSelected(
 						 JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed());
 		}
-}
+	}
 
 	/**
 	 * Creates the infoservice configuration panel with all components.

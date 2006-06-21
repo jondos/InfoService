@@ -35,6 +35,7 @@ import java.util.Vector;
 import anon.infoservice.AbstractDatabaseEntry;
 import anon.infoservice.Database;
 import anon.infoservice.MixCascade;
+import anon.infoservice.StatusInfo;
 import anon.util.ClassUtil;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -47,8 +48,7 @@ import logging.LogType;
  */
 public abstract class AbstractDatabaseUpdater implements Observer
 {
-	private static final int UPDATE_INTERVAL_MS = 5 * 60000;
-
+	private int m_updateInterval;
 	private Thread m_updateThread;
 	private boolean m_successfulUpdate = false;
 	private boolean m_bAutoUpdateChanged = false;
@@ -57,8 +57,15 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	/**
 	 * Initialises and starts the database update thread.
 	 */
-	public AbstractDatabaseUpdater()
+	public AbstractDatabaseUpdater(int a_updateInterval)
 	{
+		if (a_updateInterval <= 1000)
+		{
+			throw new IllegalArgumentException(
+						 "Database update interval of " + a_updateInterval + " is too short!");
+		}
+		m_updateInterval = a_updateInterval;
+
 		JAPModel.getInstance().addObserver(this);
 		m_updateThread = new Thread(new Runnable()
 		{
@@ -83,7 +90,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 								}
 								else
 								{
-									Thread.currentThread().wait(UPDATE_INTERVAL_MS);
+									Thread.currentThread().wait(m_updateInterval);
 								}
 							}
 							catch (InterruptedException a_e)
@@ -96,13 +103,17 @@ public abstract class AbstractDatabaseUpdater implements Observer
 								Thread.currentThread().notifyAll();
 								break;
 							}
+
 						}
 					}
 
-					LogHolder.log(LogLevel.INFO, LogType.THREAD,
-								  "Updating " + getUpdatedClassName() +  "list.");
+					if (!Thread.currentThread().isInterrupted())
+					{
+						LogHolder.log(LogLevel.INFO, LogType.THREAD,
+									  "Updating " + getUpdatedClassName() + "list.");
 
-					updateInternal();
+						updateInternal();
+					}
 				}
 				LogHolder.log(LogLevel.INFO, LogType.THREAD,
 							  getUpdatedClassName() + "update thread stopped.");
@@ -134,7 +145,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	/**
 	 * Starts the thread if it has not already started or has been stopped before.
 	 */
-	public synchronized void start()
+	public final synchronized void start()
 	{
 		if (m_bInitialRun)
 		{
@@ -151,12 +162,12 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	 * Force an update of the known database entries.
 	 * @return true if the update was successful, false otherwise
 	 */
-	public synchronized boolean update()
+	public final synchronized boolean update()
 	{
 		synchronized (m_updateThread)
 		{
 			m_bAutoUpdateChanged = false;
-			m_updateThread.notify();
+			m_updateThread.notifyAll();
 			try
 			{
 				m_updateThread.wait();
@@ -172,7 +183,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	/**
 	 * Stops the update thread. No further updates are possible.
 	 */
-	public void stop()
+	public final void stop()
 	{
 		JAPModel.getInstance().deleteObserver(this);
 		while (m_updateThread.isAlive())
@@ -227,6 +238,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 			Enumeration entries = newEntries.elements();
 			while (entries.hasMoreElements())
 			{
+
 				AbstractDatabaseEntry currentEntry = (AbstractDatabaseEntry) (entries.nextElement());
 				if (Database.getInstance(getUpdatedClass()).update(currentEntry))
 				{
@@ -236,7 +248,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 				if (preferredEntry != null)
 				{
 					/* if the current entry is equal to the preferred entry,
-					 * update the preferred infoservice, too
+					 * update the preferred entry, too
 					 */
 					if (preferredEntry.equals(currentEntry))
 					{
@@ -245,45 +257,57 @@ public abstract class AbstractDatabaseUpdater implements Observer
 				}
 			}
 
-			/* now remove all non user-defined infoservices, which were not updated, from the
-			 * database of known infoservices
-			 */
-			Enumeration knownInfoServices =
-				Database.getInstance(getUpdatedClass()).getEntryList().elements();
-			while (knownInfoServices.hasMoreElements())
-			{
-				AbstractDatabaseEntry currentEntry = (AbstractDatabaseEntry) (
-					knownInfoServices.nextElement());
-				if (!currentEntry.isUserDefined() && !newEntries.contains(currentEntry))
-				{
-					/* the InfoService was fetched from the Internet earlier, but it is not
-					 * in the list fetched from the Internet this time
-					 * -> remove that InfoService from the database of known InfoServices
-					 */
-					if (Database.getInstance(getUpdatedClass()).remove(currentEntry))
-					{
-						updated = true;
-					}
-				}
-			}
+			updated = updated || doCleanup(newEntries);
 
-			doCleanup();
 
-			if (getUpdatedClass() == MixCascade.class && updated)
+			if ((getUpdatedClass() == MixCascade.class || getUpdatedClass() == StatusInfo.class) && updated)
 			{
 				JAPController.getInstance().notifyJAPObservers();
 			}
 		}
 	}
 
-	protected abstract void doCleanup();
+	/**
+	 * Does some cleaup operations of the database. All old entries that were not updated by
+	 * the new entries are removed. Subclasses may overwrite this method to suppres or alter this
+	 * behaviour. This method is called by updateInternal().
+	 * @param a_newEntries the list of new entries
+	 * @return boolean
+	 */
+	protected boolean doCleanup(Vector a_newEntries)
+	{
+		boolean bUpdated = false;
+
+		/* now remove all non user-defined infoservices, which were not updated, from the
+		 * database of known infoservices
+		 */
+		Enumeration knownInfoServices =
+			Database.getInstance(getUpdatedClass()).getEntryList().elements();
+		while (knownInfoServices.hasMoreElements())
+		{
+			AbstractDatabaseEntry currentEntry = (AbstractDatabaseEntry) (
+				knownInfoServices.nextElement());
+			if (!currentEntry.isUserDefined() && !a_newEntries.contains(currentEntry))
+			{
+				/* the InfoService was fetched from the Internet earlier, but it is not
+				 * in the list fetched from the Internet this time
+				 * -> remove that InfoService from the database of known InfoServices
+				 */
+				if (Database.getInstance(getUpdatedClass()).remove(currentEntry))
+				{
+					bUpdated = true;
+				}
+			}
+		}
+		return bUpdated;
+	}
 
 	protected abstract AbstractDatabaseEntry getPreferredEntry();
 	protected abstract void setPreferredEntry(AbstractDatabaseEntry a_preferredEntry);
 
 	protected abstract Vector getUpdatedEntries();
 
-	protected String getUpdatedClassName()
+	private String getUpdatedClassName()
 	{
 		return ClassUtil.getShortClassName(getUpdatedClass()) + " ";
 	}
