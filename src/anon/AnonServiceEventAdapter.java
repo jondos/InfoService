@@ -56,4 +56,8 @@ public class AnonServiceEventAdapter implements AnonServiceEventListener
 	public void packetMixed(long a_totalBytes)
 	{
 	}
+
+	public void dataChainErrorSignaled()
+	{
+	}
 }

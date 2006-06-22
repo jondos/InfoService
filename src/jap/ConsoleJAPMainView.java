@@ -74,6 +74,11 @@ public class ConsoleJAPMainView implements IJAPMainView
 	{
 	}
 
+	public void dataChainErrorSignaled()
+	{
+		LogHolder.log(LogLevel.ALERT, LogType.NET, "Disconnected because the service proxy is not working!");
+	}
+
 	public void disconnected()
 	{
 		LogHolder.log(LogLevel.ALERT, LogType.NET, "Disconnected!");

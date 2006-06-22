@@ -65,8 +65,7 @@ import logging.LogType;
 /**
  * @author Stefan Lieske
  */
-public class AnonClient implements AnonService, Observer
-{
+public class AnonClient implements AnonService, Observer, DataChainErrorListener {
 
 	private static final int LOGIN_TIMEOUT = 60000;
 
@@ -238,10 +237,10 @@ public class AnonClient implements AnonService, Observer
 		if (channelsDescription == null)
 		{
 			/* old protocol with unlimited channels */
-			return (new SingleChannelDataChain(multiplexer.getChannelTable(), a_type,
+			return (new SingleChannelDataChain(multiplexer.getChannelTable(), this, a_type,
 											   keyExchangeManager.isChainProtocolWithFlowControl()));
 		}
-		return (new TypeFilterDataChain(new SequentialChannelDataChain(multiplexer.getChannelTable(),
+		return (new TypeFilterDataChain(new SequentialChannelDataChain(multiplexer.getChannelTable(), this,
 			channelsDescription.getChainTimeout()), a_type));
 	}
 
@@ -252,6 +251,11 @@ public class AnonClient implements AnonService, Observer
 			m_eventListeners.addElement(a_eventListener);
 		}
 
+	}
+
+	public void removeEventListeners()
+	{
+		m_eventListeners.removeAllElements();
 	}
 
 	public void removeEventListener(AnonServiceEventListener a_eventListener)
@@ -304,6 +308,27 @@ public class AnonClient implements AnonService, Observer
 				notificationThread.setDaemon(true);
 				notificationThread.start();
 			}
+		}
+	}
+
+	public void dataChainErrorSignaled()
+	{
+		synchronized (m_eventListeners)
+		{
+			final Enumeration eventListenersList = m_eventListeners.elements();
+			Thread notificationThread = new Thread(new Runnable()
+			{
+				public void run()
+				{
+					while (eventListenersList.hasMoreElements())
+					{
+						( (AnonServiceEventListener) (eventListenersList.nextElement())).
+							dataChainErrorSignaled();
+					}
+				}
+			}, "AnonClient: DataChainErrorSignaled notification");
+			notificationThread.setDaemon(true);
+			notificationThread.start();
 		}
 	}
 

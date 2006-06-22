@@ -27,12 +27,13 @@
  */
 package anon.mixminion;
 
-import anon.AnonService;
-import anon.AnonServerDescription;
-import anon.infoservice.ImmutableProxyInterface;
-import anon.AnonChannel;
 import java.net.ConnectException;
+
+import anon.AnonChannel;
+import anon.AnonServerDescription;
+import anon.AnonService;
 import anon.AnonServiceEventListener;
+import anon.infoservice.ImmutableProxyInterface;
 
 /** This class implements the Mixminion anonymity service, which can be used to sent anonymous e-mail
  *
@@ -136,6 +137,11 @@ public class Mixminion implements AnonService
 	public void removeEventListener(AnonServiceEventListener l)
 	{
 	}
+
+	public void removeEventListeners()
+	{
+	}
+
 
 	/**
 	 * Returns a Instance of Mixminion

@@ -148,6 +148,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		m_forwardedConnection = false;
 		m_bAutoReconnect = false;
 		m_anonServiceListener = new Vector();
+		m_Anon.removeEventListeners();
 		m_Anon.addEventListener(this);
 		// SOCKS\uFFFD
 	}
@@ -180,6 +181,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		m_maxDummyTrafficInterval = a_maxDummyTrafficInterval;
 		setDummyTraffic(a_maxDummyTrafficInterval);
 		m_anonServiceListener = new Vector();
+		m_Anon.removeEventListeners();
 		m_Anon.addEventListener(this);
 	}
 
@@ -324,7 +326,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			}
 			else
 			{
-				m_currentMixCascade.keepCurrentCascade();
+				m_currentMixCascade.keepCurrentCascade(true);
 			}
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "AN.ON initialized");
 			if (m_currentTorParams != null)
@@ -503,7 +505,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				int ret = m_Anon.initialize(m_currentMixCascade.getNextMixCascade());
 				if (ret == ErrorCodes.E_SUCCESS)
 				{
-					m_currentMixCascade.keepCurrentCascade();
+					m_currentMixCascade.keepCurrentCascade(true);
 					return true;
 				}
 				try
@@ -626,7 +628,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	public void connectionError()
 	{
 		LogHolder.log(LogLevel.ERR, LogType.NET, "AnonProxy received connectionError");
-		this.fireConnectionError();
+		fireConnectionError();
 		new Thread()
 		{
 			public void run()
@@ -674,7 +676,19 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		{
 			( (AnonServiceEventListener) e.nextElement()).packetMixed(a_totalBytes);
 		}
+	}
 
+	public void dataChainErrorSignaled()
+	{
+		LogHolder.log(LogLevel.ERR, LogType.NET, "Proxy has been nuked");
+		m_currentMixCascade.keepCurrentCascade(false);
+		m_Anon.shutdown();
+		reconnect();
+		Enumeration e = m_anonServiceListener.elements();
+		while (e.hasMoreElements())
+		{
+			( (AnonServiceEventListener) e.nextElement()).dataChainErrorSignaled();
+		}
 	}
 
 	private class DummyMixCascadeContainer extends AbstractMixCascadeContainer
@@ -686,6 +700,9 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		public MixCascade getCurrentMixCascade()
 		{
 			return null;
+		}
+		public void keepCurrentCascade(boolean a_bKeepCurrentCascade)
+		{
 		}
 	}
 }

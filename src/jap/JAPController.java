@@ -348,7 +348,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		if (JAPModel.getInstance().isCascadeConnectionChosenAutomatically())
 		{
 			AutoSwitchedMixCascadeContainer cascadeSwitcher = new AutoSwitchedMixCascadeContainer();
-			cascadeSwitcher.getNextMixCascade();
+			cascadeSwitcher.getNextMixCascade(); // this is the default cascade
 			setCurrentMixCascade(cascadeSwitcher.getNextMixCascade());
 		}
 	}
@@ -794,7 +794,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 									new MixInfo((Element)nodeMix, Long.MAX_VALUE));
 							}
 							catch (Exception e)
-							{}
+							{
+								Database.getInstance(MixInfo.class).update(
+									new MixInfo((Element)nodeMix, Long.MAX_VALUE, true));
+							}
 						}
 						nodeMix = nodeMix.getNextSibling();
 					}
@@ -1930,7 +1933,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 						/* we use a forwarded connection */
 						m_proxyAnon = JAPModel.getInstance().getRoutingSettings().getAnonProxyInstance(
 							m_socketHTTPListener);
-						registerAsAnonListener();
 					}
 					else
 					{
@@ -1940,15 +1942,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 						{
 							m_proxyAnon = new AnonProxy(
 								m_socketHTTPListener, JAPModel.getInstance().getProxyInterface());
-							registerAsAnonListener();
 						}
 						else
 						{
 							m_proxyAnon = new AnonProxy(m_socketHTTPListener, null);
-							registerAsAnonListener();
 						}
-
 					}
+					m_proxyAnon.addEventListener(JAPController.getInstance());
 
 					//m_proxyAnon.setMixCascade(new SimpleMixCascadeContainer(
 						//			   m_Controller.getCurrentMixCascade()));
@@ -2154,7 +2154,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 						}
 					}
 				}
-
 			}
 			else if ( (m_proxyDirect == null) && (!anonModeSelected))
 			{
@@ -3184,7 +3183,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	public void connectionEstablished(AnonServerDescription a_serverDescription)
 	{
-		m_feedback.update();
+		new Thread()
+		{
+			public void run()
+			{
+				m_feedback.update();
+			}
+		}.start();
+
 		synchronized (m_anonServiceListener)
 		{
 			Enumeration e = m_anonServiceListener.elements();
@@ -3195,6 +3201,20 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 		}
 	}
+
+	public void dataChainErrorSignaled()
+	{
+		connectionError();
+		synchronized (m_anonServiceListener)
+		{
+			Enumeration e = m_anonServiceListener.elements();
+			while (e.hasMoreElements())
+			{
+				( (AnonServiceEventListener) e.nextElement()).dataChainErrorSignaled();
+			}
+		}
+	}
+
 
 	public void disconnected()
 	{
@@ -3236,12 +3256,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 				( (AnonServiceEventListener) e.nextElement()).connectionError();
 			}
 		}
-	}
-
-	/** Be able to register as an event listener out of inner classes*/
-	public void registerAsAnonListener()
-	{
-		m_proxyAnon.addEventListener(this);
 	}
 
 	/**
@@ -3420,15 +3434,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 						}
 						// chose an index from the vector
 						chosenCascadeIndex %= availableCascades.size();
-
 						/* Go through all indices until a suitable MixCascade is found or the original index
 						 * is reached.
 						 */
-						boolean bFirstRun = true;
-						int currentCascadeIndex = chosenCascadeIndex;
-						while (bFirstRun || currentCascadeIndex < chosenCascadeIndex)
+						for (int i = 0; i < availableCascades.size(); i++)
 						{
-							bFirstRun = false;
 							currentCascade = (MixCascade) availableCascades.elementAt(chosenCascadeIndex);
 							// this is the logic that decides whether to use a cascade or not
 							if (!m_alreadyTriedCascades.containsKey(currentCascade.getId()))
@@ -3442,7 +3452,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 								}
 								currentCascade = null;
 							}
-							currentCascadeIndex = (currentCascadeIndex + 1) % availableCascades.size();
+							chosenCascadeIndex = (chosenCascadeIndex + 1) % availableCascades.size();
 						}
 					}
 					else if (m_initialCascade == null)
@@ -3463,6 +3473,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_currentCascade = m_initialCascade;
 				}
 			}
+
 			return m_currentCascade;
 		}
 		public MixCascade getCurrentMixCascade()
@@ -3470,11 +3481,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 			return m_currentCascade;
 		}
 
-		public void keepCurrentCascade()
+		public void keepCurrentCascade(boolean a_bKeepCurrentCascade)
 		{
 			synchronized (m_alreadyTriedCascades)
 			{
-				m_bKeepCurrentCascade = true;
+				m_bKeepCurrentCascade = a_bKeepCurrentCascade;
 			}
 		}
 	}

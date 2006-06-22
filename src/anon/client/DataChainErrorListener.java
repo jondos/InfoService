@@ -29,32 +29,13 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package anon.infoservice;
+package anon.client;
 
-/**
- * This class keeps and returns one or more objects of the class MixCascade.
- * @author Rolf Wendolsky
+/** 
+ * @author Stefan Lieske
  */
-public abstract class AbstractMixCascadeContainer
-{
-	/**
-	 * Must return a MixCascade and never null. The returned MixCascade may change
-	 * with every call of this method.
-	 * @return a MixCascade and never null
-	 */
-	public abstract MixCascade getNextMixCascade();
+public interface DataChainErrorListener {
 
-	/**
-	 * Returns the last return value of getNextCascade().
-	 * @return the last return value of getNextCascade() (may be null if no call has been
-	 * done yet)
-	 */
-	public abstract MixCascade getCurrentMixCascade();
-
-	/**
-	 * Optional method that should allow to return the last MixCascade that was returned
-	 * by getNextMixCascade() also the next time this method is called.
-	 * @param a_bKeepCurrentCascade allows or dissallows to keep the current cascade for the next call
-	 */
-	public abstract void keepCurrentCascade(boolean a_bKeepCurrentCascade);
+  public void dataChainErrorSignaled();
+  
 }

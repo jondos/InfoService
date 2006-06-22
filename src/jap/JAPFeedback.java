@@ -35,7 +35,7 @@ import anon.util.Util;
 
 final class JAPFeedback extends AbstractDatabaseUpdater
 {
-	private static final int UPDATE_INTERVAL_MS = 6000;
+	private static final int UPDATE_INTERVAL_MS = 20000;
 
 
 	public JAPFeedback()
@@ -63,14 +63,14 @@ final class JAPFeedback extends AbstractDatabaseUpdater
 		return false;
 	}
 
+	protected boolean isUpdatePaused()
+	{
+		return !JAPController.getInstance().getAnonMode() ||
+			JAPController.getInstance().getCurrentMixCascade().isUserDefined();
+	}
+
 	protected Vector getUpdatedEntries()
 	{
-		if (!JAPController.getInstance().getAnonMode() ||
-			JAPController.getInstance().getCurrentMixCascade().isUserDefined())
-		{
-			return new Vector();
-		}
-
 		StatusInfo info = JAPController.getInstance().getCurrentMixCascade().fetchCurrentStatus();
 		if (info == null)
 		{

@@ -102,6 +102,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	JAPObserver
 {
 	private static final String MSG_SERVICE_NAME = JAPNewView.class.getName() + "_ngAnonymisierungsdienst";
+	private static final String MSG_ERROR_DISCONNECTED = JAPNewView.class.getName() + "_errorDisconnected";
+	private static final String MSG_ERROR_PROXY = JAPNewView.class.getName() + "_errorProxy";
 
 	//private JLabel meterLabel;
 	private JLabel m_labelCascadeName;
@@ -1289,6 +1291,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 	}
 
+	public void dataChainErrorSignaled()
+	{
+		addStatusMsg(JAPMessages.getString(MSG_ERROR_PROXY), JAPDialog.MESSAGE_TYPE_ERROR, true);
+	}
+
 	public void disconnected()
 	{
 		synchronized(m_connectionEstablishedSync)
@@ -1310,25 +1317,37 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				synchronized (m_connectionEstablishedSync)
 				{
-					if (m_Controller.getAnonMode() && !m_Controller.isAnonConnected())
+					if (JAPModel.getInstance().getAutoReConnect())
 					{
-						m_bConnectionErrorShown = true;
-						valuesChanged(true);
-						// wait for auto-reconnect
-						int msgID = addStatusMsg(JAPMessages.getString("setAnonModeSplashConnect"),
-												 JAPDialog.MESSAGE_TYPE_INFORMATION, false);
-						setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-						try
+						if (m_Controller.getAnonMode() && !m_Controller.isAnonConnected())
 						{
-							m_connectionEstablishedSync.wait();
+							m_bConnectionErrorShown = true;
+							valuesChanged(true);
+							// wait for auto-reconnect
+							int msgID = addStatusMsg(JAPMessages.getString("setAnonModeSplashConnect"),
+								JAPDialog.MESSAGE_TYPE_INFORMATION, false);
+							setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+							try
+							{
+								m_connectionEstablishedSync.wait();
+							}
+							catch (InterruptedException a_e)
+							{
+							}
+							setCursor(Cursor.getDefaultCursor());
+							removeStatusMsg(msgID);
+							m_bConnectionErrorShown = false;
+							valuesChanged(false);
 						}
-						catch (InterruptedException a_e)
+						else
 						{
+							valuesChanged(false);
 						}
-						setCursor(Cursor.getDefaultCursor());
-						removeStatusMsg(msgID);
-						m_bConnectionErrorShown = false;
-						valuesChanged(false);
+					}
+					else
+					{
+						JAPDialog.showErrorDialog(JAPController.getView(),
+												  JAPMessages.getString(MSG_ERROR_DISCONNECTED), LogType.NET);
 					}
 				}
 			}
