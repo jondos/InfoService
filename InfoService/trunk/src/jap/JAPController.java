@@ -263,8 +263,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						ListenerInterface.PROTOCOL_TYPE_RAW_TCP));
 				}
 			}
-			m_currentMixCascade = new MixCascade(JAPConstants.DEFAULT_ANON_NAME,
-												 JAPConstants.DEFAULT_ANON_ID,
+			m_currentMixCascade = new MixCascade(JAPConstants.DEFAULT_ANON_NAME, JAPConstants.DEFAULT_ANON_ID,
 												 listeners);
 			m_currentMixCascade.setUserDefined(false);
 		}
@@ -750,7 +749,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					/* take the current mixcascade as the default */
 					m_currentMixCascade = getCurrentMixCascade();
 				}
-				Database.getInstance(MixCascade.class).update(getCurrentMixCascade());
+				//Database.getInstance(MixCascade.class).update(getCurrentMixCascade());
 
 				/* try to load information about user defined cascades */
 				Node nodeCascades = XMLUtil.getFirstChildByName(root, MixCascade.XML_ELEMENT_CONTAINER_NAME);
