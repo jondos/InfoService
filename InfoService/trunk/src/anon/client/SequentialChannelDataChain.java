@@ -208,8 +208,8 @@ public class SequentialChannelDataChain extends AbstractDataChain {
     
   }
   
-  public SequentialChannelDataChain(IDataChannelCreator a_channelCreator, long a_chainTimeout) {
-    super(a_channelCreator);
+  public SequentialChannelDataChain(IDataChannelCreator a_channelCreator, DataChainErrorListener a_errorListener, long a_chainTimeout) {
+    super(a_channelCreator, a_errorListener);
     m_associatedChannels = new Vector();
     m_sendSynchronization = new Object();
     m_firstDownstreamPacket = true;
@@ -336,6 +336,7 @@ public class SequentialChannelDataChain extends AbstractDataChain {
               if (dataCell.isConnectionErrorFlagSet()) {
                 LogHolder.log(LogLevel.ERR, LogType.NET, "SequentialChannelDataChain: run(): Last mix signaled a connection-error.");
                 addInputStreamQueueEntry(new DataChainInputStreamQueueEntry(new IOException("SequentialChannelDataChain: run(): Last mix signaled a connection-error.")));
+                propagateConnectionError();
               }
               if (dataCell.isUnknownChainIdFlagSet()) {
                 LogHolder.log(LogLevel.ERR, LogType.NET, "SequentialChannelDataChain: run(): Last mix signaled unknown chain ID.");

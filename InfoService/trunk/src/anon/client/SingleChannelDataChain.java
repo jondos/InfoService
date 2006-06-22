@@ -68,10 +68,14 @@ public class SingleChannelDataChain extends AbstractDataChain {
 
     private static final short DATALENGTH_MASK = 0x03FF;
 
-
+    private static final short FLAG_CONNECTION_ERROR = (short)0x4000;
+    
+    
     private byte[] m_payloadData;
     
     private boolean m_flowControlFlagSet;
+    
+    private boolean m_connectionErrorFlagSet;
     
     
     public ChainCell(byte[] a_rawData) throws InvalidChainCellException {
@@ -87,11 +91,15 @@ public class SingleChannelDataChain extends AbstractDataChain {
         /* should never occur */
       }
       m_flowControlFlagSet = false;
+      m_connectionErrorFlagSet = false;
       short flags = (short)(lengthAndFlagsField & (~DATALENGTH_MASK));
       if (m_supportFlowControl) {
         if ((flags & FLAG_FLOW_CONTROL) == FLAG_FLOW_CONTROL) {
           m_flowControlFlagSet = true;
         }
+      }
+      if ((flags & FLAG_CONNECTION_ERROR) == FLAG_CONNECTION_ERROR) {
+        m_connectionErrorFlagSet = true;
       }
       int dataLength = lengthAndFlagsField & DATALENGTH_MASK;
       /* data is starting at byte 3 (0 and 1 are length and flags, 2 is the type and can
@@ -114,11 +122,14 @@ public class SingleChannelDataChain extends AbstractDataChain {
       return m_flowControlFlagSet;
     }
     
+    public boolean isConnectionErrorFlagSet() {
+      return m_connectionErrorFlagSet;
+    }
   }
   
   
-  public SingleChannelDataChain(IDataChannelCreator a_channelCreator, int a_chainType, boolean a_supportFlowControl) {
-    super(a_channelCreator);
+  public SingleChannelDataChain(IDataChannelCreator a_channelCreator, DataChainErrorListener a_errorListener, int a_chainType, boolean a_supportFlowControl) {
+    super(a_channelCreator, a_errorListener);
     m_chainType = a_chainType;
     m_supportFlowControl = a_supportFlowControl;
     /* create the channel */
@@ -201,6 +212,10 @@ public class SingleChannelDataChain extends AbstractDataChain {
               }
               /* add data to the datastream */
               addInputStreamQueueEntry(new DataChainInputStreamQueueEntry(DataChainInputStreamQueueEntry.TYPE_DATA_AVAILABLE, dataCell.getPayloadData()));
+              if (dataCell.isConnectionErrorFlagSet()) {
+                addInputStreamQueueEntry(new DataChainInputStreamQueueEntry(new IOException("SingleChannelDataChain: run(): Last mix signaled connection error.")));
+                propagateConnectionError();
+              }
             }
             catch (InvalidChainCellException e) {
               addInputStreamQueueEntry(new DataChainInputStreamQueueEntry(new IOException(e.toString())));

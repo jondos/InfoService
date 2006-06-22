@@ -56,6 +56,8 @@ public abstract class AbstractDataChain implements AnonChannel, Observer, Runnab
   private Vector m_messageQueuesNotifications;
 
   private IDataChannelCreator m_channelCreator;
+  
+  private DataChainErrorListener m_errorListener;
 
   private boolean m_chainClosed;
 
@@ -300,8 +302,9 @@ public abstract class AbstractDataChain implements AnonChannel, Observer, Runnab
   }
 
 
-  public AbstractDataChain(IDataChannelCreator a_channelCreator) {
+  public AbstractDataChain(IDataChannelCreator a_channelCreator, DataChainErrorListener a_errorListener) {
     m_channelCreator = a_channelCreator;
+    m_errorListener = a_errorListener;
     m_inputStream = new DataChainInputStreamImplementation();
     m_outputStream = new DataChainOutputStreamImplementation();
     m_messageQueuesNotifications = new Vector();
@@ -373,6 +376,11 @@ public abstract class AbstractDataChain implements AnonChannel, Observer, Runnab
     m_downstreamThread.interrupt();
   }
 
+  protected void propagateConnectionError() {
+    m_errorListener.dataChainErrorSignaled();
+  }
+  
+  
   public abstract int getOutputBlockSize();
 
   public abstract void createPacketPayload(DataChainSendOrderStructure a_order);

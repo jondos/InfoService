@@ -86,4 +86,6 @@ public interface AnonService
 	 */
 	void removeEventListener(AnonServiceEventListener l);
 
+	void removeEventListeners();
+
 }

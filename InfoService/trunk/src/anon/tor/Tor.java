@@ -806,6 +806,11 @@ public class Tor implements Runnable, AnonService
 	{
 	}
 
+	public void removeEventListeners()
+	{
+	}
+
+
 	public void removeEventListener(AnonServiceEventListener l)
 	{
 	}

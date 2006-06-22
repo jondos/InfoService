@@ -277,7 +277,7 @@ public final class Database extends Observable implements Runnable
 	{
 		if (newEntry == null)
 		{
-			throw new IllegalArgumentException("Database entry is null!");
+			return false;
 		}
 
 		if (!m_DatabaseEntryClass.isAssignableFrom(newEntry.getClass()))
@@ -518,6 +518,10 @@ public final class Database extends Observable implements Runnable
 	 */
 	public AbstractDatabaseEntry getEntryById(String entryId)
 	{
+		if (entryId == null)
+		{
+			return null;
+		}
 		AbstractDatabaseEntry resultEntry = null;
 		synchronized (m_serviceDatabase)
 		{

@@ -38,4 +38,7 @@ public interface AnonServiceEventListener
 	public void connectionEstablished(AnonServerDescription a_serverDescription);
 
 	public void packetMixed(long a_totalBytes);
+
+	public void dataChainErrorSignaled();
+
 }

@@ -107,7 +107,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 						}
 					}
 
-					if (!Thread.currentThread().isInterrupted())
+					if (!Thread.currentThread().isInterrupted() && !isUpdatePaused())
 					{
 						LogHolder.log(LogLevel.INFO, LogType.THREAD,
 									  "Updating " + getUpdatedClassName() + "list.");
@@ -300,6 +300,11 @@ public abstract class AbstractDatabaseUpdater implements Observer
 			}
 		}
 		return bUpdated;
+	}
+
+	protected boolean isUpdatePaused()
+	{
+		return false;
 	}
 
 	protected abstract AbstractDatabaseEntry getPreferredEntry();

@@ -100,6 +100,11 @@ public class AnonServiceImplProxy implements AnonService
 	{
 	}
 
+	public void removeEventListeners()
+	{
+	}
+
+
 //Implementation
 	private Object doRemote(String method, Vector params) throws IOException
 	{

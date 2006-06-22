@@ -21,4 +21,7 @@ public class SimpleMixCascadeContainer extends AbstractMixCascadeContainer
 	{
 		return m_mixCascade;
 	}
+	public void keepCurrentCascade(boolean a_bKeepCurrentCascade)
+	{
+	}
 }
