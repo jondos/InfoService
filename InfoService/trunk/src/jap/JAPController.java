@@ -198,12 +198,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 	/** Holds the MsgID of the status message after the forwaring server was started.*/
 	private int m_iStatusPanelMsgIdForwarderServerStatus;
 
-	/** Stores if the connection error dialog was already shown in order to not
-	 *  display the dialog twice because of multiple exceptions resulting from
-	 *  the same connection loss.
-	 */
-	private boolean m_bConnectionErrorShown = false;
-
 	/**
 	 * Stores the jobs, if we receive new setAnonMode() requests.
 	 */
@@ -795,8 +789,16 @@ public final class JAPController extends Observable implements IProxyListener, O
 							}
 							catch (Exception e)
 							{
-								Database.getInstance(MixInfo.class).update(
-									new MixInfo((Element)nodeMix, Long.MAX_VALUE, true));
+								try
+								{
+									Database.getInstance(MixInfo.class).update(
+										new MixInfo( (Element) nodeMix, Long.MAX_VALUE, true));
+								}
+								catch (Exception a_e)
+								{
+									LogHolder.log(LogLevel.ERR, LogType.MISC,
+												  "Illegal MixInfo object in configuration.");
+								}
 							}
 						}
 						nodeMix = nodeMix.getNextSibling();
@@ -2203,10 +2205,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 	{
 		final JAPController controller = this;
 
-		if (a_anonModeSelected)
-		{
-			m_bConnectionErrorShown = false;
-		}
 
 		synchronized (m_changeAnonModeJobs)
 		{
@@ -3236,14 +3234,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public void connectionError()
 	{
 		LogHolder.log(LogLevel.ERR, LogType.NET, "JAPController received connectionError");
-		if (m_Model.getAutoReConnect())
-		{
-			if (!m_bConnectionErrorShown)
-			{
-				m_bConnectionErrorShown = true;
-			}
-		}
-		else
+		if (!m_Model.getAutoReConnect())
 		{
 			this.setAnonMode(false);
 		}
