@@ -33,7 +33,6 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import gui.JAPDll;
-import anon.AnonServiceEventListener;
 
 public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 {
