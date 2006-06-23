@@ -27,6 +27,7 @@
  */
 package jap;
 
+import java.util.Hashtable;
 import java.util.Vector;
 
 import anon.infoservice.AbstractDatabaseEntry;
@@ -72,7 +73,7 @@ public class MixCascadeUpdater extends AbstractDatabaseUpdater
 	/**
 	 * Removes all MixInfo entries that exist without a cascade.
 	 */
-	protected boolean doCleanup(Vector a_newEntries)
+	protected boolean doCleanup(Hashtable a_newEntries)
 	{
 		boolean bUpdated = super.doCleanup(a_newEntries);
 
@@ -109,7 +110,7 @@ public class MixCascadeUpdater extends AbstractDatabaseUpdater
 		return bUpdated;
 	}
 
-	protected Vector getUpdatedEntries()
+	protected Hashtable getUpdatedEntries()
 	{
 		return  InfoServiceHolder.getInstance().getMixCascades();
 	}

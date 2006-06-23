@@ -225,8 +225,7 @@ public class ForwarderInformationGrabber
 				catch (Exception e)
 				{
 					LogHolder.log(LogLevel.ERR, LogType.MISC,
-						"ForwarderInformationGrabber: findCaptchaImplementation: Error while creating the captcha implementation: " +
-								  e.toString());
+						"Error while creating the captcha implementation!", e);
 					returnCode = RETURN_UNKNOWN_ERROR;
 				}
 			}

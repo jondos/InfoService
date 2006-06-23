@@ -1252,7 +1252,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 								mixId = (String) mixIDs.elementAt(i);
 								mixinfo = (MixInfo)Database.getInstance(MixInfo.class).getEntryById(mixId);
 								if (!cascade.isUserDefined() &&
-									(mixinfo == null || mixinfo.getLastUpdate() == 0))
+									(mixinfo == null || mixinfo.isFromCascade()))
 								{
 									MixInfo mixInfo = InfoServiceHolder.getInstance().getMixInfo(mixId);
 									if (mixInfo == null)

@@ -94,6 +94,11 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
   private JAPCertificate m_mixCertificate;
 
   /**
+   * If this MixInfo has been recevied directly from a cascade connection.
+   */
+  private boolean m_bFromCascade;
+
+  /**
    * Creates a new MixInfo from XML description (Mix node). The state of the mix will be set to
    * non-free (only meaningful within the context of the infoservice).
    *
@@ -130,6 +135,7 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 	   * not have a database of mixcascade entries -> no timeout for the JAP client necessary
 	   */
 	  super(a_expireTime <= 0 ? System.currentTimeMillis() + Constants.TIMEOUT_MIX : a_expireTime);
+	  m_bFromCascade = a_bFromCascade;
 	  /* get the ID */
 	  m_mixId = XMLUtil.parseAttribute(a_mixNode, "id", null);
 	  if (m_mixId == null)
@@ -188,7 +194,7 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 	  }
 	  else
 	  {
-		  m_lastUpdate = 0;
+		  m_lastUpdate = System.currentTimeMillis() - Constants.TIMEOUT_MIX;
 	  }
 
 	  /* try to get the certificate from the Signature node */
@@ -237,6 +243,15 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
    */
   public String getId() {
     return m_mixId;
+  }
+
+  /**
+   * Returns if this MixInfo has been recevied directly from a cascade connection.
+   * @return if this MixInfo has been recevied directly from a cascade connection
+   */
+  public boolean isFromCascade()
+  {
+	  return m_bFromCascade;
   }
 
   /**

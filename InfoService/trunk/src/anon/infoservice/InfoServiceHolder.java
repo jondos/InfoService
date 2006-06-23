@@ -30,6 +30,7 @@ package anon.infoservice;
 import java.util.Enumeration;
 import java.util.Observable;
 import java.util.Vector;
+import java.util.Hashtable;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -288,6 +289,7 @@ public class InfoServiceHolder extends Observable
 	private Object fetchInformation(int functionNumber, Vector arguments) throws Exception
 	{
 		InfoServiceDBEntry currentInfoService = null;
+		int askInfoServices = 1;
 		currentInfoService = getPreferredInfoService();
 		Vector infoServiceList = null;
 		if (m_changeInfoServices)
@@ -300,6 +302,19 @@ public class InfoServiceHolder extends Observable
 			/* use an empty list -> only preferred infoservice is used */
 			infoServiceList = new Vector();
 		}
+
+		Object result = null;
+		/**
+		 * @todo This is a first hack for the fact that not only one IS should be asked but
+		 * a lot of IS...
+		 */
+		if (functionNumber == GET_INFOSERVICES || functionNumber == GET_MIXCASCADES)
+		{
+			result = new Hashtable();
+			// try up to three InfoServices
+			askInfoServices = 3;
+		}
+
 		while ( ( (infoServiceList.size() > 0) || (currentInfoService != null)) &&
 			   (Thread.currentThread().isInterrupted() == false))
 		{
@@ -307,20 +322,21 @@ public class InfoServiceHolder extends Observable
 			{
 				/* take a new one from the list */
 				currentInfoService = (InfoServiceDBEntry) (infoServiceList.firstElement());
-				LogHolder.log(LogLevel.INFO, LogType.NET,
-							  "Trying InfoService: " + currentInfoService.getName());
 			}
+			LogHolder.log(LogLevel.INFO, LogType.NET,
+							  "Trying InfoService: " + currentInfoService.getName());
 			try
 			{
-				Object result = null;
+				Hashtable tempHashtable = null;
+
 				/* try to get the information from currentInfoService */
 				if (functionNumber == GET_MIXCASCADES)
 				{
-					result = currentInfoService.getMixCascades();
+					tempHashtable = currentInfoService.getMixCascades();
 				}
 				else if (functionNumber == GET_INFOSERVICES)
 				{
-					result = currentInfoService.getInfoServices();
+					tempHashtable = currentInfoService.getInfoServices();
 				}
 				else if (functionNumber == GET_MIXINFO)
 				{
@@ -381,7 +397,47 @@ public class InfoServiceHolder extends Observable
 					/* if no preferred infoservice set -> set current infoservice */
 					setPreferredInfoService(currentInfoService);
 				}
-				return result;
+
+
+				if (result == null && tempHashtable == null)
+				{
+					LogHolder.log(LogLevel.INFO, LogType.NET,
+							  "IS " + currentInfoService.getName() + " did not have the requested info!");
+					infoServiceList.removeElement(currentInfoService);
+					currentInfoService = null;
+					continue;
+				}
+				else if (tempHashtable != null)
+				{
+					Enumeration newEntries = ((Hashtable)tempHashtable).elements();
+					AbstractDatabaseEntry currentEntry;
+					AbstractDatabaseEntry hashedEntry;
+					while (newEntries.hasMoreElements())
+					{
+						currentEntry = (AbstractDatabaseEntry)newEntries.nextElement();
+						if (((Hashtable)result).containsKey(currentEntry.getId()))
+						{
+							hashedEntry =
+								(AbstractDatabaseEntry)((Hashtable)result).get(currentEntry.getId());
+							if (hashedEntry.getExpireTime() >= currentEntry.getExpireTime())
+							{
+								continue;
+							}
+						}
+						((Hashtable)result).put(currentEntry.getId(), currentEntry);
+					}
+
+					askInfoServices--;
+					if (askInfoServices == 0)
+					{
+						break;
+					}
+					infoServiceList.removeElement(currentInfoService);
+					currentInfoService = null;
+					continue;
+				}
+
+				break;
 			}
 			catch (Exception e)
 			{
@@ -394,6 +450,10 @@ public class InfoServiceHolder extends Observable
 				infoServiceList.removeElement(currentInfoService);
 				currentInfoService = null;
 			}
+		}
+		if (result != null)
+		{
+			return result;
 		}
 		/* could not find an infoservice with the needed information */
 		throw (new Exception(
@@ -409,11 +469,11 @@ public class InfoServiceHolder extends Observable
 	 *
 	 * @return The Vector of mixcascades.
 	 */
-	public Vector getMixCascades()
+	public Hashtable getMixCascades()
 	{
 		try
 		{
-			return (Vector) (fetchInformation(GET_MIXCASCADES, null));
+			return (Hashtable) (fetchInformation(GET_MIXCASCADES, null));
 		}
 		catch (Exception e)
 		{
@@ -468,11 +528,11 @@ public class InfoServiceHolder extends Observable
 	 *
 	 * @return The Vector of infoservices.
 	 */
-	public Vector getInfoServices()
+	public Hashtable getInfoServices()
 	{
 		try
 		{
-			return (Vector) (fetchInformation(GET_INFOSERVICES, null));
+			return (Hashtable) (fetchInformation(GET_INFOSERVICES, null));
 		}
 		catch (Exception e)
 		{
@@ -637,7 +697,7 @@ public class InfoServiceHolder extends Observable
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "InfoServiceHolder: getMixminionNodesList: No InfoService with the needed information available.");
+						  "No InfoService with the needed information available.");
 			return null;
 		}
 	}

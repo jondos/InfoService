@@ -30,6 +30,7 @@ package anon.infoservice;
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
 import java.util.Vector;
+import java.util.Hashtable;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
@@ -63,7 +64,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	public static final String XML_ELEMENT_CONTAINER_NAME = "InfoServices";
 	public static final String XML_ELEMENT_NAME = "InfoService";
 
-	private static final int GET_XML_CONNECTION_TIMEOUT = 15000;
+	private static final int GET_XML_CONNECTION_TIMEOUT = 10000;
 
 	/**
 	 * A proxy interface that is used for all connections and may change over time.
@@ -787,7 +788,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 							if (a_httpRequest.getRequestCommand() == HttpRequestStructure.HTTP_COMMAND_GET)
 							{
 								LogHolder.log(LogLevel.DEBUG, LogType.NET,
-											  "InfoServiceDBEntry: getXmlDocument: Get: " +
+											  "Get: " +
 											  currentConnection.getHost() + ":" +
 											  Integer.toString(currentConnection.getPort()) +
 											  a_httpRequest.getRequestFileName());
@@ -813,8 +814,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 								}
 								else
 								{
-									throw (new Exception(
-										"InfoServiceDBEntry: getXmlDocument: Invalid HTTP command."));
+									throw (new Exception("Invalid HTTP command."));
 								}
 							}
 							if (response != null)
@@ -845,7 +845,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 						catch (Exception e)
 						{
 							LogHolder.log(LogLevel.ERR, LogType.NET,
-								"InfoServiceDBEntry: getXmlDocument: Connection to infoservice interface failed: " +
+								"Connection to infoservice interface failed: " +
 										  currentConnection.getHost() + ":" +
 										  Integer.toString(currentConnection.getPort()) +
 										  a_httpRequest.getRequestFileName() + " Reason: " + e.toString());
@@ -920,7 +920,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	 *
 	 * @return The Vector of all mixcascades.
 	 */
-	public Vector getMixCascades() throws Exception
+	public Hashtable getMixCascades() throws Exception
 	{
 		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/cascades"));
 		NodeList mixCascadesNodes = doc.getElementsByTagName(MixCascade.XML_ELEMENT_CONTAINER_NAME);
@@ -931,7 +931,8 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		//System.out.println(XMLUtil.toString(doc));
 		Element mixCascadesNode = (Element) (mixCascadesNodes.item(0));
 		NodeList mixCascadeNodes = mixCascadesNode.getElementsByTagName(MixCascade.XML_ELEMENT_NAME);
-		Vector mixCascades = new Vector();
+		Hashtable mixCascades = new Hashtable();
+		MixCascade currentCascade;
 		for (int i = 0; i < mixCascadeNodes.getLength(); i++)
 		{
 			Element mixCascadeNode = (Element) (mixCascadeNodes.item(i));
@@ -942,7 +943,8 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 				/* signature is valid */
 				try
 				{
-					mixCascades.addElement(new MixCascade(mixCascadeNode, true, Long.MAX_VALUE));
+					currentCascade = new MixCascade(mixCascadeNode, true, Long.MAX_VALUE);
+					mixCascades.put(currentCascade.getId(), currentCascade);
 				}
 				catch (Exception e)
 				{
@@ -957,7 +959,8 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 							  XMLUtil.toString(mixCascadeNode));
 				try
 				{
-					mixCascades.addElement(new MixCascade(mixCascadeNode, false));
+					currentCascade = new MixCascade(mixCascadeNode, false);
+					mixCascades.put(currentCascade.getId(), currentCascade);
 				}
 				catch (Exception e)
 				{
@@ -1018,7 +1021,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	 *
 	 * @return The Vector of all infoservices.
 	 */
-	public Vector getInfoServices() throws Exception
+	public Hashtable getInfoServices() throws Exception
 	{
 		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/infoservices"));
 		NodeList infoServicesNodes = doc.getElementsByTagName(XML_ELEMENT_CONTAINER_NAME);
@@ -1028,7 +1031,8 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		}
 		Element infoServicesNode = (Element) (infoServicesNodes.item(0));
 		NodeList infoServiceNodes = infoServicesNode.getElementsByTagName(XML_ELEMENT_NAME);
-		Vector infoServices = new Vector();
+		Hashtable infoServices = new Hashtable();
+		InfoServiceDBEntry currentEntry;
 		for (int i = 0; i < infoServiceNodes.getLength(); i++)
 		{
 			Element infoServiceNode = (Element) (infoServiceNodes.item(i));
@@ -1039,7 +1043,8 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 				/* signature is valid */
 				try
 				{
-					infoServices.addElement(new InfoServiceDBEntry(infoServiceNode));
+					currentEntry = new InfoServiceDBEntry(infoServiceNode);
+					infoServices.put(currentEntry.getId(), currentEntry);
 				}
 				catch (Exception e)
 				{
