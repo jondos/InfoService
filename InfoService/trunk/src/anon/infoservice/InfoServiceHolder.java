@@ -107,6 +107,8 @@ public class InfoServiceHolder extends Observable
 
 	private static final int GET_CASCADEINFO = 12;
 
+	private static final int MAXIMUM_OF_ASKED_INFO_SERVICES = 3;
+
 	/**
 	 * Stores the name of the root node of the XML settings for this class.
 	 */
@@ -314,14 +316,14 @@ public class InfoServiceHolder extends Observable
 			|| functionNumber == GET_STATUSINFO)
 		{
 			result = new Hashtable();
-			// try up to three InfoServices
 			if (functionNumber == GET_STATUSINFO)
 			{
-				askInfoServices = 2;
+				// example: enter numer of asked IS here, or keep default of 1
 			}
 			else
 			{
-				askInfoServices = 3;
+				// try up to three InfoServices
+				askInfoServices = MAXIMUM_OF_ASKED_INFO_SERVICES;
 			}
 		}
 
