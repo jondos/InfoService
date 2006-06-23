@@ -1709,11 +1709,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 */
 	public MixCascade getCurrentMixCascade()
 	{
-		//synchronized (this) // Deadly for JDK 1.1.8 and possible Deadlock...
-		{
-			/* return only consistent values */
-			return m_currentMixCascade;
-		}
+		return m_currentMixCascade;
 	}
 
 	public void applyProxySettingsToInfoService(boolean a_bUseAuth)
@@ -3164,6 +3160,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 			!m_currentMixCascade.equals(a_serverDescription))
 		{
 			m_currentMixCascade = (MixCascade)a_serverDescription;
+			setChanged();
+			notifyObservers(new JAPControllerMessage(JAPControllerMessage.CURRENT_MIXCASCADE_CHANGED));
 			notifyJAPObservers();
 		}
 		synchronized (m_anonServiceListener)

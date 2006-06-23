@@ -41,6 +41,8 @@ public class JAPControllerMessage extends AbstractMessage {
    */
   public static final int INFOSERVICE_POLICY_CHANGED = 1;
 
+  public static final int CURRENT_MIXCASCADE_CHANGED = 2;
+
 
   /**
    * This creates a new JAPControllerMessage. The message data is set to null.
