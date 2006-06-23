@@ -600,7 +600,7 @@ public class JAPRoutingRegistrationInfoServices extends Observable implements Ob
 			if (stopThread == false)
 			{
 				/* get all running infoservices */
-				Vector runningInfoServicesList = InfoServiceHolder.getInstance().getInfoServices();
+				Hashtable runningInfoServicesList = InfoServiceHolder.getInstance().getInfoServices();
 				if (runningInfoServicesList != null)
 				{
 					/* communication was successful */

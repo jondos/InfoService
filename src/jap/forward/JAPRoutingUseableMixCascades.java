@@ -446,11 +446,11 @@ final public class JAPRoutingUseableMixCascades extends Observable implements Ob
 		while (stopThread == false)
 		{
 			/* get all running mixcascades */
-			Vector runningMixCascadesList = InfoServiceHolder.getInstance().getMixCascades();
+			Hashtable runningMixCascadesList = InfoServiceHolder.getInstance().getMixCascades();
 			if (runningMixCascadesList == null)
 			{
 				/* handle communication errors like no cascades are currently running */
-				runningMixCascadesList = new Vector();
+				runningMixCascadesList = new Hashtable();
 			}
 			synchronized (m_currentlyRunningMixCascades)
 			{

@@ -27,7 +27,7 @@
  */
 package jap;
 
-import java.util.Vector;
+import java.util.Hashtable;
 
 import anon.infoservice.AbstractDatabaseEntry;
 import anon.infoservice.StatusInfo;
@@ -57,7 +57,7 @@ final class JAPFeedback extends AbstractDatabaseUpdater
 		return StatusInfo.class;
 	}
 
-	protected boolean doCleanup(Vector a_newEntries)
+	protected boolean doCleanup(Hashtable a_newEntries)
 	{
 		// no cleanup is needed as the status info has a short timeout
 		return false;
@@ -69,16 +69,14 @@ final class JAPFeedback extends AbstractDatabaseUpdater
 			JAPController.getInstance().getCurrentMixCascade().isUserDefined();
 	}
 
-	protected Vector getUpdatedEntries()
+	protected Hashtable getUpdatedEntries()
 	{
 		StatusInfo info = JAPController.getInstance().getCurrentMixCascade().fetchCurrentStatus();
-		if (info == null)
+		Hashtable hashtable = new Hashtable();
+		if (info != null)
 		{
-			return new Vector();
+			hashtable.put(info.getId(), info);
 		}
-		else
-		{
-			return Util.toVector(info);
-		}
+		return hashtable;
 	}
 }

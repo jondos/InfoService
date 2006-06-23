@@ -110,6 +110,12 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 
 	private String m_mixProtocolVersion;
 
+	/**
+	 * If this MixCascade has been recevied directly from a cascade connection.
+	 */
+	private boolean m_bFromCascade;
+
+
 	public MixCascade(Element a_mixCascadeNode, boolean a_isCertified) throws XMLParseException
 	{
 		this(a_mixCascadeNode);
@@ -158,6 +164,7 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		 * not have a database of mixcascade entries -> no timeout for the JAP client necessary
 		 */
 		super(a_expireTime <= 0 ? (System.currentTimeMillis() + Constants.TIMEOUT_MIXCASCADE) : a_expireTime);
+		m_bFromCascade = a_bFromCascade;
 		/* get the ID */
 		if (a_mixCascadeNode == null || !a_mixCascadeNode.getNodeName().equals(XML_ELEMENT_NAME))
 		{
@@ -419,6 +426,15 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	public String getMixProtocolVersion()
 	{
 		return m_mixProtocolVersion;
+	}
+
+	/**
+	 * Returns if this MixCascade has been recevied directly from a cascade connection.
+	 * @return if this MixCascade has been recevied directly from a cascade connection
+	 */
+	public boolean isFromCascade()
+	{
+		return m_bFromCascade;
 	}
 
 	/**

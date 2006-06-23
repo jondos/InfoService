@@ -27,7 +27,7 @@
  */
 package jap;
 
-import java.util.Vector;
+import java.util.Hashtable;
 
 import anon.infoservice.AbstractDatabaseEntry;
 import anon.infoservice.InfoServiceDBEntry;
@@ -74,11 +74,7 @@ public class InfoServiceUpdater extends AbstractDatabaseUpdater
 		}
 	}
 
-	protected void doCleanup()
-	{
-	}
-
-	protected Vector getUpdatedEntries()
+	protected Hashtable getUpdatedEntries()
 	{
 		return  InfoServiceHolder.getInstance().getInfoServices();
 	}

@@ -28,6 +28,7 @@
 package jap.forward;
 
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
@@ -40,8 +41,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -64,24 +63,23 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.PlainDocument;
 
+import anon.infoservice.Database;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.MixCascade;
+import gui.GUIUtils;
+import gui.JAPHelp;
+import gui.JAPMessages;
 import gui.dialog.JAPDialog;
+import gui.dialog.WorkerContentPane;
 import jap.AbstractJAPConfModule;
 import jap.JAPConstants;
 import jap.JAPController;
-import gui.JAPHelp;
-import gui.JAPMessages;
 import jap.JAPModel;
-import jap.JAPUtil;
 import jap.MessageSystem;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import gui.*;
-import gui.dialog.*;
-import anon.infoservice.Database;
 
 /**
  * This is the configuration GUI for the JAP forwarding server component.
@@ -1451,13 +1449,13 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		{
 			public void run()
 			{
-				Vector knownMixCascades = InfoServiceHolder.getInstance().getMixCascades();
+				Hashtable knownMixCascades = InfoServiceHolder.getInstance().getMixCascades();
 				/* clear the interrupted flag, if it is set */
 				Thread.interrupted();
 				if (knownMixCascades == null)
 				{
 					errorOccured.addElement(new NullPointerException());
-					knownMixCascades = new Vector();
+					knownMixCascades = new Hashtable();
 				}
 				/* copy the fetched cascades in the result Vector */
 				Enumeration cascades = knownMixCascades.elements();

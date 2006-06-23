@@ -31,6 +31,7 @@ import java.util.Enumeration;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
+import java.util.Hashtable;
 
 import anon.infoservice.AbstractDatabaseEntry;
 import anon.infoservice.Database;
@@ -213,7 +214,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	 */
 	protected void updateInternal()
 	{
-		Vector newEntries = getUpdatedEntries();
+		Hashtable newEntries = getUpdatedEntries();
 		if (Thread.currentThread().isInterrupted())
 		{
 			// this thread is being stopped; ignore this error
@@ -274,7 +275,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	 * @param a_newEntries the list of new entries
 	 * @return boolean
 	 */
-	protected boolean doCleanup(Vector a_newEntries)
+	protected boolean doCleanup(Hashtable a_newEntries)
 	{
 		boolean bUpdated = false;
 
@@ -310,7 +311,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	protected abstract AbstractDatabaseEntry getPreferredEntry();
 	protected abstract void setPreferredEntry(AbstractDatabaseEntry a_preferredEntry);
 
-	protected abstract Vector getUpdatedEntries();
+	protected abstract Hashtable getUpdatedEntries();
 
 	private String getUpdatedClassName()
 	{
