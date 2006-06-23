@@ -130,8 +130,16 @@ public class KeyExchangeManager {
 				  xmlDataLength = xmlDataLength - bytesRead;
 			  }
 		  }
+
+		   MixCascade cascade = new MixCascade(XMLUtil.toXMLDocument(xmlData).getDocumentElement(), 0, true);
+		  /* verify the signature */
+		  if (SignatureVerifier.getInstance().verifyXml(cascade.getXmlStructure(),
+			  SignatureVerifier.DOCUMENT_CLASS_MIX) == false)
+		  {
+			  throw (new SignatureException("Received XML structure has an invalid signature."));
+		  }
+
 		  /* process the received XML structure */
-		  MixCascade cascade = new MixCascade(XMLUtil.toXMLDocument(xmlData).getDocumentElement(), 0, true);
 		  MixCascade cascadeInDB =
 			  (MixCascade) Database.getInstance(MixCascade.class).getEntryById(cascade.getId());
 		  if (cascadeInDB != null && !cascadeInDB.isUserDefined())
@@ -157,12 +165,6 @@ public class KeyExchangeManager {
 			  }
 		  }
 
-		  /* verify the signature */
-		  if (SignatureVerifier.getInstance().verifyXml(cascade.getXmlStructure(),
-			  SignatureVerifier.DOCUMENT_CLASS_MIX) == false)
-		  {
-			  throw (new SignatureException("Received XML structure has an invalid signature."));
-		  }
 
 		  /*
 		   * get the appended certificate of the signature and store it in the

@@ -316,7 +316,7 @@ public class InfoServiceHolder extends Observable
 		}
 
 		while ( ( (infoServiceList.size() > 0) || (currentInfoService != null)) &&
-			   (Thread.currentThread().isInterrupted() == false))
+				!Thread.currentThread().isInterrupted())
 		{
 			if (currentInfoService == null)
 			{
@@ -451,7 +451,7 @@ public class InfoServiceHolder extends Observable
 				currentInfoService = null;
 			}
 		}
-		if (result != null)
+		if (result != null && (!(result instanceof Hashtable) || ((Hashtable)result).size() > 0) )
 		{
 			return result;
 		}
@@ -719,7 +719,7 @@ public class InfoServiceHolder extends Observable
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "InfoServiceHolder: getForwarder: No InfoService with the needed information available.");
+						  "No InfoService with the needed information available.");
 			return null;
 		}
 	}

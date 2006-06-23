@@ -66,6 +66,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import anon.util.Util;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
@@ -323,7 +324,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			pRoot.remove(m_manualPanel);
 		}
-
+/*
 		if (a_newCascade)
 		{
 			try
@@ -340,7 +341,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 										  LogType.MISC);
 				return;
 			}
-		}
+		}*/
 
 		m_manualPanel = new JPanel();
 		GridBagLayout layout = new GridBagLayout();
@@ -679,6 +680,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			m_listMixCascade.setSelectedValue(value, true);
 		}
+		//m_listMixCascade.setEnabled(m_listMixCascade.getModel().getSize() > 0);
 
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "- select First Item -- finished!");
 	}
@@ -742,12 +744,12 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 							JAPMessages.getString("settingsNoServersAvailableTitle"));
 					}
 					//No mixcascades returned by Infoservice
-					deactivate();
+					//deactivate();
 				}
 				else
 				{
 					// show a window containing all available cascades
-					m_listMixCascade.setEnabled(true);
+					//m_listMixCascade.setEnabled(true);
 				}
 				try
 				{
@@ -986,6 +988,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			if (e.getClickCount() == 2)
 			{
 				int index = m_listMixCascade.locationToIndex(e.getPoint());
+				if (index < 0)
+				{
+					return;
+				}
 				MixCascade c;
 				try
 				{
@@ -1367,6 +1373,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	{
 		private Hashtable m_Cascades;
 		private boolean m_isFilled = false;
+		private Object LOCK_FILL = new Object();
 
 		public InfoServiceTempLayer(boolean a_autoFill)
 		{
@@ -1450,47 +1457,65 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			m_Cascades.put(id, new TempCascade(id, interfaces, ports));
 		}
 
+		private void fill()
+		{
+			synchronized (LOCK_FILL)
+			{
+				if (!fill(Database.getInstance(MixCascade.class).getEntryList()))
+				{
+					fill(Util.toVector(JAPController.getInstance().getCurrentMixCascade()));
+				}
+			}
+		}
+
 		/**
 		 * Fills the temporary database by requesting info from the infoservice.
+		 * @todo check if synchronized with update is needed!!!
 		 */
-		public synchronized void fill()
+		private boolean fill(Vector c)
 		{
-			m_Cascades = new Hashtable();
-
-			Vector c = Database.getInstance(MixCascade.class).getEntryList();
-			for (int j = 0; j < c.size(); j++)
+			if (c == null || c.size() == 0)
 			{
-				MixCascade cascade = (MixCascade) c.elementAt(j);
-				// update hosts and ports
-				updateCascade(cascade);
+				return false;
 			}
-
-
-			for (int j = 0; j < c.size(); j++)
+			synchronized (LOCK_FILL)
 			{
-				MixCascade cascade = (MixCascade) c.elementAt(j);
-				/* fetch the current cascade state */
-				if (!cascade.isUserDefined())
+				m_Cascades = new Hashtable();
+
+				for (int j = 0; j < c.size(); j++)
 				{
-					Database.getInstance(StatusInfo.class).update(cascade.fetchCurrentStatus());
+					MixCascade cascade = (MixCascade) c.elementAt(j);
+					// update hosts and ports
+					updateCascade(cascade);
 				}
-				// update hosts and ports
-				updateCascade(cascade);
-			}
-			for (int j = 0; j < c.size(); j++)
-			{
-				MixCascade cascade = (MixCascade) c.elementAt(j);
-				//Get mixes in cascade
-				if (cascade.isUserDefined())
-				{
-					continue;
-				}
-				// update MixInfo for each mix in cascade
-				update(Database.getInstance(MixCascade.class),
-					   new DatabaseMessage(DatabaseMessage.ENTRY_ADDED, cascade));
-			}
 
-			m_isFilled = true;
+				for (int j = 0; j < c.size(); j++)
+				{
+					MixCascade cascade = (MixCascade) c.elementAt(j);
+					/* fetch the current cascade state */
+					if (!cascade.isUserDefined())
+					{
+						Database.getInstance(StatusInfo.class).update(cascade.fetchCurrentStatus());
+					}
+					// update hosts and ports
+					updateCascade(cascade);
+				}
+				for (int j = 0; j < c.size(); j++)
+				{
+					MixCascade cascade = (MixCascade) c.elementAt(j);
+					//Get mixes in cascade
+					if (cascade.isUserDefined())
+					{
+						continue;
+					}
+					// update MixInfo for each mix in cascade
+					update(Database.getInstance(MixCascade.class),
+						   new DatabaseMessage(DatabaseMessage.ENTRY_ADDED, cascade));
+				}
+
+				m_isFilled = true;
+			}
+			return true;
 		}
 
 		/**

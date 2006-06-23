@@ -68,7 +68,7 @@ public class InfoServiceUpdater extends AbstractDatabaseUpdater
 
 	protected void updateInternal()
 	{
-		synchronized (InfoServiceHolder.getInstance())
+		//synchronized (InfoServiceHolder.getInstance())
 		{
 			super.updateInternal();
 		}
