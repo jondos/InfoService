@@ -167,6 +167,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_Controller = JAPController.getInstance();
 		m_infoService = new InfoServiceTempLayer(false);
 		/* observe JAPRoutingSettings to get a notification, if connect-via-forwarder is enabled */
+		m_Controller.addObserver(this);
 		JAPModel.getInstance().getRoutingSettings().addObserver(this);
 		Database.getInstance(MixCascade.class).addObserver(this);
 		Database.getInstance(StatusInfo.class).addObserver(this);
@@ -324,7 +325,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			pRoot.remove(m_manualPanel);
 		}
-/*
+
 		if (a_newCascade)
 		{
 			try
@@ -341,7 +342,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 										  LogType.MISC);
 				return;
 			}
-		}*/
+		}
 
 		m_manualPanel = new JPanel();
 		GridBagLayout layout = new GridBagLayout();
@@ -892,13 +893,17 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			if (valid)
 			{
 				Database.getInstance(MixCascade.class).update(c);
+				Database.getInstance(MixCascade.class).remove(oldCascade);
 				if (m_Controller.getCurrentMixCascade().equals(oldCascade))
 				{
 					m_Controller.setCurrentMixCascade(c);
-					JAPDialog.showMessageDialog(this.getRootPanel(),
-												JAPMessages.getString("activeCascadeEdited"));
+/**					if (m_Controller.isAnonConnected())
+					{
+						JAPDialog.showMessageDialog(this.getRootPanel(),
+							JAPMessages.getString("activeCascadeEdited"));
+					}**/
 				}
-				Database.getInstance(MixCascade.class).remove(oldCascade);
+
 				updateMixCascadeCombo();
 				m_listMixCascade.setSelectedValue(c, true);
 			}
@@ -1292,6 +1297,21 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					}
 				});
 			}
+			else if (a_notifier == JAPController.getInstance() && a_message != null)
+			{
+				if ( ( (JAPControllerMessage) a_message).getMessageCode() ==
+					JAPControllerMessage.CURRENT_MIXCASCADE_CHANGED)
+				{
+					SwingUtilities.invokeLater(
+									   new Runnable()
+					{
+						public void run()
+						{
+							updateMixCascadeCombo();
+						}
+					});
+				}
+			}
 		}
 		catch (Exception e)
 		{
@@ -1610,7 +1630,15 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			}
 			try
 			{
-				new URL(strUrl);
+				if (strUrl != null && strUrl.toLowerCase().startsWith("https"))
+				{
+					// old java < 1.4 does not know https...
+					new URL("http" + strUrl.substring(5, strUrl.length()));
+				}
+				else
+				{
+					new URL(strUrl);
+				}
 			}
 			catch(MalformedURLException a_e)
 			{
