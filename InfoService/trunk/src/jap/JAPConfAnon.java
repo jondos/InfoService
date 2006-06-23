@@ -1081,13 +1081,13 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 				if (m_infoService != null)
 				{
-					if (cascade.isUserDefined() || m_infoService.getNumOfMixes(cascadeId) <= 0)
+					if (cascade.isUserDefined() || cascade.getNumberOfMixes() <= 0)
 					{
 						drawServerPanel(3, "", false);
 					}
 					else
 					{
-						drawServerPanel(m_infoService.getNumOfMixes(cascadeId), cascade.getName(), true);
+						drawServerPanel(cascade.getNumberOfMixes(), cascade.getName(), true);
 					}
 					m_numOfUsersLabel.setText(m_infoService.getNumOfUsers(cascadeId));
 					m_reachableLabel.setText(m_infoService.getHosts(cascadeId));
@@ -1516,21 +1516,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				m_isFilled = true;
 			}
 			return true;
-		}
-
-		/**
-		 * Get the number of mixes in a cascade.
-		 * @param a_cascadeId String
-		 * @return int
-		 */
-		public int getNumOfMixes(String a_cascadeId)
-		{
-			MixCascade cascade = getMixCascade(a_cascadeId);
-			if (cascade != null)
-			{
-				return cascade.getNumberOfMixes();
-			}
-			return -1;
 		}
 
 		/**
