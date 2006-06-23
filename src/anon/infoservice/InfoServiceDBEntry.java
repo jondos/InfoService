@@ -64,7 +64,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	public static final String XML_ELEMENT_CONTAINER_NAME = "InfoServices";
 	public static final String XML_ELEMENT_NAME = "InfoService";
 
-	private static final int GET_XML_CONNECTION_TIMEOUT = 10000;
+	private static final int GET_XML_CONNECTION_TIMEOUT = 20000;
 
 	/**
 	 * A proxy interface that is used for all connections and may change over time.
