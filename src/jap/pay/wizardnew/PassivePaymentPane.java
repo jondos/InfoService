@@ -56,6 +56,7 @@ import gui.JAPJIntField;
 import java.util.Date;
 import gui.GUIUtils;
 import gui.JAPMultilineLabel;
+import anon.util.Base64;
 
 public class PassivePaymentPane extends DialogContentPane implements IWizardSuitable
 {
@@ -224,7 +225,7 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		pp.addData("number",
 				   m_tfCardNumber1.getText() + m_tfCardNumber2.getText() + m_tfCardNumber3.getText() +
 				   m_tfCardNumber4.getText());
-		pp.addData("owner", m_tfCardOwner.getText());
+		pp.addData("owner",Base64.encode(m_tfCardOwner.getText().getBytes(), false));
 		pp.addData("valid", (String) m_cbMonth.getSelectedItem() + "/" + (String) m_cbYear.getSelectedItem());
 		pp.addData("checknumber", m_tfCardCheckNumber.getText());
 

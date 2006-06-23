@@ -1080,8 +1080,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			}
 		};
 
-
-
 		final SimpleWizardContentPane sentPane = new SimpleWizardContentPane(d,
 			JAPMessages.getString(MSG_SENTPASSIVE), null,
 			new Options(createUpdateAccountPane(selectedAccount, methodSelectionPane, d, sendPassivePane)))
@@ -1098,17 +1096,22 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					return false;
 				}
 			}
-		};
-		sentPane.addComponentListener(new ComponentAdapter()
-		{
-			public void componentShown(ComponentEvent a_event)
+			public CheckError[] checkUpdate()
 			{
 				if ( ( (Boolean) sendPassivePane.getValue()).booleanValue() == false)
 				{
-					sentPane.setText(JAPMessages.getString(MSG_NOTSENTPASSIVE));
+					setText("<Font color='red'><b>" +
+							JAPMessages.getString(MSG_NOTSENTPASSIVE) + "</b></Font>");
 				}
+				else
+				{
+					setText(JAPMessages.getString(MSG_SENTPASSIVE));
+				}
+
+				return null;
 			}
-		});
+		};
+
 		sentPane.getButtonCancel().setVisible(false);
 		sentPane.getButtonNo().setVisible(false);
 
