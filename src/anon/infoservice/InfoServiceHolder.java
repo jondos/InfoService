@@ -31,6 +31,7 @@ import java.util.Enumeration;
 import java.util.Observable;
 import java.util.Vector;
 import java.util.Hashtable;
+import java.util.Random;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -289,6 +290,7 @@ public class InfoServiceHolder extends Observable
 	private Object fetchInformation(int functionNumber, Vector arguments) throws Exception
 	{
 		InfoServiceDBEntry currentInfoService = null;
+		Random random = new Random();
 		int askInfoServices = 1;
 		currentInfoService = getPreferredInfoService();
 		Vector infoServiceList = null;
@@ -308,20 +310,30 @@ public class InfoServiceHolder extends Observable
 		 * @todo This is a first hack for the fact that not only one IS should be asked but
 		 * a lot of IS...
 		 */
-		if (functionNumber == GET_INFOSERVICES || functionNumber == GET_MIXCASCADES)
+		if (functionNumber == GET_INFOSERVICES || functionNumber == GET_MIXCASCADES
+			|| functionNumber == GET_STATUSINFO)
 		{
 			result = new Hashtable();
 			// try up to three InfoServices
-			askInfoServices = 3;
+			if (functionNumber == GET_STATUSINFO)
+			{
+				askInfoServices = 2;
+			}
+			else
+			{
+				askInfoServices = 3;
+			}
 		}
+
 
 		while ( ( (infoServiceList.size() > 0) || (currentInfoService != null)) &&
 				!Thread.currentThread().isInterrupted())
 		{
 			if (currentInfoService == null)
 			{
-				/* take a new one from the list */
-				currentInfoService = (InfoServiceDBEntry) (infoServiceList.firstElement());
+				/* randomly take a new one from the list */
+				currentInfoService = (InfoServiceDBEntry) (infoServiceList.elementAt(
+					Math.abs(random.nextInt()) % infoServiceList.size()));
 			}
 			LogHolder.log(LogLevel.INFO, LogType.NET,
 							  "Trying InfoService: " + currentInfoService.getName());
@@ -344,8 +356,15 @@ public class InfoServiceHolder extends Observable
 				}
 				else if (functionNumber == GET_STATUSINFO)
 				{
-					result = currentInfoService.getStatusInfo( (String) (arguments.elementAt(0)),
+					tempHashtable = new Hashtable();
+					StatusInfo info =
+						currentInfoService.getStatusInfo( (String) (arguments.elementAt(0)),
 						( (Integer) (arguments.elementAt(1))).intValue());
+					if (info != null)
+					{
+						tempHashtable.put(info.getId(), info);
+					}
+
 				}
 				else if (functionNumber == GET_NEWVERSIONNUMBER)
 				{
@@ -381,25 +400,8 @@ public class InfoServiceHolder extends Observable
 					result = currentInfoService.getMixCascadeInfo((String) arguments.firstElement());
 				}
 
-				/* no error occured -> success -> update the preferred infoservice and exit */
-				InfoServiceDBEntry preferredInfoService = getPreferredInfoService();
-				if (preferredInfoService != null)
-				{
-					if (!currentInfoService.equals(preferredInfoService))
-					{
-						/* update only, if it is another infoservice */
-						//setPreferredInfoService(currentInfoService);
-						/** @todo Weird, this switches the preferred IS!! Find out why this was done...*/
-					}
-				}
-				else
-				{
-					/* if no preferred infoservice set -> set current infoservice */
-					setPreferredInfoService(currentInfoService);
-				}
-
-
-				if (result == null && tempHashtable == null)
+				if ((tempHashtable == null && result == null) ||
+					(tempHashtable != null && tempHashtable.size() == 0))
 				{
 					LogHolder.log(LogLevel.INFO, LogType.NET,
 							  "IS " + currentInfoService.getName() + " did not have the requested info!");
@@ -451,8 +453,14 @@ public class InfoServiceHolder extends Observable
 				currentInfoService = null;
 			}
 		}
+
 		if (result != null && (!(result instanceof Hashtable) || ((Hashtable)result).size() > 0) )
 		{
+			if (functionNumber == GET_STATUSINFO)
+			{
+				result = ((Hashtable) result).elements().nextElement();
+			}
+
 			return result;
 		}
 		/* could not find an infoservice with the needed information */
