@@ -160,24 +160,53 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	}
 
 	/**
-	 * Force an update of the known database entries.
+	 * Force a synchronized update of the known database entries.
 	 * @return true if the update was successful, false otherwise
 	 */
 	public final synchronized boolean update()
+	{
+		return update(true);
+	}
+
+	/**
+	 * Force an update of the known database entries. The current thread does not wait until it is done.
+	 * @return true if the update was successful, false otherwise
+	 */
+	public final void updateAsync()
+	{
+		new Thread()
+		{
+			public void run()
+			{
+				update(false);
+			}
+		}.start();
+	}
+
+	/**
+	 * Force an update of the known database entries.
+	 * @param a_bSynchronized true if the current thread should wait until the update is done; false otherwise
+	 * @return true if the update was successful, false otherwise
+	 */
+	private final synchronized boolean update(boolean a_bSynchronized)
 	{
 		synchronized (m_updateThread)
 		{
 			m_bAutoUpdateChanged = false;
 			m_updateThread.notifyAll();
-			try
+			if (a_bSynchronized)
 			{
-				m_updateThread.wait();
+				try
+				{
+					m_updateThread.wait();
+				}
+				catch (InterruptedException a_e)
+				{
+					return false;
+				}
+				return m_successfulUpdate;
 			}
-			catch (InterruptedException a_e)
-			{
-				return false;
-			}
-			return m_successfulUpdate;
+			return true;
 		}
 	}
 

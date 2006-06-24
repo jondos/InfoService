@@ -51,6 +51,8 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.AnonServerDescription;
+import proxy.DirectProxy;
+import anon.pay.IAIEventListener;
 
 /**
  * This calls implements a proxy one can use for convienient access to the
@@ -269,27 +271,35 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	 */
 	public void setDummyTraffic(int a_interval)
 	{
-		if ( (!m_forwardedConnection) || (m_maxDummyTrafficInterval < 0))
+		try
 		{
-			/* no dummy traffic restrictions */
-			( (AnonClient) m_Anon).setDummyTraffic(a_interval);
-		}
-		else
-		{
-			/* there are dummy traffic restrictions */
-			if (a_interval >= 0)
+
+			if ( (!m_forwardedConnection) || (m_maxDummyTrafficInterval < 0))
 			{
-				/* take the smaller interval */
-				( (AnonClient) m_Anon).setDummyTraffic(Math.min(a_interval, m_maxDummyTrafficInterval));
+				/* no dummy traffic restrictions */
+				( (AnonClient) m_Anon).setDummyTraffic(a_interval);
 			}
 			else
 			{
-				/*
-				 * we need dummy traffic with a minimum rate -> can't disable dummy
-				 * traffic
-				 */
-				( (AnonClient) m_Anon).setDummyTraffic(m_maxDummyTrafficInterval);
+				/* there are dummy traffic restrictions */
+				if (a_interval >= 0)
+				{
+					/* take the smaller interval */
+					( (AnonClient) m_Anon).setDummyTraffic(Math.min(a_interval, m_maxDummyTrafficInterval));
+				}
+				else
+				{
+					/*
+					 * we need dummy traffic with a minimum rate -> can't disable dummy
+					 * traffic
+					 */
+					( (AnonClient) m_Anon).setDummyTraffic(m_maxDummyTrafficInterval);
+				}
 			}
+		}
+		catch (ClassCastException a_e)
+		{
+			// this is a direct proxy!
 		}
 	}
 
@@ -320,7 +330,17 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 							  " m_Anon is NULL - should never ever happen!");
 				return ErrorCodes.E_INVALID_SERVICE;
 			}
-			int ret = m_Anon.initialize(m_currentMixCascade.getNextMixCascade());
+			MixCascade cascade = m_currentMixCascade.getNextMixCascade();
+			if (cascade.getId().equals("Tor"))
+			{
+				LogHolder.log(LogLevel.NOTICE, LogType.NET, "Using Tor as anon service!");
+				m_Anon = new DirectProxy(m_socketListener);
+			}
+			else
+			{
+				m_Anon = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_ANON);
+			}
+			int ret = m_Anon.initialize(cascade);
 			if (ret != ErrorCodes.E_SUCCESS)
 			{
 				if (!a_bRetryOnError || ret == E_SIGNATURE_CHECK_FIRSTMIX_FAILED ||
@@ -351,6 +371,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				m_Mixminion.setProxy(m_proxyInterface);
 				m_Mixminion.initialize(m_currentMixminionParams);
 			}
+
 			threadRun = new Thread(this, "JAP - AnonProxy");
 			threadRun.setDaemon(true);
 			threadRun.start();
@@ -673,10 +694,17 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		return m_Anon != null && m_Anon.isConnected();
 	}
 
-	public AnonClient getAnonService()
+	public void addAIListener(IAIEventListener a_aiListener)
 	{
-		return (AnonClient) m_Anon;
+		synchronized (THREAD_SYNC)
+		{
+			if (m_Anon instanceof AnonClient)
+			{
+				( ( (AnonClient) m_Anon).getPay()).getAIControlChannel().addAIListener(a_aiListener);
+			}
+		}
 	}
+
 
 	public void packetMixed(long a_totalBytes)
 	{

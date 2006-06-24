@@ -1548,7 +1548,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 				( (MyProgressBarUI) m_progressAnonLevel.getUI()).setFilledBarColor(color);
 				m_progressAnonLevel.setValue(anonLevel + 1);
-				if (m_Controller.getAnonMode() && m_Controller.isAnonConnected())
+				if (m_Controller.isAnonConnected())
 				{
 					m_bConnectionErrorShown = false;
 					if (currentStatus.getNrOfActiveUsers() > -1)

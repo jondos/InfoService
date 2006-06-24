@@ -58,6 +58,7 @@ import anon.ErrorCodes;
 import anon.AnonServerDescription;
 import anon.tor.TorAnonServerDescription;
 import anon.AnonServiceFactory;
+import anon.infoservice.MixCascade;
 
 
 
@@ -112,7 +113,25 @@ final public class DirectProxy implements Runnable, AnonService
 
 	public AnonChannel createChannel(int a_type) throws ConnectException
 	{
-		return null;
+		return new AnonChannel()
+		{
+			public void close()
+			{
+
+			}
+			public OutputStream getOutputStream()
+			{
+				return null;
+			}
+			public InputStream getInputStream()
+			{
+				return null;
+			}
+			public int getOutputBlockSize()
+			{
+				return 1;
+			}
+		};
 	}
 
 	public void addEventListener(AnonServiceEventListener l)
@@ -148,14 +167,14 @@ final public class DirectProxy implements Runnable, AnonService
 		}
 	}
 
-	public int initialize(AnonServerDescription a_torServerDescription)
+	public int initialize(AnonServerDescription a_mixCascade)
 	{
-		if (!(a_torServerDescription instanceof TorAnonServerDescription) || a_torServerDescription == null)
+		if (!(a_mixCascade instanceof MixCascade) || a_mixCascade == null)
 		{
 			return ErrorCodes.E_INVALID_SERVICE;
 		}
 		m_tor = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_TOR);
-		startService();
+		//startService();
 		return ErrorCodes.E_SUCCESS;
 	}
 
