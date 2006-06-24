@@ -42,16 +42,26 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import anon.infoservice.ProxyInterface;
+import anon.AnonService;
 import gui.JAPMessages;
 import jap.JAPModel;
 import jap.JAPUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.AnonServiceEventListener;
+import java.net.ConnectException;
+import anon.AnonChannel;
+import anon.AnonService;
+import anon.infoservice.ImmutableProxyInterface;
+import anon.ErrorCodes;
+import anon.AnonServerDescription;
+import anon.tor.TorAnonServerDescription;
+import anon.AnonServiceFactory;
 
 
 
-final public class DirectProxy implements Runnable
+final public class DirectProxy implements Runnable, AnonService
 {
 	private static final int REMEMBER_NOTHING = 0;
 	private static final int REMEMBER_WARNING = 1;
@@ -60,6 +70,7 @@ final public class DirectProxy implements Runnable
 
 	private static AllowUnprotectedConnectionCallback ms_callback;
 
+	private AnonService m_tor;
 	private ServerSocket m_socketListener;
 	private final Object THREAD_SYNC = new Object();
 	private volatile Thread threadRunLoop;
@@ -99,6 +110,54 @@ final public class DirectProxy implements Runnable
 		public abstract Answer callback();
 }
 
+	public AnonChannel createChannel(int a_type) throws ConnectException
+	{
+		return null;
+	}
+
+	public void addEventListener(AnonServiceEventListener l)
+	{
+	}
+
+	public void removeEventListeners()
+	{
+	}
+
+
+	public void removeEventListener(AnonServiceEventListener l)
+	{
+	}
+
+	public int setProxy(ImmutableProxyInterface a_proxyInterface)
+	{
+		return ErrorCodes.E_SUCCESS;
+	}
+
+	public boolean isConnected()
+	{
+		synchronized (THREAD_SYNC)
+		{
+			if (m_tor != null)
+			{
+				return m_tor.isConnected() && (threadRunLoop != null);
+			}
+			else
+			{
+				return threadRunLoop != null;
+			}
+		}
+	}
+
+	public int initialize(AnonServerDescription a_torServerDescription)
+	{
+		if (!(a_torServerDescription instanceof TorAnonServerDescription) || a_torServerDescription == null)
+		{
+			return ErrorCodes.E_INVALID_SERVICE;
+		}
+		m_tor = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_TOR);
+		startService();
+		return ErrorCodes.E_SUCCESS;
+	}
 
 	public synchronized boolean startService()
 	{
@@ -167,8 +226,7 @@ final public class DirectProxy implements Runnable
 				continue;
 			}
 
-			if (remember == REMEMBER_NOTHING && !JAPModel.isSmallDisplay() &&
-				rememberTime < System.currentTimeMillis())
+			if (remember == REMEMBER_NOTHING && rememberTime < System.currentTimeMillis())
 			{
 				AllowUnprotectedConnectionCallback.Answer answer;
 				AllowUnprotectedConnectionCallback callback = ms_callback;
@@ -201,16 +259,14 @@ final public class DirectProxy implements Runnable
 
 			if (!bShowHtmlWarning && !JAPModel.isSmallDisplay())
 			{
-				if (JAPModel.getInstance().getProxyInterface() != null &&
-					JAPModel.getInstance().getProxyInterface().isValid() &&
-					JAPModel.getInstance().getProxyInterface().getProtocol() ==
-					ProxyInterface.PROTOCOL_TYPE_HTTP)
+				if (getProxyInterface() != null && getProxyInterface().isValid() &&
+					getProxyInterface().getProtocol() == ProxyInterface.PROTOCOL_TYPE_HTTP)
 				{
 					doIt = new DirectConViaHTTPProxy(socket);
 				}
 				else
 				{
-					doIt = new DirectProxyConnection(socket);
+					doIt = new DirectProxyConnection(socket, this);
 				}
 				Thread thread = new Thread(doIt);
 				thread.start();
@@ -226,7 +282,7 @@ final public class DirectProxy implements Runnable
 
 	}
 
-	public synchronized void stopService()
+	public synchronized void shutdown()
 	{
 		synchronized (THREAD_SYNC)
 		{
@@ -248,6 +304,18 @@ final public class DirectProxy implements Runnable
 				}
 			}
 			threadRunLoop = null;
+		}
+	}
+
+	protected ImmutableProxyInterface getProxyInterface()
+	{
+		if (m_tor != null)
+		{
+			return JAPModel.getInstance().getTorProxyInterface();
+		}
+		else
+		{
+			return JAPModel.getInstance().getProxyInterface();
 		}
 	}
 
@@ -324,8 +392,8 @@ final public class DirectProxy implements Runnable
 				// open stream from client
 				InputStream inputStream = m_clientSocket.getInputStream();
 				// create Socket to Server
-				Socket serverSocket = new Socket(JAPModel.getInstance().getProxyInterface().getHost(),
-												 JAPModel.getInstance().getProxyInterface().getPort());
+				Socket serverSocket = new Socket(getProxyInterface().getHost(),
+												 getProxyInterface().getPort());
 				// Response from server is transfered to client in a sepatate thread
 				DirectProxyResponse pr = new DirectProxyResponse(serverSocket.getInputStream(),
 					m_clientSocket.getOutputStream());
@@ -336,13 +404,13 @@ final public class DirectProxy implements Runnable
 
 				// Transfer data client --> server
 				//first check if we use authorization for the proxy
-				if (JAPModel.getInstance().getProxyInterface().isAuthenticationUsed())
+				if (getProxyInterface().isAuthenticationUsed())
 				{ //we need to insert an authorization line...
 					//read first line and after this insert the authorization
 					String str = JAPUtil.readLine(inputStream);
 					str += "\r\n";
 					outputStream.write(str.getBytes());
-					str = JAPModel.getInstance().getProxyInterface().getProxyAuthorizationHeaderAsString();
+					str = getProxyInterface().getProxyAuthorizationHeaderAsString();
 					outputStream.write(str.getBytes());
 					outputStream.flush();
 				}

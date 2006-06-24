@@ -229,27 +229,29 @@ public final class JAPController extends Observable implements IProxyListener, O
 		m_anonServiceListener = new Vector();
 
 		// initialise HTTP proxy
-		DirectProxy.setAllowUnprotectedConnectionCallback(
-			new DirectProxy.AllowUnprotectedConnectionCallback()
+		if (!JAPModel.isSmallDisplay())
 		{
-			public DirectProxy.AllowUnprotectedConnectionCallback.Answer callback()
+			DirectProxy.setAllowUnprotectedConnectionCallback(
+				new DirectProxy.AllowUnprotectedConnectionCallback()
 			{
-				if (JAPController.getView() == null)
+				public DirectProxy.AllowUnprotectedConnectionCallback.Answer callback()
 				{
-					return new Answer(false, false);
+					if (JAPController.getView() == null)
+					{
+						return new Answer(false, false);
+					}
+
+					boolean bShowHtmlWarning;
+					JAPDll.setWindowOnTop(JAPController.getView(), true);
+					JAPDialog.LinkedCheckBox cb = new JAPDialog.LinkedCheckBox(
+						JAPMessages.getString(JAPDialog.LinkedCheckBox.MSG_REMEMBER_ANSWER), false);
+					bShowHtmlWarning = ! (JAPDialog.showYesNoDialog(JAPController.getView(),
+						JAPMessages.getString(MSG_ALLOWUNPROTECTED), cb));
+					JAPDll.setWindowOnTop(JAPController.getView(), false);
+					return new Answer(!bShowHtmlWarning, cb.getState());
 				}
-
-				boolean bShowHtmlWarning;
-				JAPDll.setWindowOnTop(JAPController.getView(), true);
-				JAPDialog.LinkedCheckBox cb = new JAPDialog.LinkedCheckBox(
-					JAPMessages.getString(JAPDialog.LinkedCheckBox.MSG_REMEMBER_ANSWER), false);
-				bShowHtmlWarning = ! (JAPDialog.showYesNoDialog(JAPController.getView(),
-					JAPMessages.getString(MSG_ALLOWUNPROTECTED), cb));
-				JAPDll.setWindowOnTop(JAPController.getView(), false);
-				return new Answer(!bShowHtmlWarning, cb.getState());
-			}
-		});
-
+			});
+		}
 		/* set a default mixcascade */
 		try
 		{
@@ -352,10 +354,18 @@ public final class JAPController extends Observable implements IProxyListener, O
 		m_bInitialRun = true;
 		LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPModel:initial run of JAP...");
 
-		// start update threads
-		m_feedback.start();
-		m_InfoServiceUpdater.start();
-		m_MixCascadeUpdater.start();
+		// start update threads and prevent waining for locks by using a thread
+		new Thread()
+		{
+			public void run()
+			{
+				m_feedback.start();
+				m_InfoServiceUpdater.start();
+				m_MixCascadeUpdater.start();
+
+			}
+		}.start();
+
 
 		// start http listener object
 		/* if (JAPModel.isTorEnabled())
@@ -1964,7 +1974,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					// -> we can try to start anonymity
 					if (m_proxyDirect != null)
 					{
-						m_proxyDirect.stopService();
+						m_proxyDirect.shutdown();
 					}
 					m_proxyDirect = null;
 					LogHolder.log(LogLevel.DEBUG, LogType.NET, "Try to start AN.ON service...");
@@ -2416,21 +2426,18 @@ public final class JAPController extends Observable implements IProxyListener, O
 		return s;
 	}
 
-	private boolean startHTTPListener()
+	public boolean startHTTPListener()
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:start HTTP Listener");
 		if (!isRunningHTTPListener)
 		{
 			m_socketHTTPListener = intern_startListener(JAPModel.getHttpListenerPortNumber(),
 				JAPModel.getHttpListenerIsLocal());
-			if (m_socketHTTPListener != null)
-			{
-				isRunningHTTPListener = true;
-			}
+			isRunningHTTPListener = true;
 		}
-		return isRunningHTTPListener;
+		return m_socketHTTPListener != null;
 	}
-
+/*
 	private void stopHTTPListener()
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:stopListener");
@@ -2447,7 +2454,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			m_socketHTTPListener = null;
 			isRunningHTTPListener = false;
 		}
-	}
+	}*/
 
 	/* private boolean startSOCKSListener()
 	 {
@@ -2571,7 +2578,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 					try
 					{
-						m_Controller.m_proxyDirect.stopService();
+						m_Controller.m_proxyDirect.shutdown();
 					}
 					catch (NullPointerException a_e)
 					{

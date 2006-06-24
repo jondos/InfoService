@@ -353,6 +353,12 @@ public final class JAPModel extends Observable
 		return getProxyInterface(DIRECT_CONNECTION_UPDATE);
 	}
 
+	public ImmutableProxyInterface getTorProxyInterface()
+	{
+		return new ProxyInterface("localhost", getHttpListenerPortNumber(),
+								  ProxyInterface.PROTOCOL_TYPE_SOCKS, null);
+	}
+
 	/**
 	 *
 	 * @param a_bPayment if the proxy interface for Payment should be returned; otherwise, return
