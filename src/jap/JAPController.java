@@ -782,6 +782,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 				}
 
+				/** @todo add Tor in a better way */
+	/**			Database.getInstance(MixCascade.class).update(
+								new MixCascade("Tor - Onion Routing", "Tor", "myhost.de", 1234));*/
+
 				/* try to load information about user defined mixes */
 				Node nodeMixes = XMLUtil.getFirstChildByName(root, MixInfo.XML_ELEMENT_CONTAINER_NAME);
 				if (nodeMixes != null)
@@ -1955,6 +1959,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							m_proxyAnon = new AnonProxy(m_socketHTTPListener, null);
 						}
 					}
+					m_feedback.updateAsync();
 					m_proxyAnon.addEventListener(JAPController.getInstance());
 
 					//m_proxyAnon.setMixCascade(new SimpleMixCascadeContainer(
@@ -2034,8 +2039,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 								{
 									try
 									{
-										proxyAnon.getAnonService().getPay().getAIControlChannel().
-											addAIListener(m_caller);
+										proxyAnon.addAIListener(m_caller);
 									}
 									catch (Exception a_e)
 									{
@@ -2203,7 +2207,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	public boolean isAnonConnected()
 	{
-		return m_proxyAnon != null && m_proxyAnon.isConnected();
+		return m_proxyAnon != null && m_proxyAnon.isConnected() &&
+			m_proxyAnon.getMixCascade().equals(getCurrentMixCascade());
 	}
 
 	public void setAnonMode(final boolean a_anonModeSelected)
@@ -3216,7 +3221,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 		}
 	}
-
 
 	public void disconnected()
 	{

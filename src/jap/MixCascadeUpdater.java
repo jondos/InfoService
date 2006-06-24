@@ -77,7 +77,7 @@ public class MixCascadeUpdater extends AbstractDatabaseUpdater
 	{
 		boolean bUpdated = super.doCleanup(a_newEntries);
 
-		LogHolder.log(LogLevel.NOTICE, LogType.MISC, "Do MixInfo database cleanup.");
+		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Do MixInfo database cleanup.");
 
 		Vector mixes = Database.getInstance(MixInfo.class).getEntryList();
 		Vector cascades = Database.getInstance(MixCascade.class).getEntryList();
@@ -104,7 +104,7 @@ public class MixCascadeUpdater extends AbstractDatabaseUpdater
 				}
 			}
 			Database.getInstance(MixInfo.class).remove(currentMix);
-			LogHolder.log(LogLevel.INFO, LogType.MISC, "Cleaned MixInfo DB entry: " + currentMix.getId());
+			LogHolder.log(LogLevel.NOTICE, LogType.MISC, "Cleaned MixInfo DB entry: " + currentMix.getId());
 		}
 
 		return bUpdated;
