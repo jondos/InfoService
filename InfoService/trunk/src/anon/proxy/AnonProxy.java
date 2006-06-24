@@ -139,6 +139,11 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	 */
 	public AnonProxy(ServerSocket listener, ImmutableProxyInterface a_proxyInterface)
 	{
+		if (listener == null)
+		{
+			throw new IllegalArgumentException("Socket listener is null!");
+		}
+
 		m_socketListener = listener;
 		m_proxyInterface = a_proxyInterface;
 		// HTTP
@@ -174,6 +179,10 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	public AnonProxy(ServerSocket a_listener, ProxyConnection a_proxyConnection,
 					 int a_maxDummyTrafficInterval)
 	{
+		if (a_listener == null)
+		{
+			throw new IllegalArgumentException("Socket listener is null!");
+		}
 		m_socketListener = a_listener;
 		m_Anon = new AnonClient(a_proxyConnection.getSocket()); // uups very nasty....
 		m_forwardedConnection = true;

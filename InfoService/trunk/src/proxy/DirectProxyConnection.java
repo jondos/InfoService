@@ -27,7 +27,6 @@
  */
 package proxy;
 
-import jap.JAPModel;
 import jap.JAPUtil;
 
 import java.io.BufferedWriter;
@@ -35,6 +34,7 @@ import java.io.DataInputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
@@ -74,9 +74,11 @@ final class DirectProxyConnection implements Runnable
 	private int m_iPort = -1;
 	private static DateFormat m_DateFormat = SimpleDateFormat.getDateTimeInstance();
 	private static NumberFormat m_NumberFormat = NumberFormat.getInstance();
+	private DirectProxy m_parentProxy;
 
-	public DirectProxyConnection(Socket s)
+	public DirectProxyConnection(Socket s, DirectProxy a_parentProxy)
 	{
+		m_parentProxy = a_parentProxy;
 		m_clientSocket = s;
 	}
 
@@ -178,7 +180,7 @@ final class DirectProxyConnection implements Runnable
 		}
 		catch (Exception ioe)
 		{
-			LogHolder.log(LogLevel.NOTICE, LogType.NET, "C(" + m_threadNumber + ") - Exception: " + ioe);
+			LogHolder.log(LogLevel.NOTICE, LogType.NET, "C(" + m_threadNumber + ")", ioe);
 			badRequest();
 		}
 		try
@@ -212,7 +214,7 @@ final class DirectProxyConnection implements Runnable
 		}
 		catch (Exception e)
 		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.NET, "C(" + m_threadNumber + ") - Exception: " + e);
+			LogHolder.log(LogLevel.EXCEPTION, LogType.NET, "C(" + m_threadNumber + ") - Exception: ", e);
 		}
 	}
 
@@ -298,12 +300,11 @@ final class DirectProxyConnection implements Runnable
 			// create Socket to Server
 			Socket serverSocket = null;
 			ProxyConnection p = null;
-			if (JAPModel.getInstance().getProxyInterface()!=null&&
-				JAPModel.getInstance().getProxyInterface().isValid() &&
-				JAPModel.getInstance().getProxyInterface().getProtocol()==
-							ProxyInterface.PROTOCOL_TYPE_SOCKS)
+			if (m_parentProxy.getProxyInterface()!=null&&
+				m_parentProxy.getProxyInterface().isValid()
+				&& m_parentProxy.getProxyInterface().getProtocol()==ProxyInterface.PROTOCOL_TYPE_SOCKS)
 			{
-				p = new ProxyConnection(HTTPConnectionFactory.getInstance().createHTTPConnection(new ListenerInterface(m_strHost, m_iPort), JAPModel.getInstance().getProxyInterface()).Connect());
+				p = new ProxyConnection(HTTPConnectionFactory.getInstance().createHTTPConnection(new ListenerInterface(m_strHost, m_iPort), m_parentProxy.getProxyInterface()).Connect());
 			}
 			else
 			{
@@ -356,16 +357,21 @@ final class DirectProxyConnection implements Runnable
 						  "C(" + m_threadNumber + ") - Headers sended, POST data may follow");
 			byte[] buff = new byte[1000];
 			int len;
-			while ( (len = m_inputStream.read(buff)) != -1)
+			try
 			{
-				if (len > 0)
+				while ( (len = m_inputStream.read(buff)) != -1)
 				{
-					outputStream.write(buff, 0, len);
-					outputStream.flush();
+					if (len > 0)
+					{
+						outputStream.write(buff, 0, len);
+						outputStream.flush();
+					}
 				}
 			}
-
-			LogHolder.log(LogLevel.DEBUG, LogType.NET, "\n");
+			catch (SocketException a_e)
+			{
+				LogHolder.log(LogLevel.DEBUG, LogType.NET, "Socket seams to be closed.");
+			}
 			LogHolder.log(LogLevel.DEBUG, LogType.THREAD,
 						  "C(" + m_threadNumber + ") - Waiting for resonse thread...");
 			prt.join();
@@ -384,6 +390,7 @@ final class DirectProxyConnection implements Runnable
 
 	private void handleFTP()
 	{
+
 		FTPClient ftpClient = null;
 		OutputStream os = null;
 		//a request as GET ftp://213.244.188.60/pub/jaxp/89h324hruh/jaxp-1_1.zip was started
@@ -395,7 +402,11 @@ final class DirectProxyConnection implements Runnable
 			os = m_clientSocket.getOutputStream();
 			ftpClient = new FTPClient();
 			ftpClient.setDefaultTimeout(30000);
+			//System.getProperties().put( "socksProxyPort", "4001");
+			//System.getProperties().put( "socksProxyHost" ,"localhost");
 			ftpClient.connect(m_strHost);
+			//System.getProperties().remove("socksProxyPort");
+			//System.getProperties().remove( "socksProxyHost");
 			ftpClient.setSoTimeout(30000);
 			//Login +passive Mode [Timeout: 30 sec]
 			ftpClient.setDataTimeout(30000);
@@ -418,7 +429,7 @@ final class DirectProxyConnection implements Runnable
 				os.write("</title></head><body><h2>FTP directory at ".getBytes());
 				os.write(URL.getBytes());
 				os.write( ("</h2><hr><pre> DIR  | <A HREF=\"" + parentDir + "\">..</A>\n").getBytes());
-	FTPFile remoteFiles[] = ftpClient.listFiles(m_strFile);
+				FTPFile remoteFiles[] = ftpClient.listFiles(m_strFile);
 				if (remoteFiles == null)
 				{
 					os.write( ("No files in Directory!\nServer replied:\n" + ftpClient.getReplyString()).
@@ -512,7 +523,7 @@ final class DirectProxyConnection implements Runnable
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.NOTICE, LogType.NET,
-						  "C(" + m_threadNumber + ") - Exception in handleFTP(): " + e);
+						  "C(" + m_threadNumber + ") - Exception in handleFTP()!", e);
 			try
 			{ //TODO generate Error message in Browser.....
 				ftpClient.disconnect();

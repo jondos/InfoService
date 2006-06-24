@@ -149,6 +149,38 @@ public class ORAcl
 			if (st.hasMoreElements())
 			{
 				mask = st.nextToken();
+				try
+				{
+					int intMask = Integer.parseInt(mask);
+					if (intMask >= 0)
+					{
+						// alternative netmask description found
+						mask = "";
+						for (int i = 0; i < 4; i++)
+						{
+							if (intMask >= 8)
+							{
+								mask += 255;
+							}
+							else if (intMask == 0)
+							{
+								mask += 0;
+							}
+							else
+							{
+								mask += (255 - ((int)Math.pow(2, 8-intMask) - 1));
+							}
+							intMask = Math.max(0, intMask - 8);
+							if (i != 3)
+							{
+								mask += ".";
+							}
+						}
+					}
+				}
+				catch (NumberFormatException a_e)
+				{
+				}
 			}
 			else
 			{

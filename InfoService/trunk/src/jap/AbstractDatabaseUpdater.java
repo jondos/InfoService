@@ -258,7 +258,8 @@ public abstract class AbstractDatabaseUpdater implements Observer
 				}
 			}
 
-			updated = updated || doCleanup(newEntries);
+
+			updated = doCleanup(newEntries) || updated;
 
 
 			if ((getUpdatedClass() == MixCascade.class || getUpdatedClass() == StatusInfo.class) && updated)

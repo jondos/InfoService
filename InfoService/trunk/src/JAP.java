@@ -366,6 +366,10 @@ public class JAP
 		}
 
 		m_controller.chooseRandomMixCascade();
+		if (!m_controller.startHTTPListener())
+		{
+			view.disableSetAnonMode();
+		}
 
 		if (!bConsoleOnly)
 		{
@@ -402,15 +406,18 @@ public class JAP
 			splash.dispose();
 		}
 
+		//WP: check japdll.dll version
+		JAPDll.checkDllVersion(true);
 
+		// initially start services
+		m_controller.initialRun();
 
 		//Update account balance
 		m_controller.updateAccountStatements();
-		// initially start services
 
-		m_controller.initialRun();
-		//WP: check japdll.dll version
-		JAPDll.checkDllVersion(true);
+
+
+
 
 		if (bConsoleOnly)
 		{

@@ -263,7 +263,7 @@ public class ORDescription
 		{
 			String ln = reader.readLine();
 			boolean bIsExitNode = false;
-			if (ln == null || !ln.startsWith("router"))
+			if (ln == null || !ln.startsWith("router"))// || ln.startsWith("router-signature"))
 			{
 				return null;
 			}

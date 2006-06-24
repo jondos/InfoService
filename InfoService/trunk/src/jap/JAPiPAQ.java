@@ -31,10 +31,10 @@ import java.util.Locale;
 
 import javax.swing.JPanel;
 
+import gui.JAPMessages;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import gui.*;
 
 final public class JAPiPAQ
 {
