@@ -44,6 +44,7 @@ public final class JAPModel extends Observable
 {
 	public static final String DLL_VERSION_UPDATE = "dllVersionUpdate";
 	public static final String XML_REMIND_OPTIONAL_UPDATE = "remindOptionalUpdate";
+	public static final String XML_RESTRICT_CASCADE_AUTO_CHANGE = "restrictCascadeAutoChange";
 
 	// observer messages
 	public static final Integer CHANGED_INFOSERVICE_AUTO_UPDATE = new Integer(0);
@@ -80,6 +81,7 @@ public final class JAPModel extends Observable
 	private boolean m_bRemindOptionalUpdate;
 
 	private boolean m_bChooseCascasdeConnectionAutomatically;
+	private boolean m_bAutomaticCascadeChangeRestricted;
 
 
 	private static JAPModel ms_TheModel = null;
@@ -276,6 +278,16 @@ public final class JAPModel extends Observable
 	public void setReminderForOptionalUpdate(boolean a_bRemind)
 	{
 		m_bRemindOptionalUpdate = a_bRemind;
+	}
+
+	public boolean isAutomaticCascadeChangeRestricted()
+	{
+		return m_bAutomaticCascadeChangeRestricted;
+	}
+
+	public void restrictAutomaticCascadeChange(boolean a_bRestrict)
+	{
+		m_bAutomaticCascadeChangeRestricted = a_bRestrict;
 	}
 
 	public void setChooseCascadeConnectionAutomatically(boolean a_bChooseCascasdeConnectionAutomatically)

@@ -31,26 +31,29 @@ import java.util.Observable;
 import java.util.Observer;
 
 import java.awt.Component;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.Font;
 import javax.swing.JButton;
-import javax.swing.WindowConstants;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
-import javax.swing.border.TitledBorder;
 import javax.swing.JSeparator;
+import javax.swing.WindowConstants;
+import javax.swing.border.TitledBorder;
 
+import gui.JAPHelp;
 import gui.JAPHtmlMultiLineLabel;
+import gui.JAPMessages;
+import gui.dialog.JAPDialog;
+import jap.AbstractJAPConfModule;
+import jap.JAPModel;
+import jap.MessageSystem;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import jap.*;
-import gui.dialog.JAPDialog;
-import gui.*;
 
 /**
  * This is the configuration GUI for the JAP forwarding client component.

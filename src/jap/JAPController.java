@@ -104,6 +104,7 @@ import proxy.DirectProxy;
 import proxy.DirectProxy.AllowUnprotectedConnectionCallback;
 import update.JAPUpdateWizard;
 import anon.infoservice.AbstractMixCascadeContainer;
+import anon.infoservice.AutoSwitchedMixCascade;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -167,9 +168,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	private boolean isRunningHTTPListener = false; // true if a HTTP listener is running
 
-	//private boolean  canStartService             = false; // indicates if anon service can be started
 	private boolean m_bAlreadyCheckedForNewVersion = false; // indicates if check for new version has already been done
-	private boolean m_bAlreadyCheckedForNewDevVersion = false; // have we checked for a new development version?
+	private boolean m_bAlreadyCheckedForNewOptionalVersion = false; // have we checked for a new development version?
 	private boolean mbActCntMessageNotRemind = false; // indicates if Warning message in setAnonMode has been deactivated for the session
 	private boolean mbActCntMessageNeverRemind = false; // indicates if Warning message in setAnonMode has been deactivated forever
 	private boolean mbDoNotAbuseReminder = false; // indicates if new warning message in setAnonMode (containing Do no abuse) has been shown
@@ -646,6 +646,34 @@ public final class JAPController extends Observable implements IProxyListener, O
 				JAPModel.getInstance().setChooseCascadeConnectionAutomatically(
 								XMLUtil.parseAttribute(root, XML_ATTR_AUTO_CHOOSE_CASCADES, true));
 
+				Element autoChange =
+					(Element)XMLUtil.getFirstChildByName(
+									   root, AutoSwitchedMixCascade.XML_ELEMENT_CONTAINER_NAME);
+				JAPModel.getInstance().restrictAutomaticCascadeChange(
+								XMLUtil.parseAttribute(autoChange,
+					JAPModel.XML_RESTRICT_CASCADE_AUTO_CHANGE, false));
+				if (autoChange != null)
+				{
+					autoChange.getElementsByTagName(AutoSwitchedMixCascade.XML_ELEMENT_NAME);
+					Node nodeCascade = autoChange.getFirstChild();
+					while (nodeCascade != null)
+					{
+						if (nodeCascade.getNodeName().equals(
+							AutoSwitchedMixCascade.XML_ELEMENT_NAME))
+						{
+							try
+							{
+								Database.getInstance(AutoSwitchedMixCascade.class).update(
+									new AutoSwitchedMixCascade( (Element) nodeCascade, Long.MAX_VALUE));
+							}
+							catch (Exception e)
+							{}
+						}
+						nodeCascade = nodeCascade.getNextSibling();
+					}
+				}
+
+
 	            int port = XMLUtil.parseAttribute(root, JAPConstants.CONFIG_PORT_NUMBER,
 												  JAPModel.getHttpListenerPortNumber());
 				boolean bListenerIsLocal = XMLUtil.parseAttribute(root,
@@ -741,7 +769,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 				setDummyTraffic(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_DUMMY_TRAFFIC_INTERVALL,
 					-1));
-				setAutoConnect(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_AUTO_CONNECT, false));
+				JAPModel.getInstance().setAutoConnect(
+								XMLUtil.parseAttribute(root, JAPConstants.CONFIG_AUTO_CONNECT, true));
 				setAutoReConnect(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_AUTO_RECONNECT, true));
 				m_Model.setMinimizeOnStartup(
 					XMLUtil.parseAttribute(root, JAPConstants.CONFIG_MINIMIZED_STARTUP, false));
@@ -1419,6 +1448,18 @@ public final class JAPController extends Observable implements IProxyListener, O
 			XMLUtil.setAttribute(e, XML_ATTR_AUTO_CHOOSE_CASCADES,
 								 JAPModel.getInstance().isCascadeConnectionChosenAutomatically());
 
+			Element autoSwitch = doc.createElement(AutoSwitchedMixCascade.XML_ELEMENT_CONTAINER_NAME);
+			XMLUtil.setAttribute(autoSwitch, JAPModel.XML_RESTRICT_CASCADE_AUTO_CHANGE,
+								 JAPModel.getInstance().isAutomaticCascadeChangeRestricted());
+			e.appendChild(autoSwitch);
+			Enumeration autoSwitchCascades =
+				Database.getInstance(AutoSwitchedMixCascade.class).getEntrySnapshotAsEnumeration();
+			while (autoSwitchCascades.hasMoreElements())
+			{
+				autoSwitch.appendChild(
+								((AutoSwitchedMixCascade)autoSwitchCascades.nextElement()).toXmlElement(doc));
+			}
+
 			/* save payment configuration */
 			try
 			{
@@ -1928,7 +1969,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					if (versionCheck == -1)
 					{
 						// update failed or new mandatory release version available
-						m_bAlreadyCheckedForNewDevVersion = true;
+						m_bAlreadyCheckedForNewOptionalVersion = true;
 					}
 					else if (versionCheck == 0)
 					{
@@ -2126,7 +2167,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						if (versionCheck == -1)
 						{
 							// update failed, check for optional update will not work, either
-							m_bAlreadyCheckedForNewDevVersion = true;
+							m_bAlreadyCheckedForNewOptionalVersion = true;
 							// -> we must stop anonymity
 							//setAnonMode(false);
 						}
@@ -2137,12 +2178,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 				}
 
-				if (versionCheck != -1 && !m_bAlreadyCheckedForNewDevVersion &&
+				if (versionCheck != -1 && !m_bAlreadyCheckedForNewOptionalVersion &&
 					JAPModel.getInstance().isReminderForOptionalUpdateActivated())
 				{
 					if (versionCheck(false) != 1)
 					{
-						m_bAlreadyCheckedForNewDevVersion = true;
+						m_bAlreadyCheckedForNewOptionalVersion = true;
 					}
 				}
 
@@ -2329,11 +2370,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			m_proxyAnon.setDummyTraffic(msIntervall);
 		}
-	}
-
-	public void setAutoConnect(boolean b)
-	{
-		m_Model.setAutoConnect(b);
 	}
 
 	public void setAutoReConnect(boolean b)
@@ -2679,7 +2715,19 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 */
 	public int versionCheck(boolean a_bForced)
 	{
-		LogHolder.log(LogLevel.INFO, LogType.MISC, "Checking for new version of JAP...");
+		String versionType;
+		if (a_bForced)
+		{
+			versionType = "mandatory";
+		}
+		else
+		{
+			versionType = "optional";
+		}
+
+		LogHolder.log(LogLevel.NOTICE, LogType.MISC,
+					  "Checking for new " + versionType + " version of JAP...");
+
 		JAPVersionInfo vi = null;
 		String updateVersionNumber = null;
 		if (a_bForced)
@@ -3422,7 +3470,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 						 m_alreadyTriedCascades.containsKey(m_initialCascade.getId()))
 				{
 					MixCascade currentCascade = null;
-					Vector availableCascades = Database.getInstance(MixCascade.class).getEntryList();
+					Vector availableCascades;
+					if (JAPModel.getInstance().isAutomaticCascadeChangeRestricted())
+					{
+						availableCascades = Database.getInstance(AutoSwitchedMixCascade.class).getEntryList();
+					}
+					else
+					{
+						availableCascades = Database.getInstance(MixCascade.class).getEntryList();
+					}
 					if (availableCascades.size() > 0)
 					{
 						int chosenCascadeIndex = m_random.nextInt();

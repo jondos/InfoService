@@ -632,6 +632,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_urlLabel.setText(URL_BEGIN + m_infoService.getUrl(selectedMixId) + URL_END);
 
 		m_serverCert = m_infoService.getMixCertificate(selectedMixId);
+		if (m_serverCert == null && cascade != null && server == 0)
+		{
+			// get the certificate for the first mix
+			m_serverCert = cascade.getMixCascadeCertificate();
+		}
 		if (m_serverCert != null)
 		{
 			m_viewCertLabel.setText(
@@ -1586,7 +1591,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		public JAPCertificate getMixCertificate(String a_mixID)
 		{
-			MixInfo mixinfo = (MixInfo) Database.getInstance(MixInfo.class).getEntryById(a_mixID);
+			MixInfo mixinfo = getMixInfo(a_mixID);
 			JAPCertificate certificate = null;
 			if (mixinfo != null)
 			{
