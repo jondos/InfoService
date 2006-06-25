@@ -388,12 +388,12 @@ public class CertDetailsDialog extends JAPDialog
 		// Key Algorithm and Key length
 		Vector keyKeys = new Vector();
 		keyKeys.addElement(JAPMessages.getString(TITLE_KEYS_ALGORITHM));
-		keyKeys.addElement(JAPMessages.getString(TITLE_KEYS_KEYLENGTH));
+		//keyKeys.addElement(JAPMessages.getString(TITLE_KEYS_KEYLENGTH));
 		keyKeys.addElement(JAPMessages.getString(TITLE_KEYS_SIGNALGORITHM));
 		Vector keyValues = new Vector();
 		keyValues.addElement(new String(a_cert.getPublicKey().getAlgorithm()));
-		int kLength = ( (IMyPublicKey) a_cert.getPublicKey()).getKeyLength();
-		keyValues.addElement(new Integer(kLength).toString());
+		//int kLength = ( (IMyPublicKey) a_cert.getPublicKey()).getKeyLength();
+		//keyValues.addElement(new Integer(kLength).toString());
 		keyValues.addElement(a_cert.getPublicKey().getSignatureAlgorithm().getXMLSignatureAlgorithmReference());
 		JLabel title_keys = new JLabel(JAPMessages.getString(TITLE_KEYS), JLabel.RIGHT);
 		title_keys.setFont(TITLE_FONT);
@@ -416,6 +416,15 @@ public class CertDetailsDialog extends JAPDialog
 		this.getContentPane().add(sp);
 
 		this.pack();
+		if (this.getSize().height > 480)
+		{
+			this.setSize(getSize().width, 480);
+		}
+		if (this.getSize().width > 640)
+		{
+			this.setSize(640, getSize().height);
+		}
+
 		this.getContentPane().setVisible(true);
 
 	}

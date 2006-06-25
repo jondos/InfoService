@@ -108,7 +108,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		}.start();
 
 		// Anonservice settings
-		m_Controller.setAutoConnect(m_cbAutoConnect.isSelected());
+		JAPModel.getInstance().setAutoConnect(m_cbAutoConnect.isSelected());
 		m_Controller.setAutoReConnect(m_cbAutoReConnect.isSelected());
 		JAPModel.getInstance().setChooseCascadeConnectionAutomatically(m_cbAutoChooseCascades.isSelected());
 		return true;
@@ -177,7 +177,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	{
 		m_cbDummyTraffic.setSelected(false);
 		m_sliderDummyTrafficIntervall.setEnabled(false);
-		m_cbAutoConnect.setSelected(false);
+		m_cbAutoConnect.setSelected(true);
 		m_cbAutoReConnect.setSelected(true);
 		m_cbAutoChooseCascades.setSelected(true);
 	}
