@@ -331,6 +331,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				return ErrorCodes.E_INVALID_SERVICE;
 			}
 			MixCascade cascade = m_currentMixCascade.getNextMixCascade();
+			/*
 			if (cascade.getId().equals("Tor"))
 			{
 				LogHolder.log(LogLevel.NOTICE, LogType.NET, "Using Tor as anon service!");
@@ -339,7 +340,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			else
 			{
 				m_Anon = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_ANON);
-			}
+			}*/
 			int ret = m_Anon.initialize(cascade);
 			if (ret != ErrorCodes.E_SUCCESS)
 			{
