@@ -84,6 +84,7 @@ import anon.proxy.IProxyListener;
 import anon.tor.TorAnonServerDescription;
 import anon.util.IMiscPasswordReader;
 import anon.util.IPasswordReader;
+import anon.util.ClassUtil;
 import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
 import forward.server.ForwardServerManager;
@@ -105,6 +106,7 @@ import proxy.DirectProxy.AllowUnprotectedConnectionCallback;
 import update.JAPUpdateWizard;
 import anon.infoservice.AbstractMixCascadeContainer;
 import anon.infoservice.AutoSwitchedMixCascade;
+import java.io.*;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -267,12 +269,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 			m_currentMixCascade = new MixCascade(JAPConstants.DEFAULT_ANON_NAME, JAPConstants.DEFAULT_ANON_ID,
 												 listeners);
-			m_currentMixCascade.setUserDefined(false);
+			m_currentMixCascade.setUserDefined(false, null);
 		}
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.EMERG, LogType.NET,
-						  "JAPController: Constructor - default mix cascade: " + e.getMessage());
+						  "JAPController: Constructor - default mix cascade! ", e);
 			LogHolder.log(LogLevel.EMERG, LogType.NET, e);
 		}
 		/* set a default infoservice */
@@ -359,9 +361,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			public void run()
 			{
-				m_feedback.start();
-				m_InfoServiceUpdater.start();
-				m_MixCascadeUpdater.start();
+				m_feedback.start(false);
+				m_InfoServiceUpdater.start(false);
+				m_MixCascadeUpdater.start(false);
 
 			}
 		}.start();
@@ -649,9 +651,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 				Element autoChange =
 					(Element)XMLUtil.getFirstChildByName(
 									   root, AutoSwitchedMixCascade.XML_ELEMENT_CONTAINER_NAME);
-				JAPModel.getInstance().restrictAutomaticCascadeChange(
+				JAPModel.getInstance().setAutomaticCascadeChangeRestriction(
 								XMLUtil.parseAttribute(autoChange,
-					JAPModel.XML_RESTRICT_CASCADE_AUTO_CHANGE, false));
+					JAPModel.XML_RESTRICT_CASCADE_AUTO_CHANGE, JAPModel.AUTO_CHANGE_NO_RESTRICTION));
 				if (autoChange != null)
 				{
 					autoChange.getElementsByTagName(AutoSwitchedMixCascade.XML_ELEMENT_NAME);
@@ -1068,6 +1070,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						/** @todo implement password reader for console */
 						IMiscPasswordReader passwordReader;
 						final Hashtable cachedPasswords = new Hashtable();
+						final Hashtable completedAccounts = new Hashtable();
 						JAPDialog tempDialog = null;
 
 						if (JAPDialog.isConsoleOnly())
@@ -1113,7 +1116,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 										return null;
 									}
 
-									if (cachedPasswords.containsKey(a_message) || cachedPasswords.size() == 0)
+									if (!completedAccounts.containsKey(a_message))
+									{
+										passwordsToTry.clear();
+									}
+
+									if (cachedPasswords.size() == 0 ||
+										(completedAccounts.containsKey(a_message) &&
+										((Boolean)completedAccounts.get(a_message)).booleanValue()))
 									{
 										while (true)
 										{
@@ -1126,7 +1136,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 													// user clicked cancel
 													passwordsToTry = null;
 													// do not use the password from this account
-													cachedPasswords.remove(a_message);
+													//cachedPasswords.remove(a_message);
 													break;
 												}
 												else
@@ -1141,18 +1151,22 @@ public final class JAPController extends Observable implements IProxyListener, O
 										}
 										if (password != null)
 										{
-											cachedPasswords.put(a_message, password);
+											cachedPasswords.put(password, password);
+											completedAccounts.put(a_message, new Boolean(true));
 										}
 									}
 									else
 									{
 										if (passwordsToTry.size() == 0)
 										{
-											Enumeration enumCachedPasswords = cachedPasswords.elements();
-											while (enumCachedPasswords.hasMoreElements())
+											Enumeration enumCachedPasswordKeys = cachedPasswords.elements();
+											while (enumCachedPasswordKeys.hasMoreElements())
 											{
-												passwordsToTry.addElement(enumCachedPasswords.nextElement());
+												passwordsToTry.addElement(enumCachedPasswordKeys.
+													nextElement());
 											}
+											// start using cached paasswords for this account
+											completedAccounts.put(a_message, new Boolean(false));
 										}
 										password = (String) passwordsToTry.elementAt(passwordsToTry.size() -
 											1);
@@ -1160,10 +1174,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 										if (passwordsToTry.size() == 0)
 										{
-											cachedPasswords.put(a_message, password);
+											// all cached passwords have been used so far
+											completedAccounts.put(a_message, new Boolean(true));
 										}
-									}
 
+									}
 									return password;
 								}
 							};
@@ -1378,6 +1393,45 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	}
 
+
+	/**
+	 * Tries to restart the JAP<br>
+	 * 1.) Try to find "java.home" and start JAP with the java.exe in this path
+	 * 2.) Try to find out if 'java' or 'jview' was used
+	 */
+	private static void restartJAP() {
+
+		// restart command
+		String strRestartCommand = "";
+
+		//what is used: sun.java oder JView?
+		String strJavaVendor = System.getProperty("java.vendor");
+		LogHolder.log(LogLevel.INFO, LogType.ALL, "Java vendor: " + strJavaVendor);
+
+		if (strJavaVendor.toLowerCase().indexOf("microsoft") != -1) {
+			String pathToJView = System.getProperty("com.ms.sysdir") + File.separator;
+			strRestartCommand = pathToJView + "jview /cp \"" + ClassUtil.getClassPath().trim() + "\" JAP";
+		}
+	    else {
+			String pathToJava = System.getProperty("java.home") + File.separator + "bin" + File.separator;
+			strRestartCommand = pathToJava + "javaw -cp \"" + ClassUtil.getClassPath().trim() + "\" JAP";
+		}
+		/*
+		else { //try to start java
+			strRestartCommand = "java -cp " + ClassUtil.getClassPath().trim() + " JAP";
+		}*/
+
+		LogHolder.log(LogLevel.INFO, LogType.ALL, "JAP restart command: " + strRestartCommand);
+
+	    try {
+		    Runtime.getRuntime().exec(strRestartCommand);
+		}
+		catch (Exception ex) {
+			LogHolder.log(LogLevel.INFO, LogType.ALL, "Error auto-restart JAP: " + ex);
+			return;
+		}
+   }
+
 	/**
 	 * Changes the common proxy.
 	 * @param a_proxyInterface a proxy interface
@@ -1450,7 +1504,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 			Element autoSwitch = doc.createElement(AutoSwitchedMixCascade.XML_ELEMENT_CONTAINER_NAME);
 			XMLUtil.setAttribute(autoSwitch, JAPModel.XML_RESTRICT_CASCADE_AUTO_CHANGE,
-								 JAPModel.getInstance().isAutomaticCascadeChangeRestricted());
+								 JAPModel.getInstance().getAutomaticCascadeChangeRestriction());
 			e.appendChild(autoSwitch);
 			Enumeration autoSwitchCascades =
 				Database.getInstance(AutoSwitchedMixCascade.class).getEntrySnapshotAsEnumeration();
@@ -2197,10 +2251,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 					catch (NullPointerException a_e)
 					{
 					}
-					if (cascade != null && !cascade.isUserDefined())
+					if (!JAPModel.getInstance().isInfoServiceDisabled() &&
+						cascade != null && !cascade.isUserDefined())
 					{
-						if (Database.getInstance(MixCascade.class).getEntryById(cascade.getId()) == null)
+						if (cascade.isFromCascade() ||
+							Database.getInstance(MixCascade.class).getEntryById(cascade.getId()) == null)
 						{
+							// We have received a hint that this cascade has changed!
 							Database.getInstance(MixCascade.class).update(
 								InfoServiceHolder.getInstance().getMixCascadeInfo(cascade.getId()));
 						}
@@ -2626,12 +2683,24 @@ public final class JAPController extends Observable implements IProxyListener, O
 						// ignore
 					}
 
+					try
+					{
+						m_Controller.m_socketHTTPListener.close();
+					}
+					catch (Exception a_e)
+					{
+					}
+
 					// do not show any dialogs in this state
 					if (getView() != null)
 					{
 						getView().dispose();
 					}
 					LogHolder.log(LogLevel.INFO, LogType.GUI, "View has been disposed. Finishing...");
+					if ( !bShowConfigSaveErrorMsg ) {
+						LogHolder.log(LogLevel.INFO, LogType.ALL, "Try to restart JAP...");
+						restartJAP();
+					}
 					System.exit(0);
 				}
 			}
@@ -3471,13 +3540,20 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					MixCascade currentCascade = null;
 					Vector availableCascades;
-					if (JAPModel.getInstance().isAutomaticCascadeChangeRestricted())
+					boolean bRestrictToPay = false;
+					if (JAPModel.getInstance().getAutomaticCascadeChangeRestriction().equals(
+						JAPModel.AUTO_CHANGE_RESTRICT))
 					{
 						availableCascades = Database.getInstance(AutoSwitchedMixCascade.class).getEntryList();
 					}
 					else
 					{
 						availableCascades = Database.getInstance(MixCascade.class).getEntryList();
+						if (JAPModel.getInstance().getAutomaticCascadeChangeRestriction().equals(
+											  JAPModel.AUTO_CHANGE_RESTRICT_TO_PAY))
+						{
+							bRestrictToPay = true;
+						}
 					}
 					if (availableCascades.size() > 0)
 					{
@@ -3499,10 +3575,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 							if (!m_alreadyTriedCascades.containsKey(currentCascade.getId()))
 							{
 								m_alreadyTriedCascades.put(currentCascade.getId(), currentCascade);
-								if (!(currentCascade.isPayment() &&
-									  (!JAPController.getInstance().getDontAskPayment() ||
-									   PayAccountsFile.getInstance().getNumAccounts() == 0)))
+								if (isSuitableCascade(currentCascade) &&
+									(!bRestrictToPay || currentCascade.isPayment()))
 								{
+									// found a suitable cascade
 									break;
 								}
 								currentCascade = null;
@@ -3530,6 +3606,43 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 
 			return m_currentCascade;
+		}
+
+		private boolean isSuitableCascade(MixCascade a_cascade)
+		{
+			if (a_cascade == null)
+			{
+				return false;
+			}
+
+			if (a_cascade instanceof AutoSwitchedMixCascade)
+			{
+				/*
+				 * This cascade has been explicitly chosen as candidate. Allow to use it if it has not
+				 * changed in the current database (that means other mixes are in the cascade).
+				 */
+				MixCascade comparedCascade =
+					(MixCascade) Database.getInstance(MixCascade.class).getEntryById(a_cascade.getId());
+				if (comparedCascade != null)
+				{
+					if (!a_cascade.compareMixIDs(comparedCascade))
+					{
+						// This is not the same cascade that was chosen before!
+						return false;
+					}
+				}
+			}
+			/*
+			 * Cascade is not suitable if payment and the warning dialog is shown or no account is available
+			 * Otherwise the user would have to answer a dialog which is not good for automatic connections.
+			 */
+			return! (a_cascade.isPayment() &&
+					 ( (! (a_cascade instanceof AutoSwitchedMixCascade) &&
+						!JAPController.getInstance().getDontAskPayment()) ||
+					  PayAccountsFile.getInstance().getNumAccounts() == 0 ||
+					  PayAccountsFile.getInstance().getActiveAccount() == null ||
+					  PayAccountsFile.getInstance().getActiveAccount().getBalance().getCredit() == 0));
+
 		}
 		public MixCascade getCurrentMixCascade()
 		{

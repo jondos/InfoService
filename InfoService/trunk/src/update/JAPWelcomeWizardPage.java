@@ -46,6 +46,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 import gui.GUIUtils;
+import anon.util.ClassUtil;
 
 public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListener
 {
@@ -61,7 +62,8 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 
 	private final String COMMAND_SEARCH = "SEARCH";
 	private boolean m_bIncrementalUpdate = false;
-	final JFileChooser m_fileChooser = new JFileChooser(System.getProperty("user.dir", ""));
+	final JFileChooser m_fileChooser =
+		new JFileChooser(ClassUtil.getClassDirectory(ClassUtil.class).getParentFile());
 
 	public JAPWelcomeWizardPage()
 	{
@@ -97,8 +99,8 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 		m_panelConstraints.fill = GridBagConstraints.HORIZONTAL;
 		m_panelComponentsLayout.setConstraints(m_tfJapPath, m_panelConstraints);
 		m_panelComponents.add(m_tfJapPath, m_panelConstraints);
-		m_tfJapPath.setText(System.getProperty("user.dir", ".") + System.getProperty("file.separator", "/") +
-							"JAP.jar");
+		m_tfJapPath.setText(ClassUtil.getClassDirectory(ClassUtil.class).getParentFile() +
+							System.getProperty("file.separator", "/") + "JAP.jar");
 
 		m_bttnChooseJapFile = new JButton(JAPMessages.getString("updateM_chooseFolder_bttn"));
 		m_panelConstraints.anchor = GridBagConstraints.EAST;
@@ -186,14 +188,12 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 	{
 		if (e.getActionCommand().equals(COMMAND_SEARCH))
 		{
-
 			//final JFileChooser m_fileChooser = new JFileChooser(System.getProperty("user.dir", ""));
 			m_fileChooser.setDialogTitle(JAPMessages.getString("updateM_fileChooserTitle"));
 			m_fileChooser.setApproveButtonText(JAPMessages.getString("updateM_fileChooserApprove_bttn"));
 			m_fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			//m_fileChooser.setFileFilter(jarFileFilter);
 			m_fileChooser.addChoosableFileFilter(jarFileFilter);
-
 			int returnVal = m_fileChooser.showOpenDialog(this);
 
 			if (returnVal == JFileChooser.APPROVE_OPTION)

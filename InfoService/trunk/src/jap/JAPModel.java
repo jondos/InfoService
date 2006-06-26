@@ -46,6 +46,10 @@ public final class JAPModel extends Observable
 	public static final String XML_REMIND_OPTIONAL_UPDATE = "remindOptionalUpdate";
 	public static final String XML_RESTRICT_CASCADE_AUTO_CHANGE = "restrictCascadeAutoChange";
 
+	public static final String AUTO_CHANGE_NO_RESTRICTION = "none";
+	public static final String AUTO_CHANGE_RESTRICT_TO_PAY = "pay";
+	public static final String AUTO_CHANGE_RESTRICT = "restrict";
+
 	// observer messages
 	public static final Integer CHANGED_INFOSERVICE_AUTO_UPDATE = new Integer(0);
 	public static final Integer CHANGED_ALLOW_INFOSERVICE_DIRECT_CONNECTION = new Integer(1);
@@ -81,7 +85,7 @@ public final class JAPModel extends Observable
 	private boolean m_bRemindOptionalUpdate;
 
 	private boolean m_bChooseCascasdeConnectionAutomatically;
-	private boolean m_bAutomaticCascadeChangeRestricted;
+	private String m_automaticCascadeChangeRestriction;
 
 
 	private static JAPModel ms_TheModel = null;
@@ -280,14 +284,24 @@ public final class JAPModel extends Observable
 		m_bRemindOptionalUpdate = a_bRemind;
 	}
 
-	public boolean isAutomaticCascadeChangeRestricted()
+	public String getAutomaticCascadeChangeRestriction()
 	{
-		return m_bAutomaticCascadeChangeRestricted;
+		return m_automaticCascadeChangeRestriction;
 	}
 
-	public void restrictAutomaticCascadeChange(boolean a_bRestrict)
+	public void setAutomaticCascadeChangeRestriction(String a_restriction)
 	{
-		m_bAutomaticCascadeChangeRestricted = a_bRestrict;
+		if (a_restriction != null &&
+			(a_restriction.equals(AUTO_CHANGE_NO_RESTRICTION) ||
+			a_restriction.equals(AUTO_CHANGE_RESTRICT_TO_PAY) ||
+			a_restriction.equals(AUTO_CHANGE_RESTRICT)))
+		{
+			m_automaticCascadeChangeRestriction = a_restriction;
+		}
+		else
+		{
+			m_automaticCascadeChangeRestriction = AUTO_CHANGE_NO_RESTRICTION;
+		}
 	}
 
 	public void setChooseCascadeConnectionAutomatically(boolean a_bChooseCascasdeConnectionAutomatically)

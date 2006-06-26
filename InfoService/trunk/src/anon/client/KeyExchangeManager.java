@@ -100,13 +100,15 @@ public class KeyExchangeManager {
    * @todo allow to connect if one or more mixes (user specified) cannot be verified
    * @param a_inputStream InputStream
    * @param a_outputStream OutputStream
+   * @param a_cascade the cascade to connect to; this is only used to update database entries
    * @throws XMLParseException
    * @throws SignatureException
    * @throws IOException
    * @throws UnknownProtocolVersionException
    * @todo remove MixInfo entries when changes in the certificate ID of a mix are discovered
    */
-  public KeyExchangeManager(InputStream a_inputStream, OutputStream a_outputStream) throws
+  public KeyExchangeManager(InputStream a_inputStream, OutputStream a_outputStream,
+							MixCascade a_cascade) throws
 	  XMLParseException, SignatureException, IOException, UnknownProtocolVersionException
   {
 	  try
@@ -131,7 +133,9 @@ public class KeyExchangeManager {
 			  }
 		  }
 
-		   MixCascade cascade = new MixCascade(XMLUtil.toXMLDocument(xmlData).getDocumentElement(), 0, true);
+		   /* process the received XML structure */
+		   MixCascade cascade = new MixCascade(XMLUtil.toXMLDocument(xmlData).getDocumentElement(),
+											   Long.MAX_VALUE, a_cascade.getId());
 		  /* verify the signature */
 		  if (SignatureVerifier.getInstance().verifyXml(cascade.getXmlStructure(),
 			  SignatureVerifier.DOCUMENT_CLASS_MIX) == false)
@@ -139,32 +143,25 @@ public class KeyExchangeManager {
 			  throw (new SignatureException("Received XML structure has an invalid signature."));
 		  }
 
-		  /* process the received XML structure */
-		  MixCascade cascadeInDB =
-			  (MixCascade) Database.getInstance(MixCascade.class).getEntryById(cascade.getId());
-		  if (cascadeInDB != null && !cascadeInDB.isUserDefined())
+		  if (a_cascade.isUserDefined())
 		  {
-			  // check if the cascade has changed its composition since the last update
-			  if (cascadeInDB.getNumberOfMixes() != cascade.getNumberOfMixes())
+			  cascade.setUserDefined(true, a_cascade);
+			  Database.getInstance(MixCascade.class).update(cascade);
+		  }
+		  else
+		  {
+			  MixCascade cascadeInDB =
+				  (MixCascade) Database.getInstance(MixCascade.class).getEntryById(cascade.getId());
+			  if (cascadeInDB != null)
 			  {
-				  Database.getInstance(MixCascade.class).remove(cascadeInDB);
-			  }
-			  else
-			  {
-				  Vector mixIDs = cascade.getMixIds();
-				  Vector mixIDsDB = cascadeInDB.getMixIds();
-
-				  for (int i = 0; i < mixIDs.size(); i++)
+				  // check if the cascade has changed its composition since the last update
+				  if (!cascade.compareMixIDs(cascadeInDB))
 				  {
-					  if (!mixIDs.elementAt(i).equals(mixIDsDB.elementAt(i)))
-					  {
-						  Database.getInstance(MixCascade.class).remove(cascadeInDB);
-						  break;
-					  }
+					  // remove this cascade from DB as its values have changed
+					  Database.getInstance(MixCascade.class).remove(cascadeInDB);
 				  }
 			  }
 		  }
-
 
 		  /*
 		   * get the appended certificate of the signature and store it in the
@@ -262,6 +259,7 @@ public class KeyExchangeManager {
 				 (oldMixinfo == null || !oldMixinfo.getMixCertificate().equals(mixinfo.getMixCertificate())))
 			 {
 				 // update the database so the the (new) certificate gets available
+
 				 Database.getInstance(MixInfo.class).update(mixinfo);
 			 }
 

@@ -36,24 +36,56 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import javax.swing.JCheckBox;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.JRadioButton;
+import javax.swing.ButtonGroup;
 import javax.swing.JPanel;
+import javax.swing.JButton;
 import javax.swing.JSlider;
 import javax.swing.SwingConstants;
 
 import gui.JAPHelp;
 import gui.JAPMessages;
+import gui.GUIUtils;
+import javax.swing.JList;
+import javax.swing.DefaultListModel;
+import javax.swing.JTextArea;
+import javax.swing.ListSelectionModel;
+import javax.swing.JLabel;
+import javax.swing.JScrollPane;
 
 final class JAPConfAnonGeneral extends AbstractJAPConfModule
 {
 	private static final String MSG_AUTO_CHOOSE_CASCADES = JAPConfAnonGeneral.class.getName() +
 		"_autoChooseCascades";
+	private static final String MSG_RESTRICT_AUTO_CHOOSE = JAPConfAnonGeneral.class.getName() +
+		"_RestrictAutoChoosing";
+	private static final String MSG_DO_NOT_RESTRICT_AUTO_CHOOSE = JAPConfAnonGeneral.class.getName() +
+		"_doNotRestrictAutoChoosing";
+	private static final String MSG_RESTRICT_AUTO_CHOOSE_PAY = JAPConfAnonGeneral.class.getName() +
+		"_restrictAutoChoosingPay";
+	private static final String MSG_KNOWN_CASCADES = JAPConfAnonGeneral.class.getName() +
+		"_knownCascades";
+	private static final String MSG_ALLOWED_CASCADES = JAPConfAnonGeneral.class.getName() +
+		"_allowedCascades";
+
+	private static final String IMG_ARROW_RIGHT = JAPConfAnonGeneral.class.getName() + "_arrowRight.gif";
+	private static final String IMG_ARROW_LEFT = JAPConfAnonGeneral.class.getName() + "_arrowLeft.gif";
 
 	private JCheckBox m_cbDummyTraffic;
 	private JCheckBox m_cbAutoConnect;
 	private JCheckBox m_cbAutoReConnect;
 	private JCheckBox m_cbAutoChooseCascades;
+	private JRadioButton m_cbRestrictAutoChoose;
+	private JRadioButton m_cbRestrictAutoChoosePay;
+	private JRadioButton m_cbDoNotRestrictAutoChoose;
 	private JSlider m_sliderDummyTrafficIntervall;
 	private JAPController m_Controller;
+
+	private JPanel m_panelRestrictedCascades;
+
+	private JList m_knownCascadesList;
 
 	protected JAPConfAnonGeneral(IJAPConfSavePoint savePoint)
 	{
@@ -79,6 +111,23 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_cbAutoConnect.setSelected(JAPModel.getAutoConnect());
 		m_cbAutoReConnect.setSelected(JAPModel.getAutoReConnect());
 		m_cbAutoChooseCascades.setSelected(JAPModel.getInstance().isCascadeConnectionChosenAutomatically());
+		if (JAPModel.getInstance().getAutomaticCascadeChangeRestriction().equals(
+			  JAPModel.AUTO_CHANGE_RESTRICT))
+		{
+		   m_cbRestrictAutoChoose.setSelected(true);
+		   m_panelRestrictedCascades.setEnabled(true);
+		}
+		else if (JAPModel.getInstance().getAutomaticCascadeChangeRestriction().equals(
+			  JAPModel.AUTO_CHANGE_RESTRICT_TO_PAY))
+		{
+			m_cbRestrictAutoChoosePay.setSelected(true);
+			m_panelRestrictedCascades.setEnabled(false);
+		}
+		else
+		{
+			m_cbDoNotRestrictAutoChoose.setSelected(true);
+			m_panelRestrictedCascades.setEnabled(false);
+		}
 		m_cbAutoChooseCascades.setEnabled(JAPModel.getAutoReConnect());
 	}
 
@@ -111,6 +160,18 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		JAPModel.getInstance().setAutoConnect(m_cbAutoConnect.isSelected());
 		m_Controller.setAutoReConnect(m_cbAutoReConnect.isSelected());
 		JAPModel.getInstance().setChooseCascadeConnectionAutomatically(m_cbAutoChooseCascades.isSelected());
+		if (m_cbRestrictAutoChoose.isSelected())
+		{
+			JAPModel.getInstance().setAutomaticCascadeChangeRestriction(JAPModel.AUTO_CHANGE_RESTRICT);
+		}
+		else if (m_cbRestrictAutoChoosePay.isSelected())
+		{
+			JAPModel.getInstance().setAutomaticCascadeChangeRestriction(JAPModel.AUTO_CHANGE_RESTRICT_TO_PAY);
+		}
+		else
+		{
+			JAPModel.getInstance().setAutomaticCascadeChangeRestriction(JAPModel.AUTO_CHANGE_NO_RESTRICTION);
+		}
 		return true;
 	}
 
@@ -125,13 +186,52 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_cbAutoReConnect.setFont(font);
 		m_cbAutoChooseCascades = new JCheckBox(JAPMessages.getString(MSG_AUTO_CHOOSE_CASCADES));
 		m_cbAutoChooseCascades.setFont(font);
+		m_cbDoNotRestrictAutoChoose = new JRadioButton(JAPMessages.getString(MSG_DO_NOT_RESTRICT_AUTO_CHOOSE));
+		m_cbDoNotRestrictAutoChoose.setFont(font);
+		m_cbRestrictAutoChoosePay = new JRadioButton(JAPMessages.getString(MSG_RESTRICT_AUTO_CHOOSE_PAY));
+		m_cbRestrictAutoChoosePay.setFont(font);
+		m_cbRestrictAutoChoose = new JRadioButton(JAPMessages.getString(MSG_RESTRICT_AUTO_CHOOSE) + ":");
+		m_cbRestrictAutoChoose.setFont(font);
+		ButtonGroup groupAutoChoose = new ButtonGroup();
+		groupAutoChoose.add(m_cbDoNotRestrictAutoChoose);
+		groupAutoChoose.add(m_cbRestrictAutoChoosePay);
+		groupAutoChoose.add(m_cbRestrictAutoChoose);
+
+
 		m_cbAutoReConnect.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent a_event)
 			{
 				m_cbAutoChooseCascades.setEnabled(m_cbAutoReConnect.isSelected());
+				m_cbRestrictAutoChoose.setEnabled(m_cbAutoReConnect.isSelected() &&
+												  m_cbAutoChooseCascades.isSelected());
+				m_cbRestrictAutoChoosePay.setEnabled(m_cbAutoReConnect.isSelected() &&
+					m_cbAutoChooseCascades.isSelected());
+				m_cbDoNotRestrictAutoChoose.setEnabled(m_cbAutoReConnect.isSelected() &&
+					m_cbAutoChooseCascades.isSelected());
+				m_panelRestrictedCascades.setEnabled(m_cbAutoReConnect.isSelected() &&
+					m_cbAutoChooseCascades.isSelected());
 			}
 		});
+		m_cbAutoChooseCascades.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent a_event)
+			{
+				m_cbRestrictAutoChoose.setEnabled(m_cbAutoChooseCascades.isSelected());
+				m_cbRestrictAutoChoosePay.setEnabled(m_cbAutoChooseCascades.isSelected());
+				m_cbDoNotRestrictAutoChoose.setEnabled(m_cbAutoChooseCascades.isSelected());
+				m_panelRestrictedCascades.setEnabled(m_cbAutoChooseCascades.isSelected());
+			}
+		});
+		m_cbRestrictAutoChoose.addChangeListener(new ChangeListener()
+		{
+			public void stateChanged(ChangeEvent a_event)
+			{
+				m_panelRestrictedCascades.setEnabled(m_cbRestrictAutoChoose.isSelected());
+			}
+		});
+
+
 
 		m_cbDummyTraffic = new JCheckBox(JAPMessages.getString("ngConfAnonGeneralSendDummy"));
 		m_cbDummyTraffic.addItemListener(new ItemListener()
@@ -145,6 +245,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		GridBagLayout gb = new GridBagLayout();
 		panelRoot.setLayout(gb);
 		GridBagConstraints c = new GridBagConstraints();
+
 		c.gridx = 0;
 		c.gridy = 0;
 		c.gridheight = 1;
@@ -158,8 +259,26 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		c.gridy++;
 		panelRoot.add(m_cbAutoReConnect, c);
 		c.gridy++;
+		Insets insets = c.insets;
+		c.insets = new Insets(insets.top, insets.left + 20, insets.bottom, insets.right);
 		panelRoot.add(m_cbAutoChooseCascades, c);
 		c.gridy++;
+		c.insets = new Insets(c.insets.top, c.insets.left + 20, c.insets.bottom, c.insets.right);
+		panelRoot.add(m_cbDoNotRestrictAutoChoose, c);
+		c.gridy++;
+		panelRoot.add(m_cbRestrictAutoChoosePay, c);
+		c.gridy++;
+		panelRoot.add(m_cbRestrictAutoChoose, c);
+		c.insets = insets;
+		c.gridy++;
+
+
+
+		m_panelRestrictedCascades = createRestrictedCacadesPanel();
+
+		panelRoot.add(m_panelRestrictedCascades, c);
+		c.gridy++;
+
 		panelRoot.add(m_cbDummyTraffic, c);
 		c.gridy++;
 		c.weighty = 1.0;
@@ -180,11 +299,93 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_cbAutoConnect.setSelected(true);
 		m_cbAutoReConnect.setSelected(true);
 		m_cbAutoChooseCascades.setSelected(true);
+		m_cbDoNotRestrictAutoChoose.setSelected(true);
+		m_panelRestrictedCascades.setEnabled(false);
 	}
 
 	protected void onRootPanelShown()
 	{
 		//Register help context
 		JAPHelp.getInstance().getContextObj().setContext("services");
+	}
+
+	private JPanel createRestrictedCacadesPanel()
+	{
+		GridBagConstraints c = new GridBagConstraints();
+
+		c.gridx = 0;
+		c.gridy = 0;
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 1;
+		c.weighty = 0;
+
+		final JLabel lblKnownCascades =new JLabel(JAPMessages.getString(MSG_KNOWN_CASCADES));
+		lblKnownCascades.setFont(getFontSetting());
+		final JLabel lblAllowedCascades = new JLabel(JAPMessages.getString(MSG_ALLOWED_CASCADES));
+		lblAllowedCascades.setFont(getFontSetting());
+
+		DefaultListModel m_knownCascadesListModel = new DefaultListModel();
+		m_knownCascadesList = new JList(m_knownCascadesListModel);
+		m_knownCascadesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		final JScrollPane knownCascadesScrollPane = new JScrollPane(m_knownCascadesList);
+		knownCascadesScrollPane.setFont(getFontSetting());
+		/* set the preferred size of the scrollpane to a 4x20 textarea */
+		knownCascadesScrollPane.setPreferredSize( (new JTextArea(4, 20)).getPreferredSize());
+
+		DefaultListModel m_allowedCascadesListModel = new DefaultListModel();
+		final JList allowedCascadesList = new JList(m_allowedCascadesListModel);
+		allowedCascadesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		final JScrollPane allowedCascadesScrollPane = new JScrollPane(allowedCascadesList);
+		allowedCascadesScrollPane.setFont(getFontSetting());
+		/* set the preferred size of the scrollpane to a 4x20 textarea */
+			allowedCascadesScrollPane.setPreferredSize( (new JTextArea(4, 20)).getPreferredSize());
+
+
+		final JButton m_btnAddCascades = new JButton(GUIUtils.loadImageIcon(IMG_ARROW_RIGHT, true));
+		final JButton m_btnRemoveCascades = new JButton(GUIUtils.loadImageIcon(IMG_ARROW_LEFT, true));
+
+
+		JPanel panel = new JPanel(new GridBagLayout())
+		{
+			public void setEnabled(boolean a_bEnable)
+			{
+				super.setEnabled(a_bEnable);
+				lblKnownCascades.setEnabled(a_bEnable);
+				lblAllowedCascades.setEnabled(a_bEnable);
+				m_knownCascadesList.setEnabled(a_bEnable);
+				allowedCascadesList.setEnabled(a_bEnable);
+				m_btnAddCascades.setEnabled(a_bEnable);
+				m_btnRemoveCascades.setEnabled(a_bEnable);
+				knownCascadesScrollPane.setEnabled(a_bEnable);
+				allowedCascadesScrollPane.setEnabled(a_bEnable);
+			}
+		};
+
+
+		panel.add(lblKnownCascades, c);
+		c.gridx = 2;
+		panel.add(lblAllowedCascades, c);
+		c.gridx = 0;
+		c.gridy++;
+		c.gridheight = 2;
+		panel.add(knownCascadesScrollPane, c);
+		c.gridx++;
+		c.weightx = 0;
+		c.weighty = 1;
+		c.gridheight = 1;
+		c.fill = GridBagConstraints.BOTH;
+		panel.add(m_btnAddCascades, c);
+		c.gridy++;
+		panel.add(m_btnRemoveCascades, c);
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weighty = 0;
+		c.weightx = 1;
+		c.gridheight = 2;
+		c.gridx++;
+		c.gridy--;
+		panel.add(allowedCascadesScrollPane, c);
+
+		return panel;
 	}
 }

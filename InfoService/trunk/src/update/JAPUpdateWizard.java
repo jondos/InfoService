@@ -33,7 +33,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.URL;
-import javax.swing.SwingUtilities;
 import java.awt.Container;
 
 import HTTPClient.HTTPConnection;
@@ -54,6 +53,7 @@ import jarify.JarVerifier;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.util.ClassUtil;
 import jap.AbstractJAPMainView;
 public final class JAPUpdateWizard extends BasicWizard implements Runnable
 {
@@ -77,6 +77,8 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 
 	private final static String EXTENSION_BACKUP = ".backup";
 	private final static String EXTENSION_NEW = ".new";
+
+	private static final File CLASSFILE = ClassUtil.getClassDirectory(ClassUtil.class);
 
 	private boolean updateAborted = false;
 
@@ -263,7 +265,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 			}
 			catch (InterruptedException ie)
 			{
-				ie.printStackTrace();
+				LogHolder.log(LogLevel.ERR, LogType.THREAD, ie);
 			}
 		}
 		//if it is the DownloadWizardPage
@@ -288,12 +290,15 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 	{
 		Container parent = host.getDialogParent().getParent();
 		host.getDialogParent().dispose();
-		if (!(parent instanceof AbstractJAPMainView))
+		if (m_fileAktJapJar != null && m_fileAktJapJar.equals(CLASSFILE))
 		{
-			parent.setVisible(false);
-		}
+			if (! (parent instanceof AbstractJAPMainView))
+			{
+				parent.setVisible(false);
+			}
 
-		JAPController.goodBye(false);
+			JAPController.goodBye(false);
+		}
 		return null;
 	}
 

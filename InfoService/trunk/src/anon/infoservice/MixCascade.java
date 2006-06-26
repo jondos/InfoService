@@ -55,6 +55,10 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	public static final String XML_ELEMENT_NAME = "MixCascade";
 	public static final String XML_ELEMENT_CONTAINER_NAME = "MixCascades";
 
+	private static final String XML_ATTR_USER_DEFINED = "userDefined";
+
+	//private static final String XML_ELEM_RSA_KEY_VALUE = "RSAKeyValue";
+
 	/**
 	 * This is the ID of the mixcascade.
 	 */
@@ -82,6 +86,8 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 */
 	private Vector m_mixIds;
 
+	private Vector m_mixNodes;
+
 	/**
 	 * Stores the certificate for verifying the status messages of the mixcascade.
 	 */
@@ -91,6 +97,8 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 * Stores the XML structure for this mixcascade.
 	 */
 	private Element m_xmlStructure;
+
+	private XMLSignature m_unverifiedSignature;
 
 	/**
 	 * True, if this MixCascade is user defined, false if the Information comes from the
@@ -147,7 +155,7 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		 */
 	public MixCascade(Element a_mixCascadeNode, long a_expireTime) throws XMLParseException
 	{
-		this(a_mixCascadeNode, a_expireTime, false);
+		this(a_mixCascadeNode, a_expireTime, null);
 	}
 
 	/**
@@ -157,23 +165,30 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 * @param a_expireTime forces a specific expire time; takes default expire time if <= 0
 	 * @param a_bFromCascade if this is a MixCascade node directly received from a cascade (it is stripped)
 	 */
-	public MixCascade(Element a_mixCascadeNode, long a_expireTime, boolean a_bFromCascade)
+	public MixCascade(Element a_mixCascadeNode, long a_expireTime, String a_mixIDFromCascade)
 		throws XMLParseException
 	{
 		/* use always the timeout for the infoservice context, because the JAP client currently does
 		 * not have a database of mixcascade entries -> no timeout for the JAP client necessary
 		 */
 		super(a_expireTime <= 0 ? (System.currentTimeMillis() + Constants.TIMEOUT_MIXCASCADE) : a_expireTime);
-		m_bFromCascade = a_bFromCascade;
+		m_bFromCascade = a_mixIDFromCascade != null;
 		/* get the ID */
 		if (a_mixCascadeNode == null || !a_mixCascadeNode.getNodeName().equals(XML_ELEMENT_NAME))
 		{
 			throw new XMLParseException(XML_ELEMENT_NAME);
 		}
-		m_mixCascadeId = a_mixCascadeNode.getAttribute("id");
+		if (m_bFromCascade && a_mixIDFromCascade.trim().length() > 0)
+		{
+			m_mixCascadeId = a_mixIDFromCascade;
+		}
+		else
+		{
+			m_mixCascadeId = XMLUtil.parseAttribute(a_mixCascadeNode, "id", null);
+		}
 		/* get the name */
 		m_strName = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_mixCascadeNode, "Name"), null);
-		if (m_strName == null && !a_bFromCascade)
+		if (m_strName == null && !m_bFromCascade)
 		{
 			throw (new XMLParseException("Name"));
 		}
@@ -195,7 +210,7 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 			m_isPayment = false;
 		}
 
-		if (!a_bFromCascade)
+		if (!m_bFromCascade)
 		{
 			/* get the listener interfaces */
 			NodeList networkNodes = a_mixCascadeNode.getElementsByTagName("Network");
@@ -236,12 +251,18 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 			throw (new XMLParseException("Mix"));
 		}
 		m_mixIds = new Vector();
+		m_mixNodes = new Vector();
 		for (int i = 0; i < mixNodes.getLength(); i++)
 		{
 			Element mixNode = (Element) (mixNodes.item(i));
 			m_mixIds.addElement(mixNode.getAttribute("id"));
+			m_mixNodes.addElement(mixNode);
 		}
-		if (!a_bFromCascade)
+		if (m_mixCascadeId == null)
+		{
+			m_mixCascadeId = (String)m_mixIds.elementAt(0);
+		}
+		if (!m_bFromCascade)
 		{
 			/* get the LastUpdate timestamp */
 			NodeList lastUpdateNodes = a_mixCascadeNode.getElementsByTagName("LastUpdate");
@@ -254,16 +275,16 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		}
 		else
 		{
-			m_lastUpdate = 0;
+			m_lastUpdate = System.currentTimeMillis() - Constants.TIMEOUT_MIXCASCADE;
 		}
 		/* try to get the certificate from the Signature node */
 		try
 		{
 			m_mixCascadeCertificate = null;
-			XMLSignature documentSignature = XMLSignature.getUnverified(a_mixCascadeNode);
-			if (documentSignature != null)
+			m_unverifiedSignature = XMLSignature.getUnverified(a_mixCascadeNode);
+			if (m_unverifiedSignature != null)
 			{
-				Enumeration appendedCertificates = documentSignature.getCertificates().elements();
+				Enumeration appendedCertificates = m_unverifiedSignature.getCertificates().elements();
 				/* store the first certificate (there should be only one) -> needed for verification of the
 				 * MixCascadeStatus XML structure */
 				if (appendedCertificates.hasMoreElements())
@@ -290,20 +311,7 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		}
 
 		/* get the information, whether this mixcascade was user-defined within the JAP client */
-		if (XMLUtil.getFirstChildByName(a_mixCascadeNode, "UserDefined") == null)
-		{
-			/* there is no UserDefined node -> this MixCascade entry was generated by the corresponding
-			 * mixcascade itself
-			 */
-			m_userDefined = false;
-		}
-		else
-		{
-			/* there is a UserDefined node -> this MixCascade entry was generated by the user within the
-			 * JAP client
-			 */
-			m_userDefined = true;
-		}
+		m_userDefined = XMLUtil.parseAttribute(a_mixCascadeNode, XML_ATTR_USER_DEFINED, false);
 
 		/* store the xml structure */
 		m_xmlStructure = a_mixCascadeNode;
@@ -379,11 +387,44 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		m_lastUpdate = System.currentTimeMillis();
 		/* create the mixIds and set one with the same ID as the mixcascade itself */
 		m_mixIds = new Vector();
+		m_mixNodes = new Vector();
 		m_mixIds.addElement(m_mixCascadeId);
 		/* some more values */
 		m_userDefined = true;
 		m_mixCascadeCertificate = null;
 		m_xmlStructure = generateXmlRepresentation();
+	}
+
+	/**
+	 * Returns whether a given cascade has another number of mixes or mixes with other IDs than this one.
+	 * @param a_cascade MixCascade
+	 * @return if both cascades contain the same mix IDs (and are therefore identical); false otherwise
+	 */
+	public boolean compareMixIDs(MixCascade a_cascade)
+	{
+		if (a_cascade == null)
+		{
+			return false;
+		}
+		// check if the cascade has changed its composition since the last update
+		if (a_cascade.getNumberOfMixes() != getNumberOfMixes())
+		{
+			return false;
+		}
+		else
+		{
+			Vector mixIDs = getMixIds();
+			Vector mixIDsDB = a_cascade.getMixIds();
+
+			for (int i = 0; i < mixIDs.size(); i++)
+			{
+				if (!mixIDs.elementAt(i).equals(mixIDsDB.elementAt(i)))
+				{
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	/**
@@ -523,7 +564,11 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 */
 	public int getNumberOfListenerInterfaces()
 	{
-		return m_listenerInterfaces.size();
+		if (m_listenerInterfaces != null)
+		{
+			return m_listenerInterfaces.size();
+		}
+		return 0;
 	}
 
 	/**
@@ -555,7 +600,11 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 */
 	public int getNumberOfMixes()
 	{
-		return m_mixIds.size();
+		if (m_mixIds != null)
+		{
+			return m_mixIds.size();
+		}
+		return 0;
 	}
 
 	/**
@@ -584,9 +633,17 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		return m_userDefined;
 	}
 
-	public void setUserDefined(boolean b)
+	public void setUserDefined(boolean b, MixCascade a_oldMixCascade)
 	{
 		m_userDefined = b;
+		if (m_userDefined && a_oldMixCascade != null && a_oldMixCascade.getId().equals(getId()))
+		{
+			m_strName = a_oldMixCascade.m_strName;
+			m_listenerInterfaces = a_oldMixCascade.m_listenerInterfaces;
+			/* set the lastUpdate time */
+			m_lastUpdate = System.currentTimeMillis();
+		}
+
 		m_xmlStructure = generateXmlRepresentation();
 	}
 
@@ -706,11 +763,28 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		Element mixesNode = doc.createElement("Mixes");
 		XMLUtil.setAttribute(mixesNode, "count", getNumberOfMixes());
 		Enumeration allMixIds = m_mixIds.elements();
-		while (allMixIds.hasMoreElements())
+		for (int i = 0; allMixIds.hasMoreElements(); i++)
 		{
-			Element mixNode = doc.createElement("Mix");
-			XMLUtil.setAttribute(mixNode, "id", (String) (allMixIds.nextElement()));
-			mixesNode.appendChild(mixNode);
+			if (m_mixNodes.size() > i)
+			{
+				allMixIds.nextElement(); // skip
+				try
+				{
+					mixesNode.appendChild(XMLUtil.importNode(doc, (Node) m_mixNodes.elementAt(i), true));
+				}
+				catch (XMLParseException a_e)
+				{
+					LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Could not import node " +
+								  ( (Node) m_mixNodes.elementAt(i)).getNodeName() + "!");
+				}
+			}
+			else
+			{
+				Element mixNode = doc.createElement("Mix");
+				XMLUtil.setAttribute(mixNode, "id", (String) (allMixIds.nextElement()));
+				mixesNode.appendChild(mixNode);
+			}
+
 		}
 		Element lastUpdateNode = doc.createElement("LastUpdate");
 		XMLUtil.setValue(lastUpdateNode, getLastUpdate());
@@ -720,11 +794,15 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		mixCascadeNode.appendChild(lastUpdateNode);
 		if (isUserDefined())
 		{
-			/* if this is a user-defined MixCascade entry, add the UserDefined node (has no children) */
-			Element userDefinedNode = doc.createElement("UserDefined");
-			mixCascadeNode.appendChild(userDefinedNode);
-			XMLUtil.setAttribute(mixCascadeNode, "userDefined", true);
+			XMLUtil.setAttribute(mixCascadeNode, XML_ATTR_USER_DEFINED, true);
+			if (m_unverifiedSignature != null)
+			{
+				mixCascadeNode.appendChild(m_unverifiedSignature.toXmlElement(doc));
+			}
 		}
+
+
+
 		return mixCascadeNode;
 	}
 

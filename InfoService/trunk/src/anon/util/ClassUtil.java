@@ -45,7 +45,6 @@ import java.net.URL;
  */
 public final class ClassUtil
 {
-
 	private static final String JAR_FILE = "jar:file:";
 	private static final String FILE = "file:";
 
@@ -440,7 +439,14 @@ public final class ClassUtil
 			 * Note that this will fail when running an applet under 1.1.8!! It seems impossible to get the
 			 * class directory in this case.
 			 */
-			thisClass = getClassDirectory(ClassUtil.class).toString() + File.pathSeparator;
+			try
+			{
+				thisClass = getClassDirectory(ClassUtil.class).toString() + File.pathSeparator;
+			}
+			catch (Exception a_e)
+			{
+				// this error indicates that the parent JAP file has been changed; program state inconsistent!
+			}
 		}
 
 		try
