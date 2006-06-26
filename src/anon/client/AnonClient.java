@@ -436,7 +436,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 				/* ignore it */
 			}
 			m_keyExchangeManager = new KeyExchangeManager(m_socketHandler.getInputStream(),
-				m_socketHandler.getOutputStream());
+				m_socketHandler.getOutputStream(), (MixCascade)a_mixCascade);
 		}
 		catch (UnknownProtocolVersionException e)
 		{

@@ -65,7 +65,7 @@ final public class JAPDll {
 	private static final String MSG_PERMISSION_PROBLEM = JAPDll.class.getName() + "_permissionProblem";
 
 	private static boolean m_sbHasOnTraffic = true;
-	static
+	public static void init()
 	{
 		try
 		{
@@ -362,10 +362,8 @@ final public class JAPDll {
 	 */
 	private static void informUserAboutJapRestart()
 	{
-		System.out.println(getDllVersion());
 		//Inform the User about the necessary JAP restart
-		JAPDialog.showMessageDialog(JAPController.getView(),
-									JAPMessages.getString(MSG_DLL_UPDATE, "'" + JAP_DLL + "'"));
+		JAPDialog.showMessageDialog(JAPController.getView(), JAPMessages.getString(MSG_DLL_UPDATE, "'" + JAP_DLL + "'"));
 		//close JAP
 		JAPController.getInstance().goodBye(false);
 	}

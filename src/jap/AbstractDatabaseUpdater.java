@@ -54,6 +54,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	private boolean m_successfulUpdate = false;
 	private boolean m_bAutoUpdateChanged = false;
 	private boolean m_bInitialRun = true;
+	private Object LOCK_INITIAL_RUN = new Object();
 
 	/**
 	 * Initialises and starts the database update thread.
@@ -104,7 +105,6 @@ public abstract class AbstractDatabaseUpdater implements Observer
 								Thread.currentThread().notifyAll();
 								break;
 							}
-
 						}
 					}
 
@@ -132,29 +132,44 @@ public abstract class AbstractDatabaseUpdater implements Observer
 		{
 			return;
 		}
-		synchronized (this)
+		final AbstractDatabaseUpdater updater = this;
+		new Thread()
 		{
-			synchronized (m_updateThread)
+			public void run()
 			{
-				m_bAutoUpdateChanged = true;
-				m_bInitialRun = false;
-				m_updateThread.notify();
+				updater.start(false);
 			}
-		}
+		}.start();
 	}
 
 	/**
 	 * Starts the thread if it has not already started or has been stopped before.
 	 */
-	public final synchronized void start()
+	public final void start(boolean a_bSynchronized)
 	{
 		if (m_bInitialRun)
 		{
-			synchronized (m_updateThread)
+			synchronized (this)
 			{
-				m_bAutoUpdateChanged = true;
-				m_bInitialRun = false;
-				m_updateThread.notify();
+				synchronized (m_updateThread)
+				{
+					if (m_bInitialRun)
+					{
+						m_bAutoUpdateChanged = true;
+						m_bInitialRun = false;
+						m_updateThread.notify();
+						if (a_bSynchronized)
+						{
+							try
+							{
+								m_updateThread.wait();
+							}
+							catch (InterruptedException ex)
+							{
+							}
+						}
+					}
+				}
 			}
 		}
 	}
@@ -163,7 +178,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	 * Force a synchronized update of the known database entries.
 	 * @return true if the update was successful, false otherwise
 	 */
-	public final synchronized boolean update()
+	public final boolean update()
 	{
 		return update(true);
 	}
@@ -188,25 +203,33 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	 * @param a_bSynchronized true if the current thread should wait until the update is done; false otherwise
 	 * @return true if the update was successful, false otherwise
 	 */
-	private final synchronized boolean update(boolean a_bSynchronized)
+	private final boolean update(boolean a_bSynchronized)
 	{
-		synchronized (m_updateThread)
+		if (m_bInitialRun)
 		{
-			m_bAutoUpdateChanged = false;
-			m_updateThread.notifyAll();
-			if (a_bSynchronized)
+			start(true);
+		}
+
+		synchronized (this)
+		{
+			synchronized (m_updateThread)
 			{
-				try
+				m_bAutoUpdateChanged = false;
+				m_updateThread.notifyAll();
+				if (a_bSynchronized)
 				{
-					m_updateThread.wait();
+					try
+					{
+						m_updateThread.wait();
+					}
+					catch (InterruptedException a_e)
+					{
+						return false;
+					}
+					return m_successfulUpdate;
 				}
-				catch (InterruptedException a_e)
-				{
-					return false;
-				}
-				return m_successfulUpdate;
+				return true;
 			}
-			return true;
 		}
 	}
 
@@ -218,6 +241,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 		JAPModel.getInstance().deleteObserver(this);
 		while (m_updateThread.isAlive())
 		{
+			m_updateThread.interrupt();
 			synchronized (m_updateThread)
 			{
 				m_bAutoUpdateChanged = false;

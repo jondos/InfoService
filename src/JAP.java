@@ -295,6 +295,7 @@ public class JAP
 		JAPModel.getInstance().setForwardingStateModuleVisible(forwardingStateVisible);
 		// load settings from config file
 		m_controller.loadConfigFile(configFileName, loadPay, splash);
+		JAPDll.init();
 		// Output some information about the system
 		LogHolder.log(
 			LogLevel.INFO,
@@ -358,7 +359,7 @@ public class JAP
 
 		try
 		{
-				secureRandomThread.join();
+			secureRandomThread.join();
 		}
 		catch (InterruptedException a_e)
 		{

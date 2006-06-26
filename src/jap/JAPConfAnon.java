@@ -1091,7 +1091,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 				if (m_infoService != null)
 				{
-					if (cascade.isUserDefined() || cascade.getNumberOfMixes() <= 0)
+					if (cascade.getNumberOfMixes() <= 1)
 					{
 						drawServerPanel(3, "", false);
 					}
@@ -1529,10 +1529,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				{
 					MixCascade cascade = (MixCascade) c.elementAt(j);
 					//Get mixes in cascade
-					if (cascade.isUserDefined())
+					/*if (cascade.isUserDefined())
 					{
 						continue;
-					}
+					}*/
 					// update MixInfo for each mix in cascade
 					update(Database.getInstance(MixCascade.class),
 						   new DatabaseMessage(DatabaseMessage.ENTRY_ADDED, cascade));
