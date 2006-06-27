@@ -620,15 +620,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		m_operatorLabel.setText(operator);
 		m_operatorLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
-		try
-		{
-			m_locationLabel.setText(new CountryMapper(m_infoService.getLocation(selectedMixId),
-													  JAPController.getInstance().getLocale()).toString());
-		}
-		catch (IllegalArgumentException a_e)
-		{
-			m_locationLabel.setText(m_infoService.getLocation(selectedMixId));
-		}
+
+		m_locationLabel.setText(m_infoService.getLocation(selectedMixId));
+
 		m_urlLabel.setText(URL_BEGIN + m_infoService.getUrl(selectedMixId) + URL_END);
 
 		m_serverCert = m_infoService.getMixCertificate(selectedMixId);
@@ -1665,16 +1659,48 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		public String getLocation(String a_mixId)
 		{
 			ServiceLocation location = getServiceLocation(a_mixId);
-			String strCountry = null;
+			String strLocation = "";
+
 			if (location != null)
 			{
-				strCountry = location.getCountry();
+				if (location.getCity() != null && location.getCity().trim().length() > 0)
+				{
+					strLocation = location.getCity().trim();
+				}
+
+				if (location.getState() != null && location.getState().trim().length() > 0)
+				{
+					if (strLocation.length() > 0)
+					{
+						strLocation += ", ";
+					}
+					strLocation += location.getState().trim();
+				}
+
+				if (location.getCountry() != null && location.getCountry().trim().length() > 0)
+				{
+					if (strLocation.length() > 0)
+					{
+						strLocation += ", ";
+					}
+
+					try
+					{
+						strLocation += new CountryMapper(
+							location.getCountry(), JAPController.getInstance().getLocale()).toString();
+					}
+					catch (IllegalArgumentException a_e)
+					{
+						strLocation += location.getCountry().trim();
+					}
+				}
 			}
-			if (strCountry == null)
+
+			if (strLocation.trim().length() == 0)
 			{
 				return "N/A";
 			}
-			return strCountry;
+			return strLocation;
 		}
 
 		/**

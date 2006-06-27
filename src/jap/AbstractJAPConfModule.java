@@ -74,7 +74,10 @@ public abstract class AbstractJAPConfModule
 		{
 			if(event.getAncestor() == m_rootPanel)
 			{
-				onRootPanelShown();
+				if (getRootPanel().isVisible())
+				{
+					onRootPanelShown();
+				}
 			}
 		}
 

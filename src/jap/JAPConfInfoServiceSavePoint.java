@@ -33,7 +33,6 @@ import java.util.Vector;
 import anon.infoservice.Database;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
-import anon.infoservice.ListenerInterface;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;

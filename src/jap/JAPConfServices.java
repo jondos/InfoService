@@ -27,6 +27,7 @@
  */
 package jap;
 
+import java.util.Vector;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 
@@ -65,6 +66,7 @@ public class JAPConfServices extends AbstractJAPConfModule
 
 	/** Stores the tabbed pane  **/
 	private JTabbedPane m_tabsAnon;
+	private Vector m_tabbedModules;
 
 	/**
 	 * Constructor for JAPConfServices. We do some initialization here.
@@ -102,12 +104,17 @@ public class JAPConfServices extends AbstractJAPConfModule
 			/* rebuild the services panel */
 
 			m_tabsAnon = new JTabbedPane();
+			m_tabbedModules = new Vector();
 			m_tabsAnon.addTab(anonModule.getTabTitle(), anonModule.getRootPanel());
+			m_tabbedModules.addElement(anonModule);
 			if (JAPModel.getDefaultView() != JAPConstants.VIEW_SIMPLIFIED)
 			{
 				m_tabsAnon.addTab(torModule.getTabTitle(), torModule.getRootPanel());
+				m_tabbedModules.addElement(torModule);
 				m_tabsAnon.addTab(mixminionModule.getTabTitle(), mixminionModule.getRootPanel());
+				m_tabbedModules.addElement(mixminionModule);
 				m_tabsAnon.addTab(anonGeneralModule.getTabTitle(), anonGeneralModule.getRootPanel());
+				m_tabbedModules.addElement(anonGeneralModule);
 			}
 			GridBagLayout rootPanelLayout = new GridBagLayout();
 			rootPanel.setLayout(rootPanelLayout);
@@ -161,6 +168,11 @@ public class JAPConfServices extends AbstractJAPConfModule
 		m_torModule.cancelPressed();
 		m_mixminionModule.cancelPressed();
 		m_anonGeneralModule.cancelPressed();
+	}
+
+	protected void onRootPanelShown()
+	{
+		((AbstractJAPConfModule)m_tabbedModules.elementAt(m_tabsAnon.getSelectedIndex())).onRootPanelShown();
 	}
 
 	/**
