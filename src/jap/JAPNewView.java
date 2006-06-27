@@ -120,6 +120,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	//private TitledBorder m_borderOwnTraffic, m_borderAnonMeter, m_borderDetails;
 	private ImageIcon[] meterIcons;
 	private JAPConf m_dlgConfig;
+	private Object LOCK_CONFIG = new Object();
 	private Window m_ViewIconified;
 	private NumberFormat m_NumberFormat;
 	private boolean m_bIsIconified;
@@ -809,6 +810,19 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			   setSize(m.m_OldMainWindowSize);
 			  }*/
 		}
+		/*
+		final JAPNewView view = this;
+		new Thread()
+		{
+			public void run()
+			{
+				synchronized (LOCK_CONFIG)
+				{
+					m_dlgConfig = new JAPConf(view, m_bWithPayment);
+				}
+			}
+		}.start();*/
+
 	}
 
 	private JPanel buildLevelPanel()
@@ -1449,22 +1463,25 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	public void showConfigDialog(String card)
 	{
-		if (m_dlgConfig == null)
+		synchronized (LOCK_CONFIG)
 		{
-			Cursor c = getCursor();
-			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-			m_dlgConfig = new JAPConf(this, m_bWithPayment);
-			setCursor(c);
+			if (m_dlgConfig == null)
+			{
+				Cursor c = getCursor();
+				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+				m_dlgConfig = new JAPConf(this, m_bWithPayment);
+				setCursor(c);
+			}
+			else
+			{
+				m_dlgConfig.updateValues();
+			}
+			if (card != null)
+			{
+				m_dlgConfig.selectCard(card);
+			}
+			m_dlgConfig.setVisible(true);
 		}
-		else
-		{
-			m_dlgConfig.updateValues();
-		}
-		if (card != null)
-		{
-			m_dlgConfig.selectCard(card);
-		}
-		m_dlgConfig.setVisible(true);
 	}
 
 	public JPanel getMainPanel()

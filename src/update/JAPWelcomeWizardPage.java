@@ -63,7 +63,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 	private final String COMMAND_SEARCH = "SEARCH";
 	private boolean m_bIncrementalUpdate = false;
 	final JFileChooser m_fileChooser =
-		new JFileChooser(ClassUtil.getClassDirectory(ClassUtil.class).getParentFile());
+		new JFileChooser(ClassUtil.getClassDirectory(ClassUtil.class).getParent());
 
 	public JAPWelcomeWizardPage()
 	{
@@ -99,7 +99,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 		m_panelConstraints.fill = GridBagConstraints.HORIZONTAL;
 		m_panelComponentsLayout.setConstraints(m_tfJapPath, m_panelConstraints);
 		m_panelComponents.add(m_tfJapPath, m_panelConstraints);
-		m_tfJapPath.setText(ClassUtil.getClassDirectory(ClassUtil.class).getParentFile() +
+		m_tfJapPath.setText(ClassUtil.getClassDirectory(ClassUtil.class).getParent() +
 							System.getProperty("file.separator", "/") + "JAP.jar");
 
 		m_bttnChooseJapFile = new JButton(JAPMessages.getString("updateM_chooseFolder_bttn"));
