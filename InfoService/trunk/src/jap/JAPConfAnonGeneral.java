@@ -192,6 +192,8 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_cbRestrictAutoChoosePay.setFont(font);
 		m_cbRestrictAutoChoose = new JRadioButton(JAPMessages.getString(MSG_RESTRICT_AUTO_CHOOSE) + ":");
 		m_cbRestrictAutoChoose.setFont(font);
+		/** @todo Implement and show the whitelist button */
+		m_cbRestrictAutoChoose.setVisible(false);
 		ButtonGroup groupAutoChoose = new ButtonGroup();
 		groupAutoChoose.add(m_cbDoNotRestrictAutoChoose);
 		groupAutoChoose.add(m_cbRestrictAutoChoosePay);
@@ -276,6 +278,8 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 
 
 		m_panelRestrictedCascades = createRestrictedCacadesPanel();
+		/** @todo Implement and show the whitelist */
+		m_panelRestrictedCascades.setVisible(false);
 
 		panelRoot.add(m_panelRestrictedCascades, c);
 		c.gridy++;

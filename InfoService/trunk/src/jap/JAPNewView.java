@@ -810,7 +810,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			   setSize(m.m_OldMainWindowSize);
 			  }*/
 		}
-		/*
+
 		final JAPNewView view = this;
 		new Thread()
 		{
@@ -821,7 +821,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					m_dlgConfig = new JAPConf(view, m_bWithPayment);
 				}
 			}
-		}.start();*/
+		}.start();
 
 	}
 
