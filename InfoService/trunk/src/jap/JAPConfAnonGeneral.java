@@ -210,7 +210,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 				m_cbDoNotRestrictAutoChoose.setEnabled(m_cbAutoReConnect.isSelected() &&
 					m_cbAutoChooseCascades.isSelected());
 				m_panelRestrictedCascades.setEnabled(m_cbAutoReConnect.isSelected() &&
-					m_cbAutoChooseCascades.isSelected());
+					m_cbAutoChooseCascades.isSelected() && m_cbRestrictAutoChoose.isSelected());
 			}
 		});
 		m_cbAutoChooseCascades.addActionListener(new ActionListener()
@@ -220,7 +220,8 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 				m_cbRestrictAutoChoose.setEnabled(m_cbAutoChooseCascades.isSelected());
 				m_cbRestrictAutoChoosePay.setEnabled(m_cbAutoChooseCascades.isSelected());
 				m_cbDoNotRestrictAutoChoose.setEnabled(m_cbAutoChooseCascades.isSelected());
-				m_panelRestrictedCascades.setEnabled(m_cbAutoChooseCascades.isSelected());
+				m_panelRestrictedCascades.setEnabled(m_cbAutoChooseCascades.isSelected() &&
+					m_cbRestrictAutoChoose.isSelected());
 			}
 		});
 		m_cbRestrictAutoChoose.addChangeListener(new ChangeListener()
