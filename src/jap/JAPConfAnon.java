@@ -1279,6 +1279,12 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 						}
 					}
 				}
+				else if (message.getMessageData() instanceof StatusInfo)
+				{
+					/** @todo update only if current cascade is changed */
+				}
+
+
 				final boolean bFinalDatabaseChanged = bDatabaseChanged;
 				SwingUtilities.invokeLater(
 					new Runnable()

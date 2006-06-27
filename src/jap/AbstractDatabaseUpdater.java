@@ -54,7 +54,6 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	private boolean m_successfulUpdate = false;
 	private boolean m_bAutoUpdateChanged = false;
 	private boolean m_bInitialRun = true;
-	private Object LOCK_INITIAL_RUN = new Object();
 
 	/**
 	 * Initialises and starts the database update thread.
@@ -147,27 +146,21 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	 */
 	public final void start(boolean a_bSynchronized)
 	{
-		if (m_bInitialRun)
+		synchronized (this)
 		{
-			synchronized (this)
+			synchronized (m_updateThread)
 			{
-				synchronized (m_updateThread)
+				m_bAutoUpdateChanged = true;
+				m_bInitialRun = false;
+				m_updateThread.notifyAll();
+				if (a_bSynchronized)
 				{
-					if (m_bInitialRun)
+					try
 					{
-						m_bAutoUpdateChanged = true;
-						m_bInitialRun = false;
-						m_updateThread.notify();
-						if (a_bSynchronized)
-						{
-							try
-							{
-								m_updateThread.wait();
-							}
-							catch (InterruptedException ex)
-							{
-							}
-						}
+						m_updateThread.wait();
+					}
+					catch (InterruptedException ex)
+					{
 					}
 				}
 			}
@@ -188,7 +181,11 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	 * @return true if the update was successful, false otherwise
 	 */
 	public final void updateAsync()
-	{
+	{		if (getUpdatedClass().equals(anon.infoservice.StatusInfo.class))
+{
+new Exception().printStackTrace();
+							}
+
 		new Thread()
 		{
 			public void run()
@@ -315,7 +312,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 			updated = doCleanup(newEntries) || updated;
 
 
-			if ((getUpdatedClass() == MixCascade.class || getUpdatedClass() == StatusInfo.class) && updated)
+			if ((getUpdatedClass() == MixCascade.class) && updated)
 			{
 				JAPController.getInstance().notifyJAPObservers();
 			}
