@@ -723,8 +723,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			public void run()
 			{
 				// fetch available mix cascades from the Internet
-				Cursor c = getRootPanel().getCursor();
-				getRootPanel().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+				//Cursor c = getRootPanel().getCursor();
+				//getRootPanel().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
 				if (a_bForceCascadeUpdate)
 				{
@@ -734,7 +734,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				m_infoService.fill(a_bCheckInfoServiceUpdateStatus);
 				updateMixCascadeCombo();
 
-				getRootPanel().setCursor(c);
+				//getRootPanel().setCursor(c);
 
 				if (Database.getInstance(MixCascade.class).getNumberofEntries() == 0)
 				{

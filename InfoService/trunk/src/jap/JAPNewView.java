@@ -97,9 +97,10 @@ import anon.proxy.IProxyListener;
 import gui.dialog.JAPDialog;
 import anon.infoservice.Database;
 import anon.AnonServerDescription;
+import anon.infoservice.DatabaseMessage;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
-	JAPObserver
+	JAPObserver, Observer
 {
 	private static final String MSG_SERVICE_NAME = JAPNewView.class.getName() + "_ngAnonymisierungsdienst";
 	private static final String MSG_ERROR_DISCONNECTED = JAPNewView.class.getName() + "_errorDisconnected";
@@ -810,8 +811,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			   setSize(m.m_OldMainWindowSize);
 			  }*/
 		}
-
-		final JAPNewView view = this;
+		Database.getInstance(StatusInfo.class).addObserver(this);
+		/*final JAPNewView view = this;
 		new Thread()
 		{
 			public void run()
@@ -821,7 +822,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					m_dlgConfig = new JAPConf(view, m_bWithPayment);
 				}
 			}
-		}.start();
+		}.start();*/
 
 	}
 
@@ -1280,6 +1281,20 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		else
 		{
 			return meterIcons[0]; // Anon deactivated
+		}
+	}
+
+	public void update(Observable a_observable, Object a_message)
+	{
+		if (a_observable == Database.getInstance(StatusInfo.class))
+		{
+			Object data =  ((DatabaseMessage)a_message).getMessageData();
+			if (data instanceof StatusInfo && ((StatusInfo)data).getId().equals(
+								JAPController.getInstance().getCurrentMixCascade().getId()))
+			{
+
+				valuesChanged(false);
+			}
 		}
 	}
 
