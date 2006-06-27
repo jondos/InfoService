@@ -719,7 +719,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		updateMixCascadeCombo();
 	}
 
-	private void fetchCascades(final boolean bErr, final boolean a_bForceCascadeUpdate)
+	private void fetchCascades(final boolean bErr, final boolean a_bForceCascadeUpdate,
+							   final boolean a_bCheckInfoServiceUpdateStatus)
 	{
 		m_reloadCascadesButton.setEnabled(false);
 		final Component component = getRootPanel();
@@ -736,7 +737,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					m_Controller.fetchMixCascades(bErr, component);
 				}
 				//Update the temporary infoservice database
-				m_infoService.fill();
+				m_infoService.fill(a_bCheckInfoServiceUpdateStatus);
 				updateMixCascadeCombo();
 
 				getRootPanel().setCursor(c);
@@ -814,7 +815,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		else if (e.getSource() == m_reloadCascadesButton)
 		{
-			fetchCascades(true, true);
+			fetchCascades(true, true, false);
 		}
 		else if (e.getSource() == m_selectCascadeButton)
 		{
@@ -1056,12 +1057,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	{
 		//Register help context
 		JAPHelp.getInstance().getContextObj().setContext("services");
-		if (!JAPModel.isInfoServiceDisabled())
+		if (!m_infoService.isFilled())
 		{
-			if (!m_infoService.isFilled())
-			{
-				fetchCascades(false, false);
-			}
+			fetchCascades(false, false, true);
 		}
 	}
 
@@ -1267,7 +1265,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 							{
 								mixId = (String) mixIDs.elementAt(i);
 								mixinfo = (MixInfo)Database.getInstance(MixInfo.class).getEntryById(mixId);
-								if (!cascade.isUserDefined() &&
+								if (!JAPModel.isInfoServiceDisabled() && !cascade.isUserDefined() &&
 									(mixinfo == null || mixinfo.isFromCascade()))
 								{
 									MixInfo mixInfo = InfoServiceHolder.getInstance().getMixInfo(mixId);
@@ -1405,7 +1403,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			m_Cascades = new Hashtable();
 			if (a_autoFill)
 			{
-				this.fill();
+				this.fill(true);
 			}
 		}
 
@@ -1482,13 +1480,15 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			m_Cascades.put(id, new TempCascade(id, interfaces, ports));
 		}
 
-		private void fill()
+		private void fill(boolean a_bCheckInfoServiceUpdateStatus)
 		{
 			synchronized (LOCK_FILL)
 			{
-				if (!fill(Database.getInstance(MixCascade.class).getEntryList()))
+				if (!fill(Database.getInstance(MixCascade.class).getEntryList(),
+					a_bCheckInfoServiceUpdateStatus))
 				{
-					fill(Util.toVector(JAPController.getInstance().getCurrentMixCascade()));
+					fill(Util.toVector(JAPController.getInstance().getCurrentMixCascade()),
+						a_bCheckInfoServiceUpdateStatus);
 				}
 			}
 		}
@@ -1497,7 +1497,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		 * Fills the temporary database by requesting info from the infoservice.
 		 * @todo check if synchronized with update is needed!!!
 		 */
-		private boolean fill(Vector c)
+		private boolean fill(Vector c, boolean a_bCheckInfoServiceUpdateStatus)
 		{
 			if (c == null || c.size() == 0)
 			{
@@ -1518,7 +1518,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				{
 					MixCascade cascade = (MixCascade) c.elementAt(j);
 					/* fetch the current cascade state */
-					if (!cascade.isUserDefined())
+					if (!cascade.isUserDefined() &&
+						(!a_bCheckInfoServiceUpdateStatus || !JAPModel.isInfoServiceDisabled()))
 					{
 						Database.getInstance(StatusInfo.class).update(cascade.fetchCurrentStatus());
 					}

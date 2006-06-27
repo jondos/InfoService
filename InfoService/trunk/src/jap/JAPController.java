@@ -1118,7 +1118,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 									if (!completedAccounts.containsKey(a_message))
 									{
-										passwordsToTry.clear();
+										passwordsToTry.removeAllElements();
 									}
 
 									if (cachedPasswords.size() == 0 ||
@@ -2659,14 +2659,21 @@ public final class JAPController extends Observable implements IProxyListener, O
 									( (SetAnonModeAsync) jobs.nextElement()).interrupt();
 								}
 							}
-
-							try
+							if (i == 4)
 							{
-								sleep(500);
+								LogHolder.log(LogLevel.ALERT, LogType.MISC,
+											  "Maybe no all SetAnonMode jobs could be finished!");
 							}
-							catch (InterruptedException a_e)
+							else
 							{
-								// ignore
+								try
+								{
+									sleep(500);
+								}
+								catch (InterruptedException a_e)
+								{
+									// ignore
+								}
 							}
 						}
 					}
@@ -2690,6 +2697,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 					catch (Exception a_e)
 					{
 					}
+
+					LogHolder.log(LogLevel.NOTICE, LogType.NET,
+								  "Interrupting all network communication threads...");
+					System.getProperties().put( "socksProxyPort", "0");
+					System.getProperties().put( "socksProxyHost" ,"localhost");
 
 					// do not show any dialogs in this state
 					if (getView() != null)
