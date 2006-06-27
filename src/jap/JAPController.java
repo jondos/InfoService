@@ -2054,7 +2054,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 							m_proxyAnon = new AnonProxy(m_socketHTTPListener, null);
 						}
 					}
-					m_feedback.updateAsync();
+					if (!JAPModel.isInfoServiceDisabled())
+					{
+						m_feedback.updateAsync();
+					}
 					m_proxyAnon.addEventListener(JAPController.getInstance());
 
 					//m_proxyAnon.setMixCascade(new SimpleMixCascadeContainer(
@@ -3323,7 +3326,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			public void run()
 			{
-				m_feedback.update();
+				if (!JAPModel.getInstance().isInfoServiceDisabled())
+				{
+					m_feedback.update();
+				}
 			}
 		}.start();
 

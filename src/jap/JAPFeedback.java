@@ -31,7 +31,6 @@ import java.util.Hashtable;
 
 import anon.infoservice.AbstractDatabaseEntry;
 import anon.infoservice.StatusInfo;
-import anon.util.Util;
 
 final class JAPFeedback extends AbstractDatabaseUpdater
 {
