@@ -1042,21 +1042,27 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			if (m_locationCoordinates != null && !m_mapShown)
 			{
-				m_mapShown = true;
-				getRootPanel().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-				try
+				new Thread()
 				{
-					new MapBox(getRootPanel(), (String) m_locationCoordinates.elementAt(0),
-							   (String) m_locationCoordinates.elementAt(1), 6).setVisible(true);
-				}
-				catch (IOException a_e)
-				{
-					JAPDialog.showErrorDialog(this.getRootPanel(),
-											  JAPMessages.getString(MapBox.MSG_ERROR_WHILE_LOADING),
-											  LogType.NET, a_e);
-				}
-				getRootPanel().setCursor(Cursor.getDefaultCursor());
-				m_mapShown = false;
+					public void run()
+					{
+						m_mapShown = true;
+						getRootPanel().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+						try
+						{
+							new MapBox(getRootPanel(), (String) m_locationCoordinates.elementAt(0),
+									   (String) m_locationCoordinates.elementAt(1), 6).setVisible(true);
+						}
+						catch (IOException a_e)
+						{
+							JAPDialog.showErrorDialog(GUIUtils.getParentWindow(getRootPanel()),
+													  JAPMessages.getString(MapBox.MSG_ERROR_WHILE_LOADING),
+													  LogType.NET, a_e);
+						}
+						getRootPanel().setCursor(Cursor.getDefaultCursor());
+						m_mapShown = false;
+					}
+				}.start();
 			}
 		}
 	}
