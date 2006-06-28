@@ -37,6 +37,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import anon.util.XMLUtil;
+import anon.util.IXMLEncodable;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -48,13 +49,13 @@ import logging.LogType;
  * DO NEVER EVER synchronize on m_trustedCertificates IF YOU DO NOT OWN A LOCK on this!
  */
 
-public class CertificateStore extends Observable
+public class CertificateStore extends Observable implements IXMLEncodable
 {
 
 	/**
 	 * Stores the name of the root node of the XML settings for this class.
 	 */
-	private static final String XML_SETTINGS_ROOT_NODE_NAME = "TrustedCertificates";
+	public static final String XML_ELEMENT_NAME = "TrustedCertificates";
 
 	private Hashtable m_trustedCertificates;
 
@@ -64,7 +65,7 @@ public class CertificateStore extends Observable
 
 	public static String getXmlSettingsRootNodeName()
 	{
-		return XML_SETTINGS_ROOT_NODE_NAME;
+		return XML_ELEMENT_NAME;
 	}
 
 	/**
@@ -385,9 +386,9 @@ public class CertificateStore extends Observable
 		notifyObservers();
 	}
 
-	public Element getSettingsAsXml(Document a_doc)
+	public Element toXmlElement(Document a_doc)
 	{
-		Element trustedCertificatesNode = a_doc.createElement(XML_SETTINGS_ROOT_NODE_NAME);
+		Element trustedCertificatesNode = a_doc.createElement(XML_ELEMENT_NAME);
 		synchronized (m_trustedCertificates)
 		{
 			Enumeration allCertificates = m_trustedCertificates.elements();
