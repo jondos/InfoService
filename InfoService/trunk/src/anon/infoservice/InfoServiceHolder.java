@@ -613,13 +613,14 @@ public class InfoServiceHolder extends Observable
 	 * from preferred infoservice, another known infoservice is asked. If we can't get the
 	 * information from any infoservice, null is returned.
 	 *
-	 * @return The version String (fromat: nn.nn.nnn) of the current JAP version.
+	 * @return The version String (fromat: nn.nn.nnn) of the current JAP version or null if the
+	 * version information could not be retrieved
 	 */
-	public String getNewVersionNumber()
+	public JAPMinVersion getNewVersionNumber()
 	{
 		try
 		{
-			return (String) (fetchInformation(GET_NEWVERSIONNUMBER, null));
+			return (JAPMinVersion) (fetchInformation(GET_NEWVERSIONNUMBER, null));
 		}
 		catch (Exception e)
 		{

@@ -2816,7 +2816,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		String updateVersionNumber = null;
 		if (a_bForced)
 		{
-			updateVersionNumber = InfoServiceHolder.getInstance().getNewVersionNumber();
+			updateVersionNumber = InfoServiceHolder.getInstance().getNewVersionNumber().getJapSoftware().getVersion();
 		}
 		else
 		{
