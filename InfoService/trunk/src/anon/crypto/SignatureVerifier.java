@@ -61,7 +61,7 @@ public class SignatureVerifier implements IXMLEncodable
         /**
          * Stores the name of the root node of the XML settings for this class.
          */
-        private static final String XML_SETTINGS_ROOT_NODE_NAME = "SignatureVerification";
+        public static final String XML_ELEMENT_NAME = "SignatureVerification";
 
         /**
          * Stores the instance of SignatureVerifier (Singleton).
@@ -115,7 +115,7 @@ public class SignatureVerifier implements IXMLEncodable
          */
         public static String getXmlSettingsRootNodeName()
         {
-                return XML_SETTINGS_ROOT_NODE_NAME;
+                return XML_ELEMENT_NAME;
         }
 
         /**
@@ -262,7 +262,7 @@ public class SignatureVerifier implements IXMLEncodable
          */
         public Element toXmlElement(Document a_doc)
         {
-                Element signatureVerificationNode = a_doc.createElement(XML_SETTINGS_ROOT_NODE_NAME);
+                Element signatureVerificationNode = a_doc.createElement(XML_ELEMENT_NAME);
                 synchronized (m_trustedCertificates)
                 {
                         Element checkSignaturesNode = a_doc.createElement("CheckSignatures");

@@ -35,13 +35,12 @@
 
 package jpi;
 
-import java.io.ByteArrayInputStream;
-import java.security.InvalidKeyException;
 import java.util.Enumeration;
 import java.util.Random;
 
 import anon.crypto.IMyPublicKey;
-import anon.crypto.JAPSignature;
+import anon.crypto.XMLSignature;
+import anon.crypto.ByteSignature;
 import anon.pay.xml.XMLAccountCertificate;
 import anon.pay.xml.XMLAccountInfo;
 import anon.pay.xml.XMLBalance;
@@ -66,6 +65,8 @@ import logging.LogLevel;
 import logging.LogType;
 import java.util.Vector;
 import jpi.helper.DummyCreditCardHelper;
+import org.w3c.dom.Document;
+import anon.util.XMLParseException;
 
 /**
  * This class contains the functionality for talking to a JAP. For
@@ -480,9 +481,7 @@ public class PICommandUser implements PICommand
 		try
 		{
 			XMLResponse response = new XMLResponse(new String(data));
-			JAPSignature sigTester = new JAPSignature();
-			sigTester.initVerify(m_publicKey);
-			boolean b = sigTester.verify(m_arbChallenge, response.getResponse());
+			boolean b = ByteSignature.verify(m_arbChallenge, response.getResponse(), m_publicKey);
 			return b;
 		}
 		catch (Exception e)
@@ -581,24 +580,25 @@ public class PICommandUser implements PICommand
 	 */
 	private boolean testCertificate(byte[] data) //throws Exception
 	{
-		JAPSignature sigTester = new JAPSignature();
+		Document xmlData;
 		try
 		{
-			sigTester.initVerify(Configuration.getOwnCertificate().getPublicKey());
+			xmlData = XMLUtil.toXMLDocument(data);
+
+			if (XMLSignature.verify(xmlData, Configuration.getOwnCertificate().getPublicKey()) == null)
+			{
+				LogHolder.log(LogLevel.INFO, LogType.PAY, "Wrong certificate (invalid signature)");
+				// error: certificate not contained in our DB
+				return false;
+			}
 		}
-		catch (InvalidKeyException ex)
+		catch (XMLParseException ex)
 		{
 			LogHolder.log(LogLevel.ALERT, LogType.PAY,
-						  "Internal Error in PICommandUser.testCertificate(): wrong own certificate!");
-			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, ex);
+						  "Internal Error in PICommandUser.testCertificate(): Wrong xml structure!", ex);
 			return false;
 		}
-		if (!sigTester.verifyXML(new ByteArrayInputStream(data)))
-		{
-			LogHolder.log(LogLevel.INFO, LogType.PAY, "Wrong certificate (invalid signature)");
-			// error: certificate not contained in our DB
-			return false;
-		}
+
 		XMLAccountCertificate xmlcert = null;
 		try
 		{
