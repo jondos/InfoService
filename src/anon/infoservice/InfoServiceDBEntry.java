@@ -1132,7 +1132,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	 *
 	 * @return The version String (fromat: nn.nn.nnn) of the current JAP version.
 	 */
-	public String getNewVersionNumber() throws Exception
+	public JAPMinVersion getNewVersionNumber() throws Exception
 	{
 		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/currentjapversion"));
 		Element japNode = (Element) (XMLUtil.getFirstChildByName(doc, JAPMinVersion.getXmlElementName()));
@@ -1141,18 +1141,10 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		{
 			/* signature is invalid -> throw an exception */
 			throw (new Exception(
-				"InfoServiceDBEntry: getNewVersionNumber: Cannot verify the signature for JAPMinVersion entry: " +
-				XMLUtil.toString(japNode)));
+				"Cannot verify the signature for JAPMinVersion entry: " + XMLUtil.toString(japNode)));
 		}
 		/* signature was valid */
-		JAPMinVersion minimumRequiredVersion = new JAPMinVersion(japNode);
-		String versionString = minimumRequiredVersion.getJapSoftware().getVersion();
-		if ( (versionString.charAt(2) != '.') || (versionString.charAt(5) != '.'))
-		{
-			throw (new Exception("InfoServiceDBEntry: getNewVersionNumber: Invalid version number format: " +
-								 versionString));
-		}
-		return versionString;
+		return new JAPMinVersion(japNode);
 	}
 
 	/**

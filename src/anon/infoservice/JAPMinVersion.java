@@ -30,6 +30,7 @@ package anon.infoservice;
 import org.w3c.dom.Element;
 
 import anon.util.XMLUtil;
+import anon.util.XMLParseException;
 
 /**
  * Holds the information about the currently minimum required JAP version to access the
@@ -84,6 +85,14 @@ public class JAPMinVersion extends AbstractDatabaseEntry implements IDistributab
       throw (new Exception("JAPMinVersion: Constructor: Error in XML structure: No software node."));
     }
     m_japSoftware = new ServiceSoftware(softwareNode);
+
+	String versionString = m_japSoftware.getVersion();
+	if ( (versionString.charAt(2) != '.') || (versionString.charAt(5) != '.'))
+		{
+			throw new XMLParseException("Invalid version number format: " + versionString);
+		}
+
+
     /** @todo FixMe: Removed because new IS does not work...*/
 	m_lastUpdate = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_japRootNode, "LastUpdate"), -1L);
     if (m_lastUpdate == -1) {

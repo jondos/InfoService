@@ -128,7 +128,17 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 			m_cbDoNotRestrictAutoChoose.setSelected(true);
 			m_panelRestrictedCascades.setEnabled(false);
 		}
-		m_cbAutoChooseCascades.setEnabled(JAPModel.getAutoReConnect());
+		m_cbAutoChooseCascades.setEnabled(m_cbAutoReConnect.isSelected());
+
+		m_cbRestrictAutoChoose.setEnabled(m_cbAutoReConnect.isSelected() &&
+										  m_cbAutoChooseCascades.isSelected());
+		m_cbDoNotRestrictAutoChoose.setEnabled(m_cbAutoReConnect.isSelected() &&
+											   m_cbAutoChooseCascades.isSelected());
+		m_cbRestrictAutoChoosePay.setEnabled(m_cbAutoReConnect.isSelected() &&
+											 m_cbAutoChooseCascades.isSelected());
+		m_panelRestrictedCascades.setEnabled(m_panelRestrictedCascades.isEnabled() &&
+											 m_cbAutoReConnect.isSelected() &&
+											 m_cbAutoChooseCascades.isSelected());
 	}
 
 //ok pressed
