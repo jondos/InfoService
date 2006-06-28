@@ -181,11 +181,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	 * @return true if the update was successful, false otherwise
 	 */
 	public final void updateAsync()
-	{		if (getUpdatedClass().equals(anon.infoservice.StatusInfo.class))
-{
-new Exception().printStackTrace();
-							}
-
+	{
 		new Thread()
 		{
 			public void run()

@@ -28,6 +28,7 @@
 package jap;
 
 import java.net.URL;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Enumeration;
 import java.util.Observable;
@@ -78,6 +79,7 @@ import anon.infoservice.Database;
 import anon.infoservice.DatabaseMessage;
 import gui.GUIUtils;
 import gui.JAPHelp;
+import gui.MapBox;
 import gui.JAPJIntField;
 import gui.JAPMessages;
 import gui.JAPMultilineLabel;
@@ -148,7 +150,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private JButton m_cancelCascadeButton;
 	private JButton m_showEditPanelButton;
 
-
 	private JTextField m_manHostField;
 	private JTextField m_manPortField;
 
@@ -158,8 +159,12 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private String m_oldCascadeHost;
 	private String m_oldCascadePort;
 
+	private boolean m_mapShown = false;
+
 	/** the Certificate of the selected Mix-Server */
 	private JAPCertificate m_serverCert;
+
+	private Vector m_locationCoordinates;
 
 	protected JAPConfAnon(IJAPConfSavePoint savePoint)
 	{
@@ -229,7 +234,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			a_strCascadeName = a_strCascadeName.substring(0, 65);
 			a_strCascadeName = a_strCascadeName + "...";
 		}
-		JAPMultilineLabel label = new JAPMultilineLabel("<html><u>" + JAPMessages.getString("infoAboutCascade")
+		JAPMultilineLabel label = new JAPMultilineLabel("<html><u>" +
+			JAPMessages.getString("infoAboutCascade")
 			+ ":</html></u>" + "\n" + a_strCascadeName);
 		m_serverPanel.add(label, c);
 
@@ -264,7 +270,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		m_serverInfoPanel.setLayout(layout);
 
-		JLabel l = new JLabel("<html><u>"+JAPMessages.getString("infoAboutMix")+":</html></u>");
+		JLabel l = new JLabel("<html><u>" + JAPMessages.getString("infoAboutMix") + ":</html></u>");
 		c.insets = new Insets(5, 10, 5, 5);
 		c.gridx = 0;
 		c.gridy = 0;
@@ -304,6 +310,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_serverInfoPanel.add(l, c);
 
 		m_locationLabel = new JLabel();
+		m_locationLabel.addMouseListener(this);
 		c.gridx = 1;
 		m_serverInfoPanel.add(m_locationLabel, c);
 
@@ -621,9 +628,17 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_operatorLabel.setText(operator);
 		m_operatorLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
 
-		m_locationLabel.setText(m_infoService.getLocation(selectedMixId));
+		m_locationCoordinates = m_infoService.getCoordinates(selectedMixId);
+		if (m_locationCoordinates != null)
+		{
+			m_locationLabel.setText(URL_BEGIN + m_infoService.getLocation(selectedMixId) + URL_END);
+		}
+		else
+		{
+			m_locationLabel.setText(m_infoService.getLocation(selectedMixId));
+		}
 
-		m_urlLabel.setText(URL_BEGIN + m_infoService.getUrl(selectedMixId) + URL_END);
+		m_urlLabel.setText(m_infoService.getUrl(selectedMixId));
 
 		m_serverCert = m_infoService.getMixCertificate(selectedMixId);
 		if (m_serverCert == null && cascade != null && server == 0)
@@ -638,11 +653,12 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		else
 		{
-			m_viewCertLabel.setText(URL_BEGIN + "N/A" + URL_END);
+			m_viewCertLabel.setText("N/A");
 		}
 
 		pRoot.validate();
 	}
+
 	private void updateMixCascadeCombo()
 	{
 		/** @todo Do this in the event thread only! */
@@ -897,11 +913,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				if (m_Controller.getCurrentMixCascade().equals(oldCascade))
 				{
 					m_Controller.setCurrentMixCascade(c);
-/**					if (m_Controller.isAnonConnected())
-					{
-						JAPDialog.showMessageDialog(this.getRootPanel(),
-							JAPMessages.getString("activeCascadeEdited"));
-					}**/
+					/**					if (m_Controller.isAnonConnected())
+						 {
+						  JAPDialog.showMessageDialog(this.getRootPanel(),
+						   JAPMessages.getString("activeCascadeEdited"));
+						 }**/
 				}
 
 				updateMixCascadeCombo();
@@ -974,10 +990,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	{
 		if (e.getSource() == m_urlLabel)
 		{
-			String url = m_urlLabel.getText();
-			int start = url.indexOf(URL_BEGIN) + URL_BEGIN.length();
-			int end = url.indexOf(URL_END);
-			url = url.substring(start, end);
+			String url = getUrlFromLabel( (JLabel) m_urlLabel);
+			if (url == null)
+			{
+				return;
+			}
 			AbstractOS os = AbstractOS.getInstance();
 			try
 			{
@@ -1021,6 +1038,27 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				dialog.setVisible(true);
 			}
 		}
+		else if (e.getSource() == m_locationLabel)
+		{
+			if (m_locationCoordinates != null && !m_mapShown)
+			{
+				m_mapShown = true;
+				getRootPanel().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+				try
+				{
+					new MapBox(getRootPanel(), (String) m_locationCoordinates.elementAt(0),
+							   (String) m_locationCoordinates.elementAt(1), 6).setVisible(true);
+				}
+				catch (IOException a_e)
+				{
+					JAPDialog.showErrorDialog(this.getRootPanel(),
+											  JAPMessages.getString(MapBox.MSG_ERROR_WHILE_LOADING),
+											  LogType.NET, a_e);
+				}
+				getRootPanel().setCursor(Cursor.getDefaultCursor());
+				m_mapShown = false;
+			}
+		}
 	}
 
 	public void mousePressed(MouseEvent e)
@@ -1033,17 +1071,26 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	public void mouseEntered(MouseEvent e)
 	{
-		if (e.getSource() == m_urlLabel || e.getSource() == m_viewCertLabel)
+		if ( (e.getSource() == m_urlLabel && getUrlFromLabel( (JLabel) m_urlLabel) != null) ||
+			(e.getSource() == m_viewCertLabel && m_serverCert != null) ||
+			(e.getSource() == m_locationLabel && m_locationCoordinates != null))
 		{
-			this.getRootPanel().setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+			if (getRootPanel().getCursor().equals(Cursor.getDefaultCursor()))
+			{
+				this.getRootPanel().setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+			}
 		}
 	}
 
 	public void mouseExited(MouseEvent e)
 	{
-		if (e.getSource() == m_urlLabel || e.getSource() == m_viewCertLabel)
+		if (e.getSource() == m_urlLabel || e.getSource() == m_viewCertLabel ||
+			e.getSource() == m_locationLabel)
 		{
-			this.getRootPanel().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			if (getRootPanel().getCursor().equals(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
+			{
+				getRootPanel().setCursor(Cursor.getDefaultCursor());
+			}
 		}
 	}
 
@@ -1258,7 +1305,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 							for (int i = 0; i < mixIDs.size(); i++)
 							{
 								mixId = (String) mixIDs.elementAt(i);
-								mixinfo = (MixInfo)Database.getInstance(MixInfo.class).getEntryById(mixId);
+								mixinfo = (MixInfo) Database.getInstance(MixInfo.class).getEntryById(mixId);
 								if (!JAPModel.isInfoServiceDisabled() && !cascade.isUserDefined() &&
 									(mixinfo == null || mixinfo.isFromCascade()))
 								{
@@ -1284,7 +1331,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					/** @todo update only if current cascade is changed */
 				}
 
-
 				final boolean bFinalDatabaseChanged = bDatabaseChanged;
 				SwingUtilities.invokeLater(
 					new Runnable()
@@ -1306,7 +1352,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					JAPControllerMessage.CURRENT_MIXCASCADE_CHANGED)
 				{
 					SwingUtilities.invokeLater(
-									   new Runnable()
+						new Runnable()
 					{
 						public void run()
 						{
@@ -1323,6 +1369,17 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 	}
 
+	private static String getUrlFromLabel(JLabel a_urlLabel)
+	{
+		String url = a_urlLabel.getText();
+		int start = url.indexOf(URL_BEGIN) + URL_BEGIN.length();
+		int end = url.indexOf(URL_END);
+		if (start < 0 || end < 0 || end <= start)
+		{
+			return null;
+		}
+		return url.substring(start, end);
+	}
 
 	/*
 	 * Allows usage of icons in elements of the MixCascade list
@@ -1388,7 +1445,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 	}
 
-/**
+	/**
 	 * Temporary image of relevant infoservice entries. For better response time
 	 * of the GUI.
 	 */
@@ -1485,10 +1542,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			synchronized (LOCK_FILL)
 			{
 				if (!fill(Database.getInstance(MixCascade.class).getEntryList(),
-					a_bCheckInfoServiceUpdateStatus))
+						  a_bCheckInfoServiceUpdateStatus))
 				{
 					fill(Util.toVector(JAPController.getInstance().getCurrentMixCascade()),
-						a_bCheckInfoServiceUpdateStatus);
+						 a_bCheckInfoServiceUpdateStatus);
 				}
 			}
 		}
@@ -1531,9 +1588,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					MixCascade cascade = (MixCascade) c.elementAt(j);
 					//Get mixes in cascade
 					/*if (cascade.isUserDefined())
-					{
-						continue;
-					}*/
+						  {
+					 continue;
+						  }*/
 					// update MixInfo for each mix in cascade
 					update(Database.getInstance(MixCascade.class),
 						   new DatabaseMessage(DatabaseMessage.ENTRY_ADDED, cascade));
@@ -1566,7 +1623,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		 */
 		public String getHosts(String a_cascadeId)
 		{
-			TempCascade cascade = (TempCascade)m_Cascades.get(a_cascadeId);
+			TempCascade cascade = (TempCascade) m_Cascades.get(a_cascadeId);
 			if (cascade == null)
 			{
 				return "N/A";
@@ -1582,7 +1639,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		 */
 		public String getPorts(String a_cascadeId)
 		{
-			TempCascade cascade = (TempCascade)m_Cascades.get(a_cascadeId);
+			TempCascade cascade = (TempCascade) m_Cascades.get(a_cascadeId);
 			if (cascade == null)
 			{
 				return "N/A";
@@ -1646,7 +1703,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					new URL(strUrl);
 				}
 			}
-			catch(MalformedURLException a_e)
+			catch (MalformedURLException a_e)
 			{
 				strUrl = null;
 			}
@@ -1654,7 +1711,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			{
 				return "N/A";
 			}
-			return strUrl;
+			return URL_BEGIN + strUrl + URL_END;
 		}
 
 		/**
@@ -1722,6 +1779,31 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				return cascade.isPayment();
 			}
 			return false;
+		}
+
+		public Vector getCoordinates(String a_mixId)
+		{
+			ServiceLocation location = getServiceLocation(a_mixId);
+			Vector coordinates;
+
+			if (location == null || location.getLatitude() == null || location.getLongitude() == null)
+			{
+				return null;
+			}
+			try
+			{
+				Double.valueOf(location.getLatitude());
+				Double.valueOf(location.getLongitude());
+			}
+			catch (NumberFormatException a_e)
+			{
+				return null;
+			}
+
+			coordinates = new Vector();
+			coordinates.addElement(location.getLatitude());
+			coordinates.addElement(location.getLongitude());
+			return coordinates;
 		}
 
 		private StatusInfo getStatusInfo(String a_cascadeId)
