@@ -34,11 +34,12 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import anon.util.XMLUtil;
+import anon.util.IXMLEncodable;
 
 /**
  * Manages the verification of all signatures.
  */
-public class SignatureVerifier
+public class SignatureVerifier implements IXMLEncodable
 {
 
         /**
@@ -259,14 +260,14 @@ public class SignatureVerifier
          *
          * @return The settings of this instance of SignatureVerifier as an XML node.
          */
-        public Element getSettingsAsXml(Document a_doc)
+        public Element toXmlElement(Document a_doc)
         {
                 Element signatureVerificationNode = a_doc.createElement(XML_SETTINGS_ROOT_NODE_NAME);
                 synchronized (m_trustedCertificates)
                 {
                         Element checkSignaturesNode = a_doc.createElement("CheckSignatures");
                         XMLUtil.setValue(checkSignaturesNode, m_checkSignatures);
-                        Element trustedCertificatesNode = m_trustedCertificates.getSettingsAsXml(a_doc);
+                        Element trustedCertificatesNode = m_trustedCertificates.toXmlElement(a_doc);
                         signatureVerificationNode.appendChild(checkSignaturesNode);
                         signatureVerificationNode.appendChild(trustedCertificatesNode);
                 }
