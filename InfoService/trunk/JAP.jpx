@@ -659,6 +659,10 @@
     <property category="archiving" name="contentRules.251" value="F:images/certinvalid.gif;images/certinvalid.gif"/>
     <property category="archiving" name="contentRules.252" value="F:images/certinvalidinactive.gif;images/certinvalidinactive.gif"/>
     <property category="archiving" name="contentRules.253" value="F:images/jap.pay.AccountSettingsPanel_coins-disabled.gif;images/jap.pay.AccountSettingsPanel_coins-disabled.gif"/>
+    <property category="archiving" name="contentRules.254" value="F:images/jap.JAPConfAnonGeneral_arrowLeft.gif;images/jap.JAPConfAnonGeneral_arrowLeft.gif"/>
+    <property category="archiving" name="contentRules.255" value="F:images/jap.JAPConfAnonGeneral_arrowRight.gif;images/jap.JAPConfAnonGeneral_arrowRight.gif"/>
+    <property category="archiving" name="contentRules.256" value="F:japdll.dll.00.02.003;japdll.dll.00.02.003"/>
+    <property category="archiving" name="contentRules.257" value="F:images/gui.MapBox_mapquest-logo.gif;images/gui.MapBox_mapquest-logo.gif"/>
     <property category="archiving" name="contentRules.26" value="F:help/index_de.html;help/index_de.html"/>
     <property category="archiving" name="contentRules.27" value="F:help/index_en.html;help/index_en.html"/>
     <property category="archiving" name="contentRules.28" value="F:help/infoservice_de.html;help/infoservice_de.html"/>
