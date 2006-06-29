@@ -16,7 +16,7 @@
   prior written permission.
 
 
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
  AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
@@ -38,24 +38,25 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.SecureRandom;
-import java.util.Calendar;
 import java.util.Enumeration;
+import java.util.Vector;
+import java.math.BigInteger;
 
-import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
 import org.bouncycastle.asn1.ASN1TaggedObject;
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.BERConstructedOctetString;
 import org.bouncycastle.asn1.BEROutputStream;
 import org.bouncycastle.asn1.DERBMPString;
-import org.bouncycastle.asn1.DEREncodableVector;
+import org.bouncycastle.asn1.ASN1Set;
 import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DEROutputStream;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERSet;
-import org.bouncycastle.asn1.DERTags;
 import org.bouncycastle.asn1.pkcs.AuthenticatedSafe;
 import org.bouncycastle.asn1.pkcs.CertBag;
 import org.bouncycastle.asn1.pkcs.ContentInfo;
@@ -90,6 +91,10 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.bouncycastle.crypto.params.ParametersWithRandom;
 
+import anon.util.IMiscPasswordReader;
+import anon.util.SingleStringPasswordReader;
+import org.bouncycastle.asn1.DEREncodableVector;
+
 /**
  * This class creates and handles PKCS12 certificates, that include a private key,
  * a public key and an X509 certificate.
@@ -117,7 +122,6 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 	// private static final String MAC_ALGORITHM = "1.3.14.3.2.26";
 
 	private SecureRandom random = new SecureRandom();
-	private String m_ownerAlias;
 	private AsymmetricCryptoKeyPair m_keyPair;
 	private JAPCertificate m_x509certificate;
 
@@ -128,47 +132,12 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 	 * @param a_validFrom The date from which the certificate is valid.
 	 * @param a_validTo The date until which the certificate is valid.
 	 */
-
-	public PKCS12(String a_ownerAlias, AsymmetricCryptoKeyPair a_keyPair,
-				  Calendar a_validFrom, Calendar a_validTo)
-	{
-		m_ownerAlias = a_ownerAlias;
-		m_keyPair = a_keyPair;
-		m_x509certificate =
-			JAPCertificate.getInstance(a_ownerAlias, a_keyPair, a_validFrom, a_validTo);
-	}
-
-
-		// NEW METHOD //
-/*
 	public PKCS12(X509DistinguishedName a_ownerAlias, AsymmetricCryptoKeyPair a_keyPair,
 				  Validity a_validity)
 	{
 		this(a_ownerAlias, a_keyPair, a_validity, null);
 	}
-*/
 
-
-	/**
-	 * Creates a new PKCS12 certificate.
-	 * @param a_ownerAlias The owner of the certificate. The name is set as the common name (CN).
-	 * @param a_keyPair a key pair with a private and a public key
-	 * @param a_validFrom The date from which the certificate is valid.
-	 * @param a_validityInYears the number of years the certificate is valid;
-	 *                          if the amount is 0 or less, the validity will
-	 *                          only be ahead from a_validFrom for a very small amount of time
-	 *                          (some minutes)
-	 */
-	public PKCS12(String a_ownerAlias, AsymmetricCryptoKeyPair a_keyPair,
-				  Calendar a_validFrom, int a_validityInYears)
-	{
-		this(a_ownerAlias, a_keyPair, a_validFrom,
-			 JAPCertificate.createValidTo(a_validFrom, a_validityInYears));
-	}
-
-
-
-				// NEW Method //
 	/**
 	 * Creates a new PKCS12 certificate.
 	 * @param a_ownerAlias The owner of the certificate. The name is set as the common name (CN).
@@ -177,7 +146,6 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 	 * @param a_validTo The date until which the certificate is valid.
 	 * @param a_extensions optional X509 extensions; may be null
 	 */
-/*
 	public PKCS12(X509DistinguishedName a_ownerAlias, AsymmetricCryptoKeyPair a_keyPair,
 				  Validity a_validity, X509Extensions a_extensions)
 	{
@@ -185,25 +153,6 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 		m_x509certificate =
 			JAPCertificate.getInstance(a_ownerAlias, a_keyPair, a_validity, a_extensions);
 	}
-*/
-
-	/**
-	 * Creates a new PKCS12 certificate. This constructor is not public as is is possible
-	 * that the X509 certificate owner alias and the PKCS12 owner alias differ, what they
-	 * should not!
-	 * @param a_ownerAlias The owner of the certificate. The name is set as the common name (CN).
-	 * @param a_keyPair a key pair with a private and a public key
-	 * @param a_X509certificate an X509 certificate
-	 */
-	private PKCS12(String a_ownerAlias, AsymmetricCryptoKeyPair a_keyPair,
-				   JAPCertificate a_X509certificate)
-	{
-		m_ownerAlias = a_ownerAlias;
-		m_keyPair = a_keyPair;
-		m_x509certificate = a_X509certificate;
-	}
-
-				// NEW METHOD //
 
 	/**
 	 * Creates a new PKCS12 certificate. This constructor is not public as is is possible
@@ -212,35 +161,12 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 	 * @param a_keyPair a key pair with a private and a public key
 	 * @param a_X509certificate an X509 certificate
 	 */
-/*	private PKCS12(AsymmetricCryptoKeyPair a_keyPair, JAPCertificate a_X509certificate)
+	private PKCS12(AsymmetricCryptoKeyPair a_keyPair, JAPCertificate a_X509certificate)
 	{
 		m_keyPair = a_keyPair;
 		m_x509certificate = a_X509certificate;
 	}
-*/
-	/**
-	 * Loads a PKCS12 certificate from a byte array. The type of the encryption
-	 * algorithm is recognized dynamically.
-	 * @param a_bytes a byte array
-	 * @param a_password a password
-	 * @see anon.crypto.IMyPrivateKey
-	 * @see anon.util.ClassUtil#loadClasses()
-	 * @see anon.crypto.AsymmetricKeyPair
-	 * @return a PKCS12 certificate or null if an error occured
-	 */
 
-	public static PKCS12 getInstance(byte[] a_bytes, char[] a_password)
-	{
-		if (a_bytes == null)
-		{
-			return null;
-		}
-
-		return getInstance(new ByteArrayInputStream(a_bytes), a_password);
-	}
-
-
-			// NEW METHOD //
 
 	/**
 	 * Loads a PKCS12 certificate from a byte array. The type of the encryption
@@ -252,7 +178,21 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 	 * @see anon.crypto.AsymmetricKeyPair
 	 * @return a PKCS12 certificate or null if an error occured
 	 */
-/*
+	public static PKCS12 getInstance(byte[] a_bytes, char[] a_password)
+	{
+		return getInstance(a_bytes, new SingleStringPasswordReader(a_password));
+	}
+
+	/**
+	 * Loads a PKCS12 certificate from a byte array. The type of the encryption
+	 * algorithm is recognized dynamically.
+	 * @param a_bytes a byte array
+	 * @param a_password a password (may be null)
+	 * @see anon.crypto.IMyPrivateKey
+	 * @see anon.util.ClassUtil#loadClasses()
+	 * @see anon.crypto.AsymmetricKeyPair
+	 * @return a PKCS12 certificate or null if an error occured
+	 */
 	public static PKCS12 getInstance(byte[] a_bytes, IMiscPasswordReader a_passwordReader)
 	{
 		if (a_bytes == null)
@@ -262,27 +202,7 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 
 		return getInstance(new ByteArrayInputStream(a_bytes), a_passwordReader);
 	}
-*/
-	/**
-	 * Loads a PKCS12 certificate from an input stream. The type of the encryption
-	 * algorithm is recognized dynamically.
-	 * @param stream InputStream
-	 * @param password char[]
-	 * @see anon.crypto.IMyPrivateKey
-	 * @see anon.util.ClassUtil#loadClasses()
-	 * @see anon.crypto.AsymmetricKeyPair
-	 * @return PKCS12
-	 * @deprecated use {@link getInstance(InputStream, char[])} instead;
-	 *             scheduled for deletion on 04/12/16
-	 */
 
-	public static PKCS12 load(InputStream stream, char[] password)
-	{
-		return getInstance(stream, password);
-	}
-
-
-	// NEW METHOD //
 
 	/**
 	 * Loads a PKCS12 certificate from an input stream. The type of the encryption
@@ -294,30 +214,37 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 	 * @see anon.crypto.AsymmetricKeyPair
 	 * @return PKCS12
 	 */
-/*
 	public static PKCS12 getInstance(InputStream a_stream, char[] password)
 	{
 		return getInstance(a_stream, new SingleStringPasswordReader(password));
 	}
-*/
+
 	/**
 	 * Loads a PKCS12 certificate from an input stream. The type of the encryption
 	 * algorithm is recognized dynamically.
 	 * @param a_stream InputStream
-	 * @param password char[]
+	 * @param password a password (may be null)
 	 * @see anon.crypto.IMyPrivateKey
 	 * @see anon.util.ClassUtil#loadClasses()
 	 * @see anon.crypto.AsymmetricKeyPair
 	 * @return PKCS12
 	 */
-	public static PKCS12 getInstance(InputStream a_stream, char[] password)
+	public static PKCS12 getInstance(InputStream a_stream, IMiscPasswordReader a_passwordReader)
 	{
+		boolean bCorrectPassword = false;
+		char[] password = new char[0];
+		ASN1InputStream dIn;
+
+		if (a_passwordReader == null)
+		{
+			a_passwordReader = new SingleStringPasswordReader(new char[0]);
+		}
+
 		try
 		{
 			BufferedInputStream stream = new BufferedInputStream(a_stream);
-
 			stream.mark(1);
-			if (stream.read() != (DERTags.SEQUENCE | DERTags.CONSTRUCTED))
+			if (stream.read() != (ASN1InputStream.SEQUENCE | ASN1InputStream.CONSTRUCTED))
 			{
 				// this is no a valid PKCS12 stream
 				return null;
@@ -328,8 +255,9 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 			IMyPrivateKey privKey = null;
 			X509CertificateStructure x509cert = null;
 
+			//BERInputStream is = new BERInputStream(stream);
 			ASN1InputStream is = new ASN1InputStream(stream);
-			ContentInfo contentInfo = new Pfx( (ASN1Sequence) is.readObject()).getAuthSafe();
+			ContentInfo contentInfo = new Pfx((ASN1Sequence) is.readObject()).getAuthSafe();
 			/** @todo Check MAC */
 			// Look at JDKPKCS12KeyStore.engineLoad (starting with bag.getMacData())
 
@@ -337,9 +265,7 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 			{
 				return null;
 			}
-
-			is = new ASN1InputStream(new ByteArrayInputStream( ( (DEROctetString) contentInfo.getContent()).
-				getOctets()));
+			is = new ASN1InputStream(new ByteArrayInputStream( ( (ASN1OctetString) contentInfo.getContent()).getOctets()));
 			ContentInfo[] cinfos = (new AuthenticatedSafe( (ASN1Sequence) is.readObject())).getContentInfo();
 
 			for (int i = 0; i < cinfos.length; i++)
@@ -363,179 +289,13 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 					}
 					PKCS12PBEParams pbeParams = new PKCS12PBEParams( (ASN1Sequence) ed.getEncryptionAlgorithm()
 						.getParameters());
-					ASN1InputStream bis = new ASN1InputStream(new ByteArrayInputStream(
-						PKCS12.codeData(false, ed.getContent().getOctets(), pbeParams, password,
-										cipher.cipher, cipher.keysize)));
-					cseq = (ASN1Sequence) bis.readObject();
-				}
-				else
-				{
-					continue;
-				}
-
-				for (int j = 0; j < cseq.size(); j++)
-				{
-					SafeBag sb = new SafeBag( (ASN1Sequence) cseq.getObjectAt(j));
-
-					if (sb.getBagId().equals(PKCSObjectIdentifiers.certBag))
-					{
-						ASN1InputStream cin = new ASN1InputStream(
-							new ByteArrayInputStream( ( (DEROctetString)new CertBag( (ASN1Sequence)
-							sb.getBagValue()).getCertValue()).getOctets()));
-
-						ASN1Sequence xseq = (ASN1Sequence) cin.readObject();
-						if (xseq.size() > 1
-							&& xseq.getObjectAt(1) instanceof DERObjectIdentifier
-							&& xseq.getObjectAt(0).equals(PKCSObjectIdentifiers.signedData))
-						{
-							x509cert = X509CertificateStructure.getInstance(
-								new SignedData(
-									ASN1Sequence.getInstance(
-										(ASN1TaggedObject) xseq.getObjectAt(1),
-										true))
-								.getCertificates()
-								.getObjectAt(0));
-						}
-						else
-						{
-							x509cert = X509CertificateStructure.getInstance(xseq);
-						}
-					}
-					else if (sb.getBagId().equals(PKCSObjectIdentifiers.pkcs8ShroudedKeyBag))
-					{
-						EncryptedPrivateKeyInfo ePrivKey = new EncryptedPrivateKeyInfo( (ASN1Sequence) sb.
-							getBagValue());
-						MyCipher cipher = getCipher(ePrivKey.getEncryptionAlgorithm().getObjectId().getId());
-						if (cipher == null)
-						{
-							return null;
-						}
-						PKCS12PBEParams pbeParams = new PKCS12PBEParams( (ASN1Sequence) ePrivKey
-							.getEncryptionAlgorithm().getParameters());
-						byte[] pkData = PKCS12.codeData(false, ePrivKey.getEncryptedData(),
-							pbeParams, password, cipher.cipher, cipher.keysize);
-						ByteArrayInputStream bIn = new ByteArrayInputStream(pkData);
-						ASN1InputStream dIn = new ASN1InputStream(bIn);
-						PrivateKeyInfo privKeyInfo = new PrivateKeyInfo( (ASN1Sequence) dIn.readObject());
-						try
-						{
-							privKey = (new AsymmetricCryptoKeyPair(privKeyInfo)).getPrivate();
-						}
-						catch (Exception a_e)
-						{
-							return null;
-						}
-					}
-
-					if (alias == null && sb.getBagAttributes() != null)
-					{
-						Enumeration e = sb.getBagAttributes().getObjects();
-						while (e.hasMoreElements())
-						{
-							ASN1Sequence ba = (ASN1Sequence) e.nextElement();
-							DERObjectIdentifier oid = (DERObjectIdentifier) ba.getObjectAt(0);
-							DERObject att = (DERObject) ( (ASN1Set) ba.getObjectAt(1)).getObjectAt(0);
-							if (oid.equals(pkcs_9_at_friendlyName))
-							{
-								alias = ( (DERBMPString) att).getString();
-							}
-						}
-					}
-				}
-			}
-			if (alias != null && x509cert != null) //????
-			{
-				return new PKCS12(alias, new AsymmetricCryptoKeyPair(privKey),
-								  JAPCertificate.getInstance(x509cert));
-			}
-		}
-		catch (Throwable t)
-		{
-		}
-		return null;
-	}
-
-
-	// NEW METHOD //
-
-	/**
-	 * Loads a PKCS12 certificate from an input stream. The type of the encryption
-	 * algorithm is recognized dynamically.
-	 * @param a_stream InputStream
-	 * @param password a password (may be null)
-	 * @see anon.crypto.IMyPrivateKey
-	 * @see anon.util.ClassUtil#loadClasses()
-	 * @see anon.crypto.AsymmetricKeyPair
-	 * @return PKCS12
-	 */
-/*  public static PKCS12 getInstance(InputStream a_stream, IMiscPasswordReader a_passwordReader)
-	{
-		boolean bCorrectPassword = false;
-		char[] password = new char[0];
-		DERInputStream dIn;
-
-		if (a_passwordReader == null)
-		{
-			a_passwordReader = new SingleStringPasswordReader(new char[0]);
-		}
-
-		try
-		{
-			BufferedInputStream stream = new BufferedInputStream(a_stream);
-			stream.mark(1);
-			if (stream.read() != (DERInputStream.SEQUENCE | DERInputStream.CONSTRUCTED))
-			{
-				// this is no a valid PKCS12 stream
-				return null;
-			}
-			stream.reset();
-
-			String alias = null;
-			IMyPrivateKey privKey = null;
-			X509CertificateStructure x509cert = null;
-
-			BERInputStream is = new BERInputStream(stream);
-			ContentInfo contentInfo = new Pfx((ASN1Sequence) is.readObject()).getAuthSafe();
-			/** @todo Check MAC */
-			// Look at JDKPKCS12KeyStore.engineLoad (starting with bag.getMacData())
-/*
-			if (!contentInfo.getContentType().equals(PKCSObjectIdentifiers.data))
-			{
-				return null;
-			}
-
-			is = new BERInputStream(new ByteArrayInputStream( ( (DEROctetString) contentInfo.getContent()).
-				getOctets()));
-			ContentInfo[] cinfos = (new AuthenticatedSafe( (ASN1Sequence) is.readObject())).getContentInfo();
-
-			for (int i = 0; i < cinfos.length; i++)
-			{
-				ASN1Sequence cseq;
-				if (cinfos[i].getContentType().equals(PKCSObjectIdentifiers.data))
-				{
-					DERInputStream dis = new DERInputStream(new ByteArrayInputStream(
-						( (DEROctetString) cinfos[i].getContent())
-						.getOctets()));
-					cseq = (ASN1Sequence) dis.readObject();
-				}
-				else if (cinfos[i].getContentType().equals(PKCSObjectIdentifiers.encryptedData))
-				{
-					EncryptedData ed = new EncryptedData( (ASN1Sequence) cinfos[i].getContent());
-					String algId = ed.getEncryptionAlgorithm().getObjectId().getId();
-					MyCipher cipher = getCipher(algId);
-					if (cipher == null)
-					{
-						return null;
-					}
-					PKCS12PBEParams pbeParams = new PKCS12PBEParams( (ASN1Sequence) ed.getEncryptionAlgorithm()
-						.getParameters());
-					BERInputStream bis = null;
+					ASN1InputStream bis = null;
 
 					do
 					{
 						try
 						{
-							bis = new BERInputStream(
+							    bis = new ASN1InputStream(
 								new ByteArrayInputStream(
 								codeData(false, ed.getContent().getOctets(), pbeParams,
 										 password, cipher.cipher, cipher.keysize)));
@@ -567,7 +327,7 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 
 					if (sb.getBagId().equals(PKCSObjectIdentifiers.certBag))
 					{
-						dIn = new BERInputStream(
+						    dIn = new ASN1InputStream(
 							new ByteArrayInputStream( ( (DEROctetString)new CertBag( (ASN1Sequence)
 							sb.getBagValue()).getCertValue()).getOctets()));
 						ASN1Sequence xseq = (ASN1Sequence) dIn.readObject();
@@ -608,7 +368,7 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 							dIn = null;
 							try
 							{
-								dIn = new DERInputStream(new ByteArrayInputStream(
+								    dIn = new ASN1InputStream(new ByteArrayInputStream(
 									codeData(false, ePrivKey.getEncryptedData(),
 											 pbeParams, password, cipher.cipher, cipher.keysize)));
 								privKeyInfo = new PrivateKeyInfo( (ASN1Sequence) dIn.readObject());
@@ -661,7 +421,7 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 				 * certificate as common name. Some PKCS12 certificates created by OpenSSL
 				 * even do not contain an alias.
 				 */
-/*				return new PKCS12(new AsymmetricCryptoKeyPair(privKey),
+				return new PKCS12(new AsymmetricCryptoKeyPair(privKey),
 								  JAPCertificate.getInstance(x509cert));
 			}
 		}
@@ -671,7 +431,6 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 		}
 		return null;
 	}
-*/
 
 
 	/**
@@ -741,7 +500,6 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 				new DERObjectIdentifier(KEY_ALGORITHM),
 				kParams.getDERObject());
 			EncryptedPrivateKeyInfo kInfo = new EncryptedPrivateKeyInfo(kAlgId, kBytes);
-//NEW		DERConstructedSet kName = new DERConstructedSet();
 
 			//
 			// set a default friendly name (from the key id) and local id
@@ -754,13 +512,10 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 			//kName.addObject(new DERSequence(kSeq));
 			kSeq = new DEREncodableVector();
 			kSeq.add(pkcs_9_at_friendlyName);
-			kSeq.add(new DERSet(new DERBMPString(m_ownerAlias)));
+			kSeq.add(new DERSet(new DERBMPString(getAlias())));
 			seqs[1] = new DERSequence(kSeq);
 			DERSet kName = new DERSet(seqs);
 			//kName.addObject(new DERSequence(kSeq));
-
-//NEW		kSeq.add(new DERSet(new DERBMPString(getAlias())));
-//NEW		kName.addObject(new DERSequence(kSeq));
 
 			keyString = new BERConstructedOctetString(new DERSequence(
 				new SafeBag(pkcs8ShroudedKeyBag, kInfo.getDERObject(), kName)));
@@ -778,23 +533,19 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 				cParams);
 			CertBag cBag = new CertBag(x509certType, new DEROctetString(
 						 m_x509certificate.getBouncyCastleCertificate()));
-//NEW		DERConstructedSet fName = new DERConstructedSet();
 			DEREncodableVector fSeq = new DEREncodableVector();
 			fSeq.add(pkcs_9_at_localKeyId);
 			fSeq.add(new DERSet(createSubjectKeyId()));
 			DERSequence[] seqs = new DERSequence[2];
 			seqs[0] = new DERSequence(fSeq);
 
-//NEW		fName.addObject(new DERSequence(fSeq));
 
 			fSeq = new DEREncodableVector();
 			fSeq.add(pkcs_9_at_friendlyName);
-			fSeq.add(new DERSet(new DERBMPString(m_ownerAlias)));
+			fSeq.add(new DERSet(new DERBMPString(getAlias())));
 			seqs[1] = new DERSequence(fSeq);
 			DERSet fName = new DERSet(seqs);
 
-//NEW			fSeq.add(new DERSet(new DERBMPString(getAlias())));
-//NEW			fName.addObject(new DERSequence(fSeq));
 			SafeBag sBag = new SafeBag(certBag, cBag.getDERObject(), fName);
 
 			bOut.reset();
@@ -858,14 +609,6 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 
 	public String getAlias()
 	{
-		return m_ownerAlias;
-	}
-
-
-		// NEW METHOD //
-/*
-		public String getAlias()
-	{
 		Vector aliases = new Vector();
 		X509DistinguishedName subject = getSubject();
 
@@ -892,9 +635,14 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 
 	public X509DistinguishedName getSubject()
 	{
-		return new X509DistinguishedName(m_x509certificate.getSubject());
+		return m_x509certificate.getSubject();
 	}
-*/
+
+	public X509DistinguishedName getIssuer()
+	{
+		return m_x509certificate.getIssuer();
+	}
+
 
 	/**
 	 * Returns the private key of this certificate.
@@ -933,16 +681,15 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 		return m_x509certificate;
 	}
 
-				// NEW METHOD //
 	/**
 	 * Creates a certification request from this private certificate.
 	 * @return a new certification request
 	 */
-/*	public PKCS10CertificationRequest createCertifcationRequest()
+	public PKCS10CertificationRequest createCertifcationRequest()
 	{
 		return new PKCS10CertificationRequest(this);
 	}
-*/
+
 	/**
 	 * Replaces the current X509 certificate by a clone of the given certificate if the given
 	 * certificate has the same public key as the current certificate.
@@ -972,7 +719,7 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 		m_x509certificate = m_x509certificate.sign(a_pkcs12Certificate);
 	}
 
-			// NEW METHOD //
+
 	/**
 	 * Signs the coresponding X509 certificate with an other pkcs12 certificate.
 	 * Any previous signature is removed. If the signature was self-signed before, it is no
@@ -985,13 +732,13 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 	 * @param a_extensions some X509 extensions (may be null)
 	 * @param a_serialNumber the serial number for this certificate (may be null)
 	 */
-/*	public void sign(PKCS12 a_signerCertificate, Validity a_validity,
+	public void sign(PKCS12 a_signerCertificate, Validity a_validity,
 					 X509Extensions a_extensions, BigInteger a_serialNumber)
 	{
 		m_x509certificate = m_x509certificate.sign(a_signerCertificate,
 			a_validity, a_extensions, a_serialNumber);
 	}
-*/
+
 	private static byte[] codeData(
 		boolean encrypt,
 		byte[] data,
@@ -1103,10 +850,12 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 		return param;
 	}
 
+
 	private static PBEParametersGenerator makePBEGenerator()
 	{
 		return new PKCS12ParametersGenerator(new SHA1Digest());
 	}
+
 
 	private static MyCipher getCipher(String algId)
 	{
@@ -1150,6 +899,7 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 			keysize = ks;
 		}
 	};
+
 
 	private SubjectKeyIdentifier createSubjectKeyId()
 	{

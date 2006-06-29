@@ -30,13 +30,11 @@ package jap;
 import java.util.Enumeration;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Vector;
 import java.util.Hashtable;
 
 import anon.infoservice.AbstractDatabaseEntry;
 import anon.infoservice.Database;
 import anon.infoservice.MixCascade;
-import anon.infoservice.StatusInfo;
 import anon.util.ClassUtil;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -49,7 +47,7 @@ import logging.LogType;
  */
 public abstract class AbstractDatabaseUpdater implements Observer
 {
-	private int m_updateInterval;
+	private IUpdateInterval m_updateInterval;
 	private Thread m_updateThread;
 	private boolean m_successfulUpdate = false;
 	private boolean m_bAutoUpdateChanged = false;
@@ -58,13 +56,18 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	/**
 	 * Initialises and starts the database update thread.
 	 */
-	public AbstractDatabaseUpdater(int a_updateInterval)
+	public AbstractDatabaseUpdater(IUpdateInterval a_updateInterval)
 	{
-		if (a_updateInterval <= 1000)
+		if (a_updateInterval == null)
+		{
+			throw new IllegalArgumentException("No update interval specified!");
+		}
+		/*if (a_updateInterval.getUpdateInterval() <= 1000)
 		{
 			throw new IllegalArgumentException(
 						 "Database update interval of " + a_updateInterval + " is too short!");
-		}
+		}*/
+
 		m_updateInterval = a_updateInterval;
 
 		JAPModel.getInstance().addObserver(this);
@@ -91,7 +94,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 								}
 								else
 								{
-									Thread.currentThread().wait(m_updateInterval);
+									Thread.currentThread().wait(m_updateInterval.getUpdateInterval());
 								}
 							}
 							catch (InterruptedException a_e)
@@ -255,6 +258,25 @@ public abstract class AbstractDatabaseUpdater implements Observer
 
 	public abstract Class getUpdatedClass();
 
+	protected static class ConstantUpdateInterval implements IUpdateInterval
+	{
+		private int m_updateInterval;
+		public ConstantUpdateInterval(int a_updateInterval)
+		{
+			m_updateInterval = a_updateInterval;
+		}
+
+		public int getUpdateInterval()
+		{
+			return m_updateInterval;
+		}
+	}
+
+	protected static interface IUpdateInterval
+	{
+		int getUpdateInterval();
+	}
+
 	/**
 	 * Does the update. Subclasses may overwrite to, for example, synchronize the update with another object.
 	 */
@@ -355,8 +377,13 @@ public abstract class AbstractDatabaseUpdater implements Observer
 		return false;
 	}
 
-	protected abstract AbstractDatabaseEntry getPreferredEntry();
-	protected abstract void setPreferredEntry(AbstractDatabaseEntry a_preferredEntry);
+	protected  AbstractDatabaseEntry getPreferredEntry()
+	{
+		return null;
+	}
+	protected void setPreferredEntry(AbstractDatabaseEntry a_preferredEntry)
+	{
+	}
 
 	protected abstract Hashtable getUpdatedEntries();
 

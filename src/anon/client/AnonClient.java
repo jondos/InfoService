@@ -271,7 +271,8 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 	public void update(Observable a_object, final Object a_argument)
 	{
 		if ( (a_object == m_socketHandler) && (a_argument instanceof IOException))
-		{
+		{((Exception)a_argument).printStackTrace();
+	   new Exception().printStackTrace();
 			synchronized (m_eventListeners)
 			{
 				final Enumeration eventListenersList = m_eventListeners.elements();

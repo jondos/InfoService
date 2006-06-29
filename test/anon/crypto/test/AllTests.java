@@ -57,7 +57,8 @@ public class AllTests
 		suite.addTestSuite(ByteSignatureTest.class);
 		suite.addTestSuite(JAPCertificateTest.class);
 		suite.addTestSuite(XMLSignatureTest.class);
-		//suite.addTestSuite(PKCS12Test.class);
+		suite.addTestSuite(PKCS12Test.class);
+		suite.addTestSuite(PKCS10CertificationRequestTest.class);
 		return suite;
 	}
 }

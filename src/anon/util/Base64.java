@@ -30,6 +30,9 @@ package anon.util;
  */
 public class Base64
 {
+	public static final String BEGIN_TAG = "-----BEGIN ";
+	public static final String END_TAG = "-----END ";
+	public static final String TAG_END_SEQUENCE = "-----";
 
 	/** Specify encoding (value is <tt>true</tt>). */
 	public final static boolean ENCODE = true;
@@ -451,6 +454,28 @@ public class Base64
 
 	} // end encode
 */
+
+   /**
+	* Creates the begin tag for a base 64 encoded string.
+	* @param strBase64TagName the base 64 tag name
+	* @return the begin tag for a base 64 encoded string
+	*/
+   public static String createBeginTag(String strBase64TagName)
+   {
+	   return Base64.BEGIN_TAG + strBase64TagName + Base64.TAG_END_SEQUENCE + "\n";
+   }
+
+   /**
+	* Creates the end tag for a base 64 encoded string.
+	* @param strBase64TagName the base 64 tag name
+	* @return the end tag for a base 64 encoded string
+	*/
+   public static String createEndTag(String strBase64TagName)
+   {
+	   return "\n" + Base64.END_TAG + strBase64TagName + Base64.TAG_END_SEQUENCE + "\n";
+   }
+
+
 	/**
 	 * Encodes a byte array into Base64 notation.
 
