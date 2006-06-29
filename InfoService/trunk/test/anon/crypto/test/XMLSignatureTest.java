@@ -34,7 +34,9 @@ import java.util.Vector;
 import org.w3c.dom.Document;
 import anon.crypto.JAPCertificate;
 import anon.crypto.PKCS12;
+import anon.crypto.Validity;
 import anon.crypto.XMLSignature;
+import anon.crypto.X509DistinguishedName;
 import anon.util.XMLUtil;
 import anon.util.test.DummyXMLEncodable;
 import junitx.framework.extension.XtendedPrivateTestCase;
@@ -202,14 +204,17 @@ public class XMLSignatureTest extends XtendedPrivateTestCase
 
 		// create a private certificate
 		pkcs12Certificate = new PKCS12(
-				  "private", a_keyGen.createKeyPair(), new GregorianCalendar(), 0);
+				  new X509DistinguishedName("CN=private"),
+				  a_keyGen.createKeyPair(), new Validity(new GregorianCalendar(), 0));
 
 		// create some X509 certificates
 		certificates = new Vector();
 		for (int i = 0; i < 5; i++)
 		{
-			certificates.addElement(JAPCertificate.getInstance(
-						 "Owner:" + i, a_keyGen.createKeyPair(), new GregorianCalendar(), 0));
+			certificates.addElement(new PKCS12(new X509DistinguishedName("CN=Owner:" + i),
+											   a_keyGen.createKeyPair(),
+											   new Validity(new GregorianCalendar(), 0)
+											   ).getX509Certificate());
 		}
 
 		// sign the document with a private key (no certificate is appended)
@@ -242,8 +247,9 @@ public class XMLSignatureTest extends XtendedPrivateTestCase
 		 * add the certificate) and then sign this certificate with the previous private
 		 * certificate.
 		 */
-		otherPkcs12Certificate = new PKCS12(
-				  "private2", a_keyGen.createKeyPair(), new GregorianCalendar(), 0);
+		otherPkcs12Certificate = new PKCS12(new X509DistinguishedName(
+				  "CN=private2"), a_keyGen.createKeyPair(),
+											new Validity(new GregorianCalendar(), 0));
 		otherPkcs12Certificate.sign(pkcs12Certificate);
 		XMLSignature.removeSignatureFrom(doc);
 		signature = XMLSignature.sign(doc, otherPkcs12Certificate.getPrivateKey());
@@ -268,8 +274,9 @@ public class XMLSignatureTest extends XtendedPrivateTestCase
 
 
 		// create an other private certificate; verifying fails for this certificate
-		pkcs12Certificate = new PKCS12(
-				  "private3", a_keyGen.createKeyPair(), new GregorianCalendar(), 0);
+		pkcs12Certificate = new PKCS12(new X509DistinguishedName(
+				  "CN=private3"), a_keyGen.createKeyPair(),
+									   new Validity(new GregorianCalendar(), 0));
 		assertNull(XMLSignature.verify(doc, pkcs12Certificate.getX509Certificate()));
 
 		// use this certificate to sign the signing certificate
@@ -326,14 +333,17 @@ public class XMLSignatureTest extends XtendedPrivateTestCase
 		random = new SecureRandom();
 		random.setSeed(6839293);
 
-		trustedCertificateGenerator = new PKCS12(
-				  "trustedCertGen", a_keyGen.createKeyPair(), new GregorianCalendar(), 0);
+		trustedCertificateGenerator = new PKCS12(new X509DistinguishedName(
+				  "CN=trustedCertGen"), a_keyGen.createKeyPair(),
+												 new Validity(new GregorianCalendar(), 0));
 
-		signerOne = new PKCS12("SignerOne", a_keyGen.createKeyPair(), new GregorianCalendar(), 0);
+		signerOne = new PKCS12(new X509DistinguishedName("CN=SignerOne"),
+							   a_keyGen.createKeyPair(), new Validity(new GregorianCalendar(), 0));
 		signerOne.sign(trustedCertificateGenerator);
 
 
-		signerTwo = new PKCS12("SignerTwo", a_keyGen.createKeyPair(), new GregorianCalendar(), 0);
+		signerTwo = new PKCS12(new X509DistinguishedName("CN=SignerTwo"),
+							   a_keyGen.createKeyPair(), new Validity(new GregorianCalendar(), 0));
 		signerTwo.sign(trustedCertificateGenerator);
 
 
@@ -392,8 +402,9 @@ public class XMLSignatureTest extends XtendedPrivateTestCase
 		DummyXMLEncodable dummy;
 		XMLSignature signature;
 
-		pkcs12Certificate = new PKCS12(
-				  "CertOwner", a_keyGen.createKeyPair(), new GregorianCalendar(), 0);
+		pkcs12Certificate = new PKCS12(new X509DistinguishedName(
+				  "CN=CertOwner"), a_keyGen.createKeyPair(),
+									   new Validity(new GregorianCalendar(), 0));
 
 
 		doc = XMLUtil.toXMLDocument(new DummyXMLEncodable());
@@ -452,9 +463,9 @@ public class XMLSignatureTest extends XtendedPrivateTestCase
 			doc = XMLUtil.toXMLDocument(new DummyXMLEncodable());
 
 			// create a private certificate
-			pkcs12Certificate = new PKCS12("ImportantOwner:" + i,
+			pkcs12Certificate = new PKCS12(new X509DistinguishedName("CN=ImportantOwner:" + i),
 										   a_keyPairGenerator.createKeyPair(),
-										   new GregorianCalendar(), 0);
+										   new Validity(new GregorianCalendar(), 0));
 
 			// remove any previous signature
 			XMLSignature.removeSignatureFrom(doc);
@@ -497,11 +508,13 @@ public class XMLSignatureTest extends XtendedPrivateTestCase
 			// take other random keys and test the signature; it must fail
 			assertNull(i + "",
 					   XMLSignature.verify(doc, a_keyPairGenerator.createKeyPair().getPublic()));
-			x509certificate = JAPCertificate.getInstance("NewOwner:1",
-				a_keyPairGenerator.createKeyPair(), new GregorianCalendar(), 0);
+			x509certificate = new PKCS12(new X509DistinguishedName("CN=NewOwner:1"),
+				a_keyPairGenerator.createKeyPair(),
+				new Validity(new GregorianCalendar(), 0)).getX509Certificate();
 			assertNull(i + "", XMLSignature.verify(doc, x509certificate));
-			x509certificate = JAPCertificate.getInstance("NewOwner:2",
-				a_keyPairGenerator.createKeyPair(), new GregorianCalendar(), 0);
+			x509certificate = new PKCS12(new X509DistinguishedName("CN=NewOwner:2"),
+				a_keyPairGenerator.createKeyPair(),
+				new Validity(new GregorianCalendar(), 0)).getX509Certificate();
 			assertNull(i + "", XMLSignature.verify(doc, x509certificate));
 		}
 	}

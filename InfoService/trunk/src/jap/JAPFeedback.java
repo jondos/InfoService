@@ -39,16 +39,7 @@ final class JAPFeedback extends AbstractDatabaseUpdater
 
 	public JAPFeedback()
 	{
-		super(UPDATE_INTERVAL_MS);
-	}
-
-	protected AbstractDatabaseEntry getPreferredEntry()
-	{
-		return null;
-	}
-	protected void setPreferredEntry(AbstractDatabaseEntry a_preferredEntry)
-	{
-		// do nothing
+		super(new ConstantUpdateInterval(UPDATE_INTERVAL_MS));
 	}
 
 	public Class getUpdatedClass()

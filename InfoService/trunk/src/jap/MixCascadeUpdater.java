@@ -49,7 +49,7 @@ public class MixCascadeUpdater extends AbstractDatabaseUpdater
 
 	public MixCascadeUpdater()
 	{
-		super(UPDATE_INTERVAL_MS);
+		super(new ConstantUpdateInterval(UPDATE_INTERVAL_MS));
 	}
 
 	public Class getUpdatedClass()

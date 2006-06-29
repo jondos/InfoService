@@ -44,7 +44,7 @@ public class InfoServiceUpdater extends AbstractDatabaseUpdater
 
 	public InfoServiceUpdater()
 	{
-		super(UPDATE_INTERVAL_MS);
+		super(new ConstantUpdateInterval(UPDATE_INTERVAL_MS));
 	}
 
 

@@ -43,6 +43,8 @@ import java.util.Hashtable;
 import java.util.Vector;
 
 import anon.crypto.AsymmetricCryptoKeyPair;
+import anon.crypto.X509DistinguishedName;
+import anon.crypto.Validity;
 import anon.crypto.JAPCertificate;
 import anon.crypto.MyRandom;
 import anon.crypto.PKCS12;
@@ -194,11 +196,15 @@ public class FirstOnionRouterConnection implements Runnable
 			RSAKeyPair kp = RSAKeyPair.getInstance(new BigInteger(new byte[]
 				{1, 0, 1}), new SecureRandom(), 1024, 100);
 
-			JAPCertificate cert = JAPCertificate.getInstance(OP_NAME, kp, Calendar.getInstance(), 1);
+			JAPCertificate cert = JAPCertificate.getInstance(
+				 new X509DistinguishedName(X509DistinguishedName.LABEL_COMMON_NAME + "=" + OP_NAME),
+				 kp, new Validity(Calendar.getInstance(), 1));
 
 			AsymmetricCryptoKeyPair kp2 = RSAKeyPair.getInstance(new BigInteger(new byte[]
 				{1, 0, 1}), new SecureRandom(), 1024, 100);
-			PKCS12 pkcs12cert = new PKCS12(OP_NAME + " <identity>", kp2, Calendar.getInstance(), 1);
+			PKCS12 pkcs12cert = new PKCS12(
+				 new X509DistinguishedName(X509DistinguishedName.LABEL_COMMON_NAME + "=" + OP_NAME + " <identity>"),
+				 kp2, new Validity(Calendar.getInstance(), 1));
 
 			//sign cert with pkcs12cert
 			JAPCertificate cert1 = cert.sign(pkcs12cert);

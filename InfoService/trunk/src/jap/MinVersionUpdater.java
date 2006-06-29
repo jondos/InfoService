@@ -39,7 +39,7 @@ import anon.infoservice.JAPMinVersion;
 public class MinVersionUpdater extends AbstractDatabaseUpdater
 {
 	private static final int UPDATE_INTERVAL_MS = 1000 * 60 * 60 * 24; // one day
-	private static final int UPDATE_INTERVAL_MS_SHORT = 1000 * 60 * 2; // 2 minutes
+	private static final int UPDATE_INTERVAL_MS_SHORT = 1000 * 60 * 10; // 5 minutes
 
 	public MinVersionUpdater()
 	{
