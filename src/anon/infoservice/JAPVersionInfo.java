@@ -39,7 +39,10 @@ import anon.util.XMLUtil;
 /**
  * This stores the version information about the current JAP release or development version.
  */
-public class JAPVersionInfo extends AbstractDatabaseEntry implements IDistributable {
+public class JAPVersionInfo extends AbstractDatabaseEntry implements IDistributable
+{
+	public static final String ID_DEVELOPMENT = "/japDevelopment.jnlp";
+	public static final String ID_RELEASE = "/japRelease.jnlp";
 
   /**
    * Describes a JAP release version.
@@ -150,6 +153,8 @@ public class JAPVersionInfo extends AbstractDatabaseEntry implements IDistributa
   }
 
 
+
+
   /**
    * Returns the ID of this version information. It's the filename where this version info is
    * available on the infoservice ('/japRelease.jnlp' or '/japDevelopment.jnlp' depending on the
@@ -160,7 +165,7 @@ public class JAPVersionInfo extends AbstractDatabaseEntry implements IDistributa
   public String getId() {
     String versionInfoId = "/japRelease.jnlp";
     if (m_versionInfoType == JAP_DEVELOPMENT_VERSION) {
-      versionInfoId = "/japDevelopment.jnlp";
+      versionInfoId = ID_DEVELOPMENT;
     }
     return versionInfoId;
   }
