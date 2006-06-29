@@ -33,7 +33,6 @@ import anon.crypto.IMySignature;
 import anon.crypto.IMyPrivateKey;
 import anon.crypto.IMyPublicKey;
 import anon.util.Util;
-import anon.util.ByteArrayUtil;
 
 
 /**
@@ -108,15 +107,15 @@ public abstract class AbstractSignatureAlgorithmTest extends XtendedPrivateTestC
 		// the signatures for different keys and/or messages must be different
 		signature2 = m_algorithm.sign(message2);
 		assertNotNull(signature2);
-		assertTrue(!ByteArrayUtil.equal(signature1, signature2));
+		assertTrue(!Util.arraysEqual(signature1, signature2));
 
 		m_algorithm.initSign(getPrivateKeys()[1]);
 		signature2 = m_algorithm.sign(message1);
 		assertNotNull(signature2);
-		assertTrue(!ByteArrayUtil.equal(signature1, signature2));
+		assertTrue(!Util.arraysEqual(signature1, signature2));
 		signature2 = m_algorithm.sign(message2);
 		assertNotNull(signature2);
-		assertTrue(!ByteArrayUtil.equal(signature1, signature2));
+		assertTrue(!Util.arraysEqual(signature1, signature2));
 	}
 
 	/**
