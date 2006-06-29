@@ -812,7 +812,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			  }*/
 		}
 		Database.getInstance(StatusInfo.class).addObserver(this);
-		/*final JAPNewView view = this;
+		final JAPNewView view = this;
 		new Thread()
 		{
 			public void run()
@@ -822,7 +822,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					m_dlgConfig = new JAPConf(view, m_bWithPayment);
 				}
 			}
-		}.start();*/
+		}.start();
 
 	}
 

@@ -21,6 +21,18 @@ public class SimpleMixCascadeContainer extends AbstractMixCascadeContainer
 	{
 		return m_mixCascade;
 	}
+
+	public boolean isCascadeAutoSwitched()
+	{
+		return false;
+	}
+
+	public boolean isReconnectedAutomatically()
+	{
+		return false;
+	}
+
+
 	public void keepCurrentCascade(boolean a_bKeepCurrentCascade)
 	{
 	}

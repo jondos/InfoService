@@ -160,6 +160,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private String m_oldCascadePort;
 
 	private boolean m_mapShown = false;
+	private boolean m_observablesRegistered = false;
+	private final Object LOCK_OBSERVABLE = new Object();
 
 	/** the Certificate of the selected Mix-Server */
 	private JAPCertificate m_serverCert;
@@ -171,12 +173,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		super(null);
 		m_Controller = JAPController.getInstance();
 		m_infoService = new InfoServiceTempLayer(false);
-		/* observe JAPRoutingSettings to get a notification, if connect-via-forwarder is enabled */
-		m_Controller.addObserver(this);
-		JAPModel.getInstance().getRoutingSettings().addObserver(this);
-		Database.getInstance(MixCascade.class).addObserver(this);
-		Database.getInstance(StatusInfo.class).addObserver(this);
-		Database.getInstance(MixInfo.class).addObserver(this);
 	}
 
 	public void recreateRootPanel()
@@ -1101,6 +1097,20 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	protected void onRootPanelShown()
 	{
+		synchronized (LOCK_OBSERVABLE)
+		{
+			if (!m_observablesRegistered)
+			{
+				/* register observables */
+				m_Controller.addObserver(this);
+				JAPModel.getInstance().getRoutingSettings().addObserver(this);
+				Database.getInstance(MixCascade.class).addObserver(this);
+				Database.getInstance(StatusInfo.class).addObserver(this);
+				Database.getInstance(MixInfo.class).addObserver(this);
+				m_observablesRegistered = true;
+			}
+		}
+
 		//Register help context
 		JAPHelp.getInstance().getContextObj().setContext("services");
 		if (!m_infoService.isFilled())
@@ -1108,7 +1118,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			fetchCascades(false, false, true);
 		}
 	}
-
 	/**
 	 * Handles the selection of a cascade
 	 * @param e ListSelectionEvent

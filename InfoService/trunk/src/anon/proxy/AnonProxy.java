@@ -344,8 +344,10 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			int ret = m_Anon.initialize(cascade);
 			if (ret != ErrorCodes.E_SUCCESS)
 			{
-				if (!a_bRetryOnError || ret == E_SIGNATURE_CHECK_FIRSTMIX_FAILED ||
-					ret == E_SIGNATURE_CHECK_OTHERMIX_FAILED || ret == ErrorCodes.E_INTERRUPTED)
+				if (ret == ErrorCodes.E_INTERRUPTED ||
+					(!(a_bRetryOnError && m_currentMixCascade.isCascadeAutoSwitched()) &&
+					 (!a_bRetryOnError || ret == E_SIGNATURE_CHECK_FIRSTMIX_FAILED ||
+					  ret == E_SIGNATURE_CHECK_OTHERMIX_FAILED || ret == E_MIX_PROTOCOL_NOT_SUPPORTED)))
 				{
 					return ret;
 				}
@@ -745,8 +747,16 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		public void keepCurrentCascade(boolean a_bKeepCurrentCascade)
 		{
 		}
+		public boolean isCascadeAutoSwitched()
+		{
+			return false;
+		}
+
+		public  boolean isReconnectedAutomatically()
+		{
+			return false;
+		}
 	}
 }
-
 
 
