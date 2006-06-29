@@ -770,7 +770,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				}
 				try
 				{
-					m_listMixCascade.setSelectedValue(m_Controller.getCurrentMixCascade(), true);
+					//m_listMixCascade.setSelectedValue(m_Controller.getCurrentMixCascade(), true);
 					valueChanged(new ListSelectionEvent(m_listMixCascade, 0,
 						m_listMixCascade.getModel().getSize(), false));
 				}
@@ -875,7 +875,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			m_cancelCascadeButton.setEnabled(false);
 			m_oldCascadeHost = m_manHostField.getText();
 			m_oldCascadePort = m_manPortField.getText();
-
 		}
 	}
 
@@ -930,10 +929,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			}
 		}
 		catch (Exception a_e)
-		{
+		{a_e.printStackTrace();
 			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot edit cascade");
 			JAPDialog.showErrorDialog(this.getRootPanel(), JAPMessages.getString("errorCreateCascadeDesc"),
-									  LogType.MISC);
+									  LogType.MISC, a_e);
 
 		}
 	}
