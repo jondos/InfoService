@@ -61,6 +61,7 @@ import anon.pay.Pay;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import HTTPClient.HTTPConnection;
 
 /**
  * @author Stefan Lieske
@@ -68,6 +69,7 @@ import logging.LogType;
 public class AnonClient implements AnonService, Observer, DataChainErrorListener {
 
 	private static final int LOGIN_TIMEOUT = 60000;
+	private static final int CONNECT_TIMEOUT = 8000;
 
 	private Multiplexer m_multiplexer;
 
@@ -375,14 +377,17 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 
 
 		Socket connectedSocket = null;
+		HTTPConnection connction;
 		int i = 0;
 		while ((i < a_mixCascade.getNumberOfListenerInterfaces()) && (connectedSocket == null) && (!Thread.currentThread().isInterrupted()))
 		{
 			/* try out all interfaces of the mixcascade until we have a connection */
 			try
 			{
-				connectedSocket = HTTPConnectionFactory.getInstance().createHTTPConnection(a_mixCascade.
-					getListenerInterface(i), a_proxyInterface).Connect();
+				connction = HTTPConnectionFactory.getInstance().createHTTPConnection(a_mixCascade.
+					getListenerInterface(i), a_proxyInterface);
+				connction.setTimeout(CONNECT_TIMEOUT);
+				connectedSocket = connction.Connect();
 			}
 			catch (InterruptedIOException e)
 			{
@@ -396,10 +401,16 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 								  "'.");
 					throw e;
 				}
+				LogHolder.log(LogLevel.ERR, LogType.NET,
+							  "Timeout while connecting to MixCascade " + a_mixCascade.toString() +
+							  " via " + a_mixCascade.getListenerInterface(i).toString() + "!", e);
+
 			}
 			catch (Exception e)
 			{
-				LogHolder.log(LogLevel.ERR, LogType.NET, e);
+				LogHolder.log(LogLevel.ERR, LogType.NET,
+							  "Could not connect to MixCascade " + a_mixCascade.toString() +
+							  " via " + a_mixCascade.getListenerInterface(i).toString() + "!", e);
 			}
 			i++;
 		}

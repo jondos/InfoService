@@ -107,6 +107,7 @@ import update.JAPUpdateWizard;
 import anon.infoservice.AbstractMixCascadeContainer;
 import anon.infoservice.AutoSwitchedMixCascade;
 import java.io.*;
+import anon.infoservice.JAPMinVersion;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -2816,7 +2817,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 		String updateVersionNumber = null;
 		if (a_bForced)
 		{
-			updateVersionNumber = InfoServiceHolder.getInstance().getNewVersionNumber().getJapSoftware().getVersion();
+			JAPMinVersion minVersion = InfoServiceHolder.getInstance().getNewVersionNumber();
+			if (minVersion != null)
+			{
+				updateVersionNumber = minVersion.getJapSoftware().getVersion();
+			}
 		}
 		else
 		{
