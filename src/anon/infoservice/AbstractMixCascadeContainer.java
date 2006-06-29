@@ -57,4 +57,8 @@ public abstract class AbstractMixCascadeContainer
 	 * @param a_bKeepCurrentCascade allows or dissallows to keep the current cascade for the next call
 	 */
 	public abstract void keepCurrentCascade(boolean a_bKeepCurrentCascade);
+
+	public abstract boolean isCascadeAutoSwitched();
+
+	public abstract boolean isReconnectedAutomatically();
 }

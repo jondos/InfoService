@@ -2080,7 +2080,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 						JAPDialog.showErrorDialog(getView(), msg, LogType.NET);
 						JAPController.m_View.disableSetAnonMode();
 					}
-					else if (ret == AnonProxy.E_MIX_PROTOCOL_NOT_SUPPORTED)
+					else if (ret == AnonProxy.E_MIX_PROTOCOL_NOT_SUPPORTED &&
+						!(a_bRetryOnConnectionError &&
+						  JAPModel.getInstance().isCascadeConnectionChosenAutomatically()))
 					{
 						canStartService = false;
 						m_proxyAnon = null;
@@ -2089,7 +2091,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 												  LogType.NET);
 					}
 					//otte
-					else if (ret == AnonProxy.E_SIGNATURE_CHECK_FIRSTMIX_FAILED)
+					else if (ret == AnonProxy.E_SIGNATURE_CHECK_FIRSTMIX_FAILED &&
+							 !(a_bRetryOnConnectionError &&
+							   JAPModel.getInstance().isCascadeConnectionChosenAutomatically()))
 					{
 						canStartService = false;
 						m_proxyAnon = null;
@@ -2098,7 +2102,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 												  LogType.NET);
 					}
 
-					else if (ret == AnonProxy.E_SIGNATURE_CHECK_OTHERMIX_FAILED)
+					else if (ret == AnonProxy.E_SIGNATURE_CHECK_OTHERMIX_FAILED &&
+							 !(a_bRetryOnConnectionError &&
+							   JAPModel.getInstance().isCascadeConnectionChosenAutomatically()))
 					{
 						canStartService = false;
 						m_proxyAnon = null;
@@ -3627,6 +3633,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 
 			return m_currentCascade;
+		}
+
+		public boolean isCascadeAutoSwitched()
+		{
+			return JAPModel.getInstance().isCascadeConnectionChosenAutomatically();
+		}
+		public boolean isReconnectedAutomatically()
+		{
+			return JAPModel.getInstance().getAutoReConnect();
 		}
 
 		private boolean isSuitableCascade(MixCascade a_cascade)

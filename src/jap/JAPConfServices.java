@@ -97,10 +97,10 @@ public class JAPConfServices extends AbstractJAPConfModule
 			/* clear the whole root panel */
 			rootPanel.removeAll();
 			/* call the handler on the service modules */
-			anonModule.recreateRootPanel();
+			/*anonModule.recreateRootPanel();
 			torModule.recreateRootPanel();
 			mixminionModule.recreateRootPanel();
-			anonGeneralModule.recreateRootPanel();
+			anonGeneralModule.recreateRootPanel();*/
 			/* rebuild the services panel */
 
 			m_tabsAnon = new JTabbedPane();
