@@ -61,27 +61,15 @@ public class ServiceOperator
 	public ServiceOperator(Element operatorNode) throws XMLParseException
 	{
 		/* get the organisation name */
-		NodeList organisationNodes = operatorNode.getElementsByTagName("Organisation");
-		if (organisationNodes.getLength() == 0)
-		{
-			throw (new XMLParseException("Organisation"));
-		}
-		Element organisationNode = (Element) (organisationNodes.item(0));
-		organisation = organisationNode.getFirstChild().getNodeValue();
+		Node organisationNode = XMLUtil.getFirstChildByName(operatorNode, "Organisation");
+		organisation = XMLUtil.parseValue(organisationNode, null);
 		/* get the homepage url */
-		NodeList urlNodes = operatorNode.getElementsByTagName("URL");
-		if (urlNodes.getLength() == 0)
-		{
-			throw (new XMLParseException("URL"));
-		}
-		Element urlNode = (Element) (urlNodes.item(0));
-		url = urlNode.getFirstChild().getNodeValue();
+		Node urlNode = XMLUtil.getFirstChildByName(operatorNode, "URL");
+		url = XMLUtil.parseValue(urlNode, null);
 
 		Node emailNode = XMLUtil.getFirstChildByName(operatorNode, XML_ELEM_EMAIL);
-		if (emailNode != null)
-		{
-			m_strEmail = XMLUtil.parseValue(emailNode, null);
-		}
+		m_strEmail = XMLUtil.parseValue(emailNode, null);
+
 	}
 
 	public String getEMail()
