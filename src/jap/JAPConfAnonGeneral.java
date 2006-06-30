@@ -168,7 +168,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 
 		// Anonservice settings
 		JAPModel.getInstance().setAutoConnect(m_cbAutoConnect.isSelected());
-		m_Controller.setAutoReConnect(m_cbAutoReConnect.isSelected());
+		JAPModel.getInstance().setAutoReConnect(m_cbAutoReConnect.isSelected());
 		JAPModel.getInstance().setChooseCascadeConnectionAutomatically(m_cbAutoChooseCascades.isSelected());
 		if (m_cbRestrictAutoChoose.isSelected())
 		{

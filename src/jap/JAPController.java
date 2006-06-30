@@ -778,7 +778,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 					-1));
 				JAPModel.getInstance().setAutoConnect(
 								XMLUtil.parseAttribute(root, JAPConstants.CONFIG_AUTO_CONNECT, true));
-				setAutoReConnect(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_AUTO_RECONNECT, true));
+				m_Model.setAutoReConnect(
+								XMLUtil.parseAttribute(root, JAPConstants.CONFIG_AUTO_RECONNECT, true));;
 				m_Model.setMinimizeOnStartup(
 					XMLUtil.parseAttribute(root, JAPConstants.CONFIG_MINIMIZED_STARTUP, false));
 
@@ -2000,7 +2001,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			//JAPWaitSplash splash = null;
 			int msgIdConnect = 0;
 			boolean canStartService = true;
-
+			AutoSwitchedMixCascadeContainer cascadeContainer;
 
 			//setAnonMode--> async!!
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "setAnonMode(" + anonModeSelected + ")");
@@ -2013,186 +2014,184 @@ public final class JAPController extends Observable implements IProxyListener, O
 				msgIdConnect = m_View.addStatusMsg(JAPMessages.getString("setAnonModeSplashConnect"),
 					JAPDialog.MESSAGE_TYPE_INFORMATION, false);
 
-				if (canStartService)
+				// starting MUX --> Success ???
+				if (JAPModel.getInstance().getRoutingSettings().getRoutingMode() ==
+					JAPRoutingSettings.ROUTING_MODE_CLIENT)
 				{
-					// starting MUX --> Success ???
-					if (JAPModel.getInstance().getRoutingSettings().getRoutingMode() ==
-						JAPRoutingSettings.ROUTING_MODE_CLIENT)
+					/* we use a forwarded connection */
+					m_proxyAnon = JAPModel.getInstance().getRoutingSettings().getAnonProxyInstance(
+						m_socketHTTPListener);
+				}
+				else
+				{
+					/* we use a direct connection */
+					if (JAPModel.getInstance().getProxyInterface() != null &&
+						JAPModel.getInstance().getProxyInterface().isValid())
 					{
-						/* we use a forwarded connection */
-						m_proxyAnon = JAPModel.getInstance().getRoutingSettings().getAnonProxyInstance(
-							m_socketHTTPListener);
+						m_proxyAnon = new AnonProxy(
+							m_socketHTTPListener, JAPModel.getInstance().getProxyInterface());
 					}
 					else
 					{
-						/* we use a direct connection */
-						if (JAPModel.getInstance().getProxyInterface() != null &&
-							JAPModel.getInstance().getProxyInterface().isValid())
-						{
-							m_proxyAnon = new AnonProxy(
-								m_socketHTTPListener, JAPModel.getInstance().getProxyInterface());
-						}
-						else
-						{
-							m_proxyAnon = new AnonProxy(m_socketHTTPListener, null);
-						}
-					}
-					if (!JAPModel.isInfoServiceDisabled())
-					{
-						m_feedback.updateAsync();
-					}
-					m_proxyAnon.addEventListener(JAPController.getInstance());
-
-					//m_proxyAnon.setMixCascade(new SimpleMixCascadeContainer(
-						//			   m_Controller.getCurrentMixCascade()));
-					m_proxyAnon.setMixCascade(new AutoSwitchedMixCascadeContainer());
-					m_proxyAnon.setAutoReConnect(JAPModel.getAutoReConnect());
-					TorAnonServerDescription td = new TorAnonServerDescription(true,
-						JAPModel.isPreCreateAnonRoutesEnabled());
-					td.setMaxRouteLen(JAPModel.getTorMaxRouteLen());
-					td.setMinRouteLen(JAPModel.getTorMinRouteLen());
-					td.setMaxConnectionsPerRoute(JAPModel.getTorMaxConnectionsPerRoute());
-					m_proxyAnon.setTorParams(td);
-					m_proxyAnon.setMixminionParams(new MixminionServiceDescription(JAPModel.
-						getMixminionRouteLen()));
-					m_proxyAnon.setProxyListener(m_Controller);
-					m_proxyAnon.setDummyTraffic(JAPModel.getDummyTraffic());
-					// -> we can try to start anonymity
-					if (m_proxyDirect != null)
-					{
-						m_proxyDirect.shutdown();
-					}
-					m_proxyDirect = null;
-					LogHolder.log(LogLevel.DEBUG, LogType.NET, "Try to start AN.ON service...");
-
-					int ret = m_proxyAnon.start(a_bRetryOnConnectionError);
-
-					if (ret == AnonProxy.E_BIND)
-					{
-						canStartService = false;
-						m_proxyAnon = null;
-
-						Object[] args =
-							{
-							new Integer(JAPModel.getHttpListenerPortNumber())};
-						String msg = MessageFormat.format(JAPMessages.getString("errorListenerPort"),
-							args);
-						JAPDialog.showErrorDialog(getView(), msg, LogType.NET);
-						JAPController.m_View.disableSetAnonMode();
-					}
-					else if (ret == AnonProxy.E_MIX_PROTOCOL_NOT_SUPPORTED &&
-						!(a_bRetryOnConnectionError &&
-						  JAPModel.getInstance().isCascadeConnectionChosenAutomatically()))
-					{
-						canStartService = false;
-						m_proxyAnon = null;
-						JAPDialog.showErrorDialog(getView(),
-												  JAPMessages.getString("errorMixProtocolNotSupported"),
-												  LogType.NET);
-					}
-					//otte
-					else if (ret == AnonProxy.E_SIGNATURE_CHECK_FIRSTMIX_FAILED &&
-							 !(a_bRetryOnConnectionError &&
-							   JAPModel.getInstance().isCascadeConnectionChosenAutomatically()))
-					{
-						canStartService = false;
-						m_proxyAnon = null;
-						JAPDialog.showErrorDialog(getView(),
-												  JAPMessages.getString("errorMixFirstMixSigCheckFailed"),
-												  LogType.NET);
-					}
-
-					else if (ret == AnonProxy.E_SIGNATURE_CHECK_OTHERMIX_FAILED &&
-							 !(a_bRetryOnConnectionError &&
-							   JAPModel.getInstance().isCascadeConnectionChosenAutomatically()))
-					{
-						canStartService = false;
-						m_proxyAnon = null;
-						JAPDialog.showErrorDialog(getView(),
-												  JAPMessages.getString("errorMixOtherMixSigCheckFailed"),
-												  LogType.NET);
-					}
-					else if (ret == ErrorCodes.E_SUCCESS ||
-							 (ret != ErrorCodes.E_INTERRUPTED && a_bRetryOnConnectionError))
-					{
-						final AnonProxy proxyAnon = m_proxyAnon;
-						AnonServiceEventAdapter adapter = new AnonServiceEventAdapter()
-						{
-							boolean bWaitingForConnection = true;
-							public synchronized void connectionEstablished(
-								AnonServerDescription a_serverDescription)
-							{
-								if (bWaitingForConnection)
-								{
-									try
-									{
-										proxyAnon.addAIListener(m_caller);
-									}
-									catch (Exception a_e)
-									{
-										// do nothing
-									}
-									JAPController.getInstance().removeEventListener(this);
-									bWaitingForConnection = false;
-								}
-							}
-						};
-
-						if (ret == ErrorCodes.E_SUCCESS)
-						{
-							LogHolder.log(LogLevel.DEBUG, LogType.NET, "AN.ON service started successfully");
-							adapter.connectionEstablished(proxyAnon.getMixCascade());
-
-							if (!mbActCntMessageNotRemind && !JAPModel.isSmallDisplay())
-							{
-								SwingUtilities.invokeLater(new Runnable()
-								{
-									public void run()
-									{
-										JAPDialog.LinkedCheckBox checkBox = new JAPDialog.LinkedCheckBox(false);
-										JAPDialog.showWarningDialog(getView(),
-											JAPMessages.getString("disableActCntMessage"),
-											JAPMessages.getString("disableActCntMessageTitle"),
-											checkBox);
-										// show a Reminder message that active contents should be disabled
-
-										mbActCntMessageNeverRemind = checkBox.getState();
-										mbDoNotAbuseReminder = checkBox.getState();
-										if (mbActCntMessageNeverRemind)
-										{
-											mbActCntMessageNotRemind = true;
-										}
-									}
-								});
-
-							}
-						}
-						else
-						{
-							JAPController.getInstance().addEventListener(adapter);
-							LogHolder.log(LogLevel.INFO, LogType.NET,
-										  "AN.ON service not connected. Trying reconnect...");
-						}
-
-						// start feedback thread
-						//m_feedback.update();
-					}
-					// ootte
-					else
-					{
-						canStartService = false;
-						m_proxyAnon = null;
-						if (!JAPModel.isSmallDisplay() && ret != ErrorCodes.E_INTERRUPTED)
-						{
-							LogHolder.log(LogLevel.ERR, LogType.NET,
-										  "Error starting AN.ON service! - ErrorCode: " +
-										  Integer.toString(ret));
-							JAPDialog.showErrorDialog(getView(), JAPMessages.getString("errorConnectingFirstMix"),
-								JAPMessages.getString("errorConnectingFirstMixTitle"),
-								LogType.NET);
-						}
+						m_proxyAnon = new AnonProxy(m_socketHTTPListener, null);
 					}
 				}
+				if (!JAPModel.isInfoServiceDisabled())
+				{
+					m_feedback.updateAsync();
+				}
+				m_proxyAnon.addEventListener(JAPController.getInstance());
+
+				//m_proxyAnon.setMixCascade(new SimpleMixCascadeContainer(
+				//			   m_Controller.getCurrentMixCascade()));
+				cascadeContainer = new AutoSwitchedMixCascadeContainer();
+				m_proxyAnon.setMixCascade(cascadeContainer);
+				TorAnonServerDescription td = new TorAnonServerDescription(true,
+					JAPModel.isPreCreateAnonRoutesEnabled());
+				td.setMaxRouteLen(JAPModel.getTorMaxRouteLen());
+				td.setMinRouteLen(JAPModel.getTorMinRouteLen());
+				td.setMaxConnectionsPerRoute(JAPModel.getTorMaxConnectionsPerRoute());
+				m_proxyAnon.setTorParams(td);
+				m_proxyAnon.setMixminionParams(new MixminionServiceDescription(JAPModel.
+					getMixminionRouteLen()));
+				m_proxyAnon.setProxyListener(m_Controller);
+				m_proxyAnon.setDummyTraffic(JAPModel.getDummyTraffic());
+				// -> we can try to start anonymity
+				if (m_proxyDirect != null)
+				{
+					m_proxyDirect.shutdown();
+				}
+				m_proxyDirect = null;
+				LogHolder.log(LogLevel.DEBUG, LogType.NET, "Try to start AN.ON service...");
+
+				int ret = m_proxyAnon.start(a_bRetryOnConnectionError);
+
+				if (ret == AnonProxy.E_BIND)
+				{
+					canStartService = false;
+					m_proxyAnon = null;
+
+					Object[] args =
+						{
+						new Integer(JAPModel.getHttpListenerPortNumber())};
+					String msg = MessageFormat.format(JAPMessages.getString("errorListenerPort"),
+						args);
+					JAPDialog.showErrorDialog(getView(), msg, LogType.NET);
+					JAPController.m_View.disableSetAnonMode();
+				}
+				else if (ret == AnonProxy.E_MIX_PROTOCOL_NOT_SUPPORTED &&
+						 ! (a_bRetryOnConnectionError &&
+							JAPModel.getInstance().isCascadeConnectionChosenAutomatically()))
+				{
+					canStartService = false;
+					m_proxyAnon = null;
+					JAPDialog.showErrorDialog(getView(),
+											  JAPMessages.getString("errorMixProtocolNotSupported"),
+											  LogType.NET);
+				}
+				//otte
+				else if (ret == AnonProxy.E_SIGNATURE_CHECK_FIRSTMIX_FAILED &&
+						 ! (a_bRetryOnConnectionError &&
+							JAPModel.getInstance().isCascadeConnectionChosenAutomatically()))
+				{
+					canStartService = false;
+					m_proxyAnon = null;
+					JAPDialog.showErrorDialog(getView(),
+											  JAPMessages.getString("errorMixFirstMixSigCheckFailed"),
+											  LogType.NET);
+				}
+
+				else if (ret == AnonProxy.E_SIGNATURE_CHECK_OTHERMIX_FAILED &&
+						 ! (a_bRetryOnConnectionError &&
+							JAPModel.getInstance().isCascadeConnectionChosenAutomatically()))
+				{
+					canStartService = false;
+					m_proxyAnon = null;
+					JAPDialog.showErrorDialog(getView(),
+											  JAPMessages.getString("errorMixOtherMixSigCheckFailed"),
+											  LogType.NET);
+				}
+				else if (ret == ErrorCodes.E_SUCCESS ||
+						 (ret != ErrorCodes.E_INTERRUPTED && a_bRetryOnConnectionError))
+				{
+					final AnonProxy proxyAnon = m_proxyAnon;
+					AnonServiceEventAdapter adapter = new AnonServiceEventAdapter()
+					{
+						boolean bWaitingForConnection = true;
+						public synchronized void connectionEstablished(
+							AnonServerDescription a_serverDescription)
+						{
+							if (bWaitingForConnection)
+							{
+								try
+								{
+									proxyAnon.addAIListener(m_caller);
+								}
+								catch (Exception a_e)
+								{
+									// do nothing
+								}
+								JAPController.getInstance().removeEventListener(this);
+								bWaitingForConnection = false;
+							}
+						}
+					};
+
+					if (ret == ErrorCodes.E_SUCCESS)
+					{
+						LogHolder.log(LogLevel.DEBUG, LogType.NET, "AN.ON service started successfully");
+						adapter.connectionEstablished(proxyAnon.getMixCascade());
+
+						if (!mbActCntMessageNotRemind && !JAPModel.isSmallDisplay())
+						{
+							SwingUtilities.invokeLater(new Runnable()
+							{
+								public void run()
+								{
+									JAPDialog.LinkedCheckBox checkBox = new JAPDialog.LinkedCheckBox(false);
+									JAPDialog.showWarningDialog(getView(),
+										JAPMessages.getString("disableActCntMessage"),
+										JAPMessages.getString("disableActCntMessageTitle"),
+										checkBox);
+									// show a Reminder message that active contents should be disabled
+
+									mbActCntMessageNeverRemind = checkBox.getState();
+									mbDoNotAbuseReminder = checkBox.getState();
+									if (mbActCntMessageNeverRemind)
+									{
+										mbActCntMessageNotRemind = true;
+									}
+								}
+							});
+
+						}
+					}
+					else
+					{
+						JAPController.getInstance().addEventListener(adapter);
+						LogHolder.log(LogLevel.INFO, LogType.NET,
+									  "AN.ON service not connected. Trying reconnect...");
+					}
+
+					// start feedback thread
+					//m_feedback.update();
+				}
+				// ootte
+				else
+				{
+					canStartService = false;
+					m_proxyAnon = null;
+					if (!JAPModel.isSmallDisplay() && ret != ErrorCodes.E_INTERRUPTED)
+					{
+						LogHolder.log(LogLevel.ERR, LogType.NET,
+									  "Error starting AN.ON service! - ErrorCode: " +
+									  Integer.toString(ret));
+						JAPDialog.showErrorDialog(getView(), JAPMessages.getString("errorConnectingFirstMix"),
+												  JAPMessages.getString("errorConnectingFirstMixTitle"),
+												  LogType.NET);
+					}
+				}
+
 				if (getView() != null)
 				{
 					getView().setCursor(Cursor.getDefaultCursor());
@@ -2202,7 +2201,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 				m_View.removeStatusMsg(msgIdConnect);
 				if (!canStartService)
 				{
-					setAnonMode(false);
+					// test if cascade has been switched during the error
+					if (ret != ErrorCodes.E_INTERRUPTED ||
+						(ret == ErrorCodes.E_INTERRUPTED && cascadeContainer.getInitialCascade().equals(
+									   JAPController.getInstance().getCurrentMixCascade())))
+					{
+						setAnonMode(false);
+					}
 				}
 
 				if (canStartService && !JAPModel.isInfoServiceDisabled())
@@ -2276,7 +2281,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public void setAnonMode(final boolean a_anonModeSelected)
 	{
 		final JAPController controller = this;
-
 
 		synchronized (m_changeAnonModeJobs)
 		{
@@ -2390,15 +2394,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 		if (m_proxyAnon != null)
 		{
 			m_proxyAnon.setDummyTraffic(msIntervall);
-		}
-	}
-
-	public void setAutoReConnect(boolean b)
-	{
-		m_Model.setAutoReConnect(b);
-		if (m_proxyAnon != null)
-		{
-			m_proxyAnon.setAutoReConnect(b);
 		}
 	}
 
@@ -3535,6 +3530,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 			m_initialCascade = JAPController.getInstance().getCurrentMixCascade();
 			m_bKeepCurrentCascade = false;
 		}
+		public MixCascade getInitialCascade()
+		{
+			return m_initialCascade;
+		}
+
 		public MixCascade getNextMixCascade()
 		{
 			synchronized (m_alreadyTriedCascades)

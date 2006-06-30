@@ -68,7 +68,7 @@ import HTTPClient.HTTPConnection;
  */
 public class AnonClient implements AnonService, Observer, DataChainErrorListener {
 
-	private static final int LOGIN_TIMEOUT = 60000;
+	private static final int LOGIN_TIMEOUT = 30000;
 	private static final int CONNECT_TIMEOUT = 8000;
 
 	private Multiplexer m_multiplexer;
@@ -447,8 +447,38 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 			{
 				/* ignore it */
 			}
-			m_keyExchangeManager = new KeyExchangeManager(m_socketHandler.getInputStream(),
-				m_socketHandler.getOutputStream(), (MixCascade)a_mixCascade);
+
+			final Vector exceptionCache = new Vector();
+			Thread loginThread = new Thread()
+			{
+				public void run ()
+				{
+					try
+					{
+						m_keyExchangeManager = new KeyExchangeManager(m_socketHandler.getInputStream(),
+							m_socketHandler.getOutputStream(), (MixCascade) a_mixCascade);
+					}
+					catch (Exception a_e)
+					{
+						exceptionCache.addElement(a_e);
+					}
+				}
+			};
+			loginThread.start();
+			try
+			{
+				// this trick is needed to interrupt the key exchange read operation
+				loginThread.join();
+			}
+			catch (InterruptedException a_e)
+			{
+				throw a_e;
+			}
+
+			if (exceptionCache.size() > 0)
+			{
+				throw (Exception)exceptionCache.firstElement();
+			}
 		}
 		catch (UnknownProtocolVersionException e)
 		{
@@ -462,6 +492,12 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 			closeSocketHandler();
 			/** @todo Make this more transparent... */
 			return ErrorCodes.E_SIGNATURE_CHECK_FIRSTMIX_FAILED;
+		}
+		catch (InterruptedException a_e)
+		{
+			LogHolder.log(LogLevel.INFO, LogType.NET, a_e);
+			closeSocketHandler();
+			return ErrorCodes.E_INTERRUPTED;
 		}
 		catch (Exception e)
 		{
