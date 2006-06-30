@@ -52,6 +52,7 @@ import anon.util.XMLUtil;
 import java.util.Vector;
 import java.util.Enumeration;
 import anon.infoservice.ImmutableProxyInterface;
+import anon.infoservice.IMutableProxyInterface;
 
 /**
  * This control channel is used for communication with the AI
@@ -83,7 +84,7 @@ public class AIControlChannel extends XmlControlChannel {
 
   private Vector m_aiListeners = new Vector();
 
-  private ImmutableProxyInterface[] m_proxys;
+  private IMutableProxyInterface m_proxys;
 
   private int m_diff = 0;
 
@@ -92,10 +93,10 @@ public class AIControlChannel extends XmlControlChannel {
   private PacketCounter m_packetCounter;
 
 
-  public AIControlChannel(Multiplexer a_multiplexer, ImmutableProxyInterface a_proxy, PacketCounter a_packetCounter) {
+  public AIControlChannel(Multiplexer a_multiplexer, IMutableProxyInterface a_proxy, PacketCounter a_packetCounter) {
     super(ChannelTable.CONTROL_CHANNEL_ID_PAY, a_multiplexer);
     m_bFirstBalance = true;
-    m_proxys = new ImmutableProxyInterface[]{a_proxy};
+    m_proxys = a_proxy;
     m_packetCounter = a_packetCounter;
   }
 

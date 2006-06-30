@@ -53,6 +53,7 @@ import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.infoservice.IMutableProxyInterface;
 
 /**
  * This class encapsulates one account and all additional data associated to one
@@ -553,7 +554,7 @@ public class PayAccount implements IXMLEncodable
 	 * @todo switch SSL on
 	 * @throws java.lang.SecurityException if the account is encrypted an not usable
 	 */
-	public XMLAccountInfo fetchAccountInfo(ImmutableProxyInterface[] a_proxys, boolean a_bForce)
+	public XMLAccountInfo fetchAccountInfo(IMutableProxyInterface a_proxys, boolean a_bForce)
 		throws SecurityException, Exception
 	{
 		if (!a_bForce && !PayAccountsFile.getInstance().isBalanceAutoUpdateEnabled())
@@ -588,7 +589,7 @@ public class PayAccount implements IXMLEncodable
 	 * @throws Exception
 	 * @throws java.lang.SecurityException if the account is encrypted an not usable
 	 */
-	public XMLTransCert charge(ImmutableProxyInterface[] a_proxys) throws SecurityException, Exception
+	public XMLTransCert charge(IMutableProxyInterface a_proxys) throws SecurityException, Exception
 	{
 		if (getPrivateKey() == null)
 		{

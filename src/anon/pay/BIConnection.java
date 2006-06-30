@@ -66,6 +66,7 @@ import anon.util.captcha.ZipBinaryImageCaptchaClient;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.infoservice.IMutableProxyInterface;
 
 public class BIConnection implements ICaptchaSender
 {
@@ -81,7 +82,7 @@ public class BIConnection implements ICaptchaSender
 	private boolean m_bSendNewCaptcha;
 	private boolean m_bFirstCaptcha = true;
 
-	ImmutableProxyInterface[] m_proxys = null;
+	IMutableProxyInterface m_proxyInterface = null;
 
 	/**
 	 * Constructor
@@ -100,22 +101,30 @@ public class BIConnection implements ICaptchaSender
 	 * @throws IOException if an error occured while connection
 	 * @throws ForbiddenIOException if it is assumed that the local provider forbids the connection
 	 */
-	public void connect(ImmutableProxyInterface[] a_proxys) throws IOException
+	public void connect(IMutableProxyInterface a_proxyInterface) throws IOException
 	{
 		IOException exception = new IOException("No valid proxy available");
 
-		m_proxys = a_proxys;
-
-		if (a_proxys == null || a_proxys.length == 0)
+		if (a_proxyInterface == null)
 		{
 			throw exception;
 		}
-		for (int i = 0; i < a_proxys.length; i++)
+
+		m_proxyInterface = a_proxyInterface;
+
+		ImmutableProxyInterface[] proxies = a_proxyInterface.getProxyInterfaces();
+
+		if (proxies == null || proxies.length == 0)
+		{
+			throw exception;
+		}
+
+		for (int i = 0; i < proxies.length; i++)
 		{
 			try
 			{
 				//Try to connect to BI...
-				connect_internal(a_proxys[i]);
+				connect_internal(proxies[i]);
 			}
 			catch (IOException a_t)
 			{
@@ -322,7 +331,7 @@ public class BIConnection implements ICaptchaSender
 					LogHolder.log(LogLevel.INFO, LogType.PAY,
 								  "Not connected to payment instance while trying to disconnect");
 				}
-				this.connect(m_proxys);
+				this.connect(m_proxyInterface);
 			}
 			// send our public key
 			m_httpClient.writeRequest(
