@@ -91,6 +91,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	private ImmutableProxyInterface m_proxyInterface;
 
 	private final Object THREAD_SYNC = new Object();
+	private final Object SHUTDOWN_SYNC = new Object();
 
 	/**
 	 * Stores the MixCascade we are connected to.
@@ -106,8 +107,6 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	 * Stores the Mixminion params.
 	 */
 	private MixminionServiceDescription m_currentMixminionParams;
-
-	private boolean m_bAutoReconnect = false;
 
 	/**
 	 * Stores, whether we use a forwarded connection (already active, when
@@ -153,7 +152,6 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		m_Anon.setProxy(a_proxyInterface);
 		setDummyTraffic( -1);
 		m_forwardedConnection = false;
-		m_bAutoReconnect = false;
 		m_anonServiceListener = new Vector();
 		m_Anon.removeEventListeners();
 		m_Anon.addEventListener(this);
@@ -188,7 +186,6 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		m_socketListener = a_listener;
 		m_Anon = new AnonClient(a_proxyConnection.getSocket()); // uups very nasty....
 		m_forwardedConnection = true;
-		m_bAutoReconnect = false;
 		m_maxDummyTrafficInterval = a_maxDummyTrafficInterval;
 		setDummyTraffic(a_maxDummyTrafficInterval);
 		m_anonServiceListener = new Vector();
@@ -210,7 +207,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		}
 		else
 		{
-			m_currentMixCascade = newMixCascade;
+			m_currentMixCascade = new EncapsulatedMixCascadeContainer(newMixCascade);
 		}
 		// m_AICom.setAnonServer(newMixCascade);
 	}
@@ -303,15 +300,6 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		}
 	}
 
-	public void setAutoReConnect(boolean b)
-	{
-		if (!m_forwardedConnection)
-		{
-			/* reconnect isn't supported with forwarded connections */
-			m_bAutoReconnect = b;
-		}
-	}
-
 	public int start(boolean a_bRetryOnError)
 	{
 		synchronized (THREAD_SYNC)
@@ -390,7 +378,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	public void stop()
 	{
-		synchronized (THREAD_SYNC)
+		synchronized (SHUTDOWN_SYNC)
 		{
 			if (threadRun == null)
 			{
@@ -419,11 +407,14 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				{
 				}
 			}
+			synchronized (THREAD_SYNC)
+			{
+				THREAD_SYNC.notify();
+			}
 			m_Tor = null;
 			m_Mixminion = null;
 			threadRun = null;
 			disconnected();
-			THREAD_SYNC.notify();
 		}
 	}
 
@@ -527,12 +518,12 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			{
 				return true;
 			}
-			if (!m_bAutoReconnect)
+			if (!m_currentMixCascade.isReconnectedAutomatically())
 			{
 				stop();
 				return false;
 			}
-			while (threadRun != null && m_bAutoReconnect)
+			while (threadRun != null && m_currentMixCascade.isReconnectedAutomatically())
 			{
 				LogHolder.log(LogLevel.ERR, LogType.NET, "Try reconnect to Mix");
 				int ret = m_Anon.initialize(m_currentMixCascade.getNextMixCascade());
@@ -546,7 +537,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 					THREAD_SYNC.wait(RECONNECT_INTERVAL);
 				}
 				catch (InterruptedException ex)
-				{
+				{ex.printStackTrace();
 					break;
 				}
 			}
@@ -755,6 +746,41 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		public  boolean isReconnectedAutomatically()
 		{
 			return false;
+		}
+	}
+
+	private class EncapsulatedMixCascadeContainer extends AbstractMixCascadeContainer
+	{
+		private AbstractMixCascadeContainer m_mixCascadeContainer;
+
+		public EncapsulatedMixCascadeContainer(AbstractMixCascadeContainer a_mixCascadeContainer)
+		{
+			m_mixCascadeContainer = a_mixCascadeContainer;
+		}
+
+		public MixCascade getNextMixCascade()
+		{
+			return m_mixCascadeContainer.getNextMixCascade();
+		}
+
+		public MixCascade getCurrentMixCascade()
+		{
+			return m_mixCascadeContainer.getCurrentMixCascade();
+		}
+
+		public void keepCurrentCascade(boolean a_bKeepCurrentCascade)
+		{
+			m_mixCascadeContainer.keepCurrentCascade(a_bKeepCurrentCascade);
+		}
+
+		public boolean isCascadeAutoSwitched()
+		{
+			return m_mixCascadeContainer.isCascadeAutoSwitched();
+		}
+		public boolean isReconnectedAutomatically()
+		{
+			/* reconnect isn't supported with forwarded connections */
+			return !m_forwardedConnection && m_mixCascadeContainer.isReconnectedAutomatically();
 		}
 	}
 }
