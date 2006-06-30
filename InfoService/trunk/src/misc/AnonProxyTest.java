@@ -22,7 +22,7 @@ public class AnonProxyTest
 			log.setLogLevel(LogLevel.DEBUG);
 			LogHolder.setLogInstance(new SystemErrLog());
 			ServerSocket ss = new ServerSocket(4005);
-			AnonProxy theProxy = new AnonProxy(ss, null);
+			AnonProxy theProxy = new AnonProxy(ss, null, null);
 
 			//we need to disbale certificate checks (better: set valid root certifcates for productive environments!)
 			SignatureVerifier.getInstance().setCheckSignatures(false);

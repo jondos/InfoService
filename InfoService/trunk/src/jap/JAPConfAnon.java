@@ -96,12 +96,15 @@ import javax.swing.ScrollPaneConstants;
 /* for opening a CertDetailsDialog with the certificate data of the selected server*/
 import anon.crypto.JAPCertificate;
 import gui.CertDetailsDialog;
+import anon.crypto.X509SubjectAlternativeName;
+import anon.crypto.X509DistinguishedName;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener, Observer
 {
 	private static final String MSG_LABEL_CERTIFICATE = JAPConfAnon.class.getName() + "_certificate";
 	private static final String MSG_SHOW_CERTIFICATE = JAPConfAnon.class.getName() + "_showCertificate";
+	private static final String MSG_LABEL_EMAIL = JAPConfAnon.class.getName() + "_labelEMail";
 
 	private static final Insets SMALL_BUTTON_MARGIN = new Insets(1, 1, 1, 1);
 
@@ -136,6 +139,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private GridBagConstraints m_rootPanelConstraints;
 
 	private JLabel m_operatorLabel;
+	private JLabel m_emailLabel;
 	private JLabel m_urlLabel;
 	private JLabel m_locationLabel;
 	private JLabel m_payLabel;
@@ -289,9 +293,23 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.fill = GridBagConstraints.HORIZONTAL;
 		m_serverInfoPanel.add(m_operatorLabel, c);
 
+		l = new JLabel(JAPMessages.getString(MSG_LABEL_EMAIL));
+		c.gridx = 0;
+		c.gridy++;
+		c.weightx = 0;
+		c.insets = new Insets(5, 30, 5, 5);
+		m_serverInfoPanel.add(l, c);
+
+		m_emailLabel = new JLabel();
+		c.weightx = 1;
+		c.gridx = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		m_serverInfoPanel.add(m_emailLabel, c);
+
+
 		l = new JLabel(JAPMessages.getString("mixUrl"));
 		c.gridx = 0;
-		c.gridy = 2;
+		c.gridy++;
 		c.weightx = 0;
 		m_serverInfoPanel.add(l, c);
 
@@ -302,7 +320,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		l = new JLabel(JAPMessages.getString("mixLocation"));
 		c.gridx = 0;
-		c.gridy = 3;
+		c.gridy++;
 		m_serverInfoPanel.add(l, c);
 
 		m_locationLabel = new JLabel();
@@ -312,7 +330,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		l = new JLabel(JAPMessages.getString(MSG_LABEL_CERTIFICATE) + ":");
 		c.gridx = 0;
-		c.gridy = 4;
+		c.gridy++;
 		m_serverInfoPanel.add(l, c);
 
 		m_viewCertLabel = new JLabel();
@@ -623,6 +641,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		m_operatorLabel.setText(operator);
 		m_operatorLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
+
+		m_emailLabel.setText(m_infoService.getEMail(selectedMixId));
+
+
 
 		m_locationCoordinates = m_infoService.getCoordinates(selectedMixId);
 		if (m_locationCoordinates != null)
@@ -1671,6 +1693,48 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			}
 			return certificate;
 		}
+
+		/**
+		 * Get the operator name of a cascade.
+		 * @param a_mixId String
+		 * @return String
+		 */
+		public String getEMail(String a_mixId)
+		{
+			ServiceOperator operator;
+			MixInfo info;
+			String strEmail = null;
+			X509DistinguishedName name = null;
+
+			info = getMixInfo(a_mixId);
+			if (info != null)
+			{
+				name = info.getMixCertificate().getSubject();
+				if (name != null)
+				{
+					strEmail = name.getEmailAddress();
+					if (strEmail == null || !X509SubjectAlternativeName.isValidEMail(strEmail))
+					{
+						strEmail = name.getE_EmailAddress();
+					}
+				}
+			}
+
+			if (strEmail == null || !X509SubjectAlternativeName.isValidEMail(strEmail))
+			{
+				operator = getServiceOperator(a_mixId);
+				if (operator != null)
+				{
+					strEmail = operator.getEMail();
+				}
+			}
+			if (strEmail == null || !X509SubjectAlternativeName.isValidEMail(strEmail))
+			{
+				return "N/A";
+			}
+			return strEmail;
+		}
+
 
 		/**
 		 * Get the operator name of a cascade.

@@ -49,6 +49,7 @@ import anon.util.captcha.IImageEncodedCaptcha;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.infoservice.IMutableProxyInterface;
 
 /**
  * This class encapsulates a collection of accounts. One of the accounts in the collection
@@ -599,7 +600,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	 * @param a_keyPair RSA should not be used at the moment
 	 *
 	 */
-	public PayAccount createAccount(BI a_bi, ImmutableProxyInterface[] a_proxys,
+	public PayAccount createAccount(BI a_bi, IMutableProxyInterface a_proxys,
 									AsymmetricCryptoKeyPair a_keyPair) throws
 		Exception
 	{

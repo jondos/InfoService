@@ -28,15 +28,18 @@
 package anon.infoservice;
 
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import anon.util.XMLParseException;
+import anon.util.XMLUtil;
 
 /**
  * Holds the information about the operator of a service.
  */
 public class ServiceOperator
 {
+	private static final String XML_ELEM_EMAIL = "EMail";
 
 	/**
 	 * This is the name of the operator or organisation.
@@ -47,6 +50,8 @@ public class ServiceOperator
 	 * This is the URL of the operators homepage.
 	 */
 	private String url;
+
+	private String m_strEmail;
 
 	/**
 	 * Creates a new ServiceOperator from XML description (Operator node).
@@ -71,6 +76,17 @@ public class ServiceOperator
 		}
 		Element urlNode = (Element) (urlNodes.item(0));
 		url = urlNode.getFirstChild().getNodeValue();
+
+		Node emailNode = XMLUtil.getFirstChildByName(operatorNode, XML_ELEM_EMAIL);
+		if (emailNode != null)
+		{
+			m_strEmail = XMLUtil.parseValue(emailNode, null);
+		}
+	}
+
+	public String getEMail()
+	{
+		return m_strEmail;
 	}
 
 	/**

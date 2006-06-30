@@ -53,6 +53,7 @@ import logging.LogType;
 import anon.AnonServerDescription;
 import proxy.DirectProxy;
 import anon.pay.IAIEventListener;
+import anon.infoservice.IMutableProxyInterface;
 
 /**
  * This calls implements a proxy one can use for convienient access to the
@@ -138,7 +139,8 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	 *          connections to the anon servers (e.g. if you are behind some
 	 *          firewall etc.)
 	 */
-	public AnonProxy(ServerSocket listener, ImmutableProxyInterface a_proxyInterface)
+	public AnonProxy(ServerSocket listener, ImmutableProxyInterface a_proxyInterface,
+					 IMutableProxyInterface a_paymentProxyInterface)
 	{
 		if (listener == null)
 		{
@@ -150,6 +152,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		// HTTP
 		m_Anon = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_ANON);
 		m_Anon.setProxy(a_proxyInterface);
+		((AnonClient)m_Anon).setPaymentProxy(a_paymentProxyInterface);
 		setDummyTraffic( -1);
 		m_forwardedConnection = false;
 		m_anonServiceListener = new Vector();

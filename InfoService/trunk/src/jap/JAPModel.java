@@ -38,6 +38,7 @@ import anon.infoservice.ImmutableProxyInterface;
 import gui.JAPDll;
 import java.util.Observable;
 import jap.forward.JAPRoutingSettings;
+import anon.infoservice.IMutableProxyInterface;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel extends Observable
@@ -358,9 +359,9 @@ public final class JAPModel extends Observable
 		m_bAllowPaymentViaDirectConnection = a_bAllowPaymentViaDirectConnection;
 	}
 
-	public InfoServiceDBEntry.MutableProxyInterface getInfoServiceProxyInterface()
+	public IMutableProxyInterface getInfoServiceProxyInterface()
 	{
-		return new InfoServiceDBEntry.MutableProxyInterface()
+		return new IMutableProxyInterface()
 		{
 			public ImmutableProxyInterface[] getProxyInterfaces()
 			{
@@ -369,9 +370,15 @@ public final class JAPModel extends Observable
 		};
 	}
 
-	public ImmutableProxyInterface[] getPaymentProxyInterface()
+	public IMutableProxyInterface getPaymentProxyInterface()
 	{
-		return getProxyInterface(DIRECT_CONNECTION_PAYMENT);
+		return new IMutableProxyInterface()
+		{
+			public ImmutableProxyInterface[] getProxyInterfaces()
+			{
+				return getProxyInterface(DIRECT_CONNECTION_PAYMENT);
+			}
+		};
 	}
 
 	public ImmutableProxyInterface[] getUpdateProxyInterface()

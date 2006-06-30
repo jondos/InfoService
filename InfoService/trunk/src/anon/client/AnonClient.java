@@ -62,6 +62,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import HTTPClient.HTTPConnection;
+import anon.infoservice.IMutableProxyInterface;
 
 /**
  * @author Stefan Lieske
@@ -96,6 +97,8 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 	private Socket m_connectedSocket;
 
 	private Pay m_paymentInstance;
+
+	private IMutableProxyInterface m_paymentProxyInterface;
 
 	private boolean m_connected;
 
@@ -159,6 +162,11 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 			}
 			return initializeProtocol(socketToMixCascade, a_mixCascade);
 		}
+	}
+
+	public void setPaymentProxy(IMutableProxyInterface a_paymentProxyInterface)
+	{
+		m_paymentProxyInterface = a_paymentProxyInterface;
 	}
 
 	public int setProxy(ImmutableProxyInterface a_proxyInterface)
@@ -491,7 +499,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 			LogHolder.log(LogLevel.ERR, LogType.CRYPTO, a_e);
 			closeSocketHandler();
 			/** @todo Make this more transparent... */
-			return ErrorCodes.E_SIGNATURE_CHECK_FIRSTMIX_FAILED;
+			return ErrorCodes.E_SIGNATURE_CHECK_OTHERMIX_FAILED;
 		}
 		catch (InterruptedException a_e)
 		{
@@ -517,7 +525,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 			m_dummyTrafficControlChannel.setDummyTrafficInterval(m_dummyTrafficInterval);
 		}
 		/* maybe we have to start some more services */
-		int errorCode = finishInitialization(m_multiplexer, m_keyExchangeManager, m_proxyInterface,
+		int errorCode = finishInitialization(m_multiplexer, m_keyExchangeManager, m_paymentProxyInterface,
 											 m_packetCounter);
 		if (errorCode != ErrorCodes.E_SUCCESS)
 		{
@@ -558,7 +566,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 	}
 
 	private int finishInitialization(Multiplexer a_multiplexer, KeyExchangeManager a_keyExchangeManager,
-									 ImmutableProxyInterface a_proxyInterface, PacketCounter a_packetCounter)
+									 IMutableProxyInterface a_proxyInterface, PacketCounter a_packetCounter)
 	{
 		if (a_keyExchangeManager.isProtocolWithTimestamp())
 		{

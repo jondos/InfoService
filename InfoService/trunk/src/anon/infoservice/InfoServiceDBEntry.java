@@ -69,7 +69,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	/**
 	 * A proxy interface that is used for all connections and may change over time.
 	 */
-	private static MutableProxyInterface m_proxyInterface;
+	private static IMutableProxyInterface m_proxyInterface;
 
 	/**
 	 * This is the ID of this infoservice.
@@ -436,15 +436,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		m_xmlDescription = generateXmlRepresentation();
 	}
 
-	/**
-	 * A proxy interface with multiple proxies that may change over time.
-	 */
-	public static interface MutableProxyInterface
-	{
-		public ImmutableProxyInterface[] getProxyInterfaces();
-	}
-
-	public static void setMutableProxyInterface(MutableProxyInterface a_proxyInterface)
+	public static void setMutableProxyInterface(IMutableProxyInterface a_proxyInterface)
 	{
 		m_proxyInterface = a_proxyInterface;
 	}
