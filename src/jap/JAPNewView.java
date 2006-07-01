@@ -98,6 +98,7 @@ import gui.dialog.JAPDialog;
 import anon.infoservice.Database;
 import anon.AnonServerDescription;
 import anon.infoservice.DatabaseMessage;
+import platform.AbstractOS;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver, Observer
@@ -811,7 +812,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			   setSize(m.m_OldMainWindowSize);
 			  }*/
 		}
+
 		Database.getInstance(StatusInfo.class).addObserver(this);
+
+		JAPHelp.init(this, AbstractOS.getInstance());
 		final JAPNewView view = this;
 		new Thread()
 		{
