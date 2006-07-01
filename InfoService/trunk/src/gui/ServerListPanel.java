@@ -63,8 +63,14 @@ final public class ServerListPanel extends JPanel implements ActionListener
 	 * Creates a panel with numberOfMixes Mix-icons
 	 * @param numberOfMixes int
 	 */
-	public ServerListPanel(int a_numberOfMixes, boolean a_enabled)
+	public ServerListPanel(int a_numberOfMixes, boolean a_enabled, int a_selectedIndex)
 	{
+		int selectedIndex = 0;
+		if (a_selectedIndex > 0 && a_selectedIndex < a_numberOfMixes)
+		{
+			selectedIndex = a_selectedIndex;
+		}
+
 		m_itemListeners = new Vector();
 		GridBagLayout la = new GridBagLayout();
 		GridBagConstraints constraints = new GridBagConstraints();
@@ -97,8 +103,9 @@ final public class ServerListPanel extends JPanel implements ActionListener
 			mix.setRolloverEnabled(true);
 			mix.setRolloverIcon(ms_iconServerBlau);
 			mix.setSelectedIcon(ms_iconServerRed);
-			if (i == 0)
+			if (i == selectedIndex)
 			{
+				m_selectedIndex = i;
 				mix.setSelected(true);
 			}
 			if (i == a_numberOfMixes - 1)
@@ -148,6 +155,27 @@ final public class ServerListPanel extends JPanel implements ActionListener
 	public void addItemListener(ItemListener l)
 	{
 		m_itemListeners.addElement(l);
+	}
+
+	public void setSelectedIndex(int a_index)
+	{
+		if (a_index < 0)
+		{
+			return;
+			//throw new IndexOutOfBoundsException("Invalid index: " + a_index);
+		}
+
+		Enumeration mixes = m_bgMixe.getElements();
+		for (int i = 0; i < a_index && mixes.hasMoreElements(); i++)
+		{
+			mixes.nextElement();
+		}
+		if (!mixes.hasMoreElements())
+		{
+			return;
+			//throw new IndexOutOfBoundsException("Invalid index: " + a_index);
+		}
+		((JRadioButton)mixes.nextElement()).setSelected(true);
 	}
 
 	/**
