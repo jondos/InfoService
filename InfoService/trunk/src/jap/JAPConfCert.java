@@ -56,11 +56,13 @@ import javax.swing.event.ListSelectionListener;
 import org.bouncycastle.asn1.x509.X509NameTokenizer;
 import anon.crypto.CertificateInfoStructure;
 import anon.crypto.JAPCertificate;
+import anon.crypto.X509DistinguishedName;
 import anon.crypto.SignatureVerifier;
 import gui.CAListCellRenderer;
 import gui.CertDetailsDialog;
 import gui.JAPMessages;
 import gui.JAPHelp;
+import gui.CountryMapper;
 import gui.dialog.JAPDialog;
 
 /**
@@ -95,6 +97,10 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 
 	private void updateInfoPanel(JAPCertificate a_cert)
 	{
+		X509DistinguishedName name;
+		String strCSTL = "";
+		String country;
+
 		m_labelCNData.setText("");
 		m_labelEData.setText("");
 		m_labelCSTLData.setText("");
@@ -113,64 +119,63 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		strBuff.append(sdf.format(a_cert.getValidity().getValidTo()));
 		m_labelDateData.setText(strBuff.toString());
 
-		X509NameTokenizer x509TokenIssuer = new X509NameTokenizer(a_cert.getIssuer().toString());
-		while (x509TokenIssuer.hasMoreTokens())
+		name = a_cert.getSubject();
+		if (name.getCommonName() != null && name.getCommonName().trim().length() > 0)
+		m_labelCNData.setText(name.getCommonName().trim());
+		if (name.getEmailAddress() != null && name.getEmailAddress().trim().length() > 0)
 		{
-			String strElement = x509TokenIssuer.nextToken();
+			m_labelEData.setText(name.getEmailAddress().trim());
+		}
+		else if (name.getE_EmailAddress() != null && name.getE_EmailAddress().trim().length() > 0)
+		{
 
-			if (strElement.startsWith("CN="))
+			m_labelEData.setText(name.getE_EmailAddress());
+		}
+		if (name.getLocalityName() != null && name.getLocalityName().trim().length() > 0)
+		{
+			strCSTL = name.getLocalityName().trim();
+		}
+		if (name.getStateOrProvince() != null && name.getStateOrProvince().trim().length() > 0)
+		{
+			if (strCSTL != null)
 			{
-				m_labelCNData.setText(strElement.substring(3));
-
+				strCSTL += ", ";
 			}
-			else if (strElement.startsWith("E="))
+			else
 			{
-				m_labelEData.setText(strElement.substring(2));
-
+				strCSTL = "";
 			}
-			else if (strElement.startsWith("C="))
+			strCSTL += name.getStateOrProvince().trim();
+		}
+		if (name.getCountryCode() != null)
+		{
+			try
 			{
-				strBuff.setLength(0);
-				strBuff.append(strElement.substring(2));
-				strBuff.append(m_labelCSTLData.getText());
-				m_labelCSTLData.setText(strBuff.toString());
+				country = new CountryMapper(name.getCountryCode(), JAPMessages.getLocale()).toString();
 			}
-
-			else if (strElement.startsWith("ST="))
+			catch (IllegalArgumentException a_e)
 			{
-				strBuff.setLength(0);
-				strBuff.append(strElement.substring(3));
-				strBuff.append(" / ");
-				strBuff.append(m_labelCSTLData.getText());
-				m_labelCSTLData.setText(strBuff.toString());
-			}
-
-			else if (strElement.startsWith("L="))
-			{
-				strBuff.setLength(0);
-				strBuff.append(strElement.substring(2));
-				strBuff.append(" / ");
-				strBuff.append(m_labelCSTLData.getText());
-				m_labelCSTLData.setText(strBuff.toString());
+				country = name.getCountryCode();
 			}
 
-			else if (strElement.startsWith("O="))
+			if (country.trim().length() > 0)
 			{
-				m_labelOData.setText(strElement.substring(2));
-
-			}
-			else if (strElement.startsWith("OU="))
-			{
-				m_labelOUData.setText(strElement.substring(3));
+				if (strCSTL != null)
+				{
+					strCSTL += ", ";
+				}
+				strCSTL += country.trim();
 			}
 		}
+		m_labelCSTLData.setText(strCSTL);
 
-		if (m_labelCSTLData.getText().trim().endsWith("/"))
+		if (name.getOrganisation() != null && name.getOrganisation().trim().length() > 0)
 		{
-			String strLabel = m_labelCSTLData.getText().trim();
-			int length = strLabel.length();
-			strLabel = strLabel.substring(0, length - 1);
-			m_labelCSTLData.setText(strLabel);
+			m_labelOData.setText(name.getOrganisation().trim());
+		}
+		if (name.getOrganisationalUnit() != null && name.getOrganisationalUnit().trim().length() > 0)
+		{
+			m_labelOUData.setText(name.getOrganisationalUnit().trim());
 		}
 	}
 
