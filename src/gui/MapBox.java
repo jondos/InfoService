@@ -122,7 +122,7 @@ public class MapBox extends JAPDialog implements ChangeListener
 		layout.setConstraints(l, c);
 		getContentPane().add(l);
 
-		s = new JSlider(JSlider.VERTICAL, 1, 9, level);
+		s = new JSlider(JSlider.VERTICAL, 0, 9, level);
 		s.setBackground(Color.white);
 		s.setPaintTicks(true);
 		s.setMajorTickSpacing(1);
