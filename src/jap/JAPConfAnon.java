@@ -191,7 +191,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		drawCompleteDialog();
 	}
 
-	private void drawServerPanel(int a_numberOfMixes, String a_strCascadeName, boolean a_enabled)
+	private void drawServerPanel(int a_numberOfMixes, String a_strCascadeName, boolean a_enabled,
+								 int a_selectedIndex)
 	{
 		if (m_manualPanel != null)
 		{
@@ -239,7 +240,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			+ ":</html></u>" + "\n" + a_strCascadeName);
 		m_serverPanel.add(label, c);
 
-		m_serverList = new ServerListPanel(a_numberOfMixes, a_enabled);
+		m_serverList = new ServerListPanel(a_numberOfMixes, a_enabled, a_selectedIndex);
 		m_serverList.addItemListener(this);
 		c.insets = new Insets(5, 10, 5, 5);
 		c.gridy = 1;
@@ -618,7 +619,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_rootPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
 
 		drawCascadesPanel();
-		drawServerPanel(3, "", false);
+		drawServerPanel(3, "", false, 0);
 		drawServerInfoPanel();
 	}
 
@@ -704,6 +705,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 
 		Object value = m_listMixCascade.getSelectedValue();
+
 		m_listMixCascade.setModel(listModel);
 		m_listMixCascade.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		if (value == null)
@@ -819,7 +821,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_portsLabel.setText("");
 		m_reachableLabel.setText("");
 		m_payLabel.setText("");
-		drawServerPanel(3, "", false);
+		drawServerPanel(3, "", false, 0);
 
 		drawServerInfoPanel();
 		m_serverInfoPanel.setEnabled(false);
@@ -1154,6 +1156,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				String cascadeId;
 
 				cascade = (MixCascade) m_listMixCascade.getSelectedValue();
+				int selectedMix = m_serverList.getSelectedIndex();
 				if (cascade == null)
 				{
 					// no cascade is available and selected
@@ -1168,11 +1171,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				{
 					if (cascade.getNumberOfMixes() <= 1)
 					{
-						drawServerPanel(3, "", false);
+						drawServerPanel(3, "", false, 0);
 					}
 					else
 					{
-						drawServerPanel(cascade.getNumberOfMixes(), cascade.getName(), true);
+						drawServerPanel(cascade.getNumberOfMixes(), cascade.getName(), true, selectedMix);
 					}
 					m_numOfUsersLabel.setText(m_infoService.getNumOfUsers(cascadeId));
 					m_reachableLabel.setText(m_infoService.getHosts(cascadeId));
