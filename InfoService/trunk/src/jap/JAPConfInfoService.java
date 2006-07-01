@@ -457,7 +457,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 										}
 										else
 										{
-											SwingUtilities.invokeLater(new Test(i));
+											SwingUtilities.invokeAndWait(new Test(i));
 										}
 									}
 								}
