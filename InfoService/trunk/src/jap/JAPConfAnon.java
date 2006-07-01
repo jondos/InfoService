@@ -235,15 +235,16 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			a_strCascadeName = a_strCascadeName.substring(0, 65);
 			a_strCascadeName = a_strCascadeName + "...";
 		}
-		JAPMultilineLabel label = new JAPMultilineLabel("<html><u>" +
-			JAPMessages.getString("infoAboutCascade")
-			+ ":</html></u>" + "\n" + a_strCascadeName);
+		JLabel label = new JLabel(JAPMessages.getString("infoAboutCascade"));
+		label.setFont(new Font(label.getFont().getName(), Font.BOLD, label.getFont().getSize() + 2));
 		m_serverPanel.add(label, c);
+
+		c.gridy = 1;
+		m_serverPanel.add(new JLabel(a_strCascadeName), c);
 
 		m_serverList = new ServerListPanel(a_numberOfMixes, a_enabled, a_selectedIndex);
 		m_serverList.addItemListener(this);
-		c.insets = new Insets(5, 10, 5, 5);
-		c.gridy = 1;
+		c.gridy = 2;
 		c.insets = new Insets(2, 20, 2, 2);
 		m_serverPanel.add(m_serverList, c);
 
@@ -271,7 +272,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		m_serverInfoPanel.setLayout(layout);
 
-		JLabel l = new JLabel("<html><u>" + JAPMessages.getString("infoAboutMix") + ":</html></u>");
+		JLabel l = new JLabel(JAPMessages.getString("infoAboutMix"));
+		l.setFont(new Font(l.getFont().getName(), Font.BOLD, l.getFont().getSize() + 2));
 		c.insets = new Insets(5, 10, 5, 5);
 		c.gridx = 0;
 		c.gridy = 0;
