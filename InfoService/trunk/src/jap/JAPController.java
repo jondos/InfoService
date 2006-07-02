@@ -1243,8 +1243,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 
 
-				if (JAPModel.getInstance().isAutomaticallyReconnected() &&
-					JAPModel.getInstance().isCascadeConnectionChosenAutomatically())
+				if (JAPModel.getInstance().isCascadeConnectionChosenAutomatically())
 				{
 					// choose a random initial cascade
 					AutoSwitchedMixCascadeContainer cascadeSwitcher = new AutoSwitchedMixCascadeContainer();
@@ -3539,8 +3538,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			synchronized (m_alreadyTriedCascades)
 			{
-				if (!JAPModel.isAutomaticallyReconnected() ||
-					!JAPModel.getInstance().isCascadeConnectionChosenAutomatically())
+				if (!JAPModel.getInstance().isCascadeConnectionChosenAutomatically())
 				{
 					m_alreadyTriedCascades.clear();
 					m_bKeepCurrentCascade = false;
