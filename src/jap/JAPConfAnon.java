@@ -35,6 +35,7 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
 import java.util.Hashtable;
+import java.util.Date;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -103,7 +104,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	ListSelectionListener, ItemListener, KeyListener, Observer
 {
 	private static final String MSG_LABEL_CERTIFICATE = JAPConfAnon.class.getName() + "_certificate";
-	private static final String MSG_SHOW_CERTIFICATE = JAPConfAnon.class.getName() + "_showCertificate";
 	private static final String MSG_LABEL_EMAIL = JAPConfAnon.class.getName() + "_labelEMail";
 
 	private static final Insets SMALL_BUTTON_MARGIN = new Insets(1, 1, 1, 1);
@@ -116,6 +116,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	private static final String URL_BEGIN = "<html><font color=blue><u>";
 	private static final String URL_END = "</u></font></html>";
+	private static final String RED_BEGIN = "<font color=red>";
+	private static final String RED_END = "</font>";
 
 	private InfoServiceTempLayer m_infoService;
 
@@ -670,7 +672,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		if (m_serverCert != null)
 		{
 			m_viewCertLabel.setText(
-				URL_BEGIN + JAPMessages.getString(MSG_SHOW_CERTIFICATE) + "..." + URL_END);
+				URL_BEGIN + (JAPMessages.getString(CertDetailsDialog.MSG_CERT_VERIFIED) + ",") +
+				(m_serverCert.getValidity().isValid(new Date()) ? " " +
+				 JAPMessages.getString(CertDetailsDialog.MSG_CERTVALID) : RED_BEGIN + " " +
+				 JAPMessages.getString(JAPMessages.getString(CertDetailsDialog.MSG_CERTNOTVALID)) + RED_END) +
+				URL_END);
 		}
 		else
 		{

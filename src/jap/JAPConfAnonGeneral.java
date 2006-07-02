@@ -69,6 +69,8 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		"_knownCascades";
 	private static final String MSG_ALLOWED_CASCADES = JAPConfAnonGeneral.class.getName() +
 		"_allowedCascades";
+	private static final String MSG_AUTO_CHOOSE_ON_START = JAPConfAnonGeneral.class.getName() +
+		"_autoChooseOnStart";
 
 	private static final String IMG_ARROW_RIGHT = JAPConfAnonGeneral.class.getName() + "_arrowRight.gif";
 	private static final String IMG_ARROW_LEFT = JAPConfAnonGeneral.class.getName() + "_arrowLeft.gif";
@@ -109,7 +111,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		}
 		m_sliderDummyTrafficIntervall.setEnabled(iTmp > -1);
 		m_cbAutoConnect.setSelected(JAPModel.getAutoConnect());
-		m_cbAutoReConnect.setSelected(JAPModel.getAutoReConnect());
+		m_cbAutoReConnect.setSelected(JAPModel.isAutomaticallyReconnected());
 		m_cbAutoChooseCascades.setSelected(JAPModel.getInstance().isCascadeConnectionChosenAutomatically());
 		if (JAPModel.getInstance().getAutomaticCascadeChangeRestriction().equals(
 			  JAPModel.AUTO_CHANGE_RESTRICT))

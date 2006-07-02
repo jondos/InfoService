@@ -33,7 +33,6 @@ import java.awt.Point;
 import anon.crypto.JAPCertificate;
 import anon.infoservice.ProxyInterface;
 import anon.util.ResourceLoader;
-import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.ImmutableProxyInterface;
 import gui.JAPDll;
 import java.util.Observable;
@@ -186,7 +185,7 @@ public final class JAPModel extends Observable
 		m_bAutoReConnect = b;
 	}
 
-	public static boolean getAutoReConnect()
+	public static boolean isAutomaticallyReconnected()
 	{
 		return ms_TheModel.m_bAutoReConnect;
 	}

@@ -1350,7 +1350,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				synchronized (m_connectionEstablishedSync)
 				{
-					if (JAPModel.getInstance().getAutoReConnect())
+					if (JAPModel.getInstance().isAutomaticallyReconnected())
 					{
 						if (m_Controller.getAnonMode() && !m_Controller.isAnonConnected())
 						{

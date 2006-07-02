@@ -344,16 +344,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 		return m_passwordReader;
 	}
 
-	public void chooseRandomMixCascade()
-	{
-		if (JAPModel.getInstance().isCascadeConnectionChosenAutomatically())
-		{
-			AutoSwitchedMixCascadeContainer cascadeSwitcher = new AutoSwitchedMixCascadeContainer();
-			cascadeSwitcher.getNextMixCascade(); // this is the default cascade
-			setCurrentMixCascade(cascadeSwitcher.getNextMixCascade());
-		}
-	}
-
 	//---------------------------------------------------------------------
 	public void initialRun()
 	{
@@ -783,22 +773,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 				m_Model.setMinimizeOnStartup(
 					XMLUtil.parseAttribute(root, JAPConstants.CONFIG_MINIMIZED_STARTUP, false));
 
-
-				/* try to get the info from the MixCascade node */
-				Element mixCascadeNode = (Element) XMLUtil.getFirstChildByName(root,
-					MixCascade.XML_ELEMENT_NAME);
-				try
-				{
-					m_currentMixCascade = new MixCascade( (Element) mixCascadeNode,  Long.MAX_VALUE);
-				}
-				catch (Exception e)
-				{
-					/* take the current mixcascade as the default */
-					m_currentMixCascade = getCurrentMixCascade();
-				}
 				//Database.getInstance(MixCascade.class).update(getCurrentMixCascade());
 
-				/* try to load information about user defined cascades */
+				/* try to load information about cascades */
 				Node nodeCascades = XMLUtil.getFirstChildByName(root, MixCascade.XML_ELEMENT_CONTAINER_NAME);
 				if (nodeCascades != null)
 				{
@@ -1264,6 +1241,30 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 //				}
 
+
+
+				if (JAPModel.getInstance().isAutomaticallyReconnected() &&
+					JAPModel.getInstance().isCascadeConnectionChosenAutomatically())
+				{
+					// choose a random initial cascade
+					AutoSwitchedMixCascadeContainer cascadeSwitcher = new AutoSwitchedMixCascadeContainer();
+					cascadeSwitcher.getNextMixCascade(); // this is the default cascade
+					setCurrentMixCascade(cascadeSwitcher.getNextMixCascade());
+				}
+				else
+				{
+					/* try to get the info from the MixCascade node */
+					Element mixCascadeNode = (Element) XMLUtil.getFirstChildByName(root,
+						MixCascade.XML_ELEMENT_NAME);
+					try
+					{
+						m_currentMixCascade = new MixCascade( (Element) mixCascadeNode, Long.MAX_VALUE);
+					}
+					catch (Exception e)
+					{
+						m_currentMixCascade = new AutoSwitchedMixCascadeContainer().getNextMixCascade();
+					}
+				}
 			}
 			catch (Exception e)
 			{
@@ -1578,7 +1579,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_DUMMY_TRAFFIC_INTERVALL,
 								 JAPModel.getDummyTraffic());
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_AUTO_CONNECT, JAPModel.getAutoConnect());
-			XMLUtil.setAttribute(e, JAPConstants.CONFIG_AUTO_RECONNECT, JAPModel.getAutoReConnect());
+			XMLUtil.setAttribute(e, JAPConstants.CONFIG_AUTO_RECONNECT, JAPModel.isAutomaticallyReconnected());
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_MINIMIZED_STARTUP, JAPModel.getMinimizeOnStartup());
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_NEVER_REMIND_ACTIVE_CONTENT,
 								 mbActCntMessageNeverRemind);
@@ -3379,7 +3380,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public void connectionError()
 	{
 		LogHolder.log(LogLevel.ERR, LogType.NET, "JAPController received connectionError");
-		if (!m_Model.getAutoReConnect())
+		if (!m_Model.isAutomaticallyReconnected())
 		{
 			this.setAnonMode(false);
 		}
@@ -3525,6 +3526,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			m_alreadyTriedCascades = new Hashtable();
 			m_random = new Random();
+			m_random.nextInt();
 			m_initialCascade = JAPController.getInstance().getCurrentMixCascade();
 			m_bKeepCurrentCascade = false;
 		}
@@ -3537,7 +3539,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			synchronized (m_alreadyTriedCascades)
 			{
-				if (!JAPModel.getAutoReConnect() ||
+				if (!JAPModel.isAutomaticallyReconnected() ||
 					!JAPModel.getInstance().isCascadeConnectionChosenAutomatically())
 				{
 					m_alreadyTriedCascades.clear();
@@ -3565,6 +3567,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					MixCascade currentCascade = null;
 					Vector availableCascades;
+					boolean forward = true;
 					boolean bRestrictToPay = false;
 					if (JAPModel.getInstance().getAutomaticCascadeChangeRestriction().equals(
 						JAPModel.AUTO_CHANGE_RESTRICT))
@@ -3587,6 +3590,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 						{
 							// only positive numers are allowed
 							chosenCascadeIndex *= -1;
+							// move backward
+							forward = false;
 						}
 						// chose an index from the vector
 						chosenCascadeIndex %= availableCascades.size();
@@ -3608,7 +3613,18 @@ public final class JAPController extends Observable implements IProxyListener, O
 								}
 								currentCascade = null;
 							}
-							chosenCascadeIndex = (chosenCascadeIndex + 1) % availableCascades.size();
+							if (forward)
+							{
+								chosenCascadeIndex = (chosenCascadeIndex + 1) % availableCascades.size();
+							}
+							else
+							{
+								chosenCascadeIndex -= 1;
+								if (chosenCascadeIndex < 0)
+								{
+									chosenCascadeIndex = availableCascades.size() - 1;
+								}
+							}
 						}
 					}
 					else if (m_initialCascade == null)
@@ -3639,7 +3655,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 		public boolean isReconnectedAutomatically()
 		{
-			return JAPModel.getInstance().getAutoReConnect();
+			return JAPModel.getInstance().isAutomaticallyReconnected();
 		}
 
 		private boolean isSuitableCascade(MixCascade a_cascade)

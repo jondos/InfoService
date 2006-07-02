@@ -60,9 +60,11 @@ import logging.LogType;
  */
 public class CertDetailsDialog extends JAPDialog
 {
+	public static final String MSG_CERTVALID = CertDetailsDialog.class.getName() + "_certValid";
+	public static final String MSG_CERTNOTVALID = CertDetailsDialog.class.getName() + "_certNotValid";
+	public static final String MSG_CERT_VERIFIED = CertDetailsDialog.class.getName() + "_certVerified";
+	public static final String MSG_CERT_NOT_VERIFIED = CertDetailsDialog.class.getName() + "_certNotVerified";
 	private static final String MSG_TITLE = CertDetailsDialog.class.getName();
-	private static final String MSG_CERTVALID = CertDetailsDialog.class.getName() + "_certValid";
-	private static final String MSG_CERTNOTVALID = CertDetailsDialog.class.getName() + "_certNotValid";
 	private static final String MSG_X509Attribute_ST = CertDetailsDialog.class.getName() + "_attributeST";
 	private static final String MSG_X509Attribute_L = CertDetailsDialog.class.getName() + "_attributeL";
 	private static final String MSG_X509Attribute_C = CertDetailsDialog.class.getName() + "_attributeC";
