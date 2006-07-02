@@ -130,16 +130,12 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 			m_cbDoNotRestrictAutoChoose.setSelected(true);
 			m_panelRestrictedCascades.setEnabled(false);
 		}
-		m_cbAutoChooseCascades.setEnabled(m_cbAutoReConnect.isSelected());
+		//m_cbAutoChooseCascades.setEnabled(m_cbAutoReConnect.isSelected());
 
-		m_cbRestrictAutoChoose.setEnabled(m_cbAutoReConnect.isSelected() &&
-										  m_cbAutoChooseCascades.isSelected());
-		m_cbDoNotRestrictAutoChoose.setEnabled(m_cbAutoReConnect.isSelected() &&
-											   m_cbAutoChooseCascades.isSelected());
-		m_cbRestrictAutoChoosePay.setEnabled(m_cbAutoReConnect.isSelected() &&
-											 m_cbAutoChooseCascades.isSelected());
+		m_cbRestrictAutoChoose.setEnabled(m_cbAutoChooseCascades.isSelected());
+		m_cbDoNotRestrictAutoChoose.setEnabled(m_cbAutoChooseCascades.isSelected());
+		m_cbRestrictAutoChoosePay.setEnabled(m_cbAutoChooseCascades.isSelected());
 		m_panelRestrictedCascades.setEnabled(m_panelRestrictedCascades.isEnabled() &&
-											 m_cbAutoReConnect.isSelected() &&
 											 m_cbAutoChooseCascades.isSelected());
 	}
 
@@ -216,14 +212,11 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		{
 			public void actionPerformed(ActionEvent a_event)
 			{
-				m_cbAutoChooseCascades.setEnabled(m_cbAutoReConnect.isSelected());
-				m_cbRestrictAutoChoose.setEnabled(m_cbAutoReConnect.isSelected() &&
-												  m_cbAutoChooseCascades.isSelected());
-				m_cbRestrictAutoChoosePay.setEnabled(m_cbAutoReConnect.isSelected() &&
-					m_cbAutoChooseCascades.isSelected());
-				m_cbDoNotRestrictAutoChoose.setEnabled(m_cbAutoReConnect.isSelected() &&
-					m_cbAutoChooseCascades.isSelected());
-				m_panelRestrictedCascades.setEnabled(m_cbAutoReConnect.isSelected() &&
+				//m_cbAutoChooseCascades.setEnabled(m_cbAutoReConnect.isSelected());
+				m_cbRestrictAutoChoose.setEnabled(m_cbAutoChooseCascades.isSelected());
+				m_cbRestrictAutoChoosePay.setEnabled(m_cbAutoChooseCascades.isSelected());
+				m_cbDoNotRestrictAutoChoose.setEnabled(m_cbAutoChooseCascades.isSelected());
+				m_panelRestrictedCascades.setEnabled(
 					m_cbAutoChooseCascades.isSelected() && m_cbRestrictAutoChoose.isSelected());
 			}
 		});
@@ -275,7 +268,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		panelRoot.add(m_cbAutoReConnect, c);
 		c.gridy++;
 		Insets insets = c.insets;
-		c.insets = new Insets(insets.top, insets.left + 20, insets.bottom, insets.right);
+		//c.insets = new Insets(insets.top, insets.left + 20, insets.bottom, insets.right);
 		panelRoot.add(m_cbAutoChooseCascades, c);
 		c.gridy++;
 		c.insets = new Insets(c.insets.top, c.insets.left + 20, c.insets.bottom, c.insets.right);
