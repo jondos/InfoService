@@ -48,9 +48,9 @@ final public class JAPiPAQ
 
 	public void startJAP(String strJapConfFile)
 	{
-		JAPModel.getInstance().setSmallDisplay(true);
 		// Init Messages....
 		JAPMessages.init(JAPConstants.MESSAGESFN);
+		JAPModel.getInstance().setSmallDisplay(true);
 		// Test (part 2) for right JVM....
 		// Create the controller object
 		m_controller = JAPController.getInstance();
