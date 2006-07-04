@@ -52,6 +52,8 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	private boolean m_successfulUpdate = false;
 	private boolean m_bAutoUpdateChanged = false;
 	private boolean m_bInitialRun = true;
+	// patch for JDK 1.1.8 and JView
+	private boolean m_interrupted = false;
 
 	/**
 	 * Initialises and starts the database update thread.
@@ -77,7 +79,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 			{
 				LogHolder.log(LogLevel.INFO, LogType.THREAD,
 							  getUpdatedClassName() + "update thread started.");
-				while (!Thread.currentThread().isInterrupted())
+				while (!Thread.currentThread().isInterrupted() && !m_interrupted)
 				{
 					synchronized (Thread.currentThread())
 					{
@@ -107,10 +109,17 @@ public abstract class AbstractDatabaseUpdater implements Observer
 								Thread.currentThread().notifyAll();
 								break;
 							}
+							// patch for JDK 1.1.8 and JView
+							if (m_interrupted)
+							{
+								break;
+							}
 						}
 					}
 
-					if (!Thread.currentThread().isInterrupted() && !isUpdatePaused())
+
+
+					if (!Thread.currentThread().isInterrupted() && !m_interrupted && !isUpdatePaused())
 					{
 						LogHolder.log(LogLevel.INFO, LogType.THREAD,
 									  "Updating " + getUpdatedClassName() + "list.");
@@ -242,6 +251,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 			{
 				m_bAutoUpdateChanged = false;
 				m_bInitialRun = false;
+				m_interrupted = true;
 				m_updateThread.notifyAll();
 				m_updateThread.interrupt();
 			}
