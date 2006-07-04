@@ -2580,6 +2580,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_Controller.m_bShutdown = true;
 					// disallow InfoService traffic
 					JAPModel.getInstance().setInfoServiceDisabled(true);
+					LogHolder.log(LogLevel.NOTICE, LogType.THREAD,
+								  "Stopping InfoService auto-update threads...");
 					m_Controller.m_feedback.stop();
 					m_Controller.m_MixCascadeUpdater.stop();
 					m_Controller.m_InfoServiceUpdater.stop();
@@ -2590,11 +2592,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 					try
 					{
 						m_Controller.setAnonMode(false);
-						// Wait until anon mode is disabled
+						// Wait until anon mode is disabled");
 						synchronized (m_Controller.m_finishSync)
 						{
 							if (m_Controller.getAnonMode() || m_Controller.isAnonConnected())
 							{
+								LogHolder.log(LogLevel.NOTICE, LogType.THREAD,
+											  "Waiting for finish of AN.ON connection...");
 								try
 								{
 									m_Controller.m_finishSync.wait();
@@ -2606,8 +2610,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 							}
 						}
 
-
 						//Wait until all Jobs are finished....
+						LogHolder.log(LogLevel.NOTICE, LogType.THREAD, "Finishing all AN.ON jobs...");
 						for (int i = 0; i < 5 && m_Controller.m_changeAnonModeJobs.size() > 0; i++)
 						{
 							Vector vecJobs = (Vector)m_Controller.m_changeAnonModeJobs.clone();
@@ -2645,13 +2649,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 					try
 					{
+						LogHolder.log(LogLevel.NOTICE, LogType.THREAD, "Shutting down direct proxy...");
 						m_Controller.m_proxyDirect.shutdown();
 					}
 					catch (NullPointerException a_e)
 					{
 						// ignore
 					}
-
 					try
 					{
 						m_Controller.m_socketHTTPListener.close();
@@ -2659,12 +2663,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 					catch (Exception a_e)
 					{
 					}
-
 					LogHolder.log(LogLevel.NOTICE, LogType.NET,
 								  "Interrupting all network communication threads...");
 					System.getProperties().put( "socksProxyPort", "0");
 					System.getProperties().put( "socksProxyHost" ,"localhost");
-
 					// do not show any dialogs in this state
 					if (getView() != null)
 					{
@@ -2769,7 +2771,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 
 		LogHolder.log(LogLevel.NOTICE, LogType.MISC,
-					  "Recommending to update new " + versionType + " version of JAP...");
+					  "Checking if update new " + versionType + " version of JAP is needed...");
 
 		JAPVersionInfo vi = null;
 		String updateVersionNumber = null;
