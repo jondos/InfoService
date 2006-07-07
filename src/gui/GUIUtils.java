@@ -27,10 +27,10 @@
  */
 package gui;
 
-import java.net.URL;
-import java.util.Hashtable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URL;
+import java.util.Hashtable;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -38,22 +38,25 @@ import java.awt.Font;
 import java.awt.Image;
 import java.awt.MediaTracker;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.Window;
-import java.awt.Rectangle;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.ClipboardOwner;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.MouseEvent;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTextPane;
 
 import anon.util.ResourceLoader;
+import gui.dialog.JAPDialog;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import javax.swing.JOptionPane;
-import java.awt.event.MouseEvent;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
 
 /**
  * This class contains helper methods for the GUI.
@@ -73,6 +76,11 @@ public final class GUIUtils
 		GUIUtils.class.getName() + "_imagePathLowColor";
 
 	private static final String MSG_PASTE_FILE = GUIUtils.class.getName() + "_pasteFile";
+	private static final String MSG_COPY_FROM_CLIP = GUIUtils.class.getName() + "_copyFromClip";
+	private static final String MSG_SAVED_TO_CLIP = GUIUtils.class.getName() + "_savedToClip";
+
+
+
 
 	// all loaded icons are stored in the cache and do not need to be reloaded from file
 	private static Hashtable ms_iconCache = new Hashtable();
@@ -341,15 +349,54 @@ public final class GUIUtils
 
 	public static String getTextFromClipboard(Component a_requestingComponent)
 	{
+		return getTextFromClipboard(a_requestingComponent, true);
+	}
+
+	public static void saveTextToClipboard(String strText, Component a_requestingComponent)
+	{
+		try
+		{
+			Clipboard cb = GUIUtils.getSystemClipboard();
+			cb.setContents(new StringSelection(strText),
+						   new ClipboardOwner()
+			{
+				public void lostOwnership(Clipboard cb, Transferable co)
+				{
+					// Don't care.
+				}
+			});
+
+			if (strText.equals(getTextFromClipboard(a_requestingComponent, false)))
+			{
+				JAPDialog.showMessageDialog(a_requestingComponent, JAPMessages.getString(MSG_SAVED_TO_CLIP));
+				return;
+			}
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.NOTICE, LogType.GUI, e);
+		}
+
+		// There are some problems with the access of the
+		// clipboard, so after the try to copy it, we
+		// still offer the ClipFrame.
+		ClipFrame cf =
+			new ClipFrame(a_requestingComponent, JAPMessages.getString(MSG_COPY_FROM_CLIP), false);
+		cf.setText(strText);
+		cf.setVisible(true, false);
+	}
+
+	private static String getTextFromClipboard(Component a_requestingComponent, boolean a_bUseTextArea)
+	{
 		Clipboard cb = getSystemClipboard();
-		String xmlString = null;
+		String strText = null;
 
 		Transferable data = cb.getContents(a_requestingComponent);
 		if (data != null && data.isDataFlavorSupported(DataFlavor.stringFlavor))
 		{
 			try
 			{
-				xmlString = (String) data.getTransferData(DataFlavor.stringFlavor);
+				strText = (String) data.getTransferData(DataFlavor.stringFlavor);
 			}
 			catch (Exception a_e)
 			{
@@ -357,13 +404,13 @@ public final class GUIUtils
 			}
 		}
 
-		if (xmlString == null)
+		if (a_bUseTextArea && strText == null)
 		{
 			ClipFrame cf =
 				new ClipFrame(a_requestingComponent, JAPMessages.getString(MSG_PASTE_FILE), true);
 			cf.setVisible(true, false);
-			xmlString = cf.getText();
+			strText = cf.getText();
 		}
-		return xmlString;
+		return strText;
 	}
 }
