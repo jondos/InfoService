@@ -44,7 +44,6 @@ import java.awt.Rectangle;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JTextPane;
-import javax.swing.JFrame;
 
 import anon.util.ResourceLoader;
 import logging.LogHolder;
@@ -53,6 +52,8 @@ import logging.LogType;
 import javax.swing.JOptionPane;
 import java.awt.event.MouseEvent;
 import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
 
 /**
  * This class contains helper methods for the GUI.
@@ -63,12 +64,15 @@ public final class GUIUtils
 	 * The default path to store images.
 	 */
 	public static final String MSG_DEFAULT_IMGAGE_PATH = GUIUtils.class.getName() + "_imagePath";
+
 	/**
 	 * Images with a smaller pixes size than 16 bit should be stored in this path. Their names must
 	 * be equal to the corresponding images in the default path.
 	 */
 	public static final String MSG_DEFAULT_IMGAGE_PATH_LOWCOLOR =
 		GUIUtils.class.getName() + "_imagePathLowColor";
+
+	private static final String MSG_PASTE_FILE = GUIUtils.class.getName() + "_pasteFile";
 
 	// all loaded icons are stored in the cache and do not need to be reloaded from file
 	private static Hashtable ms_iconCache = new Hashtable();
@@ -335,4 +339,31 @@ public final class GUIUtils
 		return r_cb;
 	}
 
+	public static String getTextFromClipboard(Component a_requestingComponent)
+	{
+		Clipboard cb = getSystemClipboard();
+		String xmlString = null;
+
+		Transferable data = cb.getContents(a_requestingComponent);
+		if (data != null && data.isDataFlavorSupported(DataFlavor.stringFlavor))
+		{
+			try
+			{
+				xmlString = (String) data.getTransferData(DataFlavor.stringFlavor);
+			}
+			catch (Exception a_e)
+			{
+				LogHolder.log(LogLevel.NOTICE, LogType.GUI, a_e);
+			}
+		}
+
+		if (xmlString == null)
+		{
+			ClipFrame cf =
+				new ClipFrame(a_requestingComponent, JAPMessages.getString(MSG_PASTE_FILE), true);
+			cf.setVisible(true, false);
+			xmlString = cf.getText();
+		}
+		return xmlString;
+	}
 }
