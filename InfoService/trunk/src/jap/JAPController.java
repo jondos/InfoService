@@ -3598,7 +3598,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 						/* Go through all indices until a suitable MixCascade is found or the original index
 						 * is reached.
 						 */
-						for (int i = 0; i < availableCascades.size(); i++)
+						int i;
+						for (i = 0; i < availableCascades.size(); i++)
 						{
 							currentCascade = (MixCascade) availableCascades.elementAt(chosenCascadeIndex);
 							// this is the logic that decides whether to use a cascade or not
@@ -3611,7 +3612,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 									// found a suitable cascade
 									break;
 								}
-								currentCascade = null;
 							}
 							if (forward)
 							{
@@ -3625,6 +3625,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 									chosenCascadeIndex = availableCascades.size() - 1;
 								}
 							}
+						}
+						if (i == availableCascades.size())
+						{
+							// no suitable cascade was found
+							currentCascade = null;
 						}
 					}
 					else if (m_initialCascade == null)
