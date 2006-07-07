@@ -36,6 +36,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.util.StringTokenizer;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -804,29 +805,61 @@ public final class JAPCertificate implements IXMLEncodable, Cloneable, ICertific
 		{
 			if (a_bytes[0] != (ASN1InputStream.SEQUENCE | ASN1InputStream.CONSTRUCTED))
 			{
-				// Probably a Base64 encoded certificate
-				BufferedReader in =
-					new BufferedReader(
-					new InputStreamReader(new ByteArrayInputStream(a_bytes)));
+				/*
+				 * Probably a Base64 encoded certificate; might be given in a single line, use tokenizer to
+				 * correct this (transform whitespaces to newlines).
+				 */
+				StringTokenizer tokenizer = new StringTokenizer(new String(a_bytes));
 				StringBuffer sbuf = new StringBuffer();
 				String line;
+				boolean endTagFound = false;
 
-				while ( (line = in.readLine()) != null)
+				beginLoop:
+				while (tokenizer.hasMoreTokens())
 				{
-					if (line.startsWith(Base64.BEGIN_TAG) && line.endsWith(Base64.TAG_END_SEQUENCE))
+					line = tokenizer.nextToken();
+					if (line.startsWith(Base64.BEGIN_TAG.trim()))
 					{
-						break;
+						do
+						{
+							if (line.endsWith(Base64.TAG_END_SEQUENCE))
+							{
+								break beginLoop;
+							}
+						}
+						while (tokenizer.hasMoreTokens() && (line = tokenizer.nextToken()) != null);
 					}
 				}
 
-				while ( (line = in.readLine()) != null)
+				if (!tokenizer.hasMoreTokens())
 				{
-					if (line.startsWith(Base64.END_TAG) && line.endsWith(Base64.TAG_END_SEQUENCE))
+					throw new Exception();
+				}
+
+				endLoop:
+				while (tokenizer.hasMoreTokens())
+				{
+					line = tokenizer.nextToken();
+					if (line.startsWith(Base64.END_TAG.trim()))
 					{
-						break;
+						do
+						{
+							if (line.endsWith(Base64.TAG_END_SEQUENCE))
+							{
+								endTagFound = true;
+								break endLoop;
+							}
+						}
+						while (tokenizer.hasMoreTokens() && (line = tokenizer.nextToken()) != null);
 					}
 					sbuf.append(line);
 				}
+
+				if (!endTagFound)
+				{
+					throw new Exception();
+				}
+
 				bin = new ByteArrayInputStream(Base64.decode(sbuf.toString()));
 			}
 
