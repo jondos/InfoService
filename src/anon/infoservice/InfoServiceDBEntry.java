@@ -736,9 +736,10 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		HTTPConnectionDescriptor currentConnectionDescriptor = null;
 		ImmutableProxyInterface[] proxies;
 		int proxyCounter;
+		
 		while ( (connectionCounter < m_listenerInterfaces.size()) && !Thread.currentThread().isInterrupted())
 		{
-			/* update the connectionCounter */
+			// update the connectionCounter 
 			connectionCounter++;
 			if (m_proxyInterface != null)
 			{
@@ -753,23 +754,23 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 			for (proxyCounter = 0; proxyCounter < proxies.length && !Thread.currentThread().isInterrupted();
 				 proxyCounter++)
 			{
-				/* get the next connection descriptor by supplying the last one */
+				// get the next connection descriptor by supplying the last one 
 				currentConnectionDescriptor = connectToInfoService(currentConnectionDescriptor,
 					proxies[proxyCounter]);
 
 				final HTTPConnection currentConnection = currentConnectionDescriptor.getConnection();
 				currentConnection.setTimeout(GET_XML_CONNECTION_TIMEOUT);
 
-				/* use a Vector as storage for the the result of the communication */
+				// use a Vector as storage for the the result of the communication 
 				final Vector responseStorage = new Vector();
-				/*
-				 * we need the possibility to interrupt the infoservice communication,
-				 * but also we need to know whether the operation was interupted by an
-				 * external call of Thread.interrupt() or a timeout, thus it is not
-				 * enough to catch the InteruptedIOException because that Exception is
-				 * thrown in both cases, so we cannot distinguish the both -> solution
-				 * make an extra Thread for the communication
-				 */
+				
+				// * we need the possibility to interrupt the infoservice communication,
+				// * but also we need to know whether the operation was interupted by an
+				// * external call of Thread.interrupt() or a timeout, thus it is not
+				// * enough to catch the InteruptedIOException because that Exception is
+				// * thrown in both cases, so we cannot distinguish the both -> solution
+				// * make an extra Thread for the communication
+				 
 				Thread communicationThread = new Thread(new Runnable()
 				{
 					public void run()
@@ -823,14 +824,14 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 									}
 									else
 									{
-										/* end of stream reached -> stop reading */
+										// end of stream reached -> stop reading 
 										tempStream.flush();
 										responseStorage.addElement(tempStream.toByteArray());
-										/* stop this thread by leaving the run() method */
+										// stop this thread by leaving the run() method 
 										return;
 									}
 								}
-								/* thread was interrupted */
+								// thread was interrupted 
 								throw (new InterruptedIOException("Communication was interrupted."));
 							}
 						}
@@ -853,34 +854,35 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 					{
 						Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
 							ByteArrayInputStream( (byte[]) (responseStorage.firstElement())));
-						/* fetching the document was successful, leave this method */
+						// fetching the document was successful, leave this method //
 						return doc;
 					}
 					catch (NoSuchElementException e)
 					{
-						/* fetching the information was not successful -> do nothing */
+						// fetching the information was not successful -> do nothing //
 					}
 				}
 				catch (InterruptedException e)
 				{
-					/*
-					 * operation was interupted from the outside -> set the intterrupted
-					 * flag for the Thread again, so the caller of the methode can
-					 * evaluate it, also interrupt the communication thread, but don't
-					 * wait for the end of that thread
-					 */
+					
+					// * operation was interupted from the outside -> set the intterrupted
+					// * flag for the Thread again, so the caller of the methode can
+					// * evaluate it, also interrupt the communication thread, but don't
+					// * wait for the end of that thread
+					 
 					LogHolder.log(LogLevel.INFO, LogType.NET, "Current operation was interrupted.");
 					Thread.currentThread().interrupt();
-					/* try to stop all activities of the HTTPConnection -> should stop
-					 * nearly all running requests with an exception
-					 */
+					// * try to stop all activities of the HTTPConnection -> should stop
+					//  * nearly all running requests with an exception
+					 
 					currentConnection.stop();
-					/* interrupt also the communication thread (just to be sure) */
+					// interrupt also the communication thread (just to be sure) //
 					communicationThread.interrupt();
 				}
 			}
 		}
-		/* all interfaces tested, we can't find a valid interface */
+		// all interfaces tested, we can't find a valid interface //
+		
 		throw (new Exception("Can't connect to infoservice. Connections to all ListenerInterfaces failed."));
 	}
 
