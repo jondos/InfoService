@@ -162,7 +162,8 @@ public class BISelectionDialog extends JAPDialog implements ActionListener, List
 					Enumeration en = paymentInstances.elements();
 					while (en.hasMoreElements())
 					{
-						listModel.addElement( ((PaymentInstanceDBEntry) en.nextElement()).toBI());
+						PaymentInstanceDBEntry entry=((PaymentInstanceDBEntry) en.nextElement());
+						listModel.addElement( new BI(entry));
 					}
 				}
 				catch (Exception e)

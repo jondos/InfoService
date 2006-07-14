@@ -29,7 +29,7 @@ public class KeyGenTest
 		DSAKeyPair keyPair = DSAKeyPair.getInstance(new SecureRandom(), 1024, 80);
 		FileOutputStream out1 = new FileOutputStream("private.pfx");
 		FileOutputStream out2 = new FileOutputStream("public.cer");
-		ownCertificate = new PKCS12(new X509DistinguishedName(ms_strInfoServiceName), keyPair, new Validity(new GregorianCalendar(),5));
+		ownCertificate = new PKCS12(new X509DistinguishedName("cn="+ms_strInfoServiceName), keyPair, new Validity(new GregorianCalendar(),5));
 		ownCertificate.store(out1, strPasswd.toCharArray());
 		ownCertificate.getX509Certificate().store(out2);
 		out1.close();
