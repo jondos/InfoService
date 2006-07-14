@@ -500,6 +500,7 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	/**
 	 * Sets the host name.
 	 * @param a_strHostname a host name
+	 * @todo This method seems to be bugy!
 	 */
 	public void setHostname(String a_strHostname)
 	{
