@@ -10,6 +10,10 @@ import anon.crypto.JAPCertificate;
 import anon.infoservice.ListenerInterface;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
+import anon.infoservice.PaymentInstanceDBEntry;
+import logging.LogHolder;
+import logging.LogType;
+import logging.LogLevel;
 
 /**
  * This class represents a known BI with its unique name and x509 public
@@ -72,6 +76,13 @@ public class BI implements IXMLEncodable
 		  {
 		   m_veryfire = null;
 		  }*/
+	}
+
+	public BI(PaymentInstanceDBEntry entry) throws Exception
+	{
+		this(entry.getId(), entry.getName(),
+			 entry.getListenerInterfaces(), entry.getCertificate());
+
 	}
 
 	private void setValues(Element elemRoot) throws Exception

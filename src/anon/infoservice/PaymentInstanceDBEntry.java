@@ -178,6 +178,21 @@ public class PaymentInstanceDBEntry extends AbstractDatabaseEntry implements IDi
 		return m_strPaymentInstanceId;
 	}
 
+	public String getName()
+	{
+		return m_name;
+	}
+
+	public Vector getListenerInterfaces()
+	{
+		return m_listenerInterfaces;
+	}
+
+	public JAPCertificate getCertificate()
+	{
+		return m_cert;
+	}
+
 	/**
 	 * Returns the time when this payment instance entry was created by the origin payment instance.
 	 *
@@ -240,22 +255,4 @@ public class PaymentInstanceDBEntry extends AbstractDatabaseEntry implements IDi
 		return returnXmlStructure;
 	}
 
-	public BI toBI()
-	{
-		BI bi;
-
-		try
-		{
-
-			bi = new BI(m_strPaymentInstanceId, m_name, m_listenerInterfaces, m_cert);
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
-						  "Cannot create payment instance from PaymentInstanceDBEntry: " + e.getMessage());
-			return null;
-		}
-
-		return bi;
-	}
 }
