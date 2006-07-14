@@ -50,6 +50,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.infoservice.IMutableProxyInterface;
+import anon.infoservice.PaymentInstanceDBEntry;
 
 /**
  * This class encapsulates a collection of accounts. One of the accounts in the collection
@@ -762,7 +763,8 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 
 		try
 		{
-			theBI = InfoServiceHolder.getInstance().getPaymentInstance(a_piID).toBI();
+			PaymentInstanceDBEntry entry=InfoServiceHolder.getInstance().getPaymentInstance(a_piID);
+			theBI = new BI(entry);
 		}
 		catch (Exception e)
 		{
