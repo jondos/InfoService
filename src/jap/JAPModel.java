@@ -45,6 +45,7 @@ public final class JAPModel extends Observable
 	public static final String DLL_VERSION_UPDATE = "dllVersionUpdate";
 	public static final String XML_REMIND_OPTIONAL_UPDATE = "remindOptionalUpdate";
 	public static final String XML_RESTRICT_CASCADE_AUTO_CHANGE = "restrictCascadeAutoChange";
+	public static final String XML_DENY_NON_ANONYMOUS_SURFING = "denyNonAnonymousSurfing";
 
 	public static final String AUTO_CHANGE_NO_RESTRICTION = "none";
 	public static final String AUTO_CHANGE_RESTRICT_TO_PAY = "pay";
@@ -81,6 +82,8 @@ public final class JAPModel extends Observable
 	private boolean m_bAllowPaymentViaDirectConnection;
 	private boolean m_bAllowInfoServiceViaDirectConnection;
 	private boolean m_bAllowUpdateViaDirectConnection;
+
+	private boolean m_bDenyNonAnonymousSurfing;
 
 	private boolean m_bRemindOptionalUpdate;
 
@@ -317,6 +320,16 @@ public final class JAPModel extends Observable
 	public boolean isAnonConnected()
 	{
 		return m_connectionChecker.checkAnonConnected();
+	}
+
+	public boolean isNonAnonymousSurfingDenied()
+	{
+		return m_bDenyNonAnonymousSurfing;
+	}
+
+	public void denyNonAnonymousSurfing(boolean a_bDenyNonAnonymousSurfing)
+	{
+		m_bDenyNonAnonymousSurfing = a_bDenyNonAnonymousSurfing;
 	}
 
 	public boolean isPaymentViaDirectConnectionAllowed()

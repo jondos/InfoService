@@ -57,6 +57,8 @@ import javax.swing.JScrollPane;
 
 final class JAPConfAnonGeneral extends AbstractJAPConfModule
 {
+	private static final String MSG_DENY_NON_ANONYMOUS_SURFING = JAPConfAnonGeneral.class.getName() +
+		"_denyNonAnonymousSurfing";
 	private static final String MSG_AUTO_CHOOSE_CASCADES = JAPConfAnonGeneral.class.getName() +
 		"_autoChooseCascades";
 	private static final String MSG_RESTRICT_AUTO_CHOOSE = JAPConfAnonGeneral.class.getName() +
@@ -75,6 +77,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	private static final String IMG_ARROW_RIGHT = JAPConfAnonGeneral.class.getName() + "_arrowRight.gif";
 	private static final String IMG_ARROW_LEFT = JAPConfAnonGeneral.class.getName() + "_arrowLeft.gif";
 
+	private JCheckBox m_cbDenyNonAnonymousSurfing;
 	private JCheckBox m_cbDummyTraffic;
 	private JCheckBox m_cbAutoConnect;
 	private JCheckBox m_cbAutoReConnect;
@@ -110,6 +113,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 			m_sliderDummyTrafficIntervall.setValue(iTmp / 1000);
 		}
 		m_sliderDummyTrafficIntervall.setEnabled(iTmp > -1);
+		m_cbDenyNonAnonymousSurfing.setSelected(JAPModel.getInstance().isNonAnonymousSurfingDenied());
 		m_cbAutoConnect.setSelected(JAPModel.getAutoConnect());
 		m_cbAutoReConnect.setSelected(JAPModel.isAutomaticallyReconnected());
 		m_cbAutoChooseCascades.setSelected(JAPModel.getInstance().isCascadeConnectionChosenAutomatically());
@@ -165,6 +169,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		}.start();
 
 		// Anonservice settings
+		JAPModel.getInstance().denyNonAnonymousSurfing(m_cbDenyNonAnonymousSurfing.isSelected());
 		JAPModel.getInstance().setAutoConnect(m_cbAutoConnect.isSelected());
 		JAPModel.getInstance().setAutoReConnect(m_cbAutoReConnect.isSelected());
 		JAPModel.getInstance().setChooseCascadeConnectionAutomatically(m_cbAutoChooseCascades.isSelected());
@@ -188,6 +193,8 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		JPanel panelRoot = getRootPanel();
 		panelRoot.removeAll();
 		Font font = getFontSetting();
+		m_cbDenyNonAnonymousSurfing = new JCheckBox(JAPMessages.getString(MSG_DENY_NON_ANONYMOUS_SURFING));
+		m_cbDenyNonAnonymousSurfing.setFont(font);
 		m_cbAutoConnect = new JCheckBox(JAPMessages.getString("settingsautoConnectCheckBox"));
 		m_cbAutoConnect.setFont(font);
 		m_cbAutoReConnect = new JCheckBox(JAPMessages.getString("settingsautoReConnectCheckBox"));
@@ -263,6 +270,8 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
 		c.weighty = 0;
+		panelRoot.add(m_cbDenyNonAnonymousSurfing, c);
+		c.gridy++;
 		panelRoot.add(m_cbAutoConnect, c);
 		c.gridy++;
 		panelRoot.add(m_cbAutoReConnect, c);
@@ -304,6 +313,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	//defaults
 	public void onResetToDefaultsPressed()
 	{
+		m_cbDenyNonAnonymousSurfing.setSelected(false);
 		m_cbDummyTraffic.setSelected(false);
 		m_sliderDummyTrafficIntervall.setEnabled(false);
 		m_cbAutoConnect.setSelected(true);
