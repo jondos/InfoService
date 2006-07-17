@@ -242,7 +242,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 			{
 				public DirectProxy.AllowUnprotectedConnectionCallback.Answer callback()
 				{
-					if (JAPController.getView() == null)
+					if (JAPModel.getInstance().isNonAnonymousSurfingDenied() ||
+						JAPController.getView() == null)
 					{
 						return new Answer(false, false);
 					}
@@ -250,10 +251,18 @@ public final class JAPController extends Observable implements IProxyListener, O
 					boolean bShowHtmlWarning;
 					JAPDll.setWindowOnTop(JAPController.getView(), true);
 					JAPDialog.LinkedCheckBox cb = new JAPDialog.LinkedCheckBox(
-						JAPMessages.getString(JAPDialog.LinkedCheckBox.MSG_REMEMBER_ANSWER), false);
+						JAPMessages.getString(JAPDialog.LinkedCheckBox.MSG_REMEMBER_ANSWER), false,
+						MSG_ALLOWUNPROTECTED);
 					bShowHtmlWarning = ! (JAPDialog.showYesNoDialog(JAPController.getView(),
 						JAPMessages.getString(MSG_ALLOWUNPROTECTED), cb));
 					JAPDll.setWindowOnTop(JAPController.getView(), false);
+					if (bShowHtmlWarning && cb.getState())
+					{
+						// user has chosen to never allow non anonymous websurfing
+						JAPModel.getInstance().denyNonAnonymousSurfing(true);
+						// do not remember as this may be switched in the control panel
+						return new Answer(!bShowHtmlWarning, false);
+					}
 					return new Answer(!bShowHtmlWarning, cb.getState());
 				}
 			});
@@ -642,6 +651,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 								JAPConstants.REMIND_OPTIONAL_UPDATE));
 				JAPModel.getInstance().setChooseCascadeConnectionAutomatically(
 								XMLUtil.parseAttribute(root, XML_ATTR_AUTO_CHOOSE_CASCADES, true));
+				JAPModel.getInstance().denyNonAnonymousSurfing(
+								XMLUtil.parseAttribute(root, JAPModel.XML_DENY_NON_ANONYMOUS_SURFING, false));
 
 				Element autoChange =
 					(Element)XMLUtil.getFirstChildByName(
@@ -1507,10 +1518,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 								 JAPModel.getInstance().isReminderForOptionalUpdateActivated());
 			XMLUtil.setAttribute(e, XML_ATTR_AUTO_CHOOSE_CASCADES,
 								 JAPModel.getInstance().isCascadeConnectionChosenAutomatically());
+			XMLUtil.setAttribute(e, JAPModel.XML_DENY_NON_ANONYMOUS_SURFING,
+								 JAPModel.getInstance().isNonAnonymousSurfingDenied());
 
 			Element autoSwitch = doc.createElement(AutoSwitchedMixCascade.XML_ELEMENT_CONTAINER_NAME);
 			XMLUtil.setAttribute(autoSwitch, JAPModel.XML_RESTRICT_CASCADE_AUTO_CHANGE,
 								 JAPModel.getInstance().getAutomaticCascadeChangeRestriction());
+
+
 			e.appendChild(autoSwitch);
 			Enumeration autoSwitchCascades =
 				Database.getInstance(AutoSwitchedMixCascade.class).getEntrySnapshotAsEnumeration();
