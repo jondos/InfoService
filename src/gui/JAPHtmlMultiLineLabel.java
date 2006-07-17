@@ -346,6 +346,10 @@ public class JAPHtmlMultiLineLabel extends JLabel
 		{
 			return a_HTMLtext;
 		}
+		if (a_HTMLtext.trim().length() == 0)
+		{
+			return "";
+		}
 		if (a_defaultFont == null)
 		{
 			a_defaultFont = new JLabel().getFont();
