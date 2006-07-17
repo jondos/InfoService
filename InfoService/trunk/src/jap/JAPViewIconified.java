@@ -241,7 +241,6 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 					StatusInfo currentStatus = currentMixCascade.getCurrentStatus();
 					if (currentStatus.getNrOfActiveUsers() != -1)
 					{
-						System.out.println(currentStatus.getNrOfActiveUsers());
 						m_labelUsers.setText(m_NumberFormat.format(currentStatus.getNrOfActiveUsers()));
 					}
 					else
