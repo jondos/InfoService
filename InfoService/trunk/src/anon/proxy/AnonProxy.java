@@ -715,6 +715,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	public void dataChainErrorSignaled()
 	{
 		LogHolder.log(LogLevel.ERR, LogType.NET, "Proxy has been nuked");
+		/** @todo temporary disabled until stable recognition algorithm is implemented in the last mix
 		m_currentMixCascade.keepCurrentCascade(false);
 		m_Anon.shutdown();
 		synchronized (m_anonServiceListener)
@@ -725,7 +726,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				( (AnonServiceEventListener) e.nextElement()).dataChainErrorSignaled();
 			}
 		}
-		reconnect();
+		reconnect(); */
 	}
 
 	private class DummyMixCascadeContainer extends AbstractMixCascadeContainer

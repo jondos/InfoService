@@ -61,11 +61,15 @@ import gui.GUIUtils;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.infoservice.Database;
+import anon.infoservice.DatabaseMessage;
+import java.util.Observable;
+import java.util.Observer;
 
 final public class JAPViewIconified extends JWindow implements ActionListener,
 	MouseMotionListener,
 	MouseListener,
-	JAPObserver
+	JAPObserver, Observer
 {
 	private static final Font m_fontDlg = new Font("Sans", Font.BOLD, 11);
 	private static final String STR_HIDDEN_WINDOW = Double.toString(Math.random());
@@ -106,6 +110,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		m_NumberFormat = NumberFormat.getInstance();
 		m_runnableValueUpdate = new MyViewIconifiedUpdate();
 		init();
+		Database.getInstance(StatusInfo.class).addObserver(this);
 	}
 
 	public void init()
@@ -236,6 +241,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 					StatusInfo currentStatus = currentMixCascade.getCurrentStatus();
 					if (currentStatus.getNrOfActiveUsers() != -1)
 					{
+						System.out.println(currentStatus.getNrOfActiveUsers());
 						m_labelUsers.setText(m_NumberFormat.format(currentStatus.getNrOfActiveUsers()));
 					}
 					else
@@ -287,6 +293,21 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 			}
 		}
 	}
+
+	public void update(Observable a_observable, Object a_message)
+	{
+		if (a_observable == Database.getInstance(StatusInfo.class))
+		{
+			Object data =  ((DatabaseMessage)a_message).getMessageData();
+			if (data instanceof StatusInfo && ((StatusInfo)data).getId().equals(
+								JAPController.getInstance().getCurrentMixCascade().getId()))
+			{
+
+				valuesChanged(false);
+			}
+		}
+	}
+
 
 	public void valuesChanged(boolean bSync)
 	{
