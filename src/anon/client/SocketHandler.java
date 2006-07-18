@@ -38,28 +38,28 @@ import java.net.Socket;
 import java.util.Observable;
 
 
-/** 
+/**
  * @author Stefan Lieske
  */
 public class SocketHandler extends Observable {
-  
+
   private Socket m_socket;
-  
+
   private SocketInputStreamImplementation m_socketInputStream;
-  
+
   private SocketOutputStreamImplementation m_socketOutputStream;
-  
+
   private Object m_internalSynchronization;
-  
-  
+
+
   private class SocketInputStreamImplementation extends InputStream {
-    
+
     private InputStream m_underlyingStream;
-    
+
     public SocketInputStreamImplementation(InputStream a_underlyingStream) {
       m_underlyingStream = a_underlyingStream;
     }
-      
+
     public int read() throws IOException {
       int byteRead = -1;
       try {
@@ -88,7 +88,7 @@ public class SocketHandler extends Observable {
         handleEndOfInputStream();
       }
       return bytesRead;
-    }    
+    }
 
     public int available() throws IOException {
       int bytesAvailable = 0;
@@ -100,21 +100,21 @@ public class SocketHandler extends Observable {
         throw e;
       }
       return bytesAvailable;
-    }    
+    }
 
     public void close() {
       handleInputStreamClose();
-    }    
+    }
   }
-  
+
   private class SocketOutputStreamImplementation extends OutputStream {
-    
+
     private OutputStream m_underlyingStream;
-    
+
     public SocketOutputStreamImplementation(OutputStream a_underlyingStream) {
       m_underlyingStream = a_underlyingStream;
     }
-      
+
     public void write(int a_dataByte) throws IOException {
       try {
         m_underlyingStream.write(a_dataByte);
@@ -133,7 +133,7 @@ public class SocketHandler extends Observable {
         handleIOException(e);
         throw e;
       }
-    }    
+    }
 
     public void flush() throws IOException {
       try {
@@ -143,28 +143,28 @@ public class SocketHandler extends Observable {
         handleIOException(e);
         throw e;
       }
-    }    
+    }
 
     public void close() {
       handleOutputStreamClose();
-    }    
+    }
   }
-  
-  
+
+
   public SocketHandler(Socket a_connectedSocket) throws IOException {
     m_socket = a_connectedSocket;
     m_internalSynchronization = new Object();
     try {
       m_socketInputStream = new SocketInputStreamImplementation(m_socket.getInputStream());
-      m_socketOutputStream = new SocketOutputStreamImplementation(m_socket.getOutputStream());    
+      m_socketOutputStream = new SocketOutputStreamImplementation(m_socket.getOutputStream());
     }
     catch (IOException e) {
       closeSocket();
       throw e;
     }
   }
-  
-  
+
+
   public void closeSocket() {
     try {
       m_socket.close();
@@ -173,35 +173,38 @@ public class SocketHandler extends Observable {
       /* no handling necessary */
     }
   }
-  
+
   public InputStream getInputStream() {
     return m_socketInputStream;
   }
-  
+
   public OutputStream getOutputStream() {
     return m_socketOutputStream;
   }
-  
-  
+
+
   private void handleIOException(IOException a_exception) {
-    /* notify the observers */
-    synchronized (m_internalSynchronization) {
+    /* notify the observers
+	 * No sync needed!! Otherwise there are serious race condition problems when
+	 * waiting for user to accept pay cascade.
+	 */
+    //synchronized (m_internalSynchronization) {
       setChanged();
       notifyObservers(a_exception);
-    }    
+    //}
   }
-  
+
   private void handleEndOfInputStream() {
     /* unexpected end of input-stream */
     handleIOException(new IOException("SocketHandler: handleEndOfInputStream(): Unexpected end of input stream."));
   }
-  
+
   private void handleInputStreamClose() {
     /* ignore it */
   }
-  
+
   private void handleOutputStreamClose() {
     /* ignore it */
   }
-  
+
 }

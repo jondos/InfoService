@@ -113,6 +113,7 @@ public class AIControlChannel extends XmlControlChannel {
    *          Document
    */
   public void processXmlMessage(Document docMsg) {
+
     Element elemRoot = docMsg.getDocumentElement();
     String tagName = elemRoot.getTagName();
     try {
@@ -133,7 +134,6 @@ public class AIControlChannel extends XmlControlChannel {
       }
     }
     catch (Exception ex) {
-      ex.printStackTrace();
       LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
       PayAccountsFile.getInstance().signalAccountError(new XMLErrorMessage(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR, ex.getClass().getName() + ": " + ex.getMessage()));
     }
