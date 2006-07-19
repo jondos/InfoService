@@ -188,10 +188,10 @@ public class SocketHandler extends Observable {
 	 * No sync needed!! Otherwise there are serious race condition problems when
 	 * waiting for user to accept pay cascade.
 	 */
-    //synchronized (m_internalSynchronization) {
+    synchronized (m_internalSynchronization) {
       setChanged();
       notifyObservers(a_exception);
-    //}
+    }
   }
 
   private void handleEndOfInputStream() {
