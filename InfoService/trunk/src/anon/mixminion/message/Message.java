@@ -474,7 +474,7 @@ public class Message
 	}
 
 	/**
-	 * Diese Methode ist aus den PhytonCode übernommen und anschliessend
+	 * Diese Methode ist aus den PhytonCode uebernommen und anschliessend
 	 * in Java umgeschrieben worden
 	 */
 	byte[][] _divide_NACH_PYTHON_CODE(byte[] M)
@@ -551,7 +551,7 @@ public class Message
 	}
 
 	/**
-	 * rechte die Ganzzahl aus, welche grösser als a/b ist
+	 * rechte die Ganzzahl aus, welche groesser als a/b ist
 	 * @param a
 	 * @param b
 	 * @return
