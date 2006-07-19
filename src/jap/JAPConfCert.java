@@ -98,7 +98,7 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 	private void updateInfoPanel(JAPCertificate a_cert)
 	{
 		X509DistinguishedName name;
-		String strCSTL = "";
+		String strCSTL = null;
 		String country;
 
 		m_labelCNData.setText("");
@@ -163,6 +163,10 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 				if (strCSTL != null)
 				{
 					strCSTL += ", ";
+				}
+				else
+				{
+					strCSTL = "";
 				}
 				strCSTL += country.trim();
 			}
