@@ -168,7 +168,7 @@ public class Message
 		{
 			returnValue = false;
 		}
-		// Pfad für die Header erzeugen
+		// Pfad fuer die Header erzeugen
 		// hops gerade machen
 		m_hops = ( (m_hops + 1) / 2) * 2;
 		//Pfad anlegen
@@ -182,7 +182,7 @@ public class Message
 			Vector tv = mmrlist.getByRandomWithExit(m_hops);
 			path.addElement(tv);
 		}
-		// für jedes frag einen mit gleichem schluss-server
+		// fuer jedes frag einen mit gleichem schluss-server
 		else
 		{
 			path = mmrlist.getByRandomWithFrag(m_hops, frags.length);
