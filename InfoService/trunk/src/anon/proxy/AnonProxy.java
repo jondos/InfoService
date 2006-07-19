@@ -51,7 +51,6 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.AnonServerDescription;
-import proxy.DirectProxy;
 import anon.pay.IAIEventListener;
 import anon.infoservice.IMutableProxyInterface;
 
