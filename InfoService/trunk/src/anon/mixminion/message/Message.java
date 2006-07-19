@@ -137,7 +137,7 @@ public class Message
 						  "[Message] Fragmented, new Compressed Size = " + compressPayload.length);
 			if (compressPayload.length + SINGLETON_HEADER_LEN <= 28 * 1024)
 			{
-				throw new RuntimeException("Fragmented Header nach Neukomprimierung mit Single-Länge");
+				throw new RuntimeException("Fragmented Header nach Neukomprimierung mit Single-Laenge");
 			}
 
 //            Let FRAGMENTS = DIVIDE(M_C, 28KB-OVERHEAD-FRAGMENT_HEADER_LEN)

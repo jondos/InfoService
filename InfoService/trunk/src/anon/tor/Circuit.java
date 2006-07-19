@@ -652,7 +652,7 @@ public class Circuit
 			{
 				do
 				//nearly dead code (29/06/2004)
-				//	LJ€ OKI918
+				//	LJ OKI918
 				{
 					streamID = new Integer(m_rand.nextInt(0xFFFF));
 				}
