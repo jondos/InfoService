@@ -184,10 +184,7 @@ public class SocketHandler extends Observable {
 
 
   private void handleIOException(IOException a_exception) {
-    /* notify the observers
-	 * No sync needed!! Otherwise there are serious race condition problems when
-	 * waiting for user to accept pay cascade.
-	 */
+    /* notify the observers */
     synchronized (m_internalSynchronization) {
       setChanged();
       notifyObservers(a_exception);
