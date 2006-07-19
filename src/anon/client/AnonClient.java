@@ -279,8 +279,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 	public void update(Observable a_object, final Object a_argument)
 	{
 		if ( (a_object == m_socketHandler) && (a_argument instanceof IOException))
-		{((Exception)a_argument).printStackTrace();
-	   new Exception().printStackTrace();
+		{
 			synchronized (m_eventListeners)
 			{
 				final Enumeration eventListenersList = m_eventListeners.elements();
@@ -526,7 +525,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		}
 		/* maybe we have to start some more services */
 		int errorCode = finishInitialization(m_multiplexer, m_keyExchangeManager, m_paymentProxyInterface,
-											 m_packetCounter);
+											 m_packetCounter, a_connectedSocket);
 		if (errorCode != ErrorCodes.E_SUCCESS)
 		{
 			shutdown();
@@ -566,7 +565,8 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 	}
 
 	private int finishInitialization(Multiplexer a_multiplexer, KeyExchangeManager a_keyExchangeManager,
-									 IMutableProxyInterface a_proxyInterface, PacketCounter a_packetCounter)
+									 IMutableProxyInterface a_proxyInterface, PacketCounter a_packetCounter,
+									 Socket a_connectedSocket)
 	{
 		if (a_keyExchangeManager.isProtocolWithTimestamp())
 		{
@@ -602,6 +602,15 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		m_paymentInstance = new Pay(aiControlChannel);
 		if (a_keyExchangeManager.isPaymentRequired())
 		{
+			try
+			{
+				/* try to set infinite timeout as we might wait for user input */
+				a_connectedSocket.setSoTimeout(0);
+			}
+			catch (SocketException e)
+			{
+				/* ignore it */
+			}
 			aiControlChannel.sendAccountCert();
 		}
 		return ErrorCodes.E_SUCCESS;
