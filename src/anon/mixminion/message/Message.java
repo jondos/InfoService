@@ -176,7 +176,7 @@ public class Message
 		mmrlist.updateList();
 		Vector path = new Vector();
 		boolean isfragmented = false;
-		//für Singleton
+		//fuer Singleton
 		if (frags.length == 1)
 		{
 			Vector tv = mmrlist.getByRandomWithExit(m_hops);
