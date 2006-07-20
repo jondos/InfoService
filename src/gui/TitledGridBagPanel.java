@@ -145,9 +145,9 @@ public final class TitledGridBagPanel extends JPanel
 	 * Add a row with one component.
 	 * @param a_component a Component (may be null)
 	 */
-	public void addRow(Component a_component)
+	public int addRow(Component a_component)
 	{
-		addRow(a_component, null);
+		return addRow(a_component, null);
 	}
 
 	/**
@@ -155,14 +155,14 @@ public final class TitledGridBagPanel extends JPanel
 	 * @param a_component a Component (may be null)
 	 * @param a_otherComponent an other Component (may be null)
 	 */
-	public void addRow(Component a_component, Component a_otherComponent)
+	public int addRow(Component a_component, Component a_otherComponent)
 	{
-		addRow(a_component, a_otherComponent, GridBagConstraints.HORIZONTAL);
+		return addRow(a_component, a_otherComponent, GridBagConstraints.HORIZONTAL);
 	}
 
-	public void addRow(Component a_component, Component a_otherComponent, int a_fill)
+	public int addRow(Component a_component, Component a_otherComponent, int a_fill)
 	{
-		replaceRow(a_component, a_otherComponent, getNextRow(), a_fill);
+		return replaceRow(a_component, a_otherComponent, getNextRow(), a_fill);
 	}
 
 	/**
@@ -172,17 +172,17 @@ public final class TitledGridBagPanel extends JPanel
 	 * @param a_thirdComponent a third component (may be null)
 	 * @param a_fourthComponent a fourth component (may be null)
 	 */
-	public void addRow(Component a_component, Component a_otherComponent, Component a_thirdComponent,
+	public int addRow(Component a_component, Component a_otherComponent, Component a_thirdComponent,
 					   Component a_fourthComponent)
 	{
-		replaceRow(a_component, a_otherComponent, a_thirdComponent, a_fourthComponent, getNextRow());
+		return replaceRow(a_component, a_otherComponent, a_thirdComponent, a_fourthComponent, getNextRow());
 	}
 
 
-	public void addRow(Component a_component, Component a_otherComponent, Component a_thirdComponent,
+	public int addRow(Component a_component, Component a_otherComponent, Component a_thirdComponent,
 					   Component a_fourthComponent, int a_fill)
 	{
-		replaceRow(a_component, a_otherComponent, a_thirdComponent, a_fourthComponent, getNextRow(),
+		return replaceRow(a_component, a_otherComponent, a_thirdComponent, a_fourthComponent, getNextRow(),
 				   a_fill);
 	}
 
@@ -192,9 +192,9 @@ public final class TitledGridBagPanel extends JPanel
 	 * @param a_otherComponent an other Component (may be null)
 	 * @param a_thirdComponent a third component (may be null)
 	 */
-	public void addRow(Component a_component, Component a_otherComponent, Component a_thirdComponent)
+	public int addRow(Component a_component, Component a_otherComponent, Component a_thirdComponent)
 	{
-		replaceRow(a_component, a_otherComponent, a_thirdComponent, getNextRow());
+		return replaceRow(a_component, a_otherComponent, a_thirdComponent, getNextRow());
 	}
 
 	/**
@@ -202,9 +202,10 @@ public final class TitledGridBagPanel extends JPanel
 	 * It instructs this panel to count a new row but not to fill it. Please set the x and y
 	 * values correctly.
 	 */
-	public void addDummyRow()
+	public int addDummyRow()
 	{
 		m_rows.addElement(new JLabel());
+		return m_rows.size() - 1;
 	}
 
 	/**
@@ -229,9 +230,9 @@ public final class TitledGridBagPanel extends JPanel
 	 * @param a_components Component[]
 	 * @param a_gridwidths int[]
 	 */
-	public void addRow(Component[] a_components, int a_gridwidths[])
+	public int addRow(Component[] a_components, int a_gridwidths[])
 	{
-		replaceRow(a_components, a_gridwidths, getNextRow());
+		return replaceRow(a_components, a_gridwidths, getNextRow());
 	}
 
 	/**
@@ -240,19 +241,19 @@ public final class TitledGridBagPanel extends JPanel
 	 * @param a_otherComponent Component
 	 * @param a_rowNumber int
 	 */
-	public void replaceRow(Component a_component, Component a_otherComponent, int a_rowNumber)
+	public int replaceRow(Component a_component, Component a_otherComponent, int a_rowNumber)
 	{
-		replaceRow(a_component, a_otherComponent, a_rowNumber, GridBagConstraints.HORIZONTAL);
+		return replaceRow(a_component, a_otherComponent, a_rowNumber, GridBagConstraints.HORIZONTAL);
 	}
 
 
-	public void replaceRow(Component a_component, Component a_otherComponent, int a_rowNumber,
+	public int  replaceRow(Component a_component, Component a_otherComponent, int a_rowNumber,
 						   int a_fill)
 	{
 		Component[] comps = new Component[2];
 		comps[0] = a_component;
 		comps[1] = a_otherComponent;
-		replaceRow(comps, null, a_rowNumber, a_fill);
+		return replaceRow(comps, null, a_rowNumber, a_fill);
 	}
 
 	/**
@@ -262,14 +263,14 @@ public final class TitledGridBagPanel extends JPanel
 	 * @param a_thirdComponent Component
 	 * @param a_rowNumber int
 	 */
-	public void replaceRow(Component a_component, Component a_otherComponent,
+	public int replaceRow(Component a_component, Component a_otherComponent,
 						   Component a_thirdComponent, int a_rowNumber)
 	{
 		Component[] comps = new Component[3];
 		comps[0] = a_component;
 		comps[1] = a_otherComponent;
 		comps[2] = a_thirdComponent;
-		replaceRow(comps, null, a_rowNumber);
+		return replaceRow(comps, null, a_rowNumber);
 	}
 
 	/**
@@ -281,7 +282,7 @@ public final class TitledGridBagPanel extends JPanel
 	 * @param a_rowNumber int
 	 * @param a_fill int
 	 */
-	public void replaceRow(Component a_component, Component a_otherComponent,
+	public int replaceRow(Component a_component, Component a_otherComponent,
 						   Component a_thirdComponent, Component a_fourthComponent, int a_rowNumber,
 						   int a_fill)
 	{
@@ -290,7 +291,7 @@ public final class TitledGridBagPanel extends JPanel
 		comps[1] = a_otherComponent;
 		comps[2] = a_thirdComponent;
 		comps[3] = a_fourthComponent;
-		replaceRow(comps, null, a_rowNumber, a_fill);
+		return replaceRow(comps, null, a_rowNumber, a_fill);
 	}
 
 
@@ -302,11 +303,11 @@ public final class TitledGridBagPanel extends JPanel
 	 * @param a_fourthComponent Component
 	 * @param a_rowNumber int
 	 */
-	public void replaceRow(Component a_component, Component a_otherComponent,
+	public int replaceRow(Component a_component, Component a_otherComponent,
 						   Component a_thirdComponent, Component a_fourthComponent, int a_rowNumber)
 	{
-		replaceRow(a_component, a_otherComponent, a_thirdComponent, a_fourthComponent, a_rowNumber,
-				   GridBagConstraints.HORIZONTAL);
+		return replaceRow(a_component, a_otherComponent, a_thirdComponent, a_fourthComponent, a_rowNumber,
+						  GridBagConstraints.HORIZONTAL);
 	}
 
 
@@ -326,12 +327,12 @@ public final class TitledGridBagPanel extends JPanel
 	 * @param a_gridwidths int[]
 	 * @param a_rowNumber int
 	 */
-	public void replaceRow(Component[] a_components, int a_gridwidths[], int a_rowNumber)
+	public int replaceRow(Component[] a_components, int a_gridwidths[], int a_rowNumber)
 	{
-		replaceRow(a_components, a_gridwidths, a_rowNumber, GridBagConstraints.HORIZONTAL);
+		return replaceRow(a_components, a_gridwidths, a_rowNumber, GridBagConstraints.HORIZONTAL);
 	}
 
-	public void replaceRow(Component[] a_components, int a_gridwidths[], int a_rowNumber, int a_fill)
+	public int replaceRow(Component[] a_components, int a_gridwidths[], int a_rowNumber, int a_fill)
 	{
 		int[] gridwidths;
 		int currentComponent;
@@ -409,5 +410,6 @@ public final class TitledGridBagPanel extends JPanel
 				add(a_components[i], m_constraints);
 			}
 		}
+		return a_rowNumber;
 	}
 }

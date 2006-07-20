@@ -29,6 +29,7 @@ package anon.crypto;
 
 import java.util.Vector;
 import java.util.Enumeration;
+import java.util.StringTokenizer;
 import java.lang.Integer;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -68,7 +69,8 @@ public abstract class AbstractX509AlternativeName extends AbstractX509Extension
 	private Vector m_tags;
 
 	/**
-	 * Constructs a new X509AlternativeName from a value.
+	 * Constructs a new X509AlternativeName from a value. A value with commas (,) is interpreted
+	 * as multiple values.
 	 * @param a_identifier the identifier of this extension
 	 * @param a_value a value
 	 * @param a_tag the type tag for this value
@@ -79,7 +81,8 @@ public abstract class AbstractX509AlternativeName extends AbstractX509Extension
 	}
 
 	/**
-	 * Constructs a new X509AlternativeName from a value.
+	 * Constructs a new X509AlternativeName from a value. A value with commas (,) is interpreted
+	 * as multiple values.
 	 * @param a_identifier the identifier of this extension
 	 * @param a_critical true if the X509AlternativeName is critical; false otherwise
 	 * @param a_value a value
@@ -182,7 +185,8 @@ public abstract class AbstractX509AlternativeName extends AbstractX509Extension
 	}
 
 	/**
-	 * Verifies if a given String is a valid email address (IPv4 or IPv6)
+	 * Verifies if a given String is a valid email address (IPv4 or IPv6). There may be more than
+	 * one addresses in the string, separated by commas (,).
 	 * @param a_email an email address as String
 	 * @return if a given String is a valid email address; false otherwise
 	 */
@@ -193,18 +197,35 @@ public abstract class AbstractX509AlternativeName extends AbstractX509Extension
 			return false;
 		}
 
-		a_email = a_email.trim();
+		StringTokenizer tokenizer = new StringTokenizer(a_email, ",");
+		String email;
 
-		int dot = a_email.lastIndexOf('.');
-		int len = a_email.length();
-		int at = a_email.indexOf('@');
-
-		if (len == 0 || at == -1 || dot == -1 || at == 0 || dot < at)
+		if (!tokenizer.hasMoreElements())
 		{
 			return false;
 		}
+		while (tokenizer.hasMoreElements())
+		{
+			email = tokenizer.nextToken().trim();
+			if (email.length() == 0)
+			{
+				return false;
+			}
 
-		return (dot + 2) < len;
+			int dot = email.lastIndexOf('.');
+			int len = email.length();
+			int at = email.indexOf('@');
+
+			if (len == 0 || at == -1 || dot == -1 || at == 0 || dot < at)
+			{
+				return false;
+			}
+			if (!((dot + 2) < len))
+			{
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**
@@ -232,23 +253,38 @@ public abstract class AbstractX509AlternativeName extends AbstractX509Extension
 		Integer tag;
 		byte[] value = null;
 		String strValue;
+		Vector tempTags, tempValues;
+		StringTokenizer tokenizer;
 
 		values = new DEREncodableVector();
 
 		if (a_values != null || a_values.size() != 0)
 		{
-
 			if (a_tags == null || a_values.size() != a_tags.size())
 			{
 				throw new IllegalArgumentException("Tags have an invalid size!");
 			}
-
+			// interpret comma-separated values as multiple values
+			tempTags = new Vector();
+			tempValues = new Vector();
 			for (int i = 0; i < a_values.size(); i++)
 			{
 				if (! (a_values.elementAt(i) instanceof String))
 				{
 					throw new IllegalArgumentException("Values must be Strings!");
 				}
+				tokenizer = new StringTokenizer((String)a_values.elementAt(i), ",");
+				while (tokenizer.hasMoreTokens())
+				{
+					tempTags.addElement(a_tags.elementAt(i));
+					tempValues.addElement(tokenizer.nextToken().trim());
+				}
+			}
+			a_tags = tempTags;
+			a_values = tempValues;
+
+			for (int i = 0; i < a_values.size(); i++)
+			{
 				strValue = (String) a_values.elementAt(i);
 				if (strValue == null || strValue.length() == 0)
 				{

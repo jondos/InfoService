@@ -30,6 +30,7 @@ package anon.crypto;
 import java.util.Vector;
 import java.util.Hashtable;
 import java.util.Enumeration;
+import java.util.StringTokenizer;
 
 import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.asn1.DERObjectIdentifier;
@@ -90,7 +91,8 @@ public final class X509DistinguishedName
 	/**
 	 * Constructs a distinguished name from a Hashtable of attributes. The Hashtable contains
 	 * the attribute identifiers as keys and the attributes as values. Do not use the
-	 * string representation of the identifiers!
+	 * string representation of the identifiers! Commas (,) are interpreted as multiple
+	 * attributes for the same identifier.
 	 * @param a_attributes a Hashtable of attributes
 	 * @throws IllegalCharacterException if an illegal character is contained in the DN
 	 */
@@ -103,7 +105,8 @@ public final class X509DistinguishedName
 		}
 
 		Enumeration oids = a_attributes.keys();
-		Hashtable attributes = new Hashtable();
+		Vector vecOIDs  = new Vector();
+		Vector attributes = new Vector();
 		String currentAttribute;
 		Object oid;
 
@@ -135,20 +138,36 @@ public final class X509DistinguishedName
 				throw new IllegalCharacterException((DERObjectIdentifier)oid, '=');
 			}
 			else */
+		    /*
 			if (currentAttribute.indexOf(",") >= 0)
 			{
 				throw new IllegalCharacterException((DERObjectIdentifier)oid, ',');
+			}*/
+
+
+		    // interpret comma as separator
+
+			if (oid.equals(X509Name.E) || oid.equals(X509Name.EmailAddress) || oid.equals(X509Name.OU))
+			{
+				StringTokenizer tokenizer = new StringTokenizer(currentAttribute, ",");
+				while (tokenizer.hasMoreTokens())
+				{
+					vecOIDs.addElement(oid);
+					attributes.addElement(tokenizer.nextToken().trim());
+				}
 			}
-
-			attributes.put(oid, currentAttribute);
-
+			else
+			{
+				vecOIDs.addElement(oid);
+				attributes.addElement(currentAttribute.trim());
+			}
 		}
 
 		if (attributes.size() == 0)
 		{
 			throw new IllegalArgumentException("Attributes are empty!");
 		}
-		m_bcX509Name = new X509Name(attributes);
+		m_bcX509Name = new X509Name(vecOIDs, attributes);
 	}
 
 	/**
@@ -307,7 +326,8 @@ public final class X509DistinguishedName
 	}
 
 	/**
-	 * Returns the attribute value corresponding to a given identifier.
+	 * Returns the attribute value corresponding to a given identifier. If there is more than one
+	 * attribute for this identifier, the attributes are comma-separated.
 	 * @param a_identifier an attribute identifier
 	 * @return String the attribute value corresponding to a given identifier or null if the
 	 *                attribute is not set in this X509 name
@@ -318,15 +338,38 @@ public final class X509DistinguishedName
 		{
 			return null;
 		}
+		String attribute = null;
+		DERObjectIdentifier identifier = new DERObjectIdentifier(a_identifier);
+		Vector values = m_bcX509Name.getValues();
+		Vector OIDs = m_bcX509Name.getOIDs();
 
-		int index = m_bcX509Name.getOIDs().indexOf(new DERObjectIdentifier(a_identifier));
+		int index = OIDs.indexOf(identifier);
 
 		if (index < 0)
 		{
 			return null;
 		}
+		else
+		{
+			attribute = (String)values.elementAt(index);
+			if (attribute != null)
+			{
+				for (int i = index + 1; i < OIDs.size(); i++)
+				{
+					if (OIDs.elementAt(i).equals(identifier))
+					{
+						attribute = attribute.trim();
+						if (attribute.length() > 0)
+						{
+							attribute += ", ";
+						}
+						attribute +=  (String)values.elementAt(i);
+					}
+				}
+			}
+		}
 
-		return (String)m_bcX509Name.getValues().elementAt(index);
+		return attribute;
 	}
 
 
