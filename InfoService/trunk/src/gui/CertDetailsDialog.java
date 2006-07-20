@@ -48,6 +48,7 @@ import anon.crypto.Validity;
 import anon.crypto.X509DistinguishedName;
 import anon.crypto.X509Extensions;
 import anon.crypto.X509UnknownExtension;
+import anon.crypto.MyRSAPublicKey;
 import gui.dialog.JAPDialog;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -394,8 +395,12 @@ public class CertDetailsDialog extends JAPDialog
 		keyKeys.addElement(JAPMessages.getString(TITLE_KEYS_SIGNALGORITHM));
 		Vector keyValues = new Vector();
 		keyValues.addElement(new String(a_cert.getPublicKey().getAlgorithm()));
-		//int kLength = ( (IMyPublicKey) a_cert.getPublicKey()).getKeyLength();
-		//keyValues.addElement(new Integer(kLength).toString());
+		if (a_cert.getPublicKey() instanceof MyRSAPublicKey)
+		{
+			/** @todo Calculate correct keysize for DSA keys */
+			int kLength = ( (IMyPublicKey) a_cert.getPublicKey()).getKeyLength();
+			keyValues.addElement(new Integer(kLength).toString());
+		}
 		keyValues.addElement(a_cert.getPublicKey().getSignatureAlgorithm().getXMLSignatureAlgorithmReference());
 		JLabel title_keys = new JLabel(JAPMessages.getString(TITLE_KEYS), JLabel.RIGHT);
 		title_keys.setFont(TITLE_FONT);
