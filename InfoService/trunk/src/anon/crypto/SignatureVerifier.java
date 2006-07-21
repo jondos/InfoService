@@ -173,85 +173,118 @@ public class SignatureVerifier implements IXMLEncodable
          */
         public boolean verifyXml(Element a_rootNode, int a_documentClass)
         {
-                boolean verificationSuccessful = false;
-                synchronized (m_trustedCertificates)
-                {
-                        if (!m_checkSignatures )
-                        {
-                                /* accept every document without testing the signature */
-                                verificationSuccessful = true;
-                        }
-                        else
-                        {
-                                /* get the direct useable certificates depending on the document type */
-                                Vector additionalCertificateInfoStructures = new Vector();
-                                switch (a_documentClass)
-                                {
-                                        case DOCUMENT_CLASS_MIX:
-                                        {
-                                                additionalCertificateInfoStructures = m_trustedCertificates.
-                                                        getAvailableCertificatesByType(JAPCertificate.CERTIFICATE_TYPE_MIX);
-                                                break;
-                                        }
-                                        case DOCUMENT_CLASS_INFOSERVICE:
-                                        {
-                                                additionalCertificateInfoStructures = m_trustedCertificates.
-                                                        getAvailableCertificatesByType(JAPCertificate.CERTIFICATE_TYPE_INFOSERVICE);
-                                                break;
-                                        }
-                                        case DOCUMENT_CLASS_UPDATE:
-                                        {
-                                                additionalCertificateInfoStructures = m_trustedCertificates.
-                                                        getAvailableCertificatesByType(JAPCertificate.CERTIFICATE_TYPE_UPDATE);
-                                                break;
-                                        }
-                                }
-                                Vector additionalCertificates = new Vector();
-                                Enumeration additionalCertificatesEnumerator = additionalCertificateInfoStructures.elements();
-                                while (additionalCertificatesEnumerator.hasMoreElements())
-                                {
-                                        additionalCertificates.addElement( ( (CertificateInfoStructure) (
-                                                additionalCertificatesEnumerator.nextElement())).getCertificate());
-                                }
-                                /* get the root certificates for verifying appended certificates */
-                                Vector rootCertificates = new Vector();
-                                if ( (a_documentClass == DOCUMENT_CLASS_MIX) ||
-                                        (a_documentClass == DOCUMENT_CLASS_INFOSERVICE))
-                                {
-                                        /* if it is not an update message, we accept also all signatures which can be verified
-                                         * against the root certificates
-                                         */
-                                        int rootType=JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX;
-                                        if(a_documentClass == DOCUMENT_CLASS_INFOSERVICE)
-										{
-											rootType = JAPCertificate.CERTIFICATE_TYPE_ROOT_INFOSERVICE;
-										}
-                                        Vector rootCertificateInfoStructures = m_trustedCertificates.
-                                                getAvailableCertificatesByType(rootType);
-                                        Enumeration rootCertificatesEnumerator = rootCertificateInfoStructures.elements();
-                                        while (rootCertificatesEnumerator.hasMoreElements())
-                                        {
-                                                rootCertificates.addElement( ( (CertificateInfoStructure) (rootCertificatesEnumerator.
-                                                        nextElement())).getCertificate());
-                                        }
-                                }
-                                /* now we have everything -> verify the signature */
-                                try
-                                {
-                                        if (XMLSignature.verify(a_rootNode, rootCertificates, additionalCertificates) != null)
-                                        {
-                                                /* verification of the signature was successful */
-                                                verificationSuccessful = true;
-                                        }
-                                }
-                                catch (Exception e)
-                                {
-                                        /* this should only happen, if there is no signature child node */
-                                }
-                        }
-                }
-                return verificationSuccessful;
+			if (!m_checkSignatures )
+			{
+			/* accept every document without testing the signature */
+				return true;
+			}
+			else
+			{
+				XMLSignature signature = this.getVerifiedXml(a_rootNode, a_documentClass);
+				if(signature != null)
+				{
+					return signature.isVerified();
+				}
+				return false;
+			}
         }
+
+		/**
+		* Verifies the signature of an XML document against the store of trusted certificates.
+		*
+		* @param a_rootNode The root node of the document. The Signature node must be one of the
+		*                   children of the root node.
+		* @param a_documentClass The class of the document. See the constants in this class.
+		*
+		* @return the XMLSignature that should be verified. It is also returned if the verification
+		*         was NOT successfull. Call isVerified() on the returned XMLSignature Object to get
+		*         the result of the verification.
+		*
+		* @todo The ID within the document should be compared to the ID stored in the certificate.
+		* @todo the return value should be the certificate that successfully verified the signature
+		*/
+	    public XMLSignature getVerifiedXml(Element a_rootNode, int a_documentClass)
+		{
+			XMLSignature signature = null;
+			synchronized (m_trustedCertificates)
+			{
+				/* get the direct useable certificates depending on the document type */
+				Vector additionalCertificateInfoStructures = new Vector();
+				switch (a_documentClass)
+				{
+					case DOCUMENT_CLASS_MIX:
+					{
+						additionalCertificateInfoStructures = m_trustedCertificates.
+							getAvailableCertificatesByType(JAPCertificate.CERTIFICATE_TYPE_MIX);
+						break;
+					}
+					case DOCUMENT_CLASS_INFOSERVICE:
+					{
+						additionalCertificateInfoStructures = m_trustedCertificates.
+							getAvailableCertificatesByType(JAPCertificate.CERTIFICATE_TYPE_INFOSERVICE);
+						break;
+					}
+					case DOCUMENT_CLASS_UPDATE:
+					{
+						additionalCertificateInfoStructures = m_trustedCertificates.
+							getAvailableCertificatesByType(JAPCertificate.CERTIFICATE_TYPE_UPDATE);
+						break;
+					}
+				}
+				Vector additionalCertificates = new Vector();
+				Enumeration additionalCertificatesEnumerator = additionalCertificateInfoStructures.elements();
+				while (additionalCertificatesEnumerator.hasMoreElements())
+				{
+					additionalCertificates.addElement( ( (CertificateInfoStructure) (
+						additionalCertificatesEnumerator.nextElement())).getCertificate());
+				}
+				/* get the root certificates for verifying appended certificates */
+				Vector rootCertificates = new Vector();
+				if ( (a_documentClass == DOCUMENT_CLASS_MIX) ||
+					(a_documentClass == DOCUMENT_CLASS_INFOSERVICE))
+				{
+					/* if it is not an update message, we accept also all signatures which can be verified
+					 * against the root certificates
+					 */
+					int rootType = JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX;
+					if (a_documentClass == DOCUMENT_CLASS_INFOSERVICE)
+					{
+						rootType = JAPCertificate.CERTIFICATE_TYPE_ROOT_INFOSERVICE;
+					}
+					Vector rootCertificateInfoStructures = m_trustedCertificates.
+						getAvailableCertificatesByType(rootType);
+					Enumeration rootCertificatesEnumerator = rootCertificateInfoStructures.elements();
+					while (rootCertificatesEnumerator.hasMoreElements())
+					{
+						rootCertificates.addElement( ( (CertificateInfoStructure) (rootCertificatesEnumerator.
+							nextElement())).getCertificate());
+					}
+				}
+				/*try{
+					System.out.println("Root:"+((JAPCertificate)rootCertificates.firstElement()).getSubject().getCommonName());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				try{
+					System.out.println("Direct:"+((JAPCertificate)additionalCertificates.firstElement()).getSubject().getCommonName());
+				} catch (Exception e) {
+				    e.printStackTrace();
+				}*/
+
+				/* now we have everything -> verify the signature */
+				try
+				{
+					signature = XMLSignature.getVerified(a_rootNode, rootCertificates, additionalCertificates, false);
+					signature.getCertPath().setDocType(a_documentClass);
+				}
+				catch (Exception e)
+				{
+					/* this should only happen, if there is no signature child node */
+				}
+			}
+		return signature;
+		}
+
 
         /**
          * Returns all settings (including the verification certificate store) as an XML node.

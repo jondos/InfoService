@@ -380,7 +380,8 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	public void stop()
 	{
-		synchronized (SHUTDOWN_SYNC)
+		//synchronized (SHUTDOWN_SYNC)
+		synchronized (THREAD_SYNC)
 		{
 			if (threadRun == null)
 			{
@@ -409,7 +410,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				{
 				}
 			}
-			synchronized (THREAD_SYNC)
+			//synchronized (THREAD_SYNC)
 			{
 				THREAD_SYNC.notify();
 			}
@@ -539,7 +540,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 					THREAD_SYNC.wait(RECONNECT_INTERVAL);
 				}
 				catch (InterruptedException ex)
-				{ex.printStackTrace();
+				{
 					break;
 				}
 			}

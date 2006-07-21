@@ -28,6 +28,7 @@
 package gui;
 
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.Vector;
 import java.util.Locale;
 
@@ -37,11 +38,20 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
+import javax.swing.JTabbedPane;
+import javax.swing.ListSelectionModel;
 
+import anon.crypto.CertPath;
+import anon.crypto.CertificateInfoStructure;
 import anon.crypto.IMyPublicKey;
 import anon.crypto.JAPCertificate;
 import anon.crypto.Validity;
@@ -53,6 +63,11 @@ import gui.dialog.JAPDialog;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.ImageIcon;
 
 /**
  * <p>CertDetails Dialog </p>
@@ -74,6 +89,11 @@ public class CertDetailsDialog extends JAPDialog
 	private static final String MSG_X509Attribute_OU = CertDetailsDialog.class.getName() + "_attributeOU";
 	private static final String MSG_X509Attribute_EMAIL = CertDetailsDialog.class.getName() +
 		"_attributeEMAIL";
+	private static final String MSG_SHOW_CERT = CertDetailsDialog.class.getName() + "_showCert";
+	private static final String MSG_CERT_HIERARCHY = CertDetailsDialog.class.getName() + "_certHierarchy";
+	private static final String MSG_SYMBOLS = CertDetailsDialog.class.getName() + "_symbols";
+	private static final String MSG_DETAILS = CertDetailsDialog.class.getName() + "_detailsTab";
+
 	private static final String MSG_X509Attribute_EMAILADDRESS = CertDetailsDialog.class.getName() +
 		"_attributeEMAIL";
 	private static final String MSG_X509Attribute_SURNAME = CertDetailsDialog.class.getName() +
@@ -135,9 +155,57 @@ public class CertDetailsDialog extends JAPDialog
 	private static final Font ALERT_FONT = new Font(LABEL.getFont().getName(), Font.BOLD,
 		(LABEL.getFont().getSize()));
 
+	public final static ImageIcon CERTENABLEDICON = GUIUtils.loadImageIcon("cenabled.gif", false);
+	public final static ImageIcon CERTDISABLEDICON = GUIUtils.loadImageIcon("cdisabled.gif", false);
+	public final static ImageIcon IMAGE_WARNING = GUIUtils.loadImageIcon("warning.gif", false);
+
 	private JLabel lbl_summaryIcon;
 	private Locale m_Locale;
 	private String str;
+
+	// Used for a CertDetailsDialog with a certPath
+	private JList m_certList;
+	private JTabbedPane m_tabbedPane;
+	private DefaultListModel m_certListModel;
+	private JAPCertificate m_detailedCert, m_selectedCert;
+
+	/**
+	 *
+	 * @param a_parent The parent object
+	 * @param a_cert JAPCertificate which will be shown
+	 * @param a_bIsVerifyable boolean indicating if the cert has been verified
+	 * @param a_locale the current locale
+	 * @param a_certPath the certPath of the displayed certificate
+	 */
+	public CertDetailsDialog(Component a_parent, JAPCertificate a_cert, boolean a_bIsVerifyable,
+							 Locale a_locale, CertPath a_certPath)
+	{
+		super(a_parent, JAPMessages.getString(MSG_TITLE));
+		m_Locale = a_locale;
+
+		//init TabbedPane
+		JTabbedPane tabbedPane = new JTabbedPane();
+
+		//draw Panels
+		TitledGridBagPanel detailsPanel = drawDetailsPanel(a_cert, a_bIsVerifyable);
+		JPanel certPathPanel = drawCertPathPanel(a_certPath);
+
+
+		//add Panels to TabbedPane
+		tabbedPane.add(JAPMessages.getString(MSG_DETAILS), detailsPanel);
+		tabbedPane.add(JAPMessages.getString(MSG_CERT_HIERARCHY), certPathPanel);
+
+		JScrollPane sp = new JScrollPane(
+			tabbedPane, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+			JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		getContentPane().add(sp);
+
+		m_tabbedPane = tabbedPane;
+		m_detailedCert = a_cert;
+		setSize();
+		getContentPane().setVisible(true);
+
+	}
 	/**
 	 *
 	 * @param a_parent The parent object
@@ -149,13 +217,111 @@ public class CertDetailsDialog extends JAPDialog
 							 Locale a_locale)
 	{
 		super(a_parent, JAPMessages.getString(MSG_TITLE));
-
 		m_Locale = a_locale;
 
-		JPanel rootPanel = new JPanel();
-		rootPanel.setLayout(new GridBagLayout());
+		TitledGridBagPanel detailsPanel = drawDetailsPanel(a_cert, a_bIsVerifyable);
+
+		JScrollPane sp = new JScrollPane(
+			detailsPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+			JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+		this.getContentPane().add(sp);
+
+		setSize();
+		setVisible(true);
+	}
+
+	private void setSize()
+	{
+		this.pack();
+		if (this.getSize().height > 600)
+		{
+			this.setSize(getSize().width, 600);
+		}
+		if (this.getSize().width > 800)
+		{
+			this.setSize(800, getSize().height);
+		}
+	}
+	/**
+	 * Translates a Vector of numerical identifiers into human readable names
+	 *
+	 * @see anon.crypto.X509DistinguishedName.getAttributeNameFromAttributeIdentifier()
+	 * @param a_vector Vector with numerical identifiers
+	 * @return a Vector with human readable Strings
+	 */
+	private Vector idsToNames(Vector a_vector)
+	{
+		Vector res = new Vector(a_vector.size());
+		String str = " ";
+
+		if (a_vector != null && a_vector.size() > 0)
+		{
+			for (int i = 0; i < a_vector.size(); i++)
+			{
+				String abbrev = (anon.crypto.X509DistinguishedName.
+								 getAttributeNameFromAttributeIdentifier( (String) a_vector.elementAt(i)));
+
+				if (abbrev.equals(X509DistinguishedName.LABEL_STATE_OR_PROVINCE))
+				{
+					str = JAPMessages.getString(MSG_X509Attribute_ST);
+				}
+				else if (abbrev.equals(X509DistinguishedName.LABEL_LOCALITY))
+				{
+					str = JAPMessages.getString(MSG_X509Attribute_L);
+				}
+				else if (abbrev.equals(X509DistinguishedName.LABEL_COUNTRY))
+				{
+					str = JAPMessages.getString(MSG_X509Attribute_C);
+				}
+				else if (abbrev.equals(X509DistinguishedName.LABEL_COMMON_NAME))
+				{
+					str = JAPMessages.getString(MSG_X509Attribute_CN);
+				}
+				else if (abbrev.equals(X509DistinguishedName.LABEL_ORGANISATION))
+				{
+					str = JAPMessages.getString(MSG_X509Attribute_O);
+				}
+				else if (abbrev.equals(X509DistinguishedName.LABEL_ORGANISATIONAL_UNIT))
+				{
+					str = JAPMessages.getString(MSG_X509Attribute_OU);
+				}
+				else if (abbrev.equals(X509DistinguishedName.LABEL_EMAIL))
+				{
+					str = JAPMessages.getString(MSG_X509Attribute_EMAIL);
+				}
+				else if (abbrev.equals(X509DistinguishedName.LABEL_EMAIL_ADDRESS))
+				{
+					str = JAPMessages.getString(MSG_X509Attribute_EMAILADDRESS);
+				}
+				else if (abbrev.equals(X509DistinguishedName.LABEL_SURNAME))
+				{
+					str = JAPMessages.getString(MSG_X509Attribute_SURNAME);
+				}
+				else if (abbrev.equals(X509DistinguishedName.LABEL_GIVENNAME))
+				{
+					str = JAPMessages.getString(MSG_X509Attribute_GIVENNAME);
+				}
+
+				else
+				{
+					str = abbrev;
+				}
+				if (!str.equals(abbrev))
+				{
+					str += " (" + abbrev + ")";
+				}
+				res.addElement(str);
+			}
+		}
+		return res;
+	}
+
+	private TitledGridBagPanel drawDetailsPanel(JAPCertificate a_cert, boolean a_bIsVerifyable)
+	{
 		Insets inset = new Insets(2, 5, 2, 5);
 		TitledGridBagPanel detailsPanel = new TitledGridBagPanel(null, inset);
+
 		JLabel lbl_key;
 		JLabel lbl_val;
 
@@ -388,20 +554,23 @@ public class CertDetailsDialog extends JAPDialog
 			detailsPanel.addRow(lbl_key, null, lbl_val);
 		}
 
-		// Key Algorithm and Key length
+		/// Key Algorithm and Key length
 		Vector keyKeys = new Vector();
 		keyKeys.addElement(JAPMessages.getString(TITLE_KEYS_ALGORITHM));
-		//keyKeys.addElement(JAPMessages.getString(TITLE_KEYS_KEYLENGTH));
-		keyKeys.addElement(JAPMessages.getString(TITLE_KEYS_SIGNALGORITHM));
+
+
 		Vector keyValues = new Vector();
 		keyValues.addElement(new String(a_cert.getPublicKey().getAlgorithm()));
 		if (a_cert.getPublicKey() instanceof MyRSAPublicKey)
-		{
-			/** @todo Calculate correct keysize for DSA keys */
-			int kLength = ( (IMyPublicKey) a_cert.getPublicKey()).getKeyLength();
-			keyValues.addElement(new Integer(kLength).toString());
+				{
+					/** @todo Calculate correct keysize for DSA keys */
+					int kLength = ( (IMyPublicKey) a_cert.getPublicKey()).getKeyLength();
+					keyKeys.addElement(JAPMessages.getString(TITLE_KEYS_KEYLENGTH));
+					keyValues.addElement(new Integer(kLength).toString());
 		}
+		keyKeys.addElement(JAPMessages.getString(TITLE_KEYS_SIGNALGORITHM));
 		keyValues.addElement(a_cert.getPublicKey().getSignatureAlgorithm().getXMLSignatureAlgorithmReference());
+
 		JLabel title_keys = new JLabel(JAPMessages.getString(TITLE_KEYS), JLabel.RIGHT);
 		title_keys.setFont(TITLE_FONT);
 		title_keys.setForeground(TITLE_COLOR);
@@ -414,100 +583,171 @@ public class CertDetailsDialog extends JAPDialog
 			lbl_val.setFont(VALUE_FONT);
 			detailsPanel.addRow(lbl_key, null, lbl_val);
 		}
-
-		rootPanel.add(detailsPanel);
-
-		JScrollPane sp = new JScrollPane(
-			rootPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-
-		this.getContentPane().add(sp);
-
-		this.pack();
-		if (this.getSize().height > 480)
-		{
-			this.setSize(getSize().width, 480);
-		}
-		if (this.getSize().width > 640)
-		{
-			this.setSize(640, getSize().height);
-		}
-
-		this.getContentPane().setVisible(true);
-
+		return detailsPanel;
 	}
 
 	/**
-	 * Translates a Vector of numerical identifiers into human readable names
-	 *
-	 * @see anon.crypto.X509DistinguishedName.getAttributeNameFromAttributeIdentifier()
-	 * @param a_vector Vector with numerical identifiers
-	 * @return a Vector with human readable Strings
+	 * Draws the Panel that shows the certification Path
+	 * @param a_certPath The certPath of the Certificate that is shown in this
+	 *                   CertDetailsDialog
+	 * @return the Panel that showes the certification Path
+	 * @todo make a special CellRenderer, so we do not have to use
+	 *       a certificate InfoStructure here
 	 */
-	private Vector idsToNames(Vector a_vector)
+	private JPanel drawCertPathPanel(CertPath a_certPath)
 	{
-		Vector res = new Vector(a_vector.size());
-		String str = " ";
+		//init Panel and Layout
+		JPanel certPathPanel = new JPanel();
+		certPathPanel.setLayout(new GridBagLayout());
+		GridBagConstraints constraints = new GridBagConstraints();
 
-		if (a_vector != null && a_vector.size() > 0)
+		constraints.gridx = 0;
+		constraints.gridy = 0;
+		constraints.weightx = 0;
+		constraints.weighty = 0;
+		constraints.gridwidth = 1;
+		constraints.fill = GridBagConstraints.NONE;
+		constraints.anchor = GridBagConstraints.WEST;
+		constraints.insets = new Insets(10, 10, 5, 10);
+
+		JLabel title_certPath = new JLabel(JAPMessages.getString(MSG_CERT_HIERARCHY), JLabel.RIGHT);
+		title_certPath.setFont(TITLE_FONT);
+		title_certPath.setForeground(TITLE_COLOR);
+		certPathPanel.add(title_certPath, constraints);
+
+		//init List, Model, CellRenderer and ListSelectionListener
+		m_certListModel = new DefaultListModel();
+		m_certList = new JList(m_certListModel);
+		m_certList.setFont(VALUE_FONT);
+		m_certList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		m_certList.setCellRenderer(new CertPathListCellRenderer());
+		m_certList.addListSelectionListener(new ListSelectionListener()
 		{
-			for (int i = 0; i < a_vector.size(); i++)
+			public void valueChanged(ListSelectionEvent e)
 			{
-				String abbrev = (anon.crypto.X509DistinguishedName.
-								 getAttributeNameFromAttributeIdentifier( (String) a_vector.elementAt(i)));
-
-				if (abbrev.equals(X509DistinguishedName.LABEL_STATE_OR_PROVINCE))
+				if (m_certListModel.getSize() != 0 && m_certList.getSelectedValue() != null)
 				{
-					str = JAPMessages.getString(MSG_X509Attribute_ST);
+					m_selectedCert = ( (CertificateInfoStructure) m_certList.getSelectedValue()).
+						getCertificate();
 				}
-				else if (abbrev.equals(X509DistinguishedName.LABEL_LOCALITY))
+			}
+		});
+		m_certList.addMouseListener(new MouseAdapter()
+		{
+			public void mouseClicked(MouseEvent a_event)
+			{
+				if (a_event.getClickCount() == 2)
 				{
-					str = JAPMessages.getString(MSG_X509Attribute_L);
+					showCert();
 				}
-				else if (abbrev.equals(X509DistinguishedName.LABEL_COUNTRY))
+			}
+		});
+		//fill the list with the certificates from the certPath
+		if (a_certPath != null)
+		{
+			Enumeration certificates = a_certPath.getCertificates();
+			{  //if the certPath is already verified we just ceck the validity
+				while (certificates.hasMoreElements())
 				{
-					str = JAPMessages.getString(MSG_X509Attribute_C);
+					CertificateInfoStructure cis = (CertificateInfoStructure)certificates.nextElement();
+					m_certListModel.add(m_certListModel.getSize(), cis);
 				}
-				else if (abbrev.equals(X509DistinguishedName.LABEL_COMMON_NAME))
-				{
-					str = JAPMessages.getString(MSG_X509Attribute_CN);
-				}
-				else if (abbrev.equals(X509DistinguishedName.LABEL_ORGANISATION))
-				{
-					str = JAPMessages.getString(MSG_X509Attribute_O);
-				}
-				else if (abbrev.equals(X509DistinguishedName.LABEL_ORGANISATIONAL_UNIT))
-				{
-					str = JAPMessages.getString(MSG_X509Attribute_OU);
-				}
-				else if (abbrev.equals(X509DistinguishedName.LABEL_EMAIL))
-				{
-					str = JAPMessages.getString(MSG_X509Attribute_EMAIL);
-				}
-				else if (abbrev.equals(X509DistinguishedName.LABEL_EMAIL_ADDRESS))
-				{
-					str = JAPMessages.getString(MSG_X509Attribute_EMAILADDRESS);
-				}
-				else if (abbrev.equals(X509DistinguishedName.LABEL_SURNAME))
-				{
-					str = JAPMessages.getString(MSG_X509Attribute_SURNAME);
-				}
-				else if (abbrev.equals(X509DistinguishedName.LABEL_GIVENNAME))
-				{
-					str = JAPMessages.getString(MSG_X509Attribute_GIVENNAME);
-				}
-
-				else
-				{
-					str = abbrev;
-				}
-				if (!str.equals(abbrev))
-				{
-					str += " (" + abbrev + ")";
-				}
-				res.addElement(str);
 			}
 		}
-		return res;
+		//add scrollbars to the List
+		JScrollPane scrpaneList = new JScrollPane();
+		scrpaneList.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		scrpaneList.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+
+		scrpaneList.getViewport().add(m_certList);
+		constraints.gridy++;
+		constraints.gridwidth = 1;
+		constraints.gridheight = 5;
+		constraints.weightx = 3;
+		constraints.weighty = 2;
+		constraints.insets = new Insets(5, 20, 10, 20);
+		constraints.fill = GridBagConstraints.BOTH;
+		constraints.anchor = GridBagConstraints.NORTH;
+		certPathPanel.add(scrpaneList, constraints);
+
+		//add a Button to view the Certificate (no certpath will be shown)
+		JButton view = new JButton(JAPMessages.getString(MSG_SHOW_CERT));
+		view.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				showCert();
+			}
+
+		});
+		constraints.gridx++;
+		constraints.gridheight = 1;
+		constraints.weightx = 0;
+		constraints.weighty = 1;
+		constraints.insets = new Insets(10, 5, 10, 20);
+		constraints.fill = GridBagConstraints.NONE;
+		constraints.anchor = GridBagConstraints.NORTHWEST;
+		certPathPanel.add(view, constraints);
+
+	    //add Symbol description
+		constraints.gridy++;
+		constraints.weightx = 0;
+		constraints.weighty = 0;
+		constraints.anchor = GridBagConstraints.SOUTHWEST;
+		constraints.fill = GridBagConstraints.NONE;
+		constraints.insets = new Insets(5, 5, 5, 5);
+		JLabel lbl_symbols =
+			new JLabel("<html><u><b>" + JAPMessages.getString(MSG_SYMBOLS) + "</b></u></html>");
+		certPathPanel.add(lbl_symbols, constraints);
+
+		constraints.insets = new Insets(5, 15, 5, 5);
+		constraints.gridy++;
+		JLabel lbl_verified = new JLabel(JAPMessages.getString(MSG_CERTVALID), CERTENABLEDICON, JLabel.LEFT);
+		certPathPanel.add(lbl_verified, constraints);
+
+		constraints.gridy++;
+		JLabel lbl_invalid = new JLabel(JAPMessages.getString(MSG_CERTNOTVALID),IMAGE_WARNING, JLabel.LEFT);
+		//lbl_invalid.setForeground(Color.orange);
+	    certPathPanel.add(lbl_invalid, constraints);
+
+		constraints.gridy++;
+		constraints.insets = new Insets(5, 15, 20, 5);
+		JLabel lbl_unverified =
+			new JLabel(JAPMessages.getString(MSG_CERT_NOT_VERIFIED), CERTDISABLEDICON, JLabel.LEFT);
+		lbl_unverified.setForeground(Color.red);
+	    certPathPanel.add(lbl_unverified, constraints);
+
+	    //add Seperator
+	    constraints.gridx--;
+		constraints.gridy++;
+		constraints.weightx = 1;
+		constraints.weighty = 1;
+		constraints.gridwidth = 2;
+		constraints.insets = new Insets(10, 20, 10, 10);
+		constraints.fill = GridBagConstraints.HORIZONTAL;
+		constraints.anchor = GridBagConstraints.NORTH;
+
+		certPathPanel.add(new JSeparator(), constraints);
+
+		return certPathPanel;
+	}
+
+	private void showCert()
+	{
+		if (m_selectedCert != null)
+		{
+			//if the cert from this dialog and the cert to show are equal jump to the frist tab
+			if (m_selectedCert.equals(m_detailedCert))
+			{
+				m_tabbedPane.setSelectedIndex(0);
+			}
+			else
+			{ //open a new dialog without a certPath tab
+				CertDetailsDialog dialog =
+					new CertDetailsDialog(getContentPane(), m_selectedCert, true, m_Locale);
+				dialog.setVisible(true);
+			}
+		}
 	}
 
 	/**

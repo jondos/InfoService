@@ -823,14 +823,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 							try
 							{
 								Database.getInstance(MixInfo.class).update(
-									new MixInfo((Element)nodeMix, Long.MAX_VALUE));
+									new MixInfo(false, (Element)nodeMix, Long.MAX_VALUE, false));
 							}
 							catch (Exception e)
 							{
 								try
 								{
 									Database.getInstance(MixInfo.class).update(
-										new MixInfo( (Element) nodeMix, Long.MAX_VALUE, true));
+										new MixInfo(false, (Element) nodeMix, Long.MAX_VALUE, true));
 								}
 								catch (Exception a_e)
 								{

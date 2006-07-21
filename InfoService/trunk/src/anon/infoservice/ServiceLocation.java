@@ -30,8 +30,10 @@ package anon.infoservice;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import anon.crypto.JAPCertificate;
 import anon.util.XMLUtil;
 import anon.util.XMLParseException;
+import anon.crypto.X509DistinguishedName;
 
 /**
  * Holds the information of the location of a service.
@@ -71,21 +73,45 @@ public class ServiceLocation
 	 *
 	 * @param locationNode The Location node from an XML document.
 	 */
-	public ServiceLocation(Element locationNode) throws XMLParseException
+	public ServiceLocation(Element locationNode, JAPCertificate mixCertificate) throws XMLParseException
 	{
 		Node node;
+		X509DistinguishedName subject;
 
-		/* get the city */
-		node = XMLUtil.getFirstChildByName(locationNode, "City");
-		city = XMLUtil.parseValue(node, "");
+	    //try to get Service Location from the Certificate
+		if(mixCertificate != null)
+		{
+			subject = mixCertificate.getSubject();
 
-		/* get the state */
-		node = XMLUtil.getFirstChildByName(locationNode, "State");
-		state = XMLUtil.parseValue(node, "");
+			/* get the city */
+			city = subject.getLocalityName();
 
-		/* get the country */
-		node = XMLUtil.getFirstChildByName(locationNode, "Country");
-		country = XMLUtil.parseValue(node, "");
+			/* get the state */
+			state = subject.getStateOrProvince();
+
+			/* get the country */
+			country = subject.getCountryCode();
+		}
+
+	    /* check if the the information from the cert is valid (not null oder empty)
+	     * and take the information from the XML-Structure if not
+	     */
+	    if (city == null || city.trim().length() == 0)
+		{
+			node = XMLUtil.getFirstChildByName(locationNode, "City");
+			city = XMLUtil.parseValue(node, "");
+		}
+
+	    if(state == null || state.trim().length() == 0)
+		{
+			node = XMLUtil.getFirstChildByName(locationNode, "State");
+			state = XMLUtil.parseValue(node, "");
+		}
+		if(country == null || country.trim().length() == 0)
+		{
+			node = XMLUtil.getFirstChildByName(locationNode, "Country");
+			country = XMLUtil.parseValue(node, "");
+		}
 
 		/* get the longitude / latitude */
 		Node positionNode = XMLUtil.getFirstChildByName(locationNode, "Position");

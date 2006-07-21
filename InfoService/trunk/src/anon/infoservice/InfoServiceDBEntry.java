@@ -39,6 +39,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import HTTPClient.HTTPConnection;
 import HTTPClient.HTTPResponse;
+import HTTPClient.ThreadInterruptedIOException;
 import anon.crypto.SignatureVerifier;
 import anon.util.BZip2Tools;
 import anon.util.Base64;
@@ -51,10 +52,15 @@ import logging.LogType;
 
 import java.util.zip.GZIPInputStream;
 import java.io.ByteArrayInputStream;
-import anon.crypto.SignatureCreator;
+
 import java.io.ByteArrayOutputStream;
 import java.io.InterruptedIOException;
 import java.io.InputStream;
+import anon.crypto.CertPath;
+import anon.crypto.JAPCertificate;
+import anon.crypto.SignatureCreator;
+import anon.crypto.XMLSignature;
+
 
 /**
  * Holds the information for an infoservice.
@@ -129,6 +135,16 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	 * infoservice entry, if two entries are compared (higher version number -> more recent entry).
 	 */
 	private long m_creationTimeStamp;
+
+	/**
+	 *
+	 */
+	private JAPCertificate m_certificate;
+
+	/**
+	 *
+	 */
+	private CertPath m_certPath;
 
 	/**
 	 * Creates an XML node (InfoServices node) with all infoservices from the database inside.
@@ -325,7 +341,23 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 			 */
 			m_userDefined = true;
 		}
-
+		try
+	    {
+			XMLSignature documentSignature = SignatureVerifier.getInstance().getVerifiedXml(a_infoServiceNode,
+				SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE);
+			if (documentSignature != null)
+			{
+				Enumeration appendedCertificates = documentSignature.getCertificates().elements();
+				if (appendedCertificates.hasMoreElements())
+				{
+					m_certificate = (JAPCertificate) (appendedCertificates.nextElement());
+					m_certPath = documentSignature.getCertPath();
+				}
+			}
+		}
+		catch (Exception e)
+		{
+		}
 		/* at the moment every infoservice talks with all other infoservices */
 		m_neighbour = true;
 	}
@@ -540,6 +572,16 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		return m_strName;
 	}
 
+	public JAPCertificate getCertificate()
+	{
+		return m_certificate;
+	}
+
+	public CertPath getCertPath()
+	{
+		return m_certPath;
+	}
+
 	/**
 	 * Returns the time when this infoservice entry was created by the origin infoservice or by the
 	 * JAP client (if it is a user-defined entry).
@@ -736,10 +778,10 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		HTTPConnectionDescriptor currentConnectionDescriptor = null;
 		ImmutableProxyInterface[] proxies;
 		int proxyCounter;
-		
+
 		while ( (connectionCounter < m_listenerInterfaces.size()) && !Thread.currentThread().isInterrupted())
 		{
-			// update the connectionCounter 
+			// update the connectionCounter
 			connectionCounter++;
 			if (m_proxyInterface != null)
 			{
@@ -754,23 +796,23 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 			for (proxyCounter = 0; proxyCounter < proxies.length && !Thread.currentThread().isInterrupted();
 				 proxyCounter++)
 			{
-				// get the next connection descriptor by supplying the last one 
+				// get the next connection descriptor by supplying the last one
 				currentConnectionDescriptor = connectToInfoService(currentConnectionDescriptor,
 					proxies[proxyCounter]);
 
 				final HTTPConnection currentConnection = currentConnectionDescriptor.getConnection();
 				currentConnection.setTimeout(GET_XML_CONNECTION_TIMEOUT);
 
-				// use a Vector as storage for the the result of the communication 
+				// use a Vector as storage for the the result of the communication
 				final Vector responseStorage = new Vector();
-				
+
 				// * we need the possibility to interrupt the infoservice communication,
 				// * but also we need to know whether the operation was interupted by an
 				// * external call of Thread.interrupt() or a timeout, thus it is not
 				// * enough to catch the InteruptedIOException because that Exception is
 				// * thrown in both cases, so we cannot distinguish the both -> solution
 				// * make an extra Thread for the communication
-				 
+
 				Thread communicationThread = new Thread(new Runnable()
 				{
 					public void run()
@@ -824,14 +866,14 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 									}
 									else
 									{
-										// end of stream reached -> stop reading 
+										// end of stream reached -> stop reading
 										tempStream.flush();
 										responseStorage.addElement(tempStream.toByteArray());
-										// stop this thread by leaving the run() method 
+										// stop this thread by leaving the run() method
 										return;
 									}
 								}
-								// thread was interrupted 
+								// thread was interrupted
 								throw (new InterruptedIOException("Communication was interrupted."));
 							}
 						}
@@ -864,17 +906,17 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 				}
 				catch (InterruptedException e)
 				{
-					
+
 					// * operation was interupted from the outside -> set the intterrupted
 					// * flag for the Thread again, so the caller of the methode can
 					// * evaluate it, also interrupt the communication thread, but don't
 					// * wait for the end of that thread
-					 
+
 					LogHolder.log(LogLevel.INFO, LogType.NET, "Current operation was interrupted.");
 					Thread.currentThread().interrupt();
 					// * try to stop all activities of the HTTPConnection -> should stop
 					//  * nearly all running requests with an exception
-					 
+
 					currentConnection.stop();
 					// interrupt also the communication thread (just to be sure) //
 					communicationThread.interrupt();
@@ -882,7 +924,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 			}
 		}
 		// all interfaces tested, we can't find a valid interface //
-		
+
 		throw (new Exception("Can't connect to infoservice. Connections to all ListenerInterfaces failed."));
 	}
 
@@ -1083,7 +1125,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 				XMLUtil.toString(mixNode)));
 		}
 		/* signature was valid */
-		return new MixInfo(mixNode, Long.MAX_VALUE);
+		return new MixInfo(false, mixNode, Long.MAX_VALUE, false);
 	}
 
 	/**

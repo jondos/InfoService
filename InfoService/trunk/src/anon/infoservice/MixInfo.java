@@ -38,8 +38,10 @@ import anon.crypto.XMLSignature;
 import logging.LogHolder;
 import logging.LogLevel;
 import anon.crypto.JAPCertificate;
+import anon.crypto.CertPath;
 import logging.LogType;
 import java.util.Enumeration;
+import anon.crypto.SignatureVerifier;
 
 /**
  * Holds the information of one single mix.
@@ -91,7 +93,17 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
    */
   private Element m_xmlStructure;
 
+  /**
+   * Stores the certificate for this mix.
+   * The certificate is not set (null) if the MixInfo-Object is in the InfoService
+   */
   private JAPCertificate m_mixCertificate;
+
+  /**
+   * Stores the certPath for this mix.
+   * The CertPath is not set (null) if the MixInfo-Object is in the InfoService
+   */
+  private CertPath m_mixCertPath;
 
   /**
    * If this MixInfo has been recevied directly from a cascade connection.
@@ -103,9 +115,10 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
    * non-free (only meaningful within the context of the infoservice).
    *
    * @param a_mixNode The Mix node from an XML document.
+   * @param a_bInfoService indicates if the application that calls this constructor is the IS
    */
-  public MixInfo(Element a_mixNode) throws XMLParseException {
-	  this (a_mixNode, 0);
+  public MixInfo(boolean a_bInfoService, Element a_mixNode) throws XMLParseException {
+	  this (a_bInfoService, a_mixNode, 0);
   }
 
   /**
@@ -114,10 +127,11 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
    *
    * @param a_mixNode The Mix node from an XML document.
    * @param a_expireTime forces a specific expire time; takes default expire time if <= 0
+   * @param a_bInfoService indicates if the application that calls this constructor is the IS
    */
-  public MixInfo(Element a_mixNode, long a_expireTime) throws XMLParseException
+  public MixInfo(boolean a_bInfoService, Element a_mixNode, long a_expireTime) throws XMLParseException
   {
-	  this(a_mixNode, a_expireTime, false);
+	  this(a_bInfoService, a_mixNode, a_expireTime, false);
   }
 
   /**
@@ -128,8 +142,10 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
    * @param a_expireTime forces a specific expire time; takes default expire time if <= 0
    * @param a_bFromCascade if this is a MixInfo node directly received from a cascade (it is stripped)
    * if true, the last update value is set to 0
+   * @param a_bInfoService indicates if the application that calls this constructor is the IS
    */
-  public MixInfo(Element a_mixNode, long a_expireTime, boolean a_bFromCascade) throws XMLParseException
+  public MixInfo(boolean a_bInfoService, Element a_mixNode, long a_expireTime, boolean a_bFromCascade)
+	  throws XMLParseException
   {
 	  /* use always the timeout for the infoservice context, because the JAP client currently does
 	   * not have a database of mixcascade entries -> no timeout for the JAP client necessary
@@ -143,6 +159,43 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 		  throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "id"));
 	  }
 
+	  /* try to get the certificate and CertPath from the Signature node if the call is NOT the IS*/
+	  if(!a_bInfoService)
+	  {
+	      try
+		  {
+			  XMLSignature documentSignature = SignatureVerifier.getInstance().getVerifiedXml(a_mixNode,
+				  SignatureVerifier.DOCUMENT_CLASS_MIX);
+
+			  if (documentSignature != null)
+			  {
+				  Enumeration appendedCertificates = documentSignature.getCertificates().elements();
+				  /* store the first certificate (there should be only one) -> needed for verification of the
+				   * MixCascadeStatus XML structure */
+				  if (appendedCertificates.hasMoreElements())
+				  {
+					  m_mixCertificate = (JAPCertificate) (appendedCertificates.nextElement());
+					  m_mixCertPath = documentSignature.getCertPath();
+				  }
+				  else
+				  {
+					  LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+									"No appended certificates in the MixCascade structure.");
+				  }
+			  }
+			  else
+			  {
+				  LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+								"No signature node found while looking for MixCascade certificate.");
+			  }
+		  }
+		  catch (Exception e)
+		  {
+			  LogHolder.log(LogLevel.ERR, LogType.MISC,
+							"Error while looking for appended certificates in the MixCascade structure: " +
+							e.toString());
+		  }
+	  }
 	  if (!a_bFromCascade)
 	  {
 		  /* get the name */
@@ -164,7 +217,7 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 			  throw (new XMLParseException("Location", m_mixId));
 		  }
 		  Element locationNode = (Element) (locationNodes.item(0));
-		  m_mixLocation = new ServiceLocation(locationNode);
+		  m_mixLocation = new ServiceLocation(locationNode, m_mixCertificate);
 		  /* get the operator */
 		  NodeList operatorNodes = a_mixNode.getElementsByTagName("Operator");
 		  if (operatorNodes.getLength() == 0)
@@ -172,8 +225,15 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 			  throw (new XMLParseException("Operator", m_mixId));
 		  }
 		  Element operatorNode = (Element) (operatorNodes.item(0));
-		  m_mixOperator = new ServiceOperator(operatorNode);
-
+		  //get the Operator Certificate from the CertPath
+		  if(m_mixCertPath != null)
+		  {
+			  m_mixOperator = new ServiceOperator(operatorNode, m_mixCertPath.getSecondCertificate());
+		  }
+		  else
+		  {
+			   m_mixOperator = new ServiceOperator(operatorNode, null);
+		  }
 		  /* get the software information */
 		  NodeList softwareNodes = a_mixNode.getElementsByTagName("Software");
 		  if (softwareNodes.getLength() == 0)
@@ -197,37 +257,6 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 		  m_lastUpdate = System.currentTimeMillis() - Constants.TIMEOUT_MIX;
 	  }
 
-	  /* try to get the certificate from the Signature node */
-	  try
-	  {
-		  XMLSignature documentSignature = XMLSignature.getUnverified(a_mixNode);
-		  if (documentSignature != null)
-		  {
-			  Enumeration appendedCertificates = documentSignature.getCertificates().elements();
-			  /* store the first certificate (there should be only one) -> needed for verification of the
-			   * MixCascadeStatus XML structure */
-			  if (appendedCertificates.hasMoreElements())
-			  {
-				  m_mixCertificate = (JAPCertificate) (appendedCertificates.nextElement());
-			  }
-			  else
-			  {
-				  LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-								"No appended certificates in the MixCascade structure.");
-			  }
-		  }
-		  else
-		  {
-			  LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-							"No signature node found while looking for MixCascade certificate.");
-		  }
-	  }
-	  catch (Exception e)
-	  {
-		  LogHolder.log(LogLevel.ERR, LogType.MISC,
-						"Error while looking for appended certificates in the MixCascade structure: " +
-						e.toString());
-	  }
 	  /* as default no mix is free, only if we receive a configuration request from the mix and it
 	   * it is not already assigned to a cascade, this mix will be free
 	   */
@@ -284,11 +313,25 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
     return m_name;
   }
 
+  /**
+   * Returns the certificate of the mix
+   * For MixInfo-Objects in the InfoService the certificate is null
+   * @return the certificate of the mix
+   */
   public JAPCertificate getMixCertificate()
   {
 	  return m_mixCertificate;
   }
 
+  /**
+   * Returns the CertPath of the mix
+   * For MixInfo-Objects in the InfoService the CertPath is null
+   * @return the CertPath of the mix
+   */
+  public CertPath getMixCertPath()
+  {
+	  return m_mixCertPath;
+  }
   /**
    * Returns the location of the mix.
    *
