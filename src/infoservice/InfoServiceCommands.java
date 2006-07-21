@@ -342,7 +342,7 @@ public class InfoServiceCommands implements JWSInternalCommands
 			/* verify the signature */
 			if (SignatureVerifier.getInstance().verifyXml(mixNode, SignatureVerifier.DOCUMENT_CLASS_MIX))
 			{
-				MixInfo mixEntry = new MixInfo(mixNode);
+				MixInfo mixEntry = new MixInfo(true, mixNode);
 				Database.getInstance(MixInfo.class).update(mixEntry);
 				//extract possible last proxy addresses
 				VisibleProxyAddresses.addAddresses(mixNode);
@@ -385,7 +385,7 @@ public class InfoServiceCommands implements JWSInternalCommands
 			/* verify the signature */
 			if (SignatureVerifier.getInstance().verifyXml(mixNode, SignatureVerifier.DOCUMENT_CLASS_MIX) == true)
 			{
-				MixInfo mixEntry = new MixInfo(mixNode);
+				MixInfo mixEntry = new MixInfo(true, mixNode);
 				/* check whether the mix is already assigned to a mixcascade */
 				Enumeration knownMixCascades = Database.getInstance(MixCascade.class).getEntryList().elements();
 				MixCascade assignedCascade = null;

@@ -57,12 +57,15 @@ import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import anon.crypto.CertPath;
+import anon.crypto.JAPCertificate;
 import anon.infoservice.Database;
 import anon.infoservice.DatabaseMessage;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.InfoServiceHolderMessage;
 import anon.infoservice.ListenerInterface;
+import gui.CertDetailsDialog;
 import gui.JAPHtmlMultiLineLabel;
 import gui.JAPMultilineLabel;
 import gui.JAPJIntField;
@@ -108,6 +111,9 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 	private JCheckBox m_cbxAllowNonAnonymousConnection;
 
 	private boolean mb_newInfoService = true;
+
+	private JAPCertificate m_selectedISCert;
+	private CertPath m_selectedISCertPath;
 
 	public JAPConfInfoService()
 	{
@@ -354,6 +360,24 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 				addInfoServicePortField.setText("");
 				addInfoServicePanel.setVisible(true);
 				mb_newInfoService = true;
+			}
+		});
+
+	    final JButton settingsInfoServiceConfigBasicSettingsViewCertButton = new JButton("Zertifikat anzeigen");
+		settingsInfoServiceConfigBasicSettingsViewCertButton.setFont(getFontSetting());
+		settingsInfoServiceConfigBasicSettingsViewCertButton.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent a_event)
+			{
+				if(m_selectedISCert != null)
+				{
+					CertDetailsDialog dialog = new CertDetailsDialog(getRootPanel().getParent(),
+					m_selectedISCert.getX509Certificate(), true, //isServerCertVerified(),
+					JAPController.getInstance().getLocale(), m_selectedISCertPath);
+					dialog.pack();
+					dialog.setVisible(true);
+
+				}
 			}
 		});
 
@@ -753,15 +777,17 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 							addInfoServicePanel.setVisible(true);
 							settingsInfoServiceConfigBasicSettingsRemoveButton.setEnabled(true);
 							mb_newInfoService = false;
+							settingsInfoServiceConfigBasicSettingsViewCertButton.setEnabled(false);
 						}
 						else
 						{
 							addInfoServicePanel.setVisible(false);
 							descriptionPanel.setVisible(true);
+							settingsInfoServiceConfigBasicSettingsViewCertButton.setEnabled(true);
 						}
 					}
 
-					synchronized (knownInfoServicesListModel)
+					//synchronized (knownInfoServicesListModel)
 					{
 						/* also update the remove button (only a user-defined infoservice is removable, if it
 						 * is not currently the perferred infoservice)
@@ -781,6 +807,8 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 							settingsInfoServiceConfigBasicSettingsRemoveButton.setEnabled(false);
 						}
 					}
+					m_selectedISCert = selectedInfoService.getCertificate();
+					m_selectedISCertPath = selectedInfoService.getCertPath();
 				}
 			}
 		});
@@ -792,11 +820,11 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		GridBagConstraints buttonPanelConstraints = new GridBagConstraints();
 		buttonPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
 		buttonPanelConstraints.fill = GridBagConstraints.VERTICAL;
-		buttonPanelConstraints.weighty = 1.0;
+		//buttonPanelConstraints.weighty = 1.0;
 
 		buttonPanelConstraints.gridx = 0;
 		buttonPanelConstraints.gridy = 0;
-		buttonPanelConstraints.weightx = 0.0;
+		buttonPanelConstraints.weightx = 1.0;
 		buttonPanelConstraints.insets = new Insets(0, 10, 0, 5);
 		buttonPanelLayout.setConstraints(settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton,
 										 buttonPanelConstraints);
@@ -817,7 +845,15 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 										 buttonPanelConstraints);
 		buttonPanel.add(settingsInfoServiceConfigBasicSettingsAddButton);
 
-		/*		buttonPanelConstraints.gridx = 3;
+		buttonPanelConstraints.gridx = 3;
+		buttonPanelConstraints.gridy = 0;
+		buttonPanelConstraints.weightx = 1.0;
+		buttonPanelConstraints.insets = new Insets(0, 10, 0, 5);
+		buttonPanelLayout.setConstraints(settingsInfoServiceConfigBasicSettingsAddButton,
+										 buttonPanelConstraints);
+		buttonPanel.add(settingsInfoServiceConfigBasicSettingsViewCertButton);
+
+		  /*	buttonPanelConstraints.gridx = 3;
 		  buttonPanelConstraints.gridy = 0;
 		  buttonPanelConstraints.weightx = 1.0;
 		  buttonPanelConstraints.insets = new Insets(0, 5, 0, 5);
@@ -879,7 +915,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		m_portLabel = new JLabel("                                                      ");
 		configPanel.add(m_portLabel, configPanelConstraints);
 
-		configPanelConstraints.gridx = 0;
+	    configPanelConstraints.gridx = 0;
 		configPanelConstraints.gridy = 1;
 		configPanelConstraints.weightx = 0.0;
 		configPanelConstraints.weighty = 1.0;
@@ -892,7 +928,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 		configPanelConstraints.gridx = 0;
 		configPanelConstraints.gridy = 9;
-		configPanelConstraints.gridwidth = 3;
+		configPanelConstraints.gridwidth = 5;
 		configPanelConstraints.weighty = 0.0;
 		configPanelConstraints.insets = new Insets(10, 0, 5, 0);
 		configPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
@@ -934,7 +970,6 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		{
 			public void actionPerformed(ActionEvent event)
 			{
-
 				try
 				{
 					String infoServiceName = addInfoServiceNameField.getText().trim();

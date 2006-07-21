@@ -31,6 +31,9 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import anon.crypto.JAPCertificate;
+import anon.crypto.X509DistinguishedName;
+import anon.crypto.X509SubjectAlternativeName;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
 
@@ -58,18 +61,42 @@ public class ServiceOperator
 	 *
 	 * @param operatorNode The Operator node from an XML document.
 	 */
-	public ServiceOperator(Element operatorNode) throws XMLParseException
+	public ServiceOperator(Element operatorNode, JAPCertificate operatorCertificate) throws XMLParseException
 	{
-		/* get the organisation name */
-		Node organisationNode = XMLUtil.getFirstChildByName(operatorNode, "Organisation");
-		organisation = XMLUtil.parseValue(organisationNode, null);
-		/* get the homepage url */
-		Node urlNode = XMLUtil.getFirstChildByName(operatorNode, "URL");
-		url = XMLUtil.parseValue(urlNode, null);
+		Node node;
+		X509DistinguishedName subject;
 
-		Node emailNode = XMLUtil.getFirstChildByName(operatorNode, XML_ELEM_EMAIL);
-		m_strEmail = XMLUtil.parseValue(emailNode, null);
+	    if(operatorCertificate != null)
+		{
+			subject = operatorCertificate.getSubject();
+			/* get the organisation name */
+			organisation = subject.getOrganisation();
 
+			/* get the e-mail adress */
+			m_strEmail = subject.getE_EmailAddress();
+			if(m_strEmail == null || m_strEmail.trim().length() == 0)
+			{
+			   m_strEmail = subject.getEmailAddress();
+			}
+		}
+
+		/* check if the the information from the cert is valid (not null oder empty)
+		 * and take the information from the XML-Structure if not
+		 */
+		if(organisation == null || organisation.trim().length() == 0)
+		{
+			node = XMLUtil.getFirstChildByName(operatorNode, "Organisation");
+		    organisation = XMLUtil.parseValue(node, null);
+		}
+		if(m_strEmail == null || m_strEmail.trim().length() == 0 || X509SubjectAlternativeName.isValidEMail(m_strEmail))
+		{
+			node = XMLUtil.getFirstChildByName(operatorNode, XML_ELEM_EMAIL);
+		    m_strEmail = XMLUtil.parseValue(node, null);
+		}
+
+	    /* get the homepage url */
+	    node = XMLUtil.getFirstChildByName(operatorNode, "URL");
+	    url = XMLUtil.parseValue(node, null);
 	}
 
 	public String getEMail()

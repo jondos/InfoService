@@ -54,8 +54,8 @@ public class ListenerInterfaceTest extends XtendedPrivateTestCase
 		assertTrue(!ListenerInterface.isValidPort(-53));
 		assertTrue(ListenerInterface.isValidPort(1));
 		assertTrue(ListenerInterface.isValidPort(461));
-		assertTrue(ListenerInterface.isValidPort(65536));
-		assertTrue(!ListenerInterface.isValidPort(65537));
+		assertFalse(ListenerInterface.isValidPort(65536));
+		assertFalse(ListenerInterface.isValidPort(65537));
 	}
 
 	/**

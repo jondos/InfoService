@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.Hashtable;
@@ -96,12 +97,16 @@ public final class XMLSignature implements IXMLEncodable
 	 */
 	private Hashtable m_appendedCertificates;
 
+	private CertPath m_certPath;
+	private boolean m_verified;
+
 	/**
 	 * Creates a new and empty signature.
 	 */
 	private XMLSignature()
 	{
 		m_appendedCertificates = new Hashtable();
+		m_verified = false;
 	}
 
 	/**
@@ -164,6 +169,7 @@ public final class XMLSignature implements IXMLEncodable
 			throw new XMLParseException(ELEM_SIGNATURE_VALUE);
 		}
 		m_signatureValue = XMLUtil.parseValue(node, "");
+		m_verified = false;
 	}
 
 	/**
@@ -369,127 +375,192 @@ public final class XMLSignature implements IXMLEncodable
 	 */
 	public static XMLSignature verify(Node a_node, Vector a_certificateList) throws XMLParseException
 	{
-		/* the certificates can be used as root certificates or directly on the signature */
-		return verify(a_node, a_certificateList, a_certificateList);
+		// the certificates can be used as root certificates or directly on the signature
+		//return verify(a_node, a_certificateList, a_certificateList);
+		XMLSignature signature = getVerified(a_node, a_certificateList, a_certificateList, false);
+	    if(signature != null && signature.isVerified())
+		{
+			return signature;
+		}
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
-	 * Verifies the signature of an XML node.
+	 * New Implementation of the verify()-method. This one can also verify a
+	 * chain of certificats to verify the Signature of an XML node.
+	 * While trying to verify the Signature the certification Path is builded.
+	 * The certification Path is null if the signature could not be verified.
 	 *
-	 * @param a_node A signed XML node.
-	 * @param a_rootCertificates A Vector of trusted root certificates which is used to verify
-	 *                           the certificate maybe appended at the signature.
-	 * @param a_directCertificates A Vector of certificates to verify the signature, if it could
-	 *                             not be verified by the appended certificates (if there are no
-	 *                             appended certificates or the appended certificates could not
-	 *                             be verified by the trusted root certificates).
-	 *
-	 * @return the XMLSignature of the node; null if the node could not be verified
-	 * @exception XMLParseException if a signature element exists, but the element
-	 *                              has an invalid structure
-	 * @todo do not accept expired certificates?
+	 * @param a_node Node A signed XML node.
+	 * @param a_rootCertificates Vector A Vector of trusted root certificates which is used to verify
+	 *                                  the last(or only) certificate appended at the signature
+	 * @param a_directCertificates A Vector of certificates to verify the signature, if there are no
+	 *                             appended certificates
+	 * @param checkValidity If this is true, the validity of the certs is checked and expired
+	 *                      certs are treated as invalid.
+	 * @return XMLSignature of the node, if there is one.
+	 *         the signature also returned if the verification was NOT successfull.
+	 *         to get the result of the verification call isVerified() on the returned
+	 *         XMLSignature object
+	 * @throws XMLParseException if a signature element exists, but the element
+	 *                           has an invalid structure
+	 * @todo if the signature could not be verified, the certpath should contain the appended certificate
+	 *       so that the user can check (in a panel f.e.) wich appended certs are invalid
+	 * @todo remove the check of the first certificate when the certPath could not be verified
+	 *       this is only implemented because of compatibility reasons
 	 */
-	public static XMLSignature verify(Node a_node, Vector a_rootCertificates, Vector a_directCertificates) throws
-		XMLParseException
+	public static XMLSignature getVerified(Node a_node, Vector a_rootCertificates, Vector a_directCertificates, boolean checkValidity) throws XMLParseException
 	{
 		XMLSignature signature;
 		Enumeration certificates;
+		boolean oneCertAppended = false;
 		JAPCertificate currentCertificate;
-		boolean bVerified;
+		JAPCertificate nextCertificate = null;
 
-		// find the signature; this call could throw an XMLParseException
+	    // find the signature (this call could throw an XMLParseException)
 		signature = findXMLSignature(a_node);
 		if (signature == null)
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "Could not find the <Signature> node!");
 			return null;
 		}
-
-		bVerified = false; // this is set to 'true' if the signature could be verified
-		try
+	    //start verification
+	    try
 		{
-			// verify the signature against the appended certificates first
-			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "Locking for appended certificates...");
+			//get the included certificates
+			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "Looking for appended certificates...");
 			certificates = signature.getCertificates().elements();
-			if (certificates != null)
+			if((certificates != null) && (certificates.hasMoreElements()))
 			{
+				//we found at least one certificate
 				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "Found appended certificates!");
+				//take the first certificate and try to verify the XML-Signature
+				currentCertificate = (JAPCertificate)certificates.nextElement();
 
-				while (certificates.hasMoreElements())
+				signature.m_certPath = new CertPath(currentCertificate);
+				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "Trying to build certification path...");
+				while(certificates.hasMoreElements())
 				{
-					// get the next appended certificate
-					currentCertificate = (JAPCertificate) certificates.nextElement();
-					/* try to verify this appended certificate against the root certificates */
-					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-						"Try to verify appended certificate against root certificate...");
-
-					if (!currentCertificate.verify(a_rootCertificates))
+					//take the next certificate an try to verify the previous
+					nextCertificate = (JAPCertificate)certificates.nextElement();
+					//check validity if checking is set
+					if(!currentCertificate.verify(nextCertificate.getPublicKey())
+					   || (checkValidity && !(nextCertificate.getValidity().isValid(new Date()))))
 					{
 						LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-							"Try to verify appended certificate against root certificate - failed!");
-						/* this certificate cannot be verified; therefore, we do not use it here */
-						continue;
+									  "Trying to build certification path -stopped!");
+						break; //the building of the certPath stops here
 					}
-					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-						"Try to verify appende certifcate agains root certifcate - success!");
-					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-						"Try to verify signature against appende certifcate...");
-
-					// check the signature against this certificate if it is not verified yet
-					if (verify(a_node, signature, currentCertificate.getPublicKey()))
+					//the cert that was used for verification is now verified
+					signature.m_certPath.add(nextCertificate);
+					currentCertificate = nextCertificate;
+					if(!certificates.hasMoreElements()) //we reached the last cert in the path
 					{
 						LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-							"XMSignature:verify() Try to verify signature against appende certifcate -success!");
-						// the signature has been verified successfully
-						bVerified = true;
-						break;
+						              "Trying to build certification path -success!");
 					}
+				}
+				//the certspath was traversed as far as possible or there was only one certificate
+				if(nextCertificate == null)
+				{
+				    oneCertAppended = true;
 					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-						"XMSignature:verify() Try to verify signature against appende certifcate -failed!");
+					              "Trying to build certification path -only one certificate appended!");
+				}
+				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+							  "Trying to verify signature against first certifcate...");
+				currentCertificate = signature.getCertPath().getFirstCertificate();
+				// check validity if neccessary
+				if (!verify(a_node, signature, currentCertificate.getPublicKey())
+					 || (checkValidity && !(currentCertificate.getValidity().isValid(new Date()))))
+				{
+					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+								  "Trying to verify signature against first certifcate -failed");
+					//the verification failed, the found CertPath is set
+					return signature;
+				}
+				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+							  "Trying to verify signature against first certifcate -success!");
+				//the first (=Mix) cert could verify the signature
+				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+							  "Trying to verify last certificate against root certificates...");
+				currentCertificate = signature.m_certPath.getLatestAddedCertificate();
+				if (currentCertificate.verify(a_rootCertificates))
+				{
+					signature.m_verified = true;
+					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+								  "Trying to verify last certificate against root certificates -success");
+				}
+				else
+				{
+					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+								  "Trying to verify last certificate against root certificates -failed");
+					//new: if the last (or only) certificate could not be verified against the root certs try the direct certs
+					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+							  "Trying to verify last certificate against direct certificates...");
+					if(currentCertificate.verify(a_directCertificates))
+					{
+						signature.m_verified = true;
+						LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+									  "Trying to verify last certificate against direct certificates -success");
+					}
+					else //the CertPath is build but could not be verified
+					{    //verification ends here, the signature is returned but could not be verified
+						LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+									  "Trying to verify last certificate against direct certificates -failed");
+					}
+				}
+				if(!signature.isVerified() && !oneCertAppended) //the last certificate in the Path could not be verified
+				{	 //now try to verify the first cert against the root certs if there are more certs in the signature
+					 //this is for maintaining compatibility to older systems. it can be removed when the systems are adapted
+					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "Trying to verify first certificate against root certificates...");
+					currentCertificate = signature.m_certPath.getFirstCertificate();
+					if (currentCertificate.verify(a_rootCertificates))
+					{
+						LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+									  "Trying to verify first certificate against root certificates -success");
+						//signature.m_certPath.add(verifyingCertificate);
+						signature.m_verified = true;
+					}
+					else //the first certificate could not be verified against the rootCerts
+					{    //verification ends here, the signature is returned but could not be verified
+						LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+									  "Trying to verify first certificate against root certificates -failed");
+					}
 				}
 			}
-		}
-		catch (Exception a_e)
-		{
-		}
-
-		if (!bVerified)
-		{
-			/* the signature could not be verified against the appended certificates;
-			 * check the signature against the Vector of direct certificates
-			 */
-
-			Enumeration additionalCertificates = a_directCertificates.elements();
-
-			/* try to verify the signature against the direct certificate */
-			while (!bVerified && additionalCertificates.hasMoreElements())
+			else //no appended certificates were found, try to verify the signature using the direct certificates
 			{
-				try
+				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "No appended certificates found!");
+				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "Trying to verify signature against direct certificates...");
+				currentCertificate = getVerifier(a_node, signature, a_directCertificates);
+				if(currentCertificate != null)
 				{
-					if (verify(a_node, signature,
-							   ( (JAPCertificate) (additionalCertificates.nextElement())).getPublicKey()))
-					{
-						/* signature could be verified against one of the direct certificates */
-						bVerified = true;
-					}
+					signature.m_certPath = new CertPath(currentCertificate);
+					signature.m_verified = true;
+					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+						     "Trying to verify signature against direct certificates -success");
 				}
-				catch (Exception e)
+				else
 				{
+					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+						     "Trying to verify signature against direct certificates...-failed");
 				}
 			}
-		}
-
-		if (bVerified)
+		} //end of verification
+		catch (Exception e)
 		{
-			// return the verified signature
-			return signature;
 		}
-		else
+		/*if(!signature.isVerified())
 		{
-			// the signature could not be verified
-			return null;
-		}
-	}
+			System.out.println("###ERROR###\n" + XMLUtil.toString(a_node));
+		}*/
+		//System.out.println(signature.getCertPath());
+	    return signature;
+    }
 
 	/**
 	 * Only verifies the signature of an XML node.
@@ -545,7 +616,10 @@ public final class XMLSignature implements IXMLEncodable
 		}
 
 		signature = findXMLSignature(a_node);
-
+		if(signature != null)
+		{
+			signature.m_verified = false;
+		}
 		return signature;
 	}
 
@@ -899,6 +973,21 @@ public final class XMLSignature implements IXMLEncodable
 	}
 
 	/**
+	 * @return true if the verification of the Signature was successfull, false otherwise
+	 *         or if the was no verification yet
+	 */
+	public boolean isVerified()
+	{
+		return m_verified;
+	}
+
+	public CertPath getCertPath()
+	{
+		return m_certPath;
+	}
+
+
+	/**
 	 * Finds the signature element of the given node if present. This signature element is only found
 	 * if it is a direct child of a_node. The signature is not verified.
 	 * @param a_node an XML Node
@@ -927,6 +1016,7 @@ public final class XMLSignature implements IXMLEncodable
 		else
 		{
 			return null;
+
 		}
 
 		signatureNode = XMLUtil.getFirstChildByName(elementVerified, XML_ELEMENT_NAME);
@@ -1171,6 +1261,31 @@ public final class XMLSignature implements IXMLEncodable
 		{
 			return -1;
 		}
+	}
+
+	/**
+	 * This method is used to verify a node with a previously created XMLSignature.
+	 * @param a_node an XML node
+	 * @param a_signature an XMLSignature
+	 * @param a_verifiyingCertificates a Vector of certificates to verify the signature
+	 * @exception XMLParseException if a signature element exists, but the element
+	 *                              has an invalid structure
+	 * @return the certificate that verified this signature; null if it could not be verified
+	 *
+	 */
+	private static JAPCertificate getVerifier(Node a_node, XMLSignature a_signature, Vector a_verifyingCertificates) throws
+		XMLParseException
+	{
+		Enumeration certificates = a_verifyingCertificates.elements();
+		JAPCertificate currentCertificate = null;
+		boolean bVerified = false;
+		while(!bVerified && certificates.hasMoreElements())
+		{
+			currentCertificate = (JAPCertificate)certificates.nextElement();
+			bVerified = verify(a_node, a_signature, currentCertificate.getPublicKey());
+		}
+		//if the verification was successfull return the cert that verified, else return null
+		return bVerified? currentCertificate : null;
 	}
 
 	/**

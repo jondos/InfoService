@@ -359,18 +359,19 @@ public class XMLSignatureTest extends XtendedPrivateTestCase
 		 */
 		doc = XMLUtil.toXMLDocument(new DummyXMLEncodable(random));
 		XMLSignature.sign(doc, signerOne);
-		assertNotNull(XMLSignature.verify(doc, trustedCertificates, collectedCertificates));
+
+		assertTrue(XMLSignature.getVerified(doc, trustedCertificates, collectedCertificates, false).isVerified());
 		assertEquals(1, collectedCertificates.size());
 
 		// signer two does not append any certificate; validation is not possible
 		doc = XMLUtil.toXMLDocument(new DummyXMLEncodable(random));
 		XMLSignature.sign(doc, signerTwo.getPrivateKey());
-		assertNull(XMLSignature.verify(doc, trustedCertificates, collectedCertificates));
+		assertFalse(XMLSignature.getVerified(doc, trustedCertificates, collectedCertificates, false).isVerified());
 
 		// now signer two appends his certificate, too
 		doc = XMLUtil.toXMLDocument(new DummyXMLEncodable(random));
 		XMLSignature.sign(doc, signerTwo);
-		assertNotNull(XMLSignature.verify(doc, trustedCertificates, collectedCertificates));
+		assertTrue(XMLSignature.getVerified(doc, trustedCertificates, collectedCertificates, false).isVerified());
 		assertEquals(2, collectedCertificates.size());
 
 
@@ -381,12 +382,12 @@ public class XMLSignatureTest extends XtendedPrivateTestCase
 		doc = XMLUtil.toXMLDocument(new DummyXMLEncodable(random));
 		signature = XMLSignature.sign(doc, signerOne.getPrivateKey());
 		assertEquals(0, signature.countCertificates());
-		assertNotNull(XMLSignature.verify(doc, trustedCertificates, collectedCertificates));
+		assertTrue(XMLSignature.getVerified(doc, trustedCertificates, collectedCertificates, false).isVerified());
 
 		doc = XMLUtil.toXMLDocument(new DummyXMLEncodable(random));
 		signature = XMLSignature.sign(doc, signerTwo.getPrivateKey());
 		assertEquals(0, signature.countCertificates());
-		assertNotNull(XMLSignature.verify(doc, trustedCertificates, collectedCertificates));
+		assertTrue(XMLSignature.getVerified(doc, trustedCertificates, collectedCertificates, false).isVerified());
 	}
 
 	/**

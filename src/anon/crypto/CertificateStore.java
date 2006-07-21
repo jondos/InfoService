@@ -96,6 +96,45 @@ public class CertificateStore extends Observable implements IXMLEncodable
 		return returnedCertificates;
 	}
 
+	public Vector getUnavailableCertificatesByType(int a_certificateType)
+	{
+		Vector returnedCertificates = new Vector();
+		synchronized (m_trustedCertificates)
+		{
+			Enumeration allCertificates = m_trustedCertificates.elements();
+			while (allCertificates.hasMoreElements())
+			{
+				CertificateContainer currentCertificateContainer = (CertificateContainer) (allCertificates.
+					nextElement());
+				if (currentCertificateContainer.getCertificateType() == a_certificateType &&
+					!currentCertificateContainer.isAvailable())
+				{
+					/* return only disabled certificates of the specified type */
+					returnedCertificates.addElement(currentCertificateContainer.getInfoStructure());
+				}
+			}
+		}
+		return returnedCertificates;
+	}
+
+	public CertificateInfoStructure getCertificateInfoStructure(JAPCertificate a_certificate)
+	{
+		synchronized (m_trustedCertificates)
+		{
+			Enumeration allCertificates = m_trustedCertificates.elements();
+			while (allCertificates.hasMoreElements())
+			{
+				CertificateContainer currentCertificateContainer = (CertificateContainer) (allCertificates.
+					nextElement());
+				if(currentCertificateContainer.getCertificate().equals(a_certificate))
+				{
+					return currentCertificateContainer.getInfoStructure();
+				}
+			}
+		}
+		return null;
+	}
+
 	public Vector getAvailableCertificatesByType(int a_certificateType)
 	{
 		Vector returnedCertificates = new Vector();

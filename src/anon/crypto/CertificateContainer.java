@@ -392,5 +392,43 @@ public class CertificateContainer implements IXMLEncodable
 		}
 		return certificateContainerNode;
 	}
+	/**
+	 * Note: Only checks if the certificate in the container is the same
+	 * @see also JAPCertificate.equals()
+	 */
+	public boolean equals(Object a_certificateContainer)
+	{
+		if(this == a_certificateContainer)
+		{
+			return true;
+		}
 
+		if(a_certificateContainer == null || !(a_certificateContainer instanceof CertificateContainer))
+		{
+			return false;
+		}
+		//it is a certificateContainer, now compare the certificate ids.
+		return m_certificate.getId().equals( ( (CertificateContainer) a_certificateContainer).getCertificate().getId());
+	}
+
+	/**
+	 * Returns a unique id for this CertificateContainer.
+	 * The Container has the same id as the included certifacte
+	 * @return a unique id for this CertificateContainer
+	 * @see also JAPCertificate.getId()
+	 */
+	public String getId()
+	{
+		return m_certificate.getId();
+	}
+
+	/**
+	 * The hash code is derived from the certificate`s id.
+	 * @return the hash code of the certificate
+	 * @see also JAPCertificate.hashCode()
+	 */
+	public int hashCode()
+	{
+		return m_certificate.hashCode();
+	}
 }

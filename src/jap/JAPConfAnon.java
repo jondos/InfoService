@@ -95,10 +95,15 @@ import platform.AbstractOS;
 import javax.swing.ScrollPaneConstants;
 
 /* for opening a CertDetailsDialog with the certificate data of the selected server*/
+import anon.util.XMLUtil;
+import anon.crypto.CertPath;
 import anon.crypto.JAPCertificate;
+import anon.crypto.SignatureVerifier;
+import anon.crypto.XMLSignature;
 import gui.CertDetailsDialog;
 import anon.crypto.X509SubjectAlternativeName;
 import anon.crypto.X509DistinguishedName;
+import anon.crypto.CertificateInfoStructure;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener, Observer
@@ -171,6 +176,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	/** the Certificate of the selected Mix-Server */
 	private JAPCertificate m_serverCert;
+	private CertPath m_serverCertPath;
 
 	private Vector m_locationCoordinates;
 
@@ -310,7 +316,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.gridx = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		m_serverInfoPanel.add(m_emailLabel, c);
-
 
 		l = new JLabel(JAPMessages.getString("mixUrl"));
 		c.gridx = 0;
@@ -672,11 +677,13 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		if (m_serverCert != null)
 		{
 			m_viewCertLabel.setText(
-				URL_BEGIN + (JAPMessages.getString(CertDetailsDialog.MSG_CERT_VERIFIED) + ",") +
+				URL_BEGIN + (isServerCertVerified() ? JAPMessages.getString(CertDetailsDialog.MSG_CERT_VERIFIED) + "," :
+				RED_BEGIN + JAPMessages.getString(CertDetailsDialog.MSG_CERT_NOT_VERIFIED) + "," + RED_END) +
 				(m_serverCert.getValidity().isValid(new Date()) ? " " +
 				 JAPMessages.getString(CertDetailsDialog.MSG_CERTVALID) : RED_BEGIN + " " +
 				 JAPMessages.getString(JAPMessages.getString(CertDetailsDialog.MSG_CERTNOTVALID)) + RED_END) +
 				URL_END);
+			m_serverCertPath = m_infoService.getMixCertPath(selectedMixId);
 		}
 		else
 		{
@@ -906,6 +913,26 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 	}
 
+	private boolean isServerCertVerified()
+	{
+		boolean verified = false;
+		if(m_serverCert != null)
+		{
+			Enumeration certificates = SignatureVerifier.getInstance().getVerificationCertificateStore().
+				getAvailableCertificatesByType(SignatureVerifier.DOCUMENT_CLASS_MIX).elements();
+			while (certificates.hasMoreElements())
+			{
+				if (m_serverCert.verify( ( (CertificateInfoStructure) certificates.nextElement()).
+										getCertificate()))
+				{
+					verified = true;
+					break;
+				}
+			}
+		}
+		return verified;
+	}
+
 	/**
 	 * Edits a manually configured cascade
 	 */
@@ -1059,8 +1086,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			if (m_serverCert != null)
 			{
 				CertDetailsDialog dialog = new CertDetailsDialog(getRootPanel().getParent(),
-					m_serverCert.getX509Certificate(), true,
-					JAPController.getInstance().getLocale());
+					m_serverCert.getX509Certificate(), isServerCertVerified(),
+					JAPController.getInstance().getLocale(), m_serverCertPath);
 				dialog.pack();
 				dialog.setVisible(true);
 			}
@@ -1694,6 +1721,16 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			return cascade.getPorts();
 		}
 
+	    public CertPath getMixCertPath(String a_mixID)
+		{
+			MixInfo mixinfo = getMixInfo(a_mixID);
+			if(mixinfo != null)
+			{
+				return mixinfo.getMixCertPath();
+			}
+			return null;
+		}
+
 		public JAPCertificate getMixCertificate(String a_mixID)
 		{
 			MixInfo mixinfo = getMixInfo(a_mixID);
@@ -1715,12 +1752,14 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			ServiceOperator operator;
 			MixInfo info;
 			String strEmail = null;
-			X509DistinguishedName name = null;
+			//X509DistinguishedName name = null;
 
 			info = getMixInfo(a_mixId);
 			if (info != null)
 			{
-				name = info.getMixCertificate().getSubject();
+				operator = info.getServiceOperator();
+				strEmail = operator.getEMail();
+				/*name = info.getMixCertificate().getSubject();
 				if (name != null)
 				{
 					strEmail = name.getEmailAddress();
@@ -1728,9 +1767,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					{
 						strEmail = name.getE_EmailAddress();
 					}
-				}
+				}*/
 			}
-
+			/*
 			if (strEmail == null || !X509SubjectAlternativeName.isValidEMail(strEmail))
 			{
 				operator = getServiceOperator(a_mixId);
@@ -1738,7 +1777,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				{
 					strEmail = operator.getEMail();
 				}
-			}
+			}*/
 			if (strEmail == null || !X509SubjectAlternativeName.isValidEMail(strEmail))
 			{
 				return "N/A";

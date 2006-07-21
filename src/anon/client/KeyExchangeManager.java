@@ -253,7 +253,7 @@ public class KeyExchangeManager {
 				  }
 			  }
 
-			  MixInfo mixinfo = new MixInfo(currentMixNode, Long.MAX_VALUE, true);
+			  MixInfo mixinfo = new MixInfo(false, currentMixNode, Long.MAX_VALUE, true);
 			 MixInfo oldMixinfo = (MixInfo)Database.getInstance(MixInfo.class).getEntryById(mixinfo.getId());
 			 if (mixinfo.getMixCertificate() != null &&
 				 (oldMixinfo == null || !oldMixinfo.getMixCertificate().equals(mixinfo.getMixCertificate())))
