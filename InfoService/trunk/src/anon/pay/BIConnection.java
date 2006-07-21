@@ -125,13 +125,13 @@ public class BIConnection implements ICaptchaSender
 			{
 				//Try to connect to BI...
 				connect_internal(proxies[i]);
+				return;
 			}
 			catch (IOException a_t)
 			{
 				//Could not connect to BI
 				exception = a_t;
 			}
-			return;
 		}
 
 		throw exception;
