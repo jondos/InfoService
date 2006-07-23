@@ -131,6 +131,8 @@ public class PaymentMainPanel extends FlippingPanel
 	/** has user been notified about nearly empty accout? */
 	private boolean m_notifiedEmpty = false;
 
+	private boolean m_bShowingError = false;
+
 	private JLabel m_labelTotalSpent;
 	private JLabel m_labelSessionSpent;
 	private JLabel m_labelTitle;
@@ -531,10 +533,14 @@ public class PaymentMainPanel extends FlippingPanel
 			{
 				 error = msg.getErrorDescription();
 			}
-
-			JAPDialog.showErrorDialog(PaymentMainPanel.this,
-									  JAPMessages.getString("aiErrorMessage") + " " + error,
-									  LogType.PAY);
+			if (!m_bShowingError)
+			{
+				m_bShowingError = true;
+				JAPDialog.showErrorDialog(PaymentMainPanel.this,
+										  JAPMessages.getString("aiErrorMessage") + " " + error,
+										  LogType.PAY);
+				m_bShowingError = false;
+			}
 		}
 
 		public void gotCaptcha(ICaptchaSender a_source, final IImageEncodedCaptcha a_captcha)
