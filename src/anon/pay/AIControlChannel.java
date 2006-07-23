@@ -112,8 +112,8 @@ public class AIControlChannel extends XmlControlChannel {
    * @param docMsg
    *          Document
    */
-  public void processXmlMessage(Document docMsg) {
-
+  public void processXmlMessage(Document docMsg)
+  {
     Element elemRoot = docMsg.getDocumentElement();
     String tagName = elemRoot.getTagName();
     try {
@@ -187,7 +187,7 @@ public class AIControlChannel extends XmlControlChannel {
             public void run() {
               PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
               try {
-                currentAccount.fetchAccountInfo(m_proxys, false);
+                currentAccount.fetchAccountInfo(m_proxys, true);
               }
               catch (Exception ex) {
                 LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
@@ -258,7 +258,7 @@ public class AIControlChannel extends XmlControlChannel {
             public void run() {
               PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
               try {
-                currentAccount.fetchAccountInfo(m_proxys, false);
+                currentAccount.fetchAccountInfo(m_proxys, true);
                 XMLBalance b = currentAccount.getBalance();
                 AIControlChannel.this.sendXmlMessage(XMLUtil.toXMLDocument(b));
               }

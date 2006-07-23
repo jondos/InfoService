@@ -88,11 +88,20 @@ public class PaymentMainPanel extends FlippingPanel
 		"_sessionspent";
 	private static final String MSG_TOTALSPENT = PaymentMainPanel.class.getName() +
 		"_totalspent";
-	private static final String MSG_ACCOUNTEMPTY = PaymentMainPanel.class.getName() +
-		"_accountempty";
 	private static final String MSG_NO_ACTIVE_ACCOUNT = PaymentMainPanel.class.getName() +
 		"_noActiveAccount";
+	private static final String[] MSG_PAYMENT_ERRORS = {"_xmlSuccess", "_xmlErrorInternal",
+		"_xmlErrorWrongFormat", "_xmlErrorWrongData", "_xmlErrorKeyNotFound", "_xmlErrorBadSignature",
+	"_xmlErrorBadRequest", "_xmlErrorNoAccountCert", "_xmlErrorNoBalance", "_xmlErrorNoConfirmation",
+	"_accountempty"};
 
+	static
+	{
+		for (int i = 0; i < MSG_PAYMENT_ERRORS.length; i++)
+		{
+			MSG_PAYMENT_ERRORS[i] = PaymentMainPanel.class.getName() + MSG_PAYMENT_ERRORS[i];
+		}
+	}
 
 	/**
 	 * Icons for the account icon display
@@ -508,11 +517,21 @@ public class PaymentMainPanel extends FlippingPanel
 		 */
 		public void accountError(XMLErrorMessage msg)
 		{
-			String error = msg.getErrorDescription();
-			if (error.indexOf("empty") != -1)
+			String error;
+			if (msg.getErrorCode() <= XMLErrorMessage.ERR_OK || msg.getErrorCode() < 0)
 			{
-				error = JAPMessages.getString(MSG_ACCOUNTEMPTY);
+				// no error
+				return;
 			}
+			if (msg.getErrorCode() < MSG_PAYMENT_ERRORS.length)
+			{
+				 error = JAPMessages.getString(MSG_PAYMENT_ERRORS[msg.getErrorCode()]);
+			}
+			else
+			{
+				 error = msg.getErrorDescription();
+			}
+
 			JAPDialog.showErrorDialog(PaymentMainPanel.this,
 									  JAPMessages.getString("aiErrorMessage") + " " + error,
 									  LogType.PAY);
