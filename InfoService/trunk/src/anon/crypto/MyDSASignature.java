@@ -133,8 +133,8 @@ public final class MyDSASignature implements IMySignature
 		}
 		catch (Throwable e)
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "MyDSASignature:verify() Exception!");
-			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, e);
+			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "Signature algorithm does not match!");
+			//LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, e);
 
 			return false;
 		}
