@@ -62,18 +62,6 @@ public class CertPath
 		this.add(firstCert);
 	}
 
-	/*
-	public CertPath(Vector a_certificateVector)
-	{
-		Enumeration certEnumerator = a_certificateVector.elements();
-		m_certificates = new Vector();
-		m_certCount = 0;
-		while(certEnumerator.hasMoreElements())
-		{
-			this.add((JAPCertificate)certEnumerator.nextElement());
-			m_certCount++;
-		}
-	}*/
 
 	/**
 	 * Adds a certificate to next higher level of this CertPath,
@@ -87,17 +75,6 @@ public class CertPath
 			m_certificates.insertElementAt(a_certificate, 0);
 			m_certCount++;
 		}
-		/*Enumeration certificates = m_certificates.elements();
-		while(certificates.hasMoreElements())
-		{
-			JAPCertificate cert = (JAPCertificate)certificates.nextElement();
-			if(cert.equals(a_certificate))
-			{
-				return;
-			}
-		}
-		m_certificates.add(0, a_certificate);
-		m_certCount++;*/
 	}
 
 	/**
@@ -114,7 +91,8 @@ public class CertPath
 	 * Removes all certificates except the one on the lowest level
 	 * of this certPath
 	 */
-	protected void removeAllButLast(){
+	protected void removeAllButLast()
+	{
 		JAPCertificate firstCertificate = this.getFirstCertificate();
 		m_certificates.removeAllElements();
 		m_certCount = 0;
@@ -210,6 +188,27 @@ public class CertPath
 			return verifyingCertificate;//SignatureVerifier.getInstance().getVerificationCertificateStore().getCertificateInfoStructure(verifyingCertificate);
 		}
 		return null;
+	}
+
+	/**
+	 * Tries to verify the top level certificate in this CertPath against the root certificates.
+	 * If this last certificate can be verified the whole CertPath is verified, because we only
+	 * generate valid CertPaths
+	 * @return true if the CertPath could be verified
+	 */
+	public boolean verify()
+	{
+		Enumeration rootCertificates = SignatureVerifier.getInstance().getVerificationCertificateStore().
+				getAvailableCertificatesByType(m_rootCertificateClass).elements();
+		while (rootCertificates.hasMoreElements())
+		{
+			if (this.getLatestAddedCertificate().verify(
+				( (CertificateInfoStructure) rootCertificates.nextElement()).getCertificate()))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

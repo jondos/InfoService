@@ -418,7 +418,7 @@ final public class JAPRoutingUseableMixCascades extends Observable implements Ob
 				Element mixCascadeNode = (Element) (mixCascadeNodes.item(i));
 				try
 				{
-					MixCascade currentMixCascade = new MixCascade(mixCascadeNode);
+					MixCascade currentMixCascade = new MixCascade(mixCascadeNode, true);
 					allowedMixCascades.addElement(currentMixCascade);
 				}
 				catch (Exception e)

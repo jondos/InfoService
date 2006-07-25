@@ -256,20 +256,19 @@ public class DefaultClientProtocolHandler
 					/* signature is valid, try to add that mixcascade to the descriptor mixcascade list */
 					try
 					{
-						connectionDescriptor.addMixCascade(new MixCascade(currentMixCascadeNode));
+						connectionDescriptor.addMixCascade(new MixCascade(currentMixCascadeNode, true));
 					}
 					catch (Exception e)
 					{
 						LogHolder.log(LogLevel.ERR, LogType.MISC,
-									  "DefaultClientProtocolHandler: getConnectionDescriptor: Error while parsing MixCascade (" +
-									  e.toString() + ").");
+									  "Error while parsing MixCascade", e);
 					}
 				}
 				else
 				{
 					/* certificate check failed */
 					LogHolder.log(LogLevel.ERR, LogType.MISC,
-								  "DefaultClientProtocolHandler: getConnectionDescriptor: Signature check for a MixCascade failed.");
+								  "Signature check for a MixCascade failed.");
 				}
 			}
 			/* get the quality of service information */

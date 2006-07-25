@@ -95,9 +95,20 @@ public final class XMLSignature implements IXMLEncodable
 	 * <dt> <b> value </b> </dt> <dd> <i> certificate XML element </i> </dd>
 	 * </dl>
 	 */
-	private Hashtable m_appendedCertificates;
+	//private Hashtable m_appendedCertificates;
 
+	/**
+	 * Stores all appended certificates
+	 * It is very important, that whenever this Vector is changed,
+	 * we also have to change m_appendedCertXMLElements, because
+	 * the values have to be at the same index of the Vectors
+	 */
+	private Vector m_appendedCerts;
+	/** Stores the XML represenation of the appended certificates */
+	private Vector m_appendedCertXMLElements;
+	/** Stores the certification Path of this XMLSignature */
 	private CertPath m_certPath;
+	/** Indicates if the Signature was verfied already */
 	private boolean m_verified;
 
 	/**
@@ -105,7 +116,8 @@ public final class XMLSignature implements IXMLEncodable
 	 */
 	private XMLSignature()
 	{
-		m_appendedCertificates = new Hashtable();
+		m_appendedCerts = new Vector();
+		m_appendedCertXMLElements = new Vector();
 		m_verified = false;
 	}
 
@@ -124,7 +136,7 @@ public final class XMLSignature implements IXMLEncodable
 		}
 
 		m_elemSignature = a_element;
-		m_appendedCertificates = findCertificates(m_elemSignature);
+		setCertificates(m_elemSignature);
 
 		node = XMLUtil.getFirstChildByName(m_elemSignature, ELEM_SIGNED_INFO);
 		if (node == null)
@@ -436,8 +448,8 @@ public final class XMLSignature implements IXMLEncodable
 			if((certificates != null) && (certificates.hasMoreElements()))
 			{
 				//we found at least one certificate
-				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "Found appended certificates!");
-				//take the first certificate and try to verify the XML-Signature
+				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "Found "+ signature.countCertificates() +" appended certificates!");
+
 				currentCertificate = (JAPCertificate)certificates.nextElement();
 
 				signature.m_certPath = new CertPath(currentCertificate);
@@ -556,7 +568,7 @@ public final class XMLSignature implements IXMLEncodable
 		}
 		/*if(!signature.isVerified())
 		{
-			System.out.println("###ERROR###\n" + XMLUtil.toString(a_node));
+			System.out.println("###ERROR###\n" + XMLUtil.toString(a_node) +"\n");
 		}*/
 		//System.out.println(signature.getCertPath());
 	    return signature;
@@ -644,8 +656,8 @@ public final class XMLSignature implements IXMLEncodable
 	 */
 	public synchronized Vector getCertificates()
 	{
-		Vector certificates = new Vector();
-		Enumeration enumCerts = m_appendedCertificates.keys();
+		Vector certificates = new Vector(m_appendedCerts.size());
+		Enumeration enumCerts = m_appendedCerts.elements();
 		while (enumCerts.hasMoreElements())
 		{
 			certificates.addElement(enumCerts.nextElement());
@@ -661,7 +673,7 @@ public final class XMLSignature implements IXMLEncodable
 	 */
 	public synchronized boolean containsCertificate(JAPCertificate a_certificate)
 	{
-		return m_appendedCertificates.containsKey(a_certificate);
+		return m_appendedCerts.contains(a_certificate);
 	}
 
 	/**
@@ -670,7 +682,7 @@ public final class XMLSignature implements IXMLEncodable
 	 */
 	public synchronized int countCertificates()
 	{
-		return m_appendedCertificates.size();
+		return m_appendedCerts.size();
 	}
 
 	/**
@@ -678,7 +690,7 @@ public final class XMLSignature implements IXMLEncodable
 	 */
 	public synchronized void clearCertificates()
 	{
-		Enumeration certificates = m_appendedCertificates.elements();
+		Enumeration certificates = m_appendedCertXMLElements.elements();
 		Element currentElemCertificate;
 		Node parentNode;
 
@@ -691,8 +703,8 @@ public final class XMLSignature implements IXMLEncodable
 				parentNode.removeChild(currentElemCertificate);
 			}
 		}
-
-		m_appendedCertificates.clear();
+		m_appendedCertXMLElements.clear();
+		m_appendedCerts.clear();
 	}
 
 	/**
@@ -702,11 +714,18 @@ public final class XMLSignature implements IXMLEncodable
 	 */
 	public synchronized boolean removeCertificate(JAPCertificate a_certificate)
 	{
-		if (m_appendedCertificates.remove(a_certificate) != null)
+		int index = m_appendedCerts.indexOf(a_certificate);
+		if(index >= 0)
 		{
+			m_appendedCerts.removeElementAt(index);
+			if(!(index < m_appendedCertXMLElements.size()))
+			{
+				m_appendedCertXMLElements.removeElementAt(index);
+				//the certificate was removed from both Vectors
 			return true;
 		}
-
+		}
+		//Item was not found
 		return false;
 	}
 
@@ -749,7 +768,7 @@ public final class XMLSignature implements IXMLEncodable
 		/* test if the signature already contains the certificate and
 		 * if the certificate is suitable to verify the signature
 		 */
-		if (m_appendedCertificates.containsKey(a_certificate) ||
+		if (m_appendedCerts.contains(a_certificate) ||
 			!checkSignature(this, a_certificate.getPublicKey()))
 		{
 			return false;
@@ -758,8 +777,9 @@ public final class XMLSignature implements IXMLEncodable
 		// create a new certificate element
 		elemCertificate = a_certificate.toXmlElement(getSignatureElement().getOwnerDocument());
 
-		// add the certificate to the hashtable
-		m_appendedCertificates.put(a_certificate, elemCertificate);
+		// add the certificate to the two vectors
+		m_appendedCerts.addElement(a_certificate);
+		m_appendedCertXMLElements.addElement(elemCertificate);
 
 		// add the certificate to the signature element
 		nodeCertificateContainer.appendChild(elemCertificate);
@@ -1038,6 +1058,47 @@ public final class XMLSignature implements IXMLEncodable
 		}
 
 		return signature;
+	}
+
+	private synchronized void setCertificates(Element a_xmlSignature)
+	{
+		m_appendedCerts = new Vector();
+		m_appendedCertXMLElements = new Vector();
+		JAPCertificate currentCertificate;
+		Element elemContainer;
+		Node nodeCertificate;
+
+		elemContainer = (Element) XMLUtil.getFirstChildByName(a_xmlSignature, ELEM_KEY_INFO);
+		if (elemContainer == null)
+		{
+			return;
+		}
+
+		elemContainer = (Element) XMLUtil.getFirstChildByName(elemContainer,
+			JAPCertificate.XML_ELEMENT_CONTAINER_NAME);
+		if (elemContainer == null)
+		{
+			return;
+		}
+
+		nodeCertificate = XMLUtil.getFirstChildByName(elemContainer, JAPCertificate.XML_ELEMENT_NAME);
+		while (nodeCertificate != null)
+		{
+			try
+			{
+				currentCertificate = JAPCertificate.getInstance( (Element) nodeCertificate);
+				if (currentCertificate != null)
+				{
+					m_appendedCerts.addElement(currentCertificate);
+					m_appendedCertXMLElements.addElement(nodeCertificate);
+				}
+			}
+			catch (ClassCastException a_e)
+			{
+				// the node is non XML element; should not happen...
+			}
+			nodeCertificate = nodeCertificate.getNextSibling();
+		}
 	}
 
 	/**

@@ -268,7 +268,7 @@ public class InfoServiceCommands implements JWSInternalCommands
 			if (SignatureVerifier.getInstance().verifyXml(mixCascadeNode,
 				SignatureVerifier.DOCUMENT_CLASS_MIX) == true)
 			{
-				MixCascade mixCascadeEntry = new MixCascade(mixCascadeNode);
+				MixCascade mixCascadeEntry = new MixCascade(mixCascadeNode, false);
 				Database.getInstance(MixCascade.class).update(mixCascadeEntry);
 			}
 			else

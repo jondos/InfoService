@@ -106,6 +106,12 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
   private CertPath m_mixCertPath;
 
   /**
+   * Stores the signature element for this mix.
+   * The CertPath is not set (null) if the MixInfo-Object is in the InfoService
+   */
+  private XMLSignature m_mixSignature;
+
+  /**
    * If this MixInfo has been recevied directly from a cascade connection.
    */
   private boolean m_bFromCascade;
@@ -164,18 +170,18 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 	  {
 	      try
 		  {
-			  XMLSignature documentSignature = SignatureVerifier.getInstance().getVerifiedXml(a_mixNode,
+			  m_mixSignature = SignatureVerifier.getInstance().getVerifiedXml(a_mixNode,
 				  SignatureVerifier.DOCUMENT_CLASS_MIX);
 
-			  if (documentSignature != null)
+			  if (m_mixSignature != null)
 			  {
-				  Enumeration appendedCertificates = documentSignature.getCertificates().elements();
+				  Enumeration appendedCertificates = m_mixSignature.getCertificates().elements();
 				  /* store the first certificate (there should be only one) -> needed for verification of the
 				   * MixCascadeStatus XML structure */
 				  if (appendedCertificates.hasMoreElements())
 				  {
-					  m_mixCertificate = (JAPCertificate) (appendedCertificates.nextElement());
-					  m_mixCertPath = documentSignature.getCertPath();
+					  m_mixCertPath = m_mixSignature.getCertPath();
+					  m_mixCertificate = m_mixCertPath.getFirstCertificate();
 				  }
 				  else
 				  {
@@ -196,6 +202,9 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 							e.toString());
 		  }
 	  }
+
+	  Element operatorNode = null;
+	  Element locationNode = null;
 	  if (!a_bFromCascade)
 	  {
 		  /* get the name */
@@ -216,24 +225,15 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 		  {
 			  throw (new XMLParseException("Location", m_mixId));
 		  }
-		  Element locationNode = (Element) (locationNodes.item(0));
-		  m_mixLocation = new ServiceLocation(locationNode, m_mixCertificate);
+		  locationNode = (Element) (locationNodes.item(0));
 		  /* get the operator */
 		  NodeList operatorNodes = a_mixNode.getElementsByTagName("Operator");
 		  if (operatorNodes.getLength() == 0)
 		  {
 			  throw (new XMLParseException("Operator", m_mixId));
 		  }
-		  Element operatorNode = (Element) (operatorNodes.item(0));
-		  //get the Operator Certificate from the CertPath
-		  if(m_mixCertPath != null)
-		  {
-			  m_mixOperator = new ServiceOperator(operatorNode, m_mixCertPath.getSecondCertificate());
-		  }
-		  else
-		  {
-			   m_mixOperator = new ServiceOperator(operatorNode, null);
-		  }
+		  operatorNode = (Element) (operatorNodes.item(0));
+
 		  /* get the software information */
 		  NodeList softwareNodes = a_mixNode.getElementsByTagName("Software");
 		  if (softwareNodes.getLength() == 0)
@@ -255,6 +255,17 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 	  else
 	  {
 		  m_lastUpdate = System.currentTimeMillis() - Constants.TIMEOUT_MIX;
+	  }
+
+	  m_mixLocation = new ServiceLocation(locationNode, m_mixCertificate);
+	  //get the Operator Certificate from the CertPath
+	  if (m_mixCertPath != null)
+	  {
+		  m_mixOperator = new ServiceOperator(operatorNode, m_mixCertPath.getSecondCertificate());
+	  }
+	  else
+	  {
+		  m_mixOperator = new ServiceOperator(operatorNode, null);
 	  }
 
 	  /* as default no mix is free, only if we receive a configuration request from the mix and it
