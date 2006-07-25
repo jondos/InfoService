@@ -48,6 +48,9 @@ import org.bouncycastle.asn1.x509.X509ObjectIdentifiers;
 import org.bouncycastle.crypto.digests.SHA1Digest;
 import org.bouncycastle.crypto.encodings.PKCS1Encoding;
 import org.bouncycastle.crypto.engines.RSAEngine;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /*** SHA1withRSA Signature as described in RFC 2313 */
 public final class MyRSASignature implements IMySignature
@@ -140,6 +143,7 @@ public final class MyRSASignature implements IMySignature
 		}
 		catch (Throwable e)
 		{
+			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "Signature algorithm does not match!");
 			return false;
 		}
 	}

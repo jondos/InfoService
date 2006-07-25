@@ -1359,6 +1359,15 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					{
 						bDatabaseChanged = true;
 					}
+					else if (message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED)
+					{
+						MixCascade currentCascade = (MixCascade) m_listMixCascade.getSelectedValue();
+						if (currentCascade != null &&
+							currentCascade.equals((MixCascade)message.getMessageData()))
+						{
+							bDatabaseChanged = true;
+						}
+					}
 
 					if (message.getMessageCode() == DatabaseMessage.ALL_ENTRIES_REMOVED)
 					{
@@ -1420,8 +1429,32 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				}
 				else if (message.getMessageData() instanceof StatusInfo)
 				{
-					/** @todo update only if current cascade is changed */
+					MixCascade currentCascade = (MixCascade) m_listMixCascade.getSelectedValue();
+					if (currentCascade != null)
+					{
+						if (m_listMixCascade.getSelectedValue() != null &&
+							currentCascade.getId().equals(
+								( (StatusInfo) message.getMessageData()).getId()))
+						{
+							bDatabaseChanged = true;
+						}
+					}
 				}
+				else if (message.getMessageData() instanceof MixInfo)
+				{
+					MixCascade currentCascade = (MixCascade) m_listMixCascade.getSelectedValue();
+					if (currentCascade != null)
+					{
+						if (m_listMixCascade.getSelectedValue() != null &&
+							currentCascade.getMixIds().contains(
+							((MixInfo) message.getMessageData()).getId()))
+						{
+							bDatabaseChanged = true;
+						}
+					}
+				}
+
+
 
 				final boolean bFinalDatabaseChanged = bDatabaseChanged;
 				SwingUtilities.invokeLater(
