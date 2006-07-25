@@ -98,7 +98,7 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 */
 	private Element m_xmlStructure;
 
-	private XMLSignature m_unverifiedSignature;
+	private XMLSignature m_signature;
 
 	/**
 	 * True, if this MixCascade is user defined, false if the Information comes from the
@@ -111,11 +111,6 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 */
 	private boolean m_isPayment;
 
-	/**
-	 * True if the certificate of the cascade is signed by a root certificate.
-	 */
-	private boolean m_isCertified = true;
-
 	private String m_mixProtocolVersion;
 
 	/**
@@ -123,28 +118,16 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 */
 	private boolean m_bFromCascade;
 
-
-	public MixCascade(Element a_mixCascadeNode, boolean a_isCertified) throws XMLParseException
-	{
-		this(a_mixCascadeNode);
-		m_isCertified = a_isCertified;
-	}
-
-	public MixCascade(Element a_mixCascadeNode, boolean a_isCertified, long a_expireTime)
-		throws XMLParseException
-	{
-		this(a_mixCascadeNode, a_expireTime);
-		m_isCertified = a_isCertified;
-	}
+	private boolean m_verifySignatureNode = false;
 
 	/**
 	 * Creates a new MixCascade from XML description (MixCascade node).
 	 *
 	 * @param a_mixCascadeNode The MixCascade node from an XML document.
 	 */
-	public MixCascade(Element a_mixCascadeNode) throws XMLParseException
+	public MixCascade(Element a_mixCascadeNode, boolean a_verifySignatureNode) throws XMLParseException
 	{
-		this(a_mixCascadeNode, 0);
+		this(a_mixCascadeNode, 0, null, a_verifySignatureNode);
 	}
 
 	/**
@@ -153,9 +136,10 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		 * @param a_mixCascadeNode The MixCascade node from an XML document.
 		 * @param a_expireTime forces a specific expire time; takes default expire time if <= 0
 		 */
-	public MixCascade(Element a_mixCascadeNode, long a_expireTime) throws XMLParseException
+	public MixCascade(Element a_mixCascadeNode, boolean a_verifySignatureNode, long a_expireTime)
+		throws XMLParseException
 	{
-		this(a_mixCascadeNode, a_expireTime, null);
+		this(a_mixCascadeNode, a_expireTime, null, a_verifySignatureNode);
 	}
 
 	/**
@@ -163,9 +147,19 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 *
 	 * @param a_mixCascadeNode The MixCascade node from an XML document.
 	 * @param a_expireTime forces a specific expire time; takes default expire time if <= 0
-	 * @param a_bFromCascade if this is a MixCascade node directly received from a cascade (it is stripped)
+	 * @param a_mixIDFromCascade if this is a MixCascade node directly received from a cascade
+	 * (it is stripped) it gets this mix id; otherwise it must be null
 	 */
-	public MixCascade(Element a_mixCascadeNode, long a_expireTime, String a_mixIDFromCascade)
+	public MixCascade(Element a_mixCascadeNode, boolean a_verifySignatureNode, long a_expireTime,
+					  String a_mixIDFromCascade)
+		throws XMLParseException
+	{
+		this(a_mixCascadeNode, a_expireTime, a_mixIDFromCascade, a_verifySignatureNode);
+	}
+
+
+	private MixCascade(Element a_mixCascadeNode, long a_expireTime, String a_mixIDFromCascade,
+					  boolean a_verifySignatureNode)
 		throws XMLParseException
 	{
 		/* use always the timeout for the infoservice context, because the JAP client currently does
@@ -173,6 +167,7 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		 */
 		super(a_expireTime <= 0 ? (System.currentTimeMillis() + Constants.TIMEOUT_MIXCASCADE) : a_expireTime);
 		m_bFromCascade = a_mixIDFromCascade != null;
+		m_verifySignatureNode = a_verifySignatureNode;
 		/* get the ID */
 		if (a_mixCascadeNode == null || !a_mixCascadeNode.getNodeName().equals(XML_ELEMENT_NAME))
 		{
@@ -278,13 +273,16 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 			m_lastUpdate = System.currentTimeMillis() - Constants.TIMEOUT_MIXCASCADE;
 		}
 		/* try to get the certificate from the Signature node */
+		if(m_verifySignatureNode)
+		{
 		try
 		{
 			m_mixCascadeCertificate = null;
-			m_unverifiedSignature = XMLSignature.getUnverified(a_mixCascadeNode);
-			if (m_unverifiedSignature != null)
+				m_signature = SignatureVerifier.getInstance().getVerifiedXml(a_mixCascadeNode,
+					SignatureVerifier.DOCUMENT_CLASS_MIX);
+				if (m_signature != null)
 			{
-				Enumeration appendedCertificates = m_unverifiedSignature.getCertificates().elements();
+					Enumeration appendedCertificates = m_signature.getCertificates().elements();
 				/* store the first certificate (there should be only one) -> needed for verification of the
 				 * MixCascadeStatus XML structure */
 				if (appendedCertificates.hasMoreElements())
@@ -309,7 +307,7 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 						  "Error while looking for appended certificates in the MixCascade structure: " +
 						  e.toString());
 		}
-
+		}
 		/* get the information, whether this mixcascade was user-defined within the JAP client */
 		m_userDefined = XMLUtil.parseAttribute(a_mixCascadeNode, XML_ATTR_USER_DEFINED, false);
 
@@ -656,12 +654,16 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		synchronized (this)
 		{
 			int certificateLock = -1;
-			if (m_mixCascadeCertificate != null)
+			if (m_mixCascadeCertificate != null && m_signature != null && m_signature.getCertPath() != null)
+			{
+				//check if the Certificates are verified
+				if(m_signature.getCertPath().verify())
 			{
 				/* add the cascade certificate temporary to the certificate store */
 				certificateLock = SignatureVerifier.getInstance().getVerificationCertificateStore().
-					addCertificateWithVerification(m_mixCascadeCertificate,
-					JAPCertificate.CERTIFICATE_TYPE_MIX, false);
+						addCertificateWithoutVerification(m_mixCascadeCertificate,
+						JAPCertificate.CERTIFICATE_TYPE_MIX, false, false);
+				}
 			}
 			StatusInfo statusInfo =
 				InfoServiceHolder.getInstance().getStatusInfo(getId(), getNumberOfMixes());
@@ -738,6 +740,11 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		return m_mixCascadeCertificate;
 	}
 
+	public XMLSignature getMixCascadeSignature()
+	{
+		return m_signature;
+	}
+
 	/**
 	 * Creates an XML node without signature for this MixCascade.
 	 *
@@ -795,9 +802,9 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		if (isUserDefined())
 		{
 			XMLUtil.setAttribute(mixCascadeNode, XML_ATTR_USER_DEFINED, true);
-			if (m_unverifiedSignature != null)
+			if (m_signature != null)
 			{
-				mixCascadeNode.appendChild(m_unverifiedSignature.toXmlElement(doc));
+				mixCascadeNode.appendChild(m_signature.toXmlElement(doc));
 			}
 		}
 
@@ -809,7 +816,7 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 
 	public boolean isCertified()
 	{
-		return m_isCertified;
+		return true;
 	}
 
 	public boolean isPayment()

@@ -947,7 +947,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 				"Cannot verify the signature for MixCascade entry: " + XMLUtil.toString(mixNode)));
 		}
 		/* signature was valid */
-		return new MixCascade(mixNode, Long.MAX_VALUE);
+		return new MixCascade(mixNode, true, Long.MAX_VALUE);
 	}
 
 	/**
@@ -964,7 +964,6 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		{
 			throw (new XMLParseException(MixCascade.XML_ELEMENT_CONTAINER_NAME, "Node missing!"));
 		}
-		//System.out.println(XMLUtil.toString(doc));
 		Element mixCascadesNode = (Element) (mixCascadesNodes.item(0));
 		NodeList mixCascadeNodes = mixCascadesNode.getElementsByTagName(MixCascade.XML_ELEMENT_NAME);
 		Hashtable mixCascades = new Hashtable();

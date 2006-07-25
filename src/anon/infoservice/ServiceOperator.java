@@ -71,6 +71,11 @@ public class ServiceOperator
 			subject = operatorCertificate.getSubject();
 			/* get the organisation name */
 			organisation = subject.getOrganisation();
+			if(organisation == null || organisation.trim().length() == 0)
+			{
+				// if no organisation is given, use the common name
+				organisation = subject.getCommonName();
+			}
 
 			/* get the e-mail adress */
 			m_strEmail = subject.getE_EmailAddress();
@@ -88,6 +93,7 @@ public class ServiceOperator
 			node = XMLUtil.getFirstChildByName(operatorNode, "Organisation");
 		    organisation = XMLUtil.parseValue(node, null);
 		}
+
 		if(m_strEmail == null || m_strEmail.trim().length() == 0 || X509SubjectAlternativeName.isValidEMail(m_strEmail))
 		{
 			node = XMLUtil.getFirstChildByName(operatorNode, XML_ELEM_EMAIL);

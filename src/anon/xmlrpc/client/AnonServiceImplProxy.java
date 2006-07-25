@@ -115,7 +115,6 @@ public class AnonServiceImplProxy implements AnonService
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
 			throw new IOException("Error processing XML-RCP: " + method);
 		}
 	}

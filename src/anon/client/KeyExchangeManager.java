@@ -134,14 +134,14 @@ public class KeyExchangeManager {
 		  }
 
 		   /* process the received XML structure */
-		   MixCascade cascade = new MixCascade(XMLUtil.toXMLDocument(xmlData).getDocumentElement(),
+		   MixCascade cascade = new MixCascade(XMLUtil.toXMLDocument(xmlData).getDocumentElement(), true,
 											   Long.MAX_VALUE, a_cascade.getId());
 		  /* verify the signature */
-		  if (SignatureVerifier.getInstance().verifyXml(cascade.getXmlStructure(),
+		  /*if (SignatureVerifier.getInstance().verifyXml(cascade.getXmlStructure(),
 			  SignatureVerifier.DOCUMENT_CLASS_MIX) == false)
 		  {
 			  throw (new SignatureException("Received XML structure has an invalid signature."));
-		  }
+		  }*/
 
 		  if (a_cascade.isUserDefined())
 		  {
@@ -168,14 +168,20 @@ public class KeyExchangeManager {
 		   * certificate store (needed for verification of the MixCascadeStatus
 		   * messages)
 		   */
-		  if (cascade.getMixCascadeCertificate() != null)
+		  if (cascade.getMixCascadeCertificate() != null &&
+		          cascade.getMixCascadeSignature() != null &&
+				      cascade.getMixCascadeSignature().getCertPath() != null)
+		  {
+			  // add certificate only if the CertPath is valid
+			  if(cascade.getMixCascadeSignature().getCertPath().verify())
 		  {
 			  m_mixCascadeCertificateLock = SignatureVerifier.getInstance().
-				  getVerificationCertificateStore().addCertificateWithVerification(
+					  getVerificationCertificateStore().addCertificateWithoutVerification(
 					  cascade.getMixCascadeCertificate(),
-					  JAPCertificate.CERTIFICATE_TYPE_MIX, false);
+						  JAPCertificate.CERTIFICATE_TYPE_MIX, false, false);
 			  LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 							"Added appended certificate from the MixCascade structure to the certificate store.");
+			  }
 		  }
 		  else
 		  {

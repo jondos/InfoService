@@ -107,6 +107,7 @@ public final class MyRSASignature implements IMySignature
 			ByteArrayInputStream bIn = new ByteArrayInputStream(decryptedSig);
 			ASN1InputStream dIn = new ASN1InputStream(bIn);
 
+
 			DigestInfo digInfo = new DigestInfo( (ASN1Sequence) dIn.readObject());
 
 			if (!digInfo.getAlgorithmId().getObjectId().equals(ms_AlgID.getObjectId()))
@@ -137,7 +138,7 @@ public final class MyRSASignature implements IMySignature
 
 			return true;
 		}
-		catch (Exception e)
+		catch (Throwable e)
 		{
 			return false;
 		}

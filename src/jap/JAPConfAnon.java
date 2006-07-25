@@ -176,7 +176,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	/** the Certificate of the selected Mix-Server */
 	private JAPCertificate m_serverCert;
-	private CertPath m_serverCertPath;
+	private MixInfo m_serverInfo;
 
 	private Vector m_locationCoordinates;
 
@@ -668,13 +668,17 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		m_urlLabel.setText(m_infoService.getUrl(selectedMixId));
 
-		m_serverCert = m_infoService.getMixCertificate(selectedMixId);
-		if (m_serverCert == null && cascade != null && server == 0)
+		m_serverInfo = m_infoService.getMixInfo(selectedMixId);
+		if(m_serverInfo != null)
+		{
+			m_serverCert = m_serverInfo.getMixCertificate();
+		}
+		/*if (m_serverCert == null && cascade != null && server == 0)
 		{
 			// get the certificate for the first mix
 			m_serverCert = cascade.getMixCascadeCertificate();
-		}
-		if (m_serverCert != null)
+		}*/
+		if (m_serverCert != null && m_serverInfo != null)
 		{
 			m_viewCertLabel.setText(
 				URL_BEGIN + (isServerCertVerified() ? JAPMessages.getString(CertDetailsDialog.MSG_CERT_VERIFIED) + "," :
@@ -683,7 +687,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				 JAPMessages.getString(CertDetailsDialog.MSG_CERTVALID) : RED_BEGIN + " " +
 				 JAPMessages.getString(JAPMessages.getString(CertDetailsDialog.MSG_CERTNOTVALID)) + RED_END) +
 				URL_END);
-			m_serverCertPath = m_infoService.getMixCertPath(selectedMixId);
 		}
 		else
 		{
@@ -915,22 +918,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	private boolean isServerCertVerified()
 	{
-		boolean verified = false;
-		if(m_serverCert != null)
-		{
-			Enumeration certificates = SignatureVerifier.getInstance().getVerificationCertificateStore().
-				getAvailableCertificatesByType(SignatureVerifier.DOCUMENT_CLASS_MIX).elements();
-			while (certificates.hasMoreElements())
-			{
-				if (m_serverCert.verify( ( (CertificateInfoStructure) certificates.nextElement()).
-										getCertificate()))
+		if(m_serverInfo != null)
 				{
-					verified = true;
-					break;
-				}
+			return m_serverInfo.getMixCertPath().verify();
 			}
-		}
-		return verified;
+		return false;
 	}
 
 	/**
@@ -952,8 +944,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				if (mc.getListenerInterface(0).getHost().equalsIgnoreCase(
 					c.getListenerInterface(0).getHost()))
 				{
-					if (mc.getListenerInterface(0).getPort() ==
-						c.getListenerInterface(0).getPort())
+					if (mc.getListenerInterface(0).getPort() == c.getListenerInterface(0).getPort() &&
+						mc.isUserDefined())
 					{
 						valid = false;
 					}
@@ -984,7 +976,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			}
 		}
 		catch (Exception a_e)
-		{a_e.printStackTrace();
+		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot edit cascade");
 			JAPDialog.showErrorDialog(this.getRootPanel(), JAPMessages.getString("errorCreateCascadeDesc"),
 									  LogType.MISC, a_e);
@@ -1083,11 +1075,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		else if (e.getSource() == m_viewCertLabel)
 		{
-			if (m_serverCert != null)
+			if (m_serverCert != null && m_serverInfo != null)
 			{
 				CertDetailsDialog dialog = new CertDetailsDialog(getRootPanel().getParent(),
 					m_serverCert.getX509Certificate(), isServerCertVerified(),
-					JAPController.getInstance().getLocale(), m_serverCertPath);
+					JAPController.getInstance().getLocale(), m_serverInfo.getMixCertPath());
 				dialog.pack();
 				dialog.setVisible(true);
 			}
@@ -1721,15 +1713,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			return cascade.getPorts();
 		}
 
-	    public CertPath getMixCertPath(String a_mixID)
-		{
-			MixInfo mixinfo = getMixInfo(a_mixID);
-			if(mixinfo != null)
-			{
-				return mixinfo.getMixCertPath();
-			}
-			return null;
-		}
 
 		public JAPCertificate getMixCertificate(String a_mixID)
 		{
@@ -1752,32 +1735,16 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			ServiceOperator operator;
 			MixInfo info;
 			String strEmail = null;
-			//X509DistinguishedName name = null;
 
 			info = getMixInfo(a_mixId);
 			if (info != null)
 			{
 				operator = info.getServiceOperator();
-				strEmail = operator.getEMail();
-				/*name = info.getMixCertificate().getSubject();
-				if (name != null)
-				{
-					strEmail = name.getEmailAddress();
-					if (strEmail == null || !X509SubjectAlternativeName.isValidEMail(strEmail))
-					{
-						strEmail = name.getE_EmailAddress();
-					}
-				}*/
-			}
-			/*
-			if (strEmail == null || !X509SubjectAlternativeName.isValidEMail(strEmail))
-			{
-				operator = getServiceOperator(a_mixId);
 				if (operator != null)
 				{
 					strEmail = operator.getEMail();
 				}
-			}*/
+			}
 			if (strEmail == null || !X509SubjectAlternativeName.isValidEMail(strEmail))
 			{
 				return "N/A";

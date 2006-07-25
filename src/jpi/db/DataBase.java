@@ -922,7 +922,6 @@ public class DataBase extends DBInterface
 		catch (SQLException e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.PAY, "Could not store passive payment info");
-			e.printStackTrace();
 			throw new Exception();
 		}
 

@@ -68,25 +68,24 @@ public final class ByteSignature
 	{
 		if (a_publicKey == null)
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-						  "ByteSignature:verify(byte[] message, byte] signature,IMyPublicKey key) key==null!");
+			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "key==null!");
 			return false;
 		}
 
 		//synchronized (a_publicKey.getSignatureAlgorithm())
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-				"ByteSignature:verify(byte[] message, byte] signature,IMyPublicKey key) try to verify a message...");
+				"Try to verify a message...");
 			ISignatureVerificationAlgorithm algorithm = a_publicKey.getSignatureAlgorithm();
 			if (algorithm != null)
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-							  "ByteSignature:verify(byte[] message, byte] signature,IMyPublicKey key) try to verify a message - using algorithm: " +
-							  algorithm.toString());
+							  "Try to verify a message - using algorithm: " + algorithm.toString());
 			}
 			else
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "ByteSignature:verify(byte[] message, byte] signature,IMyPublicKey key) try to verify a message - unknown algorithm!");
+				LogHolder.log(LogLevel.EXCEPTION, LogType.CRYPTO,
+							  "Try to verify a message - unknown algorithm!");
 				return false;
 			}
 			return algorithm.verify(a_message, a_signature);

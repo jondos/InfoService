@@ -786,6 +786,31 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 				//Database.getInstance(MixCascade.class).update(getCurrentMixCascade());
 
+				/* load the signature verification settings */
+				try
+				{
+					Element signatureVerificationNode = (Element) (XMLUtil.getFirstChildByName(root,
+						SignatureVerifier.getXmlSettingsRootNodeName()));
+					if (signatureVerificationNode != null)
+					{
+						SignatureVerifier.getInstance().loadSettingsFromXml(signatureVerificationNode);
+					}
+					else
+					{
+						throw (new Exception("JAPController: loadConfigFile: No SignatureVerification node found. Using default settings for signature verification."));
+					}
+				}
+				catch (Exception e)
+				{
+					LogHolder.log(LogLevel.ERR, LogType.MISC, e);
+				}
+				/* As some old Versions of JAP have problems with writing the correct values, we include the
+				 * default certs if config version is less than 0.20 */
+				if (strVersion == null || strVersion.compareTo("0.20") < 0)
+				{
+					addDefaultCertificates();
+				}
+
 				/* try to load information about cascades */
 				Node nodeCascades = XMLUtil.getFirstChildByName(root, MixCascade.XML_ELEMENT_CONTAINER_NAME);
 				if (nodeCascades != null)
@@ -798,7 +823,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							try
 							{
 								Database.getInstance(MixCascade.class).update(
-									new MixCascade((Element)nodeCascade, Long.MAX_VALUE));
+									new MixCascade((Element)nodeCascade, true, Long.MAX_VALUE));
 							}
 							catch (Exception e)
 							{}
@@ -835,7 +860,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 								catch (Exception a_e)
 								{
 									LogHolder.log(LogLevel.ERR, LogType.MISC,
-												  "Illegal MixInfo object in configuration.");
+												  "Illegal MixInfo object in configuration.", a_e);
 								}
 							}
 						}
@@ -985,31 +1010,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 						LogHolder.log(LogLevel.INFO, LogType.MISC,
 									  " Error loading Debug Settings.");
 					}
-				}
-
-				/* load the signature verification settings */
-				try
-				{
-					Element signatureVerificationNode = (Element) (XMLUtil.getFirstChildByName(root,
-						SignatureVerifier.getXmlSettingsRootNodeName()));
-					if (signatureVerificationNode != null)
-					{
-						SignatureVerifier.getInstance().loadSettingsFromXml(signatureVerificationNode);
-					}
-					else
-					{
-						throw (new Exception("JAPController: loadConfigFile: No SignatureVerification node found. Using default settings for signature verification."));
-					}
-				}
-				catch (Exception e)
-				{
-					LogHolder.log(LogLevel.ERR, LogType.MISC, e);
-				}
-				/* As some old Versions of JAP have problems with writing the correct values, we include the
-				 * default certs if config version is less than 0.20 */
-				if (strVersion == null || strVersion.compareTo("0.20") < 0)
-				{
-					addDefaultCertificates();
 				}
 
 				/* load the infoservice management settings */
@@ -1268,7 +1268,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						MixCascade.XML_ELEMENT_NAME);
 					try
 					{
-						m_currentMixCascade = new MixCascade( (Element) mixCascadeNode, Long.MAX_VALUE);
+						m_currentMixCascade = new MixCascade( (Element) mixCascadeNode, true, Long.MAX_VALUE);
 					}
 					catch (Exception e)
 					{
@@ -3275,10 +3275,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 	{
 		JAPCertificate defaultRootCert = null;
 		/* each certificate in the directory for the default mix-certs is loaded */
-	    Enumeration mixCertificates = JAPCertificate.getInstance(JAPConstants.CERTSPATH + JAPConstants.MIX_CERTSPATH, true).elements();
-		while(mixCertificates.hasMoreElements())
+	    Enumeration certificates = JAPCertificate.getInstance(JAPConstants.CERTSPATH + JAPConstants.MIX_CERTSPATH, true).elements();
+		while(certificates.hasMoreElements())
 		{
-			defaultRootCert = (JAPCertificate)mixCertificates.nextElement();
+			defaultRootCert = (JAPCertificate)certificates.nextElement();
 			SignatureVerifier.getInstance().getVerificationCertificateStore().
 			addCertificateWithoutVerification(defaultRootCert, JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX, true, true);
 		}
@@ -3289,18 +3289,19 @@ public final class JAPController extends Observable implements IProxyListener, O
 						  "Error loading default Mix root certificates.");
 		}
 
-		defaultRootCert = JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.
-			CERTSPATH + JAPConstants.TRUSTEDINFOSERVICEROOTCERT));
-		if (defaultRootCert != null)
+	    /* load root infoservice certificates */
+	    certificates = JAPCertificate.getInstance(JAPConstants.CERTSPATH + JAPConstants.INFOSERVICE_CERTSPATH, true).elements();
+		while(certificates.hasMoreElements())
 		{
+			defaultRootCert = (JAPCertificate)certificates.nextElement();
 			SignatureVerifier.getInstance().getVerificationCertificateStore().
-				addCertificateWithoutVerification(defaultRootCert,
-												  JAPCertificate.CERTIFICATE_TYPE_ROOT_INFOSERVICE, true, true);
+			addCertificateWithoutVerification(defaultRootCert, JAPCertificate.CERTIFICATE_TYPE_ROOT_INFOSERVICE, true, true);
 		}
-		else
+		/* no elements were found */
+		if (defaultRootCert == null)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC,
-						  "Error loading default InfoService root certificate.");
+						  "Error loading default InfoService root certificates.");
 		}
 
 		JAPCertificate updateMessagesCert = JAPCertificate.getInstance(ResourceLoader.loadResource(

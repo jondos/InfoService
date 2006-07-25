@@ -57,7 +57,6 @@ public class AnonServiceImplRemote implements XmlRpcHandler
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
 			return -1;
 		}
 	}
