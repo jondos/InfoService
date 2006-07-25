@@ -27,15 +27,15 @@
  */
 package jap;
 
-import java.net.URL;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Date;
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
-import java.util.Hashtable;
-import java.util.Date;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -64,46 +64,39 @@ import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import anon.util.Util;
+import anon.crypto.JAPCertificate;
+import anon.crypto.X509SubjectAlternativeName;
+import anon.infoservice.Database;
+import anon.infoservice.DatabaseMessage;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
 import anon.infoservice.MixInfo;
-import anon.infoservice.StatusInfo;
 import anon.infoservice.ServiceLocation;
 import anon.infoservice.ServiceOperator;
-import anon.infoservice.Database;
-import anon.infoservice.DatabaseMessage;
+import anon.infoservice.StatusInfo;
+/* for opening a CertDetailsDialog with the certificate data of the selected server*/
+import anon.util.Util;
+import gui.CertDetailsDialog;
+import gui.CountryMapper;
 import gui.GUIUtils;
 import gui.JAPHelp;
-import gui.MapBox;
 import gui.JAPJIntField;
 import gui.JAPMessages;
 import gui.JAPMultilineLabel;
+import gui.MapBox;
 import gui.ServerListPanel;
 import gui.dialog.JAPDialog;
-import gui.CountryMapper;
 import jap.forward.JAPRoutingMessage;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
-import javax.swing.ScrollPaneConstants;
-
-/* for opening a CertDetailsDialog with the certificate data of the selected server*/
-import anon.util.XMLUtil;
-import anon.crypto.CertPath;
-import anon.crypto.JAPCertificate;
-import anon.crypto.SignatureVerifier;
-import anon.crypto.XMLSignature;
-import gui.CertDetailsDialog;
-import anon.crypto.X509SubjectAlternativeName;
-import anon.crypto.X509DistinguishedName;
-import anon.crypto.CertificateInfoStructure;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener, Observer
@@ -123,6 +116,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private static final String URL_END = "</u></font></html>";
 	private static final String RED_BEGIN = "<font color=red>";
 	private static final String RED_END = "</font>";
+
+	private final Object MIX_COMBO_UPDATE_LOCK = new Object();
+	private boolean m_bUpdateServerPanel = true;
 
 	private InfoServiceTempLayer m_infoService;
 
@@ -412,13 +408,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_editCascadeButton = new JButton(JAPMessages.getString("okButton"));
 		m_editCascadeButton.addActionListener(this);
 		c.gridx = 1;
-		c.weightx = 1;
+		//c.weightx = 1;
 		m_manualPanel.add(m_editCascadeButton, c);
-		m_deleteCascadeButton = new JButton(JAPMessages.getString("manualServiceDelete"));
-		m_deleteCascadeButton.addActionListener(this);
-		c.gridx = 3;
-		c.weightx = 0;
-		m_manualPanel.add(m_deleteCascadeButton, c);
 		m_cancelCascadeButton = new JButton(JAPMessages.getString("cancelButton"));
 		m_cancelCascadeButton.addActionListener(this);
 		c.gridx = 2;
@@ -517,8 +508,15 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_showEditPanelButton = new JButton(JAPMessages.getString(MSG_BUTTONEDITSHOW));
 		m_showEditPanelButton.addActionListener(this);
 		c1.gridx = 3;
-		c1.weightx = 1.0;
 		panelBttns.add(m_showEditPanelButton, c1);
+
+		m_deleteCascadeButton = new JButton(JAPMessages.getString("manualServiceDelete"));
+		m_deleteCascadeButton.addActionListener(this);
+		c1.gridx = 4;
+		c1.weightx = 1.0;
+		panelBttns.add(m_deleteCascadeButton, c1);
+
+
 
 		c.gridx = 0;
 		c.gridy = 5;
@@ -724,15 +722,21 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		Object value = m_listMixCascade.getSelectedValue();
 
-		m_listMixCascade.setModel(listModel);
-		m_listMixCascade.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		if (value == null)
+		synchronized (MIX_COMBO_UPDATE_LOCK)
 		{
-			m_listMixCascade.setSelectedIndex(0);
-		}
-		else
-		{
-			m_listMixCascade.setSelectedValue(value, true);
+			m_bUpdateServerPanel = m_manualPanel == null;
+			m_listMixCascade.setModel(listModel);
+			m_listMixCascade.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+			if (value == null)
+			{
+				m_listMixCascade.setSelectedIndex(0);
+			}
+			else
+			{
+				m_listMixCascade.setSelectedValue(value, true);
+			}
+			m_bUpdateServerPanel = true;
 		}
 		//m_listMixCascade.setEnabled(m_listMixCascade.getModel().getSize() > 0);
 
@@ -809,8 +813,12 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				try
 				{
 					//m_listMixCascade.setSelectedValue(m_Controller.getCurrentMixCascade(), true);
-					valueChanged(new ListSelectionEvent(m_listMixCascade, 0,
-						m_listMixCascade.getModel().getSize(), false));
+					/** @todo check if needed...
+					if (m_manualPanel == null) // do not interrupt cascade editing...
+					{
+						valueChanged(new ListSelectionEvent(m_listMixCascade, 0,
+							m_listMixCascade.getModel().getSize(), false));
+					}*/
 				}
 				catch (Exception e)
 				{
@@ -909,7 +917,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 								 String.valueOf(cascade.getListenerInterface(0).getPort()),
 								 false);
 			mb_manualCascadeNew = false;
-			m_deleteCascadeButton.setEnabled(true);
+
+			m_deleteCascadeButton.setEnabled(!JAPController.getInstance().getCurrentMixCascade().equals(
+						 cascade));
 			m_cancelCascadeButton.setEnabled(false);
 			m_oldCascadeHost = m_manHostField.getText();
 			m_oldCascadePort = m_manPortField.getText();
@@ -1002,6 +1012,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			{
 				Database.getInstance(MixCascade.class).remove(cascade);
 				this.updateMixCascadeCombo();
+				if (m_listMixCascade.getModel().getSize() > 0)
+				{
+					m_listMixCascade.setSelectedIndex(0);
+				}
 			}
 		}
 		catch (Exception a_e)
@@ -1070,6 +1084,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					return;
 				}
 				m_Controller.setCurrentMixCascade(c);
+				m_deleteCascadeButton.setEnabled(false);
+				m_showEditPanelButton.setEnabled(false);
 				m_listMixCascade.repaint();
 			}
 		}
@@ -1175,7 +1191,13 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	 */
 	public void valueChanged(ListSelectionEvent e)
 	{
-		if (!e.getValueIsAdjusting())
+		boolean bUpdateServerPanel;
+		synchronized (MIX_COMBO_UPDATE_LOCK)
+		{
+			bUpdateServerPanel = m_bUpdateServerPanel;
+		}
+
+		if (!e.getValueIsAdjusting() && bUpdateServerPanel)
 		{
 			if (m_listMixCascade.getSelectedIndex() > -1)
 			{
@@ -1187,9 +1209,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				if (cascade == null)
 				{
 					// no cascade is available and selected
+					m_deleteCascadeButton.setEnabled(false);
 					m_showEditPanelButton.setEnabled(false);
 					m_selectCascadeButton.setEnabled(false);
-					m_showEditPanelButton.setEnabled(false);
 					return;
 				}
 				cascadeId = cascade.getId();
@@ -1220,10 +1242,14 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 				if (cascade.isUserDefined())
 				{
-					m_showEditPanelButton.setEnabled(true);
+				   m_deleteCascadeButton.setEnabled(
+					!JAPController.getInstance().getCurrentMixCascade().equals(cascade));
+					m_showEditPanelButton.setEnabled(
+					   !JAPController.getInstance().getCurrentMixCascade().equals(cascade));
 				}
 				else
 				{
+					m_deleteCascadeButton.setEnabled(false);
 					m_showEditPanelButton.setEnabled(false);
 				}
 
@@ -1407,8 +1433,12 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 						{
 							updateMixCascadeCombo();
 						}
-						valueChanged(new ListSelectionEvent(m_listMixCascade, 0,
-							m_listMixCascade.getModel().getSize(), false));
+						/** @todo check if needed...
+						if (m_manualPanel == null) // do not interrupt cascade editing...
+						{
+							valueChanged(new ListSelectionEvent(m_listMixCascade, 0,
+								m_listMixCascade.getModel().getSize(), false));
+						}*/
 					}
 				});
 			}
