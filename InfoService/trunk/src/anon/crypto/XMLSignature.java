@@ -703,8 +703,8 @@ public final class XMLSignature implements IXMLEncodable
 				parentNode.removeChild(currentElemCertificate);
 			}
 		}
-		m_appendedCertXMLElements.clear();
-		m_appendedCerts.clear();
+		m_appendedCertXMLElements.removeAllElements();
+		m_appendedCerts.removeAllElements();
 	}
 
 	/**
