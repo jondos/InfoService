@@ -97,6 +97,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
+import anon.crypto.SignatureVerifier;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener, Observer
@@ -1171,6 +1172,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				/* register observables */
 				m_Controller.addObserver(this);
 				JAPModel.getInstance().getRoutingSettings().addObserver(this);
+				SignatureVerifier.getInstance().getVerificationCertificateStore().addObserver(this);
 				Database.getInstance(MixCascade.class).addObserver(this);
 				Database.getInstance(StatusInfo.class).addObserver(this);
 				Database.getInstance(MixInfo.class).addObserver(this);
@@ -1331,6 +1333,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	{
 		try
 		{
+			boolean bDatabaseChanged = false;
 			if (a_notifier == JAPModel.getInstance().getRoutingSettings())
 			{
 				if ( ( (JAPRoutingMessage) (a_message)).getMessageCode() ==
@@ -1349,7 +1352,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			}
 			else if (a_message != null && a_message instanceof DatabaseMessage)
 			{
-				boolean bDatabaseChanged = false;
 				DatabaseMessage message = (DatabaseMessage) a_message;
 				if (message.getMessageData() instanceof MixCascade)
 				{
@@ -1453,43 +1455,38 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 						}
 					}
 				}
-
-
-
-				final boolean bFinalDatabaseChanged = bDatabaseChanged;
-				SwingUtilities.invokeLater(
-					new Runnable()
-				{
-					public void run()
-					{
-						if (bFinalDatabaseChanged)
-						{
-							updateMixCascadeCombo();
-						}
-						/** @todo check if needed...
-						if (m_manualPanel == null) // do not interrupt cascade editing...
-						{
-							valueChanged(new ListSelectionEvent(m_listMixCascade, 0,
-								m_listMixCascade.getModel().getSize(), false));
-						}*/
-					}
-				});
 			}
 			else if (a_notifier == JAPController.getInstance() && a_message != null)
 			{
 				if ( ( (JAPControllerMessage) a_message).getMessageCode() ==
 					JAPControllerMessage.CURRENT_MIXCASCADE_CHANGED)
 				{
-					SwingUtilities.invokeLater(
-						new Runnable()
-					{
-						public void run()
-						{
-							updateMixCascadeCombo();
-						}
-					});
+					bDatabaseChanged = true;
 				}
 			}
+			else if (a_notifier == SignatureVerifier.getInstance().getVerificationCertificateStore())
+			{
+				bDatabaseChanged = true;
+			}
+
+			final boolean bFinalDatabaseChanged = bDatabaseChanged;
+			SwingUtilities.invokeLater(
+				new Runnable()
+			{
+				public void run()
+				{
+					if (bFinalDatabaseChanged)
+					{
+						updateMixCascadeCombo();
+					}
+					/** @todo seems to be superfluous...
+					if (m_manualPanel == null) // do not interrupt cascade editing...
+					{
+						valueChanged(new ListSelectionEvent(m_listMixCascade, 0,
+							m_listMixCascade.getModel().getSize(), false));
+					}*/
+				}
+				});
 		}
 		catch (Exception e)
 		{
