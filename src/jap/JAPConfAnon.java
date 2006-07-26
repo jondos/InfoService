@@ -104,6 +104,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 {
 	private static final String MSG_LABEL_CERTIFICATE = JAPConfAnon.class.getName() + "_certificate";
 	private static final String MSG_LABEL_EMAIL = JAPConfAnon.class.getName() + "_labelEMail";
+	private static final String MSG_REALLY_DELETE = JAPConfAnon.class.getName() + "_reallyDelete";
+
 
 	private static final Insets SMALL_BUTTON_MARGIN = new Insets(1, 1, 1, 1);
 
@@ -1011,11 +1013,14 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			}
 			else
 			{
-				Database.getInstance(MixCascade.class).remove(cascade);
-				this.updateMixCascadeCombo();
-				if (m_listMixCascade.getModel().getSize() > 0)
+				if (JAPDialog.showYesNoDialog(getRootPanel(), JAPMessages.getString(MSG_REALLY_DELETE)))
 				{
-					m_listMixCascade.setSelectedIndex(0);
+					Database.getInstance(MixCascade.class).remove(cascade);
+					this.updateMixCascadeCombo();
+					if (m_listMixCascade.getModel().getSize() > 0)
+					{
+						m_listMixCascade.setSelectedIndex(0);
+					}
 				}
 			}
 		}
