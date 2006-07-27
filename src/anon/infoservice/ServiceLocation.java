@@ -27,13 +27,17 @@
  */
 package anon.infoservice;
 
+import java.util.Vector;
+
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import anon.crypto.JAPCertificate;
 import anon.util.XMLUtil;
-import anon.util.XMLParseException;
 import anon.crypto.X509DistinguishedName;
+import anon.crypto.X509SubjectAlternativeName;
+import anon.crypto.AbstractX509Extension;
+import anon.util.Util;
 
 /**
  * Holds the information of the location of a service.
@@ -73,13 +77,13 @@ public class ServiceLocation
 	 *
 	 * @param locationNode The Location node from an XML document.
 	 */
-	public ServiceLocation(Element locationNode, JAPCertificate mixCertificate) throws XMLParseException
+	public ServiceLocation(Element locationNode, JAPCertificate mixCertificate)
 	{
 		Node node;
 		X509DistinguishedName subject;
 
-	    //try to get Service Location from the Certificate
-		if(mixCertificate != null)
+		//try to get Service Location from the Certificate
+		if (mixCertificate != null)
 		{
 			subject = mixCertificate.getSubject();
 
@@ -91,6 +95,48 @@ public class ServiceLocation
 
 			/* get the country */
 			country = subject.getCountryCode();
+
+			// get the geolocation
+			AbstractX509Extension extension =
+				mixCertificate.getExtensions().getExtension(X509SubjectAlternativeName.IDENTIFIER);
+			if (extension != null && extension instanceof X509SubjectAlternativeName)
+			{
+				X509SubjectAlternativeName alternativeName = (X509SubjectAlternativeName) extension;
+
+				Vector coordinates;
+				if (alternativeName.getTags().size() == 2 &&
+					alternativeName.getValues().size() == 2)
+				{
+					coordinates = alternativeName.getTags();
+					if (coordinates.elementAt(0).equals(
+						X509SubjectAlternativeName.TAG_OTHER) &&
+						coordinates.elementAt(1).equals(
+							X509SubjectAlternativeName.TAG_OTHER))
+					{
+						coordinates = alternativeName.getValues();
+						try
+						{
+							longitude = coordinates.elementAt(0).toString();
+							Util.parseFloat(longitude);
+							longitude = longitude.trim();
+						}
+						catch (NumberFormatException a_e)
+						{
+							longitude = "";
+						}
+						try
+						{
+							latitude = coordinates.elementAt(1).toString();
+							Util.parseFloat(latitude);
+							latitude = latitude.trim();
+						}
+						catch (NumberFormatException a_e)
+						{
+							latitude = "";
+						}
+					}
+				}
+			}
 		}
 
 	    /* check if the the information from the cert is valid (not null oder empty)
@@ -116,10 +162,16 @@ public class ServiceLocation
 		/* get the longitude / latitude */
 		Node positionNode = XMLUtil.getFirstChildByName(locationNode, "Position");
 		positionNode = XMLUtil.getFirstChildByName(positionNode, "Geo");
-		node = XMLUtil.getFirstChildByName(positionNode, "Longitude");
-		longitude = XMLUtil.parseValue(node, "");
-		node = XMLUtil.getFirstChildByName(positionNode, "Latitude");
-		latitude = XMLUtil.parseValue(node, "");
+		if(longitude == null || longitude.trim().length() == 0)
+		{
+			node = XMLUtil.getFirstChildByName(positionNode, "Longitude");
+			longitude = XMLUtil.parseValue(node, "");
+		}
+		if(latitude == null || latitude.trim().length() == 0)
+		{
+			node = XMLUtil.getFirstChildByName(positionNode, "Latitude");
+			latitude = XMLUtil.parseValue(node, "");
+		}
 	}
 
 	/**

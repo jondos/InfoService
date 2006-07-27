@@ -70,6 +70,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import anon.crypto.JAPCertificate;
+import anon.crypto.XMLSignature;
 import anon.crypto.X509SubjectAlternativeName;
 import anon.infoservice.Database;
 import anon.infoservice.DatabaseMessage;
@@ -1984,6 +1985,24 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			{
 				return info.getServiceLocation();
 			}
+			else
+			{
+				MixCascade cascade = (MixCascade)Database.getInstance(MixCascade.class).getEntryById(a_mixId);
+				JAPCertificate mixCertificate;
+				if (cascade != null)
+				{
+					// this is a first mix
+					XMLSignature signature = cascade.getMixCascadeSignature();
+					if (signature != null && signature.getCertPath() != null)
+					{
+						mixCertificate = signature.getCertPath().getSecondCertificate();
+						if (mixCertificate != null)
+						{
+							return new ServiceLocation(null, mixCertificate);
+						}
+					}
+				}
+			}
 			return null;
 		}
 
@@ -1994,6 +2013,24 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			if (info != null)
 			{
 				return info.getServiceOperator();
+			}
+			else
+			{
+				MixCascade cascade = (MixCascade)Database.getInstance(MixCascade.class).getEntryById(a_mixId);
+				JAPCertificate mixCertificate;
+				if (cascade != null)
+				{
+					// this is a first mix
+					XMLSignature signature = cascade.getMixCascadeSignature();
+					if (signature != null && signature.getCertPath() != null)
+					{
+						mixCertificate = signature.getCertPath().getSecondCertificate();
+						if (mixCertificate != null)
+						{
+							return new ServiceOperator(null, mixCertificate);
+						}
+					}
+				}
 			}
 			return null;
 		}

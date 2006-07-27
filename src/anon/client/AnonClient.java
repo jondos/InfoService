@@ -71,6 +71,9 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 
 	private static final int LOGIN_TIMEOUT = 30000;
 	private static final int CONNECT_TIMEOUT = 8000;
+	private static final int CONNECTION_ERROR_WAIT_TIME = 30000;
+	 // 4 errors in 30 seconds should be enough to be sure there is really a connection error
+	private static final int CONNECTION_ERROR_WAIT_COUNT = 4;
 
 	private Multiplexer m_multiplexer;
 
@@ -101,6 +104,11 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 	private IMutableProxyInterface m_paymentProxyInterface;
 
 	private boolean m_connected;
+
+	// counts the times a connection error has been signaled
+	private int m_connectionErrorCount;
+	private long m_connectionErrorTime;
+	private final Object CONN_ERR_SYNC = new Object();
 
 	public AnonClient()
 	{
@@ -139,6 +147,12 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 			{
 				return ErrorCodes.E_ALREADY_CONNECTED;
 			}
+			synchronized (CONN_ERR_SYNC)
+			{
+				m_connectionErrorCount = 0;
+				m_connectionErrorTime = 0;
+			}
+
 			Socket socketToMixCascade = null;
 			if (m_connectedSocket != null)
 			{
@@ -325,6 +339,22 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 	{
 		synchronized (m_eventListeners)
 		{
+			synchronized (CONN_ERR_SYNC)
+			{
+				if (m_connectionErrorTime <= (System.currentTimeMillis() - CONNECTION_ERROR_WAIT_TIME))
+				{
+					// error signal of last period is too old; remove the whole error history
+					m_connectionErrorTime = System.currentTimeMillis();
+					m_connectionErrorCount = 0;
+				}
+				m_connectionErrorCount++;
+				if (m_connectionErrorCount < CONNECTION_ERROR_WAIT_COUNT)
+				{
+					// may be an error, but is not yet reported
+					return;
+				}
+			}
+
 			final Enumeration eventListenersList = m_eventListeners.elements();
 			Thread notificationThread = new Thread(new Runnable()
 			{

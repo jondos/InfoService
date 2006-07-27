@@ -32,30 +32,29 @@
 
 package anon.crypto;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.util.StringTokenizer;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.security.SecureRandom;
 import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.Vector;
 import java.util.Hashtable;
+import java.util.StringTokenizer;
+import java.util.Vector;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1TaggedObject;
-import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.DERBitString;
+import org.bouncycastle.asn1.DEREncodable;
 import org.bouncycastle.asn1.DEREncodableVector;
 import org.bouncycastle.asn1.DERInteger;
 import org.bouncycastle.asn1.DERObjectIdentifier;
@@ -63,27 +62,25 @@ import org.bouncycastle.asn1.DEROutputStream;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERTaggedObject;
 import org.bouncycastle.asn1.DERTags;
-import org.bouncycastle.asn1.DEREncodable;
 import org.bouncycastle.asn1.DERUTCTime;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.pkcs.SignedData;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.asn1.x509.TBSCertificateStructure;
 import org.bouncycastle.asn1.x509.V3TBSCertificateGenerator;
 import org.bouncycastle.asn1.x509.X509CertificateStructure;
 import org.bouncycastle.asn1.x509.X509Name;
-import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.crypto.digests.GeneralDigest;
 import org.bouncycastle.crypto.digests.MD5Digest;
 import org.bouncycastle.crypto.digests.SHA1Digest;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-
 import anon.util.Base64;
-import anon.util.IXMLEncodable;
-import anon.util.XMLUtil;
 import anon.util.IResourceInstantiator;
+import anon.util.IXMLEncodable;
 import anon.util.ResourceLoader;
+import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -127,7 +124,7 @@ public final class JAPCertificate implements IXMLEncodable, Cloneable, ICertific
 	public static final String XML_ELEMENT_CONTAINER_NAME = "X509Data";
 
 	private static final String BASE64_TAG = "CERTIFICATE";
-	private static final String BASE64_ALTERNATIVE_TAG = "X509 CERTIFICATE";
+	private static final String BASE64_ALTERNATIVE_TAG = "X509 " + BASE64_TAG;
 
 	/**
 	 * The dummy private key is used to create temporary certificates.
@@ -237,7 +234,7 @@ public final class JAPCertificate implements IXMLEncodable, Cloneable, ICertific
 
 		try
 		{
-			ASN1Sequence certificate = toASN1Sequence(a_certificate);
+			ASN1Sequence certificate = toASN1Sequence(a_certificate, XML_ELEMENT_NAME);
 
 			if (certificate.size() > 1
 				&& certificate.getObjectAt(1) instanceof DERObjectIdentifier
@@ -841,11 +838,17 @@ public final class JAPCertificate implements IXMLEncodable, Cloneable, ICertific
 	 * Converts a DER or BER encoded byte array into an ASN1 sequence. The array may additionally
 	 * be Base64 encoded.
 	 * @param a_bytes an array of bytes
+	 * @param a_xmlElementName the name of the containing XML element or null if the object is not
+	 * expected to be in an XML element
 	 * @return the byte array as ASN1Sequence
 	 */
-	static ASN1Sequence toASN1Sequence(byte[] a_bytes)
+	static ASN1Sequence toASN1Sequence(byte[] a_bytes, String a_xmlElementName)
 	{
 		ByteArrayInputStream bin = null;
+		if (a_bytes == null || a_bytes.length == 0)
+		{
+			return null;
+		}
 
 		try
 		{
@@ -855,10 +858,21 @@ public final class JAPCertificate implements IXMLEncodable, Cloneable, ICertific
 				 * Probably a Base64 encoded certificate; might be given in a single line, use tokenizer to
 				 * correct this (transform whitespaces to newlines).
 				 */
-				StringTokenizer tokenizer = new StringTokenizer(new String(a_bytes));
+				String certString = new String(a_bytes);
+				StringTokenizer tokenizer = new StringTokenizer(certString);
 				StringBuffer sbuf = new StringBuffer();
 				String line;
+				int tagIndex;
 				boolean endTagFound = false;
+
+				if (a_xmlElementName != null)
+				{
+					if (a_xmlElementName.trim().length() == 0 ||
+						new StringTokenizer(a_xmlElementName).countTokens() > 1)
+					{
+						a_xmlElementName = null;
+					}
+				}
 
 				beginLoop:
 				while (tokenizer.hasMoreTokens())
@@ -875,30 +889,50 @@ public final class JAPCertificate implements IXMLEncodable, Cloneable, ICertific
 						}
 						while (tokenizer.hasMoreTokens() && (line = tokenizer.nextToken()) != null);
 					}
-				}
-
-				if (!tokenizer.hasMoreTokens())
-				{
-					throw new Exception();
-				}
-
-				endLoop:
-				while (tokenizer.hasMoreTokens())
-				{
-					line = tokenizer.nextToken();
-					if (line.startsWith(Base64.END_TAG.trim()))
+					else if (a_xmlElementName != null &&
+							 (tagIndex = line.indexOf("<" + a_xmlElementName)) >= 0)
 					{
-						do
+						int endTagIndex = certString.indexOf(">");
+						if (tagIndex >= endTagIndex)
 						{
-							if (line.endsWith(Base64.TAG_END_SEQUENCE))
-							{
-								endTagFound = true;
-								break endLoop;
-							}
+							continue;
 						}
-						while (tokenizer.hasMoreTokens() && (line = tokenizer.nextToken()) != null);
+						tagIndex = endTagIndex + 1;
+						endTagIndex = certString.indexOf("</" + a_xmlElementName + ">");
+						if (endTagIndex >= 0)
+						{
+							// this is a certificate enclosed in an XML element
+							endTagFound = true;
+							sbuf.append(certString.substring(certString.indexOf(">") + 1, endTagIndex));
+							break;
+						}
 					}
-					sbuf.append(line);
+				}
+
+				if (!endTagFound)
+				{
+					if (!tokenizer.hasMoreTokens())
+					{
+						throw new Exception();
+					}
+
+					endLoop:while (tokenizer.hasMoreTokens())
+					{
+						line = tokenizer.nextToken();
+						if (line.startsWith(Base64.END_TAG.trim()))
+						{
+							do
+							{
+								if (line.endsWith(Base64.TAG_END_SEQUENCE))
+								{
+									endTagFound = true;
+									break endLoop;
+								}
+							}
+							while (tokenizer.hasMoreTokens() && (line = tokenizer.nextToken()) != null);
+						}
+						sbuf.append(line);
+					}
 				}
 
 				if (!endTagFound)
