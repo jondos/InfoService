@@ -94,6 +94,8 @@ import org.bouncycastle.crypto.params.ParametersWithRandom;
 import anon.util.IMiscPasswordReader;
 import anon.util.SingleStringPasswordReader;
 import org.bouncycastle.asn1.DEREncodableVector;
+import anon.util.ResourceLoader;
+import anon.util.Base64;
 
 /**
  * This class creates and handles PKCS12 certificates, that include a private key,
@@ -105,6 +107,10 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 
 	private static final int SALT_SIZE = 20;
 	private static final int MIN_ITERATIONS = 100;
+
+	private static final String BASE64_TAG = "PKCS12 CERTIFICATE";
+
+	public static final String XML_ELEMENT_NAME = "X509PKCS12";
 
 	//
 	// SHA-1 and 3-key-triple DES.
@@ -242,22 +248,19 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 
 		try
 		{
-			BufferedInputStream stream = new BufferedInputStream(a_stream);
-			stream.mark(1);
-			if (stream.read() != (ASN1InputStream.SEQUENCE | ASN1InputStream.CONSTRUCTED))
-			{
-				// this is no a valid PKCS12 stream
-				return null;
-			}
-			stream.reset();
-
 			String alias = null;
 			IMyPrivateKey privKey = null;
 			X509CertificateStructure x509cert = null;
 
 			//BERInputStream is = new BERInputStream(stream);
-			ASN1InputStream is = new ASN1InputStream(stream);
-			ContentInfo contentInfo = new Pfx((ASN1Sequence) is.readObject()).getAuthSafe();
+			ASN1Sequence asn1seq = JAPCertificate.toASN1Sequence(
+				 ResourceLoader.getStreamAsBytes(a_stream), XML_ELEMENT_NAME);
+			if (asn1seq == null)
+			{
+				// this does not seem to be a PKCS12 certificate
+				return null;
+			}
+			ContentInfo contentInfo = new Pfx(asn1seq).getAuthSafe();
 			/** @todo Check MAC */
 			// Look at JDKPKCS12KeyStore.engineLoad (starting with bag.getMacData())
 
@@ -265,7 +268,8 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 			{
 				return null;
 			}
-			is = new ASN1InputStream(new ByteArrayInputStream( ( (ASN1OctetString) contentInfo.getContent()).getOctets()));
+			ASN1InputStream is =
+				new ASN1InputStream(new ByteArrayInputStream( ( (ASN1OctetString) contentInfo.getContent()).getOctets()));
 			ContentInfo[] cinfos = (new AuthenticatedSafe( (ASN1Sequence) is.readObject())).getContentInfo();
 
 			for (int i = 0; i < cinfos.length; i++)
@@ -441,6 +445,57 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 	{
 		return toByteArray("".toCharArray());
 	}
+
+	public byte[] toByteArray(boolean a_Base64Encoded)
+	{
+		if (a_Base64Encoded)
+		{
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+			try
+			{
+				out.write(Base64.createBeginTag(BASE64_TAG).getBytes());
+				out.write(Base64.encode(toByteArray(), true).getBytes());
+				out.write(Base64.createEndTag(BASE64_TAG).getBytes());
+			}
+			catch (IOException a_e)
+			{
+				// should not be possible
+			}
+
+			return out.toByteArray();
+		}
+		else
+		{
+			return toByteArray();
+		}
+	}
+
+	public byte[] toByteArray(char[] a_password, boolean a_Base64Encoded)
+	{
+		if (a_Base64Encoded)
+		{
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+			try
+			{
+				out.write(Base64.createBeginTag(BASE64_TAG).getBytes());
+				out.write(Base64.encode(toByteArray(a_password), true).getBytes());
+				out.write(Base64.createEndTag(BASE64_TAG).getBytes());
+			}
+			catch (IOException a_e)
+			{
+				// should not be possible
+			}
+
+			return out.toByteArray();
+		}
+		else
+		{
+			return toByteArray(a_password);
+		}
+	}
+
 
 	/**
 	 * Converts the certificate to a (optionally encrypted) byte array.

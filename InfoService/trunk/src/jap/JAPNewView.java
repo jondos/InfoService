@@ -1174,7 +1174,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JAPUtil.setMnemonic(m_bttnQuit, JAPMessages.getString("quitButtonMn"));
 
 		m_bttnReload.setToolTipText(JAPMessages.getString("ngCascadeReloadTooltip"));
-		m_labelAnonService.setText(JAPMessages.getString("ngAnonymisierungsdienst"));
+		m_labelAnonService.setText(JAPMessages.getString(MSG_SERVICE_NAME) + ":");
 		m_bttnAnonDetails.setText(JAPMessages.getString("ngBttnAnonDetails"));
 		m_rbAnonOn.setText(JAPMessages.getString("ngAnonOn"));
 		m_rbAnonOff.setText(JAPMessages.getString("ngAnonOff"));

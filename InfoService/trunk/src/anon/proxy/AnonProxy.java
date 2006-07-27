@@ -91,7 +91,6 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	private ImmutableProxyInterface m_proxyInterface;
 
 	private final Object THREAD_SYNC = new Object();
-	private final Object SHUTDOWN_SYNC = new Object();
 
 	/**
 	 * Stores the MixCascade we are connected to.
@@ -715,7 +714,6 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	public void dataChainErrorSignaled()
 	{
 		LogHolder.log(LogLevel.ERR, LogType.NET, "Proxy has been nuked");
-		/** @todo temporary disabled until stable recognition algorithm is implemented in the last mix
 		m_currentMixCascade.keepCurrentCascade(false);
 		m_Anon.shutdown();
 		synchronized (m_anonServiceListener)
@@ -726,7 +724,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				( (AnonServiceEventListener) e.nextElement()).dataChainErrorSignaled();
 			}
 		}
-		reconnect(); */
+		reconnect();
 	}
 
 	private class DummyMixCascadeContainer extends AbstractMixCascadeContainer

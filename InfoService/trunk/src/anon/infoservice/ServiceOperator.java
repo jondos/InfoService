@@ -61,7 +61,7 @@ public class ServiceOperator
 	 *
 	 * @param operatorNode The Operator node from an XML document.
 	 */
-	public ServiceOperator(Element operatorNode, JAPCertificate operatorCertificate) throws XMLParseException
+	public ServiceOperator(Element operatorNode, JAPCertificate operatorCertificate)
 	{
 		Node node;
 		X509DistinguishedName subject;

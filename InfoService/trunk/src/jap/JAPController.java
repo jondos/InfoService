@@ -1248,7 +1248,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 				else
 				{
-					LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPController: loadConfigFile: Error in XML structure (JapForwardingSettings node): Using default settings for forwarding.");
+					LogHolder.log(LogLevel.ERR, LogType.MISC, "Error in XML structure (JapForwardingSettings node): Using default settings for forwarding.");
 				}
 //				}
 

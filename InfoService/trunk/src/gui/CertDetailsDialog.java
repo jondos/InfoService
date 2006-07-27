@@ -734,6 +734,7 @@ public class CertDetailsDialog extends JAPDialog
 
 	private void showCert()
 	{
+		boolean verified = true;
 		if (m_selectedCert != null)
 		{
 			//if the cert from this dialog and the cert to show are equal jump to the frist tab
@@ -743,9 +744,14 @@ public class CertDetailsDialog extends JAPDialog
 			}
 			else
 			{ //open a new dialog without a certPath tab
+				if(m_certList.getSelectedIndex() == 0)
+				{  //if the first item is selected, check if it is enabled
+					verified = ((CertificateInfoStructure)m_certListModel.firstElement()).isEnabled();
+				}
 				CertDetailsDialog dialog =
-					new CertDetailsDialog(getContentPane(), m_selectedCert, true, m_Locale);
-				dialog.setVisible(true);
+					new CertDetailsDialog(getContentPane(), m_selectedCert, verified, m_Locale);
+					dialog.setVisible(true);
+
 			}
 		}
 	}

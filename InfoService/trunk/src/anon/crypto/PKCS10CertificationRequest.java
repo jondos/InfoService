@@ -101,7 +101,7 @@ public final class PKCS10CertificationRequest
 	 */
 	public PKCS10CertificationRequest(byte[] a_bytes)
 	{
-		ASN1Sequence certificateRequest = JAPCertificate.toASN1Sequence(a_bytes);
+		ASN1Sequence certificateRequest = JAPCertificate.toASN1Sequence(a_bytes, null);
 
 		m_certificationRequest = new CertificationRequest(certificateRequest);
 		createFingerprints();
