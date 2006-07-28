@@ -793,6 +793,12 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 					{
 					null};
 			}
+
+			if (proxies == null)
+			{
+				continue;
+			}
+
 			for (proxyCounter = 0; proxyCounter < proxies.length && !Thread.currentThread().isInterrupted();
 				 proxyCounter++)
 			{
