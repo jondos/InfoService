@@ -311,7 +311,14 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 				notificationThread.start();
 			}
 			/* shutdown everything */
-			shutdown();
+			new Thread()
+			{
+				/** @todo We use a thread to avoid deadlocks - is this really the best solution? */
+				public void run()
+				{
+					shutdown();
+				}
+			}.start();
 		}
 		else if ( (a_object == m_packetCounter) && (a_argument instanceof Long))
 		{

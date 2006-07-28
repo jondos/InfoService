@@ -437,22 +437,28 @@ public final class JAPModel extends Observable
 		else if (!m_connectionChecker.checkAnonConnected())
 		{
 			// return only direct connections
+			/*
 			if (interfaces[0] == null)
 			{
 				// no proxy/firewall is set
 				return new ProxyInterface[]{interfaces[1]};
-			}
-			return new ProxyInterface[]{interfaces[0], interfaces[1]};
+			}*/
+
+			// use proxy if pesent
+			return new ProxyInterface[]{interfaces[0]};
+			//return new ProxyInterface[]{interfaces[0], interfaces[1]};
 		}
 
+		/*
 		if (interfaces[0] == null)
 		{
 			// no proxy/firewall is set
 			//return new ProxyInterface[]{interfaces[1], interfaces[2], interfaces[3]};
 			return new ProxyInterface[]{interfaces[1], interfaces[2]};
-		}
+		}*/
+		return new ProxyInterface[]{interfaces[0], interfaces[2]};
 
-		return interfaces;
+		//return interfaces;
 	}
 
 	public static int getHttpListenerPortNumber()
