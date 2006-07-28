@@ -429,7 +429,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		c.fill = c.HORIZONTAL;
 		rootPanel.add(this.createDetailsPanel(myActionListener), c);
 
-		updateAccountList();
+		//updateAccountList(); //would possibly lead to deadlock with AWT-Thread when showing JAPConf
 		enableDisableButtons();
 
 		return rootPanel;
