@@ -6,6 +6,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 
+import gui.GUIUtils;
 import anon.crypto.CertificateInfoStructure;
 
 final public class CAListCellRenderer extends JLabel implements ListCellRenderer
@@ -42,12 +43,12 @@ final public class CAListCellRenderer extends JLabel implements ListCellRenderer
 		}
 		if (j.isEnabled())
 		{
-			setIcon(CertDetailsDialog.CERTENABLEDICON);
+			setIcon(GUIUtils.loadImageIcon(CertDetailsDialog.IMG_CERTENABLEDICON, false));
 		}
 		else
 		{
 			setForeground(Color.red);
-			setIcon(CertDetailsDialog.CERTDISABLEDICON);
+			setIcon(GUIUtils.loadImageIcon(CertDetailsDialog.IMG_CERTDISABLEDICON, false));
 		}
 		setFont(list.getFont());
 		setOpaque(true);

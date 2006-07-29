@@ -67,7 +67,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.ImageIcon;
 
 /**
  * <p>CertDetails Dialog </p>
@@ -155,9 +154,9 @@ public class CertDetailsDialog extends JAPDialog
 	private static final Font ALERT_FONT = new Font(LABEL.getFont().getName(), Font.BOLD,
 		(LABEL.getFont().getSize()));
 
-	public final static ImageIcon CERTENABLEDICON = GUIUtils.loadImageIcon("cenabled.gif", false);
-	public final static ImageIcon CERTDISABLEDICON = GUIUtils.loadImageIcon("cdisabled.gif", false);
-	public final static ImageIcon IMAGE_WARNING = GUIUtils.loadImageIcon("warning.gif", false);
+	public final static String IMG_CERTENABLEDICON = "cenabled.gif";
+	public final static String IMG_CERTDISABLEDICON = "cdisabled.gif";
+	public final static String IMG_WARNING = "warning.gif";
 
 	private JLabel lbl_summaryIcon;
 	private Locale m_Locale;
@@ -702,18 +701,21 @@ public class CertDetailsDialog extends JAPDialog
 
 		constraints.insets = new Insets(5, 15, 5, 5);
 		constraints.gridy++;
-		JLabel lbl_verified = new JLabel(JAPMessages.getString(MSG_CERTVALID), CERTENABLEDICON, JLabel.LEFT);
+		JLabel lbl_verified = new JLabel(JAPMessages.getString(MSG_CERTVALID),
+										 GUIUtils.loadImageIcon(IMG_CERTENABLEDICON, false), JLabel.LEFT);
 		certPathPanel.add(lbl_verified, constraints);
 
 		constraints.gridy++;
-		JLabel lbl_invalid = new JLabel(JAPMessages.getString(MSG_CERTNOTVALID),IMAGE_WARNING, JLabel.LEFT);
+		JLabel lbl_invalid = new JLabel(JAPMessages.getString(MSG_CERTNOTVALID),
+										GUIUtils.loadImageIcon(IMG_WARNING, false), JLabel.LEFT);
 		//lbl_invalid.setForeground(Color.orange);
 	    certPathPanel.add(lbl_invalid, constraints);
 
 		constraints.gridy++;
 		constraints.insets = new Insets(5, 15, 20, 5);
 		JLabel lbl_unverified =
-			new JLabel(JAPMessages.getString(MSG_CERT_NOT_VERIFIED), CERTDISABLEDICON, JLabel.LEFT);
+			new JLabel(JAPMessages.getString(MSG_CERT_NOT_VERIFIED),
+					   GUIUtils.loadImageIcon(IMG_CERTDISABLEDICON, false), JLabel.LEFT);
 		lbl_unverified.setForeground(Color.red);
 	    certPathPanel.add(lbl_unverified, constraints);
 

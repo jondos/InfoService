@@ -66,10 +66,8 @@ public class FlippingPanel extends JPanel
 	private CardLayout m_Layout;
 	private Window m_Parent;
 	private boolean m_bIsFlipped;
-	private final static Icon ms_iconUp = GUIUtils.loadImageIcon("arrow.gif", true);
-	private final static Icon ms_iconDown = GUIUtils.loadImageIcon("arrow90.gif", true);
-	private final static int ms_iBttnWidth = ms_iconUp.getIconWidth();
-	private final static int ms_iBttnHeight = ms_iconDown.getIconHeight();
+	private final static String IMG_UP = "arrow.gif";
+	private final static String IMG_DOWN = "arrow90.gif";
 
 	public FlippingPanel(Window parent)
 	{
@@ -78,7 +76,7 @@ public class FlippingPanel extends JPanel
 		GridBagLayout gbl = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
 		setLayout(gbl);
-		m_labelBttn = new JLabel(ms_iconUp);
+		m_labelBttn = new JLabel(GUIUtils.loadImageIcon(IMG_UP, true));
 		c.fill = GridBagConstraints.NONE;
 		c.weightx = 0;
 		c.weighty = 0;
@@ -92,11 +90,11 @@ public class FlippingPanel extends JPanel
 				m_Layout.next(m_panelContainer);
 				if (m_bIsFlipped)
 				{
-					m_labelBttn.setIcon(ms_iconDown);
+					m_labelBttn.setIcon(GUIUtils.loadImageIcon(IMG_DOWN, true));
 				}
 				else
 				{
-					m_labelBttn.setIcon(ms_iconUp);
+					m_labelBttn.setIcon(GUIUtils.loadImageIcon(IMG_UP, true));
 				}
 
 				m_Parent.pack();
@@ -165,7 +163,7 @@ public class FlippingPanel extends JPanel
 		d1 = m_panelFull.getPreferredSize();
 		d2 = m_panelSmall.getPreferredSize();
 		d1.width = Math.max(d1.width, d2.width);
-		d1.width += ms_iBttnWidth;
+		d1.width += GUIUtils.loadImageIcon(IMG_UP, true).getIconWidth();
 		if (!m_bIsFlipped)
 		{
 			d1.height = d2.height;
@@ -179,12 +177,12 @@ public class FlippingPanel extends JPanel
 		d1 = m_panelFull.getMinimumSize();
 		d2 = m_panelSmall.getMinimumSize();
 		d1.width = Math.max(d1.width, d2.width);
-		d1.width += ms_iBttnWidth;
+		d1.width += GUIUtils.loadImageIcon(IMG_UP, true).getIconWidth();
 		if (!m_bIsFlipped)
 		{
 			d1.height = d2.height;
 		}
-		d1.height = Math.max(d1.height, ms_iBttnHeight);
+		d1.height = Math.max(d1.height, GUIUtils.loadImageIcon(IMG_DOWN, true).getIconHeight());
 		return d1;
 	}
 
@@ -194,7 +192,7 @@ public class FlippingPanel extends JPanel
 		d1 = m_panelFull.getMaximumSize();
 		d2 = m_panelSmall.getMaximumSize();
 		d1.width = Math.max(d1.width, d2.width);
-		d1.width += ms_iBttnWidth;
+		d1.width += GUIUtils.loadImageIcon(IMG_UP, true).getIconWidth();
 		if (!m_bIsFlipped)
 		{
 			d1.height = d2.height;

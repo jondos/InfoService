@@ -49,13 +49,7 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 
 	private final static int ms_IconHeight = 15;
 	private final static int ms_IconWidth = 16;
-	private final static Image ms_imageWarning = GUIUtils.loadImageIcon(JAPConstants.IMAGE_WARNING, true).
-		getImage();
 
-	private final static Image ms_imageInformation = GUIUtils.loadImageIcon(JAPConstants.IMAGE_INFORMATION, true).
-		getImage();
-
-	private final static Image ms_imageError = GUIUtils.loadImageIcon(JAPConstants.IMAGE_ERROR, true).getImage();
 
 	final class MsgQueueEntry
 	{
@@ -127,15 +121,15 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 			}
 			if (type == JOptionPane.WARNING_MESSAGE)
 			{
-				entry.m_Icon = ms_imageWarning;
+				entry.m_Icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_WARNING, true).getImage();
 			}
 			else if (type == JOptionPane.INFORMATION_MESSAGE)
 			{
-				entry.m_Icon = ms_imageInformation;
+				entry.m_Icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_INFORMATION, true).getImage();
 			}
 			else if (type == JOptionPane.ERROR_MESSAGE)
 			{
-				entry.m_Icon = ms_imageError;
+				entry.m_Icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_ERROR, true).getImage();
 			}
 			if (m_lastMsg == null)
 			{

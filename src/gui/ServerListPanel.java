@@ -52,9 +52,6 @@ import javax.swing.JSeparator;
  */
 final public class ServerListPanel extends JPanel implements ActionListener
 {
-	private final static ImageIcon ms_iconServerBlau = GUIUtils.loadImageIcon(JAPConstants.IMAGE_SERVER_BLAU, true);
-	private final static ImageIcon ms_iconServerRed = GUIUtils.loadImageIcon(JAPConstants.IMAGE_SERVER_ROT, true);
-	private final static ImageIcon ms_iconServer = GUIUtils.loadImageIcon(JAPConstants.IMAGE_SERVER, true);
 	private ButtonGroup m_bgMixe;
 	private int m_selectedIndex;
 	private Vector m_itemListeners;
@@ -95,14 +92,14 @@ final public class ServerListPanel extends JPanel implements ActionListener
 				add(line);
 			}
 			//Create the mix icon and place it in the panel
-			AbstractButton mix = new JRadioButton(ms_iconServer);
+			AbstractButton mix = new JRadioButton(GUIUtils.loadImageIcon(JAPConstants.IMAGE_SERVER, true));
 			mix.setToolTipText(JAPMessages.getString("serverPanelAdditional"));
 			mix.addActionListener(this);
 			mix.setBorder(null);
 			mix.setFocusPainted(false);
 			mix.setRolloverEnabled(true);
-			mix.setRolloverIcon(ms_iconServerBlau);
-			mix.setSelectedIcon(ms_iconServerRed);
+			mix.setRolloverIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_SERVER_BLAU, true));
+			mix.setSelectedIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_SERVER_ROT, true));
 			if (i == selectedIndex)
 			{
 				m_selectedIndex = i;

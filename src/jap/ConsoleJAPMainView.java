@@ -94,7 +94,7 @@ public class ConsoleJAPMainView implements IJAPMainView
 		if (a_serverDescription instanceof MixCascade)
 		{
 			MixCascade cascade = (MixCascade)a_serverDescription;
-			LogHolder.log(LogLevel.ALERT, LogType.NET, "Connecting to" +
+			LogHolder.log(LogLevel.ALERT, LogType.NET, "Connecting to " +
 						  cascade.getId() + "(" + cascade.getName() + ")" + "...");
 		}
 		else
@@ -109,7 +109,7 @@ public class ConsoleJAPMainView implements IJAPMainView
 		if (a_serverDescription instanceof MixCascade)
 		{
 			MixCascade cascade = (MixCascade)a_serverDescription;
-			LogHolder.log(LogLevel.ALERT, LogType.NET, "Connected to" +
+			LogHolder.log(LogLevel.ALERT, LogType.NET, "Connected to " +
 						  cascade.getId() + "(" + cascade.getName() + ")" + "!");
 		}
 		else
