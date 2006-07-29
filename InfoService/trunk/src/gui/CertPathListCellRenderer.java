@@ -57,18 +57,18 @@ public final class CertPathListCellRenderer extends JLabel implements ListCellRe
 		{
 			if(j.getCertificate().getValidity().isValid(new Date()))
 			{
-				setIcon (CertDetailsDialog.CERTENABLEDICON);
+				setIcon (GUIUtils.loadImageIcon(CertDetailsDialog.IMG_CERTENABLEDICON, false));
 			}
 			else
 			{
 				//setForeground(Color.orange);
-				setIcon(CertDetailsDialog.IMAGE_WARNING);
+				setIcon(GUIUtils.loadImageIcon(CertDetailsDialog.IMG_WARNING, false));
 			}
 		}
 		else
 		{
 			setForeground(Color.red);
-			setIcon(CertDetailsDialog.CERTDISABLEDICON);
+			setIcon(GUIUtils.loadImageIcon(CertDetailsDialog.IMG_CERTDISABLEDICON, false));
 		}
 		//if the element is the last element in the cert Path (the mix certificate) the text is bold
 		if(j.equals(list.getModel().getElementAt((list.getModel().getSize())-1)))

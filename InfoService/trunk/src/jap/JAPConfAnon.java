@@ -108,8 +108,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private static final String MSG_REALLY_DELETE = JAPConfAnon.class.getName() + "_reallyDelete";
 
 
-	private static final Insets SMALL_BUTTON_MARGIN = new Insets(1, 1, 1, 1);
-
 	/** Messages */
 	private static final String MSG_BUTTONEDITSHOW = JAPConfAnon.class.
 		getName() + "_buttoneditshow";

@@ -73,12 +73,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 {
 	private static final Font m_fontDlg = new Font("Sans", Font.BOLD, 11);
 	private static final String STR_HIDDEN_WINDOW = Double.toString(Math.random());
-	private static final Frame m_frameParent = new Frame(STR_HIDDEN_WINDOW);
-	private static final Icon m_iconJAPpassive = GUIUtils.loadImageIcon(JAPConstants.IICON16FN, true);
-	private static final Icon m_iconJAPactive =
-		GUIUtils.loadImageIcon(JAPViewIconified.class.getName() + "_icon16red.gif", true);
-	private static final Icon m_iconJAPdisconnected =
-		GUIUtils.loadImageIcon(JAPViewIconified.class.getName() + "_icon16discon.gif", true);
+	private static Frame m_frameParent;
 
 	private JAPController m_Controller;
 	private AbstractJAPMainView m_mainView;
@@ -87,6 +82,15 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 	private Point m_startPoint;
 	private boolean m_bIsDragging = false;
 	private NumberFormat m_NumberFormat;
+
+	private static Frame getParentFrame()
+	{
+		if (m_frameParent == null)
+		{
+			m_frameParent = new Frame(STR_HIDDEN_WINDOW);
+		}
+		return m_frameParent;
+}
 
 	private long m_lTrafficWWW, m_lTrafficOther;
 	final private class MyViewIconifiedUpdate implements Runnable
@@ -101,7 +105,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 
 	public JAPViewIconified()
 	{
-		super(m_frameParent);
+		super(getParentFrame());
 		setName(STR_HIDDEN_WINDOW);
 		m_mainView = JAPController.getView();
 		m_frameParent.setIconImage(m_mainView.getIconImage());
@@ -187,7 +191,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		p.add(pTop, BorderLayout.CENTER);
 		JPanel p2 = new JPanel();
 		//p2.setBackground(new Color(204, 204, 204));
-		m_lblJAPIcon = new JLabel(m_iconJAPdisconnected);
+		m_lblJAPIcon = new JLabel(GUIUtils.loadImageIcon(JAPViewIconified.class.getName() + "_icon16discon.gif", true));
 		m_lblJAPIcon.addMouseListener(new MouseAdapter()
 		{
 			public void mouseClicked(MouseEvent a_event)
@@ -273,7 +277,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 					}
 					synchronized(m_lblJAPIcon)
 					{
-						m_lblJAPIcon.setIcon(m_iconJAPpassive);
+						m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon(JAPConstants.IICON16FN, true));
 					}
 				}
 				else
@@ -283,7 +287,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 					m_labelTraffic.setText(JAPMessages.getString("iconifiedViewNA"));
 					synchronized(m_lblJAPIcon)
 					{
-						m_lblJAPIcon.setIcon(m_iconJAPdisconnected);
+						m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon(JAPViewIconified.class.getName() + "_icon16discon.gif", true));
 					}
 				}
 			}
@@ -428,7 +432,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 			{
 				synchronized(m_lblJAPIcon)
 				{
-					m_lblJAPIcon.setIcon(m_iconJAPactive);
+					m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon(JAPViewIconified.class.getName() + "_icon16red.gif", true));
 					try
 					{
 						m_lblJAPIcon.wait(1000);
@@ -439,11 +443,11 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 					}
 					if (m_Controller.getAnonMode())
 					{
-						m_lblJAPIcon.setIcon(m_iconJAPpassive);
+						m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon(JAPConstants.IICON16FN, true));
 					}
 					else
 					{
-						m_lblJAPIcon.setIcon(m_iconJAPdisconnected);
+						m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon(JAPViewIconified.class.getName() + "_icon16discon.gif", true));
 					}
 				}
 			}
