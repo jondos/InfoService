@@ -1230,6 +1230,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		int bestWidth;
 		int failed;
 		int minLabelWidth;
+		boolean bAlgorithmFailed;
 
 		// get the minimum width and height that is needed to display this dialog without any text
 		JDialog tempDialog = new JOptionPane("", a_messageType, a_optionType, a_icon).
@@ -1276,6 +1277,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		bestWidth =  currentWidth;
 		failed = 0;
 		minLabelWidth = label.getMinimumSize().width;
+		bAlgorithmFailed = true;
 		for (int i = 0; i < NUMBER_OF_HEURISTIC_ITERATIONS; i++)
 		{
 			/**
@@ -1311,15 +1313,35 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 				dialog.pack();
 			}
 
+			// patch for CDE/Motif
+			/*
+			if (label.getSize().width < minLabelWidth)
+			{
+				System.out.println("before:" + dialog.getSize());
+				label.setSize(new Dimension(minLabelWidth, label.getSize().height));
+				System.out.println("after:" +  dialog.getSize());
+			}*/
+
 			currentWidth = dummyBox.getWidth();
 			currentDelta = getGoldenRatioDelta(dialog);
-			if (Math.abs(currentDelta) < Math.abs(bestDelta) && (label.getSize().width >= minLabelWidth))
+			if (Math.abs(currentDelta) < Math.abs(bestDelta) &&
+				(i == 0 || // patch for CDE/Motif, tolerate this error in the first run
+				label.getSize().width >= minLabelWidth))
 			{
 				bestDimension = new Dimension(dummyBox.getSize());
 				bestDelta = currentDelta;
 				bestWidth = currentWidth;
 				currentWidth += bestDelta / 2.0;
-				failed = 0;
+				if (label.getSize().width < minLabelWidth)
+				{
+					// patch for CDE/Motif
+					failed++;
+				}
+				else
+				{
+					bAlgorithmFailed = false;
+					failed = 0;
+				}
 			}
 			else
 			{
@@ -1335,6 +1357,10 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			{
 				break;
 			}
+		}
+		if (bAlgorithmFailed)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.GUI, "Auto-formatting of dialog failed!");
 		}
 
 		/*
@@ -1419,7 +1445,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		dialog.pack();
 		if (bestDelta != getGoldenRatioDelta(dialog))
 		{
-			LogHolder.log(LogLevel.NOTICE, LogType.GUI, "Calculated dialog size differs from real size!");
+			LogHolder.log(LogLevel.ERR, LogType.GUI, "Calculated dialog size differs from real size!");
 		}
 		LogHolder.log(LogLevel.NOTICE, LogType.GUI, "Dialog golden ratio delta: " + getGoldenRatioDelta(dialog));
 
