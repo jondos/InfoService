@@ -91,6 +91,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	private ImmutableProxyInterface m_proxyInterface;
 
 	private final Object THREAD_SYNC = new Object();
+	private final Object SHUTDOWN_SYNC = new Object();
 
 	/**
 	 * Stores the MixCascade we are connected to.
@@ -379,8 +380,8 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	public void stop()
 	{
-		//synchronized (SHUTDOWN_SYNC)
-		synchronized (THREAD_SYNC)
+		synchronized (SHUTDOWN_SYNC)
+		//synchronized (THREAD_SYNC)
 		{
 			if (threadRun == null)
 			{
@@ -409,7 +410,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				{
 				}
 			}
-			//synchronized (THREAD_SYNC)
+			synchronized (THREAD_SYNC)
 			{
 				THREAD_SYNC.notify();
 			}

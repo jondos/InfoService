@@ -99,6 +99,7 @@ import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
 import anon.crypto.SignatureVerifier;
+import gui.JAPHtmlMultiLineLabel;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener, Observer
@@ -106,7 +107,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private static final String MSG_LABEL_CERTIFICATE = JAPConfAnon.class.getName() + "_certificate";
 	private static final String MSG_LABEL_EMAIL = JAPConfAnon.class.getName() + "_labelEMail";
 	private static final String MSG_REALLY_DELETE = JAPConfAnon.class.getName() + "_reallyDelete";
-
+	private static final int MAXIMUM_TEXT_LENGTH = 80;
 
 	/** Messages */
 	private static final String MSG_BUTTONEDITSHOW = JAPConfAnon.class.
@@ -232,15 +233,12 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.weightx = 1;
 		c.weighty = 0;
 		c.insets = new Insets(5, 10, 5, 5);
+		trim(a_strCascadeName);
 		if (a_strCascadeName == null || a_strCascadeName.length() < 1)
 		{
 			a_strCascadeName = " ";
 		}
-		else if (a_strCascadeName.length() > 65)
-		{
-			a_strCascadeName = a_strCascadeName.substring(0, 65);
-			a_strCascadeName = a_strCascadeName + "...";
-		}
+
 		JLabel label = new JLabel(JAPMessages.getString("infoAboutCascade"));
 		label.setFont(new Font(label.getFont().getName(), Font.BOLD, label.getFont().getSize() + 2));
 		m_serverPanel.add(label, c);
@@ -644,29 +642,28 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			selectedMixId = (String) cascade.getMixIds().elementAt(server);
 		}
 
-		String operator = m_infoService.getOperator(selectedMixId);
-		if (operator != null && operator.length() > 82)
-		{
-			operator = operator.substring(0, 82) + "...";
-		}
-		m_operatorLabel.setText(operator);
+		m_operatorLabel.setText(trim(m_infoService.getOperator(selectedMixId)));
 		m_operatorLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
 
-		m_emailLabel.setText(m_infoService.getEMail(selectedMixId));
+		m_emailLabel.setText(trim(m_infoService.getEMail(selectedMixId)));
+		m_emailLabel.setToolTipText(m_infoService.getEMail(selectedMixId));
 
 
 
 		m_locationCoordinates = m_infoService.getCoordinates(selectedMixId);
 		if (m_locationCoordinates != null)
 		{
-			m_locationLabel.setText(URL_BEGIN + m_infoService.getLocation(selectedMixId) + URL_END);
+			m_locationLabel.setText(
+						 URL_BEGIN + trim(m_infoService.getLocation(selectedMixId)) + URL_END);
 		}
 		else
 		{
-			m_locationLabel.setText(m_infoService.getLocation(selectedMixId));
+			m_locationLabel.setText(trim(m_infoService.getLocation(selectedMixId)));
 		}
+		m_locationLabel.setToolTipText(m_infoService.getLocation(selectedMixId));
 
-		m_urlLabel.setText(m_infoService.getUrl(selectedMixId));
+		m_urlLabel.setText(trim(m_infoService.getUrl(selectedMixId)));
+		m_urlLabel.setToolTipText(m_infoService.getUrl(selectedMixId));
 
 		m_serverInfo = m_infoService.getMixInfo(selectedMixId);
 		if(m_serverInfo != null)
@@ -1574,6 +1571,26 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			return l;
 		}
 	}
+
+	/**
+	 * Shortens a text received from the IS or in a certificate so that it is not to long to display.
+	 * @param a_strOriginal String
+	 * @return the stripped text
+	 */
+	private String trim(String a_strOriginal)
+	{
+		if (a_strOriginal == null)
+		{
+			return null;
+		}
+		// remove all html TAGS
+		a_strOriginal = JAPHtmlMultiLineLabel.removeTagsAndNewLines(a_strOriginal);
+		if (a_strOriginal.length() > MAXIMUM_TEXT_LENGTH)
+		{
+			a_strOriginal = a_strOriginal.substring(0, MAXIMUM_TEXT_LENGTH) + "...";
+		}
+		return a_strOriginal;
+		}
 
 	/**
 	 * Temporary image of relevant infoservice entries. For better response time

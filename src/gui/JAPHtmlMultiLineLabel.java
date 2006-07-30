@@ -27,20 +27,19 @@
  */
 package gui;
 
-import java.io.*;
+import java.io.StringWriter;
 import java.util.StringTokenizer;
-
 
 import java.awt.Font;
 import javax.swing.JLabel;
+import javax.swing.text.BadLocationException;
 import javax.swing.text.PlainView;
 import javax.swing.text.View;
 import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLWriter;
-import javax.swing.text.BadLocationException;
 
-import logging.LogType;
 import gui.dialog.JAPDialog;
+import logging.LogType;
 
 /**
  * This class provides support for labels with more than one line which can also display HTML styled text.
