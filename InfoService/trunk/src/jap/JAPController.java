@@ -1423,7 +1423,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		// restart command
 		String strRestartCommand = "";
 
-		//what is used: sun.java oder JView?
+		//what is used: sun.java or JView?
 		String strJavaVendor = System.getProperty("java.vendor");
 		LogHolder.log(LogLevel.INFO, LogType.ALL, "Java vendor: " + strJavaVendor);
 

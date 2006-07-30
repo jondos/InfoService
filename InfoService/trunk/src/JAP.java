@@ -104,6 +104,13 @@ public class JAP
 			System.out.println(msg + javaVersion);
 			System.exit(0);
 		}
+		if (isArgumentSet("-version"))
+		{
+			System.out.println("JAP version: " + JAPConstants.aktVersion);
+			System.exit(0);
+		}
+
+
 		if (isArgumentSet("-console"))
 		{
 			bConsoleOnly = true;
