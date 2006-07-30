@@ -217,7 +217,14 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	/** Returns the current Mix cascade */
 	public MixCascade getMixCascade()
 	{
-		return m_currentMixCascade.getCurrentMixCascade();
+		try
+		{
+			return m_currentMixCascade.getCurrentMixCascade();
+		}
+		catch (NullPointerException a_e)
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -688,7 +695,8 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	public boolean isConnected()
 	{
-		return m_Anon != null && m_Anon.isConnected();
+		AnonService service = m_Anon;
+		return service != null && service.isConnected();
 	}
 
 	public void addAIListener(IAIEventListener a_aiListener)
