@@ -3584,7 +3584,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		public AutoSwitchedMixCascadeContainer()
 		{
 			m_alreadyTriedCascades = new Hashtable();
-			m_random = new Random();
+			m_random = new Random(System.currentTimeMillis());
 			m_random.nextInt();
 			m_initialCascade = JAPController.getInstance().getCurrentMixCascade();
 			m_bKeepCurrentCascade = false;
@@ -3651,8 +3651,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 							// move backward
 							forward = false;
 						}
+
 						// chose an index from the vector
 						chosenCascadeIndex %= availableCascades.size();
+
 						/* Go through all indices until a suitable MixCascade is found or the original index
 						 * is reached.
 						 */
