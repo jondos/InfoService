@@ -266,7 +266,14 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 				m_labelOData.setEnabled(b);
 				m_labelOUData.setEnabled(b);
 				m_bttnCertInsert.setEnabled(b);
-				m_bttnCertRemove.setEnabled(b);
+				Object value = m_listCert.getSelectedValue();
+				boolean enableRemove = false;
+				if (value != null)
+				{
+					enableRemove =
+						b && !((CertificateInfoStructure) m_listCert.getSelectedValue()).isNotRemovable();
+				}
+				m_bttnCertRemove.setEnabled(enableRemove);
 				m_bttnCertStatus.setEnabled(b);
 				m_bttnCertDetails.setEnabled(b);
 				m_listCert.setEnabled(b);
