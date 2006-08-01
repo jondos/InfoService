@@ -53,6 +53,9 @@ import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 import gui.*;
+import javax.swing.UIManager;
+import javax.swing.*;
+import logging.*;
 
 /**
  * This is the implementation for the configuration module system. It manages the configuration
@@ -338,6 +341,15 @@ public class JAPConfModuleSystem
 					returnValue = false;
 				}
 			}
+		}
+
+		try
+		{
+			UIManager.setLookAndFeel(JAPModel.getInstance().getLookAndFeel());
+		}
+		catch (Exception a_e)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.GUI,  "Error while setting Look&Feel", a_e);
 		}
 		return returnValue;
 	}

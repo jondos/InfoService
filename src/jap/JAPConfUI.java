@@ -353,8 +353,11 @@ final class JAPConfUI extends AbstractJAPConfModule
 
 		try
 		{
+			/*
 			UIManager.setLookAndFeel(UIManager.getInstalledLookAndFeels()[m_comboUI
-									 .getSelectedIndex()].getClassName());
+									 .getSelectedIndex()].getClassName());*/
+			JAPModel.getInstance().setLookAndFeel(
+				 UIManager.getInstalledLookAndFeels()[m_comboUI.getSelectedIndex()].getClassName());
 		}
 		catch (Exception ex)
 		{
