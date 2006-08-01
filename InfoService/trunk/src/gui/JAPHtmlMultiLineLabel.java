@@ -302,36 +302,24 @@ public class JAPHtmlMultiLineLabel extends JLabel
 		{
 			a_defaultFont = new JLabel().getFont();
 		}
-		super.setFont(a_defaultFont);
-		super.setText(formatTextAsHTML(m_rawText, a_defaultFont));
+		if (a_defaultFont.isBold() && a_defaultFont.getSize() >= 17 && a_defaultFont.getSize() <= 18)
+		{
+			// bold is not allowed here
+			Font replacedFont = new Font(a_defaultFont.getName(), Font.PLAIN, a_defaultFont.getSize());
+			super.setFont(replacedFont);
+			super.setText(formatTextAsHTML(m_rawText, replacedFont));
+		}
+		else
+		{
+			super.setFont(a_defaultFont);
+			super.setText(formatTextAsHTML(m_rawText, a_defaultFont));
+		}
 	}
 
-	/**
-	 * Changes the default font of the displayed text.
-	 *
-	 * @param a_defaultFont The font to use as the default font for the text (set in the HTML body
-	 *                      tag). So any part of the text, which is not influenced by special
-	 *                      modifiers is displayed with this default font. If the specified Font is
-	 *                      BOLD, the text is also included within a <b> tag.
-	 * @deprecated use <i>setFont(Font)</i> instead
-	 */
-	public void changeFont(Font a_defaultFont)
+	//public void getFont()
 	{
-		setFont(a_defaultFont);
-	}
 
-	/**
-	 * Changes the text displayed by the JAPHtmlMultiLineLabel.
-	 *
-	 * @param a_newText Any HTML 3.2 conform text, which is allowed in the body of an HTML 3.2 structure
-	 *               (without the leading and trailing <html> and <body> tags).
-	 *  @deprecated use <I>setText(String)</I> instead
-	 */
-	public void changeText(String a_newText)
-	{
-		setText(a_newText);
-	}
-
+}
 
 	/**
 	 * This method adds HTML and BODY tags to a String and overwrites existing tags of this type.
@@ -356,16 +344,46 @@ public class JAPHtmlMultiLineLabel extends JLabel
 
 		/* set the new font with the HTML default size */
 		// style=\"font-family:" + a_defaultFont.getFamily() + ";font-size:small\"
+		int size = a_defaultFont.getSize();
+		String strSize = "-1";
+		if (size < 14)
+		{
+			strSize = "-1";
+		}
+		else if (size < 17)
+		{
+			strSize = "+0";
+		}
+		else if  (size < 19)
+		{
+			strSize = "+1";
+		}
+		else if  (size < 26)
+		{
+			strSize = "+2";
+		}
+		else
+		{
+			strSize = "+3";
+		}
+
+
+		//System.out.println(size + ":" + strSize);
 		String header = TAG_HTML_OPEN  + TAG_BODY_OPEN.substring(0, TAG_BODY_OPEN.length() - 1) +
-			" style=\"font-family:" + a_defaultFont.getFamily() + "\">";
-		String trailer = TAG_BODY_CLOSE + TAG_HTML_CLOSE;
+			//" style=\"font-family:" + a_defaultFont.getFamily() + " font-size:50pt" + "\">";
+			" style=\"font-family:" + a_defaultFont.getFamily() + "\"><font size=" + strSize +">";
+			//"><font size=" + strSize +">";
+			//">";
+		String trailer = "</font>" + TAG_BODY_CLOSE + TAG_HTML_CLOSE;
+
 		if (a_defaultFont.isBold())
 		{
 			header = header + "<b>";
 			trailer = "</b>" + trailer;
 		}
 
-		return header + removeHTMLHEADAndBODYTags(a_HTMLtext) + trailer;
+		//return header + "<Font size=100pt>" + removeHTMLHEADAndBODYTags(a_HTMLtext) + "</Font>" + trailer;
+		return header+ removeHTMLHEADAndBODYTags(a_HTMLtext) + trailer;
 	}
 
 	/**

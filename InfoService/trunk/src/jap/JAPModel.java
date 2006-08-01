@@ -46,10 +46,13 @@ public final class JAPModel extends Observable
 	public static final String XML_REMIND_OPTIONAL_UPDATE = "remindOptionalUpdate";
 	public static final String XML_RESTRICT_CASCADE_AUTO_CHANGE = "restrictCascadeAutoChange";
 	public static final String XML_DENY_NON_ANONYMOUS_SURFING = "denyNonAnonymousSurfing";
+	public static final String XML_FONT_SIZE = "fontSize";
 
 	public static final String AUTO_CHANGE_NO_RESTRICTION = "none";
 	public static final String AUTO_CHANGE_RESTRICT_TO_PAY = "pay";
 	public static final String AUTO_CHANGE_RESTRICT = "restrict";
+
+	public static final int MAX_FONT_SIZE = 4;
 
 	// observer messages
 	public static final Integer CHANGED_INFOSERVICE_AUTO_UPDATE = new Integer(0);
@@ -58,6 +61,8 @@ public final class JAPModel extends Observable
 	private static final int DIRECT_CONNECTION_INFOSERVICE = 0;
 	private static final int DIRECT_CONNECTION_PAYMENT = 1;
 	private static final int DIRECT_CONNECTION_UPDATE = 2;
+
+
 
 	private int m_HttpListenerPortNumber = JAPConstants.DEFAULT_PORT_NUMBER; // port number of HTTP  listener
 	private boolean m_bHttpListenerIsLocal = JAPConstants.DEFAULT_LISTENER_IS_LOCAL; // indicates whether listeners serve for localhost only or not
@@ -89,6 +94,8 @@ public final class JAPModel extends Observable
 
 	private boolean m_bChooseCascasdeConnectionAutomatically;
 	private String m_automaticCascadeChangeRestriction;
+
+	private int m_fontSize = 0;
 
 
 	private static JAPModel ms_TheModel = null;
@@ -362,8 +369,9 @@ public final class JAPModel extends Observable
 				m_bAllowInfoServiceViaDirectConnection = a_bAllowInfoServiceViaDirectConnection;
 				setChanged();
 			}
+			notifyObservers(CHANGED_ALLOW_INFOSERVICE_DIRECT_CONNECTION);
 		}
-		notifyObservers(CHANGED_ALLOW_INFOSERVICE_DIRECT_CONNECTION);
+
 	}
 
 	public void allowPaymentViaDirectConnection(boolean a_bAllowPaymentViaDirectConnection)
@@ -515,13 +523,46 @@ public final class JAPModel extends Observable
 				m_bInfoServiceDisabled = b;
 				setChanged();
 			}
+			notifyObservers(CHANGED_INFOSERVICE_AUTO_UPDATE);
 		}
-		notifyObservers(CHANGED_INFOSERVICE_AUTO_UPDATE);
+
 	}
 
 	public static boolean isInfoServiceDisabled()
 	{
 		return ms_TheModel.m_bInfoServiceDisabled;
+	}
+
+	/**
+	 * Returns the relative font size as integer from 0 to MAX_FONT_SIZE. The real font size
+	 * is calculated as 100% + getFontSize() * 10%.
+	 * @return the relative font size as integer from 0 to MAX_FONT_SIZE
+	 */
+	public int getFontSize()
+	{
+		return m_fontSize;
+	}
+
+	public void setFontSize(int a_fontSize)
+	{
+		if (a_fontSize < 0)
+		{
+			a_fontSize = 0;
+		}
+		else if (a_fontSize > MAX_FONT_SIZE)
+		{
+			a_fontSize = MAX_FONT_SIZE;
+		}
+		if (m_fontSize != a_fontSize)
+		{
+			synchronized (this)
+			{
+				FontResize resize = new FontResize(m_fontSize, a_fontSize);
+				m_fontSize = a_fontSize;
+				setChanged();
+				notifyObservers(resize);
+			}
+		}
 	}
 
 	public String toString()
@@ -780,5 +821,25 @@ public final class JAPModel extends Observable
 
 	public boolean getDLLupdate() {
 		return m_bUpdateDll;
+	}
+
+	public static class FontResize
+	{
+		private int m_oldSize;
+		private int m_newSize;
+
+		public FontResize(int a_oldSize, int a_newSize)
+		{
+			m_oldSize = a_oldSize;
+			m_newSize = a_newSize;
+		}
+		public int getOldSize()
+		{
+			return m_oldSize;
+		}
+		public int getNewSize()
+		{
+			return m_newSize;
+		}
 	}
 }

@@ -89,7 +89,6 @@ import gui.GUIUtils;
 import gui.JAPHelp;
 import gui.JAPJIntField;
 import gui.JAPMessages;
-import gui.JAPMultilineLabel;
 import gui.MapBox;
 import gui.ServerListPanel;
 import gui.dialog.JAPDialog;
@@ -138,8 +137,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private JPanel m_manualPanel;
 
 	private JLabel m_numOfUsersLabel;
-	private JAPMultilineLabel m_reachableLabel;
-	private JAPMultilineLabel m_portsLabel;
+	private GridBagConstraints m_constrHosts, m_constrPorts;
+	private JAPHtmlMultiLineLabel m_lblHosts, m_lblPorts;
+	private JAPHtmlMultiLineLabel m_reachableLabel;
+	private JAPHtmlMultiLineLabel m_portsLabel;
 
 	private GridBagLayout m_rootPanelLayout;
 	private GridBagConstraints m_rootPanelConstraints;
@@ -147,9 +148,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private JLabel m_operatorLabel;
 	private JLabel m_emailLabel;
 	private JLabel m_urlLabel;
-	private JLabel m_locationLabel;
+	private JAPHtmlMultiLineLabel m_locationLabel;
 	private JLabel m_payLabel;
-	private JLabel m_viewCertLabel;
+	private JAPHtmlMultiLineLabel m_viewCertLabel;
 
 	private JButton m_manualCascadeButton;
 	private JButton m_reloadCascadesButton;
@@ -188,11 +189,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	public void recreateRootPanel()
 	{
-		Font font = getFontSetting();
+		//Font font = getFontSetting();
 		m_listMixCascade = new JList();
 		m_listMixCascade.addListSelectionListener(this);
 		m_listMixCascade.addMouseListener(this);
-		m_listMixCascade.setFont(font);
+		//m_listMixCascade.setFont(font);
 
 		m_listMixCascade.setEnabled(true);
 		drawCompleteDialog();
@@ -240,7 +241,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 
 		JLabel label = new JLabel(JAPMessages.getString("infoAboutCascade"));
-		label.setFont(new Font(label.getFont().getName(), Font.BOLD, label.getFont().getSize() + 2));
+		label.setFont(new Font(label.getFont().getName(), Font.BOLD, (int)(label.getFont().getSize() * 1.2)));
 		m_serverPanel.add(label, c);
 
 		c.gridy = 1;
@@ -277,7 +278,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_serverInfoPanel.setLayout(layout);
 
 		JLabel l = new JLabel(JAPMessages.getString("infoAboutMix"));
-		l.setFont(new Font(l.getFont().getName(), Font.BOLD, l.getFont().getSize() + 2));
+		l.setFont(new Font(l.getFont().getName(), Font.BOLD, (int)(l.getFont().getSize() * 1.2)));
 		c.insets = new Insets(5, 10, 5, 5);
 		c.gridx = 0;
 		c.gridy = 0;
@@ -324,22 +325,22 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.gridx = 1;
 		m_serverInfoPanel.add(m_urlLabel, c);
 
-		l = new JLabel(JAPMessages.getString("mixLocation"));
+		l = new JAPHtmlMultiLineLabel(JAPMessages.getString("mixLocation") + ":");
 		c.gridx = 0;
 		c.gridy++;
 		m_serverInfoPanel.add(l, c);
 
-		m_locationLabel = new JLabel();
+		m_locationLabel = new JAPHtmlMultiLineLabel();
 		m_locationLabel.addMouseListener(this);
 		c.gridx = 1;
 		m_serverInfoPanel.add(m_locationLabel, c);
 
-		l = new JLabel(JAPMessages.getString(MSG_LABEL_CERTIFICATE) + ":");
+		l = new JAPHtmlMultiLineLabel(JAPMessages.getString(MSG_LABEL_CERTIFICATE) + ":");
 		c.gridx = 0;
 		c.gridy++;
 		m_serverInfoPanel.add(l, c);
 
-		m_viewCertLabel = new JLabel();
+		m_viewCertLabel = new JAPHtmlMultiLineLabel();
 		m_viewCertLabel.addMouseListener(this);
 		c.gridx = 1;
 		m_serverInfoPanel.add(m_viewCertLabel, c);
@@ -549,15 +550,16 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_cascadesPanel.add(m_numOfUsersLabel, c);
 
 		c.insets = new Insets(5, 20, 0, 5);
-		l = new JLabel(JAPMessages.getString("cascadeReachableBy"));
+		m_lblHosts = new JAPHtmlMultiLineLabel(JAPMessages.getString("cascadeReachableBy") + ":");
 		c.gridx = 2;
 		c.gridy = 2;
 		c.weightx = 0;
 		c.fill = GridBagConstraints.NONE;
-		m_cascadesPanel.add(l, c);
+		m_constrHosts = (GridBagConstraints)c.clone();
+		m_cascadesPanel.add(m_lblHosts, c);
 
 		c.insets = new Insets(5, 5, 0, 5);
-		m_reachableLabel = new JAPMultilineLabel("");
+		m_reachableLabel = new JAPHtmlMultiLineLabel();
 		c.gridx = 3;
 		c.gridy = 2;
 		c.weightx = 0;
@@ -565,15 +567,16 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_cascadesPanel.add(m_reachableLabel, c);
 
 		c.insets = new Insets(5, 20, 0, 5);
-		l = new JLabel(JAPMessages.getString("cascadePorts"));
+		m_lblPorts = new JAPHtmlMultiLineLabel(JAPMessages.getString("cascadePorts") + ":");
 		c.gridx = 2;
 		c.gridy = 3;
 		c.weightx = 0;
 		c.fill = GridBagConstraints.NONE;
-		m_cascadesPanel.add(l, c);
+		m_constrPorts = (GridBagConstraints)c.clone();
+		m_cascadesPanel.add(m_lblPorts, c);
 
 		c.insets = new Insets(5, 5, 0, 5);
-		m_portsLabel = new JAPMultilineLabel("");
+		m_portsLabel = new JAPHtmlMultiLineLabel("");
 		c.gridx = 3;
 		c.gridy = 3;
 		c.weightx = 0;
@@ -1145,9 +1148,12 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			(e.getSource() == m_viewCertLabel && m_serverCert != null) ||
 			(e.getSource() == m_locationLabel && m_locationCoordinates != null))
 		{
-			if (getRootPanel().getCursor().equals(Cursor.getDefaultCursor()))
+			if (getRootPanel().getCursor() != null) // for JDK 1.1.8
 			{
-				this.getRootPanel().setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+				if (getRootPanel().getCursor().equals(Cursor.getDefaultCursor()))
+				{
+					this.getRootPanel().setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+				}
 			}
 		}
 	}
@@ -1157,9 +1163,12 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		if (e.getSource() == m_urlLabel || e.getSource() == m_viewCertLabel ||
 			e.getSource() == m_locationLabel)
 		{
-			if (getRootPanel().getCursor().equals(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
+			if (getRootPanel().getCursor() != null) // for JDK 1.1.8
 			{
-				getRootPanel().setCursor(Cursor.getDefaultCursor());
+				if (getRootPanel().getCursor().equals(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
+				{
+					getRootPanel().setCursor(Cursor.getDefaultCursor());
+				}
 			}
 		}
 	}
@@ -1230,8 +1239,16 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 						drawServerPanel(cascade.getNumberOfMixes(), cascade.getName(), true, selectedMix);
 					}
 					m_numOfUsersLabel.setText(m_infoService.getNumOfUsers(cascadeId));
+					m_reachableLabel.setFont(m_numOfUsersLabel.getFont());
+					m_lblHosts.setFont(m_numOfUsersLabel.getFont());
 					m_reachableLabel.setText(m_infoService.getHosts(cascadeId));
+					m_cascadesPanel.remove(m_lblHosts);
+					m_cascadesPanel.add(m_lblHosts, m_constrHosts);
+					m_portsLabel.setFont(m_numOfUsersLabel.getFont());
+					m_lblPorts.setFont(m_numOfUsersLabel.getFont());
 					m_portsLabel.setText(m_infoService.getPorts(cascadeId));
+					m_cascadesPanel.remove(m_lblPorts);
+					m_cascadesPanel.add(m_lblPorts, m_constrPorts);
 					if (m_infoService.isPay(cascadeId))
 					{
 						m_payLabel.setText(JAPMessages.getString(MSG_PAYCASCADE));
@@ -1648,14 +1665,13 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			{
 				if (interfaces.indexOf(a_cascade.getListenerInterface(i).getHost()) == -1)
 				{
+					if (interfaces.length() > 0)
+					{
+						interfaces += " <br> ";
+					}
 					interfaces += a_cascade.getListenerInterface(i).getHost();
 				}
 				portsArray[i] = a_cascade.getListenerInterface(i).getPort();
-
-				if (i != a_cascade.getNumberOfListenerInterfaces() - 1)
-				{
-					interfaces += "\n";
-				}
 			}
 
 			// Sort the array containing the port numbers and put the numbers into a string

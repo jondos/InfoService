@@ -49,6 +49,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeEvent;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -110,6 +112,7 @@ import jap.pay.wizardnew.PaymentInfoPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import javax.swing.UIManager;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -118,7 +121,7 @@ import logging.LogType;
  * @version 1.0
  */
 public class AccountSettingsPanel extends AbstractJAPConfModule implements
-	ListSelectionListener
+	ListSelectionListener, PropertyChangeListener
 {
 	protected static final String IMG_COINS_DISABLED = AccountSettingsPanel.class.getName() +
 		"_coins-disabled.gif";
@@ -276,6 +279,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	public AccountSettingsPanel()
 	{
 		super(null);
+		UIManager.addPropertyChangeListener(this);
+	}
+
+	public void propertyChange(PropertyChangeEvent a_event)
+	{
+		m_coinstack.setUI(new CoinstackProgressBarUI(GUIUtils.loadImageIcon(JAPConstants.IMAGE_COIN_COINSTACK, true),0, 8));
 	}
 
 	/**
@@ -299,7 +308,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		/* insert all components in the root panel */
 		JTabbedPane tabPane = new JTabbedPane();
-		tabPane.setFont(getFontSetting());
+		//tabPane.setFont(getFontSetting());
 		tabPane.insertTab(JAPMessages.getString("ngPseudonymAccounts"),
 						  null, createBasicSettingsTab(), null, 0);
 		tabPane.insertTab(JAPMessages.getString(
@@ -440,7 +449,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		JPanel panelAdvanced = new JPanel();
 
 		m_cbxShowPaymentConfirmation = new JCheckBox(JAPMessages.getString(MSG_SHOW_PAYMENT_CONFIRM_DIALOG));
-		m_cbxShowPaymentConfirmation.setFont(getFontSetting());
+		//m_cbxShowPaymentConfirmation.setFont(getFontSetting());
 		GridBagLayout advancedPanelLayout = new GridBagLayout();
 		panelAdvanced.setLayout(advancedPanelLayout);
 
@@ -494,8 +503,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		c.gridy++;
 		c.gridheight = 3;
 		m_coinstack = new JProgressBar(0, 8);
-		m_coinstack.setUI(new CoinstackProgressBarUI(GUIUtils.loadImageIcon(JAPConstants.IMAGE_COIN_COINSTACK, true),
-			0, 8));
+		propertyChange(null);
 		p.add(m_coinstack, c);
 
 		c.gridheight = 1;

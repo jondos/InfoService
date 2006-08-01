@@ -61,6 +61,7 @@ import gui.CAListCellRenderer;
 import gui.CertDetailsDialog;
 import gui.JAPMessages;
 import gui.JAPHelp;
+import gui.JAPHtmlMultiLineLabel;
 import gui.CountryMapper;
 import gui.dialog.JAPDialog;
 
@@ -194,7 +195,7 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		panelRoot.removeAll();
 
 		m_borderCert = new TitledBorder(JAPMessages.getString("confCertTab"));
-		m_borderCert.setTitleFont(getFontSetting());
+		//m_borderCert.setTitleFont(getFontSetting());
 		panelRoot.setBorder(m_borderCert);
 		JPanel caLabel = createCALabel();
 		m_panelCAList = createCertCAPanel();
@@ -242,8 +243,8 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 
 		JLabel labelTrust1 = new JLabel(JAPMessages.getString("certTrust1"));
 		JLabel labelTrust2 = new JLabel(JAPMessages.getString("certTrust2"));
-		labelTrust1.setFont(getFontSetting());
-		labelTrust2.setFont(getFontSetting());
+		//labelTrust1.setFont(getFontSetting());
+		//labelTrust2.setFont(getFontSetting());
 
 		m_cbCertCheckEnabled = new JCheckBox();
 		m_cbCertCheckEnabled.setSelected(true);
@@ -360,7 +361,7 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		r_panelCA.add(m_scrpaneList);
 
 		m_bttnCertInsert = new JButton(JAPMessages.getString("certBttnInsert"));
-		m_bttnCertInsert.setFont(getFontSetting());
+		//m_bttnCertInsert.setFont(getFontSetting());
 		m_bttnCertInsert.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -393,7 +394,7 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		});
 
 		m_bttnCertRemove = new JButton(JAPMessages.getString("certBttnRemove"));
-		m_bttnCertRemove.setFont(getFontSetting());
+		//m_bttnCertRemove.setFont(getFontSetting());
 		m_bttnCertRemove.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -426,7 +427,7 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		});
 
 		m_bttnCertStatus = new JButton(JAPMessages.getString("certBttnEnable"));
-		m_bttnCertStatus.setFont(getFontSetting());
+		//m_bttnCertStatus.setFont(getFontSetting());
 		m_bttnCertStatus.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -448,7 +449,7 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		});
 
 	    m_bttnCertDetails = new JButton(JAPMessages.getString(MSG_DETAILS));
-		m_bttnCertDetails.setFont(getFontSetting());
+		//m_bttnCertDetails.setFont(getFontSetting());
 		m_bttnCertDetails.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -503,40 +504,40 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		panelConstraintsInfo.gridy = 0;
 		panelConstraintsInfo.gridwidth = 2;
 
-		JLabel l = new JLabel("<html><u>" + JAPMessages.getString("certInfoBorder") + ":</html></u>");
+		JLabel l = new JAPHtmlMultiLineLabel("<u>" + JAPMessages.getString("certInfoBorder") + "</u>");
 		r_panelInfo.add(l, panelConstraintsInfo);
 
 		m_labelDate = new JLabel(JAPMessages.getString("certDate"));
-		m_labelDate.setFont(getFontSetting());
+		//m_labelDate.setFont(getFontSetting());
 
 		m_labelCN = new JLabel(JAPMessages.getString("certName"));
-		m_labelCN.setFont(getFontSetting());
+		//m_labelCN.setFont(getFontSetting());
 		m_labelE = new JLabel(JAPMessages.getString("certMail"));
-		m_labelE.setFont(getFontSetting());
+		//m_labelE.setFont(getFontSetting());
 		m_labelCSTL = new JLabel(JAPMessages.getString("certLocation"));
-		m_labelCSTL.setFont(getFontSetting());
+		//m_labelCSTL.setFont(getFontSetting());
 		m_labelO = new JLabel(JAPMessages.getString("certOrg"));
-		m_labelO.setFont(getFontSetting());
+		//m_labelO.setFont(getFontSetting());
 		m_labelOU = new JLabel(JAPMessages.getString("certOrgUnit"));
-		m_labelOU.setFont(getFontSetting());
+		//m_labelOU.setFont(getFontSetting());
 
 		m_labelDateData = new JLabel();
-		m_labelDateData.setFont(getFontSetting());
+		//m_labelDateData.setFont(getFontSetting());
 
 		m_labelCNData = new JLabel();
-		m_labelCNData.setFont(getFontSetting());
+		//m_labelCNData.setFont(getFontSetting());
 
 		m_labelEData = new JLabel();
-		m_labelEData.setFont(getFontSetting());
+		//m_labelEData.setFont(getFontSetting());
 
 		m_labelCSTLData = new JLabel();
-		m_labelCSTLData.setFont(getFontSetting());
+		//m_labelCSTLData.setFont(getFontSetting());
 
 		m_labelOData = new JLabel();
-		m_labelOData.setFont(getFontSetting());
+		//m_labelOData.setFont(getFontSetting());
 
 		m_labelOUData = new JLabel();
-		m_labelOUData.setFont(getFontSetting());
+		//m_labelOUData.setFont(getFontSetting());
 
 		/*		    	gridx
 		 0:				1:

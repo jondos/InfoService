@@ -71,8 +71,11 @@ import jap.JAPUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import javax.swing.UIManager;
 
-public class PaymentMainPanel extends FlippingPanel
+public class PaymentMainPanel extends FlippingPanel implements PropertyChangeListener
 {
 
 	/** Messages */
@@ -180,9 +183,6 @@ public class PaymentMainPanel extends FlippingPanel
 		c1.insets = new Insets(0, 10, 0, 0);
 		fullPanel.add(label, c1);
 		m_BalanceProgressBar = new JProgressBar();
-		MyProgressBarUI ui = new MyProgressBarUI(true);
-		ui.setFilledBarColor(Color.blue);
-		m_BalanceProgressBar.setUI(ui);
 		m_BalanceProgressBar.setMinimum(0);
 		m_BalanceProgressBar.setMaximum(5);
 		m_BalanceProgressBar.setBorderPainted(false);
@@ -295,19 +295,27 @@ public class PaymentMainPanel extends FlippingPanel
 		c1.fill = GridBagConstraints.NONE;
 		c1.insets = new Insets(0, 5, 0, 0);
 		m_BalanceSmallProgressBar = new JProgressBar();
-		MyProgressBarUI uiSmall = new MyProgressBarUI(true);
-		uiSmall.setFilledBarColor(Color.blue);
-		m_BalanceSmallProgressBar.setUI(uiSmall);
 		m_BalanceSmallProgressBar.setMinimum(0);
 		m_BalanceSmallProgressBar.setMaximum(5);
 		m_BalanceSmallProgressBar.setBorderPainted(false);
 
 		smallPanel.add(m_BalanceSmallProgressBar, c1);
-
 		this.setSmallPanel(smallPanel);
+
 
 		PayAccountsFile.getInstance().addPaymentListener(m_MyPaymentListener);
 		updateDisplay(PayAccountsFile.getInstance().getActiveAccount());
+	}
+
+	public void propertyChange(PropertyChangeEvent a_event)
+	{
+		MyProgressBarUI uiSmall = new MyProgressBarUI(true);
+		uiSmall.setFilledBarColor(Color.blue);
+		m_BalanceSmallProgressBar.setUI(uiSmall);
+		MyProgressBarUI ui = new MyProgressBarUI(true);
+		ui.setFilledBarColor(Color.blue);
+		m_BalanceProgressBar.setUI(ui);
+
 	}
 
 	/**

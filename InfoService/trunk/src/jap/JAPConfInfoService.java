@@ -147,7 +147,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 			/* insert all components in the root panel */
 			JTabbedPane infoServiceTabPane = new JTabbedPane();
-			infoServiceTabPane.setFont(getFontSetting());
+			//infoServiceTabPane.setFont(getFontSetting());
 			infoServiceTabPane.insertTab(JAPMessages.getString(
 				"settingsInfoServiceConfigBasicSettingsTabTitle"), null, createInfoServiceConfigPanel(), null,
 										 0);
@@ -231,9 +231,9 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 				}
 				returnLabel.setOpaque(true);
 				/* the default is a non-bold font */
-				returnLabel.setFont(new Font(getFontSetting().getName(),
-											 getFontSetting().getStyle() & (~Font.BOLD),
-											 getFontSetting().getSize()));
+				returnLabel.setFont(new Font(returnLabel.getFont().getName(),
+											 returnLabel.getFont().getStyle() & (~Font.BOLD),
+											 returnLabel.getFont().getSize()));
 				InfoServiceDBEntry preferredInfoService = InfoServiceHolder.getInstance().
 					getPreferredInfoService();
 				if (preferredInfoService != null)
@@ -241,8 +241,8 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 					if (preferredInfoService.equals( (InfoServiceDBEntry) a_value))
 					{
 						/* print the preferred InfoService in a bold font */
-						returnLabel.setFont(new Font(getFontSetting().getName(),
-							getFontSetting().getStyle() | Font.BOLD, getFontSetting().getSize()));
+						returnLabel.setFont(new Font(returnLabel.getFont().getName(),
+							returnLabel.getFont().getStyle() | Font.BOLD, returnLabel.getFont().getSize()));
 					}
 				}
 				if (a_isSelected)
@@ -335,7 +335,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 		JButton settingsInfoServiceConfigBasicSettingsSetPreferredButton = new JButton(JAPMessages.getString(
 			"settingsInfoServiceConfigBasicSettingsSetPreferredButton"));
-		settingsInfoServiceConfigBasicSettingsSetPreferredButton.setFont(getFontSetting());
+		//settingsInfoServiceConfigBasicSettingsSetPreferredButton.setFont(getFontSetting());
 		settingsInfoServiceConfigBasicSettingsSetPreferredButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent a_event)
@@ -346,7 +346,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 		final JButton settingsInfoServiceConfigBasicSettingsAddButton = new JButton(JAPMessages.getString(
 			"settingsInfoServiceConfigBasicSettingsAddButton"));
-		settingsInfoServiceConfigBasicSettingsAddButton.setFont(getFontSetting());
+		//settingsInfoServiceConfigBasicSettingsAddButton.setFont(getFontSetting());
 		settingsInfoServiceConfigBasicSettingsAddButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent a_event)
@@ -367,7 +367,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 			settingsInfoServiceConfigBasicSettingsRemoveButton = new JButton(JAPMessages.getString(
 				"settingsInfoServiceConfigBasicSettingsRemoveButton"));
-			settingsInfoServiceConfigBasicSettingsRemoveButton.setFont(getFontSetting());
+			//settingsInfoServiceConfigBasicSettingsRemoveButton.setFont(getFontSetting());
 			settingsInfoServiceConfigBasicSettingsRemoveButton.addActionListener(new ActionListener()
 			{
 				public void actionPerformed(ActionEvent a_event)
@@ -394,7 +394,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 	    final JButton settingsInfoServiceConfigBasicSettingsViewCertButton =
 			new JButton(JAPMessages.getString(MSG_VIEW_CERT));
-		settingsInfoServiceConfigBasicSettingsViewCertButton.setFont(getFontSetting());
+		//settingsInfoServiceConfigBasicSettingsViewCertButton.setFont(getFontSetting());
 		settingsInfoServiceConfigBasicSettingsViewCertButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent a_event)
@@ -712,11 +712,11 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 		JLabel settingsInfoServiceConfigBasicSettingsListLabel = new JLabel(JAPMessages.getString(
 			"settingsInfoServiceConfigBasicSettingsListLabel"));
-		settingsInfoServiceConfigBasicSettingsListLabel.setFont(getFontSetting());
+		//settingsInfoServiceConfigBasicSettingsListLabel.setFont(getFontSetting());
 
 		JLabel settingsInfoServiceConfigBasicSettingsInformationInterfacesLabel = new JLabel(JAPMessages.
 			getString("settingsInfoServiceConfigBasicSettingsInformationInterfacesLabel"));
-		settingsInfoServiceConfigBasicSettingsInformationInterfacesLabel.setFont(getFontSetting());
+		//settingsInfoServiceConfigBasicSettingsInformationInterfacesLabel.setFont(getFontSetting());
 
 		/*final JTextArea infoServiceInterfaceInfoArea = new JTextArea();
 		  infoServiceInterfaceInfoArea.setFont(getFontSetting());
@@ -962,7 +962,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 		JAPHtmlMultiLineLabel settingsInfoServiceConfigBasicSettingsDescriptionLabel = new
 			JAPHtmlMultiLineLabel(JAPMessages.getString(
-				"settingsInfoServiceConfigBasicSettingsDescriptionLabel"), getFontSetting());
+				"settingsInfoServiceConfigBasicSettingsDescriptionLabel"));
 
 		GridBagLayout descriptionPanelLayout = new GridBagLayout();
 		descriptionPanel.setLayout(descriptionPanelLayout);
@@ -981,15 +981,15 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		descriptionPanel.add(settingsInfoServiceConfigBasicSettingsDescriptionLabel);
 
 		addInfoServiceHostField = new JTextField(20);
-		addInfoServiceHostField.setFont(getFontSetting());
+		//addInfoServiceHostField.setFont(getFontSetting());
 		addInfoServicePortField = new JAPJIntField(ListenerInterface.PORT_MAX_VALUE);
-		addInfoServicePortField.setFont(getFontSetting());
+		//addInfoServicePortField.setFont(getFontSetting());
 		addInfoServiceNameField = new JTextField(20);
-		addInfoServiceNameField.setFont(getFontSetting());
+		//addInfoServiceNameField.setFont(getFontSetting());
 
 		JButton settingsInfoServiceConfigBasicSettingsAddInfoServiceAddButton = new JButton(JAPMessages.
 			getString("settingsInfoServiceConfigBasicSettingsAddInfoServiceAddButton"));
-		settingsInfoServiceConfigBasicSettingsAddInfoServiceAddButton.setFont(getFontSetting());
+		//settingsInfoServiceConfigBasicSettingsAddInfoServiceAddButton.setFont(getFontSetting());
 		settingsInfoServiceConfigBasicSettingsAddInfoServiceAddButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
@@ -1038,7 +1038,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 		JButton settingsInfoServiceConfigBasicSettingsAddInfoServiceCancelButton = new JButton(JAPMessages.
 			getString("cancelButton"));
-		settingsInfoServiceConfigBasicSettingsAddInfoServiceCancelButton.setFont(getFontSetting());
+		//settingsInfoServiceConfigBasicSettingsAddInfoServiceCancelButton.setFont(getFontSetting());
 		settingsInfoServiceConfigBasicSettingsAddInfoServiceCancelButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
@@ -1055,13 +1055,13 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 		JLabel settingsInfoServiceConfigBasicSettingsAddInfoServiceHostLabel = new JLabel(JAPMessages.
 			getString("settingsInfoServiceConfigBasicSettingsAddInfoServiceHostLabel"));
-		settingsInfoServiceConfigBasicSettingsAddInfoServiceHostLabel.setFont(getFontSetting());
+		//settingsInfoServiceConfigBasicSettingsAddInfoServiceHostLabel.setFont(getFontSetting());
 		JLabel settingsInfoServiceConfigBasicSettingsAddInfoServicePortLabel = new JLabel(JAPMessages.
 			getString("settingsInfoServiceConfigBasicSettingsAddInfoServicePortLabel"));
-		settingsInfoServiceConfigBasicSettingsAddInfoServicePortLabel.setFont(getFontSetting());
+		//settingsInfoServiceConfigBasicSettingsAddInfoServicePortLabel.setFont(getFontSetting());
 		JLabel settingsInfoServiceConfigBasicSettingsAddInfoServiceNameLabel = new JLabel(JAPMessages.
 			getString("settingsInfoServiceConfigBasicSettingsAddInfoServiceNameLabel"));
-		settingsInfoServiceConfigBasicSettingsAddInfoServiceNameLabel.setFont(getFontSetting());
+//		settingsInfoServiceConfigBasicSettingsAddInfoServiceNameLabel.setFont(getFontSetting());
 
 		JPanel addButtonsPanel = new JPanel();
 		FlowLayout addButtonsPanelLayout = new FlowLayout();
@@ -1221,7 +1221,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 		final JCheckBox settingsInfoServiceConfigAdvancedSettingsEnableAutomaticRequestsBox = new JCheckBox(
 			JAPMessages.getString("settingsInfoServiceConfigAdvancedSettingsEnableAutomaticRequestsBox"));
-		settingsInfoServiceConfigAdvancedSettingsEnableAutomaticRequestsBox.setFont(getFontSetting());
+//		settingsInfoServiceConfigAdvancedSettingsEnableAutomaticRequestsBox.setFont(getFontSetting());
 		settingsInfoServiceConfigAdvancedSettingsEnableAutomaticRequestsBox.addActionListener(new
 			ActionListener()
 		{
@@ -1235,7 +1235,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 		final JCheckBox settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox = new JCheckBox(
 			JAPMessages.getString("settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox"));
-		settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox.setFont(getFontSetting());
+		//settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox.setFont(getFontSetting());
 		settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox.addActionListener(new
 			ActionListener()
 		{

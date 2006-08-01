@@ -99,9 +99,11 @@ import anon.infoservice.Database;
 import anon.AnonServerDescription;
 import anon.infoservice.DatabaseMessage;
 import platform.AbstractOS;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeEvent;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
-	JAPObserver, Observer
+	JAPObserver, Observer, PropertyChangeListener
 {
 	private static final String MSG_SERVICE_NAME = JAPNewView.class.getName() + "_ngAnonymisierungsdienst";
 	private static final String MSG_ERROR_DISCONNECTED = JAPNewView.class.getName() + "_errorDisconnected";
@@ -109,6 +111,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	//private JLabel meterLabel;
 	private JLabel m_labelCascadeName;
+	private JLabel m_labelVersion;
 	private JPanel m_panelMain;
 	private JButton m_bttnHelp, m_bttnQuit, m_bttnIconify, m_bttnConf;
 	//private JButton m_bttnAnonConf;
@@ -163,9 +166,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JPanel m_panelAnonService;
 	private int m_iPreferredWidth;
 	private boolean m_bIgnoreAnonComboEvents = false;
-	private FlippingPanel m_flippingPanelPayment;
+	private PaymentMainPanel m_flippingPanelPayment;
 	private Object m_connectionEstablishedSync = new Object();
 	private boolean m_bConnectionErrorShown = false;
+	private JProgressBar m_progForwarderActivity;
+	private JProgressBar m_progForwarderActivitySmall;
 
 
 	private long m_lTrafficWWW, m_lTrafficOther;
@@ -220,13 +225,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.gridx = 1;
 		c.anchor = GridBagConstraints.SOUTHEAST;
 		c.weighty = 0;
-		JLabel l = new JLabel(JAPConstants.aktVersion);
-		l.setForeground(Color.blue);
-		l.setFont(new Font(l.getFont().getName(),
-						   l.getFont().getStyle(),
-						   (int) (l.getFont().getSize() * 0.8)));
-		l.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-		l.addMouseListener(new MouseAdapter()
+		m_labelVersion = new JLabel(JAPConstants.aktVersion);
+		m_labelVersion.setForeground(Color.blue);
+		m_labelVersion.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		m_labelVersion.addMouseListener(new MouseAdapter()
 		{
 			public void mouseClicked(MouseEvent e)
 			{
@@ -234,7 +236,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			}
 		});
 		c.insets = new Insets(0, 0, 0, 10);
-		northPanel.add(l, c);
+		northPanel.add(m_labelVersion, c);
 
 		c.gridwidth = 2;
 		c.gridx = 0;
@@ -366,9 +368,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.gridx = 1;
 		p.add(m_labelAnonymityUser, c1);
 		m_progressAnonTraffic = new JProgressBar();
-		MyProgressBarUI ui = new MyProgressBarUI(true);
-		ui.setFilledBarColor(Color.blue.brighter());
-		m_progressAnonTraffic.setUI(ui);
 		m_progressAnonTraffic.setMinimum(0);
 		m_progressAnonTraffic.setMaximum(5);
 		m_progressAnonTraffic.setBorderPainted(false);
@@ -440,7 +439,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_progressAnonLevel.setMinimum(0);
 		m_progressAnonLevel.setMaximum(6);
 		m_progressAnonLevel.setBorderPainted(false);
-		m_progressAnonLevel.setUI(new MyProgressBarUI(true));
 		c1.weightx = 0.75;
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.anchor = GridBagConstraints.CENTER;
@@ -519,7 +517,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		p.add(m_labelOwnTraffic, c1);
 		JComponent spacer = new JPanel();
-		Dimension spacerDimension = new Dimension(l.getFontMetrics(l.getFont()).charWidth('9') * 6, 1);
+		Dimension spacerDimension =
+			new Dimension(m_labelVersion.getFontMetrics(m_labelVersion.getFont()).charWidth('9') * 6, 1);
 		spacer.setPreferredSize(spacerDimension);
 		c1.insets = new Insets(0, 0, 0, 0);
 		c1.gridx = 1;
@@ -543,9 +542,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.insets = new Insets(0, 10, 0, 0);
 		p.add(m_labelOwnActivity, c1);
 		m_progressOwnTrafficActivity = new JProgressBar();
-		ui = new MyProgressBarUI(true);
-		ui.setFilledBarColor(Color.blue);
-		m_progressOwnTrafficActivity.setUI(ui);
 		m_progressOwnTrafficActivity.setMinimum(0);
 		m_progressOwnTrafficActivity.setMaximum(5);
 		m_progressOwnTrafficActivity.setBorderPainted(false);
@@ -628,9 +624,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.gridx = 3;
 		p.add(m_labelOwnActivitySmall, c1);
 		m_progressOwnTrafficActivitySmall = new JProgressBar();
-		ui = new MyProgressBarUI(true);
-		ui.setFilledBarColor(Color.blue);
-		m_progressOwnTrafficActivitySmall.setUI(ui);
 		m_progressOwnTrafficActivitySmall.setMinimum(0);
 		m_progressOwnTrafficActivitySmall.setMaximum(5);
 		m_progressOwnTrafficActivitySmall.setBorderPainted(false);
@@ -780,6 +773,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			}
 		});
 
+		update(null, new JAPModel.FontResize(0, JAPModel.getInstance().getFontSize()));
+		propertyChange(null);
+		UIManager.addPropertyChangeListener(this);
+
 		Dimension d = super.getPreferredSize();
 		m_iPreferredWidth = Math.max(d.width, Math.max(m_flippingpanelOwnTraffic.getPreferredSize().width,
 			Math.max(
@@ -790,6 +787,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			fetchMixCascadesAsync(false);
 		}
+
 		valuesChanged(true);
 		setOptimalSize();
 		GUIUtils.centerOnScreen(this);
@@ -814,6 +812,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 
 		Database.getInstance(StatusInfo.class).addObserver(this);
+		JAPModel.getInstance().addObserver(this);
 
 		JAPHelp.init(this, AbstractOS.getInstance());
 		final JAPNewView view = this;
@@ -827,7 +826,38 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 			}
 		}.start();
+	}
 
+	public void propertyChange(PropertyChangeEvent a_event)
+	{
+		MyProgressBarUI ui = new MyProgressBarUI(true);
+		ui.setFilledBarColor(Color.blue.brighter());
+		m_progressAnonTraffic.setUI(ui);
+
+		ui = new MyProgressBarUI(true);
+		ui.setFilledBarColor(Color.blue);
+		m_progressOwnTrafficActivity.setUI(ui);
+
+		ui = new MyProgressBarUI(true);
+		ui.setFilledBarColor(Color.blue);
+		m_progressOwnTrafficActivitySmall.setUI(ui);
+
+		m_progressAnonLevel.setUI(new MyProgressBarUI(true));
+		m_progForwarderActivity.setUI(new MyProgressBarUI(true));
+		m_progForwarderActivitySmall.setUI(new MyProgressBarUI(true));
+		m_flippingPanelPayment.propertyChange(null);
+		Font labelFont = new JLabel().getFont();
+
+		m_labelVersion.setFont(new Font(labelFont.getName(), labelFont.getStyle(),
+										((int)(labelFont.getSize() * 0.8))));
+
+		synchronized (LOCK_CONFIG)
+		{
+			if (m_dlgConfig != null)
+			{
+				m_dlgConfig.updateValues();
+			}
+		}
 	}
 
 	private JPanel buildLevelPanel()
@@ -838,7 +868,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 		// Own traffic situation: current # of channels
 		//ownTrafficChannelsProgressBar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 1);
-		Font fontControls = JAPController.getDialogFont();
+		//Font fontControls = JAPController.getDialogFont();
 		//wnTrafficChannelsProgressBar.setFont(fontControls);
 		//ownTrafficChannelsProgressBar.setUI(new MyProgressBarUI(false));
 		//ownTrafficChannelsProgressBar.setStringPainted(true);
@@ -870,10 +900,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JPanel ownTrafficPanel = new JPanel();
 		ownTrafficPanel.setLayout(new GridLayout(2, 2, 5, 5));
 		m_labelOwnChannels = new JLabel(JAPMessages.getString("ownTrafficChannels"));
-		m_labelOwnChannels.setFont(fontControls);
+		//m_labelOwnChannels.setFont(fontControls);
 		ownTrafficPanel.add(m_labelOwnChannels);
 		m_labelOwnBytes = new JLabel(JAPMessages.getString("ownTrafficBytes"));
-		m_labelOwnBytes.setFont(fontControls);
+		//m_labelOwnBytes.setFont(fontControls);
 		ownTrafficPanel.add(m_labelOwnBytes);
 
 // "Guthaben"
@@ -892,9 +922,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		// details panel
 		JPanel detailsPanel = new JPanel();
 		m_labelCascadeName = new JLabel();
-		m_labelCascadeName.setFont(fontControls);
+		//m_labelCascadeName.setFont(fontControls);
 		m_labelMeterDetailsRisk = new JLabel(JAPMessages.getString("meterDetailsRisk") + " ");
-		m_labelMeterDetailsRisk.setFont(fontControls);
+		//m_labelMeterDetailsRisk.setFont(fontControls);
 		GridBagLayout g = new GridBagLayout();
 		detailsPanel.setLayout(g);
 		GridBagConstraints c = new GridBagConstraints();
@@ -996,13 +1026,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c2.weightx = 0;
 		c2.fill = GridBagConstraints.NONE;
 		p2.add(m_labelForwarderActivity, c2);
-		JProgressBar progress = new JProgressBar();
-		progress.setUI(new MyProgressBarUI(true));
-		progress.setMinimum(0);
-		progress.setMaximum(5);
-		progress.setBorderPainted(false);
+		m_progForwarderActivity = new JProgressBar();
+		m_progForwarderActivity.setMinimum(0);
+		m_progForwarderActivity.setMaximum(5);
+		m_progForwarderActivity.setBorderPainted(false);
 		c2.gridx = 4;
-		p2.add(progress, c2);
+		p2.add(m_progForwarderActivity, c2);
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.weightx = 1;
 		c1.gridx = 0;
@@ -1109,13 +1138,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.fill = GridBagConstraints.NONE;
 		c1.insets = new Insets(0, 5, 0, 0);
 		p.add(m_labelForwarderActivitySmall, c1);
-		progress = new JProgressBar();
-		progress.setUI(new MyProgressBarUI(true));
-		progress.setMinimum(0);
-		progress.setMaximum(5);
-		progress.setBorderPainted(false);
+		m_progForwarderActivitySmall = new JProgressBar();
+		m_progForwarderActivitySmall.setMinimum(0);
+		m_progForwarderActivitySmall.setMaximum(5);
+		m_progForwarderActivitySmall.setBorderPainted(false);
 		c1.gridx = 4;
-		p.add(progress, c1);
+		p.add(m_progForwarderActivitySmall, c1);
 		flippingPanel.setSmallPanel(p);
 
 		Observer observer = new Observer()
@@ -1288,7 +1316,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 	}
 
-	public void update(Observable a_observable, Object a_message)
+	public void update(Observable a_observable, final Object a_message)
 	{
 		if (a_observable == Database.getInstance(StatusInfo.class))
 		{
@@ -1299,6 +1327,47 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 				valuesChanged(false);
 			}
+		}
+		else if (a_message instanceof JAPModel.FontResize && a_message != null)
+		{
+			final JAPNewView view = this;
+			Runnable run = new Runnable()
+			{
+				public void run()
+				{
+					JAPModel.FontResize resize = (JAPModel.FontResize) a_message;
+					GUIUtils.resizeAllFonts(1.0f / (1.0f + 0.1f * resize.getOldSize()));
+					GUIUtils.resizeAllFonts(1.0f + 0.1f * resize.getNewSize());
+
+					SwingUtilities.updateComponentTreeUI(view);
+					//SwingUtilities.updateComponentTreeUI(view.getOwner());
+					synchronized (LOCK_CONFIG)
+					{
+						if (m_dlgConfig != null)
+						{
+							SwingUtilities.updateComponentTreeUI(m_dlgConfig.getContentPane());
+							//SwingUtilities.updateComponentTreeUI(m_dlgConfig.getOwner());
+						}
+					}
+				}
+			};
+
+			try
+			{
+				if (SwingUtilities.isEventDispatchThread())
+				{
+					run.run();
+				}
+				else
+				{
+					SwingUtilities.invokeAndWait(run);
+				}
+			}
+			catch (Exception a_e)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.GUI, "Error while updating font sizes!", a_e);
+			}
+
 		}
 	}
 
@@ -1499,6 +1568,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				m_dlgConfig.selectCard(card);
 			}
+
+
+			//SwingUtilities.updateComponentTreeUI(m_dlgConfig.getContentPane());
+			//SwingUtilities.updateComponentTreeUI(m_dlgConfig.getOwner());
+
 			m_dlgConfig.setVisible(true);
 		}
 	}
