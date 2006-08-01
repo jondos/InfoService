@@ -188,7 +188,7 @@ final public class JAPConf extends JAPDialog implements ActionListener
 			m_moduleSystem.addComponent(nodeNet, m_pPort, "confListenerTab", PORT_TAB);
 		}
 		m_moduleSystem.addComponent(nodeNet, m_pFirewall, "confProxyTab", PROXY_TAB);
-		if (!m_bIsSimpleView)
+		//if (!m_bIsSimpleView)
 		{
 			m_moduleSystem.addConfigurationModule(nodeNet, new JAPConfForwardingClient(),
 												  FORWARDING_CLIENT_TAB);
