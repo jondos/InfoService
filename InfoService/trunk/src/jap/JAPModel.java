@@ -95,6 +95,8 @@ public final class JAPModel extends Observable
 	private boolean m_bChooseCascasdeConnectionAutomatically;
 	private String m_automaticCascadeChangeRestriction;
 
+	private String m_strLookAndFeel;
+
 	private int m_fontSize = 0;
 
 
@@ -199,6 +201,17 @@ public final class JAPModel extends Observable
 	{
 		return ms_TheModel.m_bAutoReConnect;
 	}
+
+	public void setLookAndFeel(String a_strLookAndFeel)
+	{
+		m_strLookAndFeel = a_strLookAndFeel;
+	}
+
+	public String getLookAndFeel()
+	{
+		return m_strLookAndFeel;
+	}
+
 
 	protected void setMinimizeOnStartup(boolean b)
 	{

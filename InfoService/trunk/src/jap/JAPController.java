@@ -899,6 +899,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							break ;
 						}
 					}
+					JAPModel.getInstance().setLookAndFeel(UIManager.getLookAndFeel().getClass().getName());
 					JAPModel.getInstance().setFontSize(XMLUtil.parseAttribute(
 									   root, JAPModel.XML_FONT_SIZE, JAPModel.getInstance().getFontSize()));
 				}
@@ -1608,7 +1609,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 								 JAPModel.getInstance().isNeverRemindGoodbye());
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_LOCALE, m_Locale.getLanguage());
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_LOOK_AND_FEEL,
-								 UIManager.getLookAndFeel().getClass().getName());
+								 JAPModel.getInstance().getLookAndFeel());
+								 //UIManager.getLookAndFeel().getClass().getName());
 			XMLUtil.setAttribute(e, JAPModel.XML_FONT_SIZE, JAPModel.getInstance().getFontSize());
 
 			/*stores MixCascades*/

@@ -850,14 +850,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 		m_labelVersion.setFont(new Font(labelFont.getName(), labelFont.getStyle(),
 										((int)(labelFont.getSize() * 0.8))));
-
-		synchronized (LOCK_CONFIG)
-		{
-			if (m_dlgConfig != null)
-			{
-				m_dlgConfig.updateValues();
-			}
-		}
 	}
 
 	private JPanel buildLevelPanel()
@@ -1656,6 +1648,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				{
 					color = Color.yellow;
 				}
+				m_progressAnonLevel.setUI(new MyProgressBarUI(true));
 				( (MyProgressBarUI) m_progressAnonLevel.getUI()).setFilledBarColor(color);
 				m_progressAnonLevel.setValue(anonLevel + 1);
 				if (m_Controller.isAnonConnected())
