@@ -136,7 +136,7 @@ public class JAPConfForwardingClient extends AbstractJAPConfModule
 
 		final JCheckBox settingsForwardingClientConfigNeedForwarderBox =
 			new JCheckBox(JAPMessages.getString("settingsForwardingClientConfigNeedForwarderBox"));
-		settingsForwardingClientConfigNeedForwarderBox.setFont(getFontSetting());
+		//settingsForwardingClientConfigNeedForwarderBox.setFont(getFontSetting());
 		settingsForwardingClientConfigNeedForwarderBox.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
@@ -173,7 +173,7 @@ public class JAPConfForwardingClient extends AbstractJAPConfModule
 
 		final JCheckBox settingsForwardingClientConfigForwardInfoServiceBox = new JCheckBox(
 			  JAPMessages.getString("settingsForwardingClientConfigForwardInfoServiceBox"));
-		settingsForwardingClientConfigForwardInfoServiceBox.setFont(getFontSetting());
+		//settingsForwardingClientConfigForwardInfoServiceBox.setFont(getFontSetting());
 		settingsForwardingClientConfigForwardInfoServiceBox.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
@@ -186,7 +186,7 @@ public class JAPConfForwardingClient extends AbstractJAPConfModule
 
 		TitledBorder settingsForwardingClientConfigBorder = new TitledBorder(
 			  JAPMessages.getString("settingsForwardingClientConfigBorder"));
-		settingsForwardingClientConfigBorder.setTitleFont(getFontSetting());
+		//settingsForwardingClientConfigBorder.setTitleFont(getFontSetting());
 		clientPanel.setBorder(settingsForwardingClientConfigBorder);
 
 		GridBagLayout clientPanelLayout = new GridBagLayout();
@@ -281,10 +281,9 @@ public class JAPConfForwardingClient extends AbstractJAPConfModule
 		clientPanelConstraints.gridy++;
 		clientPanelConstraints.weighty = 1.0;
 		JAPHtmlMultiLineLabel descLabel =
-			new JAPHtmlMultiLineLabel(JAPMessages.getString("forwardingClientDesc"),
-									  getFontSetting());
+			new JAPHtmlMultiLineLabel(JAPMessages.getString("forwardingClientDesc"));
 		descLabel.setFont(new Font(descLabel.getFont().getName(),
-								   descLabel.getFont().getStyle(), 10));
+								   descLabel.getFont().getStyle(), (int)(descLabel.getFont().getSize() + 0.8)));
 		clientPanel.add(descLabel, clientPanelConstraints);
 		return clientPanel;
 	}
@@ -306,12 +305,11 @@ public class JAPConfForwardingClient extends AbstractJAPConfModule
 
 		JAPHtmlMultiLineLabel settingsForwardingClientConfigConfirmServerShutdownLabel = new
 			JAPHtmlMultiLineLabel(
-				JAPMessages.getString("settingsForwardingClientConfigConfirmServerShutdownLabel"),
-				getFontSetting());
+				JAPMessages.getString("settingsForwardingClientConfigConfirmServerShutdownLabel"));
 
 		JButton settingsForwardingClientConfigConfirmServerShutdownShutdownButton = new JButton(
 			  JAPMessages.getString("settingsForwardingClientConfigConfirmServerShutdownShutdownButton"));
-		settingsForwardingClientConfigConfirmServerShutdownShutdownButton.setFont(getFontSetting());
+		//settingsForwardingClientConfigConfirmServerShutdownShutdownButton.setFont(getFontSetting());
 		settingsForwardingClientConfigConfirmServerShutdownShutdownButton.addActionListener(new
 			ActionListener()
 		{
@@ -329,7 +327,7 @@ public class JAPConfForwardingClient extends AbstractJAPConfModule
 
 		JButton settingsForwardingClientConfigConfirmServerShutdownCancelButton = new JButton(
 			  JAPMessages.getString("cancelButton"));
-		settingsForwardingClientConfigConfirmServerShutdownCancelButton.setFont(getFontSetting());
+		//settingsForwardingClientConfigConfirmServerShutdownCancelButton.setFont(getFontSetting());
 		settingsForwardingClientConfigConfirmServerShutdownCancelButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)

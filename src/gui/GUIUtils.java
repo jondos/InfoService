@@ -57,6 +57,9 @@ import gui.dialog.JAPDialog;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import javax.swing.UIManager;
+import javax.swing.plaf.FontUIResource;
+import javax.swing.UIDefaults;
 
 /**
  * This class contains helper methods for the GUI.
@@ -182,6 +185,9 @@ public final class GUIUtils
 			return null;
 		}
 	}
+
+
+
 
 	/**
 	 * Finds the first parent that is a window.
@@ -347,6 +353,24 @@ public final class GUIUtils
 		return r_cb;
 	}
 
+	/**
+	 * Resizes all fonts of the UIManager by a fixed factor.
+	 * @param a_resize  the factor to resize the fonts
+	 */
+	public static void resizeAllFonts(float a_resize)
+	{
+		java.util.Enumeration keys = UIManager.getDefaults().keys();
+		while (keys.hasMoreElements())
+		{
+			Object key = keys.nextElement();
+			Object value = UIManager.get (key);
+			if (value instanceof FontUIResource)
+			{
+				adjustFontSize(key.toString(), a_resize);
+			}
+		}
+	}
+
 	public static String getTextFromClipboard(Component a_requestingComponent)
 	{
 		return getTextFromClipboard(a_requestingComponent, true);
@@ -412,5 +436,26 @@ public final class GUIUtils
 			strText = cf.getText();
 		}
 		return strText;
+	}
+
+	/**
+	 * Resizes a specific default font of the UIManager by a fixed factor.
+	 * @param a_fontObject a UIManager font object
+	 * @param a_resize the factor to resize the given font
+	 */
+	private static void adjustFontSize(Object a_fontObject, float a_resize)
+	{
+		try
+		{
+			UIDefaults defaults = UIManager.getDefaults();
+			Font font = defaults.getFont(a_fontObject);
+			//defaults.put(a_fontObject, new FontUIResource(font.deriveFont(font.getSize() * a_resize)));
+			defaults.put(a_fontObject, new FontUIResource(
+						 font.getName(), font.getStyle(), (int)(Math.round(font.getSize() * a_resize))));
+		}
+		catch (Exception a_e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.GUI, a_e);
+		}
 	}
 }

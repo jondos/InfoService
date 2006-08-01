@@ -168,7 +168,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 
 		JLabel settingsForwardingServerConfigPortLabel = new JLabel(
 			JAPMessages.getString("settingsForwardingServerConfigPortLabel"));
-		settingsForwardingServerConfigPortLabel.setFont(getFontSetting());
+		//settingsForwardingServerConfigPortLabel.setFont(getFontSetting());
 
 		final JTextField serverPortField = new JTextField(5)
 		{
@@ -223,7 +223,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 			}
 		});
 		//serverPortField.setColumns(6);
-		serverPortField.setFont(getFontSetting());
+		//serverPortField.setFont(getFontSetting());
 
 		Observer serverPortObserver = new Observer()
 		{
@@ -277,11 +277,11 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 
 		JLabel settingsForwardingServerConfigMyConnectionLabel = new JLabel(
 			JAPMessages.getString("settingsForwardingServerConfigMyConnectionLabel"));
-		settingsForwardingServerConfigMyConnectionLabel.setFont(getFontSetting());
+		//settingsForwardingServerConfigMyConnectionLabel.setFont(getFontSetting());
 
 		final JComboBox connectionClassesComboBox = new JComboBox(JAPModel.getInstance().getRoutingSettings().
 			getConnectionClassSelector().getConnectionClasses());
-		connectionClassesComboBox.setFont(getFontSetting());
+		//connectionClassesComboBox.setFont(getFontSetting());
 		connectionClassesComboBox.setEditable(false);
 		connectionClassesComboBox.addActionListener(new ActionListener()
 		{
@@ -298,7 +298,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 
 		JLabel settingsForwardingServerConfigMaxUploadBandwidthLabel =
 			new JLabel(JAPMessages.getString("settingsForwardingServerConfigMaxUploadBandwidthLabel"));
-		settingsForwardingServerConfigMaxUploadBandwidthLabel.setFont(getFontSetting());
+		//settingsForwardingServerConfigMaxUploadBandwidthLabel.setFont(getFontSetting());
 
 		final JTextField uploadBandwidthField = new JTextField()
 		{
@@ -373,7 +373,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 			}
 		});
 		uploadBandwidthField.setColumns(7);
-		uploadBandwidthField.setFont(getFontSetting());
+		//uploadBandwidthField.setFont(getFontSetting());
 
 		Observer connectionClassSelectionObserver = new Observer()
 		{
@@ -447,12 +447,12 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 
 		JLabel settingsForwardingServerConfigForwardingPercentageLabel =
 			new JLabel(JAPMessages.getString("settingsForwardingServerConfigForwardingPercentageLabel"));
-		settingsForwardingServerConfigForwardingPercentageLabel.setFont(getFontSetting());
+		//settingsForwardingServerConfigForwardingPercentageLabel.setFont(getFontSetting());
 
 		final JTextField relativeBandwidthField = new JTextField();
 		relativeBandwidthField.setColumns(4);
 		relativeBandwidthField.setHorizontalAlignment(JTextField.RIGHT);
-		relativeBandwidthField.setFont(getFontSetting());
+		//relativeBandwidthField.setFont(getFontSetting());
 		relativeBandwidthField.setDisabledTextColor(relativeBandwidthField.getForeground());
 		relativeBandwidthField.setEnabled(false);
 
@@ -507,7 +507,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		});
 
 		final JLabel settingsForwardingServerConfigCurrentBandwidthLabel = new JLabel();
-		settingsForwardingServerConfigCurrentBandwidthLabel.setFont(getFontSetting());
+		//settingsForwardingServerConfigCurrentBandwidthLabel.setFont(getFontSetting());
 
 		Observer connectionClassSettingsObserver = new Observer()
 		{
@@ -612,7 +612,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 			CONNECTION_PARAMETERS_CHANGED));
 
 		JTabbedPane advancedConfigurationTabPane = new JTabbedPane();
-		advancedConfigurationTabPane.setFont(getFontSetting());
+		//advancedConfigurationTabPane.setFont(getFontSetting());
 		advancedConfigurationTabPane.insertTab(
 			JAPMessages.getString("settingsForwardingServerConfigAllowedCascadesTabTitle"), null,
 			createForwardingServerConfigAllowedCascadesPanel(), null, 0);
@@ -665,7 +665,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 
 		TitledBorder settingsForwardingServerConfigBorder = new TitledBorder(
 			JAPMessages.getString("settingsForwardingServerConfigBorder"));
-		settingsForwardingServerConfigBorder.setTitleFont(getFontSetting());
+		//settingsForwardingServerConfigBorder.setTitleFont(getFontSetting());
 		configPanel.setBorder(settingsForwardingServerConfigBorder);
 
 		GridBagLayout configPanelLayout = new GridBagLayout();
@@ -778,10 +778,10 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		final JLabel settingsForwardingServerConfigAllowedCascadesKnownCascadesLabel =
 			new JLabel(JAPMessages.getString(
 				"settingsForwardingServerConfigAllowedCascadesKnownCascadesLabel"));
-		settingsForwardingServerConfigAllowedCascadesKnownCascadesLabel.setFont(getFontSetting());
+		//settingsForwardingServerConfigAllowedCascadesKnownCascadesLabel.setFont(getFontSetting());
 		final JLabel settingsForwardingServerConfigAllowedCascadesAllowedCascadesLabel = new JLabel(
 			JAPMessages.getString("settingsForwardingServerConfigAllowedCascadesAllowedCascadesLabel"));
-		settingsForwardingServerConfigAllowedCascadesAllowedCascadesLabel.setFont(getFontSetting());
+		//settingsForwardingServerConfigAllowedCascadesAllowedCascadesLabel.setFont(getFontSetting());
 
 		m_knownCascadesListModel = new DefaultListModel();
 		m_knownInfoServicesListModel = new DefaultListModel();
@@ -789,7 +789,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		final JList knownCascadesList = new JList(m_knownCascadesListModel);
 		knownCascadesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		final JScrollPane knownCascadesScrollPane = new JScrollPane(knownCascadesList);
-		knownCascadesScrollPane.setFont(getFontSetting());
+		//knownCascadesScrollPane.setFont(getFontSetting());
 		/* set the preferred size of the scrollpane to a 4x20 textarea */
 		knownCascadesScrollPane.setPreferredSize( (new JTextArea(4, 20)).getPreferredSize());
 
@@ -797,13 +797,13 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		final JList allowedCascadesList = new JList(m_allowedCascadesListModel);
 		allowedCascadesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		final JScrollPane allowedCascadesScrollPane = new JScrollPane(allowedCascadesList);
-		allowedCascadesScrollPane.setFont(getFontSetting());
+		//allowedCascadesScrollPane.setFont(getFontSetting());
 		/* set the preferred size of the scrollpane to a 4x20 textarea */
 		allowedCascadesScrollPane.setPreferredSize( (new JTextArea(4, 20)).getPreferredSize());
 
 		final JButton settingsForwardingServerConfigAllowedCascadesReloadButton = new JButton(
 			JAPMessages.getString("settingsForwardingServerConfigAllowedCascadesReloadButton"));
-		settingsForwardingServerConfigAllowedCascadesReloadButton.setFont(getFontSetting());
+		//settingsForwardingServerConfigAllowedCascadesReloadButton.setFont(getFontSetting());
 		settingsForwardingServerConfigAllowedCascadesReloadButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
@@ -822,7 +822,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 
 		final JButton settingsForwardingServerConfigAllowedCascadesAddButton = new JButton(
 			JAPMessages.getString("settingsForwardingServerConfigAllowedCascadesAddButton"));
-		settingsForwardingServerConfigAllowedCascadesAddButton.setFont(getFontSetting());
+		//settingsForwardingServerConfigAllowedCascadesAddButton.setFont(getFontSetting());
 		settingsForwardingServerConfigAllowedCascadesAddButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
@@ -842,7 +842,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 
 		final JButton settingsForwardingServerConfigAllowedCascadesRemoveButton = new JButton(
 			JAPMessages.getString("settingsForwardingServerConfigAllowedCascadesRemoveButton"));
-		settingsForwardingServerConfigAllowedCascadesRemoveButton.setFont(getFontSetting());
+		//settingsForwardingServerConfigAllowedCascadesRemoveButton.setFont(getFontSetting());
 		settingsForwardingServerConfigAllowedCascadesRemoveButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
@@ -864,7 +864,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 			JAPMessages.getString("settingsForwardingServerConfigAllowedCascadesAllowAllBox"),
 			JAPModel.getInstance().getRoutingSettings().getUseableMixCascadesStore().
 			getAllowAllAvailableMixCascades());
-		settingsForwardingServerConfigAllowedCascadesAllowAllBox.setFont(getFontSetting());
+		//settingsForwardingServerConfigAllowedCascadesAllowAllBox.setFont(getFontSetting());
 		settingsForwardingServerConfigAllowedCascadesAllowAllBox.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
@@ -1003,7 +1003,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 
 		TitledBorder settingsForwardingServerConfigAllowedCascadesBorder = new TitledBorder(
 			JAPMessages.getString("settingsForwardingServerConfigAllowedCascadesBorder"));
-		settingsForwardingServerConfigAllowedCascadesBorder.setTitleFont(getFontSetting());
+		//settingsForwardingServerConfigAllowedCascadesBorder.setTitleFont(getFontSetting());
 		allowedCascadesPanel.setBorder(settingsForwardingServerConfigAllowedCascadesBorder);
 
 		GridBagLayout allowedCascadesPanelLayout = new GridBagLayout();
@@ -1094,17 +1094,17 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		final JLabel settingsForwardingServerConfigRegistrationInfoServicesKnownInfoServicesLabel = new
 			JLabel(JAPMessages.getString(
 				"settingsForwardingServerConfigRegistrationInfoServicesKnownInfoServicesLabel"));
-		settingsForwardingServerConfigRegistrationInfoServicesKnownInfoServicesLabel.setFont(getFontSetting());
+		//settingsForwardingServerConfigRegistrationInfoServicesKnownInfoServicesLabel.setFont(getFontSetting());
 		final JLabel settingsForwardingServerConfigRegistrationInfoServicesSelectedInfoServicesLabel = new
 			JLabel(JAPMessages.getString(
 				"settingsForwardingServerConfigRegistrationInfoServicesSelectedInfoServicesLabel"));
-		settingsForwardingServerConfigRegistrationInfoServicesSelectedInfoServicesLabel.setFont(
-			getFontSetting());
+		//settingsForwardingServerConfigRegistrationInfoServicesSelectedInfoServicesLabel.setFont(
+			//getFontSetting());
 
 		final JList knownInfoServicesList = new JList(m_knownInfoServicesListModel);
 		knownInfoServicesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		final JScrollPane knownInfoServicesScrollPane = new JScrollPane(knownInfoServicesList);
-		knownInfoServicesScrollPane.setFont(getFontSetting());
+		//knownInfoServicesScrollPane.setFont(getFontSetting());
 		/* set the preferred size of the scrollpane to a 4x20 textarea */
 		knownInfoServicesScrollPane.setPreferredSize( (new JTextArea(4, 20)).getPreferredSize());
 
@@ -1112,13 +1112,13 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		final JList registrationInfoServicesList = new JList(m_registrationInfoServicesListModel);
 		registrationInfoServicesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		final JScrollPane registrationInfoServicesScrollPane = new JScrollPane(registrationInfoServicesList);
-		registrationInfoServicesScrollPane.setFont(getFontSetting());
+		//registrationInfoServicesScrollPane.setFont(getFontSetting());
 		/* set the preferred size of the scrollpane to a 4x20 textarea */
 		registrationInfoServicesScrollPane.setPreferredSize( (new JTextArea(4, 20)).getPreferredSize());
 
 		final JButton settingsForwardingServerConfigRegistrationInfoServicesReloadButton = new JButton(
 			JAPMessages.getString("settingsForwardingServerConfigRegistrationInfoServicesReloadButton"));
-		settingsForwardingServerConfigRegistrationInfoServicesReloadButton.setFont(getFontSetting());
+		//settingsForwardingServerConfigRegistrationInfoServicesReloadButton.setFont(getFontSetting());
 		settingsForwardingServerConfigRegistrationInfoServicesReloadButton.addActionListener(new
 			ActionListener()
 		{
@@ -1130,7 +1130,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 
 		final JButton settingsForwardingServerConfigRegistrationInfoServicesAddButton = new JButton(
 			JAPMessages.getString("settingsForwardingServerConfigRegistrationInfoServicesAddButton"));
-		settingsForwardingServerConfigRegistrationInfoServicesAddButton.setFont(getFontSetting());
+		//settingsForwardingServerConfigRegistrationInfoServicesAddButton.setFont(getFontSetting());
 
 		settingsForwardingServerConfigRegistrationInfoServicesAddButton.addActionListener(new ActionListener()
 		{
@@ -1152,7 +1152,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 
 		final JButton settingsForwardingServerConfigRegistrationInfoServicesRemoveButton = new JButton(
 			JAPMessages.getString("settingsForwardingServerConfigRegistrationInfoServicesRemoveButton"));
-		settingsForwardingServerConfigRegistrationInfoServicesRemoveButton.setFont(getFontSetting());
+		//settingsForwardingServerConfigRegistrationInfoServicesRemoveButton.setFont(getFontSetting());
 
 		settingsForwardingServerConfigRegistrationInfoServicesRemoveButton.addActionListener(new
 			ActionListener()
@@ -1178,7 +1178,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 				"settingsForwardingServerConfigRegistrationInfoServicesRegisterAtAllBox"),
 					  JAPModel.getInstance().getRoutingSettings().getRegistrationInfoServicesStore().
 					  getRegisterAtAllAvailableInfoServices());
-		settingsForwardingServerConfigRegistrationInfoServicesRegisterAtAllBox.setFont(getFontSetting());
+		//settingsForwardingServerConfigRegistrationInfoServicesRegisterAtAllBox.setFont(getFontSetting());
 
 		settingsForwardingServerConfigRegistrationInfoServicesRegisterAtAllBox.addActionListener(new
 			ActionListener()
@@ -1329,7 +1329,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 
 		TitledBorder settingsForwardingServerConfigRegistrationInfoServicesBorder = new TitledBorder(
 			JAPMessages.getString("settingsForwardingServerConfigRegistrationInfoServicesBorder"));
-		settingsForwardingServerConfigRegistrationInfoServicesBorder.setTitleFont(getFontSetting());
+		//settingsForwardingServerConfigRegistrationInfoServicesBorder.setTitleFont(getFontSetting());
 
 		registrationInfoServicesPanel.setBorder(settingsForwardingServerConfigRegistrationInfoServicesBorder);
 

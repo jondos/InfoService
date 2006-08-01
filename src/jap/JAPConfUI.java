@@ -27,6 +27,7 @@
  */
 package jap;
 
+import java.util.Hashtable;
 import java.util.Locale;
 
 import java.awt.GridBagConstraints;
@@ -42,15 +43,18 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JSlider;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.border.TitledBorder;
 
-import gui.TitledGridBagPanel;
+import gui.GUIUtils;
 import gui.JAPHelp;
 import gui.JAPMessages;
-import gui.dialog.JAPDialog;
 import gui.LanguageMapper;
+import gui.TitledGridBagPanel;
+import gui.dialog.JAPDialog;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -59,6 +63,8 @@ final class JAPConfUI extends AbstractJAPConfModule
 {
 	private static final String MSG_ON_CLOSING_JAP = JAPConfUI.class.getName() + "_onClosingJAP";
 	private static final String MSG_WARNING_ON_CLOSING_JAP = JAPConfUI.class.getName() + "_warningOnClosingJAP";
+	private static final String MSG_FONT_SIZE = JAPConfUI.class.getName() + "_fontSize";
+
 
 	private TitledBorder m_borderLookAndFeel, m_borderView;
 	private JComboBox m_comboLanguage, m_comboUI;
@@ -66,6 +72,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 	private JCheckBox m_cbSaveWindowPositions, m_cbAfterStart;
 	private JRadioButton m_rbViewSimplified, m_rbViewNormal, m_rbViewMini, m_rbViewSystray;
 	private JCheckBox m_cbWarnOnClose;
+	private JSlider m_slidFontSize;
 
 	public JAPConfUI()
 	{
@@ -122,7 +129,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		GridBagConstraints c = new GridBagConstraints();
 
 		m_borderLookAndFeel = new TitledBorder(JAPMessages.getString("settingsLookAndFeelBorder"));
-		JPanel p = new JPanel(gbl);
+		final JPanel p = new JPanel(gbl);
 		p.setBorder(m_borderLookAndFeel);
 		JLabel l = new JLabel(JAPMessages.getString("settingsLookAndFeel"));
 		c.insets = new Insets(10, 10, 10, 10);
@@ -199,10 +206,41 @@ final class JAPConfUI extends AbstractJAPConfModule
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
 		p.add(m_comboLanguage, c);
-		m_cbSaveWindowPositions = new JCheckBox(JAPMessages.getString("settingsSaveWindowPosition"));
-		c.gridwidth = 2;
+
+
+
+
 		c.gridx = 0;
 		c.gridy = 2;
+		c.weightx = 0;
+		p.add(new JLabel(JAPMessages.getString(MSG_FONT_SIZE)), c);
+
+		m_slidFontSize = new JSlider(
+			  JSlider.HORIZONTAL, 0, JAPModel.MAX_FONT_SIZE, JAPModel.getInstance().getFontSize());
+		m_slidFontSize.setPaintTicks(false);
+		m_slidFontSize.setPaintLabels(true);
+		m_slidFontSize.setMajorTickSpacing(1);
+		m_slidFontSize.setMinorTickSpacing(1);
+		m_slidFontSize.setSnapToTicks(true);
+		m_slidFontSize.setPaintTrack(true);
+		Hashtable map = new Hashtable(JAPModel.MAX_FONT_SIZE + 1);
+		for (int i = 0; i <= JAPModel.MAX_FONT_SIZE; i++)
+		{
+			map.put(new Integer(i), new JLabel("1" + i + "0%"));
+		}
+		m_slidFontSize.setLabelTable(map);
+
+
+
+
+		c.gridx++;
+		p.add(m_slidFontSize, c);
+
+		m_cbSaveWindowPositions = new JCheckBox(JAPMessages.getString("settingsSaveWindowPosition"));
+		c.gridwidth = 2;
+		c.weightx = 1;
+		c.gridx = 0;
+		c.gridy++;
 		c.fill = GridBagConstraints.NONE;
 		c.weightx = 0;
 		p.add(m_cbSaveWindowPositions, c);
@@ -285,8 +323,15 @@ final class JAPConfUI extends AbstractJAPConfModule
 		return JAPMessages.getString("ngUIPanelTitle");
 	}
 
+	protected void onCancelPressed()
+	{
+		m_slidFontSize.setValue(JAPModel.getInstance().getFontSize());
+	}
+
 	protected boolean onOkPressed()
 	{
+		JAPModel.getInstance().setFontSize(m_slidFontSize.getValue());
+
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI,
 					  "m_comboLanguage: " + Integer.toString(m_comboLanguage.getSelectedIndex()));
 		if (m_comboLanguage.getSelectedIndex() >= 0)

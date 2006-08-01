@@ -140,18 +140,18 @@ public class CertDetailsDialog extends JAPDialog
 
 	private static final String CERT_VALID_INACTIVE = "certinactive.gif";
 	private static final String CERT_INVALID_INACTIVE = "certinvalidinactive.gif";
-	private static final JLabel LABEL = new JLabel();
+	private final JLabel LABEL = new JLabel();
 
 	private static final Color TITLE_COLOR = Color.blue;
 	private static final Color ALERT_COLOR = Color.red;
 
-	private static final Font TITLE_FONT = new Font(LABEL.getFont().getName(), Font.BOLD,
-		(LABEL.getFont().getSize()) + 3);
-	private static final Font KEY_FONT = new Font(LABEL.getFont().getName(), Font.BOLD,
+	private final Font TITLE_FONT = new Font(LABEL.getFont().getName(), Font.BOLD,
+		(int)((LABEL.getFont().getSize()) * 1.2));
+	private final Font KEY_FONT = new Font(LABEL.getFont().getName(), Font.BOLD,
 												  (LABEL.getFont().getSize()));
-	private static final Font VALUE_FONT = new Font(LABEL.getFont().getName(), Font.PLAIN,
+	private final Font VALUE_FONT = new Font(LABEL.getFont().getName(), Font.PLAIN,
 		(LABEL.getFont().getSize()));
-	private static final Font ALERT_FONT = new Font(LABEL.getFont().getName(), Font.BOLD,
+	private  final Font ALERT_FONT = new Font(LABEL.getFont().getName(), Font.BOLD,
 		(LABEL.getFont().getSize()));
 
 	public final static String IMG_CERTENABLEDICON = "cenabled.gif";
@@ -233,6 +233,7 @@ public class CertDetailsDialog extends JAPDialog
 	private void setSize()
 	{
 		this.pack();
+		/*
 		if (this.getSize().height > 600)
 		{
 			this.setSize(getSize().width, 600);
@@ -240,7 +241,7 @@ public class CertDetailsDialog extends JAPDialog
 		if (this.getSize().width > 800)
 		{
 			this.setSize(800, getSize().height);
-		}
+		}*/
 	}
 	/**
 	 * Translates a Vector of numerical identifiers into human readable names
@@ -695,8 +696,7 @@ public class CertDetailsDialog extends JAPDialog
 		constraints.anchor = GridBagConstraints.SOUTHWEST;
 		constraints.fill = GridBagConstraints.NONE;
 		constraints.insets = new Insets(5, 5, 5, 5);
-		JLabel lbl_symbols =
-			new JLabel("<html><u><b>" + JAPMessages.getString(MSG_SYMBOLS) + "</b></u></html>");
+		JLabel lbl_symbols = new JAPHtmlMultiLineLabel(JAPMessages.getString(MSG_SYMBOLS));
 		certPathPanel.add(lbl_symbols, constraints);
 
 		constraints.insets = new Insets(5, 15, 5, 5);

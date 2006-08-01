@@ -192,21 +192,21 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	{
 		JPanel panelRoot = getRootPanel();
 		panelRoot.removeAll();
-		Font font = getFontSetting();
+		//Font font = getFontSetting();
 		m_cbDenyNonAnonymousSurfing = new JCheckBox(JAPMessages.getString(MSG_DENY_NON_ANONYMOUS_SURFING));
-		m_cbDenyNonAnonymousSurfing.setFont(font);
+		//m_cbDenyNonAnonymousSurfing.setFont(font);
 		m_cbAutoConnect = new JCheckBox(JAPMessages.getString("settingsautoConnectCheckBox"));
-		m_cbAutoConnect.setFont(font);
+		//m_cbAutoConnect.setFont(font);
 		m_cbAutoReConnect = new JCheckBox(JAPMessages.getString("settingsautoReConnectCheckBox"));
-		m_cbAutoReConnect.setFont(font);
+		//m_cbAutoReConnect.setFont(font);
 		m_cbAutoChooseCascades = new JCheckBox(JAPMessages.getString(MSG_AUTO_CHOOSE_CASCADES));
-		m_cbAutoChooseCascades.setFont(font);
+		//m_cbAutoChooseCascades.setFont(font);
 		m_cbDoNotRestrictAutoChoose = new JRadioButton(JAPMessages.getString(MSG_DO_NOT_RESTRICT_AUTO_CHOOSE));
-		m_cbDoNotRestrictAutoChoose.setFont(font);
+		//m_cbDoNotRestrictAutoChoose.setFont(font);
 		m_cbRestrictAutoChoosePay = new JRadioButton(JAPMessages.getString(MSG_RESTRICT_AUTO_CHOOSE_PAY));
-		m_cbRestrictAutoChoosePay.setFont(font);
+		//m_cbRestrictAutoChoosePay.setFont(font);
 		m_cbRestrictAutoChoose = new JRadioButton(JAPMessages.getString(MSG_RESTRICT_AUTO_CHOOSE) + ":");
-		m_cbRestrictAutoChoose.setFont(font);
+		//m_cbRestrictAutoChoose.setFont(font);
 		/** @todo Implement and show the whitelist button */
 		m_cbRestrictAutoChoose.setVisible(false);
 		ButtonGroup groupAutoChoose = new ButtonGroup();
@@ -341,15 +341,15 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		c.weighty = 0;
 
 		final JLabel lblKnownCascades =new JLabel(JAPMessages.getString(MSG_KNOWN_CASCADES));
-		lblKnownCascades.setFont(getFontSetting());
+		//lblKnownCascades.setFont(getFontSetting());
 		final JLabel lblAllowedCascades = new JLabel(JAPMessages.getString(MSG_ALLOWED_CASCADES));
-		lblAllowedCascades.setFont(getFontSetting());
+		//lblAllowedCascades.setFont(getFontSetting());
 
 		DefaultListModel m_knownCascadesListModel = new DefaultListModel();
 		m_knownCascadesList = new JList(m_knownCascadesListModel);
 		m_knownCascadesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		final JScrollPane knownCascadesScrollPane = new JScrollPane(m_knownCascadesList);
-		knownCascadesScrollPane.setFont(getFontSetting());
+		//knownCascadesScrollPane.setFont(getFontSetting());
 		/* set the preferred size of the scrollpane to a 4x20 textarea */
 		knownCascadesScrollPane.setPreferredSize( (new JTextArea(4, 20)).getPreferredSize());
 
@@ -357,7 +357,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		final JList allowedCascadesList = new JList(m_allowedCascadesListModel);
 		allowedCascadesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		final JScrollPane allowedCascadesScrollPane = new JScrollPane(allowedCascadesList);
-		allowedCascadesScrollPane.setFont(getFontSetting());
+		//allowedCascadesScrollPane.setFont(getFontSetting());
 		/* set the preferred size of the scrollpane to a 4x20 textarea */
 			allowedCascadesScrollPane.setPreferredSize( (new JTextArea(4, 20)).getPreferredSize());
 

@@ -144,7 +144,7 @@ final public class JAPConf extends JAPDialog implements ActionListener
 	private JPanel m_pPort, m_pFirewall, m_pMisc;
 	private JButton m_bttnDefaultConfig, m_bttnCancel, m_bttnHelp;
 
-	private Font m_fontControls;
+	//private Font m_fontControls;
 
 	private boolean m_bWithPayment = false;
 	private boolean m_bIsSimpleView;
@@ -167,7 +167,7 @@ final public class JAPConf extends JAPDialog implements ActionListener
 		ms_JapConfInstance = this;
 		m_Controller = JAPController.getInstance();
 		JPanel pContainer = new JPanel();
-		m_fontControls = JAPController.getDialogFont();
+		//m_fontControls = JAPController.getDialogFont();
 		GridBagLayout gbl = new GridBagLayout();
 		pContainer.setLayout(gbl);
 		m_pPort = buildPortPanel();
@@ -225,12 +225,12 @@ final public class JAPConf extends JAPDialog implements ActionListener
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
 		m_bttnHelp = new JButton(JAPMessages.getString("updateM_bttnHelp"));
-		m_bttnHelp.setFont(m_fontControls);
+		//m_bttnHelp.setFont(m_fontControls);
 		buttonPanel.add(m_bttnHelp);
 		m_bttnHelp.addActionListener(this);
 
 		m_bttnDefaultConfig = new JButton(JAPMessages.getString("bttnDefaultConfig"));
-		m_bttnDefaultConfig.setFont(m_fontControls);
+		//m_bttnDefaultConfig.setFont(m_fontControls);
 		m_bttnDefaultConfig.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -243,7 +243,7 @@ final public class JAPConf extends JAPDialog implements ActionListener
 			buttonPanel.add(m_bttnDefaultConfig);
 		}
 		m_bttnCancel = new JButton(JAPMessages.getString("cancelButton"));
-		m_bttnCancel.setFont(m_fontControls);
+		//m_bttnCancel.setFont(m_fontControls);
 		m_bttnCancel.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -271,7 +271,7 @@ final public class JAPConf extends JAPDialog implements ActionListener
 				okPressed(true);
 			}
 		});
-		ok.setFont(m_fontControls);
+		//ok.setFont(m_fontControls);
 		buttonPanel.add(ok);
 		buttonPanel.add(new JLabel("   "));
 		getRootPane().setDefaultButton(ok);
@@ -364,11 +364,11 @@ final public class JAPConf extends JAPDialog implements ActionListener
 	JPanel buildPortPanel()
 	{
 		m_labelPortnumber1 = new JLabel(JAPMessages.getString("settingsPort1"));
-		m_labelPortnumber1.setFont(m_fontControls);
+		//m_labelPortnumber1.setFont(m_fontControls);
 		m_labelPortnumber2 = new JLabel(JAPMessages.getString("settingsPort2"));
-		m_labelPortnumber2.setFont(m_fontControls);
+		//m_labelPortnumber2.setFont(m_fontControls);
 		m_tfListenerPortNumber = new JAPJIntField(ListenerInterface.PORT_MAX_VALUE);
-		m_tfListenerPortNumber.setFont(m_fontControls);
+		//m_tfListenerPortNumber.setFont(m_fontControls);
 		m_tfListenerPortNumber.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -377,7 +377,7 @@ final public class JAPConf extends JAPDialog implements ActionListener
 			}
 		});
 		m_cbListenerIsLocal = new JCheckBox(JAPMessages.getString("settingsListenerCheckBox"));
-		m_cbListenerIsLocal.setFont(m_fontControls);
+		//m_cbListenerIsLocal.setFont(m_fontControls);
 		// set Font in listenerCheckBox in same color as in portnumberLabel1
 		m_cbListenerIsLocal.setForeground(m_labelPortnumber1.getForeground());
 
@@ -389,7 +389,7 @@ final public class JAPConf extends JAPDialog implements ActionListener
 		JPanel p = new JPanel();
 		p.setLayout(new BorderLayout());
 		m_borderSettingsListener = new TitledBorder(JAPMessages.getString("settingsListenerBorder"));
-		m_borderSettingsListener.setTitleFont(m_fontControls);
+		//m_borderSettingsListener.setTitleFont(m_fontControls);
 		p.setBorder(m_borderSettingsListener);
 		JPanel p1 = new JPanel();
 		GridBagLayout g = new GridBagLayout();
@@ -456,15 +456,15 @@ final public class JAPConf extends JAPDialog implements ActionListener
 	JPanel buildProxyPanel()
 	{
 		m_cbProxy = new JCheckBox(JAPMessages.getString("settingsProxyCheckBox"));
-		m_cbProxy.setFont(m_fontControls);
+		//m_cbProxy.setFont(m_fontControls);
 		m_comboProxyType = new JComboBox();
-		m_comboProxyType.setFont(m_fontControls);
+		//m_comboProxyType.setFont(m_fontControls);
 		m_comboProxyType.addItem(JAPMessages.getString("settingsProxyTypeHTTP"));
 		m_comboProxyType.addItem(JAPMessages.getString("settingsProxyTypeSOCKS"));
 		m_tfProxyHost = new JTextField(20);
-		m_tfProxyHost.setFont(m_fontControls);
+		//m_tfProxyHost.setFont(m_fontControls);
 		m_tfProxyPortNumber = new JAPJIntField(ListenerInterface.PORT_MAX_VALUE);
-		m_tfProxyPortNumber.setFont(m_fontControls);
+		//m_tfProxyPortNumber.setFont(m_fontControls);
 		ProxyInterface proxyInterface = JAPModel.getInstance().getProxyInterface();
 		boolean bUseProxy = (proxyInterface != null && proxyInterface.isValid());
 		m_tfProxyHost.setEnabled(bUseProxy);
@@ -501,9 +501,9 @@ final public class JAPConf extends JAPDialog implements ActionListener
 			}
 		});
 		m_cbProxyAuthentication = new JCheckBox(JAPMessages.getString("settingsProxyAuthenticationCheckBox"));
-		m_cbProxyAuthentication.setFont(m_fontControls);
+		//m_cbProxyAuthentication.setFont(m_fontControls);
 		m_tfProxyAuthenticationUserID = new JTextField(10);
-		m_tfProxyAuthenticationUserID.setFont(m_fontControls);
+		//m_tfProxyAuthenticationUserID.setFont(m_fontControls);
 		m_cbProxyAuthentication.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -513,13 +513,13 @@ final public class JAPConf extends JAPDialog implements ActionListener
 			}
 		});
 		m_labelProxyHost = new JLabel(JAPMessages.getString("settingsProxyHost"));
-		m_labelProxyHost.setFont(m_fontControls);
+		//m_labelProxyHost.setFont(m_fontControls);
 		m_labelProxyPort = new JLabel(JAPMessages.getString("settingsProxyPort"));
-		m_labelProxyPort.setFont(m_fontControls);
+		//m_labelProxyPort.setFont(m_fontControls);
 		m_labelProxyType = new JLabel(JAPMessages.getString("settingsProxyType"));
-		m_labelProxyType.setFont(m_fontControls);
+		//m_labelProxyType.setFont(m_fontControls);
 		m_labelProxyAuthUserID = new JLabel(JAPMessages.getString("settingsProxyAuthUserID"));
-		m_labelProxyAuthUserID.setFont(m_fontControls);
+		//m_labelProxyAuthUserID.setFont(m_fontControls);
 		// set Font in m_cbProxy in same color as in proxyPortLabel
 		m_cbProxy.setForeground(m_labelProxyPort.getForeground());
 		m_cbProxyAuthentication.setForeground(m_labelProxyPort.getForeground());
@@ -527,7 +527,7 @@ final public class JAPConf extends JAPDialog implements ActionListener
 		JPanel p = new JPanel();
 		p.setLayout(new BorderLayout());
 		TitledBorder border = new TitledBorder(JAPMessages.getString("settingsProxyBorder"));
-		border.setTitleFont(m_fontControls);
+		//border.setTitleFont(m_fontControls);
 		p.setBorder(border);
 		JPanel p1 = new JPanel();
 		GridBagLayout g = new GridBagLayout();

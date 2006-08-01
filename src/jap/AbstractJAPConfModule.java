@@ -290,9 +290,10 @@ public abstract class AbstractJAPConfModule
 	 *
 	 * @return The current font setting.
 	 */
+	/*
 	protected final Font getFontSetting()
 	{
 		return m_fontSetting;
-	}
+	}*/
 
 }
