@@ -533,7 +533,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		c.insets = new Insets(5, 20, 0, 5);
 
-		l = new JLabel(JAPMessages.getString("numOfUsersOnCascade"));
+		l = new JLabel(JAPMessages.getString("numOfUsersOnCascade") + ":");
 		c.gridx = 2;
 		c.gridy = 1;
 		c.weightx = 0;
@@ -554,7 +554,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.gridx = 2;
 		c.gridy = 2;
 		c.weightx = 0;
-		c.fill = GridBagConstraints.NONE;
+		c.fill = GridBagConstraints.HORIZONTAL;
 		m_constrHosts = (GridBagConstraints)c.clone();
 		m_cascadesPanel.add(m_lblHosts, c);
 
@@ -571,7 +571,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.gridx = 2;
 		c.gridy = 3;
 		c.weightx = 0;
-		c.fill = GridBagConstraints.NONE;
+		c.fill = GridBagConstraints.HORIZONTAL;
 		m_constrPorts = (GridBagConstraints)c.clone();
 		m_cascadesPanel.add(m_lblPorts, c);
 
@@ -724,21 +724,28 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		Object value = m_listMixCascade.getSelectedValue();
 
-		synchronized (MIX_COMBO_UPDATE_LOCK)
+		try
 		{
-			m_bUpdateServerPanel = m_manualPanel == null;
-			m_listMixCascade.setModel(listModel);
-			m_listMixCascade.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+			synchronized (MIX_COMBO_UPDATE_LOCK)
+			{
+				m_bUpdateServerPanel = m_manualPanel == null;
+				m_listMixCascade.setModel(listModel);
+				m_listMixCascade.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-			if (value == null)
-			{
-				m_listMixCascade.setSelectedIndex(0);
+				if (value == null)
+				{
+					m_listMixCascade.setSelectedIndex(0);
+				}
+				else
+				{
+					m_listMixCascade.setSelectedValue(value, true);
+				}
+				m_bUpdateServerPanel = true;
 			}
-			else
-			{
-				m_listMixCascade.setSelectedValue(value, true);
-			}
-			m_bUpdateServerPanel = true;
+		}
+		catch (Exception a_e)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, a_e);
 		}
 		//m_listMixCascade.setEnabled(m_listMixCascade.getModel().getSize() > 0);
 

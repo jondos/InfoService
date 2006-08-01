@@ -114,7 +114,6 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 		{
 			Font font = new JLabel().getFont();
 			setFont( new Font(font.getName(), Font.PLAIN, (int) (font.getSize() * 0.9)));
-
 			entry = new MsgQueueEntry();
 			entry.m_Msg = msg;
 			entry.m_Id = m_Random.nextInt();
