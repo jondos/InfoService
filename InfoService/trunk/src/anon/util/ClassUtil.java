@@ -38,6 +38,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.StringTokenizer;
 import java.net.URL;
+import java.lang.reflect.*;
+import java.io.*;
+import java.net.*;
 
 /**
  * This class performs some basic operations related to Class objects.
@@ -141,6 +144,55 @@ public final class ClassUtil
 		public String getPackage()
 		{
 			return m_strPackage;
+		}
+	}
+
+	public static void addFileToClasspath(String a_file) throws IOException, IllegalAccessException
+	{
+		File f = new File(a_file);
+		addFileToClasspath(f);
+	}
+
+	public static void addFileToClasspath(File a_file) throws IllegalAccessException
+	{
+		URL url;
+		try
+		{
+			url = (URL) File.class.getMethod("toURL", null).invoke(a_file, null);
+		}
+		catch (Exception ex)
+		{
+			throw new IllegalAccessException(ex.getMessage());
+		}
+
+		addURLToClasspath(url);
+	}
+
+	public static void addURLToClasspath(URL a_url) throws IllegalAccessException
+	{
+
+		//URLClassLoader urlClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+		Object urlClassLoader;
+		Class sysclass;
+		try
+		{
+			urlClassLoader = ClassLoader.class.getMethod("getSystemClassLoader", null).invoke(null,null);
+			sysclass = Class.forName("java.net.URLClassLoader");
+			Method method = sysclass.getDeclaredMethod("addURL", new Class[]
+				{
+				URL.class}
+				);
+			//method.setAccessible(true);
+			Method.class.getMethod("setAccessible", new Class[]{boolean.class}).invoke(method, new Object[]{new Boolean(true)});
+			method.invoke(urlClassLoader, new Object[]
+						  {a_url});
+
+		}
+
+		catch (Throwable t)
+		{
+
+			throw new IllegalAccessException("Error, could not add URL to system classloader");
 		}
 	}
 
@@ -273,6 +325,17 @@ public final class ClassUtil
 		return ms_loadedClasses.elements();
 	}
 
+	public static Enumeration loadClasses(Class a_rootClass)
+	{
+		return loadClasses(a_rootClass, null);
+	}
+
+	public static Enumeration loadClasses(File a_classDirectory)
+	{
+		return loadClasses(null, a_classDirectory);
+	}
+
+
 	/**
 	 * Loads all classes into cache that are in the same file structure as
 	 * the given class and as the calling class.
@@ -280,7 +343,7 @@ public final class ClassUtil
 	 * @param a_rootClass the class from that loading is started
 	 * @return all loaded classes
 	 */
-	public static Enumeration loadClasses(Class a_rootClass)
+	private static Enumeration loadClasses(Class a_rootClass, File a_directory)
 	{
 		PrintStream syserror;
 		PrintStream dummyStream = new PrintStream(new ByteArrayOutputStream());
@@ -293,21 +356,35 @@ public final class ClassUtil
 		syserror = System.err;
 		try
 		{
-			System.setErr(dummyStream);
 
-			// load all classes for the specified class
-			loadClassesInternal(a_rootClass);
 
-			// reactivate standard error
-			System.setErr(syserror);
-
-			// load all classes for this class
-			loadClassesInternal(thisClass);
-
-			// load all classes for the calling class
-			if (callingClass != a_rootClass && callingClass != thisClass)
+			if (a_directory != null)
 			{
-				loadClassesInternal(callingClass);
+				System.setErr(dummyStream);
+
+				loadClassesInternal(a_rootClass, a_directory);
+
+				// reactivate standard error
+				System.setErr(syserror);
+			}
+			else if (a_rootClass != null)
+			{
+				System.setErr(dummyStream);
+
+				// load all classes for the specified class
+				loadClassesInternal(a_rootClass, a_directory);
+
+				// reactivate standard error
+				System.setErr(syserror);
+
+				// load all classes for this class
+				loadClassesInternal(thisClass, null);
+
+				// load all classes for the calling class
+				if (callingClass != a_rootClass && callingClass != thisClass)
+				{
+					loadClassesInternal(callingClass, null);
+				}
 			}
 		}
 		catch (Throwable a_e)
@@ -480,16 +557,24 @@ public final class ClassUtil
 	 * Loads all classes into cache that are in the same file structure as the given class.
 	 * WARNING: this may be slow at the first call, especially for large packages (like the JRE)
 	 * @param a_rootClass the class from that loading is started
+	 * @param an optional directory or jar/zip file to load the classes from
 	 * @throws IOException if an I/O error occurs
 	 */
-	private static void loadClassesInternal(Class a_rootClass) throws IOException
+	private static void loadClassesInternal(Class a_rootClass, File a_directory) throws IOException
 	{
 		File file;
 
-		if ((file = getClassDirectory(a_rootClass)) == null)
+		if (a_directory != null)
+		{
+			file = a_directory;
+		}
+		else if (a_rootClass == null || a_rootClass.getName().startsWith("java.") ||
+				 a_rootClass.getName().startsWith("javax.") || // do not load java classes; this is slow...
+				 (file = getClassDirectory(a_rootClass)) == null)
 		{
 			return;
 		}
+
 
 		// look in the cache if the class directory has already been read
 		if (ms_loadedDirectories.contains(file.getAbsolutePath()))

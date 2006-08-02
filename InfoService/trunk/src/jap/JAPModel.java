@@ -29,6 +29,8 @@ package jap;
 
 import java.awt.Dimension;
 import java.awt.Point;
+import java.util.Vector;
+import java.io.File;
 
 import anon.crypto.JAPCertificate;
 import anon.infoservice.ProxyInterface;
@@ -38,6 +40,8 @@ import gui.JAPDll;
 import java.util.Observable;
 import jap.forward.JAPRoutingSettings;
 import anon.infoservice.IMutableProxyInterface;
+import javax.swing.UIManager;
+import javax.swing.UIManager.LookAndFeelInfo;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel extends Observable
@@ -52,7 +56,7 @@ public final class JAPModel extends Observable
 	public static final String AUTO_CHANGE_RESTRICT_TO_PAY = "pay";
 	public static final String AUTO_CHANGE_RESTRICT = "restrict";
 
-	public static final int MAX_FONT_SIZE = 4;
+	public static final int MAX_FONT_SIZE = 6;
 
 	// observer messages
 	public static final Integer CHANGED_INFOSERVICE_AUTO_UPDATE = new Integer(0);
@@ -61,8 +65,6 @@ public final class JAPModel extends Observable
 	private static final int DIRECT_CONNECTION_INFOSERVICE = 0;
 	private static final int DIRECT_CONNECTION_PAYMENT = 1;
 	private static final int DIRECT_CONNECTION_UPDATE = 2;
-
-
 
 	private int m_HttpListenerPortNumber = JAPConstants.DEFAULT_PORT_NUMBER; // port number of HTTP  listener
 	private boolean m_bHttpListenerIsLocal = JAPConstants.DEFAULT_LISTENER_IS_LOCAL; // indicates whether listeners serve for localhost only or not
@@ -96,8 +98,12 @@ public final class JAPModel extends Observable
 	private String m_automaticCascadeChangeRestriction;
 
 	private String m_strLookAndFeel;
+	private Vector m_vecLookAndFeels = new Vector();
+	private LookAndFeelInfo[] m_systemLookAndFeels;
+	private Object LOOK_AND_FEEL_SYNC = new Object();
 
 	private int m_fontSize = 0;
+
 
 
 	private static JAPModel ms_TheModel = null;
@@ -207,6 +213,37 @@ public final class JAPModel extends Observable
 		m_strLookAndFeel = a_strLookAndFeel;
 	}
 
+	/**
+	 * Returns a Vector with all files that are registerd to contain LookAndFeel classes.
+	 * @return a Vector with all files that are registerd to contain LookAndFeel classes
+	 */
+	public Vector getLookAndFeelFiles()
+	{
+		return (Vector)m_vecLookAndFeels.clone();
+	}
+
+	public boolean addLookAndFeelFile(File a_file)
+	{
+		if (a_file != null)
+		{
+			synchronized (m_vecLookAndFeels)
+			{
+				if (!m_vecLookAndFeels.contains(a_file))
+				{
+					m_vecLookAndFeels.addElement(a_file);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public boolean removeLookAndFeelFile(File a_file)
+	{
+		return m_vecLookAndFeels.removeElement(a_file);
+	}
+
+
 	public String getLookAndFeel()
 	{
 		return m_strLookAndFeel;
@@ -246,6 +283,37 @@ public final class JAPModel extends Observable
 	protected void setSaveMainWindowPosition(boolean b)
 	{
 		m_bSaveMainWindowPosition = b;
+	}
+
+	public void updateSystemLookAndFeels()
+	{
+		synchronized (LOOK_AND_FEEL_SYNC)
+		{
+			m_systemLookAndFeels = UIManager.getInstalledLookAndFeels();
+		}
+	}
+
+	public boolean isSystemLookAndFeel(String a_LAFclassName)
+	{
+		synchronized (LOOK_AND_FEEL_SYNC)
+		{
+			if (m_systemLookAndFeels == null || a_LAFclassName == null)
+			{
+				return false;
+			}
+			for (int i = 0; i < m_systemLookAndFeels.length; i++)
+			{
+				if (m_systemLookAndFeels[i] == null)
+				{
+					continue;
+				}
+				if (m_systemLookAndFeels[i].getClassName().equals(a_LAFclassName))
+				{
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	public static boolean getSaveMainWindowPosition()

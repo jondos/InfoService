@@ -94,6 +94,18 @@ public final class ResourceLoader
 	{
 	}
 
+	public static Vector getFilesInClassPath()
+	{
+		try
+		{
+			return (Vector) ms_classpathFiles.clone();
+		}
+		catch (NullPointerException a_e)
+		{
+			return null;
+		}
+	}
+
 	/**
 	 * Reads a java.io.InputStream into a byte array and closes the stream.
 	 * If the stream blocks before the first byte is read this method will block, too, until
