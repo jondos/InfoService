@@ -316,11 +316,6 @@ public class JAPHtmlMultiLineLabel extends JLabel
 		}
 	}
 
-	//public void getFont()
-	{
-
-}
-
 	/**
 	 * This method adds HTML and BODY tags to a String and overwrites existing tags of this type.
 	 * @param a_HTMLtext a String
@@ -358,7 +353,7 @@ public class JAPHtmlMultiLineLabel extends JLabel
 		{
 			strSize = "+1";
 		}
-		else if  (size < 23)
+		else if  (size < 26)
 		{
 			strSize = "+2";
 		}
