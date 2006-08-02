@@ -99,6 +99,7 @@ import logging.LogType;
 import platform.AbstractOS;
 import anon.crypto.SignatureVerifier;
 import gui.JAPHtmlMultiLineLabel;
+import gui.JAPMultilineLabel;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener, Observer
@@ -114,8 +115,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private static final String MSG_PAYCASCADE = JAPConfAnon.class.
 		getName() + "_paycascade";
 
-	private static final String URL_BEGIN = "<html><font color=blue><u>";
-	private static final String URL_END = "</u></font></html>";
+	private static final String URL_BEGIN = "<html><font color=blue>";
+	private static final String URL_END = "</font></html>";
 	private static final String RED_BEGIN = "<font color=red>";
 	private static final String RED_END = "</font>";
 
@@ -138,9 +139,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	private JLabel m_numOfUsersLabel;
 	private GridBagConstraints m_constrHosts, m_constrPorts;
-	private JAPHtmlMultiLineLabel m_lblHosts, m_lblPorts;
-	private JAPHtmlMultiLineLabel m_reachableLabel;
-	private JAPHtmlMultiLineLabel m_portsLabel;
+	private JLabel m_lblHosts;
+	private JLabel m_lblPorts;
+	private JAPMultilineLabel m_reachableLabel;
+	private JLabel m_portsLabel;
 
 	private GridBagLayout m_rootPanelLayout;
 	private GridBagConstraints m_rootPanelConstraints;
@@ -148,7 +150,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private JLabel m_operatorLabel;
 	private JLabel m_emailLabel;
 	private JLabel m_urlLabel;
-	private JAPHtmlMultiLineLabel m_locationLabel;
+	private JLabel m_locationLabel;
 	private JLabel m_payLabel;
 	private JAPHtmlMultiLineLabel m_viewCertLabel;
 
@@ -325,17 +327,17 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.gridx = 1;
 		m_serverInfoPanel.add(m_urlLabel, c);
 
-		l = new JAPHtmlMultiLineLabel(JAPMessages.getString("mixLocation") + ":");
+		l = new JLabel(JAPMessages.getString("mixLocation") + ":");
 		c.gridx = 0;
 		c.gridy++;
 		m_serverInfoPanel.add(l, c);
 
-		m_locationLabel = new JAPHtmlMultiLineLabel();
+		m_locationLabel = new JLabel();
 		m_locationLabel.addMouseListener(this);
 		c.gridx = 1;
 		m_serverInfoPanel.add(m_locationLabel, c);
 
-		l = new JAPHtmlMultiLineLabel(JAPMessages.getString(MSG_LABEL_CERTIFICATE) + ":");
+		l = new JLabel(JAPMessages.getString(MSG_LABEL_CERTIFICATE) + ":");
 		c.gridx = 0;
 		c.gridy++;
 		m_serverInfoPanel.add(l, c);
@@ -550,7 +552,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_cascadesPanel.add(m_numOfUsersLabel, c);
 
 		c.insets = new Insets(5, 20, 0, 5);
-		m_lblHosts = new JAPHtmlMultiLineLabel(JAPMessages.getString("cascadeReachableBy") + ":");
+		m_lblHosts = new JLabel(JAPMessages.getString("cascadeReachableBy") + ":");
 		c.gridx = 2;
 		c.gridy = 2;
 		c.weightx = 0;
@@ -559,7 +561,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_cascadesPanel.add(m_lblHosts, c);
 
 		c.insets = new Insets(5, 5, 0, 5);
-		m_reachableLabel = new JAPHtmlMultiLineLabel();
+		m_reachableLabel = new JAPMultilineLabel("", null);
 		c.gridx = 3;
 		c.gridy = 2;
 		c.weightx = 0;
@@ -567,7 +569,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_cascadesPanel.add(m_reachableLabel, c);
 
 		c.insets = new Insets(5, 20, 0, 5);
-		m_lblPorts = new JAPHtmlMultiLineLabel(JAPMessages.getString("cascadePorts") + ":");
+		m_lblPorts = new JLabel(JAPMessages.getString("cascadePorts") + ":");
 		c.gridx = 2;
 		c.gridy = 3;
 		c.weightx = 0;
@@ -576,7 +578,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_cascadesPanel.add(m_lblPorts, c);
 
 		c.insets = new Insets(5, 5, 0, 5);
-		m_portsLabel = new JAPHtmlMultiLineLabel("");
+		m_portsLabel = new JLabel("");
 		c.gridx = 3;
 		c.gridy = 3;
 		c.weightx = 0;
@@ -654,18 +656,26 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 
 		m_locationCoordinates = m_infoService.getCoordinates(selectedMixId);
+		m_locationLabel.setText(trim(m_infoService.getLocation(selectedMixId)));
 		if (m_locationCoordinates != null)
 		{
-			m_locationLabel.setText(
-						 URL_BEGIN + trim(m_infoService.getLocation(selectedMixId)) + URL_END);
+			m_locationLabel.setForeground(Color.blue);
 		}
 		else
 		{
-			m_locationLabel.setText(trim(m_infoService.getLocation(selectedMixId)));
+			m_locationLabel.setForeground(new JLabel().getForeground());
 		}
 		m_locationLabel.setToolTipText(m_infoService.getLocation(selectedMixId));
 
 		m_urlLabel.setText(trim(m_infoService.getUrl(selectedMixId)));
+		if (getUrlFromLabel(m_urlLabel) != null)
+		{
+			m_urlLabel.setForeground(Color.blue);
+		}
+		else
+		{
+			m_urlLabel.setForeground(new JLabel().getForeground());
+		}
 		m_urlLabel.setToolTipText(m_infoService.getUrl(selectedMixId));
 
 		m_serverInfo = m_infoService.getMixInfo(selectedMixId);
@@ -1067,6 +1077,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			{
 				return;
 			}
+
 			AbstractOS os = AbstractOS.getInstance();
 			try
 			{
@@ -1246,13 +1257,13 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 						drawServerPanel(cascade.getNumberOfMixes(), cascade.getName(), true, selectedMix);
 					}
 					m_numOfUsersLabel.setText(m_infoService.getNumOfUsers(cascadeId));
-					m_reachableLabel.setFont(m_numOfUsersLabel.getFont());
-					m_lblHosts.setFont(m_numOfUsersLabel.getFont());
+					//m_reachableLabel.setFont(m_numOfUsersLabel.getFont());
+					//m_lblHosts.setFont(m_numOfUsersLabel.getFont());
 					m_reachableLabel.setText(m_infoService.getHosts(cascadeId));
 					m_cascadesPanel.remove(m_lblHosts);
 					m_cascadesPanel.add(m_lblHosts, m_constrHosts);
-					m_portsLabel.setFont(m_numOfUsersLabel.getFont());
-					m_lblPorts.setFont(m_numOfUsersLabel.getFont());
+					//m_portsLabel.setFont(m_numOfUsersLabel.getFont());
+					//m_lblPorts.setFont(m_numOfUsersLabel.getFont());
 					m_portsLabel.setText(m_infoService.getPorts(cascadeId));
 					m_cascadesPanel.remove(m_lblPorts);
 					m_cascadesPanel.add(m_lblPorts, m_constrPorts);
@@ -1523,13 +1534,23 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private static String getUrlFromLabel(JLabel a_urlLabel)
 	{
 		String url = a_urlLabel.getText();
-		int start = url.indexOf(URL_BEGIN) + URL_BEGIN.length();
+		try
+		{
+			return new URL(url).toString();
+		}
+		catch (Exception a_e)
+		{
+			return null;
+		}
+		/*int start = url.indexOf(URL_BEGIN) + URL_BEGIN.length();
 		int end = url.indexOf(URL_END);
 		if (start < 0 || end < 0 || end <= start)
 		{
 			return null;
 		}
-		return url.substring(start, end);
+		return url.substring(start, end);*/
+
+
 	}
 
 	/*
@@ -1674,7 +1695,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				{
 					if (interfaces.length() > 0)
 					{
-						interfaces += " <br> ";
+						interfaces += "\n";
 					}
 					interfaces += a_cascade.getListenerInterface(i).getHost();
 				}

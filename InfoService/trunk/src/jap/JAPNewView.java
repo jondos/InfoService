@@ -850,6 +850,28 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 		m_labelVersion.setFont(new Font(labelFont.getName(), labelFont.getStyle(),
 										((int)(labelFont.getSize() * 0.8))));
+		Runnable run = new Runnable()
+		{
+			public void run()
+			{
+				synchronized (LOCK_CONFIG)
+				{
+					if (m_dlgConfig != null)
+					{
+						m_dlgConfig.updateValues();
+					}
+				}
+			}
+		};
+		if (SwingUtilities.isEventDispatchThread())
+		{
+			run.run();
+		}
+		else
+		{
+			SwingUtilities.invokeLater(run);
+		}
+
 	}
 
 	private JPanel buildLevelPanel()

@@ -79,6 +79,8 @@ import jap.pay.AccountSettingsPanel;
 import logging.LogLevel;
 import logging.LogType;
 import logging.LogHolder;
+import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.UIManager;
 
 final public class JAPConf extends JAPDialog implements ActionListener
 {
@@ -1003,6 +1005,33 @@ final public class JAPConf extends JAPDialog implements ActionListener
 
 				// save configuration
 				m_Controller.saveConfigFile();
+
+				try
+				{
+					UIManager.setLookAndFeel(JAPModel.getInstance().getLookAndFeel());
+				}
+				catch (Throwable a_e)
+				{
+					try
+					{
+						UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+					}
+					catch (UnsupportedLookAndFeelException ex)
+					{
+					}
+					catch (IllegalAccessException ex)
+					{
+					}
+					catch (InstantiationException ex)
+					{
+					}
+					catch (ClassNotFoundException ex)
+					{
+					}
+
+
+					LogHolder.log(LogLevel.EXCEPTION, LogType.GUI,  "Error while setting Look&Feel", a_e);
+				}
 				// force notifying the observers set the right server name
 				m_Controller.notifyJAPObservers(); // this should be the last line of okPressed() !!!
 				if (isRestartNeeded())
