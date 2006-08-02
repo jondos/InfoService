@@ -370,7 +370,7 @@ public class JAPHtmlMultiLineLabel extends JLabel
 
 		//System.out.println(size + ":" + strSize);
 		String header = TAG_HTML_OPEN  + TAG_BODY_OPEN.substring(0, TAG_BODY_OPEN.length() - 1) +
-			//" style=\"font-family:" + a_defaultFont.getFamily() + " font-size:50pt" + "\">";
+			//" style=\"font-family:" + a_defaultFont.getFamily() + "\">";
 			" style=\"font-family:" + a_defaultFont.getFamily() + "\"><font size=" + strSize +">";
 			//"><font size=" + strSize +">";
 			//">";

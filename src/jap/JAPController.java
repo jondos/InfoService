@@ -55,6 +55,7 @@ import javax.swing.UIManager.LookAndFeelInfo;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 import anon.AnonServerDescription;
 import anon.AnonServiceEventAdapter;
@@ -91,6 +92,7 @@ import forward.server.ForwardServerManager;
 import gui.JAPDll;
 import gui.JAPHelp;
 import gui.JAPMessages;
+import gui.GUIUtils;
 import gui.dialog.JAPDialog;
 import gui.dialog.JAPDialog.LinkedCheckBox;
 import gui.dialog.PasswordContentPane;
@@ -109,6 +111,7 @@ import anon.infoservice.AutoSwitchedMixCascade;
 import java.io.*;
 import anon.infoservice.JAPMinVersion;
 import anon.infoservice.DatabaseMessage;
+import javax.swing.UnsupportedLookAndFeelException;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -144,7 +147,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private static final String MSG_ALLOWUNPROTECTED = JAPController.class.getName() + "_allowunprotected";
 	public static final String MSG_IS_NOT_ALLOWED = JAPController.class.getName() + "_isNotAllowed";
 
-
+	private static final String XML_ELEM_LOOK_AND_FEEL = "LookAndFeel";
+	private static final String XML_ELEM_LOOK_AND_FEELS = "LookAndFeels";
+	private static final String XML_ATTR_LOOK_AND_FEEL = "current";
 	private static final String XML_ALLOW_NON_ANONYMOUS_CONNECTION = "AllowNonAnonymousConnection";
 	private static final String XML_ALLOW_NON_ANONYMOUS_UPDATE = "AllowNonAnonymousUpdate";
 	private static final String XML_ATTR_AUTO_CHOOSE_CASCADES = "AutoChooseCascades";
@@ -875,11 +880,58 @@ public final class JAPController extends Observable implements IProxyListener, O
 					XMLUtil.parseAttribute(root, JAPConstants.CONFIG_LOCALE,	m_Locale.getLanguage());
 				Locale locale = new Locale(strLocale, "");
 				setLocale(locale);
-				//Load look-and-feel settings (not changed if SmmallDisplay!
+
 				if (!JAPModel.isSmallDisplay() && !JAPDialog.isConsoleOnly())
 				{
-					String lf = XMLUtil.parseAttribute(
-									   root, JAPConstants.CONFIG_LOOK_AND_FEEL, JAPConstants.CONFIG_UNKNOWN);
+					JAPModel.getInstance().updateSystemLookAndFeels();
+				}
+				// read the current L&F (old XML tag for compatibility reasons)
+				String lf = XMLUtil.parseAttribute(root, JAPConstants.CONFIG_LOOK_AND_FEEL, null);
+				if (lf == null)
+				{
+					Node elemLookAndFeels = XMLUtil.getFirstChildByName(root, XML_ELEM_LOOK_AND_FEELS);
+					// read the current L&F (if old tag is not available)
+					lf = XMLUtil.parseAttribute(
+						elemLookAndFeels, XML_ATTR_LOOK_AND_FEEL, JAPConstants.CONFIG_UNKNOWN);
+
+					if (elemLookAndFeels != null)
+					{
+						NodeList lnfs =
+							( (Element) elemLookAndFeels).getElementsByTagName(XML_ELEM_LOOK_AND_FEEL);
+						File currentFile;
+						for (int j = 0; j < lnfs.getLength(); j++)
+						{
+							try
+							{
+								currentFile = new File(XMLUtil.parseValue(lnfs.item(j), null));
+								//Load look-and-feel settings (not changed if SmmallDisplay!)
+								try
+								{
+									if (JAPModel.isSmallDisplay() || JAPDialog.isConsoleOnly() ||
+										GUIUtils.registerLookAndFeelClasses(currentFile))
+									{
+										// this is a valie L&F-file
+										JAPModel.getInstance().addLookAndFeelFile(currentFile);
+									}
+								}
+								catch (IllegalAccessException a_e)
+								{
+									// this is an old java version; do not drop the file reference
+									JAPModel.getInstance().addLookAndFeelFile(currentFile);
+								}
+							}
+							catch (Exception a_e)
+							{
+								LogHolder.log(
+									LogLevel.ERR, LogType.MISC, "Error while parsing Look&Feels!");
+								continue;
+							}
+						}
+					}
+				}
+
+				if (!JAPModel.isSmallDisplay() && !JAPDialog.isConsoleOnly())
+				{
 					LookAndFeelInfo[] lfi = UIManager.getInstalledLookAndFeels();
 					for (i = 0; i < lfi.length; i++)
 					{
@@ -888,13 +940,28 @@ public final class JAPController extends Observable implements IProxyListener, O
 							try
 							{
 								UIManager.setLookAndFeel(lfi[i].getClassName());
-								//        SwingUtilities.updateComponentTreeUI(m_frmParent);
-								//        SwingUtilities.updateComponentTreeUI(SwingUtilities.getRoot(((JComboBox)e.getItemSelectable())));
 							}
-							catch (Exception lfe)
+							catch (Throwable lfe)
 							{
+							try
+								{
+									UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+								}
+								catch (UnsupportedLookAndFeelException ex)
+								{
+								}
+								catch (IllegalAccessException ex)
+								{
+								}
+								catch (InstantiationException ex)
+								{
+								}
+								catch (ClassNotFoundException ex)
+								{
+								}
 								LogHolder.log(LogLevel.WARNING, LogType.GUI,
-											  "JAPModel:Exception while setting look-and-feel");
+											  "Exception while setting look-and-feel '" +
+											  lfi[i].getClassName() + "'");
 							}
 							break ;
 						}
@@ -1608,9 +1675,19 @@ public final class JAPController extends Observable implements IProxyListener, O
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_NEVER_REMIND_GOODBYE,
 								 JAPModel.getInstance().isNeverRemindGoodbye());
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_LOCALE, m_Locale.getLanguage());
-			XMLUtil.setAttribute(e, JAPConstants.CONFIG_LOOK_AND_FEEL,
+			Element elemLookAndFeels = doc.createElement(XML_ELEM_LOOK_AND_FEELS);
+			XMLUtil.setAttribute(elemLookAndFeels, XML_ATTR_LOOK_AND_FEEL,
 								 JAPModel.getInstance().getLookAndFeel());
-								 //UIManager.getLookAndFeel().getClass().getName());
+			e.appendChild(elemLookAndFeels);
+			Vector vecUIFiles = JAPModel.getInstance().getLookAndFeelFiles();
+			Element elemLookAndFeel;
+			for (int i = 0; i < vecUIFiles.size(); i++)
+			{
+				elemLookAndFeel = doc.createElement(XML_ELEM_LOOK_AND_FEEL);
+				XMLUtil.setValue(elemLookAndFeel, ((File)vecUIFiles.elementAt(i)).getAbsolutePath());
+				elemLookAndFeels.appendChild(elemLookAndFeel);
+			}
+
 			XMLUtil.setAttribute(e, JAPModel.XML_FONT_SIZE, JAPModel.getInstance().getFontSize());
 
 			/*stores MixCascades*/

@@ -148,6 +148,7 @@ final public class JAPConf extends JAPDialog implements ActionListener
 
 	private boolean m_bWithPayment = false;
 	private boolean m_bIsSimpleView;
+	private boolean m_bRestartNeeded = false;
 
 	private JAPConfModuleSystem m_moduleSystem;
 	private JAPConfServices m_confServices;
@@ -1004,6 +1005,10 @@ final public class JAPConf extends JAPDialog implements ActionListener
 				m_Controller.saveConfigFile();
 				// force notifying the observers set the right server name
 				m_Controller.notifyJAPObservers(); // this should be the last line of okPressed() !!!
+				if (isRestartNeeded())
+				{
+					JAPController.goodBye(false);
+				}
 			}
 		}.start();
 
@@ -1146,5 +1151,15 @@ final public class JAPConf extends JAPDialog implements ActionListener
 			m_tfProxyPortNumber.setText("");
 		}
 		validate();
+	}
+
+	protected void setNeedRestart()
+	{
+		m_bRestartNeeded = true;
+	}
+
+	protected boolean isRestartNeeded()
+	{
+		return m_bRestartNeeded;
 	}
 }

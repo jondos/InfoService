@@ -31,6 +31,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.Hashtable;
+import java.io.File;
+import java.io.IOException;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -60,6 +62,10 @@ import logging.LogType;
 import javax.swing.UIManager;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.UIDefaults;
+import java.util.Vector;
+import anon.util.ClassUtil;
+import javax.swing.LookAndFeel;
+import javax.swing.UIManager.LookAndFeelInfo;
 
 /**
  * This class contains helper methods for the GUI.
@@ -351,6 +357,74 @@ public final class GUIUtils
 			r_cb = Toolkit.getDefaultToolkit().getSystemClipboard();
 		}
 		return r_cb;
+	}
+
+
+
+	/**
+	 * Returns all valid javax.swing.LookAndFeel subclasses that could be found by ClassUtil.findSubclasses.
+	 * @return all valid javax.swing.LookAndFeel subclasses that could be found by ClassUtil.findSubclasses
+	 */
+	public static boolean registerLookAndFeelClasses(File a_file) throws IllegalAccessException
+	{
+		if (a_file == null)
+		{
+			return false;
+		}
+		ClassUtil.addFileToClasspath(a_file);
+		ClassUtil.loadClasses(a_file);
+
+		LookAndFeelInfo lnfOldInfo[] = UIManager.getInstalledLookAndFeels();
+		LookAndFeelInfo lnfNewInfo[];
+		LookAndFeel lnf;
+
+		Vector tempLnfClasses = ClassUtil.findSubclasses(LookAndFeel.class);
+		for (int i = 0; i < tempLnfClasses.size(); i++)
+		{
+			try
+			{
+				lnf = (LookAndFeel)( (Class) tempLnfClasses.elementAt(i)).newInstance();
+			}
+			catch (IllegalAccessException ex)
+			{
+				continue;
+			}
+			catch (InstantiationException ex)
+			{
+				continue;
+			}
+			catch (ClassCastException a_e)
+			{
+				continue;
+			}
+			try
+			{
+
+				if (lnf.isSupportedLookAndFeel())
+				{
+					LookAndFeelInfo installed[] = UIManager.getInstalledLookAndFeels();
+					boolean bInstalled = false;
+					for (int j = 0; j < installed.length; j++)
+					{
+						if (installed[j].getClassName().equals(lnf.getClass().getName()))
+						{
+							// this theme has been previously installed
+							bInstalled = true;
+						}
+					}
+					if (!bInstalled)
+					{
+						UIManager.installLookAndFeel(lnf.getName(), lnf.getClass().getName());
+					}
+				}
+			}
+			catch (Throwable a_e)
+			{
+				continue;
+			}
+		}
+		lnfNewInfo = UIManager.getInstalledLookAndFeels();
+		return lnfNewInfo.length > lnfOldInfo.length;
 	}
 
 	/**
