@@ -1497,14 +1497,34 @@ public final class JAPController extends Observable implements IProxyListener, O
 		String strJavaVendor = System.getProperty("java.vendor");
 		LogHolder.log(LogLevel.INFO, LogType.ALL, "Java vendor: " + strJavaVendor);
 
-		if (strJavaVendor.toLowerCase().indexOf("microsoft") != -1) {
-			String pathToJView = System.getProperty("com.ms.sysdir") + File.separator;
-			strRestartCommand = pathToJView + "jview /cp \"" + ClassUtil.getClassPath().trim() + "\" JAP";
+		String javaExe = null;
+		String pathToJava = null;
+		if (strJavaVendor.toLowerCase().indexOf("microsoft") != -1)
+		{
+
+			pathToJava = System.getProperty("com.ms.sysdir") + File.separator;
+			javaExe = "jview";
+			if (new File(pathToJava + javaExe).exists())
+			{
+				javaExe += " /cp";
+			}
+			else
+			{
+				javaExe = null;
+			}
 		}
-	    else {
-			String pathToJava = System.getProperty("java.home") + File.separator + "bin" + File.separator;
-			strRestartCommand = pathToJava + "javaw -cp \"" + ClassUtil.getClassPath().trim() + "\" JAP";
+	    if (javaExe == null)
+		{
+			pathToJava = System.getProperty("java.home") + File.separator + "bin" + File.separator;
+			javaExe = "javaw"; // for windows
+			if (!new File(pathToJava + javaExe).exists())
+			{
+				javaExe = "java";
+			}
+			javaExe += " -cp";
+
 		}
+		strRestartCommand = pathToJava + javaExe + " \"" + ClassUtil.getClassPath().trim() + "\" JAP";
 		/*
 		else { //try to start java
 			strRestartCommand = "java -cp " + ClassUtil.getClassPath().trim() + " JAP";
@@ -1512,10 +1532,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 		LogHolder.log(LogLevel.INFO, LogType.ALL, "JAP restart command: " + strRestartCommand);
 
-	    try {
+	    try
+		{
 		    Runtime.getRuntime().exec(strRestartCommand);
 		}
-		catch (Exception ex) {
+		catch (Exception ex)
+		{
 			LogHolder.log(LogLevel.INFO, LogType.ALL, "Error auto-restart JAP: " + ex);
 			return;
 		}
