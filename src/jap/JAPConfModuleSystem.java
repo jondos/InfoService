@@ -343,32 +343,6 @@ public class JAPConfModuleSystem
 			}
 		}
 
-		try
-		{
-			UIManager.setLookAndFeel(JAPModel.getInstance().getLookAndFeel());
-		}
-		catch (Throwable a_e)
-		{
-			try
-			{
-				UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-			}
-			catch (UnsupportedLookAndFeelException ex)
-			{
-			}
-			catch (IllegalAccessException ex)
-			{
-			}
-			catch (InstantiationException ex)
-			{
-			}
-			catch (ClassNotFoundException ex)
-			{
-			}
-
-
-			LogHolder.log(LogLevel.EXCEPTION, LogType.GUI,  "Error while setting Look&Feel", a_e);
-		}
 		return returnValue;
 	}
 

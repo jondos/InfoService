@@ -64,6 +64,7 @@ import gui.JAPHelp;
 import gui.JAPHtmlMultiLineLabel;
 import gui.CountryMapper;
 import gui.dialog.JAPDialog;
+import java.awt.Font;
 
 /**
  * This is the configuration GUI for the cert.
@@ -83,6 +84,7 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 	private Enumeration m_enumCerts;
 	private JCheckBox m_cbCertCheckEnabled;
 	private JPanel m_panelCAInfo, m_panelCAList;
+	private JLabel m_lblCertTitle;
 
 	public JAPConfCert()
 	{
@@ -511,8 +513,8 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		panelConstraintsInfo.gridy = 0;
 		panelConstraintsInfo.gridwidth = 2;
 
-		JLabel l = new JAPHtmlMultiLineLabel("<u>" + JAPMessages.getString("certInfoBorder") + "</u>");
-		r_panelInfo.add(l, panelConstraintsInfo);
+		m_lblCertTitle = new JLabel(JAPMessages.getString("certInfoBorder"));
+		r_panelInfo.add(m_lblCertTitle, panelConstraintsInfo);
 
 		m_labelDate = new JLabel(JAPMessages.getString("certDate"));
 		//m_labelDate.setFont(getFontSetting());
@@ -697,6 +699,8 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 
 	protected void onUpdateValues()
 	{
+		JLabel label = new JLabel();
+		m_lblCertTitle.setFont(new Font(label.getFont().getName(), Font.BOLD, (int)(label.getFont().getSize() * 1.2)));
 		m_cbCertCheckEnabled.setSelected(SignatureVerifier.getInstance().isCheckSignatures());
 	}
 

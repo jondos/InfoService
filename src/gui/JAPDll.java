@@ -63,6 +63,8 @@ final public class JAPDll {
 	private static final String MSG_DLL_UPDATE_FAILED = JAPDll.class.getName() + "_updateFailed";
 	private static final String MSG_CONFIRM_OVERWRITE = JAPDll.class.getName() + "_confirmOverwrite";
 	private static final String MSG_PERMISSION_PROBLEM = JAPDll.class.getName() + "_permissionProblem";
+	private static final String MSG_COULD_NOT_SAVE = JAPDll.class.getName() + "_couldNotSave";
+
 
 	private static boolean m_sbHasOnTraffic = true;
 	public static void init()
@@ -313,9 +315,9 @@ final public class JAPDll {
 			try
 			{
 				File f = chooser.getSelectedFile();
-				if (!f.getName().toLowerCase().endsWith(MyFileFilter.ACCOUNT_EXTENSION))
+				if (!f.getName().toLowerCase().endsWith(MyFileFilter.DLL_EXTENSION))
 				{
-					f = new File(f.getParent(), f.getName() + MyFileFilter.ACCOUNT_EXTENSION);
+					f = new File(f.getParent(), f.getName() + MyFileFilter.DLL_EXTENSION);
 				}
 
 				//confirm overwrite if file exists
@@ -325,9 +327,14 @@ final public class JAPDll {
 						JAPMessages.getString(MSG_CONFIRM_OVERWRITE, "'" + f + "'"),
 						JAPDialog.MSG_TITLE_CONFIRMATION,
 						JAPDialog.OPTION_TYPE_YES_NO, JAPDialog.MESSAGE_TYPE_WARNING);
-					if (answer == 0) b_extractOK = extractDLL(f);
-					if (answer == 1) b_extractOK = false;
-
+					if (answer == JAPDialog.RETURN_VALUE_OK)
+					{
+						b_extractOK = extractDLL(f);
+					}
+					else
+					{
+						b_extractOK = false;
+					}
 				}
 				//if file dose not exist -> extract
 				else
@@ -351,6 +358,8 @@ final public class JAPDll {
 
 		if (!b_extractOK)
 		{
+			JAPDialog.showErrorDialog(JAPController.getView(), JAPMessages.getString(MSG_COULD_NOT_SAVE),
+				LogType.MISC);
 			chooseAndSave();
 		}
    }
@@ -498,21 +507,10 @@ final public class JAPDll {
 	native static private String getDllFileName_dll();
 
 
-
-
-
-
-
-	/**
-	 * Filefilter for the import function
-	 *
-	 * @author Bastian Voigt
-	 * @version 1.0
-	 */
 	private static class MyFileFilter extends FileFilter
 	{
-		public static final String ACCOUNT_EXTENSION = ".dll";
-		private final String ACCOUNT_DESCRIPTION = "JAP dll file (*" + ACCOUNT_EXTENSION + ")";
+		public static final String DLL_EXTENSION = ".dll";
+		private final String ACCOUNT_DESCRIPTION = "JAP dll file (*" + DLL_EXTENSION + ")";
 
 		private int filterType;
 
@@ -523,7 +521,7 @@ final public class JAPDll {
 
 		public boolean accept(File f)
 		{
-			return f.isDirectory() || f.getName().endsWith(ACCOUNT_EXTENSION);
+			return f.isDirectory() || f.getName().endsWith(DLL_EXTENSION);
 		}
 
 		public String getDescription()

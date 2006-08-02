@@ -302,7 +302,7 @@ public class JAPHtmlMultiLineLabel extends JLabel
 		{
 			a_defaultFont = new JLabel().getFont();
 		}
-		if (a_defaultFont.isBold() && a_defaultFont.getSize() >= 17 && a_defaultFont.getSize() <= 18)
+		if (a_defaultFont.isBold() && a_defaultFont.getSize() >= 16 && a_defaultFont.getSize() <= 18)
 		{
 			// bold is not allowed here
 			Font replacedFont = new Font(a_defaultFont.getName(), Font.PLAIN, a_defaultFont.getSize());
@@ -346,11 +346,11 @@ public class JAPHtmlMultiLineLabel extends JLabel
 		// style=\"font-family:" + a_defaultFont.getFamily() + ";font-size:small\"
 		int size = a_defaultFont.getSize();
 		String strSize = "-1";
-		if (size < 14)
+		if (size < 13)
 		{
 			strSize = "-1";
 		}
-		else if (size < 17)
+		else if (size < 16)
 		{
 			strSize = "+0";
 		}
@@ -358,7 +358,7 @@ public class JAPHtmlMultiLineLabel extends JLabel
 		{
 			strSize = "+1";
 		}
-		else if  (size < 26)
+		else if  (size < 23)
 		{
 			strSize = "+2";
 		}

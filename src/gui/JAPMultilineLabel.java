@@ -72,7 +72,10 @@ final public class JAPMultilineLabel extends JPanel
 		while (st.hasMoreElements())
 		{
 			label = new JLabel(st.nextToken());
-			label.setFont(m_font);
+			if (m_font != null)
+			{
+				label.setFont(m_font);
+			}
 			add(label);
 		}
 	}
