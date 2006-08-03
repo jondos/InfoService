@@ -279,6 +279,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 
 		cFrame.gridx = 0;
 		cFrame.gridy = 2;
+		cFrame.gridwidth = 2;
 		m_cbxAllowDirectUpdate = new JCheckBox(JAPMessages.getString(MSG_ALLOW_DIRECT_CONN));
 		panelRoot.add(m_cbxAllowDirectUpdate, cFrame);
 
@@ -288,7 +289,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		panelRoot.add(m_cbxRemindOptionalUpdate, cFrame);
 
 		cFrame.gridy = 4;
-		cFrame.gridwidth = 2;
+
 		cFrame.anchor = GridBagConstraints.CENTER;
 		cFrame.fill = GridBagConstraints.BOTH;
 		cFrame.weightx = 1.0;

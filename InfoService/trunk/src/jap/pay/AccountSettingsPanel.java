@@ -113,6 +113,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import javax.swing.UIManager;
+import javax.swing.JScrollPane;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -247,6 +248,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		"_showAIErrors";
 	private static final String MSG_BALANCE_AUTO_UPDATE_ENABLED = AccountSettingsPanel.class.getName() +
 		"_balanceAutoUpdateEnabled";
+	private static final String MSG_NO_BACKUP = AccountSettingsPanel.class.getName() + "_noBackup";
+	private static final String MSG_FILE_EXISTS = AccountSettingsPanel.class.getName() + "_fileExists";
 
 
 	private JButton m_btnCreateAccount;
@@ -270,7 +273,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private JLabel m_labelSpent;
 	private JLabel m_labelBalance;
 	private JLabel m_labelValid;
-	private JAPHtmlMultiLineLabel m_lblInactiveMessage;
+	private JLabel m_lblInactiveMessage, m_lblNoBackupMessage;
 	private JProgressBar m_coinstack;
 	private JList m_listAccounts;
 	private boolean m_bReady = true;
@@ -330,7 +333,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		m_listAccounts.setCellRenderer(new CustomRenderer());
 		m_listAccounts.addListSelectionListener(this);
 		m_listAccounts.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		m_listAccounts.setPreferredSize(new Dimension(200, 200));
+		//m_listAccounts.setPreferredSize(new Dimension(200, 200));
 		m_listAccounts.addMouseListener(new MouseAdapter()
 		{
 			public void mouseClicked(MouseEvent e)
@@ -383,46 +386,67 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		buttonsPanel.add(m_btnActivate, c);
 
 		c = new GridBagConstraints();
-		c.fill = c.NONE;
+		c.fill = c.BOTH;
 		c.anchor = c.NORTHWEST;
-		c.weightx = 0;
-		c.weighty = 0;
+		c.weightx = 2.0;
+		c.weighty = 1.0;
 		c.gridx = 0;
 		c.gridy = 0;
-		c.gridheight = 4;
+		c.gridheight = 5;
 		c.insets = new Insets(5, 5, 5, 5);
-		rootPanel.add(m_listAccounts, c);
+		JScrollPane scroller = new JScrollPane(m_listAccounts);
+		scroller.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		//scroller.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		rootPanel.add(scroller, c);
 
 		c.gridx++;
+		c.fill = c.NONE;
 		c.gridheight = 1;
+		c.weighty = 0.0;
+		c.weightx = 0.0;
 		rootPanel.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_CREATION_DATE)), c);
 		c.gridx++;
+		c.weightx = 1.0;
 		m_labelCreationDate = new JLabel();
 		rootPanel.add(m_labelCreationDate, c);
 
 		c.gridx--;
 		c.gridy++;
+		c.weightx = 0.0;
 		rootPanel.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_STATEMENT_DATE)), c);
 		c.gridx++;
 		m_labelStatementDate = new JLabel();
+		c.weightx = 1.0;
 		rootPanel.add(m_labelStatementDate, c);
 
 		c.gridx--;
 		c.gridy++;
+		c.weightx = 0.0;
 		rootPanel.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_VALID)), c);
 		c.gridx++;
+		c.weightx = 1.0;
 		m_labelValid = new JLabel();
 		rootPanel.add(m_labelValid, c);
 
 		c.gridy++;
 		c.gridx--;
 		c.gridwidth = 2;
-		m_lblInactiveMessage = new JAPHtmlMultiLineLabel();
+		c.weightx = 1.0;
+		m_lblInactiveMessage = new JLabel();
+		m_lblInactiveMessage.setForeground(Color.red);
 		rootPanel.add(m_lblInactiveMessage, c);
-		c.gridwidth = 1;
+
+		c.gridy++;
+		m_lblNoBackupMessage = new JLabel();
+		rootPanel.add(m_lblNoBackupMessage, c);
+		m_lblNoBackupMessage.setForeground(Color.red);
+
+
+
 
 
 		c.gridy++;
+		c.weightx = 0;
 		c.gridx = 0;
 		c.gridwidth = 3;
 		rootPanel.add(buttonsPanel, c);
@@ -774,6 +798,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			m_labelBalance.setText("");
 			m_labelValid.setText("");
 			m_lblInactiveMessage.setText("");
+			m_lblNoBackupMessage.setText("");
 			return;
 		}
 
@@ -788,13 +813,19 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		   }*/
 		if (selectedAccount.getPrivateKey() == null)
 		{
-			m_lblInactiveMessage.setText("<Font color='red'>" +
-										 JAPMessages.getString(MSG_ACCOUNT_DISABLED) +
-										 "</Font>");
+			m_lblInactiveMessage.setText(JAPMessages.getString(MSG_ACCOUNT_DISABLED));
 		}
 		else
 		{
 			m_lblInactiveMessage.setText("");
+		}
+		if (!selectedAccount.isBackupDone())
+		{
+			m_lblNoBackupMessage.setText(JAPMessages.getString(MSG_NO_BACKUP));
+		}
+		else
+		{
+			m_lblNoBackupMessage.setText("");
 		}
 
 
@@ -1665,63 +1696,82 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				p.getButtonValue() != PasswordContentPane.RETURN_VALUE_CLOSED)
 			{
 
-				exportAccount(selectedAccount, this.getRootPanel(), new String(p.getPassword()));
+				if (exportAccount(selectedAccount, this.getRootPanel(), new String(p.getPassword())))
+				{
+					selectedAccount.setBackupDone(true);
+					doShowDetails(selectedAccount);
+				}
 			}
 		}
 		else
 		{
 			// account is already encrypted, save it only
-			exportAccount(selectedAccount, this.getRootPanel(), null);
+			if (exportAccount(selectedAccount, this.getRootPanel(), null))
+			{
+				selectedAccount.setBackupDone(true);
+				doShowDetails(selectedAccount);
+			}
 		}
 	}
 
 	private boolean exportAccount(PayAccount selectedAccount, Component a_parent, String strPassword)
 	{
 		JFileChooser chooser = new JFileChooser();
+		chooser.setSelectedFile(new File(selectedAccount.getAccountNumber() + MyFileFilter.ACCOUNT_EXTENSION));
 		MyFileFilter filter = new MyFileFilter();
 		chooser.setFileFilter(filter);
-		int returnVal = chooser.showSaveDialog(a_parent);
-		if (returnVal == JFileChooser.APPROVE_OPTION)
+		while (true)
 		{
-			try
+			int returnVal = chooser.showSaveDialog(a_parent);
+			if (returnVal == JFileChooser.APPROVE_OPTION)
 			{
-				File f = chooser.getSelectedFile();
-				if (!f.getName().toLowerCase().endsWith(MyFileFilter.ACCOUNT_EXTENSION))
+				try
 				{
-					f = new File(f.getParent(), f.getName() + MyFileFilter.ACCOUNT_EXTENSION);
+					File f = chooser.getSelectedFile();
+					if (!f.getName().toLowerCase().endsWith(MyFileFilter.ACCOUNT_EXTENSION))
+					{
+						f = new File(f.getParent(), f.getName() + MyFileFilter.ACCOUNT_EXTENSION);
+					}
+					if (f.exists())
+					{
+						if (!JAPDialog.showYesNoDialog(GUIUtils.getParentWindow(this.getRootPanel()),
+							JAPMessages.getString(MSG_FILE_EXISTS)))
+						{
+							continue;
+						}
+					}
+
+					Document doc = XMLUtil.createDocument();
+					Element elemRoot = doc.createElement("root");
+					elemRoot.setAttribute("filetype", "JapAccountFile");
+					elemRoot.setAttribute("version", "1.1");
+
+					doc.appendChild(elemRoot);
+					Element elemAccount = selectedAccount.toXmlElement(doc, strPassword);
+					elemRoot.appendChild(elemAccount);
+					/*
+						 if (strPassword != null && strPassword.length() > 0)
+						 {
+					 XMLEncryption.encryptElement(elemAccount, strPassword);
+						 }*/
+
+					String strOutput = XMLUtil.toString(XMLUtil.formatHumanReadable(doc));
+					FileOutputStream outStream = new FileOutputStream(f);
+					outStream.write(strOutput.getBytes());
+					outStream.close();
+					JAPDialog.showMessageDialog(GUIUtils.getParentWindow(this.getRootPanel()),
+												JAPMessages.getString(MSG_EXPORTED));
+					return true;
 				}
-
-				Document doc = XMLUtil.createDocument();
-				Element elemRoot = doc.createElement("root");
-				elemRoot.setAttribute("filetype", "JapAccountFile");
-				elemRoot.setAttribute("version", "1.1");
-
-				doc.appendChild(elemRoot);
-				Element elemAccount = selectedAccount.toXmlElement(doc, strPassword);
-				elemRoot.appendChild(elemAccount);
-				/*
-				if (strPassword != null && strPassword.length() > 0)
+				catch (Exception e)
 				{
-					XMLEncryption.encryptElement(elemAccount, strPassword);
-				}*/
-
-				String strOutput = XMLUtil.toString(XMLUtil.formatHumanReadable(doc));
-				FileOutputStream outStream = new FileOutputStream(f);
-				outStream.write(strOutput.getBytes());
-				outStream.close();
-				JAPDialog.showMessageDialog(GUIUtils.getParentWindow(this.getRootPanel()),
-											JAPMessages.getString(MSG_EXPORTED));
-return true;
+					JAPDialog.showErrorDialog(GUIUtils.getParentWindow(a_parent),
+											  JAPMessages.getString(MSG_NOTEXPORTED) + ": " + e, LogType.PAY);
+				}
 			}
-			catch (Exception e)
-			{
-				JAPDialog.showErrorDialog(GUIUtils.getParentWindow(a_parent),
-										  JAPMessages.getString(MSG_NOTEXPORTED) + ": " + e, LogType.PAY);
-			}
+			break;
 		}
-
 		return false;
-
 	}
 
 /**
@@ -1828,6 +1878,7 @@ return true;
 					XMLUtil.removeComments(elemAccount);
 
 					importedAccount = new PayAccount(elemAccount, null);
+					importedAccount.setBackupDone(true); // we know there is a backup file...
 					PayAccountsFile accounts = PayAccountsFile.getInstance();
 					accounts.addAccount(importedAccount);
 					doActivateAccount(importedAccount);
@@ -1873,6 +1924,7 @@ return true;
 
 					doShowDetails(a_selectedAccount);
 					enableDisableButtons();
+					m_listAccounts.repaint();
 
 					JAPDialog.showMessageDialog(getRootPanel(),
 												JAPMessages.getString(MSG_ACTIVATION_SUCCESSFUL));

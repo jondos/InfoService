@@ -79,6 +79,7 @@ import gui.JAPMessages;
 import gui.JAPHelp;
 import gui.GUIUtils;
 import gui.dialog.JAPDialog;
+import javax.swing.JSlider;
 
 /**
  * This is the configuration GUI for the infoservice.
@@ -89,6 +90,8 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		"_allowDirectConnection";
 	private static final String MSG_VIEW_CERT = JAPConfInfoService.class.getName() + "_viewCert";
 	private static final String MSG_REALLY_DELETE = JAPConfInfoService.class.getName() + "_reallyDelete";
+	private static final String MSG_USE_MORE_IS = JAPConfInfoService.class.getName() + "_useMoreIS";
+
 
 	/**
 	 * This is the internal message system of this module.
@@ -111,6 +114,9 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 	private JPanel descriptionPanel;
 	private JButton settingsInfoServiceConfigBasicSettingsRemoveButton;
 	private JCheckBox m_cbxAllowNonAnonymousConnection;
+	private JCheckBox m_cbxUseDefaultISOnly;
+	private JSlider m_sliderAskedInfoServices;
+	private JLabel m_lblSlider;
 
 	private boolean mb_newInfoService = true;
 
@@ -941,7 +947,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 	    configPanelConstraints.gridx = 0;
 		configPanelConstraints.gridy = 1;
-		configPanelConstraints.weightx = 0.0;
+		configPanelConstraints.weightx = 1.0;
 		configPanelConstraints.weighty = 1.0;
 		configPanelConstraints.insets = new Insets(10, 10, 5, 5);
 		configPanelConstraints.fill = GridBagConstraints.BOTH;
@@ -954,6 +960,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		configPanelConstraints.gridy = 9;
 		configPanelConstraints.gridwidth = 5;
 		configPanelConstraints.weighty = 0.0;
+		configPanelConstraints.weightx = 0.0;
 		configPanelConstraints.insets = new Insets(10, 0, 5, 0);
 		configPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
 		configPanelConstraints.fill = GridBagConstraints.NONE;
@@ -1233,17 +1240,19 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 			}
 		});
 
-		final JCheckBox settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox = new JCheckBox(
+		m_cbxUseDefaultISOnly = new JCheckBox(
 			JAPMessages.getString("settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox"));
 		//settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox.setFont(getFontSetting());
-		settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox.addActionListener(new
+		m_cbxUseDefaultISOnly.addActionListener(new
 			ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
 			{
 				/* enable/disable the automatic changes of the infoservices */
 				InfoServiceHolder.getInstance().setChangeInfoServices(!
-					settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox.isSelected());
+					m_cbxUseDefaultISOnly.isSelected());
+				m_sliderAskedInfoServices.setEnabled(!m_cbxUseDefaultISOnly.isSelected());
+				m_lblSlider.setEnabled(!m_cbxUseDefaultISOnly.isSelected());
 			}
 		});
 
@@ -1275,7 +1284,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 							/* the InfoService management policy was changed */
 							boolean newPolicy = ( (Boolean) ( ( (InfoServiceHolderMessage) a_message).
 								getMessageData())).booleanValue();
-							settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox.setSelected(!
+							m_cbxUseDefaultISOnly.setSelected(!
 								newPolicy);
 						}
 					}
@@ -1346,12 +1355,28 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 		advancedPanelConstraints.gridx = 0;
 		advancedPanelConstraints.gridy = 2;
-		advancedPanelConstraints.weighty = 1.0;
 		//advancedPanelConstraints.insets = new Insets(0, 5, 20, 5);
 		advancedPanelLayout.setConstraints(
-			settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox, advancedPanelConstraints);
-		advancedPanel.add(settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox);
+			m_cbxUseDefaultISOnly, advancedPanelConstraints);
+		advancedPanel.add(m_cbxUseDefaultISOnly);
 
+		m_lblSlider = new JLabel(JAPMessages.getString(MSG_USE_MORE_IS));
+		advancedPanelConstraints.gridy++;
+		advancedPanel.add(m_lblSlider, advancedPanelConstraints);
+
+		m_sliderAskedInfoServices = new JSlider(
+			  SwingConstants.HORIZONTAL, 1, InfoServiceHolder.MAXIMUM_OF_ASKED_INFO_SERVICES,
+			  InfoServiceHolder.getInstance().getNumberOFAskedInfoServices());
+		m_sliderAskedInfoServices.setMajorTickSpacing(1);
+		m_sliderAskedInfoServices.setMinorTickSpacing(1);
+		m_sliderAskedInfoServices.setPaintLabels(true);
+		m_sliderAskedInfoServices.setPaintTicks(true);
+		m_sliderAskedInfoServices.setSnapToTicks(true);
+		advancedPanelConstraints.gridy++;
+		advancedPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
+		advancedPanelConstraints.weightx = 1.0;
+		advancedPanelConstraints.weighty = 1.0;
+		advancedPanel.add(m_sliderAskedInfoServices, advancedPanelConstraints);
 
 
 		return advancedPanel;
@@ -1361,15 +1386,20 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 	{
 		m_cbxAllowNonAnonymousConnection.setSelected(
 			  JAPConstants.DEFAULT_ALLOW_INFOSERVICE_NON_ANONYMOUS_CONNECTION);
+		m_sliderAskedInfoServices.setValue(InfoServiceHolder.DEFAULT_OF_ASKED_INFO_SERVICES);
+		m_cbxUseDefaultISOnly.setSelected(false);
 	}
 
 	protected void onUpdateValues()
 	{
+		m_sliderAskedInfoServices.setValue(InfoServiceHolder.getInstance().getNumberOFAskedInfoServices());
 		m_cbxAllowNonAnonymousConnection.setSelected(
 			  JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed());
 		//Select the preferred InfoService
 		m_listKnownInfoServices.setSelectedValue(InfoServiceHolder.getInstance().
 												 getPreferredInfoService(), true);
+		m_sliderAskedInfoServices.setEnabled(InfoServiceHolder.getInstance().isChangeInfoServices());
+		m_lblSlider.setEnabled(InfoServiceHolder.getInstance().isChangeInfoServices());
 	}
 
 	protected void onRootPanelShown()
@@ -1381,6 +1411,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 	protected boolean onOkPressed()
 	{
 		JAPModel.getInstance().allowInfoServiceViaDirectConnection(m_cbxAllowNonAnonymousConnection.isSelected());
+		InfoServiceHolder.getInstance().setNumberOfAskedInfoServices(m_sliderAskedInfoServices.getValue());
 		return true;
 	}
 
