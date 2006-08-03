@@ -177,19 +177,35 @@ final class JAPConfUI extends AbstractJAPConfModule
 					synchronized (m_comboUI)
 					{
 						LookAndFeelInfo[] oldLnFs = UIManager.getInstalledLookAndFeels();
-						LookAndFeelInfo[] alteredLnFs = new LookAndFeelInfo[oldLnFs.length - 1];
-						Class lnf = Class.forName( (oldLnFs[m_comboUI.getSelectedIndex()].getClassName()));
-						for (int i = 0, j = 0; i < oldLnFs.length; i++)
+						Vector tempLnFs = new Vector(oldLnFs.length - 1);
+						LookAndFeelInfo[] alteredLnFs;
+						File lnfFile = ClassUtil.getClassDirectory(Class.forName(
+											  (oldLnFs[m_comboUI.getSelectedIndex()].getClassName())));
+						File tempLnfFile;
+
+						for (int i = 0; i < oldLnFs.length; i++)
 						{
-							if (i == m_comboUI.getSelectedIndex())
+							try
+							{
+								tempLnfFile =
+									ClassUtil.getClassDirectory(Class.forName(oldLnFs[i].getClassName()));
+							}
+							catch (ClassNotFoundException a_e)
 							{
 								continue;
 							}
-							alteredLnFs[j] = oldLnFs[i];
-							j++;
+							if (tempLnfFile == null || !lnfFile.equals(tempLnfFile))
+							{
+								tempLnFs.addElement(oldLnFs[i]);
+							}
+						}
+						alteredLnFs = new LookAndFeelInfo[tempLnFs.size()];
+						for (int i = 0; i < alteredLnFs.length; i++)
+						{
+							alteredLnFs[i] = (LookAndFeelInfo)tempLnFs.elementAt(i);
 						}
 						UIManager.setInstalledLookAndFeels(alteredLnFs);
-						JAPModel.getInstance().removeLookAndFeelFile(ClassUtil.getClassDirectory(lnf));
+						JAPModel.getInstance().removeLookAndFeelFile(lnfFile);
 						updateUICombo();
 					}
 				}
@@ -369,10 +385,24 @@ final class JAPConfUI extends AbstractJAPConfModule
 				{
 					if (m_comboUI.getSelectedIndex() >= 0)
 					{
-						String lnfClass = UIManager.getInstalledLookAndFeels()[
+						String selectedLaFClass = UIManager.getInstalledLookAndFeels()[
 							m_comboUI.getSelectedIndex()].getClassName();
-						if (JAPModel.getInstance().getLookAndFeel().equals(lnfClass) ||
-							JAPModel.getInstance().isSystemLookAndFeel(lnfClass))
+						String currentLaFClass = JAPModel.getInstance().getLookAndFeel();
+						File currentLaFFile = null;
+						File selectedLaFFile = null;
+						try
+						{
+							currentLaFFile = ClassUtil.getClassDirectory(Class.forName(currentLaFClass));
+							selectedLaFFile = ClassUtil.getClassDirectory(Class.forName(selectedLaFClass));
+						}
+						catch (ClassNotFoundException ex)
+						{
+						}
+
+						if ((selectedLaFFile != null && currentLaFFile != null &&
+							 currentLaFFile.equals(selectedLaFFile)) ||
+							currentLaFClass.equals(selectedLaFClass) ||
+							JAPModel.getInstance().isSystemLookAndFeel(selectedLaFClass))
 						{
 							m_btnDeleteUI.setEnabled(false);
 						}
