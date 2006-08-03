@@ -1809,7 +1809,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			e.appendChild(SignatureVerifier.getInstance().toXmlElement(doc));
 
 			/* adding infoservice settings */
-			Element elemIS = InfoServiceHolder.getInstance().getSettingsAsXml(doc);
+			Element elemIS = InfoServiceHolder.getInstance().toXmlElement(doc);
 			XMLUtil.setAttribute(elemIS, XML_ALLOW_NON_ANONYMOUS_CONNECTION,
 								 JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed());
 			e.appendChild(elemIS);

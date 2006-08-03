@@ -82,6 +82,7 @@ public class PayAccount implements IXMLEncodable
 {
 	public static final String XML_ELEMENT_NAME = "Account";
 	private static final String XML_ATTR_ACTIVE = "active";
+	private static final String XML_BACKUP_DONE = "backupDone";
 
 	private static final String VERSION = "1.1";
 
@@ -103,6 +104,8 @@ public class PayAccount implements IXMLEncodable
 	private long m_currentBytes;
 
 	private Vector m_accountListeners = new Vector();
+
+	private boolean m_bBackupDone = false;
 
 	/**
 	 * internal value for spent bytes. Basically this is the same as spent in
@@ -152,7 +155,7 @@ public class PayAccount implements IXMLEncodable
 			throw new XMLParseException("PayAccount wrong XML format");
 		}
 		boolean bActive = XMLUtil.parseAttribute(elemRoot, XML_ATTR_ACTIVE, true);
-
+		m_bBackupDone = XMLUtil.parseAttribute(elemRoot, XML_BACKUP_DONE, false);
 
 		// fill vector with transfer certificates
 		m_transCerts = new Vector();
@@ -208,6 +211,8 @@ public class PayAccount implements IXMLEncodable
 			// import AccountCertificate XML Representation
 			elemTmp = m_accountCertificate.toXmlElement(a_doc);
 			elemRoot.appendChild(elemTmp);
+
+			XMLUtil.setAttribute(elemRoot, XML_BACKUP_DONE, m_bBackupDone);
 
 			// import Private Key XML Representation
 			if (m_encryptedPrivateKey != null)
@@ -329,6 +334,16 @@ public class PayAccount implements IXMLEncodable
 	public long getAccountNumber()
 	{
 		return m_accountCertificate.getAccountNumber();
+	}
+
+	public boolean isBackupDone()
+	{
+		return m_bBackupDone;
+	}
+
+	public void setBackupDone(boolean a_bDone)
+	{
+		m_bBackupDone = a_bDone;
 	}
 
 	/**

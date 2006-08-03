@@ -37,6 +37,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import anon.util.XMLUtil;
 import anon.util.Util;
+import anon.util.IXMLEncodable;
 import anon.infoservice.MixCascade;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -48,8 +49,15 @@ import logging.LogType;
  * InfoServiceHolderMessage, if the preferred InfoService or the InfoService management policy
  * were changed.
  */
-public class InfoServiceHolder extends Observable
+public class InfoServiceHolder extends Observable implements IXMLEncodable
 {
+	/**
+	 * Stores the name of the root node of the XML settings for this class.
+	 */
+	public static final String XML_ELEMENT_NAME = "InfoServiceManagement";
+	public static final int MAXIMUM_OF_ASKED_INFO_SERVICES = 5;
+	public static final int DEFAULT_OF_ASKED_INFO_SERVICES = 3;
+
 	/**
 	 * Function number for fetchInformation() - getMixCascades().
 	 */
@@ -107,12 +115,7 @@ public class InfoServiceHolder extends Observable
 
 	private static final int GET_CASCADEINFO = 12;
 
-	private static final int MAXIMUM_OF_ASKED_INFO_SERVICES = 3;
-
-	/**
-	 * Stores the name of the root node of the XML settings for this class.
-	 */
-	private static final String XML_SETTINGS_ROOT_NODE_NAME = "InfoServiceManagement";
+	private static final String XML_ATTR_ASKED_INFO_SERVICES = "askedInfoServices";
 
 	/**
 	 * Stores the instance of InfoServiceHolder (Singleton).
@@ -129,6 +132,8 @@ public class InfoServiceHolder extends Observable
 	 * set to false, only the preferred infoservice is used.
 	 */
 	private boolean m_changeInfoServices;
+
+	private int m_nrAskedInfoServices = DEFAULT_OF_ASKED_INFO_SERVICES;
 
 	/**
 	 * This creates a new instance of InfoServiceHolder. This is only used for setting some
@@ -167,7 +172,7 @@ public class InfoServiceHolder extends Observable
 	 */
 	public static String getXmlSettingsRootNodeName()
 	{
-		return XML_SETTINGS_ROOT_NODE_NAME;
+		return XML_ELEMENT_NAME;
 	}
 
 	/**
@@ -207,6 +212,27 @@ public class InfoServiceHolder extends Observable
 	public InfoServiceDBEntry getPreferredInfoService()
 	{
 		return m_preferredInfoService;
+	}
+
+	public int getNumberOFAskedInfoServices()
+	{
+		return m_nrAskedInfoServices;
+	}
+
+	public void setNumberOfAskedInfoServices(int a_nrAskedInfoServices)
+	{
+		if (a_nrAskedInfoServices < 1)
+		{
+			m_nrAskedInfoServices = 1;
+		}
+		else if (a_nrAskedInfoServices > MAXIMUM_OF_ASKED_INFO_SERVICES)
+		{
+			a_nrAskedInfoServices = MAXIMUM_OF_ASKED_INFO_SERVICES;
+		}
+		else
+		{
+			m_nrAskedInfoServices = a_nrAskedInfoServices;
+		}
 	}
 
 	/**
@@ -292,7 +318,7 @@ public class InfoServiceHolder extends Observable
 	private Object fetchInformation(int functionNumber, Vector arguments) throws Exception
 	{
 		InfoServiceDBEntry currentInfoService = null;
-		Random random = new Random();
+		Random random = new Random(System.currentTimeMillis());
 		int askInfoServices = 1;
 		currentInfoService = getPreferredInfoService();
 		Vector infoServiceList = null;
@@ -322,8 +348,8 @@ public class InfoServiceHolder extends Observable
 			}
 			else
 			{
-				// try up to three InfoServices
-				askInfoServices = MAXIMUM_OF_ASKED_INFO_SERVICES;
+				// try up to a certain maximum of InfoServices
+				askInfoServices = m_nrAskedInfoServices;
 			}
 		}
 
@@ -742,13 +768,14 @@ public class InfoServiceHolder extends Observable
 	 *
 	 * @return The settings of this instance of InfoServiceHolder as an XML node.
 	 */
-	public Element getSettingsAsXml(Document a_doc)
+	public Element toXmlElement(Document a_doc)
 	{
-		Element infoServiceManagementNode = a_doc.createElement(XML_SETTINGS_ROOT_NODE_NAME);
+		Element infoServiceManagementNode = a_doc.createElement(XML_ELEMENT_NAME);
 		Element infoServicesNode = InfoServiceDBEntry.toXmlElement(a_doc,
 			Database.getInstance(InfoServiceDBEntry.class));
 		Element preferredInfoServiceNode = a_doc.createElement("PreferredInfoService");
 		Element changeInfoServicesNode = a_doc.createElement("ChangeInfoServices");
+		XMLUtil.setAttribute(infoServiceManagementNode, XML_ATTR_ASKED_INFO_SERVICES, m_nrAskedInfoServices);
 		synchronized (this)
 		{
 			InfoServiceDBEntry preferredInfoService = getPreferredInfoService();
@@ -774,21 +801,24 @@ public class InfoServiceHolder extends Observable
 	 */
 	public void loadSettingsFromXml(Element a_infoServiceManagementNode) throws Exception
 	{
+		setNumberOfAskedInfoServices(XMLUtil.parseAttribute(
+			  a_infoServiceManagementNode, XML_ATTR_ASKED_INFO_SERVICES, DEFAULT_OF_ASKED_INFO_SERVICES));
+
 		/* parse the whole InfoServiceManagement node */
 		Element infoServicesNode = (Element) (XMLUtil.getFirstChildByName(a_infoServiceManagementNode,
 			"InfoServices"));
 		if (infoServicesNode == null)
 		{
-			throw (new Exception("InfoServiceHolder: loadSettingsFromXml: No InfoServices node found."));
+			throw (new Exception("No InfoServices node found."));
 		}
+
 		/* InfoServices node found -> load it into the database of known infoservices */
 		InfoServiceDBEntry.loadFromXml(infoServicesNode, Database.getInstance(InfoServiceDBEntry.class));
 		Element preferredInfoServiceNode = (Element) (XMLUtil.getFirstChildByName(a_infoServiceManagementNode,
 			"PreferredInfoService"));
 		if (preferredInfoServiceNode == null)
 		{
-			throw (new Exception(
-				"InfoServiceHolder: loadSettingsFromXml: No PreferredInfoService node found."));
+			throw (new Exception("No PreferredInfoService node found."));
 		}
 		Element infoServiceNode = (Element) (XMLUtil.getFirstChildByName(preferredInfoServiceNode,
 			"InfoService"));
@@ -802,7 +832,7 @@ public class InfoServiceHolder extends Observable
 			"ChangeInfoServices"));
 		if (changeInfoServicesNode == null)
 		{
-			throw (new Exception("InfoServiceHolder: loadSettingsFromXml: No ChangeInfoServices node found."));
+			throw (new Exception("No ChangeInfoServices node found."));
 		}
 		synchronized (this)
 		{

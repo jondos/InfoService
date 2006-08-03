@@ -152,7 +152,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private JLabel m_urlLabel;
 	private JLabel m_locationLabel;
 	private JLabel m_payLabel;
-	private JAPHtmlMultiLineLabel m_viewCertLabel;
+	private JLabel m_viewCertLabel;
+	private JLabel m_viewCertLabelValidity;
 
 	private JButton m_manualCascadeButton;
 	private JButton m_reloadCascadesButton;
@@ -285,7 +286,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.gridx = 0;
 		c.gridy = 0;
 		c.weightx = 0;
-		c.gridwidth = 2;
+		c.gridwidth = 3;
 		c.fill = GridBagConstraints.NONE;
 		c.anchor = GridBagConstraints.NORTHWEST;
 		c.insets = new Insets(5, 20, 5, 5);
@@ -295,12 +296,14 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.gridy = 1;
 		c.gridwidth = 1;
 		c.insets = new Insets(5, 30, 5, 5);
+		c.gridwidth = 1;
 		m_serverInfoPanel.add(l, c);
 
 		m_operatorLabel = new JLabel();
 		c.weightx = 1;
 		c.gridx = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 2;
 		m_serverInfoPanel.add(m_operatorLabel, c);
 
 		l = new JLabel(JAPMessages.getString(MSG_LABEL_EMAIL));
@@ -308,44 +311,58 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.gridy++;
 		c.weightx = 0;
 		c.insets = new Insets(5, 30, 5, 5);
+		c.gridwidth = 1;
 		m_serverInfoPanel.add(l, c);
 
 		m_emailLabel = new JLabel();
 		c.weightx = 1;
 		c.gridx = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridwidth = 2;
 		m_serverInfoPanel.add(m_emailLabel, c);
 
 		l = new JLabel(JAPMessages.getString("mixUrl"));
 		c.gridx = 0;
 		c.gridy++;
 		c.weightx = 0;
+		c.gridwidth = 1;
 		m_serverInfoPanel.add(l, c);
 
 		m_urlLabel = new JLabel();
 		m_urlLabel.addMouseListener(this);
 		c.gridx = 1;
+		c.gridwidth = 2;
 		m_serverInfoPanel.add(m_urlLabel, c);
 
 		l = new JLabel(JAPMessages.getString("mixLocation") + ":");
 		c.gridx = 0;
 		c.gridy++;
+		c.gridwidth = 1;
 		m_serverInfoPanel.add(l, c);
 
 		m_locationLabel = new JLabel();
 		m_locationLabel.addMouseListener(this);
 		c.gridx = 1;
+		c.gridwidth = 2;
 		m_serverInfoPanel.add(m_locationLabel, c);
 
 		l = new JLabel(JAPMessages.getString(MSG_LABEL_CERTIFICATE) + ":");
 		c.gridx = 0;
 		c.gridy++;
+		c.gridwidth = 1;
 		m_serverInfoPanel.add(l, c);
 
-		m_viewCertLabel = new JAPHtmlMultiLineLabel();
+		m_viewCertLabel = new JLabel();
 		m_viewCertLabel.addMouseListener(this);
 		c.gridx = 1;
+		c.gridwidth = 1;
+		c.insets = new Insets(5, 30, 5, 0);
 		m_serverInfoPanel.add(m_viewCertLabel, c);
+		m_viewCertLabelValidity = new JLabel();
+		m_viewCertLabelValidity.addMouseListener(this);
+		c.gridx = 2;
+		c.insets = new Insets(5, 0, 5, 5);
+		m_serverInfoPanel.add(m_viewCertLabelValidity, c);
 
 	}
 
@@ -690,16 +707,18 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}*/
 		if (m_serverCert != null && m_serverInfo != null)
 		{
-			m_viewCertLabel.setText(
-				URL_BEGIN + (isServerCertVerified() ? JAPMessages.getString(CertDetailsDialog.MSG_CERT_VERIFIED) + "," :
-				RED_BEGIN + JAPMessages.getString(CertDetailsDialog.MSG_CERT_NOT_VERIFIED) + "," + RED_END) +
-				(m_serverCert.getValidity().isValid(new Date()) ? " " +
-				 JAPMessages.getString(CertDetailsDialog.MSG_CERTVALID) : RED_BEGIN + " " +
-				 JAPMessages.getString(JAPMessages.getString(CertDetailsDialog.MSG_CERTNOTVALID)) + RED_END) +
-				URL_END);
+			m_viewCertLabel.setText((isServerCertVerified() ? JAPMessages.getString(CertDetailsDialog.MSG_CERT_VERIFIED) + "," :
+				JAPMessages.getString(CertDetailsDialog.MSG_CERT_NOT_VERIFIED) + ","));
+			m_viewCertLabel.setForeground(isServerCertVerified() ? Color.blue : Color.red);
+			m_viewCertLabelValidity.setText((m_serverCert.getValidity().isValid(new Date()) ? " " +
+				 JAPMessages.getString(CertDetailsDialog.MSG_CERTVALID) : " " +
+				 JAPMessages.getString(JAPMessages.getString(CertDetailsDialog.MSG_CERTNOTVALID))));
+			m_viewCertLabelValidity.setForeground(
+						 m_serverCert.getValidity().isValid(new Date()) ? Color.blue : Color.red);
 		}
 		else
 		{
+			m_viewCertLabelValidity.setText("");
 			m_viewCertLabel.setText("N/A");
 		}
 
@@ -1112,7 +1131,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				m_listMixCascade.repaint();
 			}
 		}
-		else if (e.getSource() == m_viewCertLabel)
+		else if (e.getSource() == m_viewCertLabel || e.getSource() == m_viewCertLabelValidity)
 		{
 			if (m_serverCert != null && m_serverInfo != null)
 			{
@@ -1164,6 +1183,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	{
 		if ( (e.getSource() == m_urlLabel && getUrlFromLabel( (JLabel) m_urlLabel) != null) ||
 			(e.getSource() == m_viewCertLabel && m_serverCert != null) ||
+			(e.getSource() == m_viewCertLabelValidity && m_serverCert != null) ||
 			(e.getSource() == m_locationLabel && m_locationCoordinates != null))
 		{
 			if (getRootPanel().getCursor() != null) // for JDK 1.1.8
@@ -1179,7 +1199,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	public void mouseExited(MouseEvent e)
 	{
 		if (e.getSource() == m_urlLabel || e.getSource() == m_viewCertLabel ||
-			e.getSource() == m_locationLabel)
+			e.getSource() == m_viewCertLabelValidity || e.getSource() == m_locationLabel)
 		{
 			if (getRootPanel().getCursor() != null) // for JDK 1.1.8
 			{
