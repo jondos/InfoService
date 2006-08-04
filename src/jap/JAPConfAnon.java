@@ -1186,29 +1186,17 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			(e.getSource() == m_viewCertLabelValidity && m_serverCert != null) ||
 			(e.getSource() == m_locationLabel && m_locationCoordinates != null))
 		{
-			if (getRootPanel().getCursor() != null) // for JDK 1.1.8
-			{
-				if (getRootPanel().getCursor().equals(Cursor.getDefaultCursor()))
-				{
-					this.getRootPanel().setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-				}
-			}
+
+			((JLabel)e.getSource()).setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		}
+		else if (e.getSource() instanceof JLabel)
+		{
+			((JLabel)e.getSource()).setCursor(Cursor.getDefaultCursor());
 		}
 	}
 
 	public void mouseExited(MouseEvent e)
 	{
-		if (e.getSource() == m_urlLabel || e.getSource() == m_viewCertLabel ||
-			e.getSource() == m_viewCertLabelValidity || e.getSource() == m_locationLabel)
-		{
-			if (getRootPanel().getCursor() != null) // for JDK 1.1.8
-			{
-				if (getRootPanel().getCursor().equals(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
-				{
-					getRootPanel().setCursor(Cursor.getDefaultCursor());
-				}
-			}
-		}
 	}
 
 	protected void onRootPanelShown()

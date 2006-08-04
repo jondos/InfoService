@@ -2932,7 +2932,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 
 		LogHolder.log(LogLevel.NOTICE, LogType.MISC,
-					  "Checking if update new " + versionType + " version of JAP is needed...");
+					  "Checking if update new " + versionType + " version of JAP is available...");
 
 		JAPVersionInfo vi = null;
 		String updateVersionNumber = null;
@@ -2950,6 +2950,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				vi = InfoServiceHolder.getInstance().getJAPVersionInfo(JAPVersionInfo.JAP_RELEASE_VERSION);
 			}
 		}
+		Database.getInstance(JAPVersionInfo.class).update(vi);
 
 		if (a_bForced)
 		{
@@ -2969,8 +2970,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 				return 0;
 			}
 		}
-
-
 
 		if (updateVersionNumber != null)
 		{
