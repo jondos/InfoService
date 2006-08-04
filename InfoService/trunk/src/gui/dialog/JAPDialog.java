@@ -80,6 +80,7 @@ import gui.JAPMessages;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.awt.Cursor;
 
 /**
  * This is the generic implementation for an optionally modal, resizable a dialog. Use the getRootPane()
@@ -1406,6 +1407,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 				textPane.setMargin(new java.awt.Insets(0,0,0,0));
 				textPane.setBorder(javax.swing.BorderFactory.createEmptyBorder(0,0,1,0));
 				textPane.setForeground(java.awt.Color.blue);
+				textPane.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 				linkLabel = textPane;
 				linkLabel.addMouseListener(new LinkedInformationClickListener(a_linkedInformation));
 			}
@@ -1424,6 +1426,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 				linkLabel = new JAPHtmlMultiLineLabel(JAPHtmlMultiLineLabel.TAG_A_OPEN +
 					strLinkedInformation + JAPHtmlMultiLineLabel.TAG_A_CLOSE);
 				linkLabel.addMouseListener(new LinkedInformationClickListener(a_linkedInformation));
+				linkLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 			}
 
 			dummyBox.add(linkLabel);

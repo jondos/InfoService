@@ -114,6 +114,7 @@ import logging.LogLevel;
 import logging.LogType;
 import javax.swing.UIManager;
 import javax.swing.JScrollPane;
+import java.awt.Cursor;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -433,16 +434,30 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		c.gridwidth = 2;
 		c.weightx = 1.0;
 		m_lblInactiveMessage = new JLabel();
+		m_lblInactiveMessage.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		m_lblInactiveMessage.setForeground(Color.red);
+		m_lblInactiveMessage.addMouseListener(new MouseAdapter()
+		{
+			public void mouseClicked(MouseEvent a_event)
+			{
+				m_btnActivate.doClick();
+			}
+		});
+
 		rootPanel.add(m_lblInactiveMessage, c);
 
 		c.gridy++;
 		m_lblNoBackupMessage = new JLabel();
-		rootPanel.add(m_lblNoBackupMessage, c);
+		m_lblNoBackupMessage.addMouseListener(new MouseAdapter()
+		{
+			public void mouseClicked(MouseEvent a_event)
+			{
+				m_btnExportAccount.doClick();
+			}
+		});
+		m_lblNoBackupMessage.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		m_lblNoBackupMessage.setForeground(Color.red);
-
-
-
+		rootPanel.add(m_lblNoBackupMessage, c);
 
 
 		c.gridy++;
@@ -1692,10 +1707,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			p.updateDialog();
 			d.pack();
 			d.setVisible(true);
-			if (p.getButtonValue() != PasswordContentPane.RETURN_VALUE_CANCEL &&
-				p.getButtonValue() != PasswordContentPane.RETURN_VALUE_CLOSED)
+			if (p.getButtonValue() == PasswordContentPane.RETURN_VALUE_OK)
 			{
-
 				if (exportAccount(selectedAccount, this.getRootPanel(), new String(p.getPassword())))
 				{
 					selectedAccount.setBackupDone(true);

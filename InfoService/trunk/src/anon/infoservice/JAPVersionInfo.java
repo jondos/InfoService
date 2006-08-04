@@ -163,7 +163,7 @@ public class JAPVersionInfo extends AbstractDatabaseEntry implements IDistributa
    * @return The ID of this version info.
    */
   public String getId() {
-    String versionInfoId = "/japRelease.jnlp";
+    String versionInfoId = ID_RELEASE;
     if (m_versionInfoType == JAP_DEVELOPMENT_VERSION) {
       versionInfoId = ID_DEVELOPMENT;
     }

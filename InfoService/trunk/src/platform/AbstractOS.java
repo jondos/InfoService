@@ -27,10 +27,13 @@
  */
 package platform;
 
+import java.net.URL;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import gui.JAPHelp.IExternalURLCaller;
+import gui.dialog.JAPDialog;
 
 /**
  * This abstract class provides access to OS-specific implementations of certain
@@ -75,6 +78,44 @@ public abstract class AbstractOS implements IExternalURLCaller
 		}
 
 		return ms_operatingSystem;
+	}
+
+	public JAPDialog.ILinkedInformation createURLLink(final URL a_url, final String a_optionalText)
+	{
+		if (a_url == null)
+		{
+			return null;
+		}
+
+		JAPDialog.ILinkedInformation link = new JAPDialog.ILinkedInformation()
+		{
+			public boolean  isApplicationModalityForced()
+			{
+				return false;
+			}
+			public int getType()
+			{
+				return JAPDialog.ILinkedInformation.TYPE_LINK;
+			}
+			public void clicked(boolean a_bState)
+			{
+				openURL(a_url);
+			}
+			public String getMessage()
+			{
+				if (a_optionalText == null || a_optionalText.trim().length() == 0)
+				{
+					return a_url.toString();
+				}
+				else
+				{
+					return a_optionalText;
+				}
+			}
+	};
+
+
+		return link;
 	}
 
 	/**

@@ -32,6 +32,8 @@ import java.util.Enumeration;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
+import java.net.URL;
+import java.net.MalformedURLException;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -101,6 +103,8 @@ import anon.infoservice.DatabaseMessage;
 import platform.AbstractOS;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
+import anon.infoservice.JAPVersionInfo;
+import update.JAPUpdateWizard;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver, Observer, PropertyChangeListener
@@ -108,10 +112,34 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String MSG_SERVICE_NAME = JAPNewView.class.getName() + "_ngAnonymisierungsdienst";
 	private static final String MSG_ERROR_DISCONNECTED = JAPNewView.class.getName() + "_errorDisconnected";
 	private static final String MSG_ERROR_PROXY = JAPNewView.class.getName() + "_errorProxy";
+	private static final String MSG_UPDATE = JAPNewView.class.getName() + "_update";
+	private static final String MSG_TITLE_OLD_JAVA = JAPNewView.class.getName() + "_titleOldJava";
+	private static final String MSG_OLD_JAVA = JAPNewView.class.getName() + "_oldJava";
+
+	/** @todo fetch latest Java version automatically, store value in database and update view automatically*/
+	private static final String LATEST_SUN_JAVA = "1.5.0_07";
+	private static final String JAVA_VENDOR = System.getProperty("java.vendor");
+	private static final String JAVA_VERSION = System.getProperty("java.version");
+	private static final URL SUN_JAVA_URL;
+
+	static
+	{
+		URL url = null;
+		try
+		{
+			url = new URL("http://java.sun.com");
+		}
+		catch (MalformedURLException a_e)
+		{
+		}
+		SUN_JAVA_URL = url;
+	}
 
 	//private JLabel meterLabel;
 	private JLabel m_labelCascadeName;
 	private JLabel m_labelVersion;
+	private JLabel m_labelUpdate;
+	private JPanel m_pnlVersion;
 	private JPanel m_panelMain;
 	private JButton m_bttnHelp, m_bttnQuit, m_bttnIconify, m_bttnConf;
 	//private JButton m_bttnAnonConf;
@@ -172,7 +200,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JProgressBar m_progForwarderActivity;
 	private JProgressBar m_progForwarderActivitySmall;
 
-
 	private long m_lTrafficWWW, m_lTrafficOther;
 
 	private boolean m_bIsSimpleView;
@@ -222,6 +249,53 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.fill = GridBagConstraints.NONE;
 		c.weighty = 1;
 		northPanel.add(northLabel, c);
+
+		m_pnlVersion = new JPanel(new GridBagLayout());
+		GridBagConstraints constrVersion = new GridBagConstraints();
+		constrVersion.anchor = GridBagConstraints.SOUTHEAST;
+		constrVersion.insets = new Insets(0, 0, 0, 10);
+		constrVersion.gridx = 0;
+		constrVersion.gridy = 0;
+		m_labelUpdate = new JLabel(">>" + JAPMessages.getString(MSG_UPDATE) + "<<");
+		m_labelUpdate.setForeground(Color.blue);
+		m_labelUpdate.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		final JAPNewView view = this;
+		m_labelUpdate.addMouseListener(new MouseAdapter()
+		{
+			public void mouseClicked(MouseEvent e)
+			{
+				Enumeration entries =
+					Database.getInstance(JAPVersionInfo.class).getEntrySnapshotAsEnumeration();
+				if (entries.hasMoreElements())
+				{
+					JAPUpdateWizard wz = new JAPUpdateWizard( (JAPVersionInfo) entries.nextElement());
+					/* we got the JAPVersionInfo from the infoservice */
+					/* Assumption: If we are here, the download failed for some resaons, otherwise the
+					 * program would quit
+					 */
+					//TODO: Do this in a better way!!
+					if (wz.getStatus() != JAPUpdateWizard.UPDATESTATUS_SUCCESS)
+					{
+						/* Download failed -> alert, and reset anon mode to false */
+						LogHolder.log(LogLevel.ERR, LogType.MISC, "Some update problem.");
+						JAPDialog.showErrorDialog(view,
+												  JAPMessages.getString("downloadFailed") +
+												  JAPMessages.getString("infoURL"), LogType.MISC);
+					}
+				}
+				else if (isJavaTooOld())
+				{
+					Object[] args = new Object[2];
+					args[0] = JAVA_VERSION + ", " + JAVA_VENDOR;
+					args[1] = LATEST_SUN_JAVA + ", " + "Sun Microsystems Inc.";
+					JAPDialog.showMessageDialog(view, JAPMessages.getString(MSG_OLD_JAVA, args),
+												JAPMessages.getString(MSG_TITLE_OLD_JAVA),
+												AbstractOS.getInstance().createURLLink(SUN_JAVA_URL, null));
+				}
+			}
+		});
+		m_pnlVersion.add(m_labelUpdate, constrVersion);
+
 		c.gridx = 1;
 		c.anchor = GridBagConstraints.SOUTHEAST;
 		c.weighty = 0;
@@ -236,7 +310,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			}
 		});
 		c.insets = new Insets(0, 0, 0, 10);
-		northPanel.add(m_labelVersion, c);
+		//northPanel.add(m_labelVersion, c);
+		constrVersion.gridx++;
+		constrVersion.insets = new Insets(0, 0, 0, 0);
+		m_pnlVersion.add(m_labelVersion, constrVersion);
+		northPanel.add(m_pnlVersion, c);
+
 
 		c.gridwidth = 2;
 		c.gridx = 0;
@@ -812,10 +891,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 
 		Database.getInstance(StatusInfo.class).addObserver(this);
+		Database.getInstance(JAPVersionInfo.class).addObserver(this);
 		JAPModel.getInstance().addObserver(this);
 
 		JAPHelp.init(this, AbstractOS.getInstance());
-		final JAPNewView view = this;
 		new Thread()
 		{
 			public void run()
@@ -849,6 +928,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		Font labelFont = new JLabel().getFont();
 
 		m_labelVersion.setFont(new Font(labelFont.getName(), labelFont.getStyle(),
+										((int)(labelFont.getSize() * 0.8))));
+		m_labelUpdate.setFont(new Font(labelFont.getName(), labelFont.getStyle(),
 										((int)(labelFont.getSize() * 0.8))));
 		Runnable run = new Runnable()
 		{
@@ -1342,6 +1423,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				valuesChanged(false);
 			}
 		}
+		else if (a_observable == Database.getInstance(JAPVersionInfo.class))
+		{
+			valuesChanged(false);
+		}
 		else if (a_message instanceof JAPModel.FontResize && a_message != null)
 		{
 			final JAPNewView view = this;
@@ -1616,6 +1701,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	{
 		synchronized (m_runnableValueUpdate)
 		{
+			m_labelUpdate.setVisible(
+						 (Database.getInstance(JAPVersionInfo.class).getNumberofEntries() > 0) ||
+						 isJavaTooOld());
+
 			MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
 			//String strCascadeName = currentMixCascade.getName();
 			Vector v = Database.getInstance(MixCascade.class).getEntryList();
@@ -1881,5 +1970,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		Thread t = new Thread(doFetchMixCascades, "DoFetchMixCascades");
 		t.setDaemon(true);
 		t.start();
+	}
+
+	private boolean isJavaTooOld()
+	{
+		return (JAVA_VENDOR != null && (JAVA_VENDOR.toLowerCase().indexOf("microsoft") >= 0 ||
+												 (JAVA_VENDOR.toLowerCase().indexOf("sun") >= 0 &&
+												  JAVA_VERSION != null &&
+												  JAVA_VERSION.compareTo(LATEST_SUN_JAVA) < 0)));
 	}
 }
