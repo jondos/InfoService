@@ -61,6 +61,7 @@ import logging.LogType;
 public class JAP
 {
 	private static final String MSG_ERROR_NEED_NEWER_JAVA = "errorNeedNewerJava";
+	private static final String MSG_GNU_NOT_COMPATIBLE = JAP.class.getName() +  "_gnuNotCompatible";
 
 	// um pay funktionalitaet ein oder auszuschalten
 	private boolean bConsoleOnly = false;
@@ -91,9 +92,18 @@ public class JAP
 		String vendor = System.getProperty("java.vendor");
 		String os = System.getProperty("os.name");
 		String mrjVersion = System.getProperty("mrj.version");
+
+		if (isArgumentSet("-version"))
+		{
+			System.out.println("JAP version: " + JAPConstants.aktVersion + "\n" +
+							   "Java Vendor: " + vendor + "\n" +
+							   "Java Version: " + javaVersion +"\n");
+			System.exit(0);
+		}
+
 		if (!JAPConstants.m_bReleasedVersion)
 		{
-			System.out.println("Starting up JAP. (" + javaVersion + "/" + vendor + "/" + os + "/" +
+			System.out.println("Starting up JAP version " + JAPConstants.aktVersion +". (" + javaVersion + "/" + vendor + "/" + os + "/" +
 							   mrjVersion +
 							   ")");
 		}
@@ -104,12 +114,17 @@ public class JAP
 			System.out.println(msg + javaVersion);
 			System.exit(0);
 		}
-		if (isArgumentSet("-version"))
+
+		if (isArgumentSet("-help") || isArgumentSet("--help") || isArgumentSet("-h"))
 		{
-			System.out.println("JAP version: " + JAPConstants.aktVersion);
+			System.out.println("Usage:");
+			System.out.println("-help, -_help, -h:  Show this text.");
+			System.out.println("-console:           Start JAP in console-only mode.");
+			System.out.println("-minimized:         Minimize JAP onb startup.");
+			System.out.println("-version:           Print version information.");
+			System.out.println("-config {Filename}: Force JAP to use a specific configuration file.");
 			System.exit(0);
 		}
-
 
 		if (isArgumentSet("-console"))
 		{
@@ -140,6 +155,12 @@ public class JAP
 				}
 				System.exit(0);
 			}
+		}
+		else if (vendor.toUpperCase().indexOf("FREE SOFTWARE FOUNDATION") >= 0)
+		{
+			// latest version reported not to run: 1.4.2, Free Software Foundation Inc.
+			System.out.println("\n" + JAPMessages.getString(MSG_GNU_NOT_COMPATIBLE) + "\n");
+			//System.exit(0);
 		}
 		else
 		{
@@ -431,10 +452,31 @@ public class JAP
 		try
 			{
 				String entered = null;
-				while (entered == null || !entered.equals("exit"))
+				while (true)
 				{
-					System.out.println("Type 'exit' to quit.");
+					System.out.println("Type 'exit' to quit or 'save' to save the configuration.");
 					entered = new java.io.BufferedReader(new java.io.InputStreamReader(System.in)).readLine();
+					if (entered == null)
+					{
+						continue;
+					}
+					if (entered.equals("exit"))
+					{
+						break;
+					}
+					if (entered.equals("save"))
+					{
+						System.out.println("Saving configuration...");
+						if (!m_controller.saveConfigFile())
+						{
+							System.out.println("Configuration saved!");
+						}
+						else
+						{
+							System.out.println("Error while saving configuration!");
+						}
+					}
+
 				}
 				m_controller.goodBye(true);
 			}
