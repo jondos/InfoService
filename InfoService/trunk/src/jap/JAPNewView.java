@@ -264,6 +264,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			public void mouseClicked(MouseEvent e)
 			{
+				boolean bUpdated = false;
 				Enumeration entries =
 					Database.getInstance(JAPVersionInfo.class).getEntrySnapshotAsEnumeration();
 				if (entries.hasMoreElements())
@@ -286,9 +287,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 								JAPMessages.getString("downloadFailed") +
 								JAPMessages.getString("infoURL"), LogType.MISC);
 						}
+						else
+						{
+							bUpdated = true;
+						}
 					}
 				}
-				else if (isJavaTooOld())
+
+				if (!bUpdated && isJavaTooOld())
 				{
 					Object[] args = new Object[2];
 					args[0] = JAVA_VERSION + ", " + JAVA_VENDOR;
