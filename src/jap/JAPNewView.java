@@ -268,19 +268,24 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					Database.getInstance(JAPVersionInfo.class).getEntrySnapshotAsEnumeration();
 				if (entries.hasMoreElements())
 				{
-					JAPUpdateWizard wz = new JAPUpdateWizard( (JAPVersionInfo) entries.nextElement());
-					/* we got the JAPVersionInfo from the infoservice */
-					/* Assumption: If we are here, the download failed for some resaons, otherwise the
-					 * program would quit
-					 */
-					//TODO: Do this in a better way!!
-					if (wz.getStatus() != JAPUpdateWizard.UPDATESTATUS_SUCCESS)
+					JAPVersionInfo vi =  (JAPVersionInfo) entries.nextElement();
+					if (vi != null && vi.getJapVersion() != null &&
+						vi.getJapVersion().compareTo(JAPConstants.aktVersion) > 0)
 					{
-						/* Download failed -> alert, and reset anon mode to false */
-						LogHolder.log(LogLevel.ERR, LogType.MISC, "Some update problem.");
-						JAPDialog.showErrorDialog(view,
-												  JAPMessages.getString("downloadFailed") +
-												  JAPMessages.getString("infoURL"), LogType.MISC);
+						JAPUpdateWizard wz = new JAPUpdateWizard(vi);
+						/* we got the JAPVersionInfo from the infoservice */
+						/* Assumption: If we are here, the download failed for some resaons, otherwise the
+						 * program would quit
+						 */
+						//TODO: Do this in a better way!!
+						if (wz.getStatus() != JAPUpdateWizard.UPDATESTATUS_SUCCESS)
+						{
+							/* Download failed -> alert, and reset anon mode to false */
+							LogHolder.log(LogLevel.ERR, LogType.MISC, "Some update problem.");
+							JAPDialog.showErrorDialog(view,
+								JAPMessages.getString("downloadFailed") +
+								JAPMessages.getString("infoURL"), LogType.MISC);
+						}
 					}
 				}
 				else if (isJavaTooOld())
@@ -1701,9 +1706,18 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	{
 		synchronized (m_runnableValueUpdate)
 		{
-			m_labelUpdate.setVisible(
-						 (Database.getInstance(JAPVersionInfo.class).getNumberofEntries() > 0) ||
-						 isJavaTooOld());
+			Enumeration entries =
+				Database.getInstance(JAPVersionInfo.class).getEntrySnapshotAsEnumeration();
+
+			JAPVersionInfo vi = null;
+			if (entries.hasMoreElements())
+			{
+				vi = (JAPVersionInfo) entries.nextElement();
+			}
+
+			m_labelUpdate.setVisible((vi != null && vi.getJapVersion() != null &&
+									  vi.getJapVersion().compareTo(JAPConstants.aktVersion) > 0) ||
+									 isJavaTooOld());
 
 			MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
 			//String strCascadeName = currentMixCascade.getName();

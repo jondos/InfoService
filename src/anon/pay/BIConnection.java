@@ -164,7 +164,7 @@ public class BIConnection implements ICaptchaSender
 								  ":" + a_proxy.getPort());
 					tls = new TinyTLS(li.getHost(), li.getPort(), a_proxy);
 				}
-				tls.setSoTimeout(60000);
+				tls.setSoTimeout(120000);
 				tls.setRootKey(m_theBI.getCertificate().getPublicKey());
 				tls.startHandshake();
 				m_socket = tls;
