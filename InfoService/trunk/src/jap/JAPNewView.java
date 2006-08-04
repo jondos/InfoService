@@ -278,7 +278,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						 * program would quit
 						 */
 						//TODO: Do this in a better way!!
-						if (wz.getStatus() != JAPUpdateWizard.UPDATESTATUS_SUCCESS)
+						if (wz.getStatus() == JAPUpdateWizard.UPDATESTATUS_ERROR)
 						{
 							/* Download failed -> alert, and reset anon mode to false */
 							LogHolder.log(LogLevel.ERR, LogType.MISC, "Some update problem.");
