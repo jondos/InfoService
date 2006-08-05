@@ -91,6 +91,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 	private static final String MSG_VIEW_CERT = JAPConfInfoService.class.getName() + "_viewCert";
 	private static final String MSG_REALLY_DELETE = JAPConfInfoService.class.getName() + "_reallyDelete";
 	private static final String MSG_USE_MORE_IS = JAPConfInfoService.class.getName() + "_useMoreIS";
+	private static final String MSG_EXPLANATION = JAPConfInfoService.class.getName() + "_explanation";
 
 
 	/**
@@ -117,6 +118,8 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 	private JCheckBox m_cbxUseDefaultISOnly;
 	private JSlider m_sliderAskedInfoServices;
 	private JLabel m_lblSlider;
+	private JAPHtmlMultiLineLabel m_lblExplanation;
+	private JAPHtmlMultiLineLabel m_settingsInfoServiceConfigBasicSettingsDescriptionLabel;
 
 	private boolean mb_newInfoService = true;
 
@@ -967,7 +970,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		configPanelLayout.setConstraints(buttonPanel, configPanelConstraints);
 		configPanel.add(buttonPanel);
 
-		JAPHtmlMultiLineLabel settingsInfoServiceConfigBasicSettingsDescriptionLabel = new
+		m_settingsInfoServiceConfigBasicSettingsDescriptionLabel = new
 			JAPHtmlMultiLineLabel(JAPMessages.getString(
 				"settingsInfoServiceConfigBasicSettingsDescriptionLabel"));
 
@@ -983,9 +986,9 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		descriptionPanelConstraints.gridy = 0;
 		descriptionPanelConstraints.weightx = 1.0;
 		descriptionPanelConstraints.insets = new Insets(10, 10, 10, 5);
-		descriptionPanelLayout.setConstraints(settingsInfoServiceConfigBasicSettingsDescriptionLabel,
+		descriptionPanelLayout.setConstraints(m_settingsInfoServiceConfigBasicSettingsDescriptionLabel,
 											  descriptionPanelConstraints);
-		descriptionPanel.add(settingsInfoServiceConfigBasicSettingsDescriptionLabel);
+		descriptionPanel.add(m_settingsInfoServiceConfigBasicSettingsDescriptionLabel);
 
 		addInfoServiceHostField = new JTextField(20);
 		//addInfoServiceHostField.setFont(getFontSetting());
@@ -1375,8 +1378,14 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		advancedPanelConstraints.gridy++;
 		advancedPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
 		advancedPanelConstraints.weightx = 1.0;
-		advancedPanelConstraints.weighty = 1.0;
 		advancedPanel.add(m_sliderAskedInfoServices, advancedPanelConstraints);
+
+		m_lblExplanation = new JAPHtmlMultiLineLabel(JAPMessages.getString(
+			  MSG_EXPLANATION, new Object[]{new Integer(InfoServiceHolder.DEFAULT_OF_ASKED_INFO_SERVICES)}));
+		advancedPanelConstraints.weightx = 0.0;
+		advancedPanelConstraints.weighty = 1.0;
+		advancedPanelConstraints.gridy++;
+		advancedPanel.add(m_lblExplanation, advancedPanelConstraints);
 
 
 		return advancedPanel;
@@ -1400,6 +1409,8 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 												 getPreferredInfoService(), true);
 		m_sliderAskedInfoServices.setEnabled(InfoServiceHolder.getInstance().isChangeInfoServices());
 		m_lblSlider.setEnabled(InfoServiceHolder.getInstance().isChangeInfoServices());
+		m_lblExplanation.setFont(new JLabel().getFont());
+		m_settingsInfoServiceConfigBasicSettingsDescriptionLabel.setFont(new JLabel().getFont());
 	}
 
 	protected void onRootPanelShown()

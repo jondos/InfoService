@@ -40,6 +40,7 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
+import javax.swing.JLabel;
 import javax.swing.JSeparator;
 import javax.swing.WindowConstants;
 import javax.swing.border.TitledBorder;
@@ -60,6 +61,8 @@ import logging.LogType;
  */
 public class JAPConfForwardingClient extends AbstractJAPConfModule
 {
+	private JAPHtmlMultiLineLabel m_descLabel;
+
 
 	/**
 	 * This is the internal message system of this module.
@@ -280,11 +283,11 @@ public class JAPConfForwardingClient extends AbstractJAPConfModule
 		clientPanel.add(new JSeparator(), clientPanelConstraints);
 		clientPanelConstraints.gridy++;
 		clientPanelConstraints.weighty = 1.0;
-		JAPHtmlMultiLineLabel descLabel =
+		m_descLabel =
 			new JAPHtmlMultiLineLabel(JAPMessages.getString("forwardingClientDesc"));
-		descLabel.setFont(new Font(descLabel.getFont().getName(),
-								   descLabel.getFont().getStyle(), (int)(descLabel.getFont().getSize() + 0.8)));
-		clientPanel.add(descLabel, clientPanelConstraints);
+		m_descLabel.setFont(new Font(m_descLabel.getFont().getName(),
+								   m_descLabel.getFont().getStyle(), (int)(m_descLabel.getFont().getSize() + 0.8)));
+		clientPanel.add(m_descLabel, clientPanelConstraints);
 		return clientPanel;
 	}
 
@@ -373,6 +376,11 @@ public class JAPConfForwardingClient extends AbstractJAPConfModule
 
 		confirmDialog.pack();
 		confirmDialog.setVisible(true);
+	}
+
+	protected void onUpdateValues()
+	{
+		m_descLabel.setFont(new JLabel().getFont());
 	}
 
 	protected void onRootPanelShown()
