@@ -80,6 +80,9 @@ import gui.JAPHelp;
 import gui.GUIUtils;
 import gui.dialog.JAPDialog;
 import javax.swing.JSlider;
+import javax.swing.event.ChangeListener;
+import java.util.Dictionary;
+import javax.swing.event.ChangeEvent;
 
 /**
  * This is the configuration GUI for the infoservice.
@@ -1256,6 +1259,11 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 					m_cbxUseDefaultISOnly.isSelected());
 				m_sliderAskedInfoServices.setEnabled(!m_cbxUseDefaultISOnly.isSelected());
 				m_lblSlider.setEnabled(!m_cbxUseDefaultISOnly.isSelected());
+				Dictionary d = m_sliderAskedInfoServices.getLabelTable();
+				for (int i = 1; i <= InfoServiceHolder.MAXIMUM_OF_ASKED_INFO_SERVICES; i++)
+				{
+					( (JLabel) d.get(new Integer(i))).setEnabled(m_sliderAskedInfoServices.isEnabled());
+				}
 			}
 		});
 
@@ -1375,6 +1383,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		m_sliderAskedInfoServices.setPaintLabels(true);
 		m_sliderAskedInfoServices.setPaintTicks(true);
 		m_sliderAskedInfoServices.setSnapToTicks(true);
+
 		advancedPanelConstraints.gridy++;
 		advancedPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
 		advancedPanelConstraints.weightx = 1.0;
@@ -1409,6 +1418,13 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 												 getPreferredInfoService(), true);
 		m_sliderAskedInfoServices.setEnabled(InfoServiceHolder.getInstance().isChangeInfoServices());
 		m_lblSlider.setEnabled(InfoServiceHolder.getInstance().isChangeInfoServices());
+		Dictionary d = m_sliderAskedInfoServices.getLabelTable();
+		for (int i = 1; i <= InfoServiceHolder.MAXIMUM_OF_ASKED_INFO_SERVICES; i++)
+		{
+			( (JLabel) d.get(new Integer(i))).setEnabled(m_sliderAskedInfoServices.isEnabled());
+		}
+
+
 		m_lblExplanation.setFont(new JLabel().getFont());
 		m_settingsInfoServiceConfigBasicSettingsDescriptionLabel.setFont(new JLabel().getFont());
 	}
