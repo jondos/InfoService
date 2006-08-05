@@ -46,6 +46,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
+import java.awt.Cursor;
 
 /**
  * Class for painting a mix cascade in the configuration dialog
@@ -100,6 +101,7 @@ final public class ServerListPanel extends JPanel implements ActionListener
 			mix.setRolloverEnabled(true);
 			mix.setRolloverIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_SERVER_BLAU, true));
 			mix.setSelectedIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_SERVER_ROT, true));
+			mix.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 			if (i == selectedIndex)
 			{
 				m_selectedIndex = i;
