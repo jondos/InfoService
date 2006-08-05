@@ -599,12 +599,14 @@ public class PaymentMainPanel extends FlippingPanel implements PropertyChangeLis
 		m_labelTotalSpentHeader.setText(JAPMessages.getString(MSG_TOTALSPENT));
 		m_labelSessionSpentHeader.setText(JAPMessages.getString(MSG_SESSIONSPENT));
 		m_dateLabel.setText(JAPMessages.getString(MSG_LASTUPDATE));
-		Timestamp t = new Timestamp(System.currentTimeMillis());
-		if (PayAccountsFile.getInstance().getNumAccounts() > 0)
-		{
-			t = PayAccountsFile.getInstance().getActiveAccount().getBalance().getTimestamp();
-		}
 
-		m_lastUpdateLabel.setText(JAPUtil.formatTimestamp(t, true, JAPController.getInstance().getLocale().getLanguage()));
+		PayAccount activeAccount = PayAccountsFile.getInstance().getActiveAccount();
+		if (activeAccount != null)
+		{
+			Timestamp t = PayAccountsFile.getInstance().getActiveAccount().getBalance().getTimestamp();
+			m_lastUpdateLabel.setText(
+							JAPUtil.formatTimestamp(
+				t, true, JAPController.getInstance().getLocale().getLanguage()));
+		}
 	}
 }

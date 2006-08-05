@@ -1503,32 +1503,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 
 			pathToJava = System.getProperty("com.ms.sysdir") + File.separator;
-			javaExe = "jview";
-			if (new File(pathToJava + javaExe).exists())
-			{
-				javaExe += " /cp";
-			}
-			else
-			{
-				javaExe = null;
-			}
+			javaExe = "jview /cp";
 		}
-	    if (javaExe == null)
+		else
 		{
 			pathToJava = System.getProperty("java.home") + File.separator + "bin" + File.separator;
-			javaExe = "javaw"; // for windows
-			/*if (!new File(pathToJava + javaExe).exists())  // does not work on JDK 1.3.x
-			{
-				javaExe = "java";
-			}*/
-			javaExe += " -cp";
-
+			javaExe = "javaw -cp"; // for windows
 		}
 		strRestartCommand = pathToJava + javaExe + " \"" + ClassUtil.getClassPath().trim() + "\" JAP";
-		/*
-		else { //try to start java
-			strRestartCommand = "java -cp " + ClassUtil.getClassPath().trim() + " JAP";
-		}*/
 
 		LogHolder.log(LogLevel.INFO, LogType.ALL, "JAP restart command: " + strRestartCommand);
 
@@ -1538,7 +1520,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 		catch (Exception ex)
 		{
-			javaExe = "java -cp";
+			javaExe = "java -cp"; // Linux/UNIX
 			strRestartCommand = pathToJava + javaExe + " \"" + ClassUtil.getClassPath().trim() + "\" JAP";
 			try
 			{
