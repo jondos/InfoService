@@ -155,7 +155,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JAPConf m_dlgConfig;
 	private Object LOCK_CONFIG = new Object();
 	private Window m_ViewIconified;
-	private NumberFormat m_NumberFormat;
 	private boolean m_bIsIconified;
 	//private final static boolean PROGRESSBARBORDER = true;
 	//private GuthabenAnzeige guthaben;
@@ -208,7 +207,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	{
 		super(s, a_controller);
 		m_bIsSimpleView = (JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED);
-		m_NumberFormat = NumberFormat.getInstance();
 		m_Controller = JAPController.getInstance();
 		m_dlgConfig = null; //new JAPConf(this);
 		m_bIsIconified = false;
@@ -1354,7 +1352,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			((PaymentMainPanel)m_flippingPanelPayment).localeChanged();
 		}
-		m_NumberFormat = NumberFormat.getInstance();
 		Dimension d = super.getPreferredSize();
 		m_iPreferredWidth = Math.max(d.width, Math.max(m_flippingpanelOwnTraffic.getPreferredSize().width,
 			Math.max(
@@ -1401,8 +1398,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	/**Anon Level is >=0 amd <=5. If -1 no measure is available*/
 	private ImageIcon getMeterImage(int iAnonLevel)
 	{
-		if (m_Controller.getAnonMode() && m_Controller.isAnonConnected())
+		boolean bAnonMode = m_Controller.getAnonMode();
+		boolean bConnected = m_Controller.isAnonConnected();
+		boolean bConnectionErrorShown = m_bConnectionErrorShown;
+		//System.out.println(bAnonMode + ":" + bConnected + ":" + bConnectionErrorShown);
+
+		if (bAnonMode && bConnected)
 		{
+			//System.out.println("anon level");
 			if (iAnonLevel >= 0 && iAnonLevel < 6)
 			{
 				return meterIcons[iAnonLevel + 2];
@@ -1412,12 +1415,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				return meterIcons[1]; //No measure available
 			}
 		}
-		else if (m_Controller.getAnonMode() && !m_Controller.isAnonConnected() && m_bConnectionErrorShown)
+		else if (bAnonMode && !bConnected && bConnectionErrorShown)
 		{
+			//System.out.println("connection lost");
 			return meterIcons[8]; // connection lost
 		}
 		else
 		{
+			//System.out.println("deactivated");
 			return meterIcons[0]; // Anon deactivated
 		}
 	}

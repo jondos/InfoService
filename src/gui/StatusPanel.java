@@ -72,7 +72,7 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 		m_Random = new Random();
 		oMsgSync = new Object();
 		Font font = new JLabel("Status").getFont();
-		m_Height = (int) (font.getSize() * 0.9);
+		m_Height = (int) (font.getSize() * 0.7);
 		m_Height = Math.min(m_Height, ms_IconHeight);
 		font = new Font(font.getName(), Font.PLAIN, m_Height);
 		m_dimensionPreferredSize = new Dimension(100, ms_IconHeight);

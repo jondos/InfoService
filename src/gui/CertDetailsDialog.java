@@ -142,8 +142,8 @@ public class CertDetailsDialog extends JAPDialog
 	private static final String CERT_INVALID_INACTIVE = "certinvalidinactive.gif";
 	private final JLabel LABEL = new JLabel();
 
-	private static final Color TITLE_COLOR = Color.blue;
-	private static final Color ALERT_COLOR = Color.red;
+	private final Color TITLE_COLOR = Color.blue;
+	private final Color ALERT_COLOR = Color.red;
 
 	private final Font TITLE_FONT = new Font(LABEL.getFont().getName(), Font.BOLD,
 		(int)((LABEL.getFont().getSize()) * 1.2));

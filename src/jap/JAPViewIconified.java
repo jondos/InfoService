@@ -71,7 +71,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 	MouseListener,
 	JAPObserver, Observer
 {
-	private static final Font m_fontDlg = new Font("Sans", Font.BOLD, 11);
+
 	private static final String STR_HIDDEN_WINDOW = Double.toString(Math.random());
 	private static Frame m_frameParent;
 
@@ -80,6 +80,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 	private JLabel m_labelBytes, m_labelUsers, m_labelTraffic;
 	private JLabel m_lblJAPIcon;
 	private Point m_startPoint;
+	private Font m_fontDlg;
 	private boolean m_bIsDragging = false;
 	private NumberFormat m_NumberFormat;
 
@@ -106,6 +107,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 	public JAPViewIconified()
 	{
 		super(getParentFrame());
+		 m_fontDlg = new Font("Sans", Font.BOLD, 11);
 		setName(STR_HIDDEN_WINDOW);
 		m_mainView = JAPController.getView();
 		m_frameParent.setIconImage(m_mainView.getIconImage());

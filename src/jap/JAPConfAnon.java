@@ -718,7 +718,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		else
 		{
-			m_viewCertLabelValidity.setText("");
+			m_viewCertLabelValidity.setText(" ");
 			m_viewCertLabel.setText("N/A");
 		}
 
