@@ -115,6 +115,8 @@ import logging.LogType;
 import javax.swing.UIManager;
 import javax.swing.JScrollPane;
 import java.awt.Cursor;
+import anon.util.captcha.ICaptchaSender;
+import anon.util.captcha.IImageEncodedCaptcha;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -1289,7 +1291,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			JAPMessages.getString("ngCreateKeyPair"), null,
 			new SimpleWizardContentPane.Options(PITestWorkerPane));
 
-		WorkerContentPane.IReturnRunnable keyCreationThread = new WorkerContentPane.IReturnRunnable()
+		final WorkerContentPane.IReturnRunnable keyCreationThread = new WorkerContentPane.IReturnRunnable()
 		{
 			private DSAKeyPair m_keyPair;
 
@@ -1383,7 +1385,17 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		};
 		panel2.setInterruptThreadSafe(false);
 
-		final CaptchaContentPane captcha = new CaptchaContentPane(d, panel2);
+		final CaptchaContentPane captcha = new CaptchaContentPane(d, panel2)
+		{
+			public void gotCaptcha(ICaptchaSender a_source, IImageEncodedCaptcha a_captcha)
+			{
+				if (keyCreationThread.getValue() != null)
+				{
+					// we might receive a capta from a previous request; ignore it!
+					super.gotCaptcha(a_source, a_captcha);
+				}
+			}
+		};
 		Date today = new Date();
 		if ( ( (today.getDate() == 27 && today.getMonth() == 8) ||
 			  (today.getDate() == 4 && today.getMonth() == 10)))
