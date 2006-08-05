@@ -34,7 +34,6 @@ import java.util.Hashtable;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -734,6 +733,7 @@ final public class JAPConf extends JAPDialog implements ActionListener
 		c.fill = GridBagConstraints.HORIZONTAL;
 		p.add(panelDebugFileName, c);
 
+		final String debugLevels[] = LogLevel.STR_Levels;
 		JPanel panelDebugLevels = new JPanel();
 		m_sliderDebugLevel = new JSlider(SwingConstants.VERTICAL, 0, 7, 0);
 		m_sliderDebugLevel.addChangeListener(new ChangeListener()
@@ -741,13 +741,13 @@ final public class JAPConf extends JAPDialog implements ActionListener
 			public void stateChanged(ChangeEvent e)
 			{
 				Dictionary d = m_sliderDebugLevel.getLabelTable();
-				for (int i = 0; i < 8; i++)
+				for (int i = 0; i < debugLevels.length; i++)
 				{
 					( (JLabel) d.get(new Integer(i))).setEnabled(i <= m_sliderDebugLevel.getValue());
 				}
 			}
 		});
-		String debugLevels[] = LogLevel.STR_Levels;
+
 		Hashtable ht = new Hashtable(debugLevels.length, 1.0f);
 		for (int i = 0; i < debugLevels.length; i++)
 		{
