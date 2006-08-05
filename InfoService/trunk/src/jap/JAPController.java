@@ -967,9 +967,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 						}
 					}
 					JAPModel.getInstance().setLookAndFeel(UIManager.getLookAndFeel().getClass().getName());
-					JAPModel.getInstance().setFontSize(XMLUtil.parseAttribute(
-									   root, JAPModel.XML_FONT_SIZE, JAPModel.getInstance().getFontSize()));
 				}
+				JAPModel.getInstance().setFontSize(XMLUtil.parseAttribute(
+									   root, JAPModel.XML_FONT_SIZE, JAPModel.getInstance().getFontSize()));
 				//Loading GUI Setting
 				Element elemGUI = (Element) XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_GUI);
 				if (elemGUI != null)
@@ -1329,8 +1329,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 				if (JAPModel.getInstance().isCascadeConnectionChosenAutomatically())
 				{
 					// choose a random initial cascade
-					AutoSwitchedMixCascadeContainer cascadeSwitcher = new AutoSwitchedMixCascadeContainer();
-					cascadeSwitcher.getNextMixCascade(); // this is the default cascade
+					AutoSwitchedMixCascadeContainer cascadeSwitcher =
+						new AutoSwitchedMixCascadeContainer(true);
 					setCurrentMixCascade(cascadeSwitcher.getNextMixCascade());
 				}
 				else
@@ -3683,14 +3683,21 @@ public final class JAPController extends Observable implements IProxyListener, O
 		private MixCascade m_initialCascade;
 		private MixCascade m_currentCascade;
 		private boolean m_bKeepCurrentCascade;
+		private boolean bSkipInitialCascade;
 
-		public AutoSwitchedMixCascadeContainer()
+		public AutoSwitchedMixCascadeContainer(boolean a_bSkipInitialCascade)
 		{
+			bSkipInitialCascade = a_bSkipInitialCascade;
 			m_alreadyTriedCascades = new Hashtable();
 			m_random = new Random(System.currentTimeMillis());
 			m_random.nextInt();
 			m_initialCascade = JAPController.getInstance().getCurrentMixCascade();
 			m_bKeepCurrentCascade = false;
+		}
+
+		public AutoSwitchedMixCascadeContainer()
+		{
+			this(false);
 		}
 		public MixCascade getInitialCascade()
 		{
@@ -3723,13 +3730,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 						m_alreadyTriedCascades.put(m_currentCascade.getId(), m_currentCascade);
 					}
 				}
-				else if (m_initialCascade == null ||
+				else if (bSkipInitialCascade || m_initialCascade == null ||
 						 m_alreadyTriedCascades.containsKey(m_initialCascade.getId()))
 				{
 					MixCascade currentCascade = null;
 					Vector availableCascades;
 					boolean forward = true;
 					boolean bRestrictToPay = false;
+
 					if (JAPModel.getInstance().getAutomaticCascadeChangeRestriction().equals(
 						JAPModel.AUTO_CHANGE_RESTRICT))
 					{
@@ -3757,7 +3765,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 						// chose an index from the vector
 						chosenCascadeIndex %= availableCascades.size();
-
 						/* Go through all indices until a suitable MixCascade is found or the original index
 						 * is reached.
 						 */
@@ -3812,6 +3819,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_alreadyTriedCascades.put(m_initialCascade.getId(), m_initialCascade);
 					m_currentCascade = m_initialCascade;
 				}
+
+				if (bSkipInitialCascade)
+				{
+					m_initialCascade = m_currentCascade;
+				}
+				// this only happens for the first call
+				bSkipInitialCascade = false;
 			}
 
 			return m_currentCascade;
