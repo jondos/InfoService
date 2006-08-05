@@ -144,9 +144,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private JAPMultilineLabel m_reachableLabel;
 	private JLabel m_portsLabel;
 
+
 	private GridBagLayout m_rootPanelLayout;
 	private GridBagConstraints m_rootPanelConstraints;
 
+	private JLabel m_lblMix;
 	private JLabel m_operatorLabel;
 	private JLabel m_emailLabel;
 	private JLabel m_urlLabel;
@@ -280,8 +282,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		m_serverInfoPanel.setLayout(layout);
 
-		JLabel l = new JLabel(JAPMessages.getString("infoAboutMix"));
-		l.setFont(new Font(l.getFont().getName(), Font.BOLD, (int)(l.getFont().getSize() * 1.2)));
+		m_lblMix = new JLabel(JAPMessages.getString("infoAboutMix"));
+		m_lblMix.setFont(new Font(m_lblMix.getFont().getName(), Font.BOLD, (int)(m_lblMix.getFont().getSize() * 1.2)));
 		c.insets = new Insets(5, 10, 5, 5);
 		c.gridx = 0;
 		c.gridy = 0;
@@ -290,9 +292,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.fill = GridBagConstraints.NONE;
 		c.anchor = GridBagConstraints.NORTHWEST;
 		c.insets = new Insets(5, 20, 5, 5);
-		m_serverInfoPanel.add(l, c);
+		m_serverInfoPanel.add(m_lblMix, c);
 
-		l = new JLabel(JAPMessages.getString("mixOperator"));
+		JLabel l = new JLabel(JAPMessages.getString("mixOperator"));
 		c.gridy = 1;
 		c.gridwidth = 1;
 		c.insets = new Insets(5, 30, 5, 5);
@@ -662,6 +664,14 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		if (cascade != null)
 		{
 			selectedMixId = (String) cascade.getMixIds().elementAt(server);
+		}
+		if (selectedMixId != null)
+		{
+			m_lblMix.setToolTipText(selectedMixId);
+		}
+		else
+		{
+			m_lblMix.setToolTipText("");
 		}
 
 		m_operatorLabel.setText(trim(m_infoService.getOperator(selectedMixId)));
@@ -1939,7 +1949,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			{
 				return "N/A";
 			}
-			return URL_BEGIN + strUrl + URL_END;
+			//return URL_BEGIN + strUrl + URL_END;
+			return strUrl;
 		}
 
 		/**
