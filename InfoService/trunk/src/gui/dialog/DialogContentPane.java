@@ -63,6 +63,7 @@ import gui.JAPMessages;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.awt.Cursor;
 
 /**
  * This is a replacement for a dialog content pane. It defines an icon, buttons, a status bar for
@@ -2001,7 +2002,8 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			}
 			dialog.setSize(dialogSize);
 
-			preferredWidth = getDialogContentPane().getSize().width - 2 * SPACE_AROUND_TEXT;
+			//preferredWidth = getDialogContentPane().getSize().width - 2 * SPACE_AROUND_TEXT;
+
 
 			// remove and add the text field, as it may have been removed in a prior call to this method
 			if (m_lblText != null)
@@ -2017,7 +2019,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			}
 			m_lblText = new JAPHtmlMultiLineLabel(m_strText, SwingConstants.CENTER);
 			m_lblText.setFontStyle(JAPHtmlMultiLineLabel.FONT_STYLE_PLAIN);
-			m_lblText.setPreferredWidth(preferredWidth);
+			//m_lblText.setPreferredWidth(preferredWidth);
 			m_titlePane.add(m_lblText, m_textConstraints);
 
 
@@ -2035,17 +2037,16 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 				m_lblSeeFullText = null;
 			}
 			updateDialog(false);
-			//System.out.println(dialog.getContentPane().getSize().height);
-			//System.out.println(dialog.getContentPane().getPreferredSize().height);
 
 			if (dialog.getContentPane().getSize().height < dialog.getContentPane().getPreferredSize().height)
 			{
 				m_lblSeeFullText = new JAPHtmlMultiLineLabel(
-					"<A href=''>" + //"..." +
-					"(" + JAPMessages.getString(MSG_SEE_FULL_MESSAGE) + ")</A>", m_lblText.getFont(),
-					SwingConstants.CENTER);
-
-				m_lblSeeFullText.setPreferredSize(new Dimension(preferredWidth,
+								"<A href=''>" + //"..." +
+								"(" + JAPMessages.getString(MSG_SEE_FULL_MESSAGE) + ")</A>", m_lblText.getFont(),
+								SwingConstants.CENTER);
+				m_lblSeeFullText.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+				// set the with of the label so that is has the current width of the content pane
+				m_lblSeeFullText.setPreferredSize(new Dimension(getContentPane().getSize().width,
 					m_lblSeeFullText.getPreferredSize().height));
 				m_lblSeeFullText.addMouseListener(new MouseAdapter()
 				{
@@ -2091,7 +2092,8 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 					m_lblText.cutHTMLDocument(currentCut);
 					m_lblText.setText(JAPHtmlMultiLineLabel.removeHTMLHEADAndBODYTags(m_lblText.getText()) +
 									  "...");
-					m_lblText.setPreferredWidth(preferredWidth);
+					//m_lblText.setPreferredWidth(preferredWidth);
+					//m_lblText.setPreferredWidth(320);
 					updateDialog(false);
 
 					if (dialog.getContentPane().getSize().height <
@@ -2129,8 +2131,9 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 				m_lblText.setText("<font color=#000000>" +
 								  JAPHtmlMultiLineLabel.removeHTMLHEADAndBODYTags(m_lblText.getText())
 								  + "</font>");
-				m_lblText.setPreferredWidth(preferredWidth);
+				//m_lblText.setPreferredWidth(preferredWidth);
 			}
+
 
 			m_parentDialog = ownerDialog;
 			if (bWasUnlimitedSize)
@@ -2470,6 +2473,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			m_linkedDialog = new LinkedDialog(a_strMessage, strMessageTitle,
 											  OPTION_TYPE_DEFAULT, a_messageType);
 			m_lblMessage.addMouseListener(m_linkedDialog);
+			m_lblMessage.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		}
 		else
 		{
