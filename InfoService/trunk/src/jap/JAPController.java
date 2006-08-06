@@ -3800,6 +3800,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 					if (currentCascade == null)
 					{
+						bSkipInitialCascade = false; // this is not the first call
 						m_alreadyTriedCascades.clear();
 						m_currentCascade = getNextMixCascade();
 					}
