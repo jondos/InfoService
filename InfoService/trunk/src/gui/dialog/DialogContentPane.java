@@ -2038,8 +2038,20 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			}
 			updateDialog(false);
 
+			m_lblText.setText(m_strText);
+			m_lblText.setPreferredWidth(getContentPane().getSize().width);
+			contraints = (GridBagConstraints)m_textConstraints.clone();
+			contraints.gridy = 2;
+			contraints.insets = new Insets(0, 0, 0, 0);
+			// add dummy label to set optimal width
+			m_lblSeeFullText = new JAPHtmlMultiLineLabel();
+			m_lblSeeFullText.setPreferredSize(new Dimension(getContentPane().getSize().width, 0));
+			m_titlePane.add(m_lblSeeFullText, contraints);
+			updateDialog(false);
+			m_titlePane.remove(m_lblSeeFullText);
 			if (dialog.getContentPane().getSize().height < dialog.getContentPane().getPreferredSize().height)
 			{
+				// OK, text height is too big to display
 				m_lblSeeFullText = new JAPHtmlMultiLineLabel(
 								"<A href=''>" + //"..." +
 								"(" + JAPMessages.getString(MSG_SEE_FULL_MESSAGE) + ")</A>", m_lblText.getFont(),
@@ -2062,9 +2074,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 						}
 					}
 				});
-				contraints = (GridBagConstraints)m_textConstraints.clone();
-				contraints.gridy = 2;
-				contraints.insets = new Insets(0, 0, 0, 0);
+
 				m_titlePane.add(m_lblSeeFullText, contraints);
 
 				// do a short heuristic to optimize the label size (find the optimal cut)
@@ -2092,10 +2102,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 					m_lblText.cutHTMLDocument(currentCut);
 					m_lblText.setText(JAPHtmlMultiLineLabel.removeHTMLHEADAndBODYTags(m_lblText.getText()) +
 									  "...");
-					//m_lblText.setPreferredWidth(preferredWidth);
-					//m_lblText.setPreferredWidth(320);
 					updateDialog(false);
-
 					if (dialog.getContentPane().getSize().height <
 						dialog.getContentPane().getPreferredSize().height)
 				   {
