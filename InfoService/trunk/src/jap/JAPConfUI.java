@@ -83,10 +83,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 	private static final String MSG_IMPORT_SUCCESSFUL = JAPConfUI.class.getName() + "_importSuccessful";
 	private static final String MSG_NO_LNF_FOUND = JAPConfUI.class.getName() + "_noLNFFound";
 	private static final String MSG_LOOK_AND_FEEL_CHANGED = JAPConfUI.class.getName() + "_lnfChanged";
-
-
-
-
+	private static final String MSG_RESTART_TO_UNLOAD = JAPConfUI.class.getName() + "_restartToUnload";
 
 
 
@@ -202,6 +199,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 						JAPModel.getInstance().removeLookAndFeelFile(lnfFile);
 						updateUICombo();
 					}
+					JAPDialog.showMessageDialog(getRootPanel(), JAPMessages.getString(MSG_RESTART_TO_UNLOAD));
 				}
 				catch (Exception a_e)
 				{
