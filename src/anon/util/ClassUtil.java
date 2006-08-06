@@ -401,6 +401,23 @@ public final class ClassUtil
 		return ms_loadedClasses.elements();
 	}
 
+	public static File getClassDirectory(String a_className)
+	{
+		if (a_className == null)
+		{
+			return null;
+		}
+
+		try
+		{
+			return getClassDirectory(Class.forName(a_className));
+		}
+		catch (ClassNotFoundException ex)
+		{
+			return null;
+		}
+	}
+
 	/**
 	 * Returns the class directory of the specified class. The class directory is either the
 	 * directory in that the highest package in the package structure of the class is contained,

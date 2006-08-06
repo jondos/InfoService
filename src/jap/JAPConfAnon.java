@@ -100,6 +100,7 @@ import platform.AbstractOS;
 import anon.crypto.SignatureVerifier;
 import gui.JAPHtmlMultiLineLabel;
 import gui.JAPMultilineLabel;
+import anon.infoservice.ServiceSoftware;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener, Observer
@@ -107,6 +108,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private static final String MSG_LABEL_CERTIFICATE = JAPConfAnon.class.getName() + "_certificate";
 	private static final String MSG_LABEL_EMAIL = JAPConfAnon.class.getName() + "_labelEMail";
 	private static final String MSG_REALLY_DELETE = JAPConfAnon.class.getName() + "_reallyDelete";
+	private static final String MSG_MIX_VERSION = JAPConfAnon.class.getName() + "_mixVersion";
+	private static final String MSG_MIX_ID = JAPConfAnon.class.getName() + "_mixID";
+
+
 	private static final int MAXIMUM_TEXT_LENGTH = 80;
 
 	/** Messages */
@@ -667,7 +672,16 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		if (selectedMixId != null)
 		{
-			m_lblMix.setToolTipText(selectedMixId);
+			String version = trim(m_infoService.getMixVersion(selectedMixId));
+			if (version != null)
+			{
+				version = ", " + JAPMessages.getString(MSG_MIX_VERSION) + "=" + version;
+			}
+			else
+			{
+				version = "";
+			}
+			m_lblMix.setToolTipText(JAPMessages.getString(MSG_MIX_ID) + "=" + selectedMixId + version);
 		}
 		else
 		{
@@ -1856,6 +1870,19 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			return cascade.getPorts();
 		}
 
+		public String getMixVersion(String a_mixID)
+		{
+			MixInfo mixinfo = getMixInfo(a_mixID);
+			if (mixinfo != null)
+			{
+				ServiceSoftware software = mixinfo.getServiceSoftware();
+				if (software != null)
+				{
+					return software.getVersion();
+				}
+			}
+			return null;
+		}
 
 		public JAPCertificate getMixCertificate(String a_mixID)
 		{

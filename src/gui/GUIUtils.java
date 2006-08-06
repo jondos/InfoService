@@ -362,21 +362,33 @@ public final class GUIUtils
 
 
 	/**
-	 * Returns all valid javax.swing.LookAndFeel subclasses that could be found by ClassUtil.findSubclasses.
-	 * @return all valid javax.swing.LookAndFeel subclasses that could be found by ClassUtil.findSubclasses
+	 * Registers all instanciable subclasses of javax.swing.LookAndFeel from a file in the UIManager.
+	 * @return the files that contain the newly loaded look&feel classes
 	 */
-	public static boolean registerLookAndFeelClasses(File a_file) throws IllegalAccessException
+	public static Vector registerLookAndFeelClasses(File a_file) throws IllegalAccessException
 	{
 		if (a_file == null)
 		{
-			return false;
+			return new Vector();
 		}
-		ClassUtil.addFileToClasspath(a_file);
-		ClassUtil.loadClasses(a_file);
 
 		LookAndFeelInfo lnfOldInfo[] = UIManager.getInstalledLookAndFeels();
 		LookAndFeelInfo lnfNewInfo[];
 		LookAndFeel lnf;
+		Vector oldFiles = new Vector(lnfOldInfo.length);
+		Vector newFiles;
+		File file;
+		for (int i = 0; i < lnfOldInfo.length; i++)
+		{
+			file = ClassUtil.getClassDirectory(lnfOldInfo[i].getClassName());
+			if (file != null)
+			{
+				oldFiles.addElement(file);
+			}
+		}
+
+		ClassUtil.addFileToClasspath(a_file);
+		ClassUtil.loadClasses(a_file);
 
 		Vector tempLnfClasses = ClassUtil.findSubclasses(LookAndFeel.class);
 		for (int i = 0; i < tempLnfClasses.size(); i++)
@@ -424,7 +436,23 @@ public final class GUIUtils
 			}
 		}
 		lnfNewInfo = UIManager.getInstalledLookAndFeels();
-		return lnfNewInfo.length > lnfOldInfo.length;
+		if (lnfNewInfo.length > lnfOldInfo.length)
+		{
+			newFiles = new Vector(lnfNewInfo.length - lnfOldInfo.length);
+			for (int i = 0; i < lnfNewInfo.length; i++)
+			{
+				file = ClassUtil.getClassDirectory(lnfNewInfo[i].getClassName());
+				if (!oldFiles.contains(file))
+				{
+					newFiles.addElement(file);
+				}
+			}
+		}
+		else
+		{
+			newFiles = new Vector();
+		}
+		return newFiles;
 	}
 
 	/**

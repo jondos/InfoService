@@ -82,6 +82,8 @@ final class JAPConfUI extends AbstractJAPConfModule
 	private static final String MSG_NEED_RESTART = JAPConfUI.class.getName() + "_needRestart";
 	private static final String MSG_IMPORT_SUCCESSFUL = JAPConfUI.class.getName() + "_importSuccessful";
 	private static final String MSG_NO_LNF_FOUND = JAPConfUI.class.getName() + "_noLNFFound";
+	private static final String MSG_LOOK_AND_FEEL_CHANGED = JAPConfUI.class.getName() + "_lnfChanged";
+
 
 
 
@@ -179,21 +181,13 @@ final class JAPConfUI extends AbstractJAPConfModule
 						LookAndFeelInfo[] oldLnFs = UIManager.getInstalledLookAndFeels();
 						Vector tempLnFs = new Vector(oldLnFs.length - 1);
 						LookAndFeelInfo[] alteredLnFs;
-						File lnfFile = ClassUtil.getClassDirectory(Class.forName(
-											  (oldLnFs[m_comboUI.getSelectedIndex()].getClassName())));
+						File lnfFile = ClassUtil.getClassDirectory(
+											  (oldLnFs[m_comboUI.getSelectedIndex()].getClassName()));
 						File tempLnfFile;
 
 						for (int i = 0; i < oldLnFs.length; i++)
 						{
-							try
-							{
-								tempLnfFile =
-									ClassUtil.getClassDirectory(Class.forName(oldLnFs[i].getClassName()));
-							}
-							catch (ClassNotFoundException a_e)
-							{
-								continue;
-							}
+							tempLnfFile = ClassUtil.getClassDirectory(oldLnFs[i].getClassName());
 							if (tempLnfFile == null || !lnfFile.equals(tempLnfFile))
 							{
 								tempLnFs.addElement(oldLnFs[i]);
@@ -230,6 +224,8 @@ final class JAPConfUI extends AbstractJAPConfModule
 			{
 				final JFileChooser fileChooser = new JFileChooser(m_currentDirectory);
 				final JAPDialog dialog = new JAPDialog(getRootPanel(), JAPMessages.getString(MSG_TITLE_IMPORT));
+				LookAndFeel currentLaf = UIManager.getLookAndFeel();
+
 				final DialogContentPane pane =
 					new SimpleWizardContentPane(dialog,
 												"<font color='red'>" +
@@ -270,6 +266,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 						return new Boolean(m_bCanceled);
 					}
 				};
+
 				final WorkerContentPane.IReturnRunnable doIt = new WorkerContentPane.IReturnRunnable()
 				{
 					Object m_value;
@@ -284,13 +281,19 @@ final class JAPConfUI extends AbstractJAPConfModule
 						if (fileChooser.getSelectedFile() != null)
 						{
 							m_currentDirectory = fileChooser.getCurrentDirectory();
+							Vector files;
 							try
 							{
-								if (GUIUtils.registerLookAndFeelClasses(fileChooser.getSelectedFile()))
+								if ((files = GUIUtils.registerLookAndFeelClasses(
+									fileChooser.getSelectedFile())).size() > 0)
 								{
-									LogHolder.log(LogLevel.NOTICE, LogType.GUI,
-												  "Added new L&F class file: " + fileChooser.getSelectedFile());
-									JAPModel.getInstance().addLookAndFeelFile(fileChooser.getSelectedFile());
+									for (int i = 0; i < files.size(); i++)
+									{
+										LogHolder.log(LogLevel.NOTICE, LogType.GUI,
+												  "Added new L&F class file: " + files.elementAt(i));
+										JAPModel.getInstance().addLookAndFeelFile(
+											(File)files.elementAt(i));
+									}
 									updateUICombo();
 									m_value = JAPMessages.getString(MSG_IMPORT_SUCCESSFUL);
 								}
@@ -369,10 +372,16 @@ final class JAPConfUI extends AbstractJAPConfModule
 				errorPane.getButtonCancel().setVisible(false);
 
 
-
+				JLabel dummyLabel = new JLabel("AAAAAAAAAAAAAAAAAAAAAAAA");
+				importPane.getContentPane().add(dummyLabel);
 				DialogContentPane.updateDialogOptimalSized(pane);
+				dummyLabel.setVisible(false);
 				dialog.setVisible(true);
-
+				if (currentLaf != UIManager.getLookAndFeel())
+				{
+					JAPDialog.showMessageDialog(
+									   getRootPanel(), JAPMessages.getString(MSG_LOOK_AND_FEEL_CHANGED));
+				}
 			}
 		});
 
@@ -388,20 +397,23 @@ final class JAPConfUI extends AbstractJAPConfModule
 						String selectedLaFClass = UIManager.getInstalledLookAndFeels()[
 							m_comboUI.getSelectedIndex()].getClassName();
 						String currentLaFClass = JAPModel.getInstance().getLookAndFeel();
+						// the currently active lnf may differ from the laf that is set as active
+						String activeLaFClass =UIManager.getLookAndFeel().getClass().getName();
 						File currentLaFFile = null;
+						File activeLaFFile = null;
 						File selectedLaFFile = null;
-						try
-						{
-							currentLaFFile = ClassUtil.getClassDirectory(Class.forName(currentLaFClass));
-							selectedLaFFile = ClassUtil.getClassDirectory(Class.forName(selectedLaFClass));
-						}
-						catch (ClassNotFoundException ex)
-						{
-						}
+
+						activeLaFFile = ClassUtil.getClassDirectory(activeLaFClass);
+						currentLaFFile = ClassUtil.getClassDirectory(currentLaFClass);
+						selectedLaFFile = ClassUtil.getClassDirectory(selectedLaFClass);
+
 
 						if ((selectedLaFFile != null && currentLaFFile != null &&
 							 currentLaFFile.equals(selectedLaFFile)) ||
+							(selectedLaFFile != null && activeLaFFile != null &&
+							 activeLaFFile.equals(selectedLaFFile)) ||
 							currentLaFClass.equals(selectedLaFClass) ||
+							activeLaFClass.equals(selectedLaFClass) ||
 							JAPModel.getInstance().isSystemLookAndFeel(selectedLaFClass))
 						{
 							m_btnDeleteUI.setEnabled(false);

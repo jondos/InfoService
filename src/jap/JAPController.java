@@ -908,7 +908,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 								try
 								{
 									if (JAPModel.isSmallDisplay() || JAPDialog.isConsoleOnly() ||
-										GUIUtils.registerLookAndFeelClasses(currentFile))
+										GUIUtils.registerLookAndFeelClasses(currentFile).size() > 0)
 									{
 										// this is a valie L&F-file
 										JAPModel.getInstance().addLookAndFeelFile(currentFile);
