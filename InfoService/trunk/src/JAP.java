@@ -492,7 +492,7 @@ public class JAP
 		{
 			for (int i = 0; i < m_arstrCmdnLnArgs.length; i++)
 			{
-				if (m_arstrCmdnLnArgs[i].equalsIgnoreCase(a_argument))
+				if (m_arstrCmdnLnArgs[i] != null && m_arstrCmdnLnArgs[i].equalsIgnoreCase(a_argument))
 				{
 					return true;
 				}
