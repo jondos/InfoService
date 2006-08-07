@@ -870,7 +870,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			m_labelBalance.setText(JAPUtil.formatBytesValue(balance.getDeposit() - balance.getSpent()));
 			m_labelValid.setText(JAPUtil.formatTimestamp(balance.getValidTime(), true,
 				JAPController.getInstance().getLocale().getLanguage()));
-			if (balance.getValidTime().compareTo(new Date()) < 0)
+			if (balance.getValidTime().before(new Date()))
 			{
 				m_labelValid.setForeground(Color.red);
 				m_labelValid.setToolTipText(JAPMessages.getString(MSG_TOOL_TIP_EXPIRED));
