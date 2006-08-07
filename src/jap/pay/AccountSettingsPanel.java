@@ -252,8 +252,14 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private static final String MSG_BALANCE_AUTO_UPDATE_ENABLED = AccountSettingsPanel.class.getName() +
 		"_balanceAutoUpdateEnabled";
 	private static final String MSG_NO_BACKUP = AccountSettingsPanel.class.getName() + "_noBackup";
-	private static final String MSG_FILE_EXISTS = AccountSettingsPanel.class.getName() + "_fileExists";
+	private static final String MSG_TOOL_TIP_NO_BACKUP =
+		AccountSettingsPanel.class.getName() + "_toolTipNoBackup";
+	private static final String MSG_TOOL_TIP_ACTIVATE =
+		AccountSettingsPanel.class.getName() + "_toolTipActivate";
+	private static final String MSG_TOOL_TIP_EXPIRED =
+		AccountSettingsPanel.class.getName() + "_toolTipExpired";
 
+	private static final String MSG_FILE_EXISTS = AccountSettingsPanel.class.getName() + "_fileExists";
 
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
@@ -831,18 +837,22 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		if (selectedAccount.getPrivateKey() == null)
 		{
 			m_lblInactiveMessage.setText(JAPMessages.getString(MSG_ACCOUNT_DISABLED));
+			m_lblInactiveMessage.setToolTipText(JAPMessages.getString(MSG_TOOL_TIP_ACTIVATE));
 		}
 		else
 		{
 			m_lblInactiveMessage.setText("");
+			m_lblInactiveMessage.setToolTipText("");
 		}
 		if (!selectedAccount.isBackupDone())
 		{
 			m_lblNoBackupMessage.setText(JAPMessages.getString(MSG_NO_BACKUP));
+			m_lblNoBackupMessage.setToolTipText(JAPMessages.getString(MSG_TOOL_TIP_NO_BACKUP));
 		}
 		else
 		{
 			m_lblNoBackupMessage.setText("");
+			m_lblNoBackupMessage.setToolTipText("");
 		}
 
 
@@ -860,6 +870,16 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			m_labelBalance.setText(JAPUtil.formatBytesValue(balance.getDeposit() - balance.getSpent()));
 			m_labelValid.setText(JAPUtil.formatTimestamp(balance.getValidTime(), true,
 				JAPController.getInstance().getLocale().getLanguage()));
+			if (balance.getValidTime().compareTo(new Date()) < 0)
+			{
+				m_labelValid.setForeground(Color.red);
+				m_labelValid.setToolTipText(JAPMessages.getString(MSG_TOOL_TIP_EXPIRED));
+			}
+			else
+			{
+				m_labelValid.setForeground(new JLabel().getForeground());
+				m_labelValid.setToolTipText("");
+			}
 
 			long dep = selectedAccount.getDeposit();
 			long spe = selectedAccount.getSpent();
