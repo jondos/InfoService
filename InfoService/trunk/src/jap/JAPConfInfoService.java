@@ -83,6 +83,8 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeListener;
 import java.util.Dictionary;
 import javax.swing.event.ChangeEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.ItemEvent;
 
 /**
  * This is the configuration GUI for the infoservice.
@@ -1257,15 +1259,9 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 				/* enable/disable the automatic changes of the infoservices */
 				InfoServiceHolder.getInstance().setChangeInfoServices(!
 					m_cbxUseDefaultISOnly.isSelected());
-				m_sliderAskedInfoServices.setEnabled(!m_cbxUseDefaultISOnly.isSelected());
-				m_lblSlider.setEnabled(!m_cbxUseDefaultISOnly.isSelected());
-				Dictionary d = m_sliderAskedInfoServices.getLabelTable();
-				for (int i = 1; i <= InfoServiceHolder.MAXIMUM_OF_ASKED_INFO_SERVICES; i++)
-				{
-					( (JLabel) d.get(new Integer(i))).setEnabled(m_sliderAskedInfoServices.isEnabled());
-				}
 			}
 		});
+
 
 		Observer infoServicePolicyObserver = new Observer()
 		{
@@ -1383,6 +1379,20 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		m_sliderAskedInfoServices.setPaintLabels(true);
 		m_sliderAskedInfoServices.setPaintTicks(true);
 		m_sliderAskedInfoServices.setSnapToTicks(true);
+
+		m_cbxUseDefaultISOnly.addItemListener(new ItemListener()
+		{
+			public void itemStateChanged(ItemEvent e)
+			{
+				m_sliderAskedInfoServices.setEnabled(!m_cbxUseDefaultISOnly.isSelected());
+				m_lblSlider.setEnabled(!m_cbxUseDefaultISOnly.isSelected());
+				Dictionary d = m_sliderAskedInfoServices.getLabelTable();
+				for (int i = 1; i <= InfoServiceHolder.MAXIMUM_OF_ASKED_INFO_SERVICES; i++)
+				{
+					( (JLabel) d.get(new Integer(i))).setEnabled(m_sliderAskedInfoServices.isEnabled());
+				}
+			}
+		});
 
 		advancedPanelConstraints.gridy++;
 		advancedPanelConstraints.fill = GridBagConstraints.HORIZONTAL;

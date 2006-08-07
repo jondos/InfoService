@@ -27,7 +27,6 @@
  */
 package jap;
 
-import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -54,6 +53,7 @@ import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
+import java.util.Dictionary;
 
 final class JAPConfAnonGeneral extends AbstractJAPConfModule
 {
@@ -76,6 +76,10 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 
 	private static final String IMG_ARROW_RIGHT = JAPConfAnonGeneral.class.getName() + "_arrowRight.gif";
 	private static final String IMG_ARROW_LEFT = JAPConfAnonGeneral.class.getName() + "_arrowLeft.gif";
+
+	private static final int DT_INTERVAL_STEPLENGTH = 10;
+	private static final int DT_INTERVAL_STEPS = 6;
+	private static final int DT_INTERVAL_DEFAULT = 3;
 
 	private JCheckBox m_cbDenyNonAnonymousSurfing;
 	private JCheckBox m_cbDummyTraffic;
@@ -113,6 +117,12 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 			m_sliderDummyTrafficIntervall.setValue(iTmp / 1000);
 		}
 		m_sliderDummyTrafficIntervall.setEnabled(iTmp > -1);
+		Dictionary d = m_sliderDummyTrafficIntervall.getLabelTable();
+		for (int i = 1; i <= DT_INTERVAL_STEPS; i++)
+		{
+			( (JLabel) d.get(new Integer(i * DT_INTERVAL_STEPLENGTH))).setEnabled(
+						 m_sliderDummyTrafficIntervall.isEnabled());
+		}
 		m_cbDenyNonAnonymousSurfing.setSelected(JAPModel.getInstance().isNonAnonymousSurfingDenied());
 		m_cbAutoConnect.setSelected(JAPModel.getAutoConnect());
 		m_cbAutoReConnect.setSelected(JAPModel.isAutomaticallyReconnected());
@@ -249,13 +259,6 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 
 
 		m_cbDummyTraffic = new JCheckBox(JAPMessages.getString("ngConfAnonGeneralSendDummy"));
-		m_cbDummyTraffic.addItemListener(new ItemListener()
-		{
-			public void itemStateChanged(ItemEvent e)
-			{
-				m_sliderDummyTrafficIntervall.setEnabled(e.getStateChange() == ItemEvent.SELECTED);
-			}
-		});
 
 		GridBagLayout gb = new GridBagLayout();
 		panelRoot.setLayout(gb);
@@ -301,13 +304,30 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		panelRoot.add(m_cbDummyTraffic, c);
 		c.gridy++;
 		c.weighty = 1.0;
-		m_sliderDummyTrafficIntervall = new JSlider(SwingConstants.HORIZONTAL, 10, 60, 30);
-		m_sliderDummyTrafficIntervall.setMajorTickSpacing(10);
-		m_sliderDummyTrafficIntervall.setMinorTickSpacing(5);
+		m_sliderDummyTrafficIntervall = new JSlider(SwingConstants.HORIZONTAL,
+													DT_INTERVAL_STEPLENGTH,
+													DT_INTERVAL_STEPS * DT_INTERVAL_STEPLENGTH,
+													DT_INTERVAL_DEFAULT * DT_INTERVAL_STEPLENGTH);
+		m_sliderDummyTrafficIntervall.setMajorTickSpacing(DT_INTERVAL_STEPLENGTH);
+		m_sliderDummyTrafficIntervall.setMinorTickSpacing(DT_INTERVAL_STEPLENGTH / 2);
 		m_sliderDummyTrafficIntervall.setPaintLabels(true);
 		m_sliderDummyTrafficIntervall.setPaintTicks(true);
 		m_sliderDummyTrafficIntervall.setSnapToTicks(true);
 		panelRoot.add(m_sliderDummyTrafficIntervall, c);
+
+		m_cbDummyTraffic.addItemListener(new ItemListener()
+		{
+			public void itemStateChanged(ItemEvent e)
+			{
+				m_sliderDummyTrafficIntervall.setEnabled(e.getStateChange() == ItemEvent.SELECTED);
+				Dictionary d = m_sliderDummyTrafficIntervall.getLabelTable();
+				for (int i = 1; i <= DT_INTERVAL_STEPS; i++)
+				{
+					( (JLabel) d.get(new Integer(i*DT_INTERVAL_STEPLENGTH))).setEnabled(e.getStateChange() ==
+						ItemEvent.SELECTED);
+				}
+			}
+	});
 	}
 
 	//defaults
