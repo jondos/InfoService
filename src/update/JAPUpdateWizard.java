@@ -122,7 +122,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 		japVersionInfo = info;
 		m_strNewJapVersion = info.getJapVersion();
 		//updateWizard = this;
-		welcomePage = new JAPWelcomeWizardPage();
+		welcomePage = new JAPWelcomeWizardPage(info);
 		downloadPage = new JAPDownloadWizardPage();
 		finishPage = new JAPFinishWizardPage();
 

@@ -47,6 +47,7 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 import gui.GUIUtils;
 import anon.util.ClassUtil;
+import anon.infoservice.JAPVersionInfo;
 
 public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListener
 {
@@ -57,7 +58,6 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 	private JButton m_bttnChooseJapFile = null;
 	private File m_fileAktJapJar;
 	private JCheckBox m_cbIncrementalUpdate;
-	private JAPUpdateWizard m_theUpdateWizard;
 	private JarFileFilter jarFileFilter = new JarFileFilter();
 
 	private final String COMMAND_SEARCH = "SEARCH";
@@ -65,11 +65,12 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 	final JFileChooser m_fileChooser =
 		new JFileChooser(ClassUtil.getClassDirectory(ClassUtil.class).getParent());
 
-	public JAPWelcomeWizardPage()
+	public JAPWelcomeWizardPage(JAPVersionInfo a_versionInfo)
 	{
 		//this.updateWizard = updateWizard;
 		setIcon(GUIUtils.loadImageIcon(JAPConstants.DOWNLOADFN, false));
-		setPageTitle(JAPMessages.getString("updateWelcomeWizardPageTitle"));
+		setPageTitle(JAPMessages.getString("updateWelcomeWizardPageTitle",
+										   new Object[]{a_versionInfo.getJapVersion()}));
 
 		GridBagLayout m_panelComponentsLayout = new GridBagLayout();
 		GridBagConstraints m_panelConstraints = new GridBagConstraints();
