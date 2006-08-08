@@ -117,6 +117,7 @@ import javax.swing.JScrollPane;
 import java.awt.Cursor;
 import anon.util.captcha.ICaptchaSender;
 import anon.util.captcha.IImageEncodedCaptcha;
+import anon.util.SingleStringPasswordReader;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -1949,6 +1950,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	{
 		if (a_selectedAccount != null)
 		{
+			Enumeration accounts;
+			PayAccount currentAccount;
 			JAPDialog dialog = new JAPDialog(getRootPanel(), JAPMessages.getString(MSG_ACCPASSWORDTITLE));
 			dialog.setDefaultCloseOperation(JAPDialog.HIDE_ON_CLOSE);
 			PasswordContentPane contentPane =
@@ -1960,17 +1963,50 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			try
 			{
 				a_selectedAccount.decryptPrivateKey(contentPane);
-				if (a_selectedAccount.getPrivateKey() != null)
+
+				// try to decrypt all inactive accounts with this password
+				try
 				{
-					if (PayAccountsFile.getInstance().getActiveAccount() == null)
+					accounts = PayAccountsFile.getInstance().getAccounts();
+					while (accounts.hasMoreElements())
+					{
+						currentAccount = (PayAccount) accounts.nextElement();
+						currentAccount.decryptPrivateKey(
+											  new SingleStringPasswordReader(contentPane.getPassword()));
+					}
+				}
+				catch (Exception a_e)
+				{
+					LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, a_e);
+				}
+
+				// set the active account if none exists
+				if (PayAccountsFile.getInstance().getActiveAccount() == null)
+				{
+					if (a_selectedAccount.getPrivateKey() != null)
 					{
 						PayAccountsFile.getInstance().setActiveAccount(a_selectedAccount);
 					}
+					else
+					{
+						accounts = PayAccountsFile.getInstance().getAccounts();
+						while (accounts.hasMoreElements())
+						{
+							currentAccount = (PayAccount)accounts.nextElement();
+							if (currentAccount.getPrivateKey() != null)
+							{
+								PayAccountsFile.getInstance().setActiveAccount(currentAccount);
+							}
+						}
+					}
+				}
 
-					doShowDetails(a_selectedAccount);
-					enableDisableButtons();
-					m_listAccounts.repaint();
+				doShowDetails(a_selectedAccount);
+				enableDisableButtons();
+				m_listAccounts.repaint();
 
+				if (a_selectedAccount.getPrivateKey() != null)
+				{
 					JAPDialog.showMessageDialog(getRootPanel(),
 												JAPMessages.getString(MSG_ACTIVATION_SUCCESSFUL));
 				}
