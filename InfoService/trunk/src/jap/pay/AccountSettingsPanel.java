@@ -1650,7 +1650,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 	private DialogContentPane createUpdateAccountPane(final PayAccount a_selectedAccount,
 		final MethodSelectionPane a_methodSelectionPane,
-		JAPDialog a_parentDialog, DialogContentPane a_previousContentPane)
+		final JAPDialog a_parentDialog, DialogContentPane a_previousContentPane)
 	{
 		Thread t = new Thread()
 		{
@@ -1666,7 +1666,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				{
 					if (!Thread.currentThread().isInterrupted())
 					{
-						showPIerror(GUIUtils.getParentWindow(getRootPanel()), e);
+						showPIerror(a_parentDialog.getContentPane(), e);
 						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Could not get account statement");
 						Thread.currentThread().interrupt();
 					}

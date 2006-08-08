@@ -31,6 +31,7 @@ import gui.JAPMessages;
 import jap.JAPUtil;
 
 import java.awt.CardLayout;
+import java.awt.Container;
 import java.awt.Dialog;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
@@ -45,12 +46,14 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import gui.GUIUtils;
+import gui.dialog.JAPDialog;
+import javax.swing.RootPaneContainer;
 
 // this shall become the browser/wizardhost providing class ...
 public class BasicWizardHost implements WizardHost,ActionListener
 	{
-		private Frame   m_Parent;
-		private JDialog m_Dialog;
+
+		private JAPDialog m_Dialog;
 		private JButton m_bttnOk;
 		private JButton m_bttnCancel;
 		private JButton m_bttnFinish;
@@ -67,14 +70,31 @@ public class BasicWizardHost implements WizardHost,ActionListener
 		private final static String COMMAND_FINISH="FINISH";
 		private final static String COMMAND_HELP="HELP";
 
-		public BasicWizardHost(Frame parent,Wizard wizard)
-			{
-				m_Parent=parent;
+		public BasicWizardHost(JAPDialog a_dialog, Wizard a_wizard)
+		{
+			this((Object)a_dialog, a_wizard);
+		}
+
+		public BasicWizardHost(Container a_dialog, Wizard a_wizard)
+		{
+			this((Object)a_dialog, a_wizard);
+		}
+
+
+		private BasicWizardHost(Object parent,Wizard wizard)
+		{
+
 				m_Wizard=wizard;
 				//m_currentPage=null;
 
-				m_Dialog = new JDialog(parent,wizard.getWizardTitle(),true);
-
+				if (parent instanceof JAPDialog)
+				{
+					m_Dialog = new JAPDialog((JAPDialog)parent, wizard.getWizardTitle(), true);
+				}
+				else
+				{
+					m_Dialog = new JAPDialog((Container)parent, wizard.getWizardTitle(), true);
+				}
 				GridBagLayout gridBag= new GridBagLayout();
 				GridBagConstraints c = new GridBagConstraints();
 
@@ -172,8 +192,8 @@ public class BasicWizardHost implements WizardHost,ActionListener
 				{
 					m_cardlayoutPages.first(m_panelPages);
 					m_Dialog.pack();
-					GUIUtils.centerOnScreen(m_Dialog);
-					m_Dialog.show();
+					//GUIUtils.centerOnScreen(m_Dialog);
+					m_Dialog.setVisible(true);
 				}
 			else
 				{
@@ -182,7 +202,7 @@ public class BasicWizardHost implements WizardHost,ActionListener
 				}
 		}
 
-	public Dialog getDialogParent()
+	public JAPDialog getDialogParent()
 		{
 			return m_Dialog;
 		}
