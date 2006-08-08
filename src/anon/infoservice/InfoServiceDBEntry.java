@@ -389,6 +389,22 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	}
 
 	/**
+	 * This is a JAP-only constructor needed to initialise JAP with default InfoServices.
+	 * @param a_strName String
+	 * @param a_listeners Vector
+	 * @param a_primaryForwarderList boolean
+	 * @param a_creationTime long
+	 * @throws IllegalArgumentException
+	 */
+	public InfoServiceDBEntry(String a_strName, Vector a_listeners, boolean a_primaryForwarderList)
+		throws IllegalArgumentException
+	{
+		this(a_strName, a_listeners, a_primaryForwarderList, false,
+			 System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE_JAP, 0);
+	}
+
+
+	/**
 	 * Creates a new InfoServiceDBEntry. The ID is set to a generic value derived from the host and
 	 * the port of the first listener interface. If you supply a name for the infoservice then it
 	 * will get that name, if you supply null, the name will be of the type "hostname:port". If the
@@ -408,6 +424,32 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	 */
 	public InfoServiceDBEntry(String a_strName, Vector a_listeners, boolean a_primaryForwarderList,
 							  boolean a_japClientContext, long a_expireTime) throws IllegalArgumentException
+	{
+		this (a_strName, a_listeners, a_primaryForwarderList, a_japClientContext,  a_expireTime,
+			  System.currentTimeMillis());
+	}
+
+	/**
+	 * Creates a new InfoServiceDBEntry. The ID is set to a generic value derived from the host and
+	 * the port of the first listener interface. If you supply a name for the infoservice then it
+	 * will get that name, if you supply null, the name will be of the type "hostname:port". If the
+	 * new infoservice entry is created within the context of the JAP client, the software info is
+	 * set to a dummy value. If it is created within the context of the infoservice, the software
+	 * info is set to the current infoservice version (see Constants.INFOSERVICE_VERSION).
+	 *
+	 * @param a_strName The name of the infoservice or null, if a generic name shall be used.
+	 * @param a_listeners The listeners the infoservice is (virtually) listening on.
+	 * @param a_primaryForwarderList Whether the infoservice holds a primary forwarder list.
+	 * @param a_japClientContext Whether the new entry will be created within the context of the
+	 *                           JAP client (true) or the context of the InfoService (false).
+	 * @param a_expireTime The time when this InfoService will be removed from the database of all
+	 *                     InfoServices.
+	 *
+	 * @exception IllegalArgumentException if invalid listener interfaces are given
+	 */
+	public InfoServiceDBEntry(String a_strName, Vector a_listeners, boolean a_primaryForwarderList,
+							  boolean a_japClientContext, long a_expireTime, long a_creationTime)
+	throws IllegalArgumentException
 	{
 		super(a_expireTime);
 
@@ -459,7 +501,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 
 		m_preferedListenerInterface = 0;
 		m_userDefined = a_japClientContext;
-		m_creationTimeStamp = System.currentTimeMillis();
+		m_creationTimeStamp = a_creationTime;
 
 		/* locally created infoservices are never neighbours of our infoservice */
 		m_neighbour = false;

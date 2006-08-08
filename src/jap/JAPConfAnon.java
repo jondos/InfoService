@@ -1715,6 +1715,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 			//Get cascade id
 			String id = a_cascade.getId();
+			Vector countPorts;
+			Integer port;
 
 			// Get hostnames and ports
 			String interfaces = "";
@@ -1748,15 +1750,26 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				}
 			}
 
+			countPorts = new Vector(portsArray.length);
 			for (int i = 0; i < portsArray.length; i++)
 			{
-				ports += String.valueOf(portsArray[i]);
-				if (i != portsArray.length - 1)
+				// do not double-count any ports
+				port = new Integer(portsArray[i]);
+				if (countPorts.contains(port))
+				{
+					continue;
+				}
+				countPorts.addElement(new Integer(portsArray[i]));
+			}
+			for (int i = 0; i < countPorts.size(); i++)
+			{
+				ports += countPorts.elementAt(i).toString();
+				if (i != countPorts.size() - 1)
 				{
 					ports += ", ";
 				}
-
 			}
+
 			m_Cascades.put(id, new TempCascade(id, interfaces, ports));
 		}
 

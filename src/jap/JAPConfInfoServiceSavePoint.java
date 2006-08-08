@@ -116,9 +116,12 @@ public class JAPConfInfoServiceSavePoint implements IJAPConfSavePoint
 			Database.getInstance(InfoServiceDBEntry.class).removeAll();
 			try
 			{
-				InfoServiceDBEntry defaultInfoService = JAPController.createDefaultInfoService();
-				Database.getInstance(InfoServiceDBEntry.class).update(defaultInfoService);
-				InfoServiceHolder.getInstance().setPreferredInfoService(defaultInfoService);
+				InfoServiceDBEntry[] defaultInfoService = JAPController.createDefaultInfoServices();
+				for (int i = 0; i < defaultInfoService.length; i++)
+				{
+					Database.getInstance(InfoServiceDBEntry.class).update(defaultInfoService[i]);
+				}
+				InfoServiceHolder.getInstance().setPreferredInfoService(defaultInfoService[0]);
 			}
 			catch (Exception e)
 			{

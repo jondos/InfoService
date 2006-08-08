@@ -27,7 +27,6 @@
  */
 package jap;
 
-import java.text.NumberFormat;
 import java.util.Enumeration;
 import java.util.Observable;
 import java.util.Observer;
@@ -115,6 +114,15 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String MSG_UPDATE = JAPNewView.class.getName() + "_update";
 	private static final String MSG_TITLE_OLD_JAVA = JAPNewView.class.getName() + "_titleOldJava";
 	private static final String MSG_OLD_JAVA = JAPNewView.class.getName() + "_oldJava";
+	private static final String MSG_LBL_NEW_SERVICES_FOUND = JAPNewView.class.getName() + "_newServicesFound";
+	private static final String MSG_SERVICE_PRICE = JAPNewView.class.getName() + "_servicePrice";
+	private static final String MSG_NO_COSTS = JAPNewView.class.getName() + "_noCosts";
+	private static final String MSG_NEW_SERVICES_FOUND =
+		JAPNewView.class.getName() + "_newServicesFoundExplanation";
+
+
+
+	private static final String PRICE_UNIT = "ct/MB (€)";
 
 	/** @todo fetch latest Java version automatically, store value in database and update view automatically*/
 	private static final String LATEST_SUN_JAVA = "1.5.0_07";
@@ -137,6 +145,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	//private JLabel meterLabel;
 	private JLabel m_labelCascadeName;
+	private JLabel m_lblPrice;
+	private JLabel m_lblNewServices;
 	private JLabel m_labelVersion;
 	private JLabel m_labelUpdate;
 	private JPanel m_pnlVersion;
@@ -349,18 +359,44 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			public void itemStateChanged(ItemEvent e)
 			{
+				final MixCascade cascade = (MixCascade) m_comboAnonServices.getSelectedItem();
+				if (cascade != null)
+				{
+					SwingUtilities.invokeLater(new Thread()
+					{
+						public void run()
+						{
+							if (cascade.isPayment())
+							{
+								m_lblPrice.setText("1" + " " + PRICE_UNIT);
+							}
+							else
+							{
+								m_lblPrice.setText(JAPMessages.getString(MSG_NO_COSTS));
+							}
+						}
+					});
+				}
+
 				if (m_bIgnoreAnonComboEvents)
 				{
 					return;
 				}
 				if (e.getStateChange() == ItemEvent.SELECTED)
 				{
-					final MixCascade cascade = (MixCascade) m_comboAnonServices.getSelectedItem();
 					SwingUtilities.invokeLater(new Thread()
 					{
 						public void run()
 						{
 							m_Controller.setCurrentMixCascade(cascade);
+							if (cascade.isPayment())
+							{
+								m_lblPrice.setText("1" + " " + PRICE_UNIT);
+							}
+							else
+							{
+								m_lblPrice.setText(JAPMessages.getString(MSG_NO_COSTS));
+							}
 						}
 					});
 				}
@@ -368,9 +404,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		});
 
 		c1.insets = new Insets(0, 5, 0, 0);
+		c1.gridwidth = 2;
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.weightx = 1;
 		m_panelAnonService.add(m_comboAnonServices, c1);
+		c1.gridwidth = 1;
 		m_bttnReload = new JButton(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD, true));
 		m_bttnReload.setOpaque(false);
 		LookAndFeel laf = UIManager.getLookAndFeel();
@@ -396,7 +434,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_bttnReload.setBorder(new EmptyBorder(0, 0, 0, 0));
 		m_bttnReload.setFocusPainted(false);
 
-		c1.gridx = 2;
+		c1.gridx = 3;
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
 		m_panelAnonService.add(m_bttnReload, c1);
@@ -408,10 +446,38 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				showConfigDialog(JAPConf.ANON_TAB);
 			}
 		});
-		c1.gridx = 3;
+		c1.gridx = 4;
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
 		m_panelAnonService.add(m_bttnAnonDetails, c1);
+
+		c1.gridx = 0;
+		c1.gridy = 1;
+		c1.anchor = GridBagConstraints.WEST;
+		c1.insets = new Insets(5, 0, 0, 0);
+		m_panelAnonService.add(new JLabel(JAPMessages.getString(MSG_SERVICE_PRICE) + ":"), c1);
+
+		c1.gridx++;
+		c1.insets = new Insets(5, 5, 0, 0);
+		//c1.fill = GridBagConstraints.HORIZONTAL;
+		m_lblPrice = new JLabel();
+		m_panelAnonService.add(m_lblPrice, c1);
+
+		c1.gridx++;
+		c1.insets = new Insets(5, 20, 0, 0);
+		c1.anchor = GridBagConstraints.EAST;
+		m_lblNewServices = new JLabel(JAPMessages.getString(MSG_LBL_NEW_SERVICES_FOUND));
+		m_lblNewServices.setForeground(Color.blue);
+		m_lblNewServices.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		m_lblNewServices.addMouseListener(new MouseAdapter()
+		{
+			public void mouseClicked(MouseEvent a_event)
+			{
+				JAPDialog.showMessageDialog(view, JAPMessages.getString(MSG_NEW_SERVICES_FOUND));
+			}
+		});
+		m_panelAnonService.add(m_lblNewServices, c1);
+		m_lblNewServices.setVisible(false);
 
 		c.weighty = 1;
 		c.gridwidth = 2;

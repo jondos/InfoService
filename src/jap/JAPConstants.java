@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.05.328"; //Never change the layout of this line!
+	public static final String aktVersion = "00.05.329"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -67,18 +67,19 @@ public final class JAPConstants
 	static final String DEFAULT_ANON_NAME = "Dresden-Dresden";
 	static final String DEFAULT_ANON_ID = "141.76.1.120%3A6544";
 	static final String[] DEFAULT_ANON_HOSTS = {"mix.inf.tu-dresden.de", "141.76.1.120"};
+
 	static final int DEFAULT_ANON_PORT_NUMBERS[] =
 		{
 		22, 80, 443, 6544};
 	/**
 	 * The name of the default infoservice.
 	 */
-	public static final String DEFAULT_INFOSERVICE_NAME = "JAP-Team InfoService";
-	public static final String DEFAULT_INFOSERVICE_ID = "infoservice.inf.tu-dresden.de%3A80";
-	public static final String DEFAULT_INFOSERVICE_HOSTNAME = "infoservice.inf.tu-dresden.de";
-	public static final int DEFAULT_INFOSERVICE_PORT_NUMBERS[] =
-		{
-		80, 6543};
+	public static final String DEFAULT_INFOSERVICE_NAMES[] =
+		new String[]{"JAP-Team InfoService", "IS Uni Regensburg", "IS HostEurope"};
+	public static final String DEFAULT_INFOSERVICE_HOSTNAMES[] =
+		new String[]{"infoservice.inf.tu-dresden.de", "132.199.134.2", "80.237.206.62"};
+	public static final int DEFAULT_INFOSERVICE_PORT_NUMBERS[][] =
+		{{80, 6543}, {6543}, {6543}};
 
 	/**
 	 * This defines, whether automatic infoservice request are disabled as default.
