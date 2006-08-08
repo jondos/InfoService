@@ -85,6 +85,7 @@ import java.util.Dictionary;
 import javax.swing.event.ChangeEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.ItemEvent;
+import java.awt.Color;
 
 /**
  * This is the configuration GUI for the infoservice.
@@ -243,7 +244,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 											 GUIUtils.loadImageIcon(JAPConstants.IMAGE_INFOSERVICE_INTERNET, true),
 											 SwingConstants.LEFT);
 				}
-				returnLabel.setOpaque(true);
+
 				/* the default is a non-bold font */
 				returnLabel.setFont(new Font(returnLabel.getFont().getName(),
 											 returnLabel.getFont().getStyle() & (~Font.BOLD),
@@ -261,14 +262,10 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 				}
 				if (a_isSelected)
 				{
-					returnLabel.setForeground(a_list.getSelectionForeground());
-					returnLabel.setBackground(a_list.getSelectionBackground());
+					returnLabel.setOpaque(true);
+					returnLabel.setBackground(Color.lightGray);
 				}
-				else
-				{
-					returnLabel.setForeground(a_list.getForeground());
-					returnLabel.setBackground(a_list.getBackground());
-				}
+
 				return returnLabel;
 			}
 		});
