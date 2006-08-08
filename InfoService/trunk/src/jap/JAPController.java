@@ -300,8 +300,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 		/* set a default infoservice */
 		try
 		{
-			InfoServiceDBEntry defaultInfoService = JAPController.createDefaultInfoService();
-			InfoServiceHolder.getInstance().setPreferredInfoService(defaultInfoService);
+			InfoServiceDBEntry[] defaultInfoService = JAPController.createDefaultInfoServices();
+			for (int i = 0; i < defaultInfoService.length; i++)
+			{
+				Database.getInstance(InfoServiceDBEntry.class).update(defaultInfoService[i]);
+			}
+			InfoServiceHolder.getInstance().setPreferredInfoService(defaultInfoService[0]);
 		}
 		catch (Exception e)
 		{
@@ -2910,7 +2914,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 *             new version found, version check failed.
 	 *          1, if no version check could be done
 	 */
-	public int versionCheck(String a_minVersion, boolean a_bForced)
+	private int versionCheck(String a_minVersion, boolean a_bForced)
 	{
 		String versionType;
 		if (a_bForced)
@@ -2962,7 +2966,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 		}
 
-		if (updateVersionNumber != null)
+		if (updateVersionNumber != null &&
+			(a_bForced || JAPModel.getInstance().isReminderForOptionalUpdateActivated()))
 		{
 			updateVersionNumber = updateVersionNumber.trim();
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Local version: " + JAPConstants.aktVersion);
@@ -3237,10 +3242,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 				final String versionNumber = version.getJapSoftware().getVersion().trim();
 				final boolean bForce = (versionNumber.compareTo(JAPConstants.aktVersion) > 0);
 
-				if (!bForce && !JAPModel.getInstance().isReminderForOptionalUpdateActivated())
+				/*if (!bForce && !JAPModel.getInstance().isReminderForOptionalUpdateActivated())
 				{
 					return;
-				}
+				}*/
 
 				new Thread()
 				{
@@ -3256,7 +3261,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 							m_bShowingVersionUpdate = true;
 						}
 
-						versionCheck(versionNumber, bForce);
+						try
+						{
+							versionCheck(versionNumber, bForce);
+						}
+						catch (Throwable a_e)
+						{
+							LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
+						}
+
 						synchronized (LOCK_VERSION_UPDATE)
 						{
 							m_bShowingVersionUpdate = false;
@@ -3390,20 +3403,22 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 	}
 
-	static public InfoServiceDBEntry createDefaultInfoService() throws Exception
+	static public InfoServiceDBEntry[] createDefaultInfoServices() throws Exception
 	{
-		Vector listeners = new Vector();
-		for (int i = 0; i < JAPConstants.DEFAULT_INFOSERVICE_PORT_NUMBERS.length; i++)
+		Vector listeners;
+		InfoServiceDBEntry[] entries = new InfoServiceDBEntry[JAPConstants.DEFAULT_INFOSERVICE_NAMES.length];
+		for (int i = 0; i < entries.length; i++)
 		{
-			listeners.addElement(new ListenerInterface(JAPConstants.DEFAULT_INFOSERVICE_HOSTNAME,
-				JAPConstants.DEFAULT_INFOSERVICE_PORT_NUMBERS[i]));
+			listeners = new Vector(JAPConstants.DEFAULT_INFOSERVICE_PORT_NUMBERS[i].length);
+			for (int j = 0; j < JAPConstants.DEFAULT_INFOSERVICE_PORT_NUMBERS[i].length; j++)
+			{
+				listeners.addElement(new ListenerInterface(JAPConstants.DEFAULT_INFOSERVICE_HOSTNAMES[i],
+					JAPConstants.DEFAULT_INFOSERVICE_PORT_NUMBERS[i][j]));
+			}
+			entries[i] = new InfoServiceDBEntry(JAPConstants.DEFAULT_INFOSERVICE_NAMES[i], listeners, false);
 		}
 
-		InfoServiceDBEntry defaultInfoService = new InfoServiceDBEntry(JAPConstants.
-			DEFAULT_INFOSERVICE_NAME, listeners, true, true);
-		defaultInfoService.setId(JAPConstants.DEFAULT_INFOSERVICE_ID);
-		defaultInfoService.setUserDefined(false);
-		return defaultInfoService;
+		return entries;
 	}
 
 	/** load the default certificates */

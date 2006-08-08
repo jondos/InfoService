@@ -76,7 +76,7 @@ final class JAPLean implements IProxyListener
 		JAPDebug.getInstance().setLogLevel(LogLevel.DEBUG);
 		JAPModel.getInstance();
 		HTTPConnectionFactory.getInstance().setTimeout(JAPConstants.DEFAULT_INFOSERVICE_TIMEOUT);
-		InfoServiceHolder.getInstance().setPreferredInfoService(JAPController.createDefaultInfoService());
+		InfoServiceHolder.getInstance().setPreferredInfoService(JAPController.createDefaultInfoServices()[0]);
 		// JAPAnonService.init();
 		ServerSocket listener = null;
 		try

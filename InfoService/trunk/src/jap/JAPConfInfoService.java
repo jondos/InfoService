@@ -1113,7 +1113,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		addInfoServicePanelConstraints.gridy = 1;
 		addInfoServicePanelConstraints.anchor = GridBagConstraints.NORTHWEST;
 		addInfoServicePanelConstraints.gridheight = 1;
-		addInfoServicePanelConstraints.weightx = 1.0;
+		//addInfoServicePanelConstraints.weightx = 1.0;
 		addInfoServicePanelConstraints.insets = new Insets(0, 10, 5, 10);
 		addInfoServicePanelLayout.setConstraints(addInfoServiceHostField, addInfoServicePanelConstraints);
 		addInfoServicePanel.add(addInfoServiceHostField);
@@ -1138,7 +1138,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		addInfoServicePanelConstraints.gridx = 0;
 		addInfoServicePanelConstraints.gridy = 3;
 		addInfoServicePanelConstraints.gridheight = 1;
-		addInfoServicePanelConstraints.weightx = 1.0;
+		//addInfoServicePanelConstraints.weightx = 1.0;
 		addInfoServicePanelConstraints.insets = new Insets(0, 10, 5, 10);
 		addInfoServicePanelLayout.setConstraints(addInfoServicePortField, addInfoServicePanelConstraints);
 		addInfoServicePanel.add(addInfoServicePortField);
@@ -1180,8 +1180,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		switchPanelConstraints.gridy = 0;
 		switchPanelLayout.setConstraints(descriptionPanel, switchPanelConstraints);
 		switchPanel.add(descriptionPanel);
-		switchPanelLayout.setConstraints(addInfoServicePanel, switchPanelConstraints);
-		switchPanel.add(addInfoServicePanel);
+		switchPanel.add(addInfoServicePanel, switchPanelConstraints);
 
 		switchPanel.setPreferredSize(new Dimension(Math.max(descriptionPanel.getPreferredSize().width,
 			addInfoServicePanel.getPreferredSize().width),

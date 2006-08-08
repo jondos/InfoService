@@ -145,7 +145,12 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		{
 			if (isConnected())
 			{
-				return ErrorCodes.E_ALREADY_CONNECTED;
+				LogHolder.log(LogLevel.NOTICE, LogType.NET, "AnonClient was still connected when connecting!");
+				shutdown();
+				if (isConnected())
+				{
+					return ErrorCodes.E_ALREADY_CONNECTED;
+				}
 			}
 			synchronized (CONN_ERR_SYNC)
 			{
@@ -476,129 +481,132 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 	private int initializeProtocol(Socket a_connectedSocket,
 								   final AnonServerDescription a_mixCascade)
 	{
-		try
+		synchronized (m_internalSynchronization)
 		{
-			synchronized (m_internalSynchronizationForSocket)
+			try
 			{
-				m_socketHandler = new SocketHandler(a_connectedSocket);
+				synchronized (m_internalSynchronizationForSocket)
+				{
+					m_socketHandler = new SocketHandler(a_connectedSocket);
+				}
+				try
+				{
+					/* limit timeouts while login procedure */
+					a_connectedSocket.setSoTimeout(LOGIN_TIMEOUT);
+				}
+				catch (SocketException e)
+				{
+/* ignore it */
+				}
+
+				final Vector exceptionCache = new Vector();
+				Thread loginThread = new Thread("Login Thread")
+				{
+					public void run()
+					{
+						try
+						{
+							m_keyExchangeManager = new KeyExchangeManager(m_socketHandler.getInputStream(),
+								m_socketHandler.getOutputStream(), (MixCascade) a_mixCascade);
+						}
+						catch (Exception a_e)
+						{
+							exceptionCache.addElement(a_e);
+						}
+					}
+				};
+				loginThread.start();
+				try
+				{
+					// this trick is needed to interrupt the key exchange read operation
+					loginThread.join();
+				}
+				catch (InterruptedException a_e)
+				{
+					throw a_e;
+				}
+
+				if (exceptionCache.size() > 0)
+				{
+					throw (Exception) exceptionCache.firstElement();
+				}
+			}
+			catch (UnknownProtocolVersionException e)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.NET, e);
+				closeSocketHandler();
+				return ErrorCodes.E_PROTOCOL_NOT_SUPPORTED;
+			}
+			catch (SignatureException a_e)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.CRYPTO, a_e);
+				closeSocketHandler();
+				/** @todo Make this more transparent... */
+				return ErrorCodes.E_SIGNATURE_CHECK_OTHERMIX_FAILED;
+			}
+			catch (InterruptedException a_e)
+			{
+				LogHolder.log(LogLevel.INFO, LogType.NET, a_e);
+				closeSocketHandler();
+				return ErrorCodes.E_INTERRUPTED;
+			}
+			catch (Exception e)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.NET, e);
+				closeSocketHandler();
+				return ErrorCodes.E_UNKNOWN;
+			}
+			m_multiplexer = new Multiplexer(m_socketHandler.getInputStream(), m_socketHandler.getOutputStream(),
+											m_keyExchangeManager, new SecureRandom());
+			m_socketHandler.addObserver(this);
+			m_packetCounter = new PacketCounter();
+			m_multiplexer.addObserver(m_packetCounter);
+			m_packetCounter.addObserver(this);
+			synchronized (m_internalSynchronizationForDummyTraffic)
+			{
+				m_dummyTrafficControlChannel = new DummyTrafficControlChannel(m_multiplexer);
+				m_dummyTrafficControlChannel.setDummyTrafficInterval(m_dummyTrafficInterval);
+			}
+			/* maybe we have to start some more services */
+			int errorCode = finishInitialization(m_multiplexer, m_keyExchangeManager, m_paymentProxyInterface,
+												 m_packetCounter, a_connectedSocket);
+			if (errorCode != ErrorCodes.E_SUCCESS)
+			{
+				shutdown();
+				return errorCode;
 			}
 			try
 			{
-				/* limit timeouts while login procedure */
-				a_connectedSocket.setSoTimeout(LOGIN_TIMEOUT);
+				/* try to set infinite timeout */
+				a_connectedSocket.setSoTimeout(0);
 			}
 			catch (SocketException e)
 			{
 				/* ignore it */
 			}
 
-			final Vector exceptionCache = new Vector();
-			Thread loginThread = new Thread()
+			Thread notificationThread = new Thread(new Runnable()
 			{
-				public void run ()
+				public void run()
 				{
-					try
+					synchronized (m_eventListeners)
 					{
-						m_keyExchangeManager = new KeyExchangeManager(m_socketHandler.getInputStream(),
-							m_socketHandler.getOutputStream(), (MixCascade) a_mixCascade);
-					}
-					catch (Exception a_e)
-					{
-						exceptionCache.addElement(a_e);
+						Enumeration eventListenersList = m_eventListeners.elements();
+						while (eventListenersList.hasMoreElements())
+						{
+							( (AnonServiceEventListener) (eventListenersList.nextElement())).
+								connectionEstablished(a_mixCascade);
+						}
 					}
 				}
-			};
-			loginThread.start();
-			try
-			{
-				// this trick is needed to interrupt the key exchange read operation
-				loginThread.join();
-			}
-			catch (InterruptedException a_e)
-			{
-				throw a_e;
-			}
+			}, "AnonClient: ConnectionEstablished notification");
+			notificationThread.setDaemon(true);
+			notificationThread.start();
 
-			if (exceptionCache.size() > 0)
-			{
-				throw (Exception)exceptionCache.firstElement();
-			}
+			/* AnonClient successfully started */
+			m_connected = true;
+			return ErrorCodes.E_SUCCESS;
 		}
-		catch (UnknownProtocolVersionException e)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.NET, e);
-			closeSocketHandler();
-			return ErrorCodes.E_PROTOCOL_NOT_SUPPORTED;
-		}
-		catch (SignatureException a_e)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.CRYPTO, a_e);
-			closeSocketHandler();
-			/** @todo Make this more transparent... */
-			return ErrorCodes.E_SIGNATURE_CHECK_OTHERMIX_FAILED;
-		}
-		catch (InterruptedException a_e)
-		{
-			LogHolder.log(LogLevel.INFO, LogType.NET, a_e);
-			closeSocketHandler();
-			return ErrorCodes.E_INTERRUPTED;
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.NET, e);
-			closeSocketHandler();
-			return ErrorCodes.E_UNKNOWN;
-		}
-		m_multiplexer = new Multiplexer(m_socketHandler.getInputStream(), m_socketHandler.getOutputStream(),
-										m_keyExchangeManager, new SecureRandom());
-		m_socketHandler.addObserver(this);
-		m_packetCounter = new PacketCounter();
-		m_multiplexer.addObserver(m_packetCounter);
-		m_packetCounter.addObserver(this);
-		synchronized (m_internalSynchronizationForDummyTraffic)
-		{
-			m_dummyTrafficControlChannel = new DummyTrafficControlChannel(m_multiplexer);
-			m_dummyTrafficControlChannel.setDummyTrafficInterval(m_dummyTrafficInterval);
-		}
-		/* maybe we have to start some more services */
-		int errorCode = finishInitialization(m_multiplexer, m_keyExchangeManager, m_paymentProxyInterface,
-											 m_packetCounter, a_connectedSocket);
-		if (errorCode != ErrorCodes.E_SUCCESS)
-		{
-			shutdown();
-			return errorCode;
-		}
-		try
-		{
-			/* try to set infinite timeout */
-			a_connectedSocket.setSoTimeout(0);
-		}
-		catch (SocketException e)
-		{
-			/* ignore it */
-		}
-
-		Thread notificationThread = new Thread(new Runnable()
-		{
-			public void run()
-			{
-				synchronized (m_eventListeners)
-				{
-					Enumeration eventListenersList = m_eventListeners.elements();
-					while (eventListenersList.hasMoreElements())
-					{
-						( (AnonServiceEventListener) (eventListenersList.nextElement())).
-							connectionEstablished(a_mixCascade);
-					}
-				}
-			}
-		}, "AnonClient: ConnectionEstablished notification");
-		notificationThread.setDaemon(true);
-		notificationThread.start();
-
-		/* AnonClient successfully started */
-		m_connected = true;
-		return ErrorCodes.E_SUCCESS;
 	}
 
 	private int finishInitialization(Multiplexer a_multiplexer, KeyExchangeManager a_keyExchangeManager,
