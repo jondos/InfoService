@@ -27,7 +27,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package gui.wizard;
 
-import java.awt.Dialog;
+import gui.dialog.JAPDialog;
 
 public interface WizardHost
 {
@@ -36,7 +36,7 @@ public interface WizardHost
 	//public void setTotalSteps(int numberOfSteps);
 	//public int getTotalSteps();
 
-	public Dialog getDialogParent();
+	public JAPDialog getDialogParent();
 
 		//set all the Buttons enabled/disabled which are needed during the Wizard takes its Action
 	public void setFinishEnabled(boolean enabled);

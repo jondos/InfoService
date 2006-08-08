@@ -271,7 +271,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					if (vi != null && vi.getJapVersion() != null &&
 						vi.getJapVersion().compareTo(JAPConstants.aktVersion) > 0)
 					{
-						JAPUpdateWizard wz = new JAPUpdateWizard(vi);
+						JAPUpdateWizard wz = new JAPUpdateWizard(vi, view);
 						/* we got the JAPVersionInfo from the infoservice */
 						/* Assumption: If we are here, the download failed for some resaons, otherwise the
 						 * program would quit

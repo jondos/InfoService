@@ -45,6 +45,7 @@ import gui.JAPMessages;
 import gui.wizard.BasicWizard;
 import gui.wizard.BasicWizardHost;
 import gui.wizard.WizardPage;
+import gui.dialog.JAPDialog;
 import jap.JAPConstants;
 import jap.JAPController;
 import jap.JAPModel;
@@ -55,6 +56,7 @@ import logging.LogLevel;
 import logging.LogType;
 import anon.util.ClassUtil;
 import jap.AbstractJAPMainView;
+import javax.swing.RootPaneContainer;
 public final class JAPUpdateWizard extends BasicWizard implements Runnable
 {
 	public JAPWelcomeWizardPage welcomePage;
@@ -113,10 +115,28 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 	public final static int UPDATESTATUS_ABORTED = 1;
 	public final static int UPDATESTATUS_ERROR = -1;
 
-	public JAPUpdateWizard(JAPVersionInfo info)
+	public JAPUpdateWizard(JAPVersionInfo info, JAPDialog a_dialog)
+	{
+		this(info, (Object)a_dialog);
+	}
+
+	public JAPUpdateWizard(JAPVersionInfo info, Container a_container)
+	{
+		this(info, (Object)a_container);
+	}
+
+
+	private JAPUpdateWizard(JAPVersionInfo info, Object a_parent)
 	{
 		setWizardTitle("JAP Update Wizard");
-		host = new BasicWizardHost(JAPController.getView(), this);
+		if (a_parent instanceof JAPDialog)
+		{
+			host = new BasicWizardHost((JAPDialog)a_parent, this);
+		}
+		else
+		{
+			host = new BasicWizardHost((Container)a_parent, this);
+		}
 		setHost(host);
 		m_Status = UPDATESTATUS_ABORTED;
 		japVersionInfo = info;
@@ -288,7 +308,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 
 	public WizardPage finish( /*WizardPage currentPage, WizardHost host*/)
 	{
-		Container parent = host.getDialogParent().getParent();
+		Container parent = host.getDialogParent().getOwner();
 		host.getDialogParent().dispose();
 		if (m_fileAktJapJar != null && m_fileAktJapJar.equals(CLASSFILE))
 		{

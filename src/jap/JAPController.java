@@ -3007,7 +3007,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					//store current configuration first
 					saveConfigFile();
-					JAPUpdateWizard wz = new JAPUpdateWizard(vi);
+					JAPUpdateWizard wz = new JAPUpdateWizard(vi, getView());
 					/* we got the JAPVersionInfo from the infoservice */
 					/* Assumption: If we are here, the download failed for some resaons, otherwise the
 					 * program would quit
