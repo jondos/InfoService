@@ -448,7 +448,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	 */
 	public Enumeration getAccounts()
 	{
-		return m_Accounts.elements();
+		return ((Vector)m_Accounts .clone()).elements();
 	}
 
 	/**
