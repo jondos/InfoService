@@ -86,6 +86,8 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 */
 	private Vector m_mixIds;
 
+	private String m_strMixIds;
+
 	private Vector m_mixNodes;
 
 	/**
@@ -313,6 +315,7 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 
 		/* store the xml structure */
 		m_xmlStructure = a_mixCascadeNode;
+		createMixIDString();
 	}
 
 	/**
@@ -355,6 +358,11 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 
 	public MixCascade(String a_name, String a_id, Vector a_listenerInterfaces) throws Exception
 	{
+		this(a_name, a_id, null, a_listenerInterfaces);
+	}
+
+	public MixCascade(String a_name, String a_id, Vector a_mixIDs, Vector a_listenerInterfaces) throws Exception
+	{
 		/* use always the timeout for the infoservice context, because the JAP client currently does
 		 * not have a database of mixcascade entries -> no timeout for the JAP client necessary
 		 */
@@ -384,13 +392,21 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		/* set the lastUpdate time */
 		m_lastUpdate = System.currentTimeMillis();
 		/* create the mixIds and set one with the same ID as the mixcascade itself */
-		m_mixIds = new Vector();
 		m_mixNodes = new Vector();
-		m_mixIds.addElement(m_mixCascadeId);
+		if (a_mixIDs == null || a_mixIDs.size() == 0)
+		{
+			m_mixIds = new Vector();
+			m_mixIds.addElement(m_mixCascadeId);
+		}
+		else
+		{
+			m_mixIds = (Vector)a_mixIDs.clone();
+		}
 		/* some more values */
 		m_userDefined = true;
 		m_mixCascadeCertificate = null;
 		m_xmlStructure = generateXmlRepresentation();
+		createMixIDString();
 	}
 
 	/**
@@ -404,25 +420,8 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		{
 			return false;
 		}
-		// check if the cascade has changed its composition since the last update
-		if (a_cascade.getNumberOfMixes() != getNumberOfMixes())
-		{
-			return false;
-		}
-		else
-		{
-			Vector mixIDs = getMixIds();
-			Vector mixIDsDB = a_cascade.getMixIds();
 
-			for (int i = 0; i < mixIDs.size(); i++)
-			{
-				if (!mixIDs.elementAt(i).equals(mixIDsDB.elementAt(i)))
-				{
-					return false;
-				}
-			}
-		}
-		return true;
+		return a_cascade.getMixIDsAsString().equals(getMixIDsAsString());
 	}
 
 	/**
@@ -603,6 +602,11 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 			return m_mixIds.size();
 		}
 		return 0;
+	}
+
+	public String getMixIDsAsString()
+	{
+		return m_strMixIds;
 	}
 
 	/**
@@ -824,4 +828,12 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		return m_isPayment;
 	}
 
+	private void createMixIDString()
+	{
+		m_strMixIds = "";
+		for (int i = 0; i < m_mixIds.size(); i++)
+		{
+			m_strMixIds += m_mixIds.elementAt(i);
+		}
+	}
 }

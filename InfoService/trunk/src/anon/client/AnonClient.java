@@ -145,7 +145,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		{
 			if (isConnected())
 			{
-				LogHolder.log(LogLevel.NOTICE, LogType.NET, "AnonClient was still connected when connecting!");
+				LogHolder.log(LogLevel.ERR, LogType.NET, "AnonClient was still connected when connecting!");
 				shutdown();
 				if (isConnected())
 				{

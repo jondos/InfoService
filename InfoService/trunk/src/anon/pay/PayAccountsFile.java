@@ -493,6 +493,8 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 					pl.accountActivated(account);
 				}
 			}
+			enumListeners = null;
+			pl = null;
 		}
 	}
 

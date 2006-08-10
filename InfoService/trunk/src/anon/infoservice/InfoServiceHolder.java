@@ -771,8 +771,8 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	public Element toXmlElement(Document a_doc)
 	{
 		Element infoServiceManagementNode = a_doc.createElement(XML_ELEMENT_NAME);
-		Element infoServicesNode = InfoServiceDBEntry.toXmlElement(a_doc,
-			Database.getInstance(InfoServiceDBEntry.class));
+		Element infoServicesNode = Database.getInstance(InfoServiceDBEntry.class).toXmlElement(
+			  a_doc, InfoServiceDBEntry.XML_ELEMENT_CONTAINER_NAME);
 		Element preferredInfoServiceNode = a_doc.createElement("PreferredInfoService");
 		Element changeInfoServicesNode = a_doc.createElement("ChangeInfoServices");
 		XMLUtil.setAttribute(infoServiceManagementNode, XML_ATTR_ASKED_INFO_SERVICES, m_nrAskedInfoServices);

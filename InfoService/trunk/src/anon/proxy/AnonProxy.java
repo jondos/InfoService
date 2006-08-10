@@ -358,6 +358,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				m_currentMixCascade.keepCurrentCascade(true);
 			}
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "AN.ON initialized");
+
 			if (m_currentTorParams != null)
 			{
 				m_Tor = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_TOR);

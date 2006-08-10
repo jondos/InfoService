@@ -90,7 +90,6 @@ import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
 import forward.server.ForwardServerManager;
 import gui.JAPDll;
-import gui.JAPHelp;
 import gui.JAPMessages;
 import gui.GUIUtils;
 import gui.dialog.JAPDialog;
@@ -112,6 +111,7 @@ import java.io.*;
 import anon.infoservice.JAPMinVersion;
 import anon.infoservice.DatabaseMessage;
 import javax.swing.UnsupportedLookAndFeelException;
+import anon.infoservice.CascadeIDEntry;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -287,9 +287,19 @@ public final class JAPController extends Observable implements IProxyListener, O
 						ListenerInterface.PROTOCOL_TYPE_RAW_TCP));
 				}
 			}
-			m_currentMixCascade = new MixCascade(JAPConstants.DEFAULT_ANON_NAME, JAPConstants.DEFAULT_ANON_ID,
-												 listeners);
+			Vector mixIDs = new Vector(JAPConstants.DEFAULT_ANON_MIX_IDs.length);
+			for (int i = 0; i < JAPConstants.DEFAULT_ANON_MIX_IDs.length; i++)
+			{
+				mixIDs.addElement(JAPConstants.DEFAULT_ANON_MIX_IDs[i]);
+			}
+			m_currentMixCascade =
+				new MixCascade(JAPConstants.DEFAULT_ANON_NAME,
+							   JAPConstants.DEFAULT_ANON_MIX_IDs[0], mixIDs, listeners);
 			m_currentMixCascade.setUserDefined(false, null);
+			/** make this cascade known */
+			Database.getInstance(MixCascade.class).update(m_currentMixCascade);
+			Database.getInstance(CascadeIDEntry.class).update(
+						 new CascadeIDEntry(m_currentMixCascade));
 		}
 		catch (Exception e)
 		{
@@ -824,6 +834,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 				/* try to load information about cascades */
 				Node nodeCascades = XMLUtil.getFirstChildByName(root, MixCascade.XML_ELEMENT_CONTAINER_NAME);
+				MixCascade currentCascade;
 				if (nodeCascades != null)
 				{
 					Node nodeCascade = nodeCascades.getFirstChild();
@@ -833,11 +844,21 @@ public final class JAPController extends Observable implements IProxyListener, O
 						{
 							try
 							{
-								Database.getInstance(MixCascade.class).update(
-									new MixCascade((Element)nodeCascade, true, Long.MAX_VALUE));
+								currentCascade = new MixCascade( (Element) nodeCascade, true, Long.MAX_VALUE);
+								try
+								{
+
+									Database.getInstance(MixCascade.class).update(currentCascade);
+								}
+								catch (Exception e)
+								{}
+								/* register loaded cascades as known cascades */
+								Database.getInstance(CascadeIDEntry.class).update(
+									new CascadeIDEntry(currentCascade));
 							}
-							catch (Exception e)
-							{}
+							catch (Exception a_e)
+							{
+							}
 						}
 						nodeCascade = nodeCascade.getNextSibling();
 					}
