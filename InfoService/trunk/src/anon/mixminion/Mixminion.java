@@ -78,6 +78,11 @@ public class Mixminion implements AnonService
 	{
 		return m_serviceDescription.getRouteLen();
 	}
+	
+	public static String getMyEMail()
+	{
+		return m_serviceDescription.getMyEmail();
+	}
 
 	public int setProxy(ImmutableProxyInterface a_Proxy)
 	{

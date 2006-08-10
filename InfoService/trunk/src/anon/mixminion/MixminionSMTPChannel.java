@@ -33,7 +33,6 @@ import java.util.Vector;
 
 import anon.mixminion.message.Message;
 import anon.shared.AbstractChannel;
-import anon.util.ByteArrayUtil;
 
 /** This class implements a channel,which speaks SMTP*/
 public class MixminionSMTPChannel extends AbstractChannel
@@ -159,22 +158,45 @@ public class MixminionSMTPChannel extends AbstractChannel
                 String[] rec = new String[m_receiver.size()];
 				m_receiver.copyInto(rec);
 
-
                 EMail eMail = new EMail(rec,m_text);
+                String sender = eMail.getSender();
 
-				//FIXME TESTING
-//                byte[] h_end= {0x0A};
-//                byte[] pl=ByteArrayUtil.conc(h_end, "unser text".getBytes());
-//                //byte[] pl = "Dies ist Stefans Test...".getBytes();
-				//END
+ 				//if a sender is specified in the config use this one otherwise the probably bad value of the message
+                if (Mixminion.getMyEMail() != "");
+                {
+                	sender = Mixminion.getMyEMail();
+                }
+                
+                //for the Moment we always send with a replyblock
+                //TODO checkbox in the jap-config
+                boolean repliable = true;
+				
+                //get hops
                 int hops = Mixminion.getRouteLen();
-                Message m = new Message(eMail.getPayload().getBytes(), eMail.getReceiverAsVektor(), hops);
 
-				boolean success = m.send();
+                //for testing we send for the first specified recipient one message,
+                //later mixminion will support up to 8 recipients in in one packet.
+                //for now there is no such support
+                boolean success = false;
+                Message m = null;
+                
+         
+                //build message(s)
+                m = new Message(eMail.getPayload(), eMail.getReceiver(), hops, sender, repliable);
+
+                //send 	
+                success = m.send();
 
 				m_state = 5;
+                
                 if (success==true) toClient("250 OK\r\n");
-                else toClient("554 Fehler beim Versenden der eMail zum MixMinionServer!\r\n");
+                else {
+                	//TODO which answer for which situation
+                	String clientanswer="";
+                	if (m.getDecoded() != null) clientanswer="250 OK\r\n" ;
+                	else clientanswer =	"554 Fehler beim Versenden der eMail zum MixMinionServer!\r\n";
+                	toClient(clientanswer);
+                }
 				}
 			}
         else if (m_state==5)

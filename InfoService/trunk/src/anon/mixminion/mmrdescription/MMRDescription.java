@@ -32,13 +32,12 @@ import java.io.LineNumberReader;
 import anon.crypto.MyRSAPublicKey;
 import anon.util.Base64;
 import anon.util.ByteArrayUtil;
-
-import java.util.Vector;
-
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import java.security.SecureRandom;
+import java.text.SimpleDateFormat;
+
 import anon.mixminion.message.ExitInformation;
 import anon.mixminion.message.RoutingInformation;
 
@@ -54,6 +53,8 @@ public class MMRDescription
 	private boolean m_isExitNode;
 	private boolean m_allowsFragmened;
 	private String m_software;
+	private SimpleDateFormat m_published;
+	private static String m_time; //testing
 	/**
 	 *
 	 * @param address
@@ -64,7 +65,7 @@ public class MMRDescription
 	 * @param exit
 	 */
 	public MMRDescription(String address, String name, int port, byte[] digest,
-						  byte[] keydigest, boolean exit, boolean fragmented, String software)
+						  byte[] keydigest, boolean exit, boolean fragmented, String software, SimpleDateFormat published)
 	{
 		this.m_address = address;
 		this.m_name = name;
@@ -74,6 +75,7 @@ public class MMRDescription
 		this.m_isExitNode = exit;
 		this.m_allowsFragmened = fragmented;
 		this.m_software = software;
+		this.m_published = published;
 	}
 
 	/**
@@ -97,6 +99,13 @@ public class MMRDescription
 	public MyRSAPublicKey getIdentityKey()
 	{
 		return this.m_IdentityKey;
+	}
+	/**
+	 * 
+	 * @return
+	 */
+	public SimpleDateFormat getPublished() {
+		return this.m_published;
 	}
 
 	/**
@@ -222,17 +231,24 @@ public class MMRDescription
 	 * @param email vector with strings max 8
 	 * @return vector with routingtype, routinginformation
 	 */
-	public static ExitInformation getExitInformation(Vector email)
+	public static ExitInformation getExitInformation(String[] email, byte[] decodinghandle)
 	{
 		ExitInformation exitInformation = new ExitInformation();
+		byte[] arRand= null;
+		if (decodinghandle == null) 
+		{
 		SecureRandom rand = new SecureRandom();
-		byte[] arRand = new byte[20];
+			arRand = new byte[20];
 		rand.nextBytes(arRand);
         arRand[0] &= 0x7F; 
-        
+		}
+		else 
+		{
+			arRand = decodinghandle; //when using a replyblock
+		}
 
 		//if no e-mail adress is specified return a vector with a drop and log error
-		if (email.size() < 1)
+		if (email.length < 1)
 		{
 			exitInformation.m_Type = ExitInformation.TYPE_DROP;
 			exitInformation.m_Content = arRand;
@@ -243,22 +259,24 @@ public class MMRDescription
 		else
 		{
 			exitInformation.m_Type = ExitInformation.TYPE_SMTP;
-			byte[] zero = new byte[1];
-			String mail = (String) email.elementAt(0);
+			//byte[] zero = new byte[1];
+			String mail = (String) email[0];
 			arRand = ByteArrayUtil.conc(arRand, mail.getBytes());
-			for (int i = 1; i < email.size(); i++)
-			{
-				if (i > 8)
-				{
-					LogHolder.log(LogLevel.ERR, LogType.MISC,
-								  "[Building ExitInformation]: more than 8 Recipients; 9+ will not receive ");
-					break;
-				}
-
-				mail = (String) email.elementAt(i);
-				arRand = ByteArrayUtil.conc(arRand, zero, mail.getBytes());
-			}
+			//TODO For the moment it seems like mixminion only supports one recipient 
+//			for (int i = 1; i < email.length; i++)
+//			{
+//				if (i > 8)
+//				{
+//					LogHolder.log(LogLevel.ERR, LogType.MISC,
+//								  "[Building ExitInformation]: more than 8 Recipients; 9+ will not receive ");
+//					break;
+//				}
+//
+//				mail = (String) email[i];
+//				arRand = ByteArrayUtil.conc(arRand, zero, mail.getBytes());
+//			}
 			exitInformation.m_Content = arRand;
+						
 		}
 
 		return exitInformation;
@@ -283,7 +301,12 @@ public class MMRDescription
 			//Signature
 			byte[] signature = Base64.decode(reader.readLine().substring(11));
 
-			reader.readLine(); // skip published
+			//published
+			String pd = reader.readLine().substring(11,21);
+			m_time = pd;
+			SimpleDateFormat published = new SimpleDateFormat("yyyy-MM-dd");
+			published.parse(pd);
+						
 			reader.readLine(); // skip Valid after
 			reader.readLine(); // skip Valid until
 
@@ -345,7 +368,7 @@ public class MMRDescription
 
 			//build the new MMRDescription
 			MMRDescription mmrd = new MMRDescription(hostname, nickname, Integer.parseInt(port), digest,
-				keydigest, exitNode, fragmented, software);
+				keydigest, exitNode, fragmented, software, published);
 
 			if (!mmrd.setIdentityKey(identity) || !mmrd.setPacketKey(packetkey))
 			{
@@ -367,7 +390,7 @@ public class MMRDescription
 	//FIXME only for testing purpose
 	public String toString()
 	{
-		return "MMRRouter: " + this.m_name + " Exitnode:" + this.m_isExitNode;
+		return "MMRRouter: " + this.m_name + " Exitnode:" + this.m_isExitNode + "Published: " + m_time;
 	}
 
 }
