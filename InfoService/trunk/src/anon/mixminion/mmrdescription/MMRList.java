@@ -60,7 +60,7 @@ public class MMRList
 		m_fragexitnodes = new Vector();
 		m_exitnodes = new Vector();
 		m_mixminionroutersWithNames = new Hashtable();
-		
+
 		m_mmrlistFetcher = fetcher;
 		m_rand = new MyRandom();
 
@@ -89,7 +89,7 @@ public class MMRList
 		try
 		{
 			String doc = m_mmrlistFetcher.getMMRList();
-			
+
 			if (doc == null)
 			{
 				return false;
@@ -160,9 +160,9 @@ public class MMRList
 	}
 
 
-	
-	
-	
+
+
+
 	/**
 	 * selects a Routing List randomly, last element is surely an exit-node
 	 * tries to blanace the probability of exit and non-exit nodes
@@ -177,11 +177,11 @@ public class MMRList
 		MMRDescription x = null;
 		boolean contains = true;
 
-		for (int i=0; i<hops-1; i++) 
+		for (int i=0; i<hops-1; i++)
 		{
 			contains=true;
 			int abbruch=0;
-			while (contains && (abbruch != 10) ) 
+			while (contains && (abbruch != 10) )
 			{
 				abbruch++;
 				x = getByRandom();
@@ -192,7 +192,7 @@ public class MMRList
 
 		contains = true;
 		int abbruch = 0;
-			while (contains && (abbruch != 10)) 
+			while (contains && (abbruch != 10))
 			{
 				abbruch++;
 				x = getByRandom(m_exitnodes);
@@ -201,7 +201,7 @@ public class MMRList
 		routers.addElement(x);
 		return routers;
 	}
-	
+
 	public synchronized Vector getByRandomWithFrag(int hops, int frags)
 	{
 		Vector routes = new Vector();
@@ -211,14 +211,14 @@ public class MMRList
 		boolean contains = true;
 
 		exit = getByRandom(m_fragexitnodes);
-		
-		for (int i = 0; i < frags; i++) 
+
+		for (int i = 0; i < frags; i++)
 		{
 			route = new Vector();
-			for (int j = 0; j < hops-1; j++) 
+			for (int j = 0; j < hops-1; j++)
 			{
 				contains=true;
-				while (contains) 
+				while (contains)
 				{
 					temp = getByRandom();
 					contains = route.contains(temp);
@@ -269,7 +269,7 @@ public class MMRList
 		//down servers
 		ServerStats servSt = new ServerStats();
 		Vector downServers = servSt.getWhoIsDown();
-			
+
 		if(aktLine==null)
 			return false;
 		for (; ; )
@@ -283,13 +283,13 @@ public class MMRList
 
 			if (aktLine.startsWith("[Server]"))
 			{
-				
+
 				MMRDescription mmrd = MMRDescription.parse(reader);
 				if ((mmrd != null)  && !downServers.contains(mmrd.getName()))
 				{
 					//check mmrswn.containsKey(mmrd.getName()) and we only use 0.0.7.1  0.0.8alpha2
-					boolean addme = true;//(mmrd.getSoftwareVersion().intern() == "Mixminion 0.0.8alpha2"); 
-					if (mmrswn.containsKey(mmrd.getName())) 
+					boolean addme = true;//(mmrd.getSoftwareVersion().intern() == "Mixminion 0.0.8alpha2");
+					if (mmrswn.containsKey(mmrd.getName()))
 						{
 //						//sometimes there are entries with the same nicks, i suppose that the later the entries
 //						//are in the list the newer they are
@@ -301,22 +301,22 @@ public class MMRList
 //						mmrswn.remove(old.getName());
 						addme=false;
 						}
-					
+
 					//---
-					if (addme) 
+					if (addme)
 					{
-						if (mmrd.isExitNode()) 
+						if (mmrd.isExitNode())
 						{
-							if (mmrd.allowsFragmented()) 
+							if (mmrd.allowsFragmented())
 				{
 							fnodes.addElement(mmrd);
 						}
-							else 
+							else
 							{
 							enodes.addElement(mmrd);
 						}
 					}
-						
+
 
 					mmrs.addElement(mmrd);
 					mmrswn.put(mmrd.getName(), mmrd);
@@ -326,7 +326,7 @@ public class MMRList
 					}
 		}
 
-		
+
 		m_exitnodes = enodes;
 		m_fragexitnodes = fnodes;
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "ExitNodes : "+enodes.size() +"Frag-Exit-Nodes:" +fnodes.size());
@@ -336,19 +336,19 @@ public class MMRList
 		//m_exitnodes=m_mixminionrouters=mytesting();
 		return true;
 	}
-	
 
-	
+
+
 	public void vectortostring(Vector v) {
 		String huhu="";
 		for(int i=0; i<v.size(); i++) {
-			huhu += ((MMRDescription)v.get(i)).getName() +",";
+			huhu += ((MMRDescription)v.elementAt(i)).getName() +",";
 		}
 		System.out.println(huhu);
 	}
-	
+
 	public Vector mytesting() {
-		
+
 //		[Server]
 //		 Nickname: rinos
 //		 Identity: MIIBCgKCAQEAwYi8XHUVrwYEQJSA3gCbXX5A6B81T4Vfw3C1Sjof5RpYhZHf8BHHhOkm7JN0vkYKIzilr37W2KtV5g4hjJQCX+KR8RQhvYetFZzZ8fRjyO3ldfK273TuCXVJgmyf4cAFsNsm/hihNg8SaNmDXpxM0W6mJyvC+W+x+N6upjOBKED0dzLDBShgE0a6CiZrCTGjUrR9ZD3mG1jl+gHmiDvymYQV1XPoJYKQw9FMxTybPyMmLJ4p3ZRKQU2LEjNdQXmywTE6KC1MfD+nqY6P+CVDgjCf85zA2/DhUkuGMUlGt82fN0Sigy0uxqTNJIGZ8ozmatY5E2R+0waxwv4ek0rOjQIDAQAB
@@ -360,14 +360,16 @@ public class MMRList
 //		 Key-Digest: OxI12M4YvKMZnWJfV1leV6ywT10=
 
 		MMRDescription mym = new MMRDescription("localhost", "losrinos", 48099, Base64.decode("oZoRbjYxnqUVfdUGP/3fPQVFy5U="),
-						  Base64.decode("OxI12M4YvKMZnWJfV1leV6ywT10="), true, true, "egal",null); 
-		mym.setIdentityKey(Base64.decode("MIIBCgKCAQEAwYi8XHUVrwYEQJSA3gCbXX5A6B81T4Vfw3C1Sjof5RpYhZHf8BHHhOkm7JN0vkYKIzilr37W2KtV5g4hjJQCX+KR8RQhvYetFZzZ8fRjyO3ldfK273TuCXVJgmyf4cAFsNsm/hihNg8SaNmDXpxM0W6mJyvC+W+x+N6upjOBKED0dzLDBShgE0a6CiZrCTGjUrR9ZD3mG1jl+gHmiDvymYQV1XPoJYKQw9FMxTybPyMmLJ4p3ZRKQU2LEjNdQXmywTE6KC1MfD+nqY6P+CVDgjCf85zA2/DhUkuGMUlGt82fN0Sigy0uxqTNJIGZ8ozmatY5E2R+0waxwv4ek0rOjQIDAQAB")); 
+						  Base64.decode("OxI12M4YvKMZnWJfV1leV6ywT10="), true, true, "egal",null);
+		mym.setIdentityKey(Base64.decode("MIIBCgKCAQEAwYi8XHUVrwYEQJSA3gCbXX5A6B81T4Vfw3C1Sjof5RpYhZHf8BHHhOkm7JN0vkYKIzilr37W2KtV5g4hjJQCX+KR8RQhvYetFZzZ8fRjyO3ldfK273TuCXVJgmyf4cAFsNsm/hihNg8SaNmDXpxM0W6mJyvC+W+x+N6upjOBKED0dzLDBShgE0a6CiZrCTGjUrR9ZD3mG1jl+gHmiDvymYQV1XPoJYKQw9FMxTybPyMmLJ4p3ZRKQU2LEjNdQXmywTE6KC1MfD+nqY6P+CVDgjCf85zA2/DhUkuGMUlGt82fN0Sigy0uxqTNJIGZ8ozmatY5E2R+0waxwv4ek0rOjQIDAQAB"));
 		mym.setPacketKey(Base64.decode("MIIBCgKCAQEA+IPzeiSReMfoNZ1PhqdN8Cy8Q9xJPdr5pcpTOZZ+d786urWWL1PPW+YQXr1fOBeqaxoag+GNxZdkep1z4Vejsxh6FYILAVSQhyJE3sXE24KyHyQgn7DhMF4FEOQvbqcJiI+hHlVR1zSAly/TCdZIvHYCgfI0tyLcD0HJ1T0aAINuWOPZefHi2ME7gGxJ3IDbL4JpNuRhmd5vJo8ShpvpJUT4BI1Yg9MymgiYFkDsBVmNlQEPrWkI8713go8221/bPc5X5K82Kq8QnkMwGILcB5xDxbljwIiOuyGpSshaU3lAsOy5NXf+s/0DiS7Q3GOfkt8S5OrSpns1V0rUl87JlQIDAQAB"));
-		
+
 		Vector retn = new Vector();
-		retn.add(mym); retn.add(mym);retn.add(mym);
+		retn.addElement(mym);
+		retn.addElement(mym);
+		retn.addElement(mym);
 		return retn;
-	
+
 //////		//end
 	}
 }

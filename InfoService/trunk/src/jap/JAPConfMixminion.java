@@ -42,6 +42,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
@@ -49,6 +50,7 @@ import javax.swing.table.DefaultTableModel;
 import anon.mixminion.mmrdescription.MMRDescription;
 import anon.mixminion.mmrdescription.MMRList;
 import anon.mixminion.mmrdescription.InfoServiceMMRListFetcher;
+import anon.mixminion.mmrdescription.PlainMMRListFetcher;
 
 import gui.JAPMessages;
 import gui.JAPHelp;
@@ -62,6 +64,8 @@ final class JAPConfMixminion extends AbstractJAPConfModule implements ActionList
 	JSlider m_sliderPathLen;
 	JButton m_bttnFetchRouters;
 	JLabel m_labelAvailableRouters;
+	JTextField m_email;
+	
 	long m_lastUpdate;
 	DateFormat ms_dateFormat=DateFormat.getDateTimeInstance(DateFormat.MEDIUM,
 					DateFormat.SHORT);
@@ -169,6 +173,26 @@ final class JAPConfMixminion extends AbstractJAPConfModule implements ActionList
 		c.fill = GridBagConstraints.HORIZONTAL;
 		panelRoot.add(p, c);
 
+		//test
+		p= new JPanel(new GridBagLayout());
+		GridBagConstraints c4 = new GridBagConstraints();
+		c4.anchor = GridBagConstraints.NORTHWEST;
+		c4.insets = new Insets(2, 5, 2, 5);
+		c4.fill = GridBagConstraints.NONE;
+		p.add(new JLabel(JAPMessages.getString("mixminionEMail")), c3);
+		m_email = new JTextField();
+		m_email.setSize(1,50);
+		c4.gridx = 1;
+		c4.fill = GridBagConstraints.HORIZONTAL;
+		p.add(m_email, c4);
+
+		p.setBorder(new TitledBorder(JAPMessages.getString("mixminionEMailSettings")));
+		c.gridy = 4;
+		c.weighty = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		panelRoot.add(p, c);
+		//end
+
 		m_lastUpdate = 0;
 	}
 
@@ -198,6 +222,7 @@ final class JAPConfMixminion extends AbstractJAPConfModule implements ActionList
 	protected boolean onOkPressed()
 	{
 		JAPController.setMixminionRouteLen(m_sliderPathLen.getValue());
+		JAPController.setMixMinionMyEMail(m_email.getText());
 		return true;
 	}
 
@@ -219,6 +244,7 @@ final class JAPConfMixminion extends AbstractJAPConfModule implements ActionList
 	private void updateGuiOutput()
 	{
 		m_sliderPathLen.setValue(JAPModel.getMixminionRouteLen());
+		m_email.setText(JAPModel.getMixminionMyEMail());
 	}
 
 	private void fetchRoutersAsync(final boolean bShowError)
@@ -229,6 +255,7 @@ final class JAPConfMixminion extends AbstractJAPConfModule implements ActionList
 			public void run()
 			{
 				MMRList mmrl = new MMRList(new InfoServiceMMRListFetcher());
+				if (!mmrl.updateList()) mmrl = new MMRList(new PlainMMRListFetcher());
 				if (!mmrl.updateList())
 				{
 					if (bShowError)
@@ -265,5 +292,6 @@ final class JAPConfMixminion extends AbstractJAPConfModule implements ActionList
 	public void onResetToDefaultsPressed()
 	{
 		m_sliderPathLen.setValue(JAPConstants.DEFAULT_MIXMINION_ROUTE_LEN);
+		m_email.setText(JAPConstants.DEFAULT_MIXMINION_EMAIL);
 	}
 }

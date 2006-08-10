@@ -117,7 +117,7 @@ public class Decoder {
 //		            If DECODE_PLAINTEXT_PAYLOAD(P_t) is not "Unknown", return it.
 
 		for (int i = 0; i<mykeys.size(); i++) {
-			byte[] aktkey = (byte[])mykeys.get(i);
+			byte[] aktkey = (byte[])mykeys.elementAt(i);
 			byte[] tempkey = ByteArrayUtil.conc(tag,aktkey,"Validate".getBytes());
 			if (MixMinionCryptoUtil.hash(tempkey)[19] == 0x00) {
 				byte[] key = ByteArrayUtil.copy(MixMinionCryptoUtil.hash(ByteArrayUtil.conc(tag,aktkey,"Generate".getBytes())),0,KEY_LEN);

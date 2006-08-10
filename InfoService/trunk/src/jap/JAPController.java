@@ -1331,6 +1331,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 						JAPConstants.CONFIG_ROUTE_LEN);
 					int routeLen = XMLUtil.parseValue(elemMM, JAPModel.getMixminionRouteLen());
 					setMixminionRouteLen(routeLen);
+					//FIXME sr
+					Element elemMMMail = (Element) XMLUtil.getFirstChildByName(elemMixminion,
+							JAPConstants.CONFIG_MIXMINION_REPLY_MAIL);
+					String emaddress = XMLUtil.parseAttribute(elemMMMail,"MixminionSender", "none");
+					
+					setMixMinionMyEMail(emaddress);
 				}
 				catch (Exception ex)
 				{
@@ -1859,10 +1865,17 @@ public final class JAPController extends Observable implements IProxyListener, O
 			Element elemMixminion = doc.createElement(JAPConstants.CONFIG_Mixminion);
 			Element elemMM = doc.createElement(JAPConstants.CONFIG_ROUTE_LEN);
 			XMLUtil.setValue(elemMM, JAPModel.getMixminionRouteLen());
+			//FIXME von sr
+			Element elemMMMail = doc.createElement(JAPConstants.CONFIG_MIXMINION_REPLY_MAIL);
+			XMLUtil.setValue(elemMMMail, JAPModel.getMixminionMyEMail());
+			XMLUtil.setAttribute(elemMMMail,"MixminionSender", JAPModel.getMixminionMyEMail());
+			//end
 			elemMixminion.appendChild(elemMM);
+			elemMixminion.appendChild(elemMMMail);
 			e.appendChild(elemMixminion);
 
 			e.appendChild(JAPModel.getInstance().getRoutingSettings().getSettingsAsXml(doc));
+			
 			XMLUtil.formatHumanReadable(doc);
 			return XMLUtil.toString(doc);
 			//((XmlDocument)doc).write(f);
@@ -2226,7 +2239,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					td.setMaxConnectionsPerRoute(JAPModel.getTorMaxConnectionsPerRoute());
 					m_proxyAnon.setTorParams(td);
 					m_proxyAnon.setMixminionParams(new MixminionServiceDescription(JAPModel.
-						getMixminionRouteLen()));
+						getMixminionRouteLen(), JAPModel.getMixminionMyEMail()));
 					m_proxyAnon.setProxyListener(m_Controller);
 					m_proxyAnon.setDummyTraffic(JAPModel.getDummyTraffic());
 					// -> we can try to start anonymity
@@ -2238,6 +2251,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					LogHolder.log(LogLevel.DEBUG, LogType.NET, "Try to start AN.ON service...");
 
 					int ret = m_proxyAnon.start(a_bRetryOnConnectionError);
+
 
 					if (ret == AnonProxy.E_BIND)
 					{
@@ -2625,6 +2639,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public static void setMixminionRouteLen(int len)
 	{
 		m_Model.setMixminionRouteLen(len);
+	}
+	
+	public static void setMixMinionMyEMail(String address) 
+	{
+		m_Model.setMixminionMyEMail(address);
 	}
 
 	//---------------------------------------------------------------------
