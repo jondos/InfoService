@@ -30,14 +30,25 @@
  */
 package anon.infoservice;
 
+import anon.util.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+
 /**
  * This database class stores the IDs of all mixes in a cascade in a single string. It may be
  * used to determine previously known cascades.
  *
  * @author Rolf Wendolsky
  */
-public abstract class AbstractCascadeIDEntry extends AbstractDatabaseEntry
+public abstract class AbstractCascadeIDEntry extends AbstractDatabaseEntry implements IXMLEncodable
 {
+	private static final String XML_ID = "ID";
+	private static final String XML_CASCADE_ID = "CascadeID";
+	private static final String XML_ATTR_UPDATE_TIME = "updateTime";
+	private static final String XML_ATTR_EXPIRE_TIME = "expireTime";
+
+
 	private String m_ID;
 	private long m_version;
 	private String m_cascadeID;
@@ -78,6 +89,27 @@ public abstract class AbstractCascadeIDEntry extends AbstractDatabaseEntry
 		m_cascadeID = a_entry.getCascadeId();
 	}
 
+	public AbstractCascadeIDEntry(Element a_xmlElement) throws XMLParseException
+	{
+		super(XMLUtil.parseAttribute(a_xmlElement, XML_ATTR_EXPIRE_TIME, 0));
+		if (a_xmlElement == null)
+		{
+			throw new XMLParseException(XMLParseException.NODE_NULL_TAG);
+		}
+		if (!a_xmlElement.getNodeName().equals(ClassUtil.getShortClassName(getClass())))
+		{
+			throw new XMLParseException(XMLParseException.ROOT_TAG);
+		}
+		m_version = XMLUtil.parseAttribute(a_xmlElement, XML_ATTR_UPDATE_TIME, 0);
+		m_ID = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_xmlElement, XML_ID), null);
+		m_cascadeID = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_xmlElement, XML_CASCADE_ID), null);
+		if (m_ID == null || m_cascadeID == null)
+		{
+			throw new XMLParseException(
+						 "This is no valid " + ClassUtil.getShortClassName(getClass()) + " node!");
+		}
+	}
+
 	/**
 	 * The cascade ID, that means the ID of the first mix in the cascade.
 	 * @return the ID of the first mix in the cascade
@@ -105,5 +137,20 @@ public abstract class AbstractCascadeIDEntry extends AbstractDatabaseEntry
 	public final long getVersionNumber()
 	{
 		return m_version;
+	}
+
+	public Element toXmlElement(Document a_doc)
+	{
+		Element element = a_doc.createElement(ClassUtil.getShortClassName(getClass()));
+		Element temp = a_doc.createElement(XML_ID);
+		XMLUtil.setAttribute(element, XML_ATTR_UPDATE_TIME, m_version);
+		XMLUtil.setAttribute(element, XML_ATTR_EXPIRE_TIME, getExpireTime());
+		XMLUtil.setValue(temp, m_ID);
+		element.appendChild(temp);
+		temp =  a_doc.createElement(XML_CASCADE_ID);
+		XMLUtil.setValue(temp, m_cascadeID);
+		element.appendChild(temp);
+
+		return element;
 	}
 }

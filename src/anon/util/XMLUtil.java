@@ -44,6 +44,7 @@ import java.io.Reader;
 import java.io.Writer;
 import java.util.StringTokenizer;
 import java.lang.reflect.Method;
+import java.lang.reflect.Field;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -410,6 +411,21 @@ public class XMLUtil
 			}
 		}
 		return s;
+	}
+
+	public static String getXmlElementName(Class a_xmlEncodableClass)
+	{
+		String xmlElementName = null;
+		try
+		{
+			Field field = a_xmlEncodableClass.getField(IXMLEncodable.FIELD_XML_ELEMENT_NAME);
+			xmlElementName = (String) field.get(null);
+		}
+		catch (Exception ex)
+		{
+		}
+
+		return xmlElementName;
 	}
 
 	/**

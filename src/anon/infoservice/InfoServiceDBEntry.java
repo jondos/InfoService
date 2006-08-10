@@ -147,30 +147,6 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	private CertPath m_certPath;
 
 	/**
-	 * Adds all infoservices, which are childs of the InfoServices node, to the database.
-	 *
-	 * @param infoServicesNode The InfoServices node.
-	 * @param a_database the database that contains the InfoServiceDBEntries
-	 */
-	public static void loadFromXml(Element infoServicesNode, Database a_database)
-	{
-		NodeList infoServiceNodes = infoServicesNode.getElementsByTagName(XML_ELEMENT_NAME);
-		for (int i = 0; i < infoServiceNodes.getLength(); i++)
-		{
-			/* add all childs to the database */
-			try
-			{
-				a_database.update(new InfoServiceDBEntry( (Element) (infoServiceNodes.item(i))));
-			}
-			catch (Exception e)
-			{
-				LogHolder.log(LogLevel.WARNING, LogType.MISC, "Could not load db entries from XML! " + e);
-				/* if there was an error, it does not matter */
-			}
-		}
-	}
-
-	/**
 	 * This is only for compatibility and will be rewritten next time.
 	 * @todo rewrite this
 	 * @param a_listenerInterface a ListenerInterface of this InfoService

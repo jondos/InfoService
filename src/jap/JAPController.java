@@ -864,6 +864,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 				}
 
+				/* load the list of known cascades */
+				Database.getInstance(CascadeIDEntry.class).loadFromXml(
+								(Element) XMLUtil.getFirstChildByName(root,
+					CascadeIDEntry.XML_ELEMENT_CONTAINER_NAME));
+
 				/** @todo add Tor in a better way */
 	/**			Database.getInstance(MixCascade.class).update(
 								new MixCascade("Tor - Onion Routing", "Tor", "myhost.de", 1234));*/
@@ -1736,6 +1741,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 			{
 				elemCascades.appendChild(((MixCascade) enumer.nextElement()).toXmlElement(doc));
 			}
+
+			/* stores known cascades */
+			e.appendChild(Database.getInstance(CascadeIDEntry.class).toXmlElement(
+						 doc, CascadeIDEntry.XML_ELEMENT_CONTAINER_NAME));
+
 			/*stores mixes */
 			Element elemMixes = doc.createElement(MixInfo.XML_ELEMENT_CONTAINER_NAME);
 			e.appendChild(elemMixes);
