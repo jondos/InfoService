@@ -30,12 +30,10 @@ package anon.mixminion.message;
 
 
 import java.io.IOException;
-import java.io.LineNumberReader;
-import java.io.StringReader;
 import java.util.Vector;
 
-import javax.swing.JFrame;
-import javax.swing.JTextArea;
+//import javax.swing.JFrame;
+//import javax.swing.JTextArea;
 
 import logging.LogHolder;
 import logging.LogLevel;
@@ -56,8 +54,8 @@ public class Message
 	private String m_payload = null; // "raw"-Payload from the mail
 	private String[] m_recipient = null; // all recipients; if there is a replyblock in use: dont care
 	private int m_hops = 0;
-	private String m_address; // E-Mail address of the sender; needed to build a Replyblock(this one is appended to the payload to allow a reply) 
-	private boolean m_withreplyblock = false; // true if the the message should contain a Replyblock 
+	private String m_address; // E-Mail address of the sender; needed to build a Replyblock(this one is appended to the payload to allow a reply)
+	private boolean m_withreplyblock = false; // true if the the message should contain a Replyblock
 	private String m_decoded = null;
 
 
@@ -71,7 +69,7 @@ public class Message
  * usage:
  * for normal message: specify payload, recipient, hops,rb=null,myadress=dontcare,repliable=false
  * for repliable message specify above but: myadress=e-mail for replies, repliable=true
- * for message to an replyblock specify above possibilitys but: rb = Replyblock, recipient=dontcare 
+ * for message to an replyblock specify above possibilitys but: rb = Replyblock, recipient=dontcare
  * @param payload
  * @param recipient
  * @param hops
@@ -103,7 +101,7 @@ public class Message
 //		0.1 Look if the Sender has specified a ReplyBlock to send to
 //		0.2 Do we want to make the message repliable? yes: add a replyblock to the payload
 //      0.3 add ascii armor to the payload
-//		1. Compress the message 
+//		1. Compress the message
 //		2. Choose whether SingleBlock or Fragmented Message Imlementation and build the payload(s)
 //		3. Choose whether in Reply or normal Forward Message
 //		4. Build the packets.
@@ -113,58 +111,59 @@ public class Message
 		//0.look if the user only wants a decoded representation
 		Decoder decoder = new Decoder(m_payload, keyringpassword);
 		String decoded = null;
-		try 
+		try
 		{
 			decoded = decoder.decode();
-		} catch (IOException e2) 
+		} catch (IOException e2)
 			{
 			System.out.println("Decodier-Exception...");
 			}
 
-		if (decoded != null) 
+		if (decoded != null)
 		{
 			//TODO for the Moment we open a new window with the decoded content
-			JFrame jf = new JFrame( "Decodiert:" );
+	/** Removed becaus no GUI in lib coding directive...
+	JFrame jf = new JFrame( "Decodiert:" );
 			jf.setDefaultCloseOperation( JFrame.DISPOSE_ON_CLOSE   );
 		    jf.setSize( 700, 1000 );
-		   
+
 		    JTextArea jt = new JTextArea();
 		    jt.append(decoded);
 		    jt.setVisible(true);
 		    jf.getContentPane().add(jt);
 		    jf.setVisible( true );
 		    //----
-			m_decoded=decoded;
+*/			m_decoded=decoded;
 			return false;
 		}
-		
+
 		//There is a message to send....
 		//Needed Variables
 		byte[][] message_parts = null; // Array with finalized payload parts, each 28kb
 		boolean returnValue = true; // all parts sended correct?
-		
+
 		MessageImplementation payload_imp; //BridgeVariable, if single or multipart implemetation
 		ReplyImplementation message_imp; //BridgeVariable, if repliable or not
-		
-		
+
+
 		//0.1 possibly parse replyblock
-		String m_payload_temp = m_payload; 
+		String m_payload_temp = m_payload;
 		ReplyBlock rb = new ReplyBlock(null,null,null,10000); //if the payload contains a replyblock this one is initialised and used as header 2, otherwise the specified recipients are used to build header2
-		try 
+		try
 		{
 			//TODO do this stuff in the e-mail class
 			rb = rb.parseReplyBlock(m_payload_temp, null);
-		} catch (IOException e) 
+		} catch (IOException e)
 		{
 			e.printStackTrace();
 		}
 		//remove the replyblock from the payload, he is not needed anymore
-		if (rb != null) 
+		if (rb != null)
 	{
-			try 
+			try
 			{
 				m_payload = rb.removeRepyBlock(m_payload);
-			} catch (IOException e1) 
+			} catch (IOException e1)
 		{
 				e1.printStackTrace();
 			}
@@ -184,7 +183,7 @@ public class Message
 
 		//0.2 Do we want to send a ReplyBlock with the Message to allow a Reply?
 		//if so, we have to build a replyblock an add it to the payload...
-		
+
 		if (m_withreplyblock) {
 			//build Repyblock
 			//TODO BETA We use the same Replyblock for every Message part
@@ -205,7 +204,7 @@ public class Message
 					  "[Message] Compressed Size = " + compressed_payload.length);
 
 		//2. choose which concrete Implementation for the payload to use
-		//Test if the payload fix to one 28k block or if it must be fragmented 
+		//Test if the payload fix to one 28k block or if it must be fragmented
 		if (compressed_payload.length + SingleBlockMessage.SINGLETON_HEADER_LEN <= 28 * 1024)
 
 		{
@@ -229,10 +228,10 @@ public class Message
 			return false;
 		}
 
-		//3. Choose wether to send with in Reply to an ReplyBlock or without, note that the replyblock in the constructor 
+		//3. Choose wether to send with in Reply to an ReplyBlock or without, note that the replyblock in the constructor
 		//contains the address of the recipient
 		//for every element in message_parts build a 32k message
-		if (rb != null) 
+		if (rb != null)
 		{
 			//FIXME test whether the rb is within his time to live
 			if (!rb.timetoliveIsOK()) return false;
@@ -250,7 +249,7 @@ public class Message
 		//5. send each packet
 		Vector firstservers = message_imp.getStartServers();
 
-		for(int i = 0; i < packets.size(); i++) 
+		for(int i = 0; i < packets.size(); i++)
 		{
 			returnValue = returnValue && sendToMixMinionServer((byte[])packets.elementAt(i), (MMRDescription) firstservers.elementAt(i));
 		}
@@ -302,7 +301,7 @@ public class Message
 //		//- davorsetzen
 //		LineNumberReader reader = new LineNumberReader(new StringReader(m_payload));
 //		String filtered ="";
-//		 
+//
 //		while (1==1) {
 //			try {
 //				String aktLine = reader.readLine();
@@ -314,13 +313,13 @@ public class Message
 //				break;
 //			}
 //		}
-				
+
 		String result = new String();
 		    result = "-----BEGIN TYPE III ANONYMOUS MESSAGE-----\n";
 		    result = result + "Message-type: plaintext\n\n" +"Nachricht: \n";
 		    result = result + message + "\n";
 		    result = result + "-----END TYPE III ANONYMOUS MESSAGE-----\n";
-		    return result;	
+		    return result;
 	}
 
 	/**

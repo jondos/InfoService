@@ -116,6 +116,7 @@ public final class JAPModel extends Observable
 	private int m_TorMaxRouteLen = JAPConstants.DEFAULT_TOR_MAX_ROUTE_LEN;
 	private int m_TorMinRouteLen = JAPConstants.DEFAULT_TOR_MIN_ROUTE_LEN;
 	private int m_MixminionRouteLen = JAPConstants.DEFAULT_MIXMINION_ROUTE_LEN;
+	private String m_MixminionMyEMail = JAPConstants.DEFAULT_MIXMINION_EMAIL;
 	private boolean m_bPreCreateAnonRoutes = JAPConstants.DEFAULT_TOR_PRECREATE_ROUTES;
 	private boolean m_bUseProxyAuthentication = false;
 	private JAPController.AnonConnectionChecker m_connectionChecker;
@@ -864,6 +865,15 @@ public final class JAPModel extends Observable
 	public static int getMixminionRouteLen()
 	{
 		return ms_TheModel.m_MixminionRouteLen;
+	}
+	
+	//von Stefan Rönisch
+	protected void setMixminionMyEMail(String address) {
+		m_MixminionMyEMail = address;
+	}
+	
+	public static String getMixminionMyEMail() {
+		return ms_TheModel.m_MixminionMyEMail;
 	}
 
 	protected void setUseProxyAuthentication(boolean a_bUseAuth)

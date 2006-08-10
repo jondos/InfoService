@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.05.332"; //Never change the layout of this line!
+	public static final String aktVersion = "00.05.333"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -216,7 +216,7 @@ public final class JAPConstants
 	public final static int DEFAULT_TOR_MAX_ROUTE_LEN = Tor.MIN_ROUTE_LEN + 1;
 	public final static int DEFAULT_TOR_MAX_CONNECTIONS_PER_ROUTE = Circuit.MAX_STREAMS_OVER_CIRCUIT;
 	public final static int DEFAULT_MIXMINION_ROUTE_LEN = Mixminion.MIN_ROUTE_LEN;
-
+	public final static String DEFAULT_MIXMINION_EMAIL = "";
 	/**
 	 * The minimum bandwidth per user needed for forwarding. This affects the maximum number
 	 * of users, which can be forwarded with a specified bandwidth. The default is 2 KByte/sec
@@ -278,6 +278,7 @@ public final class JAPConstants
 	public final static String CONFIG_MAX_CONNECTIONS_PER_ROUTE = "MaxConnectionsPerRoute";
 	public final static String CONFIG_TOR_PRECREATE_ANON_ROUTES = "PreCreateAnonRoutes";
 	public final static String CONFIG_ROUTE_LEN = "RouteLen";
+	public final static String CONFIG_MIXMINION_REPLY_MAIL = "MixminionREPLYMail";
 	public final static String CONFIG_MIN = "min";
 	public final static String CONFIG_MAX = "max";
 	public final static String CONFIG_PAYMENT = "Payment";
