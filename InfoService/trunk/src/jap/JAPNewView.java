@@ -106,6 +106,7 @@ import anon.infoservice.JAPVersionInfo;
 import update.JAPUpdateWizard;
 import anon.infoservice.NewCascadeIDEntry;
 import anon.infoservice.CascadeIDEntry;
+import java.lang.reflect.*;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver, Observer, PropertyChangeListener
@@ -1555,6 +1556,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 		else if (a_observable == Database.getInstance(NewCascadeIDEntry.class))
 		{
+			Runnable run = null;
 			DatabaseMessage message = ((DatabaseMessage)a_message);
 			if (message.getMessageData() == null)
 			{
@@ -1563,14 +1565,43 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			if (message.getMessageCode() == DatabaseMessage.ENTRY_ADDED ||
 				message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED)
 			{
-				m_lblNewServices.setVisible(true);
+				run = new Runnable()
+				{
+					public void run()
+					{
+						m_lblNewServices.setVisible(true);
+					}
+				};
 			}
 			else if (message.getMessageCode() == DatabaseMessage.ENTRY_REMOVED ||
 					 message.getMessageCode() == DatabaseMessage.ALL_ENTRIES_REMOVED)
 			{
 				if (Database.getInstance(NewCascadeIDEntry.class).getNumberofEntries() == 0)
 				{
-					m_lblNewServices.setVisible(false);
+					run = new Runnable()
+					{
+						public void run()
+						{
+							m_lblNewServices.setVisible(false);
+						}
+					};
+				}
+			}
+			if (run != null)
+			{
+				if (SwingUtilities.isEventDispatchThread())
+				{
+					run.run();
+				}
+				else
+				{
+					try
+					{
+						SwingUtilities.invokeAndWait(run);
+					}
+					catch (Exception ex)
+					{
+					}
 				}
 			}
 		}
