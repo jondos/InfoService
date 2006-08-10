@@ -25,11 +25,42 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
+
 package anon.mixminion.message;
 
-public class RoutingInformation extends ForwardInformation
-{
-	public final static short TYPE_FORWARD_TO_HOST=0x0003;
-	public final static short TYPE_SWAP_FORWARD_TO_HOST=0x0004;
+import anon.util.ByteArrayUtil;
+
+/**
+ * @author Stefan Rönisch
+ * 
+ */
+public class SingleBlockMessage extends MessageImplementation {
+	static final int SINGLETON_HEADER_LEN = 22;
+	private byte[] m_payload;
 	
+	/**
+	 * Constructor 
+	 * @param compressed_payload
+	 */
+	public SingleBlockMessage(byte[] compressed_payload) {
+		m_payload = compressed_payload;
+	}
+	
+	/**
+	 * 
+	 */
+	public byte[][] buildPayload() {
+		
+		// Let PADDING_LEN = 28KB - LEN(M_C) - SINGLETON_HEADER_LEN - OVERHEAD
+		// Let PADDING = Rand(PADDING_LEN)
+		// return Flag 0 | Int(15,LEN(M_C)) | Hash(M_C | PADDING) | M_C | PADDING
+		int paddin_len = 28 * 1024 - m_payload.length - SINGLETON_HEADER_LEN;
+		byte[] payload_padding = MixMinionCryptoUtil.randomArray(paddin_len);
+		byte[] first = ByteArrayUtil.inttobyte(m_payload.length, 2);
+		byte[] hash = MixMinionCryptoUtil.hash(ByteArrayUtil.conc(m_payload, payload_padding));
+		byte[][] all = new byte[1][28 * 1024]; 
+		all[0] = ByteArrayUtil.conc(first, hash, m_payload, payload_padding);
+		return all;
+	}	
+
 }

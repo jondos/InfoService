@@ -25,11 +25,23 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
+
 package anon.mixminion.message;
 
-public class RoutingInformation extends ForwardInformation
-{
-	public final static short TYPE_FORWARD_TO_HOST=0x0003;
-	public final static short TYPE_SWAP_FORWARD_TO_HOST=0x0004;
+import java.util.Vector;
+
+/**
+ * @author Stefan Rönisch
+ *
+ */
+public abstract class ReplyImplementation  {
 	
+	public Vector buildMessage() {
+		return null;
+	}
+	
+	public Vector getStartServers() {
+		return null;
+	}
+
 }
