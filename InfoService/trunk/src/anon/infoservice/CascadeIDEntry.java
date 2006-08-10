@@ -30,12 +30,9 @@
  */
 package anon.infoservice;
 
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
-import anon.util.IXMLEncodable;
-import anon.util.XMLUtil;
 import anon.util.ClassUtil;
+import anon.util.XMLParseException;
 
 
 
@@ -47,7 +44,10 @@ import anon.util.ClassUtil;
  */
 public class CascadeIDEntry extends AbstractCascadeIDEntry
 {
-	private static final long EXPIRE_TIME = 1000 * 60 * 60 * 24 * 30l; // one month; must be long-value!!
+	public static final String XML_ELEMENT_NAME = ClassUtil.getShortClassName(CascadeIDEntry.class);
+	public static final String XML_ELEMENT_CONTAINER_NAME = "KnownCascades";
+
+	private static final long EXPIRE_TIME = 1000 * 60 * 60 * 24 * 7l; // one week; must be long-value!!
 
 	/**
 	 * Creates a new CascadeIDEntry from the mix IDs of a given cascade.
@@ -59,5 +59,8 @@ public class CascadeIDEntry extends AbstractCascadeIDEntry
 		super(a_cascade, System.currentTimeMillis() + EXPIRE_TIME);
 	}
 
-
+	public CascadeIDEntry(Element a_xmlElement)  throws XMLParseException
+	{
+		super(a_xmlElement);
+	}
 }

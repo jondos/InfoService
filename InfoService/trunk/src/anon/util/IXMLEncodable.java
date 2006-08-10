@@ -45,6 +45,7 @@ public interface IXMLEncodable
 	 */
 	public static final String XML_VERSION = "version";
 
+	public static final String FIELD_XML_ELEMENT_NAME = "XML_ELEMENT_NAME";
 	/**
 	 * The name of the XML element constructed by this class.
 	 */

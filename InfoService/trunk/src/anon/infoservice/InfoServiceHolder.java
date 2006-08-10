@@ -813,7 +813,8 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 		}
 
 		/* InfoServices node found -> load it into the database of known infoservices */
-		InfoServiceDBEntry.loadFromXml(infoServicesNode, Database.getInstance(InfoServiceDBEntry.class));
+		Database.getInstance(InfoServiceDBEntry.class).loadFromXml(infoServicesNode);
+		//InfoServiceDBEntry.loadFromXml(infoServicesNode, Database.getInstance(InfoServiceDBEntry.class));
 		Element preferredInfoServiceNode = (Element) (XMLUtil.getFirstChildByName(a_infoServiceManagementNode,
 			"PreferredInfoService"));
 		if (preferredInfoServiceNode == null)

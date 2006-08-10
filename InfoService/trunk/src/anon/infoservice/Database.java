@@ -43,6 +43,8 @@ import anon.crypto.MyRandom;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import anon.util.IXMLEncodable;
+import anon.util.XMLUtil;
+import org.w3c.dom.NodeList;
 
 /**
  * This class is the generic implementation of a database. It is used by the database
@@ -468,6 +470,39 @@ public final class Database extends Observable implements Runnable
 		/* database was cleared -> notify the observers */
 		setChanged();
 		notifyObservers(new DatabaseMessage(DatabaseMessage.ALL_ENTRIES_REMOVED));
+	}
+
+	/**
+	 * Adds all database entries that are subnodes of the given element to the database.
+	 * The class must have a constructor with a single argument, a org.w3c.dom.Element, so that this
+	 * is successful.
+	 *
+	 * @param a_dbNode The xml node that contains db entries.
+	 */
+	public void loadFromXml(Element a_dbNode)
+	{
+		String xmlElementName = XMLUtil.getXmlElementName(m_DatabaseEntryClass);
+		if (a_dbNode == null || xmlElementName == null)
+		{
+			return;
+		}
+
+		NodeList dbNodes = a_dbNode.getElementsByTagName(xmlElementName);
+		for (int i = 0; i < dbNodes.getLength(); i++)
+		{
+			/* add all children to the database */
+			try
+			{
+				AbstractDatabaseEntry instance = (AbstractDatabaseEntry)m_DatabaseEntryClass.getConstructor(
+								new Class[]{Element.class}).newInstance(new Object[]{dbNodes.item(i)});
+				update(instance);
+			}
+			catch (Exception e)
+			{
+				LogHolder.log(LogLevel.WARNING, LogType.MISC, "Could not load db entries from XML! " + e);
+				/* if there was an error, it does not matter */
+			}
+		}
 	}
 
 	/**
