@@ -40,6 +40,9 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.crypto.MyRandom;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import anon.util.IXMLEncodable;
 
 /**
  * This class is the generic implementation of a database. It is used by the database
@@ -465,6 +468,40 @@ public final class Database extends Observable implements Runnable
 		/* database was cleared -> notify the observers */
 		setChanged();
 		notifyObservers(new DatabaseMessage(DatabaseMessage.ALL_ENTRIES_REMOVED));
+	}
+
+	/**
+	 * Creates an XML node with all database entries, but only for those entries that implement
+	 * IXMLEncodable.
+	 *
+	 * @param a_doc The XML document, which is the environment for the created XML node.
+	 * @param a_xmlContainerName the name of the XML element that should contain the entries
+	 *
+	 * @return the newly created XML node.
+	 */
+	public Element toXmlElement(Document a_doc, String a_xmlContainerName)
+	{
+		Object dbentry;
+
+		if (a_doc == null || a_xmlContainerName == null || a_xmlContainerName.trim().length() == 0)
+		{
+			return null;
+		}
+
+		Element element = a_doc.createElement(a_xmlContainerName);
+		synchronized (m_serviceDatabase)
+		{
+			Enumeration it = m_serviceDatabase.elements();
+			while (it.hasMoreElements())
+			{
+				dbentry = it.nextElement();
+				if (dbentry instanceof IXMLEncodable)
+				{
+					element.appendChild( ( (IXMLEncodable) (dbentry)).toXmlElement(a_doc));
+				}
+			}
+		}
+		return element;
 	}
 
 	/**

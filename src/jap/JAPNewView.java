@@ -104,6 +104,8 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
 import anon.infoservice.JAPVersionInfo;
 import update.JAPUpdateWizard;
+import anon.infoservice.NewCascadeIDEntry;
+import anon.infoservice.CascadeIDEntry;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver, Observer, PropertyChangeListener
@@ -119,6 +121,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String MSG_NO_COSTS = JAPNewView.class.getName() + "_noCosts";
 	private static final String MSG_NEW_SERVICES_FOUND =
 		JAPNewView.class.getName() + "_newServicesFoundExplanation";
+	private static final String MSG_NO_REAL_PAYMENT = JAPNewView.class.getName() + "_noRealPayment";
+
 
 
 
@@ -369,10 +373,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 							if (cascade.isPayment())
 							{
 								m_lblPrice.setText("1" + " " + PRICE_UNIT);
+								m_lblPrice.setForeground(Color.blue);
+								m_lblPrice.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 							}
 							else
 							{
 								m_lblPrice.setText(JAPMessages.getString(MSG_NO_COSTS));
+								m_lblPrice.setForeground(new JLabel().getForeground());
+								m_lblPrice.setCursor(Cursor.getDefaultCursor());
 							}
 						}
 					});
@@ -389,14 +397,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						public void run()
 						{
 							m_Controller.setCurrentMixCascade(cascade);
-							if (cascade.isPayment())
-							{
-								m_lblPrice.setText("1" + " " + PRICE_UNIT);
-							}
-							else
-							{
-								m_lblPrice.setText(JAPMessages.getString(MSG_NO_COSTS));
-							}
 						}
 					});
 				}
@@ -461,6 +461,16 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.insets = new Insets(5, 5, 0, 0);
 		//c1.fill = GridBagConstraints.HORIZONTAL;
 		m_lblPrice = new JLabel();
+		m_lblPrice.addMouseListener(new MouseAdapter()
+		{
+			public void mouseClicked(MouseEvent a_event)
+			{
+				if (m_lblPrice.getCursor() == Cursor.getPredefinedCursor(Cursor.HAND_CURSOR))
+				{
+					JAPDialog.showMessageDialog(view, JAPMessages.getString(MSG_NO_REAL_PAYMENT));
+				}
+			}
+		});
 		m_panelAnonService.add(m_lblPrice, c1);
 
 		c1.gridx++;
@@ -473,7 +483,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			public void mouseClicked(MouseEvent a_event)
 			{
-				JAPDialog.showMessageDialog(view, JAPMessages.getString(MSG_NEW_SERVICES_FOUND));
+				JAPDialog.showMessageDialog(view, JAPMessages.getString(MSG_NEW_SERVICES_FOUND,
+					new String[]{JAPMessages.getString(MSG_SERVICE_NAME)}));
 			}
 		});
 		m_panelAnonService.add(m_lblNewServices, c1);
@@ -967,6 +978,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 		Database.getInstance(StatusInfo.class).addObserver(this);
 		Database.getInstance(JAPVersionInfo.class).addObserver(this);
+		Database.getInstance(MixCascade.class).addObserver(this);
+		Database.getInstance(NewCascadeIDEntry.class).addObserver(this);
+		Database.getInstance(CascadeIDEntry.class).addObserver(this);
+
 		JAPModel.getInstance().addObserver(this);
 
 		JAPHelp.init(this, AbstractOS.getInstance());
@@ -1509,6 +1524,56 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			valuesChanged(false);
 		}
+		else if (a_observable == Database.getInstance(MixCascade.class))
+		{
+			DatabaseMessage message =  ((DatabaseMessage)a_message);
+			if (message.getMessageData() == null)
+			{
+				return;
+			}
+
+			if (message.getMessageCode() == DatabaseMessage.ENTRY_ADDED ||
+				message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED)
+			{
+				Database.getInstance(CascadeIDEntry.class).update(
+								new CascadeIDEntry((MixCascade)message.getMessageData()));
+			}
+		}
+		else if (a_observable == Database.getInstance(CascadeIDEntry.class))
+		{
+			DatabaseMessage message = ((DatabaseMessage)a_message);
+			if (message.getMessageData() == null)
+			{
+				return;
+			}
+
+			if (message.getMessageCode() == DatabaseMessage.ENTRY_ADDED)
+			{
+				Database.getInstance(NewCascadeIDEntry.class).update(
+								new NewCascadeIDEntry((CascadeIDEntry)message.getMessageData()));
+			}
+		}
+		else if (a_observable == Database.getInstance(NewCascadeIDEntry.class))
+		{
+			DatabaseMessage message = ((DatabaseMessage)a_message);
+			if (message.getMessageData() == null)
+			{
+				return;
+			}
+			if (message.getMessageCode() == DatabaseMessage.ENTRY_ADDED ||
+				message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED)
+			{
+				m_lblNewServices.setVisible(true);
+			}
+			else if (message.getMessageCode() == DatabaseMessage.ENTRY_REMOVED ||
+					 message.getMessageCode() == DatabaseMessage.ALL_ENTRIES_REMOVED)
+			{
+				if (Database.getInstance(NewCascadeIDEntry.class).getNumberofEntries() == 0)
+				{
+					m_lblNewServices.setVisible(false);
+				}
+			}
+		}
 		else if (a_message instanceof JAPModel.FontResize && a_message != null)
 		{
 			final JAPNewView view = this;
@@ -1568,6 +1633,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	public void connectionEstablished(AnonServerDescription a_serverDescription)
 	{
+		if (a_serverDescription != null && a_serverDescription instanceof MixCascade)
+		{
+			Database.getInstance(NewCascadeIDEntry.class).remove(
+						 ((MixCascade)a_serverDescription).getMixIDsAsString());
+		}
 		synchronized(m_connectionEstablishedSync)
 		{
 			m_connectionEstablishedSync.notifyAll();

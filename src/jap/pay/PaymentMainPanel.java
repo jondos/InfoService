@@ -545,7 +545,7 @@ public class PaymentMainPanel extends FlippingPanel implements PropertyChangeLis
 			{
 				m_bShowingError = true;
 				JAPDialog.showErrorDialog(PaymentMainPanel.this,
-										  JAPMessages.getString("aiErrorMessage") + " " + error,
+										  JAPMessages.getString("aiErrorMessage") + "<br>" + error,
 										  LogType.PAY);
 				m_bShowingError = false;
 			}

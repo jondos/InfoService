@@ -40,8 +40,9 @@ import javax.swing.border.EmptyBorder;
 import anon.infoservice.MixCascade;
 import jap.JAPConstants;
 
-import jap.JAPUtil;
 import java.awt.Dimension;
+import anon.infoservice.Database;
+import anon.infoservice.NewCascadeIDEntry;
 
 public class JAPMixCascadeComboBox extends JComboBox
 {
@@ -127,6 +128,8 @@ final class JAPMixCascadeComboBoxModel extends DefaultComboBoxModel
 
 final class JAPMixCascadeComboBoxListCellRender implements ListCellRenderer
 {
+	private final Color m_newCascadeColor = new Color(255, 255, 170);
+
 	private JLabel m_componentNoServer;
 	private JLabel m_componentAvailableServer;
 	private JLabel m_componentUserServer;
@@ -227,7 +230,15 @@ final class JAPMixCascadeComboBoxListCellRender implements ListCellRenderer
 		}
 		else
 		{
-			l.setBackground(list.getBackground());
+			if (Database.getInstance(NewCascadeIDEntry.class).getEntryById(
+						 cascade.getMixIDsAsString()) != null)
+			{
+				l.setBackground(m_newCascadeColor);
+			}
+			else
+			{
+				l.setBackground(list.getBackground());
+			}
 			l.setForeground(list.getForeground());
 		}
 		return l;

@@ -147,33 +147,6 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	private CertPath m_certPath;
 
 	/**
-	 * Creates an XML node (InfoServices node) with all infoservices from the database inside.
-	 * The Database does not need to be the one registered in the central registry.
-	 *
-	 * @param a_doc The XML document, which is the environment for the created XML node.
-	 * @param a_database the database that contains the InfoServiceDBEntries
-	 *
-	 * @return The InfoServices XML node.
-	 */
-	public static Element toXmlElement(Document a_doc, Database a_database)
-	{
-		Object dbentry;
-
-		Element infoServicesNode = a_doc.createElement(XML_ELEMENT_CONTAINER_NAME);
-		Vector infoServices = a_database.getEntryList();
-		Enumeration it = infoServices.elements();
-		while (it.hasMoreElements())
-		{
-			dbentry = it.nextElement();
-			if (dbentry instanceof InfoServiceDBEntry)
-			{
-				infoServicesNode.appendChild( ( (InfoServiceDBEntry) (dbentry)).toXmlElement(a_doc));
-			}
-		}
-		return infoServicesNode;
-	}
-
-	/**
 	 * Adds all infoservices, which are childs of the InfoServices node, to the database.
 	 *
 	 * @param infoServicesNode The InfoServices node.
