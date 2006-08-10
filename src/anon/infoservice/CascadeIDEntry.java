@@ -47,7 +47,7 @@ public class CascadeIDEntry extends AbstractCascadeIDEntry
 	public static final String XML_ELEMENT_NAME = ClassUtil.getShortClassName(CascadeIDEntry.class);
 	public static final String XML_ELEMENT_CONTAINER_NAME = "KnownCascades";
 
-	private static final long EXPIRE_TIME = 1000 * 60 * 60 * 24 * 7l; // one week; must be long-value!!
+	private static final long EXPIRE_TIME = 1000 * 60 * 60 * 24 * 30l; // one month; must be long-value!!
 
 	/**
 	 * Creates a new CascadeIDEntry from the mix IDs of a given cascade.
