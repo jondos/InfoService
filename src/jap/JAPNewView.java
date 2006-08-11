@@ -1510,6 +1510,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	public void update(Observable a_observable, final Object a_message)
 	{
+		Runnable run = null;
+
 		if (a_observable == Database.getInstance(StatusInfo.class))
 		{
 			Object data =  ((DatabaseMessage)a_message).getMessageData();
@@ -1527,16 +1529,73 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		else if (a_observable == Database.getInstance(MixCascade.class))
 		{
 			DatabaseMessage message =  ((DatabaseMessage)a_message);
-			if (message.getMessageData() == null)
+			MixCascade cascade;
+
+			if (message.getMessageData() == null || !(message.getMessageData() instanceof MixCascade))
 			{
 				return;
 			}
 
+			cascade = (MixCascade)message.getMessageData();
+
 			if (message.getMessageCode() == DatabaseMessage.ENTRY_ADDED ||
 				message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED)
 			{
-				Database.getInstance(CascadeIDEntry.class).update(
-								new CascadeIDEntry((MixCascade)message.getMessageData()));
+				Database.getInstance(CascadeIDEntry.class).update(new CascadeIDEntry(cascade));
+
+				/** @todo all databases should be synchronized... */
+				/* Show the new services hint if a new service that had been hidden before becomes visible
+				 * again.
+				 */
+				if (Database.getInstance(NewCascadeIDEntry.class).getEntryById(
+								cascade.getMixIDsAsString()) != null)
+				{
+					run = new Runnable()
+					{
+						public void run()
+						{
+							m_lblNewServices.setVisible(true);
+						}
+					};
+				}
+			}
+			else if (message.getMessageCode() == DatabaseMessage.ENTRY_REMOVED||
+					 message.getMessageCode() == DatabaseMessage.ALL_ENTRIES_REMOVED)
+			{
+				if (Database.getInstance(NewCascadeIDEntry.class).getEntryById(cascade.getMixIDsAsString()) != null)
+				{
+					/** @todo all databases should be synchronized... */
+					/*
+					 * Hide the new services hint if the last new service has been deleted from the database
+					 * of currently registered services.
+					 */
+					Enumeration newEntries = Database.getInstance(NewCascadeIDEntry.class).
+						getEntrySnapshotAsEnumeration();
+					boolean bExists = false;
+					NewCascadeIDEntry currentEntry;
+					while (newEntries.hasMoreElements())
+					{
+						currentEntry = (NewCascadeIDEntry) newEntries.nextElement();
+						if (Database.getInstance(MixCascade.class).getEntryById(
+											  currentEntry.getCascadeId()) != null &&
+							!currentEntry.getCascadeId().equals(cascade.getId()))
+						{
+							bExists = true;
+							break;
+						}
+					}
+
+					if (!bExists)
+					{
+						run = new Runnable()
+						{
+							public void run()
+							{
+								m_lblNewServices.setVisible(false);
+							}
+						};
+					}
+				}
 			}
 		}
 		else if (a_observable == Database.getInstance(CascadeIDEntry.class))
@@ -1555,7 +1614,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 		else if (a_observable == Database.getInstance(NewCascadeIDEntry.class))
 		{
-			Runnable run = null;
 			DatabaseMessage message = ((DatabaseMessage)a_message);
 			if (message.getMessageData() == null)
 			{
@@ -1586,28 +1644,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					};
 				}
 			}
-			if (run != null)
-			{
-				if (SwingUtilities.isEventDispatchThread())
-				{
-					run.run();
-				}
-				else
-				{
-					try
-					{
-						SwingUtilities.invokeAndWait(run);
-					}
-					catch (Exception ex)
-					{
-					}
-				}
-			}
 		}
 		else if (a_message instanceof JAPModel.FontResize && a_message != null)
 		{
 			final JAPNewView view = this;
-			Runnable run = new Runnable()
+			run = new Runnable()
 			{
 				public void run()
 				{
@@ -1627,23 +1668,24 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					}
 				}
 			};
-
-			try
+		}
+		if (run != null)
+		{
+			if (SwingUtilities.isEventDispatchThread())
 			{
-				if (SwingUtilities.isEventDispatchThread())
-				{
-					run.run();
-				}
-				else
+				run.run();
+			}
+			else
+			{
+				try
 				{
 					SwingUtilities.invokeAndWait(run);
 				}
+				catch (Exception a_e)
+				{
+					LogHolder.log(LogLevel.ERR, LogType.GUI, a_e);
+				}
 			}
-			catch (Exception a_e)
-			{
-				LogHolder.log(LogLevel.ERR, LogType.GUI, "Error while updating font sizes!", a_e);
-			}
-
 		}
 	}
 
