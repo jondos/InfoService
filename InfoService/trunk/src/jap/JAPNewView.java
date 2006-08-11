@@ -123,11 +123,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String MSG_NEW_SERVICES_FOUND =
 		JAPNewView.class.getName() + "_newServicesFoundExplanation";
 	private static final String MSG_NO_REAL_PAYMENT = JAPNewView.class.getName() + "_noRealPayment";
+	private static final String MSG_CURRENCY_EURO =  JAPNewView.class.getName() + "_currencyEuro";
 
-
-
-
-	private static final String PRICE_UNIT = "ct/MB (€)";
+	private static final String PRICE_UNIT = "ct/MB";
 
 	/** @todo fetch latest Java version automatically, store value in database and update view automatically*/
 	private static final String LATEST_SUN_JAVA = "1.5.0_07";
@@ -373,7 +371,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						{
 							if (cascade.isPayment())
 							{
-								m_lblPrice.setText("1" + " " + PRICE_UNIT);
+								m_lblPrice.setText("1" + " " + PRICE_UNIT + " (" +
+									JAPMessages.getString(MSG_CURRENCY_EURO) + ")");
 								m_lblPrice.setForeground(Color.blue);
 								m_lblPrice.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 							}
