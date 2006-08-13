@@ -128,7 +128,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String PRICE_UNIT = "ct/MB";
 
 	/** @todo fetch latest Java version automatically, store value in database and update view automatically*/
-	private static final String LATEST_SUN_JAVA = "1.5.0_07";
+	private static final String LATEST_SUN_JAVA = "1.5.0_08";
 	private static final String JAVA_VENDOR = System.getProperty("java.vendor");
 	private static final String JAVA_VERSION = System.getProperty("java.version");
 	private static final URL SUN_JAVA_URL;
@@ -138,7 +138,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		URL url = null;
 		try
 		{
-			url = new URL("http://java.sun.com");
+			//url = new URL("http://java.sun.com");
+			url = new URL("http://java.sun.com/javase/downloads/index.jsp");
 		}
 		catch (MalformedURLException a_e)
 		{
