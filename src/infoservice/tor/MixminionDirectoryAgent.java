@@ -27,28 +27,18 @@
  */
 package infoservice.tor;
 
-import java.util.Enumeration;
-import java.util.Vector;
+import java.net.URL;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-
-import anon.tor.ordescription.ORDescription;
-import anon.tor.ordescription.ORList;
-import anon.infoservice.Database;
+import HTTPClient.HTTPConnection;
+import anon.infoservice.HTTPConnectionFactory;
+import anon.infoservice.ListenerInterface;
 import anon.util.Base64;
-import anon.util.BZip2Tools;
 import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.net.URL;
-import anon.infoservice.ListenerInterface;
-import anon.infoservice.HTTPConnectionFactory;
-import HTTPClient.HTTPConnection;
 
 /**
  * This class is responsible for fetching the information about the active tor nodes. This class
@@ -126,7 +116,7 @@ public class MixminionDirectoryAgent implements Runnable
 			{
 				m_updateInterval = a_updateInterval;
 				/* start the internal thread */
-				Thread fetchThread = new Thread(this,"MixminionDirectoryAgent Update Thread");
+				Thread fetchThread = new Thread(this, "MixminionDirectoryAgent Update Thread");
 				fetchThread.setDaemon(true);
 				fetchThread.start();
 			}
@@ -134,8 +124,36 @@ public class MixminionDirectoryAgent implements Runnable
 	}
 
 	/**
-	 * Returns the XML container with the current tor nodes list. If we don't have a topical list,
+	 * Returns the XML container with the current Mixminion nodes list. If we don't have a topical list,
 	 * the returned value is null.
+	 * The xml-struct is as follows:
+	 * <MixminionNodesList>
+	 *  ... <!-- the bzip2 compressed and base64 codes original mixminion nodes list -->
+	 *   <ReliabilityNodesList generated="..."> <!-- generated is the dat, when the list was originaly generated
+	 *                                               in seconds since the epoch
+	 *                                            -->
+	 *     <MixminionNode id=".."> <!-- id ist he unique name (aka nickname) of this Mixminion node
+	 *        <UptimeHistory>
+	 *          <Uptime>
+	 *             <!-- one char as symbol for the uptime according to:
+	 *                  0	0 to .1
+                        1	.1 to .2
+                        2	.2 to .3
+                        3	.3 to .4
+                        4	.4 to .5
+                        5	.5 to .6
+                        6	.6 to .7
+                        7	.7 to .8
+                        8	.8 to .9
+                        9	.9 to 1, but less than 1
+                        +	1
+                        ?	no pings that day
+                  -->
+	 *          <Uptime>
+	 *        </UptimeHistory>
+	 *     <MixminionNode>
+	 *   <ReliabilityNodesList>
+	 * </MixminionNodesList>
 	 *
 	 * @return The XML structur with the current tor nodes list or null, if we don't have a topical
 	 *         list.
@@ -169,6 +187,7 @@ public class MixminionDirectoryAgent implements Runnable
 				mixminionNodesListNode = XMLUtil.createDocument().createElement("MixminionNodesList");
 				mixminionNodesListNode.setAttribute("xml:space", "preserve");
 				XMLUtil.setValue(mixminionNodesListNode, mixminionNodesListInformation);
+				//getReliabilityList();
 			}
 			catch (Exception e)
 			{
