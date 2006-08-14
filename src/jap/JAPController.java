@@ -533,6 +533,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 * </Tor>
 	 * <Mixminion>    //  Mixminion related seetings (since Version 0.22)
 	 * 	 <RouteLen>...</RouteLen> //How long should a route be
+	 *   <KeyRing>
+	 *   </KeyRing>
 	 * </Mixminion>
 	 * <Payment //Since version 0.7
 	 *    biHost="..."                      // BI's Hostname
@@ -1335,7 +1337,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					Element elemMMMail = (Element) XMLUtil.getFirstChildByName(elemMixminion,
 							JAPConstants.CONFIG_MIXMINION_REPLY_MAIL);
 					String emaddress = XMLUtil.parseAttribute(elemMMMail,"MixminionSender", "none");
-					
+
 					setMixMinionMyEMail(emaddress);
 				}
 				catch (Exception ex)
@@ -1875,7 +1877,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			e.appendChild(elemMixminion);
 
 			e.appendChild(JAPModel.getInstance().getRoutingSettings().getSettingsAsXml(doc));
-			
+
 			XMLUtil.formatHumanReadable(doc);
 			return XMLUtil.toString(doc);
 			//((XmlDocument)doc).write(f);
@@ -2640,8 +2642,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 	{
 		m_Model.setMixminionRouteLen(len);
 	}
-	
-	public static void setMixMinionMyEMail(String address) 
+
+	public static void setMixMinionMyEMail(String address)
 	{
 		m_Model.setMixminionMyEMail(address);
 	}
