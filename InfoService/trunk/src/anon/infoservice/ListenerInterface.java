@@ -173,7 +173,7 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	 * Returns if the given protocol is valid web protocol and can be recognized by
 	 * recognizeProtocol().
 	 * @param a_protocol a web protocol
-	 * @see recognizeProtocol(String)
+	 * @see #recognizeProtocol(String)
 	 * @return true if the given protocol is valid web protocol; false otherwise
 	 */
 	public static boolean isValidProtocol(String a_protocol)
@@ -185,7 +185,7 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	 * Returns if the given protocol is valid web protocol and can be recognized by
 	 * recognizeProtocol().
 	 * @param a_protocol a web protocol
-	 * @see recognizeProtocol(String)
+	 * @see #recognizeProtocol(String)
 	 * @return true if the given protocol is valid web protocol; false otherwise
 	 */
 	public static boolean isValidProtocol(int a_protocol)
