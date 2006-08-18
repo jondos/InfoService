@@ -42,7 +42,7 @@ public abstract class AbstractDatabaseEntry
 	 */
 	private long m_expireTime;
 
-
+	/** This constructor is just for sub-classes!*/
 	protected AbstractDatabaseEntry()
 	{
 	}
