@@ -73,7 +73,7 @@ public abstract class AbstractCascadeIDEntry extends AbstractDatabaseEntry imple
 
 	/**
 	 * Creates a new CascadeIDEntry from the mix IDs of a given cascade.
-	 * @param a_cascade MixCascade
+	 * @param a_entry MixCascade
 	 * @param a_expireTime the time in ms when this databse entry expires
 	 * @throws java.lang.IllegalArgumentException if the given AbstractCascadeIDEntry is null
 	 */

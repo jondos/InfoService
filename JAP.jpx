@@ -483,6 +483,18 @@
 <property category="archiving" name="targetPath" value="anonlib.jar"/>
 <property category="archiving" name="usingRules" value="1"/>
 </node>
+<node name="AnonLibDoc" type="Javadoc">
+<property category="docletJavadoc" name="author" value="1"/>
+<property category="docletJavadoc" name="use" value="1"/>
+<property category="docletJavadoc" name="version" value="1"/>
+<property category="javadoc" name="documentAllPackages" value="0"/>
+<property category="javadoc" name="packages.1" value="anon"/>
+<property category="javadoc" name="packages.2" value="anon.infoservice"/>
+<property category="javadoc" name="scope" value="private"/>
+<property category="nodeJavadoc" name="buildWithProject" value="0"/>
+<property category="nodeJavadoc" name="directory" value="doc"/>
+<property category="nodeJavadoc" name="displayAllOutput" value="1"/>
+</node>
 <node name="JAP.jar" type="Archive">
 <property category="archiving" name="archiverClass" value="com.borland.jbuilder.wizard.archive.ApplicationArchiver"/>
 <property category="archiving" name="buildWithProject" value="0"/>
@@ -855,6 +867,14 @@
 <property category="archiving" name="targetPath" value="JAP.jar"/>
 <property category="archiving" name="usingRules" value="1"/>
 </node>
+<node name="JAPDoc" type="Javadoc">
+<property category="docletJavadoc" name="author" value="1"/>
+<property category="docletJavadoc" name="use" value="1"/>
+<property category="docletJavadoc" name="version" value="1"/>
+<property category="nodeJavadoc" name="buildWithProject" value="0"/>
+<property category="nodeJavadoc" name="directory" value="doc"/>
+<property category="nodeJavadoc" name="displayAllOutput" value="0"/>
+</node>
 <node name="JAPiPAQ.jar" type="Archive">
 <property category="archiving" name="archiverClass" value="com.borland.jbuilder.wizard.archive.ApplicationArchiver"/>
 <property category="archiving" name="buildWithProject" value="0"/>
@@ -884,20 +904,6 @@
 <property category="archiving" name="outPathState" value="1"/>
 <property category="archiving" name="targetCompressed" value="1"/>
 <property category="archiving" name="targetPath" value="JAPiPAQ.jar"/>
-</node>
-<node name="Standard-Doclet" type="Javadoc">
-<property category="docletJavadoc" name="author" value="1"/>
-<property category="docletJavadoc" name="use" value="1"/>
-<property category="docletJavadoc" name="version" value="1"/>
-<property category="javadoc" name="documentAllPackages" value="0"/>
-<property category="javadoc" name="packages.1" value="anon"/>
-<property category="javadoc" name="packages.2" value="anon.infoservice"/>
-<property category="javadoc" name="packages.3" value="anon.server"/>
-<property category="javadoc" name="packages.4" value="anon.server.impl"/>
-<property category="javadoc" name="scope" value="private"/>
-<property category="nodeJavadoc" name="buildWithProject" value="0"/>
-<property category="nodeJavadoc" name="directory" value="doc"/>
-<property category="nodeJavadoc" name="displayAllOutput" value="1"/>
 </node>
 <file path="JAP.doxy"/>
 <file path="help/jap.JAPController_allowunprotected.html"/>
