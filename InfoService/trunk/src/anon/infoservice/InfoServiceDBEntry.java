@@ -61,6 +61,7 @@ import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureCreator;
 import anon.crypto.XMLSignature;
 
+
 /**
  * Holds the information for an infoservice.
  */
@@ -290,7 +291,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 			m_userDefined = true;
 		}
 		try
-		{
+	    {
 			XMLSignature documentSignature = SignatureVerifier.getInstance().getVerifiedXml(a_infoServiceNode,
 				SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE);
 			if (documentSignature != null)
@@ -337,30 +338,20 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	}
 
 	/**
-	 * This is a simple constructor useful to initialise with default InfoServices.
-	 * @param a_strHost Hostname of IS
-	 * @param a_port Port of IS
-	 * @throws IllegalArgumentException
-	 */
-	public InfoServiceDBEntry(String a_strHost, int a_Port) throws IllegalArgumentException
-	{
-		init(a_strHost, new ListenerInterface(a_strHost, a_Port).toVector(),false,false,
-			 System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE_JAP,0);
-	}
-
-	/**
 	 * This is a JAP-only constructor needed to initialise JAP with default InfoServices.
 	 * @param a_strName String
 	 * @param a_listeners Vector
 	 * @param a_primaryForwarderList boolean
+	 * @param a_creationTime long
 	 * @throws IllegalArgumentException
 	 */
-	public InfoServiceDBEntry(String a_strName, Vector a_listeners, boolean a_primaryForwarderList) throws
-		IllegalArgumentException
+	public InfoServiceDBEntry(String a_strName, Vector a_listeners, boolean a_primaryForwarderList)
+		throws IllegalArgumentException
 	{
 		this(a_strName, a_listeners, a_primaryForwarderList, false,
 			 System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE_JAP, 0);
 	}
+
 
 	/**
 	 * Creates a new InfoServiceDBEntry. The ID is set to a generic value derived from the host and
@@ -383,8 +374,8 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	public InfoServiceDBEntry(String a_strName, Vector a_listeners, boolean a_primaryForwarderList,
 							  boolean a_japClientContext, long a_expireTime) throws IllegalArgumentException
 	{
-		this(a_strName, a_listeners, a_primaryForwarderList, a_japClientContext, a_expireTime,
-			 System.currentTimeMillis());
+		this (a_strName, a_listeners, a_primaryForwarderList, a_japClientContext,  a_expireTime,
+			  System.currentTimeMillis());
 	}
 
 	/**
@@ -406,17 +397,11 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	 * @exception IllegalArgumentException if invalid listener interfaces are given
 	 */
 	public InfoServiceDBEntry(String a_strName, Vector a_listeners, boolean a_primaryForwarderList,
-							  boolean a_japClientContext, long a_expireTime, long a_creationTime) throws
-		IllegalArgumentException
+							  boolean a_japClientContext, long a_expireTime, long a_creationTime)
+	throws IllegalArgumentException
 	{
-		init(a_strName, a_listeners, a_primaryForwarderList, a_japClientContext, a_expireTime, a_creationTime);
-	}
+		super(a_expireTime);
 
-	private void init(String a_strName, Vector a_listeners, boolean a_primaryForwarderList,
-					  boolean a_japClientContext, long a_expireTime, long a_creationTime) throws
-		IllegalArgumentException
-	{
-		setExpireTime(a_expireTime);
 		if (a_listeners == null)
 		{
 			throw new IllegalArgumentException("No listener interfaces!");
@@ -892,7 +877,7 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 						catch (Exception e)
 						{
 							LogHolder.log(LogLevel.ERR, LogType.NET,
-										  "Connection to infoservice interface failed: " +
+								"Connection to infoservice interface failed: " +
 										  currentConnection.getHost() + ":" +
 										  Integer.toString(currentConnection.getPort()) +
 										  a_httpRequest.getRequestFileName() + " Reason: " + e.toString());
