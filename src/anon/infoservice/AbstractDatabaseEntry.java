@@ -42,11 +42,6 @@ public abstract class AbstractDatabaseEntry
 	 */
 	private long m_expireTime;
 
-	/** This constructor is just for sub-classes!*/
-	protected AbstractDatabaseEntry()
-	{
-	}
-
 	/**
 	 * Creates a new AbstractDatabaseEntry with the specified expire time.
 	 *
@@ -54,7 +49,7 @@ public abstract class AbstractDatabaseEntry
 	 */
 	public AbstractDatabaseEntry(long a_expireTime)
 	{
-		setExpireTime(m_expireTime);
+		m_expireTime = a_expireTime;
 	}
 
 	/**
@@ -85,11 +80,6 @@ public abstract class AbstractDatabaseEntry
 	public final long getExpireTime()
 	{
 		return m_expireTime;
-	}
-
-	protected void setExpireTime(long t)
-	{
-		m_expireTime=t;
 	}
 
 	/**
