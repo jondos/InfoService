@@ -101,7 +101,7 @@ public class NoReplyMessage extends ReplyImplementation {
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 					  "[Message] make Header to Fragment_" + i_frag);
 		// build paths
-		//FIXME zufällige aufteilung!
+		//FIXME zufaellige aufteilung!
 		Vector wholepath = (Vector) paths.elementAt(i_frag);
 		Vector path1 = new Vector();
 		Vector path2 = new Vector();
