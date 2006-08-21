@@ -31,26 +31,26 @@ package anon.mixminion.message;
 import anon.util.ByteArrayUtil;
 
 /**
- * @author Stefan Rönisch
- * 
+ * @author Stefan Roenisch
+ *
  */
 public class SingleBlockMessage extends MessageImplementation {
 	static final int SINGLETON_HEADER_LEN = 22;
 	private byte[] m_payload;
-	
+
 	/**
-	 * Constructor 
+	 * Constructor
 	 * @param compressed_payload
 	 */
 	public SingleBlockMessage(byte[] compressed_payload) {
 		m_payload = compressed_payload;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 */
 	public byte[][] buildPayload() {
-		
+
 		// Let PADDING_LEN = 28KB - LEN(M_C) - SINGLETON_HEADER_LEN - OVERHEAD
 		// Let PADDING = Rand(PADDING_LEN)
 		// return Flag 0 | Int(15,LEN(M_C)) | Hash(M_C | PADDING) | M_C | PADDING
@@ -58,9 +58,9 @@ public class SingleBlockMessage extends MessageImplementation {
 		byte[] payload_padding = MixMinionCryptoUtil.randomArray(paddin_len);
 		byte[] first = ByteArrayUtil.inttobyte(m_payload.length, 2);
 		byte[] hash = MixMinionCryptoUtil.hash(ByteArrayUtil.conc(m_payload, payload_padding));
-		byte[][] all = new byte[1][28 * 1024]; 
+		byte[][] all = new byte[1][28 * 1024];
 		all[0] = ByteArrayUtil.conc(first, hash, m_payload, payload_padding);
 		return all;
-	}	
+	}
 
 }

@@ -39,17 +39,17 @@ import anon.util.Base64;
 import anon.util.ByteArrayUtil;
 
 /**
- * @author Stefan Rönisch
+ * @author Stefan Roenisch
  *
- * 
+ *
  * Window - Preferences - Java - Code Style - Code Templates
  */
 public class ReplyBlock {
-	
+
 	static final int KEY_LEN = 16;
-    // We discard SURB keys after 3 months. 
+    // We discard SURB keys after 3 months.
     static final long KEY_LIFETIME = 3*30*24*60*60;
-	
+
 	private byte[] m_sharedSecret;
 	private Vector m_path; //path for the reply-header -->the second leg
 	private byte[] m_longterm_secret; //userkey
@@ -57,25 +57,25 @@ public class ReplyBlock {
 	private byte[] m_headerbytes;
 	private String m_myaddress; //the address on which the block points on
 	private long m_timetolive;
-	
-		
+
+
 	/**
 	 * Constructor 1
 	 * used to build a replyblock, which is appended to a message
 	 * call build() to complete it!
-	 * @param myadress 
+	 * @param myadress
 	 * @param path
 	 * @param usersecret
 	 */
 	public ReplyBlock(String myaddress, Vector path, byte[] usersecret){
-		this.m_myaddress = myaddress; 
-		this.m_path = path; 
-		this.m_longterm_secret = usersecret; 
+		this.m_myaddress = myaddress;
+		this.m_path = path;
+		this.m_longterm_secret = usersecret;
 		this.m_myrouting = new RoutingInformation();
 		this.m_headerbytes = null;
-		
+
 	}
-	
+
 	/**
 	 * Constructor 2
 	 * used to instantiate a ReplyBlock Object,
@@ -92,7 +92,7 @@ public class ReplyBlock {
 		this.m_sharedSecret = sharedsecret;
 		this.m_timetolive = time;
 		}
-	
+
 	/**
 	 * builds the replyHeader
 	 *
@@ -100,13 +100,13 @@ public class ReplyBlock {
 	public void buildBlock() {
 		System.out.println("Baue ReplyBlock an: " + m_myaddress);
 		int hops = m_path.size();
-		
+
 		// Repeat:
 		// Let SEED = a random 159-bit seed.
 		// Until Hash(SEED | SEC | "Validate") ends with a 0 octet.
 		// start value
 		byte[] seed = null; //==tag
-		
+
 		while (true) {
 			//make a 20 byte random array
 			seed = MixMinionCryptoUtil.randomArray(20);
@@ -116,44 +116,44 @@ public class ReplyBlock {
 			byte last = (MixMinionCryptoUtil.hash(ByteArrayUtil.conc(seed, m_longterm_secret, "Validate".getBytes())))[19];
 			if (last == 0x00) break;
 		}
-		
+
 		// Let K = Hash(SEED | SEC | "Generate")[0:KEY_LEN]
 		byte[] key = ByteArrayUtil.copy(MixMinionCryptoUtil.hash(
 							ByteArrayUtil.conc(seed, m_longterm_secret, "Generate".getBytes())),
 								0,KEY_LEN);
-		
+
 		// Let STREAM = PRNG(K, KEY_LEN*(PATH_LEN + 1))
 		// Let SHARED_SECRET = STREAM[PATH_LEN*KEY_LEN:KEY_LEN]
 		byte[] stream = MixMinionCryptoUtil.createPRNG(key, KEY_LEN * (hops + 1));
 		m_sharedSecret = ByteArrayUtil.copy(stream, hops * KEY_LEN, KEY_LEN );
-		
+
 		// For i in 1 .. PATH_LEN
 		// Let MS_i = STREAM[(PATH_LEN-i)*KEY_LEN : KEY_LEN] STREAM = ENC(K, Z(MAX_PATH * KEY_LEN)) steht woanders
 		// Generate a reply block using MS_i as the master secret for the
 		// i'th node in the hop, SEED as the tag, and SHARED_SECRET as the
-		// end-to-end shared secret.	
+		// end-to-end shared secret.
 
 		Vector master_secret = new Vector();
-				
-		//mastersecrets 
+
+		//mastersecrets
 		for (int i = 1; i <= hops; i++) {
 			master_secret.addElement(ByteArrayUtil.copy(stream, (hops-i) * KEY_LEN, KEY_LEN ));
-		}		
-		
+		}
+
 		//ExitInfo bauen
 		ExitInformation exitInfo = new ExitInformation();
 		String[] destination = new String[1];
 		destination[0] = m_myaddress;
 		exitInfo = MMRDescription.getExitInformation(destination,seed);
-						
+
 		//build replyHeader
 		Header replyHeader = new Header(m_path, master_secret, exitInfo);
 		m_headerbytes = replyHeader.getAsByteArray();
-		
+
 		//info about the first router for crossoverpoint
 		m_myrouting.m_Type = RoutingInformation.TYPE_SWAP_FORWARD_TO_HOST;
 		m_myrouting.m_Content = ((MMRDescription)m_path.elementAt(0)).getRoutingInformation().m_Content;
-		
+
 		//timetolive
 		//time in seconds since midnight 1.Jan 1970
 		Calendar cal = Calendar.getInstance();
@@ -162,7 +162,7 @@ public class ReplyBlock {
 		int year = cal.get(Calendar.YEAR);
 		m_timetolive = ((((year-1970-1)*365)+day)*24*60*60)+KEY_LIFETIME;
 		}
-	
+
 	/**
 	 * Returns the ReplyHeader as Bytes
 	 * @return the replyHeader
@@ -170,7 +170,7 @@ public class ReplyBlock {
 	public byte[] getHeaderBytes() {
 		return m_headerbytes;
 	}
-	
+
 	/**
 	 * Returns the End-to End shared Secret
 	 * @return sharedSecret End to End
@@ -184,33 +184,33 @@ public class ReplyBlock {
 	 * @return ReplyBlock as Bytes
 	 */
 	public byte[] getReplyBlockasBytes() {
-		
+
 //		# A reply block is: the string "SURB", a major number, a minor number,
 //		#   a 4-byte "valid-until" timestamp, a 2K header, 2 bytes of routingLen for
 //		#   the last server in the first leg; 2 bytes of routingType for the last
 //		#   server in the first leg; a 16-byte shared end-to-end key, and the
 //		#   routingInfo for the last server.
-		
+
 		byte[] beginmarker = {0x53, 0x55, 0x52, 0x42, 0x01,0x00}; //=="SURB"+1+0 We use Version 1.0
-		
+
         return ByteArrayUtil.conc(beginmarker,
                            ByteArrayUtil.inttobyte(m_timetolive,4), m_headerbytes,
-                           ByteArrayUtil.inttobyte(m_myrouting.m_Content.length,2), 
+                           ByteArrayUtil.inttobyte(m_myrouting.m_Content.length,2),
                            ByteArrayUtil.inttobyte(4,2),
                            ByteArrayUtil.conc(m_sharedSecret, m_myrouting.m_Content));
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @return Base64-encoded ReplyBlock with ascii armor
 	 * FIXME
 	 */
 	public String getReplyBlockasString() {
-		return "\n\n- -----BEGIN TYPE III REPLY BLOCK-----\nVERSION: 0.2\n" 
+		return "\n\n- -----BEGIN TYPE III REPLY BLOCK-----\nVERSION: 0.2\n"
 				+ Base64.encodeBytes(getReplyBlockasBytes())
 				+ "\n- -----END TYPE III REPLY BLOCK-----";
 	}
-	
+
 	/**
 	 * Returns the RoutingInformation of the First Server in the Path of the ReplyBlock, needed for the Crossover-Point
 	 * @return
@@ -218,7 +218,7 @@ public class ReplyBlock {
 	public RoutingInformation getRouting() {
 		return m_myrouting;
 	}
-	
+
 	/**
 	 * Parses a given payload for a ReplyBlock and returns it,
 	 * return null, when no ReplyBlock is detected
@@ -228,7 +228,7 @@ public class ReplyBlock {
 	 * @throws IOException
 	 */
 	public ReplyBlock parseReplyBlock(String message, byte[] block ) throws IOException {
-		
+
 		message = message + "\n-----END OF PLAINTEXT MESSAGE-----"; //mark Message end
 		LineNumberReader reader = new LineNumberReader(new StringReader(message));
 		String aktLine = reader.readLine();
@@ -245,7 +245,7 @@ public class ReplyBlock {
 			myBlock = myBlock + aktLine + "\n";
 			aktLine = reader.readLine();
 		}
-		
+
 		myBlock = myBlock.substring(0,myBlock.length()-1); //FIXME letztes Leerzeichen abschneiden anders/vermeiden?
 		//decode
 		byte[] mybyteblock = Base64.decode(myBlock);
@@ -266,7 +266,7 @@ public class ReplyBlock {
 		for (int i = 2078; i<2078+size; i++) {
 			content[i-2078] = mybyteblock[i];
 		}
-		rInfo.m_Content = content; 
+		rInfo.m_Content = content;
 		//header
 		byte[] h = new byte[2048];
 		for (int i = 0; i<2048; i++) {
@@ -277,7 +277,7 @@ public class ReplyBlock {
 		for (int i = 0; i<16; i++) {
 			secret[i] = mybyteblock[2062+i];
 		}
-				
+
 		return new ReplyBlock(rInfo, h, secret,time);
 	}
 
@@ -295,10 +295,10 @@ public class ReplyBlock {
 			myBlock = myBlock + "\n" + aktLine;
 			aktLine = reader.readLine();
 		}
-		
+
 		return myBlock;
 	}
-	
+
 	/**
 	 * tests whether the replyblock is not older then 3 months
 	 * @return
