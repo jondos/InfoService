@@ -32,15 +32,6 @@ import java.io.File;
 
 import javax.swing.filechooser.FileFilter;
 
-/**
- * Überschrift:
- * Beschreibung:
- * Copyright:     Copyright (c) 2001
- * Organisation:
- * @author
- * @version 1.0
- */
-
 public class JarFileFilter extends FileFilter
 {
 
