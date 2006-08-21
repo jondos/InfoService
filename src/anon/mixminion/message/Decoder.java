@@ -68,7 +68,7 @@ public class Decoder {
 		//needed variables
 		byte[] tag = new byte[0];
 		String encrypted = "";
-		String plaintext = "Konnte nix entschlüsseln";
+		String plaintext = "Konnte nix entschluesseln";
 
 		LineNumberReader reader = new LineNumberReader(new StringReader(m_message));
 		String aktLine = reader.readLine();

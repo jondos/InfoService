@@ -75,7 +75,7 @@ public class ReplyMessage extends ReplyImplementation{
 		Vector ready_to_send_Messages = new Vector(); // returned
 		boolean isfragmented = m_message_parts.length > 1; //multipart?
 
-		//FIXME replymessage und fragmented nich möglich, weil für jeden part ein replyblock nötig
+		//FIXME replymessage und fragmented nich moeglich, weil für jeden part ein replyblock noetig
 		if (isfragmented) {
 			System.out.println("nur ein replyblock für x parts...geht noch ne");
 			return null;

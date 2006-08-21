@@ -37,9 +37,9 @@ import anon.mixminion.mmrdescription.MMRDescription;
 import anon.util.ByteArrayUtil;
 
 /**
- * @author Stefan Rönisch
+ * @author Stefan Roenisch
  *TODO NOCH LÄUFT DAS GANZE NICHT!!!!
- * 
+ *
  */
 public class FragmentedMessage extends MessageImplementation {
 	static final int 	KEY_LEN = 16,
@@ -47,15 +47,15 @@ public class FragmentedMessage extends MessageImplementation {
 						FRAGMENT_HEADER_LEN = 47;
 	String[] m_recipient;
 	byte[] m_payload;
-	
+
 public FragmentedMessage(String[] recipient, byte[] payload) {
 	this.m_payload = payload;
 	this.m_recipient = recipient;
-	
+
 }
 
 public byte[][] buildPayload() {
-	
+
 //	When generating plaintext forward
 //	fragmented messages, the message generator uses a routing type of
 //	"FRAGMENT" (0x0103), an empty routing info, and prepends the
@@ -73,7 +73,7 @@ public byte[][] buildPayload() {
 	byte[] prepayload = ByteArrayUtil.conc(ByteArrayUtil.inttobyte(pl_exit_info.m_Content.length, 2),
 		ByteArrayUtil.inttobyte(ExitInformation.TYPE_SMTP, 2), pl_exit_info.m_Content);
 	m_payload = ByteArrayUtil.conc(prepayload, m_payload);
-	
+
 	LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 				  "[Message] Fragmented, new Compressed Size = " + m_payload.length);
 	//Constraint
@@ -81,7 +81,7 @@ public byte[][] buildPayload() {
 	{
 		throw new RuntimeException("Fragmented Header nach Neukomprimierung mit Single-Länge");
 	}
-	
+
 	//whiten
 	m_payload = whiten(m_payload);
 
