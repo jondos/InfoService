@@ -39,17 +39,17 @@ import anon.util.ByteArrayUtil;
 
 
 /**
- * @author Stefan Rönisch
+ * @author Stefan Roenisch
  *
  */
 public class NoReplyMessage extends ReplyImplementation {
-	
+
 	private byte[][] m_message_parts; //28kb prepared payload(s)
 	private int m_hops;
 	private String[] m_recipient;
 	private Vector m_start_server; //for every ready to send message the first server
 	private MMRList m_mmrlist;
-	
+
 	/**
 	 * Constructor
 	 * build a no-Reply Message with two Headers, if a replyblock is specified its used as header2
@@ -57,7 +57,7 @@ public class NoReplyMessage extends ReplyImplementation {
 	 * @param hops
 	 * @param recipient
 	 */
-	public NoReplyMessage(byte[][] message_parts, int hops, String[] recipient, MMRList mmrlist) 
+	public NoReplyMessage(byte[][] message_parts, int hops, String[] recipient, MMRList mmrlist)
 	{
 		this.m_message_parts = message_parts;
 		this.m_hops = hops;
@@ -65,30 +65,30 @@ public class NoReplyMessage extends ReplyImplementation {
 		this.m_start_server = new Vector();
 		this.m_mmrlist = mmrlist;
 	}
-	
+
 	/**
-	 * Builds for every element in m_message_parts a ready to send message 
-	 * @return Vector with ready to send 32k blocks 
+	 * Builds for every element in m_message_parts a ready to send message
+	 * @return Vector with ready to send 32k blocks
 	 */
-	public Vector buildMessage() 
+	public Vector buildMessage()
 	{
-	
+
 	Vector ready_to_send_Messages = new Vector(); // returned
-	boolean isfragmented = m_message_parts.length > 1; //multipart? 
-		
+	boolean isfragmented = m_message_parts.length > 1; //multipart?
+
 	Vector paths = new Vector(); //Vector with one path for every final packet
-	
+
 	//prepare the hops
 	int firstleg_hops = m_hops/2;
 	int secondleg_hops = m_hops - firstleg_hops;
-		
+
 	//for Single Block Message
 	if (!isfragmented)
 	{
 		Vector tv = m_mmrlist.getByRandomWithExit(m_hops);
 		paths.addElement(tv);
 	}
-	
+
 	// for every block the last server must be the same to allow reassembling
 	else
 	{
@@ -105,16 +105,16 @@ public class NoReplyMessage extends ReplyImplementation {
 		Vector wholepath = (Vector) paths.elementAt(i_frag);
 		Vector path1 = new Vector();
 		Vector path2 = new Vector();
-		
-		
+
+
 		path1 = MixMinionCryptoUtil.subVector(wholepath, 0, firstleg_hops);
 		path2 = MixMinionCryptoUtil.subVector(wholepath, firstleg_hops, secondleg_hops);
-			
+
 
 		m_start_server.addElement((MMRDescription)path1.elementAt(0));
-		
+
 		//build secrets
-		
+
 		Vector secrets1 = new Vector();
 		Vector secrets2 = new Vector();
 		for (int i = 0; i < (m_hops / 2); i++)
@@ -123,8 +123,8 @@ public class NoReplyMessage extends ReplyImplementation {
 			secrets2.addElement(MixMinionCryptoUtil.randomArray(16));
 		}
 		if (secrets2.size() < secondleg_hops) secrets2.addElement(MixMinionCryptoUtil.randomArray(16));
-		
-		//definate ExitInfos and Crossoverpoint 
+
+		//definate ExitInfos and Crossoverpoint
 		ExitInformation exit2 = new ExitInformation();
 		if (isfragmented)
 		{
@@ -143,7 +143,7 @@ public class NoReplyMessage extends ReplyImplementation {
 		//Header erzeugen
 		Header header1 = new Header(path1, secrets1, exit1);
 		Header header2 = new Header(path2, secrets2, exit2);
-		
+
 		byte[] headerbytes_1 = header1.getAsByteArray();
 		byte[] headerbytes_2 = header2.getAsByteArray();
 		byte[] payload = m_message_parts[i_frag];
@@ -153,14 +153,14 @@ public class NoReplyMessage extends ReplyImplementation {
 		/**Phase 1 - if H2 is not a reply block**/
 		// for i = N .. 1
 		//   P = SPRP_Encrypt(SK2_i, "PAYLOAD ENCRYPT", P)
-		// end			
+		// end
 		for (int i = secrets2.size() - 1; i >= 0; i--)
 		{
 			byte[] secretKey = (byte[]) secrets2.elementAt(i);
 			byte[] key = MixMinionCryptoUtil.hash(ByteArrayUtil.conc(secretKey, "PAYLOAD ENCRYPT".getBytes()));
 			payload = MixMinionCryptoUtil.SPRP_Encrypt(key, payload);
 		}
-		
+
 		/** Phase 2: SPRP verschluesseln **/
 		// H2 = SPRP_Encrypt(SHA1(P), "HIDE HEADER", H2)
 		// P = SPRP_Encrypt(SHA1(H2), "HIDE PAYLOAD", P)
@@ -188,7 +188,7 @@ public class NoReplyMessage extends ReplyImplementation {
 	}
 	return ready_to_send_Messages;
 	}
-	
+
 	public Vector getStartServers() {
 		return m_start_server;
 	}

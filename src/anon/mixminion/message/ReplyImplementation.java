@@ -31,15 +31,15 @@ package anon.mixminion.message;
 import java.util.Vector;
 
 /**
- * @author Stefan Rönisch
+ * @author Stefan Roenisch
  *
  */
 public abstract class ReplyImplementation  {
-	
+
 	public Vector buildMessage() {
 		return null;
 	}
-	
+
 	public Vector getStartServers() {
 		return null;
 	}

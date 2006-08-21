@@ -47,7 +47,7 @@ import anon.mixminion.mmrdescription.PlainMMRListFetcher;
 
 
 /**
- * @author Jens Kempe, Stefan Rönisch
+ * @author Jens Kempe, Stefan Roenisch
  */
 public class Message
 {

@@ -29,15 +29,15 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 package anon.mixminion.message;
 
 /**
- * @author Stefan Rönisch
+ * @author Stefan Roenisch
  *
  * TODO To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
 public abstract class MessageImplementation {
-	
+
 	public byte[][] buildPayload() {
 		return null;
 	}
-	
+
 }

@@ -43,7 +43,7 @@ import HTTPClient.HTTPResponse;
 
 /**
  *
- * @author Stefan Rönisch
+ * @author Stefan Roenisch
  */
 public class ServerStats {
 
