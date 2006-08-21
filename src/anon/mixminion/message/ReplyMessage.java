@@ -78,7 +78,7 @@ public class ReplyMessage extends ReplyImplementation{
 		//FIXME replymessage und fragmented nich moeglich, weil fuer jeden part ein replyblock noetig
 
 		if (isfragmented) {
-			System.out.println("nur ein replyblock für x parts...geht noch ne");
+			System.out.println("nur ein replyblock fuer x parts...geht noch ne");
 			return null;
 		}
 
