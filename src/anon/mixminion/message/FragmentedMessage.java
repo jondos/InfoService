@@ -103,7 +103,7 @@ public byte[][] buildPayload() {
 		//FIXME eventuell muss in den hash noch mit rein: "X"*Disgest_LEN
 		byte[] flag = new byte[3];
 		flag[0] = new Integer(128).byteValue();
-		flag[2] = new Integer(i).byteValue(); //FIXME fängt der index bei null an???
+		flag[2] = new Integer(i).byteValue(); //FIXME faengt der index bei null an???
 		//FIXME stand so im python code
 		byte[] hash = "XXXXXXXXXXXXXXXXXXXX".getBytes();
 		System.out.println("Hash vorerzeugt:" + hash.length);
