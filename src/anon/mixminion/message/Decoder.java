@@ -36,7 +36,7 @@ import anon.util.Base64;
 import anon.util.ByteArrayUtil;
 
 /**
- * @author Stefan Rönisch
+ * @author Stefan Roenisch
  */
 public class Decoder {
 
