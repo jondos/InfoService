@@ -79,7 +79,7 @@ public byte[][] buildPayload() {
 	//Constraint
 	if (m_payload.length + SingleBlockMessage.SINGLETON_HEADER_LEN <= 28 * 1024)
 	{
-		throw new RuntimeException("Fragmented Header nach Neukomprimierung mit Single-Länge");
+		throw new RuntimeException("Fragmented Header nach Neukomprimierung mit Single-Laenge");
 	}
 
 	//whiten
