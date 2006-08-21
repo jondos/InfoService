@@ -38,7 +38,7 @@ import anon.util.ByteArrayUtil;
 
 /**
  * @author Stefan Roenisch
- *TODO NOCH LÄUFT DAS GANZE NICHT!!!!
+ *TODO NOCH LaeUFT DAS GANZE NICHT!!!!
  *
  */
 public class FragmentedMessage extends MessageImplementation {
