@@ -866,12 +866,12 @@ public final class JAPModel extends Observable
 	{
 		return ms_TheModel.m_MixminionRouteLen;
 	}
-	
-	//von Stefan Rönisch
+
+	//von Stefan Roenisch
 	protected void setMixminionMyEMail(String address) {
 		m_MixminionMyEMail = address;
 	}
-	
+
 	public static String getMixminionMyEMail() {
 		return ms_TheModel.m_MixminionMyEMail;
 	}
