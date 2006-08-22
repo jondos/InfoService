@@ -35,6 +35,7 @@ import java.util.Vector;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import anon.crypto.SignatureVerifier;
 import anon.infoservice.Constants;
@@ -43,6 +44,7 @@ import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.JAPMinVersion;
 import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.MixCascade;
+import anon.infoservice.JavaVersionDBEntry;
 import anon.infoservice.MixInfo;
 import anon.infoservice.StatusInfo;
 import anon.util.XMLUtil;
@@ -541,6 +543,70 @@ public class InfoServiceCommands implements JWSInternalCommands
 		return httpResponse;
 	}
 
+	private HttpResponseStructure getLatestJavaVersions()
+	{
+		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
+			HTTP_RETURN_INTERNAL_SERVER_ERROR);
+		Document doc = XMLUtil.createDocument();
+		try
+		{
+			Element entries = Database.getInstance(JavaVersionDBEntry.class).toXmlElement(doc);
+			if (entries != null)
+			{
+				doc.appendChild(entries);
+			}
+			httpResponse = new HttpResponseStructure(doc);
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.NET, e);
+		}
+		return httpResponse;
+	}
+
+	/**
+	 * This method is called, when we receive data from another infoservice with the lastest java version
+	 * for a specific vendor.
+	 *
+	 * @param a_postData The data we have received.
+	 *
+	 * @return The HTTP response for the client.
+	 */
+	private HttpResponseStructure postLatestJavaVersions(byte[] a_postData)
+	{
+		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK);
+		try
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.NET,
+						  "Latest Java versions received. XML: " + (new String(a_postData)));
+
+			Element node = (Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(
+						 a_postData), JavaVersionDBEntry.XML_ELEMENT_NAME));
+			/* verify the signature */
+			if (SignatureVerifier.getInstance().verifyXml(node,
+				SignatureVerifier.DOCUMENT_CLASS_UPDATE) == true)
+			{
+				Database.getInstance(JavaVersionDBEntry.class).update(
+					new JavaVersionDBEntry(node));
+				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK);
+			}
+			else
+			{
+				LogHolder.log(LogLevel.WARNING, LogType.NET,
+							  "Signature check failed for Java version entry! XML: " +
+							  XMLUtil.toString(node));
+				httpResponse = new HttpResponseStructure(HttpResponseStructure.
+					HTTP_RETURN_INTERNAL_SERVER_ERROR);
+			}
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.NET, e);
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);
+		}
+		return httpResponse;
+	}
+
 	/**
 	 * Sends a generated HTML file with all status entrys to the client. This function is not used
 	 * by the JAP client. It's intended to use with a webbrowser to see the status of all cascades.
@@ -619,7 +685,7 @@ public class InfoServiceCommands implements JWSInternalCommands
 				Configuration.getInstance().getStartupTime() +
 				"</P>\n" +
 				"    <HR noShade SIZE=\"1\">\n" +
-				"    <ADDRESS>&copy; 2000 - 2005 The JAP Team</ADDRESS>\n" +
+				"    <ADDRESS>&copy; 2000 - 2006 The JAP Team</ADDRESS>\n" +
 				"  </BODY>\n" +
 				"</HTML>\n";
 			/* send content */
@@ -1227,6 +1293,17 @@ public class InfoServiceCommands implements JWSInternalCommands
 		{
 			/* get a captcha with information about a JAP forwarder */
 			httpResponse = getJapForwarder();
+		}
+		else if (command.equals(JavaVersionDBEntry.HTTP_REQUEST_STRING))
+		{
+			if (method == Constants.REQUEST_METHOD_GET)
+			{
+				httpResponse = getLatestJavaVersions();
+			}
+			else if (method == Constants.REQUEST_METHOD_POST)
+			{
+				httpResponse = postLatestJavaVersions(postData);
+			}
 		}
 		else if ( (command.equals("/currentjapversion")) && (method == Constants.REQUEST_METHOD_POST))
 		{

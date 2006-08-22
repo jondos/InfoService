@@ -106,7 +106,7 @@ import anon.infoservice.JAPVersionInfo;
 import update.JAPUpdateWizard;
 import anon.infoservice.NewCascadeIDEntry;
 import anon.infoservice.CascadeIDEntry;
-import java.lang.reflect.*;
+import anon.infoservice.JavaVersionDBEntry;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver, Observer, PropertyChangeListener
@@ -117,6 +117,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String MSG_UPDATE = JAPNewView.class.getName() + "_update";
 	private static final String MSG_TITLE_OLD_JAVA = JAPNewView.class.getName() + "_titleOldJava";
 	private static final String MSG_OLD_JAVA = JAPNewView.class.getName() + "_oldJava";
+	private static final String MSG_OLD_JAVA_HINT = JAPNewView.class.getName() + "_oldJavaHint";
 	private static final String MSG_LBL_NEW_SERVICES_FOUND = JAPNewView.class.getName() + "_newServicesFound";
 	private static final String MSG_SERVICE_PRICE = JAPNewView.class.getName() + "_servicePrice";
 	private static final String MSG_NO_COSTS = JAPNewView.class.getName() + "_noCosts";
@@ -127,25 +128,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private static final String PRICE_UNIT = "ct/MB";
 
-	/** @todo fetch latest Java version automatically, store value in database and update view automatically*/
-	private static final String LATEST_SUN_JAVA = "1.5.0_08";
-	private static final String JAVA_VENDOR = System.getProperty("java.vendor");
-	private static final String JAVA_VERSION = System.getProperty("java.version");
-	private static final URL SUN_JAVA_URL;
-
-	static
-	{
-		URL url = null;
-		try
-		{
-			//url = new URL("http://java.sun.com");
-			url = new URL("http://java.sun.com/javase/downloads/index.jsp");
-		}
-		catch (MalformedURLException a_e)
-		{
-		}
-		SUN_JAVA_URL = url;
-	}
 
 	//private JLabel meterLabel;
 	private JLabel m_labelCascadeName;
@@ -213,6 +195,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JProgressBar m_progForwarderActivity;
 	private JProgressBar m_progForwarderActivitySmall;
 
+	private boolean m_bUpdateClicked = false;
+
 	private long m_lTrafficWWW, m_lTrafficOther;
 
 	private boolean m_bIsSimpleView;
@@ -276,6 +260,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			public void mouseClicked(MouseEvent e)
 			{
+				if (m_bUpdateClicked)
+				{
+					return;
+				}
+				m_bUpdateClicked = true;
+
 				boolean bUpdated = false;
 				Enumeration entries =
 					Database.getInstance(JAPVersionInfo.class).getEntrySnapshotAsEnumeration();
@@ -287,10 +277,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					{
 						JAPUpdateWizard wz = new JAPUpdateWizard(vi, view);
 						/* we got the JAPVersionInfo from the infoservice */
-						/* Assumption: If we are here, the download failed for some resaons, otherwise the
-						 * program would quit
-						 */
-						//TODO: Do this in a better way!!
 						if (wz.getStatus() == JAPUpdateWizard.UPDATESTATUS_ERROR)
 						{
 							/* Download failed -> alert, and reset anon mode to false */
@@ -299,22 +285,19 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 								JAPMessages.getString("downloadFailed") +
 								JAPMessages.getString("infoURL"), LogType.MISC);
 						}
+						/*
 						else
 						{
 							bUpdated = true;
-						}
+						}*/
 					}
 				}
-
-				if (!bUpdated && isJavaTooOld())
+				JavaVersionDBEntry versionEntry = JavaVersionDBEntry.getNewJavaVersion();
+				if (!bUpdated && versionEntry != null)
 				{
-					Object[] args = new Object[2];
-					args[0] = JAVA_VERSION + ", " + JAVA_VENDOR;
-					args[1] = LATEST_SUN_JAVA + ", " + "Sun Microsystems Inc.";
-					JAPDialog.showMessageDialog(view, JAPMessages.getString(MSG_OLD_JAVA, args),
-												JAPMessages.getString(MSG_TITLE_OLD_JAVA),
-												AbstractOS.getInstance().createURLLink(SUN_JAVA_URL, null));
+					showJavaUpdateDialog(versionEntry);
 				}
+				m_bUpdateClicked = false;
 			}
 		});
 		m_pnlVersion.add(m_labelUpdate, constrVersion);
@@ -982,6 +965,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		Database.getInstance(MixCascade.class).addObserver(this);
 		Database.getInstance(NewCascadeIDEntry.class).addObserver(this);
 		Database.getInstance(CascadeIDEntry.class).addObserver(this);
+		Database.getInstance(JavaVersionDBEntry.class).addObserver(this);
 
 		JAPModel.getInstance().addObserver(this);
 
@@ -1670,6 +1654,37 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 			};
 		}
+		else if (a_observable == Database.getInstance(JavaVersionDBEntry.class))
+		{
+			DatabaseMessage message = ((DatabaseMessage)a_message);
+			JavaVersionDBEntry entry;
+
+			if (message.getMessageData() == null)
+			{
+				return;
+			}
+			if ((message.getMessageCode() == DatabaseMessage.ENTRY_ADDED ||
+				message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED) &&
+				JAPModel.getInstance().isReminderForJavaUpdateActivated())
+			{
+				entry = (JavaVersionDBEntry)message.getMessageData();
+				if (JavaVersionDBEntry.isJavaTooOld(entry))
+				{
+					JAPDialog.LinkedCheckBox checkbox = new JAPDialog.LinkedCheckBox(false);
+					// this blocks the database, but should nevertheless not cause any deadlocks
+					if (JAPDialog.showYesNoDialog(this, JAPMessages.getString(MSG_OLD_JAVA_HINT,
+						new Object[]{entry.getJREVersion()}), JAPMessages.getString(MSG_TITLE_OLD_JAVA),
+						checkbox))
+					{
+						showJavaUpdateDialog(entry);
+					}
+					if (checkbox.getState())
+					{
+						JAPModel.getInstance().setReminderForJavaUpdate(false);
+					}
+				}
+			}
+		}
 		if (run != null)
 		{
 			if (SwingUtilities.isEventDispatchThread())
@@ -1937,7 +1952,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 			m_labelUpdate.setVisible((vi != null && vi.getJapVersion() != null &&
 									  vi.getJapVersion().compareTo(JAPConstants.aktVersion) > 0) ||
-									 isJavaTooOld());
+									 JavaVersionDBEntry.getNewJavaVersion() != null);
 
 			MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
 			//String strCascadeName = currentMixCascade.getName();
@@ -2179,6 +2194,20 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_StatusPanel.removeStatusMsg(id);
 	}
 
+	private void showJavaUpdateDialog(JavaVersionDBEntry a_entry)
+	{
+		Object[] args = new Object[5];
+		args[0] = JavaVersionDBEntry.CURRENT_JAVA_VERSION;
+		args[1] = JavaVersionDBEntry.CURRENT_JAVA_VENDOR;
+		args[2] = a_entry.getJREVersion();
+		args[3] = a_entry.getVendorLongName();
+		args[4] = a_entry.getVendor();
+
+		JAPDialog.showMessageDialog(this, JAPMessages.getString(MSG_OLD_JAVA, args),
+									JAPMessages.getString(MSG_TITLE_OLD_JAVA),
+									AbstractOS.getInstance().createURLLink(a_entry.getDownloadURL(), null));
+	}
+
 	private synchronized void fetchMixCascadesAsync(final boolean bShowError)
 	{
 		m_bttnReload.setEnabled(false);
@@ -2204,13 +2233,5 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		Thread t = new Thread(doFetchMixCascades, "DoFetchMixCascades");
 		t.setDaemon(true);
 		t.start();
-	}
-
-	private boolean isJavaTooOld()
-	{
-		return (JAVA_VENDOR != null && (JAVA_VENDOR.toLowerCase().indexOf("microsoft") >= 0 ||
-												 (JAVA_VENDOR.toLowerCase().indexOf("sun") >= 0 &&
-												  JAVA_VERSION != null &&
-												  JAVA_VERSION.compareTo(LATEST_SUN_JAVA) < 0)));
 	}
 }

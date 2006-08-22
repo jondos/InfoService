@@ -68,6 +68,8 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		"_allowDirectConnection";
 	private static final String MSG_REMIND_OPTIONAL_UPDATE = JAPConfUpdate.class.getName() +
 		"_remindOptionalUpdate";
+	private static final String MSG_REMIND_JAVA_UPDATE = JAPConfUpdate.class.getName() +
+		"_remindJavaUpdate";
 
 	//private JDialog m_Dialog;
 	private JTextArea m_taInfo;
@@ -78,6 +80,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 	private JButton m_bttnUpgrade, m_bttnCheckForUpgrade;
 	private JCheckBox m_cbxAllowDirectUpdate;
 	private JCheckBox m_cbxRemindOptionalUpdate;
+	private JCheckBox m_cbxRemindJavaUpdate;
 
 	private Thread m_threadGetVersionInfo;
 	private JAPVersionInfo m_devVersion;
@@ -283,13 +286,15 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		m_cbxAllowDirectUpdate = new JCheckBox(JAPMessages.getString(MSG_ALLOW_DIRECT_CONN));
 		panelRoot.add(m_cbxAllowDirectUpdate, cFrame);
 
-		cFrame.gridx = 0;
-		cFrame.gridy = 3;
+		cFrame.gridy++;
 		m_cbxRemindOptionalUpdate = new JCheckBox(JAPMessages.getString(MSG_REMIND_OPTIONAL_UPDATE));
 		panelRoot.add(m_cbxRemindOptionalUpdate, cFrame);
 
-		cFrame.gridy = 4;
+		cFrame.gridy++;
+		m_cbxRemindJavaUpdate = new JCheckBox(JAPMessages.getString(MSG_REMIND_JAVA_UPDATE));
+		panelRoot.add(m_cbxRemindJavaUpdate, cFrame);
 
+		cFrame.gridy++;
 		cFrame.anchor = GridBagConstraints.CENTER;
 		cFrame.fill = GridBagConstraints.BOTH;
 		cFrame.weightx = 1.0;
@@ -297,8 +302,8 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		gridBagFrame.setConstraints(infoPanel, cFrame);
 		panelRoot.add(infoPanel);
 
-		cFrame.gridx = 0;
-		cFrame.gridy = 5;
+
+		cFrame.gridy++;
 		cFrame.weighty = 0;
 		cFrame.fill = GridBagConstraints.HORIZONTAL;
 		cFrame.anchor = GridBagConstraints.SOUTH;
@@ -310,19 +315,23 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 	{
 		JAPModel.getInstance().allowUpdateViaDirectConnection(m_cbxAllowDirectUpdate.isSelected());
 		JAPModel.getInstance().setReminderForOptionalUpdate(m_cbxRemindOptionalUpdate.isSelected());
+		JAPModel.getInstance().setReminderForJavaUpdate(m_cbxRemindJavaUpdate.isSelected());
+
 		return true;
 	}
 
 	public void onResetToDefaultsPressed()
 	{
 		m_cbxAllowDirectUpdate.setSelected(true);
-		m_cbxRemindOptionalUpdate.setSelected(true);
+		m_cbxRemindOptionalUpdate.setSelected(JAPConstants.REMIND_OPTIONAL_UPDATE);
+		m_cbxRemindJavaUpdate.setSelected(JAPConstants.REMIND_JAVA_UPDATE);
 	}
 
 	protected void onUpdateValues()
 	{
 		m_cbxAllowDirectUpdate.setSelected(JAPModel.getInstance().isUpdateViaDirectConnectionAllowed());
 		m_cbxRemindOptionalUpdate.setSelected(JAPModel.getInstance().isReminderForOptionalUpdateActivated());
+		m_cbxRemindJavaUpdate.setSelected(JAPModel.getInstance().isReminderForJavaUpdateActivated());
 	}
 
 	public void run()

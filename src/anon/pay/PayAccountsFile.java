@@ -765,19 +765,13 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 
 		try
 		{
-			PaymentInstanceDBEntry entry=InfoServiceHolder.getInstance().getPaymentInstance(a_piID);
-			theBI = new BI(entry);
+			theBI = new BI(InfoServiceHolder.getInstance().getPaymentInstance(a_piID));
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Got BI " + theBI.getID() + " from InfoService");
+			return theBI;
 		}
 		catch (Exception e)
 		{
-			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "No InfoService with the needed information available.");
-		}
-
-		if (theBI != null)
-		{
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Got BI " + theBI.getID() + " from InfoService");
-			return theBI;
+			// ignore
 		}
 
 		//If no infoservice could give us information about the PI, get it from the list of known PIs

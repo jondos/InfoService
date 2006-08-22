@@ -53,6 +53,8 @@ Zusatzkommandos (JAP forwarding):
 
 
 Zusatzkommandos (JAP-Update):
+  /currentjavaversion: GET: returns the latest known java versions ordered by vendors
+                       POST: receives the latst known java versions from another info service
   /currentjapversion: GET: liefert die Versionsnummer der aktuellen JAP-Version in einer
                            XML-Struktur
                       POST: Empfang der minimal nötigen JAP Version von einem anderen

@@ -56,7 +56,7 @@ import org.w3c.dom.NodeList;
  * will identify the reason of the notification, see the DatabaseMessage class for more
  * information.
  */
-public final class Database extends Observable implements Runnable
+public final class Database extends Observable implements Runnable, IXMLEncodable
 {
 	/**
 	 * The registered databases.
@@ -376,8 +376,7 @@ public final class Database extends Observable implements Runnable
 					else
 					{
 						LogHolder.log(LogLevel.WARNING, LogType.MISC,
-									  "Database: update: No distributor specified." +
-									  "Cannot distribute database entries!");
+									  "No distributor specified - cannot distribute database entries!");
 					}
 				}
 			}
@@ -506,6 +505,17 @@ public final class Database extends Observable implements Runnable
 	}
 
 	/**
+	 * If the entries of this database implement IXMLEncodable and has a proper value for the field
+	 * XML_ELEMENT_CONTAINER_NAME, this database is transormed into an XML element.
+	 * @param a_doc a Document
+	 * @return the database als XML Element or null if transformation was not possible
+	 */
+	public Element toXmlElement(Document a_doc)
+	{
+		return toXmlElement(a_doc, XMLUtil.getXmlElementContainerName(m_DatabaseEntryClass));
+	}
+
+	/**
 	 * Creates an XML node with all database entries, but only for those entries that implement
 	 * IXMLEncodable.
 	 *
@@ -516,24 +526,21 @@ public final class Database extends Observable implements Runnable
 	 */
 	public Element toXmlElement(Document a_doc, String a_xmlContainerName)
 	{
-		Object dbentry;
+		Element element;
 
-		if (a_doc == null || a_xmlContainerName == null || a_xmlContainerName.trim().length() == 0)
+		if (a_doc == null || !IXMLEncodable.class.isAssignableFrom(m_DatabaseEntryClass) ||
+			a_xmlContainerName == null || a_xmlContainerName.trim().length() == 0)
 		{
 			return null;
 		}
 
-		Element element = a_doc.createElement(a_xmlContainerName);
+		element = a_doc.createElement(a_xmlContainerName);
 		synchronized (m_serviceDatabase)
 		{
 			Enumeration it = m_serviceDatabase.elements();
 			while (it.hasMoreElements())
 			{
-				dbentry = it.nextElement();
-				if (dbentry instanceof IXMLEncodable)
-				{
-					element.appendChild( ( (IXMLEncodable) (dbentry)).toXmlElement(a_doc));
-				}
+				element.appendChild( ( (IXMLEncodable) (it.nextElement())).toXmlElement(a_doc));
 			}
 		}
 		return element;

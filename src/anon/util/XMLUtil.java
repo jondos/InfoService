@@ -60,6 +60,10 @@ import org.w3c.dom.Text;
 import org.xml.sax.InputSource;
 
 import anon.util.Util;
+import logging.LogHolder;
+import logging.LogLevel;
+import java.util.Vector;
+import logging.LogType;
 /**
  * This class provides an easy interface to XML methods.
  */
@@ -413,20 +417,75 @@ public class XMLUtil
 		return s;
 	}
 
+	/**
+	 * Uses Java reflection to get the static XML_ELEMENT_CONTAINER_NAME field contents if present in the
+	 * given class.
+	 * @param a_xmlEncodableClass a Class (should be an IXMLEncodable)
+	 * @return the static XML_ELEMENT_CONTAINER_NAME field contents if present in the given class or null
+	 * if the field was not found
+	 */
+	public static String getXmlElementContainerName(Class a_xmlEncodableClass)
+	{
+		return Util.getStaticFieldValue(a_xmlEncodableClass, IXMLEncodable.FIELD_XML_ELEMENT_CONTAINER_NAME);
+	}
+
+	/**
+	 * Uses Java reflection to get the static XML_ELEMENT_NAME field contents if present in the given class.
+	 * @param a_xmlEncodableClass a Class (should be an IXMLEncodable)
+	 * @return the static XML_ELEMENT_NAME field contents if present in the given class or null if the
+	 * field was not found
+	 */
 	public static String getXmlElementName(Class a_xmlEncodableClass)
 	{
-		String xmlElementName = null;
-		try
+		return Util.getStaticFieldValue(a_xmlEncodableClass, IXMLEncodable.FIELD_XML_ELEMENT_NAME);
+	}
+
+	/**
+	 * Loads all elements under the root elements that have the specified tag name.
+	 * @param a_file a file to load the elements from
+	 * @param a_tagName the tag that specifies the elemetns to load
+	 * @return the elements read from the given file or an empty array if no elements were read
+	 */
+	public static Element[] readElementsByTagName(File a_file, String a_tagName)
+	{
+		NodeList elements;
+
+		Vector vec = new Vector();
+		Element[] entries;
+
+		if (a_file != null && a_tagName != null)
 		{
-			Field field = a_xmlEncodableClass.getField(IXMLEncodable.FIELD_XML_ELEMENT_NAME);
-			xmlElementName = (String) field.get(null);
-		}
-		catch (Exception ex)
-		{
+			try
+			{
+				elements = XMLUtil.readXMLDocument(a_file).
+					getDocumentElement().getElementsByTagName(a_tagName);
+				for (int i = 0; i < elements.getLength(); i++)
+				{
+					try
+					{
+						vec.addElement( (Element) elements.item(i));
+					}
+					catch (Exception a_e)
+					{
+						LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, ex);
+			}
 		}
 
-		return xmlElementName;
+		entries = new Element[vec.size()];
+		for (int i = 0; i < vec.size(); i++)
+		{
+			entries[i] = (Element) vec.elementAt(i);
+		}
+
+		return entries;
 	}
+
 
 	/**
 	 * Returns the child node of the given node with the given name.

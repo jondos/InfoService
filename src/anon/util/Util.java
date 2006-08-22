@@ -29,6 +29,7 @@ package anon.util;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
 import java.util.Vector;
 import java.util.StringTokenizer;
 import java.util.NoSuchElementException;
@@ -444,5 +445,27 @@ public final class Util
 		}
 
 		return a_source;
+	}
+
+	/**
+	 * Uses the reflection API to get the value of a static field in the given class, if the field
+	 * is present.
+	 * @param a_class a Class
+	 * @param a_fieldName the field to read the value from
+	 * @return the value of a static field in the given class or null if the value or field is not present
+	 */
+	public static String getStaticFieldValue(Class a_class, String a_fieldName)
+	{
+		String fieldValue = null;
+		try
+		{
+			Field field = a_class.getField(a_fieldName);
+			fieldValue = (String) field.get(null);
+		}
+		catch (Exception ex)
+		{
+		}
+
+		return fieldValue;
 	}
 }

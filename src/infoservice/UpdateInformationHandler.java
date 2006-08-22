@@ -29,6 +29,7 @@ package infoservice;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.Vector;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -44,198 +45,274 @@ import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.infoservice.JavaVersionDBEntry;
+import anon.util.*;
+import anon.infoservice.IDistributable;
 
 /**
  * Manages the propaganda of the JAP update information.
  */
-public class UpdateInformationHandler implements Runnable {
+public class UpdateInformationHandler implements Runnable
+{
 
-  /**
-   * Stores the instance of UpdateInformationHandler (Singleton).
-   */
-  private static UpdateInformationHandler ms_uihInstance;
+	/**
+	 * Stores the instance of UpdateInformationHandler (Singleton).
+	 */
+	private static UpdateInformationHandler ms_uihInstance;
 
+	/**
+	 * Returns the instance of UpdateInformationHandler (Singleton). If there is no instance,
+	 * there is a new one created, also the included thread is started.
+	 *
+	 * @return The UpdateInformationHandler instance.
+	 */
+	public static UpdateInformationHandler getInstance()
+	{
+		synchronized (UpdateInformationHandler.class)
+		{
+			if (ms_uihInstance == null)
+			{
+				ms_uihInstance = new UpdateInformationHandler();
+				Thread uihThread = new Thread(ms_uihInstance, "UpdateInformationHandler");
+				uihThread.setDaemon(true);
+				uihThread.start();
+			}
+		}
+		return ms_uihInstance;
+	}
 
-  /**
-   * Returns the instance of UpdateInformationHandler (Singleton). If there is no instance,
-   * there is a new one created, also the included thread is started.
-   *
-   * @return The UpdateInformationHandler instance.
-   */
-  public static UpdateInformationHandler getInstance() {
-    synchronized (UpdateInformationHandler.class) {
-      if (ms_uihInstance == null) {
-        ms_uihInstance = new UpdateInformationHandler();
-        Thread uihThread = new Thread(ms_uihInstance,"UpdateInformationHandler");
-        uihThread.setDaemon(true);
-        uihThread.start();
-      }
-    }
-    return ms_uihInstance;
-  }
+	/**
+	 * Creates a new instance of UpdateInformationHandler.
+	 */
+	private UpdateInformationHandler()
+	{
+	}
 
+	/**
+	 * This is the propaganda thread for all JAP update specific information. It posts the current
+	 * JAP update information periodically (default: 10 minutes, see
+	 * Constants.UPDATE_INFORMATION_ANNOUNCE_PERIOD) to all neighbour infoservices. Also it reads
+	 * the information from the local filesystem, if this is the root-of-update information
+	 * infoservice.
+	 */
+	public void run()
+	{
+		IDistributable distributable;
+		Vector distributables;
+		Element[] entries;
 
-  /**
-   * Creates a new instance of UpdateInformationHandler.
-   */
-  private UpdateInformationHandler() {
-  }
+		while (true)
+		{
+			if (Configuration.getInstance().isRootOfUpdateInformation())
+			{
+				/* we are the root of update information -> try to read the update files from disk */
+				try
+				{
+					byte[] releaseJnlpData = readLocalFile(Configuration.getInstance().getJapReleaseJnlpFile());
+					Document releaseJnlpDocument = XMLUtil.toXMLDocument(releaseJnlpData);
+					Element jnlpNode = (Element) (XMLUtil.getFirstChildByName(releaseJnlpDocument,
+						JAPVersionInfo.getXmlElementName()));
+					prepareEntryForPropaganda(jnlpNode);
+					/* update the internal database and propagate the new version info */
+					Database.getInstance(JAPVersionInfo.class).update(new JAPVersionInfo(jnlpNode,
+						JAPVersionInfo.JAP_RELEASE_VERSION));
+				}
+				catch (Exception e)
+				{
+					LogHolder.log(LogLevel.ERR, LogType.NET,
+								  "Error while processing JAP release information: " + e);
+					/* try to propagate the JAP release version info from the database, if we have one
+					 * stored there
+					 */
+					distributable = (JAPVersionInfo) (Database.getInstance(JAPVersionInfo.class).
+						getEntryById(JAPVersionInfo.ID_RELEASE));
+					if (distributable != null)
+					{
+						/* we have found a old entry in the database -> better than nothing */
+						InfoServiceDistributor.getInstance().addJob(distributable);
+					}
+				}
+				try
+				{
+					byte[] developmentJnlpData = readLocalFile(Configuration.getInstance().
+						getJapDevelopmentJnlpFile());
+					Document developmentJnlpDocument = XMLUtil.toXMLDocument(developmentJnlpData);
+					Element jnlpNode = (Element) (XMLUtil.getFirstChildByName(developmentJnlpDocument,
+						JAPVersionInfo.getXmlElementName()));
+					prepareEntryForPropaganda(jnlpNode);
+					/* update the internal database and propagate the new version info */
+					Database.getInstance(JAPVersionInfo.class).update(new JAPVersionInfo(jnlpNode,
+						JAPVersionInfo.JAP_DEVELOPMENT_VERSION));
+				}
+				catch (Exception e)
+				{
+					LogHolder.log(LogLevel.ERR, LogType.NET,
+								  "Error while processing JAP development information: " + e);
+					/* try to propagate the JAP development version info from the database, if we have one
+					 * stored there
+					 */
+					distributable = (JAPVersionInfo) (Database.getInstance(JAPVersionInfo.class).
+						getEntryById(JAPVersionInfo.ID_DEVELOPMENT));
+					if (distributable != null)
+					{
+						/* we have found a old entry in the database -> better than nothing */
+						InfoServiceDistributor.getInstance().addJob(distributable);
+					}
+				}
+				try
+				{
+					byte[] minVersionData = readLocalFile(Configuration.getInstance().getJapMinVersionFile());
+					Document minVersionDocument = XMLUtil.toXMLDocument(minVersionData);
+					Element japNode = (Element) (XMLUtil.getFirstChildByName(minVersionDocument,
+						JAPMinVersion.getXmlElementName()));
+					prepareEntryForPropaganda(japNode);
+					/* update the internal database and propagate the new minimum version info */
+					Database.getInstance(JAPMinVersion.class).update(new JAPMinVersion(japNode));
+				}
+				catch (Exception e)
+				{
+					LogHolder.log(LogLevel.ERR, LogType.NET,
+								  "Error while processing JAP minimum version information: " + e.toString());
+					/* try to propagate the JAP minimum version info from the database, if we have one
+					 * stored there
+					 */
+					distributable = (JAPMinVersion) (Database.getInstance(JAPMinVersion.class).
+						getEntryById(JAPMinVersion.DEFAULT_ID));
+					if (distributable != null)
+					{
+						/* we have found a old entry in the database -> better than nothing */
+						InfoServiceDistributor.getInstance().addJob(distributable);
+					}
+				}
 
+				try
+				{
+					entries =
+						XMLUtil.readElementsByTagName(Configuration.getInstance().getJavaLatestVersionFile(),
+						JavaVersionDBEntry.XML_ELEMENT_NAME);
+					for (int i = 0; i < entries.length; i++)
+					{
+						prepareEntryForPropaganda(entries[i]);
 
-  /**
-   * This is the propaganda thread for all JAP update specific information. It posts the current
-   * JAP update information periodically (default: 10 minutes, see
-   * Constants.UPDATE_INFORMATION_ANNOUNCE_PERIOD) to all neighbour infoservices. Also it reads
-   * the information from the local filesystem, if this is the root-of-update information
-   * infoservice.
-   */
-  public void run() {
-    while (true) {
-      if (Configuration.getInstance().isRootOfUpdateInformation()) {
-        /* we are the root of update information -> try to read the update files from disk */
-        try {
-          byte[] releaseJnlpData = readLocalFile(Configuration.getInstance().getJapReleaseJnlpFile());
-          Document releaseJnlpDocument = XMLUtil.toXMLDocument(releaseJnlpData);
-          Element jnlpNode = (Element)(XMLUtil.getFirstChildByName(releaseJnlpDocument, JAPVersionInfo.getXmlElementName()));
-          prepareEntryForPropaganda(jnlpNode);
-          /* update the internal database and propagate the new version info */
-          Database.getInstance(JAPVersionInfo.class).update(new JAPVersionInfo(jnlpNode, JAPVersionInfo.JAP_RELEASE_VERSION));
-        }
-        catch (Exception e) {
-          LogHolder.log(LogLevel.ERR, LogType.NET, "UpdateInformationHandler: run: Error while processing JAP release information: " + e);
-          /* try to propagate the JAP release version info from the database, if we have one
-           * stored there
-           */
-          JAPVersionInfo releaseVersion = (JAPVersionInfo)(Database.getInstance(JAPVersionInfo.class).getEntryById("/japRelease.jnlp"));
-          if (releaseVersion != null) {
-            /* we have found a old entry in the database -> better than nothing */
-            InfoServiceDistributor.getInstance().addJob(releaseVersion);
-          }
-        }
-        try {
-          byte[] developmentJnlpData = readLocalFile(Configuration.getInstance().getJapDevelopmentJnlpFile());
-          Document developmentJnlpDocument = XMLUtil.toXMLDocument(developmentJnlpData);
-          Element jnlpNode = (Element)(XMLUtil.getFirstChildByName(developmentJnlpDocument, JAPVersionInfo.getXmlElementName()));
-          prepareEntryForPropaganda(jnlpNode);
-          /* update the internal database and propagate the new version info */
-          Database.getInstance(JAPVersionInfo.class).update(new JAPVersionInfo(jnlpNode, JAPVersionInfo.JAP_DEVELOPMENT_VERSION));
-        }
-        catch (Exception e) {
-          LogHolder.log(LogLevel.ERR, LogType.NET, "UpdateInformationHandler: run: Error while processing JAP development information: " + e);
-          /* try to propagate the JAP development version info from the database, if we have one
-           * stored there
-           */
-          JAPVersionInfo developmentVersion = (JAPVersionInfo)(Database.getInstance(JAPVersionInfo.class).getEntryById("/japDevelopment.jnlp"));
-          if (developmentVersion != null) {
-            /* we have found a old entry in the database -> better than nothing */
-            InfoServiceDistributor.getInstance().addJob(developmentVersion);
-          }
-        }
-        try {
-          byte[] minVersionData = readLocalFile(Configuration.getInstance().getJapMinVersionFile());
-          Document minVersionDocument = XMLUtil.toXMLDocument(minVersionData);
-          Element japNode = (Element)(XMLUtil.getFirstChildByName(minVersionDocument, JAPMinVersion.getXmlElementName()));
-          prepareEntryForPropaganda(japNode);
-          /* update the internal database and propagate the new minimum version info */
-          Database.getInstance(JAPMinVersion.class).update(new JAPMinVersion(japNode));
-        }
-        catch (Exception e) {
-          LogHolder.log(LogLevel.ERR, LogType.NET, "UpdateInformationHandler: run: Error while processing JAP minimum version information: " + e.toString());
-          /* try to propagate the JAP minimum version info from the database, if we have one
-           * stored there
-           */
-          JAPMinVersion minimumVersion = (JAPMinVersion)(Database.getInstance(JAPMinVersion.class).getEntryById("JAPMinVersion"));
-          if (minimumVersion != null) {
-            /* we have found a old entry in the database -> better than nothing */
-            InfoServiceDistributor.getInstance().addJob(minimumVersion);
-          }
-        }
-      }
-      else {
-        /* we are not the root of update information, nevertheless we propagate the update
-         * information from the local database (this is necessary, if the root of update
-         * information infoservice is down)
-         */
-        JAPVersionInfo releaseVersion = (JAPVersionInfo)(Database.getInstance(JAPVersionInfo.class).getEntryById("/japRelease.jnlp"));
-        if (releaseVersion != null) {
-          InfoServiceDistributor.getInstance().addJob(releaseVersion);
-        }
-        JAPVersionInfo developmentVersion = (JAPVersionInfo)(Database.getInstance(JAPVersionInfo.class).getEntryById("/japDevelopment.jnlp"));
-        if (developmentVersion != null) {
-          InfoServiceDistributor.getInstance().addJob(developmentVersion);
-        }
-        JAPMinVersion minimumVersion = (JAPMinVersion)(Database.getInstance(JAPMinVersion.class).getEntryById("JAPMinVersion"));
-        if (minimumVersion != null) {
-          InfoServiceDistributor.getInstance().addJob(minimumVersion);
-        }
-      }
-      try {
-        Thread.sleep(Constants.UPDATE_INFORMATION_ANNOUNCE_PERIOD);
-      }
-      catch (InterruptedException e) {
-      }
-    }
-  }
+						try
+						{
+							Database.getInstance(
+							 JavaVersionDBEntry.class).update(new JavaVersionDBEntry(entries[i]));
+						}
+						catch (Exception ex)
+						{
+							LogHolder.log(LogLevel.ERR, LogType.NET,
+										  "Error while processing Java version information.", ex);
+						}
+						entries[i] = null;
+					}
+					entries = null;
+				}
+				catch (Exception a_e)
+				{
+					LogHolder.log(LogLevel.ERR, LogType.NET,
+								  "Error while processing Java version information.", a_e);
+				}
+			}
+			else
+			{
+				/* we are not the root of update information, nevertheless we propagate the update
+				 * information from the local database (this is necessary, if the root of update
+				 * information infoservice is down)
+				 */
+				distributables = Database.getInstance(JavaVersionDBEntry.class).getEntryList();
+				distributables.addElement(Database.getInstance(JAPVersionInfo.class).
+										  getEntryById(JAPVersionInfo.ID_RELEASE));
+				distributables.addElement(Database.getInstance(JAPVersionInfo.class).
+										  getEntryById(JAPVersionInfo.ID_DEVELOPMENT));
+				distributables.addElement(Database.getInstance(JAPMinVersion.class).
+										  getEntryById(JAPMinVersion.DEFAULT_ID));
 
+				for (int i = 0; i < distributables.size(); i++)
+				{
+					if (distributables.elementAt(i) != null)
+					{
+						InfoServiceDistributor.getInstance().addJob(
+											  (IDistributable)distributables.elementAt(i));
+					}
+				}
+				distributables.clear();
+				distributables = null;
+			}
+			try
+			{
+				Thread.sleep(Constants.UPDATE_INFORMATION_ANNOUNCE_PERIOD);
+			}
+			catch (InterruptedException e)
+			{
+			}
+		}
+	}
 
-  /**
-   * Reads a file from local filesystem and returns the data.
-   *
-   * @param a_fileName The file to read (path + filename).
-   *
-   * @return The data read from the file or null, if there was an error.
-   */
-  private byte[] readLocalFile(String a_fileName)
-  {
-    try
-    {
-      FileReader fr = new FileReader(a_fileName);
-      File file = new File(a_fileName);
-      int fileSize = (int) (file.length());
-      char[] readData = new char[fileSize];
-      int count = fr.read(readData);
-      if (count != fileSize)
-      {
-        throw (new Exception("Error reading file."));
-      }
-      fr.close();
-      String dataString = new String(readData);
-      return dataString.getBytes();
-    }
-    catch (Exception e)
-    {
-      LogHolder.log(LogLevel.ERR, LogType.MISC, "UpdateInformationHandler: readLocalFile(" +
-              a_fileName + "): " + e);
-      return null;
-    }
-  }
+	/**
+	 * Reads a file from local filesystem and returns the data.
+	 *
+	 * @param a_fileName The file to read (path + filename).
+	 *
+	 * @return The data read from the file or null, if there was an error.
+	 */
+	private byte[] readLocalFile(String a_fileName)
+	{
+		try
+		{
+			FileReader fr = new FileReader(a_fileName);
+			File file = new File(a_fileName);
+			int fileSize = (int) (file.length());
+			char[] readData = new char[fileSize];
+			int count = fr.read(readData);
+			if (count != fileSize)
+			{
+				throw (new Exception("Error reading file."));
+			}
+			fr.close();
+			fr = null;
+			file = null;
+			return new String(readData).getBytes();
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.MISC, "readLocalFile(" + a_fileName + "): " + e);
+			return null;
+		}
+	}
 
-  /**
-   * This prepares a JAP update information entry read from the local filesystem for propaganda
-   * within the infoservice network. The LastUpdate timestamp will be updated and the whole
-   * structure is signed with the update messages certificate. This method is only necessary
-   * within the root-of-update-information infoservice.
-   *
-   * @param a_entryRootElement The root node of the update entry to prepare.
-   */
-  private void prepareEntryForPropaganda(Element a_entryRootElement) {
-    /* remove all LastUpdate and Signature nodes (if there are any) from the root element */
-    NodeList lastUpdateNodes = a_entryRootElement.getElementsByTagName("LastUpdate");
-    for (int i = 0; i < lastUpdateNodes.getLength(); i++) {
-      a_entryRootElement.removeChild(lastUpdateNodes.item(i));
-    }
-    NodeList signatureNodes = a_entryRootElement.getElementsByTagName("Signature");
-    for (int i = 0; i < signatureNodes.getLength(); i++) {
-      a_entryRootElement.removeChild(signatureNodes.item(i));
-    }
-    /* create a new LastUpdate node and sign the whole JNLP structure */
-    Element lastUpdateNode = a_entryRootElement.getOwnerDocument().createElement("LastUpdate");
-    XMLUtil.setValue(lastUpdateNode, Long.toString(System.currentTimeMillis()));
-    a_entryRootElement.appendChild(lastUpdateNode);
-    /* try to sign the XML root node */
-    if (SignatureCreator.getInstance().signXml(SignatureVerifier.DOCUMENT_CLASS_UPDATE, a_entryRootElement) == false) {
-      LogHolder.log(LogLevel.WARNING, LogType.MISC, "UpdateInformationHandler: prepareEntryForPropaganda: The update information cannot be signed. Propagate unsigned information.");
-    }
-  }
+	/**
+	 * This prepares a JAP update information entry read from the local filesystem for propaganda
+	 * within the infoservice network. The LastUpdate timestamp will be updated and the whole
+	 * structure is signed with the update messages certificate. This method is only necessary
+	 * within the root-of-update-information infoservice.
+	 *
+	 * @param a_entryRootElement The root node of the update entry to prepare.
+	 */
+	private void prepareEntryForPropaganda(Element a_entryRootElement)
+	{
+		/* remove all LastUpdate and Signature nodes (if there are any) from the root element */
+		NodeList lastUpdateNodes = a_entryRootElement.getElementsByTagName("LastUpdate");
+		for (int i = 0; i < lastUpdateNodes.getLength(); i++)
+		{
+			a_entryRootElement.removeChild(lastUpdateNodes.item(i));
+		}
+		NodeList signatureNodes = a_entryRootElement.getElementsByTagName("Signature");
+		for (int i = 0; i < signatureNodes.getLength(); i++)
+		{
+			a_entryRootElement.removeChild(signatureNodes.item(i));
+		}
+		/* create a new LastUpdate node and sign the whole JNLP structure */
+		Element lastUpdateNode = a_entryRootElement.getOwnerDocument().createElement("LastUpdate");
+		XMLUtil.setValue(lastUpdateNode, Long.toString(System.currentTimeMillis()));
+		a_entryRootElement.appendChild(lastUpdateNode);
+		/* try to sign the XML root node */
+		if (SignatureCreator.getInstance().signXml(SignatureVerifier.DOCUMENT_CLASS_UPDATE,
+			a_entryRootElement) == false)
+		{
+			LogHolder.log(LogLevel.WARNING, LogType.MISC,
+						  "The update information cannot be signed. Propagate unsigned information.");
+		}
+	}
 
 }
