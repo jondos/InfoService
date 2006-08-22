@@ -34,6 +34,7 @@ import java.io.File;
 
 import anon.crypto.JAPCertificate;
 import anon.infoservice.ProxyInterface;
+import anon.infoservice.Database;
 import anon.util.ResourceLoader;
 import anon.infoservice.ImmutableProxyInterface;
 import gui.JAPDll;
@@ -42,12 +43,14 @@ import jap.forward.JAPRoutingSettings;
 import anon.infoservice.IMutableProxyInterface;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
+import anon.infoservice.JavaVersionDBEntry;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel extends Observable
 {
 	public static final String DLL_VERSION_UPDATE = "dllVersionUpdate";
 	public static final String XML_REMIND_OPTIONAL_UPDATE = "remindOptionalUpdate";
+	public static final String XML_REMIND_JAVA_UPDATE = "remindJavaUpdate";
 	public static final String XML_RESTRICT_CASCADE_AUTO_CHANGE = "restrictCascadeAutoChange";
 	public static final String XML_DENY_NON_ANONYMOUS_SURFING = "denyNonAnonymousSurfing";
 	public static final String XML_FONT_SIZE = "fontSize";
@@ -93,6 +96,7 @@ public final class JAPModel extends Observable
 	private boolean m_bDenyNonAnonymousSurfing;
 
 	private boolean m_bRemindOptionalUpdate;
+	private boolean m_bRemindJavaUpdate;
 
 	private boolean m_bChooseCascasdeConnectionAutomatically;
 	private String m_automaticCascadeChangeRestriction;
@@ -375,6 +379,17 @@ public final class JAPModel extends Observable
 	{
 		m_bRemindOptionalUpdate = a_bRemind;
 	}
+
+	public boolean isReminderForJavaUpdateActivated()
+	{
+		return m_bRemindJavaUpdate;
+	}
+
+	public void setReminderForJavaUpdate(boolean a_bRemind)
+	{
+		m_bRemindJavaUpdate = a_bRemind;
+	}
+
 
 	public String getAutomaticCascadeChangeRestriction()
 	{

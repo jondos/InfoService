@@ -120,8 +120,7 @@ public class InfoServiceDistributor implements IDistributor {
               try
               {
                 m_defaultJobQueue.wait();
-                LogHolder.log(LogLevel.DEBUG, LogType.NET,
-                  "InfoServiceDistributor: defaultJobQueueThread: run: There is something to do. Wake up...");
+                LogHolder.log(LogLevel.DEBUG, LogType.NET, "There is something to do. Wake up...");
               }
               catch (InterruptedException e)
               {
@@ -253,7 +252,8 @@ public class InfoServiceDistributor implements IDistributor {
     while (enumer.hasMoreElements())
     {
       InfoServiceDBEntry currentInfoService = (InfoServiceDBEntry) (enumer.nextElement());
-      if (currentInfoService.isNeighbour())
+
+      if (currentInfoService.isNeighbour() && !targets.contains(currentInfoService))
       {
         /* if currentInfoService is a neighbour of our one, put it in the target list */
         targets.addElement(currentInfoService);
@@ -335,7 +335,7 @@ public class InfoServiceDistributor implements IDistributor {
        * connection any more in both cases
        */
       connection.stop();
-    } 
+    }
     return connected;
   }
 

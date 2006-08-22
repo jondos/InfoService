@@ -36,7 +36,10 @@ import anon.util.XMLParseException;
  * Holds the information about the currently minimum required JAP version to access the
  * mixcascades.
  */
-public class JAPMinVersion extends AbstractDatabaseEntry implements IDistributable {
+public class JAPMinVersion extends AbstractDatabaseEntry implements IDistributable
+{
+	public static final String DEFAULT_ID = "JAPMinVersion";
+
 
   /**
    * The timeout for minimum JAP version information in the database. This should be an infinite
@@ -109,8 +112,9 @@ public class JAPMinVersion extends AbstractDatabaseEntry implements IDistributab
    *
    * @return The ID for this JAPMinVersion.
    */
-  public String getId() {
-    return "JAPMinVersion";
+  public String getId()
+  {
+    return DEFAULT_ID;
   }
 
   /**

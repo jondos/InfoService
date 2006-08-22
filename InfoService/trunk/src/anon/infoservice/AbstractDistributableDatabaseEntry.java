@@ -25,23 +25,59 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-/* Hint: This file may be only a copy of the original file which is always in the JAP source tree!
- * If you change something - do not forget to add the changes also to the JAP source tree!
- */
 package anon.infoservice;
 
+import org.w3c.dom.Element;
+import anon.util.XMLUtil;
+import org.w3c.dom.Document;
+import anon.util.IXMLEncodable;
+
 /**
- * This class is used as a short-term memory for previously known cascades.
+ * This class implements common methods that may be used by distributabe database entries.
  *
  * @author Rolf Wendolsky
  */
-public class NewCascadeIDEntry extends AbstractCascadeIDEntry
+public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabaseEntry
+	implements IDistributable, IXMLEncodable
 {
-	private static final long EXPIRE_TIME = 1000 * 60 * 60 * 12l; // twelve hours; must be long-value!!
-	//private static final long EXPIRE_TIME = 1000 * 60; // one minute
-
-	public NewCascadeIDEntry(CascadeIDEntry a_entry)
+	public AbstractDistributableDatabaseEntry(long a_expireTime)
 	{
-		super(a_entry, System.currentTimeMillis() + EXPIRE_TIME);
+		super(a_expireTime);
+	}
+
+	/**
+	 * Returns the XML structure for this db entry.
+	 *
+	 * @return The XML node of this db entry
+	 */
+	public abstract Element getXmlStructure();
+
+	/**
+	 * This returns the data, which are posted to other InfoServices. It's the whole XML structure
+	 * of this DBEntry.
+	 *
+	 * @return The data, which are posted to other InfoServices when this entry is forwarded.
+	 */
+	public final byte[] getPostData()
+	{
+		return (XMLUtil.toString(getXmlStructure()).getBytes());
+	}
+
+	/**
+	 * Creates an XML node for this db entry.
+	 * @param a_doc The XML document, which is the environment for the created XML node.
+	 * @return The db entry XML node or null if an error occured
+	 */
+	public final Element toXmlElement(Document a_doc)
+	{
+		Element returnXmlStructure = null;
+		try
+		{
+			returnXmlStructure = (Element) (XMLUtil.importNode(a_doc, getXmlStructure(), true));
+		}
+		catch (Exception e)
+		{
+		}
+		return returnXmlStructure;
 	}
 }

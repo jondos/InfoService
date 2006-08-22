@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.05.338"; //Never change the layout of this line!
+	public static final String aktVersion = "00.05.340"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -102,6 +102,7 @@ public final class JAPConstants
 	public static final boolean DEFAULT_ALLOW_UPDATE_NON_ANONYMOUS_CONNECTION = true;
 
 	public static final boolean REMIND_OPTIONAL_UPDATE = true;
+	public static final boolean REMIND_JAVA_UPDATE = true;
 
 	static final int SMALL_FONT_SIZE = 9;
 	static final int SMALL_FONT_STYLE = Font.PLAIN;

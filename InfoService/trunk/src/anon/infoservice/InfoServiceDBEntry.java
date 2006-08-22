@@ -65,7 +65,7 @@ import anon.crypto.XMLSignature;
 /**
  * Holds the information for an infoservice.
  */
-public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistributable, IXMLEncodable
+public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 {
 	public static final String XML_ELEMENT_CONTAINER_NAME = "InfoServices";
 	public static final String XML_ELEMENT_NAME = "InfoService";
@@ -339,10 +339,20 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 
 	/**
 	 * This is a JAP-only constructor needed to initialise JAP with default InfoServices.
+	 * @param a_host host name of this info service
+	 * @param a_port the port where this IS is reachable
+	 * @throws IllegalArgumentException
+	 */
+	public InfoServiceDBEntry(String a_host, int a_port) throws IllegalArgumentException
+	{
+		this(null, new ListenerInterface(a_host, a_port).toVector(), false);
+	}
+
+	/**
+	 * This is a JAP-only constructor needed to initialise JAP with default InfoServices.
 	 * @param a_strName String
 	 * @param a_listeners Vector
 	 * @param a_primaryForwarderList boolean
-	 * @param a_creationTime long
 	 * @throws IllegalArgumentException
 	 */
 	public InfoServiceDBEntry(String a_strName, Vector a_listeners, boolean a_primaryForwarderList)
@@ -553,6 +563,11 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		m_xmlDescription = generateXmlRepresentation();
 	}
 
+	public Element getXmlStructure()
+	{
+		return m_xmlDescription;
+	}
+
 	/**
 	 * Returns the name of the infoservice.
 	 *
@@ -640,24 +655,6 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	}
 
 	/**
-	 * Creates an XML node for this InfoService.
-	 * @param a_doc The XML document, which is the environment for the created XML node.
-	 * @return The InfoService XML node.
-	 */
-	public Element toXmlElement(Document a_doc)
-	{
-		Element returnXmlStructure = null;
-		try
-		{
-			returnXmlStructure = (Element) (XMLUtil.importNode(a_doc, m_xmlDescription, true));
-		}
-		catch (Exception e)
-		{
-		}
-		return returnXmlStructure;
-	}
-
-	/**
 	 * Compares this object to another one. This method returns only true, if the other object is
 	 * also an InfoServiceDBEntry and has the same ID as this InfoServiceDBEntry.
 	 *
@@ -704,17 +701,6 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	}
 
 	/**
-	 * This returns the data, which are posted to other InfoServices. It's the whole XML structure
-	 * of this InfoServerDBEntry.
-	 *
-	 * @return The data, which are posted to other InfoServices when this entry is forwarded.
-	 */
-	public byte[] getPostData()
-	{
-		return (XMLUtil.toString(m_xmlDescription).getBytes());
-	}
-
-	/**
 	 * Returns whether this infoservice is a neighbour of our one. This is only meaningful within
 	 * the context of an infoservice. We send all messages only to neighbours, so we have less
 	 * traffic. For now, every remote infoservice is a neighbour and it is only false for the local
@@ -725,6 +711,15 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 	public boolean isNeighbour()
 	{
 		return m_neighbour;
+	}
+
+	/**
+	 * Forces this InfoService to be a neighbour or not.
+	 * @param a_bNeighbour if this IS should be a neighbour
+	 */
+	public void setNeighbour(boolean a_bNeighbour)
+	{
+		m_neighbour = a_bNeighbour;
 	}
 
 	/**
@@ -1178,6 +1173,55 @@ public class InfoServiceDBEntry extends AbstractDatabaseEntry implements IDistri
 		/* signature was valid */
 		return new JAPMinVersion(japNode);
 	}
+
+	/**
+	 * Get the latest java versions the infoservice knows ordered by vendors.
+	 * @throws java.lang.Exception If we can't get a connection to the infoservice
+	 * @return the latest java versions
+	 */
+	public Hashtable getLatestJava() throws Exception
+	{
+		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest(
+				  JavaVersionDBEntry.HTTP_REQUEST_STRING));
+
+		Node rootNode = XMLUtil.getFirstChildByName(doc, JavaVersionDBEntry.XML_ELEMENT_CONTAINER_NAME);
+		if (rootNode == null || !(rootNode instanceof Element))
+		{
+			throw (new XMLParseException(JavaVersionDBEntry.XML_ELEMENT_CONTAINER_NAME, "Node missing!"));
+		}
+		NodeList nodes = ((Element)rootNode).getElementsByTagName(JavaVersionDBEntry.XML_ELEMENT_NAME);
+		Hashtable versionInfos = new Hashtable();
+		JavaVersionDBEntry currentVersionInfo;
+		Element versionNode;
+		for (int i = 0; i < nodes.getLength(); i++)
+		{
+			versionNode = (Element) (nodes.item(i));
+			/* check the signature */
+			if (SignatureVerifier.getInstance().verifyXml(versionNode,
+				SignatureVerifier.DOCUMENT_CLASS_UPDATE))
+			{
+				/* signature is valid */
+				try
+				{
+					currentVersionInfo = new JavaVersionDBEntry(versionNode);
+					versionInfos.put(currentVersionInfo.getId(), currentVersionInfo);
+				}
+				catch (Exception e)
+				{
+					/* an error while parsing the node occured -> we don't use this mixcascade */
+					LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Error in JavaVersionDBEntry XML node.");
+				}
+			}
+			else
+			{
+				LogHolder.log(LogLevel.INFO, LogType.MISC,
+							  "Cannot verify the signature for JavaVersionDBEntry entry: " +
+							  XMLUtil.toString(versionNode));
+			}
+		}
+		return versionInfos;
+	}
+
 
 	/**
 	 * Returns the JAPVersionInfo for the specified type. The JAPVersionInfo is generated from

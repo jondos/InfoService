@@ -39,7 +39,7 @@ import anon.util.XMLUtil;
 /**
  * This stores the version information about the current JAP release or development version.
  */
-public class JAPVersionInfo extends AbstractDatabaseEntry implements IDistributable
+public class JAPVersionInfo extends AbstractDistributableDatabaseEntry
 {
 	public static final String ID_DEVELOPMENT = "/japDevelopment.jnlp";
 	public static final String ID_RELEASE = "/japRelease.jnlp";
@@ -105,7 +105,8 @@ public class JAPVersionInfo extends AbstractDatabaseEntry implements IDistributa
    *
    * @return The name of the XML root element used by this class ('jnlp').
    */
-  public static String getXmlElementName() {
+  public static String getXmlElementName()
+  {
     return "jnlp";
   }
 
@@ -117,7 +118,8 @@ public class JAPVersionInfo extends AbstractDatabaseEntry implements IDistributa
    * @param a_versionInfoType The type of the JAPVersionInfo (release / development), see the
    *                          constants in this class.
    */
-  public JAPVersionInfo(Element a_jnlpRootNode, int a_versionInfoType) throws Exception {
+  public JAPVersionInfo(Element a_jnlpRootNode, int a_versionInfoType) throws Exception
+  {
     super(System.currentTimeMillis() + DATABASE_TIMEOUT);
     m_versionInfoType = a_versionInfoType;
     /* parse the document */
@@ -162,9 +164,11 @@ public class JAPVersionInfo extends AbstractDatabaseEntry implements IDistributa
    *
    * @return The ID of this version info.
    */
-  public String getId() {
+  public String getId()
+  {
     String versionInfoId = ID_RELEASE;
-    if (m_versionInfoType == JAP_DEVELOPMENT_VERSION) {
+    if (m_versionInfoType == JAP_DEVELOPMENT_VERSION)
+	{
       versionInfoId = ID_DEVELOPMENT;
     }
     return versionInfoId;
@@ -181,7 +185,8 @@ public class JAPVersionInfo extends AbstractDatabaseEntry implements IDistributa
    * @return A version number which is used to determine the more recent version info entry, if
    *         two entries are compared (higher version number -> more recent entry).
    */
-  public long getVersionNumber() {
+  public long getVersionNumber()
+  {
     return m_lastUpdate;
   }
 
@@ -190,7 +195,8 @@ public class JAPVersionInfo extends AbstractDatabaseEntry implements IDistributa
    *
    * @return The JAP software version described in this JAPVersionInfo.
    */
-  public String getJapVersion() {
+  public String getJapVersion()
+  {
     return m_version;
   }
 
@@ -199,7 +205,8 @@ public class JAPVersionInfo extends AbstractDatabaseEntry implements IDistributa
    *
    * @return The release date of the JAP software described in this JAPVersionInfo.
    */
-  public Date getDate() {
+  public Date getDate()
+  {
     return m_releaseDate;
   }
 
@@ -209,7 +216,8 @@ public class JAPVersionInfo extends AbstractDatabaseEntry implements IDistributa
    * @return The URL of the download server for the JAP software described in this version info
    *         structure.
    */
-  public URL getCodeBase() {
+  public URL getCodeBase()
+  {
     return m_codeBase;
   }
 
@@ -219,7 +227,8 @@ public class JAPVersionInfo extends AbstractDatabaseEntry implements IDistributa
    * @return The filename where the JAP software described in this JAPVersionInfo is available on
    *         the download server.
    */
-  public String getJAPJarFileName() {
+  public String getJAPJarFileName()
+  {
     return m_jarFileName;
   }
 
@@ -232,18 +241,9 @@ public class JAPVersionInfo extends AbstractDatabaseEntry implements IDistributa
    * @return The filename where this version information is posted at other infoservices when this
    *         entry is forwarded.
    */
-  public String getPostFile() {
+  public String getPostFile()
+  {
     return getId();
-  }
-
-  /**
-   * This returns the data posted when this JAPVersionInfo is forwarded to other infoservices.
-   * It's the XML structure of this version info.
-   *
-   * @return The data posted to other infoservices when this entry is forwarded.
-   */
-  public byte[] getPostData() {
-    return XMLUtil.toString(m_xmlStructure).getBytes();
   }
 
   /**
@@ -251,7 +251,8 @@ public class JAPVersionInfo extends AbstractDatabaseEntry implements IDistributa
    *
    * @return The XML node of this JAPVersionInfo entry (jnlp node).
    */
-  public Element getXmlStructure() {
+  public Element getXmlStructure()
+  {
     return m_xmlStructure;
   }
 

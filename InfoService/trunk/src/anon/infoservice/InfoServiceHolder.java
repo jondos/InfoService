@@ -115,6 +115,8 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 
 	private static final int GET_CASCADEINFO = 12;
 
+	private static final int GET_LATEST_JAVA = 13;
+
 	private static final String XML_ATTR_ASKED_INFO_SERVICES = "askedInfoServices";
 
 	/**
@@ -315,7 +317,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	 *
 	 * @return The needed information.
 	 */
-	private Object fetchInformation(int functionNumber, Vector arguments) throws Exception
+	private Object fetchInformation(int functionNumber, Vector arguments)
 	{
 		InfoServiceDBEntry currentInfoService = null;
 		Random random = new Random(System.currentTimeMillis());
@@ -381,6 +383,10 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 				else if (functionNumber == GET_MIXINFO)
 				{
 					result = currentInfoService.getMixInfo( (String) (arguments.elementAt(0)));
+				}
+				else if (functionNumber == GET_LATEST_JAVA)
+				{
+					result = currentInfoService.getLatestJava();
 				}
 				else if (functionNumber == GET_STATUSINFO)
 				{
@@ -491,9 +497,10 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 
 			return result;
 		}
-		/* could not find an infoservice with the needed information */
-		throw (new Exception(
-			"No InfoService with the needed information available."));
+
+		LogHolder.log(LogLevel.ERR, LogType.NET,  "No InfoService with the needed information available.",
+					  true);
+		return null;
 	}
 
 	/**
@@ -507,16 +514,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	 */
 	public Hashtable getMixCascades()
 	{
-		try
-		{
-			return (Hashtable) (fetchInformation(GET_MIXCASCADES, null));
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "No InfoService with the needed information available.");
-			return null;
-		}
+		return (Hashtable) (fetchInformation(GET_MIXCASCADES, null));
 	}
 
 	/**
@@ -530,16 +528,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	 */
 	public Vector getPaymentInstances()
 	{
-		try
-		{
-			return (Vector) (fetchInformation(GET_PAYMENT_INSTANCES, null));
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "InfoServiceHolder: getPaymentInstances: No InfoService with the needed information available.");
-			return null;
-		}
+		return (Vector) (fetchInformation(GET_PAYMENT_INSTANCES, null));
 	}
 
 	/** Get information for a particular payment instance identified by a_piID
@@ -549,10 +538,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 
 	public PaymentInstanceDBEntry getPaymentInstance(String a_piID) throws Exception
 	{
-
-		Vector args = new Vector();
-		args.addElement(a_piID);
-		return (PaymentInstanceDBEntry) (fetchInformation(GET_PAYMENT_INSTANCE, args));
+		return (PaymentInstanceDBEntry) (fetchInformation(GET_PAYMENT_INSTANCE, Util.toVector(a_piID)));
 	}
 
 	/**
@@ -566,16 +552,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	 */
 	public Hashtable getInfoServices()
 	{
-		try
-		{
-			return (Hashtable) (fetchInformation(GET_INFOSERVICES, null));
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "No InfoService with the needed information available.");
-			return null;
-		}
+		return (Hashtable) (fetchInformation(GET_INFOSERVICES, null));
 	}
 
 	/**
@@ -590,18 +567,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	 */
 	public MixInfo getMixInfo(String mixId)
 	{
-		try
-		{
-			Vector arguments = new Vector();
-			arguments.addElement(mixId);
-			return (MixInfo) (fetchInformation(GET_MIXINFO, arguments));
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "No InfoService with the needed information available.");
-			return null;
-		}
+		return (MixInfo) (fetchInformation(GET_MIXINFO, Util.toVector(mixId)));
 	}
 
 	/**
@@ -618,19 +584,10 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	 */
 	public StatusInfo getStatusInfo(String cascadeId, int cascadeLength)
 	{
-		try
-		{
-			Vector arguments = new Vector();
-			arguments.addElement(cascadeId);
-			arguments.addElement(new Integer(cascadeLength));
-			return (StatusInfo) (fetchInformation(GET_STATUSINFO, arguments));
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "No InfoService with the needed information available.");
-			return null;
-		}
+		Vector arguments = new Vector();
+		arguments.addElement(cascadeId);
+		arguments.addElement(new Integer(cascadeLength));
+		return (StatusInfo) (fetchInformation(GET_STATUSINFO, arguments));
 	}
 
 	/**
@@ -644,16 +601,18 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	 */
 	public JAPMinVersion getNewVersionNumber()
 	{
-		try
-		{
-			return (JAPMinVersion) (fetchInformation(GET_NEWVERSIONNUMBER, null));
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "No InfoService with the needed information available.");
-			return null;
-		}
+		return (JAPMinVersion) (fetchInformation(GET_NEWVERSIONNUMBER, null));
+	}
+
+	/**
+	 * Returns all known latests Java versions as JavaVersionDBEntry. If we can't get the information
+	 * from any infoservice, null is returned.
+	 *
+	 * @return all known latests Java versions as JavaVersionDBEntry
+	 */
+	public Hashtable getLatestJavaVersions()
+	{
+		return (Hashtable) fetchInformation(GET_LATEST_JAVA, null);
 	}
 
 	/**
@@ -669,18 +628,8 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	 */
 	public JAPVersionInfo getJAPVersionInfo(int japVersionType)
 	{
-		try
-		{
-			Vector arguments = new Vector();
-			arguments.addElement(new Integer(japVersionType));
-			return (JAPVersionInfo) (fetchInformation(GET_JAPVERSIONINFO, arguments));
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "No InfoService with the needed information available.");
-			return null;
-		}
+		return (JAPVersionInfo) fetchInformation(
+			  GET_JAPVERSIONINFO, Util.toVector(new Integer(japVersionType)));
 	}
 
 	/**
@@ -692,31 +641,13 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	 */
 	public String getTorNodesList()
 	{
-		try
-		{
-			return (String) (fetchInformation(GET_TORNODESLIST, null));
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "No InfoService with the needed information available.");
-			return null;
-		}
+		return (String) (fetchInformation(GET_TORNODESLIST, null));
 	}
 
 	public MixCascade getMixCascadeInfo(String a_cascadeID)
 	{
-		try
-		{
-			return (MixCascade) (fetchInformation(GET_CASCADEINFO, Util.toVector(a_cascadeID)));
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "No InfoService with the needed information available.");
-			return null;
-		}
-}
+		return (MixCascade) (fetchInformation(GET_CASCADEINFO, Util.toVector(a_cascadeID)));
+	}
 
 	/**
 	 * Get the list with the mixminion nodes from the infoservice. If we can't get a the information from
@@ -727,16 +658,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	 */
 	public String getMixminionNodesList()
 	{
-		try
-		{
-			return (String) (fetchInformation(GET_MIXMINIONNODESLIST, null));
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "No InfoService with the needed information available.");
-			return null;
-		}
+		return (String) (fetchInformation(GET_MIXMINIONNODESLIST, null));
 	}
 
 	/**
@@ -749,16 +671,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	 */
 	public Element getForwarder()
 	{
-		try
-		{
-			return (Element) (fetchInformation(GET_FORWARDER, null));
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "No InfoService with the needed information available.");
-			return null;
-		}
+		return (Element) (fetchInformation(GET_FORWARDER, null));
 	}
 
 	/**

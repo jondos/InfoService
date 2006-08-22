@@ -48,7 +48,9 @@ import anon.crypto.SignatureCreator;
 import anon.crypto.SignatureVerifier;
 import anon.infoservice.Constants;
 import anon.infoservice.ListenerInterface;
+import anon.infoservice.Database;
 import anon.util.ResourceLoader;
+import anon.util.Util;
 import infoservice.tor.TorDirectoryAgent;
 import infoservice.tor.TorDirectoryServer;
 import infoservice.tor.TorDirectoryServerUrl;
@@ -56,6 +58,8 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import infoservice.tor.MixminionDirectoryAgent;
+import anon.infoservice.JavaVersionDBEntry;
+import anon.infoservice.InfoServiceDBEntry;
 
 public class Configuration
 {
@@ -146,6 +150,12 @@ public class Configuration
 	 * Stores where the japDevelopment.jnlp is located in the local file system (path + filename).
 	 */
 	private String m_strJapDevelopmentJnlpFile;
+
+	/**
+	 * Stores where the information about latest Java versions is located in the local file system
+	 * (path + filename).
+	 */
+	private File m_strJavaLatestVersionFile;
 
 	/**
 	 * Stores where the japMinVersion.xml is located in the local file system (path + filename).
@@ -460,9 +470,31 @@ public class Configuration
 				equalsIgnoreCase("true");
 			if (m_bRootOfUpdateInformation)
 			{
-				m_strJapReleaseJnlpFile = a_properties.getProperty("japReleaseFileName").trim();
-				m_strJapDevelopmentJnlpFile = a_properties.getProperty("japDevelopmentFileName").trim();
-				m_strJapMinVersionFile = a_properties.getProperty("japMinVersionFileName").trim();
+				m_strJapReleaseJnlpFile = a_properties.getProperty("japReleaseFileName");
+				if (m_strJapReleaseJnlpFile != null)
+				{
+					m_strJapReleaseJnlpFile.trim();
+				}
+				m_strJapDevelopmentJnlpFile = a_properties.getProperty("japDevelopmentFileName");
+				if (m_strJapDevelopmentJnlpFile != null)
+				{
+					m_strJapDevelopmentJnlpFile.trim();
+				}
+				m_strJapMinVersionFile = a_properties.getProperty("japMinVersionFileName");
+				if (m_strJapMinVersionFile != null)
+				{
+					m_strJapMinVersionFile.trim();
+				}
+				try
+				{
+					m_strJavaLatestVersionFile = new File(a_properties.getProperty(JavaVersionDBEntry.
+						PROPERTY_NAME).trim());
+				}
+				catch (Exception a_e)
+				{
+					LogHolder.log(LogLevel.WARNING, LogType.MISC, "Could not load Java version information!");
+				}
+
 				/* load the private key for signing our own infoservice messages */
 				String updatePkcs12KeyFile = a_properties.getProperty("updateInformationPrivateKey");
 				if ( (updatePkcs12KeyFile != null) && (!updatePkcs12KeyFile.trim().equals("")))
@@ -535,6 +567,18 @@ public class Configuration
 				{
 					/* simply don't use this neighbour */
 				}
+			}
+			// initialise the info service database to quickly send the own database entries
+			InfoServiceDBEntry entry;
+			for (int i = 0; i < m_initialNeighbourInfoServices.size(); i++)
+			{
+				entry =
+					new InfoServiceDBEntry(null,
+										   ( (ListenerInterface) m_initialNeighbourInfoServices.elementAt(i)).
+										   toVector(),
+										   false, false);
+				entry.setNeighbour(true);
+				Database.getInstance(InfoServiceDBEntry.class).update(entry);
 			}
 
 			/* get the settings for status statistics */
@@ -836,6 +880,18 @@ public class Configuration
 	{
 		return m_strJapDevelopmentJnlpFile;
 	}
+
+	/**
+	 * Returns where the file with Java latest version information is located in the local file system
+	 * (path + filename).
+	 *
+	 * @return The filename (maybe with path) of java latest versions
+	 */
+	public File getJavaLatestVersionFile()
+	{
+		return m_strJavaLatestVersionFile;
+	}
+
 
 	/**
 	 * Returns where the file with JAP minimal version number is located in the local file system

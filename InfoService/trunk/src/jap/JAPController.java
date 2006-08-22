@@ -112,6 +112,7 @@ import anon.infoservice.JAPMinVersion;
 import anon.infoservice.DatabaseMessage;
 import javax.swing.UnsupportedLookAndFeelException;
 import anon.infoservice.CascadeIDEntry;
+import anon.infoservice.JavaVersionDBEntry;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -668,10 +669,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 				JAPModel.getInstance().allowUpdateViaDirectConnection(
 								XMLUtil.parseAttribute(root, XML_ALLOW_NON_ANONYMOUS_UPDATE,
-								JAPConstants.DEFAULT_ALLOW_UPDATE_NON_ANONYMOUS_CONNECTION));
+					JAPConstants.DEFAULT_ALLOW_UPDATE_NON_ANONYMOUS_CONNECTION));
 				JAPModel.getInstance().setReminderForOptionalUpdate(
 								XMLUtil.parseAttribute(root, JAPModel.XML_REMIND_OPTIONAL_UPDATE,
-								JAPConstants.REMIND_OPTIONAL_UPDATE));
+					JAPConstants.REMIND_OPTIONAL_UPDATE));
+				JAPModel.getInstance().setReminderForJavaUpdate(
+								XMLUtil.parseAttribute(root, JAPModel.XML_REMIND_JAVA_UPDATE,
+					JAPConstants.REMIND_JAVA_UPDATE));
+
 				JAPModel.getInstance().setChooseCascadeConnectionAutomatically(
 								XMLUtil.parseAttribute(root, XML_ATTR_AUTO_CHOOSE_CASCADES, true));
 				JAPModel.getInstance().denyNonAnonymousSurfing(
@@ -1639,6 +1644,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 								 JAPModel.getInstance().isUpdateViaDirectConnectionAllowed());
 			XMLUtil.setAttribute(e, JAPModel.XML_REMIND_OPTIONAL_UPDATE,
 								 JAPModel.getInstance().isReminderForOptionalUpdateActivated());
+			XMLUtil.setAttribute(e, JAPModel.XML_REMIND_JAVA_UPDATE,
+								 JAPModel.getInstance().isReminderForJavaUpdateActivated());
 			XMLUtil.setAttribute(e, XML_ATTR_AUTO_CHOOSE_CASCADES,
 								 JAPModel.getInstance().isCascadeConnectionChosenAutomatically());
 			XMLUtil.setAttribute(e, JAPModel.XML_DENY_NON_ANONYMOUS_SURFING,
@@ -3303,6 +3310,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					public void run()
 					{
+						Hashtable javaVersions;
+						Enumeration enumVersions;
 
 						synchronized (LOCK_VERSION_UPDATE)
 						{
@@ -3322,13 +3331,27 @@ public final class JAPController extends Observable implements IProxyListener, O
 							LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
 						}
 
+						// proceed with java check if JAP has not been updated (that means it is closed)
+						javaVersions = InfoServiceHolder.getInstance().getLatestJavaVersions();
+						if (javaVersions != null)
+						{
+							enumVersions = javaVersions.elements();
+							while (enumVersions.hasMoreElements())
+							{
+								/* Beware that this must be the only update operation for this DB!
+								 * Otherwise there would be deadlocks caused by JAPNewView.
+								 */
+								Database.getInstance(JavaVersionDBEntry.class).update(
+									(JavaVersionDBEntry)enumVersions.nextElement());
+							}
+						}
+
 						synchronized (LOCK_VERSION_UPDATE)
 						{
 							m_bShowingVersionUpdate = false;
 						}
 					}
 				}.start();
-
 			}
 		}
 		catch (Exception e)
