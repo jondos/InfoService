@@ -158,7 +158,7 @@ public final class ClassUtil
 		URL url;
 		try
 		{
-			url = (URL) File.class.getMethod("toURL", null).invoke(a_file, null);
+			url = (URL) File.class.getMethod("toURL", null).invoke(a_file, new Object[0]);
 		}
 		catch (Exception ex)
 		{
@@ -176,7 +176,8 @@ public final class ClassUtil
 		Class sysclass;
 		try
 		{
-			urlClassLoader = ClassLoader.class.getMethod("getSystemClassLoader", null).invoke(null,null);
+			urlClassLoader =
+				ClassLoader.class.getMethod("getSystemClassLoader", null).invoke((Object)null,new Object[0]);
 			sysclass = Class.forName("java.net.URLClassLoader");
 			Method method = sysclass.getDeclaredMethod("addURL", new Class[]
 				{
