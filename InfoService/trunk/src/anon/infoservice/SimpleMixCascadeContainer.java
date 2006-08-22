@@ -8,7 +8,7 @@ package anon.infoservice;
 public class SimpleMixCascadeContainer extends AbstractMixCascadeContainer
 {
 	private MixCascade m_mixCascade;
-
+	private boolean m_bAutoReConnect=false;
 	public SimpleMixCascadeContainer(MixCascade a_mixCascade)
 	{
 		m_mixCascade = a_mixCascade;
@@ -27,9 +27,13 @@ public class SimpleMixCascadeContainer extends AbstractMixCascadeContainer
 		return false;
 	}
 
+	public void setAutoReConnect(boolean b)
+	{
+		m_bAutoReConnect=b;
+	}
 	public boolean isReconnectedAutomatically()
 	{
-		return false;
+		return m_bAutoReConnect;
 	}
 
 

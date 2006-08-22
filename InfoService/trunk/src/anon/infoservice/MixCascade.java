@@ -697,7 +697,6 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 			statusInfo = StatusInfo.createDummyStatusInfo(getId());
 		}
 		return statusInfo;
-
 	}
 
 	/**
