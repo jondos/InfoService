@@ -210,8 +210,8 @@ public class ServerVerifier
 		}
 		else
 		{
-			LogHolder.log(LogLevel.ERR, LogType.NET,
-						  "ServerVerifier: verifyServer: Verification of the JAP forwarding server " +
+			LogHolder.log(LogLevel.INFO, LogType.NET,
+						  "Verification of the JAP forwarding server " +
 						  m_serverAddress.toString() + ":" + Integer.toString(m_serverPort) + " failed.");
 		}
 		return verificationSuccess;
