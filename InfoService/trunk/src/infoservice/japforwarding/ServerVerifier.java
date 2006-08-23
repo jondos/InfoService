@@ -170,8 +170,8 @@ public class ServerVerifier
 					{
 						/* it was already null */
 					}
-					LogHolder.log(LogLevel.ERR, LogType.NET,
-						"ServerVerifier: verifyThread: run: Error while verifying the JAP forwarding server " +
+					LogHolder.log(LogLevel.INFO, LogType.NET,
+						"Error while verifying the JAP forwarding server " +
 								  m_serverAddress.toString() + ":" + Integer.toString(m_serverPort) + ": " +
 								  e.toString());
 					/* no success -> wake up the main thread */
