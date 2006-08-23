@@ -577,7 +577,8 @@ public class Configuration
 										   ( (ListenerInterface) m_initialNeighbourInfoServices.elementAt(i)).
 										   toVector(),
 										   false, false);
-				entry.setNeighbour(true);
+				/** @todo don't know why, this leads to "NoSuchMethodError" (Z)V on some systems */
+				//entry.setNeighbour(true);
 				Database.getInstance(InfoServiceDBEntry.class).update(entry);
 			}
 
