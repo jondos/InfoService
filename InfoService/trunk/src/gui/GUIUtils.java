@@ -135,7 +135,7 @@ public final class GUIUtils
 	 */
 	public static ImageIcon loadImageIcon(String a_strRelativeImagePath)
 	{
-		return loadImageIcon(a_strRelativeImagePath, true);
+		return loadImageIcon(a_strRelativeImagePath, true, true);
 	}
 
 	/**
@@ -154,6 +154,28 @@ public final class GUIUtils
 	 *         (getImageLoadStatus() == java.awt.MediaTracker.ERRORED)
 	 */
 	public static ImageIcon loadImageIcon(String a_strRelativeImagePath, boolean a_bSync)
+	{
+		return loadImageIcon(a_strRelativeImagePath, a_bSync, true);
+	}
+
+
+	/**
+	 * Loads an ImageIcon from the classpath or the current directory.
+	 * The icon may be contained in an archive (JAR) or a directory structure. If the icon could
+	 * not be found in the classpath, it is loaded from the current directory.
+	 * If even the current directory does not contain the icon, it is loaded from the default image path.
+	 * Once an icon is loaded, it is stored in a memory cache, so that further calls of this method
+	 * do not load the icon from the file system, but from the cache.
+	 * The image may be loaded synchronously so that the method only returns when the image has been
+	 * loaded completely (or an error occured), or asynchronously so that the method returns even if
+	 * the image has not been loaded yet.
+	 * @param a_strRelativeImagePath the relative resource path or filename of the Image
+	 * @param a_bSync true if the image should be loaded synchronously; false otherwise
+	 * @param a_bScale if the icon should be auto-scaled
+	 * @return the loaded ImageIcon or null if the icon could not be loaded
+	 *         (getImageLoadStatus() == java.awt.MediaTracker.ERRORED)
+	 */
+	public static ImageIcon loadImageIcon(String a_strRelativeImagePath, boolean a_bSync, boolean a_bScale)
 	{
 		ImageIcon img;
 		int statusBits;
@@ -206,7 +228,11 @@ public final class GUIUtils
 							  "Could not load requested image '" + a_strRelativeImagePath + "'!");
 			}
 		}
-		return GUIUtils.createScaledImageIcon(img, ms_resizer);
+		if (a_bScale)
+		{
+			return GUIUtils.createScaledImageIcon(img, ms_resizer);
+		}
+		return img;
 	}
 
 	private static ImageIcon loadImageIconInternal(URL a_imageURL)

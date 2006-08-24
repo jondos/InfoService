@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004, The JAP-Team
+ Copyright (c) 2000 - 2006, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -31,8 +31,6 @@ import java.util.Enumeration;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
-import java.net.URL;
-import java.net.MalformedURLException;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -241,7 +239,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 		loadMeterIcons();
 		// "NORTH": Image
-		ImageIcon northImage = GUIUtils.loadImageIcon(JAPMessages.getString("northPath"), true);
+		ImageIcon northImage = GUIUtils.loadImageIcon(JAPMessages.getString("northPath"), true, false);
 		JLabel northLabel = new JLabel(northImage);
 		JPanel northPanel = new JPanel();
 		GridBagLayout gbl = new GridBagLayout();
@@ -399,7 +397,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.weightx = 1;
 		m_panelAnonService.add(m_comboAnonServices, c1);
 		c1.gridwidth = 1;
-		m_bttnReload = new JButton(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD, true));
+		m_bttnReload = new JButton(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD, true, false));
 		m_bttnReload.setOpaque(false);
 		LookAndFeel laf = UIManager.getLookAndFeel();
 		if (laf != null && UIManager.getCrossPlatformLookAndFeelClassName().equals(laf.getClass().getName())) //stupid but is necessary for JDK 1.5 and Metal L&F on Windows XP (and maybe others)
@@ -415,12 +413,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		});
 		m_bttnReload.setRolloverEnabled(true);
 		m_bttnReload.setToolTipText(JAPMessages.getString("ngCascadeReloadTooltip"));
-		ImageIcon tmpIcon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true);
+		ImageIcon tmpIcon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true, false);
 		m_bttnReload.setRolloverIcon(tmpIcon);
 		m_bttnReload.setSelectedIcon(tmpIcon);
 		m_bttnReload.setRolloverSelectedIcon(tmpIcon);
 		m_bttnReload.setPressedIcon(tmpIcon);
-		m_bttnReload.setDisabledIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true));
+		m_bttnReload.setDisabledIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true, false));
 		m_bttnReload.setBorder(new EmptyBorder(0, 0, 0, 0));
 		m_bttnReload.setFocusPainted(false);
 
