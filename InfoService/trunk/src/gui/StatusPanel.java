@@ -121,15 +121,15 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 			}
 			if (type == JOptionPane.WARNING_MESSAGE)
 			{
-				entry.m_Icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_WARNING, true).getImage();
+				entry.m_Icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_WARNING, true, false).getImage();
 			}
 			else if (type == JOptionPane.INFORMATION_MESSAGE)
 			{
-				entry.m_Icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_INFORMATION, true).getImage();
+				entry.m_Icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_INFORMATION, true, false).getImage();
 			}
 			else if (type == JOptionPane.ERROR_MESSAGE)
 			{
-				entry.m_Icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_ERROR, true).getImage();
+				entry.m_Icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_ERROR, true, false).getImage();
 			}
 			if (m_lastMsg == null)
 			{

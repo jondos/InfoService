@@ -277,26 +277,10 @@ public class ConfigAssistant extends JAPDialog
 			DialogContentPane.ON_NO_SHOW_PREVIOUS_CONTENT);
 
 
-		DialogContentPane paneDeactivateActiveContents = new SimpleWizardContentPane(
-			  this, JAPMessages.getString(MSG_DEACTIVATE_ACTIVE), layout,
-			  new DialogContentPane.Options(paneExplainNoDirectConnection));
-		contentPane = paneDeactivateActiveContents.getContentPane();
-		contentPane.setLayout(new GridBagLayout());
-		constraints = new GridBagConstraints();
-		constraints.gridx = 0;
-		constraints.gridy = -1;
-		constraints.anchor = GridBagConstraints.WEST;
-		addBrowserInstallationInfo(contentPane, constraints, BROWSER_IE, "browser_ie", false);
-		addBrowserInstallationInfo(contentPane, constraints, BROWSER_FIREFOX, "browser_firefox", false);
-		addBrowserInstallationInfo(contentPane, constraints, BROWSER_OPERA, "browser_opera", false);
-		addBrowserInstallationInfo(contentPane, constraints, BROWSER_KONQUEROR, "browser_konqueror", false);
-		addBrowserInstallationInfo(contentPane, constraints, BROWSER_SAFARI, "browser_safari", false);
-		addBrowserInstallationInfo(contentPane, constraints,
-								   JAPMessages.getString(MSG_OTHER_BROWSERS), "browser_unknown", false);
 
 		DialogContentPane paneAnonTest = new SimpleWizardContentPane(
 			  this, JAPMessages.getString(MSG_ANON_TEST), layout,
-			  new DialogContentPane.Options(paneDeactivateActiveContents))
+			  new DialogContentPane.Options(paneExplainNoDirectConnection))
 		{
 			public CheckError[] checkYesOK()
 			{
@@ -417,9 +401,28 @@ public class ConfigAssistant extends JAPDialog
 		paneExplainBadConnection.getContentPane().add(lblImage);
 
 
+		DialogContentPane paneDeactivateActiveContents = new SimpleWizardContentPane(
+	  this, JAPMessages.getString(MSG_DEACTIVATE_ACTIVE), layout,
+	  new DialogContentPane.Options(paneExplainBadConnection));
+contentPane = paneDeactivateActiveContents.getContentPane();
+contentPane.setLayout(new GridBagLayout());
+constraints = new GridBagConstraints();
+constraints.gridx = 0;
+constraints.gridy = -1;
+constraints.anchor = GridBagConstraints.WEST;
+addBrowserInstallationInfo(contentPane, constraints, BROWSER_IE, "browser_ie", false);
+addBrowserInstallationInfo(contentPane, constraints, BROWSER_FIREFOX, "browser_firefox", false);
+addBrowserInstallationInfo(contentPane, constraints, BROWSER_OPERA, "browser_opera", false);
+addBrowserInstallationInfo(contentPane, constraints, BROWSER_KONQUEROR, "browser_konqueror", false);
+addBrowserInstallationInfo(contentPane, constraints, BROWSER_SAFARI, "browser_safari", false);
+addBrowserInstallationInfo(contentPane, constraints,
+						   JAPMessages.getString(MSG_OTHER_BROWSERS), "browser_unknown", false);
+
+
+
 		final DialogContentPane paneFinish = new SimpleWizardContentPane(
 			  this, JAPMessages.getString(MSG_FINISHED), layout,
-			  new DialogContentPane.Options(paneExplainBadConnection));
+			  new DialogContentPane.Options(paneDeactivateActiveContents));
 		paneFinish.getButtonCancel().setVisible(false);
 
 		// prevent premature closing of the wizard
