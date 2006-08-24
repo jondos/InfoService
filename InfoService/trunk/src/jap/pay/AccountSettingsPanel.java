@@ -1083,6 +1083,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				return true;
 			}
 		};
+		paymentInfoPane.getButtonNo().setVisible(false);
 
 		final PassivePaymentPane passivePaymentPane = new PassivePaymentPane(d, paymentInfoPane)
 		{

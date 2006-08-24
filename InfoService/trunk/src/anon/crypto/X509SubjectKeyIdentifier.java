@@ -43,7 +43,8 @@ import anon.util.Util;
 
 /**
  * The subject public key identifier is calculated using a SHA1 hash over the BIT STRING from
- * SubjectPublicKeyInfo as defined in RFC2459.
+ * SubjectPublicKeyInfo as defined in RFC3280.
+ * For DSA-PublicKeys the AlgorithmIdentifier of the SubjectPublicKeyInfo MUST contain the DSA-Parameters as specified in RFC 3279
  * @author Rolf Wendolsky
  */
 public final class X509SubjectKeyIdentifier extends AbstractX509Extension

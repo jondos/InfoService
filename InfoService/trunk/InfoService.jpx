@@ -28,6 +28,7 @@
   <property category="generalFormatting2" name="overrideBasicFormatting" value="1"/>
   <property category="generalFormatting2" name="tabSize" value="4"/>
   <property category="generalFormatting2" name="useTabChar" value="1"/>
+  <property category="java" name="compiler" value="projectjavac"/>
   <property category="javaFormatting" name="EventMatch" value="0"/>
   <property category="javaFormatting" name="alwaysClasses" value="1"/>
   <property category="javaFormatting" name="classBraceNextLine" value="1"/>
@@ -140,7 +141,7 @@
   <property category="sys" name="DocPath" value="doc/javadoc;doc"/>
   <property category="sys" name="ExcludeClassEnabled" value="0"/>
   <property category="sys" name="IncludeTestPath" value="1"/>
-  <property category="sys" name="JDK" value="java version 1.5.0_03-b07"/>
+  <property category="sys" name="JDK" value="java version 1.5.0_07-b03"/>
   <property category="sys" name="JvmVersion" value="1.4"/>
   <property category="sys" name="LastTag" value="42"/>
   <property category="sys" name="Libraries" value="Log4j;XML-1.1;BouncyCastleLightForJAP;junitx;JUnit;http;JavaMail;Jama;ApacheBzip2;Log4j"/>
@@ -157,6 +158,7 @@
   <property category="team" name="ignorePath.0" value="bak"/>
   <property category="team" name="ignorePath.1" value="classes"/>
   <property category="team" name="ignorePath.10" value="InfoService.log"/>
+  <property category="team" name="ignorePath.11" value="InfoService_update.log"/>
   <property category="team" name="ignorePath.2" value="htdoc"/>
   <property category="team" name="ignorePath.3" value="InfoService.jar"/>
   <property category="team" name="ignorePath.4" value="InfoService.jpx.bak"/>

@@ -165,6 +165,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	private boolean m_bShutdown = false;
 
+	private boolean m_bShowConfigAssistant = false;
+
 	/**
 	 * Stores the active MixCascade.
 	 */
@@ -616,6 +618,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 			/* no config file at any position->use OS-specific path for storing a new one*/
 			JAPModel.getInstance().setConfigFile(AbstractOS.getInstance().getConfigPath() +
 												 JAPConstants.XMLCONFFN);
+
+			/* As this is the first JAp start, show the config assistant */
+			m_bShowConfigAssistant = true;
 		}
 		if (a_strJapConfFile != null)
 		{
@@ -2472,6 +2477,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public boolean getAnonMode()
 	{
 		return m_proxyAnon != null;
+	}
+
+	/**
+	 * Indicactes if the config assistant should be shown on JAP start.
+	 * @return if the config assistant should be shown on JAP start
+	 */
+	public boolean isConfigAssistantShown()
+	{
+		return m_bShowConfigAssistant;
 	}
 
 	public boolean isAnonConnected()

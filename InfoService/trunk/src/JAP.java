@@ -40,6 +40,7 @@ import gui.JAPAWTMsgBox;
 import gui.JAPDll;
 import gui.JAPMessages;
 import gui.dialog.JAPDialog;
+import gui.GUIUtils;
 import jap.JAPConstants;
 import jap.JAPController;
 import jap.JAPDebug;
@@ -194,6 +195,7 @@ public class JAP
 		}
 		else
 		{
+			GUIUtils.setIconResizer(JAPModel.getInstance().getIconResizer());
 			splash = new JAPSplash(ownerFrame);
 			splash.setVisible(true);
 		}

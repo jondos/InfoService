@@ -417,6 +417,7 @@ public final class JAPHelp extends JAPDialog
 			}
 			m_urlCaller = a_urlCaller;
 			html = new JEditorPane("text/html", "<html><body></body></html>");
+			new JTextComponentToClipboardCopier(true).registerTextComponent(html);
 			html.setEditable(false);
 			html.addHyperlinkListener(this);
 			m_history = new Vector();

@@ -59,7 +59,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.ImageObserver;
 import javax.swing.BoxLayout;
-import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLayeredPane;
@@ -630,7 +630,8 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 */
 	public static void showMessageDialog(Component a_parentComponent, String a_message)
 	{
-		showMessageDialog(a_parentComponent, a_message, JAPMessages.getString(MSG_TITLE_INFO), (Icon)null);
+		showMessageDialog(
+			  a_parentComponent, a_message, JAPMessages.getString(MSG_TITLE_INFO), (ImageIcon)null);
 	}
 
 	/**
@@ -646,8 +647,9 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	public static void showMessageDialog(Component a_parentComponent, String a_message,
 										 ILinkedInformation a_linkedInformation)
 	{
-		showMessageDialog(a_parentComponent, a_message, JAPMessages.getString(MSG_TITLE_INFO), (Icon)null,
-					   a_linkedInformation);
+		showMessageDialog(
+			  a_parentComponent, a_message, JAPMessages.getString(MSG_TITLE_INFO), (ImageIcon)null,
+			  a_linkedInformation);
 	}
 
 	/**
@@ -692,7 +694,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 */
 	public static void showMessageDialog(Component a_parentComponent, String a_message, String a_title)
 	{
-		showMessageDialog(a_parentComponent, a_message, a_title, (Icon)null);
+		showMessageDialog(a_parentComponent, a_message, a_title, (ImageIcon)null);
 	}
 
 	/**
@@ -721,7 +723,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 * to the golden ratio.
 	 * @param a_icon an icon that will be displayed on the dialog
 	 */
-	public static void showMessageDialog(JAPDialog a_parentDialog, String a_message, Icon a_icon)
+	public static void showMessageDialog(JAPDialog a_parentDialog, String a_message, ImageIcon a_icon)
 	{
 		showMessageDialog(getInternalDialog(a_parentDialog), a_message, a_icon);
 	}
@@ -736,7 +738,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 * @param a_icon an icon that will be displayed on the dialog
 	 * @param a_linkedInformation a clickable information message that is appended to the text
 	 */
-	public static void showMessageDialog(JAPDialog a_parentDialog, String a_message, Icon a_icon,
+	public static void showMessageDialog(JAPDialog a_parentDialog, String a_message, ImageIcon a_icon,
 										 ILinkedInformation a_linkedInformation)
 	{
 		showMessageDialog(getInternalDialog(a_parentDialog), a_message, a_icon, a_linkedInformation);
@@ -752,7 +754,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 * to the golden ratio.
 	 * @param a_icon an icon that will be displayed on the dialog
 	 */
-	public static void showMessageDialog(Component a_parentComponent, String a_message, Icon a_icon)
+	public static void showMessageDialog(Component a_parentComponent, String a_message, ImageIcon a_icon)
 	{
 		showMessageDialog(a_parentComponent, a_message, JAPMessages.getString(MSG_TITLE_INFO), a_icon);
 	}
@@ -768,7 +770,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 * @param a_icon an icon that will be displayed on the dialog
 	 * @param a_linkedInformation a clickable information message that is appended to the text
 	 */
-	public static void showMessageDialog(Component a_parentComponent, String a_message, Icon a_icon,
+	public static void showMessageDialog(Component a_parentComponent, String a_message, ImageIcon a_icon,
 									  ILinkedInformation a_linkedInformation)
 	{
 		showMessageDialog(a_parentComponent, a_message, JAPMessages.getString(MSG_TITLE_INFO), a_icon,
@@ -786,7 +788,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 * @param a_icon an icon that will be displayed on the dialog
 	 */
 	public static void showMessageDialog(JAPDialog a_parentDialog, String a_message, String a_title,
-										 Icon a_icon)
+										 ImageIcon a_icon)
 	{
 		showMessageDialog(getInternalDialog(a_parentDialog), a_message, a_title, a_icon);
 	}
@@ -803,7 +805,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 * @param a_linkedInformation a clickable information message that is appended to the text
 	 */
 	public static void showMessageDialog(JAPDialog a_parentDialog, String a_message, String a_title,
-										 Icon a_icon, ILinkedInformation a_linkedInformation)
+										 ImageIcon a_icon, ILinkedInformation a_linkedInformation)
 	{
 		showMessageDialog(getInternalDialog(a_parentDialog), a_message, a_title, a_icon, a_linkedInformation);
 	}
@@ -820,7 +822,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 * @param a_icon an icon that will be displayed on the dialog
 	 */
 	public static void showMessageDialog(Component a_parentComponent, String a_message, String a_title,
-										 Icon a_icon)
+										 ImageIcon a_icon)
 	{
 		showMessageDialog(a_parentComponent, a_message, a_title, a_icon, null);
 	}
@@ -838,7 +840,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 * @param a_linkedInformation a clickable information message that is appended to the text
 	 */
 	public static void showMessageDialog(Component a_parentComponent, String a_message, String a_title,
-										 Icon a_icon, ILinkedInformation a_linkedInformation)
+										 ImageIcon a_icon, ILinkedInformation a_linkedInformation)
 	{
 		if (a_title == null)
 		{
@@ -991,7 +993,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 * @see javax.swing.JOptionPane
 	 */
 	public static int showConfirmDialog(JAPDialog a_parentDialog, String a_message, String a_title,
-									   int a_optionType, int a_messageType, Icon a_icon)
+									   int a_optionType, int a_messageType, ImageIcon a_icon)
 	{
 		return showConfirmDialog(a_parentDialog, a_message, a_title, a_optionType, a_messageType, a_icon,
 								 null);
@@ -1014,7 +1016,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 * @see javax.swing.JOptionPane
 	 */
 	public static int showConfirmDialog(Component a_parentComponent, String a_message, String a_title,
-									   int a_optionType, int a_messageType, Icon a_icon)
+									   int a_optionType, int a_messageType, ImageIcon a_icon)
 	{
 		return showConfirmDialog(a_parentComponent, a_message, a_title, a_optionType, a_messageType, a_icon,
 								null);
@@ -1037,7 +1039,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 * @see javax.swing.JOptionPane
 	 */
 	public static int showConfirmDialog(JAPDialog a_parentDialog, String a_message, String a_title,
-									   int a_optionType, int a_messageType, Icon a_icon,
+									   int a_optionType, int a_messageType, ImageIcon a_icon,
 									   ILinkedInformation a_linkedInformation)
 	{
 		return showConfirmDialog(getInternalDialog(a_parentDialog), a_message, a_title, a_optionType,
@@ -1063,7 +1065,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 * @see javax.swing.JOptionPane
 	 */
 	public static int showConfirmDialog(Component a_parentComponent, String a_message, String a_title,
-										int a_optionType, int a_messageType, Icon a_icon,
+										int a_optionType, int a_messageType, ImageIcon a_icon,
 										ILinkedInformation a_linkedInformation)
 	{
 		JAPDialog dialog;
@@ -1082,6 +1084,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			LogHolder.log(LogLevel.ALERT, LogType.GUI, a_message);
 			return RETURN_VALUE_UNINITIALIZED;
 		}
+		//a_icon = GUIUtils.createScaledImageIcon(a_icon, GUIUtils.getIconResizer());
 
 
 		if (a_message == null)
@@ -1621,7 +1624,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 * @see javax.swing.JOptionPane
 	 */
 	public static int showConfirmDialog(JAPDialog a_parentDialog, String a_message,
-										int a_optionType, int a_messageType, Icon a_icon)
+										int a_optionType, int a_messageType, ImageIcon a_icon)
 	{
 		return showConfirmDialog(getInternalDialog(a_parentDialog), a_message, null,
 								 a_optionType, a_messageType, a_icon, null);
@@ -1644,7 +1647,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 * @see javax.swing.JOptionPane
 	 */
 	public static int showConfirmDialog(Component a_parentComponent, String a_message,
-										int a_optionType, int a_messageType, Icon a_icon)
+										int a_optionType, int a_messageType, ImageIcon a_icon)
 	{
 		return showConfirmDialog(a_parentComponent, a_message, null, a_optionType, a_messageType, a_icon,
 								 null);

@@ -34,7 +34,6 @@ import java.io.File;
 
 import anon.crypto.JAPCertificate;
 import anon.infoservice.ProxyInterface;
-import anon.infoservice.Database;
 import anon.util.ResourceLoader;
 import anon.infoservice.ImmutableProxyInterface;
 import gui.JAPDll;
@@ -43,7 +42,7 @@ import jap.forward.JAPRoutingSettings;
 import anon.infoservice.IMutableProxyInterface;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
-import anon.infoservice.JavaVersionDBEntry;
+import gui.GUIUtils;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel extends Observable
@@ -108,7 +107,13 @@ public final class JAPModel extends Observable
 
 	private int m_fontSize = 0;
 
-
+	private GUIUtils.IIconResizer m_resizer = new GUIUtils.IIconResizer()
+		{
+			public double getResizeFactor()
+			{
+				return 1.0 + getFontSize() * 0.1;
+			}
+	};
 
 	private static JAPModel ms_TheModel = null;
 
@@ -628,6 +633,11 @@ public final class JAPModel extends Observable
 	public static boolean isInfoServiceDisabled()
 	{
 		return ms_TheModel.m_bInfoServiceDisabled;
+	}
+
+	public GUIUtils.IIconResizer getIconResizer()
+	{
+		return m_resizer;
 	}
 
 	/**
