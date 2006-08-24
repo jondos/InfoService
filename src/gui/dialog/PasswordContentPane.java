@@ -37,7 +37,6 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import java.awt.Toolkit;
 import javax.swing.JLabel;
 import javax.swing.JPasswordField;
 import javax.swing.JPopupMenu;
@@ -124,7 +123,7 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 
 		GridBagLayout layout = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
-		JMenuItem itemInsertPasswort = new JMenuItem(JAPMessages.getString(MSG_INSERT_FROM_CLIP));
+		JMenuItem itemInsertPassword = new JMenuItem(JAPMessages.getString(MSG_INSERT_FROM_CLIP));
 		MouseAdapter popupListener = new MouseAdapter()
 		{
 			public void mouseClicked(MouseEvent a_event)
@@ -146,7 +145,7 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 		c.gridy = 0;
 
 		m_popup = new JPopupMenu();
-		itemInsertPasswort.addActionListener(new ActionListener()
+		itemInsertPassword.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent a_event)
 			{
@@ -165,7 +164,7 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 				}
 			}
 		});
-		m_popup.add(itemInsertPasswort);
+		m_popup.add(itemInsertPassword);
 
 
 		if (a_type == PASSWORD_CHANGE)

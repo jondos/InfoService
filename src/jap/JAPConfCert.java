@@ -61,7 +61,6 @@ import gui.CAListCellRenderer;
 import gui.CertDetailsDialog;
 import gui.JAPMessages;
 import gui.JAPHelp;
-import gui.JAPHtmlMultiLineLabel;
 import gui.CountryMapper;
 import gui.dialog.JAPDialog;
 import java.awt.Font;
@@ -73,6 +72,8 @@ import java.awt.Font;
 final class JAPConfCert extends AbstractJAPConfModule implements Observer
 {
 	private static final String MSG_DETAILS = JAPConfCert.class.getName() + "_details";
+	private static final String MSG_NO_CHECK_WARNING = JAPConfCert.class.getName() + "_noCheckWarning";
+
 
 	private TitledBorder m_borderCert;
 	private JLabel m_labelDate, m_labelCN, m_labelE, m_labelCSTL, m_labelO, m_labelOU;
@@ -250,11 +251,23 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 
 		m_cbCertCheckEnabled = new JCheckBox();
 		m_cbCertCheckEnabled.setSelected(true);
+		m_cbCertCheckEnabled.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent a_event)
+			{
+				if (!m_cbCertCheckEnabled.isSelected())
+				{
+					JAPDialog.showWarningDialog(
+									   m_cbCertCheckEnabled, JAPMessages.getString(MSG_NO_CHECK_WARNING));
+				}
+			}
+		});
 		m_cbCertCheckEnabled.addItemListener(new ItemListener()
 		{
 			public void itemStateChanged(ItemEvent e)
 			{
 				boolean b = m_cbCertCheckEnabled.isSelected();
+
 				m_labelDate.setEnabled(b);
 				m_labelCN.setEnabled(b);
 				m_labelE.setEnabled(b);

@@ -120,11 +120,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private static final String MSG_PAYCASCADE = JAPConfAnon.class.
 		getName() + "_paycascade";
 
-	private static final String URL_BEGIN = "<html><font color=blue>";
-	private static final String URL_END = "</font></html>";
-	private static final String RED_BEGIN = "<font color=red>";
-	private static final String RED_END = "</font>";
-
 	private final Object MIX_COMBO_UPDATE_LOCK = new Object();
 	private boolean m_bUpdateServerPanel = true;
 

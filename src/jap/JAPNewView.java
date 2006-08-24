@@ -51,6 +51,8 @@ import java.awt.Component;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
@@ -125,6 +127,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JAPNewView.class.getName() + "_newServicesFoundExplanation";
 	private static final String MSG_NO_REAL_PAYMENT = JAPNewView.class.getName() + "_noRealPayment";
 	private static final String MSG_CURRENCY_EURO =  JAPNewView.class.getName() + "_currencyEuro";
+	private static final String MSG_BTN_ASSISTANT =  JAPNewView.class.getName() + "_btnAssistant";
+	private static final String MSG_MN_ASSISTANT =  JAPNewView.class.getName() + "_mnAssistant";
+
 
 	private static final String PRICE_UNIT = "ct/MB";
 
@@ -137,7 +142,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JLabel m_labelUpdate;
 	private JPanel m_pnlVersion;
 	private JPanel m_panelMain;
-	private JButton m_bttnHelp, m_bttnQuit, m_bttnIconify, m_bttnConf;
+	private JButton m_bttnHelp, m_bttnQuit, m_bttnIconify, m_bttnConf, m_btnAssistant;
 	//private JButton m_bttnAnonConf;
 	//private JCheckBox m_cbAnon;
 	//private JProgressBar userProgressBar;
@@ -196,6 +201,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JProgressBar m_progForwarderActivitySmall;
 
 	private boolean m_bUpdateClicked = false;
+	private boolean m_bAssistantClicked = false;
 
 	private long m_lTrafficWWW, m_lTrafficOther;
 
@@ -842,6 +848,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JPanel buttonPanel = new JPanel(gbl1);
 		m_bttnHelp = new JButton(JAPMessages.getString("helpButton"));
 		m_bttnQuit = new JButton(JAPMessages.getString("quitButton"));
+		m_btnAssistant = new JButton(JAPMessages.getString(MSG_BTN_ASSISTANT));
 		m_bttnConf = new JButton(JAPMessages.getString("confButton"));
 		m_bttnIconify = new JButton(GUIUtils.loadImageIcon(JAPConstants.ICONIFYICONFN, true));
 		m_bttnIconify.setToolTipText(JAPMessages.getString("iconifyWindow"));
@@ -854,22 +861,26 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.insets = new Insets(0, 10, 0, 0);
 		buttonPanel.add(m_bttnHelp, c1);
 		c1.gridx = 2;
-		buttonPanel.add(m_bttnConf, c1);
+		buttonPanel.add(m_btnAssistant, c1);
 		c1.gridx = 3;
+		buttonPanel.add(m_bttnConf, c1);
+
+		c1.gridx = 4;
 		c1.weightx = 1;
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		buttonPanel.add(new JLabel(), c1);
-		c1.gridx = 4;
-		c1.weightx = 0;
+		c1.gridx = 5;
 		buttonPanel.add(m_bttnQuit, c1);
 		m_bttnIconify.addActionListener(this);
 		m_bttnConf.addActionListener(this);
 		m_bttnHelp.addActionListener(this);
 		m_bttnQuit.addActionListener(this);
+		m_btnAssistant.addActionListener(this);
 		JAPUtil.setMnemonic(m_bttnIconify, JAPMessages.getString("iconifyButtonMn"));
 		JAPUtil.setMnemonic(m_bttnConf, JAPMessages.getString("confButtonMn"));
 		JAPUtil.setMnemonic(m_bttnHelp, JAPMessages.getString("helpButtonMn"));
 		JAPUtil.setMnemonic(m_bttnQuit, JAPMessages.getString("quitButtonMn"));
+		JAPUtil.setMnemonic(m_btnAssistant, JAPMessages.getString(MSG_MN_ASSISTANT));
 
 		c.gridy = 13;
 		northPanel.add(buttonPanel, c);
@@ -977,6 +988,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				synchronized (LOCK_CONFIG)
 				{
 					m_dlgConfig = new JAPConf(view, m_bWithPayment);
+					if (JAPController.getInstance().isConfigAssistantShown())
+					{
+						showInstallationAssistant();
+					}
 				}
 			}
 		}.start();
@@ -1367,9 +1382,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_bttnHelp.setText(JAPMessages.getString("helpButton"));
 		m_bttnQuit.setText(JAPMessages.getString("quitButton"));
 		m_bttnConf.setText(JAPMessages.getString("confButton"));
+		m_btnAssistant.setText(JAPMessages.getString(MSG_BTN_ASSISTANT));
+
 		JAPUtil.setMnemonic(m_bttnConf, JAPMessages.getString("confButtonMn"));
 		JAPUtil.setMnemonic(m_bttnHelp, JAPMessages.getString("helpButtonMn"));
 		JAPUtil.setMnemonic(m_bttnQuit, JAPMessages.getString("quitButtonMn"));
+		JAPUtil.setMnemonic(m_btnAssistant, JAPMessages.getString(MSG_MN_ASSISTANT));
 
 		m_bttnReload.setToolTipText(JAPMessages.getString("ngCascadeReloadTooltip"));
 		m_labelAnonService.setText(JAPMessages.getString(MSG_SERVICE_NAME) + ":");
@@ -1826,6 +1844,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					  else if (event.getSource() == anonB)
 					 showConfigDialog(JAPConf.ANON_TAB);*/
 				}
+				else if (source == m_btnAssistant)
+				{
+					showInstallationAssistant();
+				}
 				//else if (source == m_bttnAnonConf)
 				//{
 				//showConfigDialog(JAPConf.ANON_TAB);
@@ -1874,6 +1896,49 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			doIt.run();
 		}
+	}
+
+	private void showInstallationAssistant()
+	{
+		final JAPNewView view = this;
+		if (m_bAssistantClicked)
+		{
+			return;
+		}
+		m_bAssistantClicked = true;
+		while (m_dlgConfig == null);
+		final JAPDialog configAssistant = new ConfigAssistant(m_dlgConfig);
+		final ComponentAdapter componentAdapter =
+			new ComponentAdapter()
+		{
+			public void componentHidden(ComponentEvent a_event)
+			{
+				// Prevent that, if the config dialog is closed, the assistent is made invisible.
+				if (!m_dlgConfig.isRestartNeeded())
+				{
+					configAssistant.setLocation(configAssistant.getLocation());
+					configAssistant.setVisible(true);
+				}
+				else
+				{
+					configAssistant.dispose();
+				}
+			}
+		};
+		configAssistant.addComponentListener(componentAdapter);
+
+		configAssistant.addWindowListener(new WindowAdapter()
+		{
+			public void windowClosed(WindowEvent a_event)
+			{
+				configAssistant.removeWindowListener(this);
+				configAssistant.removeComponentListener(componentAdapter);
+				m_bAssistantClicked = false;
+				view.setVisible(true);
+			}
+		});
+
+		configAssistant.setVisible(true);
 	}
 
 	private void showHelpWindow()

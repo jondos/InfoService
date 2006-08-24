@@ -32,6 +32,7 @@ import java.util.Vector;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Image;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
@@ -46,7 +47,7 @@ import java.awt.event.WindowEvent;
 import java.awt.Insets;
 import java.awt.event.WindowListener;
 import javax.swing.Box;
-import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -60,6 +61,7 @@ import gui.JAPHelp;
 import gui.JAPHelpContext;
 import gui.JAPHtmlMultiLineLabel;
 import gui.JAPMessages;
+import gui.GUIUtils;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -179,7 +181,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	private JButton m_btnNo;
 	private JButton m_btnCancel;
 	private ButtonListener m_buttonListener;
-	private Icon m_icon;
+	private ImageIcon m_icon;
 	private boolean m_bHasHadWizardLayout;
 	private GridBagConstraints m_textConstraints;
 	private Vector m_rememberedErrors = new Vector();
@@ -470,7 +472,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 * @todo implement the expansion on !a_bCentered
 	 */
 	private void init(RootPaneContainer a_parentDialog, String a_strTitle, String a_strText, int a_alignment,
-					  int a_optionType, int a_messageType, Icon a_icon, boolean a_bCentered,
+					  int a_optionType, int a_messageType, ImageIcon a_icon, boolean a_bCentered,
 					  JAPHelpContext.IHelpContext a_helpContext, DialogContentPane a_previousContentPane)
 	{
 		if (a_parentDialog == null)
@@ -510,7 +512,9 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		m_previousContentPane = a_previousContentPane;
 		m_messageType = a_messageType;
 		m_optionType = a_optionType;
+
 		m_icon = a_icon;
+
 		m_helpContext = a_helpContext;
 		m_rootPane = new JPanel(new BorderLayout());
 		m_titlePane = new JPanel(new GridBagLayout());
@@ -904,7 +908,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	{
 		private String m_strTitle;
 		private int m_messageType;
-		private Icon m_icon;
+		private ImageIcon m_icon;
 		private boolean m_bCentered;
 
 		/**
@@ -935,7 +939,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		 * @param a_icon The icon for the content pane. If is is null, the icon will be automatically chosen
 		 * depending on the message type.
 		 */
-		public Layout(Icon a_icon)
+		public Layout(ImageIcon a_icon)
 		{
 			this("", MESSAGE_TYPE_PLAIN, a_icon);
 		}
@@ -948,7 +952,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		 * @param a_icon The icon for the content pane. If is is null, the icon will be automatically chosen
 		 * depending on the message type.
 		 */
-		public Layout(int a_messageType, Icon a_icon)
+		public Layout(int a_messageType, ImageIcon a_icon)
 		{
 			this("", a_messageType, a_icon);
 		}
@@ -975,7 +979,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		 * @param a_icon The icon for the content pane. If is is null, the icon will be automatically chosen
 		 * depending on the message type.
 		 */
-		public Layout(String a_strTitle, Icon a_icon)
+		public Layout(String a_strTitle, ImageIcon a_icon)
 		{
 			this(a_strTitle, MESSAGE_TYPE_PLAIN, a_icon);
 		}
@@ -990,7 +994,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		 * @param a_icon The icon for the content pane. If is is null, the icon will be automatically chosen
 		 * depending on the message type.
 		 */
-		public Layout(String a_strTitle, int a_messageType, Icon a_icon)
+		public Layout(String a_strTitle, int a_messageType, ImageIcon a_icon)
 		{
 			m_strTitle = a_strTitle;
 			m_messageType = a_messageType;
@@ -1028,7 +1032,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		 * depending on the message type.
 		 * @return icon for the content pane.
 		 */
-		public Icon getIcon()
+		public ImageIcon getIcon()
 		{
 			return m_icon;
 		}
@@ -2577,9 +2581,11 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 						{
 							if (currentContentPane.isAutomaticFocusSettingEnabled())
 							{
-								currentContentPane.getButtonNo().requestFocus();
+								//currentContentPane.getButtonNo().requestFocus();
+								currentContentPane.getButtonYesOK().requestFocus();
 							}
-							getDialog().getRootPane().setDefaultButton(currentContentPane.getButtonNo());
+							//getDialog().getRootPane().setDefaultButton(currentContentPane.getButtonNo());
+							getDialog().getRootPane().setDefaultButton(currentContentPane.getButtonYesOK());
 							bFocused = true;
 						}
 						else if (currentContentPane.getButtonYesOK() != null &&

@@ -951,7 +951,7 @@ final public class JAPConf extends JAPDialog implements ActionListener
 		{
 			return;
 		}
-		if (m_bCloseConfiguration)
+		if (m_bCloseConfiguration || isRestartNeeded())
 		{
 			setVisible(false);
 		}
