@@ -1312,6 +1312,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 				try
 				{
 					Element elemTor = (Element) XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_TOR);
+					JAPModel.getInstance().setTorActivated(
+						XMLUtil.parseAttribute(elemTor, JAPModel.XML_ATTR_ACTIVATED,
+											   !JAPConstants.m_bReleasedVersion));
 					Element elem = (Element) XMLUtil.getFirstChildByName(elemTor,
 						JAPConstants.CONFIG_MAX_CONNECTIONS_PER_ROUTE);
 					setTorMaxConnectionsPerRoute(XMLUtil.parseValue(elem,
@@ -1339,6 +1342,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					Element elemMixminion = (Element) XMLUtil.getFirstChildByName(root,
 						JAPConstants.CONFIG_Mixminion);
+					JAPModel.getInstance().setMixMinionActivated(
+						XMLUtil.parseAttribute(elemMixminion, JAPModel.XML_ATTR_ACTIVATED,
+											   !JAPConstants.m_bReleasedVersion));
 					Element elemMM = (Element) XMLUtil.getFirstChildByName(elemMixminion,
 						JAPConstants.CONFIG_ROUTE_LEN);
 					int routeLen = XMLUtil.parseValue(elemMM, JAPModel.getMixminionRouteLen());
@@ -1863,6 +1869,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 			/** add tor*/
 			Element elemTor = doc.createElement(JAPConstants.CONFIG_TOR);
+			XMLUtil.setAttribute(elemTor, JAPModel.XML_ATTR_ACTIVATED, JAPModel.getInstance().isTorActivated());
 			Element elem = doc.createElement(JAPConstants.CONFIG_MAX_CONNECTIONS_PER_ROUTE);
 			XMLUtil.setValue(elem, JAPModel.getTorMaxConnectionsPerRoute());
 			elemTor.appendChild(elem);
@@ -1877,6 +1884,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 			/** add mixminion*/
 			Element elemMixminion = doc.createElement(JAPConstants.CONFIG_Mixminion);
+			XMLUtil.setAttribute(elemMixminion, JAPModel.XML_ATTR_ACTIVATED,
+								 JAPModel.getInstance().isMixMinionActivated());
 			Element elemMM = doc.createElement(JAPConstants.CONFIG_ROUTE_LEN);
 			XMLUtil.setValue(elemMM, JAPModel.getMixminionRouteLen());
 			//FIXME von sr
@@ -2246,14 +2255,28 @@ public final class JAPController extends Observable implements IProxyListener, O
 					//			   m_Controller.getCurrentMixCascade()));
 					cascadeContainer = new AutoSwitchedMixCascadeContainer();
 					m_proxyAnon.setMixCascade(cascadeContainer);
-					TorAnonServerDescription td = new TorAnonServerDescription(true,
-						JAPModel.isPreCreateAnonRoutesEnabled());
-					td.setMaxRouteLen(JAPModel.getTorMaxRouteLen());
-					td.setMinRouteLen(JAPModel.getTorMinRouteLen());
-					td.setMaxConnectionsPerRoute(JAPModel.getTorMaxConnectionsPerRoute());
-					m_proxyAnon.setTorParams(td);
-					m_proxyAnon.setMixminionParams(new MixminionServiceDescription(JAPModel.
-						getMixminionRouteLen(), JAPModel.getMixminionMyEMail()));
+					if (JAPModel.getInstance().isTorActivated())
+					{
+						TorAnonServerDescription td = new TorAnonServerDescription(true,
+							JAPModel.isPreCreateAnonRoutesEnabled());
+						td.setMaxRouteLen(JAPModel.getTorMaxRouteLen());
+						td.setMinRouteLen(JAPModel.getTorMinRouteLen());
+						td.setMaxConnectionsPerRoute(JAPModel.getTorMaxConnectionsPerRoute());
+						m_proxyAnon.setTorParams(td);
+					}
+					else
+					{
+						m_proxyAnon.setTorParams(null);
+					}
+					if (JAPModel.getInstance().isMixMinionActivated())
+					{
+						m_proxyAnon.setMixminionParams(new MixminionServiceDescription(JAPModel.
+							getMixminionRouteLen(), JAPModel.getMixminionMyEMail()));
+					}
+					else
+					{
+						m_proxyAnon.setMixminionParams(null);
+					}
 					m_proxyAnon.setProxyListener(m_Controller);
 					m_proxyAnon.setDummyTraffic(JAPModel.getDummyTraffic());
 					// -> we can try to start anonymity

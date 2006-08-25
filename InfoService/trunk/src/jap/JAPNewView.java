@@ -231,7 +231,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_flippingpanelForward = new FlippingPanel(this);
 
 		// Load Icon in upper left corner of the frame window
-		ImageIcon ii = GUIUtils.loadImageIcon(JAPConstants.IICON16FN, true);
+		ImageIcon ii = GUIUtils.loadImageIcon(JAPConstants.IICON16FN, true, false);
 		if (ii != null)
 		{
 			setIconImage(ii.getImage());
