@@ -51,6 +51,7 @@ import javax.swing.border.TitledBorder;
 
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.JAPVersionInfo;
+import anon.infoservice.Database;
 import gui.GUIUtils;
 import gui.JAPHelp;
 import gui.JAPMessages;
@@ -120,9 +121,9 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		buttonPanel.add(m_bttnUpgrade);
 
 		m_bttnCheckForUpgrade = new JButton(JAPMessages.getString("confCheckForUpgrade"));
-		m_bttnCheckForUpgrade.setIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD, true));
-		m_bttnCheckForUpgrade.setDisabledIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true));
-		m_bttnCheckForUpgrade.setPressedIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true));
+		m_bttnCheckForUpgrade.setIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD, true, false));
+		m_bttnCheckForUpgrade.setDisabledIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true, false));
+		m_bttnCheckForUpgrade.setPressedIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true, false));
 		m_bttnCheckForUpgrade.addActionListener(this);
 		m_bttnCheckForUpgrade.setActionCommand(COMMAND_CHECKFORUPGRADE);
 		cButtons.anchor = GridBagConstraints.CENTER;
@@ -336,18 +337,46 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 
 	public void run()
 	{
-		//Thread Run Loop for getting the Version Infos...
-		m_taInfo.setText(JAPMessages.getString("updateFetchVersionInfo"));
-		m_releaseVersion = InfoServiceHolder.getInstance().getJAPVersionInfo(JAPVersionInfo.
-			JAP_RELEASE_VERSION);
-		m_devVersion = InfoServiceHolder.getInstance().getJAPVersionInfo(JAPVersionInfo.
-			JAP_DEVELOPMENT_VERSION);
+		updateVersionInfo(true);
+	}
+
+	public void updateVersionInfo(boolean a_bFetchUpdateFromIS)
+	{
+		if (a_bFetchUpdateFromIS)
+		{
+			//Thread Run Loop for getting the Version Infos...
+			m_taInfo.setText(JAPMessages.getString("updateFetchVersionInfo"));
+			m_releaseVersion = InfoServiceHolder.getInstance().getJAPVersionInfo(JAPVersionInfo.
+				JAP_RELEASE_VERSION);
+			m_devVersion = InfoServiceHolder.getInstance().getJAPVersionInfo(JAPVersionInfo.
+				JAP_DEVELOPMENT_VERSION);
+		}
+		else
+		{
+			JAPVersionInfo devVersion = (JAPVersionInfo)
+				Database.getInstance(JAPVersionInfo.class).getEntryById(JAPVersionInfo.ID_DEVELOPMENT);
+			JAPVersionInfo releaseVersion = (JAPVersionInfo)
+				Database.getInstance(JAPVersionInfo.class).getEntryById(JAPVersionInfo.ID_RELEASE);
+			if (devVersion != null && releaseVersion != null)
+			{
+				m_releaseVersion = releaseVersion;
+				m_devVersion = devVersion;
+			}
+			else
+			{
+				return;
+			}
+		}
+
 		if ( (m_releaseVersion == null) || (m_devVersion == null))
 		{
 			m_taInfo.setText(JAPMessages.getString("updateFetchVersionInfoFailed"));
 		}
 		else
 		{
+			Database.getInstance(JAPVersionInfo.class).update(m_releaseVersion);
+			Database.getInstance(JAPVersionInfo.class).update(m_devVersion);
+
 			m_comboType.setEnabled(true);
 			String text = "";
 			if (JAPConstants.m_bReleasedVersion)
@@ -459,5 +488,6 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 	{
 		//Register help context
 		JAPHelp.getInstance().getContextObj().setContext("update");
+		updateVersionInfo(false);
 	}
 }

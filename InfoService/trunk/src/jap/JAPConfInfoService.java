@@ -279,11 +279,11 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 			JAPMessages.getString("settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton"));
 		//settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setFont(getFontSetting());
 		settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setIcon(GUIUtils.loadImageIcon(
-			JAPConstants.IMAGE_RELOAD, true));
+			JAPConstants.IMAGE_RELOAD, true, false));
 		settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setDisabledIcon(GUIUtils.loadImageIcon(
-			JAPConstants.IMAGE_RELOAD_DISABLED, true));
+			JAPConstants.IMAGE_RELOAD_DISABLED, true, false));
 		settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setPressedIcon(GUIUtils.loadImageIcon(
-			JAPConstants.IMAGE_RELOAD_ROLLOVER, true));
+			JAPConstants.IMAGE_RELOAD_ROLLOVER, true, false));
 		//settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setMargin(new Insets(1, 1, 1,
 		//	settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.getMargin().right));
 		settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.addActionListener(new ActionListener()
