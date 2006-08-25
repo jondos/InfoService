@@ -508,9 +508,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c1.gridy = 0;
 		c1.insets = new Insets(0, 0, 0, 10);
 		m_reloadCascadesButton = new JButton(JAPMessages.getString("reloadCascades"));
-		m_reloadCascadesButton.setIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD, true));
-		m_reloadCascadesButton.setDisabledIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true));
-		m_reloadCascadesButton.setPressedIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true));
+		m_reloadCascadesButton.setIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD, true, false));
+		m_reloadCascadesButton.setDisabledIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true, false));
+		m_reloadCascadesButton.setPressedIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true, false));
 
 		m_reloadCascadesButton.addActionListener(this);
 		panelBttns.add(m_reloadCascadesButton, c1);
