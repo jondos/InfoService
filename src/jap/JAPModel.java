@@ -52,6 +52,7 @@ public final class JAPModel extends Observable
 	public static final String XML_REMIND_JAVA_UPDATE = "remindJavaUpdate";
 	public static final String XML_RESTRICT_CASCADE_AUTO_CHANGE = "restrictCascadeAutoChange";
 	public static final String XML_DENY_NON_ANONYMOUS_SURFING = "denyNonAnonymousSurfing";
+	public static final String XML_ATTR_ACTIVATED = "activated";
 	public static final String XML_FONT_SIZE = "fontSize";
 
 	public static final String AUTO_CHANGE_NO_RESTRICTION = "none";
@@ -96,6 +97,9 @@ public final class JAPModel extends Observable
 
 	private boolean m_bRemindOptionalUpdate;
 	private boolean m_bRemindJavaUpdate;
+
+	private boolean m_bTorActivated;
+	private boolean m_bMixMinionActivated;
 
 	private boolean m_bChooseCascasdeConnectionAutomatically;
 	private String m_automaticCascadeChangeRestriction;
@@ -259,6 +263,25 @@ public final class JAPModel extends Observable
 		return m_strLookAndFeel;
 	}
 
+	public boolean isTorActivated()
+	{
+		return m_bTorActivated;
+	}
+
+	public void setTorActivated(boolean a_bActivate)
+	{
+		m_bTorActivated = a_bActivate;
+	}
+
+	public void setMixMinionActivated(boolean a_bActivate)
+	{
+		m_bMixMinionActivated = a_bActivate;
+	}
+
+	public boolean isMixMinionActivated()
+	{
+		return m_bMixMinionActivated;
+	}
 
 	protected void setMinimizeOnStartup(boolean b)
 	{

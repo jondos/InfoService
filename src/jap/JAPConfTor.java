@@ -28,16 +28,19 @@
 package jap;
 
 import java.text.DateFormat;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.Vector;
 
 import java.awt.Dimension;
+import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -45,28 +48,39 @@ import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
 
 import anon.tor.ordescription.InfoServiceORListFetcher;
 import anon.tor.ordescription.ORDescription;
 import anon.tor.ordescription.ORList;
-import javax.swing.JCheckBox;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ChangeEvent;
-import java.util.Date;
-import gui.*;
+import gui.GUIUtils;
+import gui.JAPHelp;
+import gui.JAPMessages;
 import gui.dialog.JAPDialog;
 import logging.LogType;
+import java.util.Dictionary;
 
 final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 {
-	JTable m_tableRouters;
-	JSlider m_sliderMaxPathLen, m_sliderMinPathLen, m_sliderConnectionsPerPath;
-	JButton m_bttnFetchRouters;
-	JLabel m_labelAvailableRouters;
-	JCheckBox m_cbPreCreateRoutes;
-	long m_lastUpdate;
-	DateFormat ms_dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM,
+	public static final String MSG_ACTIVATE = JAPConfTor.class.getName() + "_activate";
+
+	private static final int MIN_CON_PER_PATH = 1;
+	private static final int MAX_CON_PER_PATH = 5;
+
+	private JCheckBox m_cbxActive;
+	private JTable m_tableRouters;
+	private JSlider m_sliderMaxPathLen, m_sliderMinPathLen, m_sliderConnectionsPerPath;
+	private JButton m_bttnFetchRouters;
+	private JLabel m_labelAvailableRouters;
+	private JCheckBox m_cbPreCreateRoutes;
+	private JLabel m_lblMaxPathLen, m_lblMinPathLen, m_lblPathSwitchTime;
+	private JScrollPane m_scrollPane;
+	private JPanel m_panelSlider;
+	private TitledBorder m_border;
+	private long m_lastUpdate;
+	private DateFormat ms_dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM,
 					DateFormat.SHORT);
 	private class MyJTable extends JTable
 		{
@@ -99,6 +113,59 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		panelRoot.setLayout(l);
 		c.gridwidth = 5;
 		c.fill = GridBagConstraints.BOTH;
+
+		c.gridx = 0;
+		c.gridy = 1;
+		m_cbxActive = new JCheckBox(JAPMessages.getString(MSG_ACTIVATE), true);
+		m_cbxActive.addChangeListener(new ChangeListener()
+		{
+			public void stateChanged(ChangeEvent a_event)
+			{
+				m_labelAvailableRouters.setEnabled(m_cbxActive.isSelected());
+				m_tableRouters.setEnabled(m_cbxActive.isSelected());
+				m_bttnFetchRouters.setEnabled(m_cbxActive.isSelected());
+				m_sliderMinPathLen.setEnabled(m_cbxActive.isSelected());
+				m_sliderMaxPathLen.setEnabled(m_cbxActive.isSelected());
+				m_sliderConnectionsPerPath.setEnabled(m_cbxActive.isSelected());
+				m_cbPreCreateRoutes.setEnabled(m_cbxActive.isSelected());
+				m_lblMinPathLen.setEnabled(m_cbxActive.isSelected());
+				m_lblMaxPathLen.setEnabled(m_cbxActive.isSelected());
+				m_scrollPane.setEnabled(m_cbxActive.isSelected());
+				m_lblPathSwitchTime.setEnabled(m_cbxActive.isSelected());
+				m_border = new TitledBorder(m_border.getTitle());
+				if (m_cbxActive.isSelected())
+				{
+					m_bttnFetchRouters.setDisabledIcon(GUIUtils.loadImageIcon(JAPConstants.
+						IMAGE_RELOAD_DISABLED, true, false));
+				}
+				else
+				{
+					m_border.setTitleColor(Color.gray);
+					m_bttnFetchRouters.setDisabledIcon(
+									   GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true, false));
+				}
+				m_panelSlider.setBorder(m_border);
+
+				Dictionary d;
+				d = m_sliderMaxPathLen.getLabelTable();
+				for (int i = JAPConstants.TOR_MIN_ROUTE_LEN; i <= JAPConstants.TOR_MAX_ROUTE_LEN; i++)
+				{
+					( (JLabel) d.get(new Integer(i))).setEnabled(m_sliderMaxPathLen.isEnabled());
+				}
+				d = m_sliderMinPathLen.getLabelTable();
+				for (int i = JAPConstants.TOR_MIN_ROUTE_LEN; i <= JAPConstants.TOR_MAX_ROUTE_LEN; i++)
+				{
+					( (JLabel) d.get(new Integer(i))).setEnabled(m_sliderMinPathLen.isEnabled());
+				}
+				d = m_sliderConnectionsPerPath.getLabelTable();
+				for (int i = MIN_CON_PER_PATH; i <= MAX_CON_PER_PATH; i++)
+				{
+					( (JLabel) d.get(new Integer(i))).setEnabled(m_sliderConnectionsPerPath.isEnabled());
+				}
+			}
+		});
+		panelRoot.add(m_cbxActive, c);
+
 		c.weightx = 1;
 		c.weighty = 1;
 		c.gridx = 0;
@@ -124,18 +191,18 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		m_tableRouters.setColumnSelectionAllowed(false);
 		m_tableRouters.setRowSelectionAllowed(true);
 		m_tableRouters.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		JScrollPane s = new JScrollPane(m_tableRouters);
-		s.setAutoscrolls(true);
+		m_scrollPane = new JScrollPane(m_tableRouters);
+		m_scrollPane.setAutoscrolls(true);
 		c2.fill = GridBagConstraints.BOTH;
 		c2.gridy = 1;
 		c2.weightx = 1;
 		c2.weighty = 1;
 		c2.gridwidth = 2;
-		p.add(s, c2);
+		p.add(m_scrollPane, c2);
 		m_bttnFetchRouters = new JButton(JAPMessages.getString("torBttnFetchRouters"));
-		m_bttnFetchRouters.setIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD, true));
-		m_bttnFetchRouters.setDisabledIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true));
-		m_bttnFetchRouters.setPressedIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true));
+		m_bttnFetchRouters.setIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD, true, false));
+		m_bttnFetchRouters.setDisabledIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true, false));
+		m_bttnFetchRouters.setPressedIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true, false));
 
 		m_bttnFetchRouters.setActionCommand("fetchRouters");
 		m_bttnFetchRouters.addActionListener(this);
@@ -154,7 +221,8 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		c3.anchor = GridBagConstraints.NORTHWEST;
 		c3.insets = new Insets(2, 5, 2, 5);
 		c3.fill = GridBagConstraints.NONE;
-		p.add(new JLabel(JAPMessages.getString("torPrefMinPathLen")), c3);
+		m_lblMinPathLen = new JLabel(JAPMessages.getString("torPrefMinPathLen"));
+		p.add(m_lblMinPathLen, c3);
 		m_sliderMinPathLen = new JSlider();
 		m_sliderMinPathLen.setPaintLabels(true);
 		m_sliderMinPathLen.setPaintTicks(true);
@@ -178,7 +246,8 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		c3.gridx = 0;
 		c3.gridy = 1;
 		c3.fill = GridBagConstraints.NONE;
-		p.add(new JLabel(JAPMessages.getString("torPrefMaxPathLen")), c3);
+		m_lblMaxPathLen = new JLabel(JAPMessages.getString("torPrefMaxPathLen"));
+		p.add(m_lblMaxPathLen, c3);
 		m_sliderMaxPathLen = new JSlider();
 		m_sliderMaxPathLen.setMinimum(JAPConstants.TOR_MIN_ROUTE_LEN);
 		m_sliderMaxPathLen.setMaximum(JAPConstants.TOR_MAX_ROUTE_LEN);
@@ -203,7 +272,8 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		c3.gridx = 0;
 		c3.gridy = 2;
 		c3.fill = GridBagConstraints.NONE;
-		p.add(new JLabel(JAPMessages.getString("torPrefPathSwitchTime")), c3);
+		m_lblPathSwitchTime = new JLabel(JAPMessages.getString("torPrefPathSwitchTime"));
+		p.add(m_lblPathSwitchTime, c3);
 		m_sliderConnectionsPerPath = new JSlider();
 		Hashtable sliderLabels = new Hashtable();
 		sliderLabels.put(new Integer(1), new JLabel("10"));
@@ -228,8 +298,10 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		c3.gridx = 0;
 		c3.gridwidth = 2;
 		p.add(m_cbPreCreateRoutes, c3);
+		m_border = new TitledBorder(JAPMessages.getString("torBorderPreferences"));
+		p.setBorder(m_border);
+		m_panelSlider = p;
 
-		p.setBorder(new TitledBorder(JAPMessages.getString("torBorderPreferences")));
 		c.gridy = 3;
 		c.weighty = 0;
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -263,6 +335,7 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 
 	protected boolean onOkPressed()
 	{
+		JAPModel.getInstance().setTorActivated(m_cbxActive.isSelected());
 		int i = m_sliderConnectionsPerPath.getValue();
 		int[] ar =
 			{
@@ -315,6 +388,7 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		m_sliderMaxPathLen.setValue(JAPModel.getTorMaxRouteLen());
 		m_sliderMinPathLen.setValue(JAPModel.getTorMinRouteLen());
 		m_cbPreCreateRoutes.setSelected(JAPModel.isPreCreateAnonRoutesEnabled());
+		m_cbxActive.setSelected(JAPModel.getInstance().isTorActivated());
 	}
 
 	private void fetchRoutersAsync(final boolean bShowError)
@@ -371,5 +445,6 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		m_sliderMaxPathLen.setValue(JAPConstants.DEFAULT_TOR_MAX_ROUTE_LEN);
 		m_sliderMinPathLen.setValue(JAPConstants.DEFAULT_TOR_MIN_ROUTE_LEN);
 		m_sliderConnectionsPerPath.setValue(JAPConstants.DEFAULT_TOR_MAX_CONNECTIONS_PER_ROUTE);
+		m_cbxActive.setSelected(!JAPConstants.m_bReleasedVersion);
 	}
 }
