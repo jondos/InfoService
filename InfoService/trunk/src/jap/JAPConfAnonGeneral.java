@@ -57,7 +57,7 @@ import java.util.Dictionary;
 
 final class JAPConfAnonGeneral extends AbstractJAPConfModule
 {
-	private static final String MSG_DENY_NON_ANONYMOUS_SURFING = JAPConfAnonGeneral.class.getName() +
+	public static final String MSG_DENY_NON_ANONYMOUS_SURFING = JAPConfAnonGeneral.class.getName() +
 		"_denyNonAnonymousSurfing";
 	private static final String MSG_AUTO_CHOOSE_CASCADES = JAPConfAnonGeneral.class.getName() +
 		"_autoChooseCascades";

@@ -27,6 +27,8 @@
  */
 package jap.pay;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -36,6 +38,7 @@ import java.util.Enumeration;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -49,8 +52,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeEvent;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -63,10 +64,14 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileFilter;
@@ -88,10 +93,12 @@ import anon.pay.xml.XMLPaymentOption;
 import anon.pay.xml.XMLPaymentOptions;
 import anon.pay.xml.XMLTransCert;
 import anon.util.ResourceLoader;
+import anon.util.SingleStringPasswordReader;
 import anon.util.XMLUtil;
+import anon.util.captcha.ICaptchaSender;
+import anon.util.captcha.IImageEncodedCaptcha;
 import gui.GUIUtils;
 import gui.JAPHelp;
-import gui.JAPHtmlMultiLineLabel;
 import gui.JAPMessages;
 import gui.dialog.CaptchaContentPane;
 import gui.dialog.DialogContentPane;
@@ -112,12 +119,6 @@ import jap.pay.wizardnew.PaymentInfoPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import javax.swing.UIManager;
-import javax.swing.JScrollPane;
-import java.awt.Cursor;
-import anon.util.captcha.ICaptchaSender;
-import anon.util.captcha.IImageEncodedCaptcha;
-import anon.util.SingleStringPasswordReader;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -126,7 +127,7 @@ import anon.util.SingleStringPasswordReader;
  * @version 1.0
  */
 public class AccountSettingsPanel extends AbstractJAPConfModule implements
-	ListSelectionListener, PropertyChangeListener
+	ListSelectionListener, PropertyChangeListener, ChangeListener
 {
 	protected static final String IMG_COINS_DISABLED = AccountSettingsPanel.class.getName() +
 		"_coins-disabled.gif";
@@ -289,6 +290,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private boolean m_bReady = true;
 	private boolean m_bDoNotCloseDialog = false;
 
+	/**The TabbedPane Component*/
+	private JTabbedPane m_tabPane;
+
 	public AccountSettingsPanel()
 	{
 		super(null);
@@ -320,17 +324,17 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		rootPanel.removeAll();
 
 		/* insert all components in the root panel */
-		JTabbedPane tabPane = new JTabbedPane();
+		m_tabPane = new JTabbedPane();
 		//tabPane.setFont(getFontSetting());
-		tabPane.insertTab(JAPMessages.getString("ngPseudonymAccounts"),
+		m_tabPane.insertTab(JAPMessages.getString("ngPseudonymAccounts"),
 						  null, createBasicSettingsTab(), null, 0);
-		tabPane.insertTab(JAPMessages.getString(
+		m_tabPane.insertTab(JAPMessages.getString(
 			"settingsInfoServiceConfigAdvancedSettingsTabTitle"), null, createAdvancedSettingsTab(), null, 1);
-
+		m_tabPane.addChangeListener(this);
 		GridBagLayout rootPanelLayout = new GridBagLayout();
 		rootPanel.setLayout(rootPanelLayout);
-		rootPanelLayout.setConstraints(tabPane, createTabbedRootPanelContraints());
-		rootPanel.add(tabPane);
+		rootPanelLayout.setConstraints(m_tabPane, createTabbedRootPanelContraints());
+		rootPanel.add(m_tabPane);
 	}
 
 	private JPanel createBasicSettingsTab()
@@ -2122,8 +2126,25 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	protected void onRootPanelShown()
 	{
 		//Register help context
-		JAPHelp.getInstance().getContextObj().setContext("payment");
+		this.setHelpContext();
 		updateAccountList();
+	}
+
+	/**
+	 * This panel has one or more tabs. Depending on which tab is active, another help context has to be set.
+	 * @return
+	 */
+	private void setHelpContext(){
+		int index = 0;
+		index = this.m_tabPane.getSelectedIndex();
+		String context = null;
+		switch (index){
+			case 0: context = "payment";
+					break;
+			case 1: context = "payment_extend";
+					break;
+		}
+		JAPHelp.getInstance().getContextObj().setContext(context);
 	}
 
 	/**
@@ -2272,5 +2293,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 			return l;
 		}
+	}
+
+	/**
+	 * This method will be called when another tab is chosen*/
+	public void stateChanged(ChangeEvent ce)
+	{
+		setHelpContext();
 	}
 }
