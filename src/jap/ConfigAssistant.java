@@ -28,19 +28,33 @@
 package jap;
 
 import java.awt.Color;
-import java.awt.Insets;
-import java.awt.event.*;
-import javax.swing.border.Border;
-import javax.swing.*;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-
-import gui.dialog.JAPDialog;
-import gui.dialog.*;
-import gui.JAPMessages;
-import gui.*;
-import logging.*;
 import java.awt.Cursor;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Component;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JRadioButton;
+import javax.swing.JTextPane;
+import javax.swing.border.Border;
+
+import gui.GUIUtils;
+import gui.JAPHelp;
+import gui.JAPMessages;
+import gui.JTextComponentToClipboardCopier;
+import gui.dialog.DialogContentPane;
+import gui.dialog.JAPDialog;
+import gui.dialog.SimpleWizardContentPane;
+import logging.LogType;
+import javax.swing.RootPaneContainer;
 
 /**
  * This is some kind of isntallation and configuration assistant that helps the unexperienced
@@ -97,6 +111,10 @@ public class ConfigAssistant extends JAPDialog
 		"_explainBadConnection";
 	private static final String MSG_EXPLAIN_NO_SERVICE_AVAILABLE = ConfigAssistant.class.getName() +
 		"_explainNoServiceAvailable";
+	private static final String MSG_ERROR_WARNING_IN_BROWSER = ConfigAssistant.class.getName() +
+		"_errorWarningInBrowser";
+	private static final String MSG_EXPLAIN_WARNING_IN_BROWSER = ConfigAssistant.class.getName() +
+		"_explainWarningInBrowser";
 
 
 	private static final String IMG_ARROW = "arrow46.gif";
@@ -105,16 +123,26 @@ public class ConfigAssistant extends JAPDialog
 
 	private JTextPane m_lblHostname, m_lblPort;
 	private JRadioButton m_radioNoWarning, m_radioNoWarningAndSurfing, m_radioSuccessWarning,
-		m_radioErrorWarningNoSurfing;
+		m_radioErrorWarningNoSurfing, m_radioWarningInBrowser;
 	private ButtonGroup m_groupWarning;
 	private JRadioButton m_radioNoConnection, m_radioConnectionSlow, m_noSurfing, m_ConnectionOK,
 		m_radioNoServiceAvailable;
 	private ButtonGroup m_groupAnon;
 
+	public ConfigAssistant(Component a_parentComponent)
+	{
+		super(a_parentComponent, JAPMessages.getString(MSG_TITLE), false);
+		init();
+	}
+
 	public ConfigAssistant(JAPDialog a_parentDialog)
 	{
 		super(a_parentDialog, JAPMessages.getString(MSG_TITLE), false);
+		init();
+	}
 
+	private void init()
+	{
 		final JAPDialog thisDialog = this;
 		JLabel tempLabel;
 		Insets insets = new Insets(0, 0, 0, 5);
@@ -188,7 +216,9 @@ public class ConfigAssistant extends JAPDialog
 
 
 		DialogContentPane paneBrowserTest = new SimpleWizardContentPane(
-			  this, JAPMessages.getString(MSG_BROWSER_TEST), layout,
+			  this, JAPMessages.getString(MSG_BROWSER_TEST,
+										  JAPMessages.getString(
+			JAPDialog.LinkedCheckBox.MSG_REMEMBER_ANSWER)), layout,
 			  new DialogContentPane.Options(paneBrowserConf))
 		{
 			public CheckError[] checkYesOK()
@@ -223,6 +253,9 @@ public class ConfigAssistant extends JAPDialog
 		m_radioErrorWarningNoSurfing = new JRadioButton(JAPMessages.getString(MSG_ERROR_WARNING_NO_SURFING));
 		constraints.gridy++;
 		contentPane.add(m_radioErrorWarningNoSurfing, constraints);
+		m_radioWarningInBrowser = new JRadioButton(JAPMessages.getString(MSG_ERROR_WARNING_IN_BROWSER));
+		constraints.gridy++;
+		contentPane.add(m_radioWarningInBrowser, constraints);
 		m_radioSuccessWarning = new JRadioButton(JAPMessages.getString(MSG_SUCCESS_WARNING));
 		m_radioSuccessWarning.setForeground(new Color(0, 160, 0));
 		constraints.gridy++;
@@ -231,6 +264,7 @@ public class ConfigAssistant extends JAPDialog
 		m_groupWarning.add(m_radioNoWarning);
 		m_groupWarning.add(m_radioNoWarningAndSurfing);
 		m_groupWarning.add(m_radioErrorWarningNoSurfing);
+		m_groupWarning.add(m_radioWarningInBrowser);
 		m_groupWarning.add(m_radioSuccessWarning);
 
 
@@ -254,11 +288,37 @@ public class ConfigAssistant extends JAPDialog
 			  DialogContentPane.ON_NO_SHOW_PREVIOUS_CONTENT);
 
 
+		DialogContentPane paneExplainWarningInBrowser = new SimpleWizardContentPane(
+			this, JAPMessages.getString(MSG_EXPLAIN_WARNING_IN_BROWSER, new Object[]
+										{
+										JAPMessages.getString("ngBttnAnonDetails"),
+										JAPMessages.getString("ngAnonGeneralPanelTitle"),
+										JAPMessages.getString(
+		  JAPConfAnonGeneral.MSG_DENY_NON_ANONYMOUS_SURFING)}), layout,
+			new DialogContentPane.Options(paneBrowserTestNoWarning))
+		{
+
+			public boolean isSkippedAsNextContentPane()
+			{
+				return m_groupWarning.getSelection() != null && !m_radioWarningInBrowser.isSelected();
+			}
+
+			public boolean isSkippedAsPreviousContentPane()
+			{
+				return true;
+			}
+		};
+		paneExplainWarningInBrowser.setDefaultButtonOperation(
+			DialogContentPane.ON_YESOK_SHOW_PREVIOUS_CONTENT |
+			DialogContentPane.ON_CANCEL_DISPOSE_DIALOG |
+			DialogContentPane.ON_NO_SHOW_PREVIOUS_CONTENT);
+
+
 		DialogContentPane paneExplainNoDirectConnection = new SimpleWizardContentPane(
 			  this, JAPMessages.getString(MSG_EXPLAIN_NO_DIRECT_CONNECTION, new Object[]{
 										  JAPMessages.getString("confButton"),
 										  JAPMessages.getString("confProxyBorder")}), layout,
-			  new DialogContentPane.Options(paneBrowserTestNoWarning))
+			  new DialogContentPane.Options(paneExplainWarningInBrowser))
 		{
 
 			public boolean isSkippedAsNextContentPane()

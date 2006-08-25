@@ -1905,7 +1905,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 		m_bAssistantClicked = true;
 		while (m_dlgConfig == null);
-		final JAPDialog configAssistant = new ConfigAssistant(m_dlgConfig);
+		//final JAPDialog configAssistant = new ConfigAssistant(m_dlgConfig);
+		final JAPDialog configAssistant = new ConfigAssistant(this);
 		final ComponentAdapter componentAdapter =
 			new ComponentAdapter()
 		{

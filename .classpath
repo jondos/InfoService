@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="test"/>
-	<classpathentry including="JAP.java|JAPMacintosh.java|JAPMessages.properties|JAPMessages_de.properties|JAPMessages_en.properties|JAPMessages_fr.properties|anon/|forward/|gui/|jap/|jarify/|logging/|proxy/|update/" excluding="infoservice/|jpi/" kind="src" path="src"/>
+	<classpathentry including="JAP.java|JAPMacintosh.java|JAPMessages.properties|JAPMessages_de.properties|JAPMessages_en.properties|JAPMessages_fr.properties|anon/|forward/|gui/|jap/|jarify/|logging/|proxy/|update/platform/" excluding="infoservice/|jpi/" kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/HTTP"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/BouncycastleForJAP"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/XML-RPC"/>
