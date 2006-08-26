@@ -805,10 +805,12 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 						}
 						m_hostLabel.setText(hosts);
 						m_portLabel.setText(ports);
-						m_hostLabel.getRootPane().invalidate();
-						m_hostLabel.getRootPane().revalidate();
-						m_hostLabel.getRootPane().repaint();
-
+						if (m_hostLabel.getRootPane() != null)
+						{
+							m_hostLabel.getRootPane().invalidate();
+							m_hostLabel.getRootPane().revalidate();
+							m_hostLabel.getRootPane().repaint();
+						}
 						if (selectedInfoService.isUserDefined())
 						{
 							addInfoServiceHostField.setText(hosts);
@@ -1402,6 +1404,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		advancedPanelConstraints.gridy++;
 		advancedPanel.add(m_lblExplanation, advancedPanelConstraints);
 
+		onUpdateValues();
 
 		return advancedPanel;
 	}

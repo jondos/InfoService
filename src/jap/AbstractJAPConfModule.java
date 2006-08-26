@@ -47,12 +47,6 @@ public abstract class AbstractJAPConfModule
 	private JPanel m_rootPanel;
 
 	/**
-	 * Stores the font setting for this configuration tab. The constructor will set it to the
-	 * value returned by JAPController.getDialogFont().
-	 */
-	private Font m_fontSetting;
-
-	/**
 	 * The savepoint for this module. It is needed for restoring the old configuration, if the user
 	 * presses "Cancel" or the default configuration, if the user presses "Reset to defaults".
 	 */
@@ -116,7 +110,6 @@ public abstract class AbstractJAPConfModule
 	{
 		m_rootPanel = new JPanel();
 		m_rootPanel.addAncestorListener(new RootPanelAncestorListener());
-		m_fontSetting = JAPController.getDialogFont();
 		m_savePoint = a_moduleSavePoint;
 		recreateRootPanel();
 	}
@@ -163,18 +156,6 @@ public abstract class AbstractJAPConfModule
 	public final JPanel getRootPanel()
 	{
 		return m_rootPanel;
-	}
-
-	/**
-	 * This will set the font setting for this configuration module. After setting the font, the
-	 * recreateRootPanel() method is called by this method.
-	 *
-	 * @param a_newFont The new font for this configuration module.
-	 */
-	public final void setFontSetting(Font a_newFont)
-	{
-		m_fontSetting = a_newFont;
-		recreateRootPanel();
 	}
 
 	/**
