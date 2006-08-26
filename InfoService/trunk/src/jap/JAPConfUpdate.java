@@ -38,6 +38,8 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ChangeEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import javax.swing.JButton;
@@ -295,6 +297,8 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		m_cbxRemindJavaUpdate = new JCheckBox(JAPMessages.getString(MSG_REMIND_JAVA_UPDATE));
 		panelRoot.add(m_cbxRemindJavaUpdate, cFrame);
 
+
+
 		cFrame.gridy++;
 		cFrame.anchor = GridBagConstraints.CENTER;
 		cFrame.fill = GridBagConstraints.BOTH;
@@ -310,6 +314,8 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		cFrame.anchor = GridBagConstraints.SOUTH;
 		gridBagFrame.setConstraints(buttonPanel, cFrame);
 		panelRoot.add(buttonPanel);
+
+		onUpdateValues();
 	}
 
 	protected boolean onOkPressed()

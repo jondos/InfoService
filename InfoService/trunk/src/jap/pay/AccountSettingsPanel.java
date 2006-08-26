@@ -517,11 +517,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		panelAdvanced.add(m_cbxShowPaymentConfirmation, advancedPanelConstraints);
 
 		m_cbxAllowNonAnonymousConnection = new JCheckBox(JAPMessages.getString(MSG_ALLOW_DIRECT_CONNECTION));
+
 		advancedPanelConstraints.gridy = 1;
 		panelAdvanced.add(m_cbxAllowNonAnonymousConnection, advancedPanelConstraints);
 
 		advancedPanelConstraints.gridy = 2;
 		m_cbxShowAIErrors = new JCheckBox(JAPMessages.getString(MSG_SHOW_AI_ERRORS));
+
 		if (JAPConstants.m_bReleasedVersion)
 		{
 			// this does not work in release version, as it is only meant for debugging purposes
@@ -532,7 +534,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		advancedPanelConstraints.gridy = 3;
 		advancedPanelConstraints.weighty = 1.0;
 		m_cbxBalanceAutoUpdateEnabled = new JCheckBox(JAPMessages.getString(MSG_BALANCE_AUTO_UPDATE_ENABLED));
+
 		panelAdvanced.add(m_cbxBalanceAutoUpdateEnabled, advancedPanelConstraints);
+
+		onUpdateValues();
 
 		return panelAdvanced;
 	}
