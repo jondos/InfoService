@@ -1396,7 +1396,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						m_currentMixCascade = new AutoSwitchedMixCascadeContainer().getNextMixCascade();
 					}
 				}
-				/** make the default cascade known (important for first JAP start) */
+				/** make the default cascade known (so that it is not marked as new on first JAP start) */
 				Database.getInstance(MixCascade.class).update(m_currentMixCascade);
 				Database.getInstance(CascadeIDEntry.class).update(
 								new CascadeIDEntry(m_currentMixCascade));
