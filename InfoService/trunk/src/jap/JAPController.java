@@ -74,7 +74,6 @@ import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
 import anon.infoservice.MixInfo;
 import anon.infoservice.ProxyInterface;
-import anon.infoservice.SimpleMixCascadeContainer;
 import anon.mixminion.MixminionServiceDescription;
 import anon.pay.BI;
 import anon.pay.IAIEventListener;
@@ -299,10 +298,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 				new MixCascade(JAPConstants.DEFAULT_ANON_NAME,
 							   JAPConstants.DEFAULT_ANON_MIX_IDs[0], mixIDs, listeners);
 			m_currentMixCascade.setUserDefined(false, null);
-			/** make this cascade known */
-			Database.getInstance(MixCascade.class).update(m_currentMixCascade);
-			Database.getInstance(CascadeIDEntry.class).update(
-						 new CascadeIDEntry(m_currentMixCascade));
 		}
 		catch (Exception e)
 		{
@@ -1359,7 +1354,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				catch (Exception ex)
 				{
 					LogHolder.log(LogLevel.INFO, LogType.MISC,
-								  "JAPController: loadConfigFile: Error loading Mixminion configuration.");
+								  "Error loading Mixminion configuration.");
 				}
 
 				/* read the settings of the JAP forwarding system, if it is enabled */
@@ -1401,6 +1396,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 						m_currentMixCascade = new AutoSwitchedMixCascadeContainer().getNextMixCascade();
 					}
 				}
+				/** make the default cascade known (important for first JAP start) */
+				Database.getInstance(MixCascade.class).update(m_currentMixCascade);
+				Database.getInstance(CascadeIDEntry.class).update(
+								new CascadeIDEntry(m_currentMixCascade));
 			}
 			catch (Exception e)
 			{
