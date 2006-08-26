@@ -180,7 +180,8 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	 * @param a_passwordReader  a password reader for encrypted account files; message: AccountNumber
 	 * @return boolean succeeded?
 	 */
-	public static boolean init(Element elemAccountsFile, IMiscPasswordReader a_passwordReader)
+	public static boolean init(Element elemAccountsFile, IMiscPasswordReader a_passwordReader,
+							   boolean a_bForceAIErrors)
 	{
 		if (ms_AccountsFile == null)
 		{
@@ -189,8 +190,15 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		//ms_AccountsFile.m_theBI = theBI;
 		if (elemAccountsFile != null && elemAccountsFile.getNodeName().equals(XML_ELEMENT_NAME))
 		{
-			ms_AccountsFile.m_bIgnoreAIAccountErrorMessages =
-				XMLUtil.parseAttribute(elemAccountsFile, XML_ATTR_IGNORE_AI_ERRORS, false);
+			if (a_bForceAIErrors)
+			{
+				ms_AccountsFile.m_bIgnoreAIAccountErrorMessages = false;
+			}
+			else
+			{
+				ms_AccountsFile.m_bIgnoreAIAccountErrorMessages =
+					XMLUtil.parseAttribute(elemAccountsFile, XML_ATTR_IGNORE_AI_ERRORS, false);
+			}
 			ms_AccountsFile.m_bEnableBalanceAutoUpdate =
 				XMLUtil.parseAttribute(elemAccountsFile, XML_ATTR_ENABLE_BALANCE_AUTO_UPDATE, true);
 			Element elemActiveAccount = (Element) XMLUtil.getFirstChildByName(elemAccountsFile,

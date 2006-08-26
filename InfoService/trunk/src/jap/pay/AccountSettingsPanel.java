@@ -522,6 +522,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		advancedPanelConstraints.gridy = 2;
 		m_cbxShowAIErrors = new JCheckBox(JAPMessages.getString(MSG_SHOW_AI_ERRORS));
+		if (JAPConstants.m_bReleasedVersion)
+		{
+			// this does not work in release version, as it is only meant for debugging purposes
+			m_cbxShowAIErrors.setVisible(false);
+		}
 		panelAdvanced.add(m_cbxShowAIErrors, advancedPanelConstraints);
 
 		advancedPanelConstraints.gridy = 3;
