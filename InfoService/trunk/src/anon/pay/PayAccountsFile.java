@@ -35,7 +35,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import anon.crypto.AsymmetricCryptoKeyPair;
 import anon.crypto.JAPCertificate;
-import anon.infoservice.ImmutableProxyInterface;
+import anon.infoservice.IMutableProxyInterface;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.ListenerInterface;
 import anon.pay.xml.XMLAccountCertificate;
@@ -49,8 +49,6 @@ import anon.util.captcha.IImageEncodedCaptcha;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.infoservice.IMutableProxyInterface;
-import anon.infoservice.PaymentInstanceDBEntry;
 
 /**
  * This class encapsulates a collection of accounts. One of the accounts in the collection
