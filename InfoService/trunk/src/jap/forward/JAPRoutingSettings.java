@@ -41,6 +41,7 @@ import anon.infoservice.MixCascade;
 import anon.infoservice.ProxyInterface;
 import anon.shared.ProxyConnection;
 import anon.util.XMLUtil;
+import anon.util.IXMLEncodable;
 import forward.ForwardUtils;
 import forward.client.ClientForwardException;
 import forward.client.DefaultClientProtocolHandler;
@@ -61,7 +62,7 @@ import anon.proxy.AnonProxy;
  * are changed. They will get an instance of JapRoutingMessage with the detailed message of the
  * notification.
  */
-final public class JAPRoutingSettings extends Observable
+final public class JAPRoutingSettings extends Observable implements IXMLEncodable
 {
 
 	/**
@@ -333,8 +334,20 @@ final public class JAPRoutingSettings extends Observable
 					ForwardServerManager.getInstance().startForwarding();
 					ForwardServerManager.getInstance().setNetBandwidth(getBandwidth());
 					ForwardServerManager.getInstance().setMaximumNumberOfConnections(getAllowedConnections());
-					m_currentServerManagerId = ForwardServerManager.getInstance().addListenSocket(
-						getServerPort());
+					/*
+					m_currentServerManagerId = null;
+					if (getServerPort() != 443)
+					{
+						m_currentServerManagerId = ForwardServerManager.getInstance().addListenSocket(443);
+					}
+					if (m_currentServerManagerId == null)
+					{
+						LogHolder.log(LogLevel.ERR, LogType.NET,
+									  "Could not start forwarding server on port 443! Trying port " +
+							getServerPort() + "...");*/
+						m_currentServerManagerId = ForwardServerManager.getInstance().addListenSocket(
+							getServerPort());
+					//}
 					if (m_currentServerManagerId == null)
 					{
 						/* error while binding the socket -> shutdown the server */
@@ -1139,7 +1152,7 @@ final public class JAPRoutingSettings extends Observable
 	 *
 	 * @return An XML node (JapForwardingSettings) with all routing related settings.
 	 */
-	public Element getSettingsAsXml(Document a_doc)
+	public Element toXmlElement(Document a_doc)
 	{
 		Element japForwardingSettingsNode = a_doc.createElement("JapForwardingSettings");
 		Element forwardingServerNode = a_doc.createElement("ForwardingServer");

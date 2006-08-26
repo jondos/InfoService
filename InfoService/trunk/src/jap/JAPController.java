@@ -1897,7 +1897,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			elemMixminion.appendChild(elemMMMail);
 			e.appendChild(elemMixminion);
 
-			e.appendChild(JAPModel.getInstance().getRoutingSettings().getSettingsAsXml(doc));
+			e.appendChild(JAPModel.getInstance().getRoutingSettings().toXmlElement(doc));
 
 			XMLUtil.formatHumanReadable(doc);
 			return XMLUtil.toString(doc);
