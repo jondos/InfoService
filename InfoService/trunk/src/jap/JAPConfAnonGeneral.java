@@ -335,8 +335,8 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	public void onResetToDefaultsPressed()
 	{
 		m_cbDenyNonAnonymousSurfing.setSelected(false);
-		m_cbDummyTraffic.setSelected(false);
-		m_sliderDummyTrafficIntervall.setEnabled(false);
+		m_cbDummyTraffic.setSelected(true);
+		m_sliderDummyTrafficIntervall.setEnabled(true);
 		m_cbAutoConnect.setSelected(true);
 		m_cbAutoReConnect.setSelected(true);
 		m_cbAutoChooseCascades.setSelected(true);

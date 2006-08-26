@@ -809,7 +809,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					root,JAPConstants.CONFIG_PROXY_AUTHORIZATION, false));
 
 				setDummyTraffic(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_DUMMY_TRAFFIC_INTERVALL,
-					-1));
+					30000));
 				JAPModel.getInstance().setAutoConnect(
 								XMLUtil.parseAttribute(root, JAPConstants.CONFIG_AUTO_CONNECT, true));
 				m_Model.setAutoReConnect(
