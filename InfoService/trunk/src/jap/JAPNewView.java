@@ -111,10 +111,11 @@ import anon.infoservice.JavaVersionDBEntry;
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver, Observer, PropertyChangeListener
 {
+	public static final String MSG_UPDATE = JAPNewView.class.getName() + "_update";
+
 	private static final String MSG_SERVICE_NAME = JAPNewView.class.getName() + "_ngAnonymisierungsdienst";
 	private static final String MSG_ERROR_DISCONNECTED = JAPNewView.class.getName() + "_errorDisconnected";
 	private static final String MSG_ERROR_PROXY = JAPNewView.class.getName() + "_errorProxy";
-	private static final String MSG_UPDATE = JAPNewView.class.getName() + "_update";
 	private static final String MSG_TITLE_OLD_JAVA = JAPNewView.class.getName() + "_titleOldJava";
 	private static final String MSG_OLD_JAVA = JAPNewView.class.getName() + "_oldJava";
 	private static final String MSG_OLD_JAVA_HINT = JAPNewView.class.getName() + "_oldJavaHint";

@@ -37,6 +37,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.net.URL;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
@@ -53,8 +54,9 @@ import gui.JTextComponentToClipboardCopier;
 import gui.dialog.DialogContentPane;
 import gui.dialog.JAPDialog;
 import gui.dialog.SimpleWizardContentPane;
+import platform.AbstractOS;
 import logging.LogType;
-import javax.swing.RootPaneContainer;
+import java.net.*;
 
 /**
  * This is some kind of isntallation and configuration assistant that helps the unexperienced
@@ -72,6 +74,7 @@ public class ConfigAssistant extends JAPDialog
 
 	private static final String MSG_WELCOME = ConfigAssistant.class.getName() + "_welcome";
 	private static final String MSG_HELP = ConfigAssistant.class.getName() + "_help";
+	private static final String MSG_ANON_HP = ConfigAssistant.class.getName() + "_anonHP";
 	private static final String MSG_TITLE = ConfigAssistant.class.getName() + "_title";
 	private static final String MSG_FINISHED = ConfigAssistant.class.getName() + "_finished";
 	private static final String MSG_BROWSER_CONF = ConfigAssistant.class.getName() + "_browserConf";
@@ -147,6 +150,7 @@ public class ConfigAssistant extends JAPDialog
 		JLabel tempLabel;
 		Insets insets = new Insets(0, 0, 0, 5);
 		ImageIcon wizardIcon = GUIUtils.loadImageIcon("install.gif");
+		GridBagConstraints constraints;
 
 		DialogContentPane.Layout layout = new DialogContentPane.Layout(wizardIcon);
 		JLabel lblImage;
@@ -158,13 +162,19 @@ public class ConfigAssistant extends JAPDialog
 				  this, JAPMessages.getString(MSG_WELCOME), layout, null);
 
 		DialogContentPane paneHelp = new SimpleWizardContentPane(
-				  this,
-				  JAPMessages.getString(MSG_HELP,
-										"<a href=\"http://www.anon-online.de\">http://www.anon-online.de</a>"),
-				  layout, new DialogContentPane.Options(paneWelcome));
+			  this, JAPMessages.getString(MSG_HELP),
+			  layout, new DialogContentPane.Options(paneWelcome));
+		paneHelp.getContentPane().setLayout(new GridBagLayout());
+		constraints = new GridBagConstraints();
+		constraints.gridx = 0;
+		constraints.gridy = 0;
+		lblImage = new JLabel(JAPMessages.getString(MSG_ANON_HP));
+		registerLink(lblImage, JAPMessages.getString(MSG_ANON_HP), false);
+		paneHelp.getContentPane().add(lblImage, constraints);
 		lblImage = new JLabel(GUIUtils.loadImageIcon(IMG_HELP_BUTTON));
 		lblImage.setBorder(border);
-		paneHelp.getContentPane().add(lblImage);
+		constraints.gridy++;
+		paneHelp.getContentPane().add(lblImage, constraints);
 
 
 		DialogContentPane paneBrowserConf = new SimpleWizardContentPane(
@@ -178,7 +188,7 @@ public class ConfigAssistant extends JAPDialog
 		};
 		JComponent contentPane = paneBrowserConf.getContentPane();
 		contentPane.setLayout(new GridBagLayout());
-		GridBagConstraints constraints = new GridBagConstraints();
+		constraints = new GridBagConstraints();
 		constraints.gridx = 1;
 		constraints.gridy = 0;
 		constraints.anchor = GridBagConstraints.WEST;
@@ -533,7 +543,7 @@ addBrowserInstallationInfo(contentPane, constraints,
 			tempLabel = new JLabel(a_browserName);
 		}
 
-		registerHelpContext(tempLabel, a_helpContext);
+		registerLink(tempLabel, a_helpContext, true);
 		a_component.add(tempLabel, a_constraints);
 		tempLabel = new JLabel();
 		a_constraints.weightx = 1.0;
@@ -543,17 +553,35 @@ addBrowserInstallationInfo(contentPane, constraints,
 
 	}
 
-	private void registerHelpContext(JLabel a_label, final String a_context)
+	private void registerLink(JLabel a_label, final String a_context, final boolean a_bHelpContext)
 	{
 		a_label.setForeground(Color.blue);
-		a_label.setToolTipText(JAPMessages.getString(MSG_CLICK_TO_VIEW_HELP));
+		if (a_bHelpContext)
+		{
+			a_label.setToolTipText(JAPMessages.getString(MSG_CLICK_TO_VIEW_HELP));
+		}
 		a_label.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		a_label.addMouseListener(new MouseAdapter()
 		{
 			public void mouseClicked(MouseEvent e)
 			{
-				JAPHelp.getInstance().getContextObj().setContext(a_context);
-				JAPHelp.getInstance().setVisible(true);
+				if (a_bHelpContext)
+				{
+					JAPHelp.getInstance().getContextObj().setContext(a_context);
+					JAPHelp.getInstance().setVisible(true);
+				}
+				else
+				{
+					// interpret as URL
+					try
+					{
+						AbstractOS.getInstance().openURL(new URL(a_context));
+					}
+					catch (MalformedURLException ex)
+					{
+						// ignore
+					}
+				}
 			}
 		});
 	}

@@ -3157,7 +3157,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 
 
-					JAPDialog.showWarningDialog(getView(), JAPMessages.getString("youShouldUpdate"),
+					JAPDialog.showWarningDialog(getView(), JAPMessages.getString("youShouldUpdate",
+												JAPMessages.getString(JAPNewView.MSG_UPDATE)),
 												JAPUtil.createDialogBrowserLink(JAPMessages.getString("infoURL")));
 					//notifyJAPObservers();
 					return -1;
