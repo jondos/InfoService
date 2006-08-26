@@ -1291,7 +1291,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 								}
 							};
 						}
-						PayAccountsFile.init(elemAccounts, passwordReader);
+						PayAccountsFile.init(elemAccounts, passwordReader, JAPConstants.m_bReleasedVersion);
 						if (tempDialog != null)
 						{
 							tempDialog.dispose();
