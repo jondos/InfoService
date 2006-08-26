@@ -45,7 +45,7 @@ public class ForwardServerManager {
    * no problem.
    */
   public static final int CLIENT_CONNECTION_TIMEOUT = 200 * 1000;
-  
+
   /**
    * This is the interval, we need dummy traffic from the client (in milliseconds). This value
    * should be a little bit smaller than the CLIENT_CONNECTION_TIMEOUT, so if the client
@@ -53,19 +53,19 @@ public class ForwardServerManager {
    * no problem with timeouts. The default value is dummy traffic every 180 seconds.
    */
   public static final int CLIENT_DUMMYTRAFFIC_INTERVAL = 180 * 1000;
-  
+
   /**
    * Stores the instance of ForwardServerManager (Singleton).
    */
   private static ForwardServerManager ms_fsmInstance = null;
- 
- 
+
+
   /**
-   * Stores the dummy traffic interval (in ms), if we need dummy traffic for holding a connection 
+   * Stores the dummy traffic interval (in ms), if we need dummy traffic for holding a connection
    * while phases of inactivity. If this value is -1, no dummy traffic is needed.
    */
   private int m_dummyTrafficInterval;
-  
+
   /**
    * Stores the database with with the MixCascades, where connections can be forwarded to.
    */
@@ -75,8 +75,8 @@ public class ForwardServerManager {
    * Stores the associated ForwardScheduler. If this value is null, forwarding is disabled.
    */
   private ForwardScheduler m_forwardScheduler;
-  
-  
+
+
   /**
    * Returns the instance of ForwardServerManager (Singleton). If there is no instance,
    * there is a new one created.
@@ -90,7 +90,7 @@ public class ForwardServerManager {
     return ms_fsmInstance;
   }
 
-  
+
   /**
    * This creates a new instance of ForwardManager. Forwarding is disabled (m_forwardScheduler is
    * set to null).
@@ -100,8 +100,8 @@ public class ForwardServerManager {
     m_allowedCascadesDatabase = new ForwardCascadeDatabase();
     m_forwardScheduler = null;
   }
-  
-  
+
+
   /**
    * This sets the dummy traffic interval. If a connection has to take a proxy server, that
    * proxy maybe closes the connection after some time of inactivity. So there is the need of
@@ -126,7 +126,7 @@ public class ForwardServerManager {
       m_dummyTrafficInterval = CLIENT_DUMMYTRAFFIC_INTERVAL;
     }
   }
-  
+
   /**
    * Returns the dummy traffic interval. Sometimes dummy traffic is needed for holding a
    * connection while phases of inactivity.
@@ -136,7 +136,7 @@ public class ForwardServerManager {
   public int getDummyTrafficInterval() {
     return m_dummyTrafficInterval;
   }
-  
+
   /**
    * Returns the database with the MixCascades, where connections are allowed to be forwarded to.
    *
@@ -154,7 +154,7 @@ public class ForwardServerManager {
    *
    * @a_maximumNumberOfConnections The new maximum number of simultaneously forwarded client
    *                               connections.
-   */   
+   */
   public void setMaximumNumberOfConnections(int a_maxNumberOfConnections) {
     synchronized (this) {
       /* only one operation on the scheduler at one time */
@@ -163,7 +163,7 @@ public class ForwardServerManager {
       }
     }
   }
-  
+
   /**
    * Changes the maximum bandwidth (net bandwidth, without TCP/IP headers...) which can be used
    * by all client connections together. If forwarding is not enabled while the call of this
@@ -180,7 +180,7 @@ public class ForwardServerManager {
       }
     }
   }
-  
+
   /**
    * This opens a listen socket at the specified portnumber. Clients can connect to this socket
    * and the associated ForwardScheduler will manage that forwarded connections. It is possible
@@ -204,10 +204,10 @@ public class ForwardServerManager {
           m_forwardScheduler.addServerManager(serverSocketManager);
           /* ServerSocketManager established successful */
           serverManagerId = serverSocketManager.getId();
-          LogHolder.log(LogLevel.DEBUG, LogType.NET, "ForwardServerManager: addListenSocket: Establishing ServerManager with ID '" + serverManagerId.toString() + "' was successful.");
+          LogHolder.log(LogLevel.DEBUG, LogType.NET, "Establishing ServerManager with ID '" + serverManagerId.toString() + "' was successful.");
         }
-        catch (Exception e) {     
-          LogHolder.log(LogLevel.EXCEPTION, LogType.NET, "ForwardServerManager: addListenSocket: Error establishing socket at port " + Integer.toString(a_portNumber) + ". Reason: " + e.toString());
+        catch (Exception e) {
+          LogHolder.log(LogLevel.EXCEPTION, LogType.NET, "Error establishing socket at port " + Integer.toString(a_portNumber) + ". Reason: " + e.toString());
         }
       }
     }
@@ -234,9 +234,9 @@ public class ForwardServerManager {
     }
     else {
       LogHolder.log(LogLevel.EXCEPTION, LogType.NET, "ForwardServerManager: removeServerManager: ServerManager ID null is invalid.");
-    }  
+    }
   }
-  
+
   /**
    * Removes all ServerManagers from the list of associated ServerManagers of the internal
    * ForwardScheduler. The shutdown() method is called on every ServerManager. There can't be
@@ -250,8 +250,8 @@ public class ForwardServerManager {
         LogHolder.log(LogLevel.DEBUG, LogType.NET, "ForwardServerManager: removeAllServerManagers: All server managers removed.");
       }
     }
-  }  
-  
+  }
+
   /**
    * This method must be called, when forwarding shall come to an end. This method blocks until
    * all connections, sockets and threads are closed. If forwarding is not enabled while the call
@@ -260,13 +260,13 @@ public class ForwardServerManager {
   public void shutdownForwarding() {
     synchronized (this) {
       /* only one operation on the scheduler at one time */
-      if (m_forwardScheduler != null) {      
+      if (m_forwardScheduler != null) {
         m_forwardScheduler.shutdown();
         m_forwardScheduler = null;
       }
     }
   }
-  
+
   /**
    * This method starts the forwarding code. The initial bandwidth is set to 0 bytes/sec, the
    * maximum number of forwarded connections is set to 0 and there are no ServerManagers bound to
@@ -281,7 +281,7 @@ public class ForwardServerManager {
       }
     }
   }
-  
+
   /**
    * Returns the statistics instance of the scheduler. If no scheduler is running, null is
    * returned.
@@ -294,11 +294,11 @@ public class ForwardServerManager {
       /* only one operation on the scheduler at one time */
       if (m_forwardScheduler != null) {
         schedulerStatistics = m_forwardScheduler.getStatistics();
-      }   
+      }
     }
     return schedulerStatistics;
   }
-  
+
   /**
    * Returns the number of currently forwarded connections. If no scheduler is running, 0 is
    * returned.
@@ -311,9 +311,9 @@ public class ForwardServerManager {
       /* only one operation on the scheduler at one time */
       if (m_forwardScheduler != null) {
         forwardedConnections = m_forwardScheduler.getCurrentlyForwardedConnections();
-      }   
+      }
     }
     return forwardedConnections;
   }
-          
+
 }

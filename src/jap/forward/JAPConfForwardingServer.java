@@ -206,7 +206,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 					int port = Integer.parseInt(serverPortField.getText());
 					if (JAPModel.getInstance().getRoutingSettings().setServerPort(port) == false)
 					{
-						throw (new Exception("JAPConfForwardingServer: Error while changing server port."));
+						throw (new Exception("Error while changing server port."));
 					}
 				}
 				catch (Exception e)
