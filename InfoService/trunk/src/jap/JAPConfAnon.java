@@ -1445,11 +1445,15 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 							MixCascade cascade =
 								(MixCascade) ( (DatabaseMessage) a_message).getMessageData();
 							m_infoService.removeCascade(cascade);
-							Vector mixIDs = (cascade).getMixIds();
-							for (int i = 0; i < mixIDs.size(); i++)
+							// remove the corresponding mixes if the cascade is not the current cascade
+							if (!JAPController.getInstance().getCurrentMixCascade().equals(cascade))
 							{
-								Database.getInstance(MixInfo.class).remove(
-									(String) mixIDs.elementAt(i));
+								Vector mixIDs = cascade.getMixIds();
+								for (int i = 0; i < mixIDs.size(); i++)
+								{
+									Database.getInstance(MixInfo.class).remove(
+										(String) mixIDs.elementAt(i));
+								}
 							}
 						}
 						catch (Exception a_e)
