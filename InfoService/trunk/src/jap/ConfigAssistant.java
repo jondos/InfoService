@@ -196,10 +196,23 @@ public class ConfigAssistant extends JAPDialog
 
 		JTextComponentToClipboardCopier textCopier = new JTextComponentToClipboardCopier(false);
 
-		tempLabel = new JLabel("Hostname" + ":" + "Port");
+
+		addBrowserInstallationInfo(contentPane, constraints, BROWSER_IE, "browser_ie", false);
+
+		constraints.gridx = 5;
+		constraints.gridwidth = 1;
+		constraints.anchor = GridBagConstraints.EAST;
+		tempLabel = new JLabel("Proxy Hostname");
+		contentPane.add(tempLabel, constraints);
+		tempLabel = new JLabel(":");
+		constraints.gridx++;
+		contentPane.add(tempLabel, constraints);
+		tempLabel = new JLabel("Proxy Port");
+		constraints.gridx++;
 		contentPane.add(tempLabel, constraints);
 
-		constraints.gridx++;
+		constraints.gridx = 5;
+		constraints.gridy++;
 		m_lblHostname = GUIUtils.createSelectableAndResizeableLabel(contentPane);
 		m_lblHostname.setText("localhost");
 		textCopier.registerTextComponent(m_lblHostname);
@@ -216,7 +229,11 @@ public class ConfigAssistant extends JAPDialog
 		textCopier.registerTextComponent(m_lblPort);
 		m_lblPort.setBackground(Color.white);
 		contentPane.add(m_lblPort, constraints);
-		addBrowserInstallationInfo(contentPane, constraints, BROWSER_IE, "browser_ie", false);
+		constraints.gridy--;
+
+
+
+
 		addBrowserInstallationInfo(contentPane, constraints, BROWSER_FIREFOX, "browser_firefox", true);
 		addBrowserInstallationInfo(contentPane, constraints, BROWSER_OPERA, "browser_opera", false);
 		addBrowserInstallationInfo(contentPane, constraints, BROWSER_KONQUEROR, "browser_konqueror", false);
@@ -529,6 +546,7 @@ addBrowserInstallationInfo(contentPane, constraints,
 		a_constraints.gridx = 0;
 		a_constraints.gridy++;
 		a_constraints.gridwidth = 1;
+		a_constraints.anchor = GridBagConstraints.WEST;
 		tempLabel = new JLabel(GUIUtils.loadImageIcon(IMG_ARROW));
 		a_component.add(tempLabel, a_constraints);
 
