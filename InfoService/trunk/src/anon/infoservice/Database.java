@@ -477,13 +477,15 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 	 * is successful.
 	 *
 	 * @param a_dbNode The xml node that contains db entries.
+	 * @return number of updated entries
 	 */
-	public void loadFromXml(Element a_dbNode)
+	public int loadFromXml(Element a_dbNode)
 	{
+		int updatedEntries = 0;
 		String xmlElementName = XMLUtil.getXmlElementName(m_DatabaseEntryClass);
 		if (a_dbNode == null || xmlElementName == null)
 		{
-			return;
+			return updatedEntries;
 		}
 
 		NodeList dbNodes = a_dbNode.getElementsByTagName(xmlElementName);
@@ -495,6 +497,7 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 				AbstractDatabaseEntry instance = (AbstractDatabaseEntry)m_DatabaseEntryClass.getConstructor(
 								new Class[]{Element.class}).newInstance(new Object[]{dbNodes.item(i)});
 				update(instance);
+				updatedEntries++;
 			}
 			catch (Exception e)
 			{
@@ -502,6 +505,7 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 				/* if there was an error, it does not matter */
 			}
 		}
+		return updatedEntries;
 	}
 
 	/**
