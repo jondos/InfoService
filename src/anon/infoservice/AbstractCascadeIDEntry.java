@@ -91,7 +91,7 @@ public abstract class AbstractCascadeIDEntry extends AbstractDatabaseEntry imple
 
 	public AbstractCascadeIDEntry(Element a_xmlElement) throws XMLParseException
 	{
-		super(XMLUtil.parseAttribute(a_xmlElement, XML_ATTR_EXPIRE_TIME, 0));
+		super(XMLUtil.parseAttribute(a_xmlElement, XML_ATTR_EXPIRE_TIME, 0l));
 		if (a_xmlElement == null)
 		{
 			throw new XMLParseException(XMLParseException.NODE_NULL_TAG);
