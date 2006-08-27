@@ -8,7 +8,7 @@
     </JavaVersion>
     <JavaVersion vendor="Blackdown">
         <LatestVersion>1.4.2-03</LatestVersion> <!-- Most recent JRE version number of this vendor -->
-        <VendorLongName>Blackdown</VendorLongName> <!-- Optional additional identifier -->
+        <VendorLongName>Blackdown Java-Linux Team</VendorLongName> <!-- Optional additional identifier -->
         <DownloadURL>http://www.blackdown.org/java-linux/java-linux-d2.html</DownloadURL> <!-- URL to download the JRE -->
     </JavaVersion>    
 </JavaVersionInfos>
