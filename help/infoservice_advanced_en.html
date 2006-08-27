@@ -1,0 +1,36 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="xhelpfrms.css">
+</head>
+<body>
+<!--#include virtual="/header_en.html"-->
+
+<H2>InfoService</H2>
+
+<H3>Advanced Settings</H3>
+<P>
+<UL>
+    <LI><B>Enable automatic InfoService Requests</B><BR>
+    JAP occassionally attempts to automatically connect to the InfoService to request information.  If this checkbox is activated, these automatic connections are also activated.
+    <P>
+    <LI><B>Allow non-anonymous connections to InfoServices</B><BR>
+    If activated, JAP can connect to InfoServices even if you have no anonymized connection currently established.<br>
+    If this option is deactivated, information from InfoServices may be gathered through anonymized connections only.<br>
+    Thus, it is recommended to activate this option.
+    <P>
+    <LI><B>Use only the default InfoService</B><BR>
+    Normally, JAP attempts to obtain information from all known InfoServices if the standard InfoService cannot deliver the information.  When this checkbox is activated, only the standard InfoService will be connected to.
+    <br>This is NOT recommended.
+    <br>If this option is NOT activated, you have one more option to set:
+    <P>
+    <UL>
+    <LI><B>Number of redundant InfoService queries:</B><BR>
+    Define how many InfoServices will be queried. If you set this value to "3", for example, JAP will always try to reach 3 InfoServices. Should one of them appear to be offline, JAP will try to reach a substitute.
+    <br>The higher the value, the more fail safe JAP will become, the more time these queries will consume, however.
+    </UL>
+    </UL>
+
+
+<!--#include virtual="/footer_en.html"-->
+</body>
+</html>
