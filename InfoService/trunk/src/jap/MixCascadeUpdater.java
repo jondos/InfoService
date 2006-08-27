@@ -90,7 +90,9 @@ public class MixCascadeUpdater extends AbstractDatabaseUpdater
 		for (int i = 0; i < mixes.size(); i++)
 		{
 			currentMix = (MixInfo)mixes.elementAt(i);
-			if (Database.getInstance(MixCascade.class).getEntryById(currentMix.getId()) != null)
+			if (Database.getInstance(MixCascade.class).getEntryById(currentMix.getId()) != null ||
+				JAPController.getInstance().getCurrentMixCascade().getMixIds().elementAt(0).equals(
+						currentMix.getId()))
 			{
 				continue;
 			}
