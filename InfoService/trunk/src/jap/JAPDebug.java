@@ -402,7 +402,7 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 
 			m_textareaConsole.append("FreeMemory: " +
 									 JAPUtil.formatBytesValue(Runtime.getRuntime().freeMemory()) + "\n");
-
+			m_textareaConsole.append("\n");
 			m_textareaConsole.append(JAPModel.getInstance().toString());
 		}
 		else
