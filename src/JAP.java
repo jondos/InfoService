@@ -119,7 +119,7 @@ public class JAP
 		if (isArgumentSet("-help") || isArgumentSet("--help") || isArgumentSet("-h"))
 		{
 			System.out.println("Usage:");
-			System.out.println("-help, -_help, -h:  Show this text.");
+			System.out.println("-help, --help, -h:  Show this text.");
 			System.out.println("-console:           Start JAP in console-only mode.");
 			System.out.println("-minimized:         Minimize JAP onb startup.");
 			System.out.println("-version:           Print version information.");
