@@ -65,56 +65,20 @@ Wenn ein  vom InfoService als verf&uuml;gbar gemeldeter Dienst markiert ist, erh
         <LI><B>Betreiber:</B><BR>
         Hier sehen Sie den Namen der Organisation, die den gew&auml;hlten Server betreibt.
         <P>
+	<LI><B>Email:</B><BR>
+        Die Emailadresse geh&ouml;rt zum Ansprechpartner des gew&auml;hlten Servers.
+        <P>
         <LI><B>URL:</B><BR>
         Unter der angezeigten Internetadresse k&ouml;nnen Sie mehr &uuml;ber die Betreiberorganisation des Servers erfahren.
         <P>
         <LI><B>Standort:</B><BR>
-        Der geographische Standort des Servers wird hier angezeigt.
+        Der geographische Standort des Servers wird hier angezeigt. Ein Klick darauf &ouml;ffnet eine Karte.
+	<P>
+	<LI><B>Zertifikat:</B><BR>
+        Hier k&ouml;nnen Sie erkennen, ob das Zertifikat des Servers verifiziert werden konnte und ob es noch g&uuml;ltig ist oder schon abgelaufen. Mit einem Klick darauf k&ouml;nnen Sie das Zertifikat einsehen.
     </UL>
 </UL>
 
-<H3>Tor</H3>
-Auf dieser Seite sehen Sie Informationen und Einstellungen die sich auf das Tor-Anonymisierungsnetzwerk beziehen.<BR>
-Wenn Sie den JAP als Zugang zum Tor-Netzwerk nutzen wollen, m&uuml;ssen Sie ihn als Socks-Proxy (nicht als HTTP/HTTPS-Proxy) bei Ihrem Browser eintragen.
-
-<UL>
-    <LI><B>Verf&uuml;gbare Tor Knoten:</B><BR>
-    In diesem Feld werden Ihnen Rechner angezeigt, die eine Verbindung ins Tor-Netzwerk zur Verf&uuml;gung stellen.
-    <P>
-    <LI><B>Liste neu laden:</B><BR>
-    Mit diesem Knopf wird die Liste der verf&uuml;gbaren Knoten aktualisiert.
-    <P>
-    <LI><B>Einstellungen f&uuml;r die anonymen Routen:</B><BR>
-    <P>
-    <UL>
-        <LI><B>Minimale Knoten pro Verbindung:</B><BR>
-        Hier stellen Sie ein, &uuml;ber wie viele Tor-Knoten eine Verbindung mindestens geleitet werden soll, bevor Sie an ihr eigentliches Ziel geschickt wird. Je mehr Knoten genutzt werden, desto zuverl&auml;ssiger ist die Anonymisierung der Verbindung.
-        <P>
-        <LI><B>Maximale Knoten pro Verbindung:</B><BR>
-        Mit diesem Schieberegler stellen Sie die maximale Anzahl von Tor-Knoten f&uuml;r eine Verbindung ein. Je gr&ouml;&szlig;er diese Zahl ist, desto langsamer ist die Verbindung.
-        <P>
-        <LI><B>Wechsel der Route alle x Verbindungen:</B><BR>
-        Hier legen Sie fest, wie oft eine neue Route aufgebaut werden soll. Immer, wenn so viele Verbindungen erstellt wurden, wie die hier eingestellte Zahl, dann wird die alte Route abgebaut und eine neue Route durch das Tor-Netzwerk erzeugt.
-        <P>
-        <LI><B>Anonyme Route im Voraus erstellen:</B><BR>
-        Wenn dieses Feld markiert ist, erstellt der JAP gleich nach dem Start eine Route durch das Tor-Netzwerk. Ist das Feld nicht markiert, wird erst eine Route erstellt, wenn ein Verbindungswunsch vorliegt.
-    </UL>
-</UL>
-
-<H3>Allgemein</H3>
-<UL>
-    <LI><B>Anonymit&auml;tsservice sofort nach Programmstart aktivieren:</B><BR>
-    Ist dieses Feld markiert, so baut der JAP gleich nach dem Start eine Verbindung zum Anonymisierungsdienst auf.
-    <P>
-    <LI><B>Automatisch wieder verbinden nach Verbindungsabbruch:</B><BR>
-    Setzen Sie hier einen Haken, wenn Sie wollen, dass der JAP automatisch die Verbindung zum Anonymiserungsdienst wieder herstellt, wenn diese unterbrochen wurde.
-    <P>
-    <LI><B>Dummy Daten alle x Sekunden senden:</B><BR>
-    Hier k&ouml;nnen Sie festlegen ob und wie h&auml;ufig Pakete ohne Nutzinhalt verschickt werden, um f&uuml;r einen Beobachter eine laufende Kommunikation vorzut&auml;uschen.
-    <P>
-    <LI><B>Nicht zertifizierte Server verwenden:</B><BR>
-    Ist dieses Feld markiert, werden auch Server verwendet, f&uuml;r die kein g&uuml;ltiges Zertifikat existiert. Diese Option sollte aus Sicherheitsgr&uuml;nden nicht aktiviert werden.
-</UL>
 <!--#include virtual="/footer.html"-->
 </body>
 </html>

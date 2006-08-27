@@ -131,7 +131,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 	private JAPCertificate m_selectedISCert;
 	private CertPath m_selectedISCertPath;
-
+	
 	private JTabbedPane m_infoServiceTabPane;
 
 	public JAPConfInfoService()
@@ -282,11 +282,11 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 			JAPMessages.getString("settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton"));
 		//settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setFont(getFontSetting());
 		settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setIcon(GUIUtils.loadImageIcon(
-			JAPConstants.IMAGE_RELOAD, true, false));
+			JAPConstants.IMAGE_RELOAD, true));
 		settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setDisabledIcon(GUIUtils.loadImageIcon(
-			JAPConstants.IMAGE_RELOAD_DISABLED, true, false));
+			JAPConstants.IMAGE_RELOAD_DISABLED, true));
 		settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setPressedIcon(GUIUtils.loadImageIcon(
-			JAPConstants.IMAGE_RELOAD_ROLLOVER, true, false));
+			JAPConstants.IMAGE_RELOAD_ROLLOVER, true));
 		//settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setMargin(new Insets(1, 1, 1,
 		//	settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.getMargin().right));
 		settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.addActionListener(new ActionListener()
@@ -808,12 +808,10 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 						}
 						m_hostLabel.setText(hosts);
 						m_portLabel.setText(ports);
-						if (m_hostLabel.getRootPane() != null)
-						{
-							m_hostLabel.getRootPane().invalidate();
-							m_hostLabel.getRootPane().revalidate();
-							m_hostLabel.getRootPane().repaint();
-						}
+						m_hostLabel.getRootPane().invalidate();
+						m_hostLabel.getRootPane().revalidate();
+						m_hostLabel.getRootPane().repaint();
+
 						if (selectedInfoService.isUserDefined())
 						{
 							addInfoServiceHostField.setText(hosts);
@@ -1407,7 +1405,6 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		advancedPanelConstraints.gridy++;
 		advancedPanel.add(m_lblExplanation, advancedPanelConstraints);
 
-		onUpdateValues();
 
 		return advancedPanel;
 	}

@@ -1,0 +1,40 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="xhelpfrms.css">
+</head>
+<body>
+<!--#include virtual="/header.html"-->
+
+<H2>Services</H2>
+<P>
+<H3>General</H3>
+<UL>
+    <LI><B>Deny all data traffic without call back if anonymous mode is switched off</B><BR>
+    If this box is checked, JAP will not transfer non-anonymous traffic. Your browser will show a hint which says that browsing the web is currently not possible.
+    <br>If you do NOT check this box, JAP will show a warning window which has the option to allow non-anonymous browsing for a short amount of time.
+    <P>
+    <LI><B>Auto connect after program start</B><BR>
+    If this box is checked, JAP automatically connects to the anonymization service when JAP is started.
+    <P>
+    <LI><B>Auto re-connect after connection to mix was lost</B><BR>
+    Check this box if you want JAP to automatically reconnect to the anonymization service if the connection is lost.
+    <P>
+    <LI><B>Automatically change Mix cascades</B><BR>
+    Checking this box will give you two more options:<P>
+    <UL>
+    <LI><B>Equally choose all cascades</B><BR>
+    With this option activated, JAP will choose a cascade by chance. During anonymous browsing, however, cascades will only be switched if the active cascade is offline.
+    <P>
+    <LI><B>Only choose payment cascades</B><BR>
+    Similar to the first option, with the distinction that the random cascade will exclusively be chosen from payment cascades.
+    <P>
+    </UL>
+    <P>
+    <LI><B>Send dummy packet every x seconds</B><BR>
+    Here you can decide if fake packets without any content should be sent and if so, how often.  This simulates continuous communication for any potential observers.
+</UL>
+
+
+<!--#include virtual="/footer.html"-->
+</body>
+</html>
