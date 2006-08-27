@@ -81,6 +81,8 @@ public class MixCascadeUpdater extends AbstractDatabaseUpdater
 
 		Vector mixes = Database.getInstance(MixInfo.class).getEntryList();
 		Vector cascades = Database.getInstance(MixCascade.class).getEntryList();
+		// do not remove mixes of current cascade
+		cascades.addElement(JAPController.getInstance().getCurrentMixCascade());
 		MixInfo currentMix;
 		Vector currentCascadeMixes;
 
