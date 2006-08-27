@@ -121,7 +121,7 @@ public class JAP
 			System.out.println("Usage:");
 			System.out.println("-help, --help, -h:  Show this text.");
 			System.out.println("-console:           Start JAP in console-only mode.");
-			System.out.println("-minimized:         Minimize JAP onb startup.");
+			System.out.println("-minimized:         Minimize JAP on startup.");
 			System.out.println("-version:           Print version information.");
 			System.out.println("-config {Filename}: Force JAP to use a specific configuration file.");
 			System.exit(0);
