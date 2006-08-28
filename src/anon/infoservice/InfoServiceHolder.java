@@ -55,6 +55,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	 * Stores the name of the root node of the XML settings for this class.
 	 */
 	public static final String XML_ELEMENT_NAME = "InfoServiceManagement";
+	public static final String XML_ELEM_CHANGE_INFO_SERVICES = "ChangeInfoService";
 	public static final int MAXIMUM_OF_ASKED_INFO_SERVICES = 5;
 	public static final int DEFAULT_OF_ASKED_INFO_SERVICES = 3;
 
@@ -687,7 +688,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 		Element infoServicesNode = Database.getInstance(InfoServiceDBEntry.class).toXmlElement(
 			  a_doc, InfoServiceDBEntry.XML_ELEMENT_CONTAINER_NAME);
 		Element preferredInfoServiceNode = a_doc.createElement("PreferredInfoService");
-		Element changeInfoServicesNode = a_doc.createElement("ChangeInfoServices");
+		Element changeInfoServicesNode = a_doc.createElement(XML_ELEM_CHANGE_INFO_SERVICES);
 		XMLUtil.setAttribute(infoServiceManagementNode, XML_ATTR_ASKED_INFO_SERVICES, m_nrAskedInfoServices);
 		synchronized (this)
 		{
@@ -743,7 +744,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 			preferredInfoService = new InfoServiceDBEntry(infoServiceNode);
 		}
 		Element changeInfoServicesNode = (Element) (XMLUtil.getFirstChildByName(a_infoServiceManagementNode,
-			"ChangeInfoServices"));
+			XML_ELEM_CHANGE_INFO_SERVICES));
 		if (changeInfoServicesNode == null)
 		{
 			throw (new Exception("No ChangeInfoServices node found."));
