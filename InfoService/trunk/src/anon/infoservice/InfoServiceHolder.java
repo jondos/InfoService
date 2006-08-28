@@ -712,8 +712,10 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	 * @param a_infoServiceManagementNode The XML node for loading the settings from. The name of
 	 *                                    the needed XML node can be obtained by calling
 	 *                                    getXmlSettingsRootNodeName().
+	 * @param a_bForceISChange if automatic change if IS is forced
 	 */
-	public void loadSettingsFromXml(Element a_infoServiceManagementNode) throws Exception
+	public void loadSettingsFromXml(Element a_infoServiceManagementNode,
+									boolean a_bForceISChange) throws Exception
 	{
 		setNumberOfAskedInfoServices(XMLUtil.parseAttribute(
 			  a_infoServiceManagementNode, XML_ATTR_ASKED_INFO_SERVICES, DEFAULT_OF_ASKED_INFO_SERVICES));
@@ -743,12 +745,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 			/* there is a preferred infoservice -> parse it */
 			preferredInfoService = new InfoServiceDBEntry(infoServiceNode);
 		}
-		Element changeInfoServicesNode = (Element) (XMLUtil.getFirstChildByName(a_infoServiceManagementNode,
-			XML_ELEM_CHANGE_INFO_SERVICES));
-		if (changeInfoServicesNode == null)
-		{
-			throw (new Exception("No ChangeInfoServices node found."));
-		}
+
 		synchronized (this)
 		{
 			/* we have collected all values -> set them */
@@ -756,7 +753,17 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 			{
 				setPreferredInfoService(preferredInfoService);
 			}
-			setChangeInfoServices(XMLUtil.parseValue(changeInfoServicesNode, isChangeInfoServices()));
+			if (a_bForceISChange)
+			{
+				setChangeInfoServices(true);
+			}
+			else
+			{
+				Element changeInfoServicesNode =
+					(Element) (XMLUtil.getFirstChildByName(a_infoServiceManagementNode,
+					XML_ELEM_CHANGE_INFO_SERVICES));
+				setChangeInfoServices(XMLUtil.parseValue(changeInfoServicesNode, isChangeInfoServices()));
+			}
 		}
 	}
 

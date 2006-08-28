@@ -871,6 +871,7 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 						}
 						catch (Exception e)
 						{
+							e.printStackTrace();
 							LogHolder.log(LogLevel.ERR, LogType.NET,
 								"Connection to infoservice interface failed: " +
 										  currentConnection.getHost() + ":" +

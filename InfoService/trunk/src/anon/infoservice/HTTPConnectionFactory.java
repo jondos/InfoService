@@ -34,6 +34,7 @@ import HTTPClient.AuthorizationPrompter;
 import HTTPClient.DefaultAuthHandler;
 import HTTPClient.HTTPConnection;
 import HTTPClient.NVPair;
+import logging.*;
 
 /**
  * This class creates all instances of HTTPConnection for the JAP client and is a singleton.
@@ -200,12 +201,40 @@ public class HTTPConnectionFactory
 			{
 				DefaultAuthHandler.setAuthorizationPrompter(new AuthorizationPrompter()
 				{
-					public NVPair getUsernamePassword(AuthorizationInfo challenge)
+					boolean bAlreadyTried = false;
+					String password;
+					public synchronized NVPair getUsernamePassword(AuthorizationInfo challenge)
 					{
-						return new NVPair(m_proxyInterface.getAuthenticationUserID(),
-										  m_proxyInterface.getAuthenticationPassword());
-					}
+						try
+						{
+							password = m_proxyInterface.getAuthenticationPassword();
+							if (password == null)
+							{
+								return null;
+							}
 
+							if (bAlreadyTried)
+							{
+								// passwords seems to be bad; request new password
+								if (m_proxyInterface instanceof ProxyInterface)
+								{
+									( (ProxyInterface) m_proxyInterface).clearAuthenticationPassword();
+								}
+								else
+								{
+									return null;
+								}
+							}
+							bAlreadyTried = true;
+
+							return new NVPair(m_proxyInterface.getAuthenticationUserID(), password);
+						}
+						catch (Exception a_e)
+						{
+							LogHolder.log(LogLevel.EXCEPTION, LogType.NET, a_e);
+							return null;
+						}
+					}
 				});
 			}
 		}

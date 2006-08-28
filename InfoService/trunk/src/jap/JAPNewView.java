@@ -1484,7 +1484,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		boolean bAnonMode = m_Controller.getAnonMode();
 		boolean bConnected = m_Controller.isAnonConnected();
 		boolean bConnectionErrorShown = m_bConnectionErrorShown;
-		//System.out.println(bAnonMode + ":" + bConnected + ":" + bConnectionErrorShown);
 
 		if (bAnonMode && bConnected)
 		{
@@ -1520,7 +1519,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			if (data instanceof StatusInfo && ((StatusInfo)data).getId().equals(
 								JAPController.getInstance().getCurrentMixCascade().getId()))
 			{
-
 				valuesChanged(false);
 			}
 		}
@@ -2064,6 +2062,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				StatusInfo currentStatus = currentMixCascade.getCurrentStatus();
 				int anonLevel = currentStatus.getAnonLevel();
 				m_labelAnonMeter.setIcon(getMeterImage(anonLevel));
+				m_labelAnonMeter.invalidate();
 				Color color = Color.red;
 				if (anonLevel > 3)
 				{
