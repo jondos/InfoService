@@ -38,54 +38,68 @@ import javax.swing.JPasswordField;
 
 import anon.infoservice.ImmutableProxyInterface;
 import anon.util.IPasswordReader;
+import gui.JAPMessages;
+import gui.dialog.*;
 import gui.*;
 
 /**
  * This class shows a dialog window and reads a password from user input.
  */
-final class JAPFirewallPasswdDlg implements ActionListener, IPasswordReader
+final class JAPFirewallPasswdDlg implements IPasswordReader
 {
-	private String passwd;
-	private JDialog dialog = null;
-	private JPasswordField pwdField;
+	private static final long CANCEL_WAIT_TIME = 1000 * 10l; // 10 seconds
 
-	public void actionPerformed(ActionEvent e)
-	{
-		if (e.getActionCommand() == "ok")
-		{
-			passwd = new String(pwdField.getPassword());
-		}
-		dialog.dispose();
-	}
+	private volatile long m_lastCancelTime = 0;
+	private String passwd;
+	private boolean m_bShown = false;
+
 
 	public String readPassword(ImmutableProxyInterface a_proxyInterface)
 	{
-		pwdField = new JPasswordField(20);
-		JPanel panel = new JPanel();
-		JButton bttnOk = new JButton(JAPMessages.getString("bttnOk"));
-		bttnOk.setActionCommand("ok");
-		bttnOk.addActionListener(this);
-		JButton bttnCancel = new JButton(JAPMessages.getString("bttnCancel"));
-		bttnCancel.addActionListener(this);
-		panel.add(bttnOk);
-		panel.add(bttnCancel);
-		JPanel p = new JPanel(new BorderLayout());
-		p.add("Center", pwdField);
-		p.add("South", panel);
-		Object[] options = new Object[1];
-		options[0] = p;
-		JOptionPane o = new JOptionPane(JAPMessages.getString("passwdDlgInput") + "\n" +
-										JAPMessages.getString("passwdDlgHost") + ": " +
-										a_proxyInterface.getHost() + "\n" +
-										JAPMessages.getString("passwdDlgPort") + ": " +
-										a_proxyInterface.getPort() + "\n" +
-										JAPMessages.getString("passwdDlgUserID") + ": " +
-										a_proxyInterface.getAuthenticationUserID() + "\n",
-										JOptionPane.QUESTION_MESSAGE, 0
-										, null, options);
-		dialog = o.createDialog(JAPController.getView(), JAPMessages.getString("passwdDlgTitle"));
-		dialog.toFront();
+		if (m_lastCancelTime >= System.currentTimeMillis())
+		{
+			return null;
+		}
+		synchronized (this)
+		{
+			if (m_bShown)
+			{
+				return null;
+			}
+			m_bShown = true;
+		}
+		JAPDialog dialog = new JAPDialog(JAPController.getView(),
+										 JAPMessages.getString("passwdDlgTitle"), true);
+		PasswordContentPane panePasswd =
+			new PasswordContentPane(dialog, PasswordContentPane.PASSWORD_ENTER,
+									JAPMessages.getString("passwdDlgInput") + "<br>" +
+									JAPMessages.getString("passwdDlgHost") + ": " +
+									a_proxyInterface.getHost() + "<br>" +
+									JAPMessages.getString("passwdDlgPort") + ": " +
+									a_proxyInterface.getPort() + "<br>" +
+									JAPMessages.getString("passwdDlgUserID") + ": " +
+									a_proxyInterface.getAuthenticationUserID())
+		{
+			public CheckError[] checkCancel()
+			{
+				m_lastCancelTime = System.currentTimeMillis() + CANCEL_WAIT_TIME;
+				return super.checkCancel();
+			}
+		};
+
+		panePasswd.updateDialog();
+		dialog.pack();
+		dialog.setResizable(false);
 		dialog.setVisible(true);
-		return passwd;
+		m_bShown = false;
+		if (panePasswd.getButtonValue() != PasswordContentPane.RETURN_VALUE_OK ||
+			panePasswd.getPassword() == null)
+		{
+			return null;
+		}
+		else
+		{
+			return new String(panePasswd.getPassword());
+		}
 	}
 }

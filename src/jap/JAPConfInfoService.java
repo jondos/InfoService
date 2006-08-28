@@ -1250,7 +1250,8 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		});
 
 		m_cbxUseDefaultISOnly = new JCheckBox(
-			JAPMessages.getString("settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox"));
+			  JAPMessages.getString("settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox"));
+		m_cbxUseDefaultISOnly.setVisible(!JAPConstants.m_bReleasedVersion);
 		//settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox.setFont(getFontSetting());
 		m_cbxUseDefaultISOnly.addActionListener(new
 			ActionListener()
@@ -1466,7 +1467,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 			InfoServiceHolder.getInstance().setPreferredInfoService(selectedInfoService);
 		}
 	}
-	
+
 	/**
 	 * This panel has one or more tabs. Depending on which tab is active, another help context has to be set.
 	 */

@@ -300,6 +300,11 @@ public final class ProxyInterface extends ListenerInterface
 		return m_authenticationPassword;
 	}
 
+	public void clearAuthenticationPassword()
+	{
+		m_authenticationPassword = null;
+	}
+
 	/**
 	 * Gets the authentication user ID of this interface.
 	 * @todo put this in a new class HTTPPasswordAuthenticationProtocol!!
@@ -440,7 +445,7 @@ public final class ProxyInterface extends ListenerInterface
 		if (isValid() && isAuthenticationUsed())
 		{
 			// read the password, if it is not done before
-			getAuthenticationPassword();
+			//getAuthenticationPassword();
 		}
 	}
 }

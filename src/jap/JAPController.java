@@ -794,8 +794,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 				catch (Exception a_e)
 				{
-					LogHolder.log(LogLevel.NOTICE, LogType.NET,
-								  "JAPController: could not load proxy settings: " + a_e);
+					LogHolder.log(LogLevel.NOTICE, LogType.NET, "Could not load proxy settings!", a_e);
 				}
 
 				// check if something has changed
@@ -1132,7 +1131,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 											  JAPConstants.DEFAULT_ALLOW_INFOSERVICE_NON_ANONYMOUS_CONNECTION));
 					if (infoserviceManagementNode != null)
 					{
-						InfoServiceHolder.getInstance().loadSettingsFromXml(infoserviceManagementNode);
+						InfoServiceHolder.getInstance().loadSettingsFromXml(
+											  infoserviceManagementNode, JAPConstants.m_bReleasedVersion);
 					}
 					else
 					{
