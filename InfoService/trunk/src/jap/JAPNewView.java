@@ -120,6 +120,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String MSG_OLD_JAVA = JAPNewView.class.getName() + "_oldJava";
 	private static final String MSG_OLD_JAVA_HINT = JAPNewView.class.getName() + "_oldJavaHint";
 	private static final String MSG_LBL_NEW_SERVICES_FOUND = JAPNewView.class.getName() + "_newServicesFound";
+	private static final String MSG_TOOLTIP_NEW_SERVICES_FOUND = JAPNewView.class.getName() +
+		"_tooltipNewServicesFound";
 	private static final String MSG_SERVICE_PRICE = JAPNewView.class.getName() + "_servicePrice";
 	private static final String MSG_NO_COSTS = JAPNewView.class.getName() + "_noCosts";
 	private static final String MSG_NEW_SERVICES_FOUND =
@@ -466,6 +468,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.insets = new Insets(5, 20, 0, 0);
 		c1.anchor = GridBagConstraints.EAST;
 		m_lblNewServices = new JLabel(JAPMessages.getString(MSG_LBL_NEW_SERVICES_FOUND));
+		m_lblNewServices.setToolTipText(JAPMessages.getString(MSG_TOOLTIP_NEW_SERVICES_FOUND));
 		m_lblNewServices.setForeground(Color.blue);
 		m_lblNewServices.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		m_lblNewServices.addMouseListener(new MouseAdapter()

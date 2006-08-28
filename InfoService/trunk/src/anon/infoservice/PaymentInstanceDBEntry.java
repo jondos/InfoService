@@ -193,6 +193,11 @@ public class PaymentInstanceDBEntry extends AbstractDatabaseEntry implements IDi
 		return m_cert;
 	}
 
+	public long getLastUpdate()
+	{
+		return m_creationTimeStamp;
+	}
+
 	/**
 	 * Returns the time when this payment instance entry was created by the origin payment instance.
 	 *

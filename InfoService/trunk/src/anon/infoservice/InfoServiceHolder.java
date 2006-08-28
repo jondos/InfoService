@@ -356,7 +356,6 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 			}
 		}
 
-
 		while ( ( (infoServiceList.size() > 0) || (currentInfoService != null)) &&
 				!Thread.currentThread().isInterrupted())
 		{
@@ -366,8 +365,8 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 				currentInfoService = (InfoServiceDBEntry) (infoServiceList.elementAt(
 					Math.abs(random.nextInt()) % infoServiceList.size()));
 			}
-			LogHolder.log(LogLevel.INFO, LogType.NET,
-							  "Trying InfoService: " + currentInfoService.getName());
+			LogHolder.log(LogLevel.NOTICE, LogType.NET,
+							  "Trying InfoService: " + currentInfoService.getName(), true);
 			try
 			{
 				Hashtable tempHashtable = null;

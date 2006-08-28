@@ -270,13 +270,13 @@ public abstract class AbstractDatabaseUpdater implements Observer
 
 	protected static class ConstantUpdateInterval implements IUpdateInterval
 	{
-		private int m_updateInterval;
-		public ConstantUpdateInterval(int a_updateInterval)
+		private long m_updateInterval;
+		public ConstantUpdateInterval(long a_updateInterval)
 		{
 			m_updateInterval = a_updateInterval;
 		}
 
-		public int getUpdateInterval()
+		public long getUpdateInterval()
 		{
 			return m_updateInterval;
 		}
@@ -284,7 +284,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 
 	protected static interface IUpdateInterval
 	{
-		int getUpdateInterval();
+		long getUpdateInterval();
 	}
 
 	/**
@@ -367,11 +367,14 @@ public abstract class AbstractDatabaseUpdater implements Observer
 		{
 			AbstractDatabaseEntry currentEntry = (AbstractDatabaseEntry) (
 				knownInfoServices.nextElement());
-			if (!currentEntry.isUserDefined() && !a_newEntries.contains(currentEntry))
+			if (!currentEntry.isUserDefined() && !a_newEntries.contains(currentEntry) &&
+				(currentEntry.getLastUpdate() +  2l * m_updateInterval.getUpdateInterval()) <
+				System.currentTimeMillis())
 			{
-				/* the InfoService was fetched from the Internet earlier, but it is not
+				/* the db entry was fetched from the Internet earlier, but it is not
 				 * in the list fetched from the Internet this time
-				 * -> remove that InfoService from the database of known InfoServices
+				 * -> remove that db entry from the database of known db entries, but only if it is
+				 * too old (this should make the db more robust against IS errors)
 				 */
 				if (Database.getInstance(getUpdatedClass()).remove(currentEntry))
 				{

@@ -933,10 +933,10 @@ final public class JAPConf extends JAPDialog implements ActionListener
 
 		m_cbProxy.setSelected(false);
 		m_cbShowDebugConsole.setSelected(false);
-		m_sliderDebugLevel.setValue(LogLevel.EMERG);
+		m_sliderDebugLevel.setValue(LogLevel.WARNING);
 		for (int i = 0; i < m_cbLogTypes.length; i++)
 		{
-			m_cbLogTypes[i].setSelected(false);
+			m_cbLogTypes[i].setSelected(true);
 		}
 		m_cbDebugToFile.setSelected(false);
 	}

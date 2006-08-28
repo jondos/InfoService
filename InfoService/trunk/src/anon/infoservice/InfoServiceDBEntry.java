@@ -588,6 +588,11 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 		return m_certPath;
 	}
 
+	public long getLastUpdate()
+	{
+		return m_creationTimeStamp;
+	}
+
 	/**
 	 * Returns the time when this infoservice entry was created by the origin infoservice or by the
 	 * JAP client (if it is a user-defined entry).
@@ -871,12 +876,11 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 						}
 						catch (Exception e)
 						{
-							e.printStackTrace();
 							LogHolder.log(LogLevel.ERR, LogType.NET,
 								"Connection to infoservice interface failed: " +
 										  currentConnection.getHost() + ":" +
 										  Integer.toString(currentConnection.getPort()) +
-										  a_httpRequest.getRequestFileName() + " Reason: " + e.toString());
+										  a_httpRequest.getRequestFileName(), e);
 						}
 					}
 				});

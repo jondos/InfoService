@@ -164,7 +164,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	private boolean m_bShutdown = false;
 
-	private boolean m_bShowConfigAssistant = false;
+	private boolean m_bFirstStartOfJAP = false;
+	private boolean m_bFirstActiveWarning = true;
 
 	/**
 	 * Stores the active MixCascade.
@@ -615,7 +616,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 												 JAPConstants.XMLCONFFN);
 
 			/* As this is the first JAp start, show the config assistant */
-			m_bShowConfigAssistant = true;
+			m_bFirstStartOfJAP = true;
 		}
 		if (a_strJapConfFile != null)
 		{
@@ -1777,7 +1778,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 			Enumeration enumerMixes = Database.getInstance(MixInfo.class).getEntrySnapshotAsEnumeration();
 			while (enumerMixes.hasMoreElements())
 			{
-					elemMixes.appendChild(((MixInfo) enumerMixes.nextElement()).toXmlElement(doc));
+				Element element = ((MixInfo) enumerMixes.nextElement()).toXmlElement(doc);
+				if (element != null) // do not write MixInfos of first mixes derived from cascade
+				{
+					elemMixes.appendChild(element);
+				}
 			}
 			/* store the current MixCascade */
 			MixCascade defaultMixCascade = getCurrentMixCascade();
@@ -2365,7 +2370,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 							LogHolder.log(LogLevel.DEBUG, LogType.NET, "AN.ON service started successfully");
 							adapter.connectionEstablished(proxyAnon.getMixCascade());
 
-							if (!mbActCntMessageNotRemind && !JAPModel.isSmallDisplay())
+							if (!mbActCntMessageNotRemind && !JAPModel.isSmallDisplay() &&
+								!(m_bFirstStartOfJAP && m_bFirstActiveWarning))
 							{
 								SwingUtilities.invokeLater(new Runnable()
 								{
@@ -2386,8 +2392,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 										}
 									}
 								});
-
 							}
+							m_bFirstActiveWarning = false;
 						}
 						else
 						{
@@ -2507,7 +2513,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 */
 	public boolean isConfigAssistantShown()
 	{
-		return m_bShowConfigAssistant;
+		return m_bFirstStartOfJAP;
 	}
 
 	public boolean isAnonConnected()

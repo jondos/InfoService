@@ -162,6 +162,8 @@ public class KeyExchangeManager {
 				  }
 			  }
 		  }
+		  Database.getInstance(MixInfo.class).update(
+			  new MixInfo(cascade.getId(), cascade.getMixCascadeSignature().getCertPath()));
 
 		  /*
 		   * get the appended certificate of the signature and store it in the
