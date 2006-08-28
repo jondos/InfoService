@@ -69,6 +69,7 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 	private static final String MSG_ENTER_PASSWORD_TITLE = PasswordContentPane.class.getName() + "_title";
 	private static final String MSG_CONFIRM_LBL = PasswordContentPane.class.getName() + "_confirmPasswordLabel";
 	private static final String MSG_ENTER_OLD_LBL = PasswordContentPane.class.getName() + "_enterOldPasswordLabel";
+	private static final String MSG_ENTER_LBL = PasswordContentPane.class.getName() + "_enterPasswordLabel";
 	private static final String MSG_ENTER_NEW_LBL = PasswordContentPane.class.getName() + "_enterNewPasswordLabel";
 	private static final String MSG_PASSWORDS_DONT_MATCH =
 		PasswordContentPane.class.getName() + "_passwordsDontMatch";
@@ -198,7 +199,14 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 			layout.setConstraints(m_textNewPasswd, c);
 			getContentPane().add(m_textNewPasswd);
 		}
-		m_lblNew2 = new JLabel(JAPMessages.getString(MSG_CONFIRM_LBL));
+		if (a_type == PASSWORD_ENTER)
+		{
+			m_lblNew2 = new JLabel(JAPMessages.getString(MSG_ENTER_LBL));
+		}
+		else
+		{
+			m_lblNew2 = new JLabel(JAPMessages.getString(MSG_CONFIRM_LBL));
+		}
 		c.fill = GridBagConstraints.NONE;
 		c.gridx = 0;
 		c.gridy++;
