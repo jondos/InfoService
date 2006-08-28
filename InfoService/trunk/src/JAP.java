@@ -104,9 +104,8 @@ public class JAP
 
 		if (!JAPConstants.m_bReleasedVersion)
 		{
-			System.out.println("Starting up JAP version " + JAPConstants.aktVersion +". (" + javaVersion + "/" + vendor + "/" + os + "/" +
-							   mrjVersion +
-							   ")");
+			System.out.println("Starting up JAP version " + JAPConstants.aktVersion +". (" + javaVersion + "/" + vendor + "/" + os +
+							   (mrjVersion != null ? "/" + mrjVersion : "")  + ")");
 		}
 		//Macintosh Runtime for Java (MRJ) on Mac OS
 		// Test (part 1) for right JVM
