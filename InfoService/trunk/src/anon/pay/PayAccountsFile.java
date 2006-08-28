@@ -87,8 +87,8 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 {
 	public static final String XML_ELEMENT_NAME = "PayAccountsFile";
 
-	private static final String XML_ATTR_IGNORE_AI_ERRORS = "ignoreAIErrors";
-	private static final String XML_ATTR_ENABLE_BALANCE_AUTO_UPDATE = "enableBalanceAutoUpdate";
+	private static final String XML_ATTR_IGNORE_AI_ERRORS = "ignoreAIErrorMessages";
+	private static final String XML_ATTR_ENABLE_BALANCE_AUTO_UPDATE = "autoUpdateBalance";
 
 	private boolean m_bIsInitialized = false;
 	private boolean m_bIgnoreAIAccountErrorMessages = false;

@@ -150,8 +150,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private static final String XML_ELEM_LOOK_AND_FEEL = "LookAndFeel";
 	private static final String XML_ELEM_LOOK_AND_FEELS = "LookAndFeels";
 	private static final String XML_ATTR_LOOK_AND_FEEL = "current";
-	private static final String XML_ALLOW_NON_ANONYMOUS_CONNECTION = "AllowNonAnonymousConnection";
-	private static final String XML_ALLOW_NON_ANONYMOUS_UPDATE = "AllowNonAnonymousUpdate";
+	private static final String XML_ALLOW_NON_ANONYMOUS_CONNECTION = "AllowDirectConnection";
+	private static final String XML_ALLOW_NON_ANONYMOUS_UPDATE = "AllowDirectUpdate";
 	private static final String XML_ATTR_AUTO_CHOOSE_CASCADES = "AutoChooseCascades";
 
 	private final Object PROXY_SYNC = new Object();
