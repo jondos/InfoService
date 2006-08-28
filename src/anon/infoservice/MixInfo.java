@@ -140,6 +140,20 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 	  this(a_bInfoService, a_mixNode, a_expireTime, false);
   }
 
+  public MixInfo(String a_mixID, CertPath a_certPath)
+  {
+	  super(Long.MAX_VALUE);
+	  m_mixId = a_mixID;
+	  m_name = a_mixID;
+	  m_bFromCascade = true;
+	  m_mixCertPath = a_certPath;
+	  m_mixCertificate = a_certPath.getFirstCertificate();
+	  m_lastUpdate = 0;
+	  m_mixLocation = new ServiceLocation(null, m_mixCertificate);
+	  m_mixOperator = new ServiceOperator(null, m_mixCertPath.getSecondCertificate());
+	  m_freeMix = false;
+  }
+
   /**
    * Creates a new MixInfo from XML description (Mix node). The state of the mix will be set to
    * non-free (only meaningful within the context of the infoservice).
@@ -274,7 +288,6 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 	  m_freeMix = false;
 	  m_xmlStructure = a_mixNode;
   }
-
 
   /**
    * Returns the ID of the mix.

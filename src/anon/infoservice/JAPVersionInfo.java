@@ -174,6 +174,8 @@ public class JAPVersionInfo extends AbstractDistributableDatabaseEntry
     return versionInfoId;
   }
 
+
+
   /**
    * Returns the time when this version information was created by the root-of-update-information
    * infoservice. That infoservice will update and propagate the version info periodically even
@@ -189,6 +191,12 @@ public class JAPVersionInfo extends AbstractDistributableDatabaseEntry
   {
     return m_lastUpdate;
   }
+
+  public long getLastUpdate()
+  {
+	  return m_lastUpdate;
+  }
+
 
   /**
    * Returns the JAP software version described by this version info structure.

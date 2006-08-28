@@ -37,6 +37,7 @@ public class DNSCacheEntry extends AbstractDatabaseEntry {
 
 	private String m_Id;
 	private String m_Ip;
+	private long m_lastUpdate;
 
 	/**
 	 * Constructor
@@ -50,6 +51,7 @@ public class DNSCacheEntry extends AbstractDatabaseEntry {
 	public DNSCacheEntry(String id, String ip, long a_expireTime)
 	{
 		super(a_expireTime);
+		m_lastUpdate = System.currentTimeMillis();
 		m_Id = id;
 		m_Ip = ip;
 	}
@@ -58,6 +60,12 @@ public class DNSCacheEntry extends AbstractDatabaseEntry {
 	{
 		return m_Id;
 	}
+
+	public long getLastUpdate()
+	{
+		return m_lastUpdate;
+	}
+
 
 	/**
 	 * gets the IP of the entry

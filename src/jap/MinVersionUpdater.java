@@ -38,8 +38,8 @@ import anon.infoservice.JAPMinVersion;
  */
 public class MinVersionUpdater extends AbstractDatabaseUpdater
 {
-	private static final int UPDATE_INTERVAL_MS = 1000 * 60 * 60 * 12 ; // half a day (update twice per day)
-	private static final int UPDATE_INTERVAL_MS_SHORT = 1000 * 60 * 8; // 8 minutes
+	private static final long UPDATE_INTERVAL_MS = 1000 * 60 * 60 * 12l ; // half a day (update twice per day)
+	private static final long UPDATE_INTERVAL_MS_SHORT = 1000 * 60 * 8l; // 8 minutes
 
 	public MinVersionUpdater()
 	{
@@ -64,7 +64,7 @@ public class MinVersionUpdater extends AbstractDatabaseUpdater
 
 	private static class DynamicUpdateInterval implements IUpdateInterval
 	{
-		public int getUpdateInterval()
+		public long getUpdateInterval()
 		{
 			if (Database.getInstance(JAPMinVersion.class).getNumberofEntries() > 0)
 			{

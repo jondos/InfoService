@@ -83,6 +83,12 @@ public abstract class AbstractDatabaseEntry
 	}
 
 	/**
+	 * Returns the time in milliseconds when this db entry was created.
+	 * @return the time in milliseconds when this db entry was created
+	 */
+	public abstract long getLastUpdate();
+
+	/**
 	 * Returns version number which is used to determine the more recent infoservice entry, if two
 	 * entries are compared (higher version number -> more recent entry).
 	 *
