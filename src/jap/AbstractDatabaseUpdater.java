@@ -54,6 +54,8 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	private boolean m_bInitialRun = true;
 	// patch for JDK 1.1.8 and JView
 	private boolean m_interrupted = false;
+	private boolean m_bUpdating = false;
+	private Object UPDATE_SYNC = new Object();
 
 	/**
 	 * Initialises and starts the database update thread.
@@ -158,6 +160,15 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	 */
 	public final void start(boolean a_bSynchronized)
 	{
+		synchronized (UPDATE_SYNC)
+		{
+			if (m_bUpdating)
+			{
+				return;
+			}
+			m_bUpdating = true;
+		}
+
 		synchronized (this)
 		{
 			synchronized (m_updateThread)
@@ -177,6 +188,11 @@ public abstract class AbstractDatabaseUpdater implements Observer
 				}
 			}
 		}
+		synchronized (UPDATE_SYNC)
+		{
+			m_bUpdating = false;
+		}
+
 	}
 
 	/**
