@@ -384,7 +384,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 			AbstractDatabaseEntry currentEntry = (AbstractDatabaseEntry) (
 				knownInfoServices.nextElement());
 			if (!currentEntry.isUserDefined() && !a_newEntries.contains(currentEntry) &&
-				(currentEntry.getLastUpdate() +  2l * m_updateInterval.getUpdateInterval()) <
+				(currentEntry.getLastUpdate() +  4l * m_updateInterval.getUpdateInterval()) <
 				System.currentTimeMillis())
 			{
 				/* the db entry was fetched from the Internet earlier, but it is not
