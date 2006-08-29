@@ -2,7 +2,7 @@ JARS=/opt/java/log4j/log4j.jar:/opt/java/BouncyCastle/BouncyCastleLightForJAP.ja
 
 JAVAC=/opt/jdk1.5/bin/javac
 JAVACOPTS=-classpath $(JARS):./src/ -O -target 1.5 -g:none
-JAVACOPTS_DEBUG=-classpath $(JARS) -target 1.5 
+JAVACOPTS_DEBUG=-classpath $(JARS):./src/ -target 1.5 -g 
 #JAVACOPTS=-classpath $(JARS) -target 1.4 -g
 JAR=/opt/jdk1.5/bin/jar
 JAROPTS=i
@@ -24,10 +24,11 @@ clean:
 	rm -f ./src/*/*.class
 	rm -f *.jar
 
-debug: *.java
+debug: ./src/*.java ./src/*/*.java
 	rm -f MixISTest.java
-	$(JAVAC) $(JAVACOPTS_DEBUG) *.java
-	$(JAR) -cf InfoService.jar Database.class *.class
+	rm -r -f ./src/test/
+	$(JAVAC) $(JAVACOPTS_DEBUG) ./src/infoservice/*.java ./src/anon/infoservice/*.java
+	$(JAR) -cf InfoService.jar -C src . certificates/*.cer
 	$(JAR) -i InfoService.jar
 
 #gcj: ./src/*/*.java
