@@ -28,7 +28,6 @@
   <property category="generalFormatting2" name="overrideBasicFormatting" value="1"/>
   <property category="generalFormatting2" name="tabSize" value="4"/>
   <property category="generalFormatting2" name="useTabChar" value="1"/>
-  <property category="java" name="compiler" value="projectjavac"/>
   <property category="javaFormatting" name="EventMatch" value="0"/>
   <property category="javaFormatting" name="alwaysClasses" value="1"/>
   <property category="javaFormatting" name="classBraceNextLine" value="1"/>

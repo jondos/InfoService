@@ -37,19 +37,21 @@ import anon.infoservice.AbstractDatabaseEntry;
  * This class is the implementation of an entry in the list of the latest mailaddresses.
  */
 public class MailAddressDBEntry extends AbstractDatabaseEntry {
-  
+
   /**
    * Stores the mailaddress.
    */
   private Address m_mailAddress;
-  
+
+  private long m_creationTime;
+
   /**
    * Stores the times we have sent a reply to this mailaddress (as Long objects storing the
    * corresponding System.currentTimeMillis() values).
    */
   private Vector m_requestTimes;
-  
-  
+
+
   /**
    * Creates a new mailaddress entry.
    *
@@ -60,19 +62,25 @@ public class MailAddressDBEntry extends AbstractDatabaseEntry {
     super(System.currentTimeMillis() + MailContext.MAIL_ADDRESSES_TIMEOUT);
     m_mailAddress = a_mailAddress;
     m_requestTimes = a_requestTimes;
+	m_creationTime = System.currentTimeMillis();
   }
-  
-  
+
+
   /**
    * Returns the ID of this mailaddress entry. It's just the string representation of the
    * mailaddress.
    *
    * @return The ID of this address.
-   */  
+   */
   public String getId() {
     return m_mailAddress.toString();
   }
-  
+
+  public long getLastUpdate()
+  {
+	  return m_creationTime;
+  }
+
  /**
    * Returns a version number which is used to determine the more recent entry, if two entries are
    * compared (higher version number -> more recent entry).
@@ -82,7 +90,7 @@ public class MailAddressDBEntry extends AbstractDatabaseEntry {
   public long getVersionNumber() {
     return getExpireTime();
   }
-  
+
   /**
    * Returns a list of timestamps (as Long objects storing the corresponding
    * System.currentTimeMillis() values) when we have sent a reply to this mailaddress. Only the
@@ -93,5 +101,5 @@ public class MailAddressDBEntry extends AbstractDatabaseEntry {
   public Vector getRequestTimes() {
     return m_requestTimes;
   }
-  
+
 }

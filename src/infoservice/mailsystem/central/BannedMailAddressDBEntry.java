@@ -37,24 +37,25 @@ import anon.infoservice.AbstractDatabaseEntry;
  * This class is the implementation of an entry in the list of banned mailaddresses.
  */
 public class BannedMailAddressDBEntry extends AbstractDatabaseEntry {
-  
+
   /**
    * Stores the banned mailaddress.
    */
   private Address m_mailAddress;
-  
-  
+
+  private long m_creationTime;
+
   /**
    * Creates a new banned mailaddress entry.
    *
    * @param a_mailAddress The mailaddress to ban.
-   */ 
+   */
   public BannedMailAddressDBEntry(Address a_mailAddress) {
     super(System.currentTimeMillis() + MailContext.BAN_PERIOD);
     m_mailAddress = a_mailAddress;
   }
-  
-  
+
+
   /**
    * Returns the ID of this banned mailaddress entry. It's just the string representation of the
    * banned mailaddress.
@@ -64,7 +65,13 @@ public class BannedMailAddressDBEntry extends AbstractDatabaseEntry {
   public String getId() {
     return m_mailAddress.toString();
   }
-  
+
+  public long getLastUpdate()
+  {
+	  return m_creationTime;
+  }
+
+
  /**
    * Returns a version number which is used to determine the more recent entry, if two entries are
    * compared (higher version number -> more recent entry).
@@ -74,5 +81,5 @@ public class BannedMailAddressDBEntry extends AbstractDatabaseEntry {
   public long getVersionNumber() {
     return getExpireTime();
   }
-    
+
 }
