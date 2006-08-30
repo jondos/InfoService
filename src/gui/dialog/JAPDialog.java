@@ -204,7 +204,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			{
 				( (JAPDialog) enumCurrentDialogs.nextElement()).dispose();
 			}
-			currentDialogs.clear();
+			currentDialogs.removeAllElements();
 
 		}
 	}

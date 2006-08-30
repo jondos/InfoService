@@ -1514,6 +1514,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	public void update(Observable a_observable, final Object a_message)
 	{
 		Runnable run = null;
+		final JAPNewView view = this;
 
 		if (a_observable == Database.getInstance(StatusInfo.class))
 		{
@@ -1649,7 +1650,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 		else if (a_message instanceof JAPModel.FontResize && a_message != null)
 		{
-			final JAPNewView view = this;
 			run = new Runnable()
 			{
 				public void run()
@@ -1673,38 +1673,38 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 		else if (a_observable == Database.getInstance(JavaVersionDBEntry.class))
 		{
-			DatabaseMessage message = ((DatabaseMessage)a_message);
-
+			DatabaseMessage message = ( (DatabaseMessage) a_message);
 
 			if (message.getMessageData() == null)
 			{
 				return;
 			}
-			if ((message.getMessageCode() == DatabaseMessage.ENTRY_ADDED ||
-				message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED) &&
+			if ( (message.getMessageCode() == DatabaseMessage.ENTRY_ADDED ||
+				  message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED) &&
 				JAPModel.getInstance().isReminderForJavaUpdateActivated())
 			{
-				final JavaVersionDBEntry entry = (JavaVersionDBEntry)message.getMessageData();
-				if (JavaVersionDBEntry.isJavaTooOld(entry))
+				final JavaVersionDBEntry entry = (JavaVersionDBEntry) message.getMessageData();
+				if (JavaVersionDBEntry.isJavaTooOld(entry) &&
+					!JAPController.getInstance().isConfigAssistantShown())
 				{
-					JAPDialog.LinkedCheckBox checkbox = new JAPDialog.LinkedCheckBox(false);
-					if (JAPDialog.showYesNoDialog(this, JAPMessages.getString(MSG_OLD_JAVA_HINT,
-						new Object[]{entry.getJREVersion()}), JAPMessages.getString(MSG_TITLE_OLD_JAVA),
-						checkbox))
+					// do it as thread as otherwise this would blocks the database
+					new Thread()
 					{
-						new Thread()
+						public void run()
 						{
-							public void run()
+							JAPDialog.LinkedCheckBox checkbox = new JAPDialog.LinkedCheckBox(false);
+							if (JAPDialog.showYesNoDialog(view, JAPMessages.getString(MSG_OLD_JAVA_HINT,
+								new Object[]
+								{entry.getJREVersion()}), JAPMessages.getString(MSG_TITLE_OLD_JAVA), checkbox))
 							{
-								// do it as thread as otherwise this would blocks the database
 								showJavaUpdateDialog(entry);
 							}
-						}.run();
-					}
-					if (checkbox.getState())
-					{
-						JAPModel.getInstance().setReminderForJavaUpdate(false);
-					}
+							if (checkbox.getState())
+							{
+								JAPModel.getInstance().setReminderForJavaUpdate(false);
+							}
+						}
+					}.run();
 				}
 			}
 		}
