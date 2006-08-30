@@ -132,6 +132,8 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	ImageObserver, IDialogOptions
 {
 	public static final double GOLDEN_RATIO_PHI = (1.0 + Math.sqrt(5.0)) / 2.0;
+	public static final double DEFAULT_SCREEN_FORMAT = 4.0 / 3.0;
+	public static final double WIDE_SCREEN_FORMAT = 16.0 / 9.0;
 
 	public static final String MSG_ERROR_UNKNOWN = JAPDialog.class.getName() + "_errorUnknown";
 	public static final String MSG_TITLE_INFO = JAPDialog.class.getName() + "_titleInfo";
@@ -141,6 +143,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	public static final String MSG_ERROR_UNDISPLAYABLE = JAPDialog.class.getName() + "_errorUndisplayable";
 
 	private static final int NUMBER_OF_HEURISTIC_ITERATIONS = 6;
+	private static double m_optimizedFormat = GOLDEN_RATIO_PHI;
 
 	private static boolean ms_bConsoleOnly = false;
 
@@ -576,19 +579,30 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 * @param a_window a Window
 	 * @return the difference from a window's size and the golden ratio
 	 */
-	public static double getGoldenRatioDelta(Window a_window)
+	public static double getOptimizedFormatDelta(Window a_window)
 	{
-		return a_window.getSize().height * GOLDEN_RATIO_PHI - a_window.getSize().width;
+		return a_window.getSize().height * m_optimizedFormat - a_window.getSize().width;
 	}
+
+	/**
+	 * Sets the format to which all automatically scaled dialogs are optimized. It is one of the constants
+	 * GOLDEN_RATIO_PHI,
+	 * @param a_optimizedFormat the format to which all automatically scaled dialogs are optimized
+	 */
+	public static void setOptimizedFormat(double a_optimizedFormat)
+	{
+		m_optimizedFormat = a_optimizedFormat;
+	}
+
 
 	/**
 	 * Calculates the difference from a JAPDialog's size and the golden ratio.
 	 * @param a_dialog a JAPDialog
 	 * @return the difference from a JAPDialog's size and the golden ratio
 	 */
-	public static double getGoldenRatioDelta(JAPDialog a_dialog)
+	public static double getOptimizedFormatDelta(JAPDialog a_dialog)
 	{
-		return a_dialog.getSize().height * GOLDEN_RATIO_PHI - a_dialog.getSize().width;
+		return a_dialog.getSize().height * m_optimizedFormat - a_dialog.getSize().width;
 	}
 
 	/**
@@ -1327,7 +1341,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			}*/
 
 			currentWidth = dummyBox.getWidth();
-			currentDelta = getGoldenRatioDelta(dialog);
+			currentDelta = getOptimizedFormatDelta(dialog);
 			if (Math.abs(currentDelta) < Math.abs(bestDelta) &&
 				(i == 0 || // patch for CDE/Motif, tolerate this error in the first run
 				label.getSize().width >= minLabelWidth))
@@ -1449,11 +1463,11 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		dialogContentPane.updateDialog();
 		((JComponent)dialog.getContentPane()).setPreferredSize(bestDimension);
 		dialog.pack();
-		if (bestDelta != getGoldenRatioDelta(dialog))
+		if (bestDelta != getOptimizedFormatDelta(dialog))
 		{
 			LogHolder.log(LogLevel.ERR, LogType.GUI, "Calculated dialog size differs from real size!");
 		}
-		LogHolder.log(LogLevel.NOTICE, LogType.GUI, "Dialog golden ratio delta: " + getGoldenRatioDelta(dialog));
+		LogHolder.log(LogLevel.NOTICE, LogType.GUI, "Dialog golden ratio delta: " + getOptimizedFormatDelta(dialog));
 
 		dialog.setResizable(false);
 		dialog.setDefaultCloseOperation(DISPOSE_ON_CLOSE);

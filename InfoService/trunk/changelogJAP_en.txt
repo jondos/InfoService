@@ -71,6 +71,8 @@
 - updates, InfoService information and data of the payment system are
   automatically retrieved over an anonymous connection, if they are
   otherwise unreachable or if the user forces this behaviour
+- simple command-line user interface, ideal e.g. for servers without
+  GUI
 - help files reviewed completely
 - font size alterable in steps
 - skin support: all Java-LookAndFeels available in the internet 
