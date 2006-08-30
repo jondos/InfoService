@@ -292,11 +292,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 								JAPMessages.getString("downloadFailed") +
 								JAPMessages.getString("infoURL"), LogType.MISC);
 						}
-						/*
-						else
+						else if (wz.getStatus() == JAPUpdateWizard.UPDATESTATUS_SUCCESS)
 						{
 							bUpdated = true;
-						}*/
+						}
 					}
 				}
 				JavaVersionDBEntry versionEntry = JavaVersionDBEntry.getNewJavaVersion();

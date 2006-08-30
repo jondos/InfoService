@@ -165,7 +165,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private boolean m_bShutdown = false;
 
 	private boolean m_bFirstStartOfJAP = false;
-	private boolean m_bFirstActiveWarning = true;
 
 	/**
 	 * Stores the active MixCascade.
@@ -2371,7 +2370,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							adapter.connectionEstablished(proxyAnon.getMixCascade());
 
 							if (!mbActCntMessageNotRemind && !JAPModel.isSmallDisplay() &&
-								!(m_bFirstStartOfJAP && m_bFirstActiveWarning))
+								!m_bFirstStartOfJAP)
 							{
 								SwingUtilities.invokeLater(new Runnable()
 								{
@@ -2393,7 +2392,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 									}
 								});
 							}
-							m_bFirstActiveWarning = false;
 						}
 						else
 						{
@@ -2515,6 +2513,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 	{
 		return m_bFirstStartOfJAP;
 	}
+	public void setConfigAssistantShown()
+	{
+		m_bFirstStartOfJAP = false;
+	}
+
 
 	public boolean isAnonConnected()
 	{

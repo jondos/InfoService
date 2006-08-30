@@ -80,6 +80,8 @@
   werden, wenn Link nicht direkt erreichbar, automatisch über eine
   anonyme Verbindung geholt; optional kann dies auch als verpflichtend
   eingestellt werden
+- einfache Kommandozeilenoberfläche, ideal z.B. für Server ohne
+  grafische Oberfläche
 - Hilfe komplett überarbeitet
 - Schriftgröße stufenweise veränderbar
 - Skin-Unterstützung: sämtliche im Netz verfügbaren Java-LookAndFeels 

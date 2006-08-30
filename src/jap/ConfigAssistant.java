@@ -529,6 +529,10 @@ addBrowserInstallationInfo(contentPane, constraints,
 					dispose();
 				}
 			}
+			public void windowClosed(WindowEvent a_event)
+			{
+				JAPController.getInstance().setConfigAssistantShown();
+			}
 		});
 
 

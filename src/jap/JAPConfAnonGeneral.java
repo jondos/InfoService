@@ -35,11 +35,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import javax.swing.JCheckBox;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.JRadioButton;
 import javax.swing.ButtonGroup;
 import javax.swing.JPanel;
+import javax.swing.JComboBox;
 import javax.swing.JButton;
 import javax.swing.JSlider;
 import javax.swing.SwingConstants;
@@ -47,6 +49,7 @@ import javax.swing.SwingConstants;
 import gui.JAPHelp;
 import gui.JAPMessages;
 import gui.GUIUtils;
+import gui.JAPMultilineLabel;
 import javax.swing.JList;
 import javax.swing.DefaultListModel;
 import javax.swing.JTextArea;
@@ -73,6 +76,15 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		"_allowedCascades";
 	private static final String MSG_AUTO_CHOOSE_ON_START = JAPConfAnonGeneral.class.getName() +
 		"_autoChooseOnStart";
+	private static final String MSG_TITLE_ASSIGN_SERVICES = JAPConfAnonGeneral.class.getName() +
+		"_titleAssignServices";
+	private static final String MSG_EXPLAIN_ASSIGN_SERVICES = JAPConfAnonGeneral.class.getName() +
+		"_explainAssignServices";
+	private static final String MSG_SERVICE_HTTP = JAPConfAnonGeneral.class.getName() + "_serviceHttp";
+	private static final String MSG_SERVICE_FTP = JAPConfAnonGeneral.class.getName() + "_serviceFtp";
+	private static final String MSG_SERVICE_EMAIL = JAPConfAnonGeneral.class.getName() + "_serviceEMail";
+	private static final String MSG_SERVICE_SOCKS = JAPConfAnonGeneral.class.getName() + "_serviceSocks";
+
 
 	private static final String IMG_ARROW_RIGHT = JAPConfAnonGeneral.class.getName() + "_arrowRight.gif";
 	private static final String IMG_ARROW_LEFT = JAPConfAnonGeneral.class.getName() + "_arrowLeft.gif";
@@ -202,6 +214,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	{
 		JPanel panelRoot = getRootPanel();
 		panelRoot.removeAll();
+
 		//Font font = getFontSetting();
 		m_cbDenyNonAnonymousSurfing = new JCheckBox(JAPMessages.getString(MSG_DENY_NON_ANONYMOUS_SURFING));
 		//m_cbDenyNonAnonymousSurfing.setFont(font);
@@ -256,23 +269,62 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 			}
 		});
 
-
-
 		m_cbDummyTraffic = new JCheckBox(JAPMessages.getString("ngConfAnonGeneralSendDummy"));
 
-		GridBagLayout gb = new GridBagLayout();
-		panelRoot.setLayout(gb);
-		GridBagConstraints c = new GridBagConstraints();
+		/** @todo implement this panel... */
+		JPanel panelServices = new JPanel(new GridBagLayout());
+		GridBagConstraints constrServices = new GridBagConstraints();
+		panelServices.setBorder(new TitledBorder(panelServices.getBorder(),
+												 JAPMessages.getString(MSG_TITLE_ASSIGN_SERVICES)));
+		String[][][] services = {
+			{ { JAPMessages.getString(MSG_SERVICE_HTTP) + " (HTTP/HTTPS)" }, { "AN.ON" } },
+			{ { JAPMessages.getString(MSG_SERVICE_FTP) + " (FTP)" }, { "AN.ON" } },
+			{ { JAPMessages.getString(MSG_SERVICE_EMAIL) + " (SMTP)" }, { "Mixminion" } },
+			{ { JAPMessages.getString(MSG_SERVICE_SOCKS) + " (SOCKS)"} , { "Tor" } }
+		};
 
+		constrServices.weightx = 0.0;
+		constrServices.weighty = 0.0;
+		constrServices.gridwidth = 1;
+		constrServices.gridy = 0;
+		constrServices.anchor = GridBagConstraints.WEST;
+		constrServices.insets = new Insets(5, 30, 5, 5); // top,left,bottom,right
+		for (int i = 0; i < services.length; i++)
+		{
+			constrServices.gridx = 0;
+			constrServices.fill = GridBagConstraints.NONE;
+			panelServices.add( new JLabel(services[i][0][0] + ":"), constrServices);
+			constrServices.gridx = 1;
+
+			constrServices.fill = GridBagConstraints.HORIZONTAL;
+			panelServices.add(new JComboBox(services[i][1]), constrServices);
+			constrServices.gridy++;
+		}
+		constrServices.gridx = 2;
+		constrServices.gridy = 0;
+		constrServices.weightx = 1.0;
+		constrServices.gridheight = 4;
+		panelServices.add(new JLabel(), constrServices);
+		constrServices.gridx = 3;
+		constrServices.weightx = 0.0;
+		constrServices.insets = new Insets(5, 5, 5, 30);
+		panelServices.add(new JAPMultilineLabel(JAPMessages.getString(MSG_EXPLAIN_ASSIGN_SERVICES)), constrServices);
+
+
+		panelRoot.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
 		c.gridx = 0;
 		c.gridy = 0;
 		c.gridheight = 1;
 		c.gridwidth = 1;
 		c.insets = new Insets(10, 10, 0, 10);
 		c.anchor = GridBagConstraints.NORTHWEST;
-		c.fill = GridBagConstraints.HORIZONTAL;
+		c.fill = GridBagConstraints.BOTH;
 		c.weightx = 1;
+		c.weighty = 1;
+		panelRoot.add(panelServices, c);
 		c.weighty = 0;
+		c.gridy++;
 		panelRoot.add(m_cbDenyNonAnonymousSurfing, c);
 		c.gridy++;
 		panelRoot.add(m_cbAutoConnect, c);

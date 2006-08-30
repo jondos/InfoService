@@ -64,7 +64,6 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.util.ClassUtil;
-import java.io.IOException;
 import javax.swing.LookAndFeel;
 
 final class JAPConfUI extends AbstractJAPConfModule
@@ -84,11 +83,14 @@ final class JAPConfUI extends AbstractJAPConfModule
 	private static final String MSG_NO_LNF_FOUND = JAPConfUI.class.getName() + "_noLNFFound";
 	private static final String MSG_LOOK_AND_FEEL_CHANGED = JAPConfUI.class.getName() + "_lnfChanged";
 	private static final String MSG_RESTART_TO_UNLOAD = JAPConfUI.class.getName() + "_restartToUnload";
-
+	private static final String MSG_DIALOG_FORMAT = JAPConfUI.class.getName() + "_lblDialogFormat";
+	private static final String MSG_DIALOG_FORMAT_TEST = JAPConfUI.class.getName() + "_dialogFormatTest";
+	private static final String MSG_DIALOG_FORMAT_TEST_BTN = JAPConfUI.class.getName()
+		+ "_dialogFormatTestBtn";
 
 
 	private TitledBorder m_borderLookAndFeel, m_borderView;
-	private JComboBox m_comboLanguage, m_comboUI;
+	private JComboBox m_comboLanguage, m_comboUI, m_comboDialogFormat;
 	private JCheckBox m_cbSaveWindowPositions, m_cbAfterStart;
 	private JRadioButton m_rbViewSimplified, m_rbViewNormal, m_rbViewMini, m_rbViewSystray;
 	private JCheckBox m_cbWarnOnClose;
@@ -166,6 +168,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		m_btnDeleteUI = new JButton(JAPMessages.getString(MSG_REMOVE));
 		c.gridx++;
 		c.weightx = 0;
+		c.fill = GridBagConstraints.NONE;
 		p.add(m_btnDeleteUI, c);
 		m_btnDeleteUI.addActionListener(new ActionListener()
 		{
@@ -442,13 +445,38 @@ final class JAPConfUI extends AbstractJAPConfModule
 		c.gridx = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
-		c.gridwidth = 3;
+		c.gridwidth = 1;
 		p.add(m_comboLanguage, c);
+
+		l = new JLabel(JAPMessages.getString(JAPMessages.getString(MSG_DIALOG_FORMAT)));
+		c.gridx = 0;
+		c.gridy++;
+		c.fill = GridBagConstraints.NONE;
+		c.weightx = 0;
+		c.gridwidth = 1;
+		p.add(l, c);
+
+		c.gridx = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		m_comboDialogFormat = new JComboBox();
+		m_comboDialogFormat.addItem("Goldener Schnitt");
+		m_comboDialogFormat.addItem("4:3");
+		m_comboDialogFormat.addItem("16:9");
+		p.add(m_comboDialogFormat, c);
+
+		JButton btnTestFormat = new JButton(JAPMessages.getString(MSG_DIALOG_FORMAT_TEST_BTN));
+		c.gridx = 2;
+		//c.fill = GridBagConstraints.NONE;
+		c.weightx = 0;
+		p.add(btnTestFormat, c);
+		//JAPMessages.getString(MSG_DIALOG_FORMAT_TEST)
+
 
 
 		c.gridx = 0;
-		c.gridy = 2;
+		c.gridy++;
 		c.weightx = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = 1;
 		p.add(new JLabel(JAPMessages.getString(MSG_FONT_SIZE)), c);
 
