@@ -30,6 +30,7 @@ package gui.dialog;
 import java.util.EventListener;
 import java.util.Vector;
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.lang.reflect.InvocationTargetException;
 import javax.accessibility.Accessible;
 import javax.accessibility.AccessibleContext;
@@ -150,6 +151,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	private static final int NUMBER_OF_HEURISTIC_ITERATIONS = 6;
 	private static int m_optimizedFormat = FORMAT_WIDE_SCREEN;
 
+	private static Hashtable ms_registeredDialogs = new Hashtable();
 	private static boolean ms_bConsoleOnly = false;
 
 	private boolean m_bLocationSetManually = false;
@@ -184,6 +186,27 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	public static void setConsoleOnly(boolean a_bConsoleOnly)
 	{
 		ms_bConsoleOnly = a_bConsoleOnly;
+		if (ms_bConsoleOnly)
+		{
+			Vector currentDialogs;
+			Enumeration enumCurrentDialogs;
+			synchronized (ms_registeredDialogs)
+			{
+				currentDialogs = new Vector(ms_registeredDialogs.size());
+				enumCurrentDialogs = ms_registeredDialogs.elements();
+				while (enumCurrentDialogs.hasMoreElements())
+				{
+					currentDialogs.addElement(enumCurrentDialogs.nextElement());
+				}
+			}
+			enumCurrentDialogs = currentDialogs.elements();
+			while (enumCurrentDialogs.hasMoreElements())
+			{
+				( (JAPDialog) enumCurrentDialogs.nextElement()).dispose();
+			}
+			currentDialogs.clear();
+
+		}
 	}
 
 	public static boolean isConsoleOnly()
@@ -297,6 +320,18 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		m_internalDialog.addWindowListener(m_dialogWindowAdapter);
 		m_parentWindow = GUIUtils.getParentWindow(getParentComponent());
 		setModal(a_bModal);
+
+
+		ms_registeredDialogs.put(this, this);
+		final JAPDialog thisDialog = this;
+		addWindowListener(new WindowAdapter()
+		{
+			public void windowClosed(WindowEvent a_event)
+			{
+				ms_registeredDialogs.remove(thisDialog);
+				thisDialog.removeWindowListener(this);
+			}
+		});
 	}
 
 	/**
@@ -1507,6 +1542,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		dialog.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		dialog.addWindowListener(new SimpleDialogButtonFocusWindowAdapter(dialogContentPane));
 		dialog.setVisible(true);
+		dialog = null;
 
 		return dialogContentPane.getButtonValue();
 	}
@@ -2775,14 +2811,15 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 
 
 		public void windowClosed(WindowEvent a_event)
-		{/* Does not work... Do this in the dispose method!
-			Vector listeners = (Vector)m_windowListeners.clone();
-			{
-				for (int i = 0; i < listeners.size(); i++)
-				{
-					( (WindowListener) listeners.elementAt(i)).windowClosed(a_event);
-				}
-			}*/
+		{
+			/* Does not work... Do this in the dispose method!
+			 Vector listeners = (Vector)m_windowListeners.clone();
+			 {
+			 for (int i = 0; i < listeners.size(); i++)
+			 {
+			  ( (WindowListener) listeners.elementAt(i)).windowClosed(a_event);
+			 }
+			 }*/
 		}
 
 		/**
