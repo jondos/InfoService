@@ -1674,7 +1674,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		else if (a_observable == Database.getInstance(JavaVersionDBEntry.class))
 		{
 			DatabaseMessage message = ((DatabaseMessage)a_message);
-			JavaVersionDBEntry entry;
+
 
 			if (message.getMessageData() == null)
 			{
@@ -1684,16 +1684,22 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED) &&
 				JAPModel.getInstance().isReminderForJavaUpdateActivated())
 			{
-				entry = (JavaVersionDBEntry)message.getMessageData();
+				final JavaVersionDBEntry entry = (JavaVersionDBEntry)message.getMessageData();
 				if (JavaVersionDBEntry.isJavaTooOld(entry))
 				{
 					JAPDialog.LinkedCheckBox checkbox = new JAPDialog.LinkedCheckBox(false);
-					// this blocks the database, but should nevertheless not cause any deadlocks
 					if (JAPDialog.showYesNoDialog(this, JAPMessages.getString(MSG_OLD_JAVA_HINT,
 						new Object[]{entry.getJREVersion()}), JAPMessages.getString(MSG_TITLE_OLD_JAVA),
 						checkbox))
 					{
-						showJavaUpdateDialog(entry);
+						new Thread()
+						{
+							public void run()
+							{
+								// do it as thread as otherwise this would blocks the database
+								showJavaUpdateDialog(entry);
+							}
+						}.run();
 					}
 					if (checkbox.getState())
 					{

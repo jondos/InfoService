@@ -666,7 +666,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 				String strVersion = XMLUtil.parseAttribute(root, JAPConstants.CONFIG_VERSION, null);
 	            m_Model.setDLLupdate(XMLUtil.parseAttribute(root, m_Model.DLL_VERSION_UPDATE, false));
-
 				JAPModel.getInstance().allowUpdateViaDirectConnection(
 								XMLUtil.parseAttribute(root, XML_ALLOW_NON_ANONYMOUS_UPDATE,
 					JAPConstants.DEFAULT_ALLOW_UPDATE_NON_ANONYMOUS_CONNECTION));
@@ -1006,6 +1005,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 				JAPModel.getInstance().setFontSize(XMLUtil.parseAttribute(
 									   root, JAPModel.XML_FONT_SIZE, JAPModel.getInstance().getFontSize()));
+				JAPDialog.setOptimizedFormat(XMLUtil.parseAttribute(
+								root, JAPDialog.XML_ATTR_OPTIMIZED_FORMAT, JAPDialog.getOptimizedFormat()));
 				//Loading GUI Setting
 				Element elemGUI = (Element) XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_GUI);
 				if (elemGUI != null)
@@ -1757,6 +1758,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 
 			XMLUtil.setAttribute(e, JAPModel.XML_FONT_SIZE, JAPModel.getInstance().getFontSize());
+			XMLUtil.setAttribute(e, JAPDialog.XML_ATTR_OPTIMIZED_FORMAT, JAPDialog.getOptimizedFormat());
 
 			/*stores MixCascades*/
 			Element elemCascades = doc.createElement(MixCascade.XML_ELEMENT_CONTAINER_NAME);
