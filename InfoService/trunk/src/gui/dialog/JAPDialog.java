@@ -131,9 +131,14 @@ import java.awt.Cursor;
 public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer, MenuContainer,
 	ImageObserver, IDialogOptions
 {
-	public static final double GOLDEN_RATIO_PHI = (1.0 + Math.sqrt(5.0)) / 2.0;
-	public static final double DEFAULT_SCREEN_FORMAT = 4.0 / 3.0;
-	public static final double WIDE_SCREEN_FORMAT = 16.0 / 9.0;
+	public static final String XML_ATTR_OPTIMIZED_FORMAT = "dialogFormat";
+
+	public static final int FORMAT_GOLDEN_RATIO_PHI = 0;
+	public static final int FORMAT_DEFAULT_SCREEN = 1;
+	public static final int FORMAT_WIDE_SCREEN = 2;
+
+
+	private static final double[] FORMATS = {((1.0 + Math.sqrt(5.0)) / 2.0), (4.0 / 3.0), (16.0 / 9.0)};
 
 	public static final String MSG_ERROR_UNKNOWN = JAPDialog.class.getName() + "_errorUnknown";
 	public static final String MSG_TITLE_INFO = JAPDialog.class.getName() + "_titleInfo";
@@ -143,7 +148,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	public static final String MSG_ERROR_UNDISPLAYABLE = JAPDialog.class.getName() + "_errorUndisplayable";
 
 	private static final int NUMBER_OF_HEURISTIC_ITERATIONS = 6;
-	private static double m_optimizedFormat = GOLDEN_RATIO_PHI;
+	private static int m_optimizedFormat = FORMAT_WIDE_SCREEN;
 
 	private static boolean ms_bConsoleOnly = false;
 
@@ -575,25 +580,53 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	}
 
 	/**
+	 * Sets the format to which all automatically scaled dialogs are optimized. It is one of the constants
+	 * FORMAT_GOLDEN_RATIO_PHI, FORMAT_DEFAULT_SCREEN and FORMAT_WIDE_SCREEN.
+	 * @param a_optimizedFormat the format to which all automatically scaled dialogs are optimized
+	 */
+	public static void setOptimizedFormat(int a_optimizedFormat)
+	{
+		if (a_optimizedFormat < 0 || a_optimizedFormat >= FORMATS.length)
+		{
+			a_optimizedFormat = FORMATS.length - 1;
+		}
+		m_optimizedFormat = a_optimizedFormat;
+	}
+
+	/**
+	 * Returns the format to which all automatically scaled dialogs are optimized. It is one of the constants
+	 * GOLDEN_RATIO_PHI, DEFAULT_SCREEN_FORMAT and WIDE_SCREEN_FORMAT.
+	 * @return the format to which all automatically scaled dialogs are optimized
+	 */
+	public static int getOptimizedFormat()
+	{
+		return m_optimizedFormat;
+	}
+
+	/**
+	 * Returns the format to which all automatically scaled dialogs are optimized. It is one of the constants
+	 * FORMAT_DEFAULT_SCREEN, FORMAT_GOLDEN_RATIO_PHI, and FORMAT_WIDE_SCREEN.
+	 * @return the format to which all automatically scaled dialogs are optimized
+	 */
+	public static double getOptimizedFormatInternal(int a_format)
+	{
+		if (a_format < 0 || a_format >= FORMATS.length)
+		{
+			a_format = FORMATS.length - 1;
+		}
+		return FORMATS[a_format];
+	}
+
+	/**
 	 * Calculates the difference from a window's size and the golden ratio.
 	 * @param a_window a Window
 	 * @return the difference from a window's size and the golden ratio
 	 */
 	public static double getOptimizedFormatDelta(Window a_window)
 	{
-		return a_window.getSize().height * m_optimizedFormat - a_window.getSize().width;
+		return a_window.getSize().height *
+			getOptimizedFormatInternal(m_optimizedFormat) - a_window.getSize().width;
 	}
-
-	/**
-	 * Sets the format to which all automatically scaled dialogs are optimized. It is one of the constants
-	 * GOLDEN_RATIO_PHI,
-	 * @param a_optimizedFormat the format to which all automatically scaled dialogs are optimized
-	 */
-	public static void setOptimizedFormat(double a_optimizedFormat)
-	{
-		m_optimizedFormat = a_optimizedFormat;
-	}
-
 
 	/**
 	 * Calculates the difference from a JAPDialog's size and the golden ratio.
@@ -602,7 +635,8 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 */
 	public static double getOptimizedFormatDelta(JAPDialog a_dialog)
 	{
-		return a_dialog.getSize().height * m_optimizedFormat - a_dialog.getSize().width;
+		return a_dialog.getSize().height *
+			getOptimizedFormatInternal(m_optimizedFormat) - a_dialog.getSize().width;
 	}
 
 	/**

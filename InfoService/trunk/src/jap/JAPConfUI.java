@@ -87,6 +87,8 @@ final class JAPConfUI extends AbstractJAPConfModule
 	private static final String MSG_DIALOG_FORMAT_TEST = JAPConfUI.class.getName() + "_dialogFormatTest";
 	private static final String MSG_DIALOG_FORMAT_TEST_BTN = JAPConfUI.class.getName()
 		+ "_dialogFormatTestBtn";
+	private static final String MSG_DIALOG_FORMAT_GOLDEN_RATIO = JAPConfUI.class.getName()
+		+ "_dialogFormatGoldenRatio";
 
 
 	private TitledBorder m_borderLookAndFeel, m_borderView;
@@ -157,6 +159,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		p.setBorder(m_borderLookAndFeel);
 		JLabel l = new JLabel(JAPMessages.getString("settingsLookAndFeel"));
 		c.insets = new Insets(10, 10, 10, 10);
+		c.gridy = 1;
 		c.anchor = GridBagConstraints.NORTHWEST;
 		p.add(l, c);
 		c.gridx = 1;
@@ -432,7 +435,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 
 		l = new JLabel(JAPMessages.getString("settingsLanguage"));
 		c.gridx = 0;
-		c.gridy = 1;
+		c.gridy = 0;
 		c.fill = GridBagConstraints.NONE;
 		c.weightx = 0;
 		p.add(l, c);
@@ -450,7 +453,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 
 		l = new JLabel(JAPMessages.getString(JAPMessages.getString(MSG_DIALOG_FORMAT)));
 		c.gridx = 0;
-		c.gridy++;
+		c.gridy = 2;
 		c.fill = GridBagConstraints.NONE;
 		c.weightx = 0;
 		c.gridwidth = 1;
@@ -459,17 +462,27 @@ final class JAPConfUI extends AbstractJAPConfModule
 		c.gridx = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		m_comboDialogFormat = new JComboBox();
-		m_comboDialogFormat.addItem("Goldener Schnitt");
-		m_comboDialogFormat.addItem("4:3");
-		m_comboDialogFormat.addItem("16:9");
+		m_comboDialogFormat.addItem(new DialogFormat(JAPMessages.getString(MSG_DIALOG_FORMAT_GOLDEN_RATIO),
+													 JAPDialog.FORMAT_GOLDEN_RATIO_PHI));
+		m_comboDialogFormat.addItem(new DialogFormat("4:3", JAPDialog.FORMAT_DEFAULT_SCREEN));
+		m_comboDialogFormat.addItem(new DialogFormat("16:9", JAPDialog.FORMAT_WIDE_SCREEN));
 		p.add(m_comboDialogFormat, c);
-
 		JButton btnTestFormat = new JButton(JAPMessages.getString(MSG_DIALOG_FORMAT_TEST_BTN));
+		btnTestFormat.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent a_event)
+			{
+				int currentFormat = JAPDialog.getOptimizedFormat();
+				JAPDialog.setOptimizedFormat(
+								((DialogFormat)m_comboDialogFormat.getSelectedItem()).getFormat());
+				JAPDialog.showMessageDialog(getRootPanel(), JAPMessages.getString(MSG_DIALOG_FORMAT_TEST));
+				JAPDialog.setOptimizedFormat(currentFormat);
+			}
+		});
 		c.gridx = 2;
 		//c.fill = GridBagConstraints.NONE;
 		c.weightx = 0;
 		p.add(btnTestFormat, c);
-		//JAPMessages.getString(MSG_DIALOG_FORMAT_TEST)
 
 
 
@@ -508,6 +521,28 @@ final class JAPConfUI extends AbstractJAPConfModule
 		p.add(m_cbSaveWindowPositions, c);
 		return p;
 	}
+
+	private class DialogFormat
+	{
+		String m_description;
+		int m_format;
+		public DialogFormat(String a_description, int a_format)
+		{
+			m_description = a_description;
+			m_format = a_format;
+		}
+
+		public String toString()
+		{
+			return m_description;
+		}
+
+		public int getFormat()
+		{
+			return m_format;
+		}
+	}
+
 
 	private JPanel createViewPanel()
 	{
@@ -628,6 +663,9 @@ final class JAPConfUI extends AbstractJAPConfModule
 			bNeedRestart = true;
 		}
 
+		JAPDialog.setOptimizedFormat(((DialogFormat)m_comboDialogFormat.getSelectedItem()).getFormat());
+
+
 		String newLaF;
 		if (m_comboUI.getSelectedIndex() >= 0)
 		{
@@ -703,6 +741,15 @@ final class JAPConfUI extends AbstractJAPConfModule
 		m_rbViewMini.setSelected(JAPModel.getMinimizeOnStartup());
 		m_cbWarnOnClose.setSelected(!JAPModel.getInstance().isNeverRemindGoodbye());
 		boolean b = JAPModel.getMoveToSystrayOnStartup() || JAPModel.getMinimizeOnStartup();
+		for (int i = 0; i < m_comboDialogFormat.getItemCount(); i++)
+		{
+			if (((DialogFormat)m_comboDialogFormat.getItemAt(i)).getFormat() ==
+				JAPDialog.getOptimizedFormat())
+			{
+				m_comboDialogFormat.setSelectedIndex(i);
+				break;
+			}
+		}
 		updateThirdPanel(b);
 	}
 
