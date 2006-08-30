@@ -179,6 +179,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private InfoServiceUpdater m_InfoServiceUpdater;
 	private MixCascadeUpdater m_MixCascadeUpdater;
 	private MinVersionUpdater m_minVersionUpdater;
+	private JavaVersionUpdater m_javaVersionUpdater;
 	private Object LOCK_VERSION_UPDATE = new Object();
 	private boolean m_bShowingVersionUpdate = false;
 
@@ -232,6 +233,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		m_InfoServiceUpdater = new InfoServiceUpdater();
 		m_MixCascadeUpdater = new MixCascadeUpdater();
 		m_minVersionUpdater = new MinVersionUpdater();
+		m_javaVersionUpdater = new JavaVersionUpdater();
 
 		m_changeAnonModeJobs = new Vector();
 		m_Model = JAPModel.getInstance();
@@ -388,9 +390,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 				m_InfoServiceUpdater.start(false);
 				m_MixCascadeUpdater.start(false);
 				m_minVersionUpdater.start(false);
+				m_javaVersionUpdater.start(false);
 			}
 		}.start();
 		m_minVersionUpdater.updateAsync();
+		m_javaVersionUpdater.updateAsync();
 
 		// start http listener object
 		/* if (JAPModel.isTorEnabled())
@@ -2848,6 +2852,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_Controller.m_MixCascadeUpdater.stop();
 					m_Controller.m_InfoServiceUpdater.stop();
 					m_Controller.m_minVersionUpdater.stop();
+					m_Controller.m_javaVersionUpdater.stop();
 					// do not show direct connection warning dialog
 					DirectProxy.setAllowUnprotectedConnectionCallback(null);
 
@@ -3063,120 +3068,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			updateVersionNumber = vi.getJapVersion();
 		}
 
-		if (!a_bForced)
-		{
-			if (updateVersionNumber.compareTo(JAPConstants.aktVersion) <= 0)
-			{
-				// no update needed
-				return 0;
-			}
-		}
-
-		if (updateVersionNumber != null &&
-			(a_bForced || JAPModel.getInstance().isReminderForOptionalUpdateActivated()))
-		{
-			updateVersionNumber = updateVersionNumber.trim();
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Local version: " + JAPConstants.aktVersion);
-			if (updateVersionNumber.compareTo(JAPConstants.aktVersion) <= 0)
-			{
-				/* the local JAP version is up to date -> exit */
-				return 0;
-			}
-			/* local version is not up to date, new version is available -> ask the user whether to
-			 * download the new version or not
-			 */
-			String message;
-			JAPDialog.LinkedCheckBox checkbox = null;
-			if (a_bForced)
-			{
-				message = JAPMessages.getString("newVersionAvailable", updateVersionNumber);
-			}
-			else
-			{
-				String dev = ")";
-				if (!JAPConstants.m_bReleasedVersion)
-				{
-					dev = "-dev)";
-				}
-				message = JAPMessages.getString(MSG_NEW_OPTIONAL_VERSION, updateVersionNumber + dev);
-				checkbox = new JAPDialog.LinkedCheckBox(false);
-			}
-			JAPDll.setWindowOnTop(getView(), true);
-			boolean bAnswer = JAPDialog.showYesNoDialog(getView(),
-														message,
-														JAPMessages.getString("newVersionAvailableTitle"),
-														checkbox);
-			JAPDll.setWindowOnTop(getView(), false);
-			if (checkbox != null)
-			{
-				JAPModel.getInstance().setReminderForOptionalUpdate(!checkbox.getState());
-			}
-			if (bAnswer)
-			{
-				/* User has selected to download new version of JAP -> Download, Alert, exit program */
-				if (vi != null)
-				{
-					//store current configuration first
-					saveConfigFile();
-					JAPUpdateWizard wz = new JAPUpdateWizard(vi, getView());
-					/* we got the JAPVersionInfo from the infoservice */
-					/* Assumption: If we are here, the download failed for some resaons, otherwise the
-					 * program would quit
-					 */
-					//TODO: Do this in a better way!!
-					if (wz.getStatus() == JAPUpdateWizard.UPDATESTATUS_ERROR)
-					{
-						/* Download failed -> alert, and reset anon mode to false */
-						LogHolder.log(LogLevel.ERR, LogType.MISC, "Some update problem.");
-						JAPDialog.showErrorDialog(getView(),
-												  JAPMessages.getString("downloadFailed") +
-												  JAPMessages.getString("infoURL"), LogType.MISC);
-						if (a_bForced)
-						{
-							notifyJAPObservers();
-						}
-						/* update failed -> exit */
-						return -1;
-					}
-					/* should never be reached, because if update was successful, the JAPUpdateWizard closes
-					 * JAP
-					 */
-					//goodBye(false);
-					return 0;
-				}
-				/* update was not successful, because we could not get the JAPVersionInfo -> alert, and
-				 * reset anon mode to false
-				 */
-				LogHolder.log(LogLevel.ERR, LogType.MISC, "Could not get JAPVersionInfo.");
-				JAPDialog.showErrorDialog(getView(),
-										  JAPMessages.getString("downloadFailed") +
-										  JAPMessages.getString("infoURL"), LogType.MISC);
-				if (a_bForced)
-				{
-					notifyJAPObservers();
-				}
-				/* update failed -> exit */
-				return -1;
-			}
-			else
-			{
-				/* User has selected not to download -> Alert, we should'nt start the system due to
-				 * possible compatibility problems
-				 */
-				if (a_bForced)
-				{
-
-
-					JAPDialog.showWarningDialog(getView(), JAPMessages.getString("youShouldUpdate",
-												JAPMessages.getString(JAPNewView.MSG_UPDATE)),
-												JAPUtil.createDialogBrowserLink(JAPMessages.getString("infoURL")));
-					//notifyJAPObservers();
-					return -1;
-				}
-				return 0;
-			}
-		}
-		else
+		if (updateVersionNumber == null)
 		{
 			/* can't get the current version number from the infoservices. Ignore this,
 			 * as this is not a problem!
@@ -3189,6 +3081,117 @@ public final class JAPController extends Observable implements IProxyListener, O
 			//notifyJAPObservers();
 			return 1;
 		}
+
+		if (!a_bForced)
+		{
+			if (updateVersionNumber.compareTo(JAPConstants.aktVersion) <= 0 || isConfigAssistantShown()
+				|| !JAPModel.getInstance().isReminderForOptionalUpdateActivated())
+			{
+				// no update needed; do not show dialog
+				return 0;
+			}
+		}
+
+		updateVersionNumber = updateVersionNumber.trim();
+		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Local version: " + JAPConstants.aktVersion);
+		if (updateVersionNumber.compareTo(JAPConstants.aktVersion) <= 0)
+		{
+			/* the local JAP version is up to date -> exit */
+			return 0;
+		}
+		/* local version is not up to date, new version is available -> ask the user whether to
+		 * download the new version or not
+		 */
+		String message;
+		JAPDialog.LinkedCheckBox checkbox = null;
+		if (a_bForced)
+		{
+			message = JAPMessages.getString("newVersionAvailable", updateVersionNumber);
+		}
+		else
+		{
+			String dev = ")";
+			if (!JAPConstants.m_bReleasedVersion)
+			{
+				dev = "-dev)";
+			}
+			message = JAPMessages.getString(MSG_NEW_OPTIONAL_VERSION, updateVersionNumber + dev);
+			checkbox = new JAPDialog.LinkedCheckBox(false);
+		}
+		JAPDll.setWindowOnTop(getView(), true);
+		boolean bAnswer = JAPDialog.showYesNoDialog(getView(),
+													message,
+													JAPMessages.getString("newVersionAvailableTitle"),
+													checkbox);
+		JAPDll.setWindowOnTop(getView(), false);
+		if (checkbox != null)
+		{
+			JAPModel.getInstance().setReminderForOptionalUpdate(!checkbox.getState());
+		}
+		if (bAnswer)
+		{
+			/* User has selected to download new version of JAP -> Download, Alert, exit program */
+			if (vi != null)
+			{
+				//store current configuration first
+				saveConfigFile();
+				JAPUpdateWizard wz = new JAPUpdateWizard(vi, getView());
+				/* we got the JAPVersionInfo from the infoservice */
+				/* Assumption: If we are here, the download failed for some resaons, otherwise the
+				 * program would quit
+				 */
+				//TODO: Do this in a better way!!
+				if (wz.getStatus() == JAPUpdateWizard.UPDATESTATUS_ERROR)
+				{
+					/* Download failed -> alert, and reset anon mode to false */
+					LogHolder.log(LogLevel.ERR, LogType.MISC, "Some update problem.");
+					JAPDialog.showErrorDialog(getView(),
+											  JAPMessages.getString("downloadFailed") +
+											  JAPMessages.getString("infoURL"), LogType.MISC);
+					if (a_bForced)
+					{
+						notifyJAPObservers();
+					}
+					/* update failed -> exit */
+					return -1;
+				}
+				/* should never be reached, because if update was successful, the JAPUpdateWizard closes
+				 * JAP
+				 */
+				//goodBye(false);
+				return 0;
+			}
+			/* update was not successful, because we could not get the JAPVersionInfo -> alert, and
+			 * reset anon mode to false
+			 */
+			LogHolder.log(LogLevel.ERR, LogType.MISC, "Could not get JAPVersionInfo.");
+			JAPDialog.showErrorDialog(getView(),
+									  JAPMessages.getString("downloadFailed") +
+									  JAPMessages.getString("infoURL"), LogType.MISC);
+			if (a_bForced)
+			{
+				notifyJAPObservers();
+			}
+			/* update failed -> exit */
+			return -1;
+		}
+		else
+		{
+			/* User has selected not to download -> Alert, we should'nt start the system due to
+			 * possible compatibility problems
+			 */
+			if (a_bForced)
+			{
+
+				JAPDialog.showWarningDialog(getView(), JAPMessages.getString("youShouldUpdate",
+					JAPMessages.getString(JAPNewView.MSG_UPDATE)),
+											JAPUtil.createDialogBrowserLink(JAPMessages.getString("infoURL")));
+				//notifyJAPObservers();
+				return -1;
+			}
+			return 0;
+		}
+
 		/* this line should never be reached */
 	}
 
@@ -3377,21 +3380,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 						catch (Throwable a_e)
 						{
 							LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
-						}
-
-						// proceed with java check if JAP has not been updated (that means it is closed)
-						javaVersions = InfoServiceHolder.getInstance().getLatestJavaVersions();
-						if (javaVersions != null)
-						{
-							enumVersions = javaVersions.elements();
-							while (enumVersions.hasMoreElements())
-							{
-								/* Beware that this must be the only update operation for this DB!
-								 * Otherwise there would be deadlocks caused by JAPNewView.
-								 */
-								Database.getInstance(JavaVersionDBEntry.class).update(
-									(JavaVersionDBEntry)enumVersions.nextElement());
-							}
 						}
 
 						synchronized (LOCK_VERSION_UPDATE)
