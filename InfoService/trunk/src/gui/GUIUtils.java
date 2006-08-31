@@ -65,6 +65,10 @@ import java.util.Vector;
 import anon.util.ClassUtil;
 import javax.swing.LookAndFeel;
 import javax.swing.UIManager.LookAndFeelInfo;
+import javax.swing.Icon;
+import java.awt.Graphics2D;
+import java.awt.Graphics;
+import gui.dialog.DialogContentPane;
 
 /**
  * This class contains helper methods for the GUI.
@@ -88,13 +92,23 @@ public final class GUIUtils
 	private static final String MSG_SAVED_TO_CLIP = GUIUtils.class.getName() + "_savedToClip";
 
 
-	private static IIconResizer ms_resizer = new IIconResizer()
+	private static final IIconResizer DEFAULT_RESIZER = new IIconResizer()
+	{
+		public double getResizeFactor()
 		{
-			public double getResizeFactor()
-			{
-				return 1.0;
-			}
+			return 1.0;
+		}
 	};
+	private static IIconResizer ms_resizer = DEFAULT_RESIZER;
+
+	private static final IIconResizer RESIZER = new IIconResizer()
+	{
+		public double getResizeFactor()
+		{
+			return ms_resizer.getResizeFactor();
+		}
+	};
+
 
 
 	// all loaded icons are stored in the cache and do not need to be reloaded from file
@@ -114,12 +128,19 @@ public final class GUIUtils
 
 	public static final IIconResizer getIconResizer()
 	{
-		return ms_resizer;
+		return RESIZER;
 	}
 
 	public static final void setIconResizer(IIconResizer a_resizer)
 	{
-		ms_resizer = a_resizer;
+		if (a_resizer != null)
+		{
+			ms_resizer = a_resizer;
+		}
+		else
+		{
+			ms_resizer = DEFAULT_RESIZER;
+		}
 	}
 
 	/**
@@ -581,6 +602,16 @@ public final class GUIUtils
 			  (int) (a_icon.getIconWidth() * a_resizer.getResizeFactor()), -1, Image.SCALE_REPLICATE));
 	}
 
+	public static Icon createScaledIcon(Icon a_icon, IIconResizer a_resizer)
+	{
+		if (a_icon == null)
+		{
+			return a_icon;
+		}
+
+		return new IconScaler(a_icon, a_resizer.getResizeFactor());
+	}
+
 	private static String getTextFromClipboard(Component a_requestingComponent, boolean a_bUseTextArea)
 	{
 		Clipboard cb = getSystemClipboard();
@@ -627,6 +658,52 @@ public final class GUIUtils
 		catch (Exception a_e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.GUI, a_e);
+		}
+	}
+
+	/** * Diese Klasse dient dazu aus einem vorhandenen Icon ein neues Icon
+	 * herzustellen. Dazu werden neben dem vorhanden Icon die Skalierungsfaktoren angegeben.
+	 */
+	private static class IconScaler implements Icon
+	{
+		private Icon icon;
+		private double scaleX;
+		private double scaleY;
+
+		/**
+		 * Erzeugt ein neues Icon, indem das &uuml;bergebene Icon mit den
+		 * gew&uunschten Skalierungsfaktoren vergr&ouml;ssert oder verkleinert wird.
+		 */
+		public IconScaler(Icon icon, double a_scale)
+		{
+			this(icon, a_scale, a_scale);
+		}
+
+		public IconScaler(Icon icon, double scaleX, double scaleY)
+		{
+			this.icon = icon;
+			this.scaleX = scaleX;
+			this.scaleY = scaleY;
+		}
+
+		public int getIconHeight()
+		{
+			return (int) (icon.getIconHeight() * scaleY);
+		}
+
+		public int getIconWidth()
+		{
+			return (int) (icon.getIconWidth() * scaleX);
+		}
+
+		public void paintIcon(Component c, Graphics g, int x, int y)
+		{
+			System.out.println(scaleX + ":" + scaleY);
+			Graphics2D g2 =
+				(Graphics2D) g;
+			g2.scale(scaleX, scaleY);
+			icon.paintIcon(c, g2, x, y);
+			g2.scale(1 / scaleX, 1 / scaleY);
 		}
 	}
 }
