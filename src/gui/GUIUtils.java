@@ -664,6 +664,8 @@ public final class GUIUtils
 	 */
 	private static class IconScaler implements Icon
 	{
+		private static Class GRAPHICS_2D;
+
 		static
 		{
 			try
@@ -679,7 +681,7 @@ public final class GUIUtils
 		private Icon m_icon;
 		private double m_scaleWidth;
 		private double m_scaleHeight;
-		private static Class GRAPHICS_2D;
+
 
 		/**
 		 * Erzeugt ein neues Icon, indem das &uuml;bergebene Icon mit den
