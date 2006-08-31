@@ -459,7 +459,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		c.weightx = 0;
 		c.gridwidth = 1;
 		p.add(l, c);
-
+		l.setVisible(false);
 		c.gridx = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		m_comboDialogFormat = new JComboBox();
@@ -484,6 +484,8 @@ final class JAPConfUI extends AbstractJAPConfModule
 		//c.fill = GridBagConstraints.NONE;
 		c.weightx = 0;
 		p.add(btnTestFormat, c);
+		m_comboDialogFormat.setVisible(false);
+		btnTestFormat.setVisible(false);
 
 		btnTestFormat = new JButton(JAPMessages.getString(MSG_DIALOG_FORMAT_TEST_BTN));
 		btnTestFormat.addActionListener(new ActionListener()
@@ -501,6 +503,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		//c.fill = GridBagConstraints.NONE;
 		c.weightx = 0;
 		p.add(btnTestFormat, c);
+		btnTestFormat.setVisible(false);
 
 		c.gridx = 0;
 		c.gridy++;

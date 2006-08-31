@@ -1507,7 +1507,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		if (bAnonMode && bConnected)
 		{
 			//System.out.println("anon level");
-			if (iAnonLevel >= 0 && iAnonLevel <= 11)
+			if (iAnonLevel >= 0 && iAnonLevel <= 10)
 			{
 				return meterIcons[iAnonLevel + 3];
 			}
