@@ -83,7 +83,7 @@ public class XMLPaymentOption implements IXMLEncodable
 	private String m_imageLink;
 
 	/** JAP version since when the option does work (for non-generic options) */
-	private String m_japVersion;
+	private String m_minJapVersion;
 
 	public XMLPaymentOption(String xml) throws Exception
 	{
@@ -108,7 +108,7 @@ public class XMLPaymentOption implements IXMLEncodable
 		m_name = a_name;
 		m_type = a_type;
 		m_generic = a_generic;
-		m_japVersion = a_japVersion;
+		m_minJapVersion = a_japVersion;
 	}
 
 	public XMLPaymentOption(String a_name, String a_type)
@@ -163,7 +163,7 @@ public class XMLPaymentOption implements IXMLEncodable
 		elemRoot.setAttribute("name", m_name);
 		elemRoot.setAttribute("type", m_type);
 		elemRoot.setAttribute("generic", String.valueOf(m_generic));
-		elemRoot.setAttribute("japversion", m_japVersion);
+		elemRoot.setAttribute("japversion", m_minJapVersion);
 
 		Element elem;
 
@@ -237,7 +237,7 @@ public class XMLPaymentOption implements IXMLEncodable
 		m_type = elemRoot.getAttribute("type");
 		m_name = elemRoot.getAttribute("name");
 		m_generic = XMLUtil.parseAttribute(elemRoot, "generic", true);
-		m_japVersion = XMLUtil.parseAttribute(elemRoot, "japversion", Util.VERSION_FORMAT);
+		m_minJapVersion = XMLUtil.parseAttribute(elemRoot, "japversion", Util.VERSION_FORMAT);
 
 		NodeList nodesHeadings = elemRoot.getElementsByTagName("Heading");
 		for (int i = 0; i < nodesHeadings.getLength(); i++)
@@ -387,16 +387,31 @@ public class XMLPaymentOption implements IXMLEncodable
 		return m_generic;
 	}
 
-	public void setJapVersion(String a_japVersion)
+	public String getMinJapVersion()
 	{
-		m_japVersion = a_japVersion;
+		return m_minJapVersion;
+	}
+
+	public boolean isNewer(XMLPaymentOption a_paymentOption)
+	{
+		if (m_minJapVersion == null)
+		{
+				return false;
+		}
+		if (a_paymentOption.getMinJapVersion() == null)
+		{
+			return true;
+		}
+		return (Util.convertVersionStringToNumber(m_minJapVersion) >
+				Util.convertVersionStringToNumber(a_paymentOption.getMinJapVersion()));
 	}
 
 	public boolean worksWithJapVersion(String a_version)
 	{
-		if (m_japVersion != null)
+		if (m_minJapVersion != null)
 		{
-			if (Util.convertVersionStringToNumber(m_japVersion) > Util.convertVersionStringToNumber(a_version))
+			if (Util.convertVersionStringToNumber(m_minJapVersion) >
+				Util.convertVersionStringToNumber(a_version))
 			{
 				return false;
 			}

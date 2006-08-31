@@ -305,6 +305,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	}
 
 	/**
+	 * This method will be called when another tab is chosen*/
+	public void stateChanged(ChangeEvent ce)
+	{
+		setHelpContext();
+	}
+
+	/**
 	 * getTabTitle
 	 *
 	 * @return String
@@ -972,9 +979,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		}
 	}
 
-	/**
-	 * Charges the selected account
-	 */
 	private void doChargeAccount(final PayAccount selectedAccount)
 	{
 		if (selectedAccount == null)
@@ -993,9 +997,19 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 										  JAPMessages.getString(MSG_CHARGETITLE), true);
 		d.setDefaultCloseOperation(JAPDialog.DISPOSE_ON_CLOSE);
 		d.setResizable(true);
-		SimpleWizardContentPane welcomePane = new SimpleWizardContentPane(d,
-			JAPMessages.getString(MSG_CHARGEWELCOME), null, null);
+		doChargeAccount(new FixedReturnAccountRunnable(selectedAccount), d, null, null);
+		d.setLocationCenteredOnOwner();
+		d.setVisible(true);
+	}
 
+	/**
+	 * Charges the selected account
+	 */
+	private void doChargeAccount(final IReturnAccountRunnable a_accountCreationThread,
+								 final JAPDialog a_parentDialog,
+								 final DialogContentPane a_previousContentPane,
+								 final IReturnBooleanRunnable a_booleanThread)
+	{
 		WorkerContentPane.IReturnRunnable fetchOptions = new WorkerContentPane.IReturnRunnable()
 		{
 			private XMLPaymentOptions m_paymentOptions;
@@ -1003,7 +1017,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			{
 				try
 				{
-					BI pi = selectedAccount.getBI();
+					BI pi = a_accountCreationThread.getAccount().getBI();
 					BIConnection piConn = new BIConnection(pi);
 
 					piConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
@@ -1020,7 +1034,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					{
 						LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
 									  "Error fetching payment options: " + e.getMessage());
-						showPIerror(d.getContentPane(), e);
+						showPIerror(a_parentDialog.getContentPane(), e);
 						Thread.currentThread().interrupt();
 					}
 				}
@@ -1032,12 +1046,19 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			}
 		};
 
-		final WorkerContentPane fetchOptionsPane = new WorkerContentPane(d,
-			JAPMessages.getString(MSG_FETCHINGOPTIONS), welcomePane,
-			fetchOptions);
+		final WorkerContentPane fetchOptionsPane = new WorkerContentPane(a_parentDialog,
+			JAPMessages.getString(MSG_FETCHINGOPTIONS), a_previousContentPane, fetchOptions)
+		{
+			public boolean isMoveForwardAllowed()
+			{
+				return a_parentDialog.isVisible() && a_booleanThread != null && !a_booleanThread.isTrue();
+			}
+		};
 		fetchOptionsPane.setInterruptThreadSafe(false);
 
-		final MethodSelectionPane methodSelectionPane = new MethodSelectionPane(d, fetchOptionsPane);
+
+		final MethodSelectionPane methodSelectionPane =
+			new MethodSelectionPane(a_parentDialog, fetchOptionsPane);
 
 		WorkerContentPane.IReturnRunnable fetchTan = new WorkerContentPane.IReturnRunnable()
 		{
@@ -1051,7 +1072,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 									  "Fetching Transaction Certificate from Payment Instance");
 
-						m_transCert = selectedAccount.charge(
+						m_transCert = a_accountCreationThread.getAccount().charge(
 							JAPModel.getInstance().getPaymentProxyInterface());
 					}
 					catch (Exception e)
@@ -1073,11 +1094,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			}
 		};
 
-		WorkerContentPane fetchTanPane = new WorkerContentPane(d, JAPMessages.getString(MSG_FETCHINGTAN),
+		WorkerContentPane fetchTanPane =
+			new WorkerContentPane(a_parentDialog, JAPMessages.getString(MSG_FETCHINGTAN),
 			methodSelectionPane, fetchTan);
 		fetchTanPane.setInterruptThreadSafe(false);
 
-		final PaymentInfoPane paymentInfoPane = new PaymentInfoPane(d, fetchTanPane)
+		final PaymentInfoPane paymentInfoPane = new PaymentInfoPane(a_parentDialog, fetchTanPane)
 		{
 			public boolean isSkippedAsNextContentPane()
 			{
@@ -1099,7 +1121,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		};
 		paymentInfoPane.getButtonNo().setVisible(false);
 
-		final PassivePaymentPane passivePaymentPane = new PassivePaymentPane(d, paymentInfoPane)
+		final PassivePaymentPane passivePaymentPane = new PassivePaymentPane(a_parentDialog, paymentInfoPane)
 		{
 
 			public boolean isSkippedAsNextContentPane()
@@ -1123,12 +1145,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			public void run()
 			{
 				/** Post data to payment instance */
-				BIConnection biConn = new BIConnection(selectedAccount.getBI());
+				BIConnection biConn = new BIConnection(a_accountCreationThread.getAccount().getBI());
 				try
 				{
 					biConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
-					biConn.authenticate(selectedAccount.getAccountCertificate(),
-										selectedAccount.getPrivateKey());
+					biConn.authenticate(a_accountCreationThread.getAccount().getAccountCertificate(),
+										a_accountCreationThread.getAccount().getPrivateKey());
 					if (!biConn.sendPassivePayment(passivePaymentPane.getEnteredInfo()))
 					{
 						m_successful = new Boolean(false);
@@ -1155,7 +1177,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			}
 		};
 
-		final WorkerContentPane sendPassivePane = new WorkerContentPane(d,
+		final WorkerContentPane sendPassivePane = new WorkerContentPane(a_parentDialog,
 			JAPMessages.getString(MSG_SENDINGPASSIVE), passivePaymentPane, sendPassive)
 		{
 			public boolean isSkippedAsNextContentPane()
@@ -1172,9 +1194,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			}
 		};
 
-		final SimpleWizardContentPane sentPane = new SimpleWizardContentPane(d,
+		final SimpleWizardContentPane sentPane = new SimpleWizardContentPane(a_parentDialog,
 			JAPMessages.getString(MSG_SENTPASSIVE), null,
-			new Options(createUpdateAccountPane(selectedAccount, methodSelectionPane, d, sendPassivePane)))
+			new Options(createUpdateAccountPane(
+					 a_accountCreationThread, methodSelectionPane, a_parentDialog, sendPassivePane)))
 		{
 			public boolean isSkippedAsNextContentPane()
 			{
@@ -1207,10 +1230,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		sentPane.getButtonCancel().setVisible(false);
 		sentPane.getButtonNo().setVisible(false);
 
-		welcomePane.updateDialogOptimalSized(welcomePane);
-		d.setLocationCenteredOnOwner();
-		d.setVisible(true);
-
+		if (a_previousContentPane == null)
+		{
+			DialogContentPane.updateDialogOptimalSized(fetchOptionsPane);
+		}
 	}
 
 	/**
@@ -1355,7 +1378,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		m_bReady = true;
 
-		final WorkerContentPane.IReturnRunnable doIt = new WorkerContentPane.IReturnRunnable()
+		final IReturnAccountRunnable doIt = new IReturnAccountRunnable()
 		{
 			private PayAccount m_payAccount;
 			private IOException m_connectionError;
@@ -1395,6 +1418,15 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					}
 				}
 				m_connectionError = null;
+			}
+			public PayAccount getAccount()
+			{
+				Object account = getValue();
+				if (account instanceof PayAccount)
+				{
+					return (PayAccount)account;
+				}
+				return null;
 			}
 
 			public Object getValue()
@@ -1464,37 +1496,45 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			}
 		});
 
-		PasswordContentPane pc = null;
 		//First account, ask for password
-		if (PayAccountsFile.getInstance().getNumAccounts() == 0)
+		final boolean bFirstPayAccount = PayAccountsFile.getInstance().getNumAccounts() == 0;
+		PasswordContentPane pc = new PasswordContentPane(d, captcha,
+			PasswordContentPane.PASSWORD_NEW,
+			JAPMessages.getString(MSG_ACCPASSWORD))
 		{
-			pc = new PasswordContentPane(d, captcha,
-										 PasswordContentPane.PASSWORD_NEW,
-										 JAPMessages.getString(MSG_ACCPASSWORD))
+			public CheckError[] checkYesOK()
 			{
-				public CheckError[] checkYesOK()
+				CheckError[] errors = super.checkYesOK();
+
+				if (errors == null || errors.length == 0)
 				{
-					CheckError[] errors = super.checkYesOK();
-
-					if (errors == null || errors.length == 0)
+					setButtonValue(RETURN_VALUE_OK);
+					if (getPassword() != null)
 					{
-						setButtonValue(RETURN_VALUE_OK);
-						if (getPassword() != null)
-						{
-							JAPController.getInstance().setPaymentPassword(new String(getPassword()));
-						}
-						else
-						{
-							JAPController.getInstance().setPaymentPassword("");
-						}
+						JAPController.getInstance().setPaymentPassword(new String(getPassword()));
 					}
-					return errors;
+					else
+					{
+						JAPController.getInstance().setPaymentPassword("");
+					}
 				}
-			};
-		}
+				return errors;
+			}
 
-		final WorkerContentPane.IReturnRunnable exportThread = new WorkerContentPane.IReturnRunnable()
-		{
+			public boolean isSkippedAsNextContentPane()
+			{
+				return d.isVisible() && !bFirstPayAccount;
+			}
+
+			public boolean isSkippedAsPreviousContentPane()
+			{
+				return d.isVisible() && !bFirstPayAccount;
+			}
+		};
+
+
+	final IReturnBooleanRunnable exportThread = new IReturnBooleanRunnable()
+	{
 			private Boolean m_bAccountSaved = new Boolean(false);
 
 			public void run()
@@ -1509,7 +1549,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						JAPModel.getInstance().getConfigFile()), LogType.MISC);
 					try
 					{
-						if (exportAccount( (PayAccount) doIt.getValue(), d.getContentPane(),
+						if (exportAccount(doIt.getAccount(), d.getContentPane(),
 										  JAPController.getInstance().getPaymentPassword()))
 						{
 							m_bAccountSaved = new Boolean(true);
@@ -1533,17 +1573,21 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 			public Object getValue()
 			{
+				if (!d.isVisible())
+				{
+					return new Boolean(true);
+				}
 				return m_bAccountSaved;
 			}
+			public boolean isTrue()
+			{
+				return ((Boolean)getValue()).booleanValue();
+			}
 		};
-		DialogContentPane saveConfigPrevious = pc;
-		WorkerContentPane saveConfig;
-		if (saveConfigPrevious == null)
-		{
-			saveConfigPrevious = captcha;
-		}
-		saveConfig = new WorkerContentPane(d, JAPMessages.getString(MSG_SAVE_CONFIG) + WorkerContentPane.DOTS,
-										   saveConfigPrevious, exportThread)
+
+		WorkerContentPane saveConfig =
+			new WorkerContentPane(d, JAPMessages.getString(MSG_SAVE_CONFIG) + WorkerContentPane.DOTS,
+								  pc, exportThread)
 		{
 			public boolean isMoveBackAllowed()
 			{
@@ -1568,7 +1612,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		};
 		saveErrorPane.getButtonCancel().setVisible(false);
 
-		PITestWorkerPane.updateDialogOptimalSized(fetchBiWorker);
+
 
 		d.addWindowListener(new WindowAdapter()
 		{
@@ -1593,16 +1637,22 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				{
 					/** Select new account */
 					m_listAccounts.setSelectedValue(doIt.getValue(), true);
+					/*
 					if ( ( (Boolean) exportThread.getValue()).booleanValue())
 					{
-						doChargeAccount( (PayAccount) doIt.getValue());
-					}
+						doChargeAccount(doIt.getAccount());
+					}*/
 				}
 			}
 		});
-		d.setLocationCenteredOnOwner();
+
+
 		m_bDoNotCloseDialog = false;
+		doChargeAccount(doIt, d, saveErrorPane, exportThread);
+		PITestWorkerPane.updateDialogOptimalSized(fetchBiWorker);
+		d.setLocationCenteredOnOwner();
 		d.setVisible(true);
+
 	}
 
 /**
@@ -1664,7 +1714,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		updateAccountList();
 	}
 
-	private DialogContentPane createUpdateAccountPane(final PayAccount a_selectedAccount,
+	private DialogContentPane createUpdateAccountPane(final IReturnAccountRunnable a_accountCreationThread,
 		final MethodSelectionPane a_methodSelectionPane,
 		final JAPDialog a_parentDialog, DialogContentPane a_previousContentPane)
 	{
@@ -1674,7 +1724,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			{
 				try
 				{
-					a_selectedAccount.fetchAccountInfo(
+					a_accountCreationThread.getAccount().fetchAccountInfo(
 									   JAPModel.getInstance().getPaymentProxyInterface(), true);
 					updateAccountList();
 				}
@@ -1727,14 +1777,15 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		}
 		JAPDialog busy = new JAPDialog(GUIUtils.getParentWindow(getRootPanel()),
 									   JAPMessages.getString(MSG_GETACCOUNTSTATEMENTTITLE), true);
-		DialogContentPane worker = createUpdateAccountPane(a_selectedAccount, null, busy, null);
+		DialogContentPane worker =
+			createUpdateAccountPane(new FixedReturnAccountRunnable(a_selectedAccount), null, busy, null);
 		worker.updateDialog();
 		busy.pack();
 		busy.setLocationCenteredOnOwner();
 		busy.setVisible(true);
 	}
 
-/**
+	/**
 	 * doExportAccount
 	 *
 	 * @param payAccount PayAccount
@@ -2305,10 +2356,37 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		}
 	}
 
-	/**
-	 * This method will be called when another tab is chosen*/
-	public void stateChanged(ChangeEvent ce)
+	private static interface IReturnAccountRunnable extends WorkerContentPane.IReturnRunnable
 	{
-		setHelpContext();
+		public PayAccount getAccount();
+	}
+
+	private static interface IReturnBooleanRunnable extends WorkerContentPane.IReturnRunnable
+	{
+		public boolean isTrue();
+	}
+
+
+	private static final class FixedReturnAccountRunnable implements IReturnAccountRunnable
+	{
+		private PayAccount m_account;
+
+		public FixedReturnAccountRunnable(PayAccount a_account)
+		{
+			m_account = a_account;
+		}
+
+		public Object getValue()
+		{
+			return m_account;
+		}
+
+		public PayAccount getAccount()
+		{
+			return m_account;
+		}
+
+		public void run()
+		{}
 	}
 }

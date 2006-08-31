@@ -63,7 +63,7 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 	public static final int PASSWORD_CHANGE = 3;
 	public static final int NO_MINIMUM_LENGTH = 0;
 
-	private static final int FIELD_LENGTH = 20;
+	private static final int FIELD_LENGTH = 15;
 	private static final String MSG_TOO_SHORT = PasswordContentPane.class.getName() + "_tooShort";
 	private static final String MSG_WRONG_PASSWORD = PasswordContentPane.class.getName() + "_wrongPassword";
 	private static final String MSG_ENTER_PASSWORD_TITLE = PasswordContentPane.class.getName() + "_title";

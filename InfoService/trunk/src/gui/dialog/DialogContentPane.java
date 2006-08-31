@@ -1228,6 +1228,10 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 
 		while ((contentPane = contentPane.getNextContentPane()) != null)
 		{
+			if (!contentPane.isMoveForwardAllowed())
+			{
+				return false;
+			}
 			try
 			{
 				if (!contentPane.isSkippedAsNextContentPane())
@@ -1396,6 +1400,19 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	{
 		return true;
 	}
+
+	/**
+	 * Returns if a move forward to the direction of this content pane is allowed in a wizard.
+	 * Stronger than isSkippedAsNextsContentPane(), as this method does not allow to access next
+	 * content panes, either. hasNextContentPane() will return 'false' for all content panes after
+	 * this one if isMoveForwardAllowed() returns false
+	 * @return if a move forward to the direction of this content pane is allowed in a wizard
+	 */
+	public boolean isMoveForwardAllowed()
+	{
+		return true;
+	}
+
 
 	/**
 	 * If the next content pane of this one calls moveToPreviousContentPane(), this content pane may tell him
@@ -2531,7 +2548,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 				dummyLabel.setText(strMessage.substring(0, currentSize) + MORE_POINTS);
 				if (dummyLabel.getPreferredSize().width <= m_lblMessage.getSize().width)
 				{
-					bestSize = Math.max(bestSize, currentSize);
+					bestSize = Math.max(bestSize, currentSize) - 2; // substract '2' to fix small errors
 					currentSize += (currentSize / (i + 2));
 				}
 				else
