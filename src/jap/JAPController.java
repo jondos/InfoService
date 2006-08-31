@@ -38,8 +38,8 @@ import java.util.Hashtable;
 import java.util.Locale;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Vector;
 import java.util.Random;
+import java.util.Vector;
 
 import java.awt.Component;
 import java.awt.Cursor;
@@ -51,6 +51,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
+import javax.swing.UnsupportedLookAndFeelException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -63,12 +64,17 @@ import anon.AnonServiceEventListener;
 import anon.ErrorCodes;
 import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
+import anon.infoservice.AbstractMixCascadeContainer;
+import anon.infoservice.AutoSwitchedMixCascade;
+import anon.infoservice.CascadeIDEntry;
 import anon.infoservice.Database;
+import anon.infoservice.DatabaseMessage;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.IDistributable;
 import anon.infoservice.IDistributor;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
+import anon.infoservice.JAPMinVersion;
 import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
@@ -82,15 +88,15 @@ import anon.pay.PayAccountsFile;
 import anon.proxy.AnonProxy;
 import anon.proxy.IProxyListener;
 import anon.tor.TorAnonServerDescription;
+import anon.util.ClassUtil;
 import anon.util.IMiscPasswordReader;
 import anon.util.IPasswordReader;
-import anon.util.ClassUtil;
 import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
 import forward.server.ForwardServerManager;
+import gui.GUIUtils;
 import gui.JAPDll;
 import gui.JAPMessages;
-import gui.GUIUtils;
 import gui.dialog.JAPDialog;
 import gui.dialog.JAPDialog.LinkedCheckBox;
 import gui.dialog.PasswordContentPane;
@@ -104,14 +110,6 @@ import platform.AbstractOS;
 import proxy.DirectProxy;
 import proxy.DirectProxy.AllowUnprotectedConnectionCallback;
 import update.JAPUpdateWizard;
-import anon.infoservice.AbstractMixCascadeContainer;
-import anon.infoservice.AutoSwitchedMixCascade;
-import java.io.*;
-import anon.infoservice.JAPMinVersion;
-import anon.infoservice.DatabaseMessage;
-import javax.swing.UnsupportedLookAndFeelException;
-import anon.infoservice.CascadeIDEntry;
-import anon.infoservice.JavaVersionDBEntry;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -155,6 +153,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private static final String XML_ATTR_AUTO_CHOOSE_CASCADES = "AutoChooseCascades";
 
 	private final Object PROXY_SYNC = new Object();
+
+	private String m_commandLineArgs = "";
 
 	/**
 	 * Stores all MixCascades we know (information comes from infoservice or was entered by a user).
@@ -363,7 +363,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			return isAnonConnected();
 		}
-}
+	}
+
+	public void setCommandLineArgs(String a_cmdArgs)
+	{
+		if (a_cmdArgs != null)
+		{
+			m_commandLineArgs = a_cmdArgs;
+		}
+	}
 
 	/**
 	 * Returns the password reader.
@@ -1546,7 +1554,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 * 1.) Try to find "java.home" and start JAP with the java.exe in this path
 	 * 2.) Try to find out if 'java' or 'jview' was used
 	 */
-	private static void restartJAP() {
+	private void restartJAP() {
 
 		// restart command
 		String strRestartCommand = "";
@@ -1568,7 +1576,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 			pathToJava = System.getProperty("java.home") + File.separator + "bin" + File.separator;
 			javaExe = "javaw -cp"; // for windows
 		}
-		strRestartCommand = pathToJava + javaExe + " \"" + ClassUtil.getClassPath().trim() + "\" JAP";
+		strRestartCommand = pathToJava + javaExe + " \"" + ClassUtil.getClassPath().trim() + "\" JAP" +
+			m_commandLineArgs;
 
 		LogHolder.log(LogLevel.INFO, LogType.ALL, "JAP restart command: " + strRestartCommand);
 
@@ -2942,7 +2951,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					LogHolder.log(LogLevel.INFO, LogType.GUI, "View has been disposed. Finishing...");
 					if ( !bShowConfigSaveErrorMsg ) {
 						LogHolder.log(LogLevel.INFO, LogType.ALL, "Try to restart JAP...");
-						restartJAP();
+						m_Controller.restartJAP();
 					}
 					System.exit(0);
 				}
