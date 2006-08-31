@@ -132,7 +132,7 @@ import java.awt.Cursor;
 public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer, MenuContainer,
 	ImageObserver, IDialogOptions
 {
-	public static final String XML_ATTR_OPTIMIZED_FORMAT = "dialogFormat";
+	public static final String XML_ATTR_OPTIMIZED_FORMAT = "dialogOptFormat";
 
 	public static final int FORMAT_GOLDEN_RATIO_PHI = 0;
 	public static final int FORMAT_DEFAULT_SCREEN = 1;
