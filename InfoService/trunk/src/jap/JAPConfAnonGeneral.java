@@ -80,10 +80,14 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		"_titleAssignServices";
 	private static final String MSG_EXPLAIN_ASSIGN_SERVICES = JAPConfAnonGeneral.class.getName() +
 		"_explainAssignServices";
+	private static final String MSG_EXPLAIN_ASSIGN_SERVICES_BETA = JAPConfAnonGeneral.class.getName() +
+		"_explainAssignServicesBeta";
 	private static final String MSG_SERVICE_HTTP = JAPConfAnonGeneral.class.getName() + "_serviceHttp";
 	private static final String MSG_SERVICE_FTP = JAPConfAnonGeneral.class.getName() + "_serviceFtp";
 	private static final String MSG_SERVICE_EMAIL = JAPConfAnonGeneral.class.getName() + "_serviceEMail";
 	private static final String MSG_SERVICE_SOCKS = JAPConfAnonGeneral.class.getName() + "_serviceSocks";
+	private static final String MSG_PASSIVE_FTP = JAPConfAnonGeneral.class.getName() + "_passiveFTP";
+
 
 
 	private static final String IMG_ARROW_RIGHT = JAPConfAnonGeneral.class.getName() + "_arrowRight.gif";
@@ -278,7 +282,8 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 												 JAPMessages.getString(MSG_TITLE_ASSIGN_SERVICES)));
 		String[][][] services = {
 			{ { JAPMessages.getString(MSG_SERVICE_HTTP) + " (HTTP/HTTPS)" }, { "AN.ON" } },
-			{ { JAPMessages.getString(MSG_SERVICE_FTP) + " (FTP)" }, { "AN.ON" } },
+			{ { JAPMessages.getString(MSG_SERVICE_FTP) + " (" +
+			JAPMessages.getString(MSG_PASSIVE_FTP) + ")" }, { "AN.ON" } },
 			{ { JAPMessages.getString(MSG_SERVICE_EMAIL) + " (SMTP)" }, { "Mixminion" } },
 			{ { JAPMessages.getString(MSG_SERVICE_SOCKS) + " (SOCKS)"} , { "Tor" } }
 		};
@@ -308,7 +313,8 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		constrServices.gridx = 3;
 		constrServices.weightx = 0.0;
 		constrServices.insets = new Insets(5, 5, 5, 30);
-		panelServices.add(new JAPMultilineLabel(JAPMessages.getString(MSG_EXPLAIN_ASSIGN_SERVICES)), constrServices);
+		panelServices.add(
+			  new JAPMultilineLabel(JAPMessages.getString(MSG_EXPLAIN_ASSIGN_SERVICES_BETA)), constrServices);
 
 
 		panelRoot.setLayout(new GridBagLayout());

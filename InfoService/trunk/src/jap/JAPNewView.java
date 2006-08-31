@@ -131,6 +131,23 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String MSG_BTN_ASSISTANT =  JAPNewView.class.getName() + "_btnAssistant";
 	private static final String MSG_MN_ASSISTANT =  JAPNewView.class.getName() + "_mnAssistant";
 
+	private static final String[] METERFNARRAY =
+		{
+		JAPNewView.class.getName() + "_meterAnonDeactivated.gif", // anonymity deactivated
+		JAPNewView.class.getName() + "_meterConnecting.gif", // connecting...
+		JAPNewView.class.getName() + "_meterNoMeasure.gif", // no measure available
+		JAPNewView.class.getName() + "_meter00.gif",
+		JAPNewView.class.getName() + "_meter01.gif",
+		JAPNewView.class.getName() + "_meter02.gif",
+		JAPNewView.class.getName() + "_meter03.gif",
+		JAPNewView.class.getName() + "_meter04.gif",
+		JAPNewView.class.getName() + "_meter05.gif",
+		JAPNewView.class.getName() + "_meter06.gif",
+		JAPNewView.class.getName() + "_meter07.gif",
+		JAPNewView.class.getName() + "_meter08.gif",
+		JAPNewView.class.getName() + "_meter09.gif",
+		JAPNewView.class.getName() + "_meter10.gif"
+	};
 
 	private static final String PRICE_UNIT = "ct/MB";
 
@@ -1451,21 +1468,21 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	void loadMeterIcons()
 	{
 		// Load Images for "Anonymity Meter"
-		meterIcons = new ImageIcon[JAPConstants.METERFNARRAY.length];
+		meterIcons = new ImageIcon[METERFNARRAY.length];
 //		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"JAPView:METERFNARRAY.length="+JAPConstants.METERFNARRAY.length);
 		if (!JAPModel.isSmallDisplay())
 		{
-			for (int i = 0; i < JAPConstants.METERFNARRAY.length; i++)
+			for (int i = 0; i < METERFNARRAY.length; i++)
 			{
-				meterIcons[i] = GUIUtils.loadImageIcon(JAPConstants.METERFNARRAY[i], false);
+				meterIcons[i] = GUIUtils.loadImageIcon(METERFNARRAY[i], true, false);
 			}
 		}
 		else
 		{
 			MediaTracker m = new MediaTracker(this);
-			for (int i = 0; i < JAPConstants.METERFNARRAY.length; i++)
+			for (int i = 0; i < METERFNARRAY.length; i++)
 			{
-				Image tmp = GUIUtils.loadImageIcon(JAPConstants.METERFNARRAY[i], true).getImage();
+				Image tmp = GUIUtils.loadImageIcon(METERFNARRAY[i], true).getImage();
 				int w = tmp.getWidth(null);
 				tmp = tmp.getScaledInstance( (int) (w * 0.75), -1, Image.SCALE_SMOOTH);
 				m.addImage(tmp, i);
@@ -1490,19 +1507,19 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		if (bAnonMode && bConnected)
 		{
 			//System.out.println("anon level");
-			if (iAnonLevel >= 0 && iAnonLevel < 6)
+			if (iAnonLevel >= 0 && iAnonLevel <= 11)
 			{
-				return meterIcons[iAnonLevel + 2];
+				return meterIcons[iAnonLevel + 3];
 			}
 			else
 			{
-				return meterIcons[1]; //No measure available
+				return meterIcons[2]; //No measure available
 			}
 		}
 		else if (bAnonMode && !bConnected && bConnectionErrorShown)
 		{
 			//System.out.println("connection lost");
-			return meterIcons[8]; // connection lost
+			return meterIcons[1]; // connection lost
 		}
 		else
 		{
@@ -2070,7 +2087,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				StatusInfo currentStatus = currentMixCascade.getCurrentStatus();
 				int anonLevel = currentStatus.getAnonLevel();
 				m_labelAnonMeter.setIcon(getMeterImage(anonLevel));
-				m_labelAnonMeter.invalidate();
 				Color color = Color.red;
 				if (anonLevel > 3)
 				{
