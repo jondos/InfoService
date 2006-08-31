@@ -684,8 +684,7 @@ public final class GUIUtils
 
 
 		/**
-		 * Erzeugt ein neues Icon, indem das &uuml;bergebene Icon mit den
-		 * gew&uunschten Skalierungsfaktoren vergr&ouml;ssert oder verkleinert wird.
+		 * Creates a new Icon that scales a given Icon with the given settings.
 		 */
 		public IconScaler(Icon icon, double a_scale)
 		{

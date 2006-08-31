@@ -293,6 +293,15 @@ public class JAP
 
 		// Create the controller object
 		m_controller = JAPController.getInstance();
+		String cmdArgs = "";
+		if (m_arstrCmdnLnArgs != null)
+		{
+			for (int i = 0; i < m_arstrCmdnLnArgs.length; i++)
+			{
+				cmdArgs += " " + m_arstrCmdnLnArgs[i];
+			}
+			m_controller.setCommandLineArgs(cmdArgs);
+		}
 		String configFileName = null;
 		/* check, whether there is the -config parameter, which means the we use userdefined config
 		 * file
