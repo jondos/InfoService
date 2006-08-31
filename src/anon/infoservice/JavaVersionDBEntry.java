@@ -211,7 +211,7 @@ public class JavaVersionDBEntry  extends AbstractDistributableDatabaseEntry
 
 		String vendor = a_entry.getVendor().toLowerCase();
 		String currentVendor = CURRENT_JAVA_VENDOR.toLowerCase();
-		if ((currentVendor.indexOf("microsoft") >= 0 && vendor.indexOf("sun") >= 0) ||
+		if ((currentVendor.indexOf("microsoft") >= 0) ||
 			(currentVendor.indexOf(vendor) >= 0 && (CURRENT_JAVA_VERSION == null ||
 			 CURRENT_JAVA_VERSION.compareTo(a_entry.getJREVersion()) < 0)))
 		{

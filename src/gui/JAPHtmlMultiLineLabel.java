@@ -61,6 +61,23 @@ public class JAPHtmlMultiLineLabel extends JLabel
 	private static final String TAG_HEAD_CLOSE = "</head>";
 	private static final String CLIENT_PROPERTY_HTML = "html";
 
+	private static final String CURRENT_JAVA_VENDOR = System.getProperty("java.vendor");
+	private static final String CURRENT_JAVA_VERSION = System.getProperty("java.version");
+
+	private static final boolean HTML_COMPATIBILITY_MODE;
+	static
+	{
+		String version = System.getProperty("java.version");
+		if (version != null && version.compareTo("1.3") < 0)
+		{
+			HTML_COMPATIBILITY_MODE = true;
+		}
+		else
+		{
+			HTML_COMPATIBILITY_MODE = false;
+		}
+	}
+
 	private boolean m_bInitialised = false;
 
 	/**
@@ -302,7 +319,9 @@ public class JAPHtmlMultiLineLabel extends JLabel
 		{
 			a_defaultFont = new JLabel().getFont();
 		}
-		if (a_defaultFont.isBold() && a_defaultFont.getSize() >= 16 && a_defaultFont.getSize() <= 18)
+
+		if (HTML_COMPATIBILITY_MODE &&
+			(a_defaultFont.isBold() && a_defaultFont.getSize() >= 16 && a_defaultFont.getSize() <= 18))
 		{
 			// bold is not allowed here
 			Font replacedFont = new Font(a_defaultFont.getName(), Font.PLAIN, a_defaultFont.getSize());
@@ -366,10 +385,16 @@ public class JAPHtmlMultiLineLabel extends JLabel
 		//System.out.println(size + ":" + strSize);
 		String header = TAG_HTML_OPEN  + TAG_BODY_OPEN.substring(0, TAG_BODY_OPEN.length() - 1) +
 			//" style=\"font-family:" + a_defaultFont.getFamily() + "\">";
-			" style=\"font-family:" + a_defaultFont.getFamily() + "\"><font size=" + strSize +">";
+			//" style=\"font-family:" + a_defaultFont.getFamily() + "\"><font size=" + strSize +">";
+			//" style=\"font-size:110%;" + "font-family:" + a_defaultFont.getFamily() + "\">";//<font size=" + strSize +">";
+			(HTML_COMPATIBILITY_MODE ?
+			 "><font size=" + strSize +">" :
+			 " style=\"font-size:" + size +"pt;" + "font-family:" + a_defaultFont.getFamily() + "\">");//<font size=" + strSize +">";
+
 			//"><font size=" + strSize +">";
 			//">";
-		String trailer = "</font>" + TAG_BODY_CLOSE + TAG_HTML_CLOSE;
+		//String trailer = "</font>" + TAG_BODY_CLOSE + TAG_HTML_CLOSE;
+		String trailer = TAG_BODY_CLOSE + TAG_HTML_CLOSE;
 
 		if (a_defaultFont.isBold())
 		{
