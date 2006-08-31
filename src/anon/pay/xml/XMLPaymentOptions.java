@@ -147,7 +147,6 @@ public class XMLPaymentOptions implements IXMLEncodable
 			}
 			catch (Exception e)
 			{
-				e.printStackTrace();
 				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
 							  "Could not get payment option heading: " + e.getMessage());
 			}

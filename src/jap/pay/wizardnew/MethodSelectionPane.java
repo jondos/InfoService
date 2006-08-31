@@ -30,6 +30,7 @@ package jap.pay.wizardnew;
 import java.util.Enumeration;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.Hashtable;
 
 import java.awt.Container;
 import java.awt.GridBagConstraints;
@@ -45,6 +46,7 @@ import javax.swing.JRadioButton;
 import anon.pay.xml.XMLPaymentOption;
 import anon.pay.xml.XMLPaymentOptions;
 import gui.JAPMessages;
+import gui.JAPMultilineLabel;
 import gui.dialog.DialogContentPane;
 import gui.dialog.DialogContentPane.IWizardSuitable;
 import gui.dialog.JAPDialog;
@@ -73,7 +75,7 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 	private JComboBox m_cbCurrency;
 	private Container m_rootPanel;
 
-	public MethodSelectionPane(JAPDialog a_parentDialog, DialogContentPane a_previousContentPane)
+	public MethodSelectionPane(JAPDialog a_parentDialog, WorkerContentPane a_previousContentPane)
 	{
 		super(a_parentDialog, "",
 			  new Layout(JAPMessages.getString(MSG_SELECTOPTION), MESSAGE_TYPE_PLAIN),
@@ -125,8 +127,8 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		JLabel label = new JLabel(JAPMessages.getString(MSG_PRICE));
 		m_rootPanel.add(label, m_c);
 		m_c.gridy++;
-		label = new JLabel(JAPMessages.getString("payAmount"));
-		m_rootPanel.add(label, m_c);
+		JAPMultilineLabel label2 = new JAPMultilineLabel(JAPMessages.getString("payAmount"));
+		m_rootPanel.add(label2, m_c);
 		m_c.gridwidth = 1;
 		m_cbAmount = new JComboBox(new String[]
 								   {"1", "2", "3", "4", "5", "10", "15"});
@@ -196,25 +198,41 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		XMLPaymentOptions options = (XMLPaymentOptions) value;
 		m_paymentOptions = options;
 		Enumeration headings = options.getOptionHeadings(JAPController.getLocale().getLanguage());
-
-		//Add all generic options and only non-genric options that work with this JAP version
+		Hashtable usedOptions = new Hashtable(); // holds type and option
+		/*
+		 * Add non-genric options that work with this JAP version and all generic options that have not
+		 * been replaced by non-generic options.
+		 */
+		XMLPaymentOption currentOption;
+		String optionName;
 		while (headings.hasMoreElements())
 		{
 			String heading = (String) headings.nextElement();
-			if (!m_paymentOptions.getOption(heading, JAPController.getLocale().
-										   getLanguage()).isGeneric())
+
+			currentOption = m_paymentOptions.getOption(heading, JAPController.getLocale().getLanguage());
+			if (currentOption.worksWithJapVersion(JAPConstants.aktVersion))
 			{
-				if (m_paymentOptions.getOption(heading, JAPController.getLocale().
-											   getLanguage()).worksWithJapVersion(JAPConstants.aktVersion))
+				optionName = currentOption.getName();
+				/** @todo Change the name of this option to CreditCard in BI!!!! */
+				if (optionName.equals("CreditCardOld"))
 				{
-					addOption(heading);
+					optionName = "CreditCard";
 				}
-			}
-			else
-			{
-				addOption(heading);
+				if (usedOptions.containsKey(optionName) &&
+					!currentOption.isNewer((XMLPaymentOption)usedOptions.get(optionName)))
+				{
+					continue;
+				}
+				usedOptions.put(optionName, currentOption);
 			}
 		}
+		Enumeration enumUsedOptions = usedOptions.elements();
+		while (enumUsedOptions.hasMoreElements())
+		{
+			addOption(((XMLPaymentOption)enumUsedOptions.nextElement()).getHeading(
+						 JAPController.getLocale().getLanguage()));
+		}
+
 		addCurrencies(options.getCurrencies());
 	}
 

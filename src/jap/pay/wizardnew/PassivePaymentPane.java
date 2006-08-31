@@ -114,12 +114,13 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		m_c.fill = m_c.NONE;
 
 		//Add some dummy labels for dialog sizing
+		/*
 		for (int i = 0; i < 12; i++)
 		{
 			m_rootPanel.add(new JLabel("..................................................."),
 							m_c);
 			m_c.gridy++;
-		}
+		}*/
 	}
 
 	public void showGenericForm()
@@ -390,27 +391,29 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 
 		bounds = new JAPJIntField.IntFieldUnlimitedZerosBounds(9999);
 		m_c.gridy++;
-		m_rootPanel.add(new JLabel(JAPMessages.getString(MSG_CARDNUMBER)), m_c);
-		m_c.gridx++;
 		m_c.gridwidth = 1;
+		m_c.fill = m_c.HORIZONTAL;
+		m_rootPanel.add(new JLabel(JAPMessages.getString(MSG_CARDNUMBER)), m_c);
+
+		m_c.gridx++;
+		m_c.weightx = 1.0;
 		m_tfCardNumber1 = new JAPJIntField(bounds, true);
 		m_rootPanel.add(m_tfCardNumber1, m_c);
 
 		m_c.gridx++;
-		m_c.gridwidth = 1;
 		m_tfCardNumber2 = new JAPJIntField(bounds, true);
 		m_rootPanel.add(m_tfCardNumber2, m_c);
 
 		m_c.gridx++;
-		m_c.gridwidth = 1;
 		m_tfCardNumber3 = new JAPJIntField(bounds, true);
 		m_rootPanel.add(m_tfCardNumber3, m_c);
 
 		m_c.gridx++;
-		m_c.gridwidth = 1;
 		m_tfCardNumber4 = new JAPJIntField(bounds, true);
 		m_rootPanel.add(m_tfCardNumber4, m_c);
 
+
+		m_c.weightx = 0;
 		m_c.gridx = 0;
 		m_c.gridy++;
 		m_c.gridwidth = 1;
@@ -421,13 +424,16 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		m_tfCardOwner = new JTextField();
 		m_rootPanel.add(m_tfCardOwner, m_c);
 
+
+
+		m_c.weightx = 0;
 		m_c.gridx = 0;
 		m_c.gridy++;
 		m_c.gridwidth = 1;
-		m_c.fill = GridBagConstraints.NONE;
+		//m_c.fill = GridBagConstraints.NONE;
 		m_rootPanel.add(new JLabel(JAPMessages.getString(MSG_CARDVALIDITY)), m_c);
 		m_c.gridx++;
-		m_c.fill = GridBagConstraints.NONE;
+		//m_c.fill = GridBagConstraints.NONE;
 		m_cbMonth = new JComboBox();
 		for (int i = 1; i < 13; i++)
 		{

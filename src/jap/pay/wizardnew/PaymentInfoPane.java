@@ -83,7 +83,6 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 								  ON_NO_SHOW_PREVIOUS_CONTENT);
 		m_language = JAPController.getLocale().getLanguage();
 		m_rootPanel = this.getContentPane();
-		m_c = new GridBagConstraints();
 		m_rootPanel.setLayout(new GridBagLayout());
 		m_c = new GridBagConstraints();
 		m_c.gridx = 0;
@@ -93,7 +92,6 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		m_c.insets = new Insets(5, 5, 5, 5);
 		m_c.anchor = m_c.NORTHWEST;
 		m_c.fill = m_c.NONE;
-		m_c.gridy++;
 
 		//Add some dummy labels for dialog sizing
 		/*
@@ -117,7 +115,6 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		m_selectedOption = selectedOption;
 		m_rootPanel.removeAll();
 		m_rootPanel = this.getContentPane();
-		m_c = new GridBagConstraints();
 		m_rootPanel.setLayout(new GridBagLayout());
 		m_c = new GridBagConstraints();
 		m_c.gridx = 0;
