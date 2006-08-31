@@ -698,7 +698,6 @@ public final class GUIUtils
 
 		public void paintIcon(Component c, Graphics g, int x, int y)
 		{
-			System.out.println(scaleX + ":" + scaleY);
 			Graphics2D g2 =
 				(Graphics2D) g;
 			g2.scale(scaleX, scaleY);

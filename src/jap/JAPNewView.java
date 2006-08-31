@@ -170,7 +170,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private JLabel m_labelMeterDetailsRisk, m_labelOwnBytes, m_labelOwnChannels;
 	//private TitledBorder m_borderOwnTraffic, m_borderAnonMeter, m_borderDetails;
-	private ImageIcon[] meterIcons;
+	private Icon[] meterIcons;
 	private JAPConf m_dlgConfig;
 	private Object LOCK_CONFIG = new Object();
 	private Window m_ViewIconified;
@@ -1468,7 +1468,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	void loadMeterIcons()
 	{
 		// Load Images for "Anonymity Meter"
-		meterIcons = new ImageIcon[METERFNARRAY.length];
+		meterIcons = new Icon[METERFNARRAY.length];
 //		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"JAPView:METERFNARRAY.length="+JAPConstants.METERFNARRAY.length);
 		if (!JAPModel.isSmallDisplay())
 		{
@@ -1498,7 +1498,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	}
 
 	/**Anon Level is >=0 amd <=5. If -1 no measure is available*/
-	private ImageIcon getMeterImage(int iAnonLevel)
+	private Icon getMeterImage(int iAnonLevel)
 	{
 		boolean bAnonMode = m_Controller.getAnonMode();
 		boolean bConnected = m_Controller.isAnonConnected();
