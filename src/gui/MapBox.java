@@ -95,14 +95,12 @@ public class MapBox extends JAPDialog implements ChangeListener
 	public MapBox(Component parent, String lat, String lon, int level) throws IOException
 	{
 		super(parent, "");
-		getContentPane().setBackground(Color.white);
 		m_longitude = lon;
 		m_latitude = lat;
 
 		GridBagLayout layout = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
 		getContentPane().setLayout(layout);
-		getContentPane().setBackground(Color.white);
 		c.anchor = GridBagConstraints.NORTHWEST;
 		c.insets = new Insets(10, 10, 10, 10);
 		map = new JLabel();
@@ -123,7 +121,6 @@ public class MapBox extends JAPDialog implements ChangeListener
 		getContentPane().add(l);
 
 		s = new JSlider(JSlider.VERTICAL, 0, 9, level);
-		s.setBackground(Color.white);
 		s.setPaintTicks(true);
 		s.setMajorTickSpacing(1);
 		s.setMinorTickSpacing(1);
@@ -174,6 +171,7 @@ public class MapBox extends JAPDialog implements ChangeListener
 		refresh();
 
 		pack();
+		setResizable(false);
 	}
 
         /** Sets the coordinates to be displayed on the map.

@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.05.361"; //Never change the layout of this line!
+	public static final String aktVersion = "00.05.362"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -171,18 +171,6 @@ public final class JAPConstants
 	public static final String IMAGE_COINS_EMPTY = "coins-empty.gif";
 	public static final String IMAGE_COIN_COINSTACK = "coinstack.gif";
 
-	static final String[] METERFNARRAY =
-		{
-		"meterD.gif", // anonymity deactivated
-		"meterNnew.gif", // no measure available
-		"meter1.gif",
-		"meter2.gif",
-		"meter3.gif",
-		"meter4.gif",
-		"meter5.gif",
-		"meter6.gif",
-		"meterNoConnection.gif" // connection lost
-	};
 // Bastian Voigt: Icons for the account meter
 	public static final String[] ACCOUNTICONFNARRAY =
 		{

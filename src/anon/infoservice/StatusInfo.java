@@ -152,8 +152,8 @@ public class StatusInfo extends AbstractDatabaseEntry implements IDistributable 
       double userFactor = Math.min( ( (double) getNrOfActiveUsers()) / 500.0, 1.0);
       double trafficFactor = Math.min( ( (double) getTrafficSituation()) / 100.0, 1.0);
       double mixFactor = 1.0 - Math.pow(0.5, a_mixCascadeLength);
-      /* get the integer part of the product -> 0 <= anonLevel <= 5 because mixFactor is always < 1.0 */
-      m_anonLevel = (int) (userFactor * trafficFactor * mixFactor * 6.0);
+      /* get the integer part of the product -> 0 <= anonLevel <= 10 because mixFactor is always < 1.0 */
+      m_anonLevel = (int) (userFactor * trafficFactor * mixFactor * 11.0);
     }
     m_statusXmlData = XMLUtil.toString(a_statusNode);
   }

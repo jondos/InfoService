@@ -85,6 +85,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 	private static final String MSG_RESTART_TO_UNLOAD = JAPConfUI.class.getName() + "_restartToUnload";
 	private static final String MSG_DIALOG_FORMAT = JAPConfUI.class.getName() + "_lblDialogFormat";
 	private static final String MSG_DIALOG_FORMAT_TEST = JAPConfUI.class.getName() + "_dialogFormatTest";
+	private static final String MSG_DIALOG_FORMAT_TEST_2 = JAPConfUI.class.getName() + "_dialogFormatTest2";
 	private static final String MSG_DIALOG_FORMAT_TEST_BTN = JAPConfUI.class.getName()
 		+ "_dialogFormatTestBtn";
 	private static final String MSG_DIALOG_FORMAT_GOLDEN_RATIO = JAPConfUI.class.getName()
@@ -484,7 +485,22 @@ final class JAPConfUI extends AbstractJAPConfModule
 		c.weightx = 0;
 		p.add(btnTestFormat, c);
 
-
+		btnTestFormat = new JButton(JAPMessages.getString(MSG_DIALOG_FORMAT_TEST_BTN));
+		btnTestFormat.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent a_event)
+			{
+				int currentFormat = JAPDialog.getOptimizedFormat();
+				JAPDialog.setOptimizedFormat(
+								((DialogFormat)m_comboDialogFormat.getSelectedItem()).getFormat());
+				JAPDialog.showMessageDialog(getRootPanel(), JAPMessages.getString(MSG_DIALOG_FORMAT_TEST_2));
+				JAPDialog.setOptimizedFormat(currentFormat);
+			}
+		});
+		c.gridx = 3;
+		//c.fill = GridBagConstraints.NONE;
+		c.weightx = 0;
+		p.add(btnTestFormat, c);
 
 		c.gridx = 0;
 		c.gridy++;
