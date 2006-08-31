@@ -27,10 +27,10 @@
  */
 package jap;
 
+import java.io.File;
 import java.util.Hashtable;
 import java.util.Locale;
 import java.util.Vector;
-import java.io.File;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -40,31 +40,33 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import javax.swing.ButtonGroup;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
-import javax.swing.JFileChooser;
-import javax.swing.filechooser.FileFilter;
-import javax.swing.JButton;
+import javax.swing.LookAndFeel;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.border.TitledBorder;
+import javax.swing.filechooser.FileFilter;
 
+import anon.util.ClassUtil;
 import gui.GUIUtils;
 import gui.JAPHelp;
 import gui.JAPMessages;
 import gui.LanguageMapper;
 import gui.TitledGridBagPanel;
+import gui.dialog.DialogContentPane;
 import gui.dialog.JAPDialog;
-import gui.dialog.*;
+import gui.dialog.SimpleWizardContentPane;
+import gui.dialog.WorkerContentPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.util.ClassUtil;
-import javax.swing.LookAndFeel;
 
 final class JAPConfUI extends AbstractJAPConfModule
 {
@@ -91,6 +93,8 @@ final class JAPConfUI extends AbstractJAPConfModule
 	private static final String MSG_DIALOG_FORMAT_GOLDEN_RATIO = JAPConfUI.class.getName()
 		+ "_dialogFormatGoldenRatio";
 
+	// show the options to alter the dialog format
+	private static final boolean SHOW_DIALOG_FORMAT = false;
 
 	private TitledBorder m_borderLookAndFeel, m_borderView;
 	private JComboBox m_comboLanguage, m_comboUI, m_comboDialogFormat;
@@ -459,7 +463,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		c.weightx = 0;
 		c.gridwidth = 1;
 		p.add(l, c);
-		l.setVisible(false);
+		l.setVisible(SHOW_DIALOG_FORMAT);
 		c.gridx = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		m_comboDialogFormat = new JComboBox();
@@ -484,8 +488,8 @@ final class JAPConfUI extends AbstractJAPConfModule
 		//c.fill = GridBagConstraints.NONE;
 		c.weightx = 0;
 		p.add(btnTestFormat, c);
-		m_comboDialogFormat.setVisible(false);
-		btnTestFormat.setVisible(false);
+		m_comboDialogFormat.setVisible(SHOW_DIALOG_FORMAT);
+		btnTestFormat.setVisible(SHOW_DIALOG_FORMAT);
 
 		btnTestFormat = new JButton(JAPMessages.getString(MSG_DIALOG_FORMAT_TEST_BTN));
 		btnTestFormat.addActionListener(new ActionListener()
@@ -503,7 +507,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		//c.fill = GridBagConstraints.NONE;
 		c.weightx = 0;
 		p.add(btnTestFormat, c);
-		btnTestFormat.setVisible(false);
+		btnTestFormat.setVisible(SHOW_DIALOG_FORMAT);
 
 		c.gridx = 0;
 		c.gridy++;

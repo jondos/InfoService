@@ -31,10 +31,11 @@ import java.util.Vector;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
+import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.Image;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -44,28 +45,28 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.Insets;
 import java.awt.event.WindowListener;
 import javax.swing.Box;
-import javax.swing.ImageIcon;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.RootPaneContainer;
 import javax.swing.SwingConstants;
 import javax.swing.border.TitledBorder;
+import javax.swing.plaf.IconUIResource;
 
+import gui.GUIUtils;
 import gui.JAPHelp;
 import gui.JAPHelpContext;
 import gui.JAPHtmlMultiLineLabel;
 import gui.JAPMessages;
-import gui.GUIUtils;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.awt.Cursor;
 
 /**
  * This is a replacement for a dialog content pane. It defines an icon, buttons, a status bar for
@@ -95,16 +96,23 @@ import java.awt.Cursor;
  */
 public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOptions
 {
+	private static final int MESSAGE_TYPES[] =
+		{MESSAGE_TYPE_PLAIN, MESSAGE_TYPE_INFORMATION,
+		MESSAGE_TYPE_QUESTION, MESSAGE_TYPE_WARNING, MESSAGE_TYPE_ERROR};
+	private static final Icon MESSAGE_ICONS[] = new Icon[MESSAGE_TYPES.length];
+
 	static
 	{
 		// preload java dialog icons
 		if (!JAPDialog.isConsoleOnly())
 		{
-			new JOptionPane("", MESSAGE_TYPE_ERROR).createDialog(null, "");
-			new JOptionPane("", MESSAGE_TYPE_INFORMATION).createDialog(null, "");
-			new JOptionPane("", MESSAGE_TYPE_WARNING).createDialog(null, "");
-			new JOptionPane("", MESSAGE_TYPE_PLAIN).createDialog(null, "");
-			new JOptionPane("", MESSAGE_TYPE_QUESTION).createDialog(null, "");
+			JOptionPane pane;
+			for (int i = 0; i < MESSAGE_TYPES.length; i++)
+			{
+				pane = new JOptionPane("", MESSAGE_TYPES[i]);
+				pane.createDialog(null, "");
+				MESSAGE_ICONS[i] = findMessageIcon(pane);
+			}
 		}
 	}
 
@@ -181,7 +189,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	private JButton m_btnNo;
 	private JButton m_btnCancel;
 	private ButtonListener m_buttonListener;
-	private ImageIcon m_icon;
+	private Icon m_icon;
 	private boolean m_bHasHadWizardLayout;
 	private GridBagConstraints m_textConstraints;
 	private Vector m_rememberedErrors = new Vector();
@@ -472,7 +480,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 * @todo implement the expansion on !a_bCentered
 	 */
 	private void init(RootPaneContainer a_parentDialog, String a_strTitle, String a_strText, int a_alignment,
-					  int a_optionType, int a_messageType, ImageIcon a_icon, boolean a_bCentered,
+					  int a_optionType, int a_messageType, Icon a_icon, boolean a_bCentered,
 					  JAPHelpContext.IHelpContext a_helpContext, DialogContentPane a_previousContentPane)
 	{
 		if (a_parentDialog == null)
@@ -514,6 +522,10 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		m_optionType = a_optionType;
 
 		m_icon = a_icon;
+		if (m_icon == null)
+		{
+			m_icon = getMessageIcon(m_messageType);
+		}
 
 		m_helpContext = a_helpContext;
 		m_rootPane = new JPanel(new BorderLayout());
@@ -622,6 +634,41 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 				validateDialog();
 			}
 		});
+	}
+
+	public static Icon getMessageIcon(int a_messageType)
+	{
+		Icon icon;
+		int nrIcon;
+		if (a_messageType == MESSAGE_TYPE_INFORMATION)
+		{
+			nrIcon = 1;
+		}
+		else if (a_messageType == MESSAGE_TYPE_QUESTION)
+		{
+			nrIcon = 2;
+		}
+		else if (a_messageType == MESSAGE_TYPE_WARNING)
+		{
+			nrIcon = 3;
+		}
+		else if (a_messageType == MESSAGE_TYPE_ERROR)
+		{
+			nrIcon = 4;
+		}
+		else
+		{
+			return MESSAGE_ICONS[0];
+		}
+		icon = MESSAGE_ICONS[nrIcon];
+		if (icon == null)
+		{
+			// image was not preloaded; make another try...
+			icon = findMessageIcon(new JOptionPane("", a_messageType));
+			MESSAGE_ICONS[nrIcon] = icon;
+		}
+		return GUIUtils.createScaledIcon(icon, GUIUtils.getIconResizer());
+		//return icon;
 	}
 
 	/**
@@ -908,7 +955,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	{
 		private String m_strTitle;
 		private int m_messageType;
-		private ImageIcon m_icon;
+		private Icon m_icon;
 		private boolean m_bCentered;
 
 		/**
@@ -939,7 +986,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		 * @param a_icon The icon for the content pane. If is is null, the icon will be automatically chosen
 		 * depending on the message type.
 		 */
-		public Layout(ImageIcon a_icon)
+		public Layout(Icon a_icon)
 		{
 			this("", MESSAGE_TYPE_PLAIN, a_icon);
 		}
@@ -952,7 +999,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		 * @param a_icon The icon for the content pane. If is is null, the icon will be automatically chosen
 		 * depending on the message type.
 		 */
-		public Layout(int a_messageType, ImageIcon a_icon)
+		public Layout(int a_messageType, Icon a_icon)
 		{
 			this("", a_messageType, a_icon);
 		}
@@ -979,7 +1026,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		 * @param a_icon The icon for the content pane. If is is null, the icon will be automatically chosen
 		 * depending on the message type.
 		 */
-		public Layout(String a_strTitle, ImageIcon a_icon)
+		public Layout(String a_strTitle, Icon a_icon)
 		{
 			this(a_strTitle, MESSAGE_TYPE_PLAIN, a_icon);
 		}
@@ -994,7 +1041,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		 * @param a_icon The icon for the content pane. If is is null, the icon will be automatically chosen
 		 * depending on the message type.
 		 */
-		public Layout(String a_strTitle, int a_messageType, ImageIcon a_icon)
+		public Layout(String a_strTitle, int a_messageType, Icon a_icon)
 		{
 			m_strTitle = a_strTitle;
 			m_messageType = a_messageType;
@@ -1032,7 +1079,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		 * depending on the message type.
 		 * @return icon for the content pane.
 		 */
-		public ImageIcon getIcon()
+		public Icon getIcon()
 		{
 			return m_icon;
 		}
@@ -1659,6 +1706,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		{
 			m_titlePane.remove(m_lblText);
 		}
+
 		pane = new JOptionPane(m_rootPane, m_messageType, 0, m_icon, options );
 		if (m_tempDialog != null)
 		{
@@ -2403,6 +2451,28 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 				throw a_e;
 			}
 		}
+	}
+
+	private static Icon findMessageIcon(JOptionPane a_optionPane)
+	{
+		Container currentPanel;
+		IconUIResource icon = null;
+		for (int i = 0; i < a_optionPane.getComponentCount(); i++)
+		{
+			if (a_optionPane.getComponent(i) instanceof Container)
+			{
+				currentPanel = (Container) a_optionPane.getComponent(i);
+				for (int j = 0; j < currentPanel.getComponentCount(); j++)
+				{
+					if (currentPanel.getComponent(j) instanceof JLabel)
+					{
+						icon = (IconUIResource) ( (JLabel) currentPanel.getComponent(j)).getIcon();
+						break;
+					}
+				}
+			}
+		}
+		return icon;
 	}
 
 
