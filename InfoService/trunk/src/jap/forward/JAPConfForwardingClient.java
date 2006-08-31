@@ -285,8 +285,6 @@ public class JAPConfForwardingClient extends AbstractJAPConfModule
 		clientPanelConstraints.weighty = 1.0;
 		m_descLabel =
 			new JAPHtmlMultiLineLabel(JAPMessages.getString("forwardingClientDesc"));
-		m_descLabel.setFont(new Font(m_descLabel.getFont().getName(),
-								   m_descLabel.getFont().getStyle(), (int)(m_descLabel.getFont().getSize() + 0.8)));
 		clientPanel.add(m_descLabel, clientPanelConstraints);
 		return clientPanel;
 	}
