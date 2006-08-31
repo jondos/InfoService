@@ -27,15 +27,17 @@
  */
 package gui;
 
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.Hashtable;
-import java.io.File;
+import java.util.Vector;
 
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.MediaTracker;
 import java.awt.Point;
@@ -48,27 +50,23 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.MouseEvent;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextPane;
+import javax.swing.LookAndFeel;
+import javax.swing.UIDefaults;
+import javax.swing.UIManager;
+import javax.swing.UIManager.LookAndFeelInfo;
+import javax.swing.plaf.FontUIResource;
 
+import anon.util.ClassUtil;
 import anon.util.ResourceLoader;
 import gui.dialog.JAPDialog;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import javax.swing.UIManager;
-import javax.swing.plaf.FontUIResource;
-import javax.swing.UIDefaults;
-import java.util.Vector;
-import anon.util.ClassUtil;
-import javax.swing.LookAndFeel;
-import javax.swing.UIManager.LookAndFeelInfo;
-import javax.swing.Icon;
-import java.awt.Graphics2D;
-import java.awt.Graphics;
-import gui.dialog.DialogContentPane;
 
 /**
  * This class contains helper methods for the GUI.
@@ -666,9 +664,22 @@ public final class GUIUtils
 	 */
 	private static class IconScaler implements Icon
 	{
-		private Icon icon;
-		private double scaleX;
-		private double scaleY;
+		static
+		{
+			try
+			{
+				GRAPHICS_2D = Class.forName("java.awt.Graphics2D");
+			}
+			catch (ClassNotFoundException a_e)
+			{
+				GRAPHICS_2D = null;
+			}
+		}
+
+		private Icon m_icon;
+		private double m_scaleWidth;
+		private double m_scaleHeight;
+		private static Class GRAPHICS_2D;
 
 		/**
 		 * Erzeugt ein neues Icon, indem das &uuml;bergebene Icon mit den
@@ -679,30 +690,56 @@ public final class GUIUtils
 			this(icon, a_scale, a_scale);
 		}
 
-		public IconScaler(Icon icon, double scaleX, double scaleY)
+		public IconScaler(Icon icon, double a_scaleWidth, double a_scaleHeight)
 		{
-			this.icon = icon;
-			this.scaleX = scaleX;
-			this.scaleY = scaleY;
+			m_icon = icon;
+			if (GRAPHICS_2D != null)
+			{
+				m_scaleWidth = a_scaleWidth;
+				m_scaleHeight = a_scaleHeight;
+			}
+			else
+			{
+				m_scaleWidth = 1.0;
+				m_scaleHeight = 1.0;
+			}
 		}
 
 		public int getIconHeight()
 		{
-			return (int) (icon.getIconHeight() * scaleY);
+			return (int) (m_icon.getIconHeight() * m_scaleHeight);
 		}
 
 		public int getIconWidth()
 		{
-			return (int) (icon.getIconWidth() * scaleX);
+			return (int) (m_icon.getIconWidth() * m_scaleWidth);
 		}
 
 		public void paintIcon(Component c, Graphics g, int x, int y)
 		{
-			Graphics2D g2 =
-				(Graphics2D) g;
-			g2.scale(scaleX, scaleY);
-			icon.paintIcon(c, g2, x, y);
-			g2.scale(1 / scaleX, 1 / scaleY);
+			scale(g, m_scaleWidth, m_scaleHeight);
+			m_icon.paintIcon(c, g, x, y);
+			scale(g, 1.0 / m_scaleWidth, 1.0 / m_scaleHeight);
+		}
+		private static void scale(Graphics a_graphics, double a_scaleWidth, double a_scaleHeight)
+		{
+			if (GRAPHICS_2D != null)
+			{
+				try
+				{
+					GRAPHICS_2D.getMethod("scale", new Class[]
+										  {double.class, double.class}).invoke(
+											  a_graphics,
+											  new Object[]
+											  {new Double(a_scaleWidth), new Double(a_scaleHeight)});
+				}
+				catch (Exception a_e)
+				{
+					LogHolder.log(LogLevel.ERR, LogType.GUI, a_e);
+				}
+				//Graphics2D g2 = (Graphics2D) g;
+				//g2.scale(m_scaleWidth, m_scaleHeight);
+			}
 		}
 	}
 }
