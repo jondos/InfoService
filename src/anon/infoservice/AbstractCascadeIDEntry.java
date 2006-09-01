@@ -30,10 +30,12 @@
  */
 package anon.infoservice;
 
-import anon.util.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
+import anon.util.ClassUtil;
+import anon.util.IXMLEncodable;
+import anon.util.XMLParseException;
+import anon.util.XMLUtil;
 
 /**
  * This database class stores the IDs of all mixes in a cascade in a single string. It may be
@@ -127,12 +129,6 @@ public abstract class AbstractCascadeIDEntry extends AbstractDatabaseEntry imple
 	{
 		return m_ID;
 	}
-
-	public long getLastUpdate()
-	{
-		return m_version;
-	}
-
 
 	/**
 	 * Returns version number which is used to determine the more recent infoservice entry, if two entries

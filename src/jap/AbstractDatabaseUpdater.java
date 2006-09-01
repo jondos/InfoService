@@ -47,6 +47,14 @@ import logging.LogType;
  */
 public abstract class AbstractDatabaseUpdater implements Observer
 {
+	/**
+	 * Keep all entries KEEP_ENTRY_FACTOR times of the update interval, even if the InfoService
+	 * does not hold this object any longer. If the update interval is 5 minutes, for example,
+	 * each entry read into the JAP database is kept for at least 15 minutes before it is deleted (if
+	 * the database does not delete it before).
+	 */
+	private static final long KEEP_ENTRY_FACTOR = 3l;
+
 	private IUpdateInterval m_updateInterval;
 	private Thread m_updateThread;
 	private boolean m_successfulUpdate = false;
@@ -363,6 +371,11 @@ public abstract class AbstractDatabaseUpdater implements Observer
 		}
 	}
 
+	private long toMinutes(long a_time)
+	{
+		return a_time / 1000l / 60l;
+	}
+
 	/**
 	 * Does some cleaup operations of the database. All old entries that were not updated by
 	 * the new entries are removed. Subclasses may overwrite this method to suppres or alter this
@@ -377,14 +390,21 @@ public abstract class AbstractDatabaseUpdater implements Observer
 		/* now remove all non user-defined infoservices, which were not updated, from the
 		 * database of known infoservices
 		 */
-		Enumeration knownInfoServices =
-			Database.getInstance(getUpdatedClass()).getEntryList().elements();
-		while (knownInfoServices.hasMoreElements())
+		Enumeration knownDBEntries = Database.getInstance(getUpdatedClass()).getEntryList().elements();
+		while (knownDBEntries.hasMoreElements())
 		{
-			AbstractDatabaseEntry currentEntry = (AbstractDatabaseEntry) (
-				knownInfoServices.nextElement());
+			AbstractDatabaseEntry currentEntry = (AbstractDatabaseEntry) (knownDBEntries.nextElement());
+			/*
+			if (currentEntry instanceof MixCascade)
+			{
+				System.out.println( ( (MixCascade) currentEntry).getName() + ":" +
+								   toMinutes(System.currentTimeMillis() - currentEntry.getCreationTime()) +
+								   "/" + toMinutes(KEEP_ENTRY_FACTOR * m_updateInterval.getUpdateInterval()) +
+								   ":" + (!currentEntry.isUserDefined()) + ":" +
+								   (!a_newEntries.contains(currentEntry)));
+			}*/
 			if (!currentEntry.isUserDefined() && !a_newEntries.contains(currentEntry) &&
-				(currentEntry.getLastUpdate() +  4l * m_updateInterval.getUpdateInterval()) <
+				(currentEntry.getCreationTime() +  KEEP_ENTRY_FACTOR * m_updateInterval.getUpdateInterval()) <
 				System.currentTimeMillis())
 			{
 				/* the db entry was fetched from the Internet earlier, but it is not
