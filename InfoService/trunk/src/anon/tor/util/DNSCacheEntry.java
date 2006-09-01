@@ -61,12 +61,6 @@ public class DNSCacheEntry extends AbstractDatabaseEntry {
 		return m_Id;
 	}
 
-	public long getLastUpdate()
-	{
-		return m_lastUpdate;
-	}
-
-
 	/**
 	 * gets the IP of the entry
 	 * @return

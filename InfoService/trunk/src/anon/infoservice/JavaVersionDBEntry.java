@@ -245,12 +245,6 @@ public class JavaVersionDBEntry  extends AbstractDistributableDatabaseEntry
 		return m_latestVersion;
 	}
 
-	public long getLastUpdate()
-	{
-		return m_lastUpdate;
-	}
-
-
 	/**
 	 * Returns version number which is used to determine the more recent infoservice entry, if two
 	 * entries are compared (higher version number -> more recent entry).

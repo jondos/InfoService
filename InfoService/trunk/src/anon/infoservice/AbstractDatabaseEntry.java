@@ -42,6 +42,8 @@ public abstract class AbstractDatabaseEntry
 	 */
 	private long m_expireTime;
 
+	private long m_creationTime;
+
 	/**
 	 * Creates a new AbstractDatabaseEntry with the specified expire time.
 	 *
@@ -50,6 +52,7 @@ public abstract class AbstractDatabaseEntry
 	public AbstractDatabaseEntry(long a_expireTime)
 	{
 		m_expireTime = a_expireTime;
+		m_creationTime = System.currentTimeMillis();
 	}
 
 	/**
@@ -86,7 +89,10 @@ public abstract class AbstractDatabaseEntry
 	 * Returns the time in milliseconds when this db entry was created.
 	 * @return the time in milliseconds when this db entry was created
 	 */
-	public abstract long getLastUpdate();
+	public final long getCreationTime()
+	{
+		return m_creationTime;
+	}
 
 	/**
 	 * Returns version number which is used to determine the more recent infoservice entry, if two

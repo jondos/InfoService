@@ -588,11 +588,6 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 		return m_certPath;
 	}
 
-	public long getLastUpdate()
-	{
-		return m_creationTimeStamp;
-	}
-
 	/**
 	 * Returns the time when this infoservice entry was created by the origin infoservice or by the
 	 * JAP client (if it is a user-defined entry).

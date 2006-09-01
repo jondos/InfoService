@@ -43,8 +43,6 @@ public class BannedMailAddressDBEntry extends AbstractDatabaseEntry {
    */
   private Address m_mailAddress;
 
-  private long m_creationTime;
-
   /**
    * Creates a new banned mailaddress entry.
    *
@@ -65,12 +63,6 @@ public class BannedMailAddressDBEntry extends AbstractDatabaseEntry {
   public String getId() {
     return m_mailAddress.toString();
   }
-
-  public long getLastUpdate()
-  {
-	  return m_creationTime;
-  }
-
 
  /**
    * Returns a version number which is used to determine the more recent entry, if two entries are
