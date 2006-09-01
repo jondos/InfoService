@@ -57,7 +57,6 @@ import javax.swing.JPanel;
 import javax.swing.RootPaneContainer;
 import javax.swing.SwingConstants;
 import javax.swing.border.TitledBorder;
-import javax.swing.plaf.IconUIResource;
 
 import gui.GUIUtils;
 import gui.JAPHelp;
@@ -2473,7 +2472,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	private static Icon findMessageIcon(JOptionPane a_optionPane)
 	{
 		Container currentPanel;
-		IconUIResource icon = null;
+		Icon icon = null;
 		for (int i = 0; i < a_optionPane.getComponentCount(); i++)
 		{
 			if (a_optionPane.getComponent(i) instanceof Container)
@@ -2483,7 +2482,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 				{
 					if (currentPanel.getComponent(j) instanceof JLabel)
 					{
-						icon = (IconUIResource) ( (JLabel) currentPanel.getComponent(j)).getIcon();
+						icon = ( (JLabel) currentPanel.getComponent(j)).getIcon();
 						break;
 					}
 				}
