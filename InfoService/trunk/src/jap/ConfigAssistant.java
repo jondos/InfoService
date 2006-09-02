@@ -68,6 +68,7 @@ public class ConfigAssistant extends JAPDialog
 {
 	private static final String BROWSER_IE = "Internet Explorer";
 	private static final String BROWSER_FIREFOX = "Mozilla Firefox";
+	private static final String BROWSER_SEA_MONKEY = "Sea Monkey";
 	private static final String BROWSER_OPERA = "Opera";
 	private static final String BROWSER_KONQUEROR = "Konqueror";
 	private static final String BROWSER_SAFARI = "Safari";
@@ -232,9 +233,8 @@ public class ConfigAssistant extends JAPDialog
 		constraints.gridy--;
 
 
-
-
 		addBrowserInstallationInfo(contentPane, constraints, BROWSER_FIREFOX, "browser_firefox", true);
+		addBrowserInstallationInfo(contentPane, constraints, BROWSER_SEA_MONKEY, "browser_seamonkey", false);
 		addBrowserInstallationInfo(contentPane, constraints, BROWSER_OPERA, "browser_opera", false);
 		addBrowserInstallationInfo(contentPane, constraints, BROWSER_KONQUEROR, "browser_konqueror", false);
 		addBrowserInstallationInfo(contentPane, constraints, BROWSER_SAFARI, "browser_safari", false);
@@ -497,13 +497,14 @@ constraints = new GridBagConstraints();
 constraints.gridx = 0;
 constraints.gridy = -1;
 constraints.anchor = GridBagConstraints.WEST;
-addBrowserInstallationInfo(contentPane, constraints, BROWSER_IE, "browser_ie", false);
-addBrowserInstallationInfo(contentPane, constraints, BROWSER_FIREFOX, "browser_firefox", false);
-addBrowserInstallationInfo(contentPane, constraints, BROWSER_OPERA, "browser_opera", false);
-addBrowserInstallationInfo(contentPane, constraints, BROWSER_KONQUEROR, "browser_konqueror", false);
-addBrowserInstallationInfo(contentPane, constraints, BROWSER_SAFARI, "browser_safari", false);
+addBrowserInstallationInfo(contentPane, constraints, BROWSER_IE, "noactive_ie", false);
+addBrowserInstallationInfo(contentPane, constraints, BROWSER_FIREFOX, "noactive_firefox", false);
+addBrowserInstallationInfo(contentPane, constraints, BROWSER_SEA_MONKEY, "noactive_seamonkey", false);
+addBrowserInstallationInfo(contentPane, constraints, BROWSER_OPERA, "noactive_opera", false);
+addBrowserInstallationInfo(contentPane, constraints, BROWSER_KONQUEROR, "noactive_konqueror", false);
+addBrowserInstallationInfo(contentPane, constraints, BROWSER_SAFARI, "noactive_safari", false);
 addBrowserInstallationInfo(contentPane, constraints,
-						   JAPMessages.getString(MSG_OTHER_BROWSERS), "browser_unknown", false);
+						   JAPMessages.getString(MSG_OTHER_BROWSERS), "noactive_general", false);
 
 
 
