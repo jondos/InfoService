@@ -113,6 +113,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 {
 	public static final String MSG_UPDATE = JAPNewView.class.getName() + "_update";
 
+	private static final String MSG_UPDATE_TOOL_TIP = JAPNewView.class.getName() + "_updateToolTip";
+	private static final String MSG_ANONYMETER_TOOL_TIP = JAPNewView.class.getName() + "_anonymeterToolTip";
 	private static final String MSG_SERVICE_NAME = JAPNewView.class.getName() + "_ngAnonymisierungsdienst";
 	private static final String MSG_ERROR_DISCONNECTED = JAPNewView.class.getName() + "_errorDisconnected";
 	private static final String MSG_ERROR_PROXY = JAPNewView.class.getName() + "_errorProxy";
@@ -130,6 +132,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String MSG_CURRENCY_EURO =  JAPNewView.class.getName() + "_currencyEuro";
 	private static final String MSG_BTN_ASSISTANT =  JAPNewView.class.getName() + "_btnAssistant";
 	private static final String MSG_MN_ASSISTANT =  JAPNewView.class.getName() + "_mnAssistant";
+
+	private static final String HLP_ANONYMETER =  JAPNewView.class.getName() + "_anonymometer";
+
 
 	private static final String[] METERFNARRAY =
 		{
@@ -215,6 +220,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private PaymentMainPanel m_flippingPanelPayment;
 	private Object m_connectionEstablishedSync = new Object();
 	private boolean m_bConnectionErrorShown = false;
+	private boolean m_bConnecting = false;
 	private JProgressBar m_progForwarderActivity;
 	private JProgressBar m_progForwarderActivitySmall;
 
@@ -277,6 +283,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		constrVersion.gridx = 0;
 		constrVersion.gridy = 0;
 		m_labelUpdate = new JLabel(">>" + JAPMessages.getString(MSG_UPDATE) + "<<");
+		m_labelUpdate.setToolTipText(JAPMessages.getString(MSG_UPDATE_TOOL_TIP));
+
 		m_labelUpdate.setForeground(Color.blue);
 		m_labelUpdate.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		final JAPNewView view = this;
@@ -548,6 +556,16 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		p.add(m_progressAnonTraffic, c1);
 
 		m_labelAnonMeter = new JLabel(getMeterImage(3));
+		m_labelAnonMeter.setToolTipText(JAPMessages.getString(MSG_ANONYMETER_TOOL_TIP));
+		m_labelAnonMeter.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		m_labelAnonMeter.addMouseListener(new MouseAdapter()
+		{
+			public void mouseClicked(MouseEvent a_event)
+			{
+				JAPHelp.getInstance().getContextObj().setContext(HLP_ANONYMETER);
+				JAPHelp.getInstance().setVisible(true);
+			}
+		});
 		c1.gridx = 2;
 		c1.gridy = 0;
 		c1.gridheight = 3;
@@ -1503,6 +1521,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		boolean bAnonMode = m_Controller.getAnonMode();
 		boolean bConnected = m_Controller.isAnonConnected();
 		boolean bConnectionErrorShown = m_bConnectionErrorShown;
+		boolean bConnecting = m_bConnecting; // not used at the moment
 
 		if (bAnonMode && bConnected)
 		{
@@ -1516,7 +1535,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				return meterIcons[2]; //No measure available
 			}
 		}
-		else if (bAnonMode && !bConnected && bConnectionErrorShown)
+		else if (bAnonMode && !bConnected && (bConnectionErrorShown || bConnecting))
 		{
 			//System.out.println("connection lost");
 			return meterIcons[1]; // connection lost
