@@ -89,4 +89,9 @@ public class DummyDatabaseEntry extends AbstractDatabaseEntry implements IDistri
 		m_versionNumber = a_versionNumber;
 	}
 
+	public long getLastUpdate() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }
