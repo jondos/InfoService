@@ -1236,7 +1236,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 
 		//Register help context
-		JAPHelp.getInstance().getContextObj().setContext("services");
+		JAPHelp.getInstance().getContextObj().setContext("services_anon");
 		if (!m_infoService.isFilled())
 		{
 			fetchCascades(false, false, true);
