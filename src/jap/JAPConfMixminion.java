@@ -293,7 +293,7 @@ final class JAPConfMixminion extends AbstractJAPConfModule implements ActionList
 	protected void onRootPanelShown()
 	{
 		//Register help context
-		JAPHelp.getInstance().getContextObj().setContext("services");
+		JAPHelp.getInstance().getContextObj().setContext("services_mixminion");
 //		if (System.currentTimeMillis() - m_lastUpdate > 600000)
 //		{
 //			fetchRouters(false);
