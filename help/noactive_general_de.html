@@ -6,36 +6,36 @@
 <!--#include virtual="/header_en.html"-->
 <H2>Verwendung eines Filterproxys</H2>
 
-<B>Blockieren von aktiven Inhalten f&uuml;r alle Arten von Browsern</B><P>
+<B>Datenspuren im Internet verhindern mit allen Arten von Browsern</B><P>
 
 Verschiedene Browser haben unterschiedliche M&ouml;glichkeiten, aktive Inhalte zu blockieren. Manchmal gibt es n&uuml;tzliche Erweiterungen daf&uuml;r, manchmal nicht.
 <br>Ein allgemeinerer Ansatz, welcher f&uuml;r jede Art von Browser funktioniert, ist das Zwischenschalten eines Proxys. So wie JAP zwischen Ihren Browser und das Internet geschaltet ist, kann ein Filterproxy zwischen JAP und den Browser geschaltet sein und unerw&uuml;nschte Inhalte filtern.
-<br>Für den Einsatz mit JAP wird der Filterproxy <i>Muffin</i> empfohlen. Muffin ist OpenSource und wie JAP in Java programmiert.
+<br>F&uuml;r den Einsatz mit JAP wird der Filterproxy <i>Muffin</i> empfohlen. Muffin ist OpenSource und wie JAP in Java programmiert.
 <UL>
 <LI><B>Installation</B><P>
 Laden Sie sich Muffin <A href="http://muffin.doit.org/">von dieser Seite</A> herunter. Verwenden Sie bei den Downloads die Datei mit der Endung <i>.jar</i> oder verwenden Sie direkt <A href="http://download.sourceforge.net/muffin/muffin-0.9.3a.jar">diesen Link</A> zum Download.
-<br>Sie können Muffin mit einem Doppelklick auf die heruntergeladene Datei öffnen oder über den Befehl <i>java -jar Dateiname.jar</i> wenn Sie sich im Verzeichnis von Muffin befinden.
+<br>Sie k&ouml;nnen Muffin mit einem Doppelklick auf die heruntergeladene Datei &ouml;ffnen oder &uuml;ber den Befehl <i>java -jar Dateiname.jar</i> wenn Sie sich im Verzeichnis von Muffin befinden.
 <LI><B>Einrichtung</B><P>
-Das Fenster von Muffin öffnet sich. Öffnen Sie im Menü <i>Edit</i> -> <i>Options</i>.
+Das Fenster von Muffin &ouml;ffnet sich. &Ouml;ffnen Sie im Men&uuml; <i>Edit</i> -> <i>Options</i>.
 <br>
 <center><img src="muffin1.gif"></center>
 <br>
-Geben Sie für <i>HTTP Proxy</i> und <i>HTTPS Proxy</i> jeweils "127.0.0.1" und für den zugehörigen <i>Port</i> "4001" ein.
+Geben Sie f&uuml;r <i>HTTP Proxy</i> und <i>HTTPS Proxy</i> jeweils "127.0.0.1" und f&uuml;r den zugeh&ouml;rigen <i>Port</i> "4001" ein.
 <br><B>Hinweis:</B> Falls Sie im JAP einen anderen <A HREF="portlistener_de.html">Listenerport</A> eingestellt haben m&uuml;ssen Sie diesen anstatt 4001 eintragen.
-<br>Lassen Sie alle anderen Felder unverändert. Bestätigen Sie mit durch Klicken von <i>Apply</i>, <i>Save</i> und <i>Close</i>. Ohne <i>Apply</i> überdauern die Einstellungen einen Neustart von Muffin nicht.
+<br>Lassen Sie alle anderen Felder unver&auml;ndert. Best&auml;tigen Sie mit durch Klicken von <i>Apply</i>, <i>Save</i> und <i>Close</i>. Ohne <i>Apply</i> &uuml;berdauern die Einstellungen einen Neustart von Muffin nicht.
 <br>Durch diese Einstellung holt sich Muffin die Daten aus dem Internet nicht direkt, sondern vom JAP.
 <P>
 <LI><B>Filter</B><P>
-Jetzt müssen die Filter aktiviert werden. Öffnen Sie im Menü <i>Edit</i> -> <i>Filters</i>.
+Jetzt m&uuml;ssen die Filter aktiviert werden. &Ouml;ffnen Sie im Men&uuml; <i>Edit</i> -> <i>Filters</i>.
 <br>
 <center><img src="muffin2.gif"></center>
 <br>
-Wählen Sie von den <i>Supported Filters</i> den Eintrag <i>NoCode</i> und klicken Sie <i>Enable</i>. Wiederholen Sie den Schritt für den Eintrag <i>Referer</i>. Dadurch sind beide Einträge jetzt unter <i>Enabled Filters</i> zu sehen.
-Es wird empfohlen, beim Filter <i>NoCode</i> die Standardeinstellungen zu belassen. Sollten Sie dennoch Änderungen vornehmen wollen, bearbeiten Sie den Filter durch einen Klick auf <i>Preferences</i> und bestätigen Sie mit <i>Apply</i>, <i>Save</i> und <i>Close</i>.
-<br>Dadurch blockiert Muffin unter anderem Java, JavaScript, VBScript und andere Scriptsprachen und sendet keinen Referer. Bestätigen Sie den Dialog mit <i>Save</i> und <i>Close</i>.
+W&auml;hlen Sie von den <i>Supported Filters</i> den Eintrag <i>NoCode</i> und klicken Sie <i>Enable</i>. Wiederholen Sie den Schritt f&uuml;r den Eintrag <i>Referer</i>. Dadurch sind beide Eintr&auml;ge jetzt unter <i>Enabled Filters</i> zu sehen.
+Es wird empfohlen, beim Filter <i>NoCode</i> die Standardeinstellungen zu belassen. Sollten Sie dennoch &Auml;nderungen vornehmen wollen, bearbeiten Sie den Filter durch einen Klick auf <i>Preferences</i> und best&auml;tigen Sie mit <i>Apply</i>, <i>Save</i> und <i>Close</i>.
+<br>Dadurch blockiert Muffin unter anderem Java, JavaScript, VBScript und andere Scriptsprachen und sendet keinen Referer. Best&auml;tigen Sie den Dialog mit <i>Save</i> und <i>Close</i>.
 <P>
 <LI><B>Browser</B><P>
-Als letzter Schritt muss der Browser so eingerichtet werden, dass er die Daten nicht von JAP, sondern von Muffin bezieht. Das Vorgehen ist das selbe wie <A href="browser_de.html">hier</A> beschrieben, nur verwenden Sie diesmal den Port von Muffin, das ist standardmässig 51966.
+Als letzter Schritt muss der Browser so eingerichtet werden, dass er die Daten nicht von JAP, sondern von Muffin bezieht. Das Vorgehen ist das selbe wie <A href="browser_de.html">hier</A> beschrieben, nur verwenden Sie diesmal den Port von Muffin, das ist standardm&auml;ssig 51966.
 <br>Somit besteht folgende Kette: Browser <-> Muffin <-> JAP <-> Internet.
 </UL>
 <!--#include virtual="/footer_en.html"-->
