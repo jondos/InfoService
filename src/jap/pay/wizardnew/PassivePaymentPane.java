@@ -38,6 +38,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import anon.pay.xml.XMLPassivePayment;
@@ -395,22 +396,39 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		m_c.fill = m_c.HORIZONTAL;
 		m_rootPanel.add(new JLabel(JAPMessages.getString(MSG_CARDNUMBER)), m_c);
 
+		JPanel panelCardNumer = new JPanel(new GridBagLayout());
+		m_c.gridwidth = 4;
 		m_c.gridx++;
 		m_c.weightx = 1.0;
+		m_rootPanel.add(panelCardNumer, m_c);
+
+		GridBagConstraints constrCardNr = new GridBagConstraints();
+
+		constrCardNr.gridx = 0;
+		constrCardNr.gridy = 0;
+		constrCardNr.fill = GridBagConstraints.HORIZONTAL;
+		constrCardNr.weightx = 1.0;
+		constrCardNr.insets = new Insets(5, 0, 5, 5);
 		m_tfCardNumber1 = new JAPJIntField(bounds, true);
-		m_rootPanel.add(m_tfCardNumber1, m_c);
+		panelCardNumer.add(m_tfCardNumber1, constrCardNr);
+		//m_rootPanel.add(m_tfCardNumber1, m_c);
 
-		m_c.gridx++;
+		constrCardNr.gridx++;
+		constrCardNr.insets = new Insets(5, 5, 5, 5);
 		m_tfCardNumber2 = new JAPJIntField(bounds, true);
-		m_rootPanel.add(m_tfCardNumber2, m_c);
+		//m_rootPanel.add(m_tfCardNumber2, m_c);
+		panelCardNumer.add(m_tfCardNumber2, constrCardNr);
 
-		m_c.gridx++;
+		constrCardNr.gridx++;
 		m_tfCardNumber3 = new JAPJIntField(bounds, true);
-		m_rootPanel.add(m_tfCardNumber3, m_c);
+		//m_rootPanel.add(m_tfCardNumber3, m_c);
+		panelCardNumer.add(m_tfCardNumber3, constrCardNr);
 
-		m_c.gridx++;
+		constrCardNr.gridx++;
+		constrCardNr.insets = new Insets(5, 5, 5, 0);
 		m_tfCardNumber4 = new JAPJIntField(bounds, true);
-		m_rootPanel.add(m_tfCardNumber4, m_c);
+		//m_rootPanel.add(m_tfCardNumber4, m_c);
+		panelCardNumer.add(m_tfCardNumber4, constrCardNr);
 
 
 		m_c.weightx = 0;
