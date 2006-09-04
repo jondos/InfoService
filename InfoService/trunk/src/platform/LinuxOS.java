@@ -44,8 +44,7 @@ public class LinuxOS extends AbstractOS
 
 	public static final String[] BROWSERLIST =
 		{
-		"firefox", "iexplore", "explorer", "mozilla", "konqueror", "mozilla-firefox",
-		"firebird", "opera"
+		"firefox", "iexplore", "explorer", "mozilla", "konqueror", "mozilla-firefox", "opera"
 	};
 
 	public LinuxOS() throws Exception
@@ -56,23 +55,34 @@ public class LinuxOS extends AbstractOS
 			throw new Exception("Operating system is not Linux");
 		}
 
+		Properties properties = new Properties();
 		try
 		{
-			Properties properties = new Properties();
 			properties.load(Runtime.getRuntime().exec("env").getInputStream());
-			try
-			{
-				m_bKDE = Boolean.getBoolean(properties.getProperty("KDE_FULL_SESSION"));
-			}
-			catch (Exception a_e)
-			{
-			}
-			m_bGnome = properties.getProperty("GNOME_DESKTOP_SESSION_ID") != null;
+			System.out.println(properties.getProperty("KDE_FULL_SESSION"));
+			m_bKDE = Boolean.valueOf(properties.getProperty("KDE_FULL_SESSION")).booleanValue();
 		}
-		catch (Exception ex)
+		catch (Exception a_e)
 		{
 		}
+		m_bGnome = properties.getProperty("GNOME_DESKTOP_SESSION_ID") != null;
 
+	}
+
+	public boolean openEMail(String a_mailto)
+	{
+		if (a_mailto == null)
+		{
+			return false;
+		}
+		if (!a_mailto.startsWith("mailto:"))
+		{
+			return openLink("mailto:" + a_mailto);
+		}
+		else
+		{
+			return openLink(a_mailto);
+		}
 	}
 
 	public boolean openURL(URL a_url)
@@ -86,32 +96,8 @@ public class LinuxOS extends AbstractOS
 		String[] browser = BROWSERLIST;
 		//String url = "\"" + a_url.toString() + "\"";
 		String url = a_url.toString();
-		if (m_bKDE)
-		{
-			try
-			{
-				Runtime.getRuntime().exec("kfmclient exec " + url);
-				success = true;
-			}
-			catch (Exception ex)
-			{
-				LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot open URL in KDE default browser");
-			}
-		}
-		else if (m_bGnome)
-		{
-			try
-			{
-				Runtime.getRuntime().exec("gnome-open " + url);
-				success = true;
-			}
-			catch (Exception ex)
-			{
-				LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot open URL in Gnome default browser");
-			}
-		}
 
-		if (!success)
+		if (!openLink(url))
 		{
 			for (int i = 0; i < browser.length; i++)
 			{
@@ -133,6 +119,42 @@ public class LinuxOS extends AbstractOS
 		}
 
 		return success;
+	}
+
+	private boolean openLink(String a_link)
+	{
+		if (a_link == null)
+		{
+			return false;
+		}
+
+		if (m_bKDE)
+		{
+			try
+			{
+				Runtime.getRuntime().exec("kfmclient exec " + a_link);
+				return true;
+			}
+			catch (Exception ex)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.MISC,
+							  "Cannot open '" + a_link + "' in KDE default program.");
+			}
+		}
+		else if (m_bGnome)
+		{
+			try
+			{
+				Runtime.getRuntime().exec("gnome-open " + a_link);
+				return true;
+			}
+			catch (Exception ex)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.MISC,
+							  "Cannot open '" + a_link + "' in Gnome default program.");
+			}
+		}
+		return false;
 	}
 
 	public String getConfigPath()

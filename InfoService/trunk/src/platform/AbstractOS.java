@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004, The JAP-Team
+ Copyright (c) 2000 - 2006, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -47,7 +47,7 @@ public abstract class AbstractOS implements IExternalURLCaller
 	 */
 	private static Class[] REGISTERED_PLATFORM_CLASSES =
 		{
-		LinuxOS.class, WindowsOS.class, MacOS.class, DefaultOS.class};
+		LinuxOS.class, WindowsOS.class, MacOS.class, UnknownOS.class};
 
 	/**
 	 * The instanciated operation system class.
@@ -73,7 +73,7 @@ public abstract class AbstractOS implements IExternalURLCaller
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 							  "Cannot instantiate class " + REGISTERED_PLATFORM_CLASSES[i] +
-							  ". Trying to instanciate an other platform class.");
+							  ". Trying to instanciate another platform class.");
 			}
 		}
 
@@ -112,8 +112,7 @@ public abstract class AbstractOS implements IExternalURLCaller
 					return a_optionalText;
 				}
 			}
-	};
-
+		};
 
 		return link;
 	}

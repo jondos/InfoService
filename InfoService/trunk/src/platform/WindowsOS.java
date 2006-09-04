@@ -44,8 +44,7 @@ public class WindowsOS extends AbstractOS
 {
 	public static final String[] BROWSERLIST =
 		{
-		"firefox", "iexplore", "explorer", "mozilla", "konqueror", "mozilla-firefox",
-		"firebird", "opera"
+		"firefox", "iexplore", "explorer", "mozilla", "konqueror", "mozilla-firefox", "opera"
 	};
 
 	public WindowsOS() throws Exception
