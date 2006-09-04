@@ -263,19 +263,13 @@ public final class JAPHelp extends JAPDialog
 			try
 			{
 				m_htmlpaneTheHelpPane.loadContext(m_helpPath, m_helpContext.getContext(), m_language);
-				if (!isVisible())
-				{
-					super.setVisible(true);
-				}
 			}
 			catch (Exception e)
 			{
 			}
 		}
-		else
-		{
-			super.setVisible(false);
-		}
+		super.setVisible(a_bVisible);
+
 	}
 
 	/**

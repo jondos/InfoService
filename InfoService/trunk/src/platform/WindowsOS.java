@@ -60,20 +60,37 @@ public class WindowsOS extends AbstractOS
 	public boolean openURL(URL a_url)
 	{
 		boolean success = false;
+		if (a_url == null)
+		{
+			return false;
+		}
 
 		String[] browser = BROWSERLIST;
 		String url="\""+a_url.toString()+"\"";
-		for (int i = 0; i < browser.length; i++)
+		try
 		{
-			try
+			Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + url);
+			success = true;
+		}
+		catch (Exception ex)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot open URL in windows default browser");
+		}
+
+		if (!success)
+		{
+			for (int i = 0; i < browser.length; i++)
 			{
-				Runtime.getRuntime().exec(new String[]
-										  {browser[i], url});
-				success = true;
-				break;
-			}
-			catch (Exception ex)
-			{
+				try
+				{
+					Runtime.getRuntime().exec(new String[]
+											  {browser[i], url});
+					success = true;
+					break;
+				}
+				catch (Exception ex)
+				{
+				}
 			}
 		}
 		if (!success)
