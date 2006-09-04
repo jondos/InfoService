@@ -34,6 +34,7 @@
  */
 import java.security.SecureRandom;
 import java.awt.Frame;
+import java.util.Hashtable;
 
 import anon.client.crypto.KeyPool;
 import gui.JAPAWTMsgBox;
@@ -68,9 +69,10 @@ public class JAP
 	private boolean bConsoleOnly = false;
 	private boolean loadPay = true;
 	private JAPController m_controller;
-	private Frame ownerFrame = null;
 
-	String[] m_arstrCmdnLnArgs = null;
+	Hashtable m_arstrCmdnLnArgs = null;
+	String[] m_temp = null;
+
 	public JAP()
 	{
 	}
@@ -80,7 +82,19 @@ public class JAP
 	 */
 	JAP(String[] argv)
 	{
-		m_arstrCmdnLnArgs = argv;
+		m_temp = argv;
+		if (argv != null)
+		{
+			m_arstrCmdnLnArgs = new Hashtable(argv.length);
+			for (int i = 0; i < argv.length; i++)
+			{
+				m_arstrCmdnLnArgs.put(argv[i], argv[i]);
+			}
+		}
+		else
+		{
+			m_arstrCmdnLnArgs = new Hashtable();
+		}
 	}
 
 	/** Initializes and starts the JAP.
@@ -130,10 +144,6 @@ public class JAP
 		{
 			bConsoleOnly = true;
 		}
-		else
-		{
-			ownerFrame = new Frame();
-		}
 
 		// Init Messages....
 		JAPMessages.init(JAPConstants.MESSAGESFN);
@@ -149,7 +159,7 @@ public class JAP
 				else
 				{
 					JAPAWTMsgBox.MsgBox(
-						ownerFrame,
+						new Frame(),
 						JAPMessages.getString(MSG_ERROR_NEED_NEWER_JAVA),
 						JAPMessages.getString("error"));
 				}
@@ -178,7 +188,7 @@ public class JAP
 				else
 				{
 					JAPAWTMsgBox.MsgBox(
-						ownerFrame,
+						new Frame(),
 						JAPMessages.getString(MSG_ERROR_NEED_NEWER_JAVA),
 						JAPMessages.getString("error"));
 				}
@@ -194,9 +204,9 @@ public class JAP
 		}
 		else
 		{
-			GUIUtils.setIconResizer(JAPModel.getInstance().getIconResizer());
-			splash = new JAPSplash(ownerFrame);
+			splash = new JAPSplash(new Frame());
 			splash.setVisible(true);
+			GUIUtils.setIconResizer(JAPModel.getInstance().getIconResizer());
 		}
 
 		// initialise secure random generators
@@ -222,7 +232,7 @@ public class JAP
 			catch (NoClassDefFoundError e)
 			{
 				JAPAWTMsgBox.MsgBox(
-					ownerFrame,
+					new Frame(),
 					JAPMessages.getString("errorSwingNotInstalled"),
 					JAPMessages.getString("error"));
 				System.exit(0);
@@ -294,11 +304,11 @@ public class JAP
 		// Create the controller object
 		m_controller = JAPController.getInstance();
 		String cmdArgs = "";
-		if (m_arstrCmdnLnArgs != null)
+		if (m_temp != null)
 		{
-			for (int i = 0; i < m_arstrCmdnLnArgs.length; i++)
+			for (int i = 0; i < m_temp.length; i++)
 			{
-				cmdArgs += " " + m_arstrCmdnLnArgs[i];
+				cmdArgs += " " + m_temp[i];
 			}
 			m_controller.setCommandLineArgs(cmdArgs);
 		}
@@ -306,15 +316,15 @@ public class JAP
 		/* check, whether there is the -config parameter, which means the we use userdefined config
 		 * file
 		 */
-		if (m_arstrCmdnLnArgs != null)
+		if (m_temp != null)
 		{
-			for (int i = 0; i < m_arstrCmdnLnArgs.length; i++)
+			for (int i = 0; i < m_temp.length; i++)
 			{
-				if (m_arstrCmdnLnArgs[i].equalsIgnoreCase("-config"))
+				if (m_temp[i].equalsIgnoreCase("-config"))
 				{
-					if (i + 1 < m_arstrCmdnLnArgs.length)
+					if (i + 1 < m_temp.length)
 					{
-						configFileName = m_arstrCmdnLnArgs[i + 1];
+						configFileName = m_temp[i + 1];
 					}
 					break;
 				}
@@ -498,17 +508,7 @@ public class JAP
 
 	public boolean isArgumentSet(String a_argument)
 	{
-		if (m_arstrCmdnLnArgs != null)
-		{
-			for (int i = 0; i < m_arstrCmdnLnArgs.length; i++)
-			{
-				if (m_arstrCmdnLnArgs[i] != null && m_arstrCmdnLnArgs[i].equalsIgnoreCase(a_argument))
-				{
-					return true;
-				}
-			}
-		}
-		return false;
+		return m_arstrCmdnLnArgs.containsKey(a_argument);
 	}
 
 	public static void main(String[] argv)
