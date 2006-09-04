@@ -36,16 +36,22 @@ import java.net.URL;
  * This class is instantiated by AbstractOS if the OS cannot be determined.
  * It only provides dummy methods.
  */
-public class DefaultOS extends AbstractOS
+public class UnknownOS extends AbstractOS
 {
-	public DefaultOS() throws Exception
+	public UnknownOS() throws Exception
 	{
-
 	}
+
+	public boolean openEMail(String a_mailto)
+	{
+		LogHolder.log(LogLevel.INFO, LogType.MISC, "Class is uncapable of opening EMail links");
+		return false;
+	}
+
 
 	public boolean openURL(URL a_url)
 	{
-		LogHolder.log(LogLevel.INFO, LogType.MISC, "DefaultOS class is uncapable of opening URLs");
+		LogHolder.log(LogLevel.INFO, LogType.MISC, "Class is uncapable of opening URLs");
 		return false;
 	}
 
