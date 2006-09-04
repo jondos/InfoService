@@ -31,12 +31,17 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import java.net.URL;
+import java.util.Properties;
 
 /**
  * This class is instantiated by AbstractOS if the current OS is Linux
  */
 public class LinuxOS extends AbstractOS
 {
+	private boolean m_bKDE = false;
+	private boolean m_bGnome = false;
+
+
 	public static final String[] BROWSERLIST =
 		{
 		"firefox", "iexplore", "explorer", "mozilla", "konqueror", "mozilla-firefox",
@@ -50,20 +55,70 @@ public class LinuxOS extends AbstractOS
 		{
 			throw new Exception("Operating system is not Linux");
 		}
+
+		try
+		{
+			Properties properties = new Properties();
+			properties.load(Runtime.getRuntime().exec("env").getInputStream());
+			try
+			{
+				m_bKDE = Boolean.getBoolean(properties.getProperty("KDE_FULL_SESSION"));
+			}
+			catch (Exception a_e)
+			{
+			}
+			m_bGnome = properties.getProperty("GNOME_DESKTOP_SESSION_ID") != null;
+		}
+		catch (Exception ex)
+		{
+		}
+
 	}
 
 	public boolean openURL(URL a_url)
 	{
 		boolean success = false;
-		try
+		if (a_url == null)
 		{
-			String[] browser = BROWSERLIST;
+			return false;
+		}
+
+		String[] browser = BROWSERLIST;
+		//String url = "\"" + a_url.toString() + "\"";
+		String url = a_url.toString();
+		if (m_bKDE)
+		{
+			try
+			{
+				Runtime.getRuntime().exec("kfmclient exec " + url);
+				success = true;
+			}
+			catch (Exception ex)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot open URL in KDE default browser");
+			}
+		}
+		else if (m_bGnome)
+		{
+			try
+			{
+				Runtime.getRuntime().exec("gnome-open " + url);
+				success = true;
+			}
+			catch (Exception ex)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot open URL in Gnome default browser");
+			}
+		}
+
+		if (!success)
+		{
 			for (int i = 0; i < browser.length; i++)
 			{
 				try
 				{
 					Runtime.getRuntime().exec(new String[]
-											  {browser[i], a_url.toString()});
+											  {browser[i], url});
 					success = true;
 					break;
 				}
@@ -71,16 +126,12 @@ public class LinuxOS extends AbstractOS
 				{
 				}
 			}
-			if (!success)
-			{
-				return false;
-			}
 		}
-		catch (Exception ex)
+		if (!success)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot open URL in browser");
-			return false;
 		}
+
 		return success;
 	}
 
