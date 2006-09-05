@@ -1016,7 +1016,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 		JAPModel.getInstance().addObserver(this);
 
-		JAPHelp.init(this, AbstractOS.getInstance());
+		JAPHelp.init(this, AbstractOS.getInstance(), AbstractOS.getInstance());
 		new Thread()
 		{
 			public void run()

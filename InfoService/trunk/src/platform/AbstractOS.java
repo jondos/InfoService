@@ -33,14 +33,16 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import gui.JAPHelp.IExternalURLCaller;
+import gui.JAPHelp.IExternalEMailCaller;
 import gui.dialog.JAPDialog;
+
 
 /**
  * This abstract class provides access to OS-specific implementations of certain
  * functions. It tries to instantiate an OS-specific class by determining on which
  * operating system JAP is currently running.
  */
-public abstract class AbstractOS implements IExternalURLCaller
+public abstract class AbstractOS implements IExternalURLCaller, IExternalEMailCaller
 {
 	/**
 	 * Make sure that the default OS is the last OS in the array.
