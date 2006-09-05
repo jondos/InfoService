@@ -69,59 +69,7 @@ public class LinuxOS extends AbstractOS
 
 	}
 
-	public boolean openEMail(String a_mailto)
-	{
-		if (a_mailto == null)
-		{
-			return false;
-		}
-		if (!a_mailto.startsWith("mailto:"))
-		{
-			return openLink("mailto:" + a_mailto);
-		}
-		else
-		{
-			return openLink(a_mailto);
-		}
-	}
-
-	public boolean openURL(URL a_url)
-	{
-		boolean success = false;
-		if (a_url == null)
-		{
-			return false;
-		}
-
-		String[] browser = BROWSERLIST;
-		//String url = "\"" + a_url.toString() + "\"";
-		String url = a_url.toString();
-
-		if (!openLink(url))
-		{
-			for (int i = 0; i < browser.length; i++)
-			{
-				try
-				{
-					Runtime.getRuntime().exec(new String[]
-											  {browser[i], url});
-					success = true;
-					break;
-				}
-				catch (Exception ex)
-				{
-				}
-			}
-		}
-		if (!success)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot open URL in browser");
-		}
-
-		return success;
-	}
-
-	private boolean openLink(String a_link)
+	protected boolean openLink(String a_link)
 	{
 		if (a_link == null)
 		{

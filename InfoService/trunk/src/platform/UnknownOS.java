@@ -30,7 +30,6 @@ package platform;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.net.URL;
 
 /**
  * This class is instantiated by AbstractOS if the OS cannot be determined.
@@ -42,16 +41,9 @@ public class UnknownOS extends AbstractOS
 	{
 	}
 
-	public boolean openEMail(String a_mailto)
+	public boolean openLink(String a_link)
 	{
-		LogHolder.log(LogLevel.INFO, LogType.MISC, "Class is uncapable of opening EMail links");
-		return false;
-	}
-
-
-	public boolean openURL(URL a_url)
-	{
-		LogHolder.log(LogLevel.INFO, LogType.MISC, "Class is uncapable of opening URLs");
+		LogHolder.log(LogLevel.INFO, LogType.MISC, "Class is uncapable of opening links");
 		return false;
 	}
 
