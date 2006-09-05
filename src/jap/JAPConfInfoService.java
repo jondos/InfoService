@@ -583,12 +583,16 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 								getMessageData())).elements();
 							synchronized (knownInfoServicesListModel)
 							{
+								int i = 0;
 								while (databaseEntries.hasMoreElements())
 								{
 									/* trick: call this observer with an ADD message for every single entry */
+									knownInfoServicesListModel.add(i, databaseEntries.nextElement());
+									i++;
+									/*
 									update(a_notifier,
 										   new DatabaseMessage(DatabaseMessage.ENTRY_ADDED,
-										databaseEntries.nextElement()));
+										databaseEntries.nextElement()));*/
 								}
 							}
 						}
