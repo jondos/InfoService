@@ -110,14 +110,14 @@ public final class JAPHelp extends JAPDialog
 
 	private static JAPHelp ms_theJAPHelp = null;
 
-	private JAPHelp(Frame parent, IExternalURLCaller a_urlCaller)
+	private JAPHelp(Frame parent, IExternalURLCaller a_urlCaller, IExternalEMailCaller a_emailCaller)
 	{
 		super(parent, JAPMessages.getString(MSG_HELP_WINDOW), false);
 		setDefaultCloseOperation(HIDE_ON_CLOSE);
 
 		m_initializing = true;
 		m_helpContext = new JAPHelpContext();
-		m_htmlpaneTheHelpPane = new HtmlPane(a_urlCaller);
+		m_htmlpaneTheHelpPane = new HtmlPane(a_urlCaller, a_emailCaller);
 		m_htmlpaneTheHelpPane.addPropertyChangeListener(new HelpListener());
 
 		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -196,12 +196,14 @@ public final class JAPHelp extends JAPDialog
 	 * Creates and initialises a new global help object with the given frame as parent frame.
 	 * @param a_parent the parent frame of the help object
 	 * @param a_urlCaller the caller that is used to open external URLs (may be null)
+	 * @param m_emailCaller the caller that is used to open E_Mail applications with a given address
 	 */
-	public static void init(Frame a_parent, IExternalURLCaller a_urlCaller)
+	public static void init(Frame a_parent,
+							IExternalURLCaller a_urlCaller, IExternalEMailCaller a_emailCaller)
 	{
 		if (ms_theJAPHelp == null)
 		{
-			ms_theJAPHelp = new JAPHelp(a_parent, a_urlCaller);
+			ms_theJAPHelp = new JAPHelp(a_parent, a_urlCaller, a_emailCaller);
 		}
 	}
 
@@ -212,6 +214,19 @@ public final class JAPHelp extends JAPDialog
 	public static JAPHelp getInstance()
 	{
 		return ms_theJAPHelp;
+	}
+
+	/**
+	 * An instance of this interface is needed to open an E-Mail application with a given address.
+	 */
+	public static interface IExternalEMailCaller
+	{
+		/**
+		 * Returns if the caller was able to open the URL in the browser
+		 * @param a_email an E-Mail address
+		 * @return if the caller was able to open the E-Mail address in the browser
+		 */
+		boolean openEMail(String a_email);
 	}
 
 	/**
@@ -390,6 +405,7 @@ public final class JAPHelp extends JAPDialog
 	private final class HtmlPane extends JScrollPane implements HyperlinkListener
 	{
 		private IExternalURLCaller m_urlCaller;
+		private IExternalEMailCaller m_emailCaller;
 		private JEditorPane html;
 		private URL url;
 		private Cursor cursor;
@@ -397,7 +413,7 @@ public final class JAPHelp extends JAPDialog
 		private Vector m_historyViewports;
 		private int m_historyPosition;
 
-		public HtmlPane(IExternalURLCaller a_urlCaller)
+		public HtmlPane(IExternalURLCaller a_urlCaller, IExternalEMailCaller a_emailCaller)
 		{
 			if (a_urlCaller == null)
 			{
@@ -410,6 +426,18 @@ public final class JAPHelp extends JAPDialog
 				};
 			}
 			m_urlCaller = a_urlCaller;
+
+			if (a_emailCaller == null)
+			{
+				a_emailCaller = new IExternalEMailCaller()
+				{
+					public boolean openEMail(String a_email)
+					{
+						return false;
+					}
+				};
+			}
+			m_emailCaller = a_emailCaller;
 			html = new JEditorPane("text/html", "<html><body></body></html>");
 			new JTextComponentToClipboardCopier(true).registerTextComponent(html);
 			html.setEditable(false);
@@ -603,6 +631,8 @@ public final class JAPHelp extends JAPDialog
 
 		private final class PageLoader implements Runnable
 		{
+			private static final String MAILTO = "mailto";
+
 			PageLoader(URL u)
 			{
 				url = u;
@@ -645,10 +675,20 @@ public final class JAPHelp extends JAPDialog
 				}
 				else
 				{
-					if (!m_urlCaller.openURL(url))
+					boolean success = true;
+					if (url.getProtocol().toLowerCase().startsWith(MAILTO))
+					{
+						success = m_emailCaller.openEMail(url.toString());
+					}
+					else
+					{
+						success = m_urlCaller.openURL(url);
+					}
+					if (!success)
 					{
 						html.setCursor(cursor);
-						JAPDialog.showMessageDialog(html.getParent(), JAPMessages.getString(MSG_ERROR_EXT_URL),
+						JAPDialog.showMessageDialog(html.getParent(),
+							JAPMessages.getString(MSG_ERROR_EXT_URL),
 							new ExternalLinkedInformation(url));
 					}
 					if (m_historyPosition > 0)
