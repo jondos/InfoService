@@ -42,11 +42,6 @@ import java.net.URL;
  */
 public class WindowsOS extends AbstractOS
 {
-	public static final String[] BROWSERLIST =
-		{
-		"firefox", "iexplore", "explorer", "mozilla", "konqueror", "mozilla-firefox", "opera"
-	};
-
 	public WindowsOS() throws Exception
 	{
 		String osName = System.getProperty("os.name", "").toLowerCase();
@@ -56,47 +51,25 @@ public class WindowsOS extends AbstractOS
 		}
 	}
 
-	public boolean openURL(URL a_url)
+	protected boolean openLink(String a_link)
 	{
-		boolean success = false;
-		if (a_url == null)
-		{
-			return false;
-		}
-
-		String[] browser = BROWSERLIST;
-		String url="\""+a_url.toString()+"\"";
 		try
 		{
-			Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + url);
-			success = true;
+			Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + a_link);
+			return true;
 		}
 		catch (Exception ex)
 		{
-			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot open URL in windows default browser");
+			LogHolder.log(LogLevel.ERR, LogType.MISC,
+						  "Cannot open '" + a_link + "' in Windows default program.");
 		}
 
-		if (!success)
-		{
-			for (int i = 0; i < browser.length; i++)
-			{
-				try
-				{
-					Runtime.getRuntime().exec(new String[]
-											  {browser[i], url});
-					success = true;
-					break;
-				}
-				catch (Exception ex)
-				{
-				}
-			}
-		}
-		if (!success)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot open URL in browser");
-		}
-		return success;
+		return false;
+	}
+
+	protected String getAsString(URL a_url)
+	{
+		return "\"" + super.getAsString(a_url) +"\"";
 	}
 
 	public String getConfigPath()

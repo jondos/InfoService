@@ -101,6 +101,7 @@ import anon.crypto.SignatureVerifier;
 import gui.JAPHtmlMultiLineLabel;
 import gui.JAPMultilineLabel;
 import anon.infoservice.ServiceSoftware;
+import anon.crypto.AbstractX509AlternativeName;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener, Observer
@@ -317,6 +318,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_serverInfoPanel.add(l, c);
 
 		m_emailLabel = new JLabel();
+		m_emailLabel.addMouseListener(this);
 		c.weightx = 1;
 		c.gridx = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -688,6 +690,15 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		m_emailLabel.setText(trim(m_infoService.getEMail(selectedMixId)));
 		m_emailLabel.setToolTipText(m_infoService.getEMail(selectedMixId));
+		if (getEMailFromLabel(m_emailLabel) != null)
+		{
+			m_emailLabel.setForeground(Color.blue);
+		}
+		else
+		{
+			m_emailLabel.setForeground(new JLabel().getForeground());
+		}
+		m_emailLabel.setToolTipText(m_infoService.getEMail(selectedMixId));
 
 
 
@@ -713,6 +724,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			m_urlLabel.setForeground(new JLabel().getForeground());
 		}
 		m_urlLabel.setToolTipText(m_infoService.getUrl(selectedMixId));
+
 
 		m_serverInfo = m_infoService.getMixInfo(selectedMixId);
 		if(m_serverInfo != null)
@@ -1126,6 +1138,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				LogHolder.log(LogLevel.ERR, LogType.MISC, "Error opening URL in browser");
 			}
 		}
+		else if (e.getSource() == m_emailLabel)
+		{
+			AbstractOS.getInstance().openEMail(getEMailFromLabel(m_emailLabel));
+		}
 		else if (e.getSource() == m_listMixCascade)
 		{
 			if (e.getClickCount() == 2)
@@ -1200,7 +1216,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	public void mouseEntered(MouseEvent e)
 	{
-		if ( (e.getSource() == m_urlLabel && getUrlFromLabel( (JLabel) m_urlLabel) != null) ||
+		if ( (e.getSource() == m_urlLabel && getUrlFromLabel(m_urlLabel) != null) ||
+			 (e.getSource() == m_emailLabel && getEMailFromLabel(m_emailLabel) != null) ||
 			(e.getSource() == m_viewCertLabel && m_serverCert != null) ||
 			(e.getSource() == m_viewCertLabelValidity && m_serverCert != null) ||
 			(e.getSource() == m_locationLabel && m_locationCoordinates != null))
@@ -1561,6 +1578,19 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			LogHolder.log(LogLevel.EMERG, LogType.GUI, e);
 		}
 	}
+
+	private static String getEMailFromLabel(JLabel a_emailLabel)
+	{
+		String email = a_emailLabel.getText();
+		if (AbstractX509AlternativeName.isValidEMail(email))
+		{
+			return email;
+		}
+		else
+		{
+			return null;
+		}
+}
 
 	private static String getUrlFromLabel(JLabel a_urlLabel)
 	{

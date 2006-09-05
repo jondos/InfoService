@@ -49,6 +49,11 @@ public abstract class AbstractOS implements IExternalURLCaller
 		{
 		LinuxOS.class, WindowsOS.class, MacOS.class, UnknownOS.class};
 
+	private static final String[] BROWSERLIST =
+		{
+		"firefox", "iexplore", "explorer", "mozilla", "konqueror", "mozilla-firefox", "opera"
+	};
+
 	/**
 	 * The instanciated operation system class.
 	 * (no, ms_operating system does not mean only Microsoft OS are supported... ;-))
@@ -117,9 +122,67 @@ public abstract class AbstractOS implements IExternalURLCaller
 		return link;
 	}
 
+	public final boolean openEMail(String a_mailto)
+	{
+		if (a_mailto == null)
+		{
+			return false;
+		}
+		if (!a_mailto.startsWith("mailto:"))
+		{
+			return openLink("mailto:" + a_mailto);
+		}
+		else
+		{
+			return openLink(a_mailto);
+		}
+	}
+
+	public final boolean openURL(URL a_url)
+	{
+		boolean success = false;
+		if (a_url == null)
+		{
+			return false;
+		}
+
+		String[] browser = BROWSERLIST;
+		String url = getAsString(a_url);
+		if (!openLink(url))
+		{
+			for (int i = 0; i < browser.length; i++)
+			{
+				try
+				{
+					Runtime.getRuntime().exec(new String[]{browser[i], url});
+					success = true;
+					break;
+				}
+				catch (Exception ex)
+				{
+				}
+			}
+		}
+		if (!success)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot open URL in browser");
+		}
+		return success;
+	}
+
 	/**
 	 * Implementations must return a valid path to the config file.
 	 */
 	public abstract String getConfigPath();
 
+	protected abstract boolean openLink(String a_link);
+
+	protected String getAsString(URL a_url)
+	{
+		if (a_url == null)
+		{
+			return null;
+		}
+		return a_url.toString();
+	}
 }
