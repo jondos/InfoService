@@ -141,6 +141,13 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 	}
 
 	/**
+	 * This method will be called when another tab is chosen*/
+	public void stateChanged(ChangeEvent ce)
+	{
+		this.setHelpContext();
+	}
+
+	/**
 	 * Creates the infoservice root panel with all child-panels.
 	 */
 	public void recreateRootPanel()
@@ -488,21 +495,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 										/* it's an entry downloaded from the Internet -> add it at the end of the
 										 * Internet entries but before the user-defined entries
 										 */
-										boolean positionFound = false;
-										int i = 0;
-										while ( (i < knownInfoServicesListModel.size()) && !positionFound)
-										{
-											if ( ( (InfoServiceDBEntry) (knownInfoServicesListModel.
-												getElementAt(i))).isUserDefined())
-											{
-												/* we have found the first user-defined entry */
-												positionFound = true;
-											}
-											else
-											{
-												i++;
-											}
-										}
+										int i = findFirstUserDefinedListModelEntry(knownInfoServicesListModel);
 										//knownInfoServicesListModel.insertElementAt(updatedEntry, i);
 										final class Test implements Runnable
 										{
@@ -587,7 +580,9 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 								while (databaseEntries.hasMoreElements())
 								{
 									/* trick: call this observer with an ADD message for every single entry */
-									knownInfoServicesListModel.add(i, databaseEntries.nextElement());
+									knownInfoServicesListModel.add(
+										findFirstUserDefinedListModelEntry(knownInfoServicesListModel),
+										databaseEntries.nextElement());
 									i++;
 									/* leads to deadlock on MacOS
 									update(a_notifier,
@@ -1488,9 +1483,23 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		JAPHelp.getInstance().getContextObj().setContext(context);
 	}
 
-	/**
-	 * This method will be called when another tab is chosen*/
-	public void stateChanged(ChangeEvent ce) {
-		this.setHelpContext();
+	private int findFirstUserDefinedListModelEntry(DefaultListModel knownInfoServicesListModel)
+	{
+		int i = 0;
+		while ( (i < knownInfoServicesListModel.size()))
+		{
+			if ( ( (InfoServiceDBEntry) (knownInfoServicesListModel.
+										 getElementAt(i))).isUserDefined())
+			{
+				/* we have found the first user-defined entry */
+				break;
+			}
+			else
+			{
+				i++;
+			}
+		}
+		return i;
 	}
+
 }
