@@ -28,6 +28,7 @@
 package jap;
 
 import java.io.InputStream;
+import java.io.FileInputStream;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -42,6 +43,7 @@ import gui.JAPMessages;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.io.*;
 
 final public class JAPSplash extends Window
 {
@@ -77,10 +79,30 @@ final public class JAPSplash extends Window
 		if (t.getColorModel().getPixelSize() <= 16)
 		{
 			in = c.getResourceAsStream(IMGPATHLOWCOLOR + SPLASHFN);
+			if (in == null)
+			{
+				try
+				{
+					in = new FileInputStream(IMGPATHLOWCOLOR + SPLASHFN);
+				}
+				catch (FileNotFoundException ex)
+				{
+				}
+			}
 		}
 		if (in == null)
 		{
 			in = c.getResourceAsStream(IMGPATHHICOLOR + SPLASHFN);
+		}
+		if (in == null)
+		{
+			try
+			{
+				in = new FileInputStream(IMGPATHHICOLOR + SPLASHFN);
+			}
+			catch (FileNotFoundException ex)
+			{
+			}
 		}
 		int len;
 		int aktIndex;

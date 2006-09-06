@@ -1227,79 +1227,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_rbAnonOff.setEnabled(false);
 	}
 
-	/** Used to notice the View, that the locale has Changed.
-	 *
-	 */
-	public void localeChanged()
-	{
-		m_bttnHelp.setText(JAPMessages.getString("helpButton"));
-		m_bttnQuit.setText(JAPMessages.getString("quitButton"));
-		m_bttnConf.setText(JAPMessages.getString("confButton"));
-		m_btnAssistant.setText(JAPMessages.getString(MSG_BTN_ASSISTANT));
-
-		JAPUtil.setMnemonic(m_bttnConf, JAPMessages.getString("confButtonMn"));
-		JAPUtil.setMnemonic(m_bttnHelp, JAPMessages.getString("helpButtonMn"));
-		JAPUtil.setMnemonic(m_bttnQuit, JAPMessages.getString("quitButtonMn"));
-		JAPUtil.setMnemonic(m_btnAssistant, JAPMessages.getString(MSG_MN_ASSISTANT));
-
-		m_bttnReload.setToolTipText(JAPMessages.getString("ngCascadeReloadTooltip"));
-		m_labelAnonService.setText(JAPMessages.getString(MSG_SERVICE_NAME) + ":");
-		m_bttnAnonDetails.setText(JAPMessages.getString("ngBttnAnonDetails"));
-		m_rbAnonOn.setText(JAPMessages.getString("ngAnonOn"));
-		m_rbAnonOff.setText(JAPMessages.getString("ngAnonOff"));
-		m_labelAnonymityOnOff.setText(JAPMessages.getString("ngAnonymitaet"));
-		m_labelAnonymity.setText(JAPMessages.getString("ngAnonymitaet"));
-		m_labelAnonymitySmall.setText(JAPMessages.getString("ngAnonymitaet"));
-		m_labelAnonymityUserLabel.setText(JAPMessages.getString("ngNrOfUsers"));
-		m_labelAnonymityTrafficLabel.setText(JAPMessages.getString("ngAnonymityTraffic"));
-		m_labelAnonymityLow.setText(JAPMessages.getString("ngAnonymityLow"));
-		m_labelAnonymityHigh.setText(JAPMessages.getString("ngAnonymityHigh"));
-		m_cbAnonymityOn.setText(JAPMessages.getString("ngAnonOn"));
-		m_labelOwnActivity.setText(JAPMessages.getString("ngActivity"));
-		m_labelOwnActivitySmall.setText(JAPMessages.getString("ngActivity"));
-		m_labelForwarderActivity.setText(JAPMessages.getString("ngActivity"));
-		m_labelForwarderActivitySmall.setText(JAPMessages.getString("ngActivity"));
-		m_labelForwarderCurrentConnectionsLabel.setText(JAPMessages.getString("ngForwardedCurrentConnections"));
-		m_labelForwarderAcceptedConnectionsLabel.setText(
-			JAPMessages.getString("ngForwardedAcceptedConnections"));
-		m_labelForwarderRejectedConnectionsLabel.setText(
-			JAPMessages.getString("ngForwardedRejectedConnections"));
-		m_labelForwardingSmall.setText(JAPMessages.getString("ngForwarding"));
-		m_labelForwarding.setText(JAPMessages.getString("ngForwarding"));
-		m_labelForwardedTraffic.setText(JAPMessages.getString("ngForwardedTraffic"));
-		m_labelForwarderConnections.setText(JAPMessages.getString("ngForwardedConnections"));
-		m_labelForwarderUsedBandwidthLabel.setText(JAPMessages.getString("ngForwardedUsedBandwidth"));
-		m_cbForwarding.setText(JAPMessages.getString("ngForwardingOn"));
-		m_cbForwardingSmall.setText(JAPMessages.getString("ngForwardingOn"));
-
-		m_labelOwnTraffic.setText(JAPMessages.getString("ngOwnTraffic"));
-		m_labelOwnTrafficSmall.setText(JAPMessages.getString("ngOwnTraffic"));
-		m_labelOwnTrafficWWW.setText(JAPMessages.getString("ngOwnTrafficWWW"));
-		m_labelOwnTrafficOther.setText(JAPMessages.getString("ngOwnTrafficOther"));
-
-		m_labelMeterDetailsRisk.setText(JAPMessages.getString("meterDetailsRisk") + " ");
-		m_labelOwnChannels.setText(JAPMessages.getString("ownTrafficChannels"));
-		m_labelOwnBytes.setText(JAPMessages.getString("ownTrafficBytes"));
-		if (m_dlgConfig != null)
-		{
-			m_dlgConfig.localeChanged();
-		}
-
-	    if (m_bWithPayment)
-		{
-			((PaymentMainPanel)m_flippingPanelPayment).localeChanged();
-		}
-		Dimension d = super.getPreferredSize();
-		m_iPreferredWidth = Math.max(d.width, Math.max(m_flippingpanelOwnTraffic.getPreferredSize().width,
-			Math.max(
-				Math.max(m_panelAnonService.getPreferredSize().width,
-						 m_flippingpanelForward.getPreferredSize().width),
-				m_flippingpanelAnon.getPreferredSize().width)));
-
-		valuesChanged(true);
-		setOptimalSize();
-	}
-
 	private void loadMeterIcons()
 	{
 		// Load Images for "Anonymity Meter"
@@ -1516,6 +1443,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						( (int) (labelFont.getSize() * 0.8))));
 					m_labelUpdate.setFont(new Font(labelFont.getName(), labelFont.getStyle(),
 						( (int) (labelFont.getSize() * 0.8))));
+					setOptimalSize();
 				}
 			};
 		}

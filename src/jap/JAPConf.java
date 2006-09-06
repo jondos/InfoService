@@ -1049,46 +1049,6 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		}
 	}
 
-	public void localeChanged()
-	{
-		m_moduleSystem.repaintEverything();
-		setTitle(JAPMessages.getString("settingsDialog"));
-		m_bttnDefaultConfig.setText(JAPMessages.getString("bttnDefaultConfig"));
-		m_bttnCancel.setText(JAPMessages.getString("cancelButton"));
-		m_bttnHelp.setText(JAPMessages.getString("helpButton"));
-		//Port Panel
-		m_labelPortnumber1.setText(JAPMessages.getString("settingsPort1"));
-		m_labelPortnumber2.setText(JAPMessages.getString("settingsPort2"));
-		m_cbListenerIsLocal.setText(JAPMessages.getString("settingsListenerCheckBox"));
-		m_borderSettingsListener.setTitle(JAPMessages.getString("settingsListenerBorder"));
-		//ProxyPanel
-		m_cbProxy.setText(JAPMessages.getString("settingsProxyCheckBox"));
-		int i = m_comboProxyType.getSelectedIndex();
-		m_comboProxyType.removeAllItems();
-		m_comboProxyType.addItem(JAPMessages.getString("settingsProxyTypeHTTP"));
-		m_comboProxyType.addItem(JAPMessages.getString("settingsProxyTypeSOCKS"));
-		if (i != -1)
-		{
-			m_comboProxyType.setSelectedIndex(i);
-		}
-		m_cbProxyAuthentication.setText(JAPMessages.getString("settingsProxyAuthenticationCheckBox"));
-		m_labelProxyHost.setText(JAPMessages.getString("settingsProxyHost"));
-		m_labelProxyPort.setText(JAPMessages.getString("settingsProxyPort"));
-		m_labelProxyType.setText(JAPMessages.getString("settingsProxyType"));
-		m_labelProxyAuthUserID.setText(JAPMessages.getString("settingsProxyAuthUserID"));
-		m_labelConfDebugLevel.setText(JAPMessages.getString("ConfDebugLevels"));
-		m_labelConfDebugTypes.setText(JAPMessages.getString("ConfDebugTypes"));
-		m_bttnDebugFileNameSearch.setText(JAPMessages.getString("ConfDebugFileNameSearch"));
-		m_cbShowDebugConsole.setText(JAPMessages.getString("ConfDebugShowConsole"));
-		m_cbDebugToFile.setText(JAPMessages.getString("ConfDebugFile"));
-		pack();
-		/*	if(!m_Tree.isVisible())
-		 {
-		  Dimension d=getSize();
-		  setSize(d.width+10,d.height);
-		 }*/
-	}
-
 	/** Updates the shown Values from the Model.*/
 	public void updateValues()
 	{

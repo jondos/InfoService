@@ -575,22 +575,4 @@ public class PaymentMainPanel extends FlippingPanel
 			}
 		}
 	}
-
-	public void localeChanged()
-	{
-		m_labelTitle.setText(JAPMessages.getString(MSG_TITLE));
-		m_labelTitleSmall.setText(JAPMessages.getString(MSG_TITLE));
-		m_labelTotalSpentHeader.setText(JAPMessages.getString(MSG_TOTALSPENT));
-		m_labelSessionSpentHeader.setText(JAPMessages.getString(MSG_SESSIONSPENT));
-		m_dateLabel.setText(JAPMessages.getString(MSG_LASTUPDATE));
-
-		PayAccount activeAccount = PayAccountsFile.getInstance().getActiveAccount();
-		if (activeAccount != null)
-		{
-			Timestamp t = PayAccountsFile.getInstance().getActiveAccount().getBalance().getTimestamp();
-			m_lastUpdateLabel.setText(
-							JAPUtil.formatTimestamp(
-				t, true, JAPController.getInstance().getLocale().getLanguage()));
-		}
-	}
 }
