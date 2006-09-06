@@ -42,7 +42,6 @@ import java.util.Vector;
 
 import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
-import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
@@ -53,7 +52,9 @@ import java.awt.Cursor;
  */
 final public class ServerListPanel extends JPanel implements ActionListener
 {
+	private boolean m_bEnabled;
 	private ButtonGroup m_bgMixe;
+	private int m_numberOfMixes;
 	private int m_selectedIndex;
 	private Vector m_itemListeners;
 
@@ -68,7 +69,7 @@ final public class ServerListPanel extends JPanel implements ActionListener
 		{
 			selectedIndex = a_selectedIndex;
 		}
-
+		m_numberOfMixes = a_numberOfMixes;
 		m_itemListeners = new Vector();
 		GridBagLayout la = new GridBagLayout();
 		GridBagConstraints constraints = new GridBagConstraints();
@@ -115,13 +116,19 @@ final public class ServerListPanel extends JPanel implements ActionListener
 			la.setConstraints(mix, constraints);
 			add(mix);
 			m_bgMixe.add(mix);
-			if (!a_enabled)
-			{
-				mix.setEnabled(false);
-			}
-
+			m_bEnabled = a_enabled;
+			mix.setEnabled(m_bEnabled);
 		}
+	}
 
+	public boolean areMixButtonsEnabled()
+	{
+		return m_bEnabled;
+	}
+
+	public int getNumberOfMixes()
+	{
+		return m_numberOfMixes;
 	}
 
 	/**
@@ -156,6 +163,11 @@ final public class ServerListPanel extends JPanel implements ActionListener
 		m_itemListeners.addElement(l);
 	}
 
+	public void removeItemListener (ItemListener a_listener)
+	{
+		m_itemListeners.removeElement(a_listener);
+	}
+
 	public void setSelectedIndex(int a_index)
 	{
 		if (a_index < 0)
@@ -165,7 +177,8 @@ final public class ServerListPanel extends JPanel implements ActionListener
 		}
 
 		Enumeration mixes = m_bgMixe.getElements();
-		for (int i = 0; i < a_index && mixes.hasMoreElements(); i++)
+		int i = 0;
+		for (; i < a_index && mixes.hasMoreElements(); i++)
 		{
 			mixes.nextElement();
 		}
@@ -174,6 +187,7 @@ final public class ServerListPanel extends JPanel implements ActionListener
 			return;
 			//throw new IndexOutOfBoundsException("Invalid index: " + a_index);
 		}
+		m_selectedIndex = i;
 		((JRadioButton)mixes.nextElement()).setSelected(true);
 	}
 
