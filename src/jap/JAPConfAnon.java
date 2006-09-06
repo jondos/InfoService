@@ -102,6 +102,7 @@ import gui.JAPHtmlMultiLineLabel;
 import gui.JAPMultilineLabel;
 import anon.infoservice.ServiceSoftware;
 import anon.crypto.AbstractX509AlternativeName;
+import jap.pay.CoinstackProgressBarUI;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener, Observer
@@ -138,6 +139,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private JPanel m_serverInfoPanel;
 	private JPanel m_manualPanel;
 
+	private JLabel m_lblCascadeInfo;
 	private JLabel m_numOfUsersLabel;
 	private GridBagConstraints m_constrHosts, m_constrPorts;
 	private JLabel m_lblHosts;
@@ -202,6 +204,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		//m_listMixCascade.setFont(font);
 
 		m_listMixCascade.setEnabled(true);
+		m_lblCascadeInfo = new JLabel(JAPMessages.getString("infoAboutCascade"));
+
+		m_lblMix = new JLabel(JAPMessages.getString("infoAboutMix"));
+
+
 		drawCompleteDialog();
 	}
 
@@ -246,9 +253,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			a_strCascadeName = " ";
 		}
 
-		JLabel label = new JLabel(JAPMessages.getString("infoAboutCascade"));
-		label.setFont(new Font(label.getFont().getName(), Font.BOLD, (int)(label.getFont().getSize() * 1.2)));
-		m_serverPanel.add(label, c);
+		m_serverPanel.add(m_lblCascadeInfo, c);
 
 		c.gridy = 1;
 		m_serverPanel.add(new JLabel(a_strCascadeName), c);
@@ -283,8 +288,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		m_serverInfoPanel.setLayout(layout);
 
-		m_lblMix = new JLabel(JAPMessages.getString("infoAboutMix"));
-		m_lblMix.setFont(new Font(m_lblMix.getFont().getName(), Font.BOLD, (int)(m_lblMix.getFont().getSize() * 1.2)));
 		c.insets = new Insets(5, 10, 5, 5);
 		c.gridx = 0;
 		c.gridy = 0;
@@ -1259,6 +1262,15 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			fetchCascades(false, false, true);
 		}
 	}
+
+	public void fontSizeChanged(final JAPModel.FontResize a_resize, final JLabel a_dummyLabel)
+	{
+		m_lblCascadeInfo.setFont(new Font(a_dummyLabel.getFont().getName(), Font.BOLD,
+										  (int) (a_dummyLabel.getFont().getSize() * 1.2)));
+		m_lblMix.setFont(new Font(a_dummyLabel.getFont().getName(), Font.BOLD,
+								  (int) (a_dummyLabel.getFont().getSize() * 1.2)));
+	}
+
 	/**
 	 * Handles the selection of a cascade
 	 * @param e ListSelectionEvent

@@ -28,11 +28,14 @@
 
 package jap;
 
-import java.awt.Font;
 import javax.swing.JPanel;
+import javax.swing.JLabel;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 import java.awt.GridBagConstraints;
+import java.util.Observer;
+import java.util.Observable;
+import javax.swing.SwingUtilities;
 
 /**
  * This is the generic implementation for a JAP configuration module.
@@ -112,6 +115,11 @@ public abstract class AbstractJAPConfModule
 		m_rootPanel.addAncestorListener(new RootPanelAncestorListener());
 		m_savePoint = a_moduleSavePoint;
 		recreateRootPanel();
+		FontSizeObserver observer = new FontSizeObserver();
+		JAPModel.getInstance().addObserver(observer);
+		fontSizeChanged(new JAPModel.FontResize(JAPModel.getInstance().getFontSize(),
+												JAPModel.getInstance().getFontSize()),
+						observer.getDummyLabel());
 	}
 
 	/**
@@ -180,6 +188,16 @@ public abstract class AbstractJAPConfModule
 	{
 		/* call the event handler */
 		return onOkPressed();
+	}
+
+	/**
+	 * May contain some logic that is executed when the font size changes. It should also
+	 * contain all fixed font sizes, e.g. for JLabels.
+	 * @param a_fontResize the resize factor
+	 * @param a_dummyLabel a label to get the current JLabel font size from
+	 */
+	public void fontSizeChanged(JAPModel.FontResize a_fontResize, JLabel a_dummyLabel)
+	{
 	}
 
 	/**
@@ -267,14 +285,25 @@ public abstract class AbstractJAPConfModule
 	}
 
 	/**
-	 * Returns the current font setting for the children of AbstractJAPConfModule.
-	 *
-	 * @return The current font setting.
+	 * Observes changes of the font size.
 	 */
-	/*
-	protected final Font getFontSetting()
+	protected class FontSizeObserver implements Observer
 	{
-		return m_fontSetting;
-	}*/
+		private JLabel DUMMY_LABEL = new JLabel();
+
+		public JLabel getDummyLabel()
+		{
+			return DUMMY_LABEL;
+		}
+
+		public void update(Observable a_observable, final Object a_message)
+		{
+			if (a_message instanceof JAPModel.FontResize && a_message != null)
+			{
+				SwingUtilities.updateComponentTreeUI(DUMMY_LABEL);
+				fontSizeChanged((JAPModel.FontResize)a_message, DUMMY_LABEL);
+			}
+		}
+	}
 
 }

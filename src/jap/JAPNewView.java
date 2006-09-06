@@ -30,7 +30,7 @@ package jap;
 import java.util.Enumeration;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Vector;
+import java.util.Hashtable;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -39,7 +39,6 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.MediaTracker;
@@ -57,8 +56,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -67,7 +64,6 @@ import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 import javax.swing.LookAndFeel;
@@ -84,7 +80,6 @@ import gui.JAPDll;
 import gui.JAPHelp;
 import gui.JAPMessages;
 import gui.JAPMixCascadeComboBox;
-import gui.MyProgressBarUI;
 import gui.StatusPanel;
 import gui.GUIUtils;
 import jap.forward.JAPRoutingRegistrationStatusObserver;
@@ -100,16 +95,15 @@ import anon.infoservice.Database;
 import anon.AnonServerDescription;
 import anon.infoservice.DatabaseMessage;
 import platform.AbstractOS;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeEvent;
 import anon.infoservice.JAPVersionInfo;
 import update.JAPUpdateWizard;
 import anon.infoservice.NewCascadeIDEntry;
 import anon.infoservice.CascadeIDEntry;
 import anon.infoservice.JavaVersionDBEntry;
+import gui.JAPProgressBar;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
-	JAPObserver, Observer, PropertyChangeListener
+	JAPObserver, Observer
 {
 	public static final String MSG_UPDATE = JAPNewView.class.getName() + "_update";
 
@@ -156,22 +150,15 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private static final String PRICE_UNIT = "ct/MB";
 
+	private final JLabel DEFAULT_LABEL = new JLabel();
 
 	//private JLabel meterLabel;
-	private JLabel m_labelCascadeName;
 	private JLabel m_lblPrice;
 	private JLabel m_lblNewServices;
 	private JLabel m_labelVersion;
 	private JLabel m_labelUpdate;
 	private JPanel m_pnlVersion;
-	private JPanel m_panelMain;
 	private JButton m_bttnHelp, m_bttnQuit, m_bttnIconify, m_bttnConf, m_btnAssistant;
-	//private JButton m_bttnAnonConf;
-	//private JCheckBox m_cbAnon;
-	//private JProgressBar userProgressBar;
-	//private JProgressBar trafficProgressBar;
-	//private JProgressBar protectionProgressBar;
-	//private JProgressBar ownTrafficChannelsProgressBar;
 
 	private JLabel m_labelMeterDetailsRisk, m_labelOwnBytes, m_labelOwnChannels;
 	//private TitledBorder m_borderOwnTraffic, m_borderAnonMeter, m_borderDetails;
@@ -187,7 +174,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JAPMixCascadeComboBox m_comboAnonServices;
 	private JLabel m_labelAnonService, m_labelAnonymity, m_labelAnonymitySmall, m_labelAnonymityOnOff;
 	private JLabel m_labelAnonMeter, m_labelAnonymityLow, m_labelAnonymityHigh;
-	private JProgressBar m_progressAnonTraffic;
+	private JAPProgressBar m_progressAnonTraffic;
 	private JLabel m_labelAnonymityUser, m_labelAnonymityUserLabel, m_labelAnonymityTrafficLabel;
 
 	private JLabel m_labelOwnTraffic, m_labelOwnTrafficSmall;
@@ -207,7 +194,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JLabel m_labelForwarderRejectedConnectionsLabel, m_labelForwarderUsedBandwidthLabel;
 	private JLabel m_labelForwarderConnections;
 	private JLabel m_labelForwardingErrorSmall, m_labelForwardingError;
-	private JProgressBar m_progressOwnTrafficActivity, m_progressOwnTrafficActivitySmall, m_progressAnonLevel;
+	private JAPProgressBar m_progressOwnTrafficActivity, m_progressOwnTrafficActivitySmall, m_progressAnonLevel;
 	private JButton m_bttnAnonDetails, m_bttnReload;
 	private JCheckBox m_cbAnonymityOn;
 	private JRadioButton m_rbAnonOff, m_rbAnonOn;
@@ -221,8 +208,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private Object m_connectionEstablishedSync = new Object();
 	private boolean m_bConnectionErrorShown = false;
 	private boolean m_bConnecting = false;
-	private JProgressBar m_progForwarderActivity;
-	private JProgressBar m_progForwarderActivitySmall;
+	private JAPProgressBar m_progForwarderActivity;
+	private JAPProgressBar m_progForwarderActivitySmall;
 
 	private boolean m_bUpdateClicked = false;
 	private boolean m_bAssistantClicked = false;
@@ -548,7 +535,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.gridy = 1;
 		c1.gridx = 1;
 		p.add(m_labelAnonymityUser, c1);
-		m_progressAnonTraffic = new JProgressBar();
+		m_progressAnonTraffic = new JAPProgressBar();
 		m_progressAnonTraffic.setMinimum(0);
 		m_progressAnonTraffic.setMaximum(5);
 		m_progressAnonTraffic.setBorderPainted(false);
@@ -626,9 +613,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.anchor = GridBagConstraints.EAST;
 		p.add(m_labelAnonymityLow, c1);
-		m_progressAnonLevel = new JProgressBar();
-		m_progressAnonLevel.setMinimum(0);
-		m_progressAnonLevel.setMaximum(6);
+		m_progressAnonLevel = new JAPProgressBar();
+		m_progressAnonLevel.setMinimum(StatusInfo.ANON_LEVEL_MIN);
+		m_progressAnonLevel.setMaximum(StatusInfo.ANON_LEVEL_MAX);
 		m_progressAnonLevel.setBorderPainted(false);
 		c1.weightx = 0.75;
 		c1.fill = GridBagConstraints.HORIZONTAL;
@@ -732,7 +719,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.gridx = 4;
 		c1.insets = new Insets(0, 10, 0, 0);
 		p.add(m_labelOwnActivity, c1);
-		m_progressOwnTrafficActivity = new JProgressBar();
+		m_progressOwnTrafficActivity = new JAPProgressBar();
 		m_progressOwnTrafficActivity.setMinimum(0);
 		m_progressOwnTrafficActivity.setMaximum(5);
 		m_progressOwnTrafficActivity.setBorderPainted(false);
@@ -814,7 +801,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.insets = new Insets(0, 10, 0, 0);
 		c1.gridx = 3;
 		p.add(m_labelOwnActivitySmall, c1);
-		m_progressOwnTrafficActivitySmall = new JProgressBar();
+		m_progressOwnTrafficActivitySmall = new JAPProgressBar();
 		m_progressOwnTrafficActivitySmall.setMinimum(0);
 		m_progressOwnTrafficActivitySmall.setMaximum(5);
 		m_progressOwnTrafficActivitySmall.setBorderPainted(false);
@@ -928,12 +915,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		// "Center:" tabs
 		//JTabbedPane tabs = new JTabbedPane();
 		//JPanel config = buildConfigPanel();
-		JPanel level = buildLevelPanel();
 		// "South": Buttons
 
 		getContentPane().setBackground(buttonPanel.getBackground());
 		getContentPane().add(northPanel, BorderLayout.CENTER);
-		m_panelMain = level;
 
 		/*if (!JAPModel.isSmallDisplay())
 		 {
@@ -970,8 +955,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		});
 
 		update(null, new JAPModel.FontResize(0, JAPModel.getInstance().getFontSize()));
-		propertyChange(null);
-		UIManager.addPropertyChangeListener(this);
 
 		Dimension d = super.getPreferredSize();
 		m_iPreferredWidth = Math.max(d.width, Math.max(m_flippingpanelOwnTraffic.getPreferredSize().width,
@@ -1033,172 +1016,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}.start();
 	}
 
-	public void propertyChange(PropertyChangeEvent a_event)
-	{
-		MyProgressBarUI ui = new MyProgressBarUI(true);
-		ui.setFilledBarColor(Color.blue.brighter());
-		m_progressAnonTraffic.setUI(ui);
-
-		ui = new MyProgressBarUI(true);
-		ui.setFilledBarColor(Color.blue);
-		m_progressOwnTrafficActivity.setUI(ui);
-
-		ui = new MyProgressBarUI(true);
-		ui.setFilledBarColor(Color.blue);
-		m_progressOwnTrafficActivitySmall.setUI(ui);
-
-		m_progressAnonLevel.setUI(new MyProgressBarUI(true));
-		m_progForwarderActivity.setUI(new MyProgressBarUI(true));
-		m_progForwarderActivitySmall.setUI(new MyProgressBarUI(true));
-		m_flippingPanelPayment.propertyChange(null);
-		Font labelFont = new JLabel().getFont();
-
-		m_labelVersion.setFont(new Font(labelFont.getName(), labelFont.getStyle(),
-										((int)(labelFont.getSize() * 0.8))));
-		m_labelUpdate.setFont(new Font(labelFont.getName(), labelFont.getStyle(),
-										((int)(labelFont.getSize() * 0.8))));
-		Runnable run = new Runnable()
-		{
-			public void run()
-			{
-				synchronized (LOCK_CONFIG)
-				{
-					if (m_dlgConfig != null)
-					{
-						m_dlgConfig.updateValues();
-					}
-				}
-			}
-		};
-		if (SwingUtilities.isEventDispatchThread())
-		{
-			run.run();
-		}
-		else
-		{
-			SwingUtilities.invokeLater(run);
-		}
-
-	}
-
-	private JPanel buildLevelPanel()
-	{
-		JPanel levelPanel = new JPanel(new BorderLayout());
-//		JPanel levelPanel = new JPanel();
-//		levelPanel.setLayout(new BoxLayout(levelPanel, BoxLayout.Y_AXIS) );
-
-		// Own traffic situation: current # of channels
-		//ownTrafficChannelsProgressBar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 1);
-		//Font fontControls = JAPController.getDialogFont();
-		//wnTrafficChannelsProgressBar.setFont(fontControls);
-		//ownTrafficChannelsProgressBar.setUI(new MyProgressBarUI(false));
-		//ownTrafficChannelsProgressBar.setStringPainted(true);
-		//ownTrafficChannelsProgressBar.setBorderPainted(false /*PROGRESSBARBORDER*/);
-		//ownTrafficChannelsProgressBar.setString(" ");
-
-		// Own traffic situation: # of bytes transmitted
-		//m_labelOwnTrafficBytes = new JLabel("0 Bytes", SwingConstants.RIGHT);
-		//m_labelOwnTrafficBytes.setFont(fontControls);
-		//
-		//userProgressBar = new
-		//	JProgressBar(JProgressBar.HORIZONTAL, 0, 1);
-		//userProgressBar.setStringPainted(true);
-		//userProgressBar.setBorderPainted(PROGRESSBARBORDER);
-		//userProgressBar.setFont(fontControls);
-		//
-		//trafficProgressBar = new
-		//	JProgressBar(JProgressBar.HORIZONTAL);
-		//trafficProgressBar.setStringPainted(true);
-		//trafficProgressBar.setBorderPainted(PROGRESSBARBORDER);
-		//	trafficProgressBar.setFont(fontControls);
-		//
-		//	protectionProgressBar = new
-		//		JProgressBar(JProgressBar.HORIZONTAL);
-		//	protectionProgressBar.setStringPainted(true);
-		//	protectionProgressBar.setBorderPainted(PROGRESSBARBORDER);
-		//	protectionProgressBar.setFont(fontControls);
-
-		JPanel ownTrafficPanel = new JPanel();
-		ownTrafficPanel.setLayout(new GridLayout(2, 2, 5, 5));
-		m_labelOwnChannels = new JLabel(JAPMessages.getString("ownTrafficChannels"));
-		//m_labelOwnChannels.setFont(fontControls);
-		ownTrafficPanel.add(m_labelOwnChannels);
-		m_labelOwnBytes = new JLabel(JAPMessages.getString("ownTrafficBytes"));
-		//m_labelOwnBytes.setFont(fontControls);
-		ownTrafficPanel.add(m_labelOwnBytes);
-
-// "Guthaben"
-
-		// Line 1
-		JPanel p41 = new JPanel();
-		p41.setLayout(new BoxLayout(p41, BoxLayout.X_AXIS));
-		//p41.add(Box.createRigidArea(new Dimension(10,0)) );
-		//p41.add(m_cbAnon);
-		if (!JAPModel.isSmallDisplay())
-		{
-			p41.add(Box.createRigidArea(new Dimension(5, 0)));
-		}
-		p41.add(Box.createHorizontalGlue());
-
-		// details panel
-		JPanel detailsPanel = new JPanel();
-		m_labelCascadeName = new JLabel();
-		//m_labelCascadeName.setFont(fontControls);
-		m_labelMeterDetailsRisk = new JLabel(JAPMessages.getString("meterDetailsRisk") + " ");
-		//m_labelMeterDetailsRisk.setFont(fontControls);
-		GridBagLayout g = new GridBagLayout();
-		detailsPanel.setLayout(g);
-		GridBagConstraints c = new GridBagConstraints();
-		c.anchor = GridBagConstraints.WEST;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		Insets normInsets = new Insets(0, 0, 8, 0);
-		c.insets = normInsets;
-		c.gridwidth = 1;
-		c.weightx = 0;
-		c.weighty = 1;
-		c.gridx = 0;
-		c.gridy = 0;
-		//g.setConstraints(m_labelMeterDetailsName, c);
-		//detailsPanel.add(m_labelMeterDetailsName);
-		c.gridx = 1;
-		c.weightx = 1;
-		g.setConstraints(m_labelCascadeName, c);
-		detailsPanel.add(m_labelCascadeName);
-		c.weightx = 0;
-		c.gridx = 0;
-		c.gridy = 1;
-		//g.setConstraints(m_labelAnonymityUser, c);
-		//detailsPanel.add(m_labelAnonymityUser);
-		c.gridx = 1;
-		c.weightx = 1;
-		//g.setConstraints(userProgressBar, c);
-		//detailsPanel.add(userProgressBar);
-		c.gridx = 0;
-		c.gridy = 2;
-		c.weightx = 0;
-		//g.setConstraints(m_labelMeterDetailsTraffic, c);
-		//detailsPanel.add(m_labelMeterDetailsTraffic);
-		c.gridx = 1;
-		c.weightx = 1;
-		//g.setConstraints(trafficProgressBar, c);
-		//detailsPanel.add(trafficProgressBar);
-		normInsets = new Insets(0, 0, 0, 0);
-		c.insets = normInsets;
-		c.gridx = 0;
-		c.gridy = 3;
-		g.setConstraints(m_labelMeterDetailsRisk, c);
-//		detailsPanel.add(labelMeterDetailsRisk);
-		c.gridx = 1;
-		//g.setConstraints(protectionProgressBar, c);
-//		detailsPanel.add(protectionProgressBar);
-
-		// Add all panels to level panel
-		levelPanel.add(ownTrafficPanel, BorderLayout.NORTH);
-		//levelPanel.add(meterPanel, BorderLayout.CENTER);
-		levelPanel.add(detailsPanel, BorderLayout.SOUTH);
-
-		return levelPanel;
-	}
 
 	private FlippingPanel buildForwarderPanel()
 	{
@@ -1247,7 +1064,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c2.weightx = 0;
 		c2.fill = GridBagConstraints.NONE;
 		p2.add(m_labelForwarderActivity, c2);
-		m_progForwarderActivity = new JProgressBar();
+		m_progForwarderActivity = new JAPProgressBar();
 		m_progForwarderActivity.setMinimum(0);
 		m_progForwarderActivity.setMaximum(5);
 		m_progForwarderActivity.setBorderPainted(false);
@@ -1359,7 +1176,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.fill = GridBagConstraints.NONE;
 		c1.insets = new Insets(0, 5, 0, 0);
 		p.add(m_labelForwarderActivitySmall, c1);
-		m_progForwarderActivitySmall = new JProgressBar();
+		m_progForwarderActivitySmall = new JAPProgressBar();
 		m_progForwarderActivitySmall.setMinimum(0);
 		m_progForwarderActivitySmall.setMaximum(5);
 		m_progForwarderActivitySmall.setBorderPainted(false);
@@ -1690,20 +1507,15 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				public void run()
 				{
-					JAPModel.FontResize resize = (JAPModel.FontResize) a_message;
-					GUIUtils.resizeAllFonts(1.0f / (1.0f + 0.1f * resize.getOldSize()));
-					GUIUtils.resizeAllFonts(1.0f + 0.1f * resize.getNewSize());
-
+					//JAPModel.FontResize resize = (JAPModel.FontResize) a_message;
 					SwingUtilities.updateComponentTreeUI(view);
-					//SwingUtilities.updateComponentTreeUI(view.getOwner());
-					synchronized (LOCK_CONFIG)
-					{
-						if (m_dlgConfig != null)
-						{
-							SwingUtilities.updateComponentTreeUI(m_dlgConfig.getContentPane());
-							//SwingUtilities.updateComponentTreeUI(m_dlgConfig.getOwner());
-						}
-					}
+
+					SwingUtilities.updateComponentTreeUI(DEFAULT_LABEL);
+					Font labelFont = DEFAULT_LABEL.getFont();
+					m_labelVersion.setFont(new Font(labelFont.getName(), labelFont.getStyle(),
+						( (int) (labelFont.getSize() * 0.8))));
+					m_labelUpdate.setFont(new Font(labelFont.getName(), labelFont.getStyle(),
+						( (int) (labelFont.getSize() * 0.8))));
 				}
 			};
 		}
@@ -2023,11 +1835,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 	}
 
-	public JPanel getMainPanel()
-	{
-		return m_panelMain;
-	}
-
 	private void setOptimalSize()
 	{
 		try
@@ -2048,9 +1855,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	{
 		synchronized (m_runnableValueUpdate)
 		{
+			/*
+			 * Only thing that have really changed are updated!
+			 */
 			Enumeration entries =
 				Database.getInstance(JAPVersionInfo.class).getEntrySnapshotAsEnumeration();
-
+			String strTemp;
 			JAPVersionInfo vi = null;
 			if (entries.hasMoreElements())
 			{
@@ -2063,34 +1873,35 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 			MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
 			//String strCascadeName = currentMixCascade.getName();
-			Vector v = Database.getInstance(MixCascade.class).getEntryList();
-			m_bIgnoreAnonComboEvents = true;
-			boolean bMixCascadeAlreadyIncluded = false;
-			m_comboAnonServices.removeAllItems();
-			if (v != null && v.size() > 0)
+			Hashtable hashAvailableCascades = Database.getInstance(MixCascade.class).getEntryHash();
+			if (!hashAvailableCascades.containsKey(currentMixCascade))
 			{
-				Enumeration enumer = v.elements();
-				while (enumer.hasMoreElements())
+				hashAvailableCascades.put(currentMixCascade.getId(), currentMixCascade);
+			}
+			m_bIgnoreAnonComboEvents = true;
+			if (!equals(m_comboAnonServices, hashAvailableCascades))
+			{
+				m_comboAnonServices.removeAllItems();
+				if (hashAvailableCascades != null && hashAvailableCascades.size() > 0)
 				{
-					MixCascade c = (MixCascade) enumer.nextElement();
-					m_comboAnonServices.addMixCascade(c);
-					if (c.equals(currentMixCascade))
+					Enumeration enumer = hashAvailableCascades.elements();
+					while (enumer.hasMoreElements())
 					{
-						bMixCascadeAlreadyIncluded = true;
+						m_comboAnonServices.addMixCascade((MixCascade) enumer.nextElement());
 					}
 				}
+				else
+				{
+					m_comboAnonServices.setNoDataAvailable();
+				}
 			}
-			else
-			{
-				m_comboAnonServices.setNoDataAvailable();
-			}
-			if (!bMixCascadeAlreadyIncluded)
-			{
-				m_comboAnonServices.addMixCascade(currentMixCascade);
-			}
-			m_comboAnonServices.setSelectedItem(currentMixCascade);
-			m_bIgnoreAnonComboEvents = false;
 			m_comboAnonServices.setToolTipText(currentMixCascade.getName());
+			if (m_comboAnonServices.getSelectedItem() == null ||
+				!m_comboAnonServices.getSelectedItem().equals(currentMixCascade))
+			{
+				m_comboAnonServices.setSelectedItem(currentMixCascade);
+			}
+			m_bIgnoreAnonComboEvents = false;
 
 			// Config panel
 			LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Start updateValues");
@@ -2100,23 +1911,19 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				m_rbAnonOn.setSelected(m_Controller.getAnonMode());
 				m_rbAnonOff.setSelected(!m_Controller.getAnonMode());
 				m_cbAnonymityOn.setSelected(m_Controller.getAnonMode());
-				LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Update CascadeName");
-				m_labelCascadeName.setText(currentMixCascade.getName());
-				m_labelCascadeName.setToolTipText(currentMixCascade.getName());
 				StatusInfo currentStatus = currentMixCascade.getCurrentStatus();
 				int anonLevel = currentStatus.getAnonLevel();
 				m_labelAnonMeter.setIcon(getMeterImage(anonLevel));
 				Color color = Color.red;
-				if (anonLevel > 3)
+				if (anonLevel > 7)
 				{
 					color = Color.green;
 				}
-				else if (anonLevel > 1)
+				else if (anonLevel > 2)
 				{
 					color = Color.yellow;
 				}
-				m_progressAnonLevel.setUI(new MyProgressBarUI(true));
-				( (MyProgressBarUI) m_progressAnonLevel.getUI()).setFilledBarColor(color);
+				m_progressAnonLevel.setFilledBarColor(color);
 				m_progressAnonLevel.setValue(anonLevel + 1);
 				if (m_Controller.isAnonConnected())
 				{
@@ -2138,8 +1945,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					}
 					else
 					{
-						m_labelAnonymityUser.setText(JAPMessages.getString("meterNA"));
-
+						strTemp = JAPMessages.getString("meterNA");
+						if (m_labelAnonymityUser.getText() == null ||
+							!m_labelAnonymityUser.getText().equals(strTemp))
+						{
+							// optimized change...
+							m_labelAnonymityUser.setText(strTemp);
+						}
 					}
 					int t = currentStatus.getTrafficSituation();
 					if (t > -1)
@@ -2340,5 +2152,38 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		Thread t = new Thread(doFetchMixCascades, "DoFetchMixCascades");
 		t.setDaemon(true);
 		t.start();
+	}
+
+	private static boolean equals(JAPMixCascadeComboBox a_one, Hashtable a_two)
+	{
+		int count;
+		if (a_one == null || a_two == null || a_one.getMixCascadeCount() == 0)
+		{
+			return false;
+		}
+		synchronized (a_one)
+		{
+			synchronized (a_two)
+			{
+				count = a_one.getMixCascadeCount();
+				if (count != a_two.size())
+				{
+					return false;
+				}
+				MixCascade currentCascade;
+				MixCascade hashedCascade;
+				for (int i = 0; i < count; i++)
+				{
+					currentCascade = a_one.getMixCascadeItemAt(i);
+					hashedCascade = (MixCascade)a_two.get(currentCascade.getId());
+					if (hashedCascade == null || hashedCascade.isPayment() != currentCascade.isPayment() ||
+						!hashedCascade.getName().equals(currentCascade.getName()))
+					{
+						return false;
+					}
+				}
+			}
+		}
+		return true;
 	}
 }

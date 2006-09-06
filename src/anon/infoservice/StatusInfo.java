@@ -39,7 +39,11 @@ import anon.util.XMLUtil;
 /**
  * Holds the information of a mixcascade status.
  */
-public class StatusInfo extends AbstractDatabaseEntry implements IDistributable {
+public class StatusInfo extends AbstractDatabaseEntry implements IDistributable
+{
+	public static final int ANON_LEVEL_MIN = 0;
+	public static final int ANON_LEVEL_MAX = 10;
+
 
   /**
    * This is the ID of the mixcascade to which this status belongs.
@@ -153,7 +157,7 @@ public class StatusInfo extends AbstractDatabaseEntry implements IDistributable 
       double trafficFactor = Math.min( ( (double) getTrafficSituation()) / 100.0, 1.0);
       double mixFactor = 1.0 - Math.pow(0.5, a_mixCascadeLength);
       /* get the integer part of the product -> 0 <= anonLevel <= 10 because mixFactor is always < 1.0 */
-      m_anonLevel = (int) (userFactor * trafficFactor * mixFactor * 11.0);
+      m_anonLevel = (int) (userFactor * trafficFactor * mixFactor * (double)(ANON_LEVEL_MAX + 1));
     }
     m_statusXmlData = XMLUtil.toString(a_statusNode);
   }
