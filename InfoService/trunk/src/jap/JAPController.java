@@ -1947,10 +1947,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 		JAPMessages.init(l, JAPConstants.MESSAGESFN);
 		m_Controller.m_Locale = l;
 		Locale.setDefault(l);
-		if (m_View != null)
-		{
-			m_View.localeChanged();
-		}
 	}
 
 	//---------------------------------------------------------------------
