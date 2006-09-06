@@ -579,15 +579,10 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 								int i = 0;
 								while (databaseEntries.hasMoreElements())
 								{
-									/* trick: call this observer with an ADD message for every single entry */
 									knownInfoServicesListModel.add(
 										findFirstUserDefinedListModelEntry(knownInfoServicesListModel),
 										databaseEntries.nextElement());
 									i++;
-									/* leads to deadlock on MacOS
-									update(a_notifier,
-										   new DatabaseMessage(DatabaseMessage.ENTRY_ADDED,
-										databaseEntries.nextElement()));*/
 								}
 							}
 						}

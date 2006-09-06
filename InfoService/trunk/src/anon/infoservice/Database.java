@@ -550,6 +550,11 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 		return element;
 	}
 
+	public Hashtable getEntryHash()
+	{
+		return (Hashtable)m_serviceDatabase.clone();
+	}
+
 	/**
 	 * Returns a snapshot of all values in the serviceDatabase.
 	 *

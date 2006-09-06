@@ -35,7 +35,6 @@ package jap.pay;
  */
 import java.sql.Timestamp;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -46,7 +45,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
@@ -60,7 +58,6 @@ import anon.util.captcha.IImageEncodedCaptcha;
 import gui.FlippingPanel;
 import gui.GUIUtils;
 import gui.JAPMessages;
-import gui.MyProgressBarUI;
 import gui.dialog.JAPDialog;
 import jap.JAPConf;
 import jap.JAPConstants;
@@ -71,11 +68,9 @@ import jap.JAPUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import javax.swing.UIManager;
+import gui.JAPProgressBar;
 
-public class PaymentMainPanel extends FlippingPanel implements PropertyChangeListener
+public class PaymentMainPanel extends FlippingPanel
 {
 
 	/** Messages */
@@ -112,8 +107,8 @@ public class PaymentMainPanel extends FlippingPanel implements PropertyChangeLis
 	private ImageIcon[] m_accountIcons;
 
 	/** shows the current balance state */
-	private JProgressBar m_BalanceProgressBar;
-	private JProgressBar m_BalanceSmallProgressBar;
+	private JAPProgressBar m_BalanceProgressBar;
+	private JAPProgressBar m_BalanceSmallProgressBar;
 
 	/** shows the current balance as text */
 	private JLabel m_BalanceText, m_BalanceTextSmall;
@@ -182,7 +177,7 @@ public class PaymentMainPanel extends FlippingPanel implements PropertyChangeLis
 		c1.gridx = 3;
 		c1.insets = new Insets(0, 10, 0, 0);
 		fullPanel.add(label, c1);
-		m_BalanceProgressBar = new JProgressBar();
+		m_BalanceProgressBar = new JAPProgressBar();
 		m_BalanceProgressBar.setMinimum(0);
 		m_BalanceProgressBar.setMaximum(5);
 		m_BalanceProgressBar.setBorderPainted(false);
@@ -294,7 +289,7 @@ public class PaymentMainPanel extends FlippingPanel implements PropertyChangeLis
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
 		c1.insets = new Insets(0, 5, 0, 0);
-		m_BalanceSmallProgressBar = new JProgressBar();
+		m_BalanceSmallProgressBar = new JAPProgressBar();
 		m_BalanceSmallProgressBar.setMinimum(0);
 		m_BalanceSmallProgressBar.setMaximum(5);
 		m_BalanceSmallProgressBar.setBorderPainted(false);
@@ -305,17 +300,6 @@ public class PaymentMainPanel extends FlippingPanel implements PropertyChangeLis
 
 		PayAccountsFile.getInstance().addPaymentListener(m_MyPaymentListener);
 		updateDisplay(PayAccountsFile.getInstance().getActiveAccount());
-	}
-
-	public void propertyChange(PropertyChangeEvent a_event)
-	{
-		MyProgressBarUI uiSmall = new MyProgressBarUI(true);
-		uiSmall.setFilledBarColor(Color.blue);
-		m_BalanceSmallProgressBar.setUI(uiSmall);
-		MyProgressBarUI ui = new MyProgressBarUI(true);
-		ui.setFilledBarColor(Color.blue);
-		m_BalanceProgressBar.setUI(ui);
-
 	}
 
 	/**

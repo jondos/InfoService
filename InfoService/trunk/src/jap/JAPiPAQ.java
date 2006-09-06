@@ -80,11 +80,6 @@ final public class JAPiPAQ
 		view.setVisible(true);
 	}
 
-	public JPanel getMainPanel()
-	{
-		return JAPController.getView().getMainPanel();
-	}
-
 	public void setLocale(Locale l)
 	{
 		JAPController.setLocale(l);

@@ -119,6 +119,8 @@ import jap.pay.wizardnew.PaymentInfoPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.util.Observer;
+import java.util.Observable;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -127,7 +129,7 @@ import logging.LogType;
  * @version 1.0
  */
 public class AccountSettingsPanel extends AbstractJAPConfModule implements
-	ListSelectionListener, PropertyChangeListener, ChangeListener
+	ListSelectionListener,  ChangeListener
 {
 	protected static final String IMG_COINS_DISABLED = AccountSettingsPanel.class.getName() +
 		"_coins-disabled.gif";
@@ -296,12 +298,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	public AccountSettingsPanel()
 	{
 		super(null);
-		UIManager.addPropertyChangeListener(this);
 	}
 
-	public void propertyChange(PropertyChangeEvent a_event)
+	public void fontSizeChanged(JAPModel.FontResize a_fontSize, JLabel a_dummyLabel)
 	{
-		m_coinstack.setUI(new CoinstackProgressBarUI(GUIUtils.loadImageIcon(JAPConstants.IMAGE_COIN_COINSTACK, true),0, 8));
+		m_coinstack.setUI(new CoinstackProgressBarUI(GUIUtils.loadImageIcon(JAPConstants.
+			IMAGE_COIN_COINSTACK, true), 0, 8));
 	}
 
 	/**
@@ -572,7 +574,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		c.gridy++;
 		c.gridheight = 3;
 		m_coinstack = new JProgressBar(0, 8);
-		propertyChange(null);
 		p.add(m_coinstack, c);
 
 		c.gridheight = 1;

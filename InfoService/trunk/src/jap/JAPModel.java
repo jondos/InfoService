@@ -59,7 +59,7 @@ public final class JAPModel extends Observable
 	public static final String AUTO_CHANGE_RESTRICT_TO_PAY = "pay";
 	public static final String AUTO_CHANGE_RESTRICT = "restrict";
 
-	public static final int MAX_FONT_SIZE = 6;
+	public static final int MAX_FONT_SIZE = 4;
 
 	// observer messages
 	public static final Integer CHANGED_INFOSERVICE_AUTO_UPDATE = new Integer(0);
@@ -688,6 +688,8 @@ public final class JAPModel extends Observable
 			synchronized (this)
 			{
 				FontResize resize = new FontResize(m_fontSize, a_fontSize);
+				GUIUtils.resizeAllFonts(1.0f / (1.0f + 0.1f * resize.getOldSize()));
+				GUIUtils.resizeAllFonts(1.0f + 0.1f * resize.getNewSize());
 				m_fontSize = a_fontSize;
 				setChanged();
 				notifyObservers(resize);

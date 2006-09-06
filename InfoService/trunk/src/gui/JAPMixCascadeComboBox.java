@@ -63,7 +63,36 @@ public class JAPMixCascadeComboBox extends JComboBox
 	{
 	}
 
-	public void addMixCascade(MixCascade cascade)
+	public synchronized int getMixCascadeCount()
+	{
+		int count = getItemCount();
+		DefaultComboBoxModel model = (DefaultComboBoxModel) getModel();
+		if (model.getIndexOf(ITEM_USER_CASCADES) >= 0)
+		{
+			count--;
+		}
+		if (model.getIndexOf(ITEM_AVAILABLE_CASCADES) >= 0)
+		{
+			count--;
+		}
+		if (model.getIndexOf(ITEM_NO_SERVERS_AVAILABLE) >= 0)
+		{
+			count--;
+		}
+		return count;
+	}
+
+	public MixCascade getMixCascadeItemAt(int a_index)
+	{
+		Object item;
+		while ((item = getItemAt(a_index)) instanceof String)
+		{
+			a_index++;
+		}
+		return (MixCascade)item;
+	}
+
+	public synchronized void addMixCascade(MixCascade cascade)
 	{
 		DefaultComboBoxModel model = (DefaultComboBoxModel) getModel();
 		if (cascade.isUserDefined())
