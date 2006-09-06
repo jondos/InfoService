@@ -150,7 +150,8 @@ public abstract class AbstractOS implements IExternalURLCaller, IExternalEMailCa
 
 		String[] browser = BROWSERLIST;
 		String url = getAsString(a_url);
-		if (!openLink(url))
+		success = openLink(url);
+		if (!success)
 		{
 			for (int i = 0; i < browser.length; i++)
 			{
