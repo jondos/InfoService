@@ -222,6 +222,10 @@ public abstract class AbstractISOCodeMapper
 		{
 			strCName = strCName.substring(0, MAX_LENGTH);
 		}
+		if (strCName != null && strCName.length() > 1)
+		{
+			strCName = strCName.substring(0, 1).toUpperCase() + strCName.substring(1, strCName.length());
+		}
 
 		return strCName;
 	}

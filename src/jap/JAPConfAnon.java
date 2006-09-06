@@ -194,7 +194,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	public void recreateRootPanel()
 	{
-		//Font font = getFontSetting();
 		m_listMixCascade = new JList();
 		m_listMixCascade.addListSelectionListener(this);
 		m_listMixCascade.addMouseListener(this);
