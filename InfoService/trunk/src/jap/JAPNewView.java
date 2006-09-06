@@ -1300,7 +1300,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		setOptimalSize();
 	}
 
-	void loadMeterIcons()
+	private void loadMeterIcons()
 	{
 		// Load Images for "Anonymity Meter"
 		meterIcons = new Icon[METERFNARRAY.length];
