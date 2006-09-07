@@ -352,7 +352,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			{
 				MixCascade dummyCascade = new MixCascade(JAPMessages.getString("dummyCascade"), 0);
 				Database.getInstance(MixCascade.class).update(dummyCascade);
-				this.updateMixCascadeCombo();
+				updateValues();
 				m_listMixCascade.setSelectedValue(dummyCascade, true);
 				//m_manHostField.selectAll();
 			}
@@ -690,9 +690,31 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		pRoot.validate();
 	}
 
-	private void updateMixCascadeCombo()
+	/**
+	 * getTabTitle
+	 *
+	 * @return String
+	 */
+	public String getTabTitle()
 	{
-		/** @todo Do this in the event thread only! */
+		return JAPMessages.getString("confAnonTab");
+	}
+
+	public void onResetToDefaultsPressed()
+	{
+		//m_tfMixHost.setText(JAPConstants.DEFAULT_ANON_HOST);
+		//m_tfMixPortNumber.setText(Integer.toString(JAPConstants.DEFAULT_ANON_PORT_NUMBER));
+
+	}
+
+	public boolean onOkPressed()
+	{
+		return true;
+
+	}
+
+	protected void onUpdateValues()
+	{
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "-start");
 		Enumeration it = Database.getInstance(MixCascade.class).getEntrySnapshotAsEnumeration();
 		DefaultListModel listModel = new DefaultListModel();
@@ -746,34 +768,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "- select First Item -- finished!");
 	}
 
-	/**
-	 * getTabTitle
-	 *
-	 * @return String
-	 */
-	public String getTabTitle()
-	{
-		return JAPMessages.getString("confAnonTab");
-	}
-
-	public void onResetToDefaultsPressed()
-	{
-		//m_tfMixHost.setText(JAPConstants.DEFAULT_ANON_HOST);
-		//m_tfMixPortNumber.setText(Integer.toString(JAPConstants.DEFAULT_ANON_PORT_NUMBER));
-
-	}
-
-	public boolean onOkPressed()
-	{
-		return true;
-
-	}
-
-	public void onUpdateValues()
-	{
-		updateMixCascadeCombo();
-	}
-
 	private void fetchCascades(final boolean bErr, final boolean a_bForceCascadeUpdate,
 							   final boolean a_bCheckInfoServiceUpdateStatus)
 	{
@@ -793,7 +787,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				}
 				//Update the temporary infoservice database
 				m_infoService.fill(a_bCheckInfoServiceUpdateStatus);
-				updateMixCascadeCombo();
+				updateValues();
 
 				//getRootPanel().setCursor(c);
 
@@ -932,9 +926,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private boolean isServerCertVerified()
 	{
 		if(m_serverInfo != null)
-				{
+		{
 			return m_serverInfo.getMixCertPath().verify();
-			}
+		}
 		return false;
 	}
 
@@ -979,7 +973,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 						 }**/
 				}
 
-				updateMixCascadeCombo();
+				updateValues();
 				m_listMixCascade.setSelectedValue(c, true);
 			}
 			else
@@ -1016,7 +1010,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				if (JAPDialog.showYesNoDialog(getRootPanel(), JAPMessages.getString(MSG_REALLY_DELETE)))
 				{
 					Database.getInstance(MixCascade.class).remove(cascade);
-					this.updateMixCascadeCombo();
+					updateValues();
 					if (m_listMixCascade.getModel().getSize() > 0)
 					{
 						m_listMixCascade.setSelectedIndex(0);
@@ -1042,7 +1036,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 										  Integer.parseInt(m_manPortField.getText()));
 
 			Database.getInstance(MixCascade.class).update(c);
-			this.updateMixCascadeCombo();
+			updateValues();
 			m_listMixCascade.setSelectedValue(c, true);
 			m_enterCascadeButton.setVisible(false);
 		}
@@ -1244,6 +1238,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 						drawServerPanel(cascade.getNumberOfMixes(), cascade.getName(), true, selectedMix);
 					}
 					m_numOfUsersLabel.setText(m_infoService.getNumOfUsers(cascadeId));
+					//System.out.println(m_numOfUsersLabel.getText());
 					//m_reachableLabel.setFont(m_numOfUsersLabel.getFont());
 					//m_lblHosts.setFont(m_numOfUsersLabel.getFont());
 					m_reachableLabel.setText(m_infoService.getHosts(cascadeId));
@@ -1496,18 +1491,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				bDatabaseChanged = true;
 			}
 
-			final boolean bFinalDatabaseChanged = bDatabaseChanged;
-			SwingUtilities.invokeLater(
-				new Runnable()
+			if (bDatabaseChanged)
 			{
-				public void run()
-				{
-					if (bFinalDatabaseChanged)
-					{
-						updateMixCascadeCombo();
-					}
-				}
-				});
+				updateValues();
+			}
 		}
 		catch (Exception e)
 		{

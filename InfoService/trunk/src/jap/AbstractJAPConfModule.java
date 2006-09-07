@@ -37,11 +37,20 @@ import java.util.Observer;
 import java.util.Observable;
 import javax.swing.SwingUtilities;
 
+import gui.AWTUpdateQueue;
+
 /**
  * This is the generic implementation for a JAP configuration module.
  */
 public abstract class AbstractJAPConfModule
 {
+	private final AWTUpdateQueue AWT_UPDATE_QUEUE = new AWTUpdateQueue(new Runnable()
+	{
+		public void run()
+		{
+			onUpdateValues();
+		}
+	});
 
 	/**
 	 * This stores the root panel of this configuration tab. All elements of the configuration
@@ -232,12 +241,16 @@ public abstract class AbstractJAPConfModule
 
 	/**
 	 * This method is called, if something on the configuration data has changed and the module
-	 * shall update its GUI.
+	 * shall update its GUI. The update events are queued.
 	 */
 	public final void updateValues()
 	{
+		if (this instanceof JAPConfAnon)
+		{
+		//	new Exception().printStackTrace();
+		}
 		/* call the event handler */
-		onUpdateValues();
+		AWT_UPDATE_QUEUE.update(false);
 	}
 
 	/**
@@ -279,6 +292,7 @@ public abstract class AbstractJAPConfModule
 	/**
 	 * This method can be overwritten by the children of AbstractJAPConfModule. It is called
 	 * every time the values of the model have changed and must be reread by the module.
+	 * SHOULD NOT BE CALLED DIRECTLY in subclasses!!
 	 */
 	protected void onUpdateValues()
 	{

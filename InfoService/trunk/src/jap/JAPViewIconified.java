@@ -308,13 +308,13 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 								JAPController.getInstance().getCurrentMixCascade().getId()))
 			{
 
-				valuesChanged(false);
+				updateValues(false);
 			}
 		}
 	}
 
 
-	public void valuesChanged(boolean bSync)
+	public void updateValues(boolean bSync)
 	{
 		synchronized (m_runnableValueUpdate)
 		{

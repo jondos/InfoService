@@ -56,7 +56,7 @@ public class ConsoleJAPMainView implements IJAPMainView
 		return 0;
 	}
 
-	public void valuesChanged(boolean bSync)
+	public void updateValues(boolean bSync)
 	{
 	}
 
@@ -142,7 +142,7 @@ public class ConsoleJAPMainView implements IJAPMainView
 	 *
 	 * @todo Diese jap.IJAPMainView-Methode implementieren
 	 */
-	public void doSynchronizedUpdateValues()
+	public void onUpdateValues()
 	{
 	}
 

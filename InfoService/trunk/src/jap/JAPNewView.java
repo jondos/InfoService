@@ -230,10 +230,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	public void create(boolean loadPay)
 	{
 		m_bWithPayment = loadPay;
-		LogHolder.log(LogLevel.INFO, LogType.GUI, "JAPView:initializing...");
+		LogHolder.log(LogLevel.INFO, LogType.GUI, "Initializing view...");
 		init();
-		setWindowIcon();
-//			LogHolder.log(LogLevel.DEBUG,LogType.GUI,"JAPView:initialization finished!");
+		setTitle(Double.toString(Math.random())); //ensure that we have an uinque title
+		JAPDll.setWindowIcon(getTitle());
+		setTitle(m_Title);
+		LogHolder.log(LogLevel.INFO,LogType.GUI,"View initialized!");
 	}
 
 	private void init()
@@ -940,18 +942,15 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 			public void windowDeiconified(WindowEvent e)
 			{
-				synchronized (m_runnableValueUpdate) //updateValues may change the Titel of the Window!!
-				{
-					m_bIsIconified = false;
-					setTitle(m_Title);
-				}
+				m_bIsIconified = false;
+				updateValues(false);
 			}
 
 			public void windowIconified(WindowEvent e)
 			{
 				hideWindowInTaskbar();
 				m_bIsIconified = true;
-				valuesChanged(false);
+				updateValues(false);
 			}
 		});
 
@@ -968,7 +967,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			fetchMixCascadesAsync(false);
 		}
 
-		valuesChanged(true);
+		updateValues(true);
 		setOptimalSize();
 		GUIUtils.centerOnScreen(this);
 		//Change size and location if the user requested to restore the old position/size
@@ -1303,12 +1302,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			if (data instanceof StatusInfo && ((StatusInfo)data).getId().equals(
 								JAPController.getInstance().getCurrentMixCascade().getId()))
 			{
-				valuesChanged(false);
+				updateValues(false);
 			}
 		}
 		else if (a_observable == Database.getInstance(JAPVersionInfo.class))
 		{
-			valuesChanged(false);
+			updateValues(false);
 		}
 		else if (a_observable == Database.getInstance(MixCascade.class))
 		{
@@ -1563,7 +1562,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						if (m_Controller.getAnonMode() && !m_Controller.isAnonConnected())
 						{
 							m_bConnectionErrorShown = true;
-							valuesChanged(true);
+							updateValues(true);
 							// wait for auto-reconnect
 							int msgID = addStatusMsg(JAPMessages.getString("setAnonModeSplashConnect"),
 								JAPDialog.MESSAGE_TYPE_INFORMATION, false);
@@ -1578,11 +1577,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 							setCursor(Cursor.getDefaultCursor());
 							removeStatusMsg(msgID);
 							m_bConnectionErrorShown = false;
-							valuesChanged(false);
+							updateValues(false);
 						}
 						else
 						{
-							valuesChanged(false);
+							updateValues(false);
 						}
 					}
 					else
@@ -1780,197 +1779,201 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 	}
 
-	public void doSynchronizedUpdateValues()
+	public void onUpdateValues()
 	{
-		synchronized (m_runnableValueUpdate)
+		/*
+		 * Only thing that have really changed are updated!
+		 */
+		Enumeration entries =
+			Database.getInstance(JAPVersionInfo.class).getEntrySnapshotAsEnumeration();
+		String strTemp;
+		JAPVersionInfo vi = null;
+		if (entries.hasMoreElements())
 		{
-			/*
-			 * Only thing that have really changed are updated!
-			 */
-			Enumeration entries =
-				Database.getInstance(JAPVersionInfo.class).getEntrySnapshotAsEnumeration();
-			String strTemp;
-			JAPVersionInfo vi = null;
-			if (entries.hasMoreElements())
-			{
-				vi = (JAPVersionInfo) entries.nextElement();
-			}
+			vi = (JAPVersionInfo) entries.nextElement();
+		}
 
-			m_labelUpdate.setVisible((vi != null && vi.getJapVersion() != null &&
-									  vi.getJapVersion().compareTo(JAPConstants.aktVersion) > 0) ||
-									 JavaVersionDBEntry.getNewJavaVersion() != null);
+		m_labelUpdate.setVisible( (vi != null && vi.getJapVersion() != null &&
+								   vi.getJapVersion().compareTo(JAPConstants.aktVersion) > 0) ||
+								 JavaVersionDBEntry.getNewJavaVersion() != null);
 
-			MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
-			//String strCascadeName = currentMixCascade.getName();
-			Hashtable hashAvailableCascades = Database.getInstance(MixCascade.class).getEntryHash();
-			if (!hashAvailableCascades.containsKey(currentMixCascade))
+		MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
+		//String strCascadeName = currentMixCascade.getName();
+		Hashtable hashAvailableCascades = Database.getInstance(MixCascade.class).getEntryHash();
+		if (!hashAvailableCascades.containsKey(currentMixCascade))
+		{
+			hashAvailableCascades.put(currentMixCascade.getId(), currentMixCascade);
+		}
+		m_bIgnoreAnonComboEvents = true;
+		if (!equals(m_comboAnonServices, hashAvailableCascades))
+		{
+			m_comboAnonServices.removeAllItems();
+			if (hashAvailableCascades != null && hashAvailableCascades.size() > 0)
 			{
-				hashAvailableCascades.put(currentMixCascade.getId(), currentMixCascade);
-			}
-			m_bIgnoreAnonComboEvents = true;
-			if (!equals(m_comboAnonServices, hashAvailableCascades))
-			{
-				m_comboAnonServices.removeAllItems();
-				if (hashAvailableCascades != null && hashAvailableCascades.size() > 0)
+				Enumeration enumer = hashAvailableCascades.elements();
+				while (enumer.hasMoreElements())
 				{
-					Enumeration enumer = hashAvailableCascades.elements();
-					while (enumer.hasMoreElements())
+					m_comboAnonServices.addMixCascade( (MixCascade) enumer.nextElement());
+				}
+			}
+			else
+			{
+				m_comboAnonServices.setNoDataAvailable();
+			}
+		}
+		m_comboAnonServices.setToolTipText(currentMixCascade.getName());
+		if (m_comboAnonServices.getSelectedItem() == null ||
+			!m_comboAnonServices.getSelectedItem().equals(currentMixCascade))
+		{
+			m_comboAnonServices.setSelectedItem(currentMixCascade);
+		}
+		m_bIgnoreAnonComboEvents = false;
+
+		// Config panel
+		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Start updateValues");
+		// Meter panel
+		try
+		{
+			m_rbAnonOn.setSelected(m_Controller.getAnonMode());
+			m_rbAnonOff.setSelected(!m_Controller.getAnonMode());
+			m_cbAnonymityOn.setSelected(m_Controller.getAnonMode());
+			StatusInfo currentStatus = currentMixCascade.getCurrentStatus();
+			int anonLevel = currentStatus.getAnonLevel();
+			m_labelAnonMeter.setIcon(getMeterImage(anonLevel));
+			Color color = Color.red;
+			if (anonLevel > 7)
+			{
+				color = Color.green;
+			}
+			else if (anonLevel > 2)
+			{
+				color = Color.yellow;
+			}
+			m_progressAnonLevel.setFilledBarColor(color);
+			m_progressAnonLevel.setValue(anonLevel + 1);
+			if (m_Controller.isAnonConnected())
+			{
+				m_bConnectionErrorShown = false;
+				if (currentStatus.getNrOfActiveUsers() > -1)
+				{
+					// Nr of active users
+					//if (currentStatus.getNrOfActiveUsers() > userProgressBar.getMaximum())
+					//{
+					//	userProgressBar.setMaximum(currentStatus.getNrOfActiveUsers());
+					//}
+					m_labelAnonymityUser.setText(Integer.toString(currentStatus.getNrOfActiveUsers()));
+					//userProgressBar.setString(String.valueOf(currentStatus.getNrOfActiveUsers()));
+					if (!isChangingTitle())
 					{
-						m_comboAnonServices.addMixCascade((MixCascade) enumer.nextElement());
-					}
-				}
-				else
-				{
-					m_comboAnonServices.setNoDataAvailable();
-				}
-			}
-			m_comboAnonServices.setToolTipText(currentMixCascade.getName());
-			if (m_comboAnonServices.getSelectedItem() == null ||
-				!m_comboAnonServices.getSelectedItem().equals(currentMixCascade))
-			{
-				m_comboAnonServices.setSelectedItem(currentMixCascade);
-			}
-			m_bIgnoreAnonComboEvents = false;
-
-			// Config panel
-			LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Start updateValues");
-			// Meter panel
-			try
-			{
-				m_rbAnonOn.setSelected(m_Controller.getAnonMode());
-				m_rbAnonOff.setSelected(!m_Controller.getAnonMode());
-				m_cbAnonymityOn.setSelected(m_Controller.getAnonMode());
-				StatusInfo currentStatus = currentMixCascade.getCurrentStatus();
-				int anonLevel = currentStatus.getAnonLevel();
-				m_labelAnonMeter.setIcon(getMeterImage(anonLevel));
-				Color color = Color.red;
-				if (anonLevel > 7)
-				{
-					color = Color.green;
-				}
-				else if (anonLevel > 2)
-				{
-					color = Color.yellow;
-				}
-				m_progressAnonLevel.setFilledBarColor(color);
-				m_progressAnonLevel.setValue(anonLevel + 1);
-				if (m_Controller.isAnonConnected())
-				{
-					m_bConnectionErrorShown = false;
-					if (currentStatus.getNrOfActiveUsers() > -1)
-					{
-						// Nr of active users
-						//if (currentStatus.getNrOfActiveUsers() > userProgressBar.getMaximum())
-						//{
-						//	userProgressBar.setMaximum(currentStatus.getNrOfActiveUsers());
-						//}
-						m_labelAnonymityUser.setText(Integer.toString(currentStatus.getNrOfActiveUsers()));
-						//userProgressBar.setString(String.valueOf(currentStatus.getNrOfActiveUsers()));
 						if (m_bIsIconified)
 						{
 							setTitle("JAP (" + Integer.toString(currentStatus.getNrOfActiveUsers()) + " " +
 									 JAPMessages.getString("iconifiedviewUsers") + ")");
 						}
-					}
-					else
-					{
-						strTemp = JAPMessages.getString("meterNA");
-						if (m_labelAnonymityUser.getText() == null ||
-							!m_labelAnonymityUser.getText().equals(strTemp))
+						else
 						{
-							// optimized change...
-							m_labelAnonymityUser.setText(strTemp);
+							setTitle(m_Title);
 						}
-					}
-					int t = currentStatus.getTrafficSituation();
-					if (t > -1)
-					{
-						//map 0..100 --> 0..5
-						//0 --> 0
-						//1..20 --> 1
-						//21..40 --> 2
-						//41..60 --> 3
-						//61..80 --> 4
-						//81..100 --> 5
-						m_progressAnonTraffic.setValue( (t + 19) / 20);
-					}
-					else
-					{
-						// no value from InfoService
-						m_progressAnonTraffic.setValue(0);
-
 					}
 				}
 				else
 				{
-					/* we are not in anonymity mode */
-					m_progressAnonTraffic.setValue(0);
-					m_labelAnonymityUser.setText("");
-					m_progressAnonLevel.setValue(0);
-				}
-				LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Finished updateValues");
-				boolean bForwaringServerOn = JAPModel.getInstance().getRoutingSettings().getRoutingMode() ==
-					JAPRoutingSettings.ROUTING_MODE_SERVER;
-				m_cbForwarding.setSelected(bForwaringServerOn);
-				m_cbForwardingSmall.setSelected(bForwaringServerOn);
-				Icon icon = null;
-				String strError = null;
-				if (bForwaringServerOn)
-				{
-					/* update the server state label and the reason of error, if necessary */
-					int currentRegistrationState = JAPModel.getInstance().getRoutingSettings().
-						getRegistrationStatusObserver().getCurrentState();
-					int currentErrorCode = JAPModel.getInstance().getRoutingSettings().
-						getRegistrationStatusObserver().getCurrentErrorCode();
-					if (currentRegistrationState ==
-						JAPRoutingRegistrationStatusObserver.STATE_NO_REGISTRATION)
+					strTemp = JAPMessages.getString("meterNA");
+					if (m_labelAnonymityUser.getText() == null ||
+						!m_labelAnonymityUser.getText().equals(strTemp))
 					{
-						icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_WARNING, true);
-						if (currentErrorCode ==
-							JAPRoutingRegistrationStatusObserver.ERROR_NO_KNOWN_PRIMARY_INFOSERVICES)
-						{
-							strError = "settingsRoutingServerStatusRegistrationErrorLabelNoKnownInfoServices";
-						}
-						else if (currentErrorCode ==
-								 JAPRoutingRegistrationStatusObserver.ERROR_INFOSERVICE_CONNECT_ERROR)
-						{
-							strError = "settingsRoutingServerStatusRegistrationErrorLabelConnectionFailed";
-						}
-						else if (currentErrorCode ==
-								 JAPRoutingRegistrationStatusObserver.ERROR_VERIFICATION_ERROR)
-						{
-							strError = "settingsRoutingServerStatusRegistrationErrorLabelVerificationFailed";
-						}
-						else if (currentErrorCode == JAPRoutingRegistrationStatusObserver.ERROR_UNKNOWN_ERROR)
-						{
-							strError = "settingsRoutingServerStatusRegistrationErrorLabelUnknownReason";
-
-						}
-						if (strError != null)
-						{
-							strError = JAPMessages.getString(strError);
-						}
+						// optimized change...
+						m_labelAnonymityUser.setText(strTemp);
 					}
 				}
-				m_labelForwardingError.setIcon(icon);
-				m_labelForwardingErrorSmall.setIcon(icon);
-				m_labelForwardingError.setToolTipText(strError);
-				m_labelForwardingErrorSmall.setToolTipText(strError);
+				int t = currentStatus.getTrafficSituation();
+				if (t > -1)
+				{
+					//map 0..100 --> 0..5
+					//0 --> 0
+					//1..20 --> 1
+					//21..40 --> 2
+					//41..60 --> 3
+					//61..80 --> 4
+					//81..100 --> 5
+					m_progressAnonTraffic.setValue( (t + 19) / 20);
+				}
+				else
+				{
+					// no value from InfoService
+					m_progressAnonTraffic.setValue(0);
 
-				/* if the forwarding client is running, it should not be possible to start the forwarding
-				 * server, also it should not be possible to change the selected mixcascade
-				 */
-				m_cbForwarding.setEnabled(!JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder());
-				m_cbForwardingSmall.setEnabled(!JAPModel.getInstance().getRoutingSettings().
-											   isConnectViaForwarder());
-				m_comboAnonServices.setEnabled(!JAPModel.getInstance().getRoutingSettings().
-											   isConnectViaForwarder());
-				validate();
+				}
 			}
-			catch (Throwable t)
+			else
 			{
-				LogHolder.log(LogLevel.EMERG, LogType.GUI, t);
+				/* we are not in anonymity mode */
+				m_progressAnonTraffic.setValue(0);
+				m_labelAnonymityUser.setText("");
+				m_progressAnonLevel.setValue(0);
 			}
+			LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Finished updateValues");
+			boolean bForwaringServerOn = JAPModel.getInstance().getRoutingSettings().getRoutingMode() ==
+				JAPRoutingSettings.ROUTING_MODE_SERVER;
+			m_cbForwarding.setSelected(bForwaringServerOn);
+			m_cbForwardingSmall.setSelected(bForwaringServerOn);
+			Icon icon = null;
+			String strError = null;
+			if (bForwaringServerOn)
+			{
+				/* update the server state label and the reason of error, if necessary */
+				int currentRegistrationState = JAPModel.getInstance().getRoutingSettings().
+					getRegistrationStatusObserver().getCurrentState();
+				int currentErrorCode = JAPModel.getInstance().getRoutingSettings().
+					getRegistrationStatusObserver().getCurrentErrorCode();
+				if (currentRegistrationState ==
+					JAPRoutingRegistrationStatusObserver.STATE_NO_REGISTRATION)
+				{
+					icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_WARNING, true);
+					if (currentErrorCode ==
+						JAPRoutingRegistrationStatusObserver.ERROR_NO_KNOWN_PRIMARY_INFOSERVICES)
+					{
+						strError = "settingsRoutingServerStatusRegistrationErrorLabelNoKnownInfoServices";
+					}
+					else if (currentErrorCode ==
+							 JAPRoutingRegistrationStatusObserver.ERROR_INFOSERVICE_CONNECT_ERROR)
+					{
+						strError = "settingsRoutingServerStatusRegistrationErrorLabelConnectionFailed";
+					}
+					else if (currentErrorCode ==
+							 JAPRoutingRegistrationStatusObserver.ERROR_VERIFICATION_ERROR)
+					{
+						strError = "settingsRoutingServerStatusRegistrationErrorLabelVerificationFailed";
+					}
+					else if (currentErrorCode == JAPRoutingRegistrationStatusObserver.ERROR_UNKNOWN_ERROR)
+					{
+						strError = "settingsRoutingServerStatusRegistrationErrorLabelUnknownReason";
+
+					}
+					if (strError != null)
+					{
+						strError = JAPMessages.getString(strError);
+					}
+				}
+			}
+			m_labelForwardingError.setIcon(icon);
+			m_labelForwardingErrorSmall.setIcon(icon);
+			m_labelForwardingError.setToolTipText(strError);
+			m_labelForwardingErrorSmall.setToolTipText(strError);
+
+			/* if the forwarding client is running, it should not be possible to start the forwarding
+			 * server, also it should not be possible to change the selected mixcascade
+			 */
+			m_cbForwarding.setEnabled(!JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder());
+			m_cbForwardingSmall.setEnabled(!JAPModel.getInstance().getRoutingSettings().
+										   isConnectViaForwarder());
+			m_comboAnonServices.setEnabled(!JAPModel.getInstance().getRoutingSettings().
+										   isConnectViaForwarder());
+			validate();
+		}
+		catch (Throwable t)
+		{
+			LogHolder.log(LogLevel.EMERG, LogType.GUI, t);
 		}
 	}
 

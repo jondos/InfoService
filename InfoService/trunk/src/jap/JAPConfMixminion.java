@@ -61,7 +61,6 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
 import java.awt.Color;
 import java.util.Dictionary;
-import anon.infoservice.InfoServiceHolder;
 
 final class JAPConfMixminion extends AbstractJAPConfModule implements ActionListener
 {
@@ -268,7 +267,7 @@ final class JAPConfMixminion extends AbstractJAPConfModule implements ActionList
 	{
 		if (actionEvent.getActionCommand().equals("enableMixminion"))
 		{
-			updateGuiOutput();
+			updateValues();
 		}
 		else if (actionEvent.getActionCommand().equals("fetchRouters"))
 		{
@@ -279,15 +278,17 @@ final class JAPConfMixminion extends AbstractJAPConfModule implements ActionList
 
 	protected boolean onOkPressed()
 	{
-		JAPController.setMixminionRouteLen(m_sliderPathLen.getValue());
-		JAPController.setMixMinionMyEMail(m_email.getText());
+		JAPModel.getInstance().setMixminionRouteLen(m_sliderPathLen.getValue());
+		JAPModel.getInstance().setMixminionMyEMail(m_email.getText());
 		JAPModel.getInstance().setMixMinionActivated(m_cbxActive.isSelected());
 		return true;
 	}
 
 	protected void onUpdateValues()
 	{
-		updateGuiOutput();
+		m_sliderPathLen.setValue(JAPModel.getMixminionRouteLen());
+		m_email.setText(JAPModel.getMixminionMyEMail());
+		m_cbxActive.setSelected(JAPModel.getInstance().isMixMinionActivated());
 	}
 
 	protected void onRootPanelShown()
@@ -300,12 +301,6 @@ final class JAPConfMixminion extends AbstractJAPConfModule implements ActionList
 //		}
 	}
 
-	private void updateGuiOutput()
-	{
-		m_sliderPathLen.setValue(JAPModel.getMixminionRouteLen());
-		m_email.setText(JAPModel.getMixminionMyEMail());
-		m_cbxActive.setSelected(JAPModel.getInstance().isMixMinionActivated());
-	}
 
 	private void fetchRoutersAsync(final boolean bShowError)
 	{
