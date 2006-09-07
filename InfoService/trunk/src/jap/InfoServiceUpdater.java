@@ -40,7 +40,7 @@ import anon.infoservice.InfoServiceHolder;
  */
 public class InfoServiceUpdater extends AbstractDatabaseUpdater
 {
-	private static final long UPDATE_INTERVAL_MS = 5 * 60000l;
+	private static final long UPDATE_INTERVAL_MS = 5 * 60000l; // every five minutes
 
 	public InfoServiceUpdater()
 	{

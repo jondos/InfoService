@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.05.382"; //Never change the layout of this line!
+	public static final String aktVersion = "00.05.384"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -63,8 +63,6 @@ public final class JAPConstants
 			strReleaseDate = CVS_GENERATED_RELEASE_DATE.substring(7, 26);
 		}
 	}
-
-
 
 	static final int DEFAULT_PORT_NUMBER = 4001;
 	static final boolean DEFAULT_LISTENER_IS_LOCAL = true;
@@ -111,8 +109,8 @@ public final class JAPConstants
 	static final int SMALL_FONT_SIZE = 9;
 	static final int SMALL_FONT_STYLE = Font.PLAIN;
 
-	static final int VIEW_NORMAL = 1;
-	static final int VIEW_SIMPLIFIED = 2;
+	public static final int VIEW_NORMAL = 1;
+	public static final int VIEW_SIMPLIFIED = 2;
 	static final int DEFAULT_VIEW = VIEW_NORMAL;
 
 	static final boolean DEFAULT_SAVE_MAIN_WINDOW_POSITION = false;

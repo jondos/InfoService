@@ -259,8 +259,10 @@ final class JAPMixCascadeComboBoxListCellRender implements ListCellRenderer
 		}
 		else
 		{
-			if (Database.getInstance(NewCascadeIDEntry.class).getEntryById(
-						 cascade.getMixIDsAsString()) != null)
+			if ((Database.getInstance(NewCascadeIDEntry.class).getNumberofEntries() * 2 <
+				 Database.getInstance(MixCascade.class).getNumberofEntries()) &&
+				Database.getInstance(NewCascadeIDEntry.class).getEntryById(
+								cascade.getMixIDsAsString()) != null)
 			{
 				l.setBackground(m_newCascadeColor);
 			}

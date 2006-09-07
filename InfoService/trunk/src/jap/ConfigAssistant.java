@@ -42,6 +42,8 @@ import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
+import javax.swing.JRadioButton;
+import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextPane;
@@ -119,6 +121,10 @@ public class ConfigAssistant extends JAPDialog
 		"_errorWarningInBrowser";
 	private static final String MSG_EXPLAIN_WARNING_IN_BROWSER = ConfigAssistant.class.getName() +
 		"_explainWarningInBrowser";
+	private static final String MSG_SELECT_VIEW = ConfigAssistant.class.getName() +
+		"_selectView";
+	private static final String MSG_SELECT_VIEW_RESTART = ConfigAssistant.class.getName() +
+		"_selectViewRestart";
 
 
 	private static final String IMG_ARROW = "arrow46.gif";
@@ -132,6 +138,8 @@ public class ConfigAssistant extends JAPDialog
 	private JRadioButton m_radioNoConnection, m_radioConnectionSlow, m_noSurfing, m_ConnectionOK,
 		m_radioNoServiceAvailable;
 	private ButtonGroup m_groupAnon;
+	JRadioButton m_radioSimpleView, m_radioAdvancedView;
+	private ButtonGroup m_groupView;
 
 	public ConfigAssistant(Component a_parentComponent)
 	{
@@ -231,8 +239,6 @@ public class ConfigAssistant extends JAPDialog
 		m_lblPort.setBackground(Color.white);
 		contentPane.add(m_lblPort, constraints);
 		constraints.gridy--;
-
-
 		addBrowserInstallationInfo(contentPane, constraints, BROWSER_FIREFOX, "browser_firefox", true);
 		addBrowserInstallationInfo(contentPane, constraints, BROWSER_SEA_MONKEY, "browser_seamonkey", false);
 		addBrowserInstallationInfo(contentPane, constraints, BROWSER_OPERA, "browser_opera", false);
@@ -489,29 +495,99 @@ public class ConfigAssistant extends JAPDialog
 
 
 		DialogContentPane paneDeactivateActiveContents = new SimpleWizardContentPane(
-	  this, JAPMessages.getString(MSG_DEACTIVATE_ACTIVE), layout,
-	  new DialogContentPane.Options(paneExplainBadConnection));
-contentPane = paneDeactivateActiveContents.getContentPane();
-contentPane.setLayout(new GridBagLayout());
-constraints = new GridBagConstraints();
-constraints.gridx = 0;
-constraints.gridy = -1;
-constraints.anchor = GridBagConstraints.WEST;
-addBrowserInstallationInfo(contentPane, constraints, BROWSER_IE, "noactive_ie", false);
-addBrowserInstallationInfo(contentPane, constraints, BROWSER_FIREFOX, "noactive_firefox", false);
-addBrowserInstallationInfo(contentPane, constraints, BROWSER_SEA_MONKEY, "noactive_seamonkey", false);
-addBrowserInstallationInfo(contentPane, constraints, BROWSER_OPERA, "noactive_opera", false);
-addBrowserInstallationInfo(contentPane, constraints, BROWSER_KONQUEROR, "noactive_konqueror", false);
-addBrowserInstallationInfo(contentPane, constraints, BROWSER_SAFARI, "noactive_safari", false);
-addBrowserInstallationInfo(contentPane, constraints,
-						   JAPMessages.getString(MSG_OTHER_BROWSERS), "noactive_general", false);
+			this, JAPMessages.getString(MSG_DEACTIVATE_ACTIVE), layout,
+			new DialogContentPane.Options(paneExplainBadConnection));
+		contentPane = paneDeactivateActiveContents.getContentPane();
+		contentPane.setLayout(new GridBagLayout());
+		constraints = new GridBagConstraints();
+		constraints.gridx = 0;
+		constraints.gridy = -1;
+		addBrowserInstallationInfo(contentPane, constraints, BROWSER_IE, "noactive_ie", false);
+		addBrowserInstallationInfo(contentPane, constraints, BROWSER_FIREFOX, "noactive_firefox", false);
+		addBrowserInstallationInfo(contentPane, constraints, BROWSER_SEA_MONKEY, "noactive_seamonkey", false);
+		addBrowserInstallationInfo(contentPane, constraints, BROWSER_OPERA, "noactive_opera", false);
+		addBrowserInstallationInfo(contentPane, constraints, BROWSER_KONQUEROR, "noactive_konqueror", false);
+		addBrowserInstallationInfo(contentPane, constraints, BROWSER_SAFARI, "noactive_safari", false);
+		addBrowserInstallationInfo(contentPane, constraints,
+								   JAPMessages.getString(MSG_OTHER_BROWSERS), "noactive_general", false);
 
+
+		final DialogContentPane paneView = new SimpleWizardContentPane(
+			  this, JAPMessages.getString(MSG_SELECT_VIEW), layout,
+			  new DialogContentPane.Options(paneDeactivateActiveContents))
+		{
+			public CheckError[] checkYesOK()
+			{
+				CheckError[] errors = super.checkYesOK();
+				if (m_groupView.getSelection() == null)
+				{
+					return new CheckError[]{new CheckError(
+					   JAPMessages.getString(MSG_MAKE_SELECTION), LogType.GUI)};
+				}
+
+				return errors;
+			}
+		};
+		contentPane = paneView.getContentPane();
+		contentPane.setLayout(new GridBagLayout());
+		constraints = new GridBagConstraints();
+		constraints.gridx = 0;
+		constraints.gridy = 0;
+		constraints.anchor = GridBagConstraints.WEST;
+		m_radioSimpleView = new JRadioButton(JAPMessages.getString("ngSettingsViewSimplified"));
+		m_radioAdvancedView = new JRadioButton(JAPMessages.getString("ngSettingsViewNormal"));
+		if (!JAPController.getInstance().isConfigAssistantShown())
+		{
+			// this is not the first start of JAP
+			if (JAPModel.getDefaultView() == JAPConstants.VIEW_NORMAL)
+			{
+				m_radioAdvancedView.setSelected(true);
+			}
+			else
+			{
+				m_radioSimpleView.setSelected(true);
+			}
+		}
+		m_groupView = new ButtonGroup();
+		m_groupView.add(m_radioSimpleView);
+		m_groupView.add(m_radioAdvancedView);
+		contentPane.add(m_radioSimpleView, constraints);
+		constraints.gridy++;
+		contentPane.add(m_radioAdvancedView, constraints);
 
 
 		final DialogContentPane paneFinish = new SimpleWizardContentPane(
-			  this, JAPMessages.getString(MSG_FINISHED), layout,
-			  new DialogContentPane.Options(paneDeactivateActiveContents));
-		paneFinish.getButtonCancel().setVisible(false);
+			  this, JAPMessages.getString(MSG_FINISHED) + "<br><br>" +
+			  JAPMessages.getString(MSG_SELECT_VIEW_RESTART), layout,
+			  new DialogContentPane.Options(paneView))
+		{
+			public CheckError[] checkUpdate()
+			{
+				if ((m_radioSimpleView.isSelected() && JAPModel.getDefaultView() == JAPConstants.VIEW_NORMAL)
+					|| (m_radioAdvancedView.isSelected() &&
+						JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED))
+				{
+					String view;
+					if (m_radioSimpleView.isSelected())
+					{
+						view = JAPMessages.getString("ngSettingsViewSimplified");
+					}
+					else
+					{
+						view = JAPMessages.getString("ngSettingsViewNormal");
+					}
+					setText(JAPMessages.getString(MSG_FINISHED) + "<br><br>" +
+							JAPMessages.getString(MSG_SELECT_VIEW_RESTART, view));
+				}
+				else
+				{
+					setText(JAPMessages.getString(MSG_FINISHED));
+				}
+
+				return super.checkUpdate();
+			}
+		};
+
 
 		// prevent premature closing of the wizard
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -525,6 +601,10 @@ addBrowserInstallationInfo(contentPane, constraints,
 					bClose = (JAPDialog.showConfirmDialog(thisDialog, JAPMessages.getString(MSG_REALLY_CLOSE),
 						OPTION_TYPE_OK_CANCEL, MESSAGE_TYPE_QUESTION) == RETURN_VALUE_OK);
 				}
+				else
+				{
+					paneFinish.setButtonValue(DialogContentPane.DEFAULT_BUTTON_OK);
+				}
 				if (bClose)
 				{
 					dispose();
@@ -533,10 +613,24 @@ addBrowserInstallationInfo(contentPane, constraints,
 			public void windowClosed(WindowEvent a_event)
 			{
 				JAPController.getInstance().setConfigAssistantShown();
+				if (paneFinish.getButtonValue() == DialogContentPane.RETURN_VALUE_OK)
+				{
+					if (m_radioSimpleView.isSelected() &&
+						JAPModel.getDefaultView() == JAPConstants.VIEW_NORMAL)
+					{
+
+						JAPModel.getInstance().setDefaultView(JAPConstants.VIEW_SIMPLIFIED);
+						JAPController.getInstance().goodBye(false);
+					}
+					else if (m_radioAdvancedView.isSelected() &&
+							 JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED)
+					{
+						JAPModel.getInstance().setDefaultView(JAPConstants.VIEW_NORMAL);
+						JAPController.getInstance().goodBye(false);
+					}
+				}
 			}
 		});
-
-
 
 		DialogContentPane.updateDialogOptimalSized(paneWelcome);
 		setResizable(false);

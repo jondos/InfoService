@@ -27,10 +27,15 @@
  */
 package anon.infoservice;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.NoSuchElementException;
 import java.util.Vector;
-import java.util.Hashtable;
+import java.util.zip.GZIPInputStream;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
@@ -39,27 +44,18 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import HTTPClient.HTTPConnection;
 import HTTPClient.HTTPResponse;
-import HTTPClient.ThreadInterruptedIOException;
+import anon.crypto.CertPath;
+import anon.crypto.JAPCertificate;
+import anon.crypto.SignatureCreator;
 import anon.crypto.SignatureVerifier;
+import anon.crypto.XMLSignature;
 import anon.util.BZip2Tools;
 import anon.util.Base64;
-import anon.util.IXMLEncodable;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-
-import java.util.zip.GZIPInputStream;
-import java.io.ByteArrayInputStream;
-
-import java.io.ByteArrayOutputStream;
-import java.io.InterruptedIOException;
-import java.io.InputStream;
-import anon.crypto.CertPath;
-import anon.crypto.JAPCertificate;
-import anon.crypto.SignatureCreator;
-import anon.crypto.XMLSignature;
 
 
 /**
@@ -70,7 +66,7 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 	public static final String XML_ELEMENT_CONTAINER_NAME = "InfoServices";
 	public static final String XML_ELEMENT_NAME = "InfoService";
 
-	private static final int GET_XML_CONNECTION_TIMEOUT = 20000;
+	private static final int GET_XML_CONNECTION_TIMEOUT = 10000;
 
 	/**
 	 * A proxy interface that is used for all connections and may change over time.

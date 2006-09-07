@@ -242,15 +242,16 @@ public abstract class AbstractJAPConfModule
 	/**
 	 * This method is called, if something on the configuration data has changed and the module
 	 * shall update its GUI. The update events are queued.
+	 * @param a_bSync if the current thread should wait until the operation is performed
 	 */
-	public final void updateValues()
+	public final void updateValues(boolean a_bSync)
 	{
 		if (this instanceof JAPConfAnon)
 		{
 		//	new Exception().printStackTrace();
 		}
 		/* call the event handler */
-		AWT_UPDATE_QUEUE.update(false);
+		AWT_UPDATE_QUEUE.update(a_bSync);
 	}
 
 	/**

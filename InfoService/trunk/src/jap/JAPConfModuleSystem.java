@@ -391,7 +391,7 @@ public class JAPConfModuleSystem
 			Enumeration confModules = m_registratedModules.elements();
 			while (confModules.hasMoreElements())
 			{
-				( (AbstractJAPConfModule) (confModules.nextElement())).updateValues();
+				( (AbstractJAPConfModule) (confModules.nextElement())).updateValues(false);
 			}
 		}
 	}

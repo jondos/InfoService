@@ -69,7 +69,6 @@ import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
@@ -119,8 +118,6 @@ import jap.pay.wizardnew.PaymentInfoPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.util.Observer;
-import java.util.Observable;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -289,6 +286,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private JLabel m_lblInactiveMessage, m_lblNoBackupMessage;
 	private JProgressBar m_coinstack;
 	private JList m_listAccounts;
+	private JPanel m_tabBasicSettings, m_tabAdvancedSettings;
 	private boolean m_bReady = true;
 	private boolean m_bDoNotCloseDialog = false;
 
@@ -335,15 +333,30 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		/* insert all components in the root panel */
 		m_tabPane = new JTabbedPane();
 		//tabPane.setFont(getFontSetting());
+		m_tabBasicSettings = createBasicSettingsTab();
 		m_tabPane.insertTab(JAPMessages.getString("ngPseudonymAccounts"),
-						  null, createBasicSettingsTab(), null, 0);
-		m_tabPane.insertTab(JAPMessages.getString(
-			"settingsInfoServiceConfigAdvancedSettingsTabTitle"), null, createAdvancedSettingsTab(), null, 1);
+							null, m_tabBasicSettings , null, 0);
+		m_tabAdvancedSettings = createAdvancedSettingsTab();
 		m_tabPane.addChangeListener(this);
 		GridBagLayout rootPanelLayout = new GridBagLayout();
 		rootPanel.setLayout(rootPanelLayout);
-		rootPanelLayout.setConstraints(m_tabPane, createTabbedRootPanelContraints());
-		rootPanel.add(m_tabPane);
+		GridBagConstraints contraints = createTabbedRootPanelContraints();
+
+		if (JAPModel.getDefaultView() != JAPConstants.VIEW_SIMPLIFIED)
+		{
+			m_tabPane.insertTab(JAPMessages.getString(
+				"settingsInfoServiceConfigAdvancedSettingsTabTitle"), null, m_tabAdvancedSettings, null, 1);
+			rootPanel.add(m_tabPane, contraints);
+		}
+		else
+		{
+			contraints.weightx = 0;
+			contraints.weighty = 0;
+			rootPanel.add(m_tabBasicSettings, contraints);
+			contraints.weightx = 1;
+			contraints.weighty = 1;
+			rootPanel.add(new JLabel(), contraints);
+		}
 	}
 
 	private JPanel createBasicSettingsTab()
@@ -546,7 +559,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		panelAdvanced.add(m_cbxBalanceAutoUpdateEnabled, advancedPanelConstraints);
 
-		updateValues();
+		updateValues(false);
 
 		return panelAdvanced;
 	}

@@ -635,7 +635,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 
 	protected void onCancelPressed()
 	{
-		updateValues();
+		updateValues(false);
 	}
 
 	protected boolean onOkPressed()

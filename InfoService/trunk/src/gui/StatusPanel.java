@@ -117,7 +117,7 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 			entry.m_Id = m_Random.nextInt();
 			if (bAutoRemove)
 			{
-				entry.m_DisplayCount = 1;
+				entry.m_DisplayCount = 2;
 			}
 			if (type == JOptionPane.WARNING_MESSAGE)
 			{

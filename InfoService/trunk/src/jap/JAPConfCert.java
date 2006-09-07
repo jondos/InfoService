@@ -689,8 +689,10 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 
 	public void fontSizeChanged(final JAPModel.FontResize a_resize, final JLabel a_dummyLabel)
 	{
+		/*
 		m_lblCertTitle.setFont(new Font(a_dummyLabel.getFont().getName(), Font.BOLD,
 										(int)(a_dummyLabel.getFont().getSize() * 1.2)));
+								 */
 	}
 
 	protected void onUpdateValues()

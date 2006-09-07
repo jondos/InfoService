@@ -32,6 +32,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 
 import javax.swing.JPanel;
+import javax.swing.JLabel;
 import javax.swing.JTabbedPane;
 import gui.JAPMessages;
 
@@ -105,30 +106,37 @@ public class JAPConfServices extends AbstractJAPConfModule
 
 			m_tabsAnon = new JTabbedPane();
 			m_tabbedModules = new Vector();
-			m_tabsAnon.addTab(anonModule.getTabTitle(), anonModule.getRootPanel());
-			m_tabbedModules.addElement(anonModule);
+
+
+			GridBagLayout rootPanelLayout = new GridBagLayout();
+			rootPanel.setLayout(rootPanelLayout);
+			GridBagConstraints rootPanelConstraints = createTabbedRootPanelContraints();
+
 			if (JAPModel.getDefaultView() != JAPConstants.VIEW_SIMPLIFIED)
 			{
+				m_tabsAnon.addTab(anonModule.getTabTitle(), anonModule.getRootPanel());
+				m_tabbedModules.addElement(anonModule);
 				m_tabsAnon.addTab(torModule.getTabTitle(), torModule.getRootPanel());
 				m_tabbedModules.addElement(torModule);
 				m_tabsAnon.addTab(mixminionModule.getTabTitle(), mixminionModule.getRootPanel());
 				m_tabbedModules.addElement(mixminionModule);
 				m_tabsAnon.addTab(anonGeneralModule.getTabTitle(), anonGeneralModule.getRootPanel());
 				m_tabbedModules.addElement(anonGeneralModule);
+				rootPanel.add(m_tabsAnon, rootPanelConstraints);
 			}
-			GridBagLayout rootPanelLayout = new GridBagLayout();
-			rootPanel.setLayout(rootPanelLayout);
+			else
+			{
+				rootPanelConstraints.weightx = 0;
+				rootPanelConstraints.weighty = 0;
+				rootPanel.add(anonModule.getRootPanel(), rootPanelConstraints);
+				rootPanelConstraints.weightx = 1;
+				rootPanelConstraints.weighty = 1;
+				rootPanel.add(new JLabel(), rootPanelConstraints);
+			}
 
-			GridBagConstraints rootPanelConstraints = new GridBagConstraints();
-			rootPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
-			rootPanelConstraints.fill = GridBagConstraints.BOTH;
-			rootPanelConstraints.weightx = 1.0;
-			rootPanelConstraints.weighty = 1.0;
 
-			rootPanelConstraints.gridx = 0;
-			rootPanelConstraints.gridy = 0;
-			rootPanelLayout.setConstraints(m_tabsAnon, rootPanelConstraints);
-			rootPanel.add(m_tabsAnon);
+
+
 		}
 	}
 
@@ -172,7 +180,15 @@ public class JAPConfServices extends AbstractJAPConfModule
 
 	protected void onRootPanelShown()
 	{
-		((AbstractJAPConfModule)m_tabbedModules.elementAt(m_tabsAnon.getSelectedIndex())).onRootPanelShown();
+		if (JAPModel.getDefaultView() != JAPConstants.VIEW_SIMPLIFIED)
+		{
+			( (AbstractJAPConfModule) m_tabbedModules.elementAt(m_tabsAnon.getSelectedIndex())).
+				onRootPanelShown();
+		}
+		else
+		{
+			m_anonModule.onRootPanelShown();
+		}
 	}
 
 	/**
@@ -193,10 +209,10 @@ public class JAPConfServices extends AbstractJAPConfModule
 	protected void onUpdateValues()
 	{
 		/* forward the event to all service modules */
-		m_anonModule.updateValues();
-		m_torModule.updateValues();
-		m_mixminionModule.updateValues();
-		m_anonGeneralModule.updateValues();
+		m_anonModule.updateValues(false);
+		m_torModule.updateValues(false);
+		m_mixminionModule.updateValues(false);
+		m_anonGeneralModule.updateValues(false);
 	}
 
 	/**
@@ -269,6 +285,9 @@ public class JAPConfServices extends AbstractJAPConfModule
 
 	public synchronized void selectAnonTab()
 	{
-		m_tabsAnon.setSelectedIndex(0);
+		if (JAPModel.getDefaultView() != JAPConstants.VIEW_SIMPLIFIED)
+		{
+			m_tabsAnon.setSelectedIndex(0);
+		}
 	}
 }
