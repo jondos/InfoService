@@ -1402,7 +1402,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		advancedPanelConstraints.gridy++;
 		advancedPanel.add(m_lblExplanation, advancedPanelConstraints);
 
-		updateValues();
+		updateValues(false);
 
 		return advancedPanel;
 	}

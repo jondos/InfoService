@@ -65,7 +65,6 @@ import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import anon.crypto.JAPCertificate;
@@ -160,7 +159,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private JButton m_manualCascadeButton;
 	private JButton m_reloadCascadesButton;
 	private JButton m_selectCascadeButton;
-	private JButton m_enterCascadeButton;
 	private JButton m_editCascadeButton;
 	private JButton m_deleteCascadeButton;
 	private JButton m_cancelCascadeButton;
@@ -238,12 +236,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	private void drawServerInfoPanel()
 	{
-		GridBagLayout layout = new GridBagLayout();
-		GridBagConstraints c = new GridBagConstraints();
-
 		if (m_serverInfoPanel == null)
 		{
-			m_serverInfoPanel = new JPanel();
+			m_serverInfoPanel = new ServerInfoPanel(this);
 			m_rootPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
 			m_rootPanelConstraints.gridx = 0;
 			m_rootPanelConstraints.gridy = 3;
@@ -254,116 +249,13 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		else
 		{
-			m_serverInfoPanel.removeAll();
+			//m_serverInfoPanel.removeAll();
 			m_serverInfoPanel.setVisible(true);
 		}
-		m_serverInfoPanel.setLayout(layout);
-
-		c.insets = new Insets(5, 10, 5, 5);
-		c.gridx = 0;
-		c.gridy = 0;
-		c.weightx = 0;
-		c.gridwidth = 3;
-		c.fill = GridBagConstraints.NONE;
-		c.anchor = GridBagConstraints.NORTHWEST;
-		c.insets = new Insets(5, 20, 5, 5);
-		m_serverInfoPanel.add(m_lblMix, c);
-
-		JLabel l = new JLabel(JAPMessages.getString("mixOperator"));
-		c.gridy = 1;
-		c.gridwidth = 1;
-		c.insets = new Insets(5, 30, 5, 5);
-		c.gridwidth = 1;
-		m_serverInfoPanel.add(l, c);
-
-		m_operatorLabel = new JLabel();
-		c.weightx = 1;
-		c.gridx = 1;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 2;
-		m_serverInfoPanel.add(m_operatorLabel, c);
-
-		l = new JLabel(JAPMessages.getString(MSG_LABEL_EMAIL));
-		c.gridx = 0;
-		c.gridy++;
-		c.weightx = 0;
-		c.insets = new Insets(5, 30, 5, 5);
-		c.gridwidth = 1;
-		m_serverInfoPanel.add(l, c);
-
-		m_emailLabel = new JLabel();
-		m_emailLabel.addMouseListener(this);
-		c.weightx = 1;
-		c.gridx = 1;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 2;
-		m_serverInfoPanel.add(m_emailLabel, c);
-
-		l = new JLabel(JAPMessages.getString("mixUrl"));
-		c.gridx = 0;
-		c.gridy++;
-		c.weightx = 0;
-		c.gridwidth = 1;
-		m_serverInfoPanel.add(l, c);
-
-		m_urlLabel = new JLabel();
-		m_urlLabel.addMouseListener(this);
-		c.gridx = 1;
-		c.gridwidth = 2;
-		m_serverInfoPanel.add(m_urlLabel, c);
-
-		l = new JLabel(JAPMessages.getString("mixLocation") + ":");
-		c.gridx = 0;
-		c.gridy++;
-		c.gridwidth = 1;
-		m_serverInfoPanel.add(l, c);
-
-		m_locationLabel = new JLabel();
-		m_locationLabel.addMouseListener(this);
-		c.gridx = 1;
-		c.gridwidth = 2;
-		m_serverInfoPanel.add(m_locationLabel, c);
-
-		l = new JLabel(JAPMessages.getString(MSG_LABEL_CERTIFICATE) + ":");
-		c.gridx = 0;
-		c.gridy++;
-		c.gridwidth = 1;
-		m_serverInfoPanel.add(l, c);
-
-		m_viewCertLabel = new JLabel();
-		m_viewCertLabel.addMouseListener(this);
-		c.gridx = 1;
-		c.gridwidth = 1;
-		c.insets = new Insets(5, 30, 5, 0);
-		m_serverInfoPanel.add(m_viewCertLabel, c);
-		m_viewCertLabelValidity = new JLabel();
-		m_viewCertLabelValidity.addMouseListener(this);
-		c.gridx = 2;
-		c.insets = new Insets(5, 0, 5, 5);
-		m_serverInfoPanel.add(m_viewCertLabelValidity, c);
-
 	}
 
-	private void drawManualPanel(String a_hostName, String a_port, boolean a_newCascade)
+	private void drawManualPanel(String a_hostName, String a_port)
 	{
-		if (a_newCascade)
-		{
-			try
-			{
-				MixCascade dummyCascade = new MixCascade(JAPMessages.getString("dummyCascade"), 0);
-				Database.getInstance(MixCascade.class).update(dummyCascade);
-				updateValues();
-				m_listMixCascade.setSelectedValue(dummyCascade, true);
-				//m_manHostField.selectAll();
-			}
-			catch (Exception a_e)
-			{
-				JAPDialog.showErrorDialog(this.getRootPanel(), JAPMessages.getString("errorCreateCascadeDesc"),
-										  LogType.MISC);
-				return;
-			}
-		}
-
 		if (m_serverPanel != null)
 		{
 			m_serverPanel.setVisible(false);
@@ -582,6 +474,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		pRoot.setLayout(m_rootPanelLayout);
 		m_rootPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
 
+		drawManualPanel("","");
 		drawCascadesPanel();
 		drawServerPanel(3, "", false, 0);
 		drawServerInfoPanel();
@@ -612,7 +505,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 			m_lblMix.setToolTipText(JAPMessages.getString(MSG_MIX_ID) + "=" + selectedMixId + version);
 			m_lblMix.setText(JAPMessages.getString("infoAboutMix") +
-							 " (" + (server + 1) + "/" + m_serverList.getNumberOfMixes() + ")");
+							 (m_serverList.areMixButtonsEnabled() ?
+							 (" (" + (server + 1) + "/" + m_serverList.getNumberOfMixes() + ")") : ""));
 		}
 		else
 		{
@@ -744,7 +638,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			synchronized (MIX_COMBO_UPDATE_LOCK)
 			{
-				m_bUpdateServerPanel = m_manualPanel == null;
+				m_bUpdateServerPanel = ((m_manualPanel == null) || (!m_manualPanel.isVisible()));
 				m_listMixCascade.setModel(listModel);
 				m_listMixCascade.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
@@ -787,7 +681,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				}
 				//Update the temporary infoservice database
 				m_infoService.fill(a_bCheckInfoServiceUpdateStatus);
-				updateValues();
+				updateValues(false);
 
 				//getRootPanel().setCursor(c);
 
@@ -857,7 +751,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			if (mb_manualCascadeNew)
 			{
-				this.deleteManualCascade();
+				m_manualPanel.setVisible(false);
+				m_serverPanel.setVisible(true);
+				m_serverInfoPanel.setVisible(true);
+				updateValues(false);
 			}
 			else
 			{
@@ -890,18 +787,22 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		else if (e.getSource() == m_manualCascadeButton)
 		{
-			drawManualPanel(null, null, true);
+			drawManualPanel(null, null);
 			mb_manualCascadeNew = true;
 			m_deleteCascadeButton.setEnabled(false);
 			m_cancelCascadeButton.setEnabled(true);
 		}
-		else if (e.getSource() == m_enterCascadeButton)
-		{
-			this.enterManualCascade();
-		}
+
 		else if (e.getSource() == m_editCascadeButton)
 		{
-			this.editManualCascade();
+			if (mb_manualCascadeNew)
+			{
+				enterManualCascade();
+			}
+			else
+			{
+				editManualCascade();
+			}
 		}
 		else if (e.getSource() == m_deleteCascadeButton)
 		{
@@ -910,9 +811,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		else if (e.getSource() == m_showEditPanelButton)
 		{
 			MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
-			this.drawManualPanel(cascade.getListenerInterface(0).getHost(),
-								 String.valueOf(cascade.getListenerInterface(0).getPort()),
-								 false);
+			drawManualPanel(cascade.getListenerInterface(0).getHost(),
+							String.valueOf(cascade.getListenerInterface(0).getPort()));
 			mb_manualCascadeNew = false;
 
 			m_deleteCascadeButton.setEnabled(!JAPController.getInstance().getCurrentMixCascade().equals(
@@ -941,7 +841,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		try
 		{
 			MixCascade oldCascade = (MixCascade) m_listMixCascade.getSelectedValue();
-			MixCascade c = new MixCascade(m_manHostField.getText(),
+			final MixCascade c = new MixCascade(m_manHostField.getText(),
 										  Integer.parseInt(m_manPortField.getText()));
 			//Check if this cascade already exists
 			Vector db = Database.getInstance(MixCascade.class).getEntryList();
@@ -972,9 +872,16 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 						   JAPMessages.getString("activeCascadeEdited"));
 						 }**/
 				}
+				new Thread()
+				{
+					// get out of event thread
+					public void run()
+					{
+						updateValues(true);
+						m_listMixCascade.setSelectedValue(c, true);
+					}
+				}.start();
 
-				updateValues();
-				m_listMixCascade.setSelectedValue(c, true);
 			}
 			else
 			{
@@ -1010,11 +917,18 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				if (JAPDialog.showYesNoDialog(getRootPanel(), JAPMessages.getString(MSG_REALLY_DELETE)))
 				{
 					Database.getInstance(MixCascade.class).remove(cascade);
-					updateValues();
-					if (m_listMixCascade.getModel().getSize() > 0)
+					new Thread()
 					{
-						m_listMixCascade.setSelectedIndex(0);
-					}
+						public void run()
+						{
+							// get out of event thread
+							updateValues(true);
+							if (m_listMixCascade.getModel().getSize() > 0)
+							{
+								m_listMixCascade.setSelectedIndex(0);
+							}
+						}
+					}.start();
 				}
 			}
 		}
@@ -1032,13 +946,13 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	{
 		try
 		{
-			MixCascade c = new MixCascade(m_manHostField.getText(),
+			final MixCascade c = new MixCascade(m_manHostField.getText(),
 										  Integer.parseInt(m_manPortField.getText()));
 
 			Database.getInstance(MixCascade.class).update(c);
-			updateValues();
+			((DefaultListModel)m_listMixCascade.getModel()).addElement(c);
 			m_listMixCascade.setSelectedValue(c, true);
-			m_enterCascadeButton.setVisible(false);
+			updateValues(false);
 		}
 		catch (Exception a_e)
 		{
@@ -1190,10 +1104,12 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	public void fontSizeChanged(final JAPModel.FontResize a_resize, final JLabel a_dummyLabel)
 	{
+		/*
 		m_lblCascadeInfo.setFont(new Font(a_dummyLabel.getFont().getName(), Font.BOLD,
 										  (int) (a_dummyLabel.getFont().getSize() * 1.2)));
 		m_lblMix.setFont(new Font(a_dummyLabel.getFont().getName(), Font.BOLD,
 								  (int) (a_dummyLabel.getFont().getSize() * 1.2)));
+						   */
 	}
 
 	/**
@@ -1493,7 +1409,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 			if (bDatabaseChanged)
 			{
-				updateValues();
+				updateValues(false);
 			}
 		}
 		catch (Exception e)
@@ -2269,6 +2185,100 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			}
 
 			add(m_serverList, m_constraints);
+		}
+	}
+
+	private class ServerInfoPanel extends JPanel
+	{
+		public ServerInfoPanel(JAPConfAnon a_listener)
+		{
+			GridBagLayout layout = new GridBagLayout();
+			GridBagConstraints c = new GridBagConstraints();
+
+			setLayout(layout);
+
+			c.insets = new Insets(5, 10, 5, 5);
+			c.gridx = 0;
+			c.gridy = 0;
+			c.weightx = 0;
+			c.gridwidth = 3;
+			c.fill = GridBagConstraints.NONE;
+			c.anchor = GridBagConstraints.NORTHWEST;
+			c.insets = new Insets(5, 20, 5, 5);
+			add(m_lblMix, c);
+
+			JLabel l = new JLabel(JAPMessages.getString("mixOperator"));
+			c.gridy = 1;
+			c.gridwidth = 1;
+			c.insets = new Insets(5, 30, 5, 5);
+			c.gridwidth = 1;
+			add(l, c);
+
+			m_operatorLabel = new JLabel();
+			c.weightx = 1;
+			c.gridx = 1;
+			c.fill = GridBagConstraints.HORIZONTAL;
+			c.gridwidth = 2;
+			add(m_operatorLabel, c);
+
+			l = new JLabel(JAPMessages.getString(MSG_LABEL_EMAIL));
+			c.gridx = 0;
+			c.gridy++;
+			c.weightx = 0;
+			c.insets = new Insets(5, 30, 5, 5);
+			c.gridwidth = 1;
+			add(l, c);
+
+			m_emailLabel = new JLabel();
+			m_emailLabel.addMouseListener(a_listener);
+			c.weightx = 1;
+			c.gridx = 1;
+			c.fill = GridBagConstraints.HORIZONTAL;
+			c.gridwidth = 2;
+			add(m_emailLabel, c);
+
+			l = new JLabel(JAPMessages.getString("mixUrl"));
+			c.gridx = 0;
+			c.gridy++;
+			c.weightx = 0;
+			c.gridwidth = 1;
+			add(l, c);
+
+			m_urlLabel = new JLabel();
+			m_urlLabel.addMouseListener(a_listener);
+			c.gridx = 1;
+			c.gridwidth = 2;
+			add(m_urlLabel, c);
+
+			l = new JLabel(JAPMessages.getString("mixLocation") + ":");
+			c.gridx = 0;
+			c.gridy++;
+			c.gridwidth = 1;
+			add(l, c);
+
+			m_locationLabel = new JLabel();
+			m_locationLabel.addMouseListener(a_listener);
+			c.gridx = 1;
+			c.gridwidth = 2;
+			add(m_locationLabel, c);
+
+			l = new JLabel(JAPMessages.getString(MSG_LABEL_CERTIFICATE) + ":");
+			c.gridx = 0;
+			c.gridy++;
+			c.gridwidth = 1;
+			add(l, c);
+
+			m_viewCertLabel = new JLabel();
+			m_viewCertLabel.addMouseListener(a_listener);
+			c.gridx = 1;
+			c.gridwidth = 1;
+			c.insets = new Insets(5, 30, 5, 0);
+			add(m_viewCertLabel, c);
+			m_viewCertLabelValidity = new JLabel();
+			m_viewCertLabelValidity.addMouseListener(a_listener);
+			c.gridx = 2;
+			c.insets = new Insets(5, 0, 5, 5);
+			add(m_viewCertLabelValidity, c);
 		}
 	}
 }

@@ -595,7 +595,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		}
 
 		m_bHasHadWizardLayout = false;
-		m_value = RETURN_VALUE_UNINITIALIZED;
+		setButtonValue(RETURN_VALUE_UNINITIALIZED);
 
 		// create the buttons
 		createOptions();
@@ -2973,9 +2973,9 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	{
 		public void componentHidden(ComponentEvent a_event)
 		{
-			if (m_value == RETURN_VALUE_UNINITIALIZED)
+			if (getButtonValue() == RETURN_VALUE_UNINITIALIZED)
 			{
-				m_value = RETURN_VALUE_CLOSED;
+				setButtonValue(RETURN_VALUE_CLOSED);
 			}
 
 			ComponentListener listener = m_currentlyActiveContentPaneComponentListener;
@@ -3063,7 +3063,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 										   ON_CANCEL_SHOW_NEXT_CONTENT, ON_CANCEL_SHOW_PREVIOUS_CONTENT,
 										   ON_CANCEL_HIDE_DIALOG, ON_CANCEL_DISPOSE_DIALOG))
 				{
-					m_value = RETURN_VALUE_CANCEL;
+					setButtonValue(RETURN_VALUE_CANCEL);
 				}
 				bActionDone = doDefaultButtonOperation(errors, ON_CANCEL_SHOW_NEXT_CONTENT,
 													   ON_CANCEL_SHOW_PREVIOUS_CONTENT,
@@ -3077,11 +3077,11 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 				{
 					if (OPTION_TYPE_YES_NO == m_optionType || OPTION_TYPE_YES_NO_CANCEL == m_optionType)
 					{
-						m_value = RETURN_VALUE_YES;
+						setButtonValue(RETURN_VALUE_YES);
 					}
 					else
 					{
-						m_value = RETURN_VALUE_OK;
+						setButtonValue(RETURN_VALUE_OK);
 					}
 				}
 				bActionDone = doDefaultButtonOperation(errors, ON_YESOK_SHOW_NEXT_CONTENT,
@@ -3093,7 +3093,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 				if (isSomethingDoneOnClick(errors, ON_NO_SHOW_NEXT_CONTENT, ON_NO_SHOW_PREVIOUS_CONTENT,
 										   ON_NO_HIDE_DIALOG, ON_NO_DISPOSE_DIALOG))
 				{
-					m_value = RETURN_VALUE_NO;
+					setButtonValue(RETURN_VALUE_NO);
 				}
 				bActionDone = doDefaultButtonOperation(errors,
 					ON_NO_SHOW_NEXT_CONTENT, ON_NO_SHOW_PREVIOUS_CONTENT,

@@ -942,7 +942,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		m_cbDebugToFile.setSelected(false);
 	}
 
-	private void okPressed(boolean m_bCloseConfiguration)
+	private void okPressed(final boolean a_bCloseConfiguration)
 	{
 		if (!checkValues())
 		{
@@ -952,10 +952,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		{
 			return;
 		}
-		if (m_bCloseConfiguration || isRestartNeeded())
-		{
-			setVisible(false);
-		}
+
 		// We are in event dispatch thread!!
 		new Thread()
 		{
@@ -1008,7 +1005,14 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 				m_Controller.saveConfigFile();
 
 				// force notifying the observers set the right server name
-				m_Controller.notifyJAPObservers(); // this should be the last line of okPressed() !!!
+
+				m_Controller.notifyJAPObservers();
+
+				if (a_bCloseConfiguration || isRestartNeeded())
+				{
+					setVisible(false);
+				}
+
 				if (isRestartNeeded())
 				{
 					JAPController.goodBye(false);

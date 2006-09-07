@@ -267,7 +267,7 @@ final class JAPConfMixminion extends AbstractJAPConfModule implements ActionList
 	{
 		if (actionEvent.getActionCommand().equals("enableMixminion"))
 		{
-			updateValues();
+			updateValues(false);
 		}
 		else if (actionEvent.getActionCommand().equals("fetchRouters"))
 		{

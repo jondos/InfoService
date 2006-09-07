@@ -315,7 +315,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		gridBagFrame.setConstraints(buttonPanel, cFrame);
 		panelRoot.add(buttonPanel);
 
-		updateValues();
+		updateValues(false);
 	}
 
 	protected boolean onOkPressed()

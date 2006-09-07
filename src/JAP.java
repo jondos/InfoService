@@ -206,7 +206,6 @@ public class JAP
 		{
 			splash = new JAPSplash(new Frame());
 			splash.setVisible(true);
-			GUIUtils.setIconResizer(JAPModel.getInstance().getIconResizer());
 		}
 
 		// initialise secure random generators
@@ -221,9 +220,11 @@ public class JAP
 		secureRandomThread.setPriority(Thread.MIN_PRIORITY);
 		secureRandomThread.start();
 
-		// Test for Swing
+
 		if (!bConsoleOnly)
 		{
+			GUIUtils.setIconResizer(JAPModel.getInstance().getIconResizer());
+			// Test for Swing
 			try
 			{
 				Object o = new javax.swing.JLabel();

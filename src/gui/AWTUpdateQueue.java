@@ -57,7 +57,7 @@ public class AWTUpdateQueue
 	{
 		synchronized (JOB_LOCK)
 		{
-			if (m_jobs >= 2)
+			if (m_jobs >= 2 && !a_bSync)
 			{
 				// queue is full, skip update
 				return;
