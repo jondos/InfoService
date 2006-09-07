@@ -397,38 +397,6 @@ public class JAPConfModuleSystem
 	}
 
 	/**
-	 * Rebuilds the whole configuration tree (e.g. after a change of the language setting) and
-	 * processes an recreate event on all registered instances of AbstractJAPConfModule.
-	 */
-	public void repaintEverything()
-	{
-		synchronized (this)
-		{
-			/* update the nodes in the tree */
-			Enumeration moduleNodes = m_registratedModules.keys();
-			while (moduleNodes.hasMoreElements())
-			{
-				DefaultMutableTreeNode currentNode = (DefaultMutableTreeNode) (moduleNodes.nextElement());
-				currentNode.setUserObject( ( (AbstractJAPConfModule) (m_registratedModules.get(currentNode))).
-										  getTabTitle());
-			}
-			Enumeration panelNodes = m_registratedPanelTitleIdentifiers.keys();
-			while (panelNodes.hasMoreElements())
-			{
-				DefaultMutableTreeNode currentNode = (DefaultMutableTreeNode) (panelNodes.nextElement());
-				currentNode.setUserObject(JAPMessages.getString( (String) (m_registratedPanelTitleIdentifiers.
-					get(currentNode))));
-			}
-			/* Call the event handler of all configuration modules. */
-			Enumeration confModules = m_registratedModules.elements();
-			while (confModules.hasMoreElements())
-			{
-				( (AbstractJAPConfModule) (confModules.nextElement())).recreateRootPanel();
-			}
-		}
-	}
-
-	/**
 	 * Processes a create savepoints event on all registered instances of AbstractJAPConfModule.
 	 * This method must be called everytime when the configuration dialog is displayed.
 	 */

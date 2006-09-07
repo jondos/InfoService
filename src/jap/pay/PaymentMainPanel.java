@@ -38,9 +38,7 @@ import java.sql.Timestamp;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Image;
 import java.awt.Insets;
-import java.awt.MediaTracker;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -58,17 +56,14 @@ import anon.util.captcha.IImageEncodedCaptcha;
 import gui.FlippingPanel;
 import gui.GUIUtils;
 import gui.JAPMessages;
+import gui.JAPProgressBar;
 import gui.dialog.JAPDialog;
 import jap.JAPConf;
 import jap.JAPConstants;
 import jap.JAPController;
-import jap.JAPModel;
 import jap.JAPNewView;
 import jap.JAPUtil;
-import logging.LogHolder;
-import logging.LogLevel;
 import logging.LogType;
-import gui.JAPProgressBar;
 
 public class PaymentMainPanel extends FlippingPanel
 {
@@ -543,36 +538,13 @@ public class PaymentMainPanel extends FlippingPanel
 	/**
 	 * Loads some icons for the account display
 	 */
-	protected void loadIcons()
+	private void loadIcons()
 	{
 		// Load Images for Account Icon Display
 		m_accountIcons = new ImageIcon[JAPConstants.ACCOUNTICONFNARRAY.length];
-		if (!JAPModel.isSmallDisplay())
+		for (int i = 0; i < JAPConstants.ACCOUNTICONFNARRAY.length; i++)
 		{
-			for (int i = 0; i < JAPConstants.ACCOUNTICONFNARRAY.length; i++)
-			{
-				m_accountIcons[i] = GUIUtils.loadImageIcon(JAPConstants.ACCOUNTICONFNARRAY[i], false);
-			}
-		}
-		else // scale down for small displays
-		{
-			MediaTracker m = new MediaTracker(this);
-			for (int i = 0; i < JAPConstants.ACCOUNTICONFNARRAY.length; i++)
-			{
-				Image tmp = GUIUtils.loadImageIcon(JAPConstants.ACCOUNTICONFNARRAY[i], true).getImage();
-				int w = tmp.getWidth(null);
-				tmp = tmp.getScaledInstance( (int) (w * 0.75), -1, Image.SCALE_SMOOTH);
-				m.addImage(tmp, i);
-				m_accountIcons[i] = new ImageIcon(tmp);
-			}
-			try
-			{
-				m.waitForAll();
-			}
-			catch (Exception e)
-			{
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY, e);
-			}
+			m_accountIcons[i] = GUIUtils.loadImageIcon(JAPConstants.ACCOUNTICONFNARRAY[i], false);
 		}
 	}
 }

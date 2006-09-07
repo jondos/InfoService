@@ -160,8 +160,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JPanel m_pnlVersion;
 	private JButton m_bttnHelp, m_bttnQuit, m_bttnIconify, m_bttnConf, m_btnAssistant;
 
-	private JLabel m_labelMeterDetailsRisk, m_labelOwnBytes, m_labelOwnChannels;
-	//private TitledBorder m_borderOwnTraffic, m_borderAnonMeter, m_borderDetails;
 	private Icon[] meterIcons;
 	private JAPConf m_dlgConfig;
 	private Object LOCK_CONFIG = new Object();
@@ -288,6 +286,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				boolean bUpdated = false;
 				Enumeration entries =
 					Database.getInstance(JAPVersionInfo.class).getEntrySnapshotAsEnumeration();
+				JavaVersionDBEntry versionEntry = JavaVersionDBEntry.getNewJavaVersion();
+
 				if (entries.hasMoreElements())
 				{
 					JAPVersionInfo vi =  (JAPVersionInfo) entries.nextElement();
@@ -310,7 +310,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						}
 					}
 				}
-				JavaVersionDBEntry versionEntry = JavaVersionDBEntry.getNewJavaVersion();
+				// Do not execute other objects after successfully finishing the wizard!
+
 				if (!bUpdated && versionEntry != null)
 				{
 					showJavaUpdateDialog(versionEntry);
