@@ -27,33 +27,32 @@
  */
 package jap;
 
-import java.lang.reflect.InvocationTargetException;
-
 import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
 
+import gui.AWTUpdateQueue;
 import gui.JAPDll;
 
 public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 {
 	protected String m_Title;
-	protected MyViewUpdate m_runnableValueUpdate;
 	protected JAPController m_Controller;
 
-	final private class MyViewUpdate implements Runnable
+	private boolean m_bChangingTitle = false;
+	private final Object SYNC_TITLE = new Object();
+
+	private final AWTUpdateQueue AWT_UPDATE_QUEUE = new AWTUpdateQueue(new Runnable()
 	{
 		public void run()
 		{
-			updateValues();
+			onUpdateValues();
 		}
-	}
+	});
 
 	public AbstractJAPMainView(String s, JAPController a_controller)
 	{
 		super(s);
 		m_Controller = a_controller;
 		m_Title = s;
-		m_runnableValueUpdate = new MyViewUpdate();
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 	}
 
@@ -66,70 +65,30 @@ public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 	{
 	}
 
+	public final boolean isChangingTitle()
+	{
+		return m_bChangingTitle;
+	}
 
 	public boolean hideWindowInTaskbar()
 	{
-		synchronized (m_runnableValueUpdate) //updateValues may change the Title of the Window!!
+		synchronized (SYNC_TITLE) //updateValues may change the Title of the Window!!
 		{
-			setTitle(Double.toString(Math.random())); //ensure that we have an uinque title
+			m_bChangingTitle = true;
+			setTitle(Double.toString(Math.random())); //ensure that we have an unique title
 			boolean b = JAPDll.hideWindowInTaskbar(getTitle());
 			if (b)
 			{
 				setVisible(false);
 			}
 			setTitle(m_Title);
+			m_bChangingTitle = false;
 			return b;
 		}
 	}
 
-	public boolean setWindowIcon()
+	public void updateValues(boolean bSync)
 	{
-		synchronized (m_runnableValueUpdate) //updateValues may change the Titke of the Window!!
-		{
-			setTitle(Double.toString(Math.random())); //ensure that we have an uinque title
-			boolean b = JAPDll.setWindowIcon(getTitle());
-			setTitle(m_Title);
-			return b;
-		}
-	}
-
-	public void valuesChanged(boolean bSync)
-	{
-//	synchronized (m_runnableValueUpdate)
-		{
-			if (SwingUtilities.isEventDispatchThread())
-			{
-				updateValues();
-			}
-			else
-			{
-				if (bSync)
-				{
-					try
-					{
-						SwingUtilities.invokeAndWait(m_runnableValueUpdate);
-					}
-					catch (InvocationTargetException ex)
-					{
-					}
-					catch (InterruptedException ex)
-					{
-					}
-				}
-				else
-				{
-					SwingUtilities.invokeLater(m_runnableValueUpdate);
-				}
-			}
-		}
-	}
-
-	private void updateValues()
-	{
-		synchronized (m_runnableValueUpdate)
-		{
-			doSynchronizedUpdateValues();
-		}
-
+		AWT_UPDATE_QUEUE.update(bSync);
 	}
 }

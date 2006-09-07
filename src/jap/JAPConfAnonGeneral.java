@@ -386,7 +386,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 				}
 			}
 		});
-		onUpdateValues();
+		updateValues();
 	}
 
 	//defaults

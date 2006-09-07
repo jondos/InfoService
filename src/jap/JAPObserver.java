@@ -35,5 +35,5 @@ interface JAPObserver extends IProxyListener
 	 *  refresh itselves.
 	 * @param bSync Hint, if the update should be processed immedialy
 	 */
-	void valuesChanged(boolean bSync);
+	void updateValues(boolean bSync);
 }

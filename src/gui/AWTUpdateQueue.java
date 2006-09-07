@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004, The JAP-Team
+ Copyright (c) 2000 - 2006, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -25,23 +25,103 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap;
+package gui;
 
-import java.awt.Window;
+import javax.swing.SwingUtilities;
 
-import gui.IStatusLine;
-import anon.AnonServiceEventListener;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
-public interface IJAPMainView extends JAPObserver, IStatusLine, AnonServiceEventListener
+/**
+ * Queues update operations for the AWT Event Thread. There are never more than two
+ * operations in the queue, as additional operations will be skipped immediatly.
+ * The queue should therefore contain only update operations for the same GUI elements.
+ *
+ * @author Rolf Wendolsky
+ */
+public class AWTUpdateQueue
 {
-	public void create(boolean bWithPay);
+	private Runnable m_awtRunnable;
+	private int m_jobs;
+	private Object JOB_LOCK = new Object();
+	private Object UPDATE_LOCK = new Object();
 
-	public void registerViewIconified(Window viewIconified);
+	public AWTUpdateQueue(Runnable a_awtRunnable)
+	{
+		m_awtRunnable = a_awtRunnable;
+		m_jobs = 0;
+	}
 
-	public void disableSetAnonMode();
+	public void update(boolean a_bSync)
+	{
+		synchronized (JOB_LOCK)
+		{
+			if (m_jobs >= 2)
+			{
+				// queue is full, skip update
+				return;
+			}
+			m_jobs++;
+		}
 
-	/**
-	 * Performs GUI update operations. Should not be called directly!!
-	 */
-	public void onUpdateValues();
+		Thread run = new Thread()
+		{
+			public void run()
+			{
+				doUpdateQueue();
+			}
+		};
+		run.start();
+		if (a_bSync)
+		{
+			try
+			{
+				run.join();
+			}
+			catch (InterruptedException a_e)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.GUI, a_e);
+			}
+		}
+	}
+
+	private void doUpdateQueue()
+	{
+		Thread run = new Thread()
+		{
+			public void run()
+			{
+				m_awtRunnable.run();
+				m_jobs--;
+			}
+		};
+
+		synchronized (UPDATE_LOCK)
+		{
+			try
+			{
+				SwingUtilities.invokeAndWait(run);
+			}
+			catch (Exception a_e)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, a_e);
+			}
+		}
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

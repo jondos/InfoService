@@ -451,7 +451,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 *
 	 * The configuration is a XML-File with the following structure:
 	 *  <JAP
-	 *    version="0.22"                     // version of the xml struct (DTD) used for saving the configuration
+	 *    version="0.24"                     // version of the xml struct (DTD) used for saving the configuration
 	 *    portNumber=""                     // Listener-Portnumber
 	 *    portNumberSocks=""                // Listener-Portnumber for SOCKS
 	 *    supportSocks=""                   // Will we support SOCKS ?
@@ -1356,13 +1356,22 @@ public final class JAPController extends Observable implements IProxyListener, O
 					Element elemMM = (Element) XMLUtil.getFirstChildByName(elemMixminion,
 						JAPConstants.CONFIG_ROUTE_LEN);
 					int routeLen = XMLUtil.parseValue(elemMM, JAPModel.getMixminionRouteLen());
-					setMixminionRouteLen(routeLen);
+					JAPModel.getInstance().setMixminionRouteLen(routeLen);
 					//FIXME sr
 					Element elemMMMail = (Element) XMLUtil.getFirstChildByName(elemMixminion,
 							JAPConstants.CONFIG_MIXMINION_REPLY_MAIL);
-					String emaddress = XMLUtil.parseAttribute(elemMMMail,"MixminionSender", "none");
+					String emaddress = XMLUtil.parseAttribute(elemMMMail,"MixminionSender", "");
+					if (strVersion == null || strVersion.compareTo(JAPConstants.CURRENT_CONFIG_VERSION) < 0)
+					{
+						/** @todo remove this fix for old config in a later version */
+						if (emaddress.equals("none"))
+						{
+							emaddress = "";
+						}
+					}
 
-					setMixMinionMyEMail(emaddress);
+
+					JAPModel.getInstance().setMixminionMyEMail(emaddress);
 				}
 				catch (Exception ex)
 				{
@@ -1661,7 +1670,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			Document doc = XMLUtil.createDocument();
 			Element e = doc.createElement("JAP");
 			doc.appendChild(e);
-			XMLUtil.setAttribute(e, JAPConstants.CONFIG_VERSION, "0.23");
+			XMLUtil.setAttribute(e, JAPConstants.CONFIG_VERSION, JAPConstants.CURRENT_CONFIG_VERSION);
 			XMLUtil.setAttribute(e, m_Model.DLL_VERSION_UPDATE, m_Model.getDLLupdate());
 
 			XMLUtil.setAttribute(e, XML_ALLOW_NON_ANONYMOUS_UPDATE,
@@ -2701,16 +2710,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 		m_Model.setTorMinRouteLen(min);
 	}
 
-	public static void setMixminionRouteLen(int len)
-	{
-		m_Model.setMixminionRouteLen(len);
-	}
-
-	public static void setMixMinionMyEMail(String address)
-	{
-		m_Model.setMixminionMyEMail(address);
-	}
-
 	//---------------------------------------------------------------------
 	private ServerSocket intern_startListener(int port, boolean bLocal)
 	{
@@ -3257,7 +3256,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					JAPObserver listener = (JAPObserver) enumer.nextElement();
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:notifyJAPObservers: " + i);
-					listener.valuesChanged(false);
+					listener.updateValues(false);
 					i++;
 				}
 			}

@@ -546,7 +546,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		panelAdvanced.add(m_cbxBalanceAutoUpdateEnabled, advancedPanelConstraints);
 
-		onUpdateValues();
+		updateValues();
 
 		return panelAdvanced;
 	}

@@ -129,10 +129,30 @@ final public class JAPSplash extends Window
 		if (t.getColorModel().getPixelSize() <= 16)
 		{
 			in = c.getResourceAsStream(IMGPATHLOWCOLOR + JAPConstants.BUSYFN);
+			if (in == null)
+			{
+				try
+				{
+					in = new FileInputStream(IMGPATHLOWCOLOR + JAPConstants.BUSYFN);
+				}
+				catch (FileNotFoundException ex)
+				{
+				}
+			}
 		}
 		if (in == null)
 		{
 			in = c.getResourceAsStream(IMGPATHHICOLOR + JAPConstants.BUSYFN);
+		}
+		if (in == null)
+		{
+			try
+			{
+				in = new FileInputStream(IMGPATHHICOLOR + JAPConstants.BUSYFN);
+			}
+			catch (FileNotFoundException ex)
+			{
+			}
 		}
 		if (in != null)
 		{
