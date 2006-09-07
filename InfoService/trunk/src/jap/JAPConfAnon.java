@@ -202,7 +202,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_listMixCascade.setEnabled(true);
 		m_lblCascadeInfo = new JLabel(JAPMessages.getString("infoAboutCascade"));
 
-		m_lblMix = new JLabel(JAPMessages.getString("infoAboutMix"));
+		m_lblMix = new JLabel();
 
 
 		drawCompleteDialog();
@@ -609,7 +609,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			{
 				version = "";
 			}
+
 			m_lblMix.setToolTipText(JAPMessages.getString(MSG_MIX_ID) + "=" + selectedMixId + version);
+			m_lblMix.setText(JAPMessages.getString("infoAboutMix") +
+							 " (" + (server + 1) + "/" + m_serverList.getNumberOfMixes() + ")");
 		}
 		else
 		{
