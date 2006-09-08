@@ -2009,7 +2009,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				if ( (getAnonMode()) && (m_currentMixCascade != null))
 				{
 					/* we are running in anonymity mode */
-					setAnonMode(false);
+					//setAnonMode(false);
 					m_currentMixCascade = newMixCascade;
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 								  "MixCascade changed while in anonymity mode.");
@@ -2234,6 +2234,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_View.removeStatusMsg(msgIdConnect);
 				}
 			}
+
 			synchronized (PROXY_SYNC)
 			{
 				boolean canStartService = true;
@@ -2241,8 +2242,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 				//setAnonMode--> async!!
 				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "setAnonMode(" + anonModeSelected + ")");
-				if ( (m_proxyAnon == null) && (anonModeSelected))
-				{ //start Anon Mode
+				if (anonModeSelected &&
+					!(m_proxyAnon != null && m_proxyAnon.getMixCascade().equals(getCurrentMixCascade())))
+				{
+					//start Anon Mode
+
+					// true if the cascade is switched without starting the direct proxy
+					boolean bSwitchCascade = (m_proxyAnon != null);
+					int ret;
+
 					if (getView() != null)
 					{
 						getView().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
@@ -2261,17 +2269,20 @@ public final class JAPController extends Observable implements IProxyListener, O
 					else
 					{
 						/* we use a direct connection */
-						if (JAPModel.getInstance().getProxyInterface() != null &&
-							JAPModel.getInstance().getProxyInterface().isValid())
+						if (!bSwitchCascade)
 						{
-							m_proxyAnon = new AnonProxy(
-								m_socketHTTPListener, JAPModel.getInstance().getProxyInterface(),
-								JAPModel.getInstance().getPaymentProxyInterface());
-						}
-						else
-						{
-							m_proxyAnon = new AnonProxy(m_socketHTTPListener, null,
-								JAPModel.getInstance().getPaymentProxyInterface());
+							if (JAPModel.getInstance().getProxyInterface() != null &&
+								JAPModel.getInstance().getProxyInterface().isValid())
+							{
+								m_proxyAnon = new AnonProxy(
+									m_socketHTTPListener, JAPModel.getInstance().getProxyInterface(),
+									JAPModel.getInstance().getPaymentProxyInterface());
+							}
+							else
+							{
+								m_proxyAnon = new AnonProxy(m_socketHTTPListener, null,
+									JAPModel.getInstance().getPaymentProxyInterface());
+							}
 						}
 					}
 					if (!JAPModel.isInfoServiceDisabled())
@@ -2284,44 +2295,53 @@ public final class JAPController extends Observable implements IProxyListener, O
 					//			   m_Controller.getCurrentMixCascade()));
 					cascadeContainer = new AutoSwitchedMixCascadeContainer();
 					m_proxyAnon.setMixCascade(cascadeContainer);
-					if (JAPModel.getInstance().isTorActivated())
+					if (!bSwitchCascade)
 					{
-						TorAnonServerDescription td = new TorAnonServerDescription(true,
-							JAPModel.isPreCreateAnonRoutesEnabled());
-						td.setMaxRouteLen(JAPModel.getTorMaxRouteLen());
-						td.setMinRouteLen(JAPModel.getTorMinRouteLen());
-						td.setMaxConnectionsPerRoute(JAPModel.getTorMaxConnectionsPerRoute());
-						m_proxyAnon.setTorParams(td);
-					}
-					else
-					{
-						m_proxyAnon.setTorParams(null);
-					}
-					if (JAPModel.getInstance().isMixMinionActivated())
-					{
-						m_proxyAnon.setMixminionParams(new MixminionServiceDescription(JAPModel.
-							getMixminionRouteLen(), JAPModel.getMixminionMyEMail()));
-					}
-					else
-					{
-						m_proxyAnon.setMixminionParams(null);
-					}
-					m_proxyAnon.setProxyListener(m_Controller);
-					m_proxyAnon.setDummyTraffic(JAPModel.getDummyTraffic());
-					// -> we can try to start anonymity
-					if (m_proxyDirect != null)
-					{
-						m_proxyDirect.shutdown();
-					}
-					m_proxyDirect = null;
-					LogHolder.log(LogLevel.DEBUG, LogType.NET, "Try to start AN.ON service...");
+						if (JAPModel.getInstance().isTorActivated())
+						{
+							TorAnonServerDescription td = new TorAnonServerDescription(true,
+								JAPModel.isPreCreateAnonRoutesEnabled());
+							td.setMaxRouteLen(JAPModel.getTorMaxRouteLen());
+							td.setMinRouteLen(JAPModel.getTorMinRouteLen());
+							td.setMaxConnectionsPerRoute(JAPModel.getTorMaxConnectionsPerRoute());
+							m_proxyAnon.setTorParams(td);
+						}
+						else
+						{
+							m_proxyAnon.setTorParams(null);
+						}
+						if (JAPModel.getInstance().isMixMinionActivated())
+						{
+							m_proxyAnon.setMixminionParams(new MixminionServiceDescription(JAPModel.
+								getMixminionRouteLen(), JAPModel.getMixminionMyEMail()));
+						}
+						else
+						{
+							m_proxyAnon.setMixminionParams(null);
+						}
+						m_proxyAnon.setProxyListener(m_Controller);
+						m_proxyAnon.setDummyTraffic(JAPModel.getDummyTraffic());
 
-					int ret = m_proxyAnon.start(a_bRetryOnConnectionError);
+						// -> we can try to start anonymity
+						if (m_proxyDirect != null)
+						{
+							m_proxyDirect.shutdown();
+						}
+						m_proxyDirect = null;
+
+						LogHolder.log(LogLevel.DEBUG, LogType.NET, "Try to start AN.ON service...");
+						ret = m_proxyAnon.start(a_bRetryOnConnectionError);
+					}
+					else
+					{
+						ret = m_proxyAnon.switchCascade(a_bRetryOnConnectionError);
+					}
 
 
 					if (ret == AnonProxy.E_BIND)
 					{
 						canStartService = false;
+						m_proxyAnon.stop();
 						m_proxyAnon = null;
 
 						Object[] args =
@@ -2337,6 +2357,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 								JAPModel.getInstance().isCascadeConnectionChosenAutomatically()))
 					{
 						canStartService = false;
+						m_proxyAnon.stop();
 						m_proxyAnon = null;
 						JAPDialog.showErrorDialog(getView(),
 												  JAPMessages.getString("errorMixProtocolNotSupported"),
@@ -2348,6 +2369,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 								JAPModel.getInstance().isCascadeConnectionChosenAutomatically()))
 					{
 						canStartService = false;
+						m_proxyAnon.stop();
 						m_proxyAnon = null;
 						JAPDialog.showErrorDialog(getView(),
 												  JAPMessages.getString("errorMixFirstMixSigCheckFailed"),
@@ -2359,6 +2381,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 								JAPModel.getInstance().isCascadeConnectionChosenAutomatically()))
 					{
 						canStartService = false;
+						m_proxyAnon.stop();
 						m_proxyAnon = null;
 						JAPDialog.showErrorDialog(getView(),
 												  JAPMessages.getString("errorMixOtherMixSigCheckFailed"),
@@ -2433,6 +2456,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					else
 					{
 						canStartService = false;
+						m_proxyAnon.stop();
 						m_proxyAnon = null;
 						if (!JAPModel.isSmallDisplay() && ret != ErrorCodes.E_INTERRUPTED)
 						{
@@ -2489,20 +2513,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 				else if ( (m_proxyDirect == null) && (!anonModeSelected))
 				{
-					//if (m_proxyAnon != null)
-					/*{
+					AnonProxy proxyAnon = m_proxyAnon;
+					if (proxyAnon != null)
+					{
 						msgIdConnect = m_View.addStatusMsg(JAPMessages.getString(
-							"setAnonModeSplashDisconnect"),
+											  "setAnonModeSplashDisconnect"),
 							JAPDialog.MESSAGE_TYPE_INFORMATION, false);
-						try
-						{
-							m_proxyAnon.stop();
-						}
-						catch (NullPointerException a_e)
-						{
-							// ignore
-						}
-					}*/
+						proxyAnon.stop();
+						m_View.removeStatusMsg(msgIdConnect);
+					}
 
 					synchronized (m_finishSync)
 					{
@@ -2577,35 +2596,29 @@ public final class JAPController extends Observable implements IProxyListener, O
 			{
 				/* check whether this is job is different to the last one */
 				SetAnonModeAsync lastJob = (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement());
-				if (lastJob.isStartServerJob() == a_anonModeSelected)
+				if (!lastJob.isStartServerJob() && !a_anonModeSelected)
 				{
-					/* it's the same (enabling server / disabling server) as the last job */
+					/* it's the same (disabling server) as the last job */
 					newJob = false;
 				}
 			}
 			if (newJob)
 			{
 				/* it's a new job -> do something */
-				if ( (!a_anonModeSelected && (m_changeAnonModeJobs.size() >= 2)) ||
-					 (m_changeAnonModeJobs.size() >= 3))
+				SetAnonModeAsync previousJob;
+				// interrupt all previous jobs
+				Vector jobs = (Vector) m_changeAnonModeJobs.clone();
+				for (int i = 0; i < jobs.size(); i++)
 				{
-					/* because of enough previous jobs in the queue, we can ignore this job, if we also
-					 * interrupt and remove the previous one
-					 */
-					SetAnonModeAsync previousJob = (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement());
+					previousJob = (SetAnonModeAsync) jobs.elementAt(i);
 					previousJob.interrupt();
-					m_changeAnonModeJobs.removeElement(previousJob);
 				}
+				m_changeAnonModeJobs.removeAllElements();
 
-				else
+
+				//else
 				{
 					/* we have to schedule this job */
-					if (!a_anonModeSelected && (m_changeAnonModeJobs.size() == 1))
-					{
-						/* there is a start-server job currently running -> try to interrupt it */
-						SetAnonModeAsync previousJob = (SetAnonModeAsync)m_changeAnonModeJobs.lastElement();
-						previousJob.interrupt();
-					}
 					SetAnonModeAsync currentJob = null;
 					if (m_changeAnonModeJobs.size() > 0)
 					{
@@ -2622,11 +2635,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 					currentJob.setDaemon(true);
 					currentJob.start();
+
 					m_changeAnonModeJobs.addElement(currentJob);
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-								  "JAPController: setAnonMode: Added a job for changing the anonymity mode to '" +
-								  (new Boolean(a_anonModeSelected)).toString() +
-								  "' to the job queue.");
+								  "Added a job for changing the anonymity mode to '" +
+								  (new Boolean(a_anonModeSelected)).toString() + "' to the job queue.");
 				}
 			}
 		}
@@ -2867,6 +2880,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_Controller.m_InfoServiceUpdater.stop();
 					m_Controller.m_minVersionUpdater.stop();
 					m_Controller.m_javaVersionUpdater.stop();
+					m_Controller.m_MixCascadeUpdater.start(false);
 					// do not show direct connection warning dialog
 					DirectProxy.setAllowUnprotectedConnectionCallback(null);
 

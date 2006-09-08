@@ -603,6 +603,9 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 			notificationThread.setDaemon(true);
 			notificationThread.start();
 
+			LogHolder.log(LogLevel.DEBUG, LogType.NET,
+					  "Connect to MixCascade '" + a_mixCascade.toString() + "'!");
+
 			/* AnonClient successfully started */
 			m_connected = true;
 			return ErrorCodes.E_SUCCESS;

@@ -309,6 +309,65 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		}
 	}
 
+	public int switchCascade(boolean a_bRetryOnError)
+	{
+		//synchronized (SHUTDOWN_SYNC)
+		{
+			synchronized (THREAD_SYNC)
+			{
+				AnonServerDescription cascade = m_currentMixCascade.getNextMixCascade();
+				fireConnecting(cascade);
+				m_Anon.shutdown();
+				while (threadRun.isAlive())
+				{
+					try
+					{
+						threadRun.interrupt();
+						threadRun.join(1000);
+					}
+					catch (InterruptedException e)
+					{
+					}
+				}
+				threadRun = null;
+				boolean bConnectionError = false;
+				int ret = m_Anon.initialize(cascade);
+				if (ret != ErrorCodes.E_SUCCESS)
+				{
+					if (ret == ErrorCodes.E_INTERRUPTED ||
+						(! (a_bRetryOnError && m_currentMixCascade.isCascadeAutoSwitched()) &&
+						 (!a_bRetryOnError || ret == E_SIGNATURE_CHECK_FIRSTMIX_FAILED ||
+						  ret == E_SIGNATURE_CHECK_OTHERMIX_FAILED || ret == E_MIX_PROTOCOL_NOT_SUPPORTED)))
+					{
+						return ret;
+					}
+					else
+					{
+						bConnectionError = true;
+					}
+				}
+				else
+				{
+					m_currentMixCascade.keepCurrentCascade(true);
+				}
+				LogHolder.log(LogLevel.DEBUG, LogType.NET, "AN.ON initialized");
+
+				threadRun = new Thread(this, "JAP - AnonProxy");
+				threadRun.setDaemon(true);
+				threadRun.start();
+
+				THREAD_SYNC.notifyAll();
+
+				if (bConnectionError)
+				{
+					connectionError();
+					return ErrorCodes.E_CONNECT;
+				}
+				return ErrorCodes.E_SUCCESS;
+			}
+		}
+	}
+
 	public int start(boolean a_bRetryOnError)
 	{
 		synchronized (THREAD_SYNC)
@@ -318,7 +377,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				return ErrorCodes.E_SUCCESS;
 			}
 
-			boolean m_bConnectionError = false;
+			boolean bConnectionError = false;
 			m_numChannels = 0;
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Try to initialize AN.ON");
 			if (m_Anon == null)
@@ -350,7 +409,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				}
 				else
 				{
-					m_bConnectionError = true;
+					bConnectionError = true;
 				}
 			}
 			else
@@ -377,7 +436,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			threadRun.setDaemon(true);
 			threadRun.start();
 
-			if (m_bConnectionError)
+			if (bConnectionError)
 			{
 				connectionError();
 				return ErrorCodes.E_CONNECT;
@@ -393,9 +452,9 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		{
 			if (threadRun == null)
 			{
+				disconnected();
 				return;
 			}
-
 			m_Anon.shutdown();
 			if (m_Tor != null)
 			{
@@ -418,10 +477,11 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				{
 				}
 			}
+			/*
 			synchronized (THREAD_SYNC)
 			{
 				THREAD_SYNC.notify();
-			}
+			}*/
 			m_Tor = null;
 			m_Mixminion = null;
 			threadRun = null;

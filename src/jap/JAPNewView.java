@@ -1444,10 +1444,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 	}
 
-	public void connecting(AnonServerDescription a_serverDescription)
-	{
-	}
-
 	public void connectionEstablished(AnonServerDescription a_serverDescription)
 	{
 		if (a_serverDescription != null && a_serverDescription instanceof MixCascade)
@@ -1474,55 +1470,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 	}
 
+	public void connecting(AnonServerDescription a_serverDescription)
+	{
+		showConnecting(false);
+	}
+
 	public void connectionError()
 	{
-		synchronized (m_connectionEstablishedSync)
-		{
-			m_connectionEstablishedSync.notifyAll();
-		}
-
-		Thread updateThread = new Thread()
-		{
-			public void run()
-			{
-				synchronized (m_connectionEstablishedSync)
-				{
-					if (JAPModel.getInstance().isAutomaticallyReconnected())
-					{
-						if (m_Controller.getAnonMode() && !m_Controller.isAnonConnected())
-						{
-							m_bConnectionErrorShown = true;
-							updateValues(true);
-							// wait for auto-reconnect
-							int msgID = addStatusMsg(JAPMessages.getString("setAnonModeSplashConnect"),
-								JAPDialog.MESSAGE_TYPE_INFORMATION, false);
-							setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-							try
-							{
-								m_connectionEstablishedSync.wait();
-							}
-							catch (InterruptedException a_e)
-							{
-							}
-							setCursor(Cursor.getDefaultCursor());
-							removeStatusMsg(msgID);
-							m_bConnectionErrorShown = false;
-							updateValues(false);
-						}
-						else
-						{
-							updateValues(false);
-						}
-					}
-					else
-					{
-						JAPDialog.showErrorDialog(JAPController.getView(),
-												  JAPMessages.getString(MSG_ERROR_DISCONNECTED), LogType.NET);
-					}
-				}
-			}
-		};
-		updateThread.start();
+		showConnecting(true);
 	}
 
 	public void actionPerformed(final ActionEvent event)
@@ -1639,6 +1594,59 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		doIt.start();
 
 	}
+
+	private void showConnecting(final boolean a_bOnError)
+	{
+		synchronized (m_connectionEstablishedSync)
+		{
+			m_connectionEstablishedSync.notifyAll();
+		}
+
+		Thread updateThread = new Thread()
+		{
+			public void run()
+			{
+				synchronized (m_connectionEstablishedSync)
+				{
+					if (!a_bOnError || JAPModel.getInstance().isAutomaticallyReconnected())
+					{
+						if (m_Controller.getAnonMode() && !m_Controller.isAnonConnected())
+						{
+							m_bConnectionErrorShown = true;
+							updateValues(true);
+							// wait for auto-reconnect
+							int msgID = addStatusMsg(JAPMessages.getString("setAnonModeSplashConnect"),
+								JAPDialog.MESSAGE_TYPE_INFORMATION, false);
+							setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+							try
+							{
+								m_connectionEstablishedSync.wait();
+							}
+							catch (InterruptedException a_e)
+							{
+							}
+							setCursor(Cursor.getDefaultCursor());
+							removeStatusMsg(msgID);
+							m_bConnectionErrorShown = false;
+							updateValues(false);
+						}
+						else
+						{
+							updateValues(false);
+						}
+					}
+					else
+					{
+						m_rbAnonOff.setSelected(true);
+						JAPDialog.showErrorDialog(JAPController.getView(),
+												  JAPMessages.getString(MSG_ERROR_DISCONNECTED), LogType.NET);
+					}
+				}
+			}
+		};
+		updateThread.start();
+	}
+
 
 	private void showInstallationAssistant()
 	{
