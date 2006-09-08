@@ -42,20 +42,20 @@ import javax.swing.JPanel;
 /** A panel which display some status messages, one after each other*/
 public class StatusPanel extends JPanel implements Runnable, IStatusLine
 {
-	Dimension m_dimensionPreferredSize;
-	int m_Height;
-	Object oMsgSync;
+	private Dimension m_dimensionPreferredSize;
+	private int m_Height;
+	private Object oMsgSync;
 	private Random m_Random;
 
 	private final static int ms_IconHeight = 15;
 	private final static int ms_IconWidth = 16;
 
-	public Image m_imageError;
-	public Image m_imageInformation;
-	public Image m_imageWarning;
+	private Image m_imageError;
+	private Image m_imageInformation;
+	private Image m_imageWarning;
 
 
-	final class MsgQueueEntry
+	private final class MsgQueueEntry
 	{
 		String m_Msg;
 		Image m_Icon;

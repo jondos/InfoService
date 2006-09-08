@@ -81,7 +81,15 @@ public abstract class AbstractDatabaseUpdater implements Observer
 		}*/
 
 		m_updateInterval = a_updateInterval;
+		init();
+	}
 
+	/**
+	 * May be used to re-initialise the thread after stopping it.
+	 */
+	public final void init()
+	{
+		stop();
 		JAPModel.getInstance().addObserver(this);
 		m_updateThread = new Thread(new Runnable()
 		{
@@ -126,8 +134,6 @@ public abstract class AbstractDatabaseUpdater implements Observer
 							}
 						}
 					}
-
-
 
 					if (!Thread.currentThread().isInterrupted() && !m_interrupted && !isUpdatePaused())
 					{
@@ -200,7 +206,6 @@ public abstract class AbstractDatabaseUpdater implements Observer
 		{
 			m_bUpdating = false;
 		}
-
 	}
 
 	/**
@@ -268,6 +273,12 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	public final void stop()
 	{
 		JAPModel.getInstance().deleteObserver(this);
+		if (m_updateThread == null)
+		{
+			// no initialising has been done until now
+			return;
+		}
+
 		while (m_updateThread.isAlive())
 		{
 			m_updateThread.interrupt();
@@ -394,15 +405,6 @@ public abstract class AbstractDatabaseUpdater implements Observer
 		while (knownDBEntries.hasMoreElements())
 		{
 			AbstractDatabaseEntry currentEntry = (AbstractDatabaseEntry) (knownDBEntries.nextElement());
-			/*
-			if (currentEntry instanceof MixCascade)
-			{
-				System.out.println( ( (MixCascade) currentEntry).getName() + ":" +
-								   toMinutes(System.currentTimeMillis() - currentEntry.getCreationTime()) +
-								   "/" + toMinutes(KEEP_ENTRY_FACTOR * m_updateInterval.getUpdateInterval()) +
-								   ":" + (!currentEntry.isUserDefined()) + ":" +
-								   (!a_newEntries.contains(currentEntry)));
-			}*/
 			if (!currentEntry.isUserDefined() && !a_newEntries.contains(currentEntry) &&
 				(currentEntry.getCreationTime() +  KEEP_ENTRY_FACTOR * m_updateInterval.getUpdateInterval()) <
 				System.currentTimeMillis())
