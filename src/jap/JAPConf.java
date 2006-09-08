@@ -187,26 +187,25 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		{
 			m_moduleSystem.addConfigurationModule(rootNode, new JAPConfUpdate(), UPDATE_TAB);
 		}
+		JAPConfForwardingClient panelForwardingClient = new JAPConfForwardingClient();
+
 		DefaultMutableTreeNode nodeNet = m_moduleSystem.addComponent(rootNode, null, "ngTreeNetwork", null);
-		if (!m_bIsSimpleView)
+		//if (!m_bIsSimpleView)
 		{
 			m_moduleSystem.addComponent(nodeNet, m_pPort, "confListenerTab", PORT_TAB);
 		}
 		m_moduleSystem.addComponent(nodeNet, m_pFirewall, "confProxyTab", PROXY_TAB);
 		//if (!m_bIsSimpleView)
 		{
-			m_moduleSystem.addConfigurationModule(nodeNet, new JAPConfForwardingClient(),
-												  FORWARDING_CLIENT_TAB);
+			m_moduleSystem.addConfigurationModule(nodeNet, panelForwardingClient , FORWARDING_CLIENT_TAB);
 		}
-		DefaultMutableTreeNode nodeAnon = m_moduleSystem.addComponent(rootNode, null, "ngAnonymitaet", null);
-		if (!m_bIsSimpleView)
-		{
-			m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfInfoService(), INFOSERVICE_TAB);
-		}
+
 		m_confServices = new JAPConfServices();
-		m_moduleSystem.addConfigurationModule(nodeAnon, m_confServices, ANON_SERVICES_TAB);
 		if (!m_bIsSimpleView)
 		{
+			DefaultMutableTreeNode nodeAnon = m_moduleSystem.addComponent(rootNode, null, "ngAnonymitaet", null);
+			m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfInfoService(), INFOSERVICE_TAB);
+			m_moduleSystem.addConfigurationModule(nodeAnon, m_confServices, ANON_SERVICES_TAB);
 			m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfForwardingServer(),
 												  FORWARDING_SERVER_TAB);
 			m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfCert(), CERT_TAB);
@@ -218,10 +217,14 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 				m_moduleSystem.addConfigurationModule(debugNode, new JAPConfForwardingState(),
 					FORWARDING_STATE_TAB);
 			}
+			m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeAnon.getPath()));
+		}
+		else
+		{
+			m_moduleSystem.addConfigurationModule(rootNode, m_confServices, ANON_SERVICES_TAB);
+			m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeNet.getPath()));
 		}
 
-		m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeNet.getPath()));
-		m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeAnon.getPath()));
 		m_moduleSystem.getConfigurationTree().setSelectionRow(0);
 		/* after finishing building the tree, it is important to update the tree size */
 		m_moduleSystem.getConfigurationTree().setMinimumSize(m_moduleSystem.getConfigurationTree().
