@@ -3134,7 +3134,8 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			return false;
 		}
 
-		if (m_nextContentPane != null && (getDefaultButtonOperation() & a_opNext) > 0)
+		if (m_nextContentPane != null && (getDefaultButtonOperation() & a_opNext) > 0 &&
+			m_nextContentPane.isMoveForwardAllowed())
 		{
 
 			return moveToNextContentPane();
