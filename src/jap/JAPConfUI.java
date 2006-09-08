@@ -116,7 +116,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 
 		/* clear the whole root panel */
 		panelRoot.removeAll();
-		//boolean bSimpleView = (JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED);
+		boolean bSimpleView = (JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED);
 		GridBagLayout gbl1 = new GridBagLayout();
 		GridBagConstraints c1 = new GridBagConstraints();
 		panelRoot.setLayout(gbl1);
@@ -145,8 +145,11 @@ final class JAPConfUI extends AbstractJAPConfModule
 			c1.gridy++;
 		}
 
-		panelRoot.add(createAfterShutdownPanel(), c1);
-
+		JPanel pShutdown = createAfterShutdownPanel();
+		if (!bSimpleView)
+		{
+			panelRoot.add(pShutdown, c1);
+		}
 		c1.gridy++;
 		c1.anchor = GridBagConstraints.NORTHWEST;
 		c1.fill = GridBagConstraints.VERTICAL;
