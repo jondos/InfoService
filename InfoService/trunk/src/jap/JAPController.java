@@ -2604,9 +2604,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 			if (newJob)
 			{
-				/* it's a new job -> do something */
-				SetAnonModeAsync previousJob;
 				// interrupt all previous jobs
+				SetAnonModeAsync previousJob;
 				Vector jobs = (Vector) m_changeAnonModeJobs.clone();
 				for (int i = 0; i < jobs.size(); i++)
 				{

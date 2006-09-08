@@ -107,6 +107,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	private JRadioButton m_cbDoNotRestrictAutoChoose;
 	private JSlider m_sliderDummyTrafficIntervall;
 	private JAPController m_Controller;
+	private JComboBox[] m_comboServices;
 
 	private JPanel m_panelRestrictedCascades;
 
@@ -167,6 +168,9 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_cbRestrictAutoChoosePay.setEnabled(m_cbAutoChooseCascades.isSelected());
 		m_panelRestrictedCascades.setEnabled(m_panelRestrictedCascades.isEnabled() &&
 											 m_cbAutoChooseCascades.isSelected());
+
+		m_comboServices[2].setEnabled(JAPModel.getInstance().isMixMinionActivated());
+		m_comboServices[3].setEnabled(JAPModel.getInstance().isTorActivated());
 	}
 
 //ok pressed
@@ -294,6 +298,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		constrServices.gridy = 0;
 		constrServices.anchor = GridBagConstraints.WEST;
 		constrServices.insets = new Insets(5, 30, 5, 5); // top,left,bottom,right
+		m_comboServices = new JComboBox[services.length];
 		for (int i = 0; i < services.length; i++)
 		{
 			constrServices.gridx = 0;
@@ -302,7 +307,8 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 			constrServices.gridx = 1;
 
 			constrServices.fill = GridBagConstraints.HORIZONTAL;
-			panelServices.add(new JComboBox(services[i][1]), constrServices);
+			m_comboServices[i] = new JComboBox(services[i][1]);
+			panelServices.add(m_comboServices[i], constrServices);
 			constrServices.gridy++;
 		}
 		constrServices.gridx = 2;
@@ -404,6 +410,9 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 
 	protected void onRootPanelShown()
 	{
+		m_comboServices[2].setEnabled(JAPModel.getInstance().isMixMinionActivated());
+		m_comboServices[3].setEnabled(JAPModel.getInstance().isTorActivated());
+
 		//Register help context
 		JAPHelp.getInstance().getContextObj().setContext("services_general");
 	}

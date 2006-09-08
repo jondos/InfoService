@@ -183,7 +183,10 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		{
 			m_moduleSystem.addConfigurationModule(rootNode, new AccountSettingsPanel(), PAYMENT_TAB);
 		}
-		m_moduleSystem.addConfigurationModule(rootNode, new JAPConfUpdate(), UPDATE_TAB);
+		if (!m_bIsSimpleView)
+		{
+			m_moduleSystem.addConfigurationModule(rootNode, new JAPConfUpdate(), UPDATE_TAB);
+		}
 		DefaultMutableTreeNode nodeNet = m_moduleSystem.addComponent(rootNode, null, "ngTreeNetwork", null);
 		if (!m_bIsSimpleView)
 		{
