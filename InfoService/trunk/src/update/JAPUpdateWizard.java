@@ -56,7 +56,7 @@ import logging.LogLevel;
 import logging.LogType;
 import anon.util.ClassUtil;
 import jap.AbstractJAPMainView;
-import javax.swing.RootPaneContainer;
+import gui.GUIUtils;
 public final class JAPUpdateWizard extends BasicWizard implements Runnable
 {
 	public JAPWelcomeWizardPage welcomePage;
@@ -337,16 +337,9 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 
 	public void wizardCompleted()
 	{
-		try
-		{
-			updateAborted = true;
-			// updateThread.join();
-			//updateListener.progress(0,0,20);
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
+		updateAborted = true;
+		// updateThread.join();
+		//updateListener.progress(0,0,20);
 	}
 
 //User's clicked next and the path to the chosen Jar-File is being set
@@ -372,7 +365,7 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, e);
 		}
 	}
 
@@ -714,6 +707,11 @@ private boolean checkSignature()
 	{
 		try
 		{
+			if (m_fileAktJapJar != null && m_fileAktJapJar.equals(CLASSFILE))
+			{
+				// If the parent jar is overwritten, no images should be loaded any more!
+				GUIUtils.setLoadImages(false);
+			}
 			downloadPage.m_labelIconStep5.setIcon(downloadPage.arrow);
 			FileInputStream fis = new FileInputStream(m_fileNewJapJar);
 			FileOutputStream fos = new FileOutputStream(m_fileAktJapJar);
@@ -734,6 +732,7 @@ private boolean checkSignature()
 		}
 		catch (Exception e)
 		{
+			GUIUtils.setLoadImages(true);
 			return -1;
 		}
 	}

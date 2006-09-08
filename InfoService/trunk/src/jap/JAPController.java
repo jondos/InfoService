@@ -2847,6 +2847,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 							JAPModel.getInstance().getConfigFile()), LogType.MISC);
 					}
 					JAPDialog.setConsoleOnly(true); // do not show any dialogs now
+					if (!bShowConfigSaveErrorMsg)
+					{
+						GUIUtils.setLoadImages(false);
+					}
 					m_Controller.m_bShutdown = true;
 					// disallow InfoService traffic
 					JAPModel.getInstance().setInfoServiceDisabled(true);

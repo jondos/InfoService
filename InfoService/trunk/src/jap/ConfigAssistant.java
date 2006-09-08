@@ -59,6 +59,9 @@ import gui.dialog.SimpleWizardContentPane;
 import platform.AbstractOS;
 import logging.LogType;
 import java.net.*;
+import javax.swing.JComboBox;
+import gui.LanguageMapper;
+import java.util.Locale;
 
 /**
  * This is some kind of isntallation and configuration assistant that helps the unexperienced
@@ -125,6 +128,9 @@ public class ConfigAssistant extends JAPDialog
 		"_selectView";
 	private static final String MSG_SELECT_VIEW_RESTART = ConfigAssistant.class.getName() +
 		"_selectViewRestart";
+	private static final String MSG_SET_NEW_LANGUAGE = ConfigAssistant.class.getName() +
+		"_setNewLanguage";
+
 
 
 	private static final String IMG_ARROW = "arrow46.gif";
@@ -164,15 +170,71 @@ public class ConfigAssistant extends JAPDialog
 		DialogContentPane.Layout layout = new DialogContentPane.Layout(wizardIcon);
 		JLabel lblImage;
 		Border border;
+		JComponent contentPane;
 		border = BorderFactory.createRaisedBevelBorder();
 		//border = BorderFactory.createLoweredBevelBorder();
 
 		DialogContentPane paneWelcome = new SimpleWizardContentPane(
-				  this, JAPMessages.getString(MSG_WELCOME), layout, null);
+			  this, JAPMessages.getString(MSG_WELCOME), layout, null);
+		contentPane = paneWelcome.getContentPane();
+
+		tempLabel = new JLabel(JAPMessages.getString("settingsLanguage"));
+		constraints = new GridBagConstraints();
+		contentPane.setLayout(new GridBagLayout());
+		constraints.gridx = 0;
+		constraints.gridy = 0;
+		constraints.fill = GridBagConstraints.HORIZONTAL;
+		constraints.weightx = 0;
+		constraints.anchor = GridBagConstraints.WEST;
+		constraints.insets = new Insets(0, 5, 0, 0);
+		contentPane.add(tempLabel, constraints);
+		final JComboBox comboLang = new JComboBox();
+		comboLang.addItem(new LanguageMapper("en", new Locale("en", "")));
+		comboLang.addItem(new LanguageMapper("de", new Locale("de", "")));
+		comboLang.addItem(new LanguageMapper("fr", new Locale("fr", "")));
+		comboLang.addItem(new LanguageMapper("pt", new Locale("pt", "")));
+		comboLang.setSelectedItem(new LanguageMapper(JAPController.getLocale().getLanguage()));
+		constraints.gridx++;
+		constraints.insets = new Insets(0, 10, 0, 0);
+		contentPane.add(comboLang, constraints);
+		constraints.gridx++;
+		constraints.weightx = 1;
+		contentPane.add(new JLabel(), constraints);
+
+		final DialogContentPane paneSetLang = new SimpleWizardContentPane(
+			  this, JAPMessages.getString(MSG_SET_NEW_LANGUAGE),
+			  layout, new DialogContentPane.Options(paneWelcome))
+		{
+			public CheckError[] checkUpdate()
+			{
+
+
+				return super.checkUpdate();
+			}
+
+			public boolean isSkippedAsNextContentPane()
+			{
+				return ((LanguageMapper)comboLang.getSelectedItem()).getLocale().equals(
+						JAPController.getLocale());
+			}
+
+			public boolean isSkippedAsPreviousContentPane()
+			{
+				return true;
+			}
+		};
+
+
 
 		DialogContentPane paneHelp = new SimpleWizardContentPane(
 			  this, JAPMessages.getString(MSG_HELP),
-			  layout, new DialogContentPane.Options(paneWelcome));
+			  layout, new DialogContentPane.Options(paneSetLang))
+		{
+			public boolean isMoveForwardAllowed()
+			{
+				return paneSetLang.isSkippedAsNextContentPane();
+			}
+		};
 		paneHelp.getContentPane().setLayout(new GridBagLayout());
 		constraints = new GridBagConstraints();
 		constraints.gridx = 0;
@@ -195,7 +257,7 @@ public class ConfigAssistant extends JAPDialog
 				return super.checkUpdate();
 			}
 		};
-		JComponent contentPane = paneBrowserConf.getContentPane();
+		contentPane = paneBrowserConf.getContentPane();
 		contentPane.setLayout(new GridBagLayout());
 		constraints = new GridBagConstraints();
 		constraints.gridx = 1;
@@ -618,7 +680,6 @@ public class ConfigAssistant extends JAPDialog
 					if (m_radioSimpleView.isSelected() &&
 						JAPModel.getDefaultView() == JAPConstants.VIEW_NORMAL)
 					{
-
 						JAPModel.getInstance().setDefaultView(JAPConstants.VIEW_SIMPLIFIED);
 						JAPController.getInstance().goodBye(false);
 					}

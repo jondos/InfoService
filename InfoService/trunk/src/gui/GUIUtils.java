@@ -89,6 +89,7 @@ public final class GUIUtils
 	private static final String MSG_COPY_FROM_CLIP = GUIUtils.class.getName() + "_copyFromClip";
 	private static final String MSG_SAVED_TO_CLIP = GUIUtils.class.getName() + "_savedToClip";
 
+	private static boolean ms_loadImages = true;
 
 	private static final IIconResizer DEFAULT_RESIZER = new IIconResizer()
 	{
@@ -127,6 +128,23 @@ public final class GUIUtils
 	public static final IIconResizer getIconResizer()
 	{
 		return RESIZER;
+	}
+
+	/**
+	 * Stops loading of images, e.g. because of an update of the parent JAR file.
+	 */
+	public static void setLoadImages(boolean a_bLoadImages)
+	{
+		if (ms_loadImages && !a_bLoadImages)
+		{
+			LogHolder.log(LogLevel.NOTICE, LogType.GUI, "Loading of images has been stopped!");
+		}
+		ms_loadImages = a_bLoadImages;
+	}
+
+	public static boolean isLoadingImagesStopped()
+	{
+		return !ms_loadImages;
 	}
 
 	public static final void setIconResizer(IIconResizer a_resizer)
@@ -204,7 +222,7 @@ public final class GUIUtils
 		{
 			img = new ImageIcon((Image)ms_iconCache.get(a_strRelativeImagePath));
 		}
-		else
+		else if (ms_loadImages)
 		{
 			// load image from the local classpath or the local directory
 			img = loadImageIconInternal(ResourceLoader.getResourceURL(a_strRelativeImagePath));
@@ -247,7 +265,11 @@ public final class GUIUtils
 							  "Could not load requested image '" + a_strRelativeImagePath + "'!");
 			}
 		}
-		if (a_bScale)
+		else
+		{
+			img = null;
+		}
+		if (a_bScale && ms_loadImages)
 		{
 			return GUIUtils.createScaledImageIcon(img, ms_resizer);
 		}

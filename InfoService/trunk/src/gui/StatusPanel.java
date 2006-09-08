@@ -50,6 +50,10 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 	private final static int ms_IconHeight = 15;
 	private final static int ms_IconWidth = 16;
 
+	public Image m_imageError;
+	public Image m_imageInformation;
+	public Image m_imageWarning;
+
 
 	final class MsgQueueEntry
 	{
@@ -69,6 +73,10 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 
 	public StatusPanel()
 	{
+		m_imageInformation = GUIUtils.loadImageIcon(JAPConstants.IMAGE_INFORMATION, true, false).getImage();
+		m_imageError = GUIUtils.loadImageIcon(JAPConstants.IMAGE_ERROR, true, false).getImage();
+		m_imageWarning = GUIUtils.loadImageIcon(JAPConstants.IMAGE_WARNING, true, false).getImage();
+
 		m_Random = new Random();
 		oMsgSync = new Object();
 		Font font = new JLabel("Status").getFont();
@@ -121,15 +129,15 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 			}
 			if (type == JOptionPane.WARNING_MESSAGE)
 			{
-				entry.m_Icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_WARNING, true, false).getImage();
+				entry.m_Icon = m_imageWarning;
 			}
 			else if (type == JOptionPane.INFORMATION_MESSAGE)
 			{
-				entry.m_Icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_INFORMATION, true, false).getImage();
+				entry.m_Icon = m_imageInformation;
 			}
 			else if (type == JOptionPane.ERROR_MESSAGE)
 			{
-				entry.m_Icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_ERROR, true, false).getImage();
+				entry.m_Icon = m_imageError;
 			}
 			if (m_lastMsg == null)
 			{
