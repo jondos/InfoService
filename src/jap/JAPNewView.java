@@ -458,7 +458,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.anchor = GridBagConstraints.WEST;
 		c1.insets = new Insets(5, 5, 0, 0);
 		//c1.fill = GridBagConstraints.HORIZONTAL;
-		m_lblPrice = new JLabel();
+		m_lblPrice = new JLabel(JAPMessages.getString(MSG_NO_COSTS));
 		m_lblPrice.addMouseListener(new MouseAdapter()
 		{
 			public void mouseClicked(MouseEvent a_event)
@@ -936,6 +936,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			fetchMixCascadesAsync(false);
 		}
 
+		updateFonts();
 		updateValues(true);
 		setOptimalSize();
 		GUIUtils.centerOnScreen(this);
@@ -1370,13 +1371,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				{
 					//JAPModel.FontResize resize = (JAPModel.FontResize) a_message;
 					SwingUtilities.updateComponentTreeUI(view);
-
 					SwingUtilities.updateComponentTreeUI(DEFAULT_LABEL);
-					Font labelFont = DEFAULT_LABEL.getFont();
-					m_labelVersion.setFont(new Font(labelFont.getName(), labelFont.getStyle(),
-						( (int) (labelFont.getSize() * 0.8))));
-					m_labelUpdate.setFont(new Font(labelFont.getName(), labelFont.getStyle(),
-						( (int) (labelFont.getSize() * 0.8))));
+					updateFonts();
 					setOptimalSize();
 				}
 			};
@@ -2049,6 +2045,15 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		Thread t = new Thread(doFetchMixCascades, "DoFetchMixCascades");
 		t.setDaemon(true);
 		t.start();
+	}
+
+	private void updateFonts()
+	{
+		Font labelFont = DEFAULT_LABEL.getFont();
+		m_labelVersion.setFont(new Font(labelFont.getName(), labelFont.getStyle(),
+										( (int) (labelFont.getSize() * 0.8))));
+		m_labelUpdate.setFont(new Font(labelFont.getName(), labelFont.getStyle(),
+									   ( (int) (labelFont.getSize() * 0.8))));
 	}
 
 	private static boolean equals(JAPMixCascadeComboBox a_one, Hashtable a_two)
