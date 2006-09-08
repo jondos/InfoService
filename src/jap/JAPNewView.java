@@ -1800,7 +1800,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			m_cbAnonymityOn.setSelected(m_Controller.getAnonMode());
 			StatusInfo currentStatus = currentMixCascade.getCurrentStatus();
 			int anonLevel = currentStatus.getAnonLevel();
-			m_labelAnonMeter.setIcon(getMeterImage(anonLevel));
+			if (!GUIUtils.isLoadingImagesStopped())
+			{
+				/** @todo check if this helps against update freeze */
+				m_labelAnonMeter.setIcon(getMeterImage(anonLevel));
+			}
 			Color color = Color.red;
 			if (anonLevel > 7)
 			{
@@ -1890,7 +1894,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				if (currentRegistrationState ==
 					JAPRoutingRegistrationStatusObserver.STATE_NO_REGISTRATION)
 				{
-					icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_WARNING, true);
+					if (!GUIUtils.isLoadingImagesStopped())
+					{
+						/** @todo check if this helps against update freeze */
+						icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_WARNING, true);
+					}
 					if (currentErrorCode ==
 						JAPRoutingRegistrationStatusObserver.ERROR_NO_KNOWN_PRIMARY_INFOSERVICES)
 					{
@@ -1917,8 +1925,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					}
 				}
 			}
-			m_labelForwardingError.setIcon(icon);
-			m_labelForwardingErrorSmall.setIcon(icon);
+			if (!GUIUtils.isLoadingImagesStopped())
+			{
+				/** @todo check if this helps against update freeze */
+				m_labelForwardingError.setIcon(icon);
+				m_labelForwardingErrorSmall.setIcon(icon);
+			}
 			m_labelForwardingError.setToolTipText(strError);
 			m_labelForwardingErrorSmall.setToolTipText(strError);
 
