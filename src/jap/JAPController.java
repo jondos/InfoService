@@ -151,6 +151,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private static final String XML_ALLOW_NON_ANONYMOUS_CONNECTION = "AllowDirectConnection";
 	private static final String XML_ALLOW_NON_ANONYMOUS_UPDATE = "AllowDirectUpdate";
 	private static final String XML_ATTR_AUTO_CHOOSE_CASCADES = "AutoChooseCascades";
+	private static final String XML_ATTR_SHOW_CONFIG_ASSISTANT = "showConfigAssistant";
 
 	private final Object PROXY_SYNC = new Object();
 
@@ -164,7 +165,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	private boolean m_bShutdown = false;
 
-	private boolean m_bFirstStartOfJAP = false;
+	private boolean m_bShowConfigAssistant = false;
 
 	/**
 	 * Stores the active MixCascade.
@@ -627,7 +628,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 												 JAPConstants.XMLCONFFN);
 
 			/* As this is the first JAp start, show the config assistant */
-			m_bFirstStartOfJAP = true;
+			m_bShowConfigAssistant = true;
 		}
 		if (a_strJapConfFile != null)
 		{
@@ -687,7 +688,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 				JAPModel.getInstance().setReminderForJavaUpdate(
 								XMLUtil.parseAttribute(root, JAPModel.XML_REMIND_JAVA_UPDATE,
 					JAPConstants.REMIND_JAVA_UPDATE));
-
+				if (!m_bShowConfigAssistant)
+				{
+					// show the config assistant only if JAP forced this at the last start
+					m_bShowConfigAssistant =
+						XMLUtil.parseAttribute(root, XML_ATTR_SHOW_CONFIG_ASSISTANT, false);
+				}
 				JAPModel.getInstance().setChooseCascadeConnectionAutomatically(
 								XMLUtil.parseAttribute(root, XML_ATTR_AUTO_CHOOSE_CASCADES, true));
 				JAPModel.getInstance().denyNonAnonymousSurfing(
@@ -1683,7 +1689,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 								 JAPModel.getInstance().isCascadeConnectionChosenAutomatically());
 			XMLUtil.setAttribute(e, JAPModel.XML_DENY_NON_ANONYMOUS_SURFING,
 								 JAPModel.getInstance().isNonAnonymousSurfingDenied());
-
+			XMLUtil.setAttribute(e, XML_ATTR_SHOW_CONFIG_ASSISTANT, m_bShowConfigAssistant);
 			Element autoSwitch = doc.createElement(AutoSwitchedMixCascade.XML_ELEMENT_CONTAINER_NAME);
 			XMLUtil.setAttribute(autoSwitch, JAPModel.XML_RESTRICT_CASCADE_AUTO_CHANGE,
 								 JAPModel.getInstance().getAutomaticCascadeChangeRestriction());
@@ -2390,7 +2396,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							adapter.connectionEstablished(proxyAnon.getMixCascade());
 
 							if (!mbActCntMessageNotRemind && !JAPModel.isSmallDisplay() &&
-								!m_bFirstStartOfJAP)
+								!m_bShowConfigAssistant)
 							{
 								SwingUtilities.invokeLater(new Runnable()
 								{
@@ -2531,11 +2537,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 */
 	public boolean isConfigAssistantShown()
 	{
-		return m_bFirstStartOfJAP;
+		return m_bShowConfigAssistant;
 	}
 	public void setConfigAssistantShown()
 	{
-		m_bFirstStartOfJAP = false;
+		m_bShowConfigAssistant = false;
 	}
 
 
