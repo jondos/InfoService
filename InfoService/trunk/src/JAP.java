@@ -85,7 +85,14 @@ public class JAP
 		m_temp = argv;
 		if (argv != null)
 		{
-			m_arstrCmdnLnArgs = new Hashtable(argv.length);
+			if (argv.length > 0)
+			{
+				m_arstrCmdnLnArgs = new Hashtable(argv.length);
+			}
+			else
+			{
+				m_arstrCmdnLnArgs = new Hashtable();
+			}
 			for (int i = 0; i < argv.length; i++)
 			{
 				m_arstrCmdnLnArgs.put(argv[i], argv[i]);
