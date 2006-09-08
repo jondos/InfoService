@@ -37,6 +37,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentAdapter;
 import java.net.URL;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -175,7 +177,7 @@ public class ConfigAssistant extends JAPDialog
 		//border = BorderFactory.createLoweredBevelBorder();
 
 		DialogContentPane paneWelcome = new SimpleWizardContentPane(
-			  this, JAPMessages.getString(MSG_WELCOME), layout, null);
+			  this, JAPMessages.getString(MSG_WELCOME) + "<br>", layout, null);
 		contentPane = paneWelcome.getContentPane();
 
 		tempLabel = new JLabel(JAPMessages.getString("settingsLanguage"));
@@ -207,7 +209,11 @@ public class ConfigAssistant extends JAPDialog
 		{
 			public CheckError[] checkUpdate()
 			{
-
+				JAPMessages.init(((LanguageMapper)comboLang.getSelectedItem()).getLocale(),
+								 JAPConstants.MESSAGESFN);
+				getButtonCancel().setText(JAPMessages.getString(DialogContentPane.MSG_CANCEL));
+				getButtonNo().setText(JAPMessages.getString(DialogContentPane.MSG_PREVIOUS));
+				setText(JAPMessages.getString(MSG_SET_NEW_LANGUAGE));
 
 				return super.checkUpdate();
 			}
@@ -223,7 +229,14 @@ public class ConfigAssistant extends JAPDialog
 				return true;
 			}
 		};
-
+		paneSetLang.addComponentListener(new ComponentAdapter()
+		{
+			public void componentShown(ComponentEvent a_event)
+			{
+				// reset local now after the finish button has been updated
+				JAPMessages.init(JAPController.getLocale(), JAPConstants.MESSAGESFN);
+			}
+		});
 
 
 		DialogContentPane paneHelp = new SimpleWizardContentPane(
@@ -674,20 +687,28 @@ public class ConfigAssistant extends JAPDialog
 			}
 			public void windowClosed(WindowEvent a_event)
 			{
-				JAPController.getInstance().setConfigAssistantShown();
-				if (paneFinish.getButtonValue() == DialogContentPane.RETURN_VALUE_OK)
+				if (paneSetLang.getButtonValue() == DialogContentPane.RETURN_VALUE_OK)
 				{
-					if (m_radioSimpleView.isSelected() &&
-						JAPModel.getDefaultView() == JAPConstants.VIEW_NORMAL)
+					JAPController.setLocale(((LanguageMapper)comboLang.getSelectedItem()).getLocale());
+					JAPController.getInstance().goodBye(false);
+				}
+				else
+				{
+					JAPController.getInstance().setConfigAssistantShown();
+					if (paneFinish.getButtonValue() == DialogContentPane.RETURN_VALUE_OK)
 					{
-						JAPModel.getInstance().setDefaultView(JAPConstants.VIEW_SIMPLIFIED);
-						JAPController.getInstance().goodBye(false);
-					}
-					else if (m_radioAdvancedView.isSelected() &&
-							 JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED)
-					{
-						JAPModel.getInstance().setDefaultView(JAPConstants.VIEW_NORMAL);
-						JAPController.getInstance().goodBye(false);
+						if (m_radioSimpleView.isSelected() &&
+							JAPModel.getDefaultView() == JAPConstants.VIEW_NORMAL)
+						{
+							JAPModel.getInstance().setDefaultView(JAPConstants.VIEW_SIMPLIFIED);
+							JAPController.getInstance().goodBye(false);
+						}
+						else if (m_radioAdvancedView.isSelected() &&
+								 JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED)
+						{
+							JAPModel.getInstance().setDefaultView(JAPConstants.VIEW_NORMAL);
+							JAPController.getInstance().goodBye(false);
+						}
 					}
 				}
 			}
