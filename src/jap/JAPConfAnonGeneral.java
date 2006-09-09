@@ -87,6 +87,9 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	private static final String MSG_SERVICE_EMAIL = JAPConfAnonGeneral.class.getName() + "_serviceEMail";
 	private static final String MSG_SERVICE_SOCKS = JAPConfAnonGeneral.class.getName() + "_serviceSocks";
 	private static final String MSG_PASSIVE_FTP = JAPConfAnonGeneral.class.getName() + "_passiveFTP";
+	private static final String MSG_TOOLTIP_SERVICE_DEACTIVATED = JAPConfAnonGeneral.class.getName() +
+		"_tooltipServiceDeactivated";
+
 
 
 
@@ -412,6 +415,19 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	{
 		m_comboServices[2].setEnabled(JAPModel.getInstance().isMixMinionActivated());
 		m_comboServices[3].setEnabled(JAPModel.getInstance().isTorActivated());
+		for (int i = 0; i < m_comboServices.length; i++)
+		{
+			if (m_comboServices[i].isEnabled())
+			{
+				m_comboServices[i].setToolTipText(null);
+			}
+			else
+			{
+				m_comboServices[i].setToolTipText(JAPMessages.getString(MSG_TOOLTIP_SERVICE_DEACTIVATED));
+			}
+
+		}
+
 
 		//Register help context
 		JAPHelp.getInstance().getContextObj().setContext("services_general");

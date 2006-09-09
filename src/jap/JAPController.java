@@ -415,9 +415,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 			Object[] args =
 				{
 				new Integer(JAPModel.getHttpListenerPortNumber())};
-			String msg = MessageFormat.format(JAPMessages.getString("errorListenerPort"), args);
 			// output error message
-			JAPDialog.showErrorDialog(getView(), msg, LogType.NET);
+			JAPDialog.showErrorDialog(
+				 getView(), JAPMessages.getString("errorListenerPort", args) +
+				 "<br><br>" +
+			 JAPMessages.getString(JAPConf.MSG_READ_PANEL_HELP, new Object[]{
+								   JAPMessages.getString("confButton"),
+								   JAPMessages.getString("confListenerTab")}), LogType.NET,
+			 new JAPDialog.LinkedHelpContext("portlistener"));
 			m_Controller.status1 = JAPMessages.getString("statusCannotStartListener");
 			m_View.disableSetAnonMode();
 			notifyJAPObservers();
@@ -2347,9 +2352,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 						Object[] args =
 							{
 							new Integer(JAPModel.getHttpListenerPortNumber())};
-						String msg = MessageFormat.format(JAPMessages.getString("errorListenerPort"),
-							args);
-						JAPDialog.showErrorDialog(getView(), msg, LogType.NET);
+						JAPDialog.showErrorDialog(
+							getView(), JAPMessages.getString("errorListenerPort", args) +
+							"<br><br>" +
+							JAPMessages.getString(JAPConf.MSG_READ_PANEL_HELP, new Object[]
+												  {
+												  JAPMessages.getString("confButton"),
+												  JAPMessages.getString("confListenerTab")})
+							, LogType.NET, new JAPDialog.LinkedHelpContext("portlistener"));
 						JAPController.m_View.disableSetAnonMode();
 					}
 					else if (ret == AnonProxy.E_MIX_PROTOCOL_NOT_SUPPORTED &&
