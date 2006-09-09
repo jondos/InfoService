@@ -95,7 +95,6 @@ import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
 import anon.crypto.SignatureVerifier;
-import gui.JAPHtmlMultiLineLabel;
 import gui.JAPMultilineLabel;
 import anon.infoservice.ServiceSoftware;
 import anon.crypto.AbstractX509AlternativeName;

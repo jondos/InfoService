@@ -184,8 +184,15 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 				if (!JAPModel.getInstance().isUpdateViaDirectConnectionAllowed() &&
 					!JAPController.getInstance().isAnonConnected())
 				{
-					downloadPage.showInformationDialog(JAPMessages.getString("updateInformationMsgStep2")
-						+ "<br>" +  JAPMessages.getString("updateInformationMsgStep2_noDirectConn"));
+					int answer =
+						JAPDialog.showConfirmDialog(downloadPage,
+						JAPMessages.getString("updateInformationMsgStep2")
+						+ JAPMessages.getString("updateInformationMsgStep2_noDirectConn"),
+						JAPDialog.OPTION_TYPE_YES_NO, JAPDialog.MESSAGE_TYPE_ERROR);
+					if (answer == JAPDialog.RETURN_VALUE_YES)
+					{
+						JAPModel.getInstance().allowUpdateViaDirectConnection(true);
+					}
 				}
 				else
 				{
