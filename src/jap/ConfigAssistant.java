@@ -177,10 +177,10 @@ public class ConfigAssistant extends JAPDialog
 		//border = BorderFactory.createLoweredBevelBorder();
 
 		DialogContentPane paneWelcome = new SimpleWizardContentPane(
-			  this, JAPMessages.getString(MSG_WELCOME) + "<br>", layout, null);
+			  this, JAPMessages.getString(MSG_WELCOME), layout, null);
 		contentPane = paneWelcome.getContentPane();
 
-		tempLabel = new JLabel(JAPMessages.getString("settingsLanguage"));
+
 		constraints = new GridBagConstraints();
 		contentPane.setLayout(new GridBagLayout());
 		constraints.gridx = 0;
@@ -189,6 +189,11 @@ public class ConfigAssistant extends JAPDialog
 		constraints.weightx = 0;
 		constraints.anchor = GridBagConstraints.WEST;
 		constraints.insets = new Insets(0, 5, 0, 0);
+		tempLabel = new JLabel("line");
+		tempLabel.setForeground(contentPane.getBackground());
+		contentPane.add(tempLabel, constraints);
+		constraints.gridy++;
+		tempLabel = new JLabel(JAPMessages.getString("settingsLanguage"));
 		contentPane.add(tempLabel, constraints);
 		final JComboBox comboLang = new JComboBox();
 		comboLang.addItem(new LanguageMapper("en", new Locale("en", "")));

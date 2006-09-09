@@ -89,6 +89,8 @@ public final class GUIUtils
 	private static final String MSG_COPY_FROM_CLIP = GUIUtils.class.getName() + "_copyFromClip";
 	private static final String MSG_SAVED_TO_CLIP = GUIUtils.class.getName() + "_savedToClip";
 
+	private static final int MAXIMUM_TEXT_LENGTH = 60;
+
 	private static boolean ms_loadImages = true;
 
 	private static final IIconResizer DEFAULT_RESIZER = new IIconResizer()
@@ -631,6 +633,38 @@ public final class GUIUtils
 
 		return new IconScaler(a_icon, a_resizer.getResizeFactor());
 	}
+
+	/**
+	 * Shortens a text received from the IS or in a certificate so that it is not to long to display.
+	 * @param a_strOriginal String
+	 * @param a_maximumLength the maximum length that is displayed
+	 * @return the stripped text
+	 */
+	public static String trim(String a_strOriginal, int a_maximumLength)
+	{
+		if (a_strOriginal == null || a_maximumLength < 4)
+		{
+			return null;
+		}
+		// remove all html TAGS
+		a_strOriginal = JAPHtmlMultiLineLabel.removeTagsAndNewLines(a_strOriginal);
+		if (a_strOriginal.length() > a_maximumLength)
+		{
+			a_strOriginal = a_strOriginal.substring(0, a_maximumLength - 2) + "...";
+		}
+		return a_strOriginal;
+	}
+
+	/**
+	 * Shortens a text received from the IS or in a certificate so that it is not to long to display.
+	 * @param a_strOriginal String
+	 * @return the stripped text
+	 */
+	public static String trim(String a_strOriginal)
+	{
+		return trim(a_strOriginal, MAXIMUM_TEXT_LENGTH);
+	}
+
 
 	private static String getTextFromClipboard(Component a_requestingComponent, boolean a_bUseTextArea)
 	{
