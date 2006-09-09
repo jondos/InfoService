@@ -661,7 +661,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 				if (value == null)
 				{
-					m_listMixCascade.setSelectedIndex(0);
+					int index = m_listMixCascade.getFirstVisibleIndex();
+					if (index >= 0)
+					{
+						m_listMixCascade.setSelectedIndex(index);
+					}
 				}
 				else
 				{
