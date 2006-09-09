@@ -1319,7 +1319,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					 */
 					Enumeration newEntries = Database.getInstance(NewCascadeIDEntry.class).
 						getEntrySnapshotAsEnumeration();
-					boolean bExists = false;
 					NewCascadeIDEntry currentEntry;
 					while (newEntries.hasMoreElements())
 					{
@@ -1328,7 +1327,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 											  currentEntry.getCascadeId()) != null &&
 							!currentEntry.getCascadeId().equals(cascade.getId()))
 						{
-							bExists = true;
 							break;
 						}
 					}
@@ -1386,31 +1384,36 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				return;
 			}
 			if ( (message.getMessageCode() == DatabaseMessage.ENTRY_ADDED ||
-				  message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED) &&
-				JAPModel.getInstance().isReminderForJavaUpdateActivated())
+				  message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED))
 			{
 				final JavaVersionDBEntry entry = (JavaVersionDBEntry) message.getMessageData();
-				if (JavaVersionDBEntry.isJavaTooOld(entry) &&
-					!JAPController.getInstance().isConfigAssistantShown())
+				if (JavaVersionDBEntry.isJavaTooOld(entry))
 				{
-					// do it as thread as otherwise this would blocks the database
-					new Thread()
+					m_labelUpdate.setVisible(true);
+
+					if (JAPModel.getInstance().isReminderForJavaUpdateActivated() &&
+						!JAPController.getInstance().isConfigAssistantShown())
 					{
-						public void run()
+						// do it as thread as otherwise this would blocks the database
+						new Thread()
 						{
-							JAPDialog.LinkedCheckBox checkbox = new JAPDialog.LinkedCheckBox(false);
-							if (JAPDialog.showYesNoDialog(view, JAPMessages.getString(MSG_OLD_JAVA_HINT,
-								new Object[]
-								{entry.getJREVersion()}), JAPMessages.getString(MSG_TITLE_OLD_JAVA), checkbox))
+							public void run()
 							{
-								showJavaUpdateDialog(entry);
+								JAPDialog.LinkedCheckBox checkbox = new JAPDialog.LinkedCheckBox(false);
+								if (JAPDialog.showYesNoDialog(view, JAPMessages.getString(MSG_OLD_JAVA_HINT,
+									new Object[]
+									{entry.getJREVersion()}), JAPMessages.getString(MSG_TITLE_OLD_JAVA),
+									checkbox))
+								{
+									showJavaUpdateDialog(entry);
+								}
+								if (checkbox.getState())
+								{
+									JAPModel.getInstance().setReminderForJavaUpdate(false);
+								}
 							}
-							if (checkbox.getState())
-							{
-								JAPModel.getInstance().setReminderForJavaUpdate(false);
-							}
-						}
-					}.run();
+						}.run();
+					}
 				}
 			}
 		}
@@ -2037,7 +2040,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		// Uninstall old Java!! http://sunsolve.sun.com/search/document.do?assetkey=1-26-102557-1
 		JAPDialog.showMessageDialog(this, JAPMessages.getString(MSG_OLD_JAVA, args),
 									JAPMessages.getString(MSG_TITLE_OLD_JAVA),
-									AbstractOS.getInstance().createURLLink(a_entry.getDownloadURL(), null));
+									AbstractOS.getInstance().createURLLink(
+			a_entry.getDownloadURL(), null, "updateJava"));
 	}
 
 	private synchronized void fetchMixCascadesAsync(final boolean bShowError)

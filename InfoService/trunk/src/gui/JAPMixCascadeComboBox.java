@@ -251,7 +251,7 @@ final class JAPMixCascadeComboBoxListCellRender implements ListCellRenderer
 				l = m_componentNotCertifiedCascade;
 			}
 		}
-		l.setText(cascade.getName());
+		l.setText(GUIUtils.trim(cascade.getName()));
 		if (isSelected)
 		{
 			l.setBackground(list.getSelectionBackground());
