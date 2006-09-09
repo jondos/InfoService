@@ -423,9 +423,10 @@ public class ConfigAssistant extends JAPDialog
 
 
 		DialogContentPane paneExplainNoDirectConnection = new SimpleWizardContentPane(
-			  this, JAPMessages.getString(MSG_EXPLAIN_NO_DIRECT_CONNECTION, new Object[]{
-										  JAPMessages.getString("confButton"),
-										  JAPMessages.getString("confProxyBorder")}), layout,
+			  this, JAPMessages.getString(MSG_EXPLAIN_NO_DIRECT_CONNECTION) + "<br><br>" +
+			  JAPMessages.getString(JAPConf.MSG_READ_PANEL_HELP, new Object[]{
+									JAPMessages.getString("confButton"),
+									JAPMessages.getString("confProxyBorder")}), layout,
 			  new DialogContentPane.Options(paneExplainWarningInBrowser))
 		{
 

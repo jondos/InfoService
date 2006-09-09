@@ -1951,6 +1951,26 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 *                          default frame.
 	 * @param a_message a message that is shown to the user (may be null)
 	 * @param a_logType the log type for this error
+	 * @param a_linkedInformation a clickable information message that is appended to the text
+	 * @see logging.LogHolder
+	 * @see logging.LogType
+	 * @see logging.Log
+	 */
+	public static void showErrorDialog(Component a_parentComponent, String a_message, int a_logType,
+									   ILinkedInformation a_linkedInformation)
+	{
+		showErrorDialog(a_parentComponent, a_message, null, a_logType,
+						(Throwable)null, a_linkedInformation);
+	}
+
+	/**
+	 * Displays a dialog showing an error message to the user and logs the error message
+	 * to the currently used Log.
+	 * @param a_parentComponent The parent component for this dialog. If it is null or the parent
+	 *                          component is not within a frame, the dialog's parent frame is the
+	 *                          default frame.
+	 * @param a_message a message that is shown to the user (may be null)
+	 * @param a_logType the log type for this error
 	 * @see logging.LogHolder
 	 * @see logging.LogType
 	 * @see logging.Log
@@ -2118,16 +2138,40 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 * @param a_parentComponent The parent component for this dialog. If it is null or the parent
 	 *                          component is not within a frame, the dialog's parent frame is the
 	 *                          default frame.
-	 * @param a_throwable a Throwable that has been caught (may be null)
 	 * @param a_title a title for the error message (may be null)
 	 * @param a_message a message that is shown to the user (may be null)
 	 * @param a_logType the log type for this error
+	 * @param a_throwable a Throwable that has been caught (may be null)
+	 * @param a_linkedInformation a clickable information message that is appended to the text
 	 * @see logging.LogHolder
 	 * @see logging.LogType
 	 * @see logging.Log
 	 */
 	public static void showErrorDialog(Component a_parentComponent, String a_message, String a_title,
 									   int a_logType, Throwable a_throwable)
+	{
+		showErrorDialog(a_parentComponent, a_message, a_title, a_logType, a_throwable, null);
+	}
+
+
+	/**
+	 * Displays a dialog showing an error message to the user and logs the error message
+	 * to the currently used Log.
+	 * @param a_parentComponent The parent component for this dialog. If it is null or the parent
+	 *                          component is not within a frame, the dialog's parent frame is the
+	 *                          default frame.
+	 * @param a_title a title for the error message (may be null)
+	 * @param a_message a message that is shown to the user (may be null)
+	 * @param a_logType the log type for this error
+	 * @param a_throwable a Throwable that has been caught (may be null)
+	 * @param a_linkedInformation a clickable information message that is appended to the text
+	 * @see logging.LogHolder
+	 * @see logging.LogType
+	 * @see logging.Log
+	 */
+	public static void showErrorDialog(Component a_parentComponent, String a_message, String a_title,
+									   int a_logType, Throwable a_throwable,
+									   ILinkedInformation a_linkedInformation)
 	{
 		boolean bPossibleApplicationError = false;
 
@@ -2163,7 +2207,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 				a_title = JAPMessages.getString(MSG_TITLE_ERROR);
 			}
 			showConfirmDialog(a_parentComponent, a_message, a_title,
-							 OPTION_TYPE_DEFAULT, MESSAGE_TYPE_ERROR, null, null);
+							 OPTION_TYPE_DEFAULT, MESSAGE_TYPE_ERROR, null, a_linkedInformation);
 		}
 		catch (Exception e)
 		{

@@ -85,6 +85,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 {
 
 	/** Messages */
+	public static final String MSG_READ_PANEL_HELP = JAPConf.class.getName() + "_readPanelHelp";
 	private static final String MSG_DETAILLEVEL = JAPConf.class.getName() + "_detaillevel";
 	private static final String MSG_BTN_SAVE = JAPConf.class.getName() + "_btnSave";
 
@@ -187,7 +188,6 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		{
 			m_moduleSystem.addConfigurationModule(rootNode, new JAPConfUpdate(), UPDATE_TAB);
 		}
-		JAPConfForwardingClient panelForwardingClient = new JAPConfForwardingClient();
 
 		DefaultMutableTreeNode nodeNet = m_moduleSystem.addComponent(rootNode, null, "ngTreeNetwork", null);
 		//if (!m_bIsSimpleView)
@@ -197,7 +197,8 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		m_moduleSystem.addComponent(nodeNet, m_pFirewall, "confProxyTab", PROXY_TAB);
 		//if (!m_bIsSimpleView)
 		{
-			m_moduleSystem.addConfigurationModule(nodeNet, panelForwardingClient , FORWARDING_CLIENT_TAB);
+			m_moduleSystem.addConfigurationModule(nodeNet, new JAPConfForwardingClient() ,
+												  FORWARDING_CLIENT_TAB);
 		}
 
 		m_confServices = new JAPConfServices();
@@ -210,8 +211,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 												  FORWARDING_SERVER_TAB);
 			m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfCert(), CERT_TAB);
 			DefaultMutableTreeNode debugNode = m_moduleSystem.addComponent(rootNode, m_pMisc,
-				"ngTreeDebugging",
-				DEBUG_TAB);
+				"ngTreeDebugging", DEBUG_TAB);
 			if (JAPModel.getInstance().isForwardingStateModuleVisible())
 			{
 				m_moduleSystem.addConfigurationModule(debugNode, new JAPConfForwardingState(),
@@ -222,8 +222,8 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		else
 		{
 			m_moduleSystem.addConfigurationModule(rootNode, m_confServices, ANON_SERVICES_TAB);
-			m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeNet.getPath()));
 		}
+		m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeNet.getPath()));
 
 		m_moduleSystem.getConfigurationTree().setSelectionRow(0);
 		/* after finishing building the tree, it is important to update the tree size */
