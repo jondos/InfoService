@@ -27,8 +27,6 @@
  */
 package jap.pay;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -2297,8 +2295,15 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		if (!JAPModel.getInstance().isAnonConnected() &&
 			!JAPModel.getInstance().isPaymentViaDirectConnectionAllowed())
 		{
-			JAPDialog.showErrorDialog(a_parent,
-									  JAPMessages.getString(MSG_DIRECT_CONNECTION_FORBIDDEN), LogType.PAY);
+			int answer =
+				JAPDialog.showConfirmDialog(a_parent,
+											JAPMessages.getString(MSG_DIRECT_CONNECTION_FORBIDDEN),
+											JAPDialog.OPTION_TYPE_YES_NO, JAPDialog.MESSAGE_TYPE_ERROR);
+			if (answer == JAPDialog.RETURN_VALUE_YES)
+			{
+				m_cbxAllowNonAnonymousConnection.setSelected(true);
+				JAPModel.getInstance().allowPaymentViaDirectConnection(true);
+			}
 		}
 		else if (!JAPModel.getInstance().isAnonConnected())
 		{

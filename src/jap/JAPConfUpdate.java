@@ -31,6 +31,7 @@ package jap;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Observer;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -38,8 +39,6 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ChangeEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import javax.swing.JButton;
@@ -61,8 +60,10 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import update.JAPUpdateWizard;
+import java.util.Observable;
 
-final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListener, ItemListener, Runnable
+final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListener, ItemListener, Runnable,
+		Observer
 {
 	private static final String COMMAND_UPGRADE = "UPGRADE";
 	private static final String COMMAND_CHECKFORUPGRADE = "CHECKFORUPGRADE";
@@ -93,6 +94,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 	public JAPConfUpdate()
 	{
 		super(null);
+		JAPModel.getInstance().addObserver(this);
 	}
 
 	public void recreateRootPanel()
@@ -317,6 +319,29 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 
 		updateValues(false);
 	}
+
+	public void update(Observable a_notifier, Object a_message)
+	{
+		if (a_message != null)
+		{
+			if (a_message.equals(JAPModel.CHANGED_ALLOW_UPDATE_DIRECT_CONNECTION))
+			{
+
+				m_cbxAllowDirectUpdate.setSelected(JAPModel.getInstance().isUpdateViaDirectConnectionAllowed());
+			}
+			else if (a_message.equals(JAPModel.CHANGED_NOTIFY_JAP_UPDATES))
+			{
+				m_cbxRemindOptionalUpdate.setSelected(
+								JAPModel.getInstance().isReminderForOptionalUpdateActivated());
+			}
+			else if (a_message.equals(JAPModel.CHANGED_NOTIFY_JAVA_UPDATES))
+			{
+
+				m_cbxRemindJavaUpdate.setSelected(JAPModel.getInstance().isReminderForJavaUpdateActivated());
+			}
+		}
+	}
+
 
 	protected boolean onOkPressed()
 	{

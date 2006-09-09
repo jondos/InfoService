@@ -64,6 +64,9 @@ public final class JAPModel extends Observable
 	// observer messages
 	public static final Integer CHANGED_INFOSERVICE_AUTO_UPDATE = new Integer(0);
 	public static final Integer CHANGED_ALLOW_INFOSERVICE_DIRECT_CONNECTION = new Integer(1);
+	public static final Integer CHANGED_ALLOW_UPDATE_DIRECT_CONNECTION = new Integer(2);
+	public static final Integer CHANGED_NOTIFY_JAP_UPDATES = new Integer(3);
+	public static final Integer CHANGED_NOTIFY_JAVA_UPDATES = new Integer(4);
 
 	private static final int DIRECT_CONNECTION_INFOSERVICE = 0;
 	private static final int DIRECT_CONNECTION_PAYMENT = 1;
@@ -405,7 +408,16 @@ public final class JAPModel extends Observable
 
 	public void setReminderForOptionalUpdate(boolean a_bRemind)
 	{
-		m_bRemindOptionalUpdate = a_bRemind;
+		synchronized (this)
+		{
+			if (m_bRemindOptionalUpdate != a_bRemind)
+			{
+				m_bRemindOptionalUpdate = a_bRemind;
+				setChanged();
+			}
+			notifyObservers(CHANGED_NOTIFY_JAP_UPDATES);
+		}
+
 	}
 
 	public boolean isReminderForJavaUpdateActivated()
@@ -415,7 +427,16 @@ public final class JAPModel extends Observable
 
 	public void setReminderForJavaUpdate(boolean a_bRemind)
 	{
-		m_bRemindJavaUpdate = a_bRemind;
+		synchronized (this)
+		{
+			if (m_bRemindJavaUpdate != a_bRemind)
+			{
+				m_bRemindJavaUpdate = a_bRemind;
+				setChanged();
+			}
+			notifyObservers(CHANGED_NOTIFY_JAVA_UPDATES);
+		}
+
 	}
 
 
@@ -476,7 +497,15 @@ public final class JAPModel extends Observable
 
 	public void allowUpdateViaDirectConnection(boolean a_bAllow)
 	{
-		m_bAllowUpdateViaDirectConnection = a_bAllow;
+		synchronized (this)
+		{
+			if (m_bAllowUpdateViaDirectConnection != a_bAllow)
+			{
+				m_bAllowUpdateViaDirectConnection = a_bAllow;
+				setChanged();
+			}
+			notifyObservers(CHANGED_ALLOW_UPDATE_DIRECT_CONNECTION);
+		}
 	}
 
 
@@ -496,7 +525,6 @@ public final class JAPModel extends Observable
 			}
 			notifyObservers(CHANGED_ALLOW_INFOSERVICE_DIRECT_CONNECTION);
 		}
-
 	}
 
 	public void allowPaymentViaDirectConnection(boolean a_bAllowPaymentViaDirectConnection)
