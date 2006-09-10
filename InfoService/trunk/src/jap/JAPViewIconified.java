@@ -65,12 +65,15 @@ import anon.infoservice.Database;
 import anon.infoservice.DatabaseMessage;
 import java.util.Observable;
 import java.util.Observer;
+import java.awt.Cursor;
 
 final public class JAPViewIconified extends JWindow implements ActionListener,
 	MouseMotionListener,
 	MouseListener,
 	JAPObserver, Observer
 {
+	private static final String MSG_TT_SWITCH_ANONYMITY =
+		JAPViewIconified.class.getName() + "_ttSwitchAnonymity";
 
 	private static final String STR_HIDDEN_WINDOW = Double.toString(Math.random());
 	private static Frame m_frameParent;
@@ -194,6 +197,8 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		JPanel p2 = new JPanel();
 		//p2.setBackground(new Color(204, 204, 204));
 		m_lblJAPIcon = new JLabel(GUIUtils.loadImageIcon(JAPViewIconified.class.getName() + "_icon16discon.gif", true, false));
+		m_lblJAPIcon.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		m_lblJAPIcon.setToolTipText(JAPMessages.getString(MSG_TT_SWITCH_ANONYMITY));
 		m_lblJAPIcon.addMouseListener(new MouseAdapter()
 		{
 			public void mouseClicked(MouseEvent a_event)
