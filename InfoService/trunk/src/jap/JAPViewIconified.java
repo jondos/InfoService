@@ -38,6 +38,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Point;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -66,6 +67,7 @@ import anon.infoservice.DatabaseMessage;
 import java.util.Observable;
 import java.util.Observer;
 import java.awt.Cursor;
+import anon.AnonServerDescription;
 
 final public class JAPViewIconified extends JWindow implements ActionListener,
 	MouseMotionListener,
@@ -225,14 +227,26 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		JAPDll.setWindowOnTop(this, true);
 	}
 
-	void switchBackToMainView()
+	public void setVisible(boolean a_bVisible)
 	{
-		if (m_mainView == null)
+		JAPController.getInstance().switchViewWindow(!a_bVisible);
+		super.setVisible(a_bVisible);
+	}
+
+	public void switchBackToMainView()
+	{
+		if (m_mainView == null || (!isVisible() && m_mainView.isVisible()))
 		{
 			return;
 		}
 		setVisible(false);
 		m_mainView.setVisible(true);
+	}
+
+	public JAPViewIconified getViewIconified()
+	{
+		// should be this...
+		return m_mainView.getViewIconified();
 	}
 
 	public void actionPerformed(ActionEvent event)
@@ -317,7 +331,6 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 			}
 		}
 	}
-
 
 	public void updateValues(boolean bSync)
 	{

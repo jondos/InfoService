@@ -61,6 +61,15 @@ public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 		JAPController.goodBye(true); // call the final exit procedure of JAP
 	}
 
+	public void setVisible(boolean a_bVisible)
+	{
+		if (a_bVisible)
+		{
+			getViewIconified().setVisible(false);
+		}
+		super.setVisible(a_bVisible);
+	}
+
 	public void packetMixed(long a_totalBytes)
 	{
 	}
