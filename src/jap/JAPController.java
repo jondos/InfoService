@@ -198,7 +198,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private long m_nrOfBytesWWW = 0;
 	private long m_nrOfBytesOther = 0;
 
-	private static IJAPMainView m_View = null;
+	private IJAPMainView m_View = null;
+	private boolean m_bMainView = true;
+	private Object SYNC_VIEW = new Object();
 	private static JAPController m_Controller = null;
 	private static JAPModel m_Model = null;
 	private static JAPFeedback m_feedback = null;
@@ -255,19 +257,20 @@ public final class JAPController extends Observable implements IProxyListener, O
 				public DirectProxy.AllowUnprotectedConnectionCallback.Answer callback()
 				{
 					if (JAPModel.getInstance().isNonAnonymousSurfingDenied() ||
-						JAPController.getView() == null)
+						JAPController.getInstance().getView() == null)
 					{
 						return new Answer(false, false);
 					}
 
 					boolean bShowHtmlWarning;
-					JAPDll.setWindowOnTop(JAPController.getViewWindow(), true);
+					JAPDll.setWindowOnTop(JAPController.getInstance().getViewWindow(), true);
 					JAPDialog.LinkedCheckBox cb = new JAPDialog.LinkedCheckBox(
 						JAPMessages.getString(JAPDialog.LinkedCheckBox.MSG_REMEMBER_ANSWER), false,
 						MSG_ALLOWUNPROTECTED);
-					bShowHtmlWarning = ! (JAPDialog.showYesNoDialog(JAPController.getViewWindow(),
+					bShowHtmlWarning = ! (JAPDialog.showYesNoDialog(
+									   JAPController.getInstance().getViewWindow(),
 						JAPMessages.getString(MSG_ALLOWUNPROTECTED), cb));
-					JAPDll.setWindowOnTop(JAPController.getViewWindow(), false);
+					JAPDll.setWindowOnTop(JAPController.getInstance().getViewWindow(), false);
 					if (bShowHtmlWarning && cb.getState())
 					{
 						// user has chosen to never allow non anonymous websurfing
@@ -2066,7 +2069,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			Object[] options =
 				{
 				JAPMessages.getString("later"), JAPMessages.getString("reconnect")};
-			int ret = JOptionPane.showOptionDialog(JAPController.getViewWindow(),
+			int ret = JOptionPane.showOptionDialog(JAPController.getInstance().getViewWindow(),
 				JAPMessages.getString("reconnectAfterProxyChangeMsg"),
 				JAPMessages.getString("reconnectAfterProxyChangeTitle"),
 				JOptionPane.DEFAULT_OPTION,
@@ -2360,7 +2363,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 												  JAPMessages.getString("confButton"),
 												  JAPMessages.getString("confListenerTab")})
 							, LogType.NET, new JAPDialog.LinkedHelpContext("portlistener"));
-						JAPController.m_View.disableSetAnonMode();
+						JAPController.getInstance().getView().disableSetAnonMode();
 					}
 					else if (ret == AnonProxy.E_MIX_PROTOCOL_NOT_SUPPORTED &&
 							 ! (a_bRetryOnConnectionError &&
@@ -2847,12 +2850,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					// show a Reminder message that active contents should be disabled
 					checkBox = new JAPDialog.LinkedCheckBox(false);
-					returnValue = JAPDialog.showConfirmDialog(getViewWindow(),
+					returnValue = JAPDialog.showConfirmDialog(getInstance().getViewWindow(),
 						JAPMessages.getString(MSG_DISABLE_GOODBYE),
 						JAPDialog.OPTION_TYPE_OK_CANCEL, JAPDialog.MESSAGE_TYPE_INFORMATION, checkBox);
 					if (returnValue == JAPDialog.RETURN_VALUE_OK)
 					{
-						getViewWindow().setEnabled(false);
+						getInstance().getViewWindow().setEnabled(false);
 						JAPModel.getInstance().setNeverRemindGoodbye(checkBox.getState());
 					}
 				}
@@ -2863,15 +2866,16 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 				if (returnValue == JAPDialog.RETURN_VALUE_OK)
 				{
-					if (getView() != null)
+					if (getInstance().getViewWindow() != null)
 					{
-						getViewWindow().setEnabled(false);
+						getInstance().getViewWindow().setEnabled(false);
 					}
 					//JAPDll.checkDllVersion(false);
 					boolean error = m_Controller.saveConfigFile();
 					if (error && bShowConfigSaveErrorMsg)
 					{
-						JAPDialog.showErrorDialog(getViewWindow(), JAPMessages.getString(MSG_ERROR_SAVING_CONFIG,
+						JAPDialog.showErrorDialog(getInstance().getViewWindow(),
+												  JAPMessages.getString(MSG_ERROR_SAVING_CONFIG,
 							JAPModel.getInstance().getConfigFile()), LogType.MISC);
 					}
 					JAPDialog.setConsoleOnly(true); // do not show any dialogs now
@@ -2972,9 +2976,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 					System.getProperties().put( "socksProxyPort", "0");
 					System.getProperties().put( "socksProxyHost" ,"localhost");
 					// do not show any dialogs in this state
-					if (getViewWindow() != null)
+					getInstance().switchViewWindow(true);
+					if (getInstance().getViewWindow() != null)
 					{
-						getViewWindow().dispose();
+						getInstance().getViewWindow().dispose();
 					}
 					LogHolder.log(LogLevel.INFO, LogType.GUI, "View has been disposed. Finishing...");
 					if ( !bShowConfigSaveErrorMsg ) {
@@ -3001,7 +3006,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	{
 		try
 		{
-			new JAPAbout(getViewWindow());
+			new JAPAbout(getInstance().getViewWindow());
 		}
 		catch (Throwable t)
 		{
@@ -3235,20 +3240,40 @@ public final class JAPController extends Observable implements IProxyListener, O
 	//---------------------------------------------------------------------
 	public void setView(IJAPMainView v)
 	{
-		m_View = v;
+		synchronized (SYNC_VIEW)
+		{
+			m_View = v;
+		}
 	}
 
-	public static Window getViewWindow()
+	public void switchViewWindow(boolean a_bMainView)
 	{
-		if (m_View instanceof Window)
+		synchronized (SYNC_VIEW)
 		{
-			return (Window)m_View;
+			m_bMainView = a_bMainView;
 		}
-		return null;
+	}
 
-}
+	public Window getViewWindow()
+	{
+		synchronized (SYNC_VIEW)
+		{
+			if (m_View instanceof Window)
+			{
+				if (m_bMainView)
+				{
+					return (Window) m_View;
+				}
+				else
+				{
+					return m_View.getViewIconified();
+				}
+			}
+			return null;
+		}
+	}
 
-	public static IJAPMainView getView()
+	public IJAPMainView getView()
 	{
 		return m_View;
 	}

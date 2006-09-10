@@ -154,15 +154,17 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 
 	private JAPConfModuleSystem m_moduleSystem;
 	private JAPConfServices m_confServices;
+	private AbstractJAPMainView m_parentView;
 
 	public static JAPConf getInstance()
 	{
 		return ms_JapConfInstance;
 	}
 
-	public JAPConf(JFrame frmParent, boolean loadPay)
+	public JAPConf(AbstractJAPMainView frmParent, boolean loadPay)
 	{
 		super(frmParent, JAPMessages.getString("settingsDialog"), true);
+		m_parentView = frmParent;
 		setDefaultCloseOperation(HIDE_ON_CLOSE);
 		m_bWithPayment = loadPay;
 		m_bIsSimpleView = (JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED);
@@ -332,6 +334,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		 */
 		if (a_bVisible)
 		{
+			m_parentView.getViewIconified().switchBackToMainView();
 			m_moduleSystem.createSavePoints();
 		}
 		/* call the original method */
@@ -671,7 +674,8 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		{
 			public void itemStateChanged(ItemEvent e)
 			{
-				JAPDebug.showConsole(e.getStateChange() == ItemEvent.SELECTED, JAPController.getViewWindow());
+				JAPDebug.showConsole(e.getStateChange() == ItemEvent.SELECTED,
+									 JAPController.getInstance().getViewWindow());
 			}
 		});
 		c.gridy = 3;

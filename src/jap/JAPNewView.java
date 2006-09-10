@@ -158,7 +158,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private Icon[] meterIcons;
 	private JAPConf m_dlgConfig;
 	private Object LOCK_CONFIG = new Object();
-	private Window m_ViewIconified;
+	private JAPViewIconified m_ViewIconified;
 	private boolean m_bIsIconified;
 	//private final static boolean PROGRESSBARBORDER = true;
 	//private GuthabenAnzeige guthaben;
@@ -292,13 +292,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					if (vi != null && vi.getJapVersion() != null &&
 						vi.getJapVersion().compareTo(JAPConstants.aktVersion) > 0)
 					{
-						JAPUpdateWizard wz = new JAPUpdateWizard(vi, JAPController.getViewWindow());
+						JAPUpdateWizard wz = new JAPUpdateWizard(vi, JAPController.getInstance().getViewWindow());
 						/* we got the JAPVersionInfo from the infoservice */
 						if (wz.getStatus() == JAPUpdateWizard.UPDATESTATUS_ERROR)
 						{
 							/* Download failed -> alert, and reset anon mode to false */
 							LogHolder.log(LogLevel.ERR, LogType.MISC, "Some update problem.");
-							JAPDialog.showErrorDialog(JAPController.getViewWindow(),
+							JAPDialog.showErrorDialog(JAPController.getInstance().getViewWindow(),
 								JAPMessages.getString("downloadFailed") +
 								JAPMessages.getString("infoURL"), LogType.MISC);
 						}
@@ -463,7 +463,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				if (m_lblPrice.getCursor() == Cursor.getPredefinedCursor(Cursor.HAND_CURSOR))
 				{
-					JAPDialog.showMessageDialog(JAPController.getViewWindow(),
+					JAPDialog.showMessageDialog(JAPController.getInstance().getViewWindow(),
 												JAPMessages.getString(MSG_NO_REAL_PAYMENT));
 				}
 			}
@@ -1401,7 +1401,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 							public void run()
 							{
 								JAPDialog.LinkedCheckBox checkbox = new JAPDialog.LinkedCheckBox(false);
-								if (JAPDialog.showYesNoDialog(JAPController.getViewWindow(),
+								if (JAPDialog.showYesNoDialog(JAPController.getInstance().getViewWindow(),
 									JAPMessages.getString(MSG_OLD_JAVA_HINT,
 									new Object[]
 									{entry.getJREVersion()}), JAPMessages.getString(MSG_TITLE_OLD_JAVA),
@@ -1443,8 +1443,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	{
 		if (m_ViewIconified != null)
 		{
-			setVisible(false);
 			m_ViewIconified.setVisible(true);
+			setVisible(false);
 			m_ViewIconified.toFront();
 		}
 	}
@@ -1647,7 +1647,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					else
 					{
 						m_rbAnonOff.setSelected(true);
-						JAPDialog.showErrorDialog(JAPController.getViewWindow(),
+						JAPDialog.showErrorDialog(JAPController.getInstance().getViewWindow(),
 												  JAPMessages.getString(MSG_ERROR_DISCONNECTED),
 												  LogType.NET);
 					}
@@ -1670,6 +1670,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		while (m_dlgConfig == null);
 		//final JAPDialog configAssistant = new ConfigAssistant(m_dlgConfig);
 		final JAPDialog configAssistant = new ConfigAssistant(this);
+		/*
 		final ComponentAdapter componentAdapter =
 			new ComponentAdapter()
 		{
@@ -1678,8 +1679,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				// Prevent that, if the config dialog is closed, the assistent is made invisible.
 				if (!m_dlgConfig.isRestartNeeded())
 				{
-					configAssistant.setLocation(configAssistant.getLocation());
-					configAssistant.setVisible(true);
+					if (!(JAPController.getInstance().getViewWindow() instanceof JAPViewIconified))
+					{System.out.println("test");
+						configAssistant.setLocation(configAssistant.getLocation());
+						configAssistant.setVisible(true);
+					}
 				}
 				else
 				{
@@ -1687,14 +1691,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 			}
 		};
-		configAssistant.addComponentListener(componentAdapter);
+		configAssistant.addComponentListener(componentAdapter);*/
 
 		configAssistant.addWindowListener(new WindowAdapter()
 		{
 			public void windowClosed(WindowEvent a_event)
 			{
 				configAssistant.removeWindowListener(this);
-				configAssistant.removeComponentListener(componentAdapter);
+				//configAssistant.removeComponentListener(componentAdapter);
 				m_bAssistantClicked = false;
 				view.setVisible(true);
 			}
@@ -1969,7 +1973,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 	}
 
-	public void registerViewIconified(Window v)
+	public JAPViewIconified getViewIconified()
+	{
+		return m_ViewIconified;
+	}
+
+	public void registerViewIconified(JAPViewIconified v)
 	{
 		m_ViewIconified = v;
 	}
@@ -2046,7 +2055,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		args[3] = a_entry.getVendorLongName();
 		args[4] = a_entry.getVendor();
 		// Uninstall old Java!! http://sunsolve.sun.com/search/document.do?assetkey=1-26-102557-1
-		JAPDialog.showMessageDialog(JAPController.getViewWindow(),
+		JAPDialog.showMessageDialog(JAPController.getInstance().getViewWindow(),
 									JAPMessages.getString(MSG_OLD_JAVA, args),
 									JAPMessages.getString(MSG_TITLE_OLD_JAVA),
 									AbstractOS.getInstance().createURLLink(
@@ -2063,7 +2072,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				//setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
 				m_Controller.updateInfoServices();
-				m_Controller.fetchMixCascades(bShowError, JAPController.getViewWindow());
+				m_Controller.fetchMixCascades(bShowError, JAPController.getInstance().getViewWindow());
 				//setCursor(Cursor.getDefaultCursor());
 				SwingUtilities.invokeLater(new Runnable()
 				{

@@ -170,10 +170,14 @@ public class ConsoleJAPMainView implements IJAPMainView
 	 * registerViewIconified
 	 *
 	 * @param viewIconified Window
-	 * @todo Diese jap.IJAPMainView-Methode implementieren
 	 */
-	public void registerViewIconified(Window viewIconified)
+	public void registerViewIconified(JAPViewIconified viewIconified)
 	{
+	}
+
+	public JAPViewIconified getViewIconified()
+	{
+		return null;
 	}
 
 	/**
