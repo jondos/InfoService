@@ -453,6 +453,7 @@ public class JAP
 			}
 			else if (JAPModel.getMinimizeOnStartup())
 			{
+				frameView.setVisible(true);
 				frameView.showIconifiedView();
 			}
 			else
