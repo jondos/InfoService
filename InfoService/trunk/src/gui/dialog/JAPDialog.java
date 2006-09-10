@@ -2377,7 +2377,20 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			}
 
 		}
+		boolean bOnTop = false;
+		if (GUIUtils.isAlwaysOnTop(getOwner()))
+		{
+			// this is needed to display this dialog in front o the owner
+			bOnTop = true;
+			//GUIUtils.setAlwaysOnTop(getOwner(), false);
+			GUIUtils.setAlwaysOnTop(m_internalDialog, true);
+		}
 		setVisibleInternal(a_bVisible);
+		if (bOnTop)
+		{
+			//GUIUtils.setAlwaysOnTop(getOwner(), true);
+			GUIUtils.setAlwaysOnTop(m_internalDialog, false);
+		}
 	}
 
 	/**
