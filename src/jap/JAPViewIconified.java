@@ -38,7 +38,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Point;
-import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -48,7 +47,6 @@ import java.awt.event.MouseMotionListener;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.Icon;
 import javax.swing.JWindow;
 import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
@@ -67,12 +65,9 @@ import anon.infoservice.DatabaseMessage;
 import java.util.Observable;
 import java.util.Observer;
 import java.awt.Cursor;
-import anon.AnonServerDescription;
 
 final public class JAPViewIconified extends JWindow implements ActionListener,
-	MouseMotionListener,
-	MouseListener,
-	JAPObserver, Observer
+	MouseMotionListener, MouseListener, JAPObserver, Observer
 {
 	private static final String MSG_TT_SWITCH_ANONYMITY =
 		JAPViewIconified.class.getName() + "_ttSwitchAnonymity";
@@ -88,6 +83,8 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 	private Font m_fontDlg;
 	private boolean m_bIsDragging = false;
 	private NumberFormat m_NumberFormat;
+	private boolean m_anonModeDisabled = false;
+	private Object SYNC_CURSOR = new Object();
 
 	private static Frame getParentFrame()
 	{
@@ -199,15 +196,36 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		JPanel p2 = new JPanel();
 		//p2.setBackground(new Color(204, 204, 204));
 		m_lblJAPIcon = new JLabel(GUIUtils.loadImageIcon(JAPViewIconified.class.getName() + "_icon16discon.gif", true, false));
-		m_lblJAPIcon.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		//m_lblJAPIcon.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		m_lblJAPIcon.setToolTipText(JAPMessages.getString(MSG_TT_SWITCH_ANONYMITY));
 		m_lblJAPIcon.addMouseListener(new MouseAdapter()
 		{
 			public void mouseClicked(MouseEvent a_event)
 			{
-				if (GUIUtils.isMouseButton(a_event, MouseEvent.BUTTON1_MASK))
+				if (!m_anonModeDisabled && GUIUtils.isMouseButton(a_event, MouseEvent.BUTTON1_MASK))
 				{
 					m_Controller.setAnonMode(!m_Controller.getAnonMode());
+				}
+			}
+			public void mouseEntered(MouseEvent a_event)
+			{
+				synchronized (SYNC_CURSOR)
+				{
+					if (!m_anonModeDisabled)
+					{
+						// do it that 'complicated' as it would otherwise not work on JRE 1.5...
+						setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+						getRootPane().setToolTipText(JAPMessages.getString(MSG_TT_SWITCH_ANONYMITY));
+					}
+				}
+			}
+
+			public void mouseExited(MouseEvent e)
+			{
+				synchronized (SYNC_CURSOR)
+				{
+					setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+					getRootPane().setToolTipText(null);
 				}
 			}
 		});
@@ -332,13 +350,18 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		}
 	}
 
+	public void disableSetAnonMode()
+	{
+		m_anonModeDisabled = true;
+	}
+
 	public void updateValues(boolean bSync)
 	{
 		synchronized (m_runnableValueUpdate)
 		{
 			if (SwingUtilities.isEventDispatchThread())
 			{
-				updateValues1();
+				m_runnableValueUpdate.run();
 			}
 			else
 			{
@@ -453,6 +476,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 				synchronized(m_lblJAPIcon)
 				{
 					m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon(JAPViewIconified.class.getName() + "_icon16red.gif", true, false));
+					//m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon("test", true, false));
 					try
 					{
 						m_lblJAPIcon.wait(1000);

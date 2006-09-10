@@ -1192,6 +1192,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	 */
 	public void disableSetAnonMode()
 	{
+		m_ViewIconified.disableSetAnonMode();
 		//anonCheckBox.setEnabled(false);
 		m_rbAnonOn.setEnabled(false);
 		m_rbAnonOff.setEnabled(false);
@@ -1609,7 +1610,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		};
 
 		doIt.start();
-
 	}
 
 	private void showConnecting(final boolean a_bOnError)
@@ -1624,6 +1624,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					{
 						if (m_Controller.getAnonMode() && !m_Controller.isAnonConnected())
 						{
+							if (m_bShowConnecting)
+							{
+								// there already runs a wait-thread...
+								return;
+							}
 							m_bShowConnecting = true;
 							updateValues(true);
 							// wait for auto-reconnect
@@ -1640,7 +1645,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 							removeStatusMsg(msgID);
 							setCursor(Cursor.getDefaultCursor());
 							m_bShowConnecting = false;
-
 						}
 						updateValues(false);
 					}
@@ -1841,7 +1845,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			m_progressAnonLevel.setValue(anonLevel + 1);
 			if (m_Controller.isAnonConnected())
 			{
-				m_bShowConnecting = false;
+				//m_bShowConnecting = false;
 				if (currentStatus.getNrOfActiveUsers() > -1)
 				{
 					// Nr of active users

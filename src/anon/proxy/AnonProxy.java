@@ -316,7 +316,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			synchronized (THREAD_SYNC)
 			{
 				AnonServerDescription cascade = m_currentMixCascade.getNextMixCascade();
-				fireConnecting(cascade);
+				//fireConnecting(cascade);
 				m_Anon.shutdown();
 				while (threadRun.isAlive())
 				{
