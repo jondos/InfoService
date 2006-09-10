@@ -126,10 +126,29 @@ public final class AnonProxyRequest implements Runnable {
         }
         catch (NotConnectedToMixException ec) {
           LogHolder.log(LogLevel.ERR, LogType.NET, "AnonProxyRequest - Connection to Mix lost");
-          if (!m_Proxy.reconnect()) {
-            closeRequest();
-            return;
-          }
+		  // set timeout for this request
+		  Thread timeoutThread = new Thread()
+		  {
+			  public void run()
+			  {
+				  m_Proxy.reconnect();
+			  }
+		  };
+		  timeoutThread.start();
+		  try
+		  {
+			  timeoutThread.join(60000);
+		  }
+		  catch (InterruptedException ex1)
+		  {
+		  }
+		  timeoutThread.interrupt();
+
+          if (!m_Proxy.isConnected()) {
+			  // reconnect failed
+			  closeRequest();
+			  return;
+		  }
         }
         catch (Exception e) {
           LogHolder.log(LogLevel.ERR, LogType.NET, "AnonProxyRequest - something was wrong with seting up a new channel Exception: " + e);

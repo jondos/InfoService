@@ -589,6 +589,10 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			{
 				return true;
 			}
+			if (Thread.currentThread().isInterrupted())
+			{
+				return false;
+			}
 			if (!m_currentMixCascade.isReconnectedAutomatically())
 			{
 				stop();
