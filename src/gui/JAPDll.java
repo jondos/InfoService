@@ -285,7 +285,7 @@ final public class JAPDll {
 		args[0] = "'" + JAP_DLL + "'";
 		args[1] = "'" + UPDATE_PATH + "'";
 		int answer =
-			JAPDialog.showConfirmDialog(JAPController.getView(),
+			JAPDialog.showConfirmDialog(JAPController.getViewWindow(),
 										JAPMessages.getString(MSG_DLL_UPDATE_FAILED, args),
 										JAPMessages.getString(JAPDialog.MSG_TITLE_ERROR),
 										JAPDialog.OPTION_TYPE_YES_NO, JAPDialog.MESSAGE_TYPE_ERROR,
@@ -307,7 +307,7 @@ final public class JAPDll {
 		chooser.setSelectedFile(new File(UPDATE_PATH + JAP_DLL));
 		MyFileFilter filter = new MyFileFilter();
 		chooser.setFileFilter(filter);
-		int returnVal = chooser.showSaveDialog(JAPController.getView());
+		int returnVal = chooser.showSaveDialog(JAPController.getViewWindow());
 
 		// "OK" is pressed at the file chooser
 		if (returnVal == JFileChooser.APPROVE_OPTION)
@@ -323,7 +323,7 @@ final public class JAPDll {
 				//confirm overwrite if file exists
 				if (f.exists())
 				{
-					int answer = JAPDialog.showConfirmDialog(JAPController.getView(),
+					int answer = JAPDialog.showConfirmDialog(JAPController.getViewWindow(),
 						JAPMessages.getString(MSG_CONFIRM_OVERWRITE, "'" + f + "'"),
 						JAPDialog.MSG_TITLE_CONFIRMATION,
 						JAPDialog.OPTION_TYPE_YES_NO, JAPDialog.MESSAGE_TYPE_WARNING);
@@ -358,8 +358,9 @@ final public class JAPDll {
 
 		if (!b_extractOK)
 		{
-			JAPDialog.showErrorDialog(JAPController.getView(), JAPMessages.getString(MSG_COULD_NOT_SAVE),
-				LogType.MISC);
+			JAPDialog.showErrorDialog(JAPController.getViewWindow(),
+									  JAPMessages.getString(MSG_COULD_NOT_SAVE),
+									  LogType.MISC);
 			chooseAndSave();
 		}
    }
@@ -372,7 +373,8 @@ final public class JAPDll {
 	private static void informUserAboutJapRestart()
 	{
 		//Inform the User about the necessary JAP restart
-		JAPDialog.showMessageDialog(JAPController.getView(), JAPMessages.getString(MSG_DLL_UPDATE, "'" + JAP_DLL + "'"));
+		JAPDialog.showMessageDialog(JAPController.getViewWindow(),
+									JAPMessages.getString(MSG_DLL_UPDATE, "'" + JAP_DLL + "'"));
 		//close JAP
 		JAPController.getInstance().goodBye(false);
 	}
@@ -488,8 +490,8 @@ final public class JAPDll {
 
 	static public long showMainWindow()
 	{
-		JAPController.getView().setVisible(true);
-		JAPController.getView().toFront();
+		JAPController.getViewWindow().setVisible(true);
+		JAPController.getViewWindow().toFront();
 		return 0;
 	}
 

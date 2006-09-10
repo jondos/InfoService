@@ -199,8 +199,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private boolean m_bIgnoreAnonComboEvents = false;
 	private PaymentMainPanel m_flippingPanelPayment;
 	private Object m_connectionEstablishedSync = new Object();
-	private boolean m_bConnectionErrorShown = false;
-	private boolean m_bConnecting = false;
+	private boolean m_bShowConnecting = false;
 	private JAPProgressBar m_progForwarderActivity;
 	private JAPProgressBar m_progForwarderActivitySmall;
 
@@ -293,13 +292,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					if (vi != null && vi.getJapVersion() != null &&
 						vi.getJapVersion().compareTo(JAPConstants.aktVersion) > 0)
 					{
-						JAPUpdateWizard wz = new JAPUpdateWizard(vi, JAPController.getView());
+						JAPUpdateWizard wz = new JAPUpdateWizard(vi, JAPController.getViewWindow());
 						/* we got the JAPVersionInfo from the infoservice */
 						if (wz.getStatus() == JAPUpdateWizard.UPDATESTATUS_ERROR)
 						{
 							/* Download failed -> alert, and reset anon mode to false */
 							LogHolder.log(LogLevel.ERR, LogType.MISC, "Some update problem.");
-							JAPDialog.showErrorDialog(JAPController.getView(),
+							JAPDialog.showErrorDialog(JAPController.getViewWindow(),
 								JAPMessages.getString("downloadFailed") +
 								JAPMessages.getString("infoURL"), LogType.MISC);
 						}
@@ -464,7 +463,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				if (m_lblPrice.getCursor() == Cursor.getPredefinedCursor(Cursor.HAND_CURSOR))
 				{
-					JAPDialog.showMessageDialog(JAPController.getView(), JAPMessages.getString(MSG_NO_REAL_PAYMENT));
+					JAPDialog.showMessageDialog(JAPController.getViewWindow(),
+												JAPMessages.getString(MSG_NO_REAL_PAYMENT));
 				}
 			}
 		});
@@ -1234,8 +1234,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	{
 		boolean bAnonMode = m_Controller.getAnonMode();
 		boolean bConnected = m_Controller.isAnonConnected();
-		boolean bConnectionErrorShown = m_bConnectionErrorShown;
-		boolean bConnecting = m_bConnecting; // not used at the moment
+		boolean bConnectionErrorShown = m_bShowConnecting;
 
 		if (bAnonMode && bConnected)
 		{
@@ -1249,13 +1248,15 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				return meterIcons[2]; //No measure available
 			}
 		}
-		else if (bAnonMode && !bConnected && (bConnectionErrorShown || bConnecting))
+		else if (bAnonMode && !bConnected && bConnectionErrorShown)
 		{
 			//System.out.println("connection lost");
 			return meterIcons[1]; // connection lost
 		}
 		else
 		{
+			//System.out.println("AnonMode:" + bAnonMode + " " + "Connected:" + bConnected + " " +
+				//			   "ShowError:" + bConnectionErrorShown);
 			//System.out.println("deactivated");
 			return meterIcons[0]; // Anon deactivated
 		}
@@ -1400,7 +1401,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 							public void run()
 							{
 								JAPDialog.LinkedCheckBox checkbox = new JAPDialog.LinkedCheckBox(false);
-								if (JAPDialog.showYesNoDialog(JAPController.getView(),
+								if (JAPDialog.showYesNoDialog(JAPController.getViewWindow(),
 									JAPMessages.getString(MSG_OLD_JAVA_HINT,
 									new Object[]
 									{entry.getJREVersion()}), JAPMessages.getString(MSG_TITLE_OLD_JAVA),
@@ -1619,16 +1620,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				synchronized (m_connectionEstablishedSync)
 				{
-					m_connectionEstablishedSync.notifyAll();
-				}
-
-				synchronized (m_connectionEstablishedSync)
-				{
 					if (!a_bOnError || JAPModel.getInstance().isAutomaticallyReconnected())
 					{
 						if (m_Controller.getAnonMode() && !m_Controller.isAnonConnected())
 						{
-							m_bConnectionErrorShown = true;
+							m_bShowConnecting = true;
 							updateValues(true);
 							// wait for auto-reconnect
 							int msgID = addStatusMsg(JAPMessages.getString("setAnonModeSplashConnect"),
@@ -1641,22 +1637,21 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 							catch (InterruptedException a_e)
 							{
 							}
-							setCursor(Cursor.getDefaultCursor());
 							removeStatusMsg(msgID);
-							m_bConnectionErrorShown = false;
-							updateValues(false);
+							setCursor(Cursor.getDefaultCursor());
+							m_bShowConnecting = false;
+
 						}
-						else
-						{
-							updateValues(false);
-						}
+						updateValues(false);
 					}
 					else
 					{
 						m_rbAnonOff.setSelected(true);
-						JAPDialog.showErrorDialog(JAPController.getView(),
-												  JAPMessages.getString(MSG_ERROR_DISCONNECTED), LogType.NET);
+						JAPDialog.showErrorDialog(JAPController.getViewWindow(),
+												  JAPMessages.getString(MSG_ERROR_DISCONNECTED),
+												  LogType.NET);
 					}
+					m_connectionEstablishedSync.notifyAll();
 				}
 			}
 		};
@@ -1842,7 +1837,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			m_progressAnonLevel.setValue(anonLevel + 1);
 			if (m_Controller.isAnonConnected())
 			{
-				m_bConnectionErrorShown = false;
+				m_bShowConnecting = false;
 				if (currentStatus.getNrOfActiveUsers() > -1)
 				{
 					// Nr of active users
@@ -2051,7 +2046,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		args[3] = a_entry.getVendorLongName();
 		args[4] = a_entry.getVendor();
 		// Uninstall old Java!! http://sunsolve.sun.com/search/document.do?assetkey=1-26-102557-1
-		JAPDialog.showMessageDialog(JAPController.getView(), JAPMessages.getString(MSG_OLD_JAVA, args),
+		JAPDialog.showMessageDialog(JAPController.getViewWindow(),
+									JAPMessages.getString(MSG_OLD_JAVA, args),
 									JAPMessages.getString(MSG_TITLE_OLD_JAVA),
 									AbstractOS.getInstance().createURLLink(
 			a_entry.getDownloadURL(), null, "updateJava"));
@@ -2067,7 +2063,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				//setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
 				m_Controller.updateInfoServices();
-				m_Controller.fetchMixCascades(bShowError, JAPController.getView());
+				m_Controller.fetchMixCascades(bShowError, JAPController.getViewWindow());
 				//setCursor(Cursor.getDefaultCursor());
 				SwingUtilities.invokeLater(new Runnable()
 				{

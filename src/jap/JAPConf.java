@@ -671,7 +671,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		{
 			public void itemStateChanged(ItemEvent e)
 			{
-				JAPDebug.showConsole(e.getStateChange() == ItemEvent.SELECTED, JAPController.getView());
+				JAPDebug.showConsole(e.getStateChange() == ItemEvent.SELECTED, JAPController.getViewWindow());
 			}
 		});
 		c.gridy = 3;
