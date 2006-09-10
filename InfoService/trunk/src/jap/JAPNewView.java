@@ -969,13 +969,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JAPModel.getInstance().addObserver(this);
 
 		JAPHelp.init(this, AbstractOS.getInstance(), AbstractOS.getInstance());
+		final JAPNewView view = this;
 		new Thread()
 		{
 			public void run()
 			{
 				synchronized (LOCK_CONFIG)
 				{
-					m_dlgConfig = new JAPConf(JAPController.getView(), m_bWithPayment);
+					m_dlgConfig = new JAPConf(view, m_bWithPayment);
 					if (JAPController.getInstance().isConfigAssistantShown())
 					{
 						showInstallationAssistant();
