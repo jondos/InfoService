@@ -50,6 +50,7 @@ import javax.swing.JPanel;
 import javax.swing.JWindow;
 import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
+import javax.swing.BorderFactory;
 
 import anon.infoservice.MixCascade;
 import anon.infoservice.StatusInfo;
@@ -174,7 +175,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		la.setConstraints(m_labelTraffic, c);
 		pTop.add(m_labelTraffic);
 
-		JButton bttn = new JButton(GUIUtils.loadImageIcon(JAPConstants.ENLARGEYICONFN, true));
+		JButton bttn = new JButton(GUIUtils.loadImageIcon(JAPConstants.ENLARGEYICONFN, true, false));
 		bttn.setOpaque(false);
 		bttn.addActionListener(this);
 		bttn.setToolTipText(JAPMessages.getString("enlargeWindow"));
@@ -204,6 +205,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 			{
 				if (!m_anonModeDisabled && GUIUtils.isMouseButton(a_event, MouseEvent.BUTTON1_MASK))
 				{
+					m_lblJAPIcon.setBorder(BorderFactory.createLoweredBevelBorder());
 					m_Controller.setAnonMode(!m_Controller.getAnonMode());
 				}
 			}
@@ -278,7 +280,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		{
 			try
 			{
-				if (m_Controller.getAnonMode())
+				if (m_Controller.isAnonConnected())  //m_Controller.getAnonMode())
 				{
 					MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
 					StatusInfo currentStatus = currentMixCascade.getCurrentStatus();
@@ -316,7 +318,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 					}
 					synchronized(m_lblJAPIcon)
 					{
-						m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon(JAPConstants.IICON16FN, true));
+						m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon(JAPConstants.IICON16FN, true, false));
 					}
 				}
 				else
@@ -329,6 +331,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 						m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon(JAPViewIconified.class.getName() + "_icon16discon.gif", true, false));
 					}
 				}
+
 			}
 			catch (Throwable t)
 			{
@@ -349,6 +352,8 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 			}
 		}
 	}
+
+
 
 	public void disableSetAnonMode()
 	{
@@ -380,6 +385,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 				}
 				SwingUtilities.invokeLater(m_runnableValueUpdate);
 			}
+			setButtonBorder();
 		}
 	}
 
@@ -464,6 +470,18 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		}
 	}
 
+	private void setButtonBorder()
+	{
+		if (!m_anonModeDisabled)
+		{
+			m_lblJAPIcon.setBorder(BorderFactory.createRaisedBevelBorder());
+		}
+		else
+		{
+			m_lblJAPIcon.setBorder(BorderFactory.createEmptyBorder());
+		}
+	}
+
 	/**
 	 * Shows a blinking JAP icon.
 	 */
@@ -476,7 +494,6 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 				synchronized(m_lblJAPIcon)
 				{
 					m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon(JAPViewIconified.class.getName() + "_icon16red.gif", true, false));
-					//m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon("test", true, false));
 					try
 					{
 						m_lblJAPIcon.wait(1000);
@@ -487,7 +504,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 					}
 					if (m_Controller.getAnonMode())
 					{
-						m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon(JAPConstants.IICON16FN, true));
+						m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon(JAPConstants.IICON16FN, true, false));
 					}
 					else
 					{

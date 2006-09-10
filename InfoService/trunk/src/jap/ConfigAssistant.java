@@ -133,13 +133,15 @@ public class ConfigAssistant extends JAPDialog
 	private static final String MSG_SET_NEW_LANGUAGE = ConfigAssistant.class.getName() +
 		"_setNewLanguage";
 
-
+	private static final String PROXIES[] = {"HTTP(S)", "FTP"};
 
 	private static final String IMG_ARROW = "arrow46.gif";
 	private static final String IMG_HELP_BUTTON = ConfigAssistant.class.getName() + "_en_help.gif";
 	private static final String IMG_SERVICES = ConfigAssistant.class.getName() + "_services.gif";
 
-	private JTextPane m_lblHostname, m_lblPort;
+	private JTextPane[] m_lblHostnames = new JTextPane[PROXIES.length];
+	private JTextPane[] m_lblPorts = new JTextPane[PROXIES.length];
+
 	private JRadioButton m_radioNoWarning, m_radioNoWarningAndSurfing, m_radioSuccessWarning,
 		m_radioErrorWarningNoSurfing, m_radioWarningInBrowser;
 	private ButtonGroup m_groupWarning;
@@ -271,7 +273,11 @@ public class ConfigAssistant extends JAPDialog
 		{
 			public CheckError[] checkUpdate()
 			{
-				m_lblPort.setText("" + JAPModel.getInstance().getHttpListenerPortNumber());
+				for (int i = 0; i < m_lblPorts.length; i++)
+				{
+					m_lblPorts[i].setText("" + JAPModel.getInstance().getHttpListenerPortNumber());
+				}
+
 				return super.checkUpdate();
 			}
 		};
@@ -286,39 +292,35 @@ public class ConfigAssistant extends JAPDialog
 		JTextComponentToClipboardCopier textCopier = new JTextComponentToClipboardCopier(false);
 
 
+		constraints.gridy = 0;
+		constraints.fill = GridBagConstraints.HORIZONTAL;
+		for (int i = 0; i < PROXIES.length; i++)
+		{
+			constraints.gridy++;
+			addProxyInfo(contentPane, constraints, PROXIES[i]);
+			constraints.gridy++;
+			constraints.gridx = 5;
+			m_lblHostnames[i] = GUIUtils.createSelectableAndResizeableLabel(contentPane);
+			m_lblHostnames[i].setText("localhost");
+			textCopier.registerTextComponent(m_lblHostnames[i]);
+			m_lblHostnames[i].setBackground(Color.white);
+			contentPane.add(m_lblHostnames[i], constraints);
+
+			constraints.gridx++;
+			tempLabel = new JLabel(":");
+			contentPane.add(tempLabel, constraints);
+
+			constraints.gridx++;
+			m_lblPorts[i]= GUIUtils.createSelectableAndResizeableLabel(contentPane);
+			m_lblPorts[i].setText("" + 65535);
+			textCopier.registerTextComponent(m_lblPorts[i]);
+			m_lblPorts[i].setBackground(Color.white);
+			contentPane.add(m_lblPorts[i], constraints);
+			constraints.gridy++;
+		}
+
+		constraints.gridy = 0;
 		addBrowserInstallationInfo(contentPane, constraints, BROWSER_IE, "browser_ie", false);
-
-		constraints.gridx = 5;
-		constraints.gridwidth = 1;
-		constraints.anchor = GridBagConstraints.EAST;
-		tempLabel = new JLabel("Proxy Hostname");
-		contentPane.add(tempLabel, constraints);
-		tempLabel = new JLabel(":");
-		constraints.gridx++;
-		contentPane.add(tempLabel, constraints);
-		tempLabel = new JLabel("Proxy Port");
-		constraints.gridx++;
-		contentPane.add(tempLabel, constraints);
-
-		constraints.gridx = 5;
-		constraints.gridy++;
-		m_lblHostname = GUIUtils.createSelectableAndResizeableLabel(contentPane);
-		m_lblHostname.setText("localhost");
-		textCopier.registerTextComponent(m_lblHostname);
-		m_lblHostname.setBackground(Color.white);
-		contentPane.add(m_lblHostname, constraints);
-
-		constraints.gridx++;
-		tempLabel = new JLabel(":");
-		contentPane.add(tempLabel, constraints);
-
-		constraints.gridx++;
-		m_lblPort = GUIUtils.createSelectableAndResizeableLabel(contentPane);
-		m_lblPort.setText("" + 65535);
-		textCopier.registerTextComponent(m_lblPort);
-		m_lblPort.setBackground(Color.white);
-		contentPane.add(m_lblPort, constraints);
-		constraints.gridy--;
 		addBrowserInstallationInfo(contentPane, constraints, BROWSER_FIREFOX, "browser_firefox", true);
 		addBrowserInstallationInfo(contentPane, constraints, BROWSER_SEA_MONKEY, "browser_seamonkey", false);
 		addBrowserInstallationInfo(contentPane, constraints, BROWSER_OPERA, "browser_opera", false);
@@ -724,6 +726,22 @@ public class ConfigAssistant extends JAPDialog
 		setResizable(false);
 		m_radioNoServiceAvailable.setVisible(false);
 	}
+
+	private void addProxyInfo(JComponent a_component, GridBagConstraints a_constraints, String a_protocol)
+	{
+		JLabel tempLabel;
+		a_constraints.gridx = 5;
+		a_constraints.gridwidth = 1;
+		a_constraints.anchor = GridBagConstraints.EAST;
+		tempLabel = new JLabel(a_protocol + " Hostname");
+		a_component.add(tempLabel, a_constraints);
+		tempLabel = new JLabel(":");
+		a_constraints.gridx++;
+		a_component.add(tempLabel, a_constraints);
+		tempLabel = new JLabel(a_protocol + " Port");
+		a_constraints.gridx++;
+		a_component.add(tempLabel, a_constraints);
+}
 
 	private void addBrowserInstallationInfo(JComponent a_component, GridBagConstraints a_constraints,
 											String a_browserName, String a_helpContext, boolean a_bRecommended)
