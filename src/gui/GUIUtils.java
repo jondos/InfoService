@@ -393,6 +393,48 @@ public final class GUIUtils
 	}
 
 	/**
+	 * Returns if the alwaysOnTop method of JRE 1.5 is set on a given Window.
+	 * @param a_Window a Window
+	 * @return if the alwaysOnTop method of JRE 1.5 is set on a given Window
+	 */
+	public static boolean isAlwaysOnTop(Window a_Window)
+	{
+		try
+		{
+			Method m = Window.class.getMethod("isAlwaysOnTop", new Class[0]);
+			return ( (Boolean) m.invoke(a_Window, new Object[0])).booleanValue();
+		}
+		catch (Throwable t)
+		{
+		}
+		return false;
+	}
+
+	/**
+	 * Tries to use the method setAlwaysOnTop of JRE 1.5.
+	 * @param a_Window Window
+	 * @param a_bOnTop boolean
+	 * @return if the method setAlwaysOnTop could be called with the given arguments
+	 */
+	public static boolean setAlwaysOnTop(Window a_Window, boolean a_bOnTop)
+	{
+		try
+		{
+			Class[] c = new Class[1];
+			c[0] = boolean.class;
+			Method m = Window.class.getMethod("setAlwaysOnTop", c);
+			Object[] args = new Object[1];
+			args[0] = new Boolean(a_bOnTop);
+			m.invoke(a_Window, args);
+			return true;
+		}
+		catch (Throwable t)
+		{
+		}
+		return false;
+	}
+
+	/**
 	 * Returns the bounds of the screen where a specified window is currently shown.
 	 * @param a_window a Window
 	 * @return the bounds of the screen where the specified window is currently shown

@@ -390,18 +390,9 @@ final public class JAPDll {
 
 	private static boolean setWindowOnTop(Window theWindow, String caption, boolean onTop)
 	{
-		try
-		{ //first we try the new setAlwaysOnTop method of Java 1.5
-			Class[] c = new Class[1];
-			c[0] = boolean.class;
-			Method m = Window.class.getMethod("setAlwaysOnTop", c);
-			Object[] args = new Object[1];
-			args[0] = new Boolean(onTop);
-			m.invoke(theWindow, args);
-			return true;
-		}
-		catch (Throwable t)
+		if (GUIUtils.setAlwaysOnTop(theWindow, onTop))
 		{
+			return true;
 		}
 		try
 		{
