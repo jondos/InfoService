@@ -272,7 +272,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 		m_labelUpdate.setForeground(Color.blue);
 		m_labelUpdate.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-		final JAPNewView view = this;
 		m_labelUpdate.addMouseListener(new MouseAdapter()
 		{
 			public void mouseClicked(MouseEvent e)
@@ -294,13 +293,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					if (vi != null && vi.getJapVersion() != null &&
 						vi.getJapVersion().compareTo(JAPConstants.aktVersion) > 0)
 					{
-						JAPUpdateWizard wz = new JAPUpdateWizard(vi, view);
+						JAPUpdateWizard wz = new JAPUpdateWizard(vi, JAPController.getView());
 						/* we got the JAPVersionInfo from the infoservice */
 						if (wz.getStatus() == JAPUpdateWizard.UPDATESTATUS_ERROR)
 						{
 							/* Download failed -> alert, and reset anon mode to false */
 							LogHolder.log(LogLevel.ERR, LogType.MISC, "Some update problem.");
-							JAPDialog.showErrorDialog(view,
+							JAPDialog.showErrorDialog(JAPController.getView(),
 								JAPMessages.getString("downloadFailed") +
 								JAPMessages.getString("infoURL"), LogType.MISC);
 						}
@@ -465,7 +464,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				if (m_lblPrice.getCursor() == Cursor.getPredefinedCursor(Cursor.HAND_CURSOR))
 				{
-					JAPDialog.showMessageDialog(view, JAPMessages.getString(MSG_NO_REAL_PAYMENT));
+					JAPDialog.showMessageDialog(JAPController.getView(), JAPMessages.getString(MSG_NO_REAL_PAYMENT));
 				}
 			}
 		});
@@ -976,7 +975,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				synchronized (LOCK_CONFIG)
 				{
-					m_dlgConfig = new JAPConf(view, m_bWithPayment);
+					m_dlgConfig = new JAPConf(JAPController.getView(), m_bWithPayment);
 					if (JAPController.getInstance().isConfigAssistantShown())
 					{
 						showInstallationAssistant();
@@ -1400,7 +1399,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 							public void run()
 							{
 								JAPDialog.LinkedCheckBox checkbox = new JAPDialog.LinkedCheckBox(false);
-								if (JAPDialog.showYesNoDialog(view, JAPMessages.getString(MSG_OLD_JAVA_HINT,
+								if (JAPDialog.showYesNoDialog(JAPController.getView(),
+									JAPMessages.getString(MSG_OLD_JAVA_HINT,
 									new Object[]
 									{entry.getJREVersion()}), JAPMessages.getString(MSG_TITLE_OLD_JAVA),
 									checkbox))
@@ -1454,10 +1454,16 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			Database.getInstance(NewCascadeIDEntry.class).remove(
 						 ((MixCascade)a_serverDescription).getMixIDsAsString());
 		}
-		synchronized(m_connectionEstablishedSync)
+		new Thread()
 		{
-			m_connectionEstablishedSync.notifyAll();
-		}
+			public void run()
+			{
+				synchronized (m_connectionEstablishedSync)
+				{
+					m_connectionEstablishedSync.notifyAll();
+				}
+			}
+		}.start();
 	}
 
 	public void dataChainErrorSignaled()
@@ -1467,10 +1473,16 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	public void disconnected()
 	{
-		synchronized(m_connectionEstablishedSync)
+		new Thread()
 		{
-			m_connectionEstablishedSync.notifyAll();
-		}
+			public void run()
+			{
+				synchronized (m_connectionEstablishedSync)
+				{
+					m_connectionEstablishedSync.notifyAll();
+				}
+			}
+		}.start();
 	}
 
 	public void connecting(AnonServerDescription a_serverDescription)
@@ -1600,15 +1612,15 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private void showConnecting(final boolean a_bOnError)
 	{
-		synchronized (m_connectionEstablishedSync)
-		{
-			m_connectionEstablishedSync.notifyAll();
-		}
-
 		Thread updateThread = new Thread()
 		{
 			public void run()
 			{
+				synchronized (m_connectionEstablishedSync)
+				{
+					m_connectionEstablishedSync.notifyAll();
+				}
+
 				synchronized (m_connectionEstablishedSync)
 				{
 					if (!a_bOnError || JAPModel.getInstance().isAutomaticallyReconnected())
@@ -2038,7 +2050,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		args[3] = a_entry.getVendorLongName();
 		args[4] = a_entry.getVendor();
 		// Uninstall old Java!! http://sunsolve.sun.com/search/document.do?assetkey=1-26-102557-1
-		JAPDialog.showMessageDialog(this, JAPMessages.getString(MSG_OLD_JAVA, args),
+		JAPDialog.showMessageDialog(JAPController.getView(), JAPMessages.getString(MSG_OLD_JAVA, args),
 									JAPMessages.getString(MSG_TITLE_OLD_JAVA),
 									AbstractOS.getInstance().createURLLink(
 			a_entry.getDownloadURL(), null, "updateJava"));
@@ -2047,7 +2059,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private synchronized void fetchMixCascadesAsync(final boolean bShowError)
 	{
 		m_bttnReload.setEnabled(false);
-		final Component component = this;
 		Runnable doFetchMixCascades = new Runnable()
 		{
 			public void run()
@@ -2055,7 +2066,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				//setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
 				m_Controller.updateInfoServices();
-				m_Controller.fetchMixCascades(bShowError, component);
+				m_Controller.fetchMixCascades(bShowError, JAPController.getView());
 				//setCursor(Cursor.getDefaultCursor());
 				SwingUtilities.invokeLater(new Runnable()
 				{

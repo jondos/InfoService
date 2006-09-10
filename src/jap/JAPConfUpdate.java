@@ -336,7 +336,6 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 			}
 			else if (a_message.equals(JAPModel.CHANGED_NOTIFY_JAVA_UPDATES))
 			{
-
 				m_cbxRemindJavaUpdate.setSelected(JAPModel.getInstance().isReminderForJavaUpdateActivated());
 			}
 		}

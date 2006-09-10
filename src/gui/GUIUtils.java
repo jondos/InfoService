@@ -67,6 +67,7 @@ import gui.dialog.JAPDialog;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import gui.dialog.WorkerContentPane;
 
 /**
  * This class contains helper methods for the GUI.
@@ -273,7 +274,50 @@ public final class GUIUtils
 		}
 		if (a_bScale && ms_loadImages)
 		{
-			return GUIUtils.createScaledImageIcon(img, ms_resizer);
+			final ImageIcon image = img;
+			WorkerContentPane.IReturnRunnable run = new WorkerContentPane.IReturnRunnable()
+			{
+				private ImageIcon m_icon;
+				public void run()
+				{
+					m_icon = GUIUtils.createScaledImageIcon(image, ms_resizer);
+				}
+
+				public Object getValue()
+				{
+					return m_icon;
+				}
+			};
+			Thread thread = new Thread(run);
+			thread.start();
+			try
+			{
+				thread.join(1000);
+			}
+			catch (InterruptedException ex)
+			{
+				// ignore
+			}
+			while (thread.isAlive())
+			{
+				thread.interrupt();
+				try
+				{
+					thread.join();
+				}
+				catch (InterruptedException a_e)
+				{
+					// ignore
+				}
+			}
+			if (run.getValue() != null)
+			{
+				return (ImageIcon)run.getValue();
+			}
+			if (img != null && run.getValue() == null)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.GUI, "Interrupted while scaling image icon!");
+			}
 		}
 		return img;
 	}
