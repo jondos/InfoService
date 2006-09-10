@@ -82,6 +82,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import java.awt.Cursor;
+import java.awt.Insets;
 
 /**
  * This is the generic implementation for an optionally modal, resizable a dialog. Use the getRootPane()
@@ -2798,6 +2799,11 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	public final void pack()
 	{
 		m_internalDialog.pack();
+	}
+
+	public Insets getInsets()
+	{
+		return m_internalDialog.getInsets();
 	}
 
 	/**

@@ -68,7 +68,7 @@ final class JAPFirewallPasswdDlg implements IPasswordReader
 			}
 			m_bShown = true;
 		}
-		JAPDialog dialog = new JAPDialog(JAPController.getView(),
+		JAPDialog dialog = new JAPDialog(JAPController.getViewWindow(),
 										 JAPMessages.getString("passwdDlgTitle"), true);
 		PasswordContentPane panePasswd =
 			new PasswordContentPane(dialog, PasswordContentPane.PASSWORD_ENTER,

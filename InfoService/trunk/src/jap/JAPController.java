@@ -32,7 +32,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
-import java.text.MessageFormat;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Locale;
@@ -42,6 +41,7 @@ import java.util.Random;
 import java.util.Vector;
 
 import java.awt.Component;
+import java.awt.Window;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -261,13 +261,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 
 					boolean bShowHtmlWarning;
-					JAPDll.setWindowOnTop(JAPController.getView(), true);
+					JAPDll.setWindowOnTop(JAPController.getViewWindow(), true);
 					JAPDialog.LinkedCheckBox cb = new JAPDialog.LinkedCheckBox(
 						JAPMessages.getString(JAPDialog.LinkedCheckBox.MSG_REMEMBER_ANSWER), false,
 						MSG_ALLOWUNPROTECTED);
-					bShowHtmlWarning = ! (JAPDialog.showYesNoDialog(JAPController.getView(),
+					bShowHtmlWarning = ! (JAPDialog.showYesNoDialog(JAPController.getViewWindow(),
 						JAPMessages.getString(MSG_ALLOWUNPROTECTED), cb));
-					JAPDll.setWindowOnTop(JAPController.getView(), false);
+					JAPDll.setWindowOnTop(JAPController.getViewWindow(), false);
 					if (bShowHtmlWarning && cb.getState())
 					{
 						// user has chosen to never allow non anonymous websurfing
@@ -417,7 +417,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				new Integer(JAPModel.getHttpListenerPortNumber())};
 			// output error message
 			JAPDialog.showErrorDialog(
-				 getView(), JAPMessages.getString("errorListenerPort", args) +
+				 getViewWindow(), JAPMessages.getString("errorListenerPort", args) +
 				 "<br><br>" +
 			 JAPMessages.getString(JAPConf.MSG_READ_PANEL_HELP, new Object[]{
 								   JAPMessages.getString("confButton"),
@@ -435,7 +435,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder())
 			{
 				/* show the connect via forwarder dialog -> the dialog will do the remaining things */
-				new JAPRoutingEstablishForwardedConnectionDialog(getView(), getDialogFont());
+				new JAPRoutingEstablishForwardedConnectionDialog(getViewWindow(), getDialogFont());
 				notifyObservers();
 			}
 			else
@@ -1131,7 +1131,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							{
 								strConsole.trim();
 								JAPDebug.showConsole(strConsole.equalsIgnoreCase(JAPConstants.CONFIG_CONSOLE),
-									getView());
+									getViewWindow());
 							}
 							Node elemFile = XMLUtil.getLastChildByName(elemOutput, JAPConstants.CONFIG_FILE);
 							JAPDebug.setLogToFile(XMLUtil.parseValue(elemFile, null));
@@ -1831,19 +1831,19 @@ public final class JAPController extends Observable implements IProxyListener, O
 			e.appendChild(elemGUI);
 			Element elemMainWindow = doc.createElement(JAPConstants.CONFIG_MAIN_WINDOW);
 			elemGUI.appendChild(elemMainWindow);
-			if (JAPModel.getSaveMainWindowPosition() && getView() != null)
+			if (JAPModel.getSaveMainWindowPosition() && getViewWindow() != null)
 			{
 				Element tmp = doc.createElement(JAPConstants.CONFIG_SET_ON_STARTUP);
 				elemMainWindow.appendChild(tmp);
 				XMLUtil.setValue(tmp, true);
 				tmp = doc.createElement(JAPConstants.CONFIG_LOCATION);
 				elemMainWindow.appendChild(tmp);
-				Point p = getView().getLocation();
+				Point p = getViewWindow().getLocation();
 				tmp.setAttribute(JAPConstants.CONFIG_X, Integer.toString(p.x));
 				tmp.setAttribute(JAPConstants.CONFIG_Y, Integer.toString(p.y));
 				tmp = doc.createElement(JAPConstants.CONFIG_SIZE);
 				elemMainWindow.appendChild(tmp);
-				Dimension d = getView().getSize();
+				Dimension d = getViewWindow().getSize();
 				tmp.setAttribute(JAPConstants.CONFIG_DX, Integer.toString(d.width));
 				tmp.setAttribute(JAPConstants.CONFIG_DY, Integer.toString(d.height));
 			}
@@ -2066,7 +2066,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			Object[] options =
 				{
 				JAPMessages.getString("later"), JAPMessages.getString("reconnect")};
-			int ret = JOptionPane.showOptionDialog(JAPController.getView(),
+			int ret = JOptionPane.showOptionDialog(JAPController.getViewWindow(),
 				JAPMessages.getString("reconnectAfterProxyChangeMsg"),
 				JAPMessages.getString("reconnectAfterProxyChangeTitle"),
 				JOptionPane.DEFAULT_OPTION,
@@ -2256,11 +2256,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 					boolean bSwitchCascade = (m_proxyAnon != null);
 					int ret;
 
-					if (getView() != null)
+					if (getViewWindow() != null)
 					{
-						getView().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+						getViewWindow().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 					}
-					msgIdConnect = m_View.addStatusMsg(JAPMessages.getString("setAnonModeSplashConnect"),
+					msgIdConnect = getView().addStatusMsg(JAPMessages.getString("setAnonModeSplashConnect"),
 						JAPDialog.MESSAGE_TYPE_INFORMATION, false);
 
 					// starting MUX --> Success ???
@@ -2353,7 +2353,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							{
 							new Integer(JAPModel.getHttpListenerPortNumber())};
 						JAPDialog.showErrorDialog(
-							getView(), JAPMessages.getString("errorListenerPort", args) +
+							getViewWindow(), JAPMessages.getString("errorListenerPort", args) +
 							"<br><br>" +
 							JAPMessages.getString(JAPConf.MSG_READ_PANEL_HELP, new Object[]
 												  {
@@ -2369,7 +2369,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						canStartService = false;
 						m_proxyAnon.stop();
 						m_proxyAnon = null;
-						JAPDialog.showErrorDialog(getView(),
+						JAPDialog.showErrorDialog(getViewWindow(),
 												  JAPMessages.getString("errorMixProtocolNotSupported"),
 												  LogType.NET);
 					}
@@ -2381,7 +2381,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						canStartService = false;
 						m_proxyAnon.stop();
 						m_proxyAnon = null;
-						JAPDialog.showErrorDialog(getView(),
+						JAPDialog.showErrorDialog(getViewWindow(),
 												  JAPMessages.getString("errorMixFirstMixSigCheckFailed"),
 												  LogType.NET);
 					}
@@ -2393,7 +2393,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						canStartService = false;
 						m_proxyAnon.stop();
 						m_proxyAnon = null;
-						JAPDialog.showErrorDialog(getView(),
+						JAPDialog.showErrorDialog(getViewWindow(),
 												  JAPMessages.getString("errorMixOtherMixSigCheckFailed"),
 												  LogType.NET);
 					}
@@ -2436,7 +2436,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 									public void run()
 									{
 										JAPDialog.LinkedCheckBox checkBox = new JAPDialog.LinkedCheckBox(false);
-										JAPDialog.showWarningDialog(getView(),
+										JAPDialog.showWarningDialog(getViewWindow(),
 											JAPMessages.getString("disableActCntMessage"),
 											JAPMessages.getString("disableActCntMessageTitle"),
 											checkBox);
@@ -2473,16 +2473,16 @@ public final class JAPController extends Observable implements IProxyListener, O
 							LogHolder.log(LogLevel.ERR, LogType.NET,
 										  "Error starting AN.ON service! - ErrorCode: " +
 										  Integer.toString(ret));
-							JAPDialog.showErrorDialog(getView(),
+							JAPDialog.showErrorDialog(getViewWindow(),
 								JAPMessages.getString("errorConnectingFirstMix"),
 								JAPMessages.getString("errorConnectingFirstMixTitle"),
 								LogType.NET);
 						}
 					}
 
-					if (getView() != null)
+					if (getViewWindow() != null)
 					{
-						getView().setCursor(Cursor.getDefaultCursor());
+						getViewWindow().setCursor(Cursor.getDefaultCursor());
 					}
 					notifyJAPObservers();
 					//splash.abort();
@@ -2720,7 +2720,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:HTTP listener settings changed");
 			if (bShowWarning)
 			{
-				JAPDialog.showMessageDialog(getView(),
+				JAPDialog.showMessageDialog(getViewWindow(),
 											JAPMessages.getString("confmessageListernPortChanged"));
 			}
 			m_Controller.notifyJAPObservers();
@@ -2847,12 +2847,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					// show a Reminder message that active contents should be disabled
 					checkBox = new JAPDialog.LinkedCheckBox(false);
-					returnValue = JAPDialog.showConfirmDialog(getView(),
+					returnValue = JAPDialog.showConfirmDialog(getViewWindow(),
 						JAPMessages.getString(MSG_DISABLE_GOODBYE),
 						JAPDialog.OPTION_TYPE_OK_CANCEL, JAPDialog.MESSAGE_TYPE_INFORMATION, checkBox);
 					if (returnValue == JAPDialog.RETURN_VALUE_OK)
 					{
-						getView().setEnabled(false);
+						getViewWindow().setEnabled(false);
 						JAPModel.getInstance().setNeverRemindGoodbye(checkBox.getState());
 					}
 				}
@@ -2865,13 +2865,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					if (getView() != null)
 					{
-						getView().setEnabled(false);
+						getViewWindow().setEnabled(false);
 					}
 					//JAPDll.checkDllVersion(false);
 					boolean error = m_Controller.saveConfigFile();
 					if (error && bShowConfigSaveErrorMsg)
 					{
-						JAPDialog.showErrorDialog(getView(), JAPMessages.getString(MSG_ERROR_SAVING_CONFIG,
+						JAPDialog.showErrorDialog(getViewWindow(), JAPMessages.getString(MSG_ERROR_SAVING_CONFIG,
 							JAPModel.getInstance().getConfigFile()), LogType.MISC);
 					}
 					JAPDialog.setConsoleOnly(true); // do not show any dialogs now
@@ -2972,9 +2972,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 					System.getProperties().put( "socksProxyPort", "0");
 					System.getProperties().put( "socksProxyHost" ,"localhost");
 					// do not show any dialogs in this state
-					if (getView() != null)
+					if (getViewWindow() != null)
 					{
-						getView().dispose();
+						getViewWindow().dispose();
 					}
 					LogHolder.log(LogLevel.INFO, LogType.GUI, "View has been disposed. Finishing...");
 					if ( !bShowConfigSaveErrorMsg ) {
@@ -3001,7 +3001,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	{
 		try
 		{
-			new JAPAbout(getView());
+			new JAPAbout(getViewWindow());
 		}
 		catch (Throwable t)
 		{
@@ -3155,12 +3155,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 			message = JAPMessages.getString(MSG_NEW_OPTIONAL_VERSION, updateVersionNumber + dev);
 			checkbox = new JAPDialog.LinkedCheckBox(false);
 		}
-		JAPDll.setWindowOnTop(getView(), true);
-		boolean bAnswer = JAPDialog.showYesNoDialog(getView(),
+		JAPDll.setWindowOnTop(getViewWindow(), true);
+		boolean bAnswer = JAPDialog.showYesNoDialog(getViewWindow(),
 													message,
 													JAPMessages.getString("newVersionAvailableTitle"),
 													checkbox);
-		JAPDll.setWindowOnTop(getView(), false);
+		JAPDll.setWindowOnTop(getViewWindow(), false);
 		if (checkbox != null)
 		{
 			JAPModel.getInstance().setReminderForOptionalUpdate(!checkbox.getState());
@@ -3172,7 +3172,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			{
 				//store current configuration first
 				saveConfigFile();
-				JAPUpdateWizard wz = new JAPUpdateWizard(vi, getView());
+				JAPUpdateWizard wz = new JAPUpdateWizard(vi, getViewWindow());
 				/* we got the JAPVersionInfo from the infoservice */
 				/* Assumption: If we are here, the download failed for some resaons, otherwise the
 				 * program would quit
@@ -3182,7 +3182,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					/* Download failed -> alert, and reset anon mode to false */
 					LogHolder.log(LogLevel.ERR, LogType.MISC, "Some update problem.");
-					JAPDialog.showErrorDialog(getView(),
+					JAPDialog.showErrorDialog(getViewWindow(),
 											  JAPMessages.getString("downloadFailed") +
 											  JAPMessages.getString("infoURL"), LogType.MISC);
 					if (a_bForced)
@@ -3202,7 +3202,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			 * reset anon mode to false
 			 */
 			LogHolder.log(LogLevel.ERR, LogType.MISC, "Could not get JAPVersionInfo.");
-			JAPDialog.showErrorDialog(getView(),
+			JAPDialog.showErrorDialog(getViewWindow(),
 									  JAPMessages.getString("downloadFailed") +
 									  JAPMessages.getString("infoURL"), LogType.MISC);
 			if (a_bForced)
@@ -3220,7 +3220,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			if (a_bForced)
 			{
 
-				JAPDialog.showWarningDialog(getView(), JAPMessages.getString("youShouldUpdate",
+				JAPDialog.showWarningDialog(getViewWindow(), JAPMessages.getString("youShouldUpdate",
 					JAPMessages.getString(JAPNewView.MSG_UPDATE)),
 											JAPUtil.createDialogBrowserLink(JAPMessages.getString("infoURL")));
 				//notifyJAPObservers();
@@ -3233,18 +3233,24 @@ public final class JAPController extends Observable implements IProxyListener, O
 	}
 
 	//---------------------------------------------------------------------
-	public void registerMainView(IJAPMainView v)
+	public void setView(IJAPMainView v)
 	{
 		m_View = v;
 	}
 
-	public static AbstractJAPMainView getView()
+	public static Window getViewWindow()
 	{
-		if (m_View instanceof AbstractJAPMainView)
+		if (m_View instanceof Window)
 		{
-			return (AbstractJAPMainView)JAPController.m_View;
+			return (Window)m_View;
 		}
 		return null;
+
+}
+
+	public static IJAPMainView getView()
+	{
+		return m_View;
 	}
 
 	public void removeEventListener(AnonServiceEventListener a_listener)
@@ -3448,7 +3454,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			/* show a message box with the explanation of the forwarding stuff */
 			JAPDialog.LinkedCheckBox checkbox = new JAPDialog.LinkedCheckBox(false);
-			JAPDialog.showMessageDialog(getView(), JAPMessages.getString("forwardingExplainMessage"),
+			JAPDialog.showMessageDialog(getViewWindow(), JAPMessages.getString("forwardingExplainMessage"),
 				JAPMessages.getString("forwardingExplainMessageTitle"), checkbox);
 
 			m_bForwarderNotExplain = checkbox.getState();
@@ -3486,7 +3492,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							{
 								case JAPRoutingSettings.REGISTRATION_NO_INFOSERVICES:
 								{
-									JAPDialog.showErrorDialog(getView(),
+									JAPDialog.showErrorDialog(getViewWindow(),
 										JAPMessages.getString(
 											"settingsRoutingServerRegistrationEmptyListError"),
 										LogType.MISC);
@@ -3494,14 +3500,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 								}
 								case JAPRoutingSettings.REGISTRATION_UNKNOWN_ERRORS:
 								{
-									JAPDialog.showErrorDialog(getView(),
+									JAPDialog.showErrorDialog(getViewWindow(),
 										JAPMessages.getString("settingsRoutingServerRegistrationUnknownError"),
 										LogType.MISC);
 									break;
 								}
 								case JAPRoutingSettings.REGISTRATION_INFOSERVICE_ERRORS:
 								{
-									JAPDialog.showErrorDialog(getView(),
+									JAPDialog.showErrorDialog(getViewWindow(),
 										JAPMessages.getString(
 											"settingsRoutingServerRegistrationInfoservicesError"),
 										LogType.MISC);
@@ -3509,7 +3515,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 								}
 								case JAPRoutingSettings.REGISTRATION_VERIFY_ERRORS:
 								{
-									JAPDialog.showErrorDialog(getView(),
+									JAPDialog.showErrorDialog(getViewWindow(),
 										JAPMessages.getString(
 											"settingsRoutingServerRegistrationVerificationError"),
 										LogType.MISC);
@@ -3533,7 +3539,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 					/* opening the server port was not successful -> show an error message */
 					m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(JAPMessages.getString(
 						"controllerStatusMsgRoutingStartServerError"), JAPDialog.MESSAGE_TYPE_ERROR, true);
-					JAPDialog.showErrorDialog(getView(), JAPMessages.getString("settingsRoutingStartServerError"),
+					JAPDialog.showErrorDialog(getViewWindow(),
+											  JAPMessages.getString("settingsRoutingStartServerError"),
 											  LogType.MISC);
 
 				}
@@ -3733,14 +3740,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	public void unrealisticBytes(long a_bytes)
 	{
-		JAPDll.setWindowOnTop(getView(), true);
+		JAPDll.setWindowOnTop(getViewWindow(), true);
 		boolean choice = JAPDialog.showYesNoDialog(
-			getView(),
+			getViewWindow(),
 			JAPMessages.getString("unrealBytesDesc") + "<p>" +
 			JAPMessages.getString("unrealBytesDifference") + " " + a_bytes,
 			JAPMessages.getString("unrealBytesTitle")
 			);
-		JAPDll.setWindowOnTop(getView(),false);
+		JAPDll.setWindowOnTop(getViewWindow(),false);
 		if (!choice)
 		{
 			this.setAnonMode(false);

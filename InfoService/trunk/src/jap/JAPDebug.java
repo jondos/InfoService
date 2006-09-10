@@ -38,6 +38,7 @@ import java.util.Properties;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Frame;
+import java.awt.Window;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -58,6 +59,8 @@ import logging.Log;
 import logging.LogLevel;
 import logging.LogType;
 import gui.*;
+import gui.dialog.*;
+import java.awt.Rectangle;
 
 /**
  * This class serves as a debugging interface.
@@ -80,7 +83,7 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 	private int m_debugType = LogType.ALL;
 	private int m_debugLevel = LogLevel.DEBUG;
 	private static JTextArea m_textareaConsole;
-	private static JDialog m_frameConsole;
+	private static JAPDialog m_frameConsole;
 	private static boolean m_bConsole = false;
 	private static volatile boolean ms_bFile = false;
 	private static String ms_strFileName = null;
@@ -208,7 +211,7 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 	 * @param b set true to show the debug console or false to hidde them
 	 * @param parent the parent frame of the debug console
 	 */
-	public static void showConsole(boolean b, Frame parent)
+	public static void showConsole(boolean b, Window parent)
 	{
 		debug.internal_showConsole(b, parent);
 	}
@@ -234,11 +237,11 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 		ms_strFileName = strFilename;
 	}
 
-	public static void setConsoleParent(Frame parent)
+	public static void setConsoleParent(Window parent)
 	{
 		if ( (debug != null) && (JAPDebug.m_bConsole) && (JAPDebug.m_frameConsole != null))
 		{
-			JDialog tmpDlg = new JDialog(parent, "Debug-Console");
+			JAPDialog tmpDlg = new JAPDialog(parent, "Debug-Console");
 			//tmpDlg.getContentPane().add(new JScrollPane(debug.textareaConsole));
 			tmpDlg.setContentPane(JAPDebug.m_frameConsole.getContentPane());
 			tmpDlg.addWindowListener(debug);
@@ -266,7 +269,7 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 		return ms_strFileName;
 	}
 
-	public void internal_showConsole(boolean b, Frame parent)
+	public void internal_showConsole(boolean b, Window parent)
 	{
 		if (!b && m_bConsole)
 		{
@@ -277,7 +280,7 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 		}
 		else if (b && !m_bConsole)
 		{
-			m_frameConsole = new JDialog(parent, "Debug-Console");
+			m_frameConsole = new JAPDialog(parent, "Debug-Console");
 			m_textareaConsole = new JTextArea(null, 20, 30);
 			m_textareaConsole.setEditable(false);
 			Font f = Font.decode("Courier");
@@ -335,7 +338,7 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 			m_frameConsole.getContentPane().add("Center", new JScrollPane(m_textareaConsole));
 			m_frameConsole.addWindowListener(this);
 			m_frameConsole.pack();
-			Dimension screenSize = m_frameConsole.getToolkit().getScreenSize();
+			Rectangle screenSize = GUIUtils.getScreenBounds(m_frameConsole.getOwner());
 			Dimension ownSize = m_frameConsole.getSize();
 			m_frameConsole.setLocation( (screenSize.width - ownSize.width), 0);
 			m_frameConsole.setVisible(true);
@@ -416,7 +419,7 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 	{
 		JFileChooser fc = new JFileChooser();
 		fc.setDialogType(JFileChooser.SAVE_DIALOG);
-		int ret = fc.showDialog(JAPDebug.m_frameConsole, null);
+		int ret = fc.showDialog(JAPDebug.m_frameConsole.getRootPane(), null);
 		if (ret == JFileChooser.APPROVE_OPTION)
 		{
 			File file = fc.getSelectedFile();
@@ -429,10 +432,8 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 			}
 			catch (Exception e)
 			{
-				JOptionPane.showMessageDialog(JAPDebug.m_frameConsole,
-											  JAPMessages.getString("errWritingLog"),
-											  JAPMessages.getString("error"),
-											  JOptionPane.ERROR_MESSAGE);
+				JAPDialog.showErrorDialog(JAPDebug.m_frameConsole, JAPMessages.getString("errWritingLog"),
+										  LogType.MISC);
 			}
 		}
 	}

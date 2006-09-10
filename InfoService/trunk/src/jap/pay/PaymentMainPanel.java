@@ -382,7 +382,7 @@ public class PaymentMainPanel extends FlippingPanel
 				if (activeAccount.getCertifiedCredit() <= (1024 * 1024) && !m_notifiedEmpty &&
 					activeAccount.getCertifiedCredit() != 0)
 				{
-					JAPDialog.showMessageDialog(JAPController.getView(),
+					JAPDialog.showMessageDialog(JAPController.getViewWindow(),
 												JAPMessages.getString(MSG_NEARLYEMPTY));
 					m_notifiedEmpty = true;
 				}
@@ -453,7 +453,7 @@ public class PaymentMainPanel extends FlippingPanel
 				{
 					public void run()
 					{
-						boolean answer = JAPDialog.showYesNoDialog(JAPController.getView(),
+						boolean answer = JAPDialog.showYesNoDialog(JAPController.getViewWindow(),
 							JAPMessages.getString("payCreateAccountQuestion"));
 						if (answer)
 						{
@@ -471,7 +471,7 @@ public class PaymentMainPanel extends FlippingPanel
 					{
 						public void run()
 						{
-							JAPDialog.showErrorDialog(JAPController.getView(),
+							JAPDialog.showErrorDialog(JAPController.getViewWindow(),
 								JAPMessages.getString(MSG_NO_ACTIVE_ACCOUNT), LogType.PAY);
 						}
 					});
@@ -480,7 +480,7 @@ public class PaymentMainPanel extends FlippingPanel
 				{
 					JAPDialog.LinkedCheckBox checkBox = new JAPDialog.LinkedCheckBox(false);
 
-					int ret = JAPDialog.showConfirmDialog(JAPController.getView(),
+					int ret = JAPDialog.showConfirmDialog(JAPController.getViewWindow(),
 						JAPMessages.getString("payUseAccountQuestion"),
 						JAPDialog.OPTION_TYPE_OK_CANCEL, JAPDialog.MESSAGE_TYPE_INFORMATION,
 						checkBox);

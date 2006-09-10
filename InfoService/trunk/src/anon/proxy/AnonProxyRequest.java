@@ -146,6 +146,8 @@ public final class AnonProxyRequest implements Runnable {
 
           if (!m_Proxy.isConnected()) {
 			  // reconnect failed
+			  LogHolder.log(LogLevel.ERR, LogType.NET,
+							"Requests terminated due to loss of connection to service!");
 			  closeRequest();
 			  return;
 		  }

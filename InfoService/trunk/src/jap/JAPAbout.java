@@ -30,6 +30,7 @@ package jap;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Frame;
+import java.awt.Window;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -41,23 +42,18 @@ import javax.swing.JDialog;
 import anon.util.ResourceLoader;
 import gui.JAPAboutAutoScroller;
 import gui.*;
+import gui.dialog.*;
 
-final class JAPAbout extends JDialog
+final class JAPAbout extends JAPDialog
 {
-
 	private final static int ABOUT_DY = 173;
 	private final static int ABOUT_DX = 350;
-	private Cursor oldCursor;
-	private Frame parent;
 	private JAPAboutAutoScroller sp;
 
-	public JAPAbout(Frame p)
+	public JAPAbout(Window p)
 	{
 		super(p, "Info...", false);
 		super.setVisible(false);
-		parent = p;
-		oldCursor = parent.getCursor();
-		parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		try
 		{
 			init();
@@ -80,7 +76,7 @@ final class JAPAbout extends JDialog
 		});
 		setLocation( -380, -200);
 		setSize(10, 10);
-		ImageIcon imageSplash = GUIUtils.loadImageIcon(JAPConstants.ABOUTFN, true); //loading the Background Image
+		ImageIcon imageSplash = GUIUtils.loadImageIcon(JAPConstants.ABOUTFN, true, false); //loading the Background Image
 		byte[] buff = ResourceLoader.loadResource(JAPMessages.getString("htmlfileAbout"));
 		sp = new JAPAboutAutoScroller(ABOUT_DX, ABOUT_DY, imageSplash.getImage(), 5, 62, 210, 173 - 72,
 									  new String(buff)); //Creating a new scrolling HTML-Pane with the specified size
@@ -91,7 +87,7 @@ final class JAPAbout extends JDialog
 				OKPressed();
 			}
 		});
-		setBackground(new Color(204, 204, 204));
+		getContentPane().setBackground(new Color(204, 204, 204));
 		getContentPane().setLayout(null);
 		getContentPane().add(sp);
 		//setContentPane(sp);
@@ -114,10 +110,9 @@ final class JAPAbout extends JDialog
 			//		pack(); //--> Maybe a solution for MAC'S ??
 		}
 		setResizable(false); //but the user shouldn't resize the Dialog again
-		setLocationRelativeTo(parent); //now showing centerd to JAP-Main
+		this.setLocationCenteredOnOwner(); //now showing centerd to JAP-Main
 		toFront();
 		sp.startScrolling(95); //starting the scrolling...
-		parent.setCursor(oldCursor);
 	}
 
 	private void OKPressed()

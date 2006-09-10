@@ -801,7 +801,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 */
 	private void doChangePassword()
 	{
-		JAPDialog d = new JAPDialog(GUIUtils.getParentWindow(this.getRootPanel()),
+		JAPDialog d = new JAPDialog(getRootPanel(),
 									JAPMessages.getString(MSG_ACCPASSWORDTITLE), true);
 		PasswordContentPane p;
 
@@ -1000,13 +1000,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		if (selectedAccount.getBalanceValidTime().before(new Date()))
 		{
-			JAPDialog.showMessageDialog(GUIUtils.getParentWindow(getRootPanel()),
-										JAPMessages.getString(MSG_ACCOUNT_INVALID));
+			JAPDialog.showMessageDialog(getRootPanel(), JAPMessages.getString(MSG_ACCOUNT_INVALID));
 			return;
 		}
 
-		final JAPDialog d = new JAPDialog(GUIUtils.getParentWindow(this.getRootPanel()),
-										  JAPMessages.getString(MSG_CHARGETITLE), true);
+		final JAPDialog d = new JAPDialog(getRootPanel(), JAPMessages.getString(MSG_CHARGETITLE), true);
 		d.setDefaultCloseOperation(JAPDialog.DISPOSE_ON_CLOSE);
 		d.setResizable(true);
 		doChargeAccount(new FixedReturnAccountRunnable(selectedAccount), d, null, null);
@@ -1093,7 +1091,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						{
 							LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
 										  "Error fetching TransCert: " + e.getMessage());
-							showPIerror(GUIUtils.getParentWindow(getRootPanel()), e);
+							showPIerror(a_parentDialog.getContentPane(), e);
 							Thread.currentThread().interrupt();
 						}
 					}
@@ -1177,7 +1175,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
 									  "Could not send PassivePayment to payment instance: " +
 									  e.getMessage());
-						showPIerror(GUIUtils.getParentWindow(getRootPanel()), e);
+						showPIerror(a_parentDialog.getContentPane(), e);
 						Thread.currentThread().interrupt();
 					}
 				}
@@ -1715,13 +1713,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		}
 		catch (Exception ex)
 		{
-			JOptionPane.showMessageDialog(
-				JAPController.getView(),
-				JAPMessages.getString("Could not activate account. Error Code: ") +
-				ex.getMessage(),
-				JAPMessages.getString("error"),
-				JOptionPane.ERROR_MESSAGE
-				);
+			JAPDialog.showErrorDialog(GUIUtils.getParentWindow(this.getRootPanel()),
+				JAPMessages.getString("Could not select account!"), LogType.PAY, ex);
 		}
 		updateAccountList();
 	}
@@ -1932,13 +1925,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 */
 	private void doImportAccount()
 	{
-		JFrame view = JAPController.getView();
 		PayAccount importedAccount = null;
 		Element elemAccount = null;
 		JFileChooser chooser = new JFileChooser();
 		MyFileFilter filter = new MyFileFilter();
 		chooser.setFileFilter(filter);
-		int returnVal = chooser.showOpenDialog(view);
+		int returnVal = chooser.showOpenDialog(getRootPanel());
 		if (returnVal == JFileChooser.APPROVE_OPTION)
 		{
 			File f = chooser.getSelectedFile();

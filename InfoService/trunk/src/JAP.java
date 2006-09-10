@@ -54,6 +54,7 @@ import jap.JAPViewIconified;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import jap.AbstractJAPMainView;
 
 /** This is the main class of the JAP project. It starts everything. It can be inherited by another
  *  class that wants to initialize platform dependend features, e.g. see
@@ -389,13 +390,13 @@ public class JAP
 		m_controller.addJAPObserver(view);
 		m_controller.addEventListener(view);
 		// Register the Main view where they are needed
-		m_controller.registerMainView(view);
+		m_controller.setView(view);
 
 		// Create the iconified view
 		if (!bConsoleOnly)
 		{
 			JAPViewIconified viewIconified;
-			viewIconified = new JAPViewIconified();
+			viewIconified = new JAPViewIconified((AbstractJAPMainView)view);
 			m_controller.addJAPObserver(viewIconified);
 			// Register the views where they are needed
 			view.registerViewIconified(viewIconified);
