@@ -2154,22 +2154,17 @@ public final class JAPController extends Observable implements IProxyListener, O
 	{
 
 		private boolean m_startServer;
-		private Thread m_waitForThread;
-		private IAIEventListener m_caller;
 
-		public SetAnonModeAsync(boolean a_startServer, Thread a_waitForThread, IAIEventListener a_caller)
+		public SetAnonModeAsync(boolean a_startServer)
 		{
 			super("SetAnonModeAsync");
 			m_startServer = a_startServer;
-			m_waitForThread = a_waitForThread;
-			m_caller = a_caller;
 		}
 
 		public boolean isStartServerJob()
 		{
 			return m_startServer;
 		}
-
 
 		public void run()
 		{
@@ -2179,19 +2174,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 				bRetryOnError = m_bInitialRun && JAPModel.getAutoConnect();
 				m_bInitialRun = false;
 			}
-			if (m_waitForThread != null)
-			{
-				try
-				{
-					m_waitForThread.join();
-				}
-				catch (InterruptedException e)
-				{
-					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-								  "Job for changing the anonymity mode to '" +
-								  (new Boolean(m_startServer)).toString() + "' was canceled.");
-				}
-			}
+
+
 			if (!isInterrupted())
 			{
 				/* job was not canceled -> we have to do it */
@@ -2413,7 +2397,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 								{
 									try
 									{
-										proxyAnon.addAIListener(m_caller);
+										proxyAnon.addAIListener(JAPController.getInstance());
 									}
 									catch (Exception a_e)
 									{
@@ -2749,7 +2733,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	public void setAnonMode(final boolean a_anonModeSelected)
 	{
-		m_anonJobQueue.addJob(new SetAnonModeAsync(a_anonModeSelected, null, this));
+		m_anonJobQueue.addJob(new SetAnonModeAsync(a_anonModeSelected));
 	}
 
 	/**
