@@ -30,7 +30,7 @@ package gui;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.lang.reflect.Method;
+import java.util.Hashtable;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileFilter;
 
@@ -66,6 +66,8 @@ final public class JAPDll {
 	private static final String MSG_COULD_NOT_SAVE = JAPDll.class.getName() + "_couldNotSave";
 
 
+	private static Hashtable ms_hashOnTop = new Hashtable();
+
 	private static boolean m_sbHasOnTraffic = true;
 	public static void init()
 	{
@@ -73,6 +75,20 @@ final public class JAPDll {
 		{
 			if (System.getProperty("os.name", "").toLowerCase().indexOf("win") > -1)
 			{
+				GUIUtils.setNativeGUILibrary(new GUIUtils.NativeGUILibrary()
+				{
+					public boolean setAlwaysOnTop(Window a_window, boolean a_bOnTop)
+					{
+						return setWindowOnTop(a_window, a_bOnTop);
+					}
+
+					public boolean isAlwaysOnTop(Window a_window)
+					{
+						return isWindowOnTop(a_window);
+					}
+
+				});
+
 				boolean bUpdateDone = false;
 				if ( JAPModel.getInstance().getDLLupdate())
 				{
@@ -379,24 +395,48 @@ final public class JAPDll {
 		JAPController.getInstance().goodBye(false);
 	}
 
-	public static boolean setWindowOnTop(Window theWindow, boolean onTop)
+	/**
+	 * Checks if the onTop method of the dll has been used for this window.
+	 * @param a_window Window
+	 * @return if the onTop method of the dll has been used for this window
+	 */
+	private static boolean isWindowOnTop(Window a_window)
 	{
-		if (theWindow != null)
+		if (a_window == null)
 		{
-			return setWindowOnTop(theWindow, theWindow.getName(), onTop);
+			return false;
 		}
-		return false;
+		return ms_hashOnTop.contains(a_window.getName());
 	}
 
-	private static boolean setWindowOnTop(Window theWindow, String caption, boolean onTop)
+	private static boolean setWindowOnTop(Window theWindow, boolean onTop)
 	{
-		if (GUIUtils.setAlwaysOnTop(theWindow, onTop))
+		if (theWindow == null)
 		{
-			return true;
+			return false;
 		}
+
+		//theWindow.setName(Double.toString(Math.random()));
+		String caption = theWindow.getName();
+		if (caption == null)
+		{
+			return false;
+		}
+
 		try
 		{
-			setWindowOnTop_dll(caption, onTop);
+			synchronized (ms_hashOnTop)
+			{
+				setWindowOnTop_dll(caption, onTop);
+				if (onTop)
+				{
+					ms_hashOnTop.put(caption, caption);
+				}
+				else
+				{
+					ms_hashOnTop.remove(caption);
+				}
+			}
 			return true;
 		}
 		catch (Throwable t)

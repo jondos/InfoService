@@ -496,7 +496,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 				}
 				catch (SocketException e)
 				{
-/* ignore it */
+					/* ignore it */
 				}
 
 				final Vector exceptionCache = new Vector();

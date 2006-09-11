@@ -702,7 +702,7 @@ public final class JAPHelp extends JAPDialog
 			/**
 			 * Needed to copy an external URL that could not be opened to the clip board.
 			 */
-			private class ExternalLinkedInformation implements JAPDialog.ILinkedInformation
+			private class ExternalLinkedInformation extends JAPDialog.LinkedInformationAdapter
 			{
 				private URL m_url;
 
@@ -721,14 +721,6 @@ public final class JAPHelp extends JAPDialog
 				}
 
 				/**
-				 * No action is performed on clicking the link.
-				 * @param a_bState is ignored
-				 */
-				public void clicked(boolean a_bState)
-				{
-				}
-
-				/**
 				 * Returns TYPE_SELECTABLE_LINK.
 				 * @return TYPE_SELECTABLE_LINK
 				 */
@@ -738,7 +730,7 @@ public final class JAPHelp extends JAPDialog
 				}
 
 				/**
-				 * Returns true, as the dialog does not need to open an other window.
+				 * Returns true, as the dialog does not need to open another window.
 				 * @return true
 				 */
 				public boolean isApplicationModalityForced()

@@ -180,6 +180,8 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 */
 	private Window m_parentWindow;
 
+	private boolean m_bOnTop = false;
+
 	/**
 	 * Disables the output of static dialog methods. All those method will return RETURN_VALUE_UNINITIALIZED.
 	 * @param a_bConsoleOnly if the output of static dialog methods should be disabled
@@ -384,6 +386,12 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		 * @return if the dialog should block all other windows
 		 */
 		public boolean isApplicationModalityForced();
+
+		/**
+		 * Returns if this dialog should be on top of all other windows in the system.
+		 * @return if this dialog should be on top of all other windows in the system
+		 */
+		public boolean isOnTop();
 	}
 
 	/**
@@ -509,10 +517,9 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	}
 
 	/**
-	 * This class does nothing else as enforcing the application modality of a dialog, that means the
-	 * dialog is modal for all other application windows.
+	 * This class does nothing but implementing all ILinkedInformation methods.
 	 */
-	public static final class LinkedApplicationModalityEnforcer implements ILinkedInformation
+	public static class LinkedInformationAdapter implements ILinkedInformation
 	{
 		/**
 		 * Returns null
@@ -530,12 +537,12 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		{
 		}
 		/**
-		 * Returns TYPE_LINK.
-		 * @return TYPE_LINK
+		 * Returns TYPE_DEFAULT.
+		 * @return TYPE_DEFAULT
 		 */
 		public int getType()
 		{
-			return TYPE_LINK;
+			return TYPE_DEFAULT;
 		}
 		/**
 		 * Returns true.
@@ -543,7 +550,16 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		 */
 		public boolean isApplicationModalityForced()
 		{
-			return true;
+			return false;
+		}
+
+		/**
+		 * Returns false.
+		 * @return false
+		 */
+		public boolean isOnTop()
+		{
+			return false;
 		}
 	}
 
@@ -552,7 +568,8 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 * help button that opens this context. Subclasses may override it to show an additional link
 	 * or a checkbox.
 	 */
-	public static class LinkedHelpContext implements ILinkedInformation, JAPHelpContext.IHelpContext
+	public static class LinkedHelpContext extends LinkedInformationAdapter
+		implements JAPHelpContext.IHelpContext
 	{
 		private JAPHelpContext.IHelpContext m_helpContext;
 
@@ -1162,6 +1179,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		PreferredWidthBoxPanel dummyBox;
 		JComponent linkLabel;
 		boolean bForceApplicationModality = false;
+		boolean bOnTop = false;
 
 		if (ms_bConsoleOnly)
 		{
@@ -1184,6 +1202,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		if (a_linkedInformation != null)
 		{
 			bForceApplicationModality = a_linkedInformation.isApplicationModalityForced();
+			bOnTop = a_linkedInformation.isOnTop();
 
 			/*
 			 * If the linked information contains a help context, display the help button instead of a link
@@ -1546,6 +1565,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		dialog.setResizable(false);
 		dialog.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		dialog.addWindowListener(new SimpleDialogButtonFocusWindowAdapter(dialogContentPane));
+		dialog.m_bOnTop = bOnTop;
 		dialog.setVisible(true);
 		dialog = null;
 
@@ -1951,6 +1971,27 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 *                          component is not within a frame, the dialog's parent frame is the
 	 *                          default frame.
 	 * @param a_message a message that is shown to the user (may be null)
+	 * @param a_title The title of the message dialog (may be null)
+	 * @param a_logType the log type for this error
+	 * @param a_linkedInformation a clickable information message that is appended to the text
+	 * @see logging.LogHolder
+	 * @see logging.LogType
+	 * @see logging.Log
+	 */
+	public static void showErrorDialog(Component a_parentComponent, String a_message, String a_title,
+									   int a_logType, ILinkedInformation a_linkedInformation)
+	{
+		showErrorDialog(a_parentComponent, a_message, a_title, a_logType,
+						(Throwable)null, a_linkedInformation);
+	}
+
+	/**
+	 * Displays a dialog showing an error message to the user and logs the error message
+	 * to the currently used Log.
+	 * @param a_parentComponent The parent component for this dialog. If it is null or the parent
+	 *                          component is not within a frame, the dialog's parent frame is the
+	 *                          default frame.
+	 * @param a_message a message that is shown to the user (may be null)
 	 * @param a_logType the log type for this error
 	 * @param a_linkedInformation a clickable information message that is appended to the text
 	 * @see logging.LogHolder
@@ -1997,7 +2038,8 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	public static void showErrorDialog(Component a_parentComponent, String a_message,  int a_logType,
 									   String a_title)
 	{
-		showErrorDialog(a_parentComponent, a_message, a_title, a_logType, null);
+		showErrorDialog(a_parentComponent, a_message, a_title, a_logType, (Throwable)null,
+			(ILinkedInformation)null);
 	}
 
 
@@ -2017,7 +2059,8 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	public static void showErrorDialog(JAPDialog a_parentDialog, String a_message,  int a_logType,
 									   String a_title)
 	{
-		showErrorDialog(getInternalDialog(a_parentDialog), a_message, a_title, a_logType, null);
+		showErrorDialog(getInternalDialog(a_parentDialog), a_message, a_title, a_logType, (Throwable)null,
+						(ILinkedInformation)null);
 	}
 
 	/**
@@ -2036,7 +2079,8 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	public static void showErrorDialog(Component a_parentComponent, String a_message, String a_title,
 									   int a_logType)
 	{
-		showErrorDialog(a_parentComponent, a_message, a_title, a_logType, null);
+		showErrorDialog(a_parentComponent, a_message, a_title, a_logType, (Throwable)null,
+						(ILinkedInformation)null);
 	}
 
 	/**
@@ -2377,19 +2421,32 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			}
 
 		}
-		boolean bOnTop = false;
-		if (GUIUtils.isAlwaysOnTop(getOwner()))
+
+		String dialogName = m_internalDialog.getName();
+		String newName = null;
+		boolean bOwnerOnTop = GUIUtils.isAlwaysOnTop(getOwner());
+
+		if (m_bOnTop || bOwnerOnTop)
 		{
-			// this is needed to display this dialog in front o the owner
-			bOnTop = true;
-			//GUIUtils.setAlwaysOnTop(getOwner(), false);
+			GUIUtils.setAlwaysOnTop(getOwner(), false);
+			newName = getOwner().getName();
+			m_internalDialog.setName(newName);
 			GUIUtils.setAlwaysOnTop(m_internalDialog, true);
 		}
+
 		setVisibleInternal(a_bVisible);
-		if (bOnTop)
+
+		if (m_bOnTop || bOwnerOnTop)
 		{
-			//GUIUtils.setAlwaysOnTop(getOwner(), true);
+			String tempName = m_internalDialog.getName();
+			m_internalDialog.setName("JAP " + Double.toString(Math.random()));
+			GUIUtils.setAlwaysOnTop(getOwner(), bOwnerOnTop);
 			GUIUtils.setAlwaysOnTop(m_internalDialog, false);
+			if (dialogName != null && newName != null && tempName != null && tempName.equals(newName))
+			{
+				// set the original name if the current name has not changed
+				m_internalDialog.setName(dialogName);
+			}
 		}
 	}
 
@@ -3180,132 +3237,154 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 
 		if (m_bBlockParentWindow)
 		{
-			try
+			Runnable dialogThread = new Runnable()
 			{
-				BlockedWindowDeactivationAdapter windowDeactivationAdapter =
-					new BlockedWindowDeactivationAdapter();
-
-				m_parentWindow.addWindowListener(windowDeactivationAdapter);
-				m_parentWindow.addFocusListener(windowDeactivationAdapter);
-
-				if (SwingUtilities.isEventDispatchThread())
+				public void run()
 				{
-					EventQueue theQueue = m_internalDialog.getToolkit().getSystemEventQueue();
-
-					while (isVisible())
+					try
 					{
-						AWTEvent event = theQueue.getNextEvent();
+						BlockedWindowDeactivationAdapter windowDeactivationAdapter =
+							new BlockedWindowDeactivationAdapter();
 
-						if (m_bBlockParentWindow && m_parentWindow.isEnabled())
-						{
-							// another dialog has enabled the parent; set it back to diabled
-							m_parentWindow.setEnabled(false);
-						}
+						m_parentWindow.addWindowListener(windowDeactivationAdapter);
+						m_parentWindow.addFocusListener(windowDeactivationAdapter);
 
-						Class classActiveEvent;
-						try
+						if (SwingUtilities.isEventDispatchThread())
 						{
-							// java.awt.ActiveEvent is not known in JDKs < 1.2
-							classActiveEvent = Class.forName("java.awt.ActiveEvent");
-						}
-						catch (ClassNotFoundException a_e)
-						{
-							classActiveEvent = null;
-						}
-						Object src = event.getSource();
-						if (src == m_internalDialog)
-						{
-							if (event instanceof WindowEvent)
+							EventQueue theQueue = m_internalDialog.getToolkit().getSystemEventQueue();
+
+							while (isVisible())
 							{
-								if ( ( (WindowEvent) event).getID() == WindowEvent.WINDOW_CLOSING)
-								{
-									m_dialogWindowAdapter.windowClosing( (WindowEvent) event);
+								AWTEvent event = theQueue.getNextEvent();
 
-									/*
-									 * Hide this event from the internal dialog. This removes the flimmering
-									 * effect that occurs when the internal dialog is closed before enabling
-									 * the parent window.
-									 */
-									continue;
+								if (m_bBlockParentWindow && m_parentWindow.isEnabled())
+								{
+									// another dialog has enabled the parent; set it back to diabled
+									m_parentWindow.setEnabled(false);
 								}
-							}
-							else if (event instanceof KeyEvent && getRootPane().getDefaultButton() != null)
-							{
-								/*
-								// default button patch for old JDKs
-								KeyEvent keyEvent = ((KeyEvent) event);
-								if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER &&
-								//	(keyEvent.getID() == KeyEvent.KEY_RELEASED ||
-									 keyEvent.getID() == KeyEvent.KEY_TYPED)
+
+								Class classActiveEvent;
+								try
 								{
-									if (keyEvent.getID() == KeyEvent.KEY_TYPED)
+									// java.awt.ActiveEvent is not known in JDKs < 1.2
+									classActiveEvent = Class.forName("java.awt.ActiveEvent");
+								}
+								catch (ClassNotFoundException a_e)
+								{
+									classActiveEvent = null;
+								}
+								Object src = event.getSource();
+								if (src == m_internalDialog)
+								{
+									if (event instanceof WindowEvent)
 									{
-										getRootPane().getDefaultButton().doClick();
+										if ( ( (WindowEvent) event).getID() == WindowEvent.WINDOW_CLOSING)
+										{
+											m_dialogWindowAdapter.windowClosing( (WindowEvent) event);
+
+											/*
+											 * Hide this event from the internal dialog. This removes the flimmering
+											 * effect that occurs when the internal dialog is closed before enabling
+											 * the parent window.
+											 */
+											continue;
+										}
 									}
-									continue;
+									else if (event instanceof KeyEvent && getRootPane().getDefaultButton() != null)
+									{
+										/*
+													  // default button patch for old JDKs
+												  KeyEvent keyEvent = ((KeyEvent) event);
+													  if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER &&
+													  //	(keyEvent.getID() == KeyEvent.KEY_RELEASED ||
+										  keyEvent.getID() == KeyEvent.KEY_TYPED)
+													  {
+										 if (keyEvent.getID() == KeyEvent.KEY_TYPED)
+										 {
+										  getRootPane().getDefaultButton().doClick();
+										 }
+										 continue;
+													  }
+										 */
+									}
 								}
-						*/
-							}
-						}
 
+								if (classActiveEvent != null && classActiveEvent.isInstance(event))
+								{
+									// ((ActiveEvent) event).dispatch();
+									classActiveEvent.getMethod("dispatch", null).invoke(event, null);
+								}
+								else if (src instanceof Component)
+								{
+									if (src == getParentComponent() && event instanceof WindowEvent &&
+										( (WindowEvent) event).getID() == WindowEvent.WINDOW_CLOSING)
+									{
+										// Prevent closing of parent Window. This will otherwise work in KDE systems.
+										continue;
+									}
 
-						if (classActiveEvent != null && classActiveEvent.isInstance(event))
-						{
-							// ((ActiveEvent) event).dispatch();
-							classActiveEvent.getMethod("dispatch", null).invoke(event, null);
-						}
-						else if (src instanceof Component)
-						{
-							if (src == getParentComponent() && event instanceof WindowEvent &&
-								( (WindowEvent) event).getID() == WindowEvent.WINDOW_CLOSING)
-							{
-								// Prevent closing of parent Window. This will otherwise work in KDE systems.
-								continue;
-							}
-
-							try
-							{
-								( (Component) src).dispatchEvent(event);
-							}
-							catch (IllegalMonitorStateException a_e)
-							{
-								LogHolder.log(LogLevel.NOTICE, LogType.GUI, a_e);
+									try
+									{
+										( (Component) src).dispatchEvent(event);
+									}
+									catch (IllegalMonitorStateException a_e)
+									{
+										LogHolder.log(LogLevel.NOTICE, LogType.GUI, a_e);
+									}
+								}
+								else if (src instanceof MenuComponent)
+								{
+									( (MenuComponent) src).dispatchEvent(event);
+								}
 							}
 						}
-						else if (src instanceof MenuComponent)
+						else
 						{
-							( (MenuComponent) src).dispatchEvent(event);
+							/** @todo remove... */
+							/**
+							 * Dialogs going in here are less secure against 'conflicting' components that enable
+							 * the parent. These event are only handled by focusGained() and windowActivated().
+							 */
+							synchronized (m_internalDialog.getTreeLock())
+							{
+								while (isVisible())
+								{
+									try
+									{
+										m_internalDialog.getTreeLock().wait();
+									}
+									catch (InterruptedException e)
+									{
+										break;
+									}
+								}
+								m_internalDialog.getTreeLock().notifyAll();
+							}
 						}
+						m_parentWindow.removeWindowListener(windowDeactivationAdapter);
+						m_parentWindow.removeFocusListener(windowDeactivationAdapter);
 					}
-				}
-				else
-				{
-					/**
-					 * Dialogs going in here are less secure against 'conflicting' components that enable
-					 * the parent. These event are only handled by focusGained() and windowActivated().
-					 */
-					synchronized (m_internalDialog.getTreeLock())
+					catch (Exception a_e)
 					{
-						while (isVisible())
-						{
-							try
-							{
-								m_internalDialog.getTreeLock().wait();
-							}
-							catch (InterruptedException e)
-							{
-								break;
-							}
-						}
-						m_internalDialog.getTreeLock().notifyAll();
+						LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, a_e);
 					}
 				}
-				m_parentWindow.removeWindowListener(windowDeactivationAdapter);
-				m_parentWindow.removeFocusListener(windowDeactivationAdapter);
-			}
-			catch (Exception a_e)
+			};
+
+			if (SwingUtilities.isEventDispatchThread())
 			{
-				LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, a_e);
+				dialogThread.run();
+			}
+			else
+			{
+				try
+				{
+					SwingUtilities.invokeAndWait(dialogThread);
+				}
+				catch (Exception a_e)
+				{
+					LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, a_e);
+				}
 			}
 
 			if (!m_parentWindow.isEnabled())

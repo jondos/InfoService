@@ -167,6 +167,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	private boolean m_bShowConfigAssistant = false;
 
+	private AnonJobQueue m_anonJobQueue;
+
+
 	/**
 	 * Stores the active MixCascade.
 	 */
@@ -216,11 +219,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 	/** Holds the MsgID of the status message after the forwaring server was started.*/
 	private int m_iStatusPanelMsgIdForwarderServerStatus;
 
-	/**
-	 * Stores the jobs, if we receive new setAnonMode() requests.
-	 */
-	private Vector m_changeAnonModeJobs;
-
 	private JAPController()
 	{
 		// simulate database distributor
@@ -238,7 +236,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		m_minVersionUpdater = new MinVersionUpdater();
 		m_javaVersionUpdater = new JavaVersionUpdater();
 
-		m_changeAnonModeJobs = new Vector();
+		m_anonJobQueue = new AnonJobQueue();
 		m_Model = JAPModel.getInstance();
 		m_Model.setAnonConnectionChecker(new AnonConnectionChecker());
 		InfoServiceDBEntry.setMutableProxyInterface(m_Model.getInfoServiceProxyInterface());
@@ -263,14 +261,18 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 
 					boolean bShowHtmlWarning;
-					JAPDll.setWindowOnTop(JAPController.getInstance().getViewWindow(), true);
 					JAPDialog.LinkedCheckBox cb = new JAPDialog.LinkedCheckBox(
-						JAPMessages.getString(JAPDialog.LinkedCheckBox.MSG_REMEMBER_ANSWER), false,
-						MSG_ALLOWUNPROTECTED);
+									   JAPMessages.getString(JAPDialog.LinkedCheckBox.MSG_REMEMBER_ANSWER), false,
+									   MSG_ALLOWUNPROTECTED)
+					{
+						public boolean isOnTop()
+						{
+							return true;
+						}
+					};
 					bShowHtmlWarning = ! (JAPDialog.showYesNoDialog(
 									   JAPController.getInstance().getViewWindow(),
-						JAPMessages.getString(MSG_ALLOWUNPROTECTED), cb));
-					JAPDll.setWindowOnTop(JAPController.getInstance().getViewWindow(), false);
+									   JAPMessages.getString(MSG_ALLOWUNPROTECTED), cb));
 					if (bShowHtmlWarning && cb.getState())
 					{
 						// user has chosen to never allow non anonymous websurfing
@@ -2019,6 +2021,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					/* we are running in anonymity mode */
 					//setAnonMode(false);
 					m_currentMixCascade = newMixCascade;
+					connecting(m_currentMixCascade);
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 								  "MixCascade changed while in anonymity mode.");
 					setAnonMode(true);
@@ -2201,15 +2204,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 					LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
 								  "Error while setting server mode to " + m_startServer + "!", a_e);
 				}
-				synchronized (m_changeAnonModeJobs)
-				{
-					/* remove ourself from the job-queue */
-					m_changeAnonModeJobs.removeElement(this);
-				}
+
 				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 							  "Job for changing the anonymity mode to '" +
 							  (new Boolean(m_startServer)).toString() + "' was executed.");
 			}
+			m_anonJobQueue.removeJob(this);
 		}
 
 		/**
@@ -2242,7 +2242,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_View.removeStatusMsg(msgIdConnect);
 				}
 			}
-
 			synchronized (PROXY_SYNC)
 			{
 				boolean canStartService = true;
@@ -2479,10 +2478,16 @@ public final class JAPController extends Observable implements IProxyListener, O
 							JAPDialog.showErrorDialog(getViewWindow(),
 								JAPMessages.getString("errorConnectingFirstMix"),
 								JAPMessages.getString("errorConnectingFirstMixTitle"),
-								LogType.NET);
-						}
-					}
+								LogType.NET, new JAPDialog.LinkedInformationAdapter()
+							{
+								public boolean isOnTop()
+								{
+									return true;
+								}
 
+							});
+						}
+						}
 					if (getViewWindow() != null)
 					{
 						getViewWindow().setCursor(Cursor.getDefaultCursor());
@@ -2593,68 +2598,158 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	}
 
-	public void setAnonMode(final boolean a_anonModeSelected)
+	private class AnonJobQueue
 	{
-		final JAPController controller = this;
+		/**
+		 * Stores the jobs, if we receive new setAnonMode() requests.
+		 */
+		private Vector m_changeAnonModeJobs;
 
-		synchronized (m_changeAnonModeJobs)
+		private Thread m_threadQueue;
+		private boolean m_bInterrupted = false;
+		private SetAnonModeAsync m_currentJob;
+
+		public AnonJobQueue()
 		{
-			if (a_anonModeSelected && m_bShutdown)
+			m_changeAnonModeJobs = new Vector();
+			m_threadQueue = new Thread()
 			{
-				// do not make new connection during shutdown
+				public void run()
+				{
+					synchronized (Thread.currentThread())
+					{
+						while (!Thread.currentThread().isInterrupted() && !m_bInterrupted)
+						{
+							try
+							{
+								Thread.currentThread().wait();
+							}
+							catch (InterruptedException ex)
+							{
+							}
+							if (Thread.currentThread().isInterrupted())
+							{
+								Thread.currentThread().notifyAll();
+								break;
+							}
+
+							// There is a new job!
+							if (m_changeAnonModeJobs.size() > 0 &&
+								m_currentJob == m_changeAnonModeJobs.firstElement() &&
+								m_currentJob.isAlive())
+							{
+								// a job is currently running; stop it;
+								m_currentJob.interrupt();
+							}
+							else if (m_changeAnonModeJobs.size() > 0)
+							{
+								// no job is running; remove all jobs that are outdated
+								while (m_changeAnonModeJobs.size() > 1)
+								{
+									m_changeAnonModeJobs.removeElementAt(0);
+								}
+								// start the newest job
+								m_currentJob = (SetAnonModeAsync)m_changeAnonModeJobs.elementAt(0);
+								m_currentJob.start();
+							}
+						}
+						// stop all threads
+						while (m_changeAnonModeJobs.size() > 0)
+						{
+							if (m_currentJob == m_changeAnonModeJobs.firstElement())
+							{
+								m_currentJob.interrupt();
+								try
+								{
+									Thread.currentThread().wait(500);
+								}
+								catch (InterruptedException ex1)
+								{
+								}
+							}
+							else
+							{
+								m_changeAnonModeJobs.removeAllElements();
+							}
+						}
+					}
+				}
+			};
+			m_threadQueue.start();
+		}
+		public void addJob(final SetAnonModeAsync a_anonJob)
+		{
+			if (a_anonJob == null)
+			{
 				return;
 			}
-			boolean newJob = true;
-			if (m_changeAnonModeJobs.size() > 0)
+
+			if (a_anonJob.isStartServerJob() && (m_bShutdown || m_bInterrupted))
 			{
-				/* check whether this is job is different to the last one */
-				SetAnonModeAsync lastJob = (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement());
-				if (!lastJob.isStartServerJob() && !a_anonModeSelected)
-				{
-					/* it's the same (disabling server) as the last job */
-					newJob = false;
-				}
+				// do not make new connections during shutdown
+				return;
 			}
-			if (newJob)
+
+			synchronized (m_threadQueue)
 			{
-				// interrupt all previous jobs
-				SetAnonModeAsync previousJob;
-				Vector jobs = (Vector) m_changeAnonModeJobs.clone();
-				for (int i = 0; i < jobs.size(); i++)
+				if (m_changeAnonModeJobs.size() > 0)
 				{
-					previousJob = (SetAnonModeAsync) jobs.elementAt(i);
-					previousJob.interrupt();
+					/* check whether this is job is different to the last one */
+					SetAnonModeAsync lastJob = (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement());
+					if (!lastJob.isStartServerJob() && !a_anonJob.isStartServerJob())
+					{
+						/* it's the same (disabling server) as the last job */
+						return;
+					}
 				}
-				m_changeAnonModeJobs.removeAllElements();
+				a_anonJob.setDaemon(true);
+				m_changeAnonModeJobs.addElement(a_anonJob);
+				m_threadQueue.notify();
 
-
-				//else
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+					  "Added a job for changing the anonymity mode to '" +
+					  (new Boolean(a_anonJob.isStartServerJob())).toString() + "' to the job queue.");
+			}
+		}
+		public void removeJob(final SetAnonModeAsync a_anonJob)
+		{
+			if (a_anonJob == null)
+			{
+				return;
+			}
+			synchronized (m_threadQueue)
+			{
+				if (m_changeAnonModeJobs.removeElement(a_anonJob))
 				{
-					/* we have to schedule this job */
-					SetAnonModeAsync currentJob = null;
-					if (m_changeAnonModeJobs.size() > 0)
-					{
-						/* wait until the previous job is done */
-						currentJob = new SetAnonModeAsync(a_anonModeSelected,
-							( (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement())), controller);
-					}
-					else
-					{
-						/* we don't have to wait for any previous job */
-						currentJob = new SetAnonModeAsync(
-							a_anonModeSelected, null, controller);
-					}
-
-					currentJob.setDaemon(true);
-					currentJob.start();
-
-					m_changeAnonModeJobs.addElement(currentJob);
-					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-								  "Added a job for changing the anonymity mode to '" +
-								  (new Boolean(a_anonModeSelected)).toString() + "' to the job queue.");
+					m_threadQueue.notify();
 				}
 			}
 		}
+
+
+		public void stop()
+		{
+			m_threadQueue.interrupt();
+			synchronized (m_threadQueue)
+			{
+				m_bInterrupted = true;
+				m_threadQueue.notifyAll();
+				m_threadQueue.interrupt();
+			}
+			try
+			{
+				m_threadQueue.join();
+			}
+			catch (InterruptedException a_e)
+			{
+				// ignore
+			}
+		}
+	}
+
+	public void setAnonMode(final boolean a_anonModeSelected)
+	{
+		m_anonJobQueue.addJob(new SetAnonModeAsync(a_anonModeSelected, null, this));
 	}
 
 	/**
@@ -2920,6 +3015,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 						//Wait until all Jobs are finished....
 						LogHolder.log(LogLevel.NOTICE, LogType.THREAD, "Finishing all AN.ON jobs...");
+						m_Controller.m_anonJobQueue.stop();
+						/*
 						for (int i = 0; i < 5 && m_Controller.m_changeAnonModeJobs.size() > 0; i++)
 						{
 							Vector vecJobs = (Vector)m_Controller.m_changeAnonModeJobs.clone();
@@ -2949,7 +3046,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 									// ignore
 								}
 							}
-						}
+						}*/
 					}
 					catch (Throwable a_e)
 					{
@@ -3160,12 +3257,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 			message = JAPMessages.getString(MSG_NEW_OPTIONAL_VERSION, updateVersionNumber + dev);
 			checkbox = new JAPDialog.LinkedCheckBox(false);
 		}
-		JAPDll.setWindowOnTop(getViewWindow(), true);
 		boolean bAnswer = JAPDialog.showYesNoDialog(getViewWindow(),
 													message,
 													JAPMessages.getString("newVersionAvailableTitle"),
 													checkbox);
-		JAPDll.setWindowOnTop(getViewWindow(), false);
 		if (checkbox != null)
 		{
 			JAPModel.getInstance().setReminderForOptionalUpdate(!checkbox.getState());
@@ -3670,7 +3765,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 	}
 
-
 	public void connectionEstablished(AnonServerDescription a_serverDescription)
 	{
 		new Thread()
@@ -3765,14 +3859,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	public void unrealisticBytes(long a_bytes)
 	{
-		JAPDll.setWindowOnTop(getViewWindow(), true);
+		GUIUtils.setAlwaysOnTop(getViewWindow(), true);
 		boolean choice = JAPDialog.showYesNoDialog(
 			getViewWindow(),
 			JAPMessages.getString("unrealBytesDesc") + "<p>" +
 			JAPMessages.getString("unrealBytesDifference") + " " + a_bytes,
 			JAPMessages.getString("unrealBytesTitle")
 			);
-		JAPDll.setWindowOnTop(getViewWindow(),false);
+		GUIUtils.setAlwaysOnTop(getViewWindow(),false);
 		if (!choice)
 		{
 			this.setAnonMode(false);
