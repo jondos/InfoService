@@ -97,15 +97,8 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 }
 
 	private long m_lTrafficWWW, m_lTrafficOther;
-	final private class MyViewIconifiedUpdate implements Runnable
-	{
-		public void run()
-		{
-			updateValues1();
-		}
-	}
 
-	private MyViewIconifiedUpdate m_runnableValueUpdate;
+	private Runnable m_runnableValueUpdate;
 
 	public JAPViewIconified(AbstractJAPMainView a_mainView)
 	{
@@ -117,7 +110,13 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPViewIconified:initializing...");
 		m_Controller = JAPController.getInstance();
 		m_NumberFormat = NumberFormat.getInstance();
-		m_runnableValueUpdate = new MyViewIconifiedUpdate();
+		m_runnableValueUpdate = new Runnable()
+		{
+			public void run()
+			{
+				updateValues1();
+			}
+		};
 		init();
 		Database.getInstance(StatusInfo.class).addObserver(this);
 	}
@@ -244,7 +243,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		m_labelUsers.setText(JAPMessages.getString("iconifiedViewNA"));
 		m_labelTraffic.setText(JAPMessages.getString("iconifiedViewNA"));
 		//JAPDll.setWindowOnTop(this,STR_HIDDEN_WINDOW, true);
-		JAPDll.setWindowOnTop(this, true);
+		GUIUtils.setAlwaysOnTop(this, true);
 	}
 
 	public void setVisible(boolean a_bVisible)

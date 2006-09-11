@@ -64,10 +64,10 @@ import javax.swing.plaf.FontUIResource;
 import anon.util.ClassUtil;
 import anon.util.ResourceLoader;
 import gui.dialog.JAPDialog;
+import gui.dialog.WorkerContentPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import gui.dialog.WorkerContentPane;
 
 /**
  * This class contains helper methods for the GUI.
@@ -103,6 +103,20 @@ public final class GUIUtils
 	};
 	private static IIconResizer ms_resizer = DEFAULT_RESIZER;
 
+	private static final NativeGUILibrary DUMMY_GUI_LIBRARY = new NativeGUILibrary()
+	{
+		public boolean setAlwaysOnTop(Window a_window, boolean a_bOnTop)
+		{
+			return false;
+		}
+
+		public boolean isAlwaysOnTop(Window a_window)
+		{
+			return false;
+		}
+	};
+	private static NativeGUILibrary ms_nativeGUILibrary = DUMMY_GUI_LIBRARY;
+
 	private static final IIconResizer RESIZER = new IIconResizer()
 	{
 		public double getResizeFactor()
@@ -115,6 +129,13 @@ public final class GUIUtils
 
 	// all loaded icons are stored in the cache and do not need to be reloaded from file
 	private static Hashtable ms_iconCache = new Hashtable();
+
+	public static interface NativeGUILibrary
+	{
+		public boolean setAlwaysOnTop(Window a_window, boolean a_bOnTop);
+
+		public boolean isAlwaysOnTop(Window a_window);
+	}
 
 	/**
 	 * Defines a resize factor for icons that is especially useful if the font size is altered.
@@ -392,6 +413,14 @@ public final class GUIUtils
 		a_window.setLocation( (screenBounds.width - ownSize.width), 0);
 	}
 
+	public static void setNativeGUILibrary(NativeGUILibrary a_library)
+	{
+		if (a_library != null)
+		{
+			ms_nativeGUILibrary = a_library;
+		}
+	}
+
 	/**
 	 * Returns if the alwaysOnTop method of JRE 1.5 is set on a given Window.
 	 * @param a_Window a Window
@@ -407,7 +436,7 @@ public final class GUIUtils
 		catch (Throwable t)
 		{
 		}
-		return false;
+		return ms_nativeGUILibrary.isAlwaysOnTop(a_Window);
 	}
 
 	/**
@@ -431,7 +460,7 @@ public final class GUIUtils
 		catch (Throwable t)
 		{
 		}
-		return false;
+		return ms_nativeGUILibrary.setAlwaysOnTop(a_Window, a_bOnTop);
 	}
 
 	/**

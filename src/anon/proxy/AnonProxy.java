@@ -90,6 +90,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	private ImmutableProxyInterface m_proxyInterface;
 
+	private boolean m_bReconnecting = false;
 	private final Object THREAD_SYNC = new Object();
 	private final Object SHUTDOWN_SYNC = new Object();
 
@@ -315,23 +316,35 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		{
 			synchronized (THREAD_SYNC)
 			{
+				THREAD_SYNC.notifyAll();
+
 				AnonServerDescription cascade = m_currentMixCascade.getNextMixCascade();
-				//fireConnecting(cascade);
-				m_Anon.shutdown();
-				while (threadRun.isAlive())
+				synchronized (SHUTDOWN_SYNC)
 				{
-					try
+					if (threadRun == null)
 					{
-						threadRun.interrupt();
-						threadRun.join(1000);
+						// the thread has been stopped
+						Thread.currentThread().interrupt();
+						return ErrorCodes.E_INTERRUPTED;
 					}
-					catch (InterruptedException e)
+
+					m_Anon.shutdown();
+
+					while (threadRun.isAlive())
 					{
+						try
+						{
+							threadRun.interrupt();
+							threadRun.join(1000);
+						}
+						catch (InterruptedException e)
+						{
+						}
 					}
 				}
-				threadRun = null;
 				boolean bConnectionError = false;
 				int ret = m_Anon.initialize(cascade);
+
 				if (ret != ErrorCodes.E_SUCCESS)
 				{
 					if (ret == ErrorCodes.E_INTERRUPTED ||
@@ -350,13 +363,18 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				{
 					m_currentMixCascade.keepCurrentCascade(true);
 				}
+				synchronized (SHUTDOWN_SYNC)
+				{
+					if (threadRun == null)
+					{
+						Thread.currentThread().interrupt();
+						return ErrorCodes.E_INTERRUPTED;
+					}
+				}
 				LogHolder.log(LogLevel.DEBUG, LogType.NET, "AN.ON initialized");
-
 				threadRun = new Thread(this, "JAP - AnonProxy");
 				threadRun.setDaemon(true);
 				threadRun.start();
-
-				THREAD_SYNC.notifyAll();
 
 				if (bConnectionError)
 				{
@@ -465,6 +483,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				m_Mixminion.shutdown();
 			}
 
+
 			while (threadRun.isAlive())
 			{
 				try
@@ -477,16 +496,18 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				{
 				}
 			}
-			/*
-			synchronized (THREAD_SYNC)
-			{
-				THREAD_SYNC.notify();
-			}*/
+
 			m_Tor = null;
 			m_Mixminion = null;
 			threadRun = null;
 			disconnected();
 		}
+		/*
+			synchronized (THREAD_SYNC)
+			{
+				THREAD_SYNC.notify();
+			}*/
+
 	}
 
 	public void run()
@@ -536,7 +557,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				// 2001-04-04(HF)
 				try
 				{
-					new AnonProxyRequest(this, socket);
+					new AnonProxyRequest(this, socket, THREAD_SYNC);
 				}
 				catch (Exception e)
 				{
@@ -581,23 +602,31 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		return null;
 	}
 
-	synchronized boolean reconnect()
+	//synchronized
+		void reconnect()
 	{
 		synchronized (THREAD_SYNC)
 		{
 			if (m_Anon.isConnected())
 			{
-				return true;
+				return;
 			}
 			if (Thread.currentThread().isInterrupted())
 			{
-				return false;
+				return;
 			}
 			if (!m_currentMixCascade.isReconnectedAutomatically())
 			{
 				stop();
-				return false;
+				return;
 			}
+			if (m_bReconnecting)
+			{
+				// there already is a reconnect thread
+				return;
+			}
+			m_bReconnecting = true;
+
 			while (threadRun != null && m_currentMixCascade.isReconnectedAutomatically())
 			{
 				LogHolder.log(LogLevel.ERR, LogType.NET, "Try reconnect to Mix");
@@ -605,7 +634,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				if (ret == ErrorCodes.E_SUCCESS)
 				{
 					m_currentMixCascade.keepCurrentCascade(true);
-					return true;
+					break;
 				}
 				try
 				{
@@ -616,7 +645,8 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 					break;
 				}
 			}
-			return false;
+			m_bReconnecting = false;
+			return;
 		}
 	}
 
@@ -707,20 +737,21 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	public void connecting(AnonServerDescription a_serverDescription)
 	{
-		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy received connecting.");
+		LogHolder.log(LogLevel.INFO, LogType.NET, "AnonProxy received connecting.");
 		fireConnecting(a_serverDescription);
 	}
 
 
 	public void connectionEstablished(AnonServerDescription a_serverDescription)
 	{
-		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy received connectionEstablished.");
+		LogHolder.log(LogLevel.NOTICE, LogType.NET,
+					  "AnonProxy received connectionEstablished to '" + a_serverDescription + "'.");
 		fireConnectionEstablished(a_serverDescription);
 	}
 
 	public void disconnected()
 	{
-		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy was disconnected.");
+		LogHolder.log(LogLevel.NOTICE, LogType.NET, "AnonProxy was disconnected.");
 		fireDisconnected();
 	}
 
@@ -728,7 +759,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	{
 		LogHolder.log(LogLevel.ERR, LogType.NET, "AnonProxy received connectionError");
 		fireConnectionError();
-		new Thread()
+		new Thread("Connection error reconnect thead")
 		{
 			public void run()
 			{

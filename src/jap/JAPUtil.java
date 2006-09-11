@@ -85,16 +85,11 @@ public final class JAPUtil
 		}
 		final URL myUrl = url;
 
-		return new JAPDialog.ILinkedInformation()
+		return new JAPDialog.LinkedInformationAdapter()
 		{
 			public String getMessage()
 			{
 				return myUrl.toString();
-			}
-
-			public boolean isApplicationModalityForced()
-			{
-				return false;
 			}
 
 			public int getType()
