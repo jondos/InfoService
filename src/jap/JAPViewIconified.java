@@ -41,7 +41,6 @@ import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseMotionListener;
 import javax.swing.JButton;
@@ -55,20 +54,14 @@ import javax.swing.BorderFactory;
 import anon.infoservice.MixCascade;
 import anon.infoservice.StatusInfo;
 import anon.proxy.IProxyListener;
-import gui.JAPDll;
 import gui.JAPMessages;
 import gui.GUIUtils;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.infoservice.Database;
-import anon.infoservice.DatabaseMessage;
-import java.util.Observable;
-import java.util.Observer;
 import java.awt.Cursor;
 
-final public class JAPViewIconified extends JWindow implements ActionListener,
-	JAPObserver, Observer
+final public class JAPViewIconified extends JWindow implements ActionListener
 {
 	private static final String MSG_TT_SWITCH_ANONYMITY =
 		JAPViewIconified.class.getName() + "_ttSwitchAnonymity";
@@ -118,7 +111,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 			}
 		};
 		init();
-		Database.getInstance(StatusInfo.class).addObserver(this);
+		//Database.getInstance(StatusInfo.class).addObserver(this);
 	}
 
 	private void init()
@@ -253,6 +246,11 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		super.setVisible(a_bVisible);
 	}
 
+	public void doClickOnCascadeChooser()
+	{
+	}
+
+
 	public void switchBackToMainView()
 	{
 		if (m_mainView == null || (!isVisible() && m_mainView.isVisible()))
@@ -332,6 +330,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 						m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon(JAPViewIconified.class.getName() + "_icon16discon.gif", true, false));
 					}
 				}
+				setButtonBorder();
 
 			}
 			catch (Throwable t)
@@ -340,22 +339,6 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		}
 	}
 
-	public void update(Observable a_observable, Object a_message)
-	{
-		if (a_observable == Database.getInstance(StatusInfo.class))
-		{
-			Object data =  ((DatabaseMessage)a_message).getMessageData();
-			if (data instanceof StatusInfo && ((StatusInfo)data).getId().equals(
-								JAPController.getInstance().getCurrentMixCascade().getId()))
-			{
-
-				updateValues(false);
-			}
-		}
-	}
-
-
-
 	public void disableSetAnonMode()
 	{
 		m_anonModeDisabled = true;
@@ -363,30 +346,26 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 
 	public void updateValues(boolean bSync)
 	{
-		synchronized (m_runnableValueUpdate)
+		if (SwingUtilities.isEventDispatchThread())
 		{
-			if (SwingUtilities.isEventDispatchThread())
+			m_runnableValueUpdate.run();
+		}
+		else
+		{
+			try
 			{
-				m_runnableValueUpdate.run();
+				if (bSync)
+				{
+					SwingUtilities.invokeAndWait(m_runnableValueUpdate);
+				}
 			}
-			else
+			catch (InvocationTargetException ex)
 			{
-				try
-				{
-					if (bSync)
-					{
-						SwingUtilities.invokeAndWait(m_runnableValueUpdate);
-					}
-				}
-				catch (InvocationTargetException ex)
-				{
-				}
-				catch (InterruptedException ex)
-				{
-				}
-				SwingUtilities.invokeLater(m_runnableValueUpdate);
 			}
-			setButtonBorder();
+			catch (InterruptedException ex)
+			{
+			}
+			SwingUtilities.invokeLater(m_runnableValueUpdate);
 		}
 	}
 
