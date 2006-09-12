@@ -224,7 +224,7 @@ final public class DirectProxy implements Runnable, AnonService
 			}
 			catch (SocketException e2)
 			{
-				LogHolder.log(LogLevel.ERR, LogType.NET, "Accept socket excpetion: " + e2);
+				LogHolder.log(LogLevel.ERR, LogType.NET, "Accept socket exception: " + e2);
 				break;
 			}
 			catch (IOException a_e)

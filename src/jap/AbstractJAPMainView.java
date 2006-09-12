@@ -51,6 +51,7 @@ public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 	public AbstractJAPMainView(String s, JAPController a_controller)
 	{
 		super(s);
+		setName(s);
 		m_Controller = a_controller;
 		m_Title = s;
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);

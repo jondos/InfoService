@@ -28,9 +28,9 @@
 package jap;
 
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Hashtable;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -44,12 +44,8 @@ import java.awt.Insets;
 import java.awt.MediaTracker;
 import java.awt.Point;
 import java.awt.Toolkit;
-import java.awt.Component;
-import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
@@ -63,6 +59,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
@@ -73,15 +70,25 @@ import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
+import anon.AnonServerDescription;
+import anon.infoservice.CascadeIDEntry;
+import anon.infoservice.Database;
+import anon.infoservice.DatabaseMessage;
+import anon.infoservice.JAPVersionInfo;
+import anon.infoservice.JavaVersionDBEntry;
 import anon.infoservice.MixCascade;
+import anon.infoservice.NewCascadeIDEntry;
 import anon.infoservice.StatusInfo;
+import anon.proxy.IProxyListener;
 import gui.FlippingPanel;
+import gui.GUIUtils;
 import gui.JAPDll;
 import gui.JAPHelp;
 import gui.JAPMessages;
 import gui.JAPMixCascadeComboBox;
+import gui.JAPProgressBar;
 import gui.StatusPanel;
-import gui.GUIUtils;
+import gui.dialog.JAPDialog;
 import jap.forward.JAPRoutingRegistrationStatusObserver;
 import jap.forward.JAPRoutingServerStatisticsListener;
 import jap.forward.JAPRoutingSettings;
@@ -89,20 +96,8 @@ import jap.pay.PaymentMainPanel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.proxy.IProxyListener;
-import gui.dialog.JAPDialog;
-import anon.infoservice.Database;
-import anon.AnonServerDescription;
-import anon.infoservice.DatabaseMessage;
 import platform.AbstractOS;
-import anon.infoservice.JAPVersionInfo;
 import update.JAPUpdateWizard;
-import anon.infoservice.NewCascadeIDEntry;
-import anon.infoservice.CascadeIDEntry;
-import anon.infoservice.JavaVersionDBEntry;
-import gui.JAPProgressBar;
-import javax.swing.JOptionPane;
-import java.lang.reflect.*;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver, Observer
@@ -123,11 +118,16 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String MSG_NO_COSTS = JAPNewView.class.getName() + "_noCosts";
 	private static final String MSG_WITH_COSTS = JAPNewView.class.getName() + "_withCosts";
 	private static final String MSG_NO_REAL_PAYMENT = JAPNewView.class.getName() + "_noRealPayment";
-	private static final String MSG_BTN_ASSISTANT =  JAPNewView.class.getName() + "_btnAssistant";
-	private static final String MSG_MN_ASSISTANT =  JAPNewView.class.getName() + "_mnAssistant";
+	private static final String MSG_BTN_ASSISTANT = JAPNewView.class.getName() + "_btnAssistant";
+	private static final String MSG_MN_ASSISTANT = JAPNewView.class.getName() + "_mnAssistant";
+	private static final String MSG_IS_DISABLED_EXPLAIN = JAPNewView.class.getName() + "_isDisabledExplain";
+	private static final String MSG_IS_DEACTIVATED = JAPNewView.class.getName() + "_isDisabled";
+	private static final String MSG_IS_TOOLTIP = JAPNewView.class.getName() + "_isDisabledTooltip";
 
-	private static final String HLP_ANONYMETER =  JAPNewView.class.getName() + "_anonymometer";
 
+
+
+	private static final String HLP_ANONYMETER = JAPNewView.class.getName() + "_anonymometer";
 
 	private static final String[] METERFNARRAY =
 		{
@@ -151,6 +151,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	//private JLabel meterLabel;
 	private JLabel m_lblPrice;
+	private JLabel m_lblISRequestsDeactivated;
 	private JLabel m_labelVersion;
 	private JLabel m_labelUpdate;
 	private JPanel m_pnlVersion;
@@ -189,7 +190,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JLabel m_labelForwarderRejectedConnectionsLabel, m_labelForwarderUsedBandwidthLabel;
 	private JLabel m_labelForwarderConnections;
 	private JLabel m_labelForwardingErrorSmall, m_labelForwardingError;
-	private JAPProgressBar m_progressOwnTrafficActivity, m_progressOwnTrafficActivitySmall, m_progressAnonLevel;
+	private JAPProgressBar m_progressOwnTrafficActivity, m_progressOwnTrafficActivitySmall,
+		m_progressAnonLevel;
 	private JButton m_bttnAnonDetails, m_bttnReload;
 	private JCheckBox m_cbAnonymityOn;
 	private JRadioButton m_rbAnonOff, m_rbAnonOn;
@@ -198,6 +200,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private StatusPanel m_StatusPanel;
 	private JPanel m_panelAnonService;
 	private int m_iPreferredWidth;
+	private Object SYNC_DISCONNECTED_ERROR = new Object();
+	private boolean m_bDisconnectedErrorShown = false;
 	private boolean m_bIgnoreAnonComboEvents = false;
 	private PaymentMainPanel m_flippingPanelPayment;
 	private Object m_connectionEstablishedSync = new Object();
@@ -206,6 +210,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JAPProgressBar m_progForwarderActivitySmall;
 
 	private boolean m_bUpdateClicked = false;
+	private boolean m_bEnableISClicked = false;
 
 	private long m_lTrafficWWW, m_lTrafficOther;
 
@@ -470,6 +475,39 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			}
 		});
 		m_panelAnonService.add(m_lblPrice, c1);
+
+		c1.gridx = 2;
+		c1.weightx = 1;
+		c1.gridwidth = 3;
+		c1.anchor = GridBagConstraints.EAST;
+		m_lblISRequestsDeactivated = new JLabel(JAPMessages.getString(MSG_IS_DEACTIVATED));
+		m_lblISRequestsDeactivated.setToolTipText(JAPMessages.getString(MSG_IS_TOOLTIP));
+		m_lblISRequestsDeactivated.setForeground(Color.red);
+		m_lblISRequestsDeactivated.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		m_lblISRequestsDeactivated.setVisible(false);
+		final JAPNewView view = this;
+		m_lblISRequestsDeactivated.addMouseListener(new MouseAdapter()
+		{
+			public void mouseClicked(MouseEvent e)
+			{
+				if (m_bEnableISClicked)
+				{
+					return;
+				}
+				m_bEnableISClicked = true;
+
+				if (JAPDialog.showConfirmDialog(view, JAPMessages.getString(MSG_IS_DISABLED_EXPLAIN),
+												JAPDialog.OPTION_TYPE_YES_NO,
+												JAPDialog.MESSAGE_TYPE_WARNING, meterIcons[2])
+					== JAPDialog.RETURN_VALUE_YES)
+				{
+					JAPModel.getInstance().setInfoServiceDisabled(false);
+				}
+
+				m_bEnableISClicked = false;
+			}
+		});
+		m_panelAnonService.add(m_lblISRequestsDeactivated, c1);
 
 
 		c1.insets = new Insets(5, 20, 0, 0);
@@ -970,7 +1008,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JAPModel.getInstance().addObserver(this);
 
 		JAPHelp.init(this, AbstractOS.getInstance(), AbstractOS.getInstance());
-		final JAPNewView view = this;
 		new Thread()
 		{
 			public void run()
@@ -1377,6 +1414,17 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 			};
 		}
+		else if (a_message != null && a_message.equals(JAPModel.CHANGED_INFOSERVICE_AUTO_UPDATE))
+		{
+			run = new Runnable()
+			{
+				public void run()
+				{
+					m_lblISRequestsDeactivated.setVisible(!JAPController.getInstance().isShuttingDown()
+						&& JAPModel.getInstance().isInfoServiceDisabled());
+				}
+			};
+		}
 		else if (a_observable == Database.getInstance(JavaVersionDBEntry.class))
 		{
 			DatabaseMessage message = ( (DatabaseMessage) a_message);
@@ -1396,8 +1444,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					if (JAPModel.getInstance().isReminderForJavaUpdateActivated() &&
 						!JAPController.getInstance().isConfigAssistantShown())
 					{
-						// do it as thread as otherwise this would blocks the database
-						new Thread()
+						// do it as thread as otherwise this would block the database
+						new Runnable()
 						{
 							public void run()
 							{
@@ -1621,6 +1669,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			public void run()
 			{
+				boolean bShowError = false;
 				synchronized (m_connectionEstablishedSync)
 				{
 					if (!a_bOnError || JAPModel.getInstance().isAutomaticallyReconnected())
@@ -1657,11 +1706,42 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						{
 							m_rbAnonOff.setSelected(true);
 						}
-						JAPDialog.showErrorDialog(JAPController.getInstance().getViewWindow(),
-												  JAPMessages.getString(MSG_ERROR_DISCONNECTED),
-												  LogType.NET);
+						bShowError = true;
 					}
 					m_connectionEstablishedSync.notifyAll();
+				}
+				if (bShowError)
+				{
+					synchronized (SYNC_DISCONNECTED_ERROR)
+					{
+						if (m_bDisconnectedErrorShown)
+						{
+							return;
+						}
+						m_bDisconnectedErrorShown = true;
+					}
+
+					JAPDialog.showErrorDialog(JAPController.getInstance().getViewWindow(),
+											  JAPMessages.getString(MSG_ERROR_DISCONNECTED), LogType.NET,
+											  new JAPDialog.LinkedInformationAdapter()
+					{
+						public boolean isOnTop()
+						{
+							return true;
+						}
+					});
+					synchronized (SYNC_DISCONNECTED_ERROR)
+					{
+						m_bDisconnectedErrorShown = false;
+					}
+					if (Thread.currentThread().isInterrupted())
+					{
+						System.out.println("test");
+					}
+					else
+					{
+						System.out.println("here");
+					}
 				}
 			}
 		};
@@ -1754,6 +1834,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelUpdate.setVisible( (vi != null && vi.getJapVersion() != null &&
 								   vi.getJapVersion().compareTo(JAPConstants.aktVersion) > 0) ||
 								 JavaVersionDBEntry.getNewJavaVersion() != null);
+
+	   m_lblISRequestsDeactivated.setVisible(!JAPController.getInstance().isShuttingDown()
+											 && JAPModel.getInstance().isInfoServiceDisabled());
 
 		MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
 		//String strCascadeName = currentMixCascade.getName();
