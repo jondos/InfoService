@@ -56,6 +56,10 @@ public class ConsoleJAPMainView implements IJAPMainView
 		return 0;
 	}
 
+	public void doClickOnCascadeChooser()
+	{
+	}
+
 	public void updateValues(boolean bSync)
 	{
 	}

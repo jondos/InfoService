@@ -63,7 +63,6 @@ import gui.JAPMessages;
 import gui.JAPHelp;
 import gui.CountryMapper;
 import gui.dialog.JAPDialog;
-import java.awt.Font;
 
 /**
  * This is the configuration GUI for the cert.
@@ -71,8 +70,10 @@ import java.awt.Font;
 
 final class JAPConfCert extends AbstractJAPConfModule implements Observer
 {
+	public static final String MSG_NO_CHECK_WARNING = JAPConfCert.class.getName() + "_noCheckWarning";
+
 	private static final String MSG_DETAILS = JAPConfCert.class.getName() + "_details";
-	private static final String MSG_NO_CHECK_WARNING = JAPConfCert.class.getName() + "_noCheckWarning";
+
 
 
 	private TitledBorder m_borderCert;

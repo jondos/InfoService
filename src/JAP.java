@@ -397,7 +397,6 @@ public class JAP
 		{
 			JAPViewIconified viewIconified;
 			viewIconified = new JAPViewIconified((AbstractJAPMainView)view);
-			m_controller.addJAPObserver(viewIconified);
 			// Register the views where they are needed
 			view.registerViewIconified(viewIconified);
 		}
