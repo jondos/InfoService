@@ -2552,7 +2552,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							{
 								JAPModel.getInstance().setAutoReConnect(true);
 							}
-							else
+							//else
 							{
 								getView().doClickOnCascadeChooser();
 							}

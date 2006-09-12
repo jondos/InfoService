@@ -67,6 +67,8 @@ public final class JAPModel extends Observable
 	public static final Integer CHANGED_ALLOW_UPDATE_DIRECT_CONNECTION = new Integer(2);
 	public static final Integer CHANGED_NOTIFY_JAP_UPDATES = new Integer(3);
 	public static final Integer CHANGED_NOTIFY_JAVA_UPDATES = new Integer(4);
+	public static final Integer CHANGED_AUTO_RECONNECT = new Integer(5);
+	public static final Integer CHANGED_CASCADE_AUTO_CHANGE = new Integer(6);
 
 	private static final int DIRECT_CONNECTION_INFOSERVICE = 0;
 	private static final int DIRECT_CONNECTION_PAYMENT = 1;
@@ -217,7 +219,15 @@ public final class JAPModel extends Observable
 
 	protected void setAutoReConnect(boolean b)
 	{
-		m_bAutoReConnect = b;
+		synchronized (this)
+		{
+			if (m_bAutoReConnect != b)
+			{
+				m_bAutoReConnect = b;
+				setChanged();
+			}
+			notifyObservers(CHANGED_AUTO_RECONNECT);
+		}
 	}
 
 	public static boolean isAutomaticallyReconnected()
@@ -436,7 +446,6 @@ public final class JAPModel extends Observable
 			}
 			notifyObservers(CHANGED_NOTIFY_JAVA_UPDATES);
 		}
-
 	}
 
 
@@ -460,9 +469,17 @@ public final class JAPModel extends Observable
 		}
 	}
 
-	public void setChooseCascadeConnectionAutomatically(boolean a_bChooseCascasdeConnectionAutomatically)
+	public void setCascadeAutoSwitch(boolean a_bChooseCascasdeConnectionAutomatically)
 	{
-		m_bChooseCascasdeConnectionAutomatically = a_bChooseCascasdeConnectionAutomatically;
+		synchronized (this)
+		{
+			if (m_bChooseCascasdeConnectionAutomatically != a_bChooseCascasdeConnectionAutomatically)
+			{
+				m_bChooseCascasdeConnectionAutomatically = a_bChooseCascasdeConnectionAutomatically;
+				setChanged();
+			}
+			notifyObservers(CHANGED_CASCADE_AUTO_CHANGE);
+		}
 	}
 
 	public boolean isCascadeConnectionChosenAutomatically()

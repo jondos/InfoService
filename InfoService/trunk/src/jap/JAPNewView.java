@@ -160,6 +160,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JAPConf m_dlgConfig;
 	private Object LOCK_CONFIG = new Object();
 	private JAPViewIconified m_ViewIconified;
+	private Object SYNC_ICONIFIED_VIEW = new Object();
 	private boolean m_bIsIconified;
 	//private final static boolean PROGRESSBARBORDER = true;
 	//private GuthabenAnzeige guthaben;
@@ -205,7 +206,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JAPProgressBar m_progForwarderActivitySmall;
 
 	private boolean m_bUpdateClicked = false;
-	private boolean m_bAssistantClicked = false;
 
 	private long m_lTrafficWWW, m_lTrafficOther;
 
@@ -978,10 +978,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				synchronized (LOCK_CONFIG)
 				{
 					m_dlgConfig = new JAPConf(view, m_bWithPayment);
-					if (JAPController.getInstance().isConfigAssistantShown())
-					{
-						showInstallationAssistant();
-					}
 				}
 			}
 		}.start();
@@ -1193,7 +1189,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	 */
 	public void disableSetAnonMode()
 	{
-		m_ViewIconified.disableSetAnonMode();
+		synchronized (SYNC_ICONIFIED_VIEW)
+		{
+			m_ViewIconified.disableSetAnonMode();
+		}
 		//anonCheckBox.setEnabled(false);
 		m_rbAnonOn.setEnabled(false);
 		m_rbAnonOff.setEnabled(false);
@@ -1443,11 +1442,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	public void showIconifiedView()
 	{
-		if (m_ViewIconified != null)
+		synchronized (SYNC_ICONIFIED_VIEW)
 		{
-			m_ViewIconified.setVisible(true);
-			setVisible(false);
-			m_ViewIconified.toFront();
+			if (m_ViewIconified != null)
+			{
+				m_ViewIconified.setVisible(true);
+				setVisible(false);
+				m_ViewIconified.toFront();
+			}
 		}
 	}
 
@@ -1541,7 +1543,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 				else if (source == m_btnAssistant)
 				{
-					showInstallationAssistant();
+					JAPController.getInstance().showInstallationAssistant();
 				}
 				//else if (source == m_bttnAnonConf)
 				//{
@@ -1666,55 +1668,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		updateThread.start();
 	}
 
-
-	private void showInstallationAssistant()
-	{
-		final JAPNewView view = this;
-		if (m_bAssistantClicked)
-		{
-			return;
-		}
-		m_bAssistantClicked = true;
-		while (m_dlgConfig == null);
-		//final JAPDialog configAssistant = new ConfigAssistant(m_dlgConfig);
-		final JAPDialog configAssistant = new ConfigAssistant(this);
-		/*
-		final ComponentAdapter componentAdapter =
-			new ComponentAdapter()
-		{
-			public void componentHidden(ComponentEvent a_event)
-			{
-				// Prevent that, if the config dialog is closed, the assistent is made invisible.
-				if (!m_dlgConfig.isRestartNeeded())
-				{
-					if (!(JAPController.getInstance().getViewWindow() instanceof JAPViewIconified))
-					{System.out.println("test");
-						configAssistant.setLocation(configAssistant.getLocation());
-						configAssistant.setVisible(true);
-					}
-				}
-				else
-				{
-					configAssistant.dispose();
-				}
-			}
-		};
-		configAssistant.addComponentListener(componentAdapter);*/
-
-		configAssistant.addWindowListener(new WindowAdapter()
-		{
-			public void windowClosed(WindowEvent a_event)
-			{
-				configAssistant.removeWindowListener(this);
-				//configAssistant.removeComponentListener(componentAdapter);
-				m_bAssistantClicked = false;
-				view.setVisible(true);
-			}
-		});
-
-		configAssistant.setVisible(true);
-	}
-
 	private void showHelpWindow()
 	{
 		JAPHelp help = JAPHelp.getInstance();
@@ -1771,8 +1724,21 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 	}
 
+	public void doClickOnCascadeChooser()
+	{
+		m_comboAnonServices.showPopup();
+	}
+
+
 	public void onUpdateValues()
 	{
+		synchronized (SYNC_ICONIFIED_VIEW)
+		{
+			if (m_ViewIconified != null)
+			{
+				m_ViewIconified.updateValues(false);
+			}
+		}
 		/*
 		 * Only thing that have really changed are updated!
 		 */
@@ -1988,7 +1954,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	public void registerViewIconified(JAPViewIconified v)
 	{
-		m_ViewIconified = v;
+		synchronized (SYNC_ICONIFIED_VIEW)
+		{
+			m_ViewIconified = v;
+		}
 	}
 
 	public void channelsChanged(int c)
