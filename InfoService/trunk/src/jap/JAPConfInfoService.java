@@ -120,6 +120,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 	private JPanel addInfoServicePanel;
 	private JPanel descriptionPanel;
 	private JButton settingsInfoServiceConfigBasicSettingsRemoveButton;
+	private JCheckBox m_allowAutomaticIS;
 	private JCheckBox m_cbxAllowNonAnonymousConnection;
 	private JCheckBox m_cbxUseDefaultISOnly;
 	private JSlider m_sliderAskedInfoServices;
@@ -198,10 +199,17 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 	public void update(Observable a_notifier, Object a_message)
 	{
-		if (a_message != null && a_message.equals(JAPModel.CHANGED_ALLOW_INFOSERVICE_DIRECT_CONNECTION))
+		if (a_message != null)
 		{
-			m_cbxAllowNonAnonymousConnection.setSelected(
-						 JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed());
+			if (a_message.equals(JAPModel.CHANGED_ALLOW_INFOSERVICE_DIRECT_CONNECTION))
+			{
+				m_cbxAllowNonAnonymousConnection.setSelected(
+					JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed());
+			}
+			else if (a_message.equals(JAPModel.CHANGED_INFOSERVICE_AUTO_UPDATE))
+			{
+				m_allowAutomaticIS.setSelected(!JAPModel.getInstance().isInfoServiceDisabled());
+			}
 		}
 	}
 
@@ -1229,19 +1237,8 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 	{
 		JPanel advancedPanel = new JPanel();
 
-		final JCheckBox settingsInfoServiceConfigAdvancedSettingsEnableAutomaticRequestsBox = new JCheckBox(
+		m_allowAutomaticIS = new JCheckBox(
 			JAPMessages.getString("settingsInfoServiceConfigAdvancedSettingsEnableAutomaticRequestsBox"));
-//		settingsInfoServiceConfigAdvancedSettingsEnableAutomaticRequestsBox.setFont(getFontSetting());
-		settingsInfoServiceConfigAdvancedSettingsEnableAutomaticRequestsBox.addActionListener(new
-			ActionListener()
-		{
-			public void actionPerformed(ActionEvent event)
-			{
-				/* enable/disable the automatic infoservice requests */
-				JAPController.getInstance().setInfoServiceDisabled(!
-					settingsInfoServiceConfigAdvancedSettingsEnableAutomaticRequestsBox.isSelected());
-			}
-		});
 
 		m_cbxUseDefaultISOnly = new JCheckBox(
 			  JAPMessages.getString("settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox"));
@@ -1298,7 +1295,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 						if (messageCode == JAPControllerMessage.INFOSERVICE_POLICY_CHANGED)
 						{
 							/* the InfoService requests policy was changed */
-							settingsInfoServiceConfigAdvancedSettingsEnableAutomaticRequestsBox.setSelected(!
+							m_allowAutomaticIS.setSelected(!
 								JAPModel.isInfoServiceDisabled());
 						}
 					}
@@ -1348,8 +1345,8 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		advancedPanelConstraints.gridy = 0;
 		advancedPanelConstraints.insets = new Insets(5, 5, 10, 5);
 		advancedPanelLayout.setConstraints(
-			settingsInfoServiceConfigAdvancedSettingsEnableAutomaticRequestsBox, advancedPanelConstraints);
-		advancedPanel.add(settingsInfoServiceConfigAdvancedSettingsEnableAutomaticRequestsBox);
+			m_allowAutomaticIS, advancedPanelConstraints);
+		advancedPanel.add(m_allowAutomaticIS);
 
 		advancedPanelConstraints.gridy = 1;
 		m_cbxAllowNonAnonymousConnection = new JCheckBox(JAPMessages.getString(MSG_ALLOW_DIRECT_CONNECTION),
@@ -1413,11 +1410,13 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 			  JAPConstants.DEFAULT_ALLOW_INFOSERVICE_NON_ANONYMOUS_CONNECTION);
 		m_sliderAskedInfoServices.setValue(InfoServiceHolder.DEFAULT_OF_ASKED_INFO_SERVICES);
 		m_cbxUseDefaultISOnly.setSelected(false);
+		m_allowAutomaticIS.setSelected(true);
 	}
 
 	protected void onUpdateValues()
 	{
 		m_sliderAskedInfoServices.setValue(InfoServiceHolder.getInstance().getNumberOFAskedInfoServices());
+		m_allowAutomaticIS.setSelected(!JAPModel.getInstance().isInfoServiceDisabled());
 		m_cbxAllowNonAnonymousConnection.setSelected(
 			  JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed());
 		//Select the preferred InfoService
@@ -1447,6 +1446,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 	{
 		JAPModel.getInstance().allowInfoServiceViaDirectConnection(m_cbxAllowNonAnonymousConnection.isSelected());
 		InfoServiceHolder.getInstance().setNumberOfAskedInfoServices(m_sliderAskedInfoServices.getValue());
+		JAPModel.getInstance().setInfoServiceDisabled(!m_allowAutomaticIS.isSelected());
 		return true;
 	}
 

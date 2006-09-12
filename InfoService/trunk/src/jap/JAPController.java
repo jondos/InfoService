@@ -482,6 +482,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 	}
 
+	public boolean isShuttingDown()
+	{
+		return m_bShutdown;
+	}
+
 	//---------------------------------------------------------------------
 	/** Loads the Configuration.
 	 * First tries to read a config file provided on the command line.
@@ -3070,8 +3075,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 							JAPModel.getInstance().getConfigFile()), LogType.MISC);
 					}
 
+					// disallow new connections
 					JAPModel.getInstance().setAutoReConnect(false);
 					JAPModel.getInstance().setCascadeAutoSwitch(false);
+
 					JAPDialog.setConsoleOnly(true); // do not show any dialogs now
 					if (!bShowConfigSaveErrorMsg)
 					{
