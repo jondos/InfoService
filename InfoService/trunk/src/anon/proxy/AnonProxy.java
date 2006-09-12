@@ -325,11 +325,6 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		return connect(false);
 	}
 
-	public boolean isNull()
-	{
-		return m_Tor == null;
-	}
-
 	public void stop()
 	{
 		synchronized (SHUTDOWN_SYNC)

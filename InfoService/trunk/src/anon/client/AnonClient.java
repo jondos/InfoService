@@ -81,6 +81,9 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 
 	private Object m_internalSynchronization;
 
+	private Thread m_threadInitialise;
+	private Object SYNC_SHUTDOWN = new Object();
+
 	private Object m_internalSynchronizationForSocket;
 
 	private Object m_internalSynchronizationForDummyTraffic;
@@ -134,53 +137,122 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		m_connectedSocket = a_connectedSocket;
 	}
 
-	public int initialize(AnonServerDescription a_mixCascade)
+	private static interface StatusThread extends Runnable
+	{
+		public int getStatus();
+	}
+
+	public int initialize(final AnonServerDescription a_mixCascade)
 	{
 		if (! (a_mixCascade instanceof MixCascade))
 		{
 			return ErrorCodes.E_INVALID_SERVICE;
 		}
-		MixCascade mixCascade = (MixCascade) a_mixCascade;
-		synchronized (m_internalSynchronization)
+		final MixCascade mixCascade = (MixCascade) a_mixCascade;
+
+		StatusThread run = new StatusThread()
 		{
-			if (isConnected())
+			int status;
+
+			public int getStatus()
 			{
-				LogHolder.log(LogLevel.ERR, LogType.NET, "AnonClient was still connected when connecting!");
-				shutdown();
-				if (isConnected())
-				{
-					return ErrorCodes.E_ALREADY_CONNECTED;
-				}
-			}
-			synchronized (CONN_ERR_SYNC)
-			{
-				m_connectionErrorCount = 0;
-				m_connectionErrorTime = 0;
+				return status;
 			}
 
-			Socket socketToMixCascade = null;
-			if (m_connectedSocket != null)
+			public void run()
 			{
-				socketToMixCascade = m_connectedSocket;
-				m_connectedSocket = null;
-			}
-			else
-			{
-				try
+				synchronized (m_internalSynchronization)
 				{
-					socketToMixCascade = connectMixCascade(mixCascade, m_proxyInterface);
-				}
-				catch (InterruptedIOException a_e)
-				{
-					return ErrorCodes.E_INTERRUPTED;
+					if (isConnected())
+					{
+						LogHolder.log(LogLevel.ERR, LogType.NET,
+									  "AnonClient was already connected when connecting!");
+						shutdown();
+						if (isConnected())
+						{
+							status = ErrorCodes.E_ALREADY_CONNECTED;
+							synchronized (m_threadInitialise)
+							{
+								m_threadInitialise.notify();
+							}
+							return;
+						}
+					}
+					synchronized (CONN_ERR_SYNC)
+					{
+						m_connectionErrorCount = 0;
+						m_connectionErrorTime = 0;
+					}
+
+					Socket socketToMixCascade = null;
+					if (m_connectedSocket != null)
+					{
+						socketToMixCascade = m_connectedSocket;
+						m_connectedSocket = null;
+					}
+					else
+					{
+						try
+						{
+							socketToMixCascade = connectMixCascade(mixCascade, m_proxyInterface);
+						}
+						catch (InterruptedIOException a_e)
+						{
+							status = ErrorCodes.E_INTERRUPTED;
+							synchronized (m_threadInitialise)
+							{
+								m_threadInitialise.notify();
+							}
+							return;
+						}
+					}
+					if (socketToMixCascade == null)
+					{
+						status = ErrorCodes.E_CONNECT;
+						synchronized (m_threadInitialise)
+						{
+							m_threadInitialise.notify();
+						}
+						return;
+					}
+					status = initializeProtocol(socketToMixCascade, a_mixCascade);
+					synchronized (m_threadInitialise)
+					{
+						m_threadInitialise.notify();
+					}
+					return;
 				}
 			}
-			if (socketToMixCascade == null)
-			{
-				return ErrorCodes.E_CONNECT;
-			}
-			return initializeProtocol(socketToMixCascade, a_mixCascade);
+		};
+		synchronized (SYNC_SHUTDOWN)
+		{
+			m_threadInitialise = new Thread(run);
 		}
+		m_threadInitialise.start();
+		try
+		{
+			m_threadInitialise.join();
+		}
+		catch (InterruptedException ex)
+		{
+			synchronized (m_threadInitialise)
+			{
+				while (m_threadInitialise.isAlive())
+				{
+					m_threadInitialise.interrupt();
+					try
+					{
+						m_threadInitialise.wait(500);
+					}
+					catch (InterruptedException ex1)
+					{
+					}
+				}
+			}
+			return ErrorCodes.E_INTERRUPTED;
+		}
+
+		return run.getStatus();
 	}
 
 	public void setPaymentProxy(IMutableProxyInterface a_paymentProxyInterface)
@@ -206,6 +278,13 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 				m_socketHandler.deleteObserver(this);
 				m_socketHandler.closeSocket();
 				m_socketHandler = null;
+			}
+		}
+		synchronized (SYNC_SHUTDOWN)
+		{
+			if (m_threadInitialise != null)
+			{
+				m_threadInitialise.interrupt();
 			}
 		}
 		synchronized (m_internalSynchronization)

@@ -27,8 +27,6 @@
  */
 package jap;
 
-import java.awt.Window;
-
 import gui.IStatusLine;
 import anon.AnonServiceEventListener;
 
@@ -39,6 +37,8 @@ public interface IJAPMainView extends JAPObserver, IStatusLine, AnonServiceEvent
 	public void registerViewIconified(JAPViewIconified viewIconified);
 
 	public JAPViewIconified getViewIconified();
+
+	public void doClickOnCascadeChooser();
 
 	public void disableSetAnonMode();
 

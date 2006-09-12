@@ -57,6 +57,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import java.util.Dictionary;
+import java.util.Observable;
 
 final class JAPConfAnonGeneral extends AbstractJAPConfModule
 {
@@ -127,7 +128,23 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		return JAPMessages.getString("ngAnonGeneralPanelTitle");
 	}
 
-//updateGui
+	public void update(Observable a_notifier, Object a_message)
+	{
+		if (a_message != null)
+		{
+			if (a_message.equals(JAPModel.CHANGED_AUTO_RECONNECT))
+			{
+				m_cbAutoReConnect.setSelected(JAPModel.getInstance().isAutomaticallyReconnected());
+			}
+			else if (a_message.equals(JAPModel.CHANGED_CASCADE_AUTO_CHANGE))
+			{
+				m_cbAutoChooseCascades.setSelected(
+								JAPModel.getInstance().isCascadeConnectionChosenAutomatically());
+			}
+
+		}
+	}
+
 	protected void onUpdateValues()
 	{
 		int iTmp = JAPModel.getDummyTraffic();
@@ -205,7 +222,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		JAPModel.getInstance().denyNonAnonymousSurfing(m_cbDenyNonAnonymousSurfing.isSelected());
 		JAPModel.getInstance().setAutoConnect(m_cbAutoConnect.isSelected());
 		JAPModel.getInstance().setAutoReConnect(m_cbAutoReConnect.isSelected());
-		JAPModel.getInstance().setChooseCascadeConnectionAutomatically(m_cbAutoChooseCascades.isSelected());
+		JAPModel.getInstance().setCascadeAutoSwitch(m_cbAutoChooseCascades.isSelected());
 		if (m_cbRestrictAutoChoose.isSelected())
 		{
 			JAPModel.getInstance().setAutomaticCascadeChangeRestriction(JAPModel.AUTO_CHANGE_RESTRICT);

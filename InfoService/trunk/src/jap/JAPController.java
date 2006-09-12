@@ -110,6 +110,8 @@ import platform.AbstractOS;
 import proxy.DirectProxy;
 import proxy.DirectProxy.AllowUnprotectedConnectionCallback;
 import update.JAPUpdateWizard;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -144,6 +146,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 		"_newOptionalVersion";
 	private static final String MSG_ALLOWUNPROTECTED = JAPController.class.getName() + "_allowunprotected";
 	public static final String MSG_IS_NOT_ALLOWED = JAPController.class.getName() + "_isNotAllowed";
+	public static final String MSG_ASK_SWITCH = JAPController.class.getName() + "_askForSwitchOnError";
+	public static final String MSG_ASK_RECONNECT = JAPController.class.getName() + "_askForReconnectOnError";
 
 	private static final String XML_ELEM_LOOK_AND_FEEL = "LookAndFeel";
 	private static final String XML_ELEM_LOOK_AND_FEELS = "LookAndFeels";
@@ -166,6 +170,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private boolean m_bShutdown = false;
 
 	private boolean m_bShowConfigAssistant = false;
+	private boolean m_bAssistantClicked = false;
 
 	private AnonJobQueue m_anonJobQueue;
 
@@ -194,9 +199,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private boolean mbDoNotAbuseReminder = false; // indicates if new warning message in setAnonMode (containing Do no abuse) has been shown
 	private boolean m_bForwarderNotExplain = false; //indicates if the warning message about forwarding should be shown
 	private boolean m_bPayCascadeNoAsk = false;
-
-	public String status1 = " ";
-	public String status2 = " ";
 
 	private long m_nrOfBytesWWW = 0;
 	private long m_nrOfBytesOther = 0;
@@ -419,20 +421,53 @@ public final class JAPController extends Observable implements IProxyListener, O
 				new Integer(JAPModel.getHttpListenerPortNumber())};
 			// output error message
 			JAPDialog.showErrorDialog(
-				 getViewWindow(), JAPMessages.getString("errorListenerPort", args) +
-				 "<br><br>" +
-			 JAPMessages.getString(JAPConf.MSG_READ_PANEL_HELP, new Object[]{
-								   JAPMessages.getString("confButton"),
-								   JAPMessages.getString("confListenerTab")}), LogType.NET,
-			 new JAPDialog.LinkedHelpContext("portlistener"));
-			m_Controller.status1 = JAPMessages.getString("statusCannotStartListener");
+				getViewWindow(), JAPMessages.getString("errorListenerPort", args) +
+				"<br><br>" +
+				JAPMessages.getString(JAPConf.MSG_READ_PANEL_HELP, new Object[]
+									  {
+									  JAPMessages.getString("confButton"),
+									  JAPMessages.getString("confListenerTab")}), LogType.NET,
+				new JAPDialog.LinkedHelpContext("portlistener")
+			{
+				public boolean isOnTop()
+				{
+					return true;
+				}
+			});
+
 			m_View.disableSetAnonMode();
 			notifyJAPObservers();
 		}
+		else if (!SignatureVerifier.getInstance().isCheckSignatures())
+		{
+			JAPDialog.showWarningDialog(
+				getViewWindow(),
+				JAPMessages.getString(JAPConfCert.MSG_NO_CHECK_WARNING),
+				new JAPDialog.LinkedHelpContext("cert")
+			{
+				public boolean isOnTop()
+				{
+					return true;
+				}
+			});
+		}
 		else
-		{ // listender has started correctly
-			m_Controller.status1 = JAPMessages.getString("statusRunning");
-			// initial setting of anonMode
+		{
+			new Thread()
+			{
+				public void run()
+				{
+
+					if (JAPController.getInstance().isConfigAssistantShown())
+					{
+						showInstallationAssistant();
+					}
+				}
+			}.start();
+
+
+			// listener has started correctly
+			// do initial setting of anonMode
 			if (JAPModel.getAutoConnect() &&
 				JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder())
 			{
@@ -701,7 +736,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_bShowConfigAssistant =
 						XMLUtil.parseAttribute(root, XML_ATTR_SHOW_CONFIG_ASSISTANT, false);
 				}
-				JAPModel.getInstance().setChooseCascadeConnectionAutomatically(
+				JAPModel.getInstance().setCascadeAutoSwitch(
 								XMLUtil.parseAttribute(root, XML_ATTR_AUTO_CHOOSE_CASCADES, true));
 				JAPModel.getInstance().denyNonAnonymousSurfing(
 								XMLUtil.parseAttribute(root, JAPModel.XML_DENY_NON_ANONYMOUS_SURFING, false));
@@ -2368,9 +2403,18 @@ public final class JAPController extends Observable implements IProxyListener, O
 						canStartService = false;
 						m_proxyAnon.stop();
 						m_proxyAnon = null;
-						JAPDialog.showErrorDialog(getViewWindow(),
-												  JAPMessages.getString("errorMixProtocolNotSupported"),
-												  LogType.NET, onTopAdapter);
+						if (JAPDialog.showConfirmDialog(getViewWindow(),
+							JAPMessages.getString("errorMixProtocolNotSupported") + "<br><br>" +
+								JAPMessages.getString(MSG_ASK_SWITCH), JAPDialog.OPTION_TYPE_YES_NO,
+								JAPDialog.MESSAGE_TYPE_ERROR,
+							 onTopAdapter) == JAPDialog.RETURN_VALUE_YES)
+						{
+							JAPModel.getInstance().setCascadeAutoSwitch(true);
+						}
+						else
+						{
+							getView().doClickOnCascadeChooser();
+						}
 					}
 					//otte
 					else if (ret == AnonProxy.E_SIGNATURE_CHECK_FIRSTMIX_FAILED &&
@@ -2380,9 +2424,20 @@ public final class JAPController extends Observable implements IProxyListener, O
 						canStartService = false;
 						m_proxyAnon.stop();
 						m_proxyAnon = null;
-						JAPDialog.showErrorDialog(getViewWindow(),
-												  JAPMessages.getString("errorMixFirstMixSigCheckFailed"),
-												  LogType.NET, onTopAdapter);
+						if (JAPDialog.showConfirmDialog(getViewWindow(),
+							JAPMessages.getString("errorMixFirstMixSigCheckFailed") + "<br><br>" +
+							JAPMessages.getString(MSG_ASK_SWITCH), JAPDialog.OPTION_TYPE_YES_NO,
+							JAPDialog.MESSAGE_TYPE_ERROR,
+							onTopAdapter) == JAPDialog.RETURN_VALUE_YES)
+						{
+							JAPModel.getInstance().setCascadeAutoSwitch(true);
+						}
+						else
+						{
+							getView().doClickOnCascadeChooser();
+						}
+
+
 					}
 
 					else if (ret == AnonProxy.E_SIGNATURE_CHECK_OTHERMIX_FAILED &&
@@ -2392,9 +2447,20 @@ public final class JAPController extends Observable implements IProxyListener, O
 						canStartService = false;
 						m_proxyAnon.stop();
 						m_proxyAnon = null;
-						JAPDialog.showErrorDialog(getViewWindow(),
-												  JAPMessages.getString("errorMixOtherMixSigCheckFailed"),
-												  LogType.NET, onTopAdapter);
+						if (JAPDialog.
+							showConfirmDialog(getViewWindow(),
+											  JAPMessages.getString("errorMixOtherMixSigCheckFailed") + "<br><br>" +
+											  JAPMessages.getString(MSG_ASK_SWITCH), JAPDialog.OPTION_TYPE_YES_NO,
+											  JAPDialog.MESSAGE_TYPE_ERROR,
+											  onTopAdapter) == JAPDialog.RETURN_VALUE_YES)
+						{
+							JAPModel.getInstance().setCascadeAutoSwitch(true);
+						}
+						else
+						{
+							getView().doClickOnCascadeChooser();
+						}
+
 					}
 					else if (ret == ErrorCodes.E_SUCCESS ||
 							 (ret != ErrorCodes.E_INTERRUPTED &&
@@ -2476,10 +2542,20 @@ public final class JAPController extends Observable implements IProxyListener, O
 							LogHolder.log(LogLevel.ERR, LogType.NET,
 										  "Error starting AN.ON service! - ErrorCode: " +
 										  Integer.toString(ret));
-							JAPDialog.showErrorDialog(getViewWindow(),
-								JAPMessages.getString("errorConnectingFirstMix"),
+							if (JAPDialog.showConfirmDialog(getViewWindow(),
+								JAPMessages.getString("errorConnectingFirstMix") + "<br><br>" +
+								JAPMessages.getString(MSG_ASK_RECONNECT),
 								JAPMessages.getString("errorConnectingFirstMixTitle"),
-								LogType.NET, onTopAdapter);
+								JAPDialog.OPTION_TYPE_YES_NO,
+								JAPDialog.MESSAGE_TYPE_ERROR, onTopAdapter)
+								== JAPDialog.RETURN_VALUE_YES)
+							{
+								JAPModel.getInstance().setAutoReConnect(true);
+							}
+							else
+							{
+								getView().doClickOnCascadeChooser();
+							}
 						}
 					}
 					if (getViewWindow() != null)
@@ -2571,15 +2647,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 	{
 		return m_bShowConfigAssistant;
 	}
+
 	public void setConfigAssistantShown()
 	{
 		m_bShowConfigAssistant = false;
 	}
 
-
 	public boolean isAnonConnected()
 	{
-		// don't think this needs to be synhronized; would get deadlocks if it was...
+		// don't think this needs to be synhronized; would cause deadlocks if it was...
 		AnonProxy proxy = m_proxyAnon;
 		if (proxy == null)
 		{
@@ -2607,7 +2683,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		public AnonJobQueue()
 		{
 			m_changeAnonModeJobs = new Vector();
-			m_threadQueue = new Thread()
+			m_threadQueue = new Thread("Anon job queue")
 			{
 				public void run()
 				{
@@ -2878,15 +2954,40 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	public boolean startHTTPListener()
 	{
-		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:start HTTP Listener");
 		if (!isRunningHTTPListener)
 		{
+			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Start HTTP Listener");
 			m_socketHTTPListener = intern_startListener(JAPModel.getHttpListenerPortNumber(),
 				JAPModel.getHttpListenerIsLocal());
 			isRunningHTTPListener = true;
 		}
 		return m_socketHTTPListener != null;
 	}
+
+	public void showInstallationAssistant()
+	{
+		if (m_bAssistantClicked)
+		{
+			return;
+		}
+		m_bAssistantClicked = true;
+
+		final JAPDialog configAssistant = new ConfigAssistant(getViewWindow());
+
+		configAssistant.addWindowListener(new WindowAdapter()
+		{
+			public void windowClosed(WindowEvent a_event)
+			{
+				configAssistant.removeWindowListener(this);
+				//configAssistant.removeComponentListener(componentAdapter);
+				m_bAssistantClicked = false;
+				getViewWindow().setVisible(true);
+			}
+		});
+
+		configAssistant.setVisible(true);
+	}
+
 /*
 	private void stopHTTPListener()
 	{
@@ -2970,7 +3071,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 
 					JAPModel.getInstance().setAutoReConnect(false);
-					JAPModel.getInstance().setChooseCascadeConnectionAutomatically(false);
+					JAPModel.getInstance().setCascadeAutoSwitch(false);
 					JAPDialog.setConsoleOnly(true); // do not show any dialogs now
 					if (!bShowConfigSaveErrorMsg)
 					{
