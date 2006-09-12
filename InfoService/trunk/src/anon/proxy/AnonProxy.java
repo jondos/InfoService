@@ -90,6 +90,11 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	private ImmutableProxyInterface m_proxyInterface;
 
+	private IProxyListener m_ProxyListener;
+
+	private volatile int m_numChannels = 0;
+
+
 	private boolean m_bReconnecting = false;
 	private final Object THREAD_SYNC = new Object();
 	private final Object SHUTDOWN_SYNC = new Object();
@@ -312,155 +317,12 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	public int switchCascade(boolean a_bRetryOnError)
 	{
-		//synchronized (SHUTDOWN_SYNC)
-		{
-			synchronized (THREAD_SYNC)
-			{
-				THREAD_SYNC.notifyAll();
-
-				AnonServerDescription cascade = m_currentMixCascade.getNextMixCascade();
-				synchronized (SHUTDOWN_SYNC)
-				{
-					if (threadRun == null)
-					{
-						// the thread has been stopped
-						Thread.currentThread().interrupt();
-						return ErrorCodes.E_INTERRUPTED;
-					}
-
-					m_Anon.shutdown();
-
-					while (threadRun.isAlive())
-					{
-						try
-						{
-							threadRun.interrupt();
-							threadRun.join(1000);
-						}
-						catch (InterruptedException e)
-						{
-						}
-					}
-				}
-				boolean bConnectionError = false;
-				int ret = m_Anon.initialize(cascade);
-
-				if (ret != ErrorCodes.E_SUCCESS)
-				{
-					if (ret == ErrorCodes.E_INTERRUPTED ||
-						(! (a_bRetryOnError && m_currentMixCascade.isCascadeAutoSwitched()) &&
-						 (!a_bRetryOnError || ret == E_SIGNATURE_CHECK_FIRSTMIX_FAILED ||
-						  ret == E_SIGNATURE_CHECK_OTHERMIX_FAILED || ret == E_MIX_PROTOCOL_NOT_SUPPORTED)))
-					{
-						return ret;
-					}
-					else
-					{
-						bConnectionError = true;
-					}
-				}
-				else
-				{
-					m_currentMixCascade.keepCurrentCascade(true);
-				}
-				synchronized (SHUTDOWN_SYNC)
-				{
-					if (threadRun == null)
-					{
-						Thread.currentThread().interrupt();
-						return ErrorCodes.E_INTERRUPTED;
-					}
-				}
-				LogHolder.log(LogLevel.DEBUG, LogType.NET, "AN.ON initialized");
-				threadRun = new Thread(this, "JAP - AnonProxy");
-				threadRun.setDaemon(true);
-				threadRun.start();
-
-				if (bConnectionError)
-				{
-					connectionError();
-					return ErrorCodes.E_CONNECT;
-				}
-				return ErrorCodes.E_SUCCESS;
-			}
-		}
+		return connect(a_bRetryOnError, true);
 	}
 
 	public int start(boolean a_bRetryOnError)
 	{
-		synchronized (THREAD_SYNC)
-		{
-			if (threadRun != null)
-			{
-				return ErrorCodes.E_SUCCESS;
-			}
-
-			boolean bConnectionError = false;
-			m_numChannels = 0;
-			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Try to initialize AN.ON");
-			if (m_Anon == null)
-			{
-				LogHolder.log(LogLevel.EMERG, LogType.NET,
-							  " m_Anon is NULL - should never ever happen!");
-				return ErrorCodes.E_INVALID_SERVICE;
-			}
-			MixCascade cascade = m_currentMixCascade.getNextMixCascade();
-			/*
-			if (cascade.getId().equals("Tor"))
-			{
-				LogHolder.log(LogLevel.NOTICE, LogType.NET, "Using Tor as anon service!");
-				m_Anon = new DirectProxy(m_socketListener);
-			}
-			else
-			{
-				m_Anon = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_ANON);
-			}*/
-			int ret = m_Anon.initialize(cascade);
-			if (ret != ErrorCodes.E_SUCCESS)
-			{
-				if (ret == ErrorCodes.E_INTERRUPTED ||
-					(!(a_bRetryOnError && m_currentMixCascade.isCascadeAutoSwitched()) &&
-					 (!a_bRetryOnError || ret == E_SIGNATURE_CHECK_FIRSTMIX_FAILED ||
-					  ret == E_SIGNATURE_CHECK_OTHERMIX_FAILED || ret == E_MIX_PROTOCOL_NOT_SUPPORTED)))
-				{
-					return ret;
-				}
-				else
-				{
-					bConnectionError = true;
-				}
-			}
-			else
-			{
-				m_currentMixCascade.keepCurrentCascade(true);
-			}
-			LogHolder.log(LogLevel.DEBUG, LogType.NET, "AN.ON initialized");
-
-			if (m_currentTorParams != null)
-			{
-				m_Tor = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_TOR);
-				m_Tor.setProxy(m_proxyInterface);
-				m_Tor.initialize(m_currentTorParams);
-				LogHolder.log(LogLevel.DEBUG, LogType.NET, "Tor initialized");
-			}
-			if (m_currentMixminionParams != null)
-			{
-				m_Mixminion = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_MIXMINION);
-				m_Mixminion.setProxy(m_proxyInterface);
-				m_Mixminion.initialize(m_currentMixminionParams);
-			}
-
-			threadRun = new Thread(this, "JAP - AnonProxy");
-			threadRun.setDaemon(true);
-			threadRun.start();
-
-			if (bConnectionError)
-			{
-				connectionError();
-				return ErrorCodes.E_CONNECT;
-			}
-			return ErrorCodes.E_SUCCESS;
-		}
+		return connect(a_bRetryOnError, false);
 	}
 
 	public void stop()
@@ -650,10 +512,6 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		}
 	}
 
-	protected IProxyListener m_ProxyListener;
-
-	protected volatile int m_numChannels = 0;
-
 	public void setProxyListener(IProxyListener l)
 	{
 		m_ProxyListener = l;
@@ -682,6 +540,129 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		if (m_ProxyListener != null)
 		{
 			m_ProxyListener.transferedBytes(bytes, protocolType);
+		}
+	}
+
+	private int connect(boolean a_bRetryOnError, boolean a_bSwitch)
+	{
+		synchronized (THREAD_SYNC)
+		{
+			boolean bConnectionError = false;
+			AnonServerDescription cascade;
+
+			if (a_bSwitch)
+			{
+				THREAD_SYNC.notifyAll();
+
+				synchronized (SHUTDOWN_SYNC)
+				{
+					if (threadRun == null)
+					{
+						// the thread has been stopped
+						Thread.currentThread().interrupt();
+						return ErrorCodes.E_INTERRUPTED;
+					}
+
+					m_Anon.shutdown();
+
+					while (threadRun.isAlive())
+					{
+						try
+						{
+							threadRun.interrupt();
+							threadRun.join(1000);
+						}
+						catch (InterruptedException e)
+						{
+						}
+					}
+				}
+			}
+			else
+			{
+				if (threadRun != null)
+				{
+					return ErrorCodes.E_SUCCESS;
+				}
+			}
+
+			cascade = m_currentMixCascade.getNextMixCascade();
+			/*
+			  if (cascade.getId().equals("Tor"))
+			  {
+			 LogHolder.log(LogLevel.NOTICE, LogType.NET, "Using Tor as anon service!");
+			 m_Anon = new DirectProxy(m_socketListener);
+			  }
+			  else
+			  {
+			 m_Anon = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_ANON);
+			   }*/
+
+			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Try to initialize AN.ON");
+			m_numChannels = 0;
+			int ret = m_Anon.initialize(cascade);
+
+			if (ret != ErrorCodes.E_SUCCESS)
+			{
+				if (ret == ErrorCodes.E_INTERRUPTED ||
+					(! (a_bRetryOnError && m_currentMixCascade.isCascadeAutoSwitched()) &&
+					 (!a_bRetryOnError || ret == E_SIGNATURE_CHECK_FIRSTMIX_FAILED ||
+					  ret == E_SIGNATURE_CHECK_OTHERMIX_FAILED || ret == E_MIX_PROTOCOL_NOT_SUPPORTED)))
+				{
+					return ret;
+				}
+				else
+				{
+					bConnectionError = true;
+				}
+			}
+			else
+			{
+				m_currentMixCascade.keepCurrentCascade(true);
+			}
+			LogHolder.log(LogLevel.DEBUG, LogType.NET, "AN.ON initialized");
+
+			if (a_bSwitch)
+			{
+				synchronized (SHUTDOWN_SYNC)
+				{
+					if (threadRun == null)
+					{
+						LogHolder.log(LogLevel.NOTICE, LogType.NET, "Noticed shutdown. Stopping AN.ON...");
+						Thread.currentThread().interrupt();
+						return ErrorCodes.E_INTERRUPTED;
+					}
+				}
+			}
+			else
+			{
+				if (m_currentTorParams != null)
+				{
+					m_Tor = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_TOR);
+					m_Tor.setProxy(m_proxyInterface);
+					m_Tor.initialize(m_currentTorParams);
+					LogHolder.log(LogLevel.DEBUG, LogType.NET, "Tor initialized");
+				}
+				if (m_currentMixminionParams != null)
+				{
+					m_Mixminion = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.
+						SERVICE_MIXMINION);
+					m_Mixminion.setProxy(m_proxyInterface);
+					m_Mixminion.initialize(m_currentMixminionParams);
+					LogHolder.log(LogLevel.DEBUG, LogType.NET, "Mixminion initialized");
+				}
+			}
+
+			threadRun = new Thread(this, "JAP - AnonProxy");
+			threadRun.setDaemon(true);
+			threadRun.start();
+
+			if (bConnectionError)
+			{
+				connectionError();
+				return ErrorCodes.E_CONNECT;
+			}
+			return ErrorCodes.E_SUCCESS;
 		}
 	}
 

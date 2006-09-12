@@ -68,7 +68,7 @@ import java.util.Observer;
 import java.awt.Cursor;
 
 final public class JAPViewIconified extends JWindow implements ActionListener,
-	MouseMotionListener, MouseListener, JAPObserver, Observer
+	JAPObserver, Observer
 {
 	private static final String MSG_TT_SWITCH_ANONYMITY =
 		JAPViewIconified.class.getName() + "_ttSwitchAnonymity";
@@ -121,7 +121,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		Database.getInstance(StatusInfo.class).addObserver(this);
 	}
 
-	public void init()
+	private void init()
 	{
 		GridBagLayout la = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
@@ -233,8 +233,9 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		p2.add(m_lblJAPIcon);
 		p2.add(bttn);
 		p.add(p2, BorderLayout.SOUTH);
-		p.addMouseListener(this);
-		p.addMouseMotionListener(this);
+		MyMouseListener listener = new MyMouseListener();
+		p.addMouseListener(listener);
+		p.addMouseMotionListener(listener);
 		setContentPane(p);
 
 		pack();
@@ -258,8 +259,9 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		{
 			return;
 		}
-		setVisible(false);
 		m_mainView.setVisible(true);
+		setVisible(false);
+		m_mainView.toFront();
 	}
 
 	public JAPViewIconified getViewIconified()
@@ -424,48 +426,51 @@ final public class JAPViewIconified extends JWindow implements ActionListener,
 		blink();
 	}
 
-	public void mouseExited(MouseEvent e)
+	private class MyMouseListener extends MouseAdapter implements MouseMotionListener
 	{
-	}
-
-	public void mouseEntered(MouseEvent e)
-	{
-	}
-
-	public void mouseReleased(MouseEvent e)
-	{
-		m_bIsDragging = false;
-	}
-
-	public void mousePressed(MouseEvent e)
-	{
-	}
-
-	public void mouseClicked(MouseEvent e)
-	{
-		if (e.getClickCount() > 1)
+		public void mouseExited(MouseEvent e)
 		{
-			switchBackToMainView();
 		}
-	}
 
-	public void mouseMoved(MouseEvent e)
-	{
-	}
-
-	public void mouseDragged(MouseEvent e)
-	{
-		if (!m_bIsDragging)
+		public void mouseEntered(MouseEvent e)
 		{
-			m_bIsDragging = true;
-			m_startPoint = e.getPoint();
 		}
-		else
+
+		public void mouseReleased(MouseEvent e)
 		{
-			Point endPoint = e.getPoint();
-			Point aktLocation = getLocation();
-			setLocation(aktLocation.x + endPoint.x - m_startPoint.x,
-						aktLocation.y + endPoint.y - m_startPoint.y);
+			m_bIsDragging = false;
+		}
+
+		public void mousePressed(MouseEvent e)
+		{
+		}
+
+		public void mouseClicked(MouseEvent e)
+		{
+			if (e.getClickCount() > 1)
+			{
+				switchBackToMainView();
+			}
+		}
+
+		public void mouseMoved(MouseEvent e)
+		{
+		}
+
+		public void mouseDragged(MouseEvent e)
+		{
+			if (!m_bIsDragging)
+			{
+				m_bIsDragging = true;
+				m_startPoint = e.getPoint();
+			}
+			else
+			{
+				Point endPoint = e.getPoint();
+				Point aktLocation = getLocation();
+				setLocation(aktLocation.x + endPoint.x - m_startPoint.x,
+							aktLocation.y + endPoint.y - m_startPoint.y);
+			}
 		}
 	}
 
