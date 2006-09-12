@@ -3777,6 +3777,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			{
 				if (m_proxyAnon != null)
 				{
+					// leads to deadlock
 					//m_proxyAnon.stop();
 				}
 				m_proxyAnon = null;
