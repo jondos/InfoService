@@ -315,14 +315,14 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		}
 	}
 
-	public int switchCascade(boolean a_bRetryOnError)
+	public int switchCascade()
 	{
-		return connect(a_bRetryOnError, true);
+		return connect(true);
 	}
 
-	public int start(boolean a_bRetryOnError)
+	public int start()
 	{
-		return connect(a_bRetryOnError, false);
+		return connect(false);
 	}
 
 	public void stop()
@@ -480,6 +480,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			if (!m_currentMixCascade.isReconnectedAutomatically())
 			{
 				stop();
+				THREAD_SYNC.notifyAll(); // maybe setting has changed meanwhile
 				return;
 			}
 			if (m_bReconnecting)
@@ -491,7 +492,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 			while (threadRun != null && m_currentMixCascade.isReconnectedAutomatically())
 			{
-				LogHolder.log(LogLevel.ERR, LogType.NET, "Try reconnect to Mix");
+				LogHolder.log(LogLevel.ERR, LogType.NET, "Try reconnect to AN.ON service");
 				int ret = m_Anon.initialize(m_currentMixCascade.getNextMixCascade());
 				if (ret == ErrorCodes.E_SUCCESS)
 				{
@@ -508,6 +509,15 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				}
 			}
 			m_bReconnecting = false;
+
+			if ((threadRun == null || !isConnected()) &&
+				!m_currentMixCascade.isReconnectedAutomatically())
+			{
+				stop();
+				THREAD_SYNC.notifyAll(); // maybe setting has changed meanwhile
+				return;
+			}
+
 			return;
 		}
 	}
@@ -543,7 +553,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		}
 	}
 
-	private int connect(boolean a_bRetryOnError, boolean a_bSwitch)
+	private int connect(boolean a_bSwitch)
 	{
 		synchronized (THREAD_SYNC)
 		{
@@ -604,9 +614,10 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 			if (ret != ErrorCodes.E_SUCCESS)
 			{
-				if (ret == ErrorCodes.E_INTERRUPTED ||
-					(! (a_bRetryOnError && m_currentMixCascade.isCascadeAutoSwitched()) &&
-					 (!a_bRetryOnError || ret == E_SIGNATURE_CHECK_FIRSTMIX_FAILED ||
+				if (ret == ErrorCodes.E_INTERRUPTED || !m_currentMixCascade.isReconnectedAutomatically() ||
+					(!m_currentMixCascade.isCascadeAutoSwitched() &&
+					 // these errors cannot be 'healed'
+					 (ret == E_SIGNATURE_CHECK_FIRSTMIX_FAILED ||
 					  ret == E_SIGNATURE_CHECK_OTHERMIX_FAILED || ret == E_MIX_PROTOCOL_NOT_SUPPORTED)))
 				{
 					return ret;
@@ -867,7 +878,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		}
 		public boolean isReconnectedAutomatically()
 		{
-			/* reconnect isn't supported with forwarded connections */
+			/** @todo reconnect is not yet supported with forwarded connections */
 			return !m_forwardedConnection && m_mixCascadeContainer.isReconnectedAutomatically();
 		}
 	}

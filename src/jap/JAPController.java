@@ -211,8 +211,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private Vector observerVector = null;
 	private Vector m_anonServiceListener;
 	private IPasswordReader m_passwordReader;
-	private boolean m_bInitialRun = true;
-	private Object m_inititalRunSync = new Object();
 	private Object m_finishSync = new Object();
 
 	private static Font m_fontControls;
@@ -391,7 +389,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 	//---------------------------------------------------------------------
 	public void initialRun()
 	{
-		m_bInitialRun = true;
 		LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPModel:initial run of JAP...");
 
 		// start update threads and prevent waining for locks by using a thread
@@ -2169,11 +2166,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 		public void run()
 		{
 			boolean bRetryOnError;
+			/*
 			synchronized (m_inititalRunSync)
 			{
 				bRetryOnError = m_bInitialRun && JAPModel.getAutoConnect();
 				m_bInitialRun = false;
-			}
+			}*/
 
 
 			if (!isInterrupted())
@@ -2181,7 +2179,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				/* job was not canceled -> we have to do it */
 				try
 				{
-					setServerMode(m_startServer, bRetryOnError);
+					setServerMode(m_startServer);
 				}
 				catch (Throwable a_e)
 				{
@@ -2201,7 +2199,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		 * @param a_bRetryOnConnectionError if in case of a connection error it is retried to
 		 * establish the connection
 		 */
-		private synchronized void setServerMode(boolean anonModeSelected, boolean a_bRetryOnConnectionError)
+		private synchronized void setServerMode(boolean anonModeSelected)
 		{
 			int msgIdConnect = 0;
 			if (!anonModeSelected)
@@ -2321,12 +2319,21 @@ public final class JAPController extends Observable implements IProxyListener, O
 						m_proxyDirect = null;
 
 						LogHolder.log(LogLevel.DEBUG, LogType.NET, "Try to start AN.ON service...");
-						ret = m_proxyAnon.start(a_bRetryOnConnectionError);
+						ret = m_proxyAnon.start();
 					}
 					else
 					{
-						ret = m_proxyAnon.switchCascade(a_bRetryOnConnectionError);
+						ret = m_proxyAnon.switchCascade();
 					}
+
+					JAPDialog.LinkedInformationAdapter onTopAdapter =
+						new JAPDialog.LinkedInformationAdapter()
+					{
+						public boolean isOnTop()
+						{
+							return true;
+						}
+					};
 
 
 					if (ret == AnonProxy.E_BIND)
@@ -2345,46 +2352,53 @@ public final class JAPController extends Observable implements IProxyListener, O
 												  {
 												  JAPMessages.getString("confButton"),
 												  JAPMessages.getString("confListenerTab")})
-							, LogType.NET, new JAPDialog.LinkedHelpContext("portlistener"));
+							, LogType.NET, new JAPDialog.LinkedHelpContext("portlistener")
+							  {
+								  public boolean isOnTop()
+								  {
+									  return true;
+								  }
+							  });
 						JAPController.getInstance().getView().disableSetAnonMode();
 					}
 					else if (ret == AnonProxy.E_MIX_PROTOCOL_NOT_SUPPORTED &&
-							 ! (a_bRetryOnConnectionError &&
-								JAPModel.getInstance().isCascadeConnectionChosenAutomatically()))
+							 ! (cascadeContainer.isReconnectedAutomatically() &&
+								cascadeContainer.isCascadeAutoSwitched()))
 					{
 						canStartService = false;
 						m_proxyAnon.stop();
 						m_proxyAnon = null;
 						JAPDialog.showErrorDialog(getViewWindow(),
 												  JAPMessages.getString("errorMixProtocolNotSupported"),
-												  LogType.NET);
+												  LogType.NET, onTopAdapter);
 					}
 					//otte
 					else if (ret == AnonProxy.E_SIGNATURE_CHECK_FIRSTMIX_FAILED &&
-							 ! (a_bRetryOnConnectionError &&
-								JAPModel.getInstance().isCascadeConnectionChosenAutomatically()))
+							 ! (cascadeContainer.isReconnectedAutomatically() &&
+								cascadeContainer.isCascadeAutoSwitched()))
 					{
 						canStartService = false;
 						m_proxyAnon.stop();
 						m_proxyAnon = null;
 						JAPDialog.showErrorDialog(getViewWindow(),
 												  JAPMessages.getString("errorMixFirstMixSigCheckFailed"),
-												  LogType.NET);
+												  LogType.NET, onTopAdapter);
 					}
 
 					else if (ret == AnonProxy.E_SIGNATURE_CHECK_OTHERMIX_FAILED &&
-							 ! (a_bRetryOnConnectionError &&
-								JAPModel.getInstance().isCascadeConnectionChosenAutomatically()))
+							 ! (cascadeContainer.isReconnectedAutomatically() &&
+								cascadeContainer.isCascadeAutoSwitched()))
 					{
 						canStartService = false;
 						m_proxyAnon.stop();
 						m_proxyAnon = null;
 						JAPDialog.showErrorDialog(getViewWindow(),
 												  JAPMessages.getString("errorMixOtherMixSigCheckFailed"),
-												  LogType.NET);
+												  LogType.NET, onTopAdapter);
 					}
 					else if (ret == ErrorCodes.E_SUCCESS ||
-							 (ret != ErrorCodes.E_INTERRUPTED && a_bRetryOnConnectionError))
+							 (ret != ErrorCodes.E_INTERRUPTED &&
+							  cascadeContainer.isReconnectedAutomatically()))
 					{
 						final AnonProxy proxyAnon = m_proxyAnon;
 						AnonServiceEventAdapter adapter = new AnonServiceEventAdapter()
@@ -2445,8 +2459,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 										  "AN.ON service not connected. Trying reconnect...");
 						}
 
-						// start feedback thread
-						//m_feedback.update();
+						// update feedback thread
+						if (!JAPModel.isInfoServiceDisabled())
+						{
+							m_feedback.updateAsync();
+						}
 					}
 					// ootte
 					else
@@ -2462,20 +2479,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 							JAPDialog.showErrorDialog(getViewWindow(),
 								JAPMessages.getString("errorConnectingFirstMix"),
 								JAPMessages.getString("errorConnectingFirstMixTitle"),
-								LogType.NET, new JAPDialog.LinkedInformationAdapter()
-							{
-								public boolean isOnTop()
-								{
-									return true;
-								}
-
-							});
+								LogType.NET, onTopAdapter);
 						}
-						}
+					}
 					if (getViewWindow() != null)
 					{
 						getViewWindow().setCursor(Cursor.getDefaultCursor());
 					}
+					onTopAdapter = null;
 					notifyJAPObservers();
 					//splash.abort();
 					m_View.removeStatusMsg(msgIdConnect);
@@ -2949,7 +2960,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						getInstance().getViewWindow().setEnabled(false);
 					}
-					//JAPDll.checkDllVersion(false);
+
 					boolean error = m_Controller.saveConfigFile();
 					if (error && bShowConfigSaveErrorMsg)
 					{
@@ -2957,6 +2968,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 												  JAPMessages.getString(MSG_ERROR_SAVING_CONFIG,
 							JAPModel.getInstance().getConfigFile()), LogType.MISC);
 					}
+
+					JAPModel.getInstance().setAutoReConnect(false);
+					JAPModel.getInstance().setChooseCascadeConnectionAutomatically(false);
 					JAPDialog.setConsoleOnly(true); // do not show any dialogs now
 					if (!bShowConfigSaveErrorMsg)
 					{
@@ -3000,37 +3014,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 						//Wait until all Jobs are finished....
 						LogHolder.log(LogLevel.NOTICE, LogType.THREAD, "Finishing all AN.ON jobs...");
 						m_Controller.m_anonJobQueue.stop();
-						/*
-						for (int i = 0; i < 5 && m_Controller.m_changeAnonModeJobs.size() > 0; i++)
-						{
-							Vector vecJobs = (Vector)m_Controller.m_changeAnonModeJobs.clone();
-							Enumeration jobs = vecJobs.elements();
-							SetAnonModeAsync job;
-							while (jobs.hasMoreElements())
-							{
-								job = (SetAnonModeAsync)jobs.nextElement();
-								if (job.isStartServerJob())
-								{
-									( (SetAnonModeAsync) jobs.nextElement()).interrupt();
-								}
-							}
-							if (i == 4)
-							{
-								LogHolder.log(LogLevel.ALERT, LogType.MISC,
-											  "Maybe no all SetAnonMode jobs could be finished!");
-							}
-							else
-							{
-								try
-								{
-									sleep(500);
-								}
-								catch (InterruptedException a_e)
-								{
-									// ignore
-								}
-							}
-						}*/
 					}
 					catch (Throwable a_e)
 					{
@@ -3790,7 +3773,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 	{
 		synchronized (m_finishSync)
 		{
-			//m_proxyAnon = null;
+			synchronized (PROXY_SYNC)
+			{
+				if (m_proxyAnon != null)
+				{
+					//m_proxyAnon.stop();
+				}
+				m_proxyAnon = null;
+			}
 			synchronized (m_anonServiceListener)
 			{
 				Enumeration e = m_anonServiceListener.elements();

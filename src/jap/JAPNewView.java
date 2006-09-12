@@ -102,6 +102,7 @@ import anon.infoservice.CascadeIDEntry;
 import anon.infoservice.JavaVersionDBEntry;
 import gui.JAPProgressBar;
 import javax.swing.JOptionPane;
+import java.lang.reflect.*;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver, Observer
@@ -1650,7 +1651,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					}
 					else
 					{
-						m_rbAnonOff.setSelected(true);
+						if (!m_rbAnonOff.isSelected())
+						{
+							m_rbAnonOff.setSelected(true);
+						}
 						JAPDialog.showErrorDialog(JAPController.getInstance().getViewWindow(),
 												  JAPMessages.getString(MSG_ERROR_DISCONNECTED),
 												  LogType.NET);
