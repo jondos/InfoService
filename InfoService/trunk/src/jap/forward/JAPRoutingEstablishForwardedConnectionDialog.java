@@ -108,10 +108,9 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 	 * @param a_parentComponent The parent component over which the dialog is centered.
 	 * @param a_defaultFont The default font to use within the dialog.
 	 */
-	public JAPRoutingEstablishForwardedConnectionDialog(Component a_parentComponent, Font a_defaultFont)
+	public JAPRoutingEstablishForwardedConnectionDialog(Component a_parentComponent)
 	{
 		m_parentComponent = a_parentComponent;
-		m_fontSetting = a_defaultFont;
 
 		/* show the whole dialog including all steps */
 		boolean endOfDialogReached = false;

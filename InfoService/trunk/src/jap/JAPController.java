@@ -490,7 +490,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder())
 			{
 				/* show the connect via forwarder dialog -> the dialog will do the remaining things */
-				new JAPRoutingEstablishForwardedConnectionDialog(getViewWindow(), getDialogFont());
+				new JAPRoutingEstablishForwardedConnectionDialog(getViewWindow());
 				notifyObservers();
 			}
 			else
@@ -795,11 +795,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 
 
-	            int port = XMLUtil.parseAttribute(root, JAPConstants.CONFIG_PORT_NUMBER,
-												  JAPModel.getHttpListenerPortNumber());
-				boolean bListenerIsLocal = XMLUtil.parseAttribute(root,
-					JAPConstants.CONFIG_LISTENER_IS_LOCAL, true);
-				setHTTPListener(port, bListenerIsLocal, false);
+	            m_Model.setHttpListenerPortNumber(XMLUtil.parseAttribute(root,
+					JAPConstants.CONFIG_PORT_NUMBER,
+					JAPModel.getHttpListenerPortNumber()));
+				JAPModel.getInstance().setHttpListenerIsLocal(XMLUtil.parseAttribute(root,
+					JAPConstants.CONFIG_LISTENER_IS_LOCAL, true));
+
 
 				//port = XMLUtil.parseAttribute(root, "portNumberSocks",
 				//  JAPModel.getSocksListenerPortNumber());
@@ -1286,7 +1287,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							final JAPDialog dialog = new JAPDialog(a_splash,
 								"JAP: " + JAPMessages.getString(MSG_ACCPASSWORDENTERTITLE), true);
 							dialog.setResizable(false);
-							dialog.setAlwaysOnTop(); /** @todo does only work with java 1.5+ at the moment */
+							dialog.setAlwaysOnTop(true); /** @todo does only work with java 1.5+ at the moment */
 							tempDialog = dialog;
 							dialog.setDefaultCloseOperation(JAPDialog.HIDE_ON_CLOSE);
 							PasswordContentPane temp = new PasswordContentPane(
@@ -1815,7 +1816,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_PORT_NUMBER, JAPModel.getHttpListenerPortNumber());
 			//XMLUtil.setAttribute(e,"portNumberSocks", Integer.toString(JAPModel.getSocksListenerPortNumber()));
 			//XMLUtil.setAttribute(e,"supportSocks",(getUseSocksPort()?"true":"false"));
-			XMLUtil.setAttribute(e, JAPConstants.CONFIG_LISTENER_IS_LOCAL, JAPModel.getHttpListenerIsLocal());
+			XMLUtil.setAttribute(e, JAPConstants.CONFIG_LISTENER_IS_LOCAL, JAPModel.isHttpListenerLocal());
 			ProxyInterface proxyInterface = m_Model.getProxyInterface();
 			boolean bUseProxy = proxyInterface != null && proxyInterface.isValid();
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_PROXY_MODE, bUseProxy);
@@ -2153,21 +2154,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 				setAnonMode(true);
 			}
 		}
-	}
-
-	public static Font getDialogFont()
-	{
-		if (m_fontControls != null)
-		{
-			return m_fontControls;
-		}
-		m_fontControls = new JButton().getFont();
-		if (JAPModel.isSmallDisplay())
-		{
-			m_fontControls = new Font(m_fontControls.getName(), JAPConstants.SMALL_FONT_STYLE,
-									  JAPConstants.SMALL_FONT_SIZE);
-		}
-		return m_fontControls;
 	}
 
 	public static String getFirewallAuthPasswd_()
@@ -2880,7 +2866,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		if (JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder())
 		{
 			/* show the connect via forwarder dialog -> the dialog will do the remaining things */
-			new JAPRoutingEstablishForwardedConnectionDialog(a_parentComponent, getDialogFont());
+			new JAPRoutingEstablishForwardedConnectionDialog(a_parentComponent);
 			/* maybe connection to forwarder failed -> notify the observers, because the view maybe
 			 * still shows the anonymity mode enabled
 			 */
@@ -2907,31 +2893,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 		if (m_proxyAnon != null)
 		{
 			m_proxyAnon.setDummyTraffic(msIntervall);
-		}
-	}
-
-	//---------------------------------------------------------------------
-	public void setHTTPListener(int port, boolean isLocal, boolean bShowWarning)
-	{
-		if (JAPModel.getHttpListenerPortNumber() == port)
-		{
-			bShowWarning = false;
-		}
-		if ( (JAPModel.getHttpListenerPortNumber() != port) ||
-			(JAPModel.getHttpListenerIsLocal() != isLocal))
-		{
-			m_Model.setHttpListenerPortNumber(port);
-			synchronized (this)
-			{
-				m_Model.setHttpListenerIsLocal(isLocal);
-			}
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:HTTP listener settings changed");
-			if (bShowWarning)
-			{
-				JAPDialog.showMessageDialog(getViewWindow(),
-											JAPMessages.getString("confmessageListernPortChanged"));
-			}
-			m_Controller.notifyJAPObservers();
 		}
 	}
 
@@ -2997,7 +2958,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Start HTTP Listener");
 			m_socketHTTPListener = intern_startListener(JAPModel.getHttpListenerPortNumber(),
-				JAPModel.getHttpListenerIsLocal());
+				JAPModel.isHttpListenerLocal());
 			isRunningHTTPListener = true;
 		}
 		return m_socketHTTPListener != null;
@@ -3121,46 +3082,73 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_Controller.m_bShutdown = true;
 					// disallow InfoService traffic
 					JAPModel.getInstance().setInfoServiceDisabled(true);
-					LogHolder.log(LogLevel.NOTICE, LogType.THREAD,
-								  "Stopping InfoService auto-update threads...");
-					m_Controller.m_feedback.stop();
-					m_Controller.m_MixCascadeUpdater.stop();
-					m_Controller.m_InfoServiceUpdater.stop();
-					m_Controller.m_minVersionUpdater.stop();
-					m_Controller.m_javaVersionUpdater.stop();
+					Thread finishIS = new Thread("Finish IS threads")
+					{
+						public void run()
+						{
+							LogHolder.log(LogLevel.NOTICE, LogType.THREAD,
+										  "Stopping InfoService auto-update threads...");
+							m_Controller.m_feedback.stop();
+							m_Controller.m_MixCascadeUpdater.stop();
+							m_Controller.m_InfoServiceUpdater.stop();
+							m_Controller.m_minVersionUpdater.stop();
+							m_Controller.m_javaVersionUpdater.stop();
+						}
+					};
+					finishIS.start();
 
 					// do not show direct connection warning dialog
 					DirectProxy.setAllowUnprotectedConnectionCallback(null);
 
-					try
+					Thread finishAnon = new Thread("Finish anon thread")
 					{
-						m_Controller.setAnonMode(false);
-						// Wait until anon mode is disabled");
-						synchronized (m_Controller.m_finishSync)
+						public void run()
 						{
-							if (m_Controller.getAnonMode() || m_Controller.isAnonConnected())
+							try
 							{
-								LogHolder.log(LogLevel.NOTICE, LogType.THREAD,
-											  "Waiting for finish of AN.ON connection...");
-								try
+								m_Controller.setAnonMode(false);
+								// Wait until anon mode is disabled");
+								synchronized (m_Controller.m_finishSync)
 								{
-									m_Controller.m_finishSync.wait();
+									if (m_Controller.getAnonMode() || m_Controller.isAnonConnected())
+									{
+										LogHolder.log(LogLevel.NOTICE, LogType.THREAD,
+													  "Waiting for finish of AN.ON connection...");
+										try
+										{
+											m_Controller.m_finishSync.wait();
+										}
+										catch (InterruptedException a_e)
+										{
+										}
+									}
 								}
-								catch (InterruptedException a_e)
-								{
 
-								}
+								//Wait until all Jobs are finished....
+								LogHolder.log(LogLevel.NOTICE, LogType.THREAD, "Finishing all AN.ON jobs...");
+								m_Controller.m_anonJobQueue.stop();
+							}
+							catch (Throwable a_e)
+							{
+								LogHolder.log(LogLevel.EMERG, LogType.MISC, a_e);
 							}
 						}
+					};
+					finishAnon.start();
 
-						//Wait until all Jobs are finished....
-						LogHolder.log(LogLevel.NOTICE, LogType.THREAD, "Finishing all AN.ON jobs...");
-						m_Controller.m_anonJobQueue.stop();
-					}
-					catch (Throwable a_e)
+					while (finishIS.isAlive() || finishAnon.isAlive())
 					{
-						LogHolder.log(LogLevel.EMERG, LogType.MISC, a_e);
+						try
+						{
+							finishIS.join();
+							finishAnon.join();
+						}
+						catch (InterruptedException ex)
+						{
+						}
 					}
+
+
 					try
 					{
 						LogHolder.log(LogLevel.NOTICE, LogType.THREAD, "Shutting down direct proxy...");

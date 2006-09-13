@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Vector;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -89,6 +90,8 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 	private static final String MSG_DETAILLEVEL = JAPConf.class.getName() + "_detaillevel";
 	private static final String MSG_BTN_SAVE = JAPConf.class.getName() + "_btnSave";
 	private static final String MSG_ASK_RESET_DEFAULTS = JAPConf.class.getName() + "_askResetDefaults";
+	private static final String MSG_NEED_RESTART = JAPConf.class.getName() + "_needRestart";
+	private static final String MSG_LISTENER_CHANGED = JAPConf.class.getName() + "_listenerChanged";
 
 
 	final static public String PORT_TAB = "PORT_TAB";
@@ -152,7 +155,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 
 	private boolean m_bWithPayment = false;
 	private boolean m_bIsSimpleView;
-	private boolean m_bRestartNeeded = false;
+	private Vector m_vecConfigChangesNeedRestart = new Vector();
 
 	private JAPConfModuleSystem m_moduleSystem;
 	private JAPConfServices m_confServices;
@@ -330,6 +333,16 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 			pack();
 		}
 		JAPModel.getInstance().addObserver(this);
+	}
+
+	public static abstract class AbstractRestartNeedingConfigChange
+	{
+		public abstract String getName();
+		public abstract void doChange();
+		public String getMessage()
+		{
+			return "";
+		}
 	}
 
 	/**
@@ -870,6 +883,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 
 	void cancelPressed()
 	{
+		m_vecConfigChangesNeedRestart.removeAllElements();
 		m_moduleSystem.processCancelPressedEvent();
 		setVisible(false);
 	}
@@ -881,7 +895,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 	private boolean checkValues()
 	{
 		String s = null;
-		int iListenerPort, i;
+		int i;
 
 		//--------------
 		//checking Listener Port Number
@@ -899,7 +913,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 									  LogType.MISC);
 			return false;
 		}
-		iListenerPort = i;
+
 		//Checking Firewall Settings (Host + Port)
 		if (m_cbProxy.isSelected())
 		{
@@ -947,6 +961,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 	/** Resets the Configuration to the Default values*/
 	private void resetToDefault()
 	{
+		m_vecConfigChangesNeedRestart.removeAllElements();
 		m_moduleSystem.processResetToDefaultsPressedEvent();
 		m_tfListenerPortNumber.setInt(JAPConstants.DEFAULT_PORT_NUMBER);
 		m_cbListenerIsLocal.setSelected(JAPConstants.DEFAULT_LISTENER_IS_LOCAL);
@@ -962,76 +977,148 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		m_cbDebugToFile.setSelected(false);
 	}
 
+	private void onOkPressed()
+	{
+		// Misc settings
+		int[] availableLogTypes = LogType.getAvailableLogTypes();
+		int logType = LogType.NUL;
+		for (int i = 0; i < m_cbLogTypes.length; i++)
+		{
+			logType |= (m_cbLogTypes[i].isSelected() ? availableLogTypes[i] : LogType.NUL);
+		}
+
+		JAPDebug.getInstance().setLogType(logType);
+		JAPDebug.getInstance().setLogLevel(m_sliderDebugLevel.getValue());
+		String strFilename = m_tfDebugFileName.getText().trim();
+		if (!m_cbDebugToFile.isSelected())
+		{
+			strFilename = null;
+		}
+		JAPDebug.setLogToFile(strFilename);
+
+		if (JAPModel.getHttpListenerPortNumber() != m_tfListenerPortNumber.getInt())
+		{
+			addNeedRestart(new AbstractRestartNeedingConfigChange()
+			{
+				public String getName()
+				{
+					return JAPMessages.getString("Port");
+				}
+
+				public String getMessage()
+				{
+					return JAPMessages.getString(MSG_LISTENER_CHANGED);
+				}
+
+				public void doChange()
+				{
+					JAPModel.getInstance().setHttpListenerPortNumber(m_tfListenerPortNumber.getInt());
+				}
+			});
+		}
+		if (JAPModel.isHttpListenerLocal() != m_cbListenerIsLocal.isSelected())
+		{
+			addNeedRestart(new AbstractRestartNeedingConfigChange()
+			{
+				public String getName()
+				{
+					return JAPMessages.getString("Local proxy");
+				}
+
+				public void doChange()
+				{
+					JAPModel.getInstance().setHttpListenerIsLocal(m_cbListenerIsLocal.isSelected());
+				}
+			});
+		}
+
+		//m_Controller.setSocksPortNumber(m_tfListenerPortNumberSocks.getInt());
+		// Firewall settings
+		int port = -1;
+		try
+		{
+			port = Integer.parseInt(m_tfProxyPortNumber.getText().trim());
+		}
+		catch (Exception e)
+		{}
+		;
+		int firewallType = ImmutableListenerInterface.PROTOCOL_TYPE_HTTP;
+		if (m_comboProxyType.getSelectedIndex() == 1)
+		{
+			firewallType = ImmutableListenerInterface.PROTOCOL_TYPE_SOCKS;
+		}
+		m_Controller.changeProxyInterface(
+			new ProxyInterface(m_tfProxyHost.getText().trim(),
+							   port,
+							   firewallType,
+							   m_tfProxyAuthenticationUserID.getText().trim(),
+							   m_Controller.getPasswordReader(),
+							   m_cbProxyAuthentication.isSelected(),
+							   m_cbProxy.isSelected()),
+			m_cbProxyAuthentication.isSelected());
+	}
+
 	private void okPressed(final boolean a_bCloseConfiguration)
 	{
 		if (!checkValues())
 		{
 			return;
 		}
+		m_vecConfigChangesNeedRestart.removeAllElements();
 		if (m_moduleSystem.processOkPressedEvent() == false)
 		{
+			m_vecConfigChangesNeedRestart.removeAllElements();
 			return;
 		}
+		onOkPressed();
+
+		if (m_vecConfigChangesNeedRestart.size() > 0)
+		{
+			String strChanges = "<ul>";
+			AbstractRestartNeedingConfigChange change;
+			for (int i = 0; i < m_vecConfigChangesNeedRestart.size(); i++)
+			{
+				change = (AbstractRestartNeedingConfigChange)m_vecConfigChangesNeedRestart.elementAt(i);
+				strChanges += "<li>" + change.getName();
+				if (change.getMessage() != null && change.getMessage().trim().length() > 0)
+				{
+					strChanges += "<br>" + change.getMessage();
+				}
+				strChanges += "</li>";
+
+			}
+			strChanges += "</ul>";
+
+			if (JAPDialog.showYesNoDialog(this, JAPMessages.getString(MSG_NEED_RESTART, strChanges)))
+			{
+				for (int i = 0; i < m_vecConfigChangesNeedRestart.size(); i++)
+				{
+					((AbstractRestartNeedingConfigChange)m_vecConfigChangesNeedRestart.elementAt(i)).doChange();
+				}
+			}
+			else
+			{
+				m_vecConfigChangesNeedRestart.removeAllElements();
+				return;
+			}
+		}
+
 
 		// We are in event dispatch thread!!
 		Thread run = new Thread()
 		{
 			public void run()
 			{
-				// Misc settings
-				int[] availableLogTypes = LogType.getAvailableLogTypes();
-				int logType = LogType.NUL;
-				for (int i = 0; i < m_cbLogTypes.length; i++)
-				{
-					logType |= (m_cbLogTypes[i].isSelected() ? availableLogTypes[i] : LogType.NUL);
-				}
-
-				JAPDebug.getInstance().setLogType(logType);
-				JAPDebug.getInstance().setLogLevel(m_sliderDebugLevel.getValue());
-				String strFilename = m_tfDebugFileName.getText().trim();
-				if (!m_cbDebugToFile.isSelected())
-				{
-					strFilename = null;
-				}
-				JAPDebug.setLogToFile(strFilename);
-				m_Controller.setHTTPListener(m_tfListenerPortNumber.getInt(),
-											 m_cbListenerIsLocal.isSelected(), true);
-				//m_Controller.setSocksPortNumber(m_tfListenerPortNumberSocks.getInt());
-				// Firewall settings
-				int port = -1;
-				try
-				{
-					port = Integer.parseInt(m_tfProxyPortNumber.getText().trim());
-				}
-				catch (Exception e)
-				{}
-				;
-				int firewallType = ImmutableListenerInterface.PROTOCOL_TYPE_HTTP;
-				if (m_comboProxyType.getSelectedIndex() == 1)
-				{
-					firewallType = ImmutableListenerInterface.PROTOCOL_TYPE_SOCKS;
-				}
-				m_Controller.changeProxyInterface(
-					new ProxyInterface(m_tfProxyHost.getText().trim(),
-									   port,
-									   firewallType,
-									   m_tfProxyAuthenticationUserID.getText().trim(),
-									   m_Controller.getPasswordReader(),
-									   m_cbProxyAuthentication.isSelected(),
-									   m_cbProxy.isSelected()),
-					m_cbProxyAuthentication.isSelected());
-
 				// save configuration
 				m_Controller.saveConfigFile();
-
-				// force notifying the observers set the right server name
-
-				m_Controller.notifyJAPObservers();
 
 				if (a_bCloseConfiguration || isRestartNeeded())
 				{
 					setVisible(false);
 				}
+
+				// force notifying the observers set the right server name
+				m_Controller.notifyJAPObservers();
 
 				if (isRestartNeeded())
 				{
@@ -1104,7 +1191,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		}
 		// listener tab
 		m_tfListenerPortNumber.setInt(JAPModel.getHttpListenerPortNumber());
-		m_cbListenerIsLocal.setSelected(JAPModel.getHttpListenerIsLocal());
+		m_cbListenerIsLocal.setSelected(JAPModel.isHttpListenerLocal());
 		//m_tfListenerPortNumberSocks.setInt(JAPModel.getSocksListenerPortNumber());
 		//boolean bSocksVisible = JAPModel.isTorEnabled();
 		//m_tfListenerPortNumberSocks.setVisible(bSocksVisible);
@@ -1152,13 +1239,16 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		validate();
 	}
 
-	protected void setNeedRestart()
+	protected void addNeedRestart(AbstractRestartNeedingConfigChange a_change)
 	{
-		m_bRestartNeeded = true;
+		if (a_change != null)
+		{
+			m_vecConfigChangesNeedRestart.addElement(a_change);
+		}
 	}
 
-	protected boolean isRestartNeeded()
+	private boolean isRestartNeeded()
 	{
-		return m_bRestartNeeded;
+		return m_vecConfigChangesNeedRestart.size() > 0;
 	}
 }
