@@ -27,25 +27,27 @@
  */
 package jap;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Locale;
+
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.Component;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentAdapter;
-import java.net.URL;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
-import javax.swing.JRadioButton;
-import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextPane;
@@ -55,15 +57,12 @@ import gui.GUIUtils;
 import gui.JAPHelp;
 import gui.JAPMessages;
 import gui.JTextComponentToClipboardCopier;
+import gui.LanguageMapper;
 import gui.dialog.DialogContentPane;
 import gui.dialog.JAPDialog;
 import gui.dialog.SimpleWizardContentPane;
-import platform.AbstractOS;
 import logging.LogType;
-import java.net.*;
-import javax.swing.JComboBox;
-import gui.LanguageMapper;
-import java.util.Locale;
+import platform.AbstractOS;
 
 /**
  * This is some kind of isntallation and configuration assistant that helps the unexperienced
@@ -721,6 +720,7 @@ public class ConfigAssistant extends JAPDialog
 				}
 			}
 		});
+		doClosingOnContentPaneCancel(true);
 
 		DialogContentPane.updateDialogOptimalSized(paneWelcome);
 		setResizable(false);

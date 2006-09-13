@@ -223,13 +223,15 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	 */
 	public final void updateAsync()
 	{
-		new Thread()
+		Thread run = new Thread()
 		{
 			public void run()
 			{
 				update(false);
 			}
-		}.start();
+		};
+		run.setDaemon(true);
+		run.start();
 	}
 
 	/**
@@ -292,7 +294,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 			}
 			try
 			{
-				m_updateThread.join();
+				m_updateThread.join(500);
 			}
 			catch (InterruptedException a_e)
 			{

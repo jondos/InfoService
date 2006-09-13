@@ -2469,6 +2469,15 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		}
 	}
 
+	private JAPDialog getJAPDialog()
+	{
+		if (m_parentDialog instanceof JAPDialog)
+		{
+			return (JAPDialog)m_parentDialog;
+		}
+		return null;
+	}
+
 	private static Icon findMessageIcon(JOptionPane a_optionPane)
 	{
 		Container currentPanel;
@@ -3061,13 +3070,22 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 				errors = checkCancel();
 				if (isSomethingDoneOnClick(errors,
 										   ON_CANCEL_SHOW_NEXT_CONTENT, ON_CANCEL_SHOW_PREVIOUS_CONTENT,
-										   ON_CANCEL_HIDE_DIALOG, ON_CANCEL_DISPOSE_DIALOG))
+										   ON_CANCEL_HIDE_DIALOG, ON_CANCEL_DISPOSE_DIALOG) ||
+					(getJAPDialog() != null && getJAPDialog().isClosingOnContentPaneCancel()))
 				{
 					setButtonValue(RETURN_VALUE_CANCEL);
 				}
-				bActionDone = doDefaultButtonOperation(errors, ON_CANCEL_SHOW_NEXT_CONTENT,
-													   ON_CANCEL_SHOW_PREVIOUS_CONTENT,
-													   ON_CANCEL_HIDE_DIALOG, ON_CANCEL_DISPOSE_DIALOG);
+				if ((getJAPDialog() == null || !getJAPDialog().isClosingOnContentPaneCancel()))
+				{
+					bActionDone = doDefaultButtonOperation(errors, ON_CANCEL_SHOW_NEXT_CONTENT,
+						ON_CANCEL_SHOW_PREVIOUS_CONTENT,
+						ON_CANCEL_HIDE_DIALOG, ON_CANCEL_DISPOSE_DIALOG);
+				}
+				else
+				{
+					bActionDone = true;
+					getJAPDialog().doWindowClosing();
+				}
 			}
 			else if (a_event.getSource() == m_btnYesOK)
 			{

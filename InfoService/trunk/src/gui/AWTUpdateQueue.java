@@ -72,6 +72,7 @@ public class AWTUpdateQueue
 				doUpdateQueue();
 			}
 		};
+		run.setDaemon(true);
 		run.start();
 		if (a_bSync)
 		{

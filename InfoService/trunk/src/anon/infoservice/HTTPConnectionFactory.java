@@ -34,7 +34,9 @@ import HTTPClient.AuthorizationPrompter;
 import HTTPClient.DefaultAuthHandler;
 import HTTPClient.HTTPConnection;
 import HTTPClient.NVPair;
-import logging.*;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * This class creates all instances of HTTPConnection for the JAP client and is a singleton.

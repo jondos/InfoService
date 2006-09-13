@@ -67,7 +67,7 @@ public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 	{
 		setName(a_title);
 		super.setTitle(a_title);
-}
+	}
 
 	public void setVisible(boolean a_bVisible)
 	{

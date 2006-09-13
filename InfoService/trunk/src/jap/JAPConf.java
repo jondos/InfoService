@@ -88,6 +88,8 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 	public static final String MSG_READ_PANEL_HELP = JAPConf.class.getName() + "_readPanelHelp";
 	private static final String MSG_DETAILLEVEL = JAPConf.class.getName() + "_detaillevel";
 	private static final String MSG_BTN_SAVE = JAPConf.class.getName() + "_btnSave";
+	private static final String MSG_ASK_RESET_DEFAULTS = JAPConf.class.getName() + "_askResetDefaults";
+
 
 	final static public String PORT_TAB = "PORT_TAB";
 	final static public String UI_TAB = "UI_TAB";
@@ -241,11 +243,18 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 
 		m_bttnDefaultConfig = new JButton(JAPMessages.getString("bttnDefaultConfig"));
 		//m_bttnDefaultConfig.setFont(m_fontControls);
+		final JAPDialog view = this;
 		m_bttnDefaultConfig.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				resetToDefault();
+				if (JAPDialog.showConfirmDialog(view, JAPMessages.getString(MSG_ASK_RESET_DEFAULTS),
+												JAPDialog.OPTION_TYPE_OK_CANCEL,
+												JAPDialog.MESSAGE_TYPE_WARNING)
+					== JAPDialog.RETURN_VALUE_OK)
+				{
+					resetToDefault();
+				}
 			}
 		});
 		if (!JAPModel.isSmallDisplay())
@@ -949,6 +958,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		{
 			m_cbLogTypes[i].setSelected(true);
 		}
+		m_sliderDebugDetailLevel.setValue(0);
 		m_cbDebugToFile.setSelected(false);
 	}
 
@@ -964,7 +974,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		}
 
 		// We are in event dispatch thread!!
-		new Thread()
+		Thread run = new Thread()
 		{
 			public void run()
 			{
@@ -1028,7 +1038,9 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 					JAPController.goodBye(false);
 				}
 			}
-		}.start();
+		};
+		run.setDaemon(true);
+		run.start();
 
 		// ... manual settings stuff finished
 	}
