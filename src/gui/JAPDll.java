@@ -487,7 +487,7 @@ final public class JAPDll {
 		return false;
 	}
 
-	static public String getDllVersion()
+	public static String getDllVersion()
 	{
 		try
 		{

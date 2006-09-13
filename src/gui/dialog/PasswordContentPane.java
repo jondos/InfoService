@@ -63,13 +63,14 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 	public static final int PASSWORD_CHANGE = 3;
 	public static final int NO_MINIMUM_LENGTH = 0;
 
+	public static final String MSG_ENTER_LBL = PasswordContentPane.class.getName() + "_enterPasswordLabel";
 	private static final int FIELD_LENGTH = 15;
 	private static final String MSG_TOO_SHORT = PasswordContentPane.class.getName() + "_tooShort";
 	private static final String MSG_WRONG_PASSWORD = PasswordContentPane.class.getName() + "_wrongPassword";
 	private static final String MSG_ENTER_PASSWORD_TITLE = PasswordContentPane.class.getName() + "_title";
 	private static final String MSG_CONFIRM_LBL = PasswordContentPane.class.getName() + "_confirmPasswordLabel";
 	private static final String MSG_ENTER_OLD_LBL = PasswordContentPane.class.getName() + "_enterOldPasswordLabel";
-	private static final String MSG_ENTER_LBL = PasswordContentPane.class.getName() + "_enterPasswordLabel";
+
 	private static final String MSG_ENTER_NEW_LBL = PasswordContentPane.class.getName() + "_enterNewPasswordLabel";
 	private static final String MSG_PASSWORDS_DONT_MATCH =
 		PasswordContentPane.class.getName() + "_passwordsDontMatch";
@@ -170,7 +171,7 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 
 		if (a_type == PASSWORD_CHANGE)
 		{
-			m_lblOld = new JLabel(JAPMessages.getString(MSG_ENTER_OLD_LBL));
+			m_lblOld = new JLabel(getOldPasswordLabel());
 			layout.setConstraints(m_lblOld, c);
 			getContentPane().add(m_lblOld);
 			m_textOldPasswd = new JPasswordField(FIELD_LENGTH);
@@ -184,7 +185,7 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 		}
 		if (a_type == PASSWORD_CHANGE || a_type == PASSWORD_NEW)
 		{
-			m_lblNew1 = new JLabel(JAPMessages.getString(MSG_ENTER_NEW_LBL));
+			m_lblNew1 = new JLabel(getNewPasswordLabel());
 			c.gridx = 0;
 			c.gridy++;
 			c.weightx = 0;
@@ -285,6 +286,16 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 	public boolean isAutomaticFocusSettingEnabled()
 	{
 		return false;
+	}
+
+	public String getNewPasswordLabel()
+	{
+		return JAPMessages.getString(MSG_ENTER_NEW_LBL);
+	}
+
+	public String getOldPasswordLabel()
+	{
+		return JAPMessages.getString(MSG_ENTER_OLD_LBL);
 	}
 
 	/**

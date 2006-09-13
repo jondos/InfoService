@@ -111,7 +111,6 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 			}
 		};
 		init();
-		//Database.getInstance(StatusInfo.class).addObserver(this);
 	}
 
 	private void init()
@@ -245,11 +244,6 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		JAPController.getInstance().switchViewWindow(!a_bVisible);
 		super.setVisible(a_bVisible);
 	}
-
-	public void doClickOnCascadeChooser()
-	{
-	}
-
 
 	public void switchBackToMainView()
 	{
@@ -499,4 +493,4 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		blinkThread.setDaemon(true);
 		blinkThread.start();
 	}
-} //class ViewIconified
+}

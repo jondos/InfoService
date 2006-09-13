@@ -257,6 +257,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		AccountSettingsPanel.class.getName() + "_toolTipActivate";
 	private static final String MSG_TOOL_TIP_EXPIRED =
 		AccountSettingsPanel.class.getName() + "_toolTipExpired";
+	private static final String MSG_PASSWORD_EXPORT =
+		AccountSettingsPanel.class.getName() + "_passwordExport";
+
 
 	private static final String MSG_FILE_EXISTS = AccountSettingsPanel.class.getName() + "_fileExists";
 
@@ -1806,8 +1809,41 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			JAPDialog d = new JAPDialog(GUIUtils.getParentWindow(this.getRootPanel()),
 										JAPMessages.getString(MSG_ACCPASSWORDTITLE), true);
 
-			PasswordContentPane p = new PasswordContentPane(d, PasswordContentPane.PASSWORD_NEW,
-				JAPMessages.getString(MSG_EXPORTENCRYPT));
+
+			PasswordContentPane p;
+
+			if (JAPController.getInstance().getPaymentPassword() != null)
+			{
+				p = new PasswordContentPane(d, PasswordContentPane.PASSWORD_CHANGE,
+											JAPMessages.getString(MSG_EXPORTENCRYPT))
+				{
+					public char[] getComparedPassword()
+					{
+						return JAPController.getInstance().getPaymentPassword().toCharArray();
+					}
+
+					public String getOldPasswordLabel()
+					{
+						return JAPMessages.getString(PasswordContentPane.MSG_ENTER_LBL);
+					}
+
+					public String getNewPasswordLabel()
+					{
+						return JAPMessages.getString(MSG_PASSWORD_EXPORT);
+					}
+				};
+			}
+			else
+			{
+				p = new PasswordContentPane(d, PasswordContentPane.PASSWORD_NEW,
+											JAPMessages.getString(MSG_EXPORTENCRYPT))
+				{
+					public String getNewPasswordLabel()
+					{
+						return JAPMessages.getString(MSG_PASSWORD_EXPORT);
+					}
+				};
+			}
 			p.updateDialog();
 			d.pack();
 			d.setVisible(true);

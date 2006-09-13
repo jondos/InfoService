@@ -310,6 +310,7 @@ public final class GUIUtils
 				}
 			};
 			Thread thread = new Thread(run);
+			thread.setDaemon(true);
 			thread.start();
 			try
 			{

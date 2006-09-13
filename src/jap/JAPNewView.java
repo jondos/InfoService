@@ -1665,7 +1665,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private void showConnecting(final boolean a_bOnError)
 	{
-		Thread updateThread = new Thread()
+		Thread updateThread = new Thread("Wait for connecting")
 		{
 			public void run()
 			{
@@ -1734,17 +1734,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					{
 						m_bDisconnectedErrorShown = false;
 					}
-					if (Thread.currentThread().isInterrupted())
-					{
-						System.out.println("test");
-					}
-					else
-					{
-						System.out.println("here");
-					}
 				}
 			}
 		};
+		updateThread.setDaemon(true);
 		updateThread.start();
 	}
 

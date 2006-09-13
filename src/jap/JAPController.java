@@ -148,6 +148,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public static final String MSG_IS_NOT_ALLOWED = JAPController.class.getName() + "_isNotAllowed";
 	public static final String MSG_ASK_SWITCH = JAPController.class.getName() + "_askForSwitchOnError";
 	public static final String MSG_ASK_RECONNECT = JAPController.class.getName() + "_askForReconnectOnError";
+	public static final String MSG_ASK_AUTO_CONNECT = JAPController.class.getName() + "_reallyAutoConnect";
 
 	private static final String XML_ELEM_LOOK_AND_FEEL = "LookAndFeel";
 	private static final String XML_ELEM_LOOK_AND_FEELS = "LookAndFeels";
@@ -156,6 +157,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private static final String XML_ALLOW_NON_ANONYMOUS_UPDATE = "AllowDirectUpdate";
 	private static final String XML_ATTR_AUTO_CHOOSE_CASCADES = "AutoChooseCascades";
 	private static final String XML_ATTR_SHOW_CONFIG_ASSISTANT = "showConfigAssistant";
+
 
 	private final Object PROXY_SYNC = new Object();
 
@@ -191,6 +193,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private JavaVersionUpdater m_javaVersionUpdater;
 	private Object LOCK_VERSION_UPDATE = new Object();
 	private boolean m_bShowingVersionUpdate = false;
+
+	private boolean m_bAskAutoConnect = false;
 
 	private boolean isRunningHTTPListener = false; // true if a HTTP listener is running
 
@@ -395,7 +399,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 		// start update threads and prevent waining for locks by using a thread
 		Database.getInstance(JAPMinVersion.class).addObserver(this);
-		new Thread()
+		Thread run = new Thread()
 		{
 			public void run()
 			{
@@ -405,7 +409,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 				m_minVersionUpdater.start(false);
 				m_javaVersionUpdater.start(false);
 			}
-		}.start();
+		};
+		run.setDaemon(true);
+		run.start();
 		m_minVersionUpdater.updateAsync();
 		m_javaVersionUpdater.updateAsync();
 
@@ -465,6 +471,18 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 			}.start();
 
+			if (m_bAskAutoConnect)
+			{
+				if (JAPDialog.showYesNoDialog(getViewWindow(), JAPMessages.getString(MSG_ASK_AUTO_CONNECT),
+					new JAPDialog.LinkedHelpContext("services_general")))
+				{
+					JAPModel.getInstance().setAutoConnect(true);
+				}
+				else
+				{
+					JAPModel.getInstance().setAutoConnect(false);
+				}
+			}
 
 			// listener has started correctly
 			// do initial setting of anonMode
@@ -479,6 +497,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 			{
 				setAnonMode(JAPModel.getAutoConnect());
 			}
+
+			//Update account balance
+			updateAccountStatements();
 		}
 	}
 
@@ -816,7 +837,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				boolean b = XMLUtil.parseAttribute(root, JAPConstants.CONFIG_INFOSERVICE_DISABLED,
 					JAPModel.isInfoServiceDisabled());
 				setInfoServiceDisabled(b);
-				int i = XMLUtil.parseAttribute(root, JAPConstants.CONFIG_INFOSERVICE_TIMEOUT, -1);
+				int i = XMLUtil.parseAttribute(root, JAPConstants.CONFIG_INFOSERVICE_TIMEOUT, 10);
 				try
 				{ //i = 5; /** @todo temp */
 					if ( (i >= 1) && (i <= 60))
@@ -826,8 +847,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 				catch (Exception e)
 				{
-					LogHolder.log(LogLevel.INFO, LogType.MISC,
-								  "JAPController: loadConfigFile: Error loading InfoService timeout.");
+					LogHolder.log(LogLevel.INFO, LogType.MISC, "Error loading InfoService timeout.");
 				}
 
 				// load settings for proxy
@@ -868,8 +888,18 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 				setDummyTraffic(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_DUMMY_TRAFFIC_INTERVALL,
 					30000));
-				JAPModel.getInstance().setAutoConnect(
-								XMLUtil.parseAttribute(root, JAPConstants.CONFIG_AUTO_CONNECT, true));
+				if (strVersion == null || strVersion.compareTo("0.24") < 0)
+				{
+					JAPModel.getInstance().setAutoConnect(
+									   XMLUtil.parseAttribute(root, "autoConnect", true));
+					// if auto-connect is not chosen, ask the user what to do
+					m_bAskAutoConnect =  !JAPModel.getInstance().getAutoConnect();
+				}
+				else
+				{
+					JAPModel.getInstance().setAutoConnect(
+						XMLUtil.parseAttribute(root, JAPConstants.CONFIG_AUTO_CONNECT, true));
+				}
 				m_Model.setAutoReConnect(
 								XMLUtil.parseAttribute(root, JAPConstants.CONFIG_AUTO_RECONNECT, true));;
 				m_Model.setMinimizeOnStartup(
@@ -888,7 +918,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 					else
 					{
-						throw (new Exception("JAPController: loadConfigFile: No SignatureVerification node found. Using default settings for signature verification."));
+						throw (new Exception("No SignatureVerification node found. Using default settings for signature verification."));
 					}
 				}
 				catch (Exception e)
@@ -1129,8 +1159,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						}
 						catch (Exception ex)
 						{
-							LogHolder.log(LogLevel.INFO, LogType.MISC,
-										  "JAPController: loadConfigFile: Error loading GUI configuration.");
+							LogHolder.log(LogLevel.INFO, LogType.MISC, "Error loading GUI configuration.");
 						}
 					}
 				}
@@ -1158,7 +1187,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							int[] logTypes = LogType.getAvailableLogTypes();
 							for (int j = 0; j < logTypes.length; j++)
 							{
-								if (XMLUtil.parseAttribute(elemType, LogType.getLogTypeName(logTypes[j]), false))
+								if (XMLUtil.parseAttribute(elemType, LogType.getLogTypeName(logTypes[j]), true))
 								{
 									debugtype |= logTypes[j];
 								}
@@ -1255,7 +1284,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 						else
 						{
 							final JAPDialog dialog = new JAPDialog(a_splash,
-								JAPMessages.getString(MSG_ACCPASSWORDENTERTITLE), true);
+								"JAP: " + JAPMessages.getString(MSG_ACCPASSWORDENTERTITLE), true);
+							dialog.setResizable(false);
+							dialog.setAlwaysOnTop(); /** @todo does only work with java 1.5+ at the moment */
 							tempDialog = dialog;
 							dialog.setDefaultCloseOperation(JAPDialog.HIDE_ON_CLOSE);
 							PasswordContentPane temp = new PasswordContentPane(
@@ -2805,20 +2836,23 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 		public void stop()
 		{
-			m_threadQueue.interrupt();
-			synchronized (m_threadQueue)
+			while (m_threadQueue.isAlive())
 			{
-				m_bInterrupted = true;
-				m_threadQueue.notifyAll();
 				m_threadQueue.interrupt();
-			}
-			try
-			{
-				m_threadQueue.join();
-			}
-			catch (InterruptedException a_e)
-			{
-				// ignore
+				synchronized (m_threadQueue)
+				{
+					m_bInterrupted = true;
+					m_threadQueue.notifyAll();
+					m_threadQueue.interrupt();
+				}
+				try
+				{
+					m_threadQueue.join(500);
+				}
+				catch (InterruptedException a_e)
+				{
+					// ignore
+				}
 			}
 		}
 	}
@@ -3094,7 +3128,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_Controller.m_InfoServiceUpdater.stop();
 					m_Controller.m_minVersionUpdater.stop();
 					m_Controller.m_javaVersionUpdater.stop();
-					m_Controller.m_MixCascadeUpdater.start(false);
+
 					// do not show direct connection warning dialog
 					DirectProxy.setAllowUnprotectedConnectionCallback(null);
 
@@ -3842,7 +3876,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	public void connectionEstablished(AnonServerDescription a_serverDescription)
 	{
-		new Thread()
+		Thread run = new Thread()
 		{
 			public void run()
 			{
@@ -3851,7 +3885,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_feedback.update();
 				}
 			}
-		}.start();
+		};
+		run.setDaemon(true);
+		run.start();
 
 		synchronized (m_anonServiceListener)
 		{
@@ -3977,9 +4013,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 	/**
 	 * Fetches new statements for all accounts from the payment instance
 	 */
-	public void updateAccountStatements()
+	private void updateAccountStatements()
 	{
-		Runnable doIt = new Runnable()
+		Thread doIt = new Thread()
 		{
 			public void run()
 			{
@@ -4002,7 +4038,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 			}
 		};
-		new Thread(doIt).start();
+		doIt.setDaemon(true);
+		doIt.start();
 	}
 
 	public void packetMixed(long a_totalBytes)

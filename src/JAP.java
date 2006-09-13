@@ -469,13 +469,6 @@ public class JAP
 		// initially start services
 		m_controller.initialRun();
 
-		//Update account balance
-		m_controller.updateAccountStatements();
-
-
-
-
-
 		if (bConsoleOnly)
 		{
 		try

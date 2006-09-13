@@ -64,6 +64,8 @@ import gui.dialog.DialogContentPane;
 import gui.dialog.JAPDialog;
 import gui.dialog.SimpleWizardContentPane;
 import gui.dialog.WorkerContentPane;
+import gui.JAPDll;
+import platform.*;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -92,6 +94,10 @@ final class JAPConfUI extends AbstractJAPConfModule
 		+ "_dialogFormatTestBtn";
 	private static final String MSG_DIALOG_FORMAT_GOLDEN_RATIO = JAPConfUI.class.getName()
 		+ "_dialogFormatGoldenRatio";
+	private static final String MSG_NO_NATIVE_LIBRARY = JAPConfUI.class.getName() + "_noNativeLibrary";
+	private static final String MSG_NO_NATIVE_WINDOWS_LIBRARY = JAPConfUI.class.getName() +
+		"_noNativeWindowsLibrary";
+
 
 	// show the options to alter the dialog format
 	private static final boolean SHOW_DIALOG_FORMAT = false;
@@ -620,6 +626,18 @@ final class JAPConfUI extends AbstractJAPConfModule
 		p.add(m_cbAfterStart, c);
 		m_rbViewMini = new JRadioButton(JAPMessages.getString("ngViewMini"));
 		m_rbViewSystray = new JRadioButton(JAPMessages.getString("ngViewSystray"));
+		if (JAPDll.getDllVersion() == null)
+		{
+			// no library loaded
+			if (AbstractOS.getInstance() instanceof WindowsOS)
+			{
+				m_rbViewSystray.setToolTipText(JAPMessages.getString(MSG_NO_NATIVE_WINDOWS_LIBRARY));
+			}
+			else
+			{
+				m_rbViewSystray.setToolTipText(JAPMessages.getString(MSG_NO_NATIVE_LIBRARY));
+			}
+		}
 		ButtonGroup bg = new ButtonGroup();
 		bg.add(m_rbViewMini);
 		bg.add(m_rbViewSystray);
@@ -805,7 +823,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 	{
 		m_cbAfterStart.setSelected(bAfterStart);
 		m_rbViewMini.setEnabled(bAfterStart);
-		m_rbViewSystray.setEnabled(bAfterStart);
+		m_rbViewSystray.setEnabled(bAfterStart && (JAPDll.getDllVersion() != null));
 		if (bAfterStart && ! (m_rbViewSystray.isSelected() || m_rbViewMini.isSelected()))
 		{
 			m_rbViewMini.setSelected(true);

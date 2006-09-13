@@ -164,6 +164,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	private DialogWindowAdapter m_dialogWindowAdapter;
 	private boolean m_bForceApplicationModality;
 	private boolean m_bDisposed = false;
+	private boolean m_bCatchCancel = false;
 
 	/**
 	 * Stores the instance of JDialog for internal use.
@@ -2375,6 +2376,45 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	}
 
 	/**
+	 * Sets if the default click on the <i>Cancel</i> button of a dialog content
+	 * pane is caught by the WindowClosing-Event of this dialog
+	 * @param a_bCatchCancel if the default click on the <i>Cancel</i> button of a dialog content
+	 * pane is caught by the WindowClosing-Event of this dialog
+	 */
+	public void doClosingOnContentPaneCancel(boolean a_bCatchCancel)
+	{
+		m_bCatchCancel = a_bCatchCancel;
+	}
+
+	/**
+	 * Returns if the default click on the <i>Cancel</i> button of a dialog content
+	 * pane is caught by the WindowClosing-Event of this dialog.
+	 * @return if the default click on the <i>Cancel</i> button of a dialog content
+	 * pane is caught by the WindowClosing-Event of this dialog
+	 */
+	public boolean isClosingOnContentPaneCancel()
+	{
+		return m_bCatchCancel;
+	}
+
+	public void setName(String a_name)
+	{
+		m_internalDialog.setName(a_name);
+	}
+
+	public String getName()
+	{
+		return m_internalDialog.getName();
+	}
+
+
+	public void setAlwaysOnTop()
+	{
+		//GUIUtils.setAlwaysOnTop(m_internalDialog, true);
+		m_bOnTop = true;
+	}
+
+	/**
 	 * Returns if the dialog is visible on the screen.
 	 * @return true if the dialog is visible on the screen; false otherwise
 	 */
@@ -2454,9 +2494,14 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 * Sets the title of this dialog.
 	 * @param a_title the title of this dialog
 	 */
-	public final void setTitle(String a_title)
+	public void setTitle(String a_title)
 	{
 		m_internalDialog.setTitle(a_title);
+	}
+
+	public String getTitle()
+	{
+		return m_internalDialog.getTitle();
 	}
 
 	/**
@@ -2580,7 +2625,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			{
 				final WindowListener currrentListener = (WindowListener)listeners.nextElement();
 				// do this trick to bypass deadlocks
-				new Thread()
+				Thread run = new Thread()
 				{
 					public void run()
 					{
@@ -2593,7 +2638,9 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 							}
 						});
 					}
-				}.start();
+				};
+				run.setDaemon(true);
+				run.start();
 			}
 			m_windowListeners.removeAllElements();
 
@@ -2876,6 +2923,11 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		return m_internalDialog.getInsets();
 	}
 
+	void doWindowClosing()
+	{
+		m_dialogWindowAdapter.windowClosing(new WindowEvent(m_internalDialog, WindowEvent.WINDOW_CLOSING));
+	}
+
 	/**
 	 * Catches all window events and informs the window listeners about them.
 	 */
@@ -2954,6 +3006,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		 * processing the windowClosing event and informing its listeners. Therefore it is recommended
 		 * only to use JAPDialogs as parent, and, if it is really needed to use as parent a JFrame, a JDialog
 		 * or an other window, to check for it if it is enabled before performing the windowClosing operation.
+		 * This may be already fixed?
 		 * @param a_event WindowEvent
 		 */
 		public void windowClosing(WindowEvent a_event)
