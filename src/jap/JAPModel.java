@@ -659,7 +659,7 @@ public final class JAPModel extends Observable
 		m_bHttpListenerIsLocal = b;
 	}
 
-	public static boolean getHttpListenerIsLocal()
+	public static boolean isHttpListenerLocal()
 	{
 		return ms_TheModel.m_bHttpListenerIsLocal;
 	}

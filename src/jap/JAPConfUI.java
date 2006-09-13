@@ -82,7 +82,6 @@ final class JAPConfUI extends AbstractJAPConfModule
 	private static final String MSG_COULD_NOT_REMOVE = JAPConfUI.class.getName() + "_couldNotRemove";
 	private static final String MSG_TITLE_IMPORT = JAPConfUI.class.getName() + "_titleImport";
 	private static final String MSG_PROGRESS_IMPORTING = JAPConfUI.class.getName() + "_progressImport";
-	private static final String MSG_NEED_RESTART = JAPConfUI.class.getName() + "_needRestart";
 	private static final String MSG_IMPORT_SUCCESSFUL = JAPConfUI.class.getName() + "_importSuccessful";
 	private static final String MSG_NO_LNF_FOUND = JAPConfUI.class.getName() + "_noLNFFound";
 	private static final String MSG_LOOK_AND_FEEL_CHANGED = JAPConfUI.class.getName() + "_lnfChanged";
@@ -694,7 +693,23 @@ final class JAPConfUI extends AbstractJAPConfModule
 		}
 		if (!JAPController.getLocale().equals(newLocale))
 		{
-			bNeedRestart = true;
+			if (bNeedRestart)
+			{
+				final Locale localeRestart = newLocale;
+				JAPConf.getInstance().addNeedRestart(
+					new JAPConf.AbstractRestartNeedingConfigChange()
+				{
+					public String getName()
+					{
+						return JAPMessages.getString("settingsLanguage");
+					}
+
+					public void doChange()
+					{
+						JAPController.setLocale(localeRestart);
+					}
+				});
+			}
 		}
 		int newDefaultView = JAPConstants.VIEW_NORMAL;
 		if (m_rbViewSimplified.isSelected())
@@ -702,9 +717,22 @@ final class JAPConfUI extends AbstractJAPConfModule
 			newDefaultView = JAPConstants.VIEW_SIMPLIFIED;
 		}
 
-		if (!bNeedRestart && JAPModel.getInstance().getDefaultView() != newDefaultView)
+		if (JAPModel.getInstance().getDefaultView() != newDefaultView)
 		{
-			bNeedRestart = true;
+			final int defaultViewRestart = newDefaultView;
+			JAPConf.getInstance().addNeedRestart(
+			new JAPConf.AbstractRestartNeedingConfigChange()
+			{
+				public String getName()
+				{
+					return JAPMessages.getString("ngSettingsViewBorder");
+				}
+				public void doChange()
+				{
+					JAPController.getInstance().setDefaultView(defaultViewRestart);
+				}
+			});
+
 		}
 
 		JAPDialog.setOptimizedFormat(((DialogFormat)m_comboDialogFormat.getSelectedItem()).getFormat());
@@ -719,34 +747,24 @@ final class JAPConfUI extends AbstractJAPConfModule
 		{
 			newLaF = UIManager.getLookAndFeel().getClass().getName();
 		}
-		if (!bNeedRestart && !UIManager.getLookAndFeel().getClass().getName().equals(newLaF))
+		if (!UIManager.getLookAndFeel().getClass().getName().equals(newLaF))
 		{
-			bNeedRestart = true;
+			final String lafRestart = newLaF;
+			JAPConf.getInstance().addNeedRestart(
+				new JAPConf.AbstractRestartNeedingConfigChange()
+			{
+				public String getName()
+				{
+					return JAPMessages.getString("settingsLookAndFeel");
+				}
+
+				public void doChange()
+				{
+					JAPModel.getInstance().setLookAndFeel(lafRestart);
+				}
+			});
 		}
 
-		if (bNeedRestart)
-		{
-			if (JAPDialog.showYesNoDialog(getRootPanel(), JAPMessages.getString(MSG_NEED_RESTART)))
-			{
-				JAPConf.getInstance().setNeedRestart();
-			}
-			else
-			{
-				newLocale = JAPController.getLocale();
-				newDefaultView = JAPModel.getInstance().getDefaultView();
-				newLaF = UIManager.getLookAndFeel().getClass().getName();
-			}
-		}
-
-		JAPController.setLocale(newLocale);
-		JAPController.getInstance().setDefaultView(newDefaultView);
-		try
-		{
-			JAPModel.getInstance().setLookAndFeel(newLaF);
-		}
-		catch (Exception ex)
-		{
-		}
 
 		return true;
 	}

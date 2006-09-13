@@ -52,10 +52,9 @@ import javax.swing.tree.DefaultTreeSelectionModel;
 import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
-import gui.*;
-import javax.swing.UIManager;
-import javax.swing.*;
-import logging.*;
+
+import gui.GUIUtils;
+import gui.JAPMessages;
 
 /**
  * This is the implementation for the configuration module system. It manages the configuration
@@ -63,12 +62,6 @@ import logging.*;
  */
 public class JAPConfModuleSystem
 {
-
-	/**
-	 * Stores the Font setting for the configuration tree.
-	 */
-	private Font m_fontSetting;
-
 	/**
 	 * Stores the root panel for the whole configuration module system. The configuration tree and
 	 * the module cards are created on this panel.
@@ -118,7 +111,6 @@ public class JAPConfModuleSystem
 	 */
 	public JAPConfModuleSystem()
 	{
-		m_fontSetting = JAPController.getDialogFont();
 		m_registratedModules = new Hashtable();
 		m_registratedPanelTitleIdentifiers = new Hashtable();
 		m_treeNodesToSymbolicNames = new Hashtable();

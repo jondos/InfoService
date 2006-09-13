@@ -2408,10 +2408,13 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	}
 
 
-	public void setAlwaysOnTop()
+	public void setAlwaysOnTop(boolean a_bOnTop)
 	{
 		//GUIUtils.setAlwaysOnTop(m_internalDialog, true);
-		m_bOnTop = true;
+		if (!isVisible())
+		{
+			m_bOnTop = a_bOnTop;
+		}
 	}
 
 	/**
