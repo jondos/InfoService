@@ -92,6 +92,8 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 	private static final String MSG_ASK_RESET_DEFAULTS = JAPConf.class.getName() + "_askResetDefaults";
 	private static final String MSG_NEED_RESTART = JAPConf.class.getName() + "_needRestart";
 	private static final String MSG_LISTENER_CHANGED = JAPConf.class.getName() + "_listenerChanged";
+	private static final String MSG_ACCESS_TO_JAP = JAPConf.class.getName() + "_accessToJAP";
+
 
 
 	final static public String PORT_TAB = "PORT_TAB";
@@ -1002,7 +1004,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 			{
 				public String getName()
 				{
-					return JAPMessages.getString("Port");
+					return JAPMessages.getString("Portlistener");
 				}
 
 				public String getMessage()
@@ -1022,7 +1024,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 			{
 				public String getName()
 				{
-					return JAPMessages.getString("Local proxy");
+					return JAPMessages.getString(JAPMessages.getString(MSG_ACCESS_TO_JAP));
 				}
 
 				public void doChange()
