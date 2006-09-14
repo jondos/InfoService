@@ -660,7 +660,6 @@ final class JAPConfUI extends AbstractJAPConfModule
 
 	protected boolean onOkPressed()
 	{
-		boolean bNeedRestart = false;
 	/*
 	 JAPDialog.showMessageDialog(getRootPanel(),
 												JAPMessages.getString("confViewChanged"));
@@ -693,23 +692,20 @@ final class JAPConfUI extends AbstractJAPConfModule
 		}
 		if (!JAPController.getLocale().equals(newLocale))
 		{
-			if (bNeedRestart)
+			final Locale localeRestart = newLocale;
+			JAPConf.getInstance().addNeedRestart(
+				new JAPConf.AbstractRestartNeedingConfigChange()
 			{
-				final Locale localeRestart = newLocale;
-				JAPConf.getInstance().addNeedRestart(
-					new JAPConf.AbstractRestartNeedingConfigChange()
+				public String getName()
 				{
-					public String getName()
-					{
-						return JAPMessages.getString("settingsLanguage");
-					}
+					return JAPMessages.getString("settingsLanguage");
+				}
 
-					public void doChange()
-					{
-						JAPController.setLocale(localeRestart);
-					}
-				});
-			}
+				public void doChange()
+				{
+					JAPController.setLocale(localeRestart);
+				}
+			});
 		}
 		int newDefaultView = JAPConstants.VIEW_NORMAL;
 		if (m_rbViewSimplified.isSelected())
