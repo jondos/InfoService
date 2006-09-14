@@ -5,13 +5,87 @@
 <body>
 <!--#include virtual="/header_en.html"-->
 
-<H2>Settings for various browsers</H2>
+<H3>Dataprotection settings on Internet Explorer 6.0</H3>
 
-<B>Avoid data trails on the internet with Internet Explorer</B><P>
-It is recommended NOT to use Internet Explorer for surfing anonymously. IE is hard to configure safely on that score and due to the support of ActiveX there are more security leaks.
-<br>Should you want to use it anyway, <A href="noactive_general_en.html">use Muffin</A>.
+<P> Commercial webservers often use Cookies, to create user profiles. 
+  That's why we recommend to deactivate Cookies in your Browser. Unfortunately, 
+  many websites can't be used without Cookies. Partly because the providers of those 
+  websites don't want to lose that simple profiling tool.<br>
+  The <b>Internet Explorer 6.0</b> provides more extensive settings to manage 
+  the Cookies than just turning them off. 
+<p> For a simple dataprotection configuration you have the option to import the
+  <b>dataprotection settings as file</b>.<br>
+  Our configurationfile will make your browser accept Cookies <b>just</b> for the <b>current 
+  session</b>. Hence, if you visit the homepage once again you will not be recognized. 
+  <br>
+  These settings will prevent Cookies from being saved on your harddisk but since 
+  Cookies are accept for a 
+  short time, you can still access these websites normally. 
+<h3>Installing the Dataprotection-Configurationfile</h3>
+<ol>
+  <li> <b>Download the file</b> 
+    <ul>
+      <li><A HREF="./internetexplorer/ie_privacy_file.xml" type="application/ffr">ie_privacy_file.xml</A> (<A HREF="http://anon.inf.tu-dresden.de/ie_privacy_file.xml" type="application/ffr">online</A>)
+        (Save as file please.)</li>
+</ul>
+</li>
+  <li> <b>Import it</b> 
+    <ol>
+      <li>In the Internet Explorer select menu item "Extras/Internetoptions".</li>
+      <li>Go to the "Dataprotection" register.</li>
+      <li>Click on "Import...".</li>
+      <li>Select the downloaded file "ie_privacy_file.xml" and click on "open".</li>
+</ol>
+</li>
+  <li> The Internet Explorer will confirm the successful import with a message like "Dataprotectionsettingfile 
+    was successful imported". </li>
+</ol>
+<P > <b>Hint:</b> To permit saving of Cookies for some trusted websites,
+  you can enter these websites at the dataprotection settings. If you 
+  select "Edit", you can add these trusted sites.</p>
 
-<!--#include virtual="/footer_en.html"-->
+<h3>Why aren't the builtin capabilities good enough to configure IE?</h3>
 
+The decision to accept or reject a Cookie in Internet Explorer 6.0 is
+based on what the cookie setting party does with the collected
+data. Or more precisely, what they <b>declare</b> to do with the data.<br>
+This declaration is made in a machine readable Privacy-Policy
+(following the P3P-standard).
+
+That policy is downloaded from the respective website and compared to the users's preferences.<br>
+
+Unfortunately this preferences can only be set quite coarsely with the Internet Explorer. 
+There is only a ruler with these positions: 
+<ul>
+  <li>Accept all Cookies.</li>
+  <li>4 levels from "high security" to "low security"</li>
+  <li>Reject all Cookies.</li>
+</ul>
+
+One might assume that Cookies from advertising companies are blocked 
+on level &quot;high security&quot; - but it isn't so.
+
+<p> The Cookies of one of the most known web advertisers are still accepted without acknowledgement. 
+  The reason is simple. For the decision to accept a cookie it is most relevant whether a provider collects personal 
+  data, like name, address etc. , or not. Advertisers claim to collect data strictly
+  in referece to a pseudonym and not to a real person.
+  Anyway, users will be recognized whenever they visit a site that belongs to the advertisers 
+  customers. 
+<p>
+<h4>A excerpt of user information collected by the above mentioned advertiser:</h4>
+<ul>
+<!-- TODO: engischen IE greifen und nachlesen wie das tatsaechlich heisst -->
+  <li>Information about your financial situation (account balance, behavior to pay bills),</li>
+  <li>membership of parties, clubs, religious groups, unions,</li>
+  <li>information regarding mentally and physically health, sexual likings, buying 
+    products of public health.</li>
+</ul>
+<p> In the Internet Explorer you can view the P3P-Policy of a website in plain 
+  text if that website has a P3P-Policy. Just select menu item "View/Dataprotectionreport...".
+<p>
+<b>Reference: </b>
+<A HREF="http://anon.inf.tu-dresden.de/p3p_doubleclick.xml">Doubleclick P3P-Policy</A> loaded the 13th December 2001.
+<br>In order to have more options for settings on this topic, we recommend using a <A href="noactive_general_en.html">filter proxy</A>.
+  <!--#include virtual="/footer_en.html"-->
 </body>
 </html>
