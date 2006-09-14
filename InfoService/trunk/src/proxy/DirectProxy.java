@@ -29,6 +29,7 @@ package proxy;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.PushbackInputStream;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
@@ -245,8 +246,20 @@ final public class DirectProxy implements Runnable, AnonService
 				continue;
 			}
 
+			PushbackInputStream clientInputStream = null;
+
+			try
+			{
+				clientInputStream = new PushbackInputStream(socket.getInputStream());
+			}
+			catch (IOException ex)
+			{
+			}
+
 			if (remember == REMEMBER_NOTHING && rememberTime < System.currentTimeMillis())
 			{
+
+
 				AllowUnprotectedConnectionCallback.Answer answer;
 				AllowUnprotectedConnectionCallback callback = ms_callback;
 				if (callback != null)
@@ -281,18 +294,18 @@ final public class DirectProxy implements Runnable, AnonService
 				if (getProxyInterface() != null && getProxyInterface().isValid() &&
 					getProxyInterface().getProtocol() == ProxyInterface.PROTOCOL_TYPE_HTTP)
 				{
-					doIt = new DirectConViaHTTPProxy(socket);
+					doIt = new DirectConViaHTTPProxy(socket, clientInputStream);
 				}
 				else
 				{
-					doIt = new DirectProxyConnection(socket, this);
+					doIt = new DirectProxyConnection(socket, clientInputStream, this);
 				}
 				Thread thread = new Thread(doIt);
 				thread.start();
 			}
 			else
 			{
-				Thread thread = new Thread(new SendAnonWarning(socket));
+				Thread thread = new Thread(new SendAnonWarning(socket, clientInputStream));
 				thread.start();
 			}
 
@@ -346,10 +359,12 @@ final public class DirectProxy implements Runnable, AnonService
 	{
 		private Socket s;
 		private SimpleDateFormat dateFormatHTTP;
+		private InputStream m_clientInputStream;
 
-		public SendAnonWarning(Socket s)
+		public SendAnonWarning(Socket s, InputStream a_clientInputStream)
 		{
 			this.s = s;
+			m_clientInputStream = a_clientInputStream;
 			dateFormatHTTP = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
 			dateFormatHTTP.setTimeZone(TimeZone.getTimeZone("GMT"));
 		}
@@ -359,7 +374,14 @@ final public class DirectProxy implements Runnable, AnonService
 			try
 			{
 				// read something so that the browser realises everything is OK
-				s.getInputStream().read();
+				if (m_clientInputStream != null)
+				{
+					m_clientInputStream.read();
+				}
+				else
+				{
+					s.getInputStream().read();
+				}
 			}
 			catch (IOException a_e)
 			{
@@ -398,10 +420,12 @@ final public class DirectProxy implements Runnable, AnonService
 	private final class DirectConViaHTTPProxy implements Runnable
 	{
 		private Socket m_clientSocket;
+		private InputStream m_clientInputStream;
 
-		public DirectConViaHTTPProxy(Socket s)
+		public DirectConViaHTTPProxy(Socket s, InputStream a_clientInputStream)
 		{
 			m_clientSocket = s;
+			m_clientInputStream = a_clientInputStream;
 		}
 
 		public void run()
@@ -409,7 +433,16 @@ final public class DirectProxy implements Runnable, AnonService
 			try
 			{
 				// open stream from client
-				InputStream inputStream = m_clientSocket.getInputStream();
+				InputStream inputStream;
+				if (m_clientInputStream != null)
+				{
+					inputStream = m_clientInputStream;
+				}
+				else
+				{
+					inputStream = m_clientSocket.getInputStream();
+				}
+
 				// create Socket to Server
 				Socket serverSocket = new Socket(getProxyInterface().getHost(),
 												 getProxyInterface().getPort());

@@ -219,6 +219,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private IPasswordReader m_passwordReader;
 	private Object m_finishSync = new Object();
 
+	private DirectProxy.AllowUnprotectedConnectionCallback m_proxyCallback;
+
 	private static Font m_fontControls;
 	/** Holds the MsgID of the status message after the forwaring server was started.*/
 	private int m_iStatusPanelMsgIdForwarderServerStatus;
@@ -253,8 +255,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		// initialise HTTP proxy
 		if (!JAPModel.isSmallDisplay())
 		{
-			DirectProxy.setAllowUnprotectedConnectionCallback(
-				new DirectProxy.AllowUnprotectedConnectionCallback()
+			m_proxyCallback = new DirectProxy.AllowUnprotectedConnectionCallback()
 			{
 				public DirectProxy.AllowUnprotectedConnectionCallback.Answer callback()
 				{
@@ -286,7 +287,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 					return new Answer(!bShowHtmlWarning, cb.getState());
 				}
-			});
+			};
+
+			DirectProxy.setAllowUnprotectedConnectionCallback(m_proxyCallback);
 		}
 		/* set a default mixcascade */
 		try
@@ -2523,7 +2526,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 								{
 									public void run()
 									{
-										JAPDialog.LinkedCheckBox checkBox = new JAPDialog.LinkedCheckBox(false);
+										JAPDialog.LinkedCheckBox checkBox =
+											new JAPDialog.LinkedCheckBox(false, "noactive");
 										JAPDialog.showWarningDialog(getViewWindow(),
 											JAPMessages.getString("disableActCntMessage"),
 											JAPMessages.getString("disableActCntMessageTitle"),
@@ -2641,7 +2645,19 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 
 					m_proxyDirect = new DirectProxy(m_socketHTTPListener);
+					// ignore all connections to terminate all remaining connections from JAP threads
+					m_proxyDirect.setAllowUnprotectedConnectionCallback(null);
 					m_proxyDirect.startService();
+					try
+					{
+						Thread.sleep(300);
+					}
+					catch (InterruptedException ex)
+					{
+						// ignore
+					}
+					// reactivate the callback (now all remaining JAP connections should be dead)
+					m_proxyDirect.setAllowUnprotectedConnectionCallback(m_proxyCallback);
 
 					/* notify the forwarding system after! m_proxyAnon is set to null */
 					JAPModel.getInstance().getRoutingSettings().anonConnectionClosed();
@@ -3097,7 +3113,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 					};
 					finishIS.start();
 
-					// do not show direct connection warning dialog
+					// do not show direct connection warning dialog in this state; ignore all direct conns
+					m_Controller.m_proxyCallback = null;
 					DirectProxy.setAllowUnprotectedConnectionCallback(null);
 
 					Thread finishAnon = new Thread("Finish anon thread")
@@ -3147,7 +3164,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 						{
 						}
 					}
-
 
 					try
 					{
