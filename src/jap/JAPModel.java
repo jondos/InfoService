@@ -553,9 +553,10 @@ public final class JAPModel extends Observable
 	{
 		return new IMutableProxyInterface()
 		{
-			public ImmutableProxyInterface[] getProxyInterfaces()
+			public IProxyInterfaceGetter getProxyInterface(boolean a_bAnonInterface)
 			{
-				return getProxyInterface(DIRECT_CONNECTION_INFOSERVICE);
+				return JAPModel.getInstance().getProxyInterface(
+								DIRECT_CONNECTION_INFOSERVICE, a_bAnonInterface);
 			}
 		};
 	}
@@ -564,79 +565,28 @@ public final class JAPModel extends Observable
 	{
 		return new IMutableProxyInterface()
 		{
-			public ImmutableProxyInterface[] getProxyInterfaces()
+			public IProxyInterfaceGetter getProxyInterface(boolean a_bAnonInterface)
 			{
-				return getProxyInterface(DIRECT_CONNECTION_PAYMENT);
+				return JAPModel.getInstance().getProxyInterface(DIRECT_CONNECTION_PAYMENT, a_bAnonInterface);
 			}
 		};
 	}
 
-	public ImmutableProxyInterface[] getUpdateProxyInterface()
+	public IMutableProxyInterface getUpdateProxyInterface()
 	{
-		return getProxyInterface(DIRECT_CONNECTION_UPDATE);
+		return new IMutableProxyInterface()
+		{
+			public IProxyInterfaceGetter getProxyInterface(boolean a_bAnonInterface)
+			{
+				return JAPModel.getInstance().getProxyInterface(DIRECT_CONNECTION_UPDATE, a_bAnonInterface);
+			}
+		};
 	}
 
 	public ImmutableProxyInterface getTorProxyInterface()
 	{
 		return new ProxyInterface("localhost", getHttpListenerPortNumber(),
 								  ProxyInterface.PROTOCOL_TYPE_SOCKS, null);
-	}
-
-	/**
-	 *
-	 * @param a_bPayment if the proxy interface for Payment should be returned; otherwise, return
-	 * the one for the InfoService
-	 * @return ImmutableProxyInterface[] one or more proxy interfaces or null if there is no
-	 * proxy available that is allowed
-	 */
-	private ImmutableProxyInterface[] getProxyInterface(int a_component)
-	{
-		//ProxyInterface[] interfaces = new ProxyInterface[4];
-		ProxyInterface[] interfaces = new ProxyInterface[3];
-		interfaces[0] = getProxyInterface(); // try direct connection via proxy, if present
-		interfaces[1] = null; // try direct connection without proxy
-		interfaces[2] = new ProxyInterface("localhost", getHttpListenerPortNumber(), null); // AN.ON
-		//interfaces[3] = new ProxyInterface("localhost", getHttpListenerPortNumber(),
-			//							   ProxyInterface.PROTOCOL_TYPE_SOCKS, null); // TOR
-		if ((DIRECT_CONNECTION_PAYMENT == a_component && !isPaymentViaDirectConnectionAllowed()) ||
-			(DIRECT_CONNECTION_INFOSERVICE == a_component && !isInfoServiceViaDirectConnectionAllowed()) ||
-			(DIRECT_CONNECTION_UPDATE == a_component && !isUpdateViaDirectConnectionAllowed()))
-		{
-			// force anonymous connections to BI and InfoService
-			if (!m_connectionChecker.checkAnonConnected())
-			{
-				// no anonymous connection available... it is not possible to connect!
-				return null;
-			}
-			// ok, there seems to be an anonymous channel
-			//return new ProxyInterface[]{interfaces[2], interfaces[3]};
-			return new ProxyInterface[]{interfaces[2]};
-		}
-		else if (!m_connectionChecker.checkAnonConnected())
-		{
-			// return only direct connections
-			/*
-			if (interfaces[0] == null)
-			{
-				// no proxy/firewall is set
-				return new ProxyInterface[]{interfaces[1]};
-			}*/
-
-			// use proxy if pesent
-			return new ProxyInterface[]{interfaces[0]};
-			//return new ProxyInterface[]{interfaces[0], interfaces[1]};
-		}
-
-		/*
-		if (interfaces[0] == null)
-		{
-			// no proxy/firewall is set
-			//return new ProxyInterface[]{interfaces[1], interfaces[2], interfaces[3]};
-			return new ProxyInterface[]{interfaces[1], interfaces[2]};
-		}*/
-		return new ProxyInterface[]{interfaces[0], interfaces[2]};
-
-		//return interfaces;
 	}
 
 	public static int getHttpListenerPortNumber()
@@ -1027,5 +977,64 @@ public final class JAPModel extends Observable
 		{
 			return m_newSize;
 		}
+	}
+
+	private IMutableProxyInterface.IProxyInterfaceGetter getProxyInterface(
+		   int a_component, boolean a_bAnonInterface)
+	{
+		IMutableProxyInterface.IProxyInterfaceGetter proxyDirect, proxyAnon;
+		proxyDirect = new IMutableProxyInterface.IProxyInterfaceGetter()
+		{
+			public ImmutableProxyInterface getProxyInterface()
+			{
+				// try direct connection via proxy, if present
+				return JAPModel.getInstance().getProxyInterface();
+			}
+		};
+		proxyAnon = new IMutableProxyInterface.IProxyInterfaceGetter()
+		{
+			public ImmutableProxyInterface getProxyInterface()
+			{
+				return new ProxyInterface("localhost", getHttpListenerPortNumber(), null); // AN.ON
+			}
+		};
+
+		//interfaces[3] = new ProxyInterface("localhost", getHttpListenerPortNumber(),
+			//							   ProxyInterface.PROTOCOL_TYPE_SOCKS, null); // TOR
+		if ((DIRECT_CONNECTION_PAYMENT == a_component && !isPaymentViaDirectConnectionAllowed()) ||
+			(DIRECT_CONNECTION_INFOSERVICE == a_component && !isInfoServiceViaDirectConnectionAllowed()) ||
+			(DIRECT_CONNECTION_UPDATE == a_component && !isUpdateViaDirectConnectionAllowed()))
+		{
+			// force anonymous connections to BI and InfoService
+			if (!m_connectionChecker.checkAnonConnected())
+			{
+				// no anonymous connection available... it is not possible to connect!
+				return null;
+			}
+			// ok, there seems to be an anonymous channel
+			if (a_bAnonInterface)
+			{
+				return proxyAnon;
+			}
+			// A direct proxy was requested; not allowed!
+			return null;
+
+		}
+		else if (!m_connectionChecker.checkAnonConnected())
+		{
+			if (a_bAnonInterface)
+			{
+				// no anonymous connection is available
+				return null;
+			}
+			return proxyDirect;
+		}
+
+		// both proxies are available
+		if (a_bAnonInterface)
+		{
+			return proxyAnon;
+		}
+		return proxyDirect;
 	}
 }

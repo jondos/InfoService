@@ -758,35 +758,40 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 		/* make sure that we are connected */
 		int connectionCounter = 0;
 		HTTPConnectionDescriptor currentConnectionDescriptor = null;
-		ImmutableProxyInterface[] proxies;
-		int proxyCounter;
+		IMutableProxyInterface.IProxyInterfaceGetter proxyInterfaceGetter = null;
+		IMutableProxyInterface proxyInterface;
+		boolean bAnonProxy;
 
 		while ( (connectionCounter < m_listenerInterfaces.size()) && !Thread.currentThread().isInterrupted())
 		{
 			// update the connectionCounter
 			connectionCounter++;
-			if (m_proxyInterface != null)
+
+			proxyInterface = m_proxyInterface;
+			if (proxyInterface == null)
 			{
-				proxies = m_proxyInterface.getProxyInterfaces();
-			}
-			else
-			{
-				proxies = new ImmutableProxyInterface[]
-					{
-					null};
+				// No connection is possible as there are no proxies available!
+				break;
 			}
 
-			if (proxies == null)
-			{
-				continue;
-			}
+			bAnonProxy = false;
 
-			for (proxyCounter = 0; proxyCounter < proxies.length && !Thread.currentThread().isInterrupted();
-				 proxyCounter++)
+			for (int i = 0; (i < 2) && !Thread.currentThread().isInterrupted(); i++)
 			{
+				if (i == 1)
+				{
+					bAnonProxy = true;
+				}
+
+				proxyInterfaceGetter = proxyInterface.getProxyInterface(bAnonProxy);
+				if (proxyInterfaceGetter == null)
+				{
+					continue;
+				}
+
 				// get the next connection descriptor by supplying the last one
 				currentConnectionDescriptor = connectToInfoService(currentConnectionDescriptor,
-					proxies[proxyCounter]);
+					proxyInterfaceGetter.getProxyInterface());
 
 				final HTTPConnection currentConnection = currentConnectionDescriptor.getConnection();
 				currentConnection.setTimeout(GET_XML_CONNECTION_TIMEOUT);

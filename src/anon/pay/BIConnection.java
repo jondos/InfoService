@@ -111,20 +111,26 @@ public class BIConnection implements ICaptchaSender
 		}
 
 		m_proxyInterface = a_proxyInterface;
+		IMutableProxyInterface.IProxyInterfaceGetter proxyInterfaceGetter;
+		boolean bAnonProxy = false;
 
-		ImmutableProxyInterface[] proxies = a_proxyInterface.getProxyInterfaces();
-
-		if (proxies == null || proxies.length == 0)
+		for (int i = 0; (i < 2) && !Thread.currentThread().isInterrupted(); i++)
 		{
-			throw exception;
-		}
+			if (i == 1)
+			{
+				bAnonProxy = true;
+			}
 
-		for (int i = 0; i < proxies.length; i++)
-		{
+			proxyInterfaceGetter = a_proxyInterface.getProxyInterface(bAnonProxy);
+			if (proxyInterfaceGetter == null)
+			{
+				continue;
+			}
+
 			try
 			{
 				//Try to connect to BI...
-				connect_internal(proxies[i]);
+				connect_internal(proxyInterfaceGetter.getProxyInterface());
 				return;
 			}
 			catch (IOException a_t)

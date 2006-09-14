@@ -57,6 +57,7 @@ import logging.LogType;
 import anon.util.ClassUtil;
 import jap.AbstractJAPMainView;
 import gui.GUIUtils;
+import anon.infoservice.IMutableProxyInterface;
 public final class JAPUpdateWizard extends BasicWizard implements Runnable
 {
 	public JAPWelcomeWizardPage welcomePage;
@@ -475,14 +476,29 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 				 */
 				HTTPConnection connection;
 				HTTPResponse response = null;
-				ImmutableProxyInterface[] proxyInterfaces = JAPModel.getInstance().getUpdateProxyInterface();
+				boolean bAnonProxy = false;
+				IMutableProxyInterface proxyInterface =
+					JAPModel.getInstance().getUpdateProxyInterface();
+				IMutableProxyInterface.IProxyInterfaceGetter proxyInterfaceGetter;
 
-				for (int i = 0; i < proxyInterfaces.length; i++)
+
+				for (int i = 0; (i < 2) && !Thread.currentThread().isInterrupted(); i++)
 				{
+					if (i == 1)
+					{
+						bAnonProxy = true;
+					}
+
+					proxyInterfaceGetter = proxyInterface.getProxyInterface(bAnonProxy);
+					if (proxyInterfaceGetter == null)
+					{
+						continue;
+					}
+
 					try
 					{
 						connection = HTTPConnectionFactory.getInstance().createHTTPConnection(
-							targetInterface, proxyInterfaces[i]);
+							targetInterface, proxyInterfaceGetter.getProxyInterface());
 						response = connection.Get(fileName);
 					}
 					catch (Exception a_e)

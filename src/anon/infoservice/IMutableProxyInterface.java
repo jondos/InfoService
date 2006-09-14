@@ -37,5 +37,18 @@ package anon.infoservice;
  */
 public interface IMutableProxyInterface
 {
-	public ImmutableProxyInterface[] getProxyInterfaces();
+	/**
+	 * Returns one of two possible proxy interfaces or null if the chosen interface
+	 * is not allowed or available at present.
+	 * @param a_bAnonInterface true, if the anonymous interface is chosen; false, if the
+	 * direct interface is chosen
+	 * @return IProxyInterfaceGetter the chosen proxy interface or null if the chosen
+	 * interface is not allowed or available at present
+	 */
+	public IProxyInterfaceGetter getProxyInterface(boolean a_bAnonInterface);
+
+	public interface IProxyInterfaceGetter
+	{
+		public ImmutableProxyInterface getProxyInterface();
+	}
 }
