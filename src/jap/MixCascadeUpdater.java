@@ -45,7 +45,7 @@ import logging.LogType;
  */
 public class MixCascadeUpdater extends AbstractDatabaseUpdater
 {
-	private static final long UPDATE_INTERVAL_MS = 4 * 60000l; //every four minutes
+	private static final long UPDATE_INTERVAL_MS = 5 * 60000l; //every five minutes
 
 	public MixCascadeUpdater()
 	{

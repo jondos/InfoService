@@ -979,9 +979,19 @@ public final class JAPModel extends Observable
 		}
 	}
 
+	public boolean isShuttingDown()
+	{
+		return JAPController.getInstance().isShuttingDown();
+	}
+
 	private IMutableProxyInterface.IProxyInterfaceGetter getProxyInterface(
 		   int a_component, boolean a_bAnonInterface)
 	{
+		if (isShuttingDown())
+		{
+			return null;
+		}
+
 		IMutableProxyInterface.IProxyInterfaceGetter proxyDirect, proxyAnon;
 		proxyDirect = new IMutableProxyInterface.IProxyInterfaceGetter()
 		{

@@ -31,6 +31,8 @@ import jap.JAPUtil;
 
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
+import java.io.InputStream;
+import java.io.PushbackInputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
@@ -57,6 +59,7 @@ import anon.shared.ProxyConnection;
 final class DirectProxyConnection implements Runnable
 {
 	private Socket m_clientSocket;
+	private InputStream m_socketInputStream;
 
 	private int m_threadNumber;
 	private static int m_threadCount;
@@ -76,10 +79,39 @@ final class DirectProxyConnection implements Runnable
 	private static NumberFormat m_NumberFormat = NumberFormat.getInstance();
 	private DirectProxy m_parentProxy;
 
-	public DirectProxyConnection(Socket s, DirectProxy a_parentProxy)
+	public DirectProxyConnection(Socket s, InputStream a_socketInputStream, DirectProxy a_parentProxy)
 	{
 		m_parentProxy = a_parentProxy;
 		m_clientSocket = s;
+		m_socketInputStream = a_socketInputStream;
+	}
+
+	public static String getURI(PushbackInputStream a_inputStream)
+	{
+	//	if (a_inputStream == null)
+		{
+			return null;
+		}
+	/*
+		// open stream from client
+		if (m_socketInputStream != null)
+		{
+			m_inputStream = new DataInputStream(m_socketInputStream);
+		}
+		else
+		{
+			m_inputStream = new DataInputStream(m_clientSocket.getInputStream());
+		}
+		// read first line of request
+		m_requestLine = JAPUtil.readLine(m_inputStream);
+		LogHolder.log(LogLevel.DEBUG, LogType.NET,
+					  "C(" + m_threadNumber + ") - RequestLine: >" + m_requestLine + "<");
+		// Examples:
+		//  CONNECT 192.168.1.2:443 HTTP/1.0
+		//  GET http://192.168.1.2/incl/button.css HTTP/1.0
+		StringTokenizer st = new StringTokenizer(m_requestLine);
+		m_strMethod = st.nextToken(); //Must be always there
+		m_strURI = st.nextToken(); // Must be always there*/
 	}
 
 	public void run()
@@ -90,7 +122,14 @@ final class DirectProxyConnection implements Runnable
 		try
 		{
 			// open stream from client
-			m_inputStream = new DataInputStream(m_clientSocket.getInputStream());
+			if (m_socketInputStream != null)
+			{
+				m_inputStream = new DataInputStream(m_socketInputStream);
+			}
+			else
+			{
+				m_inputStream = new DataInputStream(m_clientSocket.getInputStream());
+			}
 			// read first line of request
 			m_requestLine = JAPUtil.readLine(m_inputStream);
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
@@ -99,8 +138,9 @@ final class DirectProxyConnection implements Runnable
 			//  CONNECT 192.168.1.2:443 HTTP/1.0
 			//  GET http://192.168.1.2/incl/button.css HTTP/1.0
 			StringTokenizer st = new StringTokenizer(m_requestLine);
-			m_strMethod = st.nextToken(); //Must be alwasy there
+			m_strMethod = st.nextToken(); //Must be always there
 			m_strURI = st.nextToken(); // Must be always there
+
 			if (st.hasMoreTokens())
 			{
 				m_strVersion = st.nextToken();
