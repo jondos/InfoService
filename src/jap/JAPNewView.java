@@ -496,13 +496,31 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 				m_bEnableISClicked = true;
 
-				if (JAPDialog.showConfirmDialog(view, JAPMessages.getString(MSG_IS_DISABLED_EXPLAIN),
-												JAPDialog.OPTION_TYPE_YES_NO,
-												JAPDialog.MESSAGE_TYPE_WARNING, meterIcons[2])
-					== JAPDialog.RETURN_VALUE_YES)
+				if (JAPModel.getInstance().isInfoServiceDisabled())
 				{
-					JAPModel.getInstance().setInfoServiceDisabled(false);
+					if (JAPDialog.showConfirmDialog(view, JAPMessages.getString(MSG_IS_DISABLED_EXPLAIN),
+													JAPDialog.OPTION_TYPE_YES_NO,
+													JAPDialog.MESSAGE_TYPE_WARNING, meterIcons[2])
+						== JAPDialog.RETURN_VALUE_YES)
+					{
+						JAPModel.getInstance().setInfoServiceDisabled(false);
+					}
 				}
+
+				if (!JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed() &&
+					!JAPController.getInstance().isAnonConnected())
+				{
+					if (JAPDialog.showConfirmDialog(view, JAPMessages.getString(
+									   JAPController.MSG_IS_NOT_ALLOWED),
+						JAPDialog.OPTION_TYPE_YES_NO,
+						JAPDialog.MESSAGE_TYPE_WARNING)
+						== JAPDialog.RETURN_VALUE_YES)
+					{
+						JAPModel.getInstance().allowInfoServiceViaDirectConnection(true);
+					}
+
+				}
+
 
 				m_bEnableISClicked = false;
 			}
@@ -1414,14 +1432,17 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 			};
 		}
-		else if (a_message != null && a_message.equals(JAPModel.CHANGED_INFOSERVICE_AUTO_UPDATE))
+		else if (a_message != null && (a_message.equals(JAPModel.CHANGED_INFOSERVICE_AUTO_UPDATE) ||
+				 a_message.equals(JAPModel.CHANGED_ALLOW_INFOSERVICE_DIRECT_CONNECTION)))
 		{
 			run = new Runnable()
 			{
 				public void run()
 				{
 					m_lblISRequestsDeactivated.setVisible(!JAPController.getInstance().isShuttingDown()
-						&& JAPModel.getInstance().isInfoServiceDisabled());
+						&& (JAPModel.getInstance().isInfoServiceDisabled() ||
+							(!JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed() &&
+							!JAPController.getInstance().isAnonConnected())));
 				}
 			};
 		}
@@ -1828,8 +1849,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 								   vi.getJapVersion().compareTo(JAPConstants.aktVersion) > 0) ||
 								 JavaVersionDBEntry.getNewJavaVersion() != null);
 
-	   m_lblISRequestsDeactivated.setVisible(!JAPController.getInstance().isShuttingDown()
-											 && JAPModel.getInstance().isInfoServiceDisabled());
+	   m_lblISRequestsDeactivated.setVisible(
+		   !JAPController.getInstance().isShuttingDown()
+		   && (JAPModel.getInstance().isInfoServiceDisabled() ||
+			   (!JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed() &&
+				!JAPController.getInstance().isAnonConnected())));
+
 
 		MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
 		//String strCascadeName = currentMixCascade.getName();
