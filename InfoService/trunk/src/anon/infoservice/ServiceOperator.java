@@ -29,13 +29,15 @@ package anon.infoservice;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import anon.crypto.JAPCertificate;
 import anon.crypto.X509DistinguishedName;
 import anon.crypto.X509SubjectAlternativeName;
-import anon.util.XMLParseException;
 import anon.util.XMLUtil;
+import java.util.Vector;
+import anon.crypto.AbstractX509Extension;
+import anon.util.Util;
+import java.net.URL;
 
 /**
  * Holds the information about the operator of a service.
@@ -83,6 +85,34 @@ public class ServiceOperator
 			{
 			   m_strEmail = subject.getEmailAddress();
 			}
+
+			// get the URL
+			AbstractX509Extension extension =
+				operatorCertificate.getExtensions().getExtension(X509SubjectAlternativeName.IDENTIFIER);
+			if (extension != null && extension instanceof X509SubjectAlternativeName)
+			{
+				X509SubjectAlternativeName alternativeName = (X509SubjectAlternativeName) extension;
+				Vector tags = alternativeName.getTags();
+				Vector values = alternativeName.getValues();
+				if (tags.size() == values.size())
+				{
+					for (int i = 0; i < tags.size(); i++)
+					{
+						if (tags.elementAt(i).equals(X509SubjectAlternativeName.TAG_URL))
+						{
+							try
+							{
+								url = new URL(values.elementAt(i).toString()).toString();
+							}
+							catch (Exception a_e)
+							{
+								// ignore
+							}
+							break;
+						}
+					}
+				}
+			}
 		}
 
 		/* check if the the information from the cert is valid (not null oder empty)
@@ -94,15 +124,19 @@ public class ServiceOperator
 		    organisation = XMLUtil.parseValue(node, null);
 		}
 
-		if(m_strEmail == null || m_strEmail.trim().length() == 0 || X509SubjectAlternativeName.isValidEMail(m_strEmail))
+		if(m_strEmail == null || m_strEmail.trim().length() == 0 ||
+		   !X509SubjectAlternativeName.isValidEMail(m_strEmail))
 		{
 			node = XMLUtil.getFirstChildByName(operatorNode, XML_ELEM_EMAIL);
 		    m_strEmail = XMLUtil.parseValue(node, null);
 		}
 
 	    /* get the homepage url */
-	    node = XMLUtil.getFirstChildByName(operatorNode, "URL");
-	    url = XMLUtil.parseValue(node, null);
+		if (url == null)
+		{
+			node = XMLUtil.getFirstChildByName(operatorNode, "URL");
+			url = XMLUtil.parseValue(node, null);
+		}
 	}
 
 	public String getEMail()
