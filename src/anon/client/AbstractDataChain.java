@@ -56,7 +56,7 @@ public abstract class AbstractDataChain implements AnonChannel, Observer, Runnab
   private Vector m_messageQueuesNotifications;
 
   private IDataChannelCreator m_channelCreator;
-  
+
   private DataChainErrorListener m_errorListener;
 
   private boolean m_chainClosed;
@@ -85,7 +85,7 @@ public abstract class AbstractDataChain implements AnonChannel, Observer, Runnab
     public void write(byte[] a_buffer, int a_offset, int a_length) throws IOException {
       synchronized (m_internalStreamSynchronization) {
         if (m_closed) {
-          throw (new IOException("DataChainOutputStreamImplementation: write(): Stream is closed."));
+          throw (new IOException("Stream is closed."));
         }
         byte[] dataToSend = new byte[a_length];
         System.arraycopy(a_buffer, a_offset, dataToSend, 0, a_length);
@@ -106,7 +106,7 @@ public abstract class AbstractDataChain implements AnonChannel, Observer, Runnab
               /* Attention: We will not set the number of transferred bytes in the thrown
                * Exception because we can't know it.
                */
-              throw (new InterruptedIOException("DataChainOutputStreamImplementation: write(): InterruptedException: " + e.toString()));
+              throw (new InterruptedIOException("InterruptedException: " + e.toString()));
             }
           }
           /* processing is done -> check for exceptions */
@@ -174,7 +174,7 @@ public abstract class AbstractDataChain implements AnonChannel, Observer, Runnab
       if (a_length > 0) {
         synchronized (m_queueEntries) {
           if (m_closed) {
-            throw (new IOException("DataChainInputStreamImplementation: read(): Stream is closed."));
+            throw (new IOException("Stream is closed."));
           }
           if (m_queueEntries.size() == 0) {
             /* nothing is currently available -> wait for available queue-entries */
@@ -182,7 +182,7 @@ public abstract class AbstractDataChain implements AnonChannel, Observer, Runnab
               m_queueEntries.wait();
             }
             catch (InterruptedException e) {
-              throw (new InterruptedIOException("DataChainInputStreamImplementation: read(): InterruptedException: " + e.toString()));
+              throw (new InterruptedIOException("InterruptedException: " + e.toString()));
             }
           }
           if (m_queueEntries.size() > 0) {
@@ -235,7 +235,7 @@ public abstract class AbstractDataChain implements AnonChannel, Observer, Runnab
       int availableBytes = 0;
       synchronized (m_queueEntries) {
         if (m_closed) {
-          throw (new IOException("DataChainInputStreamImplementation: available(): Stream is closed."));
+          throw (new IOException("Stream is closed."));
         }
         if (m_queueEntries.size() > 0) {
           int i = 0;
@@ -379,8 +379,8 @@ public abstract class AbstractDataChain implements AnonChannel, Observer, Runnab
   protected void propagateConnectionError() {
     m_errorListener.dataChainErrorSignaled();
   }
-  
-  
+
+
   public abstract int getOutputBlockSize();
 
   public abstract void createPacketPayload(DataChainSendOrderStructure a_order);

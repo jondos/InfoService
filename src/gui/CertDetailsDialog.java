@@ -67,6 +67,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import java.text.SimpleDateFormat;
 
 /**
  * <p>CertDetails Dialog </p>
@@ -137,6 +138,7 @@ public class CertDetailsDialog extends JAPDialog
 		"_titleKeysKeylength";
 	private static final String TITLE_KEYS_SIGNALGORITHM = CertDetailsDialog.class.getName() +
 		"_titleKeysSignatureAlgorithm";
+	private static final String MSG_CERT_INFO_BORDER = CertDetailsDialog.class.getName() + "_certInfoBorder";
 
 	private static final String CERT_VALID_INACTIVE = "certinactive.gif";
 	private static final String CERT_INVALID_INACTIVE = "certinvalidinactive.gif";
@@ -163,10 +165,11 @@ public class CertDetailsDialog extends JAPDialog
 	private String str;
 
 	// Used for a CertDetailsDialog with a certPath
+	private CertShortInfoPanel m_shortInfoPanel;
 	private JList m_certList;
 	private JTabbedPane m_tabbedPane;
 	private DefaultListModel m_certListModel;
-	private JAPCertificate m_detailedCert, m_selectedCert;
+	private JAPCertificate m_detailedCert;
 
 	/**
 	 *
@@ -228,6 +231,265 @@ public class CertDetailsDialog extends JAPDialog
 
 		setSize();
 		setVisible(true);
+	}
+
+	public static class CertShortInfoPanel extends JPanel
+	{
+		private JLabel m_labelDate, m_labelCN, m_labelE, m_labelCSTL, m_labelO, m_labelOU;
+		private JLabel m_labelDateData, m_labelCNData, m_labelEData, m_labelCSTLData, m_labelOData,
+			m_labelOUData, m_lblCertTitle;
+		private JAPCertificate m_selectedCert;
+
+		public CertShortInfoPanel()
+		{
+			GridBagLayout panelLayoutInfo = new GridBagLayout();
+			setLayout(panelLayoutInfo);
+
+			GridBagConstraints panelConstraintsInfo = new GridBagConstraints();
+			panelConstraintsInfo.anchor = GridBagConstraints.WEST;
+			panelConstraintsInfo.weightx = 1.0;
+			panelConstraintsInfo.insets = new Insets(0, 10, 0, 0);
+			panelConstraintsInfo.gridx = 0;
+			panelConstraintsInfo.gridy = 0;
+			panelConstraintsInfo.gridwidth = 2;
+
+			m_lblCertTitle = new JLabel(JAPMessages.getString(MSG_CERT_INFO_BORDER));
+			add(m_lblCertTitle, panelConstraintsInfo);
+
+			m_labelDate = new JLabel(JAPMessages.getString(TITLE_VALIDITY) + ":");
+
+			m_labelCN = new JLabel(JAPMessages.getString(MSG_X509Attribute_CN) + ":");
+			m_labelE = new JLabel(JAPMessages.getString(MSG_X509Attribute_EMAIL) + ":");
+			m_labelCSTL = new JLabel(JAPMessages.getString(MSG_X509Attribute_L) +":");
+			m_labelO = new JLabel(JAPMessages.getString(MSG_X509Attribute_O) + ":");
+			m_labelOU = new JLabel(JAPMessages.getString(MSG_X509Attribute_OU) +":");
+
+			m_labelDateData = new JLabel();
+			m_labelCNData = new JLabel();
+			m_labelEData = new JLabel();
+			m_labelCSTLData = new JLabel();
+			m_labelOData = new JLabel();
+			m_labelOUData = new JLabel();
+
+			/*		    	gridx
+			 0:				1:
+			 gridy	0:
+			   1:  labelCN			labelCNData
+			   2:	labelO			labelOData
+			   3:	labelOU			labelOUData
+			   4:	labelCSTL		labelCSTLData
+			   5:	labelE			labelEData
+			   ---------------------------------------
+			   6:  labelDate		labelDateData
+			 */
+
+			panelConstraintsInfo.anchor = GridBagConstraints.WEST;
+			panelConstraintsInfo.fill = GridBagConstraints.HORIZONTAL;
+			panelConstraintsInfo.gridwidth = 1;
+			panelConstraintsInfo.gridx = 0;
+			panelConstraintsInfo.gridy = 1;
+			panelConstraintsInfo.weightx = 0;
+			panelConstraintsInfo.insets = new Insets(10, 15, 0, 0);
+			panelLayoutInfo.setConstraints(m_labelCN, panelConstraintsInfo);
+			add(m_labelCN);
+
+			panelConstraintsInfo.gridx = 1;
+			panelConstraintsInfo.gridy = 1;
+			panelConstraintsInfo.weightx = 1;
+			panelConstraintsInfo.insets = new Insets(10, 10, 0, 10);
+			panelLayoutInfo.setConstraints(m_labelCNData, panelConstraintsInfo);
+			add(m_labelCNData);
+
+			panelConstraintsInfo.anchor = GridBagConstraints.WEST;
+			panelConstraintsInfo.gridx = 0;
+			panelConstraintsInfo.gridy = 2;
+			panelConstraintsInfo.weightx = 0;
+			panelConstraintsInfo.insets = new Insets(10, 15, 0, 0);
+			panelLayoutInfo.setConstraints(m_labelO, panelConstraintsInfo);
+			add(m_labelO);
+
+			panelConstraintsInfo.gridx = 1;
+			panelConstraintsInfo.gridy = 2;
+			panelConstraintsInfo.weightx = 1;
+			panelConstraintsInfo.insets = new Insets(10, 10, 0, 10);
+			panelLayoutInfo.setConstraints(m_labelOData, panelConstraintsInfo);
+			add(m_labelOData);
+
+			panelConstraintsInfo.anchor = GridBagConstraints.WEST;
+			panelConstraintsInfo.gridx = 0;
+			panelConstraintsInfo.gridy = 3;
+			panelConstraintsInfo.weightx = 0;
+			panelConstraintsInfo.insets = new Insets(10, 15, 0, 0);
+			panelLayoutInfo.setConstraints(m_labelOU, panelConstraintsInfo);
+			add(m_labelOU);
+
+			panelConstraintsInfo.gridx = 1;
+			panelConstraintsInfo.gridy = 3;
+			panelConstraintsInfo.weightx = 1;
+			panelConstraintsInfo.insets = new Insets(10, 10, 0, 10);
+			panelLayoutInfo.setConstraints(m_labelOUData, panelConstraintsInfo);
+			add(m_labelOUData);
+
+			panelConstraintsInfo.anchor = GridBagConstraints.WEST;
+			panelConstraintsInfo.gridx = 0;
+			panelConstraintsInfo.gridy = 4;
+			panelConstraintsInfo.weightx = 0;
+			panelConstraintsInfo.insets = new Insets(10, 15, 0, 0);
+			panelLayoutInfo.setConstraints(m_labelCSTL, panelConstraintsInfo);
+			add(m_labelCSTL);
+
+			panelConstraintsInfo.gridx = 1;
+			panelConstraintsInfo.gridy = 4;
+			panelConstraintsInfo.weightx = 1;
+			panelConstraintsInfo.insets = new Insets(10, 10, 0, 10);
+			panelLayoutInfo.setConstraints(m_labelCSTLData, panelConstraintsInfo);
+			add(m_labelCSTLData);
+
+			panelConstraintsInfo.anchor = GridBagConstraints.WEST;
+			panelConstraintsInfo.gridx = 0;
+			panelConstraintsInfo.gridy = 5;
+			panelConstraintsInfo.weightx = 0;
+			panelConstraintsInfo.insets = new Insets(10, 15, 0, 0);
+			panelLayoutInfo.setConstraints(m_labelE, panelConstraintsInfo);
+			add(m_labelE);
+
+			panelConstraintsInfo.gridx = 1;
+			panelConstraintsInfo.gridy = 5;
+			panelConstraintsInfo.weightx = 1;
+			panelConstraintsInfo.insets = new Insets(10, 10, 0, 10);
+			panelLayoutInfo.setConstraints(m_labelEData, panelConstraintsInfo);
+			add(m_labelEData);
+
+			panelConstraintsInfo.anchor = GridBagConstraints.WEST;
+			panelConstraintsInfo.gridx = 0;
+			panelConstraintsInfo.gridy = 6;
+			panelConstraintsInfo.fill = GridBagConstraints.HORIZONTAL;
+			panelConstraintsInfo.weightx = 0;
+			panelConstraintsInfo.insets = new Insets(10, 15, 10, 0);
+			panelLayoutInfo.setConstraints(m_labelDate, panelConstraintsInfo);
+			add(m_labelDate);
+
+			panelConstraintsInfo.gridx = 1;
+			panelConstraintsInfo.gridy = 6;
+			panelConstraintsInfo.weightx = 1;
+			panelConstraintsInfo.insets = new Insets(10, 10, 10, 10);
+			panelLayoutInfo.setConstraints(m_labelDateData, panelConstraintsInfo);
+			add(m_labelDateData);
+			panelConstraintsInfo.anchor = GridBagConstraints.WEST;
+		}
+
+		public JAPCertificate getShownCertificate()
+		{
+			return m_selectedCert;
+		}
+
+
+		public void setEnabled(boolean a_bEnable)
+		{
+			m_lblCertTitle.setEnabled(a_bEnable);
+			m_labelDate.setEnabled(a_bEnable);
+			m_labelCN.setEnabled(a_bEnable);
+			m_labelE.setEnabled(a_bEnable);
+			m_labelCSTL.setEnabled(a_bEnable);
+			m_labelO.setEnabled(a_bEnable);
+			m_labelOU.setEnabled(a_bEnable);
+			m_labelDateData.setEnabled(a_bEnable);
+			m_labelCNData.setEnabled(a_bEnable);
+			m_labelEData.setEnabled(a_bEnable);
+			m_labelCSTLData.setEnabled(a_bEnable);
+			m_labelOData.setEnabled(a_bEnable);
+			m_labelOUData.setEnabled(a_bEnable);
+			super.setEnabled(a_bEnable);
+		}
+
+		public void update(JAPCertificate a_cert)
+		{
+			X509DistinguishedName name;
+			String strCSTL = null;
+			String country;
+			m_selectedCert = a_cert;
+
+			m_labelCNData.setText("");
+			m_labelEData.setText("");
+			m_labelCSTLData.setText("");
+			m_labelOData.setText("");
+			m_labelOUData.setText("");
+			m_labelDateData.setText("");
+			if (a_cert == null)
+			{
+				return;
+			}
+
+			StringBuffer strBuff = new StringBuffer();
+			SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+			strBuff.append(sdf.format(a_cert.getValidity().getValidFrom()));
+			strBuff.append(" - ");
+			strBuff.append(sdf.format(a_cert.getValidity().getValidTo()));
+			m_labelDateData.setText(strBuff.toString());
+
+			name = a_cert.getSubject();
+			if (name.getCommonName() != null && name.getCommonName().trim().length() > 0)
+				m_labelCNData.setText(name.getCommonName().trim());
+			if (name.getEmailAddress() != null && name.getEmailAddress().trim().length() > 0)
+			{
+				m_labelEData.setText(name.getEmailAddress().trim());
+			}
+			else if (name.getE_EmailAddress() != null && name.getE_EmailAddress().trim().length() > 0)
+			{
+
+				m_labelEData.setText(name.getE_EmailAddress());
+			}
+			if (name.getLocalityName() != null && name.getLocalityName().trim().length() > 0)
+			{
+				strCSTL = name.getLocalityName().trim();
+			}
+			if (name.getStateOrProvince() != null && name.getStateOrProvince().trim().length() > 0)
+			{
+				if (strCSTL != null)
+				{
+					strCSTL += ", ";
+				}
+				else
+				{
+					strCSTL = "";
+				}
+				strCSTL += name.getStateOrProvince().trim();
+			}
+			if (name.getCountryCode() != null)
+			{
+				try
+				{
+					country = new CountryMapper(name.getCountryCode(), JAPMessages.getLocale()).toString();
+				}
+				catch (IllegalArgumentException a_e)
+				{
+					country = name.getCountryCode();
+				}
+
+				if (country.trim().length() > 0)
+				{
+					if (strCSTL != null)
+					{
+						strCSTL += ", ";
+					}
+					else
+					{
+						strCSTL = "";
+					}
+					strCSTL += country.trim();
+				}
+			}
+			m_labelCSTLData.setText(strCSTL);
+
+			if (name.getOrganisation() != null && name.getOrganisation().trim().length() > 0)
+			{
+				m_labelOData.setText(name.getOrganisation().trim());
+			}
+			if (name.getOrganisationalUnit() != null && name.getOrganisationalUnit().trim().length() > 0)
+			{
+				m_labelOUData.setText(name.getOrganisationalUnit().trim());
+			}
+		}
 	}
 
 	private void setSize()
@@ -328,11 +590,11 @@ public class CertDetailsDialog extends JAPDialog
 		// Image
 		if (a_bIsVerifyable)
 		{
-			lbl_summaryIcon = new JLabel(GUIUtils.loadImageIcon(CERT_VALID_INACTIVE, true), JLabel.RIGHT);
+			lbl_summaryIcon = new JLabel(GUIUtils.loadImageIcon(CERT_VALID_INACTIVE, true, false), JLabel.RIGHT);
 		}
 		else
 		{
-			lbl_summaryIcon = new JLabel(GUIUtils.loadImageIcon(CERT_INVALID_INACTIVE, true), JLabel.RIGHT);
+			lbl_summaryIcon = new JLabel(GUIUtils.loadImageIcon(CERT_INVALID_INACTIVE, true, false), JLabel.RIGHT);
 		}
 		GridBagConstraints constraints = new GridBagConstraints();
 		constraints.gridx = 0;
@@ -627,11 +889,12 @@ public class CertDetailsDialog extends JAPDialog
 			{
 				if (m_certListModel.getSize() != 0 && m_certList.getSelectedValue() != null)
 				{
-					m_selectedCert = ( (CertificateInfoStructure) m_certList.getSelectedValue()).
-						getCertificate();
+					m_shortInfoPanel.update( ( (CertificateInfoStructure) m_certList.getSelectedValue()).
+						getCertificate());
 				}
 			}
 		});
+
 		m_certList.addMouseListener(new MouseAdapter()
 		{
 			public void mouseClicked(MouseEvent a_event)
@@ -642,6 +905,7 @@ public class CertDetailsDialog extends JAPDialog
 				}
 			}
 		});
+
 		//fill the list with the certificates from the certPath
 		if (a_certPath != null)
 		{
@@ -671,7 +935,7 @@ public class CertDetailsDialog extends JAPDialog
 		certPathPanel.add(scrpaneList, constraints);
 
 		//add a Button to view the Certificate (no certpath will be shown)
-		JButton view = new JButton(JAPMessages.getString(MSG_SHOW_CERT));
+		JButton view = new JButton(JAPMessages.getString(MSG_SHOW_CERT) + "...");
 		view.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -723,7 +987,7 @@ public class CertDetailsDialog extends JAPDialog
 	    constraints.gridx--;
 		constraints.gridy++;
 		constraints.weightx = 1;
-		constraints.weighty = 1;
+		constraints.weighty = 0;
 		constraints.gridwidth = 2;
 		constraints.insets = new Insets(10, 20, 10, 10);
 		constraints.fill = GridBagConstraints.HORIZONTAL;
@@ -731,16 +995,27 @@ public class CertDetailsDialog extends JAPDialog
 
 		certPathPanel.add(new JSeparator(), constraints);
 
+		m_shortInfoPanel = new CertShortInfoPanel();
+
+		if (a_certPath != null && m_certListModel.getSize() > 0)
+		{
+			m_certList.setSelectedValue(m_certListModel.lastElement(), true);
+		}
+
+		constraints.gridy++;
+		constraints.weighty = 1;
+		certPathPanel.add(m_shortInfoPanel, constraints);
+
 		return certPathPanel;
 	}
 
 	private void showCert()
 	{
 		boolean verified = true;
-		if (m_selectedCert != null)
+		if (m_shortInfoPanel.getShownCertificate() != null)
 		{
 			//if the cert from this dialog and the cert to show are equal jump to the frist tab
-			if (m_selectedCert.equals(m_detailedCert))
+			if (m_shortInfoPanel.getShownCertificate().equals(m_detailedCert))
 			{
 				m_tabbedPane.setSelectedIndex(0);
 			}
@@ -751,7 +1026,8 @@ public class CertDetailsDialog extends JAPDialog
 					verified = ((CertificateInfoStructure)m_certListModel.firstElement()).isEnabled();
 				}
 				CertDetailsDialog dialog =
-					new CertDetailsDialog(getContentPane(), m_selectedCert, verified, m_Locale);
+					new CertDetailsDialog(getContentPane(), m_shortInfoPanel.getShownCertificate(),
+										  verified, m_Locale);
 					dialog.setVisible(true);
 
 			}
