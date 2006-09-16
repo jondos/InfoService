@@ -40,7 +40,7 @@ import logging.LogLevel;
 import logging.LogType;
 
 
-/** 
+/**
  * @author Stefan Lieske
  */
 public abstract class XmlControlChannel extends StreamedControlChannel {
@@ -49,22 +49,22 @@ public abstract class XmlControlChannel extends StreamedControlChannel {
     super(a_channelId, a_multiplexer);
   }
 
-  
+
   public int sendXmlMessage(Document docMsg) {
     return sendByteMessage(XMLUtil.toByteArray(docMsg));
   }
 
-  
+
   protected void processMessage(byte[] a_message) {
     try {
       processXmlMessage(XMLUtil.toXMLDocument(a_message));
     }
     catch (XMLParseException e) {
-      LogHolder.log(LogLevel.ERR, LogType.NET, "XmlControlChannel: processMessage(): Error while parsing XML document: " + e.toString());
+      LogHolder.log(LogLevel.ERR, LogType.NET, "Error while parsing XML document!", e);
     }
   }
 
-  
+
   protected abstract void processXmlMessage(Document a_document);
-  
+
 }

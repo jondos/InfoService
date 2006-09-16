@@ -557,8 +557,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		return connectedSocket;
 	}
 
-	private int initializeProtocol(Socket a_connectedSocket,
-								   final AnonServerDescription a_mixCascade)
+	private int initializeProtocol(Socket a_connectedSocket, final AnonServerDescription a_mixCascade)
 	{
 		synchronized (m_internalSynchronization)
 		{

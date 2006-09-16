@@ -39,82 +39,93 @@ import java.io.IOException;
 
 import anon.ErrorCodes;
 
-
-/** 
+/**
  * @author Stefan Lieske
  */
-public abstract class StreamedControlChannel extends AbstractControlChannel {
+public abstract class StreamedControlChannel extends AbstractControlChannel
+{
+	private byte[] m_messageBuffer;
 
-  private byte[] m_messageBuffer;
-  
-  private int m_currentIndex;
+	private int m_currentIndex;
 
-  private byte[] m_lengthBuffer;
-  
+	private byte[] m_lengthBuffer;
 
-  public StreamedControlChannel(int a_channelId, Multiplexer a_multiplexer) {
-    super(a_channelId, a_multiplexer);
-    m_messageBuffer = new byte[0];
-    m_currentIndex = -2;
-    m_lengthBuffer = new byte[2];
-  }
+	public StreamedControlChannel(int a_channelId, Multiplexer a_multiplexer)
+	{
+		super(a_channelId, a_multiplexer);
+		m_messageBuffer = new byte[0];
+		m_currentIndex = -2;
+		m_lengthBuffer = new byte[2];
+	}
 
-  
-  public int sendByteMessage(byte[] a_message) {
-    if (a_message.length > 0xFFFF) {
-      return ErrorCodes.E_SPACE;
-    }
-    ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream();
-    DataOutputStream dataOutputBuffer = new DataOutputStream(outputBuffer);
-    try {
-      dataOutputBuffer.writeShort(a_message.length);
-      dataOutputBuffer.flush();
-      outputBuffer.write(a_message);
-      outputBuffer.flush();
-    }
-    catch (IOException e) {
-      /* cannot happen */
-    }
-    return sendRawMessage(outputBuffer.toByteArray());
-  }
+	public int sendByteMessage(byte[] a_message)
+	{
+		if (a_message.length > 0xFFFF)
+		{
+			return ErrorCodes.E_SPACE;
+		}
+		ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream();
+		DataOutputStream dataOutputBuffer = new DataOutputStream(outputBuffer);
+		try
+		{
+			dataOutputBuffer.writeShort(a_message.length);
+			dataOutputBuffer.flush();
+			outputBuffer.write(a_message);
+			outputBuffer.flush();
+		}
+		catch (IOException e)
+		{
+			/* cannot happen */
+		}
+		return sendRawMessage(outputBuffer.toByteArray());
+	}
 
-  
-  protected void processPacketData(byte[] a_packetData) {
-    int currentPacketIndex = 0;
-    while (currentPacketIndex < a_packetData.length) {
-      if (m_currentIndex < 0) {
-        /* read the length of the next message */
-        int lengthBytesToRead = Math.min(-m_currentIndex, a_packetData.length - currentPacketIndex);
-        System.arraycopy(a_packetData, currentPacketIndex, m_lengthBuffer, m_lengthBuffer.length + m_currentIndex, lengthBytesToRead);
-        m_currentIndex = m_currentIndex + lengthBytesToRead;
-        currentPacketIndex = currentPacketIndex + lengthBytesToRead;
-        if (m_currentIndex == 0) {
-          /* we've got the length -> create the buffer for the message data */
-          try {
-            m_messageBuffer = new byte[(new DataInputStream(new ByteArrayInputStream(m_lengthBuffer))).readUnsignedShort()];
-          }
-          catch (IOException e) {
-            /* cannot happen */
-          }
-        }
-      }
-      if ((m_currentIndex >= 0) && (m_currentIndex < m_messageBuffer.length)) {
-        /* we've got the length -> read the message data */
-        int messageBytesToRead = Math.min(m_messageBuffer.length - m_currentIndex, a_packetData.length - currentPacketIndex);
-        System.arraycopy(a_packetData, currentPacketIndex, m_messageBuffer, m_currentIndex, messageBytesToRead);
-        m_currentIndex = m_currentIndex + messageBytesToRead;
-        currentPacketIndex = currentPacketIndex + messageBytesToRead;
-      }
-      if (m_currentIndex == m_messageBuffer.length) {
-        /* we've read a whole message -> process it and prepare to read the next one */
-        processMessage(m_messageBuffer);
-        m_messageBuffer = new byte[0];
-        m_currentIndex = -2;
-      }
-    }   
-  }
+	protected void processPacketData(byte[] a_packetData)
+	{
+		int currentPacketIndex = 0;
+		while (currentPacketIndex < a_packetData.length)
+		{
+			if (m_currentIndex < 0)
+			{
+				/* read the length of the next message */
+				int lengthBytesToRead = Math.min( -m_currentIndex, a_packetData.length - currentPacketIndex);
+				System.arraycopy(a_packetData, currentPacketIndex, m_lengthBuffer,
+								 m_lengthBuffer.length + m_currentIndex, lengthBytesToRead);
+				m_currentIndex = m_currentIndex + lengthBytesToRead;
+				currentPacketIndex = currentPacketIndex + lengthBytesToRead;
+				if (m_currentIndex == 0)
+				{
+					/* we've got the length -> create the buffer for the message data */
+					try
+					{
+						m_messageBuffer = new byte[ (new DataInputStream(new ByteArrayInputStream(
+							m_lengthBuffer))).readUnsignedShort()];
+					}
+					catch (IOException e)
+					{
+						/* cannot happen */
+					}
+				}
+			}
+			if ( (m_currentIndex >= 0) && (m_currentIndex < m_messageBuffer.length))
+			{
+				/* we've got the length -> read the message data */
+				int messageBytesToRead = Math.min(m_messageBuffer.length - m_currentIndex,
+												  a_packetData.length - currentPacketIndex);
+				System.arraycopy(a_packetData, currentPacketIndex, m_messageBuffer, m_currentIndex,
+								 messageBytesToRead);
+				m_currentIndex = m_currentIndex + messageBytesToRead;
+				currentPacketIndex = currentPacketIndex + messageBytesToRead;
+			}
+			if (m_currentIndex == m_messageBuffer.length)
+			{
+				/* we've read a whole message -> process it and prepare to read the next one */
+				processMessage(m_messageBuffer); /** @todo react on unrecoverable errors */
+				m_messageBuffer = new byte[0];
+				m_currentIndex = -2;
+			}
+		}
+	}
 
-  
-  protected abstract void processMessage(byte[] a_message);
-
+	protected abstract void processMessage(byte[] a_message);
 }

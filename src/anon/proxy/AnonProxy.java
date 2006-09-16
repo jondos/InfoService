@@ -558,7 +558,6 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		synchronized (THREAD_SYNC)
 		{
 			boolean bConnectionError = false;
-			AnonServerDescription cascade;
 
 			if (a_bSwitch)
 			{
@@ -596,7 +595,6 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				}
 			}
 
-			cascade = m_currentMixCascade.getNextMixCascade();
 			/*
 			  if (cascade.getId().equals("Tor"))
 			  {
@@ -610,7 +608,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Try to initialize AN.ON");
 			m_numChannels = 0;
-			int ret = m_Anon.initialize(cascade);
+			int ret = m_Anon.initialize(m_currentMixCascade.getNextMixCascade());
 
 			if (ret != ErrorCodes.E_SUCCESS)
 			{

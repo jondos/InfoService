@@ -30,6 +30,7 @@ package gui;
 import java.awt.GridLayout;
 import java.awt.Font;
 import java.util.StringTokenizer;
+import java.awt.Color;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -46,6 +47,12 @@ final public class JAPMultilineLabel extends JPanel
 		this(a_strText, new JLabel().getFont());
 	}
 
+	public JAPMultilineLabel(String a_strText, Color a_color)
+	{
+		this(a_strText, new JLabel().getFont(), a_color);
+	}
+
+
 	public JAPMultilineLabel(Font a_font)
 	{
 		this("", a_font);
@@ -53,15 +60,17 @@ final public class JAPMultilineLabel extends JPanel
 
 	public JAPMultilineLabel(String a_strText, Font a_font)
 	{
-		m_font = a_font;
-		this.setText(a_strText);
+		this(a_strText, a_font, null);
 	}
 
-	/**
-	 * Sets the text of this label.
-	 * @param a_strText the text of this label
-	 */
-	public void setText(String a_strText)
+	public JAPMultilineLabel(String a_strText, Font a_font, Color a_color)
+	{
+		m_font = a_font;
+		this.setText(a_strText, a_color);
+	}
+
+
+	public void setText(String a_strText, Color a_color)
 	{
 		JLabel label;
 		StringTokenizer st;
@@ -76,7 +85,20 @@ final public class JAPMultilineLabel extends JPanel
 			{
 				label.setFont(m_font);
 			}
+			if (a_color != null)
+			{
+				label.setForeground(a_color);
+			}
 			add(label);
 		}
+}
+
+	/**
+	 * Sets the text of this label.
+	 * @param a_strText the text of this label
+	 */
+	public void setText(String a_strText)
+	{
+		setText(a_strText, null);
 	}
 }
