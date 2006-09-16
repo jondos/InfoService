@@ -27,20 +27,12 @@
  */
 package jap;
 
-import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-
 import anon.infoservice.ImmutableProxyInterface;
 import anon.util.IPasswordReader;
 import gui.JAPMessages;
-import gui.dialog.*;
-import gui.*;
+import gui.dialog.DialogContentPane;
+import gui.dialog.JAPDialog;
+import gui.dialog.PasswordContentPane;
 
 /**
  * This class shows a dialog window and reads a password from user input.
@@ -50,7 +42,6 @@ final class JAPFirewallPasswdDlg implements IPasswordReader
 	private static final long CANCEL_WAIT_TIME = 1000 * 10l; // 10 seconds
 
 	private volatile long m_lastCancelTime = 0;
-	private String passwd;
 	private boolean m_bShown = false;
 
 

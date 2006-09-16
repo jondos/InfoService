@@ -48,7 +48,6 @@ import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
@@ -212,10 +211,9 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 				catch (Exception e)
 				{
 					/* empty field or port is already in use */
-					JOptionPane.showMessageDialog(configPanel,
+					JAPDialog.showErrorDialog(configPanel,
 												  JAPMessages.getString(
-						"settingsForwardingServerConfigChangeServerPortError"),
-												  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
+						"settingsForwardingServerConfigChangeServerPortError"), LogType.MISC);
 					/* show the current forwarding server port in the server port field */
 					serverPortField.setText(Integer.toString(JAPModel.getInstance().getRoutingSettings().
 						getServerPort()));
@@ -355,7 +353,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 				{
 					/* empty field or bandwidth value to low */
 					/* the +999 in the following line is only for rounding up the value */
-					JOptionPane.showMessageDialog(configPanel,
+					JAPDialog.showErrorDialog(configPanel,
 												  JAPMessages.getString(
 						"settingsForwardingServerConfigChangeMaximumUploadBandwidthErrorPart1") +
 												  " " +
@@ -363,8 +361,7 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 						ROUTING_BANDWIDTH_PER_USER *
 						8) + 999) / 1000) + " " +
 												  JAPMessages.getString(
-						"settingsForwardingServerConfigChangeMaximumUploadBandwidthErrorPart2"),
-												  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
+						"settingsForwardingServerConfigChangeMaximumUploadBandwidthErrorPart2"), LogType.MISC);
 					/* show the current maximum upload bandwidth in the upload bandwidth field */
 					uploadBandwidthField.setText(Integer.toString( (JAPModel.getInstance().getRoutingSettings().
 						getConnectionClassSelector().getCurrentConnectionClass().getMaximumBandwidth() * 8) /

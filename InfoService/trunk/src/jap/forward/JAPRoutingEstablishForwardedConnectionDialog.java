@@ -44,7 +44,6 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
@@ -374,18 +373,16 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 				}
 				if (dataParser.getErrorCode() == ForwarderInformationGrabber.RETURN_NO_CAPTCHA_IMPLEMENTATION)
 				{
-					JOptionPane.showMessageDialog(client1MailPanel,
+					JAPDialog.showErrorDialog(client1MailPanel,
 												  JAPMessages.getString(
-						"settingsRoutingClientGrabCapchtaImplementationError"),
-												  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
+						"settingsRoutingClientGrabCapchtaImplementationError"), LogType.MISC);
 					client1MailDialog.dispose();
 				}
 				if (dataParser.getErrorCode() == ForwarderInformationGrabber.RETURN_UNKNOWN_ERROR)
 				{
-					JOptionPane.showMessageDialog(client1MailPanel,
+					JAPDialog.showErrorDialog(client1MailPanel,
 												  JAPMessages.getString(
-						"settingsRoutingClientConfigDialog1MailParseError"),
-												  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
+						"settingsRoutingClientConfigDialog1MailParseError"), LogType.MISC);
 					settingsRoutingAnswerArea.setText("");
 				}
 			}
@@ -634,10 +631,9 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 				catch (Exception e)
 				{
 					/* the inserted key is not valid */
-					JOptionPane.showMessageDialog(captchaPanel,
+					JAPDialog.showErrorDialog(captchaPanel,
 												  JAPMessages.getString(
-						"settingsRoutingClientConfigDialogCaptchaError"),
-												  JAPMessages.getString("error"), JOptionPane.ERROR_MESSAGE);
+						"settingsRoutingClientConfigDialogCaptchaError"), LogType.MISC);
 					captchaField.setText("");
 				}
 			}

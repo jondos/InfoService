@@ -114,6 +114,8 @@ public final class JAPModel extends Observable
 	private LookAndFeelInfo[] m_systemLookAndFeels;
 	private Object LOOK_AND_FEEL_SYNC = new Object();
 
+	private boolean m_bShowDialogFormat = false;
+
 	private int m_fontSize = 0;
 
 	private GUIUtils.IIconResizer m_resizer = new GUIUtils.IIconResizer()
@@ -390,6 +392,20 @@ public final class JAPModel extends Observable
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 	 */
+	/**
+	 * Show the options to alter the dialog format
+	 * @return boolean
+	 */
+	public boolean isDialogFormatShown()
+	{
+		return m_bShowDialogFormat;
+	}
+
+	public void setDialogFormatShown(boolean a_bShow)
+	{
+		m_bShowDialogFormat = a_bShow;
+	}
+
 
 	protected void setDummyTraffic(int msIntervall)
 	{
