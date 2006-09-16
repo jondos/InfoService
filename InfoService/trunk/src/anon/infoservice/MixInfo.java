@@ -27,21 +27,21 @@
  */
 package anon.infoservice;
 
+import java.util.Enumeration;
+
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-
-import anon.util.XMLUtil;
+import anon.crypto.CertPath;
+import anon.crypto.JAPCertificate;
+import anon.crypto.SignatureVerifier;
+import anon.crypto.XMLSignature;
 import anon.util.IXMLEncodable;
 import anon.util.XMLParseException;
-import org.w3c.dom.Document;
-import anon.crypto.XMLSignature;
+import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
-import anon.crypto.JAPCertificate;
-import anon.crypto.CertPath;
 import logging.LogType;
-import java.util.Enumeration;
-import anon.crypto.SignatureVerifier;
 
 /**
  * Holds the information of one single mix.

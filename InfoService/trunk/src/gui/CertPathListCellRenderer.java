@@ -1,19 +1,22 @@
 package gui;
 
 
+import java.util.Date;
+
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
-import java.util.Date;
-import javax.swing.ImageIcon;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JPanel;
 import javax.swing.ListCellRenderer;
 
 import anon.crypto.CertificateInfoStructure;
 
 
-public final class CertPathListCellRenderer extends JLabel implements ListCellRenderer
+public final class CertPathListCellRenderer implements ListCellRenderer
 {
 
 	private int m_itemcount = 0;
@@ -27,6 +30,37 @@ public final class CertPathListCellRenderer extends JLabel implements ListCellRe
 		boolean isSelected, // is the cell selected
 		boolean cellHasFocus) // the list and the cell have the focus
 	{
+		JPanel cell = new JPanel(new GridBagLayout());
+		JLabel spaceLbl = new JLabel();
+		JLabel certIconLabel = new JLabel();
+		JLabel certTextLabel = new JLabel();
+		GridBagConstraints constraints = new GridBagConstraints();
+		char[] space;
+
+		if (a_index > 0)
+		{
+			space = new char[a_index];
+			for (int i = 0; i < space.length; i++)
+			{
+				space[i] = 'T';
+			}
+			spaceLbl.setText(new String(space));
+		}
+
+		constraints.gridx = 0;
+		constraints.gridy = 0;
+		constraints.anchor = GridBagConstraints.WEST;
+
+		cell.add(spaceLbl, constraints);
+		constraints.gridx++;
+		cell.add(certIconLabel, constraints);
+		constraints.gridx++;
+		cell.add(certTextLabel, constraints);
+		constraints.gridx++;
+		constraints.weightx = 1;
+		constraints.fill = GridBagConstraints.HORIZONTAL;
+		cell.add(new JLabel(), constraints);
+
 		m_itemcount++;
 		CertificateInfoStructure j = (CertificateInfoStructure) value;
 		String subjectCN = j.getCertificate().getSubject().getCommonName();
@@ -40,46 +74,58 @@ public final class CertPathListCellRenderer extends JLabel implements ListCellRe
 			s += "     ";
 		}
 		setText(s+subjectCN);*/
-		setText(subjectCN);
-		setEnabled(list.isEnabled());
+		certTextLabel.setText(subjectCN);
+		certTextLabel.setEnabled(list.isEnabled());
+		certIconLabel.setEnabled(list.isEnabled());
+		spaceLbl.setEnabled(list.isEnabled());
 
 		if (isSelected)
 		{
-			setBackground(list.getSelectionBackground());
-			setForeground(list.getSelectionForeground());
+			certTextLabel.setBackground(list.getSelectionBackground());
+			certTextLabel.setForeground(list.getSelectionForeground());
+			cell.setBackground(list.getSelectionBackground());
+			cell.setForeground(list.getSelectionForeground());
+			spaceLbl.setBackground(list.getSelectionBackground());
+			spaceLbl.setForeground(list.getSelectionBackground());
+
 		}
 		else
 		{
-			setBackground(list.getBackground());
-			setForeground(list.getForeground());
+			certTextLabel.setBackground(list.getBackground());
+			certTextLabel.setForeground(list.getForeground());
+			cell.setBackground(list.getBackground());
+			cell.setForeground(list.getForeground());
+			spaceLbl.setBackground(list.getBackground());
+			spaceLbl.setForeground(list.getBackground());
 		}
 		if (j.isEnabled())
 		{
 			if(j.getCertificate().getValidity().isValid(new Date()))
 			{
-				setIcon (GUIUtils.loadImageIcon(CertDetailsDialog.IMG_CERTENABLEDICON, false));
+				certIconLabel.setIcon (GUIUtils.loadImageIcon(CertDetailsDialog.IMG_CERTENABLEDICON, false));
 			}
 			else
 			{
 				//setForeground(Color.orange);
-				setIcon(GUIUtils.loadImageIcon(CertDetailsDialog.IMG_WARNING, false));
+				certIconLabel.setIcon(GUIUtils.loadImageIcon(CertDetailsDialog.IMG_WARNING, false));
 			}
 		}
 		else
 		{
-			setForeground(Color.red);
-			setIcon(GUIUtils.loadImageIcon(CertDetailsDialog.IMG_CERTDISABLEDICON, false));
+			certTextLabel.setForeground(Color.red);
+			certIconLabel.setIcon(GUIUtils.loadImageIcon(CertDetailsDialog.IMG_CERTDISABLEDICON, false));
 		}
 		//if the element is the last element in the cert Path (the mix certificate) the text is bold
 		if(j.equals(list.getModel().getElementAt((list.getModel().getSize())-1)))
 		{
-			setFont(new Font(this.getFont().getName(), Font.BOLD, this.getFont().getSize()));
+			certTextLabel.setFont(new Font(
+						 certTextLabel.getFont().getName(), Font.BOLD, certTextLabel.getFont().getSize()));
 		}
 		else
 		{
-			setFont(list.getFont());
+			certTextLabel.setFont(list.getFont());
 		}
-	    setOpaque(true);
-		return this;
+	    certTextLabel.setOpaque(true);
+		return cell;
 	}
 }

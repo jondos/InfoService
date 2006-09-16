@@ -27,7 +27,6 @@
  */
 package jap;
 
-import java.text.SimpleDateFormat;
 import java.util.Enumeration;
 import java.util.Observable;
 import java.util.Observer;
@@ -55,14 +54,14 @@ import javax.swing.event.ListSelectionListener;
 
 import anon.crypto.CertificateInfoStructure;
 import anon.crypto.JAPCertificate;
-import anon.crypto.X509DistinguishedName;
 import anon.crypto.SignatureVerifier;
 import gui.CAListCellRenderer;
 import gui.CertDetailsDialog;
 import gui.JAPMessages;
 import gui.JAPHelp;
-import gui.CountryMapper;
 import gui.dialog.JAPDialog;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 /**
  * This is the configuration GUI for the cert.
@@ -77,16 +76,14 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 
 
 	private TitledBorder m_borderCert;
-	private JLabel m_labelDate, m_labelCN, m_labelE, m_labelCSTL, m_labelO, m_labelOU;
-	private JLabel m_labelDateData, m_labelCNData, m_labelEData, m_labelCSTLData, m_labelOData, m_labelOUData;
+	private CertDetailsDialog.CertShortInfoPanel m_shortInfoPanel;
 	private JButton m_bttnCertInsert, m_bttnCertRemove, m_bttnCertStatus, m_bttnCertDetails;
 	private DefaultListModel m_listmodelCertList;
 	private JList m_listCert;
 	private JScrollPane m_scrpaneList;
 	private Enumeration m_enumCerts;
 	private JCheckBox m_cbCertCheckEnabled;
-	private JPanel m_panelCAInfo, m_panelCAList;
-	private JLabel m_lblCertTitle;
+	private JPanel  m_panelCAList;
 
 	public JAPConfCert()
 	{
@@ -97,94 +94,6 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		update(SignatureVerifier.getInstance().getVerificationCertificateStore(), null);
 		/* set the selected index of the list to the first item to avoid exceptions */
 	    m_listCert.setSelectedIndex(0);
-	}
-
-	private void updateInfoPanel(JAPCertificate a_cert)
-	{
-		X509DistinguishedName name;
-		String strCSTL = null;
-		String country;
-
-		m_labelCNData.setText("");
-		m_labelEData.setText("");
-		m_labelCSTLData.setText("");
-		m_labelOData.setText("");
-		m_labelOUData.setText("");
-		m_labelDateData.setText("");
-		if (a_cert == null)
-		{
-			return;
-		}
-
-		StringBuffer strBuff = new StringBuffer();
-		SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
-		strBuff.append(sdf.format(a_cert.getValidity().getValidFrom()));
-		strBuff.append(" - ");
-		strBuff.append(sdf.format(a_cert.getValidity().getValidTo()));
-		m_labelDateData.setText(strBuff.toString());
-
-		name = a_cert.getSubject();
-		if (name.getCommonName() != null && name.getCommonName().trim().length() > 0)
-		m_labelCNData.setText(name.getCommonName().trim());
-		if (name.getEmailAddress() != null && name.getEmailAddress().trim().length() > 0)
-		{
-			m_labelEData.setText(name.getEmailAddress().trim());
-		}
-		else if (name.getE_EmailAddress() != null && name.getE_EmailAddress().trim().length() > 0)
-		{
-
-			m_labelEData.setText(name.getE_EmailAddress());
-		}
-		if (name.getLocalityName() != null && name.getLocalityName().trim().length() > 0)
-		{
-			strCSTL = name.getLocalityName().trim();
-		}
-		if (name.getStateOrProvince() != null && name.getStateOrProvince().trim().length() > 0)
-		{
-			if (strCSTL != null)
-			{
-				strCSTL += ", ";
-			}
-			else
-			{
-				strCSTL = "";
-			}
-			strCSTL += name.getStateOrProvince().trim();
-		}
-		if (name.getCountryCode() != null)
-		{
-			try
-			{
-				country = new CountryMapper(name.getCountryCode(), JAPMessages.getLocale()).toString();
-			}
-			catch (IllegalArgumentException a_e)
-			{
-				country = name.getCountryCode();
-			}
-
-			if (country.trim().length() > 0)
-			{
-				if (strCSTL != null)
-				{
-					strCSTL += ", ";
-				}
-				else
-				{
-					strCSTL = "";
-				}
-				strCSTL += country.trim();
-			}
-		}
-		m_labelCSTLData.setText(strCSTL);
-
-		if (name.getOrganisation() != null && name.getOrganisation().trim().length() > 0)
-		{
-			m_labelOData.setText(name.getOrganisation().trim());
-		}
-		if (name.getOrganisationalUnit() != null && name.getOrganisationalUnit().trim().length() > 0)
-		{
-			m_labelOUData.setText(name.getOrganisationalUnit().trim());
-		}
 	}
 
 	/**
@@ -203,7 +112,7 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		panelRoot.setBorder(m_borderCert);
 		JPanel caLabel = createCALabel();
 		m_panelCAList = createCertCAPanel();
-		m_panelCAInfo = createCertInfoPanel();
+		m_shortInfoPanel = new CertDetailsDialog.CertShortInfoPanel();
 		panelRoot.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		c.gridx = 0;
@@ -225,7 +134,7 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 
 		c.gridy++;
 		c.insets = new Insets(0, 0, 0, 0);
-		panelRoot.add(m_panelCAInfo, c);
+		panelRoot.add(m_shortInfoPanel, c);
 	}
 
 	/**
@@ -267,18 +176,7 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 			{
 				boolean b = m_cbCertCheckEnabled.isSelected();
 
-				m_labelDate.setEnabled(b);
-				m_labelCN.setEnabled(b);
-				m_labelE.setEnabled(b);
-				m_labelCSTL.setEnabled(b);
-				m_labelO.setEnabled(b);
-				m_labelOU.setEnabled(b);
-				m_labelDateData.setEnabled(b);
-				m_labelCNData.setEnabled(b);
-				m_labelEData.setEnabled(b);
-				m_labelCSTLData.setEnabled(b);
-				m_labelOData.setEnabled(b);
-				m_labelOUData.setEnabled(b);
+				m_shortInfoPanel.setEnabled(b);
 				m_bttnCertInsert.setEnabled(b);
 				Object value = m_listCert.getSelectedValue();
 				boolean enableRemove = false;
@@ -291,7 +189,6 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 				m_bttnCertStatus.setEnabled(b);
 				m_bttnCertDetails.setEnabled(b);
 				m_listCert.setEnabled(b);
-				m_panelCAInfo.setEnabled(b);
 				m_panelCAList.setEnabled(b);
 			}
 		});
@@ -342,14 +239,14 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 
 				if (m_listmodelCertList.getSize() == 0 || m_listCert.getSelectedValue() == null)
 				{
-					updateInfoPanel(null);
+					m_shortInfoPanel.update((JAPCertificate)null);
 					m_bttnCertRemove.setEnabled(false);
 					m_bttnCertStatus.setEnabled(false);
 				}
 				else
 				{
 					CertificateInfoStructure j = (CertificateInfoStructure) m_listCert.getSelectedValue();
-					updateInfoPanel(j.getCertificate());
+					m_shortInfoPanel.update(j.getCertificate());
 
 					if (j.isEnabled())
 					{
@@ -366,6 +263,18 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 
 			} // valuechanged
 		});
+
+		m_listCert.addMouseListener(new MouseAdapter()
+		{
+			public void mouseClicked(MouseEvent a_event)
+			{
+				if (a_event.getClickCount() == 2)
+				{
+					m_bttnCertDetails.doClick();
+				}
+			}
+		});
+
 
 		m_scrpaneList = new JScrollPane();
 		m_scrpaneList.getViewport().add(m_listCert, null);
@@ -386,7 +295,6 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				//######
 				boolean decode_error = false;
 				JAPCertificate cert = null;
 				try
@@ -432,15 +340,15 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 				{
 					m_bttnCertRemove.setEnabled(false);
 					m_bttnCertStatus.setEnabled(false);
-					updateInfoPanel(null);
+					m_shortInfoPanel.update((JAPCertificate)null);
 				}
 				else
 				{
-					updateInfoPanel(null);
+					m_shortInfoPanel.update((JAPCertificate)null);
 					m_listCert.setSelectedIndex(0);
 
 					CertificateInfoStructure j = (CertificateInfoStructure) m_listCert.getSelectedValue();
-					updateInfoPanel(j.getCertificate());
+					m_shortInfoPanel.update(j.getCertificate());
 				}
 			}
 		});
@@ -505,148 +413,6 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		r_panelCA.add(m_bttnCertDetails);
 
 		return r_panelCA;
-	}
-
-	private JPanel createCertInfoPanel()
-	{
-		JPanel r_panelInfo = new JPanel();
-		GridBagLayout panelLayoutInfo = new GridBagLayout();
-		r_panelInfo.setLayout(panelLayoutInfo);
-
-		GridBagConstraints panelConstraintsInfo = new GridBagConstraints();
-		panelConstraintsInfo.anchor = GridBagConstraints.WEST;
-		panelConstraintsInfo.weightx = 1.0;
-		panelConstraintsInfo.insets = new Insets(0, 10, 0, 0);
-		panelConstraintsInfo.gridx = 0;
-		panelConstraintsInfo.gridy = 0;
-		panelConstraintsInfo.gridwidth = 2;
-
-		m_lblCertTitle = new JLabel(JAPMessages.getString("certInfoBorder"));
-		r_panelInfo.add(m_lblCertTitle, panelConstraintsInfo);
-
-		m_labelDate = new JLabel(JAPMessages.getString("certDate"));
-
-		m_labelCN = new JLabel(JAPMessages.getString("certName"));
-		m_labelE = new JLabel(JAPMessages.getString("certMail"));
-		m_labelCSTL = new JLabel(JAPMessages.getString("certLocation"));
-		m_labelO = new JLabel(JAPMessages.getString("certOrg"));
-		m_labelOU = new JLabel(JAPMessages.getString("certOrgUnit"));
-
-		m_labelDateData = new JLabel();
-		m_labelCNData = new JLabel();
-		m_labelEData = new JLabel();
-		m_labelCSTLData = new JLabel();
-		m_labelOData = new JLabel();
-		m_labelOUData = new JLabel();
-
-		/*		    	gridx
-		 0:				1:
-		 gridy	0:
-		   1:  labelCN			labelCNData
-		   2:	labelO			labelOData
-		   3:	labelOU			labelOUData
-		   4:	labelCSTL		labelCSTLData
-		   5:	labelE			labelEData
-		   ---------------------------------------
-		   6:  labelDate		labelDateData
-		 */
-
-		panelConstraintsInfo.anchor = GridBagConstraints.WEST;
-		panelConstraintsInfo.fill = GridBagConstraints.HORIZONTAL;
-		panelConstraintsInfo.gridwidth = 1;
-		panelConstraintsInfo.gridx = 0;
-		panelConstraintsInfo.gridy = 1;
-		panelConstraintsInfo.weightx = 0;
-		panelConstraintsInfo.insets = new Insets(10, 15, 0, 0);
-		panelLayoutInfo.setConstraints(m_labelCN, panelConstraintsInfo);
-		r_panelInfo.add(m_labelCN);
-
-		panelConstraintsInfo.gridx = 1;
-		panelConstraintsInfo.gridy = 1;
-		panelConstraintsInfo.weightx = 1;
-		panelConstraintsInfo.insets = new Insets(10, 10, 0, 10);
-		panelLayoutInfo.setConstraints(m_labelCNData, panelConstraintsInfo);
-		r_panelInfo.add(m_labelCNData);
-
-		panelConstraintsInfo.anchor = GridBagConstraints.WEST;
-		panelConstraintsInfo.gridx = 0;
-		panelConstraintsInfo.gridy = 2;
-		panelConstraintsInfo.weightx = 0;
-		panelConstraintsInfo.insets = new Insets(10, 15, 0, 0);
-		panelLayoutInfo.setConstraints(m_labelO, panelConstraintsInfo);
-		r_panelInfo.add(m_labelO);
-
-		panelConstraintsInfo.gridx = 1;
-		panelConstraintsInfo.gridy = 2;
-		panelConstraintsInfo.weightx = 1;
-		panelConstraintsInfo.insets = new Insets(10, 10, 0, 10);
-		panelLayoutInfo.setConstraints(m_labelOData, panelConstraintsInfo);
-		r_panelInfo.add(m_labelOData);
-
-		panelConstraintsInfo.anchor = GridBagConstraints.WEST;
-		panelConstraintsInfo.gridx = 0;
-		panelConstraintsInfo.gridy = 3;
-		panelConstraintsInfo.weightx = 0;
-		panelConstraintsInfo.insets = new Insets(10, 15, 0, 0);
-		panelLayoutInfo.setConstraints(m_labelOU, panelConstraintsInfo);
-		r_panelInfo.add(m_labelOU);
-
-		panelConstraintsInfo.gridx = 1;
-		panelConstraintsInfo.gridy = 3;
-		panelConstraintsInfo.weightx = 1;
-		panelConstraintsInfo.insets = new Insets(10, 10, 0, 10);
-		panelLayoutInfo.setConstraints(m_labelOUData, panelConstraintsInfo);
-		r_panelInfo.add(m_labelOUData);
-
-		panelConstraintsInfo.anchor = GridBagConstraints.WEST;
-		panelConstraintsInfo.gridx = 0;
-		panelConstraintsInfo.gridy = 4;
-		panelConstraintsInfo.weightx = 0;
-		panelConstraintsInfo.insets = new Insets(10, 15, 0, 0);
-		panelLayoutInfo.setConstraints(m_labelCSTL, panelConstraintsInfo);
-		r_panelInfo.add(m_labelCSTL);
-
-		panelConstraintsInfo.gridx = 1;
-		panelConstraintsInfo.gridy = 4;
-		panelConstraintsInfo.weightx = 1;
-		panelConstraintsInfo.insets = new Insets(10, 10, 0, 10);
-		panelLayoutInfo.setConstraints(m_labelCSTLData, panelConstraintsInfo);
-		r_panelInfo.add(m_labelCSTLData);
-
-		panelConstraintsInfo.anchor = GridBagConstraints.WEST;
-		panelConstraintsInfo.gridx = 0;
-		panelConstraintsInfo.gridy = 5;
-		panelConstraintsInfo.weightx = 0;
-		panelConstraintsInfo.insets = new Insets(10, 15, 0, 0);
-		panelLayoutInfo.setConstraints(m_labelE, panelConstraintsInfo);
-		r_panelInfo.add(m_labelE);
-
-		panelConstraintsInfo.gridx = 1;
-		panelConstraintsInfo.gridy = 5;
-		panelConstraintsInfo.weightx = 1;
-		panelConstraintsInfo.insets = new Insets(10, 10, 0, 10);
-		panelLayoutInfo.setConstraints(m_labelEData, panelConstraintsInfo);
-		r_panelInfo.add(m_labelEData);
-
-		panelConstraintsInfo.anchor = GridBagConstraints.WEST;
-		panelConstraintsInfo.gridx = 0;
-		panelConstraintsInfo.gridy = 6;
-		panelConstraintsInfo.fill = GridBagConstraints.HORIZONTAL;
-		panelConstraintsInfo.weightx = 0;
-		panelConstraintsInfo.insets = new Insets(10, 15, 10, 0);
-		panelLayoutInfo.setConstraints(m_labelDate, panelConstraintsInfo);
-		r_panelInfo.add(m_labelDate);
-
-		panelConstraintsInfo.gridx = 1;
-		panelConstraintsInfo.gridy = 6;
-		panelConstraintsInfo.weightx = 1;
-		panelConstraintsInfo.insets = new Insets(10, 10, 10, 10);
-		panelLayoutInfo.setConstraints(m_labelDateData, panelConstraintsInfo);
-		r_panelInfo.add(m_labelDateData);
-		panelConstraintsInfo.anchor = GridBagConstraints.WEST;
-
-		return r_panelInfo;
-
 	}
 
 	public void update(Observable a_notifier, Object a_message)

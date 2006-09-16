@@ -144,7 +144,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private JPanel m_serverInfoPanel;
 	private ManualPanel m_manualPanel;
 
-	//private JLabel m_lblCascadeInfo;
 	private JLabel m_numOfUsersLabel;
 	private GridBagConstraints m_constrHosts, m_constrPorts;
 	private JLabel m_lblHosts;
