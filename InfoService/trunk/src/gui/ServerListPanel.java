@@ -33,6 +33,7 @@ import jap.JAPConstants;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -43,20 +44,27 @@ import java.util.Vector;
 import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
 import javax.swing.JPanel;
+import javax.swing.JLabel;
 import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 import java.awt.Cursor;
+
+import gui.JAPMultilineLabel;
+import java.awt.Insets;
+import jap.JAPModel;
 
 /**
  * Class for painting a mix cascade in the configuration dialog
  */
 final public class ServerListPanel extends JPanel implements ActionListener
 {
+	private static final String MSG_MIX_CLICK = ServerListPanel.class.getName() + "_mixClick";
+
 	private boolean m_bEnabled;
 	private ButtonGroup m_bgMixe;
-	private int m_numberOfMixes;
 	private int m_selectedIndex;
 	private Vector m_itemListeners;
+	private JRadioButton[] m_mixButtons;
 
 	/**
 	 * Creates a panel with numberOfMixes Mix-icons
@@ -65,11 +73,15 @@ final public class ServerListPanel extends JPanel implements ActionListener
 	public ServerListPanel(int a_numberOfMixes, boolean a_enabled, int a_selectedIndex)
 	{
 		int selectedIndex = 0;
+		if (a_numberOfMixes < 1)
+		{
+			a_numberOfMixes = 1;
+		}
 		if (a_selectedIndex > 0 && a_selectedIndex < a_numberOfMixes)
 		{
 			selectedIndex = a_selectedIndex;
 		}
-		m_numberOfMixes = a_numberOfMixes;
+		m_mixButtons = new JRadioButton[a_numberOfMixes];
 		m_itemListeners = new Vector();
 		GridBagLayout la = new GridBagLayout();
 		GridBagConstraints constraints = new GridBagConstraints();
@@ -79,11 +91,10 @@ final public class ServerListPanel extends JPanel implements ActionListener
 		setLayout(la);
 		constraints.anchor = GridBagConstraints.WEST;
 		constraints.weightx = 0;
-		constraints.fill = GridBagConstraints.NONE;
+		constraints.fill = GridBagConstraints.HORIZONTAL;
 
 		for (int i = 0; i < a_numberOfMixes; i++)
 		{
-
 			//Insert a line from the previous mix
 			if (i != 0)
 			{
@@ -94,30 +105,58 @@ final public class ServerListPanel extends JPanel implements ActionListener
 				add(line);
 			}
 			//Create the mix icon and place it in the panel
-			AbstractButton mix = new JRadioButton(GUIUtils.loadImageIcon(JAPConstants.IMAGE_SERVER, true));
-			mix.setToolTipText(JAPMessages.getString("serverPanelAdditional"));
-			mix.addActionListener(this);
-			mix.setBorder(null);
-			mix.setFocusPainted(false);
-			mix.setRolloverEnabled(true);
-			mix.setRolloverIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_SERVER_BLAU, true));
-			mix.setSelectedIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_SERVER_ROT, true));
-			mix.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+			m_mixButtons[i] = new JRadioButton();
+			if (a_enabled)
+			{
+				m_mixButtons[i].setToolTipText(JAPMessages.getString("serverPanelAdditional"));
+			}
+			m_mixButtons[i].addActionListener(this);
+			m_mixButtons[i].setBorder(null);
+			m_mixButtons[i].setFocusPainted(false);
+			m_mixButtons[i].setRolloverEnabled(true);
+			m_mixButtons[i].setIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_SERVER, true));
+			m_mixButtons[i].setRolloverIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_SERVER_BLAU, true));
+			m_mixButtons[i].setSelectedIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_SERVER_ROT, true));
+			m_mixButtons[i].setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 			if (i == selectedIndex)
 			{
 				m_selectedIndex = i;
-				mix.setSelected(true);
+				m_mixButtons[i].setSelected(true);
 			}
 			if (i == a_numberOfMixes - 1)
 			{
 				constraints.weightx = 1;
 			}
 
-			la.setConstraints(mix, constraints);
-			add(mix);
-			m_bgMixe.add(mix);
+			la.setConstraints(m_mixButtons[i], constraints);
+			add(m_mixButtons[i]);
+
+			m_bgMixe.add(m_mixButtons[i]);
 			m_bEnabled = a_enabled;
-			mix.setEnabled(m_bEnabled);
+			m_mixButtons[i].setEnabled(m_bEnabled);
+		}
+		constraints.weightx = 0;
+		constraints.gridheight = 1;
+		Color color = null;
+		if (!a_enabled)
+		{
+			color = getBackground();
+		}
+
+		JAPMultilineLabel explain = new JAPMultilineLabel(JAPMessages.getString(MSG_MIX_CLICK), color);
+		constraints.fill = GridBagConstraints.HORIZONTAL;
+		constraints.anchor = GridBagConstraints.EAST;
+		add(explain, constraints);
+
+	}
+
+	public synchronized void fontSizeChanged(final JAPModel.FontResize a_resize, final JLabel a_dummyLabel)
+	{
+		for (int i = 0; i < m_mixButtons.length; i++)
+		{
+			m_mixButtons[i].setIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_SERVER, true));
+			m_mixButtons[i].setRolloverIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_SERVER_BLAU, true));
+			m_mixButtons[i].setSelectedIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_SERVER_ROT, true));
 		}
 	}
 
@@ -128,7 +167,7 @@ final public class ServerListPanel extends JPanel implements ActionListener
 
 	public int getNumberOfMixes()
 	{
-		return m_numberOfMixes;
+		return m_mixButtons.length;
 	}
 
 	/**

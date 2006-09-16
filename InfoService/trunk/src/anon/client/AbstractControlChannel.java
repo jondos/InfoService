@@ -38,53 +38,61 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 
-
-/** 
+/**
  * @author Stefan Lieske
  */
-public abstract class AbstractControlChannel extends AbstractChannel {
+public abstract class AbstractControlChannel extends AbstractChannel
+{
 
-  public AbstractControlChannel(int a_channelId, Multiplexer a_parentMultiplexer) {
-    super(a_channelId, a_parentMultiplexer);
-    /* register the channel */
-    a_parentMultiplexer.getChannelTable().registerControlChannel(a_channelId, this);
-  }
-  
-  
-  public int sendRawMessage(byte[] a_message) {
-    try {
-      int bytesToSend = a_message.length;
-      do {
-        /* we also send empty packages (maybe this is necessary for interaction) */
-        MixPacket currentMixPacket = createEmptyMixPacket();
-        int currentPacketLength = Math.min(bytesToSend, currentMixPacket.getPayloadData().length);
-        currentMixPacket.setChannelFlags((short)currentPacketLength);
-        System.arraycopy(a_message, a_message.length - bytesToSend, currentMixPacket.getPayloadData(), 0, currentPacketLength);
-        sendPacket(currentMixPacket);
-        bytesToSend = bytesToSend - currentPacketLength;
-      }
-      while (bytesToSend > 0);
-      return ErrorCodes.E_SUCCESS;
-    }
-    catch (IOException e) {
-      return ErrorCodes.E_UNKNOWN;
-    }
-  }
+	public AbstractControlChannel(int a_channelId, Multiplexer a_parentMultiplexer)
+	{
+		super(a_channelId, a_parentMultiplexer);
+		/* register the channel */
+		a_parentMultiplexer.getChannelTable().registerControlChannel(a_channelId, this);
+	}
 
-  public void processReceivedPacket(MixPacket a_mixPacket) {
-    int packetDataLength = a_mixPacket.getChannelFlags();
-    if ((packetDataLength > a_mixPacket.getPayloadData().length) || (packetDataLength < 0)) {
-      /* something is wrong here -> ignore the packet */
-      LogHolder.log(LogLevel.ERR, LogType.NET, "AbstractControlChannel: processReceivedPacket(): Invalid packet length.");
-    }
-    else {
-      byte[] packetData = new byte[packetDataLength];
-      System.arraycopy(a_mixPacket.getPayloadData(), 0, packetData, 0, packetDataLength);
-      processPacketData(packetData);
-    }
-  }
-  
-  
-  protected abstract void processPacketData(byte[] a_packetData);
-  
+	public int sendRawMessage(byte[] a_message)
+	{
+		try
+		{
+			int bytesToSend = a_message.length;
+			do
+			{
+				/* we also send empty packages (maybe this is necessary for interaction) */
+				MixPacket currentMixPacket = createEmptyMixPacket();
+				int currentPacketLength = Math.min(bytesToSend, currentMixPacket.getPayloadData().length);
+				currentMixPacket.setChannelFlags( (short) currentPacketLength);
+				System.arraycopy(a_message, a_message.length - bytesToSend, currentMixPacket.getPayloadData(),
+								 0, currentPacketLength);
+				sendPacket(currentMixPacket);
+				bytesToSend = bytesToSend - currentPacketLength;
+			}
+			while (bytesToSend > 0);
+			return ErrorCodes.E_SUCCESS;
+		}
+		catch (IOException e)
+		{
+			return ErrorCodes.E_UNKNOWN;
+		}
+	}
+
+	public void processReceivedPacket(MixPacket a_mixPacket)
+	{
+		int packetDataLength = a_mixPacket.getChannelFlags();
+		if ( (packetDataLength > a_mixPacket.getPayloadData().length) || (packetDataLength < 0))
+		{
+			/* something is wrong here -> ignore the packet */
+			LogHolder.log(LogLevel.ERR, LogType.NET,
+						  "AbstractControlChannel: processReceivedPacket(): Invalid packet length.");
+		}
+		else
+		{
+			byte[] packetData = new byte[packetDataLength];
+			System.arraycopy(a_mixPacket.getPayloadData(), 0, packetData, 0, packetDataLength);
+			processPacketData(packetData);
+		}
+	}
+
+	protected abstract void processPacketData(byte[] a_packetData);
+
 }

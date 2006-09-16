@@ -52,6 +52,7 @@ import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseListener;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
@@ -110,8 +111,19 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private static final String MSG_MIX_ID = JAPConfAnon.class.getName() + "_mixID";
 	private static final String MSG_BUTTONEDITSHOW = JAPConfAnon.class.
 		getName() + "_buttoneditshow";
-	private static final String MSG_PAYCASCADE = JAPConfAnon.class.
-		getName() + "_paycascade";
+	private static final String MSG_PAYCASCADE = JAPConfAnon.class.getName() + "_paycascade";
+	private static final String MSG_MIX_X_OF_Y = JAPConfAnon.class.getName() + "_mixXOfY";
+	private static final String MSG_MIX_POSITION = JAPConfAnon.class.getName() + "_mixPosition";
+	private static final String MSG_MIX_FIRST = JAPConfAnon.class.getName() + "_mixFirst";
+	private static final String MSG_MIX_MIDDLE = JAPConfAnon.class.getName() + "_mixMiddle";
+	private static final String MSG_MIX_LAST = JAPConfAnon.class.getName() + "_mixLast";
+	private static final String MSG_EXPLAIN_MIX_TT = JAPConfAnon.class.getName() + "_explainMixTT";
+	private static final String MSG_FIRST_MIX_TEXT = JAPConfAnon.class.getName() + "_firstMixText";
+	private static final String MSG_MIDDLE_MIX_TEXT = JAPConfAnon.class.getName() + "_middleMixText";
+	private static final String MSG_LAST_MIX_TEXT = JAPConfAnon.class.getName() + "_lastMixText";
+
+
+	private static final String DEFAULT_MIX_NAME = "AN.ON Mix";
 
 	private static final int MAX_HOST_LENGTH = 30;
 
@@ -132,7 +144,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private JPanel m_serverInfoPanel;
 	private ManualPanel m_manualPanel;
 
-	private JLabel m_lblCascadeInfo;
+	//private JLabel m_lblCascadeInfo;
 	private JLabel m_numOfUsersLabel;
 	private GridBagConstraints m_constrHosts, m_constrPorts;
 	private JLabel m_lblHosts;
@@ -145,6 +157,12 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private GridBagConstraints m_rootPanelConstraints;
 
 	private JLabel m_lblMix;
+
+	private JPanel m_nrPanel;
+	private JLabel m_nrLabel;
+	private JLabel m_nrLblExplainBegin;
+	private JLabel m_nrLblExplain;
+	private JLabel m_nrLblExplainEnd;
 	private JLabel m_operatorLabel;
 	private JLabel m_emailLabel;
 	private JLabel m_urlLabel;
@@ -170,6 +188,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private String m_oldCascadeHost;
 	private String m_oldCascadePort;
 
+	private boolean m_bMixInfoShown = false;
 	private boolean m_mapShown = false;
 	private boolean m_observablesRegistered = false;
 	private final Object LOCK_OBSERVABLE = new Object();
@@ -195,7 +214,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		//m_listMixCascade.setFont(font);
 
 		m_listMixCascade.setEnabled(true);
-		m_lblCascadeInfo = new JLabel(JAPMessages.getString("infoAboutCascade"));
+		//m_lblCascadeInfo = new JLabel(JAPMessages.getString("infoAboutCascade"));
 
 		m_lblMix = new JLabel();
 
@@ -402,7 +421,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_cascadesPanel.add(m_lblHosts, c);
 
 		c.insets = new Insets(5, 5, 0, 5);
-		m_reachableLabel = new JAPMultilineLabel("", null);
+		m_reachableLabel = new JAPMultilineLabel("", null, null);
 		c.gridx = 3;
 		c.gridy = 2;
 		c.weightx = 0;
@@ -501,14 +520,54 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			}
 
 			m_lblMix.setToolTipText(JAPMessages.getString(MSG_MIX_ID) + "=" + selectedMixId + version);
-			m_lblMix.setText(JAPMessages.getString("infoAboutMix") +
-							 (m_serverList.areMixButtonsEnabled() ?
-							 (" (" + (server + 1) + "/" + m_serverList.getNumberOfMixes() + ")") : ""));
+			//m_lblMix.setText(JAPMessages.getString("infoAboutMix") +
+			String name = GUIUtils.trim(m_infoService.getName(selectedMixId), 40);
+			if (name == null)
+			{
+				m_lblMix.setText(DEFAULT_MIX_NAME);
+				m_lblMix.setForeground(m_lblMix.getBackground());
+			}
+			else
+			{
+				m_lblMix.setText(name);
+				m_lblMix.setForeground(m_nrLabel.getForeground());
+			}
+
 		}
 		else
 		{
 			m_lblMix.setToolTipText("");
 		}
+		if (m_serverList.areMixButtonsEnabled())
+		{
+			String mixType;
+			if (server == 0)
+			{
+				mixType = JAPMessages.getString(MSG_MIX_FIRST);
+			}
+			else if ((server + 1) == m_serverList.getNumberOfMixes())
+			{
+				mixType = JAPMessages.getString(MSG_MIX_LAST);
+			}
+			else
+			{
+				mixType = JAPMessages.getString(MSG_MIX_MIDDLE);
+			}
+
+			m_nrLabel.setText(JAPMessages.getString(MSG_MIX_X_OF_Y, new Object[]{new Integer(server + 1),
+													new Integer(m_serverList.getNumberOfMixes())}));
+			m_nrLblExplain.setText(mixType);
+		}
+		else
+		{
+			m_nrLabel.setText("N/A");
+			m_nrLblExplain.setText("");
+		}
+		m_nrLblExplainBegin.setVisible(m_serverList.areMixButtonsEnabled());
+		m_nrLblExplainEnd.setVisible(m_serverList.areMixButtonsEnabled());
+
+
+		//m_nrLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
 
 		m_operatorLabel.setText(GUIUtils.trim(m_infoService.getOperator(selectedMixId)));
 		m_operatorLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
@@ -521,7 +580,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		else
 		{
-			m_emailLabel.setForeground(new JLabel().getForeground());
+			m_emailLabel.setForeground(m_nrLabel.getForeground());
 		}
 		m_emailLabel.setToolTipText(m_infoService.getEMail(selectedMixId));
 
@@ -535,7 +594,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		else
 		{
-			m_locationLabel.setForeground(new JLabel().getForeground());
+			m_locationLabel.setForeground(m_nrLabel.getForeground());
 		}
 		m_locationLabel.setToolTipText(m_infoService.getLocation(selectedMixId));
 
@@ -546,7 +605,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		else
 		{
-			m_urlLabel.setForeground(new JLabel().getForeground());
+			m_urlLabel.setForeground(m_nrLabel.getForeground());
 		}
 		m_urlLabel.setToolTipText(m_infoService.getUrl(selectedMixId));
 
@@ -576,6 +635,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			m_viewCertLabelValidity.setText(" ");
 			m_viewCertLabel.setText("N/A");
+			m_viewCertLabel.setForeground(m_nrLabel.getForeground());
 		}
 
 		pRoot.validate();
@@ -1104,6 +1164,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	public void fontSizeChanged(final JAPModel.FontResize a_resize, final JLabel a_dummyLabel)
 	{
+		if (m_serverList != null)
+		{
+			m_serverList.fontSizeChanged(a_resize, a_dummyLabel);
+		}
+
 		/*
 		m_lblCascadeInfo.setFont(new Font(a_dummyLabel.getFont().getName(), Font.BOLD,
 										  (int) (a_dummyLabel.getFont().getSize() * 1.2)));
@@ -1778,6 +1843,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 
 
+
 		/**
 		 * Get the operator name of a cascade.
 		 * @param a_mixId String
@@ -1835,6 +1901,23 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			return strUrl;
 		}
 
+		public String getName(String a_mixId)
+		{
+			String name;
+			MixInfo info = getMixInfo(a_mixId);
+			if (info == null)
+			{
+				return null;
+			}
+			name = info.getName();
+			if (name == null || name.trim().length() == 0)
+			{
+				name = null;
+			}
+			return name;
+		}
+
+
 		/**
 		 * Get the location of a cascade.
 		 * @param a_mixId String
@@ -1852,7 +1935,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					strLocation = location.getCity().trim();
 				}
 
-				if (location.getState() != null && location.getState().trim().length() > 0)
+				if (location.getState() != null && location.getState().trim().length() > 0 &&
+					!strLocation.equals(location.getState().trim()))
 				{
 					if (strLocation.length() > 0)
 					{
@@ -2126,7 +2210,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			m_constraints.weightx = 1;
 			m_constraints.weighty = 0;
 			m_constraints.insets = new Insets(5, 10, 5, 5);
-			add(m_lblCascadeInfo, m_constraints);
+			//add(m_lblCascadeInfo, m_constraints);
 
 			m_constraints.gridy = 1;
 			m_lblCascadeName = new JLabel();
@@ -2176,7 +2260,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			GridBagLayout layout = new GridBagLayout();
 			GridBagConstraints c = new GridBagConstraints();
-
+			JLabel l;
 			setLayout(layout);
 
 			c.insets = new Insets(5, 10, 5, 5);
@@ -2189,11 +2273,96 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			c.insets = new Insets(5, 20, 5, 5);
 			add(m_lblMix, c);
 
-			JLabel l = new JLabel(JAPMessages.getString("mixOperator"));
+
+			l = new JLabel(JAPMessages.getString(MSG_MIX_POSITION) +":");
 			c.gridy = 1;
 			c.gridwidth = 1;
 			c.insets = new Insets(5, 30, 5, 5);
+			add(l, c);
+
+
+			m_nrPanel = new JPanel(new GridBagLayout());
+			c.gridx = 1;
+			c.gridwidth = 3;
+			c.insets = new Insets(5, 30, 5, 0);
+			add(m_nrPanel, c);
+
+			c.gridx = 3;
+			c.weightx = 1;
+			c.fill = GridBagConstraints.HORIZONTAL;
+			c.anchor = GridBagConstraints.WEST;
+			add(new JLabel(), c);
+
+
+			GridBagConstraints nrPanelConstraints = new GridBagConstraints();
+
+			m_nrLabel = new JLabel();
+			nrPanelConstraints.gridx = 0;
+			nrPanelConstraints.gridy = 0;
+			nrPanelConstraints.weightx = 0;
+			nrPanelConstraints.insets = new Insets(0, 0, 0, 5);
+			m_nrPanel.add(m_nrLabel, nrPanelConstraints);
+
+			m_nrLblExplainBegin = new JLabel("(");
+			m_nrLblExplainBegin.setVisible(false);
+			nrPanelConstraints.gridx++;
+			nrPanelConstraints.insets = new Insets(0, 0, 0, 0);
+			m_nrPanel.add(m_nrLblExplainBegin, nrPanelConstraints);
+
+			m_nrLblExplain = new JLabel();
+
+			m_nrLblExplain.addMouseListener(new MouseAdapter()
+			{
+				public void mouseClicked(MouseEvent a_event)
+				{
+					if (m_bMixInfoShown)
+					{
+						return;
+					}
+					m_bMixInfoShown = true;
+
+					String mixType;
+
+					if (m_nrLblExplain.getText().equals(mixType = JAPMessages.getString(MSG_MIX_FIRST)))
+					{
+						JAPDialog.showMessageDialog(
+											  getRootPanel(), JAPMessages.getString(MSG_FIRST_MIX_TEXT),
+											  mixType);
+					}
+					else if (m_nrLblExplain.getText().equals(mixType = JAPMessages.getString(MSG_MIX_MIDDLE)))
+					{
+						JAPDialog.showMessageDialog(
+											  getRootPanel(), JAPMessages.getString(MSG_MIDDLE_MIX_TEXT),
+											  mixType);
+					}
+					else if (m_nrLblExplain.getText().equals(mixType = JAPMessages.getString(MSG_MIX_LAST)))
+					{
+						JAPDialog.showMessageDialog(
+											  getRootPanel(), JAPMessages.getString(MSG_LAST_MIX_TEXT),
+											  mixType);
+					}
+
+					m_bMixInfoShown = false;
+				}
+			});
+			m_nrLblExplain.setToolTipText(JAPMessages.getString(MSG_EXPLAIN_MIX_TT));
+			m_nrLblExplain.setForeground(Color.blue);
+			m_nrLblExplain.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+			nrPanelConstraints.gridx++;
+			m_nrPanel.add(m_nrLblExplain, nrPanelConstraints);
+
+			m_nrLblExplainEnd = new JLabel(")");
+			m_nrLblExplainEnd.setVisible(false);
+			nrPanelConstraints.gridx++;
+			m_nrPanel.add(m_nrLblExplainEnd, nrPanelConstraints);
+
+
+			l = new JLabel(JAPMessages.getString("mixOperator"));
+			c.gridy++;
+			c.weightx = 0;
+			c.gridx = 0;
 			c.gridwidth = 1;
+			c.insets = new Insets(5, 30, 5, 5);
 			add(l, c);
 
 			m_operatorLabel = new JLabel();
@@ -2203,7 +2372,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			c.gridwidth = 2;
 			add(m_operatorLabel, c);
 
-			l = new JLabel(JAPMessages.getString(MSG_LABEL_EMAIL));
+			l = new JLabel(JAPMessages.getString(MSG_LABEL_EMAIL) + ":");
 			c.gridx = 0;
 			c.gridy++;
 			c.weightx = 0;
@@ -2259,6 +2428,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			m_viewCertLabelValidity = new JLabel();
 			m_viewCertLabelValidity.addMouseListener(a_listener);
 			c.gridx = 2;
+			c.gridwidth = 1;
 			c.insets = new Insets(5, 0, 5, 5);
 			add(m_viewCertLabelValidity, c);
 		}

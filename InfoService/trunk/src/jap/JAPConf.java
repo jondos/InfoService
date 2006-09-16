@@ -1120,7 +1120,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 				}
 
 				// force notifying the observers set the right server name
-				m_Controller.notifyJAPObservers();
+				//m_Controller.notifyJAPObservers();
 
 				if (isRestartNeeded())
 				{
