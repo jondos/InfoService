@@ -3091,6 +3091,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 					JAPModel.getInstance().setCascadeAutoSwitch(false);
 
 					JAPDialog.setConsoleOnly(true); // do not show any dialogs now
+					if (getInstance().getViewWindow() != null)
+					{
+						getInstance().getViewWindow().setEnabled(false);
+					}
+
 					if (!bShowConfigSaveErrorMsg)
 					{
 						GUIUtils.setLoadImages(false);
