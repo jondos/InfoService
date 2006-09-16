@@ -46,8 +46,6 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
-import javax.swing.JButton;
-import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
@@ -888,7 +886,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 				// check if something has changed
 				changeProxyInterface(proxyInterface,
 									 XMLUtil.parseAttribute(
-					root,JAPConstants.CONFIG_PROXY_AUTHORIZATION, false));
+					root,JAPConstants.CONFIG_PROXY_AUTHORIZATION, false),
+									 JAPController.getInstance().getViewWindow());
 
 				setDummyTraffic(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_DUMMY_TRAFFIC_INTERVALL,
 					30000));
@@ -1703,7 +1702,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 * @param a_proxyInterface a proxy interface
 	 * @param a_bUseAuth indicates whether porxy authentication should be used
 	 */
-	public synchronized void changeProxyInterface(ProxyInterface a_proxyInterface, boolean a_bUseAuth)
+	public synchronized void changeProxyInterface(ProxyInterface a_proxyInterface, boolean a_bUseAuth,
+		Component a_parent)
 	{
 		if (a_proxyInterface != null &&
 			(m_Model.getProxyInterface() == null ||
@@ -1713,7 +1713,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			m_Model.setProxyListener(a_proxyInterface);
 
 			applyProxySettingsToInfoService(a_bUseAuth);
-			applyProxySettingsToAnonService();
+			applyProxySettingsToAnonService(a_parent);
 
 			notifyJAPObservers();
 		}
@@ -2135,22 +2135,30 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 	}
 
-	private void applyProxySettingsToAnonService()
+	private void applyProxySettingsToAnonService(Component a_parent)
 	{
 		if (JAPModel.getInstance().getProxyInterface() != null &&
 			JAPModel.getInstance().getProxyInterface().isValid() && getAnonMode())
 		{
 			// anon service is running
-			Object[] options =
+			JAPDialog.Options options = new JAPDialog.Options(JAPDialog.OPTION_TYPE_YES_NO)
+			{
+				public String getYesOKText()
 				{
-				JAPMessages.getString("later"), JAPMessages.getString("reconnect")};
-			int ret = JOptionPane.showOptionDialog(JAPController.getInstance().getViewWindow(),
+					return JAPMessages.getString("reconnect");
+				}
+
+				public String getNoText()
+				{
+					return JAPMessages.getString("later");
+				}
+			};
+
+			int ret = JAPDialog.showConfirmDialog(a_parent,
 				JAPMessages.getString("reconnectAfterProxyChangeMsg"),
 				JAPMessages.getString("reconnectAfterProxyChangeTitle"),
-				JOptionPane.DEFAULT_OPTION,
-				JOptionPane.WARNING_MESSAGE,
-				null, options, options[0]);
-			if (ret == 1)
+				options, JAPDialog.MESSAGE_TYPE_WARNING, null, null);
+			if (ret == JAPDialog.RETURN_VALUE_YES)
 			{
 				// reconnect
 				setAnonMode(false);

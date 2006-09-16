@@ -98,8 +98,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		"_noNativeWindowsLibrary";
 
 
-	// show the options to alter the dialog format
-	private static final boolean SHOW_DIALOG_FORMAT = false;
+
 
 	private TitledBorder m_borderLookAndFeel, m_borderView;
 	private JComboBox m_comboLanguage, m_comboUI, m_comboDialogFormat;
@@ -471,7 +470,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		c.weightx = 0;
 		c.gridwidth = 1;
 		p.add(l, c);
-		l.setVisible(SHOW_DIALOG_FORMAT);
+		l.setVisible(JAPModel.getInstance().isDialogFormatShown());
 		c.gridx = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		m_comboDialogFormat = new JComboBox();
@@ -496,8 +495,8 @@ final class JAPConfUI extends AbstractJAPConfModule
 		//c.fill = GridBagConstraints.NONE;
 		c.weightx = 0;
 		p.add(btnTestFormat, c);
-		m_comboDialogFormat.setVisible(SHOW_DIALOG_FORMAT);
-		btnTestFormat.setVisible(SHOW_DIALOG_FORMAT);
+		m_comboDialogFormat.setVisible(JAPModel.getInstance().isDialogFormatShown());
+		btnTestFormat.setVisible(JAPModel.getInstance().isDialogFormatShown());
 
 		btnTestFormat = new JButton(JAPMessages.getString(MSG_DIALOG_FORMAT_TEST_BTN));
 		btnTestFormat.addActionListener(new ActionListener()
@@ -515,7 +514,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		//c.fill = GridBagConstraints.NONE;
 		c.weightx = 0;
 		p.add(btnTestFormat, c);
-		btnTestFormat.setVisible(SHOW_DIALOG_FORMAT);
+		btnTestFormat.setVisible(JAPModel.getInstance().isDialogFormatShown());
 
 		c.gridx = 0;
 		c.gridy++;

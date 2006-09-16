@@ -116,7 +116,7 @@ public class JAP
 		String os = System.getProperty("os.name");
 		String mrjVersion = System.getProperty("mrj.version");
 
-		if (isArgumentSet("-version"))
+		if (isArgumentSet("--version") || isArgumentSet("-v"))
 		{
 			System.out.println("JAP version: " + JAPConstants.aktVersion + "\n" +
 							   "Java Vendor: " + vendor + "\n" +
@@ -137,18 +137,19 @@ public class JAP
 			System.exit(0);
 		}
 
-		if (isArgumentSet("-help") || isArgumentSet("--help") || isArgumentSet("-h"))
+		if (isArgumentSet("--help") || isArgumentSet("-h"))
 		{
 			System.out.println("Usage:");
-			System.out.println("-help, --help, -h:  Show this text.");
-			System.out.println("-console:           Start JAP in console-only mode.");
-			System.out.println("-minimized:         Minimize JAP on startup.");
-			System.out.println("-version:           Print version information.");
-			System.out.println("-config {Filename}: Force JAP to use a specific configuration file.");
+			System.out.println("--help, -h:              Show this text.");
+			System.out.println("--console, -c:           Start JAP in console-only mode.");
+			System.out.println("--minimized, -m:         Minimize JAP on startup.");
+			System.out.println("--version, -v:           Print version information.");
+			System.out.println("--showDialogFormat       Show and set dialog format options.");
+			System.out.println("--config, -c {Filename}: Force JAP to use a specific configuration file.");
 			System.exit(0);
 		}
 
-		if (isArgumentSet("-console"))
+		if (isArgumentSet("-console") || isArgumentSet("--console"))
 		{
 			bConsoleOnly = true;
 		}
@@ -237,6 +238,8 @@ public class JAP
 
 		if (!bConsoleOnly)
 		{
+			JAPModel.getInstance().setDialogFormatShown(isArgumentSet("--showDialogFormat"));
+
 			GUIUtils.setIconResizer(JAPModel.getInstance().getIconResizer());
 			// Test for Swing
 			try
@@ -335,7 +338,8 @@ public class JAP
 		{
 			for (int i = 0; i < m_temp.length; i++)
 			{
-				if (m_temp[i].equalsIgnoreCase("-config"))
+				if (m_temp[i].equalsIgnoreCase("-config") || m_temp[i].equalsIgnoreCase("--config") ||
+					m_temp[i].equalsIgnoreCase("-c"))
 				{
 					if (i + 1 < m_temp.length)
 					{
@@ -414,7 +418,7 @@ public class JAP
 		//view.setVisible(true);
 		//view.toFront();
 		boolean bSystray = JAPModel.getMoveToSystrayOnStartup();
-		if (isArgumentSet("-minimized"))
+		if (isArgumentSet("-minimized") || isArgumentSet("--minimized") || isArgumentSet("-m"))
 		{
 			bSystray = true;
 		}

@@ -1057,7 +1057,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 							   m_Controller.getPasswordReader(),
 							   m_cbProxyAuthentication.isSelected(),
 							   m_cbProxy.isSelected()),
-			m_cbProxyAuthentication.isSelected());
+			m_cbProxyAuthentication.isSelected(), getContentPane());
 	}
 
 	private void okPressed(final boolean a_bCloseConfiguration)
