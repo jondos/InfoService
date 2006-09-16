@@ -3315,7 +3315,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 
 								if (m_bBlockParentWindow && m_parentWindow.isEnabled())
 								{
-									// another dialog has enabled the parent; set it back to diabled
+									// another dialog has enabled the parent; set it back to disabled
 									m_parentWindow.setEnabled(false);
 								}
 
@@ -3446,12 +3446,16 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			if (!m_parentWindow.isEnabled())
 			{
 				m_bBlockParentWindow = false;
-				m_parentWindow.setEnabled(true);
+				m_parentWindow.setEnabled(!ms_bConsoleOnly);
 				if (m_parentWindow.isVisible())
 				{
 					// this is a bugfix
 					m_parentWindow.setVisible(true);
 				}
+			}
+			if (ms_bConsoleOnly)
+			{
+				m_parentWindow.setEnabled(false);
 			}
 		}
 

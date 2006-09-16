@@ -3083,7 +3083,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						JAPDialog.showErrorDialog(getInstance().getViewWindow(),
 												  JAPMessages.getString(MSG_ERROR_SAVING_CONFIG,
-							JAPModel.getInstance().getConfigFile()), LogType.MISC);
+							JAPModel.getInstance().getConfigFile() ), LogType.MISC);
 					}
 
 					// disallow new connections
@@ -3091,10 +3091,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 					JAPModel.getInstance().setCascadeAutoSwitch(false);
 
 					JAPDialog.setConsoleOnly(true); // do not show any dialogs now
-					if (getInstance().getViewWindow() != null)
-					{
-						getInstance().getViewWindow().setEnabled(false);
-					}
 
 					if (!bShowConfigSaveErrorMsg)
 					{
