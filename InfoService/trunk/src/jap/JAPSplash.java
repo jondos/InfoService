@@ -43,6 +43,7 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.Window;
+import java.util.Locale;
 
 import gui.JAPMessages;
 
@@ -174,7 +175,27 @@ final public class JAPSplash extends Window
 			{
 			}
 		}
-		m_strLoading = JAPMessages.getString("loading");
+
+		//JAPMessages.getString("loading");
+		Locale defaultLocale = Locale.getDefault();
+		if (defaultLocale.getLanguage().equals("de"))
+		{
+			m_strLoading = "Lade Einstellungen";
+		}
+		else if (defaultLocale.getLanguage().equals("fr"))
+		{
+			m_strLoading = "Charger les param\u00e8tres";
+		}
+		else if (defaultLocale.getLanguage().equals("pt"))
+		{
+			m_strLoading = "A carregar configura\u00e7\u00f5es";
+		}
+		else
+		{
+			m_strLoading = "Loading settings";
+		}
+		m_strLoading += "...";
+
 		m_strVersion = "Version: " + JAPConstants.aktVersion;
 		m_fntFont = new Font("Sans", Font.PLAIN, 9);
 		FontMetrics fontmetrics = t.getFontMetrics(m_fntFont);
