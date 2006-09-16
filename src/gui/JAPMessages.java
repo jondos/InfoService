@@ -129,6 +129,11 @@ public final class JAPMessages
 		ms_locale = locale;
 	}
 
+	public static boolean isInitialised()
+	{
+		return ms_locale != null;
+	}
+
 	/**
 	 * Returns the Locale that is used by this class to get the messages.
 	 * @return the Locale that is used by this class to get the messages

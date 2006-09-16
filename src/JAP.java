@@ -153,13 +153,13 @@ public class JAP
 			bConsoleOnly = true;
 		}
 
-		// Init Messages....
-		JAPMessages.init(JAPConstants.MESSAGESFN);
 		// Test (part 2) for right JVM....
 		if (vendor.startsWith("Transvirtual"))
 		{ // Kaffe
+
 			if (javaVersion.compareTo("1.0.5") <= 0)
 			{
+				JAPMessages.init(JAPConstants.MESSAGESFN);
 				if (bConsoleOnly)
 				{
 					System.out.println(JAPMessages.getString(MSG_ERROR_NEED_NEWER_JAVA));
@@ -176,6 +176,7 @@ public class JAP
 		}
 		else if (vendor.toUpperCase().indexOf("FREE SOFTWARE FOUNDATION") >= 0)
 		{
+			JAPMessages.init(JAPConstants.MESSAGESFN);
 			// latest version reported not to run: 1.4.2, Free Software Foundation Inc.
 			System.out.println("\n" + JAPMessages.getString(MSG_GNU_NOT_COMPATIBLE) + "\n");
 			//System.exit(0);
@@ -189,6 +190,7 @@ public class JAP
 			}
 			if (javaVersion.compareTo("1.1.2") <= 0)
 			{
+				JAPMessages.init(JAPConstants.MESSAGESFN);
 				if (bConsoleOnly)
 				{
 					System.out.println(JAPMessages.getString(MSG_ERROR_NEED_NEWER_JAVA));
@@ -205,7 +207,6 @@ public class JAP
 		}
 		// Show splash screen
 		JAPSplash splash = null;
-
 		if (bConsoleOnly)
 		{
 			JAPDialog.setConsoleOnly(true);
@@ -216,6 +217,11 @@ public class JAP
 			splash.setVisible(true);
 		}
 
+		// Init Messages....
+		if (!JAPMessages.isInitialised())
+		{
+			JAPMessages.init(JAPConstants.MESSAGESFN);
+		}
 		// initialise secure random generators
 		Thread secureRandomThread = new Thread()
 		{
