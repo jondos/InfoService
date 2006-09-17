@@ -31,11 +31,14 @@
  */
 package anon.infoservice;
 
+import anon.AnonServerDescription;
+import anon.IServiceContainer;
+
 /**
  * This class keeps and returns one or more objects of the class MixCascade.
  * @author Rolf Wendolsky
  */
-public abstract class AbstractMixCascadeContainer
+public abstract class AbstractMixCascadeContainer implements IServiceContainer
 {
 	/**
 	 * Must return a MixCascade and never null. The returned MixCascade may change
@@ -51,14 +54,19 @@ public abstract class AbstractMixCascadeContainer
 	 */
 	public abstract MixCascade getCurrentMixCascade();
 
-	/**
-	 * Optional method that should allow to return the last MixCascade that was returned
-	 * by getNextMixCascade() also the next time this method is called.
-	 * @param a_bKeepCurrentCascade allows or dissallows to keep the current cascade for the next call
-	 */
-	public abstract void keepCurrentCascade(boolean a_bKeepCurrentCascade);
+	public final AnonServerDescription getCurrentService()
+	{
+		return getCurrentMixCascade();
+	}
 
-	public abstract boolean isCascadeAutoSwitched();
+	/**
+	 * Optional method that should allow to return the last MixCascade (Service) that was returned
+	 * by getNextService() also the next time this method is called.
+	 * @param a_bKeepCurrentService allows or dissallows to keep the current cascade for the next call
+	 */
+	public abstract void keepCurrentService(boolean a_bKeepCurrentService);
+
+	public abstract boolean isServiceAutoSwitched();
 
 	public abstract boolean isReconnectedAutomatically();
 }

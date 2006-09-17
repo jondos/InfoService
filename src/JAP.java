@@ -442,8 +442,8 @@ public class JAP
 			JAPNewView frameView = (JAPNewView)view;
 			if (bSystray)
 			{
-				/* The old JAPDll does return false even if hideWindowInTaskbar() succeeded - so we have to do this
-				 * to circumvent the bug...
+				/* The old JAPDll does return false even if hideWindowInTaskbar() succeeded - so we have to do
+				 * this to circumvent the bug...
 				 * @todo Remove if new DLL is deployed
 				 */
 				String s = JAPDll.getDllVersion();

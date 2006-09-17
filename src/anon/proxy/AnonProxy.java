@@ -69,7 +69,6 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	public final static int E_MIX_PROTOCOL_NOT_SUPPORTED = ErrorCodes.E_PROTOCOL_NOT_SUPPORTED;
 
-	// ootte
 	public final static int E_SIGNATURE_CHECK_FIRSTMIX_FAILED = ErrorCodes.E_SIGNATURE_CHECK_FIRSTMIX_FAILED;
 
 	public final static int E_SIGNATURE_CHECK_OTHERMIX_FAILED = ErrorCodes.E_SIGNATURE_CHECK_OTHERMIX_FAILED;
@@ -493,10 +492,10 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			while (threadRun != null && m_currentMixCascade.isReconnectedAutomatically())
 			{
 				LogHolder.log(LogLevel.ERR, LogType.NET, "Try reconnect to AN.ON service");
-				int ret = m_Anon.initialize(m_currentMixCascade.getNextMixCascade());
+				int ret = m_Anon.initialize(m_currentMixCascade.getNextMixCascade(), m_currentMixCascade);
 				if (ret == ErrorCodes.E_SUCCESS)
 				{
-					m_currentMixCascade.keepCurrentCascade(true);
+					m_currentMixCascade.keepCurrentService(true);
 					break;
 				}
 				try
@@ -608,12 +607,12 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Try to initialize AN.ON");
 			m_numChannels = 0;
-			int ret = m_Anon.initialize(m_currentMixCascade.getNextMixCascade());
+			int ret = m_Anon.initialize(m_currentMixCascade.getNextMixCascade(), m_currentMixCascade);
 
 			if (ret != ErrorCodes.E_SUCCESS)
 			{
 				if (ret == ErrorCodes.E_INTERRUPTED || !m_currentMixCascade.isReconnectedAutomatically() ||
-					(!m_currentMixCascade.isCascadeAutoSwitched() &&
+					(!m_currentMixCascade.isServiceAutoSwitched() &&
 					 // these errors cannot be 'healed'
 					 (ret == E_SIGNATURE_CHECK_FIRSTMIX_FAILED ||
 					  ret == E_SIGNATURE_CHECK_OTHERMIX_FAILED || ret == E_MIX_PROTOCOL_NOT_SUPPORTED)))
@@ -627,7 +626,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			}
 			else
 			{
-				m_currentMixCascade.keepCurrentCascade(true);
+				m_currentMixCascade.keepCurrentService(true);
 			}
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "AN.ON initialized");
 
@@ -649,7 +648,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				{
 					m_Tor = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_TOR);
 					m_Tor.setProxy(m_proxyInterface);
-					m_Tor.initialize(m_currentTorParams);
+					m_Tor.initialize(m_currentTorParams, null);
 					LogHolder.log(LogLevel.DEBUG, LogType.NET, "Tor initialized");
 				}
 				if (m_currentMixminionParams != null)
@@ -657,7 +656,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 					m_Mixminion = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.
 						SERVICE_MIXMINION);
 					m_Mixminion.setProxy(m_proxyInterface);
-					m_Mixminion.initialize(m_currentMixminionParams);
+					m_Mixminion.initialize(m_currentMixminionParams, null);
 					LogHolder.log(LogLevel.DEBUG, LogType.NET, "Mixminion initialized");
 				}
 			}
@@ -809,7 +808,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	public void dataChainErrorSignaled()
 	{
 		LogHolder.log(LogLevel.ERR, LogType.NET, "Proxy has been nuked");
-		m_currentMixCascade.keepCurrentCascade(false);
+		m_currentMixCascade.keepCurrentService(false);
 		m_Anon.shutdown();
 		synchronized (m_anonServiceListener)
 		{
@@ -832,10 +831,10 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		{
 			return null;
 		}
-		public void keepCurrentCascade(boolean a_bKeepCurrentCascade)
+		public void keepCurrentService(boolean a_bKeepCurrentCascade)
 		{
 		}
-		public boolean isCascadeAutoSwitched()
+		public boolean isServiceAutoSwitched()
 		{
 			return false;
 		}
@@ -865,14 +864,14 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			return m_mixCascadeContainer.getCurrentMixCascade();
 		}
 
-		public void keepCurrentCascade(boolean a_bKeepCurrentCascade)
+		public void keepCurrentService(boolean a_bKeepCurrentCascade)
 		{
-			m_mixCascadeContainer.keepCurrentCascade(a_bKeepCurrentCascade);
+			m_mixCascadeContainer.keepCurrentService(a_bKeepCurrentCascade);
 		}
 
-		public boolean isCascadeAutoSwitched()
+		public boolean isServiceAutoSwitched()
 		{
-			return m_mixCascadeContainer.isCascadeAutoSwitched();
+			return m_mixCascadeContainer.isServiceAutoSwitched();
 		}
 		public boolean isReconnectedAutomatically()
 		{

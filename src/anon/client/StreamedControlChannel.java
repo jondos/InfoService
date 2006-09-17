@@ -38,6 +38,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 import anon.ErrorCodes;
+import anon.IServiceContainer;
 
 /**
  * @author Stefan Lieske
@@ -50,9 +51,10 @@ public abstract class StreamedControlChannel extends AbstractControlChannel
 
 	private byte[] m_lengthBuffer;
 
-	public StreamedControlChannel(int a_channelId, Multiplexer a_multiplexer)
+	public StreamedControlChannel(int a_channelId, Multiplexer a_multiplexer,
+								  IServiceContainer a_serviceContainer)
 	{
-		super(a_channelId, a_multiplexer);
+		super(a_channelId, a_multiplexer, a_serviceContainer);
 		m_messageBuffer = new byte[0];
 		m_currentIndex = -2;
 		m_lengthBuffer = new byte[2];

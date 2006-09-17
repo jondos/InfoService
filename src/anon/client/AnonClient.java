@@ -63,6 +63,7 @@ import logging.LogLevel;
 import logging.LogType;
 import HTTPClient.HTTPConnection;
 import anon.infoservice.IMutableProxyInterface;
+import anon.IServiceContainer;
 
 /**
  * @author Stefan Lieske
@@ -142,7 +143,8 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		public int getStatus();
 	}
 
-	public int initialize(final AnonServerDescription a_mixCascade)
+	public int initialize(final AnonServerDescription a_mixCascade,
+						  final IServiceContainer a_serviceContainer)
 	{
 		if (! (a_mixCascade instanceof MixCascade))
 		{
@@ -215,7 +217,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 						}
 						return;
 					}
-					status = initializeProtocol(socketToMixCascade, a_mixCascade);
+					status = initializeProtocol(socketToMixCascade, a_mixCascade, a_serviceContainer);
 					synchronized (m_threadInitialise)
 					{
 						m_threadInitialise.notify();
@@ -557,7 +559,8 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		return connectedSocket;
 	}
 
-	private int initializeProtocol(Socket a_connectedSocket, final AnonServerDescription a_mixCascade)
+	private int initializeProtocol(Socket a_connectedSocket, final AnonServerDescription a_mixCascade,
+								   IServiceContainer a_serviceContainer)
 	{
 		synchronized (m_internalSynchronization)
 		{
@@ -642,12 +645,13 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 			m_packetCounter.addObserver(this);
 			synchronized (m_internalSynchronizationForDummyTraffic)
 			{
-				m_dummyTrafficControlChannel = new DummyTrafficControlChannel(m_multiplexer);
+				m_dummyTrafficControlChannel =
+					new DummyTrafficControlChannel(m_multiplexer, a_serviceContainer);
 				m_dummyTrafficControlChannel.setDummyTrafficInterval(m_dummyTrafficInterval);
 			}
 			/* maybe we have to start some more services */
 			int errorCode = finishInitialization(m_multiplexer, m_keyExchangeManager, m_paymentProxyInterface,
-												 m_packetCounter, a_connectedSocket);
+												 m_packetCounter, a_connectedSocket, a_serviceContainer);
 			if (errorCode != ErrorCodes.E_SUCCESS)
 			{
 				shutdown();
@@ -692,7 +696,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 
 	private int finishInitialization(Multiplexer a_multiplexer, KeyExchangeManager a_keyExchangeManager,
 									 IMutableProxyInterface a_proxyInterface, PacketCounter a_packetCounter,
-									 Socket a_connectedSocket)
+									 Socket a_connectedSocket, IServiceContainer a_serviceContainer)
 	{
 		if (a_keyExchangeManager.isProtocolWithTimestamp())
 		{
@@ -711,7 +715,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 			try
 			{
 				TimestampUpdater updater = new TimestampUpdater(mixesWithReplayDetection,
-					new ReplayControlChannel(a_multiplexer));
+					new ReplayControlChannel(a_multiplexer, a_serviceContainer));
 			}
 			catch (Exception e)
 			{
@@ -723,8 +727,8 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		/* it seems that some payment things must be started even if payment is
 		 * disabled
 		 */
-		AIControlChannel aiControlChannel = new AIControlChannel(a_multiplexer, a_proxyInterface,
-			a_packetCounter);
+		AIControlChannel aiControlChannel =
+			new AIControlChannel(a_multiplexer, a_proxyInterface, a_packetCounter, a_serviceContainer);
 		m_paymentInstance = new Pay(aiControlChannel);
 		if (a_keyExchangeManager.isPaymentRequired())
 		{

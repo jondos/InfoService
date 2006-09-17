@@ -39,6 +39,7 @@ import anon.AnonService;
 import anon.AnonServiceEventListener;
 import anon.ErrorCodes;
 import anon.infoservice.ImmutableProxyInterface;
+import anon.IServiceContainer;
 public class AnonServiceImplProxy implements AnonService
 {
 	String m_RpcServerHost;
@@ -53,7 +54,7 @@ public class AnonServiceImplProxy implements AnonService
 		m_ClientID = ( (Integer) o).intValue();
 	}
 
-	public int initialize(AnonServerDescription mixCascade)
+	public int initialize(AnonServerDescription mixCascade, IServiceContainer a_serviceContainer)
 	{
 		return 0;
 	}

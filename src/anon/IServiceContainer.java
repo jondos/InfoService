@@ -29,43 +29,22 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package anon.client;
-
-import org.w3c.dom.Document;
-
-import anon.util.XMLParseException;
-import anon.util.XMLUtil;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
-import anon.IServiceContainer;
-
+package anon;
 
 /**
- * @author Stefan Lieske
+ * This interface is needed to pass through the keepCurrentService method in order to
+ * disallow reusing the current cascade in case of an unrecoverable error (e.g. payment).
+ *
+ * @author Rolf Wendolsky
  */
-public abstract class XmlControlChannel extends StreamedControlChannel {
+public interface IServiceContainer
+{
+	/**
+	 * Allows to return the current Service that was returned also the next time this method is called.
+	 * @param a_bKeepCurrentService allows or dissallows to keep the current service for the next call
+	 */
+	public void keepCurrentService(boolean a_bKeepCurrentService);
 
-  public XmlControlChannel(int a_channelId, Multiplexer a_multiplexer, IServiceContainer a_serviceContainer) {
-    super(a_channelId, a_multiplexer, a_serviceContainer);
-  }
-
-
-  public int sendXmlMessage(Document docMsg) {
-    return sendByteMessage(XMLUtil.toByteArray(docMsg));
-  }
-
-
-  protected void processMessage(byte[] a_message) {
-    try {
-      processXmlMessage(XMLUtil.toXMLDocument(a_message));
-    }
-    catch (XMLParseException e) {
-      LogHolder.log(LogLevel.ERR, LogType.NET, "Error while parsing XML document!", e);
-    }
-  }
-
-
-  protected abstract void processXmlMessage(Document a_document);
+	public boolean isServiceAutoSwitched();
 
 }

@@ -139,7 +139,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 			else if (a_message.equals(JAPModel.CHANGED_CASCADE_AUTO_CHANGE))
 			{
 				m_cbAutoChooseCascades.setSelected(
-								JAPModel.getInstance().isCascadeConnectionChosenAutomatically());
+								JAPModel.getInstance().isCascadeAutoSwitched());
 			}
 
 		}
@@ -163,7 +163,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_cbDenyNonAnonymousSurfing.setSelected(JAPModel.getInstance().isNonAnonymousSurfingDenied());
 		m_cbAutoConnect.setSelected(JAPModel.getAutoConnect());
 		m_cbAutoReConnect.setSelected(JAPModel.isAutomaticallyReconnected());
-		m_cbAutoChooseCascades.setSelected(JAPModel.getInstance().isCascadeConnectionChosenAutomatically());
+		m_cbAutoChooseCascades.setSelected(JAPModel.getInstance().isCascadeAutoSwitched());
 		if (JAPModel.getInstance().getAutomaticCascadeChangeRestriction().equals(
 			  JAPModel.AUTO_CHANGE_RESTRICT))
 		{

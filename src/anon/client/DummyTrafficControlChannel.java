@@ -37,6 +37,7 @@ import java.util.Observer;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.IServiceContainer;
 
 /**
  * This is the implementation for the dummy traffic interval timeout.
@@ -61,17 +62,17 @@ public class DummyTrafficControlChannel extends AbstractControlChannel implement
   private long m_interval;
 
   private Object m_internalSynchronization;
-  
+
   /**
    * Creates a new DummyTrafficControlChannel instance. The dummy traffic
    * interval is set to -1 (dummy traffic disabled) and the internal thread
    * isn't started.
-   * 
+   *
    * a_multiplexer The multiplexer the new DummyTrafficControlChannel instance
    *               belongs to.
    */
-  public DummyTrafficControlChannel(Multiplexer a_multiplexer) {
-    super(ChannelTable.CONTROL_CHANNEL_ID_DUMMY, a_multiplexer);
+  public DummyTrafficControlChannel(Multiplexer a_multiplexer, IServiceContainer a_serviceContainer) {
+    super(ChannelTable.CONTROL_CHANNEL_ID_DUMMY, a_multiplexer, a_serviceContainer);
     m_internalSynchronization = new Object();
     m_bRun = false;
     m_threadRunLoop = null;
@@ -79,7 +80,7 @@ public class DummyTrafficControlChannel extends AbstractControlChannel implement
     a_multiplexer.addObserver(this);
   }
 
-  
+
   /**
    * This is the implementation for the dummy traffic thread.
    */
@@ -122,9 +123,9 @@ public class DummyTrafficControlChannel extends AbstractControlChannel implement
    * that notification the dummy traffic timer can be reset. The next dummy
    * traffic packet is generated after the next timeout of the dummy traffic
    * timer if we don't get another notification in the meantime.
-   * 
+   *
    * @param a_observer The observed object (Multiplexer).
-   * @param a_argument The notification (PacketProcessedEvent). 
+   * @param a_argument The notification (PacketProcessedEvent).
    */
   public void update(Observable a_observer, Object a_argument) {
     synchronized (m_internalSynchronization) {
@@ -136,7 +137,7 @@ public class DummyTrafficControlChannel extends AbstractControlChannel implement
 
   /**
    * Changes the dummy traffic interval.
-   * 
+   *
    * @param a_interval The new dummy traffic interval in milliseconds or -1,
    *                   if dummy traffic shall be disabled.
    */
@@ -160,20 +161,20 @@ public class DummyTrafficControlChannel extends AbstractControlChannel implement
     }
   }
 
-  
+
   /**
    * This method is called by the multiplexer, if a packet is received on the
    * dummy-traffic control channel. All received packets are simply ignored.
-   * 
+   *
    * @param a_packet The data within the received packet (should be random
    *                 bytes).
    */
   protected void processPacketData(byte[] a_packet) {
     /* simply discard the packet */
-    LogHolder.log(LogLevel.DEBUG, LogType.NET, "DummyTrafficControlChannel: processPacketData(): Received a dummy-packet.");    
+    LogHolder.log(LogLevel.DEBUG, LogType.NET, "DummyTrafficControlChannel: processPacketData(): Received a dummy-packet.");
   }
-  
-  
+
+
   /**
    * Starts the internal dummy traffic thread, if it is not already running.
    */

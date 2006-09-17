@@ -498,7 +498,7 @@ public final class JAPModel extends Observable
 		}
 	}
 
-	public boolean isCascadeConnectionChosenAutomatically()
+	public boolean isCascadeAutoSwitched()
 	{
 		return m_bChooseCascasdeConnectionAutomatically;
 	}
