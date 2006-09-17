@@ -37,16 +37,34 @@ import anon.ErrorCodes;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.IServiceContainer;
 
 /**
  * @author Stefan Lieske
  */
 public abstract class AbstractControlChannel extends AbstractChannel
 {
+	private IServiceContainer m_serviceContainer;
 
-	public AbstractControlChannel(int a_channelId, Multiplexer a_parentMultiplexer)
+	public AbstractControlChannel(int a_channelId, Multiplexer a_parentMultiplexer,
+								  IServiceContainer a_serviceContainer)
 	{
 		super(a_channelId, a_parentMultiplexer);
+		m_serviceContainer = a_serviceContainer;
+		if (m_serviceContainer  == null)
+		{
+			m_serviceContainer = new IServiceContainer()
+			{
+				public void keepCurrentService(boolean a_bKeepCurrentService)
+				{
+				}
+
+				public boolean isServiceAutoSwitched()
+				{
+					return false;
+				}
+			};
+		}
 		/* register the channel */
 		a_parentMultiplexer.getChannelTable().registerControlChannel(a_channelId, this);
 	}
@@ -91,6 +109,11 @@ public abstract class AbstractControlChannel extends AbstractChannel
 			System.arraycopy(a_mixPacket.getPayloadData(), 0, packetData, 0, packetDataLength);
 			processPacketData(packetData);
 		}
+	}
+
+	protected final IServiceContainer getServiceContainer()
+	{
+		return m_serviceContainer;
 	}
 
 	protected abstract void processPacketData(byte[] a_packetData);

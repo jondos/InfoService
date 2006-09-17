@@ -55,6 +55,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.infoservice.ListenerInterface;
+import anon.IServiceContainer;
 
 /**
  * @author stefan
@@ -754,7 +755,8 @@ public class Tor implements Runnable, AnonService
 		}
 	}
 
-	public synchronized int initialize(AnonServerDescription torDirServer)
+	public synchronized int initialize(
+		   AnonServerDescription torDirServer, IServiceContainer a_serviceContainer)
 	{
 		if (! (torDirServer instanceof TorAnonServerDescription))
 		{

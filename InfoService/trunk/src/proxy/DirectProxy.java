@@ -60,6 +60,7 @@ import anon.AnonServerDescription;
 import anon.tor.TorAnonServerDescription;
 import anon.AnonServiceFactory;
 import anon.infoservice.MixCascade;
+import anon.IServiceContainer;
 
 
 
@@ -168,7 +169,7 @@ final public class DirectProxy implements Runnable, AnonService
 		}
 	}
 
-	public int initialize(AnonServerDescription a_mixCascade)
+	public int initialize(AnonServerDescription a_mixCascade, IServiceContainer a_serviceContainer)
 	{
 		if (!(a_mixCascade instanceof MixCascade) || a_mixCascade == null)
 		{

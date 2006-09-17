@@ -51,7 +51,7 @@ public interface AnonService
 	 *  @return E_CONNECT, if a general connection error occured
 	 *
 	 */
-	int initialize(AnonServerDescription anonServer);
+	int initialize(AnonServerDescription anonServer, IServiceContainer a_serviceContainer);
 
 	/** Sets the settings ofr the proxy, which should be used to establish network connections
 	 * @return E_SUCCESS, if ok

@@ -53,6 +53,7 @@ import java.util.Vector;
 import java.util.Enumeration;
 import anon.infoservice.ImmutableProxyInterface;
 import anon.infoservice.IMutableProxyInterface;
+import anon.IServiceContainer;
 
 /**
  * This control channel is used for communication with the AI
@@ -93,8 +94,9 @@ public class AIControlChannel extends XmlControlChannel {
   private PacketCounter m_packetCounter;
 
 
-  public AIControlChannel(Multiplexer a_multiplexer, IMutableProxyInterface a_proxy, PacketCounter a_packetCounter) {
-    super(ChannelTable.CONTROL_CHANNEL_ID_PAY, a_multiplexer);
+  public AIControlChannel(Multiplexer a_multiplexer, IMutableProxyInterface a_proxy,
+						  PacketCounter a_packetCounter, IServiceContainer a_serviceContainer) {
+    super(ChannelTable.CONTROL_CHANNEL_ID_PAY, a_multiplexer, a_serviceContainer);
     m_bFirstBalance = true;
     m_proxys = a_proxy;
     m_packetCounter = a_packetCounter;
@@ -121,6 +123,7 @@ public class AIControlChannel extends XmlControlChannel {
         processPayRequest(new XMLPayRequest(elemRoot));
       }
       else if (tagName.equals(XMLErrorMessage.XML_ELEMENT_NAME)) {
+		  getServiceContainer().keepCurrentService(false); // reconnect to another cascade if possible
         processErrorMessage(new XMLErrorMessage(elemRoot));
       }
       else if (tagName.equals(XMLChallenge.XML_ELEMENT_NAME)) {
@@ -135,6 +138,7 @@ public class AIControlChannel extends XmlControlChannel {
     }
     catch (Exception ex) {
       LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
+	   getServiceContainer().keepCurrentService(false); // reconnect to another cascade if possible
       PayAccountsFile.getInstance().signalAccountError(new XMLErrorMessage(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR, ex.getClass().getName() + ": " + ex.getMessage()));
     }
   }

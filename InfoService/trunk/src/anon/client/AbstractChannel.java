@@ -32,34 +32,35 @@
 package anon.client;
 
 import java.io.IOException;
+import anon.IServiceContainer;
 
 
-/** 
+/**
  * @author Stefan Lieske
  */
 public abstract class AbstractChannel {
-   
+
   private int m_channelId;
-  
+
   private Multiplexer m_parentMultiplexer;
 
   private volatile boolean m_channelOpen;
-  
+
   private Object m_internalSynchronization;
 
-  
+
   public AbstractChannel(int a_channelId, Multiplexer a_parentMultiplexer) {
     m_channelId = a_channelId;
     m_parentMultiplexer = a_parentMultiplexer;
     m_channelOpen = true;
     m_internalSynchronization = new Object();
   }
-  
-    
+
+
   public MixPacket createEmptyMixPacket() {
     return (new MixPacket(m_channelId));
   }
-  
+
   public void sendPacket(MixPacket a_mixPacket) throws IOException {
     synchronized (m_internalSynchronization) {
       if (m_channelOpen) {
@@ -74,11 +75,11 @@ public abstract class AbstractChannel {
       }
     }
   }
-  
+
   public void deleteChannel() {
     /* Attention: It can take some time until we get the synchronization monitor, if a
-     * packet is currently in the send-queue of the multiplexer. 
-     */ 
+     * packet is currently in the send-queue of the multiplexer.
+     */
     synchronized (m_internalSynchronization) {
       if (m_channelOpen) {
         /* ensure that removeChannel() is called only once (in the other case we maybe
@@ -98,8 +99,8 @@ public abstract class AbstractChannel {
    */
   public void multiplexerClosed() {
   }
-  
-  
+
+
   public abstract void processReceivedPacket(MixPacket a_mixPacket);
-    
+
 }

@@ -47,29 +47,30 @@ import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.IServiceContainer;
 
 
-/** 
+/**
  * @author Stefan Lieske
  */
 public class ReplayControlChannel extends XmlControlChannel {
 
   private MessageDistributor m_messageDistributor;
-  
+
   private Object m_internalSynchronization;
-  
-  
+
+
   private class MessageDistributor extends Observable {
-   
+
     public void publishTimestamps(Vector a_timestamps) {
       publishObject(a_timestamps);
     }
-    
+
     public void publishException(Exception a_exception) {
       publishObject(a_exception);
     }
 
-    
+
     private void publishObject(Object a_object) {
       synchronized (this) {
         setChanged();
@@ -79,28 +80,28 @@ public class ReplayControlChannel extends XmlControlChannel {
 
   }
 
-  
-  public ReplayControlChannel(Multiplexer a_multiplexer) {
-    super(ChannelTable.CONTROL_CHANNEL_ID_REPLAY, a_multiplexer);
+
+  public ReplayControlChannel(Multiplexer a_multiplexer, IServiceContainer a_serviceContainer) {
+    super(ChannelTable.CONTROL_CHANNEL_ID_REPLAY, a_multiplexer, a_serviceContainer);
     m_messageDistributor = new MessageDistributor();
     m_internalSynchronization = new Object();
   }
 
-  
+
   public Observable getMessageDistributor() {
     return m_messageDistributor;
   }
 
-  
+
   protected void processXmlMessage(Document a_document) {
     try {
-      LogHolder.log(LogLevel.DEBUG, LogType.NET, "ReplayControlChannel: processXmlMessage(): Received a message: " + XMLUtil.toString(a_document));
+      LogHolder.log(LogLevel.DEBUG, LogType.NET, "Received a message: " + XMLUtil.toString(a_document));
       Element mixesNode = a_document.getDocumentElement();
       if (mixesNode == null) {
-        throw (new XMLParseException(XMLParseException.ROOT_TAG, "ReplayControlChannel: processXmlMessage(): No document element in received XML structure."));      
+        throw (new XMLParseException(XMLParseException.ROOT_TAG, "No document element in received XML structure."));
       }
       if (!mixesNode.getNodeName().equals("Mixes")) {
-        throw (new XMLParseException(XMLParseException.ROOT_TAG, "ReplayControlChannel: processXmlMessage(): Mixes node expected in received XML structure."));
+        throw (new XMLParseException(XMLParseException.ROOT_TAG, "Mixes node expected in received XML structure."));
       }
       Vector timestamps = new Vector();
       NodeList mixNodes = mixesNode.getElementsByTagName("Mix");
@@ -109,32 +110,33 @@ public class ReplayControlChannel extends XmlControlChannel {
         /* get the mix parameters */
         String currentMixId = XMLUtil.parseAttribute(currentMixNode, "id", null);
         if (currentMixId == null) {
-          throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "ReplayControlChannel: processXmlMessage(): XML structure of Mix " + Integer.toString(i) + " does not contain a Mix-ID."));      
+          throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "XML structure of Mix " + Integer.toString(i) + " does not contain a Mix-ID."));
         }
         /* get the timestamps */
         NodeList currentReplayNodes = currentMixNode.getElementsByTagName("Replay");
         if (currentReplayNodes.getLength() == 0) {
-          throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "ReplayControlChannel: processXmlMessage(): XML structure of Mix " + Integer.toString(i) + " does not contain a Replay node."));
+          throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "XML structure of Mix " + Integer.toString(i) + " does not contain a Replay node."));
         }
         /* there should be only one replay node */
         NodeList currentReplayTimeStampNodes = ((Element)(currentReplayNodes.item(0))).getElementsByTagName("ReplayTimestamp");
         if (currentReplayTimeStampNodes.getLength() == 0) {
-          throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "ReplayControlChannel: processXmlMessage(): XML structure of Mix " + Integer.toString(i) + " does not contain a ReplayTimestamp node."));
+          throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "XML structure of Mix " + Integer.toString(i) + " does not contain a ReplayTimestamp node."));
         }
         /* there should be only one replaytimestamp node */
-        int currentMixOffset = XMLUtil.parseAttribute(currentReplayTimeStampNodes.item(0), "offset", -1);  
+        int currentMixOffset = XMLUtil.parseAttribute(currentReplayTimeStampNodes.item(0), "offset", -1);
         if (currentMixOffset == -1) {
-          throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "ReplayControlChannel: processXmlMessage(): XML structure of Mix " + Integer.toString(i) + " does not contain a valid ReplayTimestamp offset."));          
+          throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "XML structure of Mix " + Integer.toString(i) + " does not contain a valid ReplayTimestamp offset."));
         }
         int currentMixInterval = XMLUtil.parseAttribute(currentReplayTimeStampNodes.item(0), "interval", -1);
         if (currentMixInterval == -1) {
-          throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "ReplayControlChannel: processXmlMessage(): XML structure of Mix " + Integer.toString(i) + " does not contain a valid ReplayTimestamp interval."));          
+          throw (new XMLParseException(XMLParseException.NODE_NULL_TAG, "XML structure of Mix " + Integer.toString(i) + " does not contain a valid ReplayTimestamp interval."));
         }
         timestamps.addElement(new ReplayTimestamp(currentMixId, currentMixInterval, currentMixOffset));
       }
       m_messageDistributor.publishTimestamps(timestamps);
     }
     catch (Exception e) {
+		getServiceContainer().keepCurrentService(false); // do not reconnect to this cascade if possible
       LogHolder.log(LogLevel.ERR, LogType.NET, e);
       m_messageDistributor.publishException(e);
     }
@@ -159,8 +161,8 @@ public class ReplayControlChannel extends XmlControlChannel {
     }
     catch (Exception e) {
       LogHolder.log(LogLevel.ERR, LogType.NET, e);
-      m_messageDistributor.publishException(e);      
+      m_messageDistributor.publishException(e);
     }
   }
-  
+
 }

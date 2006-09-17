@@ -1484,7 +1484,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 
 
-				if (JAPModel.getInstance().isCascadeConnectionChosenAutomatically())
+				if (JAPModel.getInstance().isCascadeAutoSwitched())
 				{
 					// choose a random initial cascade
 					AutoSwitchedMixCascadeContainer cascadeSwitcher =
@@ -1768,7 +1768,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			XMLUtil.setAttribute(e, JAPModel.XML_REMIND_JAVA_UPDATE,
 								 JAPModel.getInstance().isReminderForJavaUpdateActivated());
 			XMLUtil.setAttribute(e, XML_ATTR_AUTO_CHOOSE_CASCADES,
-								 JAPModel.getInstance().isCascadeConnectionChosenAutomatically());
+								 JAPModel.getInstance().isCascadeAutoSwitched());
 			XMLUtil.setAttribute(e, JAPModel.XML_DENY_NON_ANONYMOUS_SURFING,
 								 JAPModel.getInstance().isNonAnonymousSurfingDenied());
 			XMLUtil.setAttribute(e, XML_ATTR_SHOW_CONFIG_ASSISTANT, m_bShowConfigAssistant);
@@ -2431,7 +2431,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 					else if (ret == AnonProxy.E_MIX_PROTOCOL_NOT_SUPPORTED &&
 							 ! (cascadeContainer.isReconnectedAutomatically() &&
-								cascadeContainer.isCascadeAutoSwitched()))
+								cascadeContainer.isServiceAutoSwitched()))
 					{
 						canStartService = false;
 						m_proxyAnon.stop();
@@ -2452,7 +2452,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					//otte
 					else if (ret == AnonProxy.E_SIGNATURE_CHECK_FIRSTMIX_FAILED &&
 							 ! (cascadeContainer.isReconnectedAutomatically() &&
-								cascadeContainer.isCascadeAutoSwitched()))
+								cascadeContainer.isServiceAutoSwitched()))
 					{
 						canStartService = false;
 						m_proxyAnon.stop();
@@ -2475,7 +2475,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 					else if (ret == AnonProxy.E_SIGNATURE_CHECK_OTHERMIX_FAILED &&
 							 ! (cascadeContainer.isReconnectedAutomatically() &&
-								cascadeContainer.isCascadeAutoSwitched()))
+								cascadeContainer.isServiceAutoSwitched()))
 					{
 						canStartService = false;
 						m_proxyAnon.stop();
@@ -4121,7 +4121,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			synchronized (m_alreadyTriedCascades)
 			{
-				if (!JAPModel.getInstance().isCascadeConnectionChosenAutomatically())
+				if (!JAPModel.getInstance().isCascadeAutoSwitched())
 				{
 					m_alreadyTriedCascades.clear();
 					m_bKeepCurrentCascade = false;
@@ -4251,9 +4251,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 			return m_currentCascade;
 		}
 
-		public boolean isCascadeAutoSwitched()
+		public boolean isServiceAutoSwitched()
 		{
-			return JAPModel.getInstance().isCascadeConnectionChosenAutomatically();
+			return JAPModel.getInstance().isCascadeAutoSwitched();
 		}
 		public boolean isReconnectedAutomatically()
 		{
@@ -4301,7 +4301,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			return m_currentCascade;
 		}
 
-		public void keepCurrentCascade(boolean a_bKeepCurrentCascade)
+		public void keepCurrentService(boolean a_bKeepCurrentCascade)
 		{
 			synchronized (m_alreadyTriedCascades)
 			{

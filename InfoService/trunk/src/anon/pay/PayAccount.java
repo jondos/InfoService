@@ -40,7 +40,6 @@ import anon.crypto.IMyPublicKey;
 import anon.crypto.MyDSAPrivateKey;
 import anon.crypto.MyRSAPrivateKey;
 import anon.crypto.XMLEncryption;
-import anon.infoservice.ImmutableProxyInterface;
 import anon.pay.xml.XMLAccountCertificate;
 import anon.pay.xml.XMLAccountInfo;
 import anon.pay.xml.XMLBalance;

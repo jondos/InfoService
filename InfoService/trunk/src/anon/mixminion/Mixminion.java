@@ -34,6 +34,7 @@ import anon.AnonServerDescription;
 import anon.AnonService;
 import anon.AnonServiceEventListener;
 import anon.infoservice.ImmutableProxyInterface;
+import anon.IServiceContainer;
 
 /** This class implements the Mixminion anonymity service, which can be used to sent anonymous e-mail
  *
@@ -54,7 +55,7 @@ public class Mixminion implements AnonService
 	{
 	}
 
-	public int initialize(AnonServerDescription anonServer)
+	public int initialize(AnonServerDescription anonServer, IServiceContainer a_serviceContainer)
 	{
 		m_serviceDescription = (MixminionServiceDescription)anonServer;
 		return 0;
@@ -78,7 +79,7 @@ public class Mixminion implements AnonService
 	{
 		return m_serviceDescription.getRouteLen();
 	}
-	
+
 	public static String getMyEMail()
 	{
 		return m_serviceDescription.getMyEmail();

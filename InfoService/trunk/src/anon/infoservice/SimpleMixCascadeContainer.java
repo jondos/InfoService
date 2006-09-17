@@ -22,7 +22,7 @@ public class SimpleMixCascadeContainer extends AbstractMixCascadeContainer
 		return m_mixCascade;
 	}
 
-	public boolean isCascadeAutoSwitched()
+	public boolean isServiceAutoSwitched()
 	{
 		return false;
 	}
@@ -37,7 +37,7 @@ public class SimpleMixCascadeContainer extends AbstractMixCascadeContainer
 	}
 
 
-	public void keepCurrentCascade(boolean a_bKeepCurrentCascade)
+	public void keepCurrentService(boolean a_bKeepCurrentCascade)
 	{
 	}
 }
