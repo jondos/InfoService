@@ -962,7 +962,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			public void windowClosing(WindowEvent e)
 			{
-				exitProgram();
+				if (isEnabled())
+				{
+					exitProgram();
+				}
 			}
 
 			public void windowDeiconified(WindowEvent e)
