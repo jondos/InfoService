@@ -163,6 +163,7 @@
   <property category="runtime.0" name="ConfigurationName" value="JAP"/>
   <property category="runtime.0" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
   <property category="runtime.0" name="application.class" value="JAP"/>
+  <property category="runtime.0" name="application.parameters" value="--showDialogFormat"/>
   <property category="runtime.0" name="custom.init_required" value="0"/>
   <property category="runtime.0" name="custom.required.1" value="http"/>
   <property category="runtime.0" name="custom.required.2" value="mac"/>
@@ -736,13 +737,82 @@
     <property category="archiving" name="contentRules.320" value="F:help/seamonkey2_de.jpg;help/seamonkey2_de.jpg"/>
     <property category="archiving" name="contentRules.321" value="F:help/seamonkey2_en.jpg;help/seamonkey2_en.jpg"/>
     <property category="archiving" name="contentRules.322" value="F:help/switchproxy2.jpg;help/switchproxy2.jpg"/>
+    <property category="archiving" name="contentRules.323" value="F:help/firefox1_de.gif;help/firefox1_de.gif"/>
+    <property category="archiving" name="contentRules.324" value="F:help/jap.JAPNewView_anonymometer_de.html;help/jap.JAPNewView_anonymometer_de.html"/>
+    <property category="archiving" name="contentRules.325" value="F:help/jap.JAPNewView_anonymometer_en.html;help/jap.JAPNewView_anonymometer_en.html"/>
+    <property category="archiving" name="contentRules.326" value="F:help/jap.JAPNewView_meter10.gif;help/jap.JAPNewView_meter10.gif"/>
+    <property category="archiving" name="contentRules.327" value="F:help/jap.JAPNewView_meterAnonDeactivated.gif;help/jap.JAPNewView_meterAnonDeactivated.gif"/>
+    <property category="archiving" name="contentRules.328" value="F:help/jap.JAPNewView_meterConnecting.gif;help/jap.JAPNewView_meterConnecting.gif"/>
+    <property category="archiving" name="contentRules.329" value="F:help/jap.JAPNewView_meterNoMeasure.gif;help/jap.JAPNewView_meterNoMeasure.gif"/>
     <property category="archiving" name="contentRules.33" value="F:help/japback.gif;help/japback.gif"/>
+    <property category="archiving" name="contentRules.330" value="F:help/muffin1.gif;help/muffin1.gif"/>
+    <property category="archiving" name="contentRules.331" value="F:help/muffin2.gif;help/muffin2.gif"/>
+    <property category="archiving" name="contentRules.332" value="F:help/noactive_de.html;help/noactive_de.html"/>
+    <property category="archiving" name="contentRules.333" value="F:help/noactive_en.html;help/noactive_en.html"/>
+    <property category="archiving" name="contentRules.334" value="F:help/noactive_konqueror_de.html;help/noactive_konqueror_de.html"/>
+    <property category="archiving" name="contentRules.335" value="F:help/noactive_konqueror_en.html;help/noactive_konqueror_en.html"/>
+    <property category="archiving" name="contentRules.336" value="F:help/noactive_opera1_de.gif;help/noactive_opera1_de.gif"/>
+    <property category="archiving" name="contentRules.337" value="F:help/noactive_opera1_en.gif;help/noactive_opera1_en.gif"/>
+    <property category="archiving" name="contentRules.338" value="F:help/noactive_opera2_de.gif;help/noactive_opera2_de.gif"/>
+    <property category="archiving" name="contentRules.339" value="F:help/noactive_opera2_en.gif;help/noactive_opera2_en.gif"/>
     <property category="archiving" name="contentRules.34" value="F:help/listen_de.html;help/listen_de.html"/>
+    <property category="archiving" name="contentRules.340" value="F:help/noactive_safari_de.html;help/noactive_safari_de.html"/>
+    <property category="archiving" name="contentRules.341" value="F:help/noactive_safari_en.html;help/noactive_safari_en.html"/>
+    <property category="archiving" name="contentRules.342" value="F:help/prefbar1_de.gif;help/prefbar1_de.gif"/>
+    <property category="archiving" name="contentRules.343" value="F:help/prefbar2_de.gif;help/prefbar2_de.gif"/>
+    <property category="archiving" name="contentRules.344" value="F:help/prefbar2_en.gif;help/prefbar2_en.gif"/>
+    <property category="archiving" name="contentRules.345" value="F:help/seamonkey1_de.gif;help/seamonkey1_de.gif"/>
+    <property category="archiving" name="contentRules.346" value="F:help/seamonkey1_en.gif;help/seamonkey1_en.gif"/>
+    <property category="archiving" name="contentRules.347" value="F:help/seamonkey2_de.gif;help/seamonkey2_de.gif"/>
+    <property category="archiving" name="contentRules.348" value="F:help/seamonkey2_en.gif;help/seamonkey2_en.gif"/>
+    <property category="archiving" name="contentRules.349" value="F:help/switchproxy2.gif;help/switchproxy2.gif"/>
     <property category="archiving" name="contentRules.35" value="F:help/listen_en.html;help/listen_en.html"/>
+    <property category="archiving" name="contentRules.350" value="F:help/switchproxy.gif;help/switchproxy.gif"/>
+    <property category="archiving" name="contentRules.351" value="F:help/cookieculler_de.html;help/cookieculler_de.html"/>
+    <property category="archiving" name="contentRules.352" value="F:help/cookieculler_en.html;help/cookieculler_en.html"/>
+    <property category="archiving" name="contentRules.353" value="F:help/cookies_en.html;help/cookies_en.html"/>
+    <property category="archiving" name="contentRules.354" value="F:help/cookies.html;help/cookies.html"/>
+    <property category="archiving" name="contentRules.355" value="F:help/ie6_privacy_de.html;help/ie6_privacy_de.html"/>
+    <property category="archiving" name="contentRules.356" value="F:help/ie6_privacy_en.html;help/ie6_privacy_en.html"/>
+    <property category="archiving" name="contentRules.357" value="F:help/ie_proxyswitcher_de.html;help/ie_proxyswitcher_de.html"/>
+    <property category="archiving" name="contentRules.358" value="F:help/ie_proxyswitcher_en.html;help/ie_proxyswitcher_en.html"/>
+    <property category="archiving" name="contentRules.359" value="F:help/proxyswitcher1.gif;help/proxyswitcher1.gif"/>
     <property category="archiving" name="contentRules.36" value="F:help/meter_de.html;help/meter_de.html"/>
+    <property category="archiving" name="contentRules.360" value="F:help/proxyswitcher2.gif;help/proxyswitcher2.gif"/>
+    <property category="archiving" name="contentRules.361" value="F:help/proxyswitcher3.gif;help/proxyswitcher3.gif"/>
+    <property category="archiving" name="contentRules.362" value="F:help/proxyswitcher4.gif;help/proxyswitcher4.gif"/>
+    <property category="archiving" name="contentRules.363" value="F:help/proxyswitcher5.gif;help/proxyswitcher5.gif"/>
+    <property category="archiving" name="contentRules.364" value="F:help/cookies_de.html;help/cookies_de.html"/>
+    <property category="archiving" name="contentRules.365" value="F:help/firefox2_de.gif;help/firefox2_de.gif"/>
+    <property category="archiving" name="contentRules.366" value="F:help/noactive_konqueror1_de.gif;help/noactive_konqueror1_de.gif"/>
+    <property category="archiving" name="contentRules.367" value="F:help/noactive_konqueror1_en.gif;help/noactive_konqueror1_en.gif"/>
+    <property category="archiving" name="contentRules.368" value="F:help/noactive_konqueror2_de.gif;help/noactive_konqueror2_de.gif"/>
+    <property category="archiving" name="contentRules.369" value="F:help/noactive_konqueror2_en.gif;help/noactive_konqueror2_en.gif"/>
     <property category="archiving" name="contentRules.37" value="F:help/meter_en.html;help/meter_en.html"/>
+    <property category="archiving" name="contentRules.370" value="F:help/noactive_muffin_de.html;help/noactive_muffin_de.html"/>
+    <property category="archiving" name="contentRules.371" value="F:help/noactive_muffin_en.html;help/noactive_muffin_en.html"/>
+    <property category="archiving" name="contentRules.372" value="F:help/noactive_proxomitron_de.html;help/noactive_proxomitron_de.html"/>
+    <property category="archiving" name="contentRules.373" value="F:help/noactive_proxomitron_en.html;help/noactive_proxomitron_en.html"/>
+    <property category="archiving" name="contentRules.374" value="F:help/noactive_safari1_de.gif;help/noactive_safari1_de.gif"/>
+    <property category="archiving" name="contentRules.375" value="F:help/noactive_safari1_en.gif;help/noactive_safari1_en.gif"/>
+    <property category="archiving" name="contentRules.376" value="F:help/proxomitron1_de.gif;help/proxomitron1_de.gif"/>
+    <property category="archiving" name="contentRules.377" value="F:help/proxomitron1_en.gif;help/proxomitron1_en.gif"/>
+    <property category="archiving" name="contentRules.378" value="F:help/proxomitron2_de.gif;help/proxomitron2_de.gif"/>
+    <property category="archiving" name="contentRules.379" value="F:help/proxomitron2_en.gif;help/proxomitron2_en.gif"/>
     <property category="archiving" name="contentRules.38" value="F:help/misc_de.html;help/misc_de.html"/>
+    <property category="archiving" name="contentRules.380" value="F:help/proxomitron3_de.gif;help/proxomitron3_de.gif"/>
+    <property category="archiving" name="contentRules.381" value="F:help/proxomitron4_de.gif;help/proxomitron4_de.gif"/>
+    <property category="archiving" name="contentRules.382" value="F:help/proxomitron5_de.gif;help/proxomitron5_de.gif"/>
+    <property category="archiving" name="contentRules.383" value="F:help/proxomitron5_en.gif;help/proxomitron5_en.gif"/>
+    <property category="archiving" name="contentRules.384" value="F:help/updateJava_de.html;help/updateJava_de.html"/>
+    <property category="archiving" name="contentRules.385" value="F:help/updateJava_en.html;help/updateJava_en.html"/>
+    <property category="archiving" name="contentRules.386" value="F:help/proxomitron/config_de/default.cfg;help/proxomitron/config_de/default.cfg"/>
+    <property category="archiving" name="contentRules.387" value="F:help/proxomitron/config_en/default.cfg;help/proxomitron/config_en/default.cfg"/>
+    <property category="archiving" name="contentRules.388" value="F:help/infoservice_settings_de.html;help/infoservice_settings_de.html"/>
+    <property category="archiving" name="contentRules.389" value="F:help/infoservice_settings_en.html;help/infoservice_settings_en.html"/>
     <property category="archiving" name="contentRules.39" value="F:help/misc_en.html;help/misc_en.html"/>
+    <property category="archiving" name="contentRules.390" value="F:help/security_test_de.html;help/security_test_de.html"/>
+    <property category="archiving" name="contentRules.391" value="F:help/security_test_en.html;help/security_test_en.html"/>
     <property category="archiving" name="contentRules.4" value="F:help/anon_en.html;help/anon_en.html"/>
     <property category="archiving" name="contentRules.40" value="F:help/smile.gif;help/smile.gif"/>
     <property category="archiving" name="contentRules.41" value="F:help/steps_de.html;help/steps_de.html"/>
@@ -967,6 +1037,5 @@
   <file path="src/JAPMessages_en.properties"/>
   <file path="src/JAPMessages_fr.properties"/>
   <file path="src/JAPMessages_pt.properties"/>
-  <file path="src/JAPMessages.properties"/>
   <file path="MANIFEST.MF"/>
 </project>
