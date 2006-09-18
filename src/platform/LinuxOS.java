@@ -30,7 +30,6 @@ package platform;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.net.URL;
 import java.util.Properties;
 
 /**
@@ -59,7 +58,6 @@ public class LinuxOS extends AbstractOS
 		try
 		{
 			properties.load(Runtime.getRuntime().exec("env").getInputStream());
-			System.out.println(properties.getProperty("KDE_FULL_SESSION"));
 			m_bKDE = Boolean.valueOf(properties.getProperty("KDE_FULL_SESSION")).booleanValue();
 		}
 		catch (Exception a_e)
