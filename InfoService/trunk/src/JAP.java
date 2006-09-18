@@ -243,9 +243,14 @@ public class JAP
 		}
 		else
 		{
-			splash = new JAPSplash(new Frame(), splashText);
+			Frame hidden = new Frame();
+			splash = new JAPSplash(hidden, splashText);
 			((JAPSplash)splash).centerOnScreen();
 			((JAPSplash)splash).setVisible(true);
+			hidden.setName(Double.toString(Math.random()));
+			hidden.setTitle(hidden.getName());
+			((JAPSplash)splash).setName(hidden.getName());
+			GUIUtils.setAlwaysOnTop(((JAPSplash)splash), true);
 		}
 
 		// Init Messages....
@@ -393,6 +398,10 @@ public class JAP
 
 		splash.setText(JAPMessages.getString(MSG_INIT_DLL));
 		JAPDll.init();
+		if (splash instanceof JAPSplash)
+		{
+			GUIUtils.setAlwaysOnTop( ( (JAPSplash) splash), true);
+		}
 		// Output some information about the system
 		LogHolder.log(LogLevel.INFO, LogType.MISC,
 			"Welcome! This is version " + JAPConstants.aktVersion + " of JAP.");
@@ -495,7 +504,7 @@ public class JAP
 				frameView.setVisible(true);
 				frameView.toFront();
 			}
-			splash.dispose();
+			((JAPSplash)splash).dispose();
 		}
 
 		//WP: check japdll.dll version

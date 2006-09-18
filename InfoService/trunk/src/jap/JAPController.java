@@ -1301,10 +1301,19 @@ public final class JAPController extends Observable implements IProxyListener, O
 						}
 						else
 						{
+							final JAPDialog.LinkedInformationAdapter onTopAdapter =
+								new JAPDialog.LinkedInformationAdapter()
+							{
+								public boolean isOnTop()
+								{
+									return true;
+								}
+							};
 							final JAPDialog dialog = new JAPDialog((Component)a_splash,
 								"JAP: " + JAPMessages.getString(MSG_ACCPASSWORDENTERTITLE), true);
 							dialog.setResizable(false);
-							dialog.setAlwaysOnTop(true); /** @todo does only work with java 1.5+ at the moment */
+							/** @todo does only work with java 1.5+ as the dll is not loaded at this time */
+							dialog.setAlwaysOnTop(true);
 							tempDialog = dialog;
 							dialog.setDefaultCloseOperation(JAPDialog.HIDE_ON_CLOSE);
 							PasswordContentPane temp = new PasswordContentPane(
@@ -1320,8 +1329,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 								public String readPassword(Object a_message)
 								{
-									a_splash.dispose();
-
 									PasswordContentPane panePassword;
 									String password;
 									panePassword = new PasswordContentPane(
@@ -1349,7 +1356,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 											if (password == null)
 											{
 												if (JAPDialog.showYesNoDialog(
-													dialog, JAPMessages.getString(MSG_LOSEACCOUNTDATA)))
+													dialog, JAPMessages.getString(MSG_LOSEACCOUNTDATA),
+													onTopAdapter))
 												{
 													// user clicked cancel
 													passwordsToTry = null;
@@ -3253,9 +3261,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						getInstance().getViewWindow().dispose();
 					}
-					if (getInstance().m_finishSplash != null)
+					if (getInstance().m_finishSplash instanceof JAPSplash)
 					{
-						m_Controller.m_finishSplash.dispose();
+						((JAPSplash)m_Controller.m_finishSplash).dispose();
 					}
 					LogHolder.log(LogLevel.INFO, LogType.GUI, "View has been disposed. Finishing...");
 					if ( !bShowConfigSaveErrorMsg ) {

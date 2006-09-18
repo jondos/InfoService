@@ -38,18 +38,11 @@ import logging.LogType;
  */
 public class ConsoleSplash implements ISplashResponse
 {
-	private boolean m_bDisposed = false;
-
 	public void setText(String a_message)
 	{
-		if (!m_bDisposed && a_message != null && a_message.trim().length() > 0)
+		if (a_message != null && a_message.trim().length() > 0)
 		{
 			LogHolder.log(LogLevel.ALERT, LogType.MISC, a_message + "...");
 		}
-	}
-
-	public void dispose()
-	{
-		m_bDisposed = true;
 	}
 }
