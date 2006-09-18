@@ -1788,10 +1788,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				m_dlgConfig = new JAPConf(this, m_bWithPayment);
 				setCursor(c);
 			}
-			else
-			{
-				m_dlgConfig.updateValues();
-			}
+
 			if (card != null)
 			{
 				m_dlgConfig.selectCard(card);

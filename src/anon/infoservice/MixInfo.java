@@ -42,6 +42,7 @@ import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.crypto.X509SubjectKeyIdentifier;
 
 /**
  * Holds the information of one single mix.
@@ -180,9 +181,9 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 	  }
 
 	  /* try to get the certificate and CertPath from the Signature node if the call is NOT the IS*/
-	  if(!a_bInfoService)
+	  if (!a_bInfoService)
 	  {
-	      try
+		  try
 		  {
 			  m_mixSignature = SignatureVerifier.getInstance().getVerifiedXml(a_mixNode,
 				  SignatureVerifier.DOCUMENT_CLASS_MIX);
@@ -269,6 +270,11 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 	  else
 	  {
 		  m_lastUpdate = System.currentTimeMillis() - Constants.TIMEOUT_MIX;
+	  }
+
+	  if (m_name == null)
+	  {
+		  m_name = m_mixId;
 	  }
 
 	  m_mixLocation = new ServiceLocation(locationNode, m_mixCertificate);
