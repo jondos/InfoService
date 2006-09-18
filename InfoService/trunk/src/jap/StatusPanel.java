@@ -25,19 +25,22 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package gui;
+package jap;
 
-import jap.JAPConstants;
+
+
+import java.util.Random;
 
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Image;
-import java.util.Random;
-
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+
+import gui.GUIUtils;
+import gui.IStatusLine;
 
 /** A panel which display some status messages, one after each other*/
 public class StatusPanel extends JPanel implements Runnable, IStatusLine

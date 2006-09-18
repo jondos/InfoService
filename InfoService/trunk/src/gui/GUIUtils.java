@@ -509,6 +509,24 @@ public final class GUIUtils
 	}
 
 	/**
+	 * Positions a window on the screen centered to a parent window.
+	 * @param a_window a Window
+	 * @param a_parent the Window's parent window
+	 */
+	public static void centerOnWindow(Window a_window, Window a_parent)
+	{
+		if (a_window == null || a_parent == null)
+		{
+			return;
+		}
+		Dimension parentSize = a_parent.getSize();
+		Dimension ownSize = a_window.getSize();
+		Point parentLocation = a_parent.getLocationOnScreen();
+		a_window.setLocation(parentLocation.x + (parentSize.width / 2) - (ownSize.width / 2),
+							 parentLocation.y + (parentSize.height / 2) - (ownSize.height / 2));
+	}
+
+	/**
 	 * Creates a JTextPane that may be used to simulate a selectable and resizeable JLabel.
 	 * If you do not want the label to be selectable, you may set <i>enabled<i> to <i>false<i>.
 	 * @param a_parent Component

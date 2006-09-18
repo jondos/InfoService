@@ -44,7 +44,6 @@ import java.awt.Component;
 import java.awt.Window;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Point;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -93,11 +92,11 @@ import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
 import forward.server.ForwardServerManager;
 import gui.GUIUtils;
-import gui.JAPDll;
 import gui.JAPMessages;
 import gui.dialog.JAPDialog;
 import gui.dialog.JAPDialog.LinkedCheckBox;
 import gui.dialog.PasswordContentPane;
+import jap.ConsoleSplash;
 import jap.forward.JAPRoutingEstablishForwardedConnectionDialog;
 import jap.forward.JAPRoutingMessage;
 import jap.forward.JAPRoutingSettings;
@@ -108,6 +107,7 @@ import platform.AbstractOS;
 import proxy.DirectProxy;
 import proxy.DirectProxy.AllowUnprotectedConnectionCallback;
 import update.JAPUpdateWizard;
+import java.awt.Frame;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -147,6 +147,20 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public static final String MSG_ASK_SWITCH = JAPController.class.getName() + "_askForSwitchOnError";
 	public static final String MSG_ASK_RECONNECT = JAPController.class.getName() + "_askForReconnectOnError";
 	public static final String MSG_ASK_AUTO_CONNECT = JAPController.class.getName() + "_reallyAutoConnect";
+	public static final String MSG_FINISHING = JAPController.class.getName() + "_finishing";
+	public static final String MSG_SAVING_CONFIG = JAPController.class.getName() + "_savingConfig";
+	public static final String MSG_CLOSING_DIALOGS = JAPController.class.getName() + "_closingDialogs";
+	public static final String MSG_FINISHING_IS_UPDATES = JAPController.class.getName() + "_finishISUpdates";
+	public static final String MSG_FINISHING_ANON = JAPController.class.getName() + "_finishAnon";
+	public static final String MSG_WAITING_IS = JAPController.class.getName() + "_waitingIS";
+	public static final String MSG_WAITING_ANON = JAPController.class.getName() + "_waitingAnon";
+	public static final String MSG_STOPPING_PROXY = JAPController.class.getName() + "_stoppingProxy";
+	public static final String MSG_STOPPING_LISTENER = JAPController.class.getName() + "_stoppingListener";
+
+
+
+
+
 
 	private static final String XML_ELEM_LOOK_AND_FEEL = "LookAndFeel";
 	private static final String XML_ELEM_LOOK_AND_FEELS = "LookAndFeels";
@@ -216,10 +230,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private Vector m_anonServiceListener;
 	private IPasswordReader m_passwordReader;
 	private Object m_finishSync = new Object();
+	private ISplashResponse m_finishSplash;
 
 	private DirectProxy.AllowUnprotectedConnectionCallback m_proxyCallback;
 
-	private static Font m_fontControls;
 	/** Holds the MsgID of the status message after the forwaring server was started.*/
 	private int m_iStatusPanelMsgIdForwarderServerStatus;
 
@@ -666,7 +680,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 *  @param a_strJapConfFile - file containing the Configuration. If null $(user.home)/jap.conf or ./jap.conf is used.
 	 *  @param loadPay does this JAP support Payment ?
 	 */
-	public synchronized void loadConfigFile(String a_strJapConfFile, boolean loadPay, final JAPSplash a_splash)
+	public synchronized void loadConfigFile(String a_strJapConfFile, boolean loadPay,
+											final ISplashResponse a_splash)
 	{
 		String japConfFile = a_strJapConfFile;
 		boolean success = false;
@@ -1286,7 +1301,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						}
 						else
 						{
-							final JAPDialog dialog = new JAPDialog(a_splash,
+							final JAPDialog dialog = new JAPDialog((Component)a_splash,
 								"JAP: " + JAPMessages.getString(MSG_ACCPASSWORDENTERTITLE), true);
 							dialog.setResizable(false);
 							dialog.setAlwaysOnTop(true); /** @todo does only work with java 1.5+ at the moment */
@@ -3084,13 +3099,34 @@ public final class JAPController extends Observable implements IProxyListener, O
 					if (getInstance().getViewWindow() != null)
 					{
 						getInstance().getViewWindow().setEnabled(false);
+						getInstance().m_View.getViewIconified().setEnabled(false);
+					}
+
+					getInstance().m_finishSplash.setText(JAPMessages.getString(MSG_SAVING_CONFIG));
+					if (getInstance().m_finishSplash instanceof JAPSplash)
+					{
+						if (getInstance().getViewWindow() instanceof AbstractJAPMainView &&
+							getInstance().getViewWindow().isVisible())
+						{
+							GUIUtils.centerOnWindow( (JAPSplash) getInstance().m_finishSplash,
+								(AbstractJAPMainView) m_Controller.m_View);
+						}
+						else
+						{
+							( (JAPSplash) getInstance().m_finishSplash).centerOnScreen();
+						}
+						((JAPSplash)getInstance().m_finishSplash).setVisible(true);
 					}
 
 					boolean error = m_Controller.saveConfigFile();
 					if (error && bShowConfigSaveErrorMsg)
 					{
-						JAPDialog.showErrorDialog(getInstance().getViewWindow(),
-												  JAPMessages.getString(MSG_ERROR_SAVING_CONFIG,
+						Window parent = getInstance().getViewWindow();
+						if (getInstance().m_finishSplash instanceof JAPSplash)
+						{
+							parent = (JAPSplash)getInstance().m_finishSplash;
+						}
+						JAPDialog.showErrorDialog(parent, JAPMessages.getString(MSG_ERROR_SAVING_CONFIG,
 							JAPModel.getInstance().getConfigFile() ), LogType.MISC);
 					}
 
@@ -3098,6 +3134,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					JAPModel.getInstance().setAutoReConnect(false);
 					JAPModel.getInstance().setCascadeAutoSwitch(false);
 
+					getInstance().m_finishSplash.setText(JAPMessages.getString(MSG_CLOSING_DIALOGS));
 					JAPDialog.setConsoleOnly(true); // do not show any dialogs now
 
 					if (!bShowConfigSaveErrorMsg)
@@ -3113,6 +3150,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 						{
 							LogHolder.log(LogLevel.NOTICE, LogType.THREAD,
 										  "Stopping InfoService auto-update threads...");
+							getInstance().m_finishSplash.setText(
+								JAPMessages.getString(MSG_FINISHING_IS_UPDATES));
 							m_Controller.m_feedback.stop();
 							m_Controller.m_MixCascadeUpdater.stop();
 							m_Controller.m_InfoServiceUpdater.stop();
@@ -3132,6 +3171,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 						{
 							try
 							{
+								getInstance().m_finishSplash.setText(
+									JAPMessages.getString(MSG_FINISHING_ANON));
 								m_Controller.setAnonMode(false);
 								// Wait until anon mode is disabled");
 								synchronized (m_Controller.m_finishSync)
@@ -3166,6 +3207,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						try
 						{
+							if (finishIS.isAlive())
+							{
+								getInstance().m_finishSplash.setText(JAPMessages.getString(MSG_WAITING_IS));
+							}
+							if (finishAnon.isAlive())
+							{
+								getInstance().m_finishSplash.setText(JAPMessages.getString(MSG_WAITING_ANON));
+							}
 							finishIS.join();
 							finishAnon.join();
 						}
@@ -3177,6 +3226,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					try
 					{
 						LogHolder.log(LogLevel.NOTICE, LogType.THREAD, "Shutting down direct proxy...");
+						getInstance().m_finishSplash.setText(JAPMessages.getString(MSG_STOPPING_PROXY));
 						m_Controller.m_proxyDirect.shutdown();
 					}
 					catch (NullPointerException a_e)
@@ -3185,6 +3235,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 					try
 					{
+						getInstance().m_finishSplash.setText(JAPMessages.getString(MSG_STOPPING_LISTENER));
 						m_Controller.m_socketHTTPListener.close();
 					}
 					catch (Exception a_e)
@@ -3196,9 +3247,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 					System.getProperties().put( "socksProxyHost" ,"localhost");
 					// do not show any dialogs in this state
 					getInstance().switchViewWindow(true);
+					getInstance().m_finishSplash.setText(JAPMessages.getString(MSG_FINISHING));
+
 					if (getInstance().getViewWindow() != null)
 					{
 						getInstance().getViewWindow().dispose();
+					}
+					if (getInstance().m_finishSplash != null)
+					{
+						m_Controller.m_finishSplash.dispose();
 					}
 					LogHolder.log(LogLevel.INFO, LogType.GUI, "View has been disposed. Finishing...");
 					if ( !bShowConfigSaveErrorMsg ) {
@@ -3460,6 +3517,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 		synchronized (SYNC_VIEW)
 		{
 			m_View = v;
+			if (m_View instanceof Frame)
+			{
+				m_finishSplash = new JAPSplash((Frame)m_View, JAPMessages.getString(MSG_FINISHING));
+			}
+			else
+			{
+				m_finishSplash = new ConsoleSplash();
+			}
 		}
 	}
 

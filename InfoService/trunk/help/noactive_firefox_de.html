@@ -9,10 +9,62 @@
 
 <B>Vermeiden von Datenspuren im Internet mit Mozilla Firefox</B><P>
 
-F&uuml;r Mozilla Firefox gibt es ein Plugin, welches diese Aufgaben &uuml;bernehmen kann. Bitte lesen Sie <A href="noactive_prefbar_de.html">diese Anleitung</A> f&uuml;r Genaueres.
+F&uuml;r Mozilla Firefox gibt es ein Plugin, welches diese Aufgaben &uuml;bernehmen kann (Alternative: <A href="#Manuell">Einstellungen ohne PrefBar</A>):
+<H2>PrefBar</H2>
+
+<B>PrefBar so konfigurieren, dass die Anonymit&auml;t erh&ouml;ht wird</B>
 <P>
+Webseiten k&ouml;nnen Inhalte anbieten, die Ihre Identit&auml;t aufdecken k&ouml;nnen, obwohl sie mit JAP anonym surfen. Das kann z.B. &uuml;ber JavaScript oder auch Java geschehen.<br>
+Um diese Inhalte zu blocken, kann PrefBar eingesetzt werden. PrefBar ist ein Plugin f&uuml;r Firefox.
+<P>
+<B>Installation von PrefBar</B>
+<UL>
+	<LI><B>&Ouml;ffnen Sie ihren Browser</B><BR>
+	<P>
+	<LI><B>&Ouml;ffnen Sie die Homepage von PrefBar</B><BR><P>
+	Gehen Sie dazu auf <A href="http://prefbar.mozdev.org/installation.html">diese Seite</A>.
+	<P>
+	<LI><B>Installieren Sie PrefBar</B><BR><P>
+	Klicken Sie auf den Link f&uuml;r einen der beiden Installer. Dabei wird m&ouml;glicherweise ein Popup oder ein &auml;hnlicher Hinweis angezeigt, der entweder fragt ob die Installation zugelassen werden darf oder nur aussagt dass die Installation geblockt wurde.
+	In jedem Fall k&ouml;nnen Sie dabei einstellen, dass die Installation fortgesetzt werden soll. In Firefox m&uuml;ssen sie eventuell Installationen f&uuml;r diese Seite explizit zulassen.
+	<br>Nach der Installation sollten Sie ihren Browser neu starten.
+	<P>
+</UL>
+
+<B>Einstellungen f&uuml;r PrefBar</B>
+<UL>
+	<LI><B>&Ouml;ffnen Sie ihren Browser</B><BR><P>
+	Sie sollten jetzt eine neue Toolbar sehen:<P>
+	<CENTER><IMG SRC="prefbar1_de.gif"></CENTER>
+	<P>
+	<LI><B>Einstellungen vornehmen</B><BR><P>
+	Klicken Sie auf <i>Anpassen</i>. Daraufhin sehen Sie folgendes Fenster:
+	<P>
+	<CENTER><IMG SRC="prefbar2_de.gif"></CENTER>
+	<P>
+	W&auml;hlen Sie aus den verf&uuml;gbaren Elementen das Element <i>Java</i> und klicken Sie auf <i>Hinzuf&uuml;gen -></i>. Wiederholen Sie diesen Schritt f&uuml;r das Element <i>Referrer senden</i>. Nach einem Klick auf <i>OK</i> sehen Sie in der Toolbar noch eine Checkbox f&uuml;r <i>Java</i> und <i>Referrer senden</i>.
+	<br>Sie k&ouml;nnen nat&uuml;rlich auch noch andere Elemente hinzuf&uuml;gen bzw. entfernen, je nachdem was Sie f&uuml;r n&uuml;tzlich halten.
+	<P>
+	<LI><B>Inhalte blockieren</B><BR><P>
+	F&uuml;r die Checkboxen gilt: Wenn sie <b>angehakt</b> sind, wird dieser Inhalt <b>nicht</b> blockiert. Wollen Sie z.B. Javascript <b>blockieren</b>, m&uuml;ssen Sie Javascript <b>abhaken</b>.
+	<br>Es wird dringend empfohlen, <i>Java</i>, <i>JavaScript</i> und <i>Referrer senden</i> zu deaktivieren.
+	<P>
+	
+</UL>
+<B>Hinweis:</B> PrefBar k&ouml;nnen Sie mit F8 anzeigen oder verstecken.
+<P>
+<a name="Manuell"><b>Einstellungen ohne PrefBar</b></a><br>
+Wenn Sie PrefBar nicht verwenden wollen oder k&ouml;nnen, so sollten Sie folgende Einstellungen vornehmen:
+&Ouml;ffnen Sie im Men&uuml; <i>Extras</i> den Punkt <i>Einstellungen</i>.
+<UL>
+<LI><B>Cookies</B><br>
+W&auml;hlen Sie den Tab <i>Datenschutz</i> und haken Sie <i>Cookies akzeptieren</i> an. W&auml;hlen Sie bei <i>Cookies behalten:</i> die Option <i>bis Firefox geschlossen wird</i>. Dadurch k&ouml;nnen Sie alle Seiten besuchen, die zwingend Cookies voraussetzen, k&ouml;nnen jedoch durch Cookies nicht wiedererkannt werden.
+<P>
+<LI><B>Java & JavaScript</B><br>
+W&auml;hlen Sie den Tab <i>Inhalt</i>. Haken Sie <i>Java aktivieren</i> und <i>JavaScript aktivieren</i> ab.
+</UL>
 <b>Hinweis:</b> Das sind lediglich grundlegende Einstellungen. Die Verwendung eines <A href="noactive_general_de.html">Filterproxys</A> erm&ouml;glicht mehr Einstellungen zum Blockieren von Inhalten.
-<br>Das Plugin <A href="cookieculler_de.html">Cookie Culler</A> erm&ouml;glicht das Beseitigen von unerw&uuml;nschten sowie das Verwenden von gew&uuml;nschten Cookies
+<br>Das Plugin <A href="cookieculler_de.html">Cookie Culler</A> erm&ouml;glicht das Beseitigen von unerw&uuml;nschten sowie das Verwenden von gew&uuml;nschten Cookies.
 <!--#include virtual="/footer.html"-->
 
 </body>

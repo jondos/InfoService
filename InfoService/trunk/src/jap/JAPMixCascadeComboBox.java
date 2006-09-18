@@ -25,10 +25,11 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package gui;
+package jap;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -37,12 +38,11 @@ import javax.swing.ListCellRenderer;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 
-import anon.infoservice.MixCascade;
-import jap.JAPConstants;
-
-import java.awt.Dimension;
 import anon.infoservice.Database;
+import anon.infoservice.MixCascade;
 import anon.infoservice.NewCascadeIDEntry;
+import gui.GUIUtils;
+import gui.JAPMessages;
 
 public class JAPMixCascadeComboBox extends JComboBox
 {

@@ -1,0 +1,53 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="xhelpfrms.css">
+</head>
+<body>
+<!--#include virtual="/header.html"-->
+<H2>Einstellungen des Browsers / Filters testen</H2>
+Im folgenden verwenden wir Testseiten, die uns erkennen lassen, ob der Browser (und, soweit vorhanden, der Filterproxy) richtig konfiguriert wurde.
+<br>Sie k&ouml;nnen beide Testseiten anschauen oder sich f&uuml;r eine entscheiden.<P>
+<B>Seite 1</B><br>
+<A href="http://www.leader.ru/secure/who.html">Diese Seite</A> gibt einen schnellen &Uuml;berblick &uuml;ber abgefangene HEADER-Informationen Ihres Browsers. Unter der &Uuml;berschrift <i>Collected Information</i> k&ouml;nnen Sie diese Informationen einsehen.
+<br>Um erkennen zu k&ouml;nnen, welche Wirkung die Einstellungen haben, beachten Sie bitte folgendes Vorgehen:
+<OL>
+	<LI>Besuchen Sie die Seite zuerst ohne JAP und <A href="noactive_general_de.html">Filterproxy</A> bzw. den <A href="noactive_de.html">korrekten Browsereinstellungen</A>. Schreiben Sie die Werte der folgenden Eigenschaften auf (oder merken Sie sie sich):
+	<br><br>
+	<OL type=I>
+		<LI><i>Reported remote address</i> (zeigt jetzt Ihre externe IP an)
+		<LI><i>Browser</i> (Die genaue Bezeichnung des Browsers samt Versionsnummer)
+		<LI><i>OS</i> (Ihr Betriebssystem)
+		<LI><i>Referer</i> (Die Seite, von der aus Sie auf diese Seite gekommen sind; wird m&ouml;glicherweise nicht angezeigt)
+	</OL>
+	Beachten Sie auch, wie viel Information &uuml;ber Ihr System unter dem Punkt <i>Additional Information</i> gesammelt wurde.
+	<P>
+	<LI>Besuchen Sie die Seite nun mit aktiviertem JAP (und Filterproxy).
+	<OL type=I>
+		<LI>Sollte nicht die gleiche IP sein wie vorher
+		<LI>Die Daten sollten verf&auml;lscht (Firefox -> Opera) oder zumindest deutlich weniger detailliert sein.
+		<LI>Auch hier sollten falsche oder weniger detaillierte Informationen stehen.
+		<LI>Der Referer sollte entweder fehlen oder die aktuelle Seite anzeigen, nicht jedoch die Seite, die sie vorher besucht haben.
+	</OL>
+	Die zus&auml;tzlichen Informationen unter <i>Additional Information</i> sollten fast g&auml;nzlich verschwunden sein.
+</OL>
+<B>Seite 2</B><br>
+<A href="http://www.gurusheaven.de/index_sicherheit.html">Diese Seite</A> f&uuml;hrt ebenfalls Tests durch und gibt dazu Erkl&auml;rungen ab.
+<br>Klicken Sie links im Men&uuml; auf <i>Anonymit&auml;ts-Test</i> und dann auf den Unterpunkt <i>Zum Anonymit&auml;ts-Test</i>. Auch diese Seite sollte man einmal JAP und <A href="noactive_general_de.html">Filterproxy</A> bzw. den <A href="noactive_de.html">korrekten Browsereinstellungen</A> betrachten und einmal ohne, um den Unterschied sehen zu k&ouml;nnen.
+<br>Besonders bei den folgenden Punkten sollten Unterschiede zu sehen sein:
+<UL>
+	<LI><b>Detaillierte Anzeige Deiner Bildschirmeinstellungen:</b> Hier sollten die angezeigten Werte falsch sein.
+	<LI><b>Anzeige Deiner (&ouml;ffentlichen) IP-Adresse:</b> Diese Adresse sollte nicht die eigene externe IP-Adresse sein.
+	<LI><b>Anzeige Deiner "echten", privaten IP Adresse trotz NAT an der Firewall:</b> Dieses Java-Applet sollte deaktiviert worden sein. Bei Verwendung von Proxomitron wird ein Hinweis dazu angezeigt.
+	<LI><b>Anzeige des Referers (Referrer):</b> Der Referer sollte, wie dort beschrieben, "http://www.gurusheaven.de/security/anonymitaets_test.shtml" sein. Auch ein nicht vorhandener Referer ist besser als ein "echter", kann aber in seltenen F&auml;llen Probleme bereiten.
+</UL>
+<P>
+Sollten die Testergebnisse nicht den beschriebenen Anforderungen entsprechen, so kann das u.a. folgende Ursachen haben:
+<UL>
+	<LI>Es wird kein <A href="noactive_general_de.html">Filterproxy</A> verwendet.
+	<LI>Der Filterproxy verwendet nicht die richtigen Filter.
+	<LI>Der Filterproxy benutzt nicht JAP als externen Proxy.
+	<LI>Der Browser benutzt nicht den Filterproxy als Proxy.
+</UL>
+<!--#include virtual="/footer.html"-->
+</body>
+</html>

@@ -35,6 +35,7 @@
 import java.security.SecureRandom;
 import java.awt.Frame;
 import java.util.Hashtable;
+import java.util.Locale;
 
 import anon.client.crypto.KeyPool;
 import gui.JAPAWTMsgBox;
@@ -48,6 +49,7 @@ import jap.JAPDebug;
 import jap.JAPModel;
 import jap.JAPNewView;
 import jap.JAPSplash;
+import jap.ConsoleSplash;
 import jap.IJAPMainView;
 import jap.ConsoleJAPMainView;
 import jap.JAPViewIconified;
@@ -55,6 +57,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import jap.AbstractJAPMainView;
+import jap.ISplashResponse;
 
 /** This is the main class of the JAP project. It starts everything. It can be inherited by another
  *  class that wants to initialize platform dependend features, e.g. see
@@ -65,8 +68,20 @@ public class JAP
 {
 	private static final String MSG_ERROR_NEED_NEWER_JAVA = "errorNeedNewerJava";
 	private static final String MSG_GNU_NOT_COMPATIBLE = JAP.class.getName() +  "_gnuNotCompatible";
+	private static final String MSG_LOADING_INTERNATIONALISATION = JAP.class.getName() +
+		"_loadingInternationalisation";
+	private static final String MSG_LOADING_SETTINGS = JAP.class.getName() +
+		"_loadingSettings";
+	private static final String MSG_STARTING_CONTROLLER = JAP.class.getName() +
+		"_startingController";
+	private static final String MSG_INIT_DLL = JAP.class.getName() +  "_initLibrary";
+	private static final String MSG_INIT_VIEW = JAP.class.getName() +  "_initView";
+	private static final String MSG_INIT_ICON_VIEW = JAP.class.getName() +  "_initIconView";
+	private static final String MSG_INIT_RANDOM = JAP.class.getName() +  "_initRandom";
+	private static final String MSG_FINISH_RANDOM = JAP.class.getName() +  "_finishRandom";
+	private static final String MSG_START_LISTENER = JAP.class.getName() +  "_startListener";
 
-	// um pay funktionalitaet ein oder auszuschalten
+
 	private boolean bConsoleOnly = false;
 	private boolean loadPay = true;
 	private JAPController m_controller;
@@ -207,15 +222,30 @@ public class JAP
 			}
 		}
 		// Show splash screen
-		JAPSplash splash = null;
-		if (bConsoleOnly)
+		ISplashResponse splash;
+		String splashText;
+		Locale defaultLocale = Locale.getDefault();
+		// splashText = JAPMessages.getString(MSG_LOADING_INTERNATIONALISATION);
+		if (defaultLocale.getLanguage().equals("de"))
 		{
-			JAPDialog.setConsoleOnly(true);
+			splashText = "Lade Internationalisierung";
 		}
 		else
 		{
-			splash = new JAPSplash(new Frame());
-			splash.setVisible(true);
+			splashText = "Loading internationalisation";
+		}
+
+		if (bConsoleOnly)
+		{
+			JAPDialog.setConsoleOnly(true);
+			splash = new ConsoleSplash();
+			splash.setText(splashText);
+		}
+		else
+		{
+			splash = new JAPSplash(new Frame(), splashText);
+			((JAPSplash)splash).centerOnScreen();
+			((JAPSplash)splash).setVisible(true);
 		}
 
 		// Init Messages....
@@ -223,6 +253,8 @@ public class JAP
 		{
 			JAPMessages.init(JAPConstants.MESSAGESFN);
 		}
+
+		splash.setText(JAPMessages.getString(MSG_INIT_RANDOM));
 		// initialise secure random generators
 		Thread secureRandomThread = new Thread()
 		{
@@ -264,10 +296,7 @@ public class JAP
 		// Set the default Look-And-Feel
 		if (!bConsoleOnly && !os.regionMatches(true, 0, "mac", 0, 3))
 		{
-			LogHolder.log(
-				LogLevel.DEBUG,
-				LogType.GUI,
-				"JAP:Setting Cross Platform Look-And-Feel!");
+			LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Setting Cross Platform Look-And-Feel!");
 			try
 			{
 				javax.swing.UIManager.setLookAndFeel(
@@ -275,10 +304,8 @@ public class JAP
 			}
 			catch (Exception e)
 			{
-				LogHolder.log(
-					LogLevel.EXCEPTION,
-					LogType.GUI,
-					"JAP:Exception while setting Cross Platform Look-And-Feel!");
+				LogHolder.log(LogLevel.EXCEPTION, LogType.GUI,
+							  "Exception while setting Cross Platform Look-And-Feel!");
 			}
 		}
 		//deactivate socks proxy settings if given by the os
@@ -316,10 +343,10 @@ public class JAP
 		 "JAP:Exception while trying to deactivate SOCKS proxy settings: " + t.getMessage());
 		  }
 		 */
-		// um pay funktionalitaet ein oder auszuschalten
 
 
 		// Create the controller object
+		splash.setText(JAPMessages.getString(MSG_STARTING_CONTROLLER));
 		m_controller = JAPController.getInstance();
 		String cmdArgs = "";
 		if (m_temp != null)
@@ -361,26 +388,21 @@ public class JAP
 
 		JAPModel.getInstance().setForwardingStateModuleVisible(forwardingStateVisible);
 		// load settings from config file
+		splash.setText(JAPMessages.getString(MSG_LOADING_SETTINGS));
 		m_controller.loadConfigFile(configFileName, loadPay, splash);
+
+		splash.setText(JAPMessages.getString(MSG_INIT_DLL));
 		JAPDll.init();
 		// Output some information about the system
-		LogHolder.log(
-			LogLevel.INFO,
-			LogType.MISC,
-			"JAP:Welcome! This is version " + JAPConstants.aktVersion + " of JAP.");
-		LogHolder.log(
-			LogLevel.INFO,
-			LogType.MISC,
-			"JAP:Java " + javaVersion + " running on " + os + ".");
+		LogHolder.log(LogLevel.INFO, LogType.MISC,
+			"Welcome! This is version " + JAPConstants.aktVersion + " of JAP.");
+		LogHolder.log(LogLevel.INFO, LogType.MISC, "Java " + javaVersion + " running on " + os + ".");
 		if (mrjVersion != null)
 		{
-			LogHolder.log(
-				LogLevel.INFO,
-				LogType.MISC,
-				"JAP:MRJ Version is " + mrjVersion + ".");
-
+			LogHolder.log(LogLevel.INFO, LogType.MISC, "MRJ Version is " + mrjVersion + ".");
 		}
 
+		splash.setText(JAPMessages.getString(MSG_INIT_VIEW));
 		IJAPMainView view;
 		if (!bConsoleOnly)
 		{
@@ -405,6 +427,7 @@ public class JAP
 		// Create the iconified view
 		if (!bConsoleOnly)
 		{
+			splash.setText(JAPMessages.getString(MSG_INIT_ICON_VIEW));
 			JAPViewIconified viewIconified;
 			viewIconified = new JAPViewIconified((AbstractJAPMainView)view);
 			// Register the views where they are needed
@@ -423,6 +446,7 @@ public class JAP
 			bSystray = true;
 		}
 
+		splash.setText(JAPMessages.getString(MSG_FINISH_RANDOM));
 		try
 		{
 			secureRandomThread.join();
@@ -432,6 +456,7 @@ public class JAP
 			LogHolder.log(LogLevel.NOTICE, LogType.CRYPTO, a_e);
 		}
 
+		splash.setText(JAPMessages.getString(MSG_START_LISTENER));
 		if (!m_controller.startHTTPListener())
 		{
 			view.disableSetAnonMode();
@@ -481,7 +506,7 @@ public class JAP
 
 		if (bConsoleOnly)
 		{
-		try
+			try
 			{
 				String entered = null;
 				while (true)

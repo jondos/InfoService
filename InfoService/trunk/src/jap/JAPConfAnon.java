@@ -88,7 +88,7 @@ import gui.JAPHelp;
 import gui.JAPJIntField;
 import gui.JAPMessages;
 import gui.MapBox;
-import gui.ServerListPanel;
+
 import gui.dialog.JAPDialog;
 import jap.forward.JAPRoutingMessage;
 import logging.LogHolder;
