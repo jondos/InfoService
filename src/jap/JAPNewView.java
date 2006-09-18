@@ -372,7 +372,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				final MixCascade cascade = (MixCascade) m_comboAnonServices.getSelectedItem();
 				if (cascade != null)
 				{
-					SwingUtilities.invokeLater(new Thread()
+					SwingUtilities.invokeLater(new Runnable()
 					{
 						public void run()
 						{
@@ -2066,15 +2066,16 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_progressOwnTrafficActivitySmall.setValue(c);
 //			ownTrafficChannelsProgressBar.setString(String.valueOf(c));
 	}
-
+private int instances = 0;
 	public void transferedBytes(final long c, final int protocolType)
 	{
 		m_ViewIconified.transferedBytes(c, protocolType);
-
-		SwingUtilities.invokeLater(new Thread()
+		instances++;
+		Runnable transferedBytesThread = new Runnable()
 		{
 			public void run()
 			{
+				System.out.println(instances);
 				// Nr of Bytes transmitted anonymously
 				if (protocolType == IProxyListener.PROTOCOL_WWW)
 				{
@@ -2101,8 +2102,18 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				m_labelOwnTrafficBytes.setText(s);
 				m_labelOwnTrafficBytesSmall.setText(s);
 				JAPDll.onTraffic();
+				instances--;
 			}
-		});
+		};
+		if (SwingUtilities.isEventDispatchThread())
+		{
+			transferedBytesThread.run();
+		}
+		else
+		{
+			SwingUtilities.invokeLater(transferedBytesThread);
+		}
+		transferedBytesThread = null;
 	}
 
 	public Dimension getPreferredSize()
