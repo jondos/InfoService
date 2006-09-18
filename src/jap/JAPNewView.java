@@ -2069,6 +2069,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	public void transferedBytes(final long c, final int protocolType)
 	{
+		m_ViewIconified.transferedBytes(c, protocolType);
+
 		SwingUtilities.invokeLater(new Thread()
 		{
 			public void run()
