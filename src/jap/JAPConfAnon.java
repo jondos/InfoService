@@ -1159,6 +1159,12 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			fetchCascades(false, false, true);
 		}
+
+		int index = m_listMixCascade.getFirstVisibleIndex();
+		if (m_listMixCascade.getSelectedIndex() < 0 && index >= 0)
+		{
+			m_listMixCascade.setSelectedIndex(index);
+		}
 	}
 
 	public void fontSizeChanged(final JAPModel.FontResize a_resize, final JLabel a_dummyLabel)

@@ -1794,10 +1794,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				m_dlgConfig.selectCard(card);
 			}
 
-
-			//SwingUtilities.updateComponentTreeUI(m_dlgConfig.getContentPane());
-			//SwingUtilities.updateComponentTreeUI(m_dlgConfig.getOwner());
-
 			m_dlgConfig.setVisible(true);
 		}
 	}
@@ -1814,7 +1810,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 		catch (Exception e)
 		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, "JAPView:Hm.. Error by Pack - Has To be fixed!!");
+			LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, "Hm.. Error by Pack - Has To be fixed!!");
 		}
 	}
 
