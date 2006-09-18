@@ -98,6 +98,7 @@ import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
 import update.JAPUpdateWizard;
+import gui.AWTUpdateQueue;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver, Observer
@@ -1392,6 +1393,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					}
 				}
 			}
+			updateValues(false);
 		}
 		else if (a_observable == Database.getInstance(CascadeIDEntry.class))
 		{
@@ -2066,16 +2068,24 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_progressOwnTrafficActivitySmall.setValue(c);
 //			ownTrafficChannelsProgressBar.setString(String.valueOf(c));
 	}
-private int instances = 0;
+/*
+	private final AWTUpdateQueue TRANSFERED_BYTES_UPDATE_QUEUE = new AWTUpdateQueue(new Runnable()
+		{
+			public void run()
+			{
+				onUpdateValues();
+			}
+	});
+*/
+
 	public void transferedBytes(final long c, final int protocolType)
 	{
 		m_ViewIconified.transferedBytes(c, protocolType);
-		instances++;
+
 		Runnable transferedBytesThread = new Runnable()
 		{
 			public void run()
 			{
-				System.out.println(instances);
 				// Nr of Bytes transmitted anonymously
 				if (protocolType == IProxyListener.PROTOCOL_WWW)
 				{
@@ -2086,6 +2096,7 @@ private int instances = 0;
 					m_lTrafficOther = c;
 
 				}
+
 				String unit = JAPUtil.formatBytesValueOnlyUnit(m_lTrafficWWW);
 				m_labelOwnTrafficUnitWWW.setText(unit);
 				String s = JAPUtil.formatBytesValueWithoutUnit(m_lTrafficWWW);
@@ -2102,7 +2113,6 @@ private int instances = 0;
 				m_labelOwnTrafficBytes.setText(s);
 				m_labelOwnTrafficBytesSmall.setText(s);
 				JAPDll.onTraffic();
-				instances--;
 			}
 		};
 		if (SwingUtilities.isEventDispatchThread())

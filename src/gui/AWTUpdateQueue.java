@@ -89,7 +89,7 @@ public class AWTUpdateQueue
 
 	private void doUpdateQueue()
 	{
-		Thread run = new Thread()
+		Runnable run = new Runnable()
 		{
 			public void run()
 			{
