@@ -581,7 +581,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 				}
 
 				final Vector exceptionCache = new Vector();
-				Thread loginThread = new Thread("Login Thread")
+				Thread loginThread = new Thread(new Runnable()
 				{
 					public void run()
 					{
@@ -595,7 +595,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 							exceptionCache.addElement(a_e);
 						}
 					}
-				};
+				}, "Login Thread");
 				loginThread.start();
 				try
 				{
