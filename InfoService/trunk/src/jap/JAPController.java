@@ -2298,7 +2298,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 				// this is needed to interrupt the connection process
 				if (m_proxyDirect == null)
 				{
-					msgIdConnect = m_View.addStatusMsg(JAPMessages.getString(MSG_FINISHING_ANON),
+					msgIdConnect = m_View.addStatusMsg(JAPMessages.getString(
+						"setAnonModeSplashDisconnect"),
 						JAPDialog.MESSAGE_TYPE_INFORMATION, false);
 				}
 				try
@@ -2661,7 +2662,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 					AnonProxy proxyAnon = m_proxyAnon;
 					if (proxyAnon != null)
 					{
-						msgIdConnect = m_View.addStatusMsg(JAPMessages.getString(MSG_FINISHING_ANON),
+						msgIdConnect = m_View.addStatusMsg(JAPMessages.getString(
+											  "setAnonModeSplashDisconnect"),
 							JAPDialog.MESSAGE_TYPE_INFORMATION, false);
 						proxyAnon.stop();
 						m_View.removeStatusMsg(msgIdConnect);
