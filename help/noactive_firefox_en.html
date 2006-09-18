@@ -9,8 +9,59 @@
 
 <B>Avoid data trails on the internet with Mozilla Firefox</B><P>
 
-For Mozilla Firefox, there is a useful plugin which provides such features. Please see <A href="noactive_prefbar_en.html">this howto</A> for more details.
+For Mozilla Firefox, there is a useful plugin which provides such features (Alternatively: <A href="#manual">Settings without PrefBar</A>):
+<H2>PrefBar</H2>
+<B>How to configure PrefBar so that it will enhance your anonymity</B>
 <P>
+Websites could offer content that will reveal your identity even when surfing anonymously with JAP. Examples for such contents are JavaScript and Java.
+<br>PrefBar may be used to block such content. PrefBar is a plugin suitable for Firefox.
+<P>
+<B>Installation of PrefBar</B>
+<UL>
+	<LI><B>Open your browser</B><BR>
+	<P>
+	<LI><B>Open PrefBar's Homepage</B><BR><P>
+	Go to <A href="http://prefbar.mozdev.org/installation.html">this site</A>.
+	<P>
+	<LI><B>Install PrefBar</B><BR><P>
+	Klick on the link for one of both installers. Doing that, a popup or similar message may appear asking for your permission to perform an installation or just informing you that installation has been blocked.
+	In both cases you should be able to decide that installation should be proceeded. To do so in Firefox, you may have to allow installations from this site explicitly.
+	<br>After installation you will probably have to restart your browser.
+	<P>
+</UL>
+
+<B>Settings for PrefBar</B>
+<UL>
+	<LI><B>Open your Browser</B><BR><P>
+	Now you should see a new toolbar:<P>
+	<CENTER><IMG SRC="prefbar1_de.gif"></CENTER>
+	<P>
+	<LI><B>Settings</B><BR><P>
+	Click on <i>Anpassen</i>. Now you should see this window:
+	<P>
+	<CENTER><IMG SRC="prefbar2_en.gif"></CENTER>
+	<P>
+	Choose the element <i>Java</i> from available elements and click on <i>Add items -></i>. Repeat this step for the element <i>Referrer senden</i>. Now click on <i>OK</i> and you should see new checkboxes for <i>Java</i> and <i>Referrer senden</i> in your toolbar.
+	<br>You may of course add or remove items, depending on what you consider useful.
+	<P>
+	<LI><B>Block content</B><BR><P>
+	The following rule applies to these checkboxes: If they are <b>checked</b>, this content will <b>not</b> be blocked. So if you want to <b>block</b> JavaScript, you will have to <b>uncheck</b> it's checkbox.
+	<br>It is highly recommended to uncheck <i>Java</i>, <i>JavaScript</i> and <i>Referrer senden</i>.
+	<P>
+	
+</UL>
+<B>Hint:</B> Use F8 to toggle PrefBar hidden or shown.
+<P>
+<a name="manual"><b>Settings without PrefBar</b></a><br>
+If you cannot use PrefBar or don't want to, you should apply the following settings:
+Open <i>Options</i> in Menu <i>Tools</i>.
+<UL>
+<LI><B>Cookies</B><br>
+Choose Tab <i>Privacy</i> and activate <i>Allow sites to set Cookies</i>. At <i>Keep Cookies:</i>, choose the option <i>until I close Firefox</i> from the drop-down menu. This way you won't have trouble with any sites since you accept them all, but you cannot be tracked.
+<P>
+<LI><B>Java & JavaScript</B><br>
+Choose Tab <i>Content</i>. Unselect <i>Enable Java</i> and <i>Enable JavaScript</i>.
+</UL>
 <b>Note:</b> These are basic settings. Using a <A href="noactive_general_en.html">filter proxy</A> will offer more options for blocking content.
 <br><A href="cookieculler_en.html">Cookie Culler</A> is a plugin which allows deletion of unwanted cookies while keeping wanted cookies.
 <!--#include virtual="/footer_en.html"-->

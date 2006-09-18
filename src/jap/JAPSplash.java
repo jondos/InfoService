@@ -35,7 +35,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
-import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.MediaTracker;
@@ -43,11 +42,9 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.Window;
-import java.util.Locale;
+import java.awt.Frame;
 
-import gui.JAPMessages;
-
-final public class JAPSplash extends Window
+final public class JAPSplash extends Window implements ISplashResponse
 {
 	private static final String IMGPATHHICOLOR = "images/";
 	private static final String IMGPATHLOWCOLOR = "images/lowcolor/";
@@ -62,7 +59,12 @@ final public class JAPSplash extends Window
 	private int m_iXVersion;
 	private int m_iYVersion;
 
-	public JAPSplash(Frame frmParent)
+	public JAPSplash(Frame a_frmParent)
+	{
+		this (a_frmParent, null);
+	}
+
+	public JAPSplash(Frame frmParent, String a_message)
 	{
 		super(frmParent);
 		setLayout(null);
@@ -176,25 +178,14 @@ final public class JAPSplash extends Window
 			}
 		}
 
-		//JAPMessages.getString("loading");
-		Locale defaultLocale = Locale.getDefault();
-		if (defaultLocale.getLanguage().equals("de"))
+		if (a_message == null || a_message.trim().length() == 0)
 		{
-			m_strLoading = "Lade Einstellungen";
-		}
-		else if (defaultLocale.getLanguage().equals("fr"))
-		{
-			m_strLoading = "Charger les param\u00e8tres";
-		}
-		else if (defaultLocale.getLanguage().equals("pt"))
-		{
-			m_strLoading = "A carregar configura\u00e7\u00f5es";
+			setText("Busy");
 		}
 		else
 		{
-			m_strLoading = "Loading settings";
+			setText(a_message);
 		}
-		m_strLoading += "...";
 
 		m_strVersion = "Version: " + JAPConstants.aktVersion;
 		m_fntFont = new Font("Sans", Font.PLAIN, 9);
@@ -210,8 +201,15 @@ final public class JAPSplash extends Window
 		catch (Exception e)
 		{}
 		;
-		centerOnScreen(this);
 		toFront();
+	}
+
+	public void setText(String a_text)
+	{
+		if (a_text != null && a_text.trim().length() > 0)
+		{
+			m_strLoading = a_text + "...";
+		}
 	}
 
 	public void update(Graphics g)
@@ -239,6 +237,11 @@ final public class JAPSplash extends Window
 		goff.drawString(m_strLoading, 17, 140);
 		goff.drawString(m_strVersion, m_iXVersion, m_iYVersion);
 		g.drawImage(m_imgOffScreen, 0, 0, this);
+	}
+
+	public void centerOnScreen()
+	{
+		centerOnScreen(this);
 	}
 
 	/**

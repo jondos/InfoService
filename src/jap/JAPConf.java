@@ -49,7 +49,6 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
@@ -93,8 +92,6 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 	private static final String MSG_NEED_RESTART = JAPConf.class.getName() + "_needRestart";
 	private static final String MSG_LISTENER_CHANGED = JAPConf.class.getName() + "_listenerChanged";
 	private static final String MSG_ACCESS_TO_JAP = JAPConf.class.getName() + "_accessToJAP";
-
-
 
 	final static public String PORT_TAB = "PORT_TAB";
 	final static public String UI_TAB = "UI_TAB";
@@ -1114,7 +1111,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 				// save configuration
 				m_Controller.saveConfigFile();
 
-				if (a_bCloseConfiguration || isRestartNeeded())
+				if (a_bCloseConfiguration && !isRestartNeeded())
 				{
 					setVisible(false);
 				}
