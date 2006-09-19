@@ -1104,7 +1104,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 
 
 		// We are in event dispatch thread!!
-		Thread run = new Thread()
+		Thread run = new Thread(new Runnable()
 		{
 			public void run()
 			{
@@ -1124,7 +1124,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 					JAPController.goodBye(false);
 				}
 			}
-		};
+		});
 		run.setDaemon(true);
 		run.start();
 

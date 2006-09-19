@@ -748,13 +748,13 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	{
 		LogHolder.log(LogLevel.ERR, LogType.NET, "AnonProxy received connectionError");
 		fireConnectionError();
-		new Thread("Connection error reconnect thead")
+		new Thread(new Runnable()
 		{
 			public void run()
 			{
 				reconnect();
 			}
-		}.start();
+		}, "Connection error reconnect thead").start();
 	}
 
 	public synchronized void addEventListener(AnonServiceEventListener l)

@@ -41,10 +41,13 @@ import java.util.Random;
 import java.util.Vector;
 
 import java.awt.Component;
-import java.awt.Window;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Frame;
 import java.awt.Point;
+import java.awt.Window;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
@@ -85,6 +88,7 @@ import anon.pay.PayAccountsFile;
 import anon.proxy.AnonProxy;
 import anon.proxy.IProxyListener;
 import anon.tor.TorAnonServerDescription;
+import anon.util.JobQueue;
 import anon.util.ClassUtil;
 import anon.util.IMiscPasswordReader;
 import anon.util.IPasswordReader;
@@ -96,7 +100,6 @@ import gui.JAPMessages;
 import gui.dialog.JAPDialog;
 import gui.dialog.JAPDialog.LinkedCheckBox;
 import gui.dialog.PasswordContentPane;
-import jap.ConsoleSplash;
 import jap.forward.JAPRoutingEstablishForwardedConnectionDialog;
 import jap.forward.JAPRoutingMessage;
 import jap.forward.JAPRoutingSettings;
@@ -107,9 +110,6 @@ import platform.AbstractOS;
 import proxy.DirectProxy;
 import proxy.DirectProxy.AllowUnprotectedConnectionCallback;
 import update.JAPUpdateWizard;
-import java.awt.Frame;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -156,6 +156,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public static final String MSG_WAITING_ANON = JAPController.class.getName() + "_waitingAnon";
 	public static final String MSG_STOPPING_PROXY = JAPController.class.getName() + "_stoppingProxy";
 	public static final String MSG_STOPPING_LISTENER = JAPController.class.getName() + "_stoppingListener";
+	public static final String MSG_RESTARTING = JAPController.class.getName() + "_restarting";
+	public static final String MSG_FINISH_FORWARDING_SERVER = JAPController.class.getName() +
+		"_finishForwardingServer";
+
 
 
 
@@ -186,7 +190,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private boolean m_bShowConfigAssistant = false;
 	private boolean m_bAssistantClicked = false;
 
-	private AnonJobQueue m_anonJobQueue;
+	private JobQueue m_anonJobQueue;
 
 
 	/**
@@ -254,7 +258,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		m_minVersionUpdater = new MinVersionUpdater();
 		m_javaVersionUpdater = new JavaVersionUpdater();
 
-		m_anonJobQueue = new AnonJobQueue();
+		m_anonJobQueue = new JobQueue("Anon mode job queue");
 		m_Model = JAPModel.getInstance();
 		m_Model.setAnonConnectionChecker(new AnonConnectionChecker());
 		InfoServiceDBEntry.setMutableProxyInterface(m_Model.getInfoServiceProxyInterface());
@@ -414,7 +418,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 		// start update threads and prevent waining for locks by using a thread
 		Database.getInstance(JAPMinVersion.class).addObserver(this);
-		Thread run = new Thread()
+		Thread run = new Thread(new Runnable()
 		{
 			public void run()
 			{
@@ -424,7 +428,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				m_minVersionUpdater.start(false);
 				m_javaVersionUpdater.start(false);
 			}
-		};
+		});
 		run.setDaemon(true);
 		run.start();
 		m_minVersionUpdater.updateAsync();
@@ -474,7 +478,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 		else
 		{
-			new Thread()
+			new Thread(new Runnable()
 			{
 				public void run()
 				{
@@ -484,7 +488,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						showInstallationAssistant();
 					}
 				}
-			}.start();
+			}).start();
 
 			if (m_bAskAutoConnect)
 			{
@@ -2238,15 +2242,21 @@ public final class JAPController extends Observable implements IProxyListener, O
 	//---------------------------------------------------------------------
 	//---------------------------------------------------------------------
 	//---------------------------------------------------------------------
-	private final class SetAnonModeAsync extends Thread
+	private final class SetAnonModeAsync extends JobQueue.Job
 	{
 
 		private boolean m_startServer;
 
 		public SetAnonModeAsync(boolean a_startServer)
 		{
-			super("SetAnonModeAsync");
+			super(!a_startServer);
 			m_startServer = a_startServer;
+		}
+
+		public String getAddedJobLogMessage()
+		{
+			return "Added a job for changing the anonymity mode to '" +
+				(new Boolean(isStartServerJob())).toString() + "' to the job queue.";
 		}
 
 		public boolean isStartServerJob()
@@ -2265,7 +2275,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}*/
 
 
-			if (!isInterrupted())
+			if (!Thread.currentThread().isInterrupted())
 			{
 				/* job was not canceled -> we have to do it */
 				try
@@ -2675,21 +2685,23 @@ public final class JAPController extends Observable implements IProxyListener, O
 						m_finishSync.notifyAll();
 					}
 
-					m_proxyDirect = new DirectProxy(m_socketHTTPListener);
-					// ignore all connections to terminate all remaining connections from JAP threads
-					m_proxyDirect.setAllowUnprotectedConnectionCallback(null);
-					m_proxyDirect.startService();
-					try
+					if (!isShuttingDown()) // do not restart proxy during shutdown
 					{
-						Thread.sleep(300);
+						m_proxyDirect = new DirectProxy(m_socketHTTPListener);
+						// ignore all connections to terminate all remaining connections from JAP threads
+						m_proxyDirect.setAllowUnprotectedConnectionCallback(null);
+						m_proxyDirect.startService();
+						try
+						{
+							Thread.sleep(300);
+						}
+						catch (InterruptedException ex)
+						{
+							// ignore
+						}
+						// reactivate the callback (now all remaining JAP connections should be dead)
+						m_proxyDirect.setAllowUnprotectedConnectionCallback(m_proxyCallback);
 					}
-					catch (InterruptedException ex)
-					{
-						// ignore
-					}
-					// reactivate the callback (now all remaining JAP connections should be dead)
-					m_proxyDirect.setAllowUnprotectedConnectionCallback(m_proxyCallback);
-
 					/* notify the forwarding system after! m_proxyAnon is set to null */
 					JAPModel.getInstance().getRoutingSettings().anonConnectionClosed();
 
@@ -2738,161 +2750,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	}
 
-	private class AnonJobQueue
-	{
-		/**
-		 * Stores the jobs, if we receive new setAnonMode() requests.
-		 */
-		private Vector m_changeAnonModeJobs;
-
-		private Thread m_threadQueue;
-		private boolean m_bInterrupted = false;
-		private SetAnonModeAsync m_currentJob;
-
-		public AnonJobQueue()
-		{
-			m_changeAnonModeJobs = new Vector();
-			m_threadQueue = new Thread("Anon job queue")
-			{
-				public void run()
-				{
-					synchronized (Thread.currentThread())
-					{
-						while (!Thread.currentThread().isInterrupted() && !m_bInterrupted)
-						{
-							try
-							{
-								Thread.currentThread().wait();
-							}
-							catch (InterruptedException ex)
-							{
-							}
-							if (Thread.currentThread().isInterrupted())
-							{
-								Thread.currentThread().notifyAll();
-								break;
-							}
-
-							// There is a new job!
-							if (m_changeAnonModeJobs.size() > 0 &&
-								m_currentJob == m_changeAnonModeJobs.firstElement() &&
-								m_currentJob.isAlive())
-							{
-								// a job is currently running; stop it;
-								m_currentJob.interrupt();
-							}
-							else if (m_changeAnonModeJobs.size() > 0)
-							{
-								// no job is running; remove all jobs that are outdated
-								while (m_changeAnonModeJobs.size() > 1)
-								{
-									m_changeAnonModeJobs.removeElementAt(0);
-								}
-								// start the newest job
-								m_currentJob = (SetAnonModeAsync)m_changeAnonModeJobs.elementAt(0);
-								m_currentJob.start();
-							}
-						}
-						// stop all threads
-						while (m_changeAnonModeJobs.size() > 0)
-						{
-							if (m_currentJob == m_changeAnonModeJobs.firstElement())
-							{
-								m_currentJob.interrupt();
-								try
-								{
-									Thread.currentThread().wait(500);
-								}
-								catch (InterruptedException ex1)
-								{
-								}
-							}
-							else
-							{
-								m_changeAnonModeJobs.removeAllElements();
-							}
-						}
-					}
-				}
-			};
-			m_threadQueue.start();
-		}
-		public void addJob(final SetAnonModeAsync a_anonJob)
-		{
-			if (a_anonJob == null)
-			{
-				return;
-			}
-
-			if (a_anonJob.isStartServerJob() && (m_bShutdown || m_bInterrupted))
-			{
-				// do not make new connections during shutdown
-				return;
-			}
-
-			synchronized (m_threadQueue)
-			{
-				if (m_changeAnonModeJobs.size() > 0)
-				{
-					/* check whether this is job is different to the last one */
-					SetAnonModeAsync lastJob = (SetAnonModeAsync) (m_changeAnonModeJobs.lastElement());
-					if (!lastJob.isStartServerJob() && !a_anonJob.isStartServerJob())
-					{
-						/* it's the same (disabling server) as the last job */
-						return;
-					}
-				}
-				a_anonJob.setDaemon(true);
-				m_changeAnonModeJobs.addElement(a_anonJob);
-				m_threadQueue.notify();
-
-				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-					  "Added a job for changing the anonymity mode to '" +
-					  (new Boolean(a_anonJob.isStartServerJob())).toString() + "' to the job queue.");
-			}
-		}
-		public void removeJob(final SetAnonModeAsync a_anonJob)
-		{
-			if (a_anonJob == null)
-			{
-				return;
-			}
-			synchronized (m_threadQueue)
-			{
-				if (m_changeAnonModeJobs.removeElement(a_anonJob))
-				{
-					m_threadQueue.notify();
-				}
-			}
-		}
-
-
-		public void stop()
-		{
-			while (m_threadQueue.isAlive())
-			{
-				m_threadQueue.interrupt();
-				synchronized (m_threadQueue)
-				{
-					m_bInterrupted = true;
-					m_threadQueue.notifyAll();
-					m_threadQueue.interrupt();
-				}
-				try
-				{
-					m_threadQueue.join(500);
-				}
-				catch (InterruptedException a_e)
-				{
-					// ignore
-				}
-			}
-		}
-	}
-
 	public void setAnonMode(final boolean a_anonModeSelected)
 	{
-		m_anonJobQueue.addJob(new SetAnonModeAsync(a_anonModeSelected));
+		if (!m_bShutdown || !a_anonModeSelected)
+		{
+			m_anonJobQueue.addJob(new SetAnonModeAsync(a_anonModeSelected));
+		}
 	}
 
 	/**
@@ -3073,18 +2936,17 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	/** This (and only this) is the final exit procedure of JAP!
 	 * It shows a reminder to reset the proxy configurations and saves the current configuration.
-	 *	@param bShowConfigSaveErrorMsg if true shows an error message if saving of
-	 * 			the current configuration goes wrong
+	 *	@param bDoNotRestart false if JAP should be restarted; true otherwise
 	 */
-	public static void goodBye(final boolean bShowConfigSaveErrorMsg)
+	public static void goodBye(final boolean bDoNotRestart)
 	{
-		Thread stopThread = new Thread()
+		Thread stopThread = new Thread(new Runnable()
 		{
 			public void run()
 			{
 				int returnValue;
 				JAPDialog.LinkedCheckBox checkBox;
-				if (!JAPModel.getInstance().isNeverRemindGoodbye() && bShowConfigSaveErrorMsg)
+				if (!JAPModel.getInstance().isNeverRemindGoodbye() && bDoNotRestart)
 				{
 					// show a Reminder message that active contents should be disabled
 					checkBox = new JAPDialog.LinkedCheckBox(false);
@@ -3127,7 +2989,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 
 					boolean error = m_Controller.saveConfigFile();
-					if (error && bShowConfigSaveErrorMsg)
+					if (error && bDoNotRestart)
 					{
 						Window parent = getInstance().getViewWindow();
 						if (getInstance().m_finishSplash instanceof JAPSplash)
@@ -3145,14 +3007,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 					getInstance().m_finishSplash.setText(JAPMessages.getString(MSG_CLOSING_DIALOGS));
 					JAPDialog.setConsoleOnly(true); // do not show any dialogs now
 
-					if (!bShowConfigSaveErrorMsg)
+					if (!bDoNotRestart)
 					{
 						GUIUtils.setLoadImages(false);
 					}
 					m_Controller.m_bShutdown = true;
 					// disallow InfoService traffic
 					JAPModel.getInstance().setInfoServiceDisabled(true);
-					Thread finishIS = new Thread("Finish IS threads")
+					Thread finishIS = new Thread(new Runnable()
 					{
 						public void run()
 						{
@@ -3166,14 +3028,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 							m_Controller.m_minVersionUpdater.stop();
 							m_Controller.m_javaVersionUpdater.stop();
 						}
-					};
+					}, "Finish IS threads");
 					finishIS.start();
 
 					// do not show direct connection warning dialog in this state; ignore all direct conns
 					m_Controller.m_proxyCallback = null;
 					DirectProxy.setAllowUnprotectedConnectionCallback(null);
 
-					Thread finishAnon = new Thread("Finish anon thread")
+					Thread finishAnon = new Thread(new Runnable()
 					{
 						public void run()
 						{
@@ -3185,13 +3047,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 								// Wait until anon mode is disabled");
 								synchronized (m_Controller.m_finishSync)
 								{
-									if (m_Controller.getAnonMode() || m_Controller.isAnonConnected())
+									while (m_Controller.getAnonMode() || m_Controller.isAnonConnected())
 									{
+										m_Controller.setAnonMode(false);
 										LogHolder.log(LogLevel.NOTICE, LogType.THREAD,
 													  "Waiting for finish of AN.ON connection...");
 										try
 										{
-											m_Controller.m_finishSync.wait();
+											m_Controller.m_finishSync.wait(500);
 										}
 										catch (InterruptedException a_e)
 										{
@@ -3208,8 +3071,17 @@ public final class JAPController extends Observable implements IProxyListener, O
 								LogHolder.log(LogLevel.EMERG, LogType.MISC, a_e);
 							}
 						}
-					};
+					}, "Finish anon thread");
 					finishAnon.start();
+
+					if (JAPModel.getInstance().getRoutingSettings().getRoutingMode() ==
+						JAPRoutingSettings.ROUTING_MODE_SERVER)
+					{
+						getInstance().m_finishSplash.setText(
+						  JAPMessages.getString(MSG_FINISH_FORWARDING_SERVER));
+						getInstance().enableForwardingServer(false);
+					}
+
 
 					while (finishIS.isAlive() || finishAnon.isAlive())
 					{
@@ -3249,14 +3121,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 					catch (Exception a_e)
 					{
 					}
+
+					getInstance().m_finishSplash.setText(JAPMessages.getString(MSG_FINISHING));
 					LogHolder.log(LogLevel.NOTICE, LogType.NET,
 								  "Interrupting all network communication threads...");
 					System.getProperties().put( "socksProxyPort", "0");
 					System.getProperties().put( "socksProxyHost" ,"localhost");
 					// do not show any dialogs in this state
 					getInstance().switchViewWindow(true);
-					getInstance().m_finishSplash.setText(JAPMessages.getString(MSG_FINISHING));
-
 					if (getInstance().getViewWindow() != null)
 					{
 						getInstance().getViewWindow().dispose();
@@ -3266,14 +3138,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 						((JAPSplash)m_Controller.m_finishSplash).dispose();
 					}
 					LogHolder.log(LogLevel.INFO, LogType.GUI, "View has been disposed. Finishing...");
-					if ( !bShowConfigSaveErrorMsg ) {
+					if ( !bDoNotRestart ) {
+						getInstance().m_finishSplash.setText(JAPMessages.getString(MSG_RESTARTING));
 						LogHolder.log(LogLevel.INFO, LogType.ALL, "Try to restart JAP...");
 						m_Controller.restartJAP();
 					}
 					System.exit(0);
 				}
 			}
-		};
+		});
 		if (!JAPDialog.isConsoleOnly() && SwingUtilities.isEventDispatchThread())
 		{
 			stopThread.start();
@@ -3715,7 +3588,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					return;
 				}*/
 
-				new Thread()
+				new Thread(new Runnable()
 				{
 					public void run()
 					{
@@ -3745,7 +3618,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							m_bShowingVersionUpdate = false;
 						}
 					}
-				}.start();
+				}).start();
 			}
 		}
 		catch (Exception e)
@@ -3962,7 +3835,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	public void connectionEstablished(AnonServerDescription a_serverDescription)
 	{
-		Thread run = new Thread()
+		Thread run = new Thread(new Runnable()
 		{
 			public void run()
 			{
@@ -3971,7 +3844,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_feedback.update();
 				}
 			}
-		};
+		});
 		run.setDaemon(true);
 		run.start();
 
@@ -4101,7 +3974,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 */
 	private void updateAccountStatements()
 	{
-		Thread doIt = new Thread()
+		Thread doIt = new Thread(new Runnable()
 		{
 			public void run()
 			{
@@ -4123,7 +3996,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 				}
 			}
-		};
+		});
 		doIt.setDaemon(true);
 		doIt.start();
 	}

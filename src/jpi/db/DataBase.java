@@ -246,7 +246,7 @@ public class DataBase extends DBInterface
 	 *
 	 * @author Bastian Voigt
 	 */
-	private class CleanupThread extends Thread
+	private class CleanupThread implements Runnable
 	{
 		public void run()
 		{
@@ -295,7 +295,7 @@ public class DataBase extends DBInterface
 	public void startCleanupThread()
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Starting Cleanup Thread ...");
-		Thread t = new CleanupThread();
+		Thread t = new Thread(new CleanupThread());
 		t.start();
 	}
 

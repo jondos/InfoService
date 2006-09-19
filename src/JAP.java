@@ -258,14 +258,14 @@ public class JAP
 
 		splash.setText(JAPMessages.getString(MSG_INIT_RANDOM));
 		// initialise secure random generators
-		Thread secureRandomThread = new Thread()
+		Thread secureRandomThread = new Thread(new Runnable()
 		{
 			public void run()
 			{
 				KeyPool.start();
 				new SecureRandom().nextInt();
 			}
-		};
+		});
 		secureRandomThread.setPriority(Thread.MIN_PRIORITY);
 		secureRandomThread.start();
 

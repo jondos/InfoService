@@ -741,7 +741,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		public void actionPerformed(final ActionEvent e)
 		{
-			Thread clickThread = new Thread()
+			Thread clickThread = new Thread(new Runnable()
 			{
 				public void run()
 				{
@@ -788,7 +788,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					}
 					m_bButtonClicked = false;
 				}
-			};
+			});
 			if (!m_bButtonClicked)
 			{
 				m_bButtonClicked = true;
@@ -1724,7 +1724,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		final MethodSelectionPane a_methodSelectionPane,
 		final JAPDialog a_parentDialog, DialogContentPane a_previousContentPane)
 	{
-		Thread t = new Thread()
+		Runnable t = new Runnable()
 		{
 			public void run()
 			{

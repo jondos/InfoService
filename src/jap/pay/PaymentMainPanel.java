@@ -63,6 +63,7 @@ import jap.JAPConstants;
 import jap.JAPController;
 import jap.JAPNewView;
 import jap.JAPUtil;
+import jap.JAPModel;
 import logging.LogType;
 
 public class PaymentMainPanel extends FlippingPanel
@@ -83,6 +84,10 @@ public class PaymentMainPanel extends FlippingPanel
 		"_totalspent";
 	private static final String MSG_NO_ACTIVE_ACCOUNT = PaymentMainPanel.class.getName() +
 		"_noActiveAccount";
+	private static final String MSG_ENABLE_AUTO_SWITCH = PaymentMainPanel.class.getName() +
+		"_enableAutoSwitch";
+
+
 	private static final String[] MSG_PAYMENT_ERRORS = {"_xmlSuccess", "_xmlErrorInternal",
 		"_xmlErrorWrongFormat", "_xmlErrorWrongData", "_xmlErrorKeyNotFound", "_xmlErrorBadSignature",
 	"_xmlErrorBadRequest", "_xmlErrorNoAccountCert", "_xmlErrorNoBalance", "_xmlErrorNoConfirmation",
@@ -449,7 +454,7 @@ public class PaymentMainPanel extends FlippingPanel
 			{
 				JAPController.getInstance().setAnonMode(false);
 
-				SwingUtilities.invokeLater(new Thread()
+				SwingUtilities.invokeLater(new Runnable()
 				{
 					public void run()
 					{
@@ -468,7 +473,7 @@ public class PaymentMainPanel extends FlippingPanel
 				if (accounts.getActiveAccount() == null)
 				{
 					JAPController.getInstance().setAnonMode(false);
-					SwingUtilities.invokeLater(new Thread()
+					SwingUtilities.invokeLater(new Runnable()
 					{
 						public void run()
 						{
@@ -524,9 +529,19 @@ public class PaymentMainPanel extends FlippingPanel
 			if (!m_bShowingError)
 			{
 				m_bShowingError = true;
-				JAPDialog.showErrorDialog(PaymentMainPanel.this,
-										  JAPMessages.getString("aiErrorMessage") + "<br>" + error,
-										  LogType.PAY);
+				String message = JAPMessages.getString("aiErrorMessage") + "<br>" + error;
+				if (!JAPModel.getInstance().isCascadeAutoSwitched())
+				{
+					message += "<br><br>" + MSG_ENABLE_AUTO_SWITCH;
+					if (JAPDialog.showYesNoDialog(PaymentMainPanel.this, message))
+					{
+						JAPModel.getInstance().setCascadeAutoSwitch(true);
+					}
+				}
+				else
+				{
+					JAPDialog.showErrorDialog(PaymentMainPanel.this, message, LogType.PAY);
+				}
 				m_bShowingError = false;
 			}
 		}

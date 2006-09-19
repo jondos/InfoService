@@ -160,13 +160,13 @@ public abstract class AbstractDatabaseUpdater implements Observer
 			return;
 		}
 		final AbstractDatabaseUpdater updater = this;
-		new Thread()
+		new Thread(new Runnable()
 		{
 			public void run()
 			{
 				updater.start(false);
 			}
-		}.start();
+		}).start();
 	}
 
 	/**
@@ -223,13 +223,13 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	 */
 	public final void updateAsync()
 	{
-		Thread run = new Thread()
+		Thread run = new Thread(new Runnable()
 		{
 			public void run()
 			{
 				update(false);
 			}
-		};
+		});
 		run.setDaemon(true);
 		run.start();
 	}

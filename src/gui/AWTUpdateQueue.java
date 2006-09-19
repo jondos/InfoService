@@ -65,13 +65,13 @@ public class AWTUpdateQueue
 			m_jobs++;
 		}
 
-		Thread run = new Thread()
+		Thread run = new Thread(new Runnable()
 		{
 			public void run()
 			{
 				doUpdateQueue();
 			}
-		};
+		});
 		run.setDaemon(true);
 		run.start();
 		if (a_bSync)
