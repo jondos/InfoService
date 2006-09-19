@@ -30,6 +30,7 @@ package jap;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.Observer;
 
@@ -169,8 +170,18 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		String strDate = JAPConstants.strReleaseDate;
 		try
 		{
-			DateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss z");
-			Date d = sdf.parse(strDate + " GMT");
+			DateFormat sdf;
+			Date d;
+			sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss z");
+			try
+			{
+				d = sdf.parse(strDate + " GMT");
+			}
+			catch (ParseException a_e)
+			{
+				sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+				d = sdf.parse(strDate + " GMT");
+			}
 			m_DateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM);
 			strDate = m_DateFormat.format(d);
 		}
