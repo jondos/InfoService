@@ -17,10 +17,12 @@ There is a configuration for Proxomitron which comes with lots of extra filters 
 For those of you who do not trust any .exe file, there is also a .zip version. Download it from <A href="http://anon.inf.tu-dresden.de/help/proxomitron/JDList_10-24-03.zip">here</A> and read the included README for installation instructions.
 <P>
 <LI><B>Setup</B><br>
-<br>You may either use a ready-to-use config file which is <A href="./proxomitron/config_en/default.cfg">included in the help</A> or <A href="http://anon.inf.tu-dresden.de/help/jap_help/proxomitron/config_en/default.cfg">online</A> and place it into Proxomitron's directory <b>or</b> do the following guide:
-<P>--------------Start of guide--------------<P>
+<br>You may either use a ready-to-use config file which is <A href="./proxomitron/config_en/default.cfg">included in the help</A> or <A href="http://anon.inf.tu-dresden.de/help/jap_help/proxomitron/config_en/default.cfg">online</A> and place it into Proxomitron's directory <b>or</b> do the following guide (in case you want to alter an existing proxomitron configuration):
+<HR><center>--------------Start of guide--------------</center><HR>
 Start Proxomitron by double-clicking <i>Proxomitron.exe</i>. Proxomitron's window will appear.
-<br>We will use a configuration level from the downloaded filter pack. Right-click on the proxomitron icon in your system tray and choose <i>Load config file</i> -> <i>JD_Extra.cfg</i>.
+<br>We will use a configuration level from the downloaded filter pack. Open menu <i>File</i> -> <i>Load config file</i> and choose <i>JD_Extra.cfg</i>.
+<br>Now do this in the menu: <i>File</i> -> <i>Save default settings</i>. This way, you created new default settings which will be loaded every time you start Proxomitron.
+<br>Now load these default settings by clicking <i>File</i> -> <i>Reload default settings</i>. This way, all changes will be applied to default settings.
 <br>
 <center><img src="proxomitron1_en.gif"></center>
 <br>
@@ -76,7 +78,7 @@ Activate the following (check the column <i>Out</i> or <i>In</i>, depending on w
 	</UL>
 <P>
 You can find a description of all web page filters <A href="http://www.jd5000.net/proxo/Help/Filters.htm">here</A>.
-<P>--------------End of guide--------------
+<HR><center>--------------End of guide--------------</center><HR>
 <P>
 <b>(*2) Info:</b> Some users might want to use an alternative for blocking all Java Applets that are not on their Allow list: The Filter called "Toggle:  Java {4.d}". This is more insecure, since on some browsers Java Applets will still be loaded and only hidden from view. So this is <b>not</b> recommended.
 <P>
@@ -100,16 +102,15 @@ Confirm by clicking <i>OK</i>.
 <LI><b>Disable URL Commands</b><br>
 Click <i>Config</i>, choose the tab <i>Access</i> and make sure <i>Disable URL based Proxomitron commands</i> is checked. Read the help on URL Commands in order to learn why URL Commands are a security risk. To display Proxomitron's help, go to menu <i>Help</i> -> <i>View Help</i>.
 <P>
-<LI><b>Default configuration</b><br>
-We have set up our own configuration, but every time Proxomitron starts it will load <i>default.cfg</i>, which is not the on we just created. So go to proxomitron's directory and create a copy of <i>JD_Extra.cfg</i> and name it <i>default.cfg</i> (Overwrite the old default.cfg, there is already a backup of it if you are new to proxomiton. In case you already had your own config and want a backup, first rename the old <i>default.cfg</i> to <i>default_old.cfg</i>)
-<P>
 <LI><b>Optionally: SSL support</b><br>
 Proxomitron cannot process SSL encrypted transmissions by default. In order to activate this feature, additional libraries are required.
 	<UL>
-	<LI><b>Download</b><P>
+	<LI><b>Download</b><br>
 	Get the <i>OpenSSL_DLLs.zip</i> from <A href="http://www.proxomitron.info/files/index.html">this site</A> and unzip all three libraries (libeay32.dll, msvcr70.dll, ssleay32.dll) into Proxomitron's directory.
-	<LI><b>Activation</b><P>
-	Click <i>Config</i> in Proxomitron's main window. Choose tab <i>HTTP</i> and activate <i>Use SSLeay/OpenSSL to filter secure pages</i>. Confirm by clicking <i>OK</i>. Save the configuration by pressing <img src="proxomitron3_de.gif">.
+	<P>
+	<LI><b>Activation</b><br>
+	Click <i>Config</i> in Proxomitron's main window. Choose tab <i>HTTP</i> and activate <i>Use SSLeay/OpenSSL to filter secure pages</i>. Confirm by clicking <i>OK</i>.
+	<br>Save the configuration by pressing <img src="proxomitron3_de.gif">.
 	</UL>
 </UL>
 <!--#include virtual="/footer_en.html"-->
