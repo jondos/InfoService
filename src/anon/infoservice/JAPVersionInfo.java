@@ -30,6 +30,7 @@ package anon.infoservice;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.text.ParseException;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -126,7 +127,14 @@ public class JAPVersionInfo extends AbstractDistributableDatabaseEntry
     m_version = XMLUtil.parseAttribute(a_jnlpRootNode, "version", "");
     try {
       String strDate = a_jnlpRootNode.getAttribute("releaseDate") + " GMT";
-      m_releaseDate = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss z").parse(strDate);
+	  try
+	  {
+		  m_releaseDate = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss z").parse(strDate);
+	  }
+	  catch (ParseException a_e)
+	  {
+		  m_releaseDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z").parse(strDate);
+	  }
     }
     catch (Exception e) {
       m_releaseDate = null;
