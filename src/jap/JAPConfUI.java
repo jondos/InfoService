@@ -73,7 +73,8 @@ import logging.LogType;
 final class JAPConfUI extends AbstractJAPConfModule
 {
 	private static final String MSG_ON_CLOSING_JAP = JAPConfUI.class.getName() + "_onClosingJAP";
-	private static final String MSG_WARNING_ON_CLOSING_JAP = JAPConfUI.class.getName() + "_warningOnClosingJAP";
+	private static final String MSG_WARNING_ON_CLOSING_JAP = JAPConfUI.class.getName() +
+		"_warningOnClosingJAP";
 	private static final String MSG_FONT_SIZE = JAPConfUI.class.getName() + "_fontSize";
 	private static final String MSG_WARNING_IMPORT_LNF = JAPConfUI.class.getName() + "_warningImportLNF";
 	private static final String MSG_INCOMPATIBLE_JAVA = JAPConfUI.class.getName() + "_incompatibleJava";
@@ -96,9 +97,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 	private static final String MSG_NO_NATIVE_LIBRARY = JAPConfUI.class.getName() + "_noNativeLibrary";
 	private static final String MSG_NO_NATIVE_WINDOWS_LIBRARY = JAPConfUI.class.getName() +
 		"_noNativeWindowsLibrary";
-
-
-
+	private static final String MSG_WINDOW_POSITION = JAPConfUI.class.getName() + "_windowPosition";
 
 	private TitledBorder m_borderLookAndFeel, m_borderView;
 	private JComboBox m_comboLanguage, m_comboUI, m_comboDialogFormat;
@@ -128,32 +127,32 @@ final class JAPConfUI extends AbstractJAPConfModule
 		c1.gridx = 0;
 		c1.gridy = 0;
 		c1.anchor = GridBagConstraints.NORTHWEST;
-		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.fill = GridBagConstraints.BOTH;
 		c1.weightx = 1;
 		JPanel pLookAndFeel = createLookAndFeelPanel();
-		//if (!bSimpleView)
-		{
-			panelRoot.add(pLookAndFeel, c1);
-			c1.insets = new Insets(10, 0, 10, 0);
-		}
+		c1.gridwidth = 2;
+		panelRoot.add(pLookAndFeel, c1);
 
+		c1.insets = new Insets(0, 0, 0, 0);
+		c1.gridwidth = 1;
 		c1.gridy++;
+		c1.gridx = 0;
 		panelRoot.add(createViewPanel(), c1);
 
 		c1.insets = new Insets(0, 0, 0, 0);
-		c1.gridy++;
+		c1.gridx = 1;
 		JPanel pStartup = createAfterStartupPanel();
-		//if (!bSimpleView)
-		{
-			panelRoot.add(pStartup, c1);
-			c1.gridy++;
-		}
+		panelRoot.add(pStartup, c1);
+		c1.gridy++;
 
 		JPanel pShutdown = createAfterShutdownPanel();
 		if (!bSimpleView)
 		{
 			panelRoot.add(pShutdown, c1);
 		}
+		c1.gridx = 0;
+		panelRoot.add(createWindowPanel(), c1);
+
 		c1.gridy++;
 		c1.anchor = GridBagConstraints.NORTHWEST;
 		c1.fill = GridBagConstraints.VERTICAL;
@@ -197,7 +196,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 						Vector tempLnFs = new Vector(oldLnFs.length - 1);
 						LookAndFeelInfo[] alteredLnFs;
 						File lnfFile = ClassUtil.getClassDirectory(
-											  (oldLnFs[m_comboUI.getSelectedIndex()].getClassName()));
+							(oldLnFs[m_comboUI.getSelectedIndex()].getClassName()));
 						File tempLnfFile;
 
 						for (int i = 0; i < oldLnFs.length; i++)
@@ -211,7 +210,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 						alteredLnFs = new LookAndFeelInfo[tempLnFs.size()];
 						for (int i = 0; i < alteredLnFs.length; i++)
 						{
-							alteredLnFs[i] = (LookAndFeelInfo)tempLnFs.elementAt(i);
+							alteredLnFs[i] = (LookAndFeelInfo) tempLnFs.elementAt(i);
 						}
 						UIManager.setInstalledLookAndFeels(alteredLnFs);
 						JAPModel.getInstance().removeLookAndFeelFile(lnfFile);
@@ -222,12 +221,11 @@ final class JAPConfUI extends AbstractJAPConfModule
 				catch (Exception a_e)
 				{
 					JAPDialog.showErrorDialog(
-									   getRootPanel(),
+						getRootPanel(),
 						JAPMessages.getString(MSG_COULD_NOT_REMOVE), LogType.MISC, a_e);
 				}
 			}
 		});
-
 
 		m_btnAddUI = new JButton(JAPMessages.getString(MSG_IMPORT));
 
@@ -271,12 +269,14 @@ final class JAPConfUI extends AbstractJAPConfModule
 							}
 						};
 						fileChooser.setFileFilter(filter);
-						if (fileChooser.showOpenDialog(dialog.getContentPane()) != JFileChooser.APPROVE_OPTION)
+						if (fileChooser.showOpenDialog(dialog.getContentPane()) !=
+							JFileChooser.APPROVE_OPTION)
 						{
 							m_bCanceled = true;
 						}
 						return errors;
 					}
+
 					public Object getValue()
 					{
 						return new Boolean(m_bCanceled);
@@ -300,15 +300,15 @@ final class JAPConfUI extends AbstractJAPConfModule
 							Vector files;
 							try
 							{
-								if ((files = GUIUtils.registerLookAndFeelClasses(
+								if ( (files = GUIUtils.registerLookAndFeelClasses(
 									fileChooser.getSelectedFile())).size() > 0)
 								{
 									for (int i = 0; i < files.size(); i++)
 									{
 										LogHolder.log(LogLevel.NOTICE, LogType.GUI,
-												  "Added new L&F class file: " + files.elementAt(i));
+											"Added new L&F class file: " + files.elementAt(i));
 										JAPModel.getInstance().addLookAndFeelFile(
-											(File)files.elementAt(i));
+											(File) files.elementAt(i));
 									}
 									updateUICombo();
 									m_value = JAPMessages.getString(MSG_IMPORT_SUCCESSFUL);
@@ -332,29 +332,28 @@ final class JAPConfUI extends AbstractJAPConfModule
 				{
 					public boolean isSkippedAsNextContentPane()
 					{
-						return ((Boolean)pane.getValue()).booleanValue();
+						return ( (Boolean) pane.getValue()).booleanValue();
 					}
 				};
 
 				DialogContentPane goodResultPane = new SimpleWizardContentPane(dialog, "OK",
 					new DialogContentPane.Layout(
-									   JAPMessages.getString(JAPDialog.MSG_TITLE_INFO),
-									   DialogContentPane.MESSAGE_TYPE_INFORMATION),
+						JAPMessages.getString(JAPDialog.MSG_TITLE_INFO),
+						DialogContentPane.MESSAGE_TYPE_INFORMATION),
 					new DialogContentPane.Options(importPane))
 				{
 					public CheckError[] checkUpdate()
 					{
-						setText((String)doIt.getValue());
+						setText( (String) doIt.getValue());
 						return null;
 					}
 
-
-
 					public boolean isSkippedAsNextContentPane()
 					{
-						return ((Boolean)pane.getValue()).booleanValue() ||
+						return ( (Boolean) pane.getValue()).booleanValue() ||
 							doIt.getValue() instanceof Exception;
 					}
+
 					public boolean isSkippedAsPreviousContentPane()
 					{
 						return true;
@@ -365,28 +364,28 @@ final class JAPConfUI extends AbstractJAPConfModule
 
 				DialogContentPane errorPane = new SimpleWizardContentPane(dialog, "ERROR",
 					new DialogContentPane.Layout(
-									   JAPMessages.getString(JAPDialog.MSG_TITLE_ERROR),
-									   DialogContentPane.MESSAGE_TYPE_ERROR),
+						JAPMessages.getString(JAPDialog.MSG_TITLE_ERROR),
+						DialogContentPane.MESSAGE_TYPE_ERROR),
 					new DialogContentPane.Options(goodResultPane))
 				{
 					public boolean isSkippedAsPreviousContentPane()
 					{
 						return true;
 					}
+
 					public CheckError[] checkUpdate()
 					{
-						setText(((Exception)doIt.getValue()).getMessage());
+						setText( ( (Exception) doIt.getValue()).getMessage());
 						return null;
 					}
 
 					public boolean isSkippedAsNextContentPane()
 					{
-						return ((Boolean)pane.getValue()).booleanValue() ||
-							!(doIt.getValue() instanceof Exception);
+						return ( (Boolean) pane.getValue()).booleanValue() ||
+							! (doIt.getValue() instanceof Exception);
 					}
 				};
 				errorPane.getButtonCancel().setVisible(false);
-
 
 				JLabel dummyLabel = new JLabel("AAAAAAAAAAAAAAAAAAAAAAAA");
 				importPane.getContentPane().add(dummyLabel);
@@ -396,11 +395,10 @@ final class JAPConfUI extends AbstractJAPConfModule
 				if (currentLaf != UIManager.getLookAndFeel())
 				{
 					JAPDialog.showMessageDialog(
-									   getRootPanel(), JAPMessages.getString(MSG_LOOK_AND_FEEL_CHANGED));
+						getRootPanel(), JAPMessages.getString(MSG_LOOK_AND_FEEL_CHANGED));
 				}
 			}
 		});
-
 
 		m_comboUI.addItemListener(new ItemListener()
 		{
@@ -414,7 +412,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 							m_comboUI.getSelectedIndex()].getClassName();
 						String currentLaFClass = JAPModel.getInstance().getLookAndFeel();
 						// the currently active lnf may differ from the laf that is set as active
-						String activeLaFClass =UIManager.getLookAndFeel().getClass().getName();
+						String activeLaFClass = UIManager.getLookAndFeel().getClass().getName();
 						File currentLaFFile = null;
 						File activeLaFFile = null;
 						File selectedLaFFile = null;
@@ -423,9 +421,8 @@ final class JAPConfUI extends AbstractJAPConfModule
 						currentLaFFile = ClassUtil.getClassDirectory(currentLaFClass);
 						selectedLaFFile = ClassUtil.getClassDirectory(selectedLaFClass);
 
-
-						if ((selectedLaFFile != null && currentLaFFile != null &&
-							 currentLaFFile.equals(selectedLaFFile)) ||
+						if ( (selectedLaFFile != null && currentLaFFile != null &&
+							  currentLaFFile.equals(selectedLaFFile)) ||
 							(selectedLaFFile != null && activeLaFFile != null &&
 							 activeLaFFile.equals(selectedLaFFile)) ||
 							currentLaFClass.equals(selectedLaFClass) ||
@@ -442,8 +439,6 @@ final class JAPConfUI extends AbstractJAPConfModule
 				}
 			}
 		});
-
-
 
 		l = new JLabel(JAPMessages.getString("settingsLanguage"));
 		c.gridx = 0;
@@ -475,7 +470,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		c.fill = GridBagConstraints.HORIZONTAL;
 		m_comboDialogFormat = new JComboBox();
 		m_comboDialogFormat.addItem(new DialogFormat(JAPMessages.getString(MSG_DIALOG_FORMAT_GOLDEN_RATIO),
-													 JAPDialog.FORMAT_GOLDEN_RATIO_PHI));
+			JAPDialog.FORMAT_GOLDEN_RATIO_PHI));
 		m_comboDialogFormat.addItem(new DialogFormat("4:3", JAPDialog.FORMAT_DEFAULT_SCREEN));
 		m_comboDialogFormat.addItem(new DialogFormat("16:9", JAPDialog.FORMAT_WIDE_SCREEN));
 		p.add(m_comboDialogFormat, c);
@@ -486,7 +481,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 			{
 				int currentFormat = JAPDialog.getOptimizedFormat();
 				JAPDialog.setOptimizedFormat(
-								((DialogFormat)m_comboDialogFormat.getSelectedItem()).getFormat());
+					( (DialogFormat) m_comboDialogFormat.getSelectedItem()).getFormat());
 				JAPDialog.showMessageDialog(getRootPanel(), JAPMessages.getString(MSG_DIALOG_FORMAT_TEST));
 				JAPDialog.setOptimizedFormat(currentFormat);
 			}
@@ -505,7 +500,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 			{
 				int currentFormat = JAPDialog.getOptimizedFormat();
 				JAPDialog.setOptimizedFormat(
-								((DialogFormat)m_comboDialogFormat.getSelectedItem()).getFormat());
+					( (DialogFormat) m_comboDialogFormat.getSelectedItem()).getFormat());
 				JAPDialog.showMessageDialog(getRootPanel(), JAPMessages.getString(MSG_DIALOG_FORMAT_TEST_2));
 				JAPDialog.setOptimizedFormat(currentFormat);
 			}
@@ -524,7 +519,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		p.add(new JLabel(JAPMessages.getString(MSG_FONT_SIZE)), c);
 
 		m_slidFontSize = new JSlider(
-			  JSlider.HORIZONTAL, 0, JAPModel.MAX_FONT_SIZE, JAPModel.getInstance().getFontSize());
+			JSlider.HORIZONTAL, 0, JAPModel.MAX_FONT_SIZE, JAPModel.getInstance().getFontSize());
 		m_slidFontSize.setPaintTicks(false);
 		m_slidFontSize.setPaintLabels(true);
 		m_slidFontSize.setMajorTickSpacing(1);
@@ -541,14 +536,6 @@ final class JAPConfUI extends AbstractJAPConfModule
 		c.gridx++;
 		p.add(m_slidFontSize, c);
 
-		m_cbSaveWindowPositions = new JCheckBox(JAPMessages.getString("settingsSaveWindowPosition"));
-		c.gridwidth = 4;
-		c.weightx = 1;
-		c.gridx = 0;
-		c.gridy++;
-		c.fill = GridBagConstraints.NONE;
-		c.weightx = 0;
-		p.add(m_cbSaveWindowPositions, c);
 		return p;
 	}
 
@@ -573,6 +560,21 @@ final class JAPConfUI extends AbstractJAPConfModule
 		}
 	}
 
+	private JPanel createWindowPanel()
+	{
+		GridBagConstraints c = new GridBagConstraints();
+		JPanel p = new JPanel(new GridBagLayout());
+		p.setBorder(new TitledBorder(JAPMessages.getString(MSG_WINDOW_POSITION)));
+
+		m_cbSaveWindowPositions = new JCheckBox(JAPMessages.getString("settingsSaveWindowPosition"));
+		c.weightx = 1;
+		c.gridx = 0;
+		c.gridy = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(0, 10, 0, 10);
+		p.add(m_cbSaveWindowPositions, c);
+		return p;
+	}
 
 	private JPanel createViewPanel()
 	{
@@ -586,19 +588,24 @@ final class JAPConfUI extends AbstractJAPConfModule
 		ButtonGroup bg = new ButtonGroup();
 		bg.add(m_rbViewNormal);
 		bg.add(m_rbViewSimplified);
-		c.insets = new Insets(10, 10, 10, 10);
+		c.insets = new Insets(0, 10, 10, 10);
 		c.weightx = 1;
 		c.anchor = GridBagConstraints.NORTHWEST;
 		p.add(m_rbViewNormal, c);
 		c.gridy = 1;
 		p.add(m_rbViewSimplified, c);
+
+		c.gridy++;
+
 		return p;
 	}
 
 	private JPanel createAfterShutdownPanel()
 	{
-		TitledGridBagPanel panel = new TitledGridBagPanel(JAPMessages.getString(MSG_ON_CLOSING_JAP));
+		TitledGridBagPanel panel = new TitledGridBagPanel(JAPMessages.getString(MSG_ON_CLOSING_JAP),
+			new Insets(0, 10, 0, 10));
 		m_cbWarnOnClose = new JCheckBox(JAPMessages.getString(MSG_WARNING_ON_CLOSING_JAP));
+
 		panel.addRow(m_cbWarnOnClose, null);
 		return panel;
 	}
@@ -618,7 +625,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 				updateThirdPanel(b);
 			}
 		});
-		c.insets = new Insets(10, 10, 0, 10);
+		c.insets = new Insets(0, 10, 0, 10);
 		c.anchor = GridBagConstraints.NORTHWEST;
 		c.weightx = 1;
 		p.add(m_cbAfterStart, c);
@@ -659,16 +666,16 @@ final class JAPConfUI extends AbstractJAPConfModule
 
 	protected boolean onOkPressed()
 	{
-	/*
-	 JAPDialog.showMessageDialog(getRootPanel(),
-												JAPMessages.getString("confViewChanged"));
+		/*
+		 JAPDialog.showMessageDialog(getRootPanel(),
+				   JAPMessages.getString("confViewChanged"));
 
-	 JAPDialog.showMessageDialog(getRootPanel(),
-												JAPMessages.getString("confLanguageChanged"));
+		 JAPDialog.showMessageDialog(getRootPanel(),
+				   JAPMessages.getString("confLanguageChanged"));
 
-	 JAPDialog.showMessageDialog(getRootPanel(),
-												JAPMessages.getString("confLookAndFeelChanged"));
-		*/
+		 JAPDialog.showMessageDialog(getRootPanel(),
+				   JAPMessages.getString("confLookAndFeelChanged"));
+		 */
 
 		JAPModel.getInstance().setFontSize(m_slidFontSize.getValue());
 
@@ -716,12 +723,13 @@ final class JAPConfUI extends AbstractJAPConfModule
 		{
 			final int defaultViewRestart = newDefaultView;
 			JAPConf.getInstance().addNeedRestart(
-			new JAPConf.AbstractRestartNeedingConfigChange()
+				new JAPConf.AbstractRestartNeedingConfigChange()
 			{
 				public String getName()
 				{
 					return JAPMessages.getString("ngSettingsViewBorder");
 				}
+
 				public void doChange()
 				{
 					JAPController.getInstance().setDefaultView(defaultViewRestart);
@@ -730,8 +738,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 
 		}
 
-		JAPDialog.setOptimizedFormat(((DialogFormat)m_comboDialogFormat.getSelectedItem()).getFormat());
-
+		JAPDialog.setOptimizedFormat( ( (DialogFormat) m_comboDialogFormat.getSelectedItem()).getFormat());
 
 		String newLaF;
 		if (m_comboUI.getSelectedIndex() >= 0)
@@ -760,10 +767,8 @@ final class JAPConfUI extends AbstractJAPConfModule
 			});
 		}
 
-
 		return true;
 	}
-
 
 	private void setLanguageComboIndex(Locale a_locale)
 	{
@@ -800,7 +805,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		boolean b = JAPModel.getMoveToSystrayOnStartup() || JAPModel.getMinimizeOnStartup();
 		for (int i = 0; i < m_comboDialogFormat.getItemCount(); i++)
 		{
-			if (((DialogFormat)m_comboDialogFormat.getItemAt(i)).getFormat() ==
+			if ( ( (DialogFormat) m_comboDialogFormat.getItemAt(i)).getFormat() ==
 				JAPDialog.getOptimizedFormat())
 			{
 				m_comboDialogFormat.setSelectedIndex(i);
@@ -870,7 +875,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 			lf = new LookAndFeelInfo[vecLFs.size()];
 			for (int i = 0; i < lf.length; i++)
 			{
-				lf[i] = (LookAndFeelInfo)vecLFs.elementAt(i);
+				lf[i] = (LookAndFeelInfo) vecLFs.elementAt(i);
 			}
 			UIManager.setInstalledLookAndFeels(lf);
 
