@@ -2264,7 +2264,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			return m_startServer;
 		}
 
-		public void run()
+		public void runJob()
 		{
 			boolean bRetryOnError;
 			/*
@@ -2292,7 +2292,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 							  "Job for changing the anonymity mode to '" +
 							  (new Boolean(m_startServer)).toString() + "' was executed.");
 			}
-			m_anonJobQueue.removeJob(this);
 		}
 
 		/**

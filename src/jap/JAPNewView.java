@@ -99,6 +99,7 @@ import logging.LogType;
 import platform.AbstractOS;
 import update.JAPUpdateWizard;
 import anon.util.JobQueue;
+import java.lang.reflect.*;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver, Observer
@@ -2080,10 +2081,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	{
 		m_transferedBytesJobs.addJob(new JobQueue.Job()
 		{
-			public void run()
+			public void runJob()
 			{
-				final JobQueue.Job thisJob = this;
-
 				m_ViewIconified.transferedBytes(c, protocolType);
 
 				Runnable transferedBytesThread = new Runnable()
@@ -2117,10 +2116,19 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						m_labelOwnTrafficBytes.setText(s);
 						m_labelOwnTrafficBytesSmall.setText(s);
 						JAPDll.onTraffic();
-						m_transferedBytesJobs.removeJob(thisJob);
 					}
 				};
-				SwingUtilities.invokeLater(transferedBytesThread);
+
+				try
+				{
+					SwingUtilities.invokeAndWait(transferedBytesThread);
+				}
+				catch (InvocationTargetException ex)
+				{
+				}
+				catch (InterruptedException ex)
+				{
+				}
 				transferedBytesThread = null;
 			}
 		});
