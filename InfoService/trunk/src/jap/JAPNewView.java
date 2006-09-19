@@ -98,7 +98,7 @@ import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
 import update.JAPUpdateWizard;
-import gui.AWTUpdateQueue;
+import anon.util.JobQueue;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver, Observer
@@ -126,7 +126,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String MSG_IS_TOOLTIP = JAPNewView.class.getName() + "_isDisabledTooltip";
 
 
-
+	private JobQueue m_transferedBytesJobs;
 
 	private static final String HLP_ANONYMETER = JAPNewView.class.getName() + "_anonymometer";
 
@@ -227,6 +227,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_Controller = JAPController.getInstance();
 		m_dlgConfig = null; //new JAPConf(this);
 		m_bIsIconified = false;
+		m_transferedBytesJobs = new JobQueue("Transfered bytes update job queue");
 		m_lTrafficWWW = 0;
 		m_lTrafficOther = 0;
 	}
@@ -399,7 +400,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 				if (e.getStateChange() == ItemEvent.SELECTED)
 				{
-					SwingUtilities.invokeLater(new Thread()
+					SwingUtilities.invokeLater(new Runnable()
 					{
 						public void run()
 						{
@@ -486,7 +487,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_lblISRequestsDeactivated.setForeground(Color.red);
 		m_lblISRequestsDeactivated.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		m_lblISRequestsDeactivated.setVisible(false);
-		final JAPNewView view = this;
 		m_lblISRequestsDeactivated.addMouseListener(new MouseAdapter()
 		{
 			public void mouseClicked(MouseEvent e)
@@ -499,7 +499,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 				if (JAPModel.getInstance().isInfoServiceDisabled())
 				{
-					if (JAPDialog.showConfirmDialog(view, JAPMessages.getString(MSG_IS_DISABLED_EXPLAIN),
+					if (JAPDialog.showConfirmDialog(JAPNewView.this,
+													JAPMessages.getString(MSG_IS_DISABLED_EXPLAIN),
 													JAPDialog.OPTION_TYPE_YES_NO,
 													JAPDialog.MESSAGE_TYPE_WARNING, meterIcons[2])
 						== JAPDialog.RETURN_VALUE_YES)
@@ -511,7 +512,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				if (!JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed() &&
 					!JAPController.getInstance().isAnonConnected())
 				{
-					if (JAPDialog.showConfirmDialog(view, JAPMessages.getString(
+					if (JAPDialog.showConfirmDialog(JAPNewView.this, JAPMessages.getString(
 									   JAPController.MSG_IS_NOT_ALLOWED),
 						JAPDialog.OPTION_TYPE_YES_NO,
 						JAPDialog.MESSAGE_TYPE_WARNING)
@@ -1030,16 +1031,16 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JAPModel.getInstance().addObserver(this);
 
 		JAPHelp.init(this, AbstractOS.getInstance(), AbstractOS.getInstance());
-		new Thread()
+		new Thread(new Runnable()
 		{
 			public void run()
 			{
 				synchronized (LOCK_CONFIG)
 				{
-					m_dlgConfig = new JAPConf(view, m_bWithPayment);
+					m_dlgConfig = new JAPConf(JAPNewView.this, m_bWithPayment);
 				}
 			}
-		}.start();
+		}).start();
 	}
 
 
@@ -1534,7 +1535,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			Database.getInstance(NewCascadeIDEntry.class).remove(
 						 ((MixCascade)a_serverDescription).getMixIDsAsString());
 		}
-		new Thread()
+		new Thread(new Runnable()
 		{
 			public void run()
 			{
@@ -1543,7 +1544,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					m_connectionEstablishedSync.notifyAll();
 				}
 			}
-		}.start();
+		}).start();
 	}
 
 	public void dataChainErrorSignaled()
@@ -1551,9 +1552,15 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		addStatusMsg(JAPMessages.getString(MSG_ERROR_PROXY), JAPDialog.MESSAGE_TYPE_ERROR, true);
 	}
 
+	public void dispose()
+	{
+		m_transferedBytesJobs.stop();
+		super.dispose();
+	}
+
 	public void disconnected()
 	{
-		new Thread()
+		new Thread(new Runnable()
 		{
 			public void run()
 			{
@@ -1562,7 +1569,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					m_connectionEstablishedSync.notifyAll();
 				}
 			}
-		}.start();
+		}).start();
 	}
 
 	public void connecting(AnonServerDescription a_serverDescription)
@@ -1588,7 +1595,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			m_bActionPerformed = true;
 		}
 
-		Thread doIt = new Thread()
+		Thread doIt = new Thread(new Runnable()
 		{
 			public void run()
 			{
@@ -1684,14 +1691,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 				m_bActionPerformed = false;
 			}
-		};
+		});
 
 		doIt.start();
 	}
 
 	private void showConnecting(final boolean a_bOnError)
 	{
-		Thread updateThread = new Thread("Wait for connecting")
+		Thread updateThread = new Thread(new Runnable()
 		{
 			public void run()
 			{
@@ -1762,7 +1769,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					}
 				}
 			}
-		};
+		}, "Wait for connecting");
 		updateThread.setDaemon(true);
 		updateThread.start();
 	}
@@ -2068,62 +2075,55 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_progressOwnTrafficActivitySmall.setValue(c);
 //			ownTrafficChannelsProgressBar.setString(String.valueOf(c));
 	}
-/*
-	private final AWTUpdateQueue TRANSFERED_BYTES_UPDATE_QUEUE = new AWTUpdateQueue(new Runnable()
-		{
-			public void run()
-			{
-				onUpdateValues();
-			}
-	});
-*/
 
 	public void transferedBytes(final long c, final int protocolType)
 	{
-		m_ViewIconified.transferedBytes(c, protocolType);
-
-		Runnable transferedBytesThread = new Runnable()
+		m_transferedBytesJobs.addJob(new JobQueue.Job()
 		{
 			public void run()
 			{
-				// Nr of Bytes transmitted anonymously
-				if (protocolType == IProxyListener.PROTOCOL_WWW)
-				{
-					m_lTrafficWWW = JAPModel.getInstance().getMixedBytes();
-				}
-				else if (protocolType == IProxyListener.PROTOCOL_OTHER)
-				{
-					m_lTrafficOther = c;
+				final JobQueue.Job thisJob = this;
 
-				}
+				m_ViewIconified.transferedBytes(c, protocolType);
 
-				String unit = JAPUtil.formatBytesValueOnlyUnit(m_lTrafficWWW);
-				m_labelOwnTrafficUnitWWW.setText(unit);
-				String s = JAPUtil.formatBytesValueWithoutUnit(m_lTrafficWWW);
-				m_labelOwnTrafficBytesWWW.setText(s);
-				unit = JAPUtil.formatBytesValueOnlyUnit(m_lTrafficOther);
-				m_labelOwnTrafficUnitOther.setText(unit);
-				s = JAPUtil.formatBytesValueWithoutUnit(m_lTrafficOther);
-				m_labelOwnTrafficBytesOther.setText(s);
-				long sum = m_lTrafficWWW + m_lTrafficOther;
-				unit = JAPUtil.formatBytesValueOnlyUnit(sum);
-				m_labelOwnTrafficUnit.setText(unit);
-				m_labelOwnTrafficUnitSmall.setText(unit);
-				s = JAPUtil.formatBytesValueWithoutUnit(sum);
-				m_labelOwnTrafficBytes.setText(s);
-				m_labelOwnTrafficBytesSmall.setText(s);
-				JAPDll.onTraffic();
+				Runnable transferedBytesThread = new Runnable()
+				{
+					public void run()
+					{
+						// Nr of Bytes transmitted anonymously
+						if (protocolType == IProxyListener.PROTOCOL_WWW)
+						{
+							m_lTrafficWWW = JAPModel.getInstance().getMixedBytes();
+						}
+						else if (protocolType == IProxyListener.PROTOCOL_OTHER)
+						{
+							m_lTrafficOther = c;
+
+						}
+
+						String unit = JAPUtil.formatBytesValueOnlyUnit(m_lTrafficWWW);
+						m_labelOwnTrafficUnitWWW.setText(unit);
+						String s = JAPUtil.formatBytesValueWithoutUnit(m_lTrafficWWW);
+						m_labelOwnTrafficBytesWWW.setText(s);
+						unit = JAPUtil.formatBytesValueOnlyUnit(m_lTrafficOther);
+						m_labelOwnTrafficUnitOther.setText(unit);
+						s = JAPUtil.formatBytesValueWithoutUnit(m_lTrafficOther);
+						m_labelOwnTrafficBytesOther.setText(s);
+						long sum = m_lTrafficWWW + m_lTrafficOther;
+						unit = JAPUtil.formatBytesValueOnlyUnit(sum);
+						m_labelOwnTrafficUnit.setText(unit);
+						m_labelOwnTrafficUnitSmall.setText(unit);
+						s = JAPUtil.formatBytesValueWithoutUnit(sum);
+						m_labelOwnTrafficBytes.setText(s);
+						m_labelOwnTrafficBytesSmall.setText(s);
+						JAPDll.onTraffic();
+						m_transferedBytesJobs.removeJob(thisJob);
+					}
+				};
+				SwingUtilities.invokeLater(transferedBytesThread);
+				transferedBytesThread = null;
 			}
-		};
-		if (SwingUtilities.isEventDispatchThread())
-		{
-			transferedBytesThread.run();
-		}
-		else
-		{
-			SwingUtilities.invokeLater(transferedBytesThread);
-		}
-		transferedBytesThread = null;
+		});
 	}
 
 	public Dimension getPreferredSize()

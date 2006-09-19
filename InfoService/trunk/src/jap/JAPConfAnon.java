@@ -938,7 +938,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 						   JAPMessages.getString("activeCascadeEdited"));
 						 }**/
 				}
-				new Thread()
+				new Thread(new Runnable()
 				{
 					// get out of event thread
 					public void run()
@@ -946,7 +946,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 						updateValues(true);
 						m_listMixCascade.setSelectedValue(c, true);
 					}
-				}.start();
+				}).start();
 
 			}
 			else
@@ -1082,7 +1082,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			if (m_locationCoordinates != null && !m_mapShown)
 			{
-				new Thread()
+				new Thread(new Runnable()
 				{
 					public void run()
 					{
@@ -1102,7 +1102,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 						getRootPanel().setCursor(Cursor.getDefaultCursor());
 						m_mapShown = false;
 					}
-				}.start();
+				}).start();
 			}
 		}
 	}

@@ -464,7 +464,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 	 */
 	private void blink()
 	{
-		Thread blinkThread = new Thread()
+		Thread blinkThread = new Thread(new Runnable()
 		{
 			public void run()
 			{
@@ -489,7 +489,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 					}
 				}
 			}
-		};
+		});
 		blinkThread.setDaemon(true);
 		blinkThread.start();
 	}

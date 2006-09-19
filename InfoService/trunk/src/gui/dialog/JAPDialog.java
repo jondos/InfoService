@@ -2735,7 +2735,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			{
 				final WindowListener currrentListener = (WindowListener)listeners.nextElement();
 				// do this trick to bypass deadlocks
-				Thread run = new Thread()
+				Thread run = new Thread(new Runnable()
 				{
 					public void run()
 					{
@@ -2748,7 +2748,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 							}
 						});
 					}
-				};
+				});
 				run.setDaemon(true);
 				run.start();
 			}

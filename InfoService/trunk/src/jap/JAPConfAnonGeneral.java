@@ -210,13 +210,13 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		 * Set DT asynchronous; otherwise, the Event Thread is locked while the AnonClient connects
 		 */
 		final int dtAsync = dummyTraffic;
-		new Thread()
+		new Thread(new Runnable()
 		{
 			public void run()
 			{
 				m_Controller.setDummyTraffic(dtAsync);
 			}
-		}.start();
+		}).start();
 
 		// Anonservice settings
 		JAPModel.getInstance().denyNonAnonymousSurfing(m_cbDenyNonAnonymousSurfing.isSelected());

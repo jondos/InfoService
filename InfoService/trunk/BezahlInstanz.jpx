@@ -163,7 +163,6 @@
   <node name="anon.util" type="Package"/>
   <node name="captcha" type="Package"/>
   <node name="captcha.graphics" type="Package"/>
-  <node name="gui.dialog" type="Package"/>
   <node name="jpi" type="Package"/>
   <node name="jpi.db" type="Package"/>
   <node name="jpi.helper" type="Package"/>

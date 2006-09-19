@@ -29,7 +29,6 @@ package jap;
 
 import java.util.Hashtable;
 
-import anon.infoservice.AbstractDatabaseEntry;
 import anon.infoservice.StatusInfo;
 
 final class JAPFeedback extends AbstractDatabaseUpdater

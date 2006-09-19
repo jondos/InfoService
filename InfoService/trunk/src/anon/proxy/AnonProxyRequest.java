@@ -144,13 +144,13 @@ public final class AnonProxyRequest implements Runnable
 				{
 					LogHolder.log(LogLevel.ERR, LogType.NET, "AnonProxyRequest - Connection to Mix lost");
 
-					Thread timeoutThread = new Thread("Request reconnect thread")
+					Thread timeoutThread = new Thread(new Runnable()
 					{
 						public void run()
 						{
 							m_Proxy.reconnect();
 						}
-					};
+					}, "Request reconnect thread");
 					timeoutThread.start();
 					// set timeout for this request
 					long currentTime = System.currentTimeMillis();
