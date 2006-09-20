@@ -114,6 +114,7 @@ import jap.pay.wizardnew.PaymentInfoPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import javax.swing.border.TitledBorder;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -328,7 +329,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		JPanel rootPanel = getRootPanel();
 		/* clear the whole root panel */
 		rootPanel.removeAll();
-
+		if (JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED)
+		{
+			rootPanel.setBorder(new TitledBorder(JAPMessages.getString("ngPayment")));
+		}
 		/* insert all components in the root panel */
 		m_tabPane = new JTabbedPane();
 		//tabPane.setFont(getFontSetting());
