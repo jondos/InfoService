@@ -90,6 +90,8 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	private static final String MSG_PASSIVE_FTP = JAPConfAnonGeneral.class.getName() + "_passiveFTP";
 	private static final String MSG_TOOLTIP_SERVICE_DEACTIVATED = JAPConfAnonGeneral.class.getName() +
 		"_tooltipServiceDeactivated";
+	private static final String MSG_EVERY_SECONDS = JAPConfAnonGeneral.class.getName() + "_everySeconds";
+
 
 
 
@@ -97,9 +99,9 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	private static final String IMG_ARROW_RIGHT = JAPConfAnonGeneral.class.getName() + "_arrowRight.gif";
 	private static final String IMG_ARROW_LEFT = JAPConfAnonGeneral.class.getName() + "_arrowLeft.gif";
 
-	private static final int DT_INTERVAL_STEPLENGTH = 10;
-	private static final int DT_INTERVAL_STEPS = 6;
-	private static final int DT_INTERVAL_DEFAULT = 3;
+	private static final int DT_INTERVAL_STEPLENGTH = 5;
+	private static final int DT_INTERVAL_STEPS = 12;
+	private static final int DT_INTERVAL_DEFAULT = 5;
 
 	private JCheckBox m_cbDenyNonAnonymousSurfing;
 	private JCheckBox m_cbDummyTraffic;
@@ -109,7 +111,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	private JRadioButton m_cbRestrictAutoChoose;
 	private JRadioButton m_cbRestrictAutoChoosePay;
 	private JRadioButton m_cbDoNotRestrictAutoChoose;
-	private JSlider m_sliderDummyTrafficIntervall;
+	private JComboBox m_dummyTrafficIntervallCmb;
 	private JAPController m_Controller;
 	private JComboBox[] m_comboServices;
 
@@ -151,15 +153,22 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_cbDummyTraffic.setSelected(iTmp > -1);
 		if (iTmp > -1)
 		{
-			m_sliderDummyTrafficIntervall.setValue(iTmp / 1000);
+			int index = (iTmp / 1000 / DT_INTERVAL_STEPLENGTH) - 1;
+			if (index < 0)
+			{
+				index = 0;
+			}
+			else if (index >= m_dummyTrafficIntervallCmb.getItemCount())
+			{
+				index = DT_INTERVAL_STEPS - 1;
+			}
+			m_dummyTrafficIntervallCmb.setSelectedIndex(index);
 		}
-		m_sliderDummyTrafficIntervall.setEnabled(iTmp > -1);
-		Dictionary d = m_sliderDummyTrafficIntervall.getLabelTable();
-		for (int i = 1; i <= DT_INTERVAL_STEPS; i++)
+		else
 		{
-			( (JLabel) d.get(new Integer(i * DT_INTERVAL_STEPLENGTH))).setEnabled(
-						 m_sliderDummyTrafficIntervall.isEnabled());
+			m_dummyTrafficIntervallCmb.setSelectedIndex(DT_INTERVAL_DEFAULT);
 		}
+		m_dummyTrafficIntervallCmb.setEnabled(iTmp > -1);
 		m_cbDenyNonAnonymousSurfing.setSelected(JAPModel.getInstance().isNonAnonymousSurfingDenied());
 		m_cbAutoConnect.setSelected(JAPModel.getAutoConnect());
 		m_cbAutoReConnect.setSelected(JAPModel.isAutomaticallyReconnected());
@@ -193,13 +202,14 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_comboServices[3].setEnabled(JAPModel.getInstance().isTorActivated());
 	}
 
-//ok pressed
+
 	protected boolean onOkPressed()
 	{
 		int dummyTraffic;
 		if (m_cbDummyTraffic.isSelected())
 		{
-			dummyTraffic = m_sliderDummyTrafficIntervall.getValue() * 1000;
+			dummyTraffic =
+				((DummyTrafficInterval)m_dummyTrafficIntervallCmb.getSelectedItem()).getInterval() * 1000;
 		}
 		else
 		{
@@ -348,7 +358,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		c.gridx = 0;
 		c.gridy = 0;
 		c.gridheight = 1;
-		c.gridwidth = 1;
+		c.gridwidth = 2;
 		c.insets = new Insets(10, 10, 0, 10);
 		c.anchor = GridBagConstraints.NORTHWEST;
 		c.fill = GridBagConstraints.BOTH;
@@ -384,32 +394,36 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 
 		panelRoot.add(m_panelRestrictedCascades, c);
 		c.gridy++;
-
+		c.weightx = 0.0;
+		c.gridwidth = 1;
 		panelRoot.add(m_cbDummyTraffic, c);
+
+
+		DummyTrafficInterval[] dtIntervals = new DummyTrafficInterval[DT_INTERVAL_STEPS];
+		for (int i = 0; i < dtIntervals.length; i++)
+		{
+			dtIntervals[i] = new DummyTrafficInterval((i + 1) * DT_INTERVAL_STEPLENGTH);
+		}
+
+		m_dummyTrafficIntervallCmb = new JComboBox(dtIntervals);
+		c.weighty = 0.0;
+		c.gridx = 1;
+		c.fill = GridBagConstraints.NONE;
+		c.insets = new Insets(10, 0, 0, 10);
+		panelRoot.add(m_dummyTrafficIntervallCmb, c);
+
 		c.gridy++;
 		c.weighty = 1.0;
-		m_sliderDummyTrafficIntervall = new JSlider(SwingConstants.HORIZONTAL,
-													DT_INTERVAL_STEPLENGTH,
-													DT_INTERVAL_STEPS * DT_INTERVAL_STEPLENGTH,
-													DT_INTERVAL_DEFAULT * DT_INTERVAL_STEPLENGTH);
-		m_sliderDummyTrafficIntervall.setMajorTickSpacing(DT_INTERVAL_STEPLENGTH);
-		m_sliderDummyTrafficIntervall.setMinorTickSpacing(DT_INTERVAL_STEPLENGTH / 2);
-		m_sliderDummyTrafficIntervall.setPaintLabels(true);
-		m_sliderDummyTrafficIntervall.setPaintTicks(true);
-		m_sliderDummyTrafficIntervall.setSnapToTicks(true);
-		panelRoot.add(m_sliderDummyTrafficIntervall, c);
+		c.weightx = 1.0;
+		c.gridwidth = 2;
+		c.fill = GridBagConstraints.BOTH;
+		panelRoot.add(new JLabel(), c);
 
 		m_cbDummyTraffic.addItemListener(new ItemListener()
 		{
 			public void itemStateChanged(ItemEvent e)
 			{
-				m_sliderDummyTrafficIntervall.setEnabled(e.getStateChange() == ItemEvent.SELECTED);
-				Dictionary d = m_sliderDummyTrafficIntervall.getLabelTable();
-				for (int i = 1; i <= DT_INTERVAL_STEPS; i++)
-				{
-					( (JLabel) d.get(new Integer(i*DT_INTERVAL_STEPLENGTH))).setEnabled(e.getStateChange() ==
-						ItemEvent.SELECTED);
-				}
+				m_dummyTrafficIntervallCmb.setEnabled(e.getStateChange() == ItemEvent.SELECTED);
 			}
 		});
 		updateValues(false);
@@ -420,7 +434,8 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	{
 		m_cbDenyNonAnonymousSurfing.setSelected(false);
 		m_cbDummyTraffic.setSelected(true);
-		m_sliderDummyTrafficIntervall.setEnabled(true);
+		m_dummyTrafficIntervallCmb.setEnabled(true);
+		m_dummyTrafficIntervallCmb.setSelectedIndex(DT_INTERVAL_DEFAULT);
 		m_cbAutoConnect.setSelected(true);
 		m_cbAutoReConnect.setSelected(true);
 		m_cbAutoChooseCascades.setSelected(true);
@@ -528,5 +543,25 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		panel.add(allowedCascadesScrollPane, c);
 
 		return panel;
+	}
+
+	private class DummyTrafficInterval
+	{
+		private int m_interval;
+
+		DummyTrafficInterval(int a_interval)
+		{
+			m_interval = a_interval;
+		}
+
+		public int getInterval()
+		{
+			return m_interval;
+		}
+
+		public String toString()
+		{
+			return JAPMessages.getString(MSG_EVERY_SECONDS, "" + m_interval);
+		}
 	}
 }

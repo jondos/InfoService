@@ -56,7 +56,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	 */
 	public static final String XML_ELEMENT_NAME = "InfoServiceManagement";
 	public static final String XML_ELEM_CHANGE_INFO_SERVICES = "ChangeInfoService";
-	public static final int MAXIMUM_OF_ASKED_INFO_SERVICES = 5;
+	public static final int MAXIMUM_OF_ASKED_INFO_SERVICES = 10;
 	public static final int DEFAULT_OF_ASKED_INFO_SERVICES = 3;
 
 	/**
@@ -217,7 +217,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 		return m_preferredInfoService;
 	}
 
-	public int getNumberOFAskedInfoServices()
+	public int getNumberOfAskedInfoServices()
 	{
 		return m_nrAskedInfoServices;
 	}

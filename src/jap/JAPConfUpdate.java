@@ -273,7 +273,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		titledBorder = new TitledBorder(" Info ");
 		JPanel infoPanel = new JPanel(new GridLayout(1, 1));
 		infoPanel.setBorder(titledBorder);
-		m_taInfo = new JTextArea(10, 40);
+		m_taInfo = new JTextArea();
 		m_taInfo.setEditable(false);
 		m_taInfo.setHighlighter(null);
 		JScrollPane scrollpane = new JScrollPane(m_taInfo);
