@@ -503,8 +503,10 @@ public class JAP
 			}
 			else
 			{
+				GUIUtils.setAlwaysOnTop(frameView, true);
 				frameView.setVisible(true);
 				frameView.toFront();
+				GUIUtils.setAlwaysOnTop(frameView, false);
 			}
 			((JAPSplash)splash).dispose();
 		}

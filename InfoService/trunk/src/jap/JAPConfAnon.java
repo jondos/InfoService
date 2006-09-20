@@ -322,7 +322,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			c.gridy = 0;
 			c.gridwidth = 2;
 			c.anchor = GridBagConstraints.NORTHWEST;
-			c.insets = new Insets(5, 5, 5, 5);
+			c.insets = new Insets(0, 5, 5, 5);
 			m_cascadesPanel.add(l, c);
 		}
 
@@ -337,7 +337,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.weightx = 1.0;
 		c.weighty = 1.0;
 		c.fill = GridBagConstraints.BOTH;
-		c.insets = new Insets(5, 5, 0, 5);
+		c.insets = new Insets(5, 5, 5, 5);
 		JScrollPane scroll = new JScrollPane(m_listMixCascade);
 		scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		scroll.setMinimumSize(new Dimension(100, 100));

@@ -38,6 +38,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -57,11 +59,9 @@ import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
 import gui.CAListCellRenderer;
 import gui.CertDetailsDialog;
-import gui.JAPMessages;
 import gui.JAPHelp;
+import gui.JAPMessages;
 import gui.dialog.JAPDialog;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 /**
  * This is the configuration GUI for the cert.
@@ -108,7 +108,6 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		panelRoot.removeAll();
 
 		m_borderCert = new TitledBorder(JAPMessages.getString("confCertTab"));
-		//m_borderCert.setTitleFont(getFontSetting());
 		panelRoot.setBorder(m_borderCert);
 		JPanel caLabel = createCALabel();
 		m_panelCAList = createCertCAPanel();
@@ -117,24 +116,34 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		GridBagConstraints c = new GridBagConstraints();
 		c.gridx = 0;
 		c.gridy = 0;
-		c.weightx = 1.0;
+		c.weightx = 0;
 		c.weighty = 0;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		panelRoot.add(caLabel, c);
 		c.gridy++;
 		c.fill = GridBagConstraints.BOTH;
+		c.weightx = 1.0;
 		c.weighty = 1.0;
 
 		panelRoot.add(m_panelCAList, c);
 		c.gridy++;
-		c.insets = new Insets(20, 10, 20, 10);
+		//c.insets = new Insets(20, 10, 20, 10);
+		c.insets = new Insets(10, 10, 10, 10);
 		c.weighty = 0;
+		c.weightx = 0;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		panelRoot.add(new JSeparator(), c);
 
 		c.gridy++;
 		c.insets = new Insets(0, 0, 0, 0);
 		panelRoot.add(m_shortInfoPanel, c);
+
+		//c.weighty = 1;
+		//c.weightx = 1;
+		/*
+		c.fill = GridBagConstraints.BOTH;
+		c.gridy++;
+		panelRoot.add(new JLabel(), c);*/
 	}
 
 	/**
@@ -154,8 +163,7 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		GridBagLayout panelLayoutCA = new GridBagLayout();
 		r_panelCALabel.setLayout(panelLayoutCA);
 
-		JLabel labelTrust1 = new JLabel(JAPMessages.getString("certTrust1"));
-		JLabel labelTrust2 = new JLabel(JAPMessages.getString("certTrust2"));
+		JLabel labelTrust1 = new JLabel(JAPMessages.getString("certTrust") + ":");
 
 		m_cbCertCheckEnabled = new JCheckBox();
 		m_cbCertCheckEnabled.setSelected(true);
@@ -206,14 +214,8 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		panelConstraintsCA.gridx = 1;
 		panelConstraintsCA.gridy = 0;
 		panelConstraintsCA.weightx = 1.0;
-		panelConstraintsCA.insets = new Insets(10, 0, 0, 0);
+		panelConstraintsCA.insets = new Insets(10, 0, 10, 0);
 		r_panelCALabel.add(labelTrust1, panelConstraintsCA);
-
-		panelConstraintsCA.gridx = 1;
-		panelConstraintsCA.gridy = 1;
-		panelConstraintsCA.insets = new Insets(0, 0, 10, 0);
-		panelLayoutCA.setConstraints(labelTrust2, panelConstraintsCA);
-		r_panelCALabel.add(labelTrust2);
 
 		return r_panelCALabel;
 	}
@@ -259,9 +261,8 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 					m_bttnCertStatus.setEnabled(true);
 					/* if the cert is not removable, the Remove Button is not enabled */
 					m_bttnCertRemove.setEnabled(!j.isNotRemovable());
-				} // else
-
-			} // valuechanged
+				}
+			}
 		});
 
 		m_listCert.addMouseListener(new MouseAdapter()

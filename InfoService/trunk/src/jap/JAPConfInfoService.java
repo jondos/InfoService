@@ -50,6 +50,7 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
+import javax.swing.JComboBox;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
@@ -79,9 +80,7 @@ import gui.JAPMessages;
 import gui.JAPHelp;
 import gui.GUIUtils;
 import gui.dialog.JAPDialog;
-import javax.swing.JSlider;
 import javax.swing.event.ChangeListener;
-import java.util.Dictionary;
 import javax.swing.event.ChangeEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.ItemEvent;
@@ -122,9 +121,8 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 	private JButton settingsInfoServiceConfigBasicSettingsRemoveButton;
 	private JCheckBox m_allowAutomaticIS;
 	private JCheckBox m_cbxAllowNonAnonymousConnection;
-	private JCheckBox m_cbxUseDefaultISOnly;
-	private JSlider m_sliderAskedInfoServices;
-	private JLabel m_lblSlider;
+	private JCheckBox m_cbxUseRedundantISRequests;
+	private JComboBox m_cmbAskedInfoServices;
 	private JAPHtmlMultiLineLabel m_lblExplanation;
 	private JAPHtmlMultiLineLabel m_settingsInfoServiceConfigBasicSettingsDescriptionLabel;
 
@@ -1238,20 +1236,20 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		JPanel advancedPanel = new JPanel();
 
 		m_allowAutomaticIS = new JCheckBox(
-			JAPMessages.getString("settingsInfoServiceConfigAdvancedSettingsEnableAutomaticRequestsBox"));
+			JAPMessages.getString("settingsInfoServiceConfigAdvancedSettingsEnableAutomaticRequestsBox") +
+			":");
 
-		m_cbxUseDefaultISOnly = new JCheckBox(
-			  JAPMessages.getString("settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox"));
-		m_cbxUseDefaultISOnly.setVisible(!JAPConstants.m_bReleasedVersion);
+		m_cbxUseRedundantISRequests = new JCheckBox(JAPMessages.getString(MSG_USE_MORE_IS) + ":");
+		m_cbxUseRedundantISRequests.setVisible(!JAPConstants.m_bReleasedVersion);
 		//settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox.setFont(getFontSetting());
-		m_cbxUseDefaultISOnly.addActionListener(new
+		m_cbxUseRedundantISRequests.addActionListener(new
 			ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
 			{
 				/* enable/disable the automatic changes of the infoservices */
-				InfoServiceHolder.getInstance().setChangeInfoServices(!
-					m_cbxUseDefaultISOnly.isSelected());
+				InfoServiceHolder.getInstance().setChangeInfoServices(
+					m_cbxUseRedundantISRequests.isSelected());
 			}
 		});
 
@@ -1284,8 +1282,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 							/* the InfoService management policy was changed */
 							boolean newPolicy = ( (Boolean) ( ( (InfoServiceHolderMessage) a_message).
 								getMessageData())).booleanValue();
-							m_cbxUseDefaultISOnly.setSelected(!
-								newPolicy);
+							m_cbxUseRedundantISRequests.setSelected(newPolicy);
 						}
 					}
 					if (a_notifier == JAPController.getInstance())
@@ -1339,7 +1336,8 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		GridBagConstraints advancedPanelConstraints = new GridBagConstraints();
 		advancedPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
 		advancedPanelConstraints.fill = GridBagConstraints.NONE;
-		advancedPanelConstraints.weightx = 1.0;
+		advancedPanelConstraints.weightx = 0.0;
+		advancedPanelConstraints.gridwidth = 2;
 
 		advancedPanelConstraints.gridx = 0;
 		advancedPanelConstraints.gridy = 0;
@@ -1355,49 +1353,47 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 		advancedPanelConstraints.gridx = 0;
 		advancedPanelConstraints.gridy = 2;
+		advancedPanelConstraints.gridwidth = 1;
 		//advancedPanelConstraints.insets = new Insets(0, 5, 20, 5);
-		advancedPanelLayout.setConstraints(
-			m_cbxUseDefaultISOnly, advancedPanelConstraints);
-		advancedPanel.add(m_cbxUseDefaultISOnly);
+		if (JAPConstants.m_bReleasedVersion)
+		{
+			advancedPanel.add(new JLabel(JAPMessages.getString(MSG_USE_MORE_IS) + ":"),
+							  advancedPanelConstraints);
+		}
+		else
+		{
+			advancedPanel.add(m_cbxUseRedundantISRequests, advancedPanelConstraints);
+		}
+		Integer[] askedInfoServices = new Integer[InfoServiceHolder.MAXIMUM_OF_ASKED_INFO_SERVICES];
+		for (int i = 0; i < askedInfoServices.length; i++)
+		{
+			askedInfoServices[i] = new Integer(i + 1);
+		}
+		m_cmbAskedInfoServices = new JComboBox(askedInfoServices);
+		advancedPanelConstraints.gridx++;
+		advancedPanel.add(m_cmbAskedInfoServices, advancedPanelConstraints);
 
-		m_lblSlider = new JLabel(JAPMessages.getString(MSG_USE_MORE_IS));
-		advancedPanelConstraints.gridy++;
-		advancedPanel.add(m_lblSlider, advancedPanelConstraints);
-
-		m_sliderAskedInfoServices = new JSlider(
-			  SwingConstants.HORIZONTAL, 1, InfoServiceHolder.MAXIMUM_OF_ASKED_INFO_SERVICES,
-			  InfoServiceHolder.getInstance().getNumberOFAskedInfoServices());
-		m_sliderAskedInfoServices.setMajorTickSpacing(1);
-		m_sliderAskedInfoServices.setMinorTickSpacing(1);
-		m_sliderAskedInfoServices.setPaintLabels(true);
-		m_sliderAskedInfoServices.setPaintTicks(true);
-		m_sliderAskedInfoServices.setSnapToTicks(true);
-
-		m_cbxUseDefaultISOnly.addItemListener(new ItemListener()
+		m_cbxUseRedundantISRequests.addItemListener(new ItemListener()
 		{
 			public void itemStateChanged(ItemEvent e)
 			{
-				m_sliderAskedInfoServices.setEnabled(!m_cbxUseDefaultISOnly.isSelected());
-				m_lblSlider.setEnabled(!m_cbxUseDefaultISOnly.isSelected());
-				Dictionary d = m_sliderAskedInfoServices.getLabelTable();
-				for (int i = 1; i <= InfoServiceHolder.MAXIMUM_OF_ASKED_INFO_SERVICES; i++)
-				{
-					( (JLabel) d.get(new Integer(i))).setEnabled(m_sliderAskedInfoServices.isEnabled());
-				}
+				m_cmbAskedInfoServices.setEnabled(m_cbxUseRedundantISRequests.isSelected());
 			}
 		});
 
-		advancedPanelConstraints.gridy++;
-		advancedPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
-		advancedPanelConstraints.weightx = 1.0;
-		advancedPanel.add(m_sliderAskedInfoServices, advancedPanelConstraints);
 
 		m_lblExplanation = new JAPHtmlMultiLineLabel(JAPMessages.getString(
 			  MSG_EXPLANATION, new Object[]{new Integer(InfoServiceHolder.DEFAULT_OF_ASKED_INFO_SERVICES)}));
-		advancedPanelConstraints.weightx = 0.0;
+		advancedPanelConstraints.gridy++;
+		advancedPanelConstraints.gridx = 0;
+		advancedPanelConstraints.gridwidth = 2;
+		advancedPanelConstraints.fill = GridBagConstraints.BOTH;
+		advancedPanel.add(m_lblExplanation, advancedPanelConstraints);
+
+		advancedPanelConstraints.weightx = 1.0;
 		advancedPanelConstraints.weighty = 1.0;
 		advancedPanelConstraints.gridy++;
-		advancedPanel.add(m_lblExplanation, advancedPanelConstraints);
+		advancedPanel.add(new JLabel(), advancedPanelConstraints);
 
 		updateValues(false);
 
@@ -1408,27 +1404,30 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 	{
 		m_cbxAllowNonAnonymousConnection.setSelected(
 			  JAPConstants.DEFAULT_ALLOW_INFOSERVICE_NON_ANONYMOUS_CONNECTION);
-		m_sliderAskedInfoServices.setValue(InfoServiceHolder.DEFAULT_OF_ASKED_INFO_SERVICES);
-		m_cbxUseDefaultISOnly.setSelected(false);
+		m_cmbAskedInfoServices.setSelectedIndex(InfoServiceHolder.DEFAULT_OF_ASKED_INFO_SERVICES - 1);
+		m_cbxUseRedundantISRequests.setSelected(true);
 		m_allowAutomaticIS.setSelected(true);
 	}
 
 	protected void onUpdateValues()
 	{
-		m_sliderAskedInfoServices.setValue(InfoServiceHolder.getInstance().getNumberOFAskedInfoServices());
+		int index = InfoServiceHolder.getInstance().getNumberOfAskedInfoServices() - 1;
+		if (index < 0)
+		{
+			index = 0;
+		}
+		else if (index >= m_cmbAskedInfoServices.getItemCount())
+		{
+			index = m_cmbAskedInfoServices.getItemCount() - 1;
+		}
+		m_cmbAskedInfoServices.setSelectedIndex(index);
 		m_allowAutomaticIS.setSelected(!JAPModel.getInstance().isInfoServiceDisabled());
 		m_cbxAllowNonAnonymousConnection.setSelected(
 			  JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed());
 		//Select the preferred InfoService
 		m_listKnownInfoServices.setSelectedValue(InfoServiceHolder.getInstance().
 												 getPreferredInfoService(), true);
-		m_sliderAskedInfoServices.setEnabled(InfoServiceHolder.getInstance().isChangeInfoServices());
-		m_lblSlider.setEnabled(InfoServiceHolder.getInstance().isChangeInfoServices());
-		Dictionary d = m_sliderAskedInfoServices.getLabelTable();
-		for (int i = 1; i <= InfoServiceHolder.MAXIMUM_OF_ASKED_INFO_SERVICES; i++)
-		{
-			( (JLabel) d.get(new Integer(i))).setEnabled(m_sliderAskedInfoServices.isEnabled());
-		}
+		m_cmbAskedInfoServices.setEnabled(InfoServiceHolder.getInstance().isChangeInfoServices());
 
 
 		m_lblExplanation.setFont(new JLabel().getFont());
@@ -1445,7 +1444,8 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 	protected boolean onOkPressed()
 	{
 		JAPModel.getInstance().allowInfoServiceViaDirectConnection(m_cbxAllowNonAnonymousConnection.isSelected());
-		InfoServiceHolder.getInstance().setNumberOfAskedInfoServices(m_sliderAskedInfoServices.getValue());
+		InfoServiceHolder.getInstance().setNumberOfAskedInfoServices(
+			  m_cmbAskedInfoServices.getSelectedIndex() + 1);
 		JAPModel.getInstance().setInfoServiceDisabled(!m_allowAutomaticIS.isSelected());
 		return true;
 	}
