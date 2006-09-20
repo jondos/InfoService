@@ -677,7 +677,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		Vector entries = Database.getInstance(MixCascade.class).getEntryList();
 		Vector entriesUserDefined = new Vector();
 		DefaultListModel listModel = new DefaultListModel();
-		listModel.setSize(entries.size());
+		listModel.ensureCapacity(entries.size());
+
 		CustomRenderer cr = new CustomRenderer();
 		m_listMixCascade.setCellRenderer(cr);
 		MixCascade currentCascade = JAPController.getInstance().getCurrentMixCascade();
@@ -712,8 +713,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				listModel.addElement(entriesUserDefined.elementAt(i));
 			}
 		}
-
-
 
 
 		Object value = m_listMixCascade.getSelectedValue();
