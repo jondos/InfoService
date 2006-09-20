@@ -146,7 +146,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		c1.gridy++;
 
 		JPanel pShutdown = createAfterShutdownPanel();
-		if (!bSimpleView)
+		//if (!bSimpleView)
 		{
 			panelRoot.add(pShutdown, c1);
 		}

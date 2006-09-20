@@ -64,6 +64,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
+import javax.swing.border.TitledBorder;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.event.ListSelectionEvent;
@@ -313,13 +314,17 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		m_cascadesPanel.setLayout(layout);
 
-		JLabel l = new JLabel(JAPMessages.getString("availableCascades"));
-		c.gridx = 0;
-		c.gridy = 0;
-		c.gridwidth = 2;
-		c.anchor = GridBagConstraints.NORTHWEST;
-		c.insets = new Insets(5, 5, 5, 5);
-		m_cascadesPanel.add(l, c);
+		JLabel l;
+		if (JAPModel.getDefaultView() != JAPConstants.VIEW_SIMPLIFIED)
+		{
+			l = new JLabel(JAPMessages.getString("availableCascades"));
+			c.gridx = 0;
+			c.gridy = 0;
+			c.gridwidth = 2;
+			c.anchor = GridBagConstraints.NORTHWEST;
+			c.insets = new Insets(5, 5, 5, 5);
+			m_cascadesPanel.add(l, c);
+		}
 
 		m_listMixCascade = new JList();
 		m_listMixCascade.addListSelectionListener(this);
@@ -487,6 +492,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		pRoot = getRootPanel();
 		pRoot.removeAll();
 		pRoot.setLayout(m_rootPanelLayout);
+		if (JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED)
+		{
+			pRoot.setBorder(new TitledBorder(JAPMessages.getString("availableCascades")));
+		}
 		m_rootPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
 
 		drawManualPanel("","");
