@@ -165,7 +165,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private JLabel m_nrLblExplainEnd;
 	private JLabel m_operatorLabel;
 	private JLabel m_emailLabel;
-	private JLabel m_urlLabel;
 	private JLabel m_locationLabel;
 	private JLabel m_payLabel;
 	private JLabel m_viewCertLabel;
@@ -571,6 +570,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			m_nrLabel.setText("N/A");
 			m_nrLblExplain.setText("");
 		}
+		m_nrLabel.setToolTipText(m_nrLabel.getText());
+
 		m_nrLblExplainBegin.setVisible(m_serverList.areMixButtonsEnabled());
 		m_nrLblExplainEnd.setVisible(m_serverList.areMixButtonsEnabled());
 
@@ -578,7 +579,18 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		//m_nrLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
 
 		m_operatorLabel.setText(GUIUtils.trim(m_infoService.getOperator(selectedMixId)));
-		m_operatorLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
+		//m_operatorLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
+
+		m_operatorLabel.setToolTipText(m_infoService.getUrl(selectedMixId));
+
+		if (getUrlFromLabel(m_operatorLabel) != null)
+		{
+			m_operatorLabel.setForeground(Color.blue);
+		}
+		else
+		{
+			m_operatorLabel.setForeground(m_nrLabel.getForeground());
+		}
 
 		m_emailLabel.setText(GUIUtils.trim(m_infoService.getEMail(selectedMixId)));
 		m_emailLabel.setToolTipText(m_infoService.getEMail(selectedMixId));
@@ -606,22 +618,14 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		m_locationLabel.setToolTipText(m_infoService.getLocation(selectedMixId));
 
-		m_urlLabel.setText(GUIUtils.trim(m_infoService.getUrl(selectedMixId)));
-		if (getUrlFromLabel(m_urlLabel) != null)
-		{
-			m_urlLabel.setForeground(Color.blue);
-		}
-		else
-		{
-			m_urlLabel.setForeground(m_nrLabel.getForeground());
-		}
-		m_urlLabel.setToolTipText(m_infoService.getUrl(selectedMixId));
-
-
 		m_serverInfo = m_infoService.getMixInfo(selectedMixId);
 		if(m_serverInfo != null)
 		{
 			m_serverCert = m_serverInfo.getMixCertificate();
+		}
+		else
+		{
+			m_serverCert = null;
 		}
 		/*if (m_serverCert == null && cascade != null && server == 0)
 		{
@@ -638,11 +642,16 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				 JAPMessages.getString(JAPMessages.getString(CertDetailsDialog.MSG_CERTNOTVALID))));
 			m_viewCertLabelValidity.setForeground(
 						 m_serverCert.getValidity().isValid(new Date()) ? Color.blue : Color.red);
+			m_viewCertLabel.setToolTipText(
+						 m_viewCertLabel.getText() + m_viewCertLabelValidity.getText());
+			m_viewCertLabelValidity.setToolTipText(
+						 m_viewCertLabel.getText() + m_viewCertLabelValidity.getText());
 		}
 		else
 		{
 			m_viewCertLabelValidity.setText(" ");
 			m_viewCertLabel.setText("N/A");
+			m_viewCertLabel.setToolTipText("N/A");
 			m_viewCertLabel.setForeground(m_nrLabel.getForeground());
 		}
 
@@ -1029,9 +1038,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	public void mouseClicked(MouseEvent e)
 	{
-		if (e.getSource() == m_urlLabel)
+		if (e.getSource() == m_operatorLabel)
 		{
-			String url = getUrlFromLabel( (JLabel) m_urlLabel);
+			String url = getUrlFromLabel(m_operatorLabel);
 			if (url == null)
 			{
 				return;
@@ -1125,13 +1134,12 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	public void mouseEntered(MouseEvent e)
 	{
-		if ( (e.getSource() == m_urlLabel && getUrlFromLabel(m_urlLabel) != null) ||
+		if ( (e.getSource() == m_operatorLabel && getUrlFromLabel(m_operatorLabel) != null) ||
 			 (e.getSource() == m_emailLabel && getEMailFromLabel(m_emailLabel) != null) ||
 			(e.getSource() == m_viewCertLabel && m_serverCert != null) ||
 			(e.getSource() == m_viewCertLabelValidity && m_serverCert != null) ||
 			(e.getSource() == m_locationLabel && m_locationCoordinates != null))
 		{
-
 			((JLabel)e.getSource()).setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		}
 		else if (e.getSource() instanceof JLabel)
@@ -1509,19 +1517,19 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			return null;
 		}
-}
+	}
 
 	private static String getUrlFromLabel(JLabel a_urlLabel)
 	{
-		String url = a_urlLabel.getText();
 		try
 		{
-			return new URL(url).toString();
+			return new URL(a_urlLabel.getToolTipText()).toString();
 		}
 		catch (Exception a_e)
 		{
 			return null;
 		}
+
 	}
 
 	/*
@@ -2379,6 +2387,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			add(l, c);
 
 			m_operatorLabel = new JLabel();
+			m_operatorLabel.addMouseListener(a_listener);
 			c.weightx = 1;
 			c.gridx = 1;
 			c.fill = GridBagConstraints.HORIZONTAL;
@@ -2401,20 +2410,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			c.gridwidth = 2;
 			add(m_emailLabel, c);
 
-			l = new JLabel(JAPMessages.getString("mixUrl"));
-			c.gridx = 0;
-			c.gridy++;
-			c.weightx = 0;
-			c.gridwidth = 1;
-			add(l, c);
-
-			m_urlLabel = new JLabel();
-			m_urlLabel.addMouseListener(a_listener);
-			c.gridx = 1;
-			c.gridwidth = 2;
-			add(m_urlLabel, c);
-
 			l = new JLabel(JAPMessages.getString("mixLocation") + ":");
+			c.weightx = 0;
 			c.gridx = 0;
 			c.gridy++;
 			c.gridwidth = 1;
@@ -2444,6 +2441,14 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			c.gridwidth = 1;
 			c.insets = new Insets(5, 0, 5, 5);
 			add(m_viewCertLabelValidity, c);
+			/*
+			c.weightx = 1.0;
+			c.weighty = 1.0;
+			c.gridy++;
+			c.gridx = 0;
+			c.gridwidth = 3;
+			add(new JLabel(), c);
+			*/
 		}
 	}
 }

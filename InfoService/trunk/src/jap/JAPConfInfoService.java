@@ -170,15 +170,14 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 			/* insert all components in the root panel */
 			m_infoServiceTabPane = new JTabbedPane();
-			m_infoServiceTabPane.addChangeListener(this);
 			//infoServiceTabPane.setFont(getFontSetting());
 			m_infoServiceTabPane.insertTab(JAPMessages.getString(
 				"settingsInfoServiceConfigBasicSettingsTabTitle"), null, createInfoServiceConfigPanel(), null,
 										 0);
 			m_infoServiceTabPane.insertTab(JAPMessages.getString(
-				"settingsInfoServiceConfigAdvancedSettingsTabTitle"), null, createInfoServiceAdvancedPanel(), null,
-										 1);
-
+				 "settingsInfoServiceConfigAdvancedSettingsTabTitle"), null, createInfoServiceAdvancedPanel(), null,
+										   1);
+			m_infoServiceTabPane.addChangeListener(this);
 			GridBagLayout rootPanelLayout = new GridBagLayout();
 			rootPanel.setLayout(rootPanelLayout);
 			rootPanel.add(m_infoServiceTabPane, createTabbedRootPanelContraints());

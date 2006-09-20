@@ -69,6 +69,7 @@ import anon.infoservice.ProxyInterface;
 import gui.JAPHelp;
 import gui.JAPJIntField;
 import gui.JAPMessages;
+import gui.GUIUtils;
 import gui.JAPMultilineLabel;
 import gui.dialog.JAPDialog;
 import jap.forward.JAPConfForwardingClient;
@@ -329,8 +330,21 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		}
 		else
 		{
-			pack();
+			for (int i = 0; i < 5; i++)
+			{
+				pack();
+				if (getSize().width < getSize().height)
+				{
+					LogHolder.log(LogLevel.ERR, LogType.GUI,
+								  "Could not pack config properly. Width is smaller than height! " +
+								  "Width:" + getSize().width + " Height:" + getSize().height);
+					Thread.yield();
+					continue;
+				}
+				break;
+			}
 		}
+
 		JAPModel.getInstance().addObserver(this);
 	}
 

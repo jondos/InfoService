@@ -83,6 +83,7 @@ import logging.LogLevel;
 import logging.LogType;
 import java.awt.Cursor;
 import java.awt.Insets;
+import java.awt.Rectangle;
 
 /**
  * This is the generic implementation for an optionally modal, resizable a dialog. Use the getRootPane()
@@ -2845,6 +2846,15 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	public final void setLocationCenteredOnOwner()
 	{
 		setLocationCenteredOn(m_parentWindow);
+	}
+
+	/**
+	 * Returns the bounds of the screen where this dialog is shown.
+	 * @return the bounds of the screen where this dialog is shown
+	 */
+	public final Rectangle getScreenBounds()
+	{
+		return GUIUtils.getScreenBounds(m_internalDialog);
 	}
 
 	/**
