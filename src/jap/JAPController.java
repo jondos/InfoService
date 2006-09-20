@@ -1360,7 +1360,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 											if (password == null)
 											{
 												if (JAPDialog.showYesNoDialog(
-													dialog, JAPMessages.getString(MSG_LOSEACCOUNTDATA),
+													(Component)a_splash,
+													JAPMessages.getString(MSG_LOSEACCOUNTDATA),
 													onTopAdapter))
 												{
 													// user clicked cancel

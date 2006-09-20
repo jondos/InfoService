@@ -2579,6 +2579,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		if (m_bOnTop || bOwnerOnTop)
 		{
 			GUIUtils.setAlwaysOnTop(getOwner(), false);
+			getOwner().toBack(); // fix for KDE, as otherwise the dialog would be below the window
 			newName = getOwner().getName();
 			m_internalDialog.setName(newName);
 			GUIUtils.setAlwaysOnTop(m_internalDialog, true);
