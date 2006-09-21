@@ -848,10 +848,9 @@ final class JAPConfUI extends AbstractJAPConfModule
 		}
 	}
 
-	protected void onRootPanelShown()
+	public String getHelpContext()
 	{
-		//Register help context
-		JAPHelp.getInstance().getContextObj().setContext("appearance");
+		return "appearance";
 	}
 
 	private void updateUICombo()

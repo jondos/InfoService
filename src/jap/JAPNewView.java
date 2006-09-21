@@ -246,6 +246,17 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private void init()
 	{
+		this.addMouseListener(new MouseAdapter()
+		{
+			public void mouseClicked(MouseEvent a_event)
+			{
+				if (a_event != null && a_event.getClickCount() == 2)
+				{
+					showIconifiedView();
+				}
+			}
+		});
+
 		m_flippingpanelOwnTraffic = new FlippingPanel(this);
 		m_flippingpanelForward = new FlippingPanel(this);
 

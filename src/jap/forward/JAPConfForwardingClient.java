@@ -381,10 +381,9 @@ public class JAPConfForwardingClient extends AbstractJAPConfModule
 		m_descLabel.setFont(new JLabel().getFont());
 	}
 
-	protected void onRootPanelShown()
+	public String getHelpContext()
 	{
-		//Register help context
-		JAPHelp.getInstance().getContextObj().setContext("forwarding_client");
+		return "forwarding_client";
 	}
 
 }

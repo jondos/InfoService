@@ -1498,10 +1498,14 @@ public class JAPConfForwardingServer extends AbstractJAPConfModule
 		return fetchedCascades;
 	}
 
+	public String getHelpContext()
+	{
+		return "forwarding_server";
+	}
+
+
 	protected void onRootPanelShown()
 	{
-		//Register help context
-		JAPHelp.getInstance().getContextObj().setContext("forwarding_server");
 		//Fill lists
 		if (!JAPModel.isInfoServiceDisabled())
 		{

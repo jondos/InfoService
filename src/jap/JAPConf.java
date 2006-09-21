@@ -196,12 +196,13 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 			m_moduleSystem.addConfigurationModule(rootNode, new JAPConfUpdate(), UPDATE_TAB);
 		}
 
-		DefaultMutableTreeNode nodeNet = m_moduleSystem.addComponent(rootNode, null, "ngTreeNetwork", null);
+		DefaultMutableTreeNode nodeNet = m_moduleSystem.addComponent(rootNode, null, "ngTreeNetwork", null,
+			null);
 		//if (!m_bIsSimpleView)
 		{
-			m_moduleSystem.addComponent(nodeNet, m_pPort, "confListenerTab", PORT_TAB);
+			m_moduleSystem.addComponent(nodeNet, m_pPort, "confListenerTab", PORT_TAB, "portlistener");
 		}
-		m_moduleSystem.addComponent(nodeNet, m_pFirewall, "confProxyTab", PROXY_TAB);
+		m_moduleSystem.addComponent(nodeNet, m_pFirewall, "confProxyTab", PROXY_TAB, "proxy");
 		//if (!m_bIsSimpleView)
 		{
 			m_moduleSystem.addConfigurationModule(nodeNet, new JAPConfForwardingClient() ,
@@ -211,14 +212,15 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		m_confServices = new JAPConfServices();
 		if (!m_bIsSimpleView)
 		{
-			DefaultMutableTreeNode nodeAnon = m_moduleSystem.addComponent(rootNode, null, "ngAnonymitaet", null);
+			DefaultMutableTreeNode nodeAnon =
+				m_moduleSystem.addComponent(rootNode, null, "ngAnonymitaet", null, null);
 			m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfInfoService(), INFOSERVICE_TAB);
 			m_moduleSystem.addConfigurationModule(nodeAnon, m_confServices, ANON_SERVICES_TAB);
 			m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfForwardingServer(),
 												  FORWARDING_SERVER_TAB);
 			m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfCert(), CERT_TAB);
-			DefaultMutableTreeNode debugNode = m_moduleSystem.addComponent(rootNode, m_pMisc,
-				"ngTreeDebugging", DEBUG_TAB);
+			DefaultMutableTreeNode debugNode =
+				m_moduleSystem.addComponent(rootNode, m_pMisc, "ngTreeDebugging", DEBUG_TAB, "debugging");
 			if (JAPModel.getInstance().isForwardingStateModuleVisible())
 			{
 				m_moduleSystem.addConfigurationModule(debugNode, new JAPConfForwardingState(),
@@ -380,20 +382,8 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 	{
 		if (e.getSource() == m_bttnHelp)
 		{
-			SwingUtilities.invokeLater(new Runnable()
-			{
-				public void run()
-				{
-					try
-					{
-						JAPHelp help = JAPHelp.getInstance();
-						help.loadCurrentContext();
-					}
-					catch (Exception e)
-					{
-					}
-				}
-			});
+			JAPHelp.getInstance().getContextObj().setContext(m_moduleSystem);
+			JAPHelp.getInstance().loadCurrentContext();
 		}
 		else if (e.getSource() == m_cbProxyAuthentication)
 		{
@@ -476,26 +466,6 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		g.setConstraints(m_cbListenerIsLocal, c);
 		p1.add(m_cbListenerIsLocal);
 		p.add(p1, BorderLayout.NORTH);
-		p.addComponentListener(new ComponentListener()
-		{
-			public void componentShown(ComponentEvent e)
-			{
-				//Register help context
-				JAPHelp.getInstance().getContextObj().setContext("portlistener");
-			}
-
-			public void componentHidden(ComponentEvent e)
-			{
-			}
-
-			public void componentMoved(ComponentEvent e)
-			{
-			}
-
-			public void componentResized(ComponentEvent e)
-			{
-			}
-		});
 
 		return p;
 	}
@@ -650,26 +620,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		p1.add(m_tfProxyAuthenticationUserID);
 		c.gridy = 11;
 		p.add(p1, BorderLayout.NORTH);
-		p.addComponentListener(new ComponentListener()
-		{
-			public void componentShown(ComponentEvent e)
-			{
-				//Register help context
-				JAPHelp.getInstance().getContextObj().setContext("proxy");
-			}
 
-			public void componentHidden(ComponentEvent e)
-			{
-			}
-
-			public void componentMoved(ComponentEvent e)
-			{
-			}
-
-			public void componentResized(ComponentEvent e)
-			{
-			}
-		});
 
 		return p;
 	}
@@ -871,26 +822,6 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		c.weightx = 1;
 		p.add(panelDebugDetailLevel, c);
 
-		p.addComponentListener(new ComponentListener()
-		{
-			public void componentShown(ComponentEvent e)
-			{
-				//Register help context
-				JAPHelp.getInstance().getContextObj().setContext("debugging");
-			}
-
-			public void componentHidden(ComponentEvent e)
-			{
-			}
-
-			public void componentMoved(ComponentEvent e)
-			{
-			}
-
-			public void componentResized(ComponentEvent e)
-			{
-			}
-		});
 		return p;
 	}
 

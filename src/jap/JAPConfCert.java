@@ -481,10 +481,8 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		m_cbCertCheckEnabled.setSelected(JAPConstants.DEFAULT_CERT_CHECK_ENABLED);
 	}
 
-	protected void onRootPanelShown()
+	public String getHelpContext()
 	{
-		//Register help context
-		JAPHelp.getInstance().getContextObj().setContext("cert");
+		return "cert";
 	}
-
 }

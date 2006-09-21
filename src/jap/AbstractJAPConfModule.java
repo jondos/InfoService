@@ -38,11 +38,12 @@ import java.util.Observable;
 import javax.swing.SwingUtilities;
 
 import gui.AWTUpdateQueue;
+import gui.JAPHelpContext;
 
 /**
  * This is the generic implementation for a JAP configuration module.
  */
-public abstract class AbstractJAPConfModule
+public abstract class AbstractJAPConfModule implements JAPHelpContext.IHelpContext
 {
 	private final AWTUpdateQueue AWT_UPDATE_QUEUE = new AWTUpdateQueue(new Runnable()
 	{

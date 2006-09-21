@@ -178,6 +178,21 @@ public class JAPConfServices extends AbstractJAPConfModule
 		m_anonGeneralModule.cancelPressed();
 	}
 
+	public String getHelpContext()
+	{
+		if (JAPModel.getDefaultView() != JAPConstants.VIEW_SIMPLIFIED)
+		{
+			AbstractJAPConfModule module =
+				( (AbstractJAPConfModule) m_tabbedModules.elementAt(m_tabsAnon.getSelectedIndex()));
+
+			return module.getHelpContext();
+		}
+		else
+		{
+			return m_anonModule.getHelpContext();
+		}
+	}
+
 	protected void onRootPanelShown()
 	{
 		if (JAPModel.getDefaultView() != JAPConstants.VIEW_SIMPLIFIED)
