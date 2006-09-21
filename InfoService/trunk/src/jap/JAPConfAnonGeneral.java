@@ -159,7 +159,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 			{
 				seconds = DT_INTERVAL_STEPLENGTH;
 			}
-			else if (iTmp > DT_INTERVAL_STEPLENGTH * DT_INTERVAL_STEPS)
+			else if (seconds > DT_INTERVAL_STEPLENGTH * DT_INTERVAL_STEPS)
 			{
 				seconds = DT_INTERVAL_STEPLENGTH * DT_INTERVAL_STEPS;
 			}
