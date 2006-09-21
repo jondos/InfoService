@@ -78,6 +78,8 @@ import jap.pay.AccountSettingsPanel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import gui.GUIUtils;
+import java.awt.Dimension;
 
 final public class JAPConf extends JAPDialog implements ActionListener, Observer
 {
@@ -183,7 +185,8 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 
 		m_moduleSystem = new JAPConfModuleSystem();
 		DefaultMutableTreeNode rootNode = m_moduleSystem.getConfigurationTreeRootNode();
-		m_moduleSystem.addConfigurationModule(rootNode, new JAPConfUI(), UI_TAB);
+		JAPConfUI confUI = new JAPConfUI();
+		m_moduleSystem.addConfigurationModule(rootNode, confUI, UI_TAB);
 		if (m_bWithPayment)
 		{
 			m_moduleSystem.addConfigurationModule(rootNode, new AccountSettingsPanel(), PAYMENT_TAB);
@@ -329,10 +332,10 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		}
 		else
 		{
-			for (int i = 0; i < 5; i++)
+			for (int i = 0; i < 2; i++)
 			{
 				pack();
-				if (getSize().width < getSize().height)
+				if (i != 1 && getSize().width < getSize().height)
 				{
 					LogHolder.log(LogLevel.ERR, LogType.GUI,
 								  "Could not pack config properly. Width is smaller than height! " +
@@ -340,10 +343,32 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 					Thread.yield();
 					continue;
 				}
+				else if (getSize().width > getScreenBounds().width ||
+						 getSize().height > getScreenBounds().height)
+				{
+					LogHolder.log(LogLevel.ERR, LogType.GUI, "Packed config view with illegal size! " +
+								  "Width:" + getSize().width + " Height:" + getSize().height +
+								  "\nSetting defaults...");
+
+					if (JAPModel.getInstance().getConfigSize().width > 0 &&
+						JAPModel.getInstance().getConfigSize().height > 0)
+					{
+						setSize(JAPModel.getInstance().getConfigSize());
+					}
+					else
+					{
+						// default size for MacOS
+						setSize(new Dimension(786, 545));
+					}
+				}
+				else
+				{
+					JAPModel.getInstance().setConfigSize(getSize());
+				}
 				break;
 			}
 		}
-
+		confUI.afterPack();
 		JAPModel.getInstance().addObserver(this);
 	}
 

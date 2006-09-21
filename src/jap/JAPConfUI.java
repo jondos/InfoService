@@ -56,7 +56,7 @@ import javax.swing.filechooser.FileFilter;
 
 import anon.util.ClassUtil;
 import gui.GUIUtils;
-import gui.JAPHelp;
+import gui.JAPDll;
 import gui.JAPMessages;
 import gui.LanguageMapper;
 import gui.TitledGridBagPanel;
@@ -64,11 +64,11 @@ import gui.dialog.DialogContentPane;
 import gui.dialog.JAPDialog;
 import gui.dialog.SimpleWizardContentPane;
 import gui.dialog.WorkerContentPane;
-import gui.JAPDll;
-import platform.*;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import platform.AbstractOS;
+import platform.WindowsOS;
 
 final class JAPConfUI extends AbstractJAPConfModule
 {
@@ -158,7 +158,19 @@ final class JAPConfUI extends AbstractJAPConfModule
 		c1.fill = GridBagConstraints.VERTICAL;
 		c1.weighty = 1;
 		panelRoot.add(new JPanel(), c1);
+
 	}
+
+	/**
+	 * @todo The combox must be made visible after the pack operation,
+	 * as otherwise on MacOS pack does not work properly most of the time.
+	 * Currrently, the reason for this error is not known.
+	 */
+	public void afterPack()
+	{
+		m_comboUI.setVisible(true);
+	}
+
 
 	private JPanel createLookAndFeelPanel()
 	{
@@ -176,8 +188,10 @@ final class JAPConfUI extends AbstractJAPConfModule
 		c.gridx = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
+
 		m_comboUI = new JComboBox();
 		p.add(m_comboUI, c);
+		m_comboUI.setVisible(false);
 
 		m_btnDeleteUI = new JButton(JAPMessages.getString(MSG_REMOVE));
 		c.gridx++;
@@ -463,7 +477,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		c.gridy = 2;
 		c.fill = GridBagConstraints.NONE;
 		c.weightx = 0;
-		c.gridwidth = 1;
+		//c.gridwidth = 1;
 		p.add(l, c);
 		l.setVisible(JAPModel.getInstance().isDialogFormatShown());
 		c.gridx = 1;

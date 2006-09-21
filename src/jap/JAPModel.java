@@ -54,6 +54,10 @@ public final class JAPModel extends Observable
 	public static final String XML_DENY_NON_ANONYMOUS_SURFING = "denyNonAnonymousSurfing";
 	public static final String XML_ATTR_ACTIVATED = "activated";
 	public static final String XML_FONT_SIZE = "fontSize";
+	public static final String XML_CONFIG_SIZE = "ConfigSize";
+	public static final String XML_ICONIFIED_SIZE = "IconifiedSize";
+	public static final String XML_ATTR_WIDTH = "width";
+	public static final String XML_ATTR_HEIGHT = "height";
 
 	public static final String AUTO_CHANGE_NO_RESTRICTION = "none";
 	public static final String AUTO_CHANGE_RESTRICT_TO_PAY = "pay";
@@ -140,6 +144,9 @@ public final class JAPModel extends Observable
 	private boolean m_bPreCreateAnonRoutes = JAPConstants.DEFAULT_TOR_PRECREATE_ROUTES;
 	private boolean m_bUseProxyAuthentication = false;
 	private JAPController.AnonConnectionChecker m_connectionChecker;
+
+	private Dimension m_iconifiedSize = new Dimension(0, 0);
+	private Dimension m_configSize = new Dimension(0, 0);
 
 	/**
 	 * Stores the instance with the routing settings.
@@ -841,6 +848,26 @@ public final class JAPModel extends Observable
 	public void setConfigFile(String a_configFileName)
 	{
 		m_configFileName = a_configFileName;
+	}
+
+	public void setIconifiedSize(Dimension a_size)
+	{
+		m_iconifiedSize = a_size;
+	}
+
+	public Dimension getIconifiedSize()
+	{
+		return m_iconifiedSize;
+	}
+
+	public void setConfigSize(Dimension a_size)
+	{
+		m_configSize = a_size;
+	}
+
+	public Dimension getConfigSize()
+	{
+		return m_configSize;
 	}
 
 	/**

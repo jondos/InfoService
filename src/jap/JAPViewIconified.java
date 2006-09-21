@@ -34,6 +34,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Frame;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -231,6 +232,29 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		setContentPane(p);
 
 		pack();
+		// fix for MacOS; sometimes pack increases the size to several meters...
+		if (getSize().width > GUIUtils.getScreenBounds(this).width ||
+			getSize().height > GUIUtils.getScreenBounds(this).height)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.GUI, "Packed iconified view with illegal size! " +
+						  "Width:" + getSize().width + " Height:" + getSize().height +
+						  "\nSetting defaults...");
+			if (JAPModel.getInstance().getIconifiedSize().width > 0 &&
+				JAPModel.getInstance().getIconifiedSize().height > 0)
+			{
+				setSize(JAPModel.getInstance().getIconifiedSize());
+			}
+			else
+			{
+				// default size for MacOS
+				setSize(new Dimension(151, 85));
+			}
+		}
+		else
+		{
+			JAPModel.getInstance().setIconifiedSize(getSize());
+		}
+
 		GUIUtils.moveToUpRightCorner(this);
 		m_labelBytes.setText(JAPMessages.getString("iconifiedViewZero"));
 		m_labelUsers.setText(JAPMessages.getString("iconifiedViewNA"));
