@@ -31,6 +31,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.Vector;
 
 import java.awt.BorderLayout;
@@ -41,8 +43,6 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import javax.swing.JButton;
@@ -69,18 +69,15 @@ import anon.infoservice.ProxyInterface;
 import gui.JAPHelp;
 import gui.JAPJIntField;
 import gui.JAPMessages;
-import gui.GUIUtils;
 import gui.JAPMultilineLabel;
 import gui.dialog.JAPDialog;
 import jap.forward.JAPConfForwardingClient;
 import jap.forward.JAPConfForwardingServer;
 import jap.forward.JAPConfForwardingState;
 import jap.pay.AccountSettingsPanel;
+import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import logging.LogHolder;
-import java.util.Observable;
-import java.util.Observer;
 
 final public class JAPConf extends JAPDialog implements ActionListener, Observer
 {
