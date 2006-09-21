@@ -525,10 +525,14 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		return JAPMessages.getString("ngUpdatePanelTitle");
 	}
 
+	public String getHelpContext()
+	{
+		return "update";
+	}
+
+
 	protected void onRootPanelShown()
 	{
-		//Register help context
-		JAPHelp.getInstance().getContextObj().setContext("update");
 		updateVersionInfo(false);
 	}
 }

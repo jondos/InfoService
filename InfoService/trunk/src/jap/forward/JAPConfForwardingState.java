@@ -72,6 +72,15 @@ public class JAPConfForwardingState extends AbstractJAPConfModule
 	}
 
 	/**
+	 * @todo write help
+	 * @return String
+	 */
+	public String getHelpContext()
+	{
+		return null;
+	}
+
+	/**
 	 * Creates the forwarding state root panel with all child components.
 	 */
 	public void recreateRootPanel()

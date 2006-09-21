@@ -123,7 +123,7 @@ import javax.swing.border.TitledBorder;
  * @version 1.0
  */
 public class AccountSettingsPanel extends AbstractJAPConfModule implements
-	ListSelectionListener,  ChangeListener
+	ListSelectionListener
 {
 	protected static final String IMG_COINS_DISABLED = AccountSettingsPanel.class.getName() +
 		"_coins-disabled.gif";
@@ -305,13 +305,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	}
 
 	/**
-	 * This method will be called when another tab is chosen*/
-	public void stateChanged(ChangeEvent ce)
-	{
-		setHelpContext();
-	}
-
-	/**
 	 * getTabTitle
 	 *
 	 * @return String
@@ -340,7 +333,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		m_tabPane.insertTab(JAPMessages.getString("ngPseudonymAccounts"),
 							null, m_tabBasicSettings , null, 0);
 		m_tabAdvancedSettings = createAdvancedSettingsTab();
-		m_tabPane.addChangeListener(this);
 		GridBagLayout rootPanelLayout = new GridBagLayout();
 		rootPanel.setLayout(rootPanelLayout);
 		GridBagConstraints contraints = createTabbedRootPanelContraints();
@@ -2222,33 +2214,29 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		}
 	}
 
+	public String getHelpContext()
+	{
+		int index = 0;
+		index = m_tabPane.getSelectedIndex();
+		switch (index)
+		{
+			case 1:
+				return "payment_extend";
+			default:
+				return "payment_account";
+		}
+	}
+
+
 	/**
 	 * This method can be overwritten by the children of AbstractJAPConfModule. It is called
 	 * every time the root panel comes to the foreground (is set to visible).
 	 */
 	protected void onRootPanelShown()
 	{
-		//Register help context
-		this.setHelpContext();
 		updateAccountList();
 	}
 
-	/**
-	 * This panel has one or more tabs. Depending on which tab is active, another help context has to be set.
-	 * @return
-	 */
-	private void setHelpContext(){
-		int index = 0;
-		index = this.m_tabPane.getSelectedIndex();
-		String context = null;
-		switch (index){
-			case 0: context = "payment";
-					break;
-			case 1: context = "payment_extend";
-					break;
-		}
-		JAPHelp.getInstance().getContextObj().setContext(context);
-	}
 
 	/**
 	 * This method can be overwritten by the children of AbstractJAPConfModule. It is called

@@ -89,7 +89,7 @@ import java.awt.Color;
 /**
  * This is the configuration GUI for the infoservice.
  */
-public class JAPConfInfoService extends AbstractJAPConfModule implements Observer, ChangeListener
+public class JAPConfInfoService extends AbstractJAPConfModule implements Observer
 {
 	private static final String MSG_ALLOW_DIRECT_CONNECTION = JAPConfInfoService.class.getName() +
 		"_allowDirectConnection";
@@ -140,13 +140,6 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 	}
 
 	/**
-	 * This method will be called when another tab is chosen*/
-	public void stateChanged(ChangeEvent ce)
-	{
-		this.setHelpContext();
-	}
-
-	/**
 	 * Creates the infoservice root panel with all child-panels.
 	 */
 	public void recreateRootPanel()
@@ -177,7 +170,6 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 			m_infoServiceTabPane.insertTab(JAPMessages.getString(
 				 "settingsInfoServiceConfigAdvancedSettingsTabTitle"), null, createInfoServiceAdvancedPanel(), null,
 										   1);
-			m_infoServiceTabPane.addChangeListener(this);
 			GridBagLayout rootPanelLayout = new GridBagLayout();
 			rootPanel.setLayout(rootPanelLayout);
 			rootPanel.add(m_infoServiceTabPane, createTabbedRootPanelContraints());
@@ -1433,11 +1425,18 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		m_settingsInfoServiceConfigBasicSettingsDescriptionLabel.setFont(new JLabel().getFont());
 	}
 
-	protected void onRootPanelShown()
+	public String getHelpContext()
 	{
-		//Register help context
-//		JAPHelp.getInstance().getContextObj().setContext("infoservice");
-		this.setHelpContext();
+		int index = 0;
+		index = this.m_infoServiceTabPane.getSelectedIndex();
+
+		switch (index)
+		{
+			case 1:
+				return "infoservice_advanced";
+			default:
+				return "infoservice_settings";
+		}
 	}
 
 	protected boolean onOkPressed()
@@ -1459,22 +1458,6 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 			/* change the prefered infoservice only, if something is selected */
 			InfoServiceHolder.getInstance().setPreferredInfoService(selectedInfoService);
 		}
-	}
-
-	/**
-	 * This panel has one or more tabs. Depending on which tab is active, another help context has to be set.
-	 */
-	private void setHelpContext(){
-		int index = 0;
-		index = this.m_infoServiceTabPane.getSelectedIndex();
-		String context = null;
-		switch (index){
-			case 0: context = "infoservice";
-					break;
-			case 1: context = "infoservice_advanced";
-					break;
-		}
-		JAPHelp.getInstance().getContextObj().setContext(context);
 	}
 
 	private int findFirstUserDefinedListModelEntry(DefaultListModel knownInfoServicesListModel)

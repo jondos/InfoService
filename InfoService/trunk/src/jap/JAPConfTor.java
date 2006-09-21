@@ -351,14 +351,9 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		updateGuiOutput();
 	}
 
-	protected void onRootPanelShown()
+	public String getHelpContext()
 	{
-		//Register help context
-		JAPHelp.getInstance().getContextObj().setContext("services_tor");
-//		if (System.currentTimeMillis() - m_lastUpdate > 600000)
-//		{
-//			fetchRouters(false);
-//		}
+		return "services_tor";
 	}
 
 	private void updateGuiOutput()

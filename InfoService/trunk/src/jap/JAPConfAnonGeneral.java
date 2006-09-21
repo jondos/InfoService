@@ -443,6 +443,11 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_panelRestrictedCascades.setEnabled(false);
 	}
 
+	public String getHelpContext()
+	{
+		return "services_general";
+	}
+
 	protected void onRootPanelShown()
 	{
 		m_comboServices[2].setEnabled(JAPModel.getInstance().isMixMinionActivated());
@@ -459,10 +464,6 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 			}
 
 		}
-
-
-		//Register help context
-		JAPHelp.getInstance().getContextObj().setContext("services_general");
 	}
 
 	private JPanel createRestrictedCacadesPanel()

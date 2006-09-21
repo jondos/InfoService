@@ -1152,6 +1152,12 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	{
 	}
 
+	public String getHelpContext()
+	{
+		return "services_anon";
+	}
+
+
 	protected void onRootPanelShown()
 	{
 		synchronized (LOCK_OBSERVABLE)
@@ -1169,8 +1175,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			}
 		}
 
-		//Register help context
-		JAPHelp.getInstance().getContextObj().setContext("services_anon");
 		if (!m_infoService.isFilled())
 		{
 			fetchCascades(false, false, true);

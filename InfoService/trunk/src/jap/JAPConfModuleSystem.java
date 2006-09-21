@@ -54,13 +54,16 @@ import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import gui.GUIUtils;
+import gui.JAPHelp;
+import gui.JAPHelp;
 import gui.JAPMessages;
+import gui.JAPHelpContext;
 
 /**
  * This is the implementation for the configuration module system. It manages the configuration
  * modules and displays the configuration tree and the configuration module content area.
  */
-public class JAPConfModuleSystem
+public class JAPConfModuleSystem implements JAPHelpContext.IHelpContext
 {
 	/**
 	 * Stores the root panel for the whole configuration module system. The configuration tree and
@@ -105,6 +108,9 @@ public class JAPConfModuleSystem
 	 */
 	private Hashtable m_symbolicNamesToTreeNodes;
 
+	private Hashtable m_symbolicNamesToHelpContext;
+	private JAPHelpContext.IHelpContext m_currentHelpContext;
+
 	/**
 	 * Creates a new instance of JAPConfModuleSystem with an empty configuration tree. A lot of
 	 * initialization is done here.
@@ -115,6 +121,7 @@ public class JAPConfModuleSystem
 		m_registratedPanelTitleIdentifiers = new Hashtable();
 		m_treeNodesToSymbolicNames = new Hashtable();
 		m_symbolicNamesToTreeNodes = new Hashtable();
+		m_symbolicNamesToHelpContext = new Hashtable();
 		m_configurationCardsPanel = new JPanel(new CardLayout());
 
 		DefaultTreeModel configurationTreeModel = new DefaultTreeModel(new DefaultMutableTreeNode("root"));
@@ -163,8 +170,12 @@ public class JAPConfModuleSystem
 			{
 				if (a_event.isAddedPath())
 				{
+					String symbolicName =
+						(String)(m_treeNodesToSymbolicNames.get(a_event.getPath().getLastPathComponent()));
+					m_currentHelpContext =
+						(JAPHelpContext.IHelpContext)m_symbolicNamesToHelpContext.get(symbolicName);
 					( (CardLayout) (m_configurationCardsPanel.getLayout())).show(m_configurationCardsPanel,
-						(String) (m_treeNodesToSymbolicNames.get(a_event.getPath().getLastPathComponent())));
+						symbolicName);
 				}
 			}
 		});
@@ -217,6 +228,7 @@ public class JAPConfModuleSystem
 			m_registratedModules.put(moduleNode, a_module);
 			m_treeNodesToSymbolicNames.put(moduleNode, a_symbolicName);
 			m_symbolicNamesToTreeNodes.put(a_symbolicName, moduleNode);
+			m_symbolicNamesToHelpContext.put(a_symbolicName, a_module);
 		}
 		return moduleNode;
 	}
@@ -238,7 +250,8 @@ public class JAPConfModuleSystem
 	 * @return The node of the inserted module within the configuration tree.
 	 */
 	public DefaultMutableTreeNode addComponent(DefaultMutableTreeNode a_parentNode, Component a_component,
-											   String a_nodeNameIdentifier, String a_symbolicName)
+											   String a_nodeNameIdentifier, String a_symbolicName,
+											   final String a_helpContext)
 	{
 		DefaultMutableTreeNode componentNode = new DefaultMutableTreeNode(JAPMessages.getString(
 			a_nodeNameIdentifier));
@@ -252,6 +265,13 @@ public class JAPConfModuleSystem
 				m_configurationCardsPanel.add(a_component, a_symbolicName);
 				m_treeNodesToSymbolicNames.put(componentNode, a_symbolicName);
 				m_symbolicNamesToTreeNodes.put(a_symbolicName, componentNode);
+				m_symbolicNamesToHelpContext.put(a_symbolicName, new  JAPHelpContext.IHelpContext()
+				{
+					public String getHelpContext()
+					{
+						return a_helpContext;
+					}
+				});
 			}
 		}
 		return componentNode;
@@ -276,6 +296,20 @@ public class JAPConfModuleSystem
 	public JTree getConfigurationTree()
 	{
 		return m_configurationTree;
+	}
+
+	/**
+	 * Returns the name of the module that is currently shown.
+	 * @return the name of the module that is currently shown
+	 */
+	public String getHelpContext()
+	{
+		return m_currentHelpContext.getHelpContext();
+	}
+
+	public AbstractJAPConfModule getCurrentModule()
+	{
+		return null;
 	}
 
 	/**
