@@ -32,29 +32,35 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
-import javax.swing.JComboBox;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -67,24 +73,15 @@ import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.InfoServiceHolderMessage;
 import anon.infoservice.ListenerInterface;
 import gui.CertDetailsDialog;
+import gui.GUIUtils;
 import gui.JAPHtmlMultiLineLabel;
-import gui.JAPMultilineLabel;
 import gui.JAPJIntField;
+import gui.JAPMessages;
+import gui.JAPMultilineLabel;
+import gui.dialog.JAPDialog;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.awt.FlowLayout;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-import gui.JAPMessages;
-import gui.JAPHelp;
-import gui.GUIUtils;
-import gui.dialog.JAPDialog;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ChangeEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.ItemEvent;
-import java.awt.Color;
 
 /**
  * This is the configuration GUI for the infoservice.
@@ -1227,8 +1224,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		JPanel advancedPanel = new JPanel();
 
 		m_allowAutomaticIS = new JCheckBox(
-			JAPMessages.getString("settingsInfoServiceConfigAdvancedSettingsEnableAutomaticRequestsBox") +
-			":");
+			JAPMessages.getString("settingsInfoServiceConfigAdvancedSettingsEnableAutomaticRequestsBox"));
 
 		m_cbxUseRedundantISRequests = new JCheckBox(JAPMessages.getString(MSG_USE_MORE_IS) + ":");
 		m_cbxUseRedundantISRequests.setVisible(!JAPConstants.m_bReleasedVersion);
