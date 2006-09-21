@@ -27,6 +27,7 @@
  */
 package jap;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Observable;
@@ -80,14 +81,13 @@ import anon.infoservice.MixCascade;
 import anon.infoservice.NewCascadeIDEntry;
 import anon.infoservice.StatusInfo;
 import anon.proxy.IProxyListener;
+import anon.util.JobQueue;
 import gui.FlippingPanel;
 import gui.GUIUtils;
 import gui.JAPDll;
 import gui.JAPHelp;
 import gui.JAPMessages;
-
 import gui.JAPProgressBar;
-
 import gui.dialog.JAPDialog;
 import jap.forward.JAPRoutingRegistrationStatusObserver;
 import jap.forward.JAPRoutingServerStatisticsListener;
@@ -98,8 +98,6 @@ import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
 import update.JAPUpdateWizard;
-import anon.util.JobQueue;
-import java.lang.reflect.*;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver, Observer
@@ -1826,7 +1824,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			if (!JAPModel.isSmallDisplay()) //only do this on "real" Displays
 			{
 				pack(); // optimize size
-				setResizable( /*true*/true /*false*/); //2001-11-12(HF):Changed due to a Mac OS X problem during redraw of the progress bars
+				//setResizable( /*true*/true /*false*/); //2001-11-12(HF):Changed due to a Mac OS X problem during redraw of the progress bars
+				setResizable(false);
 			}
 		}
 		catch (Exception e)
