@@ -174,6 +174,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private static final String XML_ATTR_AUTO_CHOOSE_CASCADES = "AutoChooseCascades";
 	private static final String XML_ATTR_SHOW_CONFIG_ASSISTANT = "showConfigAssistant";
 
+	// store classpath as it may not be created successfully after update
+	private final String CLASS_PATH = ClassUtil.getClassPath().trim();
 
 	private final Object PROXY_SYNC = new Object();
 
@@ -767,6 +769,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 				String strVersion = XMLUtil.parseAttribute(root, JAPConstants.CONFIG_VERSION, null);
 	            m_Model.setDLLupdate(XMLUtil.parseAttribute(root, m_Model.DLL_VERSION_UPDATE, false));
+
+
+
+
 				JAPModel.getInstance().allowUpdateViaDirectConnection(
 								XMLUtil.parseAttribute(root, XML_ALLOW_NON_ANONYMOUS_UPDATE,
 					JAPConstants.DEFAULT_ALLOW_UPDATE_NON_ANONYMOUS_CONNECTION));
@@ -1128,6 +1134,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 				Element elemGUI = (Element) XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_GUI);
 				if (elemGUI != null)
 				{
+					Node nodeSize = XMLUtil.getFirstChildByName(elemGUI, JAPModel.XML_CONFIG_SIZE);
+					JAPModel.getInstance().setConfigSize(new Dimension(
+									   XMLUtil.parseAttribute(nodeSize, JAPModel.XML_ATTR_WIDTH, 0),
+									   XMLUtil.parseAttribute(nodeSize, JAPModel.XML_ATTR_HEIGHT, 0)));
+					nodeSize = XMLUtil.getFirstChildByName(elemGUI, JAPModel.XML_ICONIFIED_SIZE);
+					JAPModel.getInstance().setIconifiedSize(new Dimension(
+									   XMLUtil.parseAttribute(nodeSize, JAPModel.XML_ATTR_WIDTH, 0),
+									   XMLUtil.parseAttribute(nodeSize, JAPModel.XML_ATTR_HEIGHT, 0)));
+
 					Element elemMainWindow = (Element) XMLUtil.getFirstChildByName(elemGUI,
 						JAPConstants.CONFIG_MAIN_WINDOW);
 					if (elemMainWindow != null)
@@ -1678,7 +1693,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 * 1.) Try to find "java.home" and start JAP with the java.exe in this path
 	 * 2.) Try to find out if 'java' or 'jview' was used
 	 */
-	private void restartJAP() {
+	private void restartJAP()
+	{
 
 		// restart command
 		String strRestartCommand = "";
@@ -1700,19 +1716,22 @@ public final class JAPController extends Observable implements IProxyListener, O
 			pathToJava = System.getProperty("java.home") + File.separator + "bin" + File.separator;
 			javaExe = "javaw -cp"; // for windows
 		}
-		strRestartCommand = pathToJava + javaExe + " \"" + ClassUtil.getClassPath().trim() + "\" JAP" +
+		strRestartCommand = pathToJava + javaExe + " \"" + CLASS_PATH + "\" JAP" +
 			m_commandLineArgs;
 
-		LogHolder.log(LogLevel.INFO, LogType.ALL, "JAP restart command: " + strRestartCommand);
+
 
 	    try
 		{
 		    Runtime.getRuntime().exec(strRestartCommand);
+			LogHolder.log(LogLevel.INFO, LogType.ALL, "JAP restart command: " + strRestartCommand);
 		}
 		catch (Exception ex)
 		{
 			javaExe = "java -cp"; // Linux/UNIX
-			strRestartCommand = pathToJava + javaExe + " \"" + ClassUtil.getClassPath().trim() + "\" JAP";
+			strRestartCommand = pathToJava + javaExe + " \"" + CLASS_PATH + "\" JAP";
+
+			LogHolder.log(LogLevel.INFO, LogType.ALL, "JAP restart command: " + strRestartCommand);
 			try
 			{
 				Runtime.getRuntime().exec(strRestartCommand);
@@ -1721,9 +1740,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 			{
 				LogHolder.log(LogLevel.INFO, LogType.ALL, "Error auto-restart JAP: " + ex);
 			}
-			return;
 		}
-   }
+	}
 
 	/**
 	 * Changes the common proxy.
@@ -1934,6 +1952,24 @@ public final class JAPController extends Observable implements IProxyListener, O
 			// adding GUI-Element
 			Element elemGUI = doc.createElement(JAPConstants.CONFIG_GUI);
 			e.appendChild(elemGUI);
+
+			Element elemSize;
+
+			elemSize = doc.createElement(JAPModel.XML_CONFIG_SIZE);
+			XMLUtil.setAttribute(
+						 elemSize, JAPModel.XML_ATTR_WIDTH, JAPModel.getInstance().getConfigSize().width);
+			XMLUtil.setAttribute(
+						 elemSize, JAPModel.XML_ATTR_HEIGHT, JAPModel.getInstance().getConfigSize().height);
+			elemGUI.appendChild(elemSize);
+
+			elemSize = doc.createElement(JAPModel.XML_ICONIFIED_SIZE);
+			XMLUtil.setAttribute(
+						 elemSize, JAPModel.XML_ATTR_WIDTH, JAPModel.getInstance().getIconifiedSize().width);
+			XMLUtil.setAttribute(
+						 elemSize, JAPModel.XML_ATTR_HEIGHT, JAPModel.getInstance().getIconifiedSize().height);
+			elemGUI.appendChild(elemSize);
+
+
 			Element elemMainWindow = doc.createElement(JAPConstants.CONFIG_MAIN_WINDOW);
 			elemGUI.appendChild(elemMainWindow);
 			if (JAPModel.getSaveMainWindowPosition() && getViewWindow() != null)
