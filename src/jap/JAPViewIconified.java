@@ -64,6 +64,8 @@ import java.awt.Cursor;
 
 final public class JAPViewIconified extends JWindow implements ActionListener
 {
+	public static final String XML_LOCATION = "IconifiedLocation";
+
 	private static final String MSG_TT_SWITCH_ANONYMITY =
 		JAPViewIconified.class.getName() + "_ttSwitchAnonymity";
 

@@ -94,7 +94,6 @@ public final class JAPModel extends Observable
 	private int m_iDefaultView = JAPConstants.DEFAULT_VIEW; //which view we should start?
 
 	private boolean m_bSaveMainWindowPosition = JAPConstants.DEFAULT_SAVE_MAIN_WINDOW_POSITION;
-	private Dimension m_OldMainWindowSize = null;
 	private Point m_OldMainWindowLocation = null;
 
 	private boolean m_bGoodByMessageNeverRemind = false; // indicates if Warning message before exit has been deactivated forever
@@ -380,14 +379,9 @@ public final class JAPModel extends Observable
 		return false;
 	}
 
-	public static boolean getSaveMainWindowPosition()
+	public static boolean isMainWindowPositionSaved()
 	{
 		return ms_TheModel.m_bSaveMainWindowPosition;
-	}
-
-	protected void setOldMainWindowSize(Dimension size)
-	{
-		m_OldMainWindowSize = size;
 	}
 
 	protected void setOldMainWindowLocation(Point location)

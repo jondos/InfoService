@@ -1012,7 +1012,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		setOptimalSize();
 		GUIUtils.centerOnScreen(this);
 		//Change size and location if the user requested to restore the old position/size
-		if (JAPModel.getSaveMainWindowPosition())
+		if (JAPModel.isMainWindowPositionSaved())
 		{
 			JAPModel m = JAPModel.getInstance();
 			Dimension ds = Toolkit.getDefaultToolkit().getScreenSize();
