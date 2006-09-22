@@ -90,7 +90,7 @@ public class RSAKeyPair extends AsymmetricCryptoKeyPair
 	}
 
 	/**
-	 * Creates a new rsa key pair with a public exponent of 17.
+	 * Creates a new rsa key pair with a public exponent of 65537.
 	 * @param a_random a random number generator
 	 * @param a_strength The bit-length of n = p*q.
 	 * @param a_certainty The certainty, that the generated numbers are prime.
@@ -99,6 +99,6 @@ public class RSAKeyPair extends AsymmetricCryptoKeyPair
 
 	public static RSAKeyPair getInstance(SecureRandom a_random, int a_strength, int a_certainty)
 	{
-		return getInstance(new BigInteger("17"), a_random, a_strength, a_certainty);
+		return getInstance(new BigInteger("65537"), a_random, a_strength, a_certainty);
 	}
 }

@@ -99,6 +99,7 @@ import gui.GUIUtils;
 import gui.JAPMessages;
 import gui.dialog.JAPDialog;
 import gui.dialog.JAPDialog.LinkedCheckBox;
+import gui.dialog.DialogContentPane;
 import gui.dialog.PasswordContentPane;
 import jap.forward.JAPRoutingEstablishForwardedConnectionDialog;
 import jap.forward.JAPRoutingMessage;
@@ -159,11 +160,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public static final String MSG_RESTARTING = JAPController.class.getName() + "_restarting";
 	public static final String MSG_FINISH_FORWARDING_SERVER = JAPController.class.getName() +
 		"_finishForwardingServer";
-
-
-
-
-
+	public static final String MSG_VERSION_RELEASE = JAPController.class.getName() + "_versionRelease";
+	public static final String MSG_VERSION_DEVELOPER = JAPController.class.getName() + "_versionDeveloper";
+	public static final String MSG_ASK_WHICH_VERSION = JAPController.class.getName() + "_askWhichVersion";
 
 
 	private static final String XML_ELEM_LOOK_AND_FEEL = "LookAndFeel";
@@ -1160,13 +1159,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 								Point p = new Point();
 								p.x = XMLUtil.parseAttribute(tmp, JAPConstants.CONFIG_X, -1);
 								p.y = XMLUtil.parseAttribute(tmp, JAPConstants.CONFIG_Y, -1);
-								Dimension d = new Dimension();
-								tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow,
-									JAPConstants.CONFIG_SIZE);
-								d.width = XMLUtil.parseAttribute(tmp, JAPConstants.CONFIG_DX, -1);
-								d.height = XMLUtil.parseAttribute(tmp, JAPConstants.CONFIG_DY, -1);
 								m_Model.setOldMainWindowLocation(p);
-								m_Model.setOldMainWindowSize(d);
 							}
 							tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow,
 								JAPConstants.CONFIG_MOVE_TO_SYSTRAY);
@@ -1972,7 +1965,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 			Element elemMainWindow = doc.createElement(JAPConstants.CONFIG_MAIN_WINDOW);
 			elemGUI.appendChild(elemMainWindow);
-			if (JAPModel.getSaveMainWindowPosition() && getViewWindow() != null)
+			if (JAPModel.isMainWindowPositionSaved() && getViewWindow() != null)
 			{
 				Element tmp = doc.createElement(JAPConstants.CONFIG_SET_ON_STARTUP);
 				elemMainWindow.appendChild(tmp);
@@ -3263,6 +3256,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private int versionCheck(String a_minVersion, boolean a_bForced)
 	{
 		String versionType;
+		boolean recommendToSwitchToRelease = false;
 		if (a_bForced)
 		{
 			versionType = "mandatory";
@@ -3273,32 +3267,46 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 
 		LogHolder.log(LogLevel.NOTICE, LogType.MISC,
-					  "Checking if update new " + versionType + " version of JAP is available...");
+					  "Checking if new " + versionType + " version of JAP is available...");
 
 		JAPVersionInfo vi = null;
+		JAPVersionInfo viRelease = null;
 		String updateVersionNumber = null;
 
 
-		if (JAPConstants.m_bReleasedVersion)
+		Database.getInstance(JAPVersionInfo.class).update(
+			  InfoServiceHolder.getInstance().getJAPVersionInfo(JAPVersionInfo.JAP_RELEASE_VERSION));
+		Database.getInstance(JAPVersionInfo.class).update(
+			  InfoServiceHolder.getInstance().getJAPVersionInfo(JAPVersionInfo.JAP_DEVELOPMENT_VERSION));
+
+		vi = (JAPVersionInfo)Database.getInstance(JAPVersionInfo.class).getEntryById(
+			  JAPVersionInfo.ID_RELEASE);
+		if (!JAPConstants.m_bReleasedVersion)
 		{
-			vi = InfoServiceHolder.getInstance().getJAPVersionInfo(JAPVersionInfo.JAP_RELEASE_VERSION);
+			viRelease = vi;
+			vi = (JAPVersionInfo) Database.getInstance(JAPVersionInfo.class).getEntryById(
+				JAPVersionInfo.ID_DEVELOPMENT);
 		}
-		else
+
+		if (vi == null)
 		{
-			vi = InfoServiceHolder.getInstance().getJAPVersionInfo(JAPVersionInfo.JAP_DEVELOPMENT_VERSION);
-			if (vi == null)
-			{
-				vi = InfoServiceHolder.getInstance().getJAPVersionInfo(JAPVersionInfo.JAP_RELEASE_VERSION);
-			}
+			LogHolder.log(LogLevel.ERR, LogType.MISC,
+						  "Could not get the current JAP version from infoservice.");
+			return 1;
 		}
-		Database.getInstance(JAPVersionInfo.class).update(vi);
+		if (viRelease != null && viRelease.getJapVersion() != null && vi.getJapVersion() != null &&
+			viRelease.getJapVersion().equals(vi.getJapVersion()))
+		{
+			// developer and release version are equal; recommend to switch to release
+			recommendToSwitchToRelease = true;
+		}
 
 		if (a_bForced)
 		{
 			updateVersionNumber = a_minVersion;
 		}
 
-		if (updateVersionNumber == null && vi != null)
+		if (updateVersionNumber == null)
 		{
 			updateVersionNumber = vi.getJapVersion();
 		}
@@ -3317,7 +3325,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			return 1;
 		}
 
-		if (!a_bForced)
+		if (!a_bForced && !recommendToSwitchToRelease)
 		{
 			if (updateVersionNumber.compareTo(JAPConstants.aktVersion) <= 0 || isConfigAssistantShown()
 				|| !JAPModel.getInstance().isReminderForOptionalUpdateActivated())
@@ -3338,10 +3346,17 @@ public final class JAPController extends Observable implements IProxyListener, O
 		 * download the new version or not
 		 */
 		String message;
-		JAPDialog.LinkedCheckBox checkbox = null;
+		JAPDialog.ILinkedInformation checkbox = null;
 		if (a_bForced)
 		{
 			message = JAPMessages.getString("newVersionAvailable", updateVersionNumber);
+			checkbox = new JAPDialog.LinkedInformationAdapter()
+			{
+				public boolean isOnTop()
+				{
+					return true;
+				}
+			};
 		}
 		else
 		{
@@ -3353,60 +3368,79 @@ public final class JAPController extends Observable implements IProxyListener, O
 			message = JAPMessages.getString(MSG_NEW_OPTIONAL_VERSION, updateVersionNumber + dev);
 			checkbox = new JAPDialog.LinkedCheckBox(false);
 		}
-		boolean bAnswer = JAPDialog.showYesNoDialog(getViewWindow(),
-													message,
-													JAPMessages.getString("newVersionAvailableTitle"),
-													checkbox);
-		if (checkbox != null)
+		JAPDialog.Options options;
+		if (recommendToSwitchToRelease)
 		{
-			JAPModel.getInstance().setReminderForOptionalUpdate(!checkbox.getState());
-		}
-		if (bAnswer)
-		{
-			/* User has selected to download new version of JAP -> Download, Alert, exit program */
-			if (vi != null)
+			message += "<br><br>" + JAPMessages.getString(MSG_ASK_WHICH_VERSION);
+			options = new JAPDialog.Options(JAPDialog.OPTION_TYPE_YES_NO_CANCEL)
 			{
-				//store current configuration first
-				saveConfigFile();
-				JAPUpdateWizard wz = new JAPUpdateWizard(vi, getViewWindow());
-				/* we got the JAPVersionInfo from the infoservice */
-				/* Assumption: If we are here, the download failed for some resaons, otherwise the
-				 * program would quit
-				 */
-				//TODO: Do this in a better way!!
-				if (wz.getStatus() == JAPUpdateWizard.UPDATESTATUS_ERROR)
+				public String getYesOKText()
 				{
-					/* Download failed -> alert, and reset anon mode to false */
-					LogHolder.log(LogLevel.ERR, LogType.MISC, "Some update problem.");
-					JAPDialog.showErrorDialog(getViewWindow(),
-											  JAPMessages.getString("downloadFailed") +
-											  JAPMessages.getString("infoURL"), LogType.MISC);
-					if (a_bForced)
-					{
-						notifyJAPObservers();
-					}
-					/* update failed -> exit */
-					return -1;
+					return JAPMessages.getString(MSG_VERSION_DEVELOPER);
 				}
-				/* should never be reached, because if update was successful, the JAPUpdateWizard closes
-				 * JAP
-				 */
-				//goodBye(false);
-				return 0;
-			}
-			/* update was not successful, because we could not get the JAPVersionInfo -> alert, and
-			 * reset anon mode to false
-			 */
-			LogHolder.log(LogLevel.ERR, LogType.MISC, "Could not get JAPVersionInfo.");
-			JAPDialog.showErrorDialog(getViewWindow(),
-									  JAPMessages.getString("downloadFailed") +
-									  JAPMessages.getString("infoURL"), LogType.MISC);
-			if (a_bForced)
+
+				public String getNoText()
+				{
+					return JAPMessages.getString(MSG_VERSION_RELEASE);
+				}
+			};
+		}
+		else
+		{
+			options = new JAPDialog.Options(JAPDialog.OPTION_TYPE_OK_CANCEL)
 			{
-				notifyJAPObservers();
+				public String getYesOKText()
+				{
+					return JAPMessages.getString(DialogContentPane.MSG_YES);
+				}
+
+				public String getCancelText()
+				{
+					return JAPMessages.getString(DialogContentPane.MSG_NO);
+				}
+			};
+		}
+		int bAnswer = JAPDialog.showConfirmDialog(getViewWindow(), message,
+												  JAPMessages.getString("newVersionAvailableTitle"),
+												  options, JAPDialog.MESSAGE_TYPE_QUESTION, checkbox);
+		if (checkbox instanceof JAPDialog.LinkedCheckBox)
+		{
+			JAPModel.getInstance().setReminderForOptionalUpdate(
+						 !((JAPDialog.LinkedCheckBox)checkbox).getState());
+		}
+		if (bAnswer == JAPDialog.RETURN_VALUE_YES || bAnswer == JAPDialog.RETURN_VALUE_NO)
+		{
+			if (bAnswer == JAPDialog.RETURN_VALUE_NO)
+			{
+				vi = viRelease;
 			}
-			/* update failed -> exit */
-			return -1;
+			/* User has selected to download new version of JAP -> Download, Alert, exit program */
+			//store current configuration first
+			saveConfigFile();
+			JAPUpdateWizard wz = new JAPUpdateWizard(vi, getViewWindow());
+			/* we got the JAPVersionInfo from the infoservice */
+			/* Assumption: If we are here, the download failed for some resaons, otherwise the
+			 * program would quit
+			 */
+			//TODO: Do this in a better way!!
+			if (wz.getStatus() == JAPUpdateWizard.UPDATESTATUS_ERROR)
+			{
+				/* Download failed -> alert, and reset anon mode to false */
+				LogHolder.log(LogLevel.ERR, LogType.MISC, "Some update problem.");
+				JAPDialog.showErrorDialog(getViewWindow(),
+										  JAPMessages.getString("downloadFailed") +
+										  JAPMessages.getString("infoURL"), LogType.MISC);
+				if (a_bForced)
+				{
+					notifyJAPObservers();
+				}
+				/* update failed -> exit */
+				return -1;
+			}
+			/* should never be reached, because if update was successful, the JAPUpdateWizard closes
+			 * JAP
+			 */
+			return 0;
 		}
 		else
 		{
@@ -3628,8 +3662,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					public void run()
 					{
-						Hashtable javaVersions;
-						Enumeration enumVersions;
 
 						synchronized (LOCK_VERSION_UPDATE)
 						{

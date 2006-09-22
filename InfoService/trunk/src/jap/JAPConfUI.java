@@ -810,7 +810,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 
 		m_slidFontSize.setValue(JAPModel.getInstance().getFontSize());
 		setLanguageComboIndex(JAPController.getLocale());
-		m_cbSaveWindowPositions.setSelected(JAPModel.getSaveMainWindowPosition());
+		m_cbSaveWindowPositions.setSelected(JAPModel.isMainWindowPositionSaved());
 		m_rbViewNormal.setSelected(JAPModel.getDefaultView() == JAPConstants.VIEW_NORMAL);
 		m_rbViewSimplified.setSelected(JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED);
 		m_rbViewSystray.setSelected(JAPModel.getMoveToSystrayOnStartup());

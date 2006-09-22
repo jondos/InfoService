@@ -688,6 +688,8 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	/**
 	 * Returns the format to which all automatically scaled dialogs are optimized. It is one of the constants
 	 * FORMAT_DEFAULT_SCREEN, FORMAT_GOLDEN_RATIO_PHI, and FORMAT_WIDE_SCREEN.
+	 * @param a_format one of the constants
+	 * FORMAT_DEFAULT_SCREEN, FORMAT_GOLDEN_RATIO_PHI, and FORMAT_WIDE_SCREEN
 	 * @return the format to which all automatically scaled dialogs are optimized
 	 */
 	public static double getOptimizedFormatInternal(int a_format)
@@ -1201,6 +1203,30 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 								 a_messageType, a_icon, a_linkedInformation);
 	}
 
+/**
+	 * Displays a confirm dialog. Words are wrapped automatically if a message line is too long.
+	 * @param a_parentComponent The parent component for this dialog. If it is null or the parent
+	 *                          component is not within a frame, the dialog's parent frame is the
+	 *                          default frame.
+	 * @param a_title The title of the message dialog
+	 * @param a_message The message to be displayed. It is interpreted as HTML. You do not need to put in
+	 * formatting tags, as the text will be auto-formatted in a way that the dialog's size is very close
+	 * to the golden ratio.
+	 * @param a_messageType use the message types from JOptionPane
+	 * @param a_options use the option types from JOptionPane
+	 * @param a_linkedInformation a clickable information message that is appended to the text
+	 * @return The value the user has selected. RETURN_VALUE_UNINITIALIZED implies
+	 * the user has not yet made a choice or that the current thread has been interrupted
+	 * @see javax.swing.JOptionPane
+	 */
+	public static int showConfirmDialog(Component a_parentComponent, String a_message, String a_title,
+										Options a_options, int a_messageType,
+										ILinkedInformation a_linkedInformation)
+	{
+		return showConfirmDialog(a_parentComponent, a_message, a_title, a_options, a_messageType, null,
+								 a_linkedInformation);
+	}
+
 	/**
 	 * Displays a confirm dialog. Words are wrapped automatically if a message line is too long.
 	 * @param a_parentComponent The parent component for this dialog. If it is null or the parent
@@ -1212,7 +1238,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 * to the golden ratio.
 	 * @param a_icon an icon that will be displayed on the dialog
 	 * @param a_messageType use the message types from JOptionPane
-	 * @param a_optionType use the option types from JOptionPane
+	 * @param a_options use the option types from JOptionPane
 	 * @param a_linkedInformation a clickable information message that is appended to the text
 	 * @return The value the user has selected. RETURN_VALUE_UNINITIALIZED implies
 	 * the user has not yet made a choice or that the current thread has been interrupted
@@ -2296,7 +2322,6 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 * @param a_message a message that is shown to the user (may be null)
 	 * @param a_logType the log type for this error
 	 * @param a_throwable a Throwable that has been caught (may be null)
-	 * @param a_linkedInformation a clickable information message that is appended to the text
 	 * @see logging.LogHolder
 	 * @see logging.LogType
 	 * @see logging.Log
