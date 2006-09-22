@@ -3301,10 +3301,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 			recommendToSwitchToRelease = true;
 		}
 
+		/*
 		if (a_bForced)
 		{
 			updateVersionNumber = a_minVersion;
-		}
+		}*/
 
 		if (updateVersionNumber == null)
 		{
@@ -3347,9 +3348,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 		 */
 		String message;
 		JAPDialog.ILinkedInformation checkbox = null;
+		String dev = ")";
+		if (!JAPConstants.m_bReleasedVersion && !recommendToSwitchToRelease)
+		{
+			dev = "-dev)";
+		}
 		if (a_bForced)
 		{
-			message = JAPMessages.getString("newVersionAvailable", updateVersionNumber);
+			message = JAPMessages.getString("newVersionAvailable", updateVersionNumber + dev);
 			checkbox = new JAPDialog.LinkedInformationAdapter()
 			{
 				public boolean isOnTop()
@@ -3360,11 +3366,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 		else
 		{
-			String dev = ")";
-			if (!JAPConstants.m_bReleasedVersion)
-			{
-				dev = "-dev)";
-			}
 			message = JAPMessages.getString(MSG_NEW_OPTIONAL_VERSION, updateVersionNumber + dev);
 			checkbox = new JAPDialog.LinkedCheckBox(false);
 		}
