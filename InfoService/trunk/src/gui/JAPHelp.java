@@ -56,6 +56,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.text.Document;
+import javax.swing.text.html.HTMLEditorKit;
+import javax.swing.text.html.StyleSheet;
 
 import anon.util.ResourceLoader;
 import gui.JAPHelpContext.IHelpContext;
@@ -439,6 +441,10 @@ public final class JAPHelp extends JAPDialog
 			}
 			m_emailCaller = a_emailCaller;
 			html = new JEditorPane("text/html", "<html><body></body></html>");
+			/*
+			StyleSheet style = ((HTMLEditorKit)html.getEditorKit()).getStyleSheet();
+			style.addRule("body { font-size: 30pt }");
+			((HTMLEditorKit)html.getEditorKit()).setStyleSheet(style);*/
 			new JTextComponentToClipboardCopier(true).registerTextComponent(html);
 			html.setEditable(false);
 			html.addHyperlinkListener(this);
