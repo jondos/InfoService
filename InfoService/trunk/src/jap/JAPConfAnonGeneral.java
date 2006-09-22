@@ -144,6 +144,11 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 				m_cbAutoChooseCascades.setSelected(
 								JAPModel.getInstance().isCascadeAutoSwitched());
 			}
+			else if (a_message.equals(JAPModel.CHANGED_AUTO_CONNECT))
+			{
+				m_cbAutoConnect.setSelected(JAPModel.getInstance().isAutoConnect());
+			}
+
 
 		}
 	}
@@ -173,7 +178,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 						 m_sliderDummyTrafficIntervall.isEnabled());
 		}
 		m_cbDenyNonAnonymousSurfing.setSelected(JAPModel.getInstance().isNonAnonymousSurfingDenied());
-		m_cbAutoConnect.setSelected(JAPModel.getAutoConnect());
+		m_cbAutoConnect.setSelected(JAPModel.isAutoConnect());
 		m_cbAutoReConnect.setSelected(JAPModel.isAutomaticallyReconnected());
 		m_cbAutoChooseCascades.setSelected(JAPModel.getInstance().isCascadeAutoSwitched());
 		if (JAPModel.getInstance().getAutomaticCascadeChangeRestriction().equals(
