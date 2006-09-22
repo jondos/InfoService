@@ -54,8 +54,9 @@ public final class JAPModel extends Observable
 	public static final String XML_DENY_NON_ANONYMOUS_SURFING = "denyNonAnonymousSurfing";
 	public static final String XML_ATTR_ACTIVATED = "activated";
 	public static final String XML_FONT_SIZE = "fontSize";
-	public static final String XML_CONFIG_SIZE = "ConfigSize";
-	public static final String XML_ICONIFIED_SIZE = "IconifiedSize";
+	public static final String XML_CONFIG_WINDOW = "ConfigWindow";
+	public static final String XML_SIZE = "Size";
+	public static final String XML_ICONIFIED_WINDOW = "IconifiedWindow";
 	public static final String XML_ATTR_WIDTH = "width";
 	public static final String XML_ATTR_HEIGHT = "height";
 
@@ -93,8 +94,12 @@ public final class JAPModel extends Observable
 	private boolean m_bMoveToSystrayOnStartup = JAPConstants.DEFAULT_MOVE_TO_SYSTRAY_ON_STARTUP; // true if programm will start in the systray
 	private int m_iDefaultView = JAPConstants.DEFAULT_VIEW; //which view we should start?
 
-	private boolean m_bSaveMainWindowPosition = JAPConstants.DEFAULT_SAVE_MAIN_WINDOW_POSITION;
+	private boolean m_bSaveMainWindowPosition;
+	private boolean m_bSaveConfigWindowPosition;
+	private boolean m_bSaveIconifiedWindowPosition;
 	private Point m_OldMainWindowLocation = null;
+	private Point m_iconifiedWindowLocation = null;
+	private Point m_configWindowLocation = null;
 
 	private boolean m_bGoodByMessageNeverRemind = false; // indicates if Warning message before exit has been deactivated forever
 
@@ -348,6 +353,16 @@ public final class JAPModel extends Observable
 		m_bSaveMainWindowPosition = b;
 	}
 
+	public void setSaveConfigWindowPosition(boolean a_bSave)
+	{
+		m_bSaveConfigWindowPosition = a_bSave;
+	}
+
+	public void setSaveIconifiedWindowPosition(boolean a_bSave)
+	{
+		m_bSaveIconifiedWindowPosition = a_bSave;
+	}
+
 	public void updateSystemLookAndFeels()
 	{
 		synchronized (LOOK_AND_FEEL_SYNC)
@@ -379,19 +394,63 @@ public final class JAPModel extends Observable
 		return false;
 	}
 
-	public static boolean isMainWindowPositionSaved()
+	public boolean isIconifiedWindowLocationSaved()
+	{
+		return m_bSaveIconifiedWindowPosition;
+	}
+
+	public void setIconifiedWindowLocation(Point a_location)
+	{
+		m_iconifiedWindowLocation = a_location;
+	}
+
+	public Point getIconifiedWindowLocation()
+	{
+		if (isIconifiedWindowLocationSaved())
+		{
+			return m_iconifiedWindowLocation;
+		}
+		return null;
+	}
+
+
+	public boolean isConfigWindowLocationSaved()
+	{
+		return m_bSaveConfigWindowPosition;
+	}
+
+	public void setConfigWindowLocation(Point a_location)
+	{
+		m_configWindowLocation = a_location;
+	}
+
+	public Point getConfigWindowLocation()
+	{
+		if (isConfigWindowLocationSaved())
+		{
+			return m_configWindowLocation;
+		}
+		return null;
+	}
+
+
+	public static boolean isMainWindowLocationSaved()
 	{
 		return ms_TheModel.m_bSaveMainWindowPosition;
 	}
 
-	protected void setOldMainWindowLocation(Point location)
+	protected void setMainWindowLocation(Point location)
 	{
 		m_OldMainWindowLocation = location;
 	}
 
-	public static Point getOldMainWindowLocation()
+	public static Point getMainWindowLocation()
 	{
-		return ms_TheModel.m_OldMainWindowLocation;
+		if (isMainWindowLocationSaved())
+		{
+			return ms_TheModel.m_OldMainWindowLocation;
+		}
+		return null;
 	}
 
 	/*

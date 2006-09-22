@@ -465,6 +465,46 @@ public final class GUIUtils
 	}
 
 	/**
+	 * Set a window to the specified position and tries to put the window inside the screen by altering
+	 * the position if needed.
+	 * @param a_window Window
+	 * @param a_location Point
+	 * @return if the location has been changed
+	 */
+	public static boolean restoreLocation(Window a_window, Point a_location)
+	{
+		if (a_window == null || a_location == null)
+		{
+			return false;
+		}
+
+		Dimension screenSize = a_window.getToolkit().getScreenSize();
+		int x = a_location.x;
+		int y = a_location.y;
+
+		if (x + a_window.getSize().width > screenSize.width)
+		{
+			x = screenSize.width - a_window.getSize().width;
+		}
+		if (y + a_window.getSize().height > screenSize.height)
+		{
+			y = screenSize.height - a_window.getSize().height;
+		}
+
+		if (x < 0)
+		{
+			x = 0;
+		}
+		if (y < 0)
+		{
+			y = 0;
+		}
+
+		a_window.setLocation(x, y);
+		return true;
+	}
+
+	/**
 	 * Returns the bounds of the screen where a specified window is currently shown.
 	 * @param a_window a Window
 	 * @return the bounds of the screen where the specified window is currently shown
