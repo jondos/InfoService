@@ -478,7 +478,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 				y = aktLocation.y + endPoint.y - m_startPoint.y;
 				maxX = (int) screenBounds.width;
 				maxY = (int) screenBounds.height;
-				if (x != 0 && x < DOCK_DISTANCE)
+				if (x != 0 && Math.abs(x) < DOCK_DISTANCE)
 				{
 					x = 0;
 				}
@@ -488,7 +488,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 					x = maxX - JAPViewIconified.this.getSize().width;
 				}
 
-				if (y != 0 && y < DOCK_DISTANCE)
+				if (y != 0 && Math.abs(y) < DOCK_DISTANCE)
 				{
 					y = 0;
 				}
