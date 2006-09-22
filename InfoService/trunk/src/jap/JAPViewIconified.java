@@ -44,8 +44,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseMotionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -72,7 +70,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 	private static final String MSG_TT_SWITCH_ANONYMITY =
 		JAPViewIconified.class.getName() + "_ttSwitchAnonymity";
 
-	private static final int DOCK_DISTANCE = 10;
+	private static final int DOCK_DISTANCE = 13;
 
 	private static final String STR_HIDDEN_WINDOW = Double.toString(Math.random());
 	private static Frame m_frameParent;
@@ -471,7 +469,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 			else
 			{
 				Point endPoint = e.getPoint();
-				Point aktLocation = getLocation();
+				Point aktLocation = getLocationOnScreen();
 				Rectangle screenBounds = GUIUtils.getScreenBounds(JAPViewIconified.this);
 				int x, y, maxX, maxY;
 
@@ -483,7 +481,8 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 				{
 					x = 0;
 				}
-				else if (x + JAPViewIconified.this.getWidth() > maxX - DOCK_DISTANCE)
+				else if (x + JAPViewIconified.this.getWidth() > maxX - DOCK_DISTANCE &&
+						 !(x + JAPViewIconified.this.getWidth() > maxX + DOCK_DISTANCE))
 				{
 					x = maxX - JAPViewIconified.this.getWidth();
 				}
@@ -492,7 +491,8 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 				{
 					y = 0;
 				}
-				else if (y + JAPViewIconified.this.getHeight() > maxY - DOCK_DISTANCE)
+				else if (y + JAPViewIconified.this.getHeight() > maxY - DOCK_DISTANCE &&
+						 !(y + JAPViewIconified.this.getHeight() > maxY + DOCK_DISTANCE))
 				{
 					y = maxY - JAPViewIconified.this.getHeight();
 				}
