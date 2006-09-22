@@ -507,7 +507,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 			// listener has started correctly
 			// do initial setting of anonMode
-			if (JAPModel.getAutoConnect() &&
+			if (JAPModel.isAutoConnect() &&
 				JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder())
 			{
 				/* show the connect via forwarder dialog -> the dialog will do the remaining things */
@@ -516,7 +516,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 			else
 			{
-				setAnonMode(JAPModel.getAutoConnect());
+				setAnonMode(JAPModel.isAutoConnect());
 			}
 
 			//Update account balance
@@ -921,7 +921,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					JAPModel.getInstance().setAutoConnect(
 									   XMLUtil.parseAttribute(root, "autoConnect", true));
 					// if auto-connect is not chosen, ask the user what to do
-					m_bAskAutoConnect =  !JAPModel.getInstance().getAutoConnect();
+					m_bAskAutoConnect =  !JAPModel.getInstance().isAutoConnect();
 				}
 				else
 				{
@@ -1889,7 +1889,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_DUMMY_TRAFFIC_INTERVALL,
 								 JAPModel.getDummyTraffic());
-			XMLUtil.setAttribute(e, JAPConstants.CONFIG_AUTO_CONNECT, JAPModel.getAutoConnect());
+			XMLUtil.setAttribute(e, JAPConstants.CONFIG_AUTO_CONNECT, JAPModel.isAutoConnect());
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_AUTO_RECONNECT, JAPModel.isAutomaticallyReconnected());
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_MINIMIZED_STARTUP, JAPModel.getMinimizeOnStartup());
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_NEVER_REMIND_ACTIVE_CONTENT,

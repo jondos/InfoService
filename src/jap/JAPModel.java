@@ -71,8 +71,9 @@ public final class JAPModel extends Observable
 	public static final Integer CHANGED_ALLOW_UPDATE_DIRECT_CONNECTION = new Integer(2);
 	public static final Integer CHANGED_NOTIFY_JAP_UPDATES = new Integer(3);
 	public static final Integer CHANGED_NOTIFY_JAVA_UPDATES = new Integer(4);
-	public static final Integer CHANGED_AUTO_RECONNECT = new Integer(5);
-	public static final Integer CHANGED_CASCADE_AUTO_CHANGE = new Integer(6);
+	public static final Integer CHANGED_AUTO_CONNECT = new Integer(5);
+	public static final Integer CHANGED_AUTO_RECONNECT = new Integer(6);
+	public static final Integer CHANGED_CASCADE_AUTO_CHANGE = new Integer(7);
 
 	private static final int DIRECT_CONNECTION_INFOSERVICE = 0;
 	private static final int DIRECT_CONNECTION_PAYMENT = 1;
@@ -218,15 +219,23 @@ public final class JAPModel extends Observable
 
 	void setAutoConnect(boolean b)
 	{
-		m_bAutoConnect = b;
+		synchronized (this)
+		{
+			if (m_bAutoConnect != b)
+			{
+				m_bAutoConnect = b;
+				setChanged();
+			}
+			notifyObservers(CHANGED_AUTO_CONNECT);
+		}
 	}
 
-	public static boolean getAutoConnect()
+	public static boolean isAutoConnect()
 	{
 		return ms_TheModel.m_bAutoConnect;
 	}
 
-	protected void setAutoReConnect(boolean b)
+	void setAutoReConnect(boolean b)
 	{
 		synchronized (this)
 		{
