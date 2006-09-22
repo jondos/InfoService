@@ -98,10 +98,14 @@ final class JAPConfUI extends AbstractJAPConfModule
 	private static final String MSG_NO_NATIVE_WINDOWS_LIBRARY = JAPConfUI.class.getName() +
 		"_noNativeWindowsLibrary";
 	private static final String MSG_WINDOW_POSITION = JAPConfUI.class.getName() + "_windowPosition";
+	private static final String MSG_WINDOW_MAIN = JAPConfUI.class.getName() + "_windowMain";
+	private static final String MSG_WINDOW_CONFIG = JAPConfUI.class.getName() + "_windowConfig";
+	private static final String MSG_WINDOW_ICON = JAPConfUI.class.getName() + "_windowIcon";
 
 	private TitledBorder m_borderLookAndFeel, m_borderView;
 	private JComboBox m_comboLanguage, m_comboUI, m_comboDialogFormat;
-	private JCheckBox m_cbSaveWindowPositions, m_cbAfterStart;
+	private JCheckBox m_cbSaveWindowLocationMain, m_cbSaveWindowLocationIcon, m_cbSaveWindowLocationConfig,
+		m_cbAfterStart;
 	private JRadioButton m_rbViewSimplified, m_rbViewNormal, m_rbViewMini, m_rbViewSystray;
 	private JCheckBox m_cbWarnOnClose;
 	private JSlider m_slidFontSize;
@@ -148,9 +152,11 @@ final class JAPConfUI extends AbstractJAPConfModule
 		JPanel pShutdown = createAfterShutdownPanel();
 		//if (!bSimpleView)
 		{
+			c1.fill = GridBagConstraints.HORIZONTAL;
 			panelRoot.add(pShutdown, c1);
 		}
 		c1.gridx = 0;
+		c1.fill = GridBagConstraints.BOTH;
 		panelRoot.add(createWindowPanel(), c1);
 
 		c1.gridy++;
@@ -580,13 +586,22 @@ final class JAPConfUI extends AbstractJAPConfModule
 		JPanel p = new JPanel(new GridBagLayout());
 		p.setBorder(new TitledBorder(JAPMessages.getString(MSG_WINDOW_POSITION)));
 
-		m_cbSaveWindowPositions = new JCheckBox(JAPMessages.getString("settingsSaveWindowPosition"));
+		m_cbSaveWindowLocationMain = new JCheckBox(JAPMessages.getString(MSG_WINDOW_MAIN));
 		c.weightx = 1;
 		c.gridx = 0;
 		c.gridy = 0;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(0, 10, 0, 10);
-		p.add(m_cbSaveWindowPositions, c);
+		p.add(m_cbSaveWindowLocationMain, c);
+
+		m_cbSaveWindowLocationConfig = new JCheckBox(JAPMessages.getString(MSG_WINDOW_CONFIG));
+		c.gridy++;
+		p.add(m_cbSaveWindowLocationConfig, c);
+
+		m_cbSaveWindowLocationIcon = new JCheckBox(JAPMessages.getString(MSG_WINDOW_ICON));
+		c.gridy++;
+		p.add(m_cbSaveWindowLocationIcon, c);
+
 		return p;
 	}
 
@@ -680,20 +695,11 @@ final class JAPConfUI extends AbstractJAPConfModule
 
 	protected boolean onOkPressed()
 	{
-		/*
-		 JAPDialog.showMessageDialog(getRootPanel(),
-				   JAPMessages.getString("confViewChanged"));
-
-		 JAPDialog.showMessageDialog(getRootPanel(),
-				   JAPMessages.getString("confLanguageChanged"));
-
-		 JAPDialog.showMessageDialog(getRootPanel(),
-				   JAPMessages.getString("confLookAndFeelChanged"));
-		 */
-
 		JAPModel.getInstance().setFontSize(m_slidFontSize.getValue());
 
-		JAPController.setSaveMainWindowPosition(m_cbSaveWindowPositions.isSelected());
+		JAPModel.getInstance().setSaveMainWindowPosition(m_cbSaveWindowLocationMain.isSelected());
+		JAPModel.getInstance().setSaveConfigWindowPosition(m_cbSaveWindowLocationConfig.isSelected());
+		JAPModel.getInstance().setSaveIconifiedWindowPosition(m_cbSaveWindowLocationIcon.isSelected());
 
 		JAPController.getInstance().setMinimizeOnStartup(m_rbViewMini.isSelected() &&
 			m_cbAfterStart.isSelected());
@@ -810,7 +816,9 @@ final class JAPConfUI extends AbstractJAPConfModule
 
 		m_slidFontSize.setValue(JAPModel.getInstance().getFontSize());
 		setLanguageComboIndex(JAPController.getLocale());
-		m_cbSaveWindowPositions.setSelected(JAPModel.isMainWindowPositionSaved());
+		m_cbSaveWindowLocationMain.setSelected(JAPModel.isMainWindowLocationSaved());
+		m_cbSaveWindowLocationConfig.setSelected(JAPModel.getInstance().isConfigWindowLocationSaved());
+		m_cbSaveWindowLocationIcon.setSelected(JAPModel.getInstance().isIconifiedWindowLocationSaved());
 		m_rbViewNormal.setSelected(JAPModel.getDefaultView() == JAPConstants.VIEW_NORMAL);
 		m_rbViewSimplified.setSelected(JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED);
 		m_rbViewSystray.setSelected(JAPModel.getMoveToSystrayOnStartup());
@@ -841,7 +849,9 @@ final class JAPConfUI extends AbstractJAPConfModule
 				break;
 			}
 		}
-		m_cbSaveWindowPositions.setSelected(JAPConstants.DEFAULT_SAVE_MAIN_WINDOW_POSITION);
+		m_cbSaveWindowLocationConfig.setSelected(JAPConstants.DEFAULT_SAVE_MAIN_WINDOW_POSITION);
+		m_cbSaveWindowLocationIcon.setSelected(JAPConstants.DEFAULT_SAVE_MAIN_WINDOW_POSITION);
+		m_cbSaveWindowLocationMain.setSelected(JAPConstants.DEFAULT_SAVE_MAIN_WINDOW_POSITION);
 		m_rbViewNormal.setSelected(JAPConstants.DEFAULT_VIEW == JAPConstants.VIEW_NORMAL);
 		m_rbViewSimplified.setSelected(JAPConstants.DEFAULT_VIEW == JAPConstants.VIEW_SIMPLIFIED);
 		m_rbViewSystray.setSelected(JAPConstants.DEFAULT_MOVE_TO_SYSTRAY_ON_STARTUP);

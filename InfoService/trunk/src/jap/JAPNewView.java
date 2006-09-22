@@ -1011,25 +1011,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		updateValues(true);
 		setOptimalSize();
 		GUIUtils.centerOnScreen(this);
-		//Change size and location if the user requested to restore the old position/size
-		if (JAPModel.isMainWindowPositionSaved())
-		{
-			JAPModel m = JAPModel.getInstance();
-			Dimension ds = Toolkit.getDefaultToolkit().getScreenSize();
-			Point oldLocation = m.getOldMainWindowLocation();
-			if (oldLocation != null && oldLocation.x >= 0 &&
-				oldLocation.y >= 0 /*&&m.m_OldMainWindowLocation.x<ds.width&&
-					   m.m_OldMainWindowLocation.y<ds.height*/
-				)
-			{
-				setLocation(oldLocation);
-			}
-			/*		if (m.m_OldMainWindowSize != null && m.m_OldMainWindowSize.height > 0 &&
-			   m.m_OldMainWindowSize.width > 0)
-			  {
-			   setSize(m.m_OldMainWindowSize);
-			  }*/
-		}
+		GUIUtils.restoreLocation(this, JAPModel.getInstance().getMainWindowLocation());
+
 
 		Database.getInstance(StatusInfo.class).addObserver(this);
 		Database.getInstance(JAPVersionInfo.class).addObserver(this);
@@ -1267,6 +1250,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_rbAnonOn.setEnabled(false);
 		m_rbAnonOff.setEnabled(false);
 	}
+
+
 
 	private void loadMeterIcons()
 	{
@@ -1796,6 +1781,15 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		showConfigDialog(null);
 	}
 
+	public void saveWindowPositions()
+	{
+		super.saveWindowPositions();
+		if (m_dlgConfig != null)
+		{
+			JAPModel.getInstance().setConfigWindowLocation(m_dlgConfig.getLocation());
+		}
+	}
+
 	public void showConfigDialog(String card)
 	{
 		synchronized (LOCK_CONFIG)
@@ -1824,8 +1818,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			if (!JAPModel.isSmallDisplay()) //only do this on "real" Displays
 			{
 				pack(); // optimize size
-				//setResizable( /*true*/true /*false*/); //2001-11-12(HF):Changed due to a Mac OS X problem during redraw of the progress bars
-				setResizable(false);
+				setResizable( /*true*/true /*false*/); //2001-11-12(HF):Changed due to a Mac OS X problem during redraw of the progress bars
+				//setResizable(false);
 			}
 		}
 		catch (Exception e)

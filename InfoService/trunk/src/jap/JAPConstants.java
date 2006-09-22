@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.05.431"; //Never change the layout of this line!
+	public static final String aktVersion = "00.05.432"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -247,13 +247,12 @@ public final class JAPConstants
 	public final static String CONFIG_GUI = "GUI";
 	public final static String CONFIG_LOG_DETAIL = "Detail";
 	public final static String CONFIG_MAIN_WINDOW = "MainWindow";
-	public final static String CONFIG_SET_ON_STARTUP = "SetOnStartup";
 	public final static String CONFIG_LOCATION = "Location";
 	public final static String CONFIG_X = "x";
 	public final static String CONFIG_Y = "y";
 	public final static String CONFIG_DX = "dx";
 	public final static String CONFIG_DY = "dy";
-	public final static String CONFIG_SIZE = "Size";
+	//public final static String CONFIG_SIZE = "Size";
 	public final static String CONFIG_MOVE_TO_SYSTRAY = "MoveToSystray";
 	public final static String CONFIG_DEFAULT_VIEW = "DefaultView";
 	public final static String CONFIG_NORMAL = "Normal";

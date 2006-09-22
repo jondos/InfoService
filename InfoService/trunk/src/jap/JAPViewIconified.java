@@ -32,36 +32,36 @@ import java.text.NumberFormat;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Frame;
-import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
 import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JWindow;
 import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
-import javax.swing.BorderFactory;
 
 import anon.infoservice.MixCascade;
 import anon.infoservice.StatusInfo;
 import anon.proxy.IProxyListener;
-import gui.JAPMessages;
 import gui.GUIUtils;
+import gui.JAPMessages;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.awt.Cursor;
-import java.awt.Rectangle;
 
 final public class JAPViewIconified extends JWindow implements ActionListener
 {
@@ -261,6 +261,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		}
 
 		GUIUtils.moveToUpRightCorner(this);
+		GUIUtils.restoreLocation(this, JAPModel.getInstance().getIconifiedWindowLocation());
 		m_labelBytes.setText(JAPMessages.getString("iconifiedViewZero"));
 		m_labelUsers.setText(JAPMessages.getString("iconifiedViewNA"));
 		m_labelTraffic.setText(JAPMessages.getString("iconifiedViewNA"));
@@ -475,26 +476,26 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 
 				x = aktLocation.x + endPoint.x - m_startPoint.x;
 				y = aktLocation.y + endPoint.y - m_startPoint.y;
-				maxX = (int) screenBounds.getMaxX();
-				maxY = (int) screenBounds.getMaxY();
+				maxX = (int) screenBounds.width;
+				maxY = (int) screenBounds.height;
 				if (x != 0 && x < DOCK_DISTANCE)
 				{
 					x = 0;
 				}
-				else if (x + JAPViewIconified.this.getWidth() > maxX - DOCK_DISTANCE &&
-						 !(x + JAPViewIconified.this.getWidth() > maxX + DOCK_DISTANCE))
+				else if (x + JAPViewIconified.this.getSize().width > maxX - DOCK_DISTANCE &&
+						 !(x + JAPViewIconified.this.getSize().width > maxX + DOCK_DISTANCE))
 				{
-					x = maxX - JAPViewIconified.this.getWidth();
+					x = maxX - JAPViewIconified.this.getSize().width;
 				}
 
 				if (y != 0 && y < DOCK_DISTANCE)
 				{
 					y = 0;
 				}
-				else if (y + JAPViewIconified.this.getHeight() > maxY - DOCK_DISTANCE &&
-						 !(y + JAPViewIconified.this.getHeight() > maxY + DOCK_DISTANCE))
+				else if (y + JAPViewIconified.this.getSize().height > maxY - DOCK_DISTANCE &&
+						 !(y + JAPViewIconified.this.getSize().height > maxY + DOCK_DISTANCE))
 				{
-					y = maxY - JAPViewIconified.this.getHeight();
+					y = maxY - JAPViewIconified.this.getSize().height;
 				}
 				JAPViewIconified.this.setLocation(x, y);
 			}

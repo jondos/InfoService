@@ -1125,74 +1125,75 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 					JAPModel.getInstance().setLookAndFeel(UIManager.getLookAndFeel().getClass().getName());
 				}
+
+
+				//Loading GUI Setting
+				Element elemGUI = (Element) XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_GUI);
+				JAPModel.getInstance().setFontSize(XMLUtil.parseAttribute(
+									   elemGUI, JAPModel.XML_FONT_SIZE, JAPModel.getInstance().getFontSize()));
+				JAPDialog.setOptimizedFormat(XMLUtil.parseAttribute(
+								elemGUI, JAPDialog.XML_ATTR_OPTIMIZED_FORMAT, JAPDialog.getOptimizedFormat()));
+				/** @todo for backwards compatibility; remove */
 				JAPModel.getInstance().setFontSize(XMLUtil.parseAttribute(
 									   root, JAPModel.XML_FONT_SIZE, JAPModel.getInstance().getFontSize()));
 				JAPDialog.setOptimizedFormat(XMLUtil.parseAttribute(
 								root, JAPDialog.XML_ATTR_OPTIMIZED_FORMAT, JAPDialog.getOptimizedFormat()));
-				//Loading GUI Setting
-				Element elemGUI = (Element) XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_GUI);
-				if (elemGUI != null)
+				Point location;
+
+				Node window = XMLUtil.getFirstChildByName(elemGUI, JAPModel.XML_CONFIG_WINDOW);
+				Node nodeSize = XMLUtil.getFirstChildByName(window, JAPModel.XML_SIZE);
+				JAPModel.getInstance().setConfigSize(new Dimension(
+								XMLUtil.parseAttribute(nodeSize, JAPModel.XML_ATTR_WIDTH, 0),
+								XMLUtil.parseAttribute(nodeSize, JAPModel.XML_ATTR_HEIGHT, 0)));
+				location = parseWindowLocation(window);
+				JAPModel.getInstance().setSaveConfigWindowPosition(location != null);
+				JAPModel.getInstance().setConfigWindowLocation(location);
+
+				window = XMLUtil.getFirstChildByName(elemGUI, JAPModel.XML_ICONIFIED_WINDOW);
+				nodeSize = XMLUtil.getFirstChildByName(window, JAPModel.XML_SIZE);
+				JAPModel.getInstance().setIconifiedSize(new Dimension(
+								XMLUtil.parseAttribute(nodeSize, JAPModel.XML_ATTR_WIDTH, 0),
+								XMLUtil.parseAttribute(nodeSize, JAPModel.XML_ATTR_HEIGHT, 0)));
+				location = parseWindowLocation(window);
+				JAPModel.getInstance().setSaveIconifiedWindowPosition(location != null);
+				JAPModel.getInstance().setIconifiedWindowLocation(location);
+
+
+				Element elemMainWindow = (Element) XMLUtil.getFirstChildByName(elemGUI,
+					JAPConstants.CONFIG_MAIN_WINDOW);
+				location = parseWindowLocation(elemMainWindow);
+				JAPModel.getInstance().setSaveMainWindowPosition(location != null);
+				JAPModel.getInstance().setMainWindowLocation(location);
+
+
+				Element tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow,
+					JAPConstants.CONFIG_MOVE_TO_SYSTRAY);
+				b = XMLUtil.parseValue(tmp, false);
+				setMoveToSystrayOnStartup(b);
+				/*if (b)
+				  { ///todo: move to systray
+				 if (m_View != null)
+				 {
+				  b=m_View.hideWindowInTaskbar();
+				 }
+				  }
+				  if(!b)
+				  {
+				 m_View.setVisible(true);
+				   m_View.toFront();
+
+
+				  }*/
+				tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow,
+					JAPConstants.CONFIG_DEFAULT_VIEW);
+				String strDefaultView = XMLUtil.parseValue(tmp, JAPConstants.CONFIG_NORMAL);
+				if (strDefaultView.equals(JAPConstants.CONFIG_SIMPLIFIED))
 				{
-					Node nodeSize = XMLUtil.getFirstChildByName(elemGUI, JAPModel.XML_CONFIG_SIZE);
-					JAPModel.getInstance().setConfigSize(new Dimension(
-									   XMLUtil.parseAttribute(nodeSize, JAPModel.XML_ATTR_WIDTH, 0),
-									   XMLUtil.parseAttribute(nodeSize, JAPModel.XML_ATTR_HEIGHT, 0)));
-					nodeSize = XMLUtil.getFirstChildByName(elemGUI, JAPModel.XML_ICONIFIED_SIZE);
-					JAPModel.getInstance().setIconifiedSize(new Dimension(
-									   XMLUtil.parseAttribute(nodeSize, JAPModel.XML_ATTR_WIDTH, 0),
-									   XMLUtil.parseAttribute(nodeSize, JAPModel.XML_ATTR_HEIGHT, 0)));
-
-					Element elemMainWindow = (Element) XMLUtil.getFirstChildByName(elemGUI,
-						JAPConstants.CONFIG_MAIN_WINDOW);
-					if (elemMainWindow != null)
-					{
-						try
-						{
-							Element tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow,
-								JAPConstants.CONFIG_SET_ON_STARTUP);
-							b = XMLUtil.parseValue(tmp, false);
-							JAPController.setSaveMainWindowPosition(b);
-							if (b)
-							{
-								tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow,
-									JAPConstants.CONFIG_LOCATION);
-								Point p = new Point();
-								p.x = XMLUtil.parseAttribute(tmp, JAPConstants.CONFIG_X, -1);
-								p.y = XMLUtil.parseAttribute(tmp, JAPConstants.CONFIG_Y, -1);
-								m_Model.setOldMainWindowLocation(p);
-							}
-							tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow,
-								JAPConstants.CONFIG_MOVE_TO_SYSTRAY);
-							b = XMLUtil.parseValue(tmp, false);
-							setMoveToSystrayOnStartup(b);
-							/*if (b)
-									{ ///todo: move to systray
-							 if (m_View != null)
-							 {
-							  b=m_View.hideWindowInTaskbar();
-							 }
-									}
-									if(!b)
-									{
-							 m_View.setVisible(true);
-							   m_View.toFront();
-
-
-									}*/
-							tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow,
-								JAPConstants.CONFIG_DEFAULT_VIEW);
-							String strDefaultView = XMLUtil.parseValue(tmp, JAPConstants.CONFIG_NORMAL);
-							if (strDefaultView.equals(JAPConstants.CONFIG_SIMPLIFIED))
-							{
-								setDefaultView(JAPConstants.VIEW_SIMPLIFIED);
-							}
-						}
-						catch (Exception ex)
-						{
-							LogHolder.log(LogLevel.INFO, LogType.MISC, "Error loading GUI configuration.");
-						}
-					}
+					setDefaultView(JAPConstants.VIEW_SIMPLIFIED);
 				}
+
+
+
 				//Loading debug settings
 				Element elemDebug = (Element) XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_DEBUG);
 				if (elemDebug != null)
@@ -1514,7 +1515,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 				else
 				{
-					LogHolder.log(LogLevel.ERR, LogType.MISC, "Error in XML structure (JapForwardingSettings node): Using default settings for forwarding.");
+					LogHolder.log(LogLevel.ERR, LogType.MISC, "No JapForwardingSettings node found. Using default settings for forwarding.");
 				}
 //				}
 
@@ -1583,6 +1584,19 @@ public final class JAPController extends Observable implements IProxyListener, O
 						  "Configuration file \"" + a_configFile +  "\" not found.");
 			return false;
 		}
+	}
+
+	private Point parseWindowLocation(Node a_node)
+	{
+		Node tmp = XMLUtil.getFirstChildByName(a_node, JAPConstants.CONFIG_LOCATION);
+		if  (tmp == null)
+		{
+			return null;
+		}
+		Point p = new Point();
+		p.x = XMLUtil.parseAttribute(tmp, JAPConstants.CONFIG_X, -1);
+		p.y = XMLUtil.parseAttribute(tmp, JAPConstants.CONFIG_Y, -1);
+		return p;
 	}
 
 	/**
@@ -1787,6 +1801,18 @@ public final class JAPController extends Observable implements IProxyListener, O
 		return error;
 	}
 
+	private void addWindowLocationToConf(Element a_parentElement, Point a_location)
+	{
+		if (a_parentElement != null && a_location != null)
+		{
+			Element tmp =
+				a_parentElement.getOwnerDocument().createElement(JAPConstants.CONFIG_LOCATION);
+			a_parentElement.appendChild(tmp);
+			tmp.setAttribute(JAPConstants.CONFIG_X, Integer.toString(a_location.x));
+			tmp.setAttribute(JAPConstants.CONFIG_Y, Integer.toString(a_location.y));
+		}
+	}
+
 	String getConfigurationAsXmlString()
 	{
 		// Save config to xml file
@@ -1906,9 +1932,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 				elemLookAndFeels.appendChild(elemLookAndFeel);
 			}
 
-			XMLUtil.setAttribute(e, JAPModel.XML_FONT_SIZE, JAPModel.getInstance().getFontSize());
-			XMLUtil.setAttribute(e, JAPDialog.XML_ATTR_OPTIMIZED_FORMAT, JAPDialog.getOptimizedFormat());
-
 			/*stores MixCascades*/
 			Element elemCascades = doc.createElement(MixCascade.XML_ELEMENT_CONTAINER_NAME);
 			e.appendChild(elemCascades);
@@ -1946,41 +1969,45 @@ public final class JAPController extends Observable implements IProxyListener, O
 			Element elemGUI = doc.createElement(JAPConstants.CONFIG_GUI);
 			e.appendChild(elemGUI);
 
-			Element elemSize;
+			XMLUtil.setAttribute(elemGUI, JAPModel.XML_FONT_SIZE, JAPModel.getInstance().getFontSize());
+			XMLUtil.setAttribute(elemGUI, JAPDialog.XML_ATTR_OPTIMIZED_FORMAT, JAPDialog.getOptimizedFormat());
 
-			elemSize = doc.createElement(JAPModel.XML_CONFIG_SIZE);
+
+
+			if (m_View instanceof AbstractJAPMainView)
+			{
+				((AbstractJAPMainView)m_View).saveWindowPositions();
+			}
+
+			Element elemWindow, elemSize;
+
+			elemWindow = doc.createElement(JAPModel.XML_CONFIG_WINDOW);
+			elemSize = doc.createElement(JAPModel.XML_SIZE);
 			XMLUtil.setAttribute(
 						 elemSize, JAPModel.XML_ATTR_WIDTH, JAPModel.getInstance().getConfigSize().width);
 			XMLUtil.setAttribute(
 						 elemSize, JAPModel.XML_ATTR_HEIGHT, JAPModel.getInstance().getConfigSize().height);
-			elemGUI.appendChild(elemSize);
+			elemWindow.appendChild(elemSize);
+			addWindowLocationToConf(elemWindow, JAPModel.getInstance().getConfigWindowLocation());
+			elemGUI.appendChild(elemWindow);
 
-			elemSize = doc.createElement(JAPModel.XML_ICONIFIED_SIZE);
+
+			elemWindow = doc.createElement(JAPModel.XML_ICONIFIED_WINDOW);
+			elemSize = doc.createElement(JAPModel.XML_SIZE);
 			XMLUtil.setAttribute(
 						 elemSize, JAPModel.XML_ATTR_WIDTH, JAPModel.getInstance().getIconifiedSize().width);
 			XMLUtil.setAttribute(
 						 elemSize, JAPModel.XML_ATTR_HEIGHT, JAPModel.getInstance().getIconifiedSize().height);
-			elemGUI.appendChild(elemSize);
+			elemWindow.appendChild(elemSize);
+			addWindowLocationToConf(elemWindow, JAPModel.getInstance().getIconifiedWindowLocation());
+			elemGUI.appendChild(elemWindow);
+
 
 
 			Element elemMainWindow = doc.createElement(JAPConstants.CONFIG_MAIN_WINDOW);
 			elemGUI.appendChild(elemMainWindow);
-			if (JAPModel.isMainWindowPositionSaved() && getViewWindow() != null)
-			{
-				Element tmp = doc.createElement(JAPConstants.CONFIG_SET_ON_STARTUP);
-				elemMainWindow.appendChild(tmp);
-				XMLUtil.setValue(tmp, true);
-				tmp = doc.createElement(JAPConstants.CONFIG_LOCATION);
-				elemMainWindow.appendChild(tmp);
-				Point p = getViewWindow().getLocation();
-				tmp.setAttribute(JAPConstants.CONFIG_X, Integer.toString(p.x));
-				tmp.setAttribute(JAPConstants.CONFIG_Y, Integer.toString(p.y));
-				tmp = doc.createElement(JAPConstants.CONFIG_SIZE);
-				elemMainWindow.appendChild(tmp);
-				Dimension d = getViewWindow().getSize();
-				tmp.setAttribute(JAPConstants.CONFIG_DX, Integer.toString(d.width));
-				tmp.setAttribute(JAPConstants.CONFIG_DY, Integer.toString(d.height));
-			}
+			addWindowLocationToConf(elemMainWindow, JAPModel.getInstance().getMainWindowLocation());
+
 			if (JAPModel.getMoveToSystrayOnStartup())
 			{
 				Element tmp = doc.createElement(JAPConstants.CONFIG_MOVE_TO_SYSTRAY);
@@ -2255,11 +2282,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public static void setPreCreateAnonRoutes(boolean b)
 	{
 		m_Model.setPreCreateAnonRoutes(b);
-	}
-
-	public static void setSaveMainWindowPosition(boolean b)
-	{
-		m_Model.setSaveMainWindowPosition(b);
 	}
 
 	//---------------------------------------------------------------------

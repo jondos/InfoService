@@ -2903,6 +2903,19 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	}
 
 	/**
+	 * Set a window to the specified position and tries to put the window inside the screen by altering
+	 * the position if needed.
+	 * @param a_point a Point; may be null
+	 */
+	public void restoreLocation(Point a_point)
+	{
+		if (GUIUtils.restoreLocation(m_internalDialog, a_point))
+		{
+			m_bLocationSetManually = true;
+		}
+	}
+
+	/**
 	 * Sets the location of the dialog 'manually'. After that,
 	 * no automatic alignment is done by this dialog.
 	 * @param x a x cooredinate on the screen
