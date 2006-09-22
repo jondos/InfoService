@@ -44,6 +44,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -61,6 +63,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import java.awt.Cursor;
+import java.awt.Rectangle;
 
 final public class JAPViewIconified extends JWindow implements ActionListener
 {
@@ -68,6 +71,8 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 
 	private static final String MSG_TT_SWITCH_ANONYMITY =
 		JAPViewIconified.class.getName() + "_ttSwitchAnonymity";
+
+	private static final int DOCK_DISTANCE = 10;
 
 	private static final String STR_HIDDEN_WINDOW = Double.toString(Math.random());
 	private static Frame m_frameParent;
@@ -90,7 +95,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 			m_frameParent = new Frame(STR_HIDDEN_WINDOW);
 		}
 		return m_frameParent;
-}
+	}
 
 	private long m_lTrafficWWW, m_lTrafficOther;
 
@@ -467,8 +472,31 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 			{
 				Point endPoint = e.getPoint();
 				Point aktLocation = getLocation();
-				setLocation(aktLocation.x + endPoint.x - m_startPoint.x,
-							aktLocation.y + endPoint.y - m_startPoint.y);
+				Rectangle screenBounds = GUIUtils.getScreenBounds(JAPViewIconified.this);
+				int x, y, maxX, maxY;
+
+				x = aktLocation.x + endPoint.x - m_startPoint.x;
+				y = aktLocation.y + endPoint.y - m_startPoint.y;
+				maxX = (int) screenBounds.getMaxX();
+				maxY = (int) screenBounds.getMaxY();
+				if (x != 0 && x < DOCK_DISTANCE)
+				{
+					x = 0;
+				}
+				else if (x + JAPViewIconified.this.getWidth() > maxX - DOCK_DISTANCE)
+				{
+					x = maxX - JAPViewIconified.this.getWidth();
+				}
+
+				if (y != 0 && y < DOCK_DISTANCE)
+				{
+					y = 0;
+				}
+				else if (y + JAPViewIconified.this.getHeight() > maxY - DOCK_DISTANCE)
+				{
+					y = maxY - JAPViewIconified.this.getHeight();
+				}
+				JAPViewIconified.this.setLocation(x, y);
 			}
 		}
 	}
