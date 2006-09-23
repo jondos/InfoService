@@ -70,8 +70,6 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 	private static final String MSG_TT_SWITCH_ANONYMITY =
 		JAPViewIconified.class.getName() + "_ttSwitchAnonymity";
 
-	private static final int DOCK_DISTANCE = 10;
-
 	private static final String STR_HIDDEN_WINDOW = Double.toString(Math.random());
 	private static Frame m_frameParent;
 
@@ -79,12 +77,12 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 	private AbstractJAPMainView m_mainView;
 	private JLabel m_labelBytes, m_labelUsers, m_labelTraffic;
 	private JLabel m_lblJAPIcon;
-	private Point m_startPoint;
 	private Font m_fontDlg;
-	private boolean m_bIsDragging = false;
 	private NumberFormat m_NumberFormat;
 	private boolean m_anonModeDisabled = false;
 	private Object SYNC_CURSOR = new Object();
+
+	private GUIUtils.WindowDocker m_docker;
 
 	private static Frame getParentFrame()
 	{
@@ -231,10 +229,19 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		p2.add(m_lblJAPIcon);
 		p2.add(bttn);
 		p.add(p2, BorderLayout.SOUTH);
-		MyMouseListener listener = new MyMouseListener();
-		p.addMouseListener(listener);
-		p.addMouseMotionListener(listener);
+
+		p.addMouseListener(new MouseAdapter()
+		{
+			public void mouseClicked(MouseEvent e)
+			{
+				if (e.getClickCount() > 1)
+				{
+					switchBackToMainView();
+				}
+			}
+		});
 		setContentPane(p);
+		m_docker = new GUIUtils.WindowDocker(p);
 
 		pack();
 		// fix for MacOS; sometimes pack increases the size to several meters...
@@ -427,80 +434,6 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		}
 
 		blink();
-	}
-
-	private class MyMouseListener extends MouseAdapter implements MouseMotionListener
-	{
-		public void mouseExited(MouseEvent e)
-		{
-		}
-
-		public void mouseEntered(MouseEvent e)
-		{
-		}
-
-		public void mouseReleased(MouseEvent e)
-		{
-			m_bIsDragging = false;
-		}
-
-		public void mousePressed(MouseEvent e)
-		{
-		}
-
-		public void mouseClicked(MouseEvent e)
-		{
-			if (e.getClickCount() > 1)
-			{
-				switchBackToMainView();
-			}
-		}
-
-		public void mouseMoved(MouseEvent e)
-		{
-		}
-
-		public void mouseDragged(MouseEvent e)
-		{
-			if (!m_bIsDragging)
-			{
-				m_bIsDragging = true;
-				m_startPoint = e.getPoint();
-			}
-			else
-			{
-				Point endPoint = e.getPoint();
-				Point aktLocation = getLocationOnScreen();
-				GUIUtils.Screen currentScreen = GUIUtils.getCurrentScreen(JAPViewIconified.this);
-				int x, y, maxX, maxY;
-
-
-				x = aktLocation.x + endPoint.x - m_startPoint.x;
-				y = aktLocation.y + endPoint.y - m_startPoint.y;
-				maxX = (int) currentScreen.getWidth() + currentScreen.getX();
-				maxY = (int) currentScreen.getHeight() + currentScreen.getY();
-				if (x != currentScreen.getX() && Math.abs(x - currentScreen.getX()) < (DOCK_DISTANCE))
-				{
-					x = currentScreen.getX();
-				}
-				else if (x + JAPViewIconified.this.getSize().width > maxX - DOCK_DISTANCE &&
-						 !(x + JAPViewIconified.this.getSize().width > maxX + DOCK_DISTANCE))
-				{
-					x = maxX - JAPViewIconified.this.getSize().width;
-				}
-
-				if (y != currentScreen.getY() && Math.abs(y - currentScreen.getY()) < (DOCK_DISTANCE))
-				{
-					y = currentScreen.getY();
-				}
-				else if (y + JAPViewIconified.this.getSize().height > maxY - DOCK_DISTANCE &&
-						 !(y + JAPViewIconified.this.getSize().height > maxY + DOCK_DISTANCE))
-				{
-					y = maxY - JAPViewIconified.this.getSize().height;
-				}
-				JAPViewIconified.this.setLocation(x, y);
-			}
-		}
 	}
 
 	private void setButtonBorder()
