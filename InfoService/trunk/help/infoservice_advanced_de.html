@@ -5,11 +5,9 @@
 <body>
 <!--#include virtual="/header.html"-->
 
-<H2>InfoService</H2>
+<H2>InfoService: Erweiterte Einstellungen</H2>
 
-<H3>Erweiterte Einstellungen</H3>
-<P>
-<b>Hinweis:</b> Dieses Panel steht nur in der <a href="appearance_en.html#expertView">Expert View</a> zur Verf&uuml;gung.<br>
+<i>Dieses Panel steht nur in der <a href="appearance_de.html#expertView">Expertenansicht</a> zur Verf&uuml;gung</i>.<P>
 Um zu diesem Einstellungsfenster zu kommen, klicken Sie im Hauptfenster von JAP auf <i>Einstellungen</i>, w&auml;hlen anschlie&szlig;end aus der linken Liste den Eintrag <i>InfoService</i> und &ouml;ffnen anschlie&szlig;end den Tab <i>Erweiterte Einstellungen</i>.<br>
 <UL>
     <LI><B>Automatische InfoService-Anfragen durchf&uuml;hren:</B><BR>
@@ -20,16 +18,10 @@ Um zu diesem Einstellungsfenster zu kommen, klicken Sie im Hauptfenster von JAP 
     Wird diese Option nicht aktiviert, k&ouml;nnen nur &uuml;ber anonymisierte Verbindungen Informationen von den InfoServices abgerufen werden.<br>
     Es wird deshalb empfohlen, diese Option zu aktivieren.
     <P>
-    <LI><B>Benutze ausschlie&szlig;lich den Standard-InfoService (Nur in der Entwicklerversion verf&uuml;gbar)</B><BR>
-    Normalerweise versucht der JAP, die gew&uuml;nschten Informationen von allen bekannten InfoServices zu erhalten, wenn der Standard-InfoService diese nicht liefern kann. Wenn dieses Feld markiert ist, wird nur der Standard-InfoService abgefragt.
-    <br>Dies wird NICHT empfohlen, denn wenn dieser InfoService ausf&auml;llt, wird kein anderer verwendet.
-    <br>Wird diese Option NICHT aktiviert, kann zus&auml;tzlich folgende Einstellung vorgenommen werden:
-    <P>
-    <UL>
-    <LI><B>Anzahl redundant abzufragender InfoServices:</B><BR>
+    <LI><B>Redundante Anfragen an verschiedene InfoServices stellen:</B><BR>
+    Es wird empfohlen, diese Option zu aktivieren.<br>
     Legen Sie fest, von wievielen InfoServices Informationen geholt werden sollen. Legen Sie z.B. als Anzahl "3" fest, so wird JAP immer versuchen, 3 InfoServices zu erreichen. F&auml;llt einer aus, wird versucht einen anderen als Ersatz zu erreichen.
     <br>Je mehr InfoServices Sie festlegen, desto robuster wird JAP gegen St&ouml;rungen in den InfoServices, desto l&auml;nger dauert die Abfrage aber auch.
-    </UL>
     </UL>
 <!--#include virtual="/footer.html"-->
 </body>

@@ -57,6 +57,7 @@ import javax.swing.filechooser.FileFilter;
 import anon.util.ClassUtil;
 import gui.GUIUtils;
 import gui.JAPDll;
+import gui.JAPHelp;
 import gui.JAPMessages;
 import gui.LanguageMapper;
 import gui.TitledGridBagPanel;
@@ -101,11 +102,15 @@ final class JAPConfUI extends AbstractJAPConfModule
 	private static final String MSG_WINDOW_MAIN = JAPConfUI.class.getName() + "_windowMain";
 	private static final String MSG_WINDOW_CONFIG = JAPConfUI.class.getName() + "_windowConfig";
 	private static final String MSG_WINDOW_ICON = JAPConfUI.class.getName() + "_windowIcon";
+	private static final String MSG_WINDOW_HELP = JAPConfUI.class.getName() + "_windowHelp";
+	private static final String MSG_WINDOW_SIZE = JAPConfUI.class.getName() + "_windowSize";
+
+
 
 	private TitledBorder m_borderLookAndFeel, m_borderView;
 	private JComboBox m_comboLanguage, m_comboUI, m_comboDialogFormat;
 	private JCheckBox m_cbSaveWindowLocationMain, m_cbSaveWindowLocationIcon, m_cbSaveWindowLocationConfig,
-		m_cbAfterStart;
+		m_cbSaveWindowLocationHelp, m_cbSaveWindowSizeHelp, m_cbAfterStart;
 	private JRadioButton m_rbViewSimplified, m_rbViewNormal, m_rbViewMini, m_rbViewSystray;
 	private JCheckBox m_cbWarnOnClose;
 	private JSlider m_slidFontSize;
@@ -120,6 +125,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 	public void recreateRootPanel()
 	{
 		JPanel panelRoot = getRootPanel();
+		JPanel tempPanel;
 
 		/* clear the whole root panel */
 		panelRoot.removeAll();
@@ -133,9 +139,8 @@ final class JAPConfUI extends AbstractJAPConfModule
 		c1.anchor = GridBagConstraints.NORTHWEST;
 		c1.fill = GridBagConstraints.BOTH;
 		c1.weightx = 1;
-		JPanel pLookAndFeel = createLookAndFeelPanel();
 		c1.gridwidth = 2;
-		panelRoot.add(pLookAndFeel, c1);
+		panelRoot.add(createLookAndFeelPanel(), c1);
 
 		c1.insets = new Insets(0, 0, 0, 0);
 		c1.gridwidth = 1;
@@ -145,26 +150,39 @@ final class JAPConfUI extends AbstractJAPConfModule
 
 		c1.insets = new Insets(0, 0, 0, 0);
 		c1.gridx = 1;
-		JPanel pStartup = createAfterStartupPanel();
-		panelRoot.add(pStartup, c1);
-		c1.gridy++;
+		panelRoot.add(createAfterStartupPanel(), c1);
 
-		JPanel pShutdown = createAfterShutdownPanel();
-		//if (!bSimpleView)
-		{
-			c1.fill = GridBagConstraints.HORIZONTAL;
-			panelRoot.add(pShutdown, c1);
-		}
-		c1.gridx = 0;
+		c1.gridy++;
 		c1.fill = GridBagConstraints.BOTH;
-		panelRoot.add(createWindowPanel(), c1);
+		tempPanel = createWindowSizePanel();
+		if (!bSimpleView)
+		{
+			panelRoot.add(tempPanel, c1);
+		}
+
+		c1.gridy++;
+		tempPanel = createAfterShutdownPanel();
+		if (!bSimpleView)
+		{
+			panelRoot.add(tempPanel, c1);
+		}
+
+		c1.gridx = 0;
+		c1.gridy--;
+		c1.gridheight = 2;
+		c1.fill = GridBagConstraints.BOTH;
+		tempPanel = createWindowPanel();
+		if (!bSimpleView)
+		{
+			panelRoot.add(tempPanel, c1);
+		}
 
 		c1.gridy++;
 		c1.anchor = GridBagConstraints.NORTHWEST;
-		c1.fill = GridBagConstraints.VERTICAL;
+		c1.fill = GridBagConstraints.BOTH;
 		c1.weighty = 1;
-		panelRoot.add(new JPanel(), c1);
-
+		tempPanel = new JPanel();
+		panelRoot.add(tempPanel, c1);
 	}
 
 	/**
@@ -580,6 +598,23 @@ final class JAPConfUI extends AbstractJAPConfModule
 		}
 	}
 
+	private JPanel createWindowSizePanel()
+	{
+		GridBagConstraints c = new GridBagConstraints();
+		JPanel p = new JPanel(new GridBagLayout());
+		p.setBorder(new TitledBorder(JAPMessages.getString(MSG_WINDOW_SIZE)));
+
+		m_cbSaveWindowSizeHelp = new JCheckBox(JAPMessages.getString(MSG_WINDOW_HELP));
+		c.weightx = 1;
+		c.gridx = 0;
+		c.gridy = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(0, 10, 0, 10);
+		p.add(m_cbSaveWindowSizeHelp, c);
+
+		return p;
+	}
+
 	private JPanel createWindowPanel()
 	{
 		GridBagConstraints c = new GridBagConstraints();
@@ -601,6 +636,11 @@ final class JAPConfUI extends AbstractJAPConfModule
 		m_cbSaveWindowLocationIcon = new JCheckBox(JAPMessages.getString(MSG_WINDOW_ICON));
 		c.gridy++;
 		p.add(m_cbSaveWindowLocationIcon, c);
+
+		m_cbSaveWindowLocationHelp = new JCheckBox(JAPMessages.getString(MSG_WINDOW_HELP));
+		c.gridy++;
+		p.add(m_cbSaveWindowLocationHelp, c);
+
 
 		return p;
 	}
@@ -700,6 +740,11 @@ final class JAPConfUI extends AbstractJAPConfModule
 		JAPModel.getInstance().setSaveMainWindowPosition(m_cbSaveWindowLocationMain.isSelected());
 		JAPModel.getInstance().setSaveConfigWindowPosition(m_cbSaveWindowLocationConfig.isSelected());
 		JAPModel.getInstance().setSaveIconifiedWindowPosition(m_cbSaveWindowLocationIcon.isSelected());
+		JAPModel.getInstance().setSaveHelpWindowPosition(m_cbSaveWindowLocationHelp.isSelected());
+		JAPModel.getInstance().setSaveHelpWindowSize(m_cbSaveWindowSizeHelp.isSelected());
+		JAPHelp.getInstance().resetAutomaticLocation(m_cbSaveWindowLocationHelp.isSelected());
+
+
 
 		JAPController.getInstance().setMinimizeOnStartup(m_rbViewMini.isSelected() &&
 			m_cbAfterStart.isSelected());
@@ -819,6 +864,8 @@ final class JAPConfUI extends AbstractJAPConfModule
 		m_cbSaveWindowLocationMain.setSelected(JAPModel.isMainWindowLocationSaved());
 		m_cbSaveWindowLocationConfig.setSelected(JAPModel.getInstance().isConfigWindowLocationSaved());
 		m_cbSaveWindowLocationIcon.setSelected(JAPModel.getInstance().isIconifiedWindowLocationSaved());
+		m_cbSaveWindowLocationHelp.setSelected(JAPModel.getInstance().isHelpWindowLocationSaved());
+		m_cbSaveWindowSizeHelp.setSelected(JAPModel.getInstance().isHelpWindowSizeSaved());
 		m_rbViewNormal.setSelected(JAPModel.getDefaultView() == JAPConstants.VIEW_NORMAL);
 		m_rbViewSimplified.setSelected(JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED);
 		m_rbViewSystray.setSelected(JAPModel.getMoveToSystrayOnStartup());
@@ -852,6 +899,8 @@ final class JAPConfUI extends AbstractJAPConfModule
 		m_cbSaveWindowLocationConfig.setSelected(JAPConstants.DEFAULT_SAVE_MAIN_WINDOW_POSITION);
 		m_cbSaveWindowLocationIcon.setSelected(JAPConstants.DEFAULT_SAVE_MAIN_WINDOW_POSITION);
 		m_cbSaveWindowLocationMain.setSelected(JAPConstants.DEFAULT_SAVE_MAIN_WINDOW_POSITION);
+		m_cbSaveWindowLocationHelp.setSelected(JAPConstants.DEFAULT_SAVE_MAIN_WINDOW_POSITION);
+		m_cbSaveWindowSizeHelp.setSelected(JAPConstants.DEFAULT_SAVE_HELP_WINDOW_SIZE);
 		m_rbViewNormal.setSelected(JAPConstants.DEFAULT_VIEW == JAPConstants.VIEW_NORMAL);
 		m_rbViewSimplified.setSelected(JAPConstants.DEFAULT_VIEW == JAPConstants.VIEW_SIMPLIFIED);
 		m_rbViewSystray.setSelected(JAPConstants.DEFAULT_MOVE_TO_SYSTRAY_ON_STARTUP);

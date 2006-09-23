@@ -176,7 +176,6 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		ms_JapConfInstance = this;
 		m_Controller = JAPController.getInstance();
 		JPanel pContainer = new JPanel();
-		//m_fontControls = JAPController.getDialogFont();
 		GridBagLayout gbl = new GridBagLayout();
 		pContainer.setLayout(gbl);
 		m_pPort = buildPortPanel();
@@ -198,16 +197,11 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 
 		DefaultMutableTreeNode nodeNet = m_moduleSystem.addComponent(rootNode, null, "ngTreeNetwork", null,
 			null);
-		//if (!m_bIsSimpleView)
-		{
-			m_moduleSystem.addComponent(nodeNet, m_pPort, "confListenerTab", PORT_TAB, "portlistener");
-		}
+		m_moduleSystem.addComponent(nodeNet, m_pPort, "confListenerTab", PORT_TAB, "portlistener");
 		m_moduleSystem.addComponent(nodeNet, m_pFirewall, "confProxyTab", PROXY_TAB, "proxy");
-		//if (!m_bIsSimpleView)
-		{
-			m_moduleSystem.addConfigurationModule(nodeNet, new JAPConfForwardingClient() ,
-												  FORWARDING_CLIENT_TAB);
-		}
+		m_moduleSystem.addConfigurationModule(nodeNet, new JAPConfForwardingClient() ,
+											  FORWARDING_CLIENT_TAB);
+
 
 		m_confServices = new JAPConfServices();
 		if (!m_bIsSimpleView)
@@ -242,12 +236,10 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
 		m_bttnHelp = new JButton(JAPMessages.getString("updateM_bttnHelp"));
-		//m_bttnHelp.setFont(m_fontControls);
 		buttonPanel.add(m_bttnHelp);
 		m_bttnHelp.addActionListener(this);
 
 		m_bttnDefaultConfig = new JButton(JAPMessages.getString("bttnDefaultConfig"));
-		//m_bttnDefaultConfig.setFont(m_fontControls);
 		final JAPDialog view = this;
 		m_bttnDefaultConfig.addActionListener(new ActionListener()
 		{
@@ -267,7 +259,6 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 			buttonPanel.add(m_bttnDefaultConfig);
 		}
 		m_bttnCancel = new JButton(JAPMessages.getString("cancelButton"));
-		//m_bttnCancel.setFont(m_fontControls);
 		m_bttnCancel.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -1039,6 +1030,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 			return;
 		}
 		onOkPressed();
+		resetAutomaticLocation(JAPModel.getInstance().isConfigWindowLocationSaved());
 
 		if (m_vecConfigChangesNeedRestart.size() > 0)
 		{

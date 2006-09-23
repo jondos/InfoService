@@ -103,7 +103,8 @@ Confirm by clicking <i>OK</i>.
 Click <i>Config</i>, choose the tab <i>Access</i> and make sure <i>Disable URL based Proxomitron commands</i> is checked. Read the help on URL Commands in order to learn why URL Commands are a security risk. To display Proxomitron's help, go to menu <i>Help</i> -> <i>View Help</i>.
 <P>
 <LI><b>Optionally: SSL support</b><br>
-Proxomitron cannot process SSL encrypted transmissions by default. In order to activate this feature, additional libraries are required.
+<b>Attention:</b> Usage of this library is discouraged. Since Proxomitron cannot decide on it's own whether a received certificate is valid or not, it will decrypt every SSL connection and provide data with it's own security before passing it to the browser. Thus, the user will only see Proxomitron's certificate (which he trusts of course) and won't be able to recognize invalid certificates.
+<br>Proxomitron cannot process SSL encrypted transmissions by default. In order to activate this feature, additional libraries are required.
 	<UL>
 	<LI><b>Download</b><br>
 	Get the <i>OpenSSL_DLLs.zip</i> from <A href="http://www.proxomitron.info/files/index.html">this site</A> and unzip all three libraries (libeay32.dll, msvcr70.dll, ssleay32.dll) into Proxomitron's directory.
@@ -113,6 +114,8 @@ Proxomitron cannot process SSL encrypted transmissions by default. In order to a
 	<br>Save the configuration by pressing <img src="proxomitron3_de.gif">.
 	</UL>
 </UL>
+
+Click <A href="security_test_en.html">here</A> in order to learn how to check the anonymity level of settings.
 <!--#include virtual="/footer_en.html"-->
 
 </body>

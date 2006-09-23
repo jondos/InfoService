@@ -70,7 +70,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 	private static final String MSG_TT_SWITCH_ANONYMITY =
 		JAPViewIconified.class.getName() + "_ttSwitchAnonymity";
 
-	private static final int DOCK_DISTANCE = 13;
+	private static final int DOCK_DISTANCE = 15;
 
 	private static final String STR_HIDDEN_WINDOW = Double.toString(Math.random());
 	private static Frame m_frameParent;
@@ -238,8 +238,8 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 
 		pack();
 		// fix for MacOS; sometimes pack increases the size to several meters...
-		if (getSize().width > GUIUtils.getScreenBounds(this).width ||
-			getSize().height > GUIUtils.getScreenBounds(this).height)
+		if (getSize().width > GUIUtils.getDefaultScreenBounds(this).width ||
+			getSize().height > GUIUtils.getDefaultScreenBounds(this).height)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.GUI, "Packed iconified view with illegal size! " +
 						  "Width:" + getSize().width + " Height:" + getSize().height +
@@ -471,16 +471,17 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 			{
 				Point endPoint = e.getPoint();
 				Point aktLocation = getLocationOnScreen();
-				Rectangle screenBounds = GUIUtils.getScreenBounds(JAPViewIconified.this);
+				GUIUtils.Screen currentScreen = GUIUtils.getCurrentScreen(JAPViewIconified.this);
 				int x, y, maxX, maxY;
+
 
 				x = aktLocation.x + endPoint.x - m_startPoint.x;
 				y = aktLocation.y + endPoint.y - m_startPoint.y;
-				maxX = (int) screenBounds.width;
-				maxY = (int) screenBounds.height;
-				if (x != 0 && Math.abs(x) < DOCK_DISTANCE)
+				maxX = (int) currentScreen.getWidth() + currentScreen.getX();
+				maxY = (int) currentScreen.getHeight() + currentScreen.getY();
+				if (x != currentScreen.getX() && Math.abs(x - currentScreen.getX()) < (DOCK_DISTANCE))
 				{
-					x = 0;
+					x = currentScreen.getX();
 				}
 				else if (x + JAPViewIconified.this.getSize().width > maxX - DOCK_DISTANCE &&
 						 !(x + JAPViewIconified.this.getSize().width > maxX + DOCK_DISTANCE))
@@ -488,9 +489,9 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 					x = maxX - JAPViewIconified.this.getSize().width;
 				}
 
-				if (y != 0 && Math.abs(y) < DOCK_DISTANCE)
+				if (y != currentScreen.getY() && Math.abs(y - currentScreen.getY()) < (DOCK_DISTANCE))
 				{
-					y = 0;
+					y = currentScreen.getY();
 				}
 				else if (y + JAPViewIconified.this.getSize().height > maxY - DOCK_DISTANCE &&
 						 !(y + JAPViewIconified.this.getSize().height > maxY + DOCK_DISTANCE))
