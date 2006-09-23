@@ -70,7 +70,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 	private static final String MSG_TT_SWITCH_ANONYMITY =
 		JAPViewIconified.class.getName() + "_ttSwitchAnonymity";
 
-	private static final int DOCK_DISTANCE = 15;
+	private static final int DOCK_DISTANCE = 10;
 
 	private static final String STR_HIDDEN_WINDOW = Double.toString(Math.random());
 	private static Frame m_frameParent;
