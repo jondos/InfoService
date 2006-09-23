@@ -2879,7 +2879,17 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 */
 	public final Rectangle getScreenBounds()
 	{
-		return GUIUtils.getScreenBounds(m_internalDialog);
+		return GUIUtils.getDefaultScreenBounds(m_internalDialog);
+	}
+
+	/**
+	 * After using a method that sets the location of the dialog, it will not automatically set
+	 * its location any more. This may be reset by calling this method.
+	 * @param a_bDoNotSetLocationAutomatically if the dialog should not set its location automatically
+	 */
+	public void resetAutomaticLocation(boolean a_bDoNotSetLocationAutomatically)
+	{
+		m_bLocationSetManually = a_bDoNotSetLocationAutomatically;
 	}
 
 	/**
@@ -2903,7 +2913,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	}
 
 	/**
-	 * Set a window to the specified position and tries to put the window inside the screen by altering
+	 * Sets a window to the specified position and tries to put the window inside the screen by altering
 	 * the position if needed.
 	 * @param a_point a Point; may be null
 	 */
@@ -2913,6 +2923,16 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		{
 			m_bLocationSetManually = true;
 		}
+	}
+
+	/**
+	 * Sets a window to the specified size and tries to put the window inside the screen by altering
+	 * the size if needed. The location of the window should be set before.
+	 * @param a_size a Dimension; may be null
+	 */
+	public void restoreSize(Dimension a_size)
+	{
+		GUIUtils.restoreSize(m_internalDialog, a_size);
 	}
 
 	/**

@@ -57,8 +57,10 @@ public final class JAPModel extends Observable
 	public static final String XML_CONFIG_WINDOW = "ConfigWindow";
 	public static final String XML_SIZE = "Size";
 	public static final String XML_ICONIFIED_WINDOW = "IconifiedWindow";
+	public static final String XML_HELP_WINDOW = "HelpWindow";
 	public static final String XML_ATTR_WIDTH = "width";
 	public static final String XML_ATTR_HEIGHT = "height";
+	public static final String XML_ATTR_SAVE = "save";
 
 	public static final String AUTO_CHANGE_NO_RESTRICTION = "none";
 	public static final String AUTO_CHANGE_RESTRICT_TO_PAY = "pay";
@@ -97,9 +99,11 @@ public final class JAPModel extends Observable
 	private boolean m_bSaveMainWindowPosition;
 	private boolean m_bSaveConfigWindowPosition;
 	private boolean m_bSaveIconifiedWindowPosition;
+	private boolean m_bSaveHelpWindowPosition;
 	private Point m_OldMainWindowLocation = null;
 	private Point m_iconifiedWindowLocation = null;
 	private Point m_configWindowLocation = null;
+	private Point m_helpWindowLocation = null;
 
 	private boolean m_bGoodByMessageNeverRemind = false; // indicates if Warning message before exit has been deactivated forever
 
@@ -152,6 +156,8 @@ public final class JAPModel extends Observable
 
 	private Dimension m_iconifiedSize = new Dimension(0, 0);
 	private Dimension m_configSize = new Dimension(0, 0);
+	private Dimension m_helpSize;
+	private boolean m_bSaveHelpSize;
 
 	/**
 	 * Stores the instance with the routing settings.
@@ -363,6 +369,12 @@ public final class JAPModel extends Observable
 		m_bSaveIconifiedWindowPosition = a_bSave;
 	}
 
+	public void setSaveHelpWindowPosition(boolean a_bSave)
+	{
+		m_bSaveHelpWindowPosition = a_bSave;
+	}
+
+
 	public void updateSystemLookAndFeels()
 	{
 		synchronized (LOOK_AND_FEEL_SYNC)
@@ -409,6 +421,25 @@ public final class JAPModel extends Observable
 		if (isIconifiedWindowLocationSaved())
 		{
 			return m_iconifiedWindowLocation;
+		}
+		return null;
+	}
+
+	public boolean isHelpWindowLocationSaved()
+	{
+		return m_bSaveHelpWindowPosition;
+	}
+
+	public void setHelpWindowLocation(Point a_location)
+	{
+		m_helpWindowLocation = a_location;
+	}
+
+	public Point getHelpWindowLocation()
+	{
+		if (isHelpWindowLocationSaved())
+		{
+			return m_helpWindowLocation;
 		}
 		return null;
 	}
@@ -920,6 +951,26 @@ public final class JAPModel extends Observable
 	public Dimension getIconifiedSize()
 	{
 		return m_iconifiedSize;
+	}
+
+	public void setHelpWindowSize(Dimension a_size)
+	{
+		m_helpSize = a_size;
+	}
+
+	public Dimension getHelpWindowSize()
+	{
+		return m_helpSize;
+	}
+
+	public boolean isHelpWindowSizeSaved()
+	{
+		return m_bSaveHelpSize;
+	}
+
+	public void setSaveHelpWindowSize(boolean a_bSave)
+	{
+		m_bSaveHelpSize = a_bSave;
 	}
 
 	public void setConfigSize(Dimension a_size)

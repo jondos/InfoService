@@ -336,7 +336,7 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 			m_frameConsole.getContentPane().add("Center", new JScrollPane(m_textareaConsole));
 			m_frameConsole.addWindowListener(this);
 			m_frameConsole.pack();
-			Rectangle screenSize = GUIUtils.getScreenBounds(m_frameConsole.getOwner());
+			Rectangle screenSize = GUIUtils.getDefaultScreenBounds(m_frameConsole.getOwner());
 			Dimension ownSize = m_frameConsole.getSize();
 			m_frameConsole.setLocation( (screenSize.width - ownSize.width), 0);
 			m_frameConsole.setVisible(true);

@@ -12,7 +12,7 @@ Proxomitron ist offiziell nur f&uuml;r Windows geeignet, der Entwickler gibt jed
 Laden Sie sich Proxomitron in der Standard-Version <A href="http://www.buerschgens.de/Prox/Seiten/Download/index.html">von dieser Seite</A> herunter. Alternativ k&ouml;nnen Sie auch <A href="http://www.buerschgens.de/Prox/Seiten/Download/Proxomitron4.51-S-2.0.1.zip">diesen Link</A> zum direkten Download verwenden.
 <br>Proxomitron ben&ouml;tigt keine Installation. Entpacken Sie die heruntergeladene .zip Datei in einen beliebigen (neuen) Ordner.
 <LI><B>Einrichtung</B><P>
-Sie k&ouml;nnen entweder eine fertige Konfigurationsdatei <A href="./proxomitron/config_de/default.cfg">aus der mitgelieferten Hilfe</A> oder hier <A href="http://anon.inf.tu-dresden.de/help/jap_help/proxomitron/config_de/default.cfg">online</A> benutzen und im Proxomitron-Verzeichnis speichern <b>oder</b> die folgende Anleitung durcharbeiten (wenn Sie eine bestehende Proxomitron-Konfiguration ändern wollen):
+Sie k&ouml;nnen entweder eine fertige Konfigurationsdatei <A href="./proxomitron/config_de/default.cfg">aus der mitgelieferten Hilfe</A> oder hier <A href="http://anon.inf.tu-dresden.de/help/jap_help/proxomitron/config_de/default.cfg">online</A> benutzen und im Proxomitron-Verzeichnis speichern <b>oder</b> die folgende Anleitung durcharbeiten (wenn Sie eine bestehende Proxomitron-Konfiguration &auml;ndern wollen):
 <HR><center>--------------Beginn der Anleitung--------------</center><HR>
 Starten Sie Proxomitron durch einen Doppelklick auf <i>Proxomitron.exe</i>.
 Das Fenster von Proxomitron &ouml;ffnet sich.
@@ -80,7 +80,7 @@ Eine Beschreibung f&uuml;r alle Seitenfilter finden Sie <A href="http://www.buer
 &Ouml;ffnen Sie die Datei <i>default.cfg</i>, welche sich im Hauptverzeichnis von Proxomitron befindet. Suchen Sie die Zeile <i>List.AllowCookiesOn&nbsp;=&nbsp;"..\Listen\Ausnahmen\AllowCookiesOn.txt"</i> und f&uuml;gen Sie darunter eine neue Zeile ein: <i>List.AllowAppletsOn&nbsp;=&nbsp;"..\Listen\Ausnahmen\AllowAppletsOn.txt"</i> . Speichern Sie die Datei.
 <HR><center>--------------Ende der Anleitung--------------</center><HR>
 <P>
-<LI><B>Eine neue Datei erstellen (<i>Diesen Schritt müssen Sie auch durchführen, wenn Sie die fertige Konfiguration benutzen</i>)</B><BR>
+<LI><B>Eine neue Datei erstellen (<i>Diesen Schritt m&uuml;ssen Sie auch durchf&uuml;hren, wenn Sie die fertige Konfiguration benutzen</i>)</B><BR>
 Erstellen Sie im Proxomitron Verzeichnis unter <i>Listen</i> -> <i>Ausnahmen</i> eine neue, leere Textdatei namens <i>AllowAppletsOn.txt</i>.
 </OL>
 
@@ -106,7 +106,8 @@ Best&auml;tigen Sie mit <i>OK</i>.
 Klicken Sie auf <i>Konfiguration</i> und vergewissern Sie sich, dass im Tab <i>Access</i> der Punkt <i>Sperre URL-basierende Proxomitron-Kommandos</i> aktiviert ist. Lesen Sie die Hilfe &uuml;ber URL Kommandos um zu erfahren, warum diese ein Sicherheitsrisiko darstellen. Die (englische) Hilfe zu Proxomitron bekommt man &uuml;ber das Men&uuml; <i>Hilfe</i> -> <i>Hilfe und Update</i>, in der auftauchenden Webseite auf <i>Englische Dokumentation (lokal)</i> klicken. Kurz: URL-Kommandos k&ouml;nnten verwendet werden, um Proxomitron auszuhebeln.
 <P>
 <LI><b>Optional: SSL Unterst&uuml;tzung</b><P>
-Standardm&auml;ssig kann Proxomitron keine SSL-verschl&uuml;sselten &Uuml;bertragungen bearbeiten. Um diese Eigenschaft zu aktivieren, m&uuml;ssen Sie zus&auml;tzliche Bibliotheken herunterladen.
+<b>Vorsicht:</b> Von der Verwendung dieser Bibliotheken wird abgeraten. Da Proxomitron selbst nicht entscheiden kann, ob Zertifikate g&uuml;ltig sind oder nicht, wird er jede SSL-Verbindung entschl&uuml;sseln und anschlie&szlig;end mit seinem Zertifikat versehen, bevor er die Daten an den Browser weiterschickt. Somit sieht der Benutzer nur das Zertifikat von Proxomitron (dem er nat&uuml;rlich vertraut) und kann somit v&ouml;llig ung&uuml;ltige Zertifikate nicht erkennen.
+<br>Standardm&auml;ssig kann Proxomitron keine SSL-verschl&uuml;sselten &Uuml;bertragungen bearbeiten. Um diese Eigenschaft zu aktivieren, m&uuml;ssen Sie zus&auml;tzliche Bibliotheken herunterladen.
 	<UL>
 	<LI><b>Download</b><P>
 	Laden Sie die <i>OpenSSL_DLLs.zip</i> von <A href="http://www.proxomitron.info/files/index.html">dieser Seite</A> herunter und entpacken Sie die drei Bibliotheken (libeay32.dll, msvcr70.dll, ssleay32.dll) in das Verzeichnis von Proxomitron.
@@ -114,6 +115,8 @@ Standardm&auml;ssig kann Proxomitron keine SSL-verschl&uuml;sselten &Uuml;bertra
 	Klicken Sie auf <i>Konfiguration</i> im Hauptfenster von Proxomitron. W&auml;hlen Sie den Tab <i>HTTP</i> und aktivieren Sie <i>Filterung SSL-verschl&uuml;sselter Seiten aktivieren</i>. &Uuml;bernehmen Sie die &Auml;nderungen mit <i>OK</i> und speichern Sie die Konfiguration durch einen Klick auf <img src="proxomitron3_de.gif">.
 	</UL>
 </UL>
+
+Klicken Sie <A href="security_test_de.html">hier</A> um zu erfahren, wie Sie die Einstellungen auf ihren Anonymit&auml;tsgrad &uuml;berpr&uuml;fen k&ouml;nnen.
 <!--#include virtual="/footer.html"-->
 
 </body>

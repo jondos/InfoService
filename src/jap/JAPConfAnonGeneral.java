@@ -334,7 +334,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		constrServices.gridwidth = 1;
 		constrServices.gridy = 0;
 		constrServices.anchor = GridBagConstraints.WEST;
-		constrServices.insets = new Insets(5, 30, 5, 5); // top,left,bottom,right
+		constrServices.insets = new Insets(5, 5, 5, 5); // top,left,bottom,right
 		m_comboServices = new JComboBox[services.length];
 		for (int i = 0; i < services.length; i++)
 		{
@@ -352,12 +352,17 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		constrServices.gridy = 0;
 		constrServices.weightx = 1.0;
 		constrServices.gridheight = 4;
+		constrServices.insets = new Insets(0, 0, 0, 0);
 		panelServices.add(new JLabel(), constrServices);
 		constrServices.gridx = 3;
 		constrServices.weightx = 0.0;
-		constrServices.insets = new Insets(5, 5, 5, 30);
+		constrServices.insets = new Insets(5, 5, 5, 5);
 		panelServices.add(
 			  new JAPMultilineLabel(JAPMessages.getString(MSG_EXPLAIN_ASSIGN_SERVICES_BETA)), constrServices);
+		constrServices.insets = new Insets(0, 0, 0, 0);
+		constrServices.gridx = 4;
+		constrServices.weightx = 1.0;
+		panelServices.add(new JLabel(), constrServices);
 
 
 		panelRoot.setLayout(new GridBagLayout());

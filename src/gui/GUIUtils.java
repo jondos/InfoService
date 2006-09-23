@@ -39,6 +39,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Image;
+import java.awt.Frame;
 import java.awt.MediaTracker;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -409,7 +410,7 @@ public final class GUIUtils
 	 */
 	public static void moveToUpRightCorner(Window a_window)
 	{
-		Rectangle screenBounds = getScreenBounds(a_window);
+		Rectangle screenBounds = getDefaultScreenBounds(a_window);
 		Dimension ownSize = a_window.getSize();
 		a_window.setLocation( (screenBounds.width - ownSize.width), 0);
 	}
@@ -465,7 +466,49 @@ public final class GUIUtils
 	}
 
 	/**
-	 * Set a window to the specified position and tries to put the window inside the screen by altering
+	 * Sets a window to the specified size and tries to put the window inside the screen by altering
+	 * the size if needed. The location of the window should be set before.
+	 * @param a_window Window
+	 * @param a_size Dimension
+	 * @return if the size has been changed
+	 */
+	public static boolean restoreSize(Window a_window, Dimension a_size)
+	{
+		if (a_window == null || a_size == null)
+		{
+			return false;
+		}
+		a_window.setSize(a_size);
+		Screen currentScreen = getCurrentScreen(a_window);
+
+		int width = a_window.getSize().width;
+		int height = a_window.getSize().height;
+
+		if ((a_window.getLocation().x + width) > (currentScreen.getX() + currentScreen.getWidth()))
+		{
+			width = currentScreen.getX() + currentScreen.getWidth() - a_window.getLocation().x;
+		}
+		if ((a_window.getLocation().y + height) > (currentScreen.getY() + currentScreen.getHeight()))
+		{
+			height = currentScreen.getY() + currentScreen.getHeight() - a_window.getLocation().y;
+		}
+
+		if (width == 0)
+		{
+			width =  a_window.getSize().width;
+		}
+		if (height == 0)
+		{
+			height = a_window.getSize().height;
+		}
+
+		a_window.setSize(width, height);
+		return true;
+	}
+
+
+	/**
+	 * Sets a window to the specified position and tries to put the window inside the screen by altering
 	 * the position if needed.
 	 * @param a_window Window
 	 * @param a_location Point
@@ -477,40 +520,139 @@ public final class GUIUtils
 		{
 			return false;
 		}
+		a_window.setLocation(a_location);
+		Screen currentScreen = getCurrentScreen(a_window);
 
-		Dimension screenSize = a_window.getToolkit().getScreenSize();
 		int x = a_location.x;
 		int y = a_location.y;
 
-		if (x + a_window.getSize().width > screenSize.width)
+		if ((x + a_window.getSize().width) > (currentScreen.getX() + currentScreen.getWidth()))
 		{
-			x = screenSize.width - a_window.getSize().width;
+			x = currentScreen.getX() +  currentScreen.getWidth() - a_window.getSize().width;
 		}
-		if (y + a_window.getSize().height > screenSize.height)
+		if ((y + a_window.getSize().height) > (currentScreen.getY() + currentScreen.getHeight()))
 		{
-			y = screenSize.height - a_window.getSize().height;
+			y = currentScreen.getY() + currentScreen.getHeight() - a_window.getSize().height;
 		}
 
-		if (x < 0)
+		if (x < currentScreen.getX())
 		{
-			x = 0;
+			x = currentScreen.getX();
 		}
-		if (y < 0)
+		if (y < currentScreen.getY())
 		{
-			y = 0;
+			y = currentScreen.getY();
 		}
 
 		a_window.setLocation(x, y);
 		return true;
 	}
 
-	/**
-	 * Returns the bounds of the screen where a specified window is currently shown.
-	 * @param a_window a Window
-	 * @return the bounds of the screen where the specified window is currently shown
-	 */
-	public static Rectangle getScreenBounds(Window a_window)
+	public static class Screen
 	{
+		private Point m_location;
+		private Rectangle m_bounds;
+
+		public Screen(Point a_location, Rectangle a_bounds)
+		{
+			m_location = a_location;
+			m_bounds = a_bounds;
+		}
+
+		public int getX()
+		{
+			return m_location.x;
+		}
+
+		public int getY()
+		{
+			return m_location.y;
+		}
+
+		public int getWidth()
+		{
+			return m_bounds.width;
+		}
+
+		public int getHeight()
+		{
+			return m_bounds.height;
+		}
+
+		public Point getLocation()
+		{
+			return m_location;
+		}
+		public Rectangle getBounds()
+		{
+			return m_bounds;
+		}
+	}
+
+	public static Screen getCurrentScreen(Window a_window)
+	{
+		if (a_window == null)
+		{
+			return null;
+		}
+
+		try
+		{
+			Object graphicsConfiguration;
+			Frame screenFrame;
+			Point windowMiddleLocation = a_window.getLocation();
+			Rectangle screenBounds;
+			Point screenLocation;
+			Object graphicsEnvironment =
+				Class.forName("java.awt.GraphicsEnvironment").getMethod(
+								"getLocalGraphicsEnvironment", null).invoke(null, null);
+			Object[] graphicsDevices = (Object[])graphicsEnvironment.getClass().getMethod(
+						 "getScreenDevices", null).invoke(graphicsEnvironment, null);
+
+			// now look on which srceen the middle of the window is located
+			windowMiddleLocation = new Point(windowMiddleLocation.x + a_window.getSize().width,
+											 windowMiddleLocation.y + a_window.getSize().height);
+			for (int i = 0; i < graphicsDevices.length; i++)
+			{
+				graphicsConfiguration = graphicsDevices[i].getClass().getMethod(
+								"getDefaultConfiguration", null).invoke(graphicsDevices[i], null);
+				screenFrame = (Frame)Frame.class.getConstructor(
+								new Class[]{Class.forName("java.awt.GraphicsConfiguration")}).newInstance(
+					new Object[]{graphicsConfiguration});
+				screenLocation = screenFrame.getLocation();
+				screenBounds = (Rectangle)graphicsConfiguration.getClass().getMethod(
+								"getBounds", null).invoke(graphicsConfiguration, null);
+
+				if (windowMiddleLocation.x >= screenLocation.x &&
+					windowMiddleLocation.x <= (screenLocation.x + screenBounds.width) &&
+					windowMiddleLocation.y >= screenLocation.y &&
+					windowMiddleLocation.y <= (screenLocation.y + screenBounds.height))
+				{
+					return new Screen(screenLocation, screenBounds);
+				}
+			}
+		}
+		catch (Exception a_e)
+		{
+			// ignore
+		}
+
+		// for JDKs < 1.3
+		return new Screen(new Point(0,0), getDefaultScreenBounds(a_window));
+	}
+
+	/**
+	 * Returns the bounds of the default screen.
+	 * @param a_window a Window
+	 * @return the bounds of the default screen
+	 */
+	public static Rectangle getDefaultScreenBounds(Window a_window)
+	{
+		if (a_window == null)
+		{
+			return null;
+		}
+
 		Rectangle screenBounds;
 
 		try
@@ -541,7 +683,7 @@ public final class GUIUtils
 	 */
 	public static void centerOnScreen(Window a_window)
 	{
-		Rectangle screenBounds = getScreenBounds(a_window);
+		Rectangle screenBounds = getDefaultScreenBounds(a_window);
 		Dimension ownSize = a_window.getSize();
 
 		a_window.setLocation(screenBounds.x + ((screenBounds.width - ownSize.width) / 2),

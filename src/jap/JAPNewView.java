@@ -1024,6 +1024,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JAPModel.getInstance().addObserver(this);
 
 		JAPHelp.init(this, AbstractOS.getInstance(), AbstractOS.getInstance());
+		JAPHelp.getInstance().setLocationCenteredOnOwner();
+		JAPHelp.getInstance().resetAutomaticLocation(JAPModel.getInstance().isHelpWindowLocationSaved());
+		JAPHelp.getInstance().restoreLocation(JAPModel.getInstance().getHelpWindowLocation());
+		JAPHelp.getInstance().restoreSize(JAPModel.getInstance().getHelpWindowSize());
+
 		new Thread(new Runnable()
 		{
 			public void run()
@@ -1788,6 +1793,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			JAPModel.getInstance().setConfigWindowLocation(m_dlgConfig.getLocation());
 		}
+		JAPModel.getInstance().setHelpWindowLocation(JAPHelp.getInstance().getLocation());
+		JAPModel.getInstance().setHelpWindowSize(JAPHelp.getInstance().getSize());
 	}
 
 	public void showConfigDialog(String card)
