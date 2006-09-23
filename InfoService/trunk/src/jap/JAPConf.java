@@ -361,7 +361,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		}
 		confUI.afterPack();
 		restoreLocation(JAPModel.getInstance().getConfigWindowLocation());
-		//setDockable(true);
+		setDockable(true);
 		JAPModel.getInstance().addObserver(this);
 	}
 
