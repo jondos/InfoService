@@ -37,9 +37,9 @@ import java.util.Vector;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Image;
-import java.awt.Frame;
 import java.awt.MediaTracker;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -50,9 +50,11 @@ import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
-import java.awt.event.MouseEvent;
-import java.awt.event.ComponentListener;
 import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
@@ -65,16 +67,13 @@ import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.plaf.FontUIResource;
 
 import anon.util.ClassUtil;
+import anon.util.JobQueue;
 import anon.util.ResourceLoader;
 import gui.dialog.JAPDialog;
 import gui.dialog.WorkerContentPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.awt.event.MouseMotionListener;
-import jap.JAPViewIconified;
-import java.awt.event.MouseAdapter;
-import anon.util.JobQueue;
 
 /**
  * This class contains helper methods for the GUI.
