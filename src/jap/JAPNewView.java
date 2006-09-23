@@ -1029,7 +1029,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JAPHelp.getInstance().restoreLocation(JAPModel.getInstance().getHelpWindowLocation());
 		JAPHelp.getInstance().restoreSize(JAPModel.getInstance().getHelpWindowSize());
 
-		new GUIUtils.WindowDocker(this);
+		//new GUIUtils.WindowDocker(this);
 
 
 		new Thread(new Runnable()
