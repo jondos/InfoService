@@ -166,6 +166,8 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	private boolean m_bForceApplicationModality;
 	private boolean m_bDisposed = false;
 	private boolean m_bCatchCancel = false;
+	private GUIUtils.WindowDocker m_docker;
+	private final Object SYNC_DOCK = new Object();
 
 	/**
 	 * Stores the instance of JDialog for internal use.
@@ -2880,6 +2882,22 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	public final Rectangle getScreenBounds()
 	{
 		return GUIUtils.getDefaultScreenBounds(m_internalDialog);
+	}
+
+	public void setDockable(boolean a_bDockable)
+	{
+		synchronized (SYNC_DOCK)
+		{
+			if (m_docker == null && a_bDockable)
+			{
+				m_docker = new GUIUtils.WindowDocker(m_internalDialog);
+			}
+			else if (m_docker != null && !a_bDockable)
+			{
+				m_docker.finalize();
+				m_docker = null;
+			}
+		}
 	}
 
 	/**

@@ -51,6 +51,8 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.MouseEvent;
+import java.awt.event.ComponentListener;
+import java.awt.event.ComponentEvent;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
@@ -69,6 +71,9 @@ import gui.dialog.WorkerContentPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.awt.event.MouseMotionListener;
+import jap.JAPViewIconified;
+import java.awt.event.MouseAdapter;
 
 /**
  * This class contains helper methods for the GUI.
@@ -463,6 +468,139 @@ public final class GUIUtils
 		{
 		}
 		return ms_nativeGUILibrary.setAlwaysOnTop(a_Window, a_bOnTop);
+	}
+
+	public static class WindowDocker
+	{
+		private Component m_component;
+		private InternalListener m_listener;
+		private Window m_parentWindow;
+
+		public WindowDocker(Component a_window)
+		{
+			m_component = a_window;
+			m_listener = new InternalListener();
+			m_component.addMouseListener(m_listener);
+			m_component.addMouseMotionListener(m_listener);
+			m_component.addComponentListener(m_listener);
+			m_parentWindow = GUIUtils.getParentWindow(a_window);
+		}
+
+		public void finalize()
+		{
+			m_component.removeMouseListener(m_listener);
+			m_component.removeMouseMotionListener(m_listener);
+			m_component.removeComponentListener(m_listener);
+			m_listener = null;
+		}
+
+		private class InternalListener extends MouseAdapter implements MouseMotionListener, ComponentListener
+		{
+			private static final int DOCK_DISTANCE = 10;
+			private boolean m_bIsDragging = false;
+			private Point m_startPoint;
+			private final Object SYNC = new Object();
+
+			public void componentHidden(ComponentEvent a_event)
+			{
+			}
+
+			public void componentResized(ComponentEvent a_event)
+			{
+			}
+
+			public void componentShown(ComponentEvent a_event)
+			{
+			}
+
+			public void componentMoved(ComponentEvent a_event)
+			{
+				move(m_parentWindow.getLocationOnScreen());
+			}
+
+			public void mouseReleased(MouseEvent e)
+			{
+				synchronized (SYNC)
+				{
+					m_bIsDragging = false;
+				}
+			}
+
+			public void mouseMoved(MouseEvent e)
+			{
+			}
+
+			public void mouseDragged(MouseEvent e)
+			{
+				synchronized (SYNC)
+				{
+					if (!m_bIsDragging)
+					{
+						m_bIsDragging = true;
+						m_startPoint = e.getPoint();
+					}
+					else
+					{
+						Point endPoint = e.getPoint();
+						Point aktLocation = m_parentWindow.getLocationOnScreen();
+						int x, y;
+
+						x = aktLocation.x + endPoint.x - m_startPoint.x;
+						y = aktLocation.y + endPoint.y - m_startPoint.y;
+
+						move(new Point(x, y));
+					}
+				}
+			}
+
+			private void move(Point a_location)
+			{
+				synchronized (SYNC)
+				{
+					GUIUtils.Screen currentScreen = GUIUtils.getCurrentScreen(m_parentWindow);
+					int x, y, maxX, maxY;
+					boolean bMove = false;
+
+					x = a_location.x;
+					y = a_location.y;
+					if (x != m_parentWindow.getLocationOnScreen().x &&
+						y != m_parentWindow.getLocationOnScreen().y)
+					{
+						bMove = true;
+					}
+
+					maxX = (int) currentScreen.getWidth() + currentScreen.getX();
+					maxY = (int) currentScreen.getHeight() + currentScreen.getY();
+					if (x != currentScreen.getX() && Math.abs(x - currentScreen.getX()) < (DOCK_DISTANCE))
+					{
+						bMove = true;
+						x = currentScreen.getX();
+					}
+					else if (x + m_parentWindow.getSize().width > maxX - DOCK_DISTANCE &&
+							 ! (x + m_parentWindow.getSize().width > maxX + DOCK_DISTANCE))
+					{
+						bMove = true;
+						x = maxX - m_parentWindow.getSize().width;
+					}
+
+					if (y != currentScreen.getY() && Math.abs(y - currentScreen.getY()) < (DOCK_DISTANCE))
+					{
+						bMove = true;
+						y = currentScreen.getY();
+					}
+					else if (y + m_parentWindow.getSize().height > maxY - DOCK_DISTANCE &&
+							 ! (y + m_parentWindow.getSize().height > maxY + DOCK_DISTANCE))
+					{
+						bMove = true;
+						y = maxY - m_parentWindow.getSize().height;
+					}
+					if (bMove)
+					{
+						m_parentWindow.setLocation(x, y);
+					}
+				}
+			}
+		}
 	}
 
 	/**
