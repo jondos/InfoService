@@ -74,6 +74,7 @@ import logging.LogType;
 import java.awt.event.MouseMotionListener;
 import jap.JAPViewIconified;
 import java.awt.event.MouseAdapter;
+import anon.util.JobQueue;
 
 /**
  * This class contains helper methods for the GUI.
@@ -472,6 +473,7 @@ public final class GUIUtils
 
 	public static class WindowDocker
 	{
+		private JobQueue m_queue;
 		private Component m_component;
 		private InternalListener m_listener;
 		private Window m_parentWindow;
@@ -484,10 +486,14 @@ public final class GUIUtils
 			m_component.addMouseMotionListener(m_listener);
 			m_component.addComponentListener(m_listener);
 			m_parentWindow = GUIUtils.getParentWindow(a_window);
+			m_queue = new JobQueue("Docking queue");
+
 		}
 
 		public void finalize()
 		{
+			m_queue.stop();
+			m_queue = null;
 			m_component.removeMouseListener(m_listener);
 			m_component.removeMouseMotionListener(m_listener);
 			m_component.removeComponentListener(m_listener);
@@ -553,52 +559,58 @@ public final class GUIUtils
 				}
 			}
 
-			private void move(Point a_location)
+			private void move(final Point a_location)
 			{
-				synchronized (SYNC)
+				m_queue.addJob(new JobQueue.Job()
 				{
-					GUIUtils.Screen currentScreen = GUIUtils.getCurrentScreen(m_parentWindow);
-					int x, y, maxX, maxY;
-					boolean bMove = false;
+					public void runJob()
+					{
+						//synchronized (SYNC)
+						{
+							GUIUtils.Screen currentScreen = GUIUtils.getCurrentScreen(m_parentWindow);
+							int x, y, maxX, maxY;
+							boolean bMove = false;
 
-					x = a_location.x;
-					y = a_location.y;
-					if (x != m_parentWindow.getLocationOnScreen().x &&
-						y != m_parentWindow.getLocationOnScreen().y)
-					{
-						bMove = true;
-					}
+							x = a_location.x;
+							y = a_location.y;
+							if (x != m_parentWindow.getLocationOnScreen().x &&
+								y != m_parentWindow.getLocationOnScreen().y)
+							{
+								bMove = true;
+							}
 
-					maxX = (int) currentScreen.getWidth() + currentScreen.getX();
-					maxY = (int) currentScreen.getHeight() + currentScreen.getY();
-					if (x != currentScreen.getX() && Math.abs(x - currentScreen.getX()) < (DOCK_DISTANCE))
-					{
-						bMove = true;
-						x = currentScreen.getX();
-					}
-					else if (x + m_parentWindow.getSize().width > maxX - DOCK_DISTANCE &&
-							 ! (x + m_parentWindow.getSize().width > maxX + DOCK_DISTANCE))
-					{
-						bMove = true;
-						x = maxX - m_parentWindow.getSize().width;
-					}
+							maxX = (int) currentScreen.getWidth() + currentScreen.getX();
+							maxY = (int) currentScreen.getHeight() + currentScreen.getY();
+							if (x != currentScreen.getX() && Math.abs(x - currentScreen.getX()) < (DOCK_DISTANCE))
+							{
+								bMove = true;
+								x = currentScreen.getX();
+							}
+							else if (x + m_parentWindow.getSize().width > maxX - DOCK_DISTANCE &&
+									 ! (x + m_parentWindow.getSize().width > maxX + DOCK_DISTANCE))
+							{
+								bMove = true;
+								x = maxX - m_parentWindow.getSize().width;
+							}
 
-					if (y != currentScreen.getY() && Math.abs(y - currentScreen.getY()) < (DOCK_DISTANCE))
-					{
-						bMove = true;
-						y = currentScreen.getY();
+							if (y != currentScreen.getY() && Math.abs(y - currentScreen.getY()) < (DOCK_DISTANCE))
+							{
+								bMove = true;
+								y = currentScreen.getY();
+							}
+							else if (y + m_parentWindow.getSize().height > maxY - DOCK_DISTANCE &&
+									 ! (y + m_parentWindow.getSize().height > maxY + DOCK_DISTANCE))
+							{
+								bMove = true;
+								y = maxY - m_parentWindow.getSize().height;
+							}
+							if (bMove)
+							{
+								m_parentWindow.setLocation(x, y);
+							}
+						}
 					}
-					else if (y + m_parentWindow.getSize().height > maxY - DOCK_DISTANCE &&
-							 ! (y + m_parentWindow.getSize().height > maxY + DOCK_DISTANCE))
-					{
-						bMove = true;
-						y = maxY - m_parentWindow.getSize().height;
-					}
-					if (bMove)
-					{
-						m_parentWindow.setLocation(x, y);
-					}
-				}
+				});
 			}
 		}
 	}

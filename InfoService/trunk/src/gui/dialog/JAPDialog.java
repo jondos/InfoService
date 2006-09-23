@@ -2756,6 +2756,15 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		m_internalDialog.setVisible(false);
 		m_internalDialog.dispose();
 
+		synchronized (SYNC_DOCK)
+		{
+			if (m_docker != null)
+			{
+				m_docker.finalize();
+				m_docker = null;
+			}
+		}
+
 		synchronized (m_internalDialog.getTreeLock())
 		{
 			Enumeration listeners = m_windowListeners.elements();

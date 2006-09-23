@@ -370,6 +370,12 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		}
 	}
 
+	public void dispose()
+	{
+		m_docker.finalize();
+		super.dispose();
+	}
+
 	public void disableSetAnonMode()
 	{
 		m_anonModeDisabled = true;
