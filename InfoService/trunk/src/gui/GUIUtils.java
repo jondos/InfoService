@@ -520,7 +520,10 @@ public final class GUIUtils
 
 			public void componentMoved(ComponentEvent a_event)
 			{
-				move(m_parentWindow.getLocationOnScreen());
+				if (!m_bIsDragging)
+				{
+					move(null);
+				}
 			}
 
 			public void mouseReleased(MouseEvent e)
@@ -552,7 +555,6 @@ public final class GUIUtils
 
 						x = aktLocation.x + endPoint.x - m_startPoint.x;
 						y = aktLocation.y + endPoint.y - m_startPoint.y;
-
 						move(new Point(x, y));
 					}
 				}
@@ -568,15 +570,15 @@ public final class GUIUtils
 						{
 							GUIUtils.Screen currentScreen = GUIUtils.getCurrentScreen(m_parentWindow);
 							int x, y, maxX, maxY;
-							boolean bMove = false;
-
-							x = a_location.x;
-							y = a_location.y;
-							if (x != m_parentWindow.getLocationOnScreen().x &&
-								y != m_parentWindow.getLocationOnScreen().y)
+							boolean bMove = a_location != null;
+							Point location = a_location;
+							if (location == null)
 							{
-								bMove = true;
+								location = m_parentWindow.getLocationOnScreen();
 							}
+
+							x = location.x;
+							y = location.y;
 
 							maxX = (int) currentScreen.getWidth() + currentScreen.getX();
 							maxY = (int) currentScreen.getHeight() + currentScreen.getY();
