@@ -777,7 +777,14 @@ public final class GUIUtils
 					windowMiddleLocation.y >= screenLocation.y &&
 					windowMiddleLocation.y <= (screenLocation.y + screenBounds.height))
 				{
-					return new Screen(screenLocation, screenBounds);
+					// if this screen overlaps with the default screen, take the smallest common part
+					Screen thisScreen = new Screen(screenLocation, screenBounds);
+					thisScreen = getOverlappingScreen(thisScreen, a_window);
+
+
+
+
+					return thisScreen;
 				}
 			}
 		}
@@ -789,7 +796,6 @@ public final class GUIUtils
 		// for JDKs < 1.3
 		return new Screen(new Point(0,0), getDefaultScreenBounds(a_window));
 	}
-
 
 	/**
 	 * Centers a window relative to the screen.
@@ -1095,6 +1101,63 @@ public final class GUIUtils
 		return trim(a_strOriginal, MAXIMUM_TEXT_LENGTH);
 	}
 
+	/**
+	 * Checks if a screen overlaps with the default screen and trims the screen area if needed.
+	 * @param a_screen Screen
+	 * @param a_window Window
+	 * @return Screen
+	 */
+	private static Screen getOverlappingScreen(Screen a_screen, Window a_window)
+	{
+		if (a_screen == null)
+		{
+			return null;
+		}
+
+		Screen defaultScreen = new Screen(new Point(0, 0), getDefaultScreenBounds(a_window));
+		if (defaultScreen.getX() == a_screen.getX() &&
+			defaultScreen.getY() == a_screen.getY() &&
+			defaultScreen.getWidth() == a_screen.getWidth() &&
+			defaultScreen.getHeight() == a_screen.getHeight())
+		{
+			// these are the same screens
+			return a_screen;
+		}
+
+		int x = a_screen.getX();
+		int y = a_screen.getY();
+		int width = a_screen.getWidth();
+		int height = a_screen.getHeight();
+		boolean bOverlap = false;
+
+		int heightOverlap = Math.min(a_screen.getY(), defaultScreen.getY())
+			+ Math.max(a_screen.getHeight(), defaultScreen.getHeight());
+		if (heightOverlap < (Math.max(a_screen.getY() + a_screen.getHeight(),
+									  defaultScreen.getY() + defaultScreen.getHeight())))
+		{
+			// height is overlapping; get the minimum overlapping area as screen
+			bOverlap = true;
+			y = Math.max(a_screen.getY(), defaultScreen.getY());
+			height = a_screen.getHeight() - Math.abs(a_screen.getY() - defaultScreen.getY());
+		}
+
+		int widthOverlap = Math.min(a_screen.getX(), defaultScreen.getX())
+			+ Math.max(a_screen.getWidth(), defaultScreen.getWidth());
+		if (widthOverlap < (Math.max(a_screen.getX() + a_screen.getWidth(),
+									  defaultScreen.getX() + defaultScreen.getWidth())))
+		{
+			// width is overlapping; get the minimum overlapping area as screen
+			bOverlap = true;
+			x = Math.max(a_screen.getX(), defaultScreen.getX());
+			width = a_screen.getWidth() - Math.abs(a_screen.getX() - defaultScreen.getX());
+		}
+
+		if (bOverlap)
+		{
+			a_screen = new Screen(new Point(x, y), new Rectangle(width, height));
+		}
+		return a_screen;
+	}
 
 	private static String getTextFromClipboard(Component a_requestingComponent, boolean a_bUseTextArea)
 	{
