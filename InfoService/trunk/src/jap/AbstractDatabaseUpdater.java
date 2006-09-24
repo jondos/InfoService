@@ -87,9 +87,9 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	/**
 	 * May be used to re-initialise the thread after stopping it.
 	 */
-	public final void init()
+	private final void init()
 	{
-		stop();
+		//stop();
 		JAPModel.getInstance().addObserver(this);
 		m_updateThread = new Thread(new Runnable()
 		{

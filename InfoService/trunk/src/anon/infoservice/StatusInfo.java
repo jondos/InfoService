@@ -42,6 +42,8 @@ import anon.util.XMLUtil;
 public class StatusInfo extends AbstractDatabaseEntry implements IDistributable
 {
 	public static final int ANON_LEVEL_MIN = 0;
+	public static final int ANON_LEVEL_FAIR = 3;
+	public static final int ANON_LEVEL_HIGH = 8;
 	public static final int ANON_LEVEL_MAX = 10;
 
 
@@ -261,7 +263,8 @@ public class StatusInfo extends AbstractDatabaseEntry implements IDistributable
 
   /**
    * Returns the calculated anonymity level (from number of active users, current traffic
-   * and cascade length). It is a value between 0 and 5.
+   * and cascade length). It is a value between ANON_LEVEL_MIN and ANON_LEVEL_MAX. If it is < 0,
+   * the anony level is unknown.
    *
    * @return The current anonymity level.
    */
