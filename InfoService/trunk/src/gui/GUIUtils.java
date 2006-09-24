@@ -412,9 +412,10 @@ public final class GUIUtils
 	 */
 	public static void moveToUpRightCorner(Window a_window)
 	{
-		Rectangle screenBounds = getDefaultScreenBounds(a_window);
+		Screen currentScreen =  getCurrentScreen(a_window);
 		Dimension ownSize = a_window.getSize();
-		a_window.setLocation( (screenBounds.width - ownSize.width), 0);
+		a_window.setLocation(currentScreen.getX() + (currentScreen.getWidth() - ownSize.width),
+							 currentScreen.getY());
 	}
 
 	public static void setNativeGUILibrary(NativeGUILibrary a_library)
@@ -789,41 +790,6 @@ public final class GUIUtils
 		return new Screen(new Point(0,0), getDefaultScreenBounds(a_window));
 	}
 
-	/**
-	 * Returns the bounds of the default screen.
-	 * @param a_window a Window
-	 * @return the bounds of the default screen
-	 */
-	public static Rectangle getDefaultScreenBounds(Window a_window)
-	{
-		if (a_window == null)
-		{
-			return null;
-		}
-
-		Rectangle screenBounds;
-
-		try
-		{
-			// try to center the window on the default screen; useful if there is more than one screen
-			Object graphicsEnvironment =
-				Class.forName("java.awt.GraphicsEnvironment").getMethod(
-						"getLocalGraphicsEnvironment", null).invoke(null, null);
-			Object graphicsDevice = graphicsEnvironment.getClass().getMethod(
-				 "getDefaultScreenDevice", null).invoke(graphicsEnvironment, null);
-			Object graphicsConfiguration = graphicsDevice.getClass().getMethod(
-				"getDefaultConfiguration", null).invoke(graphicsDevice, null);
-			screenBounds = (Rectangle)graphicsConfiguration.getClass().getMethod(
-				 "getBounds", null).invoke(graphicsConfiguration, null);
-		}
-		catch(Exception a_e)
-		{
-			// not all methods to get the default screen are available in JDKs < 1.3
-			screenBounds = new Rectangle(new Point(0,0), a_window.getToolkit().getScreenSize());
-		}
-		return screenBounds;
-	}
-
 
 	/**
 	 * Centers a window relative to the screen.
@@ -1156,6 +1122,42 @@ public final class GUIUtils
 			strText = cf.getText();
 		}
 		return strText;
+	}
+
+	/**
+	 * Returns the bounds of the default screen. This method is private as is does not always return
+	 * the right coordinates and screen bounds.
+	 * @param a_window a Window
+	 * @return the bounds of the default screen
+	 */
+	private static Rectangle getDefaultScreenBounds(Window a_window)
+	{
+		if (a_window == null)
+		{
+			return null;
+		}
+
+		Rectangle screenBounds;
+
+		try
+		{
+			// try to center the window on the default screen; useful if there is more than one screen
+			Object graphicsEnvironment =
+				Class.forName("java.awt.GraphicsEnvironment").getMethod(
+						"getLocalGraphicsEnvironment", null).invoke(null, null);
+			Object graphicsDevice = graphicsEnvironment.getClass().getMethod(
+				 "getDefaultScreenDevice", null).invoke(graphicsEnvironment, null);
+			Object graphicsConfiguration = graphicsDevice.getClass().getMethod(
+				"getDefaultConfiguration", null).invoke(graphicsDevice, null);
+			screenBounds = (Rectangle)graphicsConfiguration.getClass().getMethod(
+				 "getBounds", null).invoke(graphicsConfiguration, null);
+		}
+		catch(Exception a_e)
+		{
+			// not all methods to get the default screen are available in JDKs < 1.3
+			screenBounds = new Rectangle(new Point(0,0), a_window.getToolkit().getScreenSize());
+		}
+		return screenBounds;
 	}
 
 	/**
