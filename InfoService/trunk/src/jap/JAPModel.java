@@ -154,8 +154,8 @@ public final class JAPModel extends Observable
 	private boolean m_bUseProxyAuthentication = false;
 	private JAPController.AnonConnectionChecker m_connectionChecker;
 
-	private Dimension m_iconifiedSize = new Dimension(0, 0);
-	private Dimension m_configSize = new Dimension(0, 0);
+	private Dimension m_iconifiedSize;
+	private Dimension m_configSize;
 	private Dimension m_helpSize;
 	private boolean m_bSaveHelpSize;
 
