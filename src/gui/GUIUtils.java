@@ -362,9 +362,6 @@ public final class GUIUtils
 		}
 	}
 
-
-
-
 	/**
 	 * Finds the first parent that is a window.
 	 * @param a_component a Component
