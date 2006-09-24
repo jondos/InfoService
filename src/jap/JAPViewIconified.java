@@ -251,7 +251,8 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 			LogHolder.log(LogLevel.ERR, LogType.GUI, "Packed iconified view with illegal size! " +
 						  "Width:" + getSize().width + " Height:" + getSize().height +
 						  "\nSetting defaults...");
-			if (JAPModel.getInstance().getIconifiedSize().width > 0 &&
+			if (JAPModel.getInstance().getIconifiedSize() != null &&
+				JAPModel.getInstance().getIconifiedSize().width > 0 &&
 				JAPModel.getInstance().getIconifiedSize().height > 0)
 			{
 				setSize(JAPModel.getInstance().getIconifiedSize());
