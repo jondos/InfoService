@@ -783,6 +783,10 @@ public class ConfigAssistant extends JAPDialog
 		{
 			a_label.setToolTipText(JAPMessages.getString(MSG_CLICK_TO_VIEW_HELP));
 		}
+		else
+		{
+			a_label.setToolTipText(a_context);
+		}
 		a_label.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		a_label.addMouseListener(new MouseAdapter()
 		{
