@@ -483,7 +483,7 @@ public final class GUIUtils
 			m_component.addMouseMotionListener(m_listener);
 			//m_component.addComponentListener(m_listener);
 			m_parentWindow = GUIUtils.getParentWindow(a_window);
-			m_queue = new JobQueue("Docking queue");
+			m_queue = new JobQueue("Docking queue for window: " + a_window.getName());
 
 		}
 
