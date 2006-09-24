@@ -341,7 +341,8 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 								  "Width:" + getSize().width + " Height:" + getSize().height +
 								  "\nSetting defaults...");
 
-					if (JAPModel.getInstance().getConfigSize().width > 0 &&
+					if (JAPModel.getInstance().getConfigSize() != null &&
+						JAPModel.getInstance().getConfigSize().width > 0 &&
 						JAPModel.getInstance().getConfigSize().height > 0)
 					{
 						setSize(JAPModel.getInstance().getConfigSize());

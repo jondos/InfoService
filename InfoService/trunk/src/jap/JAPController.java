@@ -484,7 +484,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 				public void run()
 				{
 
-					if (JAPController.getInstance().isConfigAssistantShown())
+					if (JAPController.getInstance().isConfigAssistantShown() &&
+						!JAPDialog.isConsoleOnly())
 					{
 						showInstallationAssistant();
 					}
@@ -1143,9 +1144,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 				Node nodeWindow = XMLUtil.getFirstChildByName(elemGUI, JAPModel.XML_CONFIG_WINDOW);
 				Node nodeSize = XMLUtil.getFirstChildByName(nodeWindow, JAPModel.XML_SIZE);
-				JAPModel.getInstance().setConfigSize(new Dimension(
-								XMLUtil.parseAttribute(nodeSize, JAPModel.XML_ATTR_WIDTH, 0),
-								XMLUtil.parseAttribute(nodeSize, JAPModel.XML_ATTR_HEIGHT, 0)));
+				if (!JAPDialog.isConsoleOnly())
+				{
+					JAPModel.getInstance().setConfigSize(new Dimension(
+						XMLUtil.parseAttribute(nodeSize, JAPModel.XML_ATTR_WIDTH, 0),
+						XMLUtil.parseAttribute(nodeSize, JAPModel.XML_ATTR_HEIGHT, 0)));
+				}
 				location = parseWindowLocation(nodeWindow, defaultPoint,
 											   JAPConstants.DEFAULT_SAVE_CONFIG_WINDOW_POSITION);
 				JAPModel.getInstance().setSaveConfigWindowPosition(location != null);
@@ -1155,9 +1159,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 				nodeWindow = XMLUtil.getFirstChildByName(elemGUI, JAPModel.XML_ICONIFIED_WINDOW);
 				nodeSize = XMLUtil.getFirstChildByName(nodeWindow, JAPModel.XML_SIZE);
-				JAPModel.getInstance().setIconifiedSize(new Dimension(
-								XMLUtil.parseAttribute(nodeSize, JAPModel.XML_ATTR_WIDTH, 0),
-								XMLUtil.parseAttribute(nodeSize, JAPModel.XML_ATTR_HEIGHT, 0)));
+				if (!JAPDialog.isConsoleOnly())
+				{
+					JAPModel.getInstance().setIconifiedSize(new Dimension(
+						XMLUtil.parseAttribute(nodeSize, JAPModel.XML_ATTR_WIDTH, 0),
+						XMLUtil.parseAttribute(nodeSize, JAPModel.XML_ATTR_HEIGHT, 0)));
+				}
 				location = parseWindowLocation(nodeWindow, defaultPoint,
 											   JAPConstants.DEFAULT_SAVE_MINI_WINDOW_POSITION);
 				JAPModel.getInstance().setSaveIconifiedWindowPosition(location != null);
@@ -1174,13 +1181,16 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					JAPModel.getInstance().setHelpWindowLocation(location);
 				}
-				Dimension defaultSize = new Dimension();
-				Dimension size = parseWindowSize(nodeWindow, defaultSize,
-												 JAPConstants.DEFAULT_SAVE_HELP_WINDOW_SIZE);
-				JAPModel.getInstance().setSaveHelpWindowSize(size != null);
-				if (size != defaultSize)
+				if (!JAPDialog.isConsoleOnly())
 				{
-					JAPModel.getInstance().setHelpWindowSize(size);
+					Dimension defaultSize = new Dimension();
+					Dimension size = parseWindowSize(nodeWindow, defaultSize,
+						JAPConstants.DEFAULT_SAVE_HELP_WINDOW_SIZE);
+					JAPModel.getInstance().setSaveHelpWindowSize(size != null);
+					if (size != defaultSize)
+					{
+						JAPModel.getInstance().setHelpWindowSize(size);
+					}
 				}
 
 				Element elemMainWindow = (Element) XMLUtil.getFirstChildByName(elemGUI,
@@ -2074,23 +2084,29 @@ public final class JAPController extends Observable implements IProxyListener, O
 			Element elemWindow, elemSize;
 
 			elemWindow = doc.createElement(JAPModel.XML_CONFIG_WINDOW);
-			elemSize = doc.createElement(JAPModel.XML_SIZE);
-			XMLUtil.setAttribute(
-						 elemSize, JAPModel.XML_ATTR_WIDTH, JAPModel.getInstance().getConfigSize().width);
-			XMLUtil.setAttribute(
-						 elemSize, JAPModel.XML_ATTR_HEIGHT, JAPModel.getInstance().getConfigSize().height);
-			elemWindow.appendChild(elemSize);
+			if (JAPModel.getInstance().getConfigSize() != null)
+			{
+				elemSize = doc.createElement(JAPModel.XML_SIZE);
+				XMLUtil.setAttribute(
+					elemSize, JAPModel.XML_ATTR_WIDTH, JAPModel.getInstance().getConfigSize().width);
+				XMLUtil.setAttribute(
+					elemSize, JAPModel.XML_ATTR_HEIGHT, JAPModel.getInstance().getConfigSize().height);
+				elemWindow.appendChild(elemSize);
+			}
 			addWindowLocationToConf(elemWindow, JAPModel.getInstance().getConfigWindowLocation());
 			elemGUI.appendChild(elemWindow);
 
 
 			elemWindow = doc.createElement(JAPModel.XML_ICONIFIED_WINDOW);
-			elemSize = doc.createElement(JAPModel.XML_SIZE);
-			XMLUtil.setAttribute(
-						 elemSize, JAPModel.XML_ATTR_WIDTH, JAPModel.getInstance().getIconifiedSize().width);
-			XMLUtil.setAttribute(
-						 elemSize, JAPModel.XML_ATTR_HEIGHT, JAPModel.getInstance().getIconifiedSize().height);
-			elemWindow.appendChild(elemSize);
+			if (JAPModel.getInstance().getIconifiedSize() != null)
+			{
+				elemSize = doc.createElement(JAPModel.XML_SIZE);
+				XMLUtil.setAttribute(
+					elemSize, JAPModel.XML_ATTR_WIDTH, JAPModel.getInstance().getIconifiedSize().width);
+				XMLUtil.setAttribute(
+					elemSize, JAPModel.XML_ATTR_HEIGHT, JAPModel.getInstance().getIconifiedSize().height);
+				elemWindow.appendChild(elemSize);
+			}
 			addWindowLocationToConf(elemWindow, JAPModel.getInstance().getIconifiedWindowLocation());
 			elemGUI.appendChild(elemWindow);
 
