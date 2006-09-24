@@ -2890,7 +2890,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	 */
 	public final Rectangle getScreenBounds()
 	{
-		return GUIUtils.getDefaultScreenBounds(m_internalDialog);
+		return GUIUtils.getCurrentScreen(m_internalDialog).getBounds();
 	}
 
 	public void setDockable(boolean a_bDockable)
@@ -2960,6 +2960,11 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	public void restoreSize(Dimension a_size)
 	{
 		GUIUtils.restoreSize(m_internalDialog, a_size);
+	}
+
+	public void moveToUpRightCorner()
+	{
+		GUIUtils.moveToUpRightCorner(m_internalDialog);
 	}
 
 	/**

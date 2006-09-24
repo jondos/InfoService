@@ -266,8 +266,8 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 
 		pack();
 		// fix for MacOS; sometimes pack increases the size to several meters...
-		if (getSize().width > GUIUtils.getDefaultScreenBounds(this).width ||
-			getSize().height > GUIUtils.getDefaultScreenBounds(this).height)
+		GUIUtils.Screen currentScreen = GUIUtils.getCurrentScreen(this);
+		if (getSize().width > currentScreen.getWidth() || getSize().height > currentScreen.getHeight())
 		{
 			LogHolder.log(LogLevel.ERR, LogType.GUI, "Packed iconified view with illegal size! " +
 						  "Width:" + getSize().width + " Height:" + getSize().height +
