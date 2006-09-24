@@ -315,6 +315,23 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 			{
 				m_paymentInstance = null;
 			}
+
+			synchronized (m_eventListeners)
+			{
+				final Enumeration eventListenersList = m_eventListeners.elements();
+				Thread notificationThread = new Thread(new Runnable()
+				{
+					public void run()
+					{
+						while (eventListenersList.hasMoreElements())
+						{
+							( (AnonServiceEventListener) (eventListenersList.nextElement())).packetMixed(0);
+						}
+					}
+				}, "AnonClient: Zero PacketMixed notification (after shutdown)");
+				notificationThread.setDaemon(true);
+				notificationThread.start();
+			}
 		}
 	}
 
@@ -637,6 +654,18 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 				closeSocketHandler();
 				return ErrorCodes.E_UNKNOWN;
 			}
+
+			try
+			{
+				/* try to set infinite timeout */
+				a_connectedSocket.setSoTimeout(0);
+			}
+			catch (SocketException e)
+			{
+				/* ignore it */
+			}
+
+
 			m_multiplexer = new Multiplexer(m_socketHandler.getInputStream(), m_socketHandler.getOutputStream(),
 											m_keyExchangeManager, new SecureRandom());
 			m_socketHandler.addObserver(this);
@@ -657,12 +686,13 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 				shutdown();
 				return errorCode;
 			}
-			try
+
+			//try
 			{
 				/* try to set infinite timeout */
-				a_connectedSocket.setSoTimeout(0);
+				//a_connectedSocket.setSoTimeout(0);
 			}
-			catch (SocketException e)
+			//catch (SocketException e)
 			{
 				/* ignore it */
 			}

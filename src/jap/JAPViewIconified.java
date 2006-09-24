@@ -39,13 +39,10 @@ import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -69,14 +66,19 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 
 	private static final String MSG_TT_SWITCH_ANONYMITY =
 		JAPViewIconified.class.getName() + "_ttSwitchAnonymity";
+	private static final String MSG_ANON_LOW = JAPViewIconified.class.getName() + "_anonLow";
+	private static final String MSG_ANON_FAIR = JAPViewIconified.class.getName() + "_anonFair";
+	private static final String MSG_ANON_HIGH = JAPViewIconified.class.getName() + "_anonHigh";
+	private static final String MSG_ANON = JAPViewIconified.class.getName() + "_anon";
 
 	private static final String STR_HIDDEN_WINDOW = Double.toString(Math.random());
 	private static Frame m_frameParent;
 
 	private JAPController m_Controller;
 	private AbstractJAPMainView m_mainView;
-	private JLabel m_labelBytes, m_labelUsers, m_labelTraffic;
+	private JLabel m_labelBytes, m_labelUsers, m_labelTraffic, m_labelAnon;
 	private JLabel m_lblJAPIcon;
+	private JLabel m_lblBytes;
 	private Font m_fontDlg;
 	private NumberFormat m_NumberFormat;
 	private boolean m_anonModeDisabled = false;
@@ -123,19 +125,19 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		GridBagConstraints c = new GridBagConstraints();
 		JPanel pTop = new JPanel(la);
 		pTop.setOpaque(false);
-		JLabel x2 = new JLabel(JAPMessages.getString("iconifiedviewBytes") + ": ", JLabel.RIGHT);
-		x2.setFont(m_fontDlg);
+		m_lblBytes = new JLabel(JAPMessages.getString("iconifiedviewBytes") + ": ", JLabel.RIGHT);
+		m_lblBytes.setFont(m_fontDlg);
 		c.gridx = 0;
 		c.gridy = 0;
 		c.fill = GridBagConstraints.BOTH;
 		c.weightx = 0;
 		c.insets = new Insets(3, 3, 0, 0);
 		c.anchor = GridBagConstraints.NORTHWEST;
-		la.setConstraints(x2, c);
-		pTop.add(x2);
+		la.setConstraints(m_lblBytes, c);
+		pTop.add(m_lblBytes);
 		c.weightx = 1;
 		m_lTrafficOther = m_lTrafficWWW = 0;
-		m_labelBytes = new JLabel("000000000000  ", JLabel.LEFT);
+		m_labelBytes = new JLabel("00000,0", JLabel.LEFT);
 		//m_labelBytes.setForeground(Color.red);
 		m_labelBytes.setFont(m_fontDlg);
 		c.gridx = 1;
@@ -148,27 +150,46 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		c.gridx = 0;
 		c.gridy = 1;
 		la.setConstraints(x3, c);
-		pTop.add(x3);
+		//pTop.add(x3);
 
 		m_labelUsers = new JLabel("", JLabel.LEFT);
 		//m_labelUsers.setForeground(Color.red);
 		m_labelUsers.setFont(m_fontDlg);
 		c.gridx = 1;
 		la.setConstraints(m_labelUsers, c);
-		pTop.add(m_labelUsers);
+		//pTop.add(m_labelUsers);
 
 		JLabel x4 = new JLabel(JAPMessages.getString("iconifiedviewTraffic") + ": ", JLabel.RIGHT);
 		x4.setFont(m_fontDlg);
 		c.gridy = 2;
 		c.gridx = 0;
 		la.setConstraints(x4, c);
-		pTop.add(x4);
+		//pTop.add(x4);
 		m_labelTraffic = new JLabel("", JLabel.LEFT);
 		//m_labelTraffic.setForeground(Color.red);
 		m_labelTraffic.setFont(m_fontDlg);
 		c.gridx = 1;
 		la.setConstraints(m_labelTraffic, c);
-		pTop.add(m_labelTraffic);
+		//pTop.add(m_labelTraffic);
+
+		JLabel tmpLabel = new JLabel(JAPMessages.getString(MSG_ANON) + ": ", JLabel.RIGHT);
+		tmpLabel.setFont(m_fontDlg);
+		c.gridy++;
+		c.gridx = 0;
+		pTop.add(tmpLabel, c);
+		int anonLength = 0;
+		anonLength = Math.max(anonLength, JAPMessages.getString(MSG_ANON_LOW).length());
+		anonLength = Math.max(anonLength, JAPMessages.getString(MSG_ANON_FAIR).length());
+		anonLength = Math.max(anonLength, JAPMessages.getString(MSG_ANON_HIGH).length());
+		char[] charLength = new char[anonLength];
+		for (int i = 0; i < charLength.length; i++)
+		{
+			charLength[i] = 'A';
+		}
+		m_labelAnon = new JLabel(new String(charLength), JLabel.LEFT);
+		m_labelAnon.setFont(m_fontDlg);
+		c.gridx++;
+		pTop.add(m_labelAnon, c);
 
 		JButton bttn = new JButton(GUIUtils.loadImageIcon(JAPConstants.ENLARGEYICONFN, true, false));
 		bttn.setOpaque(false);
@@ -271,8 +292,10 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		GUIUtils.moveToUpRightCorner(this);
 		GUIUtils.restoreLocation(this, JAPModel.getInstance().getIconifiedWindowLocation());
 		m_labelBytes.setText(JAPMessages.getString("iconifiedViewZero"));
+		m_lblBytes.setText(JAPMessages.getString("iconifiedviewBytes") + ": ");
 		m_labelUsers.setText(JAPMessages.getString("iconifiedViewNA"));
 		m_labelTraffic.setText(JAPMessages.getString("iconifiedViewNA"));
+		m_labelAnon.setText(JAPMessages.getString("iconifiedViewNA"));
 		//JAPDll.setWindowOnTop(this,STR_HIDDEN_WINDOW, true);
 		GUIUtils.setAlwaysOnTop(this, true);
 	}
@@ -313,8 +336,30 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 			{
 				if (m_Controller.isAnonConnected())  //m_Controller.getAnonMode())
 				{
+					transferedBytes(0, IProxyListener.PROTOCOL_WWW);
 					MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
 					StatusInfo currentStatus = currentMixCascade.getCurrentStatus();
+					int anonLevel = currentStatus.getAnonLevel();
+					if (anonLevel < StatusInfo.ANON_LEVEL_MIN)
+					{
+						m_labelAnon.setText(JAPMessages.getString("iconifiedViewNA"));
+					}
+					else
+					{
+						if (anonLevel < StatusInfo.ANON_LEVEL_FAIR)
+						{
+							m_labelAnon.setText(JAPMessages.getString(MSG_ANON_LOW));
+						}
+						else if (anonLevel < StatusInfo.ANON_LEVEL_HIGH)
+						{
+							m_labelAnon.setText(JAPMessages.getString(MSG_ANON_FAIR));
+						}
+						else
+						{
+							m_labelAnon.setText(JAPMessages.getString(MSG_ANON_HIGH));
+						}
+					}
+
 					if (currentStatus.getNrOfActiveUsers() != -1)
 					{
 						m_labelUsers.setText(m_NumberFormat.format(currentStatus.getNrOfActiveUsers()));
@@ -355,8 +400,10 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 				else
 				{
 					/* not in anonymity mode */
+					m_labelBytes.setText(JAPMessages.getString("iconifiedViewNA"));
 					m_labelUsers.setText(JAPMessages.getString("iconifiedViewNA"));
 					m_labelTraffic.setText(JAPMessages.getString("iconifiedViewNA"));
+					m_labelAnon.setText(JAPMessages.getString("iconifiedViewNA"));
 					synchronized(m_lblJAPIcon)
 					{
 						m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon(JAPViewIconified.class.getName() + "_icon16discon.gif", true, false));
@@ -427,7 +474,8 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		{
 			public void run()
 			{
-				m_labelBytes.setText(JAPUtil.formatBytesValue(m_lTrafficWWW + m_lTrafficOther));
+				m_lblBytes.setText(JAPUtil.formatBytesValueOnlyUnit(m_lTrafficWWW + m_lTrafficOther) + ": ");
+				m_labelBytes.setText(JAPUtil.formatBytesValueWithoutUnit(m_lTrafficWWW + m_lTrafficOther));
 			}
 		};
 

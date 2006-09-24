@@ -415,7 +415,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	//---------------------------------------------------------------------
 	public void initialRun()
 	{
-		LogHolder.log(LogLevel.INFO, LogType.MISC, "JAPModel:initial run of JAP...");
+		LogHolder.log(LogLevel.INFO, LogType.MISC, "Initial run of JAP...");
 
 		// start update threads and prevent waining for locks by using a thread
 		Database.getInstance(JAPMinVersion.class).addObserver(this);
@@ -424,16 +424,20 @@ public final class JAPController extends Observable implements IProxyListener, O
 			public void run()
 			{
 				m_feedback.start(false);
+				/*
 				m_InfoServiceUpdater.start(false);
 				m_MixCascadeUpdater.start(false);
 				m_minVersionUpdater.start(false);
-				m_javaVersionUpdater.start(false);
+				m_javaVersionUpdater.start(false);*/
+				m_minVersionUpdater.updateAsync();
+				m_javaVersionUpdater.updateAsync();
+				m_InfoServiceUpdater.updateAsync();
+				m_MixCascadeUpdater.updateAsync();
 			}
 		});
 		run.setDaemon(true);
 		run.start();
-		m_minVersionUpdater.updateAsync();
-		m_javaVersionUpdater.updateAsync();
+
 
 		// start http listener object
 		/* if (JAPModel.isTorEnabled())
@@ -3126,7 +3130,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					returnValue = JAPDialog.RETURN_VALUE_OK;
 				}
 
-				if (returnValue == JAPDialog.RETURN_VALUE_OK)
+				if (returnValue == JAPDialog.RETURN_VALUE_OK || JAPDialog.isConsoleOnly())
 				{
 					if (getInstance().getViewWindow() != null)
 					{
