@@ -43,12 +43,12 @@ import java.awt.GridBagLayout;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.MediaTracker;
-import java.awt.Point;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -216,6 +216,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private Object SYNC_ACTION = new Object();
 	private boolean m_bActionPerformed = false;
+
+	private ComponentMovedAdapter m_mainMovedAdapter;
+	private ComponentMovedAdapter m_configMovedAdapter;
+	private ComponentMovedAdapter m_helpMovedAdapter;
+	private ComponentMovedAdapter m_miniMovedAdapter;
 
 	private boolean m_bIsSimpleView;
 
@@ -976,7 +981,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				if (isEnabled())
 				{
-					exitProgram();
+					JAPController.goodBye(true);
 				}
 			}
 
@@ -1029,6 +1034,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JAPHelp.getInstance().restoreLocation(JAPModel.getInstance().getHelpWindowLocation());
 		JAPHelp.getInstance().restoreSize(JAPModel.getInstance().getHelpWindowSize());
 
+		m_mainMovedAdapter = new ComponentMovedAdapter();
+		m_helpMovedAdapter = new ComponentMovedAdapter();
+		m_configMovedAdapter = new ComponentMovedAdapter();
+		addComponentListener(m_mainMovedAdapter);
+		JAPHelp.getInstance().addComponentListener(m_helpMovedAdapter);
+
+
 		//new GUIUtils.WindowDocker(this);
 
 
@@ -1038,7 +1050,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				synchronized (LOCK_CONFIG)
 				{
-					m_dlgConfig = new JAPConf(JAPNewView.this, m_bWithPayment);
+					if (m_dlgConfig == null)
+					{
+						m_dlgConfig = new JAPConf(JAPNewView.this, m_bWithPayment);
+						m_dlgConfig.addComponentListener(m_configMovedAdapter);
+					}
 				}
 			}
 		}).start();
@@ -1607,7 +1623,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				Object source = event.getSource();
 				if (source == m_bttnQuit)
 				{
-					exitProgram();
+					JAPController.goodBye(true);
 				}
 				else if (source == m_bttnIconify)
 				{
@@ -1791,12 +1807,25 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	public void saveWindowPositions()
 	{
-		super.saveWindowPositions();
-		if (m_dlgConfig != null)
+		if (m_mainMovedAdapter.hasMoved())
+		{
+			JAPModel.getInstance().setMainWindowLocation(getLocation());
+		}
+		synchronized (SYNC_ICONIFIED_VIEW)
+		{
+			if (m_miniMovedAdapter != null && m_miniMovedAdapter.hasMoved())
+			{
+				JAPModel.getInstance().setIconifiedWindowLocation(getViewIconified().getLocation());
+			}
+		}
+		if (m_dlgConfig != null && m_configMovedAdapter.hasMoved())
 		{
 			JAPModel.getInstance().setConfigWindowLocation(m_dlgConfig.getLocation());
 		}
-		JAPModel.getInstance().setHelpWindowLocation(JAPHelp.getInstance().getLocation());
+		if (m_helpMovedAdapter.hasMoved())
+		{
+			JAPModel.getInstance().setHelpWindowLocation(JAPHelp.getInstance().getLocation());
+		}
 		JAPModel.getInstance().setHelpWindowSize(JAPHelp.getInstance().getSize());
 	}
 
@@ -1809,6 +1838,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				Cursor c = getCursor();
 				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 				m_dlgConfig = new JAPConf(this, m_bWithPayment);
+				m_dlgConfig.addComponentListener(m_configMovedAdapter);
 				setCursor(c);
 			}
 
@@ -2077,7 +2107,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	{
 		synchronized (SYNC_ICONIFIED_VIEW)
 		{
+			if (m_ViewIconified != null)
+			{
+				m_ViewIconified.removeComponentListener(m_miniMovedAdapter);
+			}
 			m_ViewIconified = v;
+			m_miniMovedAdapter = new ComponentMovedAdapter();
+			m_ViewIconified.addComponentListener(m_miniMovedAdapter);
 		}
 	}
 
@@ -2247,5 +2283,19 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			}
 		}
 		return true;
+	}
+	private final class ComponentMovedAdapter extends ComponentAdapter
+	{
+		private boolean m_bMoved = false;
+
+		public void componentMoved(ComponentEvent a_event)
+		{
+			m_bMoved = true;
+		}
+
+		public boolean hasMoved()
+		{
+			return m_bMoved;
+		}
 	}
 }

@@ -475,7 +475,7 @@ public class JAP
 
 		if (!bConsoleOnly)
 		{
-			JAPNewView frameView = (JAPNewView)view;
+			AbstractJAPMainView frameView = (AbstractJAPMainView)view;
 			if (bSystray)
 			{
 				/* The old JAPDll does return false even if hideWindowInTaskbar() succeeded - so we have to do
@@ -517,42 +517,10 @@ public class JAP
 		// initially start services
 		m_controller.initialRun();
 
+		// show alternative view (console, http server,...);
 		if (bConsoleOnly)
 		{
-			try
-			{
-				String entered = null;
-				while (true)
-				{
-					System.out.println("Type 'exit' to quit or 'save' to save the configuration.");
-					entered = new java.io.BufferedReader(new java.io.InputStreamReader(System.in)).readLine();
-					if (entered == null)
-					{
-						continue;
-					}
-					if (entered.equals("exit"))
-					{
-						break;
-					}
-					if (entered.equals("save"))
-					{
-						System.out.println("Saving configuration...");
-						if (!m_controller.saveConfigFile())
-						{
-							System.out.println("Configuration saved!");
-						}
-						else
-						{
-							System.out.println("Error while saving configuration!");
-						}
-					}
-
-				}
-				m_controller.goodBye(true);
-			}
-			catch (java.io.IOException a_e)
-			{
-			}
+			view.setVisible(true);
 		}
 	}
 

@@ -58,23 +58,15 @@ public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 		//setName(Double.toString(Math.random()));
 	}
 
-	public void saveWindowPositions()
-	{
-		JAPModel.getInstance().setMainWindowLocation(getLocation());
-		JAPModel.getInstance().setIconifiedWindowLocation(getViewIconified().getLocation());
-	}
-
-
-	protected void exitProgram()
-	{
-		JAPController.goodBye(true); // call the final exit procedure of JAP
-	}
+	public abstract void saveWindowPositions();
 
 	public void setTitle(String a_title)
 	{
 		setName(a_title);
 		super.setTitle(a_title);
 	}
+
+	public abstract void showIconifiedView();
 
 	public void setVisible(boolean a_bVisible)
 	{
