@@ -48,6 +48,7 @@ import java.awt.event.MouseEvent;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -272,17 +273,30 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 						Database.getInstance(MixCascade.class).getEntrySnapshotAsEnumeration();
 					if (cascades.hasMoreElements())
 					{
-						Object cascade;
+						MixCascade cascade;
 						JMenuItem menuItem;
 						MixCascade currentCascade = JAPController.getInstance().getCurrentMixCascade();
+						ImageIcon icon;
 
 						m_popup.removeAll();
 						m_menuItems.clear();
 						while (cascades.hasMoreElements())
 						{
-							cascade = cascades.nextElement();
-							menuItem =
-								new JMenuItem(GUIUtils.trim(cascade.toString(), MAX_CASCADE_NAME_LENGTH));
+							cascade = (MixCascade)cascades.nextElement();
+							if (cascade.isPayment())
+							{
+								icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_PAYMENT);
+							}
+							else if (cascade.isUserDefined())
+							{
+								icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_MANUELL);
+							}
+							else
+							{
+								icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_INTERNET);
+							}
+							menuItem = new JMenuItem(
+								GUIUtils.trim(cascade.toString(), MAX_CASCADE_NAME_LENGTH), icon);
 							if (currentCascade != null && currentCascade.equals(cascade))
 							{
 								menuItem.setFont(new Font(menuItem.getFont().getName(), Font.BOLD,
