@@ -1738,7 +1738,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 							// wait for auto-reconnect
 							int msgID = addStatusMsg(JAPMessages.getString("setAnonModeSplashConnect"),
 								JAPDialog.MESSAGE_TYPE_INFORMATION, false);
-							setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+							/** @todo remove this cursor setting... */
+							//setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 							try
 							{
 								m_connectionEstablishedSync.wait();
@@ -1747,7 +1748,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 							{
 							}
 							removeStatusMsg(msgID);
-							setCursor(Cursor.getDefaultCursor());
+							//setCursor(Cursor.getDefaultCursor());
 							m_bShowConnecting = false;
 						}
 						updateValues(false);

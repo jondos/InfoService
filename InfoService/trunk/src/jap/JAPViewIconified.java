@@ -38,37 +38,32 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Frame;
-import java.awt.Point;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemListener;
-import java.awt.event.ItemEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import javax.swing.event.PopupMenuListener;
-import javax.swing.event.PopupMenuEvent;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JWindow;
 import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
 
+import anon.infoservice.Database;
 import anon.infoservice.MixCascade;
 import anon.infoservice.StatusInfo;
 import anon.proxy.IProxyListener;
-import anon.infoservice.Database;
 import gui.GUIUtils;
 import gui.JAPMessages;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import javax.swing.JPopupMenu;
-import javax.swing.JMenuItem;
 
 final public class JAPViewIconified extends JWindow implements ActionListener
 {
@@ -80,6 +75,8 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 	private static final String MSG_ANON_FAIR = JAPViewIconified.class.getName() + "_anonFair";
 	private static final String MSG_ANON_HIGH = JAPViewIconified.class.getName() + "_anonHigh";
 	private static final String MSG_ANON = JAPViewIconified.class.getName() + "_anon";
+
+	private static final int MAX_CASCADE_NAME_LENGTH = 30;
 
 	private static final String STR_HIDDEN_WINDOW = Double.toString(Math.random());
 	private static Frame m_frameParent;
@@ -284,7 +281,8 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 						while (cascades.hasMoreElements())
 						{
 							cascade = cascades.nextElement();
-							menuItem = new JMenuItem(cascade.toString());
+							menuItem =
+								new JMenuItem(GUIUtils.trim(cascade.toString(), MAX_CASCADE_NAME_LENGTH));
 							if (currentCascade != null && currentCascade.equals(cascade))
 							{
 								menuItem.setFont(new Font(menuItem.getFont().getName(), Font.BOLD,
