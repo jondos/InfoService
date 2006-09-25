@@ -518,14 +518,18 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 			{
 				synchronized(m_lblJAPIcon)
 				{
-					m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon(JAPViewIconified.class.getName() + "_icon16red.gif", true, false));
-					try
+					if (m_Controller.isAnonConnected())
 					{
-						m_lblJAPIcon.wait(1000);
-					}
-					catch (InterruptedException a_e)
-					{
-						// ignore
+						m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon(JAPViewIconified.class.getName() +
+							"_icon16red.gif", true, false));
+						try
+						{
+							m_lblJAPIcon.wait(1000);
+						}
+						catch (InterruptedException a_e)
+						{
+							// ignore
+						}
 					}
 					if (m_Controller.isAnonConnected())
 					{
