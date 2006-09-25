@@ -394,6 +394,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 				else
 				{
 					/* not in anonymity mode */
+					m_lblBytes.setText(JAPMessages.getString("iconifiedviewBytes") + ": ");
 					m_labelBytes.setText(JAPMessages.getString("iconifiedViewNA"));
 					m_labelUsers.setText(JAPMessages.getString("iconifiedViewNA"));
 					m_labelTraffic.setText(JAPMessages.getString("iconifiedViewNA"));
@@ -468,8 +469,17 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		{
 			public void run()
 			{
-				m_lblBytes.setText(JAPUtil.formatBytesValueOnlyUnit(m_lTrafficWWW + m_lTrafficOther) + ": ");
-				m_labelBytes.setText(JAPUtil.formatBytesValueWithoutUnit(m_lTrafficWWW + m_lTrafficOther));
+				if (JAPController.getInstance().isAnonConnected())
+				{
+					m_lblBytes.setText(JAPUtil.formatBytesValueOnlyUnit(m_lTrafficWWW + m_lTrafficOther) +
+									   "s: ");
+					m_labelBytes.setText(JAPUtil.formatBytesValueWithoutUnit(m_lTrafficWWW + m_lTrafficOther));
+				}
+				else
+				{
+					m_lblBytes.setText(JAPMessages.getString("iconifiedviewBytes") + ": ");
+					m_labelBytes.setText(JAPMessages.getString("iconifiedViewNA"));
+				}
 			}
 		};
 
@@ -517,7 +527,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 					{
 						// ignore
 					}
-					if (m_Controller.getAnonMode())
+					if (m_Controller.isAnonConnected())
 					{
 						m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon(JAPConstants.IICON16FN, true, false));
 					}
