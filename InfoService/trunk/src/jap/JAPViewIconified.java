@@ -29,6 +29,8 @@ package jap;
 
 import java.lang.reflect.InvocationTargetException;
 import java.text.NumberFormat;
+import java.util.Enumeration;
+import java.util.Hashtable;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -36,13 +38,18 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Frame;
+import java.awt.Point;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemListener;
+import java.awt.event.ItemEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import javax.swing.event.PopupMenuListener;
+import javax.swing.event.PopupMenuEvent;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -54,11 +61,14 @@ import javax.swing.border.LineBorder;
 import anon.infoservice.MixCascade;
 import anon.infoservice.StatusInfo;
 import anon.proxy.IProxyListener;
+import anon.infoservice.Database;
 import gui.GUIUtils;
 import gui.JAPMessages;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import javax.swing.JPopupMenu;
+import javax.swing.JMenuItem;
 
 final public class JAPViewIconified extends JWindow implements ActionListener
 {
@@ -83,6 +93,10 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 	private NumberFormat m_NumberFormat;
 	private boolean m_anonModeDisabled = false;
 	private Object SYNC_CURSOR = new Object();
+
+	private JPopupMenu m_popup;
+	private Hashtable m_menuItems;
+	private ActionListener m_cascadeItemListener;
 
 	private GUIUtils.WindowDocker m_docker;
 
@@ -137,7 +151,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		pTop.add(m_lblBytes);
 		c.weightx = 1;
 		m_lTrafficOther = m_lTrafficWWW = 0;
-		m_labelBytes = new JLabel("00000,0", JLabel.LEFT);
+		m_labelBytes = new JLabel("000000,0", JLabel.LEFT);
 		//m_labelBytes.setForeground(Color.red);
 		m_labelBytes.setFont(m_fontDlg);
 		c.gridx = 1;
@@ -253,15 +267,79 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 
 		p.addMouseListener(new MouseAdapter()
 		{
-			public void mouseClicked(MouseEvent e)
+			public void mouseClicked(MouseEvent a_event)
 			{
-				if (e.getClickCount() > 1)
+				if (SwingUtilities.isRightMouseButton(a_event))
 				{
-					switchBackToMainView();
+					Enumeration cascades =
+						Database.getInstance(MixCascade.class).getEntrySnapshotAsEnumeration();
+					if (cascades.hasMoreElements())
+					{
+						Object cascade;
+						JMenuItem menuItem;
+						MixCascade currentCascade = JAPController.getInstance().getCurrentMixCascade();
+
+						m_popup.removeAll();
+						m_menuItems.clear();
+						while (cascades.hasMoreElements())
+						{
+							cascade = cascades.nextElement();
+							menuItem = new JMenuItem(cascade.toString());
+							if (currentCascade != null && currentCascade.equals(cascade))
+							{
+								menuItem.setFont(new Font(menuItem.getFont().getName(), Font.BOLD,
+									menuItem.getFont().getSize()));
+								m_popup.insert(menuItem, 0);
+							}
+							else
+							{
+								menuItem.setFont(new Font(menuItem.getFont().getName(), Font.PLAIN,
+									menuItem.getFont().getSize()));
+								m_popup.add(menuItem);
+							}
+							menuItem.addActionListener(m_cascadeItemListener);
+							m_menuItems.put(menuItem, cascade);
+
+
+						}
+
+
+						int x = a_event.getX() + JAPViewIconified.this.getLocation().x;
+						int y = a_event.getY() + JAPViewIconified.this.getLocation().y;
+						GUIUtils.Screen screen =  GUIUtils.getCurrentScreen(JAPViewIconified.this);
+						Dimension size = m_popup.getPreferredSize();
+						if (x + size.width > screen.getX() +  screen.getWidth())
+						{
+							x = screen.getX() +  screen.getWidth() - size.width;
+						}
+						if (y + size.height > screen.getY() +  screen.getHeight())
+						{
+							y = screen.getY() +  screen.getHeight() - size.height;
+						}
+
+						// put it on the screen
+						x = Math.max(x, screen.getX()) - JAPViewIconified.this.getLocation().x;
+						y = Math.max(y, screen.getY()) - JAPViewIconified.this.getLocation().y;
+
+						m_popup.show(a_event.getComponent(), x, y);
+					}
+				}
+				else
+				{
+					if (a_event.getClickCount() > 1)
+					{
+						switchBackToMainView();
+					}
 				}
 			}
 		});
 		setContentPane(p);
+
+		m_popup = new JPopupMenu();
+		m_menuItems = new Hashtable();
+		m_cascadeItemListener = new CascadeItemListener();
+
+
 		m_docker = new GUIUtils.WindowDocker(p);
 
 		pack();
@@ -544,5 +622,18 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		});
 		blinkThread.setDaemon(true);
 		blinkThread.start();
+	}
+
+	private class CascadeItemListener implements ActionListener
+	{
+		public void actionPerformed(ActionEvent a_event)
+		{
+			MixCascade cascade = (MixCascade)m_menuItems.get(a_event.getSource());
+			if (cascade != null)
+			{
+				JAPController.getInstance().setCurrentMixCascade(cascade);
+			}
+
+		}
 	}
 }

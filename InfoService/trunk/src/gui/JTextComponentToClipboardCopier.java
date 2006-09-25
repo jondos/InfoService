@@ -37,6 +37,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
 
 /**
@@ -68,8 +69,7 @@ public class JTextComponentToClipboardCopier
 		{
 			public void mouseClicked(MouseEvent a_event)
 			{
-				if (GUIUtils.isMouseButton(a_event, MouseEvent.BUTTON2_MASK) ||
-					GUIUtils.isMouseButton(a_event, MouseEvent.BUTTON3_MASK))
+				if (SwingUtilities.isRightMouseButton(a_event))
 				{
 					m_currentPopup = (JTextComponent) a_event.getComponent();
 					m_popup.show(a_event.getComponent(), a_event.getX(), a_event.getY());
