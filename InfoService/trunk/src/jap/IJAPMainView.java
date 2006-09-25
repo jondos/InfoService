@@ -34,6 +34,8 @@ public interface IJAPMainView extends JAPObserver, IStatusLine, AnonServiceEvent
 {
 	public void create(boolean bWithPay);
 
+	public void setVisible(boolean a_bVisible);
+
 	public void registerViewIconified(JAPViewIconified viewIconified);
 
 	public JAPViewIconified getViewIconified();

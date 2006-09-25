@@ -1,6 +1,5 @@
 package jap;
 
-import java.awt.Window;
 /*
  Copyright (c) 2006, The JAP-Team
  All rights reserved.
@@ -41,15 +40,7 @@ import anon.AnonServerDescription;
  */
 public class ConsoleJAPMainView implements IJAPMainView
 {
-	/**
-	 * addStatusMsg
-	 *
-	 * @param msg String
-	 * @param type int
-	 * @param bAutoRemove boolean
-	 * @return int
-	 * @todo Diese gui.IStatusLine-Methode implementieren
-	 */
+
 	public int addStatusMsg(String msg, int type, boolean bAutoRemove)
 	{
 		LogHolder.log(LogLevel.ALERT, LogType.MISC, msg);
@@ -65,11 +56,46 @@ public class ConsoleJAPMainView implements IJAPMainView
 	}
 
 	/**
-	 * channelsChanged
-	 *
-	 * @param channels int
-	 * @todo Diese anon.proxy.IProxyListener-Methode implementieren
+	 * Shows the console view.
 	 */
+	public void setVisible(boolean a_bVisible)
+	{
+		try
+		{
+			String entered = null;
+			while (true)
+			{
+				System.out.println("Type 'exit' to quit or 'save' to save the configuration.");
+				entered = new java.io.BufferedReader(new java.io.InputStreamReader(System.in)).readLine();
+				if (entered == null)
+				{
+					continue;
+				}
+				if (entered.equals("exit"))
+				{
+					break;
+				}
+				if (entered.equals("save"))
+				{
+					System.out.println("Saving configuration...");
+					if (!JAPController.getInstance().saveConfigFile())
+					{
+						System.out.println("Configuration saved!");
+					}
+					else
+					{
+						System.out.println("Error while saving configuration!");
+					}
+				}
+
+			}
+			JAPController.getInstance().goodBye(true);
+		}
+		catch (java.io.IOException a_e)
+		{
+		}
+	}
+
 	public void channelsChanged(int channels)
 	{
 	}
@@ -122,59 +148,23 @@ public class ConsoleJAPMainView implements IJAPMainView
 		}
 	}
 
-	/**
-	 * create
-	 *
-	 * @param bWithPay boolean
-	 * @todo Diese jap.IJAPMainView-Methode implementieren
-	 */
 	public void create(boolean bWithPay)
 	{
 	}
 
-	/**
-	 * disableSetAnonMode
-	 *
-	 * @todo Diese jap.IJAPMainView-Methode implementieren
-	 */
 	public void disableSetAnonMode()
 	{
 	}
 
-	/**
-	 * doSynchronizedUpdateValues
-	 *
-	 * @todo Diese jap.IJAPMainView-Methode implementieren
-	 */
 	public void onUpdateValues()
 	{
 	}
 
-	/**
-	 * getMainPanel
-	 *
-	 * @return JPanel
-	 * @todo Diese jap.IJAPMainView-Methode implementieren
-	 */
 	public JPanel getMainPanel()
 	{
 		return null;
 	}
 
-	/**
-	 * localeChanged
-	 *
-	 * @todo Diese jap.IJAPMainView-Methode implementieren
-	 */
-	public void localeChanged()
-	{
-	}
-
-	/**
-	 * registerViewIconified
-	 *
-	 * @param viewIconified Window
-	 */
 	public void registerViewIconified(JAPViewIconified viewIconified)
 	{
 	}
@@ -184,22 +174,10 @@ public class ConsoleJAPMainView implements IJAPMainView
 		return null;
 	}
 
-	/**
-	 * removeStatusMsg
-	 *
-	 * @param id int
-	 * @todo Diese gui.IStatusLine-Methode implementieren
-	 */
 	public void removeStatusMsg(int id)
 	{
 	}
 
-	/**
-	 * Called if some bytes are transferred.
-	 *
-	 * @param bytes either total amount or delta of transferred bytes
-	 * @param protocolType the protocol to which the bytes are belonging
-	 */
 	public void transferedBytes(long bytes, int protocolType)
 	{
 	}
