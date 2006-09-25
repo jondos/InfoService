@@ -149,6 +149,7 @@ public class ConfigAssistant extends JAPDialog
 	private ButtonGroup m_groupAnon;
 	JRadioButton m_radioSimpleView, m_radioAdvancedView;
 	private ButtonGroup m_groupView;
+	private boolean m_bFinished = false;
 
 	public ConfigAssistant(Component a_parentComponent)
 	{
@@ -239,7 +240,7 @@ public class ConfigAssistant extends JAPDialog
 		{
 			public void componentShown(ComponentEvent a_event)
 			{
-				// reset local now after the finish button has been updated
+				// reset locale now after the finish button has been updated
 				JAPMessages.init(JAPController.getLocale(), JAPConstants.MESSAGESFN);
 			}
 		});
@@ -669,6 +670,7 @@ public class ConfigAssistant extends JAPDialog
 				return super.checkUpdate();
 			}
 		};
+		paneFinish.getButtonCancel().setVisible(false);
 
 
 		// prevent premature closing of the wizard
@@ -685,7 +687,8 @@ public class ConfigAssistant extends JAPDialog
 				}
 				else
 				{
-					paneFinish.setButtonValue(DialogContentPane.DEFAULT_BUTTON_OK);
+					m_bFinished = true;
+					//paneFinish.setButtonValue(DialogContentPane.DEFAULT_BUTTON_OK); // does not work...
 				}
 				if (bClose)
 				{
@@ -702,7 +705,8 @@ public class ConfigAssistant extends JAPDialog
 				else
 				{
 					JAPController.getInstance().setConfigAssistantShown();
-					if (paneFinish.getButtonValue() == DialogContentPane.RETURN_VALUE_OK)
+					if (paneFinish.getButtonValue() == DialogContentPane.RETURN_VALUE_OK ||
+						m_bFinished)
 					{
 						if (m_radioSimpleView.isSelected() &&
 							JAPModel.getDefaultView() == JAPConstants.VIEW_NORMAL)
