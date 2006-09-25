@@ -2509,7 +2509,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 					if (getViewWindow() != null)
 					{
-						getViewWindow().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+						//getViewWindow().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 					}
 					msgIdConnect = getView().addStatusMsg(JAPMessages.getString("setAnonModeSplashConnect"),
 						JAPDialog.MESSAGE_TYPE_INFORMATION, false);
@@ -2793,7 +2793,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 					if (getViewWindow() != null)
 					{
-						getViewWindow().setCursor(Cursor.getDefaultCursor());
+						//getViewWindow().setCursor(Cursor.getDefaultCursor());
 					}
 					onTopAdapter = null;
 					notifyJAPObservers();
