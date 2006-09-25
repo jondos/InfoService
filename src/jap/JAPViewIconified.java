@@ -317,12 +317,6 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		m_mainView.toFront();
 	}
 
-	public JAPViewIconified getViewIconified()
-	{
-		// should be this...
-		return m_mainView.getViewIconified();
-	}
-
 	public void actionPerformed(ActionEvent event)
 	{
 		switchBackToMainView();
