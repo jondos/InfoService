@@ -1813,7 +1813,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 		synchronized (SYNC_ICONIFIED_VIEW)
 		{
-			if (m_miniMovedAdapter != null && m_miniMovedAdapter.hasMoved())
+			if (getViewIconified() != null && m_miniMovedAdapter != null && m_miniMovedAdapter.hasMoved())
 			{
 				JAPModel.getInstance().setIconifiedWindowLocation(getViewIconified().getLocation());
 			}

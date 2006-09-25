@@ -679,7 +679,7 @@ public final class GUIUtils
 		{
 			return false;
 		}
-		int distanceX, distanceY;
+
 		double bestArea = -1.0;
 		double bestDistance = Double.MAX_VALUE;
 		double currentDistanceVector;
@@ -692,7 +692,7 @@ public final class GUIUtils
 		int y = a_location.y;
 		int height = a_window.getSize().height;
 		boolean bLeftDown, bLeftUp, bRightDown, bRightUp;
-		int area, areaHeight, areaX1, areaX2, areaY1, areaY2;
+		int area, areaX1, areaX2, areaY1, areaY2;
 
 		if (screens.length == 0)
 		{
@@ -780,16 +780,16 @@ public final class GUIUtils
 			}
 		}
 
-		// if no screen with an overlapping area was found, take the one with the shortest distance
+		// if no screen with an overlapping area was found, take the one with the shortest distance to middle
 		if (currentScreen == null)
 		{
+			Point screenCenter;
 			for (int i = 0; i < screens.length; i++)
 			{
-				distanceX = Math.min(Math.abs(windowCenter.x - screens[i].getX()),
-									 Math.abs(windowCenter.x - screens[i].getX() - screens[i].getWidth()));
-				distanceY = Math.min(Math.abs(windowCenter.y - screens[i].getY()),
-									 Math.abs(windowCenter.y - screens[i].getY() - screens[i].getHeight()));
-				currentDistanceVector = Math.sqrt(Math.pow(distanceX, 2.0) + Math.pow(distanceY, 2.0));
+				screenCenter = new Point (screens[i].getX() + (screens[i].getWidth() / 2),
+										  screens[i].getY() + (screens[i].getHeight() / 2));
+				currentDistanceVector = Math.sqrt(Math.pow(windowCenter.x - screenCenter.x, 2.0) +
+												  Math.pow(windowCenter.y - screenCenter.y, 2.0));
 				LogHolder.log(LogLevel.INFO, LogType.GUI,
 						  "Calculated distance vector for restoring window location: " +
 						  currentDistanceVector);
