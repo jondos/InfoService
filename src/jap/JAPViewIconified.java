@@ -31,6 +31,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.text.NumberFormat;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Vector;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -277,6 +278,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 						JMenuItem menuItem;
 						MixCascade currentCascade = JAPController.getInstance().getCurrentMixCascade();
 						ImageIcon icon;
+						Vector userDefined = new Vector();
 
 						m_popup.removeAll();
 						m_menuItems.clear();
@@ -307,12 +309,21 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 							{
 								menuItem.setFont(new Font(menuItem.getFont().getName(), Font.PLAIN,
 									menuItem.getFont().getSize()));
-								m_popup.add(menuItem);
+								if (cascade.isUserDefined())
+								{
+									userDefined.addElement(menuItem);
+								}
+								else
+								{
+									m_popup.add(menuItem);
+								}
 							}
 							menuItem.addActionListener(m_cascadeItemListener);
 							m_menuItems.put(menuItem, cascade);
-
-
+						}
+						for (int i = 0; i < userDefined.size(); i++)
+						{
+							m_popup.add((JMenuItem)userDefined.elementAt(i));
 						}
 
 
