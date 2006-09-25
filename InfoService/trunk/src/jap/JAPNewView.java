@@ -1883,8 +1883,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				m_ViewIconified.updateValues(false);
 			}
 		}
+		transferedBytes(0, IProxyListener.PROTOCOL_WWW);
+
 		/*
-		 * Only thing that have really changed are updated!
+		 * Only things that have really changed are updated!
 		 */
 		Enumeration entries =
 			Database.getInstance(JAPVersionInfo.class).getEntrySnapshotAsEnumeration();
@@ -2133,8 +2135,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			public void runJob()
 			{
-				m_ViewIconified.transferedBytes(c, protocolType);
-
+				synchronized (SYNC_ICONIFIED_VIEW)
+				{
+					if (m_ViewIconified != null)
+					{
+						m_ViewIconified.transferedBytes(c, protocolType);
+					}
+				}
 				Runnable transferedBytesThread = new Runnable()
 				{
 					public void run()
@@ -2147,7 +2154,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						else if (protocolType == IProxyListener.PROTOCOL_OTHER)
 						{
 							m_lTrafficOther = c;
-
 						}
 
 						String unit = JAPUtil.formatBytesValueOnlyUnit(m_lTrafficWWW);
