@@ -304,7 +304,8 @@ public class InfoServiceConnection implements Runnable
 					{
 						LogHolder.log(LogLevel.ERR, LogType.NET,
 									  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-									  "): Error while sending the response to the client: " + e.toString());
+									  "): Error while sending the response to the client: " +
+									  m_socket.getInetAddress(), e);
 					}
 				}
 				try
