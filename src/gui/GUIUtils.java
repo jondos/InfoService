@@ -50,14 +50,21 @@ import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
+import java.awt.event.KeyEvent;
+import java.awt.event.ActionEvent;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.event.MouseListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
+import javax.swing.ToolTipManager;
+import javax.swing.Action;
 import javax.swing.Icon;
+import javax.swing.JComponent;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+import javax.swing.KeyStroke;
 import javax.swing.JOptionPane;
 import javax.swing.JTextPane;
 import javax.swing.LookAndFeel;
@@ -107,6 +114,7 @@ public final class GUIUtils
 			return 1.0;
 		}
 	};
+
 	private static IIconResizer ms_resizer = DEFAULT_RESIZER;
 
 	private static final NativeGUILibrary DUMMY_GUI_LIBRARY = new NativeGUILibrary()
@@ -827,6 +835,59 @@ public final class GUIUtils
 		return true;
 	}
 
+
+	public static MouseListener addTimedTooltipListener(JComponent c)
+	{
+		Object imap;
+		ToolTipMouseListener listener;
+		Class classInputMap;
+
+		try
+		{
+			//ensure InputMap and ActionMap are created
+			classInputMap = Class.forName("javax.swing.InputMap");
+			imap = JComponent.class.getMethod("getInputMap", new Class[0]).invoke(c, new Object[0]);
+			JComponent.class.getMethod("getActionMap", new Class[0]).invoke(c, new Object[0]);
+
+			//put dummy KeyStroke into InputMap if is empty:
+			boolean removeKeyStroke = false;
+			KeyStroke[] ks =
+				(KeyStroke[]) (classInputMap.getMethod("keys", new Class[0]).invoke(imap, new Object[0]));
+			//KeyStroke[] ks = imap.keys();
+			if (ks == null || ks.length == 0)
+			{
+				classInputMap.getMethod("put", new Class[]
+										{KeyStroke.class, Object.class}).invoke(imap, new Object[]
+					{KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SLASH, 0), "backSlash"});
+				//imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SLASH, 0), "backSlash");
+				removeKeyStroke = true;
+			}
+			//now we can register by ToolTipManager
+			ToolTipManager.sharedInstance().registerComponent(c);
+			//and remove dummy KeyStroke
+			if (removeKeyStroke)
+			{
+				classInputMap.getMethod("remove", new Class[]
+										{KeyStroke.class}).invoke(imap, new Object[]
+					{KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SLASH, 0)});
+				//imap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SLASH, 0));
+			}
+			//now last part - add appropriate MouseListener and
+			//hear to mouseEntered events
+			listener = new ToolTipMouseListener();
+			c.addMouseListener(listener);
+			return listener;
+		}
+		catch (Exception a_e)
+		{
+			// JDK is too old
+			LogHolder.log(LogLevel.NOTICE, LogType.GUI,
+						  "Could not register component for timed tooltip!", a_e);
+			return null;
+		}
+
+	}
+
 	public static class Screen
 	{
 		private Point m_location;
@@ -1334,6 +1395,41 @@ public final class GUIUtils
 			a_screen = new Screen(new Point(x, y), new Rectangle(width, height));
 		}
 		return a_screen;
+	}
+
+	private static class ToolTipMouseListener extends MouseAdapter
+	{
+		public void mouseEntered(MouseEvent e)
+		{
+			if (!(e.getComponent() instanceof JComponent))
+			{
+				return;
+			}
+
+			JComponent c = (JComponent) e.getComponent();
+			Action action = null;
+			try
+			{
+				Class classActionMap = Class.forName("javax.swing.ActionMap");
+				Object map =  JComponent.class.getMethod(
+								"getActionMap", new Class[0]).invoke(c, new Object[0]);
+				action = (Action)(classActionMap.getMethod("get", new Class[]{Object.class}).invoke(
+								map, new Object[]{"postTip"}));
+			}
+			catch (Exception a_e)
+			{
+				// Should not happen!
+				LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, a_e);
+			}
+
+			//it is also possible to use own Timer to display
+			//ToolTip with custom delay, but here we just
+			//display it immediately
+			if (action != null)
+			{
+				action.actionPerformed(new ActionEvent(c, ActionEvent.ACTION_PERFORMED, "postTip"));
+			}
+		}
 	}
 
 	private static String getTextFromClipboard(Component a_requestingComponent, boolean a_bUseTextArea)
