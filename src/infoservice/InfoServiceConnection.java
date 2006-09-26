@@ -148,7 +148,7 @@ public class InfoServiceConnection implements Runnable
 					String requestLine = readRequestLine(connectionReader);
 					LogHolder.log(LogLevel.DEBUG, LogType.NET,
 								  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-								  "): Request line: " + requestLine);
+								  "): Client: " + m_socket.getInetAddress() +  " Request line: " + requestLine);
 					StringTokenizer requestLineTokenizer = new StringTokenizer(requestLine, " ");
 					if (requestLineTokenizer.countTokens() != 3)
 					{
