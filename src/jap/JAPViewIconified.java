@@ -270,13 +270,19 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 			{
 				if (SwingUtilities.isRightMouseButton(a_event))
 				{
-					Enumeration cascades =
-						Database.getInstance(MixCascade.class).getEntrySnapshotAsEnumeration();
+					Hashtable hashCascades = Database.getInstance(MixCascade.class).getEntryHash();
+					MixCascade currentCascade = JAPController.getInstance().getCurrentMixCascade();
+					if (currentCascade != null)
+					{
+						hashCascades.put(currentCascade.getId(), currentCascade);
+					}
+					Enumeration cascades = hashCascades.elements();
+
 					if (cascades.hasMoreElements())
 					{
 						MixCascade cascade;
 						JMenuItem menuItem;
-						MixCascade currentCascade = JAPController.getInstance().getCurrentMixCascade();
+
 						ImageIcon icon;
 						Vector userDefined = new Vector();
 
