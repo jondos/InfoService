@@ -319,15 +319,16 @@ public class InfoServiceDistributor implements IDistributor {
     HTTPConnection connection = null;
     try {
       connection = HTTPConnectionFactory.getInstance().createHTTPConnection(a_listener);
+	  connection.setTimeout(30000);
       /* post the information */
       HTTPResponse response = connection.Post(a_information.getPostFile(), a_information.getPostData());
       /* wait for the response with the status code */
       int statusCode = response.getStatusCode();
-      LogHolder.log(LogLevel.DEBUG, LogType.NET, "InfoServiceDistributor: sendToInterface: Entry " + a_information.getId() + " sent to: " + a_listener.getHost() + ":" + Integer.toString(a_listener.getPort()) + a_information.getPostFile() + " Result: " + Integer.toString(statusCode));
+      LogHolder.log(LogLevel.DEBUG, LogType.NET, "Entry " + a_information.getId() + " sent to: " + a_listener.getHost() + ":" + Integer.toString(a_listener.getPort()) + a_information.getPostFile() + " Result: " + Integer.toString(statusCode));
     }
     catch (Exception e) {
       connected = false;
-      LogHolder.log(LogLevel.ERR, LogType.NET, "InfoServiceDistributor: sendToInterface: Error while sending " + a_information.getId() + " to: " + a_listener.getHost() + ":" + Integer.toString(a_listener.getPort()) + a_information.getPostFile(), e);
+      LogHolder.log(LogLevel.ERR, LogType.NET, "Error while sending " + a_information.getId() + " to: " + a_listener.getHost() + ":" + Integer.toString(a_listener.getPort()) + a_information.getPostFile(), e);
     }
     if (connection != null) {
       /* we have received a status code or an exception occured -> we can interrupt the connection
