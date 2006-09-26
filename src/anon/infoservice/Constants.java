@@ -76,7 +76,7 @@ final public class Constants
 	/**
 	 * This is the general timeout for the Infoservice socket communication (milli seconds).
 	 */
-	public static final int COMMUNICATION_TIMEOUT = 30000; //30 seconds
+	public static final int COMMUNICATION_TIMEOUT = 60000; //60 seconds
 
 	public static final long ANNOUNCE_PERIOD = 10 * 60 * (long) (1000); // 10 minutes
 
