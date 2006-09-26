@@ -327,7 +327,7 @@ public class InfoServiceDistributor implements IDistributor {
     }
     catch (Exception e) {
       connected = false;
-      LogHolder.log(LogLevel.ERR, LogType.NET, "InfoServiceDistributor: sendToInterface: Error while sending " + a_information.getId() + " to: " + a_listener.getHost() + ":" + Integer.toString(a_listener.getPort()) + a_information.getPostFile() + ": " + e.toString());
+      LogHolder.log(LogLevel.ERR, LogType.NET, "InfoServiceDistributor: sendToInterface: Error while sending " + a_information.getId() + " to: " + a_listener.getHost() + ":" + Integer.toString(a_listener.getPort()) + a_information.getPostFile(), e);
     }
     if (connection != null) {
       /* we have received a status code or an exception occured -> we can interrupt the connection
