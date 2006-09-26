@@ -359,6 +359,16 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		setContentPane(p);
 
 		m_popup = new JPopupMenu();
+		m_popup.addMouseListener(new MouseAdapter()
+		{
+			public void mouseClicked(MouseEvent a_event)
+			{
+				if (SwingUtilities.isRightMouseButton(a_event))
+				{
+					m_popup.setVisible(false);
+				}
+			}
+		});
 		m_menuItems = new Hashtable();
 		m_cascadeItemListener = new CascadeItemListener();
 
