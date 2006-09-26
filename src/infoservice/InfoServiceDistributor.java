@@ -319,7 +319,6 @@ public class InfoServiceDistributor implements IDistributor {
     HTTPConnection connection = null;
     try {
       connection = HTTPConnectionFactory.getInstance().createHTTPConnection(a_listener);
-	  connection.setTimeout(30000);
       /* post the information */
       HTTPResponse response = connection.Post(a_information.getPostFile(), a_information.getPostData());
       /* wait for the response with the status code */

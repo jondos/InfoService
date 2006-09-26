@@ -247,7 +247,7 @@ public class InfoServiceConnection implements Runnable
 				{
 					LogHolder.log(LogLevel.ERR, LogType.NET,
 								  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-								  "): Invalid request - not processed: " + e.toString());
+								  "): Invalid request - not processed", e);
 					response = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);
 				}
 
