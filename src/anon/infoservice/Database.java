@@ -281,7 +281,8 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 	 * @return if the database has been changed
 	 */
 	public boolean update(AbstractDatabaseEntry newEntry) throws IllegalArgumentException
-	{
+	{System.out.println("update");
+	LogHolder.log(LogLevel.EMERG, LogType.MISC, "Update");
 		if (newEntry == null)
 		{
 			return false;
