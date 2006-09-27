@@ -430,7 +430,7 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 		{new Exception().printStackTrace();
 			AbstractDatabaseEntry removedEntry;
 			synchronized (m_serviceDatabase)
-			{
+			{System.out.println("removed!!!!!!!");
 				/* we need exclusive access to the database */
 				removedEntry = (AbstractDatabaseEntry) m_serviceDatabase.remove(a_entryID);
 				if (removedEntry != null)
@@ -470,7 +470,8 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 	public void removeAll()
 	{
 		synchronized (m_serviceDatabase)
-		{
+		{new Exception().printStackTrace();
+		System.out.println("removed all !??????");
 			/* we need exclusive access to the database */
 			m_serviceDatabase.clear();
 			m_timeoutList.removeAllElements();
@@ -602,7 +603,7 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 	 * @return the number of DatabaseEntries in the Database
 	 */
 	public int getNumberofEntries()
-	{
+	{System.out.println("got entries");
 		return m_serviceDatabase.size();
 	}
 
