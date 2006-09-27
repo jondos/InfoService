@@ -210,11 +210,9 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 					if (System.currentTimeMillis() >= entry.getExpireTime())
 					{
 						/* we remove the old entry now, because it has reached the expire time */
-						LogHolder.log(LogLevel.EMERG, LogType.MISC,
+						LogHolder.log(LogLevel.INFO, LogType.MISC,
 									  "DatabaseEntry (" + entry.getClass().getName() + ")" +
 									  entry.getId() + " has reached the expire time and is removed.");
-						System.out.println("expired");
-						LogHolder.log(LogLevel.EMERG, LogType.MISC, "Expire time:" + entry.getExpireTime());
 						m_serviceDatabase.remove(entry.getId());
 						m_timeoutList.removeElementAt(0);
 						/* notify the observers about the removal */
@@ -281,8 +279,7 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 	 * @return if the database has been changed
 	 */
 	public boolean update(AbstractDatabaseEntry newEntry) throws IllegalArgumentException
-	{System.out.println("update");
-	LogHolder.log(LogLevel.EMERG, LogType.MISC, "Update");
+	{
 		if (newEntry == null)
 		{
 			return false;
@@ -309,7 +306,7 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 			{
 				// we know this service, and the entry is newer than the one we have stored
 				addEntry = true;
-				m_timeoutList.removeElement(oldEntry.getId());
+				//m_timeoutList.removeElement(oldEntry.getId());
 			}
 			if (addEntry)
 			{
@@ -318,7 +315,6 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 				{
 					LogHolder.log(LogLevel.INFO, LogType.NET, "Received an expired db entry: '" +
 								  newEntry.getId() + "'. It was dropped immediatly.");
-					System.out.println("received expired!!!");
 					AbstractDatabaseEntry removedEntry =
 						(AbstractDatabaseEntry)m_serviceDatabase.remove(newEntry.getId());
 					if (removedEntry != null)
@@ -333,10 +329,7 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 					return false;
 				}
 				// remove any old entry with the same from the timeout list
-				while (m_timeoutList.removeElement(newEntry.getId()))
-				{
-					System.out.println("timeout remove error!");
-				}
+				while (m_timeoutList.removeElement(newEntry.getId()));
 
 				// add the entry to the database
 				m_serviceDatabase.put(newEntry.getId(), newEntry);
@@ -428,10 +421,10 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 	public boolean remove(String a_entryID)
 	{
 		if (a_entryID != null)
-		{new Exception().printStackTrace();
+		{
 			AbstractDatabaseEntry removedEntry;
 			synchronized (m_serviceDatabase)
-			{System.out.println("removed!!!!!!!");
+			{
 				/* we need exclusive access to the database */
 				removedEntry = (AbstractDatabaseEntry) m_serviceDatabase.remove(a_entryID);
 				if (removedEntry != null)
@@ -471,8 +464,7 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 	public void removeAll()
 	{
 		synchronized (m_serviceDatabase)
-		{new Exception().printStackTrace();
-		System.out.println("removed all !??????");
+		{
 			/* we need exclusive access to the database */
 			m_serviceDatabase.clear();
 			m_timeoutList.removeAllElements();
@@ -604,7 +596,7 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 	 * @return the number of DatabaseEntries in the Database
 	 */
 	public int getNumberofEntries()
-	{System.out.println("got entries");
+	{
 		return m_serviceDatabase.size();
 	}
 
