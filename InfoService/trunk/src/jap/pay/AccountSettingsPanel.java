@@ -65,8 +65,7 @@ import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileFilter;
@@ -93,7 +92,6 @@ import anon.util.XMLUtil;
 import anon.util.captcha.ICaptchaSender;
 import anon.util.captcha.IImageEncodedCaptcha;
 import gui.GUIUtils;
-import gui.JAPHelp;
 import gui.JAPMessages;
 import gui.dialog.CaptchaContentPane;
 import gui.dialog.DialogContentPane;
@@ -114,7 +112,6 @@ import jap.pay.wizardnew.PaymentInfoPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import javax.swing.border.TitledBorder;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
