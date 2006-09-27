@@ -317,6 +317,7 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 				{
 					LogHolder.log(LogLevel.INFO, LogType.NET, "Received an expired db entry: '" +
 								  newEntry.getId() + "'. It was dropped immediatly.");
+					System.out.println("received expired!!!");
 					AbstractDatabaseEntry removedEntry =
 						(AbstractDatabaseEntry)m_serviceDatabase.remove(newEntry.getId());
 					if (removedEntry != null)
@@ -426,7 +427,7 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 	public boolean remove(String a_entryID)
 	{
 		if (a_entryID != null)
-		{
+		{new Exception().printStackTrace();
 			AbstractDatabaseEntry removedEntry;
 			synchronized (m_serviceDatabase)
 			{
