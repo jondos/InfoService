@@ -79,9 +79,9 @@ public final class JAPConstants
 	public static final String DEFAULT_INFOSERVICE_NAMES[] =
 		new String[]{"JAP-Team InfoService", "IS Uni Regensburg", "IS HostEurope"};
 	public static final String DEFAULT_INFOSERVICE_HOSTNAMES[] =
-		new String[]{"infoservice.inf.tu-dresden.de", "132.199.134.2", "80.237.206.62"};
+		new String[]{"infoservice.inf.tu-dresden.de", "132.199.134.2", "87.230.9.148"};
 	public static final int DEFAULT_INFOSERVICE_PORT_NUMBERS[][] =
-		{{80, 6543}, {6543}, {6543}};
+		{{80, 6543}, {6543}, {80}};
 
 	/**
 	 * This defines, whether automatic infoservice request are disabled as default.

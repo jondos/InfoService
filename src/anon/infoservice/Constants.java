@@ -76,7 +76,7 @@ final public class Constants
 	/**
 	 * This is the general timeout for the Infoservice socket communication (milli seconds).
 	 */
-	public static final int COMMUNICATION_TIMEOUT = 60000; //60 seconds
+	public static final int COMMUNICATION_TIMEOUT = 4000; //4 seconds
 
 	public static final long ANNOUNCE_PERIOD = 10 * 60 * (long) (1000); // 10 minutes
 
@@ -90,6 +90,6 @@ final public class Constants
 	/**
 	 * This is the version number of the infoservice software.
 	 */
-	public static final String INFOSERVICE_VERSION = "IS.07.024"; //never change the layout of this line!
+	public static final String INFOSERVICE_VERSION = "IS.07.025"; //never change the layout of this line!
 
 }

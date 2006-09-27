@@ -674,10 +674,12 @@ public class InfoServiceCommands implements JWSInternalCommands
 				"      </TR>\n";
 			/* get all status entrys from database */
 			Enumeration enumer = Database.getInstance(StatusInfo.class).getEntrySnapshotAsEnumeration();
+			StatusInfo info;
 			while (enumer.hasMoreElements())
 			{
+				info = (StatusInfo) (enumer.nextElement());
 				/* get the HTML table line */
-				htmlData = htmlData + "      " + ( (StatusInfo) (enumer.nextElement())).getHtmlTableLine() +
+				htmlData = htmlData + "      " + (info).getHtmlTableLine() +
 					"\n";
 			}
 			htmlData = htmlData + "    </TABLE><BR><BR><BR><BR>\n";
