@@ -210,9 +210,11 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 					if (System.currentTimeMillis() >= entry.getExpireTime())
 					{
 						/* we remove the old entry now, because it has reached the expire time */
-						LogHolder.log(LogLevel.INFO, LogType.MISC,
+						LogHolder.log(LogLevel.EMERG, LogType.MISC,
 									  "DatabaseEntry (" + entry.getClass().getName() + ")" +
 									  entry.getId() + " has reached the expire time and is removed.");
+						System.out.println("expired");
+						LogHolder.log(LogLevel.EMERG, LogType.MISC, "Expire time:" + entry.getExpireTime());
 						m_serviceDatabase.remove(entry.getId());
 						m_timeoutList.removeElementAt(0);
 						/* notify the observers about the removal */
@@ -328,6 +330,12 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 					}
 					return false;
 				}
+				// remove any old entry with the same from the timeout list
+				while (m_timeoutList.removeElement(newEntry.getId()))
+				{
+					System.out.println("timeout remove error!");
+				}
+
 				// add the entry to the database
 				m_serviceDatabase.put(newEntry.getId(), newEntry);
 
