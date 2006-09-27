@@ -86,6 +86,8 @@ public class PaymentMainPanel extends FlippingPanel
 		"_noActiveAccount";
 	private static final String MSG_ENABLE_AUTO_SWITCH = PaymentMainPanel.class.getName() +
 		"_enableAutoSwitch";
+	private static final String MSG_EXPERIMENTAL = PaymentMainPanel.class.getName() +
+		"_experimental";
 
 
 	private static final String[] MSG_PAYMENT_ERRORS = {"_xmlSuccess", "_xmlErrorInternal",
@@ -487,7 +489,8 @@ public class PaymentMainPanel extends FlippingPanel
 					JAPDialog.LinkedCheckBox checkBox = new JAPDialog.LinkedCheckBox(false);
 
 					int ret = JAPDialog.showConfirmDialog(JAPController.getInstance().getViewWindow(),
-						JAPMessages.getString("payUseAccountQuestion"),
+						JAPMessages.getString("payUseAccountQuestion") + "<br><br>" +
+						"<Font color=\"red\">" + JAPMessages.getString(MSG_EXPERIMENTAL) + "</Font>",
 						JAPDialog.OPTION_TYPE_OK_CANCEL, JAPDialog.MESSAGE_TYPE_INFORMATION,
 						checkBox);
 					JAPController.getInstance().setDontAskPayment(checkBox.getState());
