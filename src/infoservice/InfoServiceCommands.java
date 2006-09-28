@@ -30,38 +30,36 @@ package infoservice;
 import java.net.InetAddress;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.Vector;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import anon.crypto.SignatureVerifier;
 import anon.infoservice.Constants;
 import anon.infoservice.Database;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.JAPMinVersion;
 import anon.infoservice.JAPVersionInfo;
-import anon.infoservice.MixCascade;
 import anon.infoservice.JavaVersionDBEntry;
+import anon.infoservice.MixCascade;
 import anon.infoservice.MixInfo;
+import anon.infoservice.PaymentInstanceDBEntry;
 import anon.infoservice.StatusInfo;
 import anon.util.XMLUtil;
+import infoservice.dynamic.DynamicNetworkingHelper;
 import infoservice.japforwarding.JapForwardingTools;
+import infoservice.tor.MixminionDirectoryAgent;
 import infoservice.tor.TorDirectoryAgent;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.infoservice.PaymentInstanceDBEntry;
-import infoservice.tor.MixminionDirectoryAgent;
 
 /**
  * This is the implementation of all commands the InfoService supports.
  */
 public class InfoServiceCommands implements JWSInternalCommands
 {
-
+    private DynamicNetworkingHelper m_networkingHelper = new DynamicNetworkingHelper();
 	/**
 	 * This method is called, when we receive data directly from a infoservice or when we receive
 	 * data from a remote infoservice, which posts data about another infoservice.
@@ -1361,6 +1359,15 @@ public class InfoServiceCommands implements JWSInternalCommands
 			String piID = command.substring(17);
 			httpResponse = japFetchPaymentInstanceInfo(piID);
 		}
+        // LERNGRUPPE
+        else if (command.startsWith("/connectivity") && (method == Constants.REQUEST_METHOD_POST))
+        {
+                httpResponse = m_networkingHelper.mixPostConnectivityTest(a_sourceAddress, postData);
+        }
+        else if (command.startsWith("/dynacasade") && (method == Constants.REQUEST_METHOD_POST))
+        {
+                httpResponse = m_networkingHelper.lastMixPostDynaCascade(postData);
+        }
 
 		return httpResponse;
 	}

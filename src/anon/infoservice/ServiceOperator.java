@@ -36,7 +36,6 @@ import anon.crypto.X509SubjectAlternativeName;
 import anon.util.XMLUtil;
 import java.util.Vector;
 import anon.crypto.AbstractX509Extension;
-import anon.util.Util;
 import java.net.URL;
 
 /**
@@ -63,7 +62,7 @@ public class ServiceOperator
 	 *
 	 * @param operatorNode The Operator node from an XML document.
 	 */
-	public ServiceOperator(Element operatorNode, JAPCertificate operatorCertificate)
+	public ServiceOperator(Node operatorNode, JAPCertificate operatorCertificate)
 	{
 		Node node;
 		X509DistinguishedName subject;
