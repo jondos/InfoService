@@ -77,7 +77,7 @@ public class ServiceLocation
 	 *
 	 * @param locationNode The Location node from an XML document.
 	 */
-	public ServiceLocation(Element locationNode, JAPCertificate mixCertificate)
+	public ServiceLocation(Node locationNode, JAPCertificate mixCertificate)
 	{
 		Node node;
 		X509DistinguishedName subject;

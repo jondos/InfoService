@@ -31,6 +31,7 @@ import java.util.Enumeration;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import anon.crypto.CertPath;
 import anon.crypto.JAPCertificate;
@@ -51,6 +52,23 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 {
 	public static final String XML_ELEMENT_CONTAINER_NAME = "Mixes";
 	public static final String XML_ELEMENT_NAME = "Mix";
+
+    /* LERNGRUPPE: Mix types */
+    public static final int FIRST_MIX = 0;
+    public static final int MIDDLE_MIX = 1;
+    public static final int LAST_MIX = 2;
+
+    /**
+     * LERNGRUPPE
+     * This is the type of the mix
+     */
+    private int m_type;
+
+    /**
+     * LERNGRUPPE
+     * Indicates if this mix is available for dynamic cascades
+     */
+    private boolean m_dynamic = false;
 
   /**
    * This is the ID of the mix.
@@ -218,8 +236,8 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 		  }
 	  }
 
-	  Element operatorNode = null;
-	  Element locationNode = null;
+	  Node operatorNode = null;
+	  Node locationNode = null;
 	  if (!a_bFromCascade)
 	  {
 		  /* get the name */
@@ -234,20 +252,23 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 			  m_name = nameNode.getFirstChild().getNodeValue();
 		  }
 
+		  /* Parse the MixType */
+		  Node typeNode =  XMLUtil.getFirstChildByName(a_mixNode, "MixType");
+		  if (typeNode == null)
+		  {
+			  throw new XMLParseException("MixType");
+		  }
+		  m_type = parseMixType(typeNode.getFirstChild().getNodeValue());
+
+		  /* Parse dynamic property */
+		  Node tmp = XMLUtil.getFirstChildByName(a_mixNode, "Dynamic");
+		  m_dynamic = XMLUtil.parseValue(tmp, false);
+
 		  /* get the location */
-		  NodeList locationNodes = a_mixNode.getElementsByTagName("Location");
-		  if (locationNodes.getLength() == 0)
-		  {
-			  throw (new XMLParseException("Location", m_mixId));
-		  }
-		  locationNode = (Element) (locationNodes.item(0));
+		  locationNode = XMLUtil.getFirstChildByName(a_mixNode, "Location");
+
 		  /* get the operator */
-		  NodeList operatorNodes = a_mixNode.getElementsByTagName("Operator");
-		  if (operatorNodes.getLength() == 0)
-		  {
-			  throw (new XMLParseException("Operator", m_mixId));
-		  }
-		  operatorNode = (Element) (operatorNodes.item(0));
+		  operatorNode = XMLUtil.getFirstChildByName(a_mixNode, "Operator");
 
 		  /* get the software information */
 		  NodeList softwareNodes = a_mixNode.getElementsByTagName("Software");
@@ -293,6 +314,26 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 	   */
 	  m_freeMix = false;
 	  m_xmlStructure = a_mixNode;
+  }
+
+  /**
+   * LERNGRUPPE
+   * Parse the given textual MixType to our constants
+   * @param nodeValue The textual MixType (FirstMix, MiddleMix, LastMix)
+   * @return FIRST_MIX, MIDDLE_MIX or LAST_MIX
+   * @throws XMLParseException
+   */
+  private int parseMixType(String nodeValue) throws XMLParseException
+  {
+      if("FirstMix".equals(nodeValue))
+          return FIRST_MIX;
+
+      if("MiddleMix".equals(nodeValue))
+          return MIDDLE_MIX;
+
+      if("LastMix".equals(nodeValue))
+          return LAST_MIX;
+      throw new XMLParseException("MixType", "Unkonwn type: " + nodeValue);
   }
 
   /**
@@ -467,5 +508,26 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 	  }
 	  return importedXmlStructure;
 	}
+  /**
+   * LERNGRUPPE
+   * Returns the type of this mix
+   * @return The type
+   */
+  public int getType()
+  {
+      return m_type;
+  }
+
+  /**
+   * LERNGRUPPE
+   * Returns <code>true</code> if this mix is available for dynamic cascades,
+   * <code>false</code> otherwise.
+   * @return Returns <code>true</code> if this mix is available for dynamic cascades,
+   * <code>false</code> otherwise.
+   */
+  public boolean isDynamic()
+  {
+    return m_dynamic;
+  }
 
 }

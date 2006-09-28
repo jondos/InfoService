@@ -15,6 +15,7 @@
   <property category="debug.5" name="RemoteAttachTransport" value="dt_socket"/>
   <property category="debug.5" name="RemoteDebug" value="1"/>
   <property category="debug.5" name="RemoteDebugLaunch" value="0"/>
+  <property category="debug.5" name="RemoteHost" value="80.237.206.62"/>
   <property category="debug.5" name="RemoteLaunchTransport" value="dt_socket"/>
   <property category="debug.5" name="RemoteTransportAddress" value="4060"/>
   <property category="debug.6" name="SmartStepRedefineClasses" value="0"/>
@@ -28,6 +29,7 @@
   <property category="generalFormatting2" name="overrideBasicFormatting" value="1"/>
   <property category="generalFormatting2" name="tabSize" value="4"/>
   <property category="generalFormatting2" name="useTabChar" value="1"/>
+  <property category="java" name="compiler" value="projectjavac"/>
   <property category="javaFormatting" name="EventMatch" value="0"/>
   <property category="javaFormatting" name="alwaysClasses" value="1"/>
   <property category="javaFormatting" name="classBraceNextLine" value="1"/>
@@ -41,11 +43,11 @@
   <property category="optimize.0" name="OptimizableType" value="intuitive.ide.borland.jb10.ProfilerBootstrap"/>
   <property category="optimize.0" name="oipr.EnableUnitTest" value="0"/>
   <property category="optimize.0" name="oipr.FilterFile" value="G:\projects\Jap\InfoService.oif"/>
-  <property category="optimize.5" name="OptimizableType" value="intuitive.ide.borland.jb10.ThreadDBootstrap"/>
+  <property category="optimize.5" name="OptimizableType" value="com.borland.jbuilder.optimize.IntroOptimizeitThreadDebugger"/>
   <property category="optimize.5" name="oicc.FilterFile" value="G:\projects\Jap\InfoService.oif"/>
   <property category="optimize.5" name="oipr.AttachProcess" value="1"/>
   <property category="optimize.5" name="oipr.EnableUnitTest" value="0"/>
-  <property category="optimize.5" name="oipr.FilterFile" value="G:\projects\Jap\InfoService.oif"/>
+  <property category="optimize.5" name="oipr.FilterFile" value="E:\Eigene Dateien\rolf\Coding\Jap\InfoService.oif"/>
   <property category="optimize.5" name="oipr.HostAttach" value="infoservice.inf.tu-dresden.de"/>
   <property category="optimize.5" name="oipr.PortAttach" value="4060"/>
   <property category="optimize.5" name="oipr.UseServerFilter" value="0"/>
@@ -101,7 +103,6 @@
   <property category="runtime.5" name="application.class" value="infoservice.InfoService"/>
   <property category="runtime.5" name="custom.init_required" value="0"/>
   <property category="runtime.5" name="custom.jdk" value="java version 1.5.0_01-b08"/>
-  <property category="runtime.5" name="custom.override_jdk" value="1"/>
   <property category="runtime.5" name="custom.required.1" value="Log4j"/>
   <property category="runtime.5" name="custom.required.10" value="Log4j"/>
   <property category="runtime.5" name="custom.required.2" value="XML-1.1"/>
@@ -158,6 +159,7 @@
   <property category="team" name="ignorePath.1" value="classes"/>
   <property category="team" name="ignorePath.10" value="InfoService.log"/>
   <property category="team" name="ignorePath.11" value="InfoService_update.log"/>
+  <property category="team" name="ignorePath.12" value="JAP.refactor"/>
   <property category="team" name="ignorePath.2" value="htdoc"/>
   <property category="team" name="ignorePath.3" value="InfoService.jar"/>
   <property category="team" name="ignorePath.4" value="InfoService.jpx.bak"/>
@@ -186,7 +188,12 @@
     <property category="archiving" name="buildWithProject" value="0"/>
     <property category="archiving" name="contentRules.1" value="I:**/*.*"/>
     <property category="archiving" name="libraryStates.1" value="3:Log4j"/>
-    <property category="archiving" name="libraryStates.2" value="3:BouncyCastleLightForJAP"/>
+    <property category="archiving" name="libraryStates.2" value="1:XML-1.1"/>
+    <property category="archiving" name="libraryStates.3" value="3:BouncyCastleLightForJAP"/>
+    <property category="archiving" name="libraryStates.4" value="3:http"/>
+    <property category="archiving" name="libraryStates.5" value="1:JavaMail"/>
+    <property category="archiving" name="libraryStates.6" value="1:Jama"/>
+    <property category="archiving" name="libraryStates.7" value="1:ApacheBzip2"/>
     <property category="archiving" name="manifestMainClass" value="infoservice.InfoService"/>
     <property category="archiving" name="obfuscator" value="RetroGuard for J2ME"/>
     <property category="archiving" name="targetCompressed" value="1"/>
