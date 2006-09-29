@@ -185,7 +185,7 @@ public class FirstOnionRouterConnection implements Runnable
 			new FirstOnionRouterConnectionThread(m_description.getAddress(),
 												 m_description.getPort(),
 												 m_inittimeout,
-												 m_Tor.getProxy());
+												 m_Tor.getProxy().getProxyInterface(false).getProxyInterface());
 		m_tinyTLS = forct.getConnection();
 		m_tinyTLS.setRootKey(m_description.getSigningKey());
 

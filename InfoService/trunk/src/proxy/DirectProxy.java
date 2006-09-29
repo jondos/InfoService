@@ -61,6 +61,7 @@ import anon.tor.TorAnonServerDescription;
 import anon.AnonServiceFactory;
 import anon.infoservice.MixCascade;
 import anon.IServiceContainer;
+import anon.infoservice.IMutableProxyInterface;
 
 
 
@@ -149,7 +150,7 @@ final public class DirectProxy implements Runnable, AnonService
 	{
 	}
 
-	public int setProxy(ImmutableProxyInterface a_proxyInterface)
+	public int setProxy(IMutableProxyInterface a_proxyInterface)
 	{
 		return ErrorCodes.E_SUCCESS;
 	}

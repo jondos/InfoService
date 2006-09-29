@@ -56,6 +56,7 @@ import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.util.ZLibTools;
 
 
 /**
@@ -798,6 +799,7 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 
 				// use a Vector as storage for the the result of the communication
 				final Vector responseStorage = new Vector();
+				final Vector headerContentTypeStorage = new Vector();
 
 				// * we need the possibility to interrupt the infoservice communication,
 				// * but also we need to know whether the operation was interupted by an
@@ -847,6 +849,7 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 							}
 							if (response != null)
 							{
+								headerContentTypeStorage.addElement(response.getHeader("Content-type"));
 								InputStream responseStream = response.getInputStream();
 								ByteArrayOutputStream tempStream = new ByteArrayOutputStream();
 								byte[] tempBuffer = new byte[1000];
@@ -887,10 +890,23 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 					communicationThread.join();
 					try
 					{
-						Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
-							ByteArrayInputStream( (byte[]) (responseStorage.firstElement())));
-						// fetching the document was successful, leave this method //
-						return doc;
+						if (responseStorage.size() > 0)
+						{
+							byte[] response;
+							if (headerContentTypeStorage.size() > 0 &&
+								headerContentTypeStorage.firstElement().equals("application/x-compress"))
+							{
+								response = ZLibTools.decompress( (byte[]) (responseStorage.firstElement()));
+							}
+							else
+							{
+								response = (byte[]) (responseStorage.firstElement());
+							}
+							Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
+								ByteArrayInputStream(response));
+							// fetching the document was successful, leave this method //
+							return doc;
+						}
 					}
 					catch (NoSuchElementException e)
 					{
@@ -951,7 +967,8 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 	 */
 	public Hashtable getMixCascades() throws Exception
 	{
-		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/cascades"));
+		Document doc =
+			getXmlDocument(HttpRequestStructure.createGetRequest("/cascades.z"));
 		NodeList mixCascadesNodes = doc.getElementsByTagName(MixCascade.XML_ELEMENT_CONTAINER_NAME);
 		if (mixCascadesNodes.getLength() == 0)
 		{

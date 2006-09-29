@@ -87,7 +87,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	private ServerSocket m_socketListener;
 
-	private ImmutableProxyInterface m_proxyInterface;
+	private IMutableProxyInterface m_proxyInterface;
 
 	private IProxyListener m_ProxyListener;
 
@@ -143,7 +143,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	 *          connections to the anon servers (e.g. if you are behind some
 	 *          firewall etc.)
 	 */
-	public AnonProxy(ServerSocket listener, ImmutableProxyInterface a_proxyInterface,
+	public AnonProxy(ServerSocket listener, IMutableProxyInterface a_proxyInterface,
 					 IMutableProxyInterface a_paymentProxyInterface)
 	{
 		if (listener == null)

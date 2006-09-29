@@ -40,6 +40,7 @@ import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
 import anon.crypto.XMLSignature;
 import anon.util.XMLUtil;
+import anon.util.ZLibTools;
 import anon.util.XMLParseException;
 import anon.util.IXMLEncodable;
 import logging.LogHolder;
@@ -88,6 +89,8 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 
 	private String m_strMixIds;
 
+	private MixInfo[] m_mixInfos;
+
 	private Vector m_mixNodes;
 
 	/**
@@ -98,7 +101,8 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	/**
 	 * Stores the XML structure for this mixcascade.
 	 */
-	private Element m_xmlStructure;
+	//private Element m_xmlStructure;
+	private byte[] m_compressedXmlStructure;
 
 	private XMLSignature m_signature;
 
@@ -255,6 +259,19 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 			m_mixIds.addElement(mixNode.getAttribute("id"));
 			m_mixNodes.addElement(mixNode);
 		}
+		m_mixInfos = new MixInfo[mixNodes.getLength()];
+		for (int i = 0; i < mixNodes.getLength(); i++)
+		{
+			try
+			{
+				m_mixInfos[i] = new MixInfo(false, (Element) mixNodes.item(i), Long.MAX_VALUE, true);
+			}
+			catch (XMLParseException a_e)
+			{
+				m_mixInfos[i] = null;
+			}
+		}
+
 		if (m_mixCascadeId == null)
 		{
 			m_mixCascadeId = (String)m_mixIds.elementAt(0);
@@ -314,7 +331,8 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		m_userDefined = XMLUtil.parseAttribute(a_mixCascadeNode, XML_ATTR_USER_DEFINED, false);
 
 		/* store the xml structure */
-		m_xmlStructure = a_mixCascadeNode;
+		m_compressedXmlStructure = ZLibTools.compress(XMLUtil.toByteArray(a_mixCascadeNode));
+
 		createMixIDString();
 	}
 
@@ -405,7 +423,7 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		/* some more values */
 		m_userDefined = true;
 		m_mixCascadeCertificate = null;
-		m_xmlStructure = generateXmlRepresentation();
+		m_compressedXmlStructure = ZLibTools.compress(XMLUtil.toByteArray(generateXmlRepresentation()));
 		createMixIDString();
 	}
 
@@ -438,7 +456,7 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		Element importedXmlStructure = null;
 		try
 		{
-			importedXmlStructure = (Element) (XMLUtil.importNode(a_doc, m_xmlStructure, true));
+			importedXmlStructure = (Element) (XMLUtil.importNode(a_doc, getXmlStructure(), true));
 		}
 		catch (Exception e)
 		{
@@ -610,6 +628,59 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	}
 
 	/**
+	 * Returns the MixInfo object (if available) of the mix in the specified position in the cascade.
+	 * @param a_mixNumber a mix position from 0 to getNumberOfMixes() - 1
+	 * @return the MixInfo object for the specified mix or null if it was not found in this cascade
+	 */
+	public MixInfo getMixInfo(int a_mixNumber)
+	{
+		if (a_mixNumber < 0 || a_mixNumber >= getNumberOfMixes())
+		{
+			return null;
+		}
+		return m_mixInfos[a_mixNumber];
+	}
+
+	/**
+	 * Returns the MixInfo object (if available) of the mix with the specified id if this mix is part of
+	 * this cascade.
+	 * @param a_mixId a Mix id
+	 * @return the MixInfo object for the specified mix or null if it was not found
+	 */
+	public MixInfo getMixInfo(String a_mixId)
+	{
+		if (a_mixId == null)
+		{
+			return null;
+		}
+
+		for (int i = 0; i < m_mixIds.size(); i++)
+		{
+			if (m_mixIds.elementAt(i).equals(a_mixId))
+			{
+				return m_mixInfos[i];
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the Mix ID of the mix with the specified position in the cascade.
+	 * @param a_mixNumber  a mix position from 0 to getNumberOfMixes() - 1
+	 * @return the Mix ID of the mix with the specified position in the cascade or null if the specified
+	 * mix is not present in this cascade
+	 */
+	public String getMixId(int a_mixNumber)
+	{
+		if (a_mixNumber < 0 || a_mixNumber >= getNumberOfMixes())
+		{
+			return null;
+		}
+		return m_mixIds.elementAt(a_mixNumber).toString();
+	}
+
+	/**
 	 * Returns the IDs of all mixes in the cascade.
 	 *
 	 * @return A snapshot of the list with all mix IDs within the cascade.
@@ -646,7 +717,7 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 			m_lastUpdate = System.currentTimeMillis();
 		}
 
-		m_xmlStructure = generateXmlRepresentation();
+		m_compressedXmlStructure = ZLibTools.compress(XMLUtil.toByteArray(generateXmlRepresentation()));
 	}
 
 	/**
@@ -719,7 +790,12 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 */
 	public byte[] getPostData()
 	{
-		return XMLUtil.toString(m_xmlStructure).getBytes();
+		return ZLibTools.decompress(m_compressedXmlStructure);
+	}
+
+	public String getCompressedData()
+	{
+		return new String(m_compressedXmlStructure);
 	}
 
 	/**
@@ -727,9 +803,17 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 *
 	 * @return The XML node for this MixCascade (MixCascade node).
 	 */
-	public Element getXmlStructure()
+	private Element getXmlStructure()
 	{
-		return m_xmlStructure;
+		try
+		{
+			return XMLUtil.toXMLDocument(ZLibTools.decompress(m_compressedXmlStructure)).getDocumentElement();
+		}
+		catch (XMLParseException a_e)
+		{
+			// should not happen
+			return null;
+		}
 	}
 
 	/**

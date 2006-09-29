@@ -43,7 +43,6 @@ import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.crypto.X509SubjectKeyIdentifier;
 
 /**
  * Holds the information of one single mix.
@@ -231,7 +230,7 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 		  catch (Exception e)
 		  {
 			  LogHolder.log(LogLevel.ERR, LogType.MISC,
-							"Error while looking for appended certificates in the MixCascade structure: " +
+							"Error while looking for appended certificates in the MixInfo structure: " +
 							e.toString());
 		  }
 	  }

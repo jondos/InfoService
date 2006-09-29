@@ -230,48 +230,27 @@ public class KeyExchangeManager {
 			  throw (new UnknownProtocolVersionException(
 				  "Unknown channel protocol version used ('" + cascade.getMixProtocolVersion() + "')."));
 		  }
-		  /* get the information about the mixes in the cascade */
-		  NodeList mixesNodes = cascade.getXmlStructure().getElementsByTagName("Mixes");
 
-		  /* there should be only one mixes node */
-		  Element mixesNode = (Element) (mixesNodes.item(0));
-		  NodeList mixNodes = mixesNode.getElementsByTagName("Mix");
-		  if (mixNodes.getLength() == 0)
+		 m_mixParameters = new MixParameters[cascade.getNumberOfMixes()];
+		  for (int i = 0; i < cascade.getNumberOfMixes(); i++)
 		  {
-			  throw (new XMLParseException(
-				  "No information about mixes found in the received XML structure."));
-		  }
-
-		 m_mixParameters = new MixParameters[mixNodes.getLength()];
-		  for (int i = 0; i < mixNodes.getLength(); i++)
-		  {
-			  Element currentMixNode = (Element) (mixNodes.item(i));
-			  if (i > 0)
+			  if (i > 0 && !cascade.getMixInfo(i).getMixCertPath().verify())
 			  {
-				  /*
-				   * not the first mix --> we have to check the signature (first mix'
-				   * signature is checked with the MixCascade node)
-				   */
-				  if (!SignatureVerifier.getInstance().verifyXml(currentMixNode,
-					  SignatureVerifier.DOCUMENT_CLASS_MIX))
-				  {
-					  throw (new SignatureException(
-						  "Received XML structure has an invalid signature for Mix " + Integer.toString(i) +
-						  "."));
-				  }
+				  throw (new SignatureException(
+					  "Received XML structure has an invalid signature for Mix " +
+					  Integer.toString(i) + "."));
 			  }
 
-			  MixInfo mixinfo = new MixInfo(false, currentMixNode, Long.MAX_VALUE, true);
-			 MixInfo oldMixinfo = (MixInfo)Database.getInstance(MixInfo.class).getEntryById(mixinfo.getId());
-			 if (mixinfo.getMixCertificate() != null &&
-				 (oldMixinfo == null || !oldMixinfo.getMixCertificate().equals(mixinfo.getMixCertificate())))
-			 {
-				 // update the database so the the (new) certificate gets available
+			  MixInfo mixinfo = cascade.getMixInfo(i);
+			  MixInfo oldMixinfo = (MixInfo) Database.getInstance(MixInfo.class).getEntryById(mixinfo.getId());
+			  if (mixinfo.getMixCertificate() != null &&
+				  (oldMixinfo == null || !oldMixinfo.getMixCertificate().equals(mixinfo.getMixCertificate())))
+			  {
+				  // update the database so the the (new) certificate gets available
 
-				 Database.getInstance(MixInfo.class).update(mixinfo);
-			 }
-
-
+				  Database.getInstance(MixInfo.class).update(mixinfo);
+			  }
+			  Element currentMixNode = mixinfo.getXmlStructure();
 			  m_mixParameters[i] = new MixParameters(mixinfo.getId(), new ASymCipher());
 			  if (m_mixParameters[i].getMixCipher().setPublicKey(currentMixNode) != ErrorCodes.E_SUCCESS)
 			  {
@@ -279,7 +258,7 @@ public class KeyExchangeManager {
 					  "Received XML structure contains an invalid public key for Mix " + Integer.toString(i) +
 					  "."));
 			  }
-			  if (i == (mixNodes.getLength() - 1))
+			  if (i == (cascade.getNumberOfMixes() - 1))
 			  {
 				  /* get the chain protocol version from the last mix */
 				  NodeList chainMixProtocolVersionNodes = currentMixNode.getElementsByTagName(

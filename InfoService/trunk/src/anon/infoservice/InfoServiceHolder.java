@@ -365,6 +365,16 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 				currentInfoService = (InfoServiceDBEntry) (infoServiceList.elementAt(
 					Math.abs(random.nextInt()) % infoServiceList.size()));
 			}
+
+			if (currentInfoService.getCertPath() != null && !currentInfoService.getCertPath().verify())
+			{
+				LogHolder.log(LogLevel.NOTICE, LogType.NET,
+							  "Skipped non-verifyable InfoService: " + currentInfoService.getName(), true);
+				infoServiceList.removeElement(currentInfoService);
+				currentInfoService = null;
+				continue;
+			}
+
 			LogHolder.log(LogLevel.NOTICE, LogType.NET,
 							  "Trying InfoService: " + currentInfoService.getName(), true);
 			try

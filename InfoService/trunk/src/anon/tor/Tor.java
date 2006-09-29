@@ -56,6 +56,7 @@ import logging.LogLevel;
 import logging.LogType;
 import anon.infoservice.ListenerInterface;
 import anon.IServiceContainer;
+import anon.infoservice.IMutableProxyInterface;
 
 /**
  * @author stefan
@@ -125,7 +126,7 @@ public class Tor implements Runnable, AnonService
 	private Thread m_circuitCreator;
 	private volatile boolean m_bCloseCreator;
 
-	private ImmutableProxyInterface m_proxyInterface;
+	private IMutableProxyInterface m_proxyInterface;
 	/**
 	 * Constructor
 	 *
@@ -779,13 +780,13 @@ public class Tor implements Runnable, AnonService
 		return ErrorCodes.E_SUCCESS;
 	}
 
-	public int setProxy(ImmutableProxyInterface a_Proxy)
+	public int setProxy(IMutableProxyInterface a_Proxy)
 	{
 		m_proxyInterface = a_Proxy;
 		return ErrorCodes.E_SUCCESS;
 	}
 
-	public ImmutableProxyInterface getProxy()
+	public IMutableProxyInterface getProxy()
 	{
 		return m_proxyInterface;
 	}

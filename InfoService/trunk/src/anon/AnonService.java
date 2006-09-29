@@ -30,6 +30,7 @@ package anon;
 import java.net.ConnectException;
 
 import anon.infoservice.ImmutableProxyInterface;
+import anon.infoservice.IMutableProxyInterface;
 
 /** This class is used for accessing the AnonService. An instance is created
  *  via AnonServiceFactory.
@@ -57,7 +58,7 @@ public interface AnonService
 	 * @return E_SUCCESS, if ok
 	 * @return E_UNKNOWN, if an error occured
 	 */
-	int setProxy(ImmutableProxyInterface a_Proxy);
+	int setProxy(IMutableProxyInterface a_Proxy);
 
 	/** Disconnects form the server.*/
 	void shutdown();

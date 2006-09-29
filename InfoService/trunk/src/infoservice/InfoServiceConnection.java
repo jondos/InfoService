@@ -27,23 +27,19 @@
  */
 package infoservice;
 
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.Socket;
-import java.net.URL;
 import java.util.Enumeration;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
 import anon.infoservice.Constants;
-import anon.util.URLDecoder;
+import anon.util.TimedOutputStream;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.util.*;
 
 /**
  * This is a simple implementation of an HTTP server. This implementation doesn't support the most

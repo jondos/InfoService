@@ -401,7 +401,7 @@ public class FirstMMRConnection
 			new FirstMMRConnectionThread(m_description.getAddress(),
 										 m_description.getPort(),
 										 m_inittimeout,
-										 m_Mixminion.getProxy());
+										 m_Mixminion.getProxy().getProxyInterface(false).getProxyInterface());
 
 //		//test: Verbindung auf localhost
 //		FirstMMRConnectionThread forct =
