@@ -53,6 +53,7 @@ import infoservice.tor.TorDirectoryAgent;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.util.ZLibTools;
 
 /**
  * This is the implementation of all commands the InfoService supports.
@@ -289,10 +290,10 @@ public class InfoServiceCommands implements JWSInternalCommands
 
 	/**
 	 * Sends the complete list of all known mixcascades to the client.
-	 *
+	 * @param a_bCompressed if the data should be sent compressed
 	 * @return The HTTP response for the client.
 	 */
-	private HttpResponseStructure japFetchCascades()
+	private HttpResponseStructure japFetchCascades(boolean a_bCompressed)
 	{
 		/* this is only the default, if something is going wrong */
 		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
@@ -312,8 +313,18 @@ public class InfoServiceCommands implements JWSInternalCommands
 				mixCascadesNode.appendChild(mixCascadeNode);
 			}
 			doc.appendChild(mixCascadesNode);
+
 			/* send the XML document to the client */
-			httpResponse = new HttpResponseStructure(doc);
+			if (a_bCompressed)
+			{
+				httpResponse = new HttpResponseStructure(
+								HttpResponseStructure.HTTP_TYPE_APPLICATION_ZLIB,
+								ZLibTools.compress(XMLUtil.toByteArray(doc)));
+			}
+			else
+			{
+				httpResponse = new HttpResponseStructure(doc);
+			}
 		}
 		catch (Exception e)
 		{
@@ -775,14 +786,15 @@ public class InfoServiceCommands implements JWSInternalCommands
 		return httpResponse;
 	}
 
+
 	/**
 	 * Sends the XML encoded mixcascade entry the ID given by cascadeId to the client.
 	 *
 	 * @param a_cascadeId The ID of the requested mixcascade.
-	 *
+	 * @param a_bCompressed if the data should be sent compressed
 	 * @return The HTTP response for the client.
 	 */
-	private HttpResponseStructure getCascadeInfo(String a_cascadeId)
+	private HttpResponseStructure getCascadeInfo(String a_cascadeId, boolean a_bCompressed)
 	{
 		/* this is only the default, if something is going wrong */
 		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
@@ -799,8 +811,18 @@ public class InfoServiceCommands implements JWSInternalCommands
 			else
 			{
 				/* send XML-Document */
-				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,
-					XMLUtil.toString(mixCascadeEntry.getXmlStructure()));
+				if (a_bCompressed)
+				{
+					httpResponse = new HttpResponseStructure(
+						HttpResponseStructure.HTTP_TYPE_APPLICATION_ZLIB,
+						mixCascadeEntry.getCompressedData());
+				}
+				else
+				{
+					httpResponse = new HttpResponseStructure(
+						HttpResponseStructure.HTTP_TYPE_TEXT_XML,
+						XMLUtil.toString(mixCascadeEntry.getXmlStructure()));
+				}
 			}
 		}
 		catch (Exception e)
@@ -1202,7 +1224,12 @@ public class InfoServiceCommands implements JWSInternalCommands
 		else if ( (command.equals("/cascades")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			/* JAP or someone else wants to get information about all cascades we know */
-			httpResponse = japFetchCascades();
+			httpResponse = japFetchCascades(false);
+		}
+		else if ( (command.equals("/cascades.z")) && (method == Constants.REQUEST_METHOD_GET))
+		{
+			/* JAP  wants to get information about all cascades we know */
+			httpResponse = japFetchCascades(true);
 		}
 		else if ( (command.equals("/helo")) && (method == Constants.REQUEST_METHOD_POST))
 		{
@@ -1262,8 +1289,19 @@ public class InfoServiceCommands implements JWSInternalCommands
 			 * Full command: GET /cascadeinfo/cascadeid
 			 */
 			String cascadeId = command.substring(13);
-			httpResponse = getCascadeInfo(cascadeId);
+			httpResponse = getCascadeInfo(cascadeId, false);
 		}
+		else if ( (command.startsWith("/cascadeinfo.z/")) &&
+				  (method == Constants.REQUEST_METHOD_GET))
+		{
+			/* get information about the cascade with the given ID (it's the same information as
+			 * /cascades but there you get information about all known cascades)
+			 * Full command: GET /cascadeinfo.z/cascadeid
+			 */
+			String cascadeId = command.substring(15);
+			httpResponse = getCascadeInfo(cascadeId, true);
+		}
+
 		else if ( (command.equals("/tornodes")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			/* get the list with all known tor nodes in an XML structure */

@@ -40,6 +40,7 @@ import anon.AnonServiceEventListener;
 import anon.ErrorCodes;
 import anon.infoservice.ImmutableProxyInterface;
 import anon.IServiceContainer;
+import anon.infoservice.IMutableProxyInterface;
 public class AnonServiceImplProxy implements AnonService
 {
 	String m_RpcServerHost;
@@ -64,7 +65,7 @@ public class AnonServiceImplProxy implements AnonService
 		return true;
 	}
 
-	public int setProxy(ImmutableProxyInterface a_Proxy)
+	public int setProxy(IMutableProxyInterface a_Proxy)
 	{
 		return ErrorCodes.E_UNKNOWN;
 	}

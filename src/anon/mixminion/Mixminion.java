@@ -35,6 +35,7 @@ import anon.AnonService;
 import anon.AnonServiceEventListener;
 import anon.infoservice.ImmutableProxyInterface;
 import anon.IServiceContainer;
+import anon.infoservice.IMutableProxyInterface;
 
 /** This class implements the Mixminion anonymity service, which can be used to sent anonymous e-mail
  *
@@ -49,7 +50,7 @@ public class Mixminion implements AnonService
 	public final static int MIN_ROUTE_LEN = 2;
 
 	private static Mixminion ms_theMixminionInstance = null;
-	private ImmutableProxyInterface m_proxyInterface;
+	private IMutableProxyInterface m_proxyInterface;
 
 	private Mixminion()
 	{
@@ -85,13 +86,13 @@ public class Mixminion implements AnonService
 		return m_serviceDescription.getMyEmail();
 	}
 
-	public int setProxy(ImmutableProxyInterface a_Proxy)
+	public int setProxy(IMutableProxyInterface a_Proxy)
 	{
 		m_proxyInterface=a_Proxy;
 		return 0;
 	}
 
-	public ImmutableProxyInterface getProxy()
+	public IMutableProxyInterface getProxy()
 	{
 		return m_proxyInterface;
 	}

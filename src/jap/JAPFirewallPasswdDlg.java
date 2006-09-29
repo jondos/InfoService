@@ -39,31 +39,13 @@ import gui.dialog.PasswordContentPane;
  */
 final class JAPFirewallPasswdDlg implements IPasswordReader
 {
-	private static final long CANCEL_WAIT_TIME = 1000 * 10l; // 10 seconds
-
-	private volatile long m_lastCancelTime = 0;
-	private boolean m_bShown = false;
-
-
 	public String readPassword(ImmutableProxyInterface a_proxyInterface)
 	{
-		if (m_lastCancelTime >= System.currentTimeMillis())
-		{
-			return null;
-		}
-		synchronized (this)
-		{
-			if (m_bShown)
-			{
-				return null;
-			}
-			m_bShown = true;
-		}
 		JAPDialog dialog = new JAPDialog(JAPController.getInstance().getViewWindow(),
 										 JAPMessages.getString("passwdDlgTitle"), true);
 		PasswordContentPane panePasswd =
 			new PasswordContentPane(dialog, PasswordContentPane.PASSWORD_ENTER,
-									JAPMessages.getString("passwdDlgInput") + "<br>" +
+									JAPMessages.getString("passwdDlgInput") + "<br><br>" +
 									JAPMessages.getString("passwdDlgHost") + ": " +
 									a_proxyInterface.getHost() + "<br>" +
 									JAPMessages.getString("passwdDlgPort") + ": " +
@@ -73,7 +55,6 @@ final class JAPFirewallPasswdDlg implements IPasswordReader
 		{
 			public CheckError[] checkCancel()
 			{
-				m_lastCancelTime = System.currentTimeMillis() + CANCEL_WAIT_TIME;
 				return super.checkCancel();
 			}
 		};
@@ -82,7 +63,7 @@ final class JAPFirewallPasswdDlg implements IPasswordReader
 		dialog.pack();
 		dialog.setResizable(false);
 		dialog.setVisible(true);
-		m_bShown = false;
+
 		if (panePasswd.getButtonValue() != PasswordContentPane.RETURN_VALUE_OK ||
 			panePasswd.getPassword() == null)
 		{

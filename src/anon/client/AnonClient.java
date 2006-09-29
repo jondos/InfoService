@@ -78,7 +78,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 
 	private Multiplexer m_multiplexer;
 
-	private ImmutableProxyInterface m_proxyInterface;
+	private IMutableProxyInterface m_proxyInterface;
 
 	private Object m_internalSynchronization;
 
@@ -196,7 +196,8 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 					{
 						try
 						{
-							socketToMixCascade = connectMixCascade(mixCascade, m_proxyInterface);
+							socketToMixCascade = connectMixCascade(mixCascade,
+								m_proxyInterface.getProxyInterface(false).getProxyInterface());
 						}
 						catch (InterruptedIOException a_e)
 						{
@@ -262,7 +263,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		m_paymentProxyInterface = a_paymentProxyInterface;
 	}
 
-	public int setProxy(ImmutableProxyInterface a_proxyInterface)
+	public int setProxy(IMutableProxyInterface a_proxyInterface)
 	{
 		synchronized (m_internalSynchronization)
 		{

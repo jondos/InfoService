@@ -31,7 +31,6 @@ import java.util.Date;
 
 import org.w3c.dom.Document;
 
-import anon.infoservice.Constants;
 import anon.util.XMLUtil;
 
 /**
@@ -81,6 +80,8 @@ public final class HttpResponseStructure {
    */
   public static final int HTTP_TYPE_APPLICATION_JNLP = 10;
 
+  public static final int HTTP_TYPE_APPLICATION_ZLIB = 11;
+
 
   /**
    * This constant is used, when no content type shall be specified in the HTTP header.
@@ -104,9 +105,11 @@ public final class HttpResponseStructure {
   private static final String HTTP_HEADER_PRAGMA_STRING = "Pragma: ";
 
   private static final String HTTP_TYPE_APPLICATION_JNLP_STRING = "application/x-java-jnlp-file";
+  private static final String HTTP_TYPE_APPLICATION_ZLIB_STRING = "application/x-compress";
   private static final String HTTP_TYPE_TEXT_PLAIN_STRING = "text/plain";
   private static final String HTTP_TYPE_TEXT_HTML_STRING = "text/html";
   private static final String HTTP_TYPE_TEXT_XML_STRING = "text/xml";
+
 
   private static final String HTML_NOT_FOUND = "<HTML><TITLE>404 File Not Found</TITLE><H1>404 File Not Found</H1><P>File not found on this server.</P></HTML>";
   private static final String HTML_BAD_REQUEST = "<HTML><TITLE>400 Bad Request</TITLE><H1>400 Bad Request</H1><P>Your request has been rejected by the server.</P></HTML>";
@@ -166,6 +169,18 @@ public final class HttpResponseStructure {
    */
   public HttpResponseStructure(int a_httpDataType, String a_httpData) {
     m_httpReturnData = createHttpMessage(HTTP_RETURN_OK, a_httpDataType, a_httpData.getBytes(), false);
+  }
+
+  /**
+   * Creates a new HTTP response with HTTP return code OK (200) and the content type and content
+   * data specified.
+   *
+   * @param a_httpDataType The content type of the data, see the HTTP_TYPE constants in this
+   *                       class.
+   * @param a_httpData The content data for the HTTP response.
+   */
+  public HttpResponseStructure(int a_httpDataType, byte[] a_httpData) {
+	m_httpReturnData = createHttpMessage(HTTP_RETURN_OK, a_httpDataType, a_httpData, false);
   }
 
   /**
@@ -255,6 +270,10 @@ public final class HttpResponseStructure {
       if (a_httpDataType == HTTP_TYPE_APPLICATION_JNLP) {
         httpHeader = httpHeader + HTTP_TYPE_APPLICATION_JNLP_STRING;
       }
+	  if (a_httpDataType == HTTP_TYPE_APPLICATION_ZLIB)
+	  {
+		   httpHeader = httpHeader + HTTP_TYPE_APPLICATION_ZLIB_STRING;
+	  }
       httpHeader = httpHeader + HTTP_CRLF_STRING;
     }
     /* set some more header fields */

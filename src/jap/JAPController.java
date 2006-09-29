@@ -2515,10 +2515,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 						JAPDialog.MESSAGE_TYPE_INFORMATION, false);
 
 					// starting MUX --> Success ???
+					boolean bForwardedConnection = false;
 					if (JAPModel.getInstance().getRoutingSettings().getRoutingMode() ==
 						JAPRoutingSettings.ROUTING_MODE_CLIENT)
 					{
 						/* we use a forwarded connection */
+						bForwardedConnection = true;
 						m_proxyAnon = JAPModel.getInstance().getRoutingSettings().getAnonProxyInstance(
 							m_socketHTTPListener);
 					}
@@ -2527,18 +2529,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 						/* we use a direct connection */
 						if (!bSwitchCascade)
 						{
-							if (JAPModel.getInstance().getProxyInterface() != null &&
-								JAPModel.getInstance().getProxyInterface().isValid())
-							{
-								m_proxyAnon = new AnonProxy(
-									m_socketHTTPListener, JAPModel.getInstance().getProxyInterface(),
-									JAPModel.getInstance().getPaymentProxyInterface());
-							}
-							else
-							{
-								m_proxyAnon = new AnonProxy(m_socketHTTPListener, null,
-									JAPModel.getInstance().getPaymentProxyInterface());
-							}
+							m_proxyAnon = new AnonProxy(
+								m_socketHTTPListener, JAPModel.getInstance().getMutableProxyInterface(),
+								JAPModel.getInstance().getPaymentProxyInterface());
 						}
 					}
 					if (!JAPModel.isInfoServiceDisabled())
@@ -2553,7 +2546,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_proxyAnon.setMixCascade(cascadeContainer);
 					if (!bSwitchCascade)
 					{
-						if (JAPModel.getInstance().isTorActivated())
+						if (JAPModel.getInstance().isTorActivated() && !bForwardedConnection)
 						{
 							TorAnonServerDescription td = new TorAnonServerDescription(true,
 								JAPModel.isPreCreateAnonRoutesEnabled());
@@ -2566,7 +2559,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						{
 							m_proxyAnon.setTorParams(null);
 						}
-						if (JAPModel.getInstance().isMixMinionActivated())
+						if (JAPModel.getInstance().isMixMinionActivated() && !bForwardedConnection)
 						{
 							m_proxyAnon.setMixminionParams(new MixminionServiceDescription(JAPModel.
 								getMixminionRouteLen(), JAPModel.getMixminionMyEMail()));

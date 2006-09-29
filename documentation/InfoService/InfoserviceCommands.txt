@@ -20,6 +20,7 @@ Für Betrieb zwingend nötige Kommandos:
 
   /cascades: GET: XML-Struktur mit allen Kaskaden erhalten, welche der Infoservice kennt
                   (neues Format)
+  /cascades.z: GET:	 komprimiert als zlib stream
 
   /helo: POST: von einem Mix mit Informationen über ihn
   /mixinfo/mixid: GET: Informationen über den Mix mit der ID mixid erhalten
@@ -38,6 +39,7 @@ Zusatzkommandos (Komfortfunktionen):
   /cascadeinfo/cascadeid: GET: Informationen über die Kaskade mit der ID cascadeid (es
                                sind die gleichen Informationen wie bei /cascades nur für
                                eine einzelne Kaskade)
+  /cascadeinfo.z/cascadeid: GET: komprimiert als zlib stream
   /tornodes: GET: liefert Informationen über aktive TOR-Nodes (falls aktiviert)
   /compressedtornodes: GET: liefert Informationen über aktive TOR-Nodes (falls aktiviert)
                             in komprimierter Form (BZip2), dekomprimiert ergeben sich die

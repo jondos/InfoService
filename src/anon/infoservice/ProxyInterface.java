@@ -85,6 +85,15 @@ public final class ProxyInterface extends ListenerInterface
 	 */
 	private IPasswordReader m_passwordReader;
 
+
+	/**
+	 * Authentication stuff
+	 */
+	private static final long AUTH_PASS_CANCEL_WAIT_TIME = 1000 * 6l; // 6 seconds
+	private volatile long m_authPassLastCancelTime = 0;
+	private boolean m_bAuthPassDialogShown = false;
+
+
 	/**
 	 * Creates a new ProxyInterface from XML description (ProxyInterface node).
 	 * @param a_proxyInterfaceNode The ProxyInterface node from an XML document.
@@ -292,10 +301,29 @@ public final class ProxyInterface extends ListenerInterface
 			throw new IllegalStateException("No password reader!");
 		}
 
+		if (m_authPassLastCancelTime >= System.currentTimeMillis())
+		{
+			return m_authenticationPassword;
+		}
+		synchronized (this)
+		{
+			if (m_bAuthPassDialogShown)
+			{
+				return m_authenticationPassword;
+			}
+			m_bAuthPassDialogShown = true;
+		}
+
+
 		if (m_authenticationPassword == null || m_authenticationPassword.length() == 0)
 		{
 			m_authenticationPassword = m_passwordReader.readPassword(this);
 		}
+		if (m_authenticationPassword == null)
+		{
+			m_authPassLastCancelTime = System.currentTimeMillis() + AUTH_PASS_CANCEL_WAIT_TIME;
+		}
+		m_bAuthPassDialogShown = false;
 
 		return m_authenticationPassword;
 	}
