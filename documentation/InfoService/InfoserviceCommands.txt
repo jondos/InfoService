@@ -17,10 +17,14 @@ Für Betrieb zwingend nötige Kommandos:
 	 - oder vom letzten Mix einer Kaskade mit der Anforderung, eine neue Kaskade zu erstellen
 	 (XML-Format in beiden Fällen identisch; im 2. Fall hat das Wurzelelement das Attribut
 	 'create="true"')
+  /cascade.z: POST: komprimiert als zlib stream
 
   /cascades: GET: XML-Struktur mit allen Kaskaden erhalten, welche der Infoservice kennt
                   (neues Format)
   /cascades.z: GET:	 komprimiert als zlib stream
+
+  /cascadeserials: GET: XML structure with all cascade serials the IS knows
+  /cascadeserials.z: GET:	 compressed as zlib stream
 
   /helo: POST: von einem Mix mit Informationen über ihn
   /mixinfo/mixid: GET: Informationen über den Mix mit der ID mixid erhalten

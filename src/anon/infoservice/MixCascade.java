@@ -126,6 +126,8 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 
 	private boolean m_verifySignatureNode = false;
 
+	private String m_strSerial;
+
 	/**
 	 * Creates a new MixCascade from XML description (MixCascade node).
 	 *
@@ -193,6 +195,8 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		{
 			throw (new XMLParseException("Name"));
 		}
+
+		m_strSerial = XMLUtil.parseAttribute(a_mixCascadeNode, "serial", null);
 
 		m_mixProtocolVersion =
 			XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_mixCascadeNode, "MixProtocolVersion"), null);
@@ -519,6 +523,16 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	}
 
 	/**
+	 * If two entries have the same serial, they are assumed to be identical. This is good for performance
+	 * aspects, as JAP does not have to re-download identical entries.
+	 * @return the serial of this entry or null if this cascade does not support the serial feature
+	 */
+	public String getSerial()
+	{
+		return m_strSerial;
+	}
+
+	/**
 	 * Returns the name of the mixcascade.
 	 *
 	 * @return The name of this mixcascade.
@@ -793,9 +807,9 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 		return ZLibTools.decompress(m_compressedXmlStructure);
 	}
 
-	public String getCompressedData()
+	public byte[] getCompressedData()
 	{
-		return new String(m_compressedXmlStructure);
+		return m_compressedXmlStructure;
 	}
 
 	/**
@@ -803,7 +817,7 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 *
 	 * @return The XML node for this MixCascade (MixCascade node).
 	 */
-	private Element getXmlStructure()
+	public Element getXmlStructure()
 	{
 		try
 		{

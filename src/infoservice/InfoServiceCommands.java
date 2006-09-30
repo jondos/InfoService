@@ -253,14 +253,19 @@ public class InfoServiceCommands implements JWSInternalCommands
 	 * receive data from a remote infoservice, which posts data about a mixcascade.
 	 *
 	 * @param a_postData The data we have received.
+	 * @param a_bCompressed if the recevied data is compressed as zlib stream
 	 *
 	 * @return The HTTP response for the client.
 	 */
-	private HttpResponseStructure cascadePostHelo(byte[] a_postData)
+	private HttpResponseStructure cascadePostHelo(byte[] a_postData, boolean a_bCompressed)
 	{
 		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK);
 		try
 		{
+			if (a_bCompressed)
+			{
+				a_postData = ZLibTools.decompress(a_postData);
+			}
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
 						  "MixCascade HELO received: XML: " + (new String(a_postData)));
 			Element mixCascadeNode = (Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData),
@@ -288,12 +293,13 @@ public class InfoServiceCommands implements JWSInternalCommands
 		return httpResponse;
 	}
 
+
 	/**
 	 * Sends the complete list of all known mixcascades to the client.
 	 * @param a_bCompressed if the data should be sent compressed
 	 * @return The HTTP response for the client.
 	 */
-	private HttpResponseStructure japFetchCascades(boolean a_bCompressed)
+	private HttpResponseStructure japFetchCascades(boolean a_bCompressed, boolean a_bSerialsOnly)
 	{
 		/* this is only the default, if something is going wrong */
 		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
@@ -302,15 +308,41 @@ public class InfoServiceCommands implements JWSInternalCommands
 		{
 			Document doc = XMLUtil.createDocument();
 			/* create the MixCascades element */
-			Element mixCascadesNode = doc.createElement("MixCascades");
+			Element mixCascadesNode;
+			if (a_bSerialsOnly)
+			{
+				/** @todo put this in an extra structure */
+				mixCascadesNode = doc.createElement("MixCascadeSerials");
+			}
+			else
+			{
+				mixCascadesNode = doc.createElement("MixCascades");
+			}
 			/* append the nodes of all mixcascades we know */
 			Enumeration knownMixCascades = Database.getInstance(MixCascade.class).
 				getEntrySnapshotAsEnumeration();
+			MixCascade currentCascade;
+			Element mixCascadeNode;
 			while (knownMixCascades.hasMoreElements())
 			{
 				/* import the MixCascade XML structure in this document */
-				Element mixCascadeNode = ( (MixCascade) (knownMixCascades.nextElement())).toXmlElement(doc);
-				mixCascadesNode.appendChild(mixCascadeNode);
+				currentCascade = (MixCascade) (knownMixCascades.nextElement());
+				if (a_bSerialsOnly)
+				{
+					/** @todo put this in an extra structure */
+					mixCascadeNode = doc.createElement("MixCascade");
+					mixCascadesNode.appendChild(mixCascadeNode);
+					XMLUtil.setAttribute(mixCascadeNode, "id", currentCascade.getId());
+					if (currentCascade.getSerial() != null)
+					{
+						XMLUtil.setAttribute(mixCascadeNode, "serial", currentCascade.getSerial());
+					}
+				}
+				else
+				{
+					mixCascadeNode = currentCascade.toXmlElement(doc);
+					mixCascadesNode.appendChild(mixCascadeNode);
+				}
 			}
 			doc.appendChild(mixCascadesNode);
 
@@ -1217,19 +1249,36 @@ public class InfoServiceCommands implements JWSInternalCommands
 		else if ( (command.equals("/cascade")) && (method == Constants.REQUEST_METHOD_POST))
 		{
 			/* message from the first mix of a cascade (can be forwarded by an infoservice), which
-			 * includes information about the cascade
+			 * includes information about the cascade, or from other IS
 			 */
-			httpResponse = cascadePostHelo(postData);
+			httpResponse = cascadePostHelo(postData, false);
+		}
+		else if ( (command.equals("/cascade.z")) && (method == Constants.REQUEST_METHOD_POST))
+		{
+			/* message from the first mix of a cascade (can be forwarded by an infoservice), which
+			 * includes information about the cascade, or from other IS
+			 */
+			httpResponse = cascadePostHelo(postData, true);
+		}
+		else if ( (command.equals("/cascadeserials")) && (method == Constants.REQUEST_METHOD_GET))
+		{
+			/* JAP or someone else wants to get information about all cascade serial numbers we know */
+			httpResponse = japFetchCascades(false, true);
+		}
+		else if ( (command.equals("/cascadeserials.z")) && (method == Constants.REQUEST_METHOD_GET))
+		{
+			/* JAP or someone else wants to get information about all cascade serial numbers we know */
+			httpResponse = japFetchCascades(true, true);
 		}
 		else if ( (command.equals("/cascades")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			/* JAP or someone else wants to get information about all cascades we know */
-			httpResponse = japFetchCascades(false);
+			httpResponse = japFetchCascades(false, false);
 		}
 		else if ( (command.equals("/cascades.z")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			/* JAP  wants to get information about all cascades we know */
-			httpResponse = japFetchCascades(true);
+			httpResponse = japFetchCascades(true, false);
 		}
 		else if ( (command.equals("/helo")) && (method == Constants.REQUEST_METHOD_POST))
 		{
