@@ -30,6 +30,9 @@
  */
 package anon.infoservice;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 /**
  * This is a generic definition for a database entry. Every database entry must implement this
  * methods.
@@ -73,6 +76,16 @@ public abstract class AbstractDatabaseEntry
 	 * @return The ID of this database entry.
 	 */
 	public abstract String getId();
+
+	/**
+	 * If two entries have the same serial, they are assumed to be identical. This is good for performance
+	 * aspects, as JAP does not have to re-download identical entries.
+	 * @return the serial of this entry or null if this cascade does not support the serial feature
+	 */
+	public String getSerial()
+	{
+		return null;
+	}
 
 	/**
 	 * Returns the time (see System.currentTimeMillis()) when this DatabaseEntry will be removed
