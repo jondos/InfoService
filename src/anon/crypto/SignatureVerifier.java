@@ -276,6 +276,10 @@ public class SignatureVerifier implements IXMLEncodable
 				{
 					signature = XMLSignature.getVerified(a_rootNode, rootCertificates, additionalCertificates, false);
 					signature.getCertPath().setDocType(a_documentClass);
+					if (!isCheckSignatures())
+					{
+						signature.setVerified(true);
+					}
 				}
 				catch (Exception e)
 				{

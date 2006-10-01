@@ -40,6 +40,6 @@ public class AutoSwitchedMixCascade extends MixCascade
 
 	public AutoSwitchedMixCascade(Element a_mixCascadeNode, long a_expireTime) throws XMLParseException
 	{
-		super (a_mixCascadeNode, true, a_expireTime);
+		super (a_mixCascadeNode, a_expireTime);
 	}
 }

@@ -945,7 +945,7 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 	 */
 	public MixCascade getMixCascadeInfo(String a_cascadeID) throws Exception
 	{
-		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/cascadeinfo/" + a_cascadeID));
+		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/cascadeinfo.z/" + a_cascadeID));
 		Element mixNode = doc.getDocumentElement();
 
 		/* check the signature */
@@ -956,7 +956,7 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 				"Cannot verify the signature for MixCascade entry: " + XMLUtil.toString(mixNode)));
 		}
 		/* signature was valid */
-		return new MixCascade(mixNode, true, Long.MAX_VALUE);
+		return new MixCascade(mixNode, Long.MAX_VALUE);
 	}
 
 	/**
@@ -981,37 +981,23 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 		for (int i = 0; i < mixCascadeNodes.getLength(); i++)
 		{
 			Element mixCascadeNode = (Element) (mixCascadeNodes.item(i));
-			/* check the signature */
-			if (SignatureVerifier.getInstance().verifyXml(mixCascadeNode,
-				SignatureVerifier.DOCUMENT_CLASS_MIX))
+			/* signature is valid */
+			try
 			{
-				/* signature is valid */
-				try
+				currentCascade = new MixCascade(mixCascadeNode, Long.MAX_VALUE);
+				mixCascades.put(currentCascade.getId(), currentCascade);
+				if (currentCascade.getSignature() == null ||
+					!currentCascade.getSignature().isVerified())
 				{
-					currentCascade = new MixCascade(mixCascadeNode, true, Long.MAX_VALUE);
-					mixCascades.put(currentCascade.getId(), currentCascade);
-				}
-				catch (Exception e)
-				{
-					/* an error while parsing the node occured -> we don't use this mixcascade */
-					LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Error in MixCascade XML node.");
+					LogHolder.log(LogLevel.INFO, LogType.MISC,
+								  "Cannot verify the signature for MixCascade entry: " +
+								  XMLUtil.toString(mixCascadeNode));
 				}
 			}
-			else
+			catch (Exception e)
 			{
-				LogHolder.log(LogLevel.INFO, LogType.MISC,
-							  "Cannot verify the signature for MixCascade entry: " +
-							  XMLUtil.toString(mixCascadeNode));
-				try
-				{
-					currentCascade = new MixCascade(mixCascadeNode, false);
-					mixCascades.put(currentCascade.getId(), currentCascade);
-				}
-				catch (Exception e)
-				{
-					/* an error while parsing the node occured -> we don't use this mixcascade */
-					LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Error in MixCascade XML node.");
-				}
+				/* an error while parsing the node occured -> we don't use this mixcascade */
+				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Error in MixCascade XML node.");
 			}
 		}
 		return mixCascades;

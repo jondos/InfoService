@@ -993,12 +993,17 @@ public final class XMLSignature implements IXMLEncodable
 	}
 
 	/**
-	 * @return true if the verification of the Signature was successfull, false otherwise
-	 *         or if the was no verification yet
+	 * @return true if the verification of the Signature was successful, false otherwise
+	 *         or if no verification was done
 	 */
 	public boolean isVerified()
 	{
 		return m_verified;
+	}
+
+	public void setVerified(boolean a_bVerified)
+	{
+		m_verified = a_bVerified;
 	}
 
 	public CertPath getCertPath()

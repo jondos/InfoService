@@ -250,26 +250,30 @@ public class DefaultClientProtocolHandler
 			{
 				Element currentMixCascadeNode = (Element) (mixCascadeNodes.item(i));
 				/* check the signature of the mixcascade structures */
-				if (SignatureVerifier.getInstance().verifyXml(currentMixCascadeNode,
-					SignatureVerifier.DOCUMENT_CLASS_MIX) == true)
+				try
 				{
-					/* signature is valid, try to add that mixcascade to the descriptor mixcascade list */
-					try
+					MixCascade cascade = new MixCascade(currentMixCascadeNode, true);
+					if (cascade.getSignature() != null &&
+						cascade.getSignature().isVerified())
 					{
-						connectionDescriptor.addMixCascade(new MixCascade(currentMixCascadeNode, true));
+						/* signature is valid, try to add that mixcascade to the descriptor mixcascade list */
+
+						connectionDescriptor.addMixCascade(cascade);
+
 					}
-					catch (Exception e)
+					else
 					{
+						/* certificate check failed */
 						LogHolder.log(LogLevel.ERR, LogType.MISC,
-									  "Error while parsing MixCascade", e);
+									  "Signature check for a MixCascade failed.");
 					}
 				}
-				else
+				catch (XMLParseException e)
 				{
-					/* certificate check failed */
 					LogHolder.log(LogLevel.ERR, LogType.MISC,
-								  "Signature check for a MixCascade failed.");
+								  "Error while parsing MixCascade", e);
 				}
+
 			}
 			/* get the quality of service information */
 			NodeList qualityOfServiceNodes = requestNode.getElementsByTagName("QualityOfService");
