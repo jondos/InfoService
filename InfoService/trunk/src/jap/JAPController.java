@@ -975,7 +975,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						{
 							try
 							{
-								currentCascade = new MixCascade( (Element) nodeCascade, true, Long.MAX_VALUE);
+								currentCascade = new MixCascade( (Element) nodeCascade, Long.MAX_VALUE);
 								try
 								{
 
@@ -1575,7 +1575,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						MixCascade.XML_ELEMENT_NAME);
 					try
 					{
-						m_currentMixCascade = new MixCascade( (Element) mixCascadeNode, true, Long.MAX_VALUE);
+						m_currentMixCascade = new MixCascade( (Element) mixCascadeNode, Long.MAX_VALUE);
 					}
 					catch (Exception e)
 					{

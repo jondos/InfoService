@@ -262,27 +262,35 @@ public class InfoServiceCommands implements JWSInternalCommands
 		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK);
 		try
 		{
-			if (a_bCompressed)
-			{
-				a_postData = ZLibTools.decompress(a_postData);
-			}
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
 						  "MixCascade HELO received: XML: " + (new String(a_postData)));
-			Element mixCascadeNode = (Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData),
-				MixCascade.XML_ELEMENT_NAME));
+
 			/* verify the signature */
-			if (SignatureVerifier.getInstance().verifyXml(mixCascadeNode,
-				SignatureVerifier.DOCUMENT_CLASS_MIX) == true)
+			MixCascade mixCascadeEntry;
+			if (a_bCompressed)
 			{
-				MixCascade mixCascadeEntry = new MixCascade(mixCascadeNode, false);
-				Database.getInstance(MixCascade.class).update(mixCascadeEntry);
+				mixCascadeEntry = new MixCascade(a_postData, false);
 			}
 			else
+			{
+				Element mixCascadeNode =
+					(Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData),
+					MixCascade.XML_ELEMENT_NAME));
+				mixCascadeEntry = new MixCascade(mixCascadeNode, false);
+			}
+
+			/*
+			if (mixCascadeEntry.getMixCascadeSignature() == null ||
+				!mixCascadeEntry.getMixCascadeSignature().isVerified())
 			{
 				LogHolder.log(LogLevel.WARNING, LogType.NET,
 							  "Signature check failed for MixCascade entry! XML: " + (new String(a_postData)));
 				httpResponse = new HttpResponseStructure(HttpResponseStructure.
 					HTTP_RETURN_INTERNAL_SERVER_ERROR);
+			}
+			else*/
+			{
+				Database.getInstance(MixCascade.class).update(mixCascadeEntry);
 			}
 		}
 		catch (Exception e)

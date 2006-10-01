@@ -134,7 +134,7 @@ public class KeyExchangeManager {
 		  }
 
 		   /* process the received XML structure */
-		   MixCascade cascade = new MixCascade(XMLUtil.toXMLDocument(xmlData).getDocumentElement(), true,
+		   MixCascade cascade = new MixCascade(XMLUtil.toXMLDocument(xmlData).getDocumentElement(),
 											   Long.MAX_VALUE, a_cascade.getId());
 		  /* verify the signature */
 		  /*if (SignatureVerifier.getInstance().verifyXml(cascade.getXmlStructure(),
@@ -163,7 +163,7 @@ public class KeyExchangeManager {
 			  }
 		  }
 		  Database.getInstance(MixInfo.class).update(
-			  new MixInfo(cascade.getId(), cascade.getMixCascadeSignature().getCertPath()));
+			  new MixInfo(cascade.getId(), cascade.getSignature().getCertPath()));
 
 		  /*
 		   * get the appended certificate of the signature and store it in the
@@ -171,11 +171,11 @@ public class KeyExchangeManager {
 		   * messages)
 		   */
 		  if (cascade.getMixCascadeCertificate() != null &&
-		          cascade.getMixCascadeSignature() != null &&
-				      cascade.getMixCascadeSignature().getCertPath() != null)
+		          cascade.getSignature() != null &&
+				      cascade.getSignature().getCertPath() != null)
 		  {
 			  // add certificate only if the CertPath is valid
-			  if(cascade.getMixCascadeSignature().getCertPath().verify())
+			  if(cascade.getSignature().getCertPath().verify())
 		  {
 			  m_mixCascadeCertificateLock = SignatureVerifier.getInstance().
 					  getVerificationCertificateStore().addCertificateWithoutVerification(

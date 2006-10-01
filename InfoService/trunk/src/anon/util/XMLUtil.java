@@ -1131,6 +1131,10 @@ public class XMLUtil
 	 */
 	public static Document toXMLDocument(String a_xmlDocument) throws XMLParseException
 	{
+		if (a_xmlDocument == null)
+		{
+			return toXMLDocument((byte[])null);
+		}
 		return toXMLDocument(a_xmlDocument.getBytes());
 	}
 
@@ -1143,10 +1147,11 @@ public class XMLUtil
 	 */
 	public static Document toXMLDocument(byte[] a_xmlDocument) throws XMLParseException
 	{
-		ByteArrayInputStream in = new ByteArrayInputStream(a_xmlDocument);
+		ByteArrayInputStream in;
 		Document doc;
 		try
 		{
+			in = new ByteArrayInputStream(a_xmlDocument);
 			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
 		}
 		catch (Exception a_e)

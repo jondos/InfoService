@@ -2061,7 +2061,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				if (cascade != null)
 				{
 					// this is a first mix
-					XMLSignature signature = cascade.getMixCascadeSignature();
+					XMLSignature signature = cascade.getSignature();
 					if (signature != null && signature.getCertPath() != null)
 					{
 						mixCertificate = signature.getCertPath().getSecondCertificate();
@@ -2090,7 +2090,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				if (cascade != null)
 				{
 					// this is a first mix
-					XMLSignature signature = cascade.getMixCascadeSignature();
+					XMLSignature signature = cascade.getSignature();
 					if (signature != null && signature.getCertPath() != null)
 					{
 						mixCertificate = signature.getCertPath().getSecondCertificate();
@@ -2111,10 +2111,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			if (info == null)
 			{
 				MixCascade cascade = (MixCascade) Database.getInstance(MixCascade.class).getEntryById(a_mixId);
-				if (cascade != null && cascade.getMixCascadeSignature() != null)
+				if (cascade != null && cascade.getSignature() != null)
 				{
 					//System.out.println(cascade.getMixCascadeCertificate().getId());
-					info = new MixInfo(cascade.getId(), cascade.getMixCascadeSignature().getCertPath());
+					info = new MixInfo(cascade.getId(), cascade.getSignature().getCertPath());
 				}
 
 				//System.out.println(info + ":" + a_mixId);
