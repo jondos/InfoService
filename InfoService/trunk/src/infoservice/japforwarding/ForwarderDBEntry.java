@@ -190,6 +190,11 @@ public class ForwarderDBEntry extends AbstractDatabaseEntry
 		return m_id;
 	}
 
+	public long getLastUpdate()
+	{
+		return m_creationTimeStamp;
+	}
+
 	/**
 	 * Returns the time when this ForwarderDBEntry was created.
 	 *
