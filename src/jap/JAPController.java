@@ -3267,9 +3267,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 						LogHolder.log(LogLevel.NOTICE, LogType.THREAD, "Shutting down direct proxy...");
 						getInstance().m_finishSplash.setText(JAPMessages.getString(MSG_STOPPING_PROXY));
 						m_Controller.m_proxyDirect.shutdown();
+						LogHolder.log(LogLevel.NOTICE, LogType.THREAD, "Shutting down direct proxy - Done!");
 					}
-					catch (NullPointerException a_e)
+					catch (Exception a_e)
 					{
+						LogHolder.log(LogLevel.DEBUG, LogType.THREAD, "Shutting down direct proxy - exception",a_e);
 						// ignore
 					}
 					try
