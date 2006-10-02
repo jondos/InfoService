@@ -45,6 +45,11 @@ public interface IXMLEncodable
 	 */
 	public static final String XML_VERSION = "version";
 
+	/**
+	 * The id attribute used for a lot of tags.
+	 */
+	public static final String XML_ATTR_ID = "id";
+
 	public static final String FIELD_XML_ELEMENT_NAME = "XML_ELEMENT_NAME";
 	public static final String FIELD_XML_ELEMENT_CONTAINER_NAME = "XML_ELEMENT_CONTAINER_NAME";
 

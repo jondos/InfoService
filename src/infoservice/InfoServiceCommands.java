@@ -54,6 +54,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.util.ZLibTools;
+import anon.infoservice.AbstractDistributableDatabaseEntry;
 
 /**
  * This is the implementation of all commands the InfoService supports.
@@ -146,9 +147,12 @@ public class InfoServiceCommands implements JWSInternalCommands
 	/**
 	 * Sends the complete list of all known infoservices to the client.
 	 *
+	 * @param a_bCompressed if the recevied data is compressed as zlib stream
+	 * @param a_bSerialsOnly only return a list with IS serial numbers so that the caller may decide
+	 * which InfoServices have changed since the last request
 	 * @return The HTTP response for the client.
 	 */
-	private HttpResponseStructure japFetchInfoServers()
+	private HttpResponseStructure japFetchInfoServers(boolean a_bCompressed, boolean a_bSerialsOnly)
 	{
 		/* this is only the default, if something is going wrong */
 		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
@@ -157,20 +161,41 @@ public class InfoServiceCommands implements JWSInternalCommands
 		{
 			Document doc = XMLUtil.createDocument();
 			/* create the InfoServices element */
-			Element infoServicesNode = doc.createElement("InfoServices");
-			/* append the nodes of all infoservices we know */
-			Enumeration allInfoServices = Database.getInstance(InfoServiceDBEntry.class).
-				getEntrySnapshotAsEnumeration();
-			while (allInfoServices.hasMoreElements())
+			Element infoServicesNode;
+
+			if (a_bSerialsOnly)
 			{
-				/* import the infoservice node in this document */
-				Node infoServiceNode = ( (InfoServiceDBEntry) (allInfoServices.nextElement())).toXmlElement(
-					doc);
-				infoServicesNode.appendChild(infoServiceNode);
+				infoServicesNode =
+					new AbstractDistributableDatabaseEntry.Serials(
+									   InfoServiceDBEntry.class).toXmlElement(doc);
 			}
+			else
+			{
+				infoServicesNode = doc.createElement("InfoServices");
+				/* append the nodes of all infoservices we know */
+				Enumeration allInfoServices = Database.getInstance(InfoServiceDBEntry.class).
+					getEntrySnapshotAsEnumeration();
+				while (allInfoServices.hasMoreElements())
+				{
+					/* import the infoservice node in this document */
+					Node infoServiceNode =
+						( (InfoServiceDBEntry) (allInfoServices.nextElement())).toXmlElement(doc);
+					infoServicesNode.appendChild(infoServiceNode);
+				}
+			}
+
 			doc.appendChild(infoServicesNode);
 			/* send the XML document to the client */
-			httpResponse = new HttpResponseStructure(doc);
+			if (a_bCompressed)
+			{
+				httpResponse = new HttpResponseStructure(
+					HttpResponseStructure.HTTP_TYPE_APPLICATION_ZLIB,
+					ZLibTools.compress(XMLUtil.toByteArray(doc)));
+			}
+			else
+			{
+				httpResponse = new HttpResponseStructure(doc);
+			}
 		}
 		catch (Exception e)
 		{
@@ -201,7 +226,6 @@ public class InfoServiceCommands implements JWSInternalCommands
 					httpResponse = new HttpResponseStructure(doc);
 				}
 			}
-
 		}
 		catch (Exception e)
 		{
@@ -319,40 +343,28 @@ public class InfoServiceCommands implements JWSInternalCommands
 			Element mixCascadesNode;
 			if (a_bSerialsOnly)
 			{
-				/** @todo put this in an extra structure */
-				mixCascadesNode = doc.createElement("MixCascadeSerials");
+				mixCascadesNode =
+					new AbstractDistributableDatabaseEntry.Serials(MixCascade.class).toXmlElement(doc);
 			}
 			else
 			{
-				mixCascadesNode = doc.createElement("MixCascades");
-			}
-			/* append the nodes of all mixcascades we know */
-			Enumeration knownMixCascades = Database.getInstance(MixCascade.class).
-				getEntrySnapshotAsEnumeration();
-			MixCascade currentCascade;
-			Element mixCascadeNode;
-			while (knownMixCascades.hasMoreElements())
-			{
-				/* import the MixCascade XML structure in this document */
-				currentCascade = (MixCascade) (knownMixCascades.nextElement());
-				if (a_bSerialsOnly)
+				mixCascadesNode = doc.createElement(MixCascade.XML_ELEMENT_CONTAINER_NAME);
+
+				/* append the nodes of all mixcascades we know */
+				Enumeration knownMixCascades = Database.getInstance(MixCascade.class).
+					getEntrySnapshotAsEnumeration();
+				MixCascade currentCascade;
+				Element mixCascadeNode;
+				while (knownMixCascades.hasMoreElements())
 				{
-					/** @todo put this in an extra structure */
-					mixCascadeNode = doc.createElement("MixCascade");
-					mixCascadesNode.appendChild(mixCascadeNode);
-					XMLUtil.setAttribute(mixCascadeNode, "id", currentCascade.getId());
-					if (currentCascade.getSerial() != null)
-					{
-						XMLUtil.setAttribute(mixCascadeNode, "serial", currentCascade.getSerial());
-					}
-				}
-				else
-				{
+					/* import the MixCascade XML structure in this document */
+					currentCascade = (MixCascade) (knownMixCascades.nextElement());
 					mixCascadeNode = currentCascade.toXmlElement(doc);
 					mixCascadesNode.appendChild(mixCascadeNode);
 				}
 			}
 			doc.appendChild(mixCascadesNode);
+
 
 			/* send the XML document to the client */
 			if (a_bCompressed)
@@ -1242,17 +1254,34 @@ public class InfoServiceCommands implements JWSInternalCommands
 												InetAddress a_sourceAddress)
 	{
 		HttpResponseStructure httpResponse = null;
-		if ( (command.equals("/infoserver")) && (method == Constants.REQUEST_METHOD_POST))
+		if ((command.equals("/infoserver") || command.equals("/infoservice")) &&
+			 (method == Constants.REQUEST_METHOD_POST))
 		{
-			/* message from another infoservice (can be forwared by an infoservice), which includes
+			/** message from another infoservice (can be forwared by an infoservice), which includes
 			 * information about that infoservice
+			 * @todo remove old /infoserver string
 			 */
 			httpResponse = infoServerPostHelo(postData);
 		}
 		else if ( (command.equals("/infoservices")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			/* JAP or someone else wants to get information about all infoservices we know */
-			httpResponse = japFetchInfoServers();
+			httpResponse = japFetchInfoServers(false, false);
+		}
+		else if ( (command.equals("/infoservices.z")) && (method == Constants.REQUEST_METHOD_GET))
+		{
+			/* JAP or someone else wants to get information about all infoservices we know */
+			httpResponse = japFetchInfoServers(true, false);
+		}
+		else if ( (command.equals("/infoserviceserials")) && (method == Constants.REQUEST_METHOD_GET))
+		{
+					/* JAP or someone else wants to get information about all infoservices we know */
+					httpResponse = japFetchInfoServers(false, true);
+		}
+		else if ( (command.equals("/infoserviceserials.z")) && (method == Constants.REQUEST_METHOD_GET))
+		{
+			/* JAP or someone else wants to get information about all infoservices we know */
+			httpResponse = japFetchInfoServers(true, true);
 		}
 		else if ( (command.equals("/cascade")) && (method == Constants.REQUEST_METHOD_POST))
 		{
@@ -1364,7 +1393,7 @@ public class InfoServiceCommands implements JWSInternalCommands
 			/* get the list with all known tor nodes in an XML structure */
 			httpResponse = getTorNodesList(false);
 		}
-		else if ( (command.equals("/compressedtornodes")) && (method == Constants.REQUEST_METHOD_GET))
+		else if ((command.equals("/compressedtornodes")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			/* get the list with all known tor nodes in an XML structure */
 			httpResponse = getTorNodesList(true);
