@@ -68,6 +68,11 @@ public class TemporaryCascade extends AbstractDatabaseEntry {
 		return this.cascade.getId();
 	}
 
+	public long getLastUpdate()
+	{
+		return cascade.getLastUpdate();
+	}
+
 	/* (non-Javadoc)
 	 * @see anon.infoservice.AbstractDatabaseEntry#getVersionNumber()
 	 */
