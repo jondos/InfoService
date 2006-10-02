@@ -50,8 +50,8 @@ import logging.LogType;
 /**
  * Holds the information for a mixcascade.
  */
-public class MixCascade extends AbstractDatabaseEntry implements IDistributable, AnonServerDescription,
-		IXMLEncodable
+public class MixCascade extends AbstractDistributableDatabaseEntry implements AnonServerDescription
+
 {
 	public static final String XML_ELEMENT_NAME = "MixCascade";
 	public static final String XML_ELEMENT_CONTAINER_NAME = "MixCascades";
@@ -93,6 +93,8 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 
 	private Vector m_mixNodes;
 
+	private long m_serial;
+
 	/**
 	 * Stores the certificate for verifying the status messages of the mixcascade.
 	 */
@@ -124,8 +126,6 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 * If this MixCascade has been recevied directly from a cascade connection.
 	 */
 	private boolean m_bFromCascade;
-
-	private String m_strSerial;
 
 	/**
 	 * Creates a new MixCascade from XML description (MixCascade node).
@@ -223,8 +223,6 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 			throw (new XMLParseException("Name"));
 		}
 
-		m_strSerial = XMLUtil.parseAttribute(a_mixCascadeNode, "serial", null);
-
 		m_mixProtocolVersion =
 			XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_mixCascadeNode, "MixProtocolVersion"), null);
 		if (m_mixProtocolVersion != null)
@@ -317,10 +315,12 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 			}
 			Element lastUpdateNode = (Element) (lastUpdateNodes.item(0));
 			m_lastUpdate = Long.parseLong(lastUpdateNode.getFirstChild().getNodeValue());
+			m_serial = XMLUtil.parseAttribute(a_mixCascadeNode, XML_ATTR_SERIAL, m_lastUpdate);
 		}
 		else
 		{
 			m_lastUpdate = System.currentTimeMillis() - Constants.TIMEOUT_MIXCASCADE;
+			m_serial = XMLUtil.parseAttribute(a_mixCascadeNode, XML_ATTR_SERIAL, Long.MIN_VALUE);
 		}
 		if (a_bDoSignatureCheck)
 		{
@@ -482,28 +482,6 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	}
 
 	/**
-	 * Returns an XML node for this MixCascade. This structure includes a Signature node if the
-	 * MixCascade information was created by the corresponding mixcascade itself. If this is a
-	 * userdefined MixCascade, there is no Signature node included.
-	 *
-	 * @param a_doc The XML document, which is the environment for the created XML node.
-	 *
-	 * @return The MixCascade XML node.
-	 */
-	public Element toXmlElement(Document a_doc)
-	{
-		Element importedXmlStructure = null;
-		try
-		{
-			importedXmlStructure = (Element) (XMLUtil.importNode(a_doc, getXmlStructure(), true));
-		}
-		catch (Exception e)
-		{
-		}
-		return importedXmlStructure;
-	}
-
-	/**
 	 * Returns the ID of the mixcascade.
 	 *
 	 * @return The ID of this mixcascade.
@@ -533,19 +511,6 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	}
 
 	/**
-	 * Returns the time (see System.currentTimeMillis()), when the mixcascade (first mix) has sent
-	 * this MixCascade info to an InfoService. If this is a user-defined cascade, the creation time
-	 * of this MixCasdade entry is returned.
-	 *
-	 * @return The send time of this MixCascade info from the mixcascade.
-	 *
-	 */
-	public long getLastUpdate()
-	{
-		return m_lastUpdate;
-	}
-
-	/**
 	 * Returns the time when this MixCascade entry was created by the origin mixcascade (or by the
 	 * JAP client if it is a user-defined entry).
 	 *
@@ -554,17 +519,12 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 	 */
 	public long getVersionNumber()
 	{
-		return getLastUpdate();
+		return m_serial;
 	}
 
-	/**
-	 * If two entries have the same serial, they are assumed to be identical. This is good for performance
-	 * aspects, as JAP does not have to re-download identical entries.
-	 * @return the serial of this entry or null if this cascade does not support the serial feature
-	 */
-	public String getSerial()
+	public long getLastUpdate()
 	{
-		return m_strSerial;
+		return m_lastUpdate;
 	}
 
 	/**
@@ -947,8 +907,6 @@ public class MixCascade extends AbstractDatabaseEntry implements IDistributable,
 				mixCascadeNode.appendChild(m_signature.toXmlElement(doc));
 			}
 		}
-
-
 
 		return mixCascadeNode;
 	}

@@ -204,6 +204,11 @@ public class PaymentInstanceDBEntry extends AbstractDatabaseEntry implements IDi
 		return m_creationTimeStamp;
 	}
 
+	public long getLastUpdate()
+	{
+		return m_creationTimeStamp;
+	}
+
 	/**
 	 * This returns the filename (InfoService command), where this PaymentInstanceDBEntry is posted at
 	 * other InfoServices. It's always '/paymentinstance'.

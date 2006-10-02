@@ -117,6 +117,11 @@ public class JAPMinVersion extends AbstractDatabaseEntry implements IDistributab
     return DEFAULT_ID;
   }
 
+  public long getLastUpdate()
+  {
+	  return m_lastUpdate;
+  }
+
   /**
    * Returns the time when this mimimum version information was created by the
    * root-of-update-information infoservice. That infoservice will update and propagate the

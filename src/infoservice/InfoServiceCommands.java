@@ -55,6 +55,7 @@ import logging.LogLevel;
 import logging.LogType;
 import anon.util.ZLibTools;
 import anon.infoservice.AbstractDistributableDatabaseEntry;
+import anon.crypto.SignatureCreator;
 
 /**
  * This is the implementation of all commands the InfoService supports.
@@ -183,7 +184,8 @@ public class InfoServiceCommands implements JWSInternalCommands
 					infoServicesNode.appendChild(infoServiceNode);
 				}
 			}
-
+			SignatureCreator.getInstance().signXml(SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE,
+				infoServicesNode);
 			doc.appendChild(infoServicesNode);
 			/* send the XML document to the client */
 			if (a_bCompressed)
@@ -261,6 +263,8 @@ public class InfoServiceCommands implements JWSInternalCommands
 						doc);
 				paymentInstances.appendChild(paymentInstanceNode);
 			}
+			SignatureCreator.getInstance().signXml(SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE,
+				paymentInstances);
 			doc.appendChild(paymentInstances);
 			/* send the XML document to the client */
 			httpResponse = new HttpResponseStructure(doc);
@@ -363,6 +367,8 @@ public class InfoServiceCommands implements JWSInternalCommands
 					mixCascadesNode.appendChild(mixCascadeNode);
 				}
 			}
+			SignatureCreator.getInstance().signXml(SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE,
+				mixCascadesNode);
 			doc.appendChild(mixCascadesNode);
 
 
@@ -787,6 +793,7 @@ public class InfoServiceCommands implements JWSInternalCommands
 					( (MixInfo) (knownMixes.nextElement())).getXmlStructure(), true));
 				mixesNode.appendChild(mixNode);
 			}
+			SignatureCreator.getInstance().signXml(SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE, mixesNode);
 			doc.appendChild(mixesNode);
 			/* send the XML document to the client */
 			httpResponse = new HttpResponseStructure(doc);
@@ -893,6 +900,7 @@ public class InfoServiceCommands implements JWSInternalCommands
 
 		docEchoIP.appendChild(nodeEchoIP);
 		nodeEchoIP.appendChild(nodeIP);
+		SignatureCreator.getInstance().signXml(SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE, nodeEchoIP);
 		XMLUtil.setValue(nodeIP, a_sourceAddress.getHostAddress());
 		httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK,
 												 XMLUtil.toString(docEchoIP));

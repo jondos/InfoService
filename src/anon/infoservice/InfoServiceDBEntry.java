@@ -53,10 +53,10 @@ import anon.util.BZip2Tools;
 import anon.util.Base64;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
+import anon.util.ZLibTools;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.util.ZLibTools;
 
 
 /**
@@ -143,6 +143,8 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 	 */
 	private CertPath m_certPath;
 
+	private long m_serial;
+
 	/**
 	 * This is only for compatibility and will be rewritten next time.
 	 * @todo rewrite this
@@ -210,7 +212,8 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 		m_xmlDescription = a_infoServiceNode;
 
 		/* get the ID */
-		m_strInfoServiceId = a_infoServiceNode.getAttribute("id");
+		m_strInfoServiceId = a_infoServiceNode.getAttribute(XML_ATTR_ID);
+
 
 		/* get the name */
 		m_strName = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_infoServiceNode, "Name"), null);
@@ -258,6 +261,7 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 		{
 			throw new XMLParseException("LastUpdate");
 		}
+		m_serial = XMLUtil.parseAttribute(a_infoServiceNode, XML_ATTR_SERIAL, m_creationTimeStamp);
 
 		/* get the information, whether this infoservice keeps a list of JAP forwarders */
 		if (XMLUtil.getFirstChildByName(a_infoServiceNode, "ForwarderList") == null)
@@ -329,9 +333,36 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 	public InfoServiceDBEntry(String a_strName, Vector a_listeners, boolean a_primaryForwarderList,
 							  boolean a_japClientContext) throws IllegalArgumentException
 	{
+		this(a_strName, a_listeners, a_primaryForwarderList, a_japClientContext, 0);
+	}
+
+	/**
+	 * Creates a new InfoServiceDBEntry. The ID is set to a generic value derived from the host and
+	 * the port of the first listener interface. If you supply a name for the infoservice then it
+	 * will get that name, if you supply null, the name will be of the type "hostname:port". If the
+	 * new infoservice entry is created within the context of the JAP client, the software info is
+	 * set to a dummy value. If it is created within the context of the infoservice, the software
+	 * info is set to the current infoservice version (see Constants.INFOSERVICE_VERSION).
+	 *
+	 * @param a_strName The name of the infoservice or null, if a generic name shall be used.
+	 * @param a_listeners The listeners the infoservice is (virtually) listening on.
+	 * @param a_primaryForwarderList Whether the infoservice holds a primary forwarder list.
+	 * @param a_japClientContext Whether the new entry will be created within the context of the
+	 *                           JAP client (true) or the context of the InfoService (false). This
+	 *                           setting influences the timeout of the created entry within the
+	 *                           database of all infoservices.
+	 * @param a_serialNumber the serial number that indicates if the document has changed since the last
+	 * time it was updated
+	 *
+	 * @exception IllegalArgumentException if invalid listener interfaces are given
+	 */
+	public InfoServiceDBEntry(String a_strName, Vector a_listeners, boolean a_primaryForwarderList,
+							  boolean a_japClientContext, long a_serialNumber) throws IllegalArgumentException
+	{
 		this(a_strName, a_listeners, a_primaryForwarderList, a_japClientContext,
 			 (a_japClientContext ? (System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE_JAP) :
-			  (System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE)));
+			  (System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE)), System.currentTimeMillis(),
+			 a_serialNumber);
 	}
 
 	/**
@@ -356,33 +387,7 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 		throws IllegalArgumentException
 	{
 		this(a_strName, a_listeners, a_primaryForwarderList, false,
-			 System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE_JAP, 0);
-	}
-
-
-	/**
-	 * Creates a new InfoServiceDBEntry. The ID is set to a generic value derived from the host and
-	 * the port of the first listener interface. If you supply a name for the infoservice then it
-	 * will get that name, if you supply null, the name will be of the type "hostname:port". If the
-	 * new infoservice entry is created within the context of the JAP client, the software info is
-	 * set to a dummy value. If it is created within the context of the infoservice, the software
-	 * info is set to the current infoservice version (see Constants.INFOSERVICE_VERSION).
-	 *
-	 * @param a_strName The name of the infoservice or null, if a generic name shall be used.
-	 * @param a_listeners The listeners the infoservice is (virtually) listening on.
-	 * @param a_primaryForwarderList Whether the infoservice holds a primary forwarder list.
-	 * @param a_japClientContext Whether the new entry will be created within the context of the
-	 *                           JAP client (true) or the context of the InfoService (false).
-	 * @param a_expireTime The time when this InfoService will be removed from the database of all
-	 *                     InfoServices.
-	 *
-	 * @exception IllegalArgumentException if invalid listener interfaces are given
-	 */
-	public InfoServiceDBEntry(String a_strName, Vector a_listeners, boolean a_primaryForwarderList,
-							  boolean a_japClientContext, long a_expireTime) throws IllegalArgumentException
-	{
-		this (a_strName, a_listeners, a_primaryForwarderList, a_japClientContext,  a_expireTime,
-			  System.currentTimeMillis());
+			 System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE_JAP, 0, 0);
 	}
 
 	/**
@@ -403,8 +408,9 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 	 *
 	 * @exception IllegalArgumentException if invalid listener interfaces are given
 	 */
-	public InfoServiceDBEntry(String a_strName, Vector a_listeners, boolean a_primaryForwarderList,
-							  boolean a_japClientContext, long a_expireTime, long a_creationTime)
+	private InfoServiceDBEntry(String a_strName, Vector a_listeners, boolean a_primaryForwarderList,
+							  boolean a_japClientContext, long a_expireTime, long a_creationTime,
+							  long a_serialNumber)
 	throws IllegalArgumentException
 	{
 		super(a_expireTime);
@@ -458,6 +464,7 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 		m_preferedListenerInterface = 0;
 		m_userDefined = a_japClientContext;
 		m_creationTimeStamp = a_creationTime;
+		m_serial = a_serialNumber;
 
 		/* locally created infoservices are never neighbours of our infoservice */
 		m_neighbour = false;
@@ -498,11 +505,7 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 		networkNode.appendChild(listenerInterfacesNode);
 		Element lastUpdateNode = doc.createElement("LastUpdate");
 		XMLUtil.setValue(lastUpdateNode, m_creationTimeStamp);
-		/** create also an expire node for comptatibility with JAP/InfoService <= 00.03.043/IS.06.040
-		 *  @todo remove it
-		 */
-		Element expireNode = doc.createElement("Expire");
-		XMLUtil.setValue(expireNode, m_creationTimeStamp);
+
 		infoServiceNode.appendChild(nameNode);
 		infoServiceNode.appendChild(m_infoserviceSoftware.toXmlElement(doc));
 		infoServiceNode.appendChild(networkNode);
@@ -510,7 +513,6 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 		/** append also an expire node for comptatibility with JAP/InfoService <= 00.03.043/IS.06.040
 		 *  @todo remove it
 		 */
-		infoServiceNode.appendChild(expireNode);
 		if (m_bPrimaryForwarderList)
 		{
 			/* if we hold a forwarder list, also append an ForwarderList node, at the moment this
@@ -550,16 +552,6 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 		return m_strInfoServiceId;
 	}
 
-	/**
-	 * Sets the ID of the infoservice. Use with caution!
-	 *
-	 */
-	public void setId(String id)
-	{
-		m_strInfoServiceId = id;
-		m_xmlDescription = generateXmlRepresentation();
-	}
-
 	public Element getXmlStructure()
 	{
 		return m_xmlDescription;
@@ -585,6 +577,11 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 		return m_certPath;
 	}
 
+	public long getLastUpdate()
+	{
+		return m_creationTimeStamp;
+	}
+
 	/**
 	 * Returns the time when this infoservice entry was created by the origin infoservice or by the
 	 * JAP client (if it is a user-defined entry).
@@ -594,7 +591,7 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 	 */
 	public long getVersionNumber()
 	{
-		return m_creationTimeStamp;
+		return m_serial;
 	}
 
 	/**

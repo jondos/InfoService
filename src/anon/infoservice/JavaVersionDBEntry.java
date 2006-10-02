@@ -256,6 +256,11 @@ public class JavaVersionDBEntry  extends AbstractDistributableDatabaseEntry
 		return m_lastUpdate;
 	}
 
+	public long getLastUpdate()
+	{
+		return m_lastUpdate;
+	}
+
 	/**
 	 * Returns the vendor ID.
 	 * @return the vendor ID

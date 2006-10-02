@@ -200,6 +200,11 @@ public class JAPVersionInfo extends AbstractDistributableDatabaseEntry
     return m_lastUpdate;
   }
 
+  public long getLastUpdate()
+  {
+	  return m_lastUpdate;
+  }
+
   /**
    * Returns the JAP software version described by this version info structure.
    *
