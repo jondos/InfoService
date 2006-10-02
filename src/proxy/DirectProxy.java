@@ -337,7 +337,7 @@ final public class DirectProxy implements Runnable, AnonService
 				{
 					//LogHolder.log(LogLevel.ERR, LogType.NET, "Direct Proxy Server could not be stopped!!!");
 				}
-				if (i > 3)
+				if (i == 3)
 				{
 					try
 					{
