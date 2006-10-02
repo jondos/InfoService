@@ -63,8 +63,6 @@ import anon.infoservice.MixCascade;
 import anon.IServiceContainer;
 import anon.infoservice.IMutableProxyInterface;
 
-
-
 final public class DirectProxy implements Runnable, AnonService
 {
 	private static final int REMEMBER_NOTHING = 0;
@@ -101,10 +99,12 @@ final public class DirectProxy implements Runnable, AnonService
 				m_bAllow = a_bAllow;
 				m_bRemembered = a_bRemembered;
 			}
+
 			public boolean isRemembered()
 			{
 				return m_bRemembered;
 			}
+
 			public boolean isAllowed()
 			{
 				return m_bAllow;
@@ -112,7 +112,7 @@ final public class DirectProxy implements Runnable, AnonService
 		}
 
 		public abstract Answer callback();
-}
+	}
 
 	public AnonChannel createChannel(int a_type) throws ConnectException
 	{
@@ -122,14 +122,17 @@ final public class DirectProxy implements Runnable, AnonService
 			{
 
 			}
+
 			public OutputStream getOutputStream()
 			{
 				return null;
 			}
+
 			public InputStream getInputStream()
 			{
 				return null;
 			}
+
 			public int getOutputBlockSize()
 			{
 				return 1;
@@ -144,7 +147,6 @@ final public class DirectProxy implements Runnable, AnonService
 	public void removeEventListeners()
 	{
 	}
-
 
 	public void removeEventListener(AnonServiceEventListener l)
 	{
@@ -172,7 +174,7 @@ final public class DirectProxy implements Runnable, AnonService
 
 	public int initialize(AnonServerDescription a_mixCascade, IServiceContainer a_serviceContainer)
 	{
-		if (!(a_mixCascade instanceof MixCascade) || a_mixCascade == null)
+		if (! (a_mixCascade instanceof MixCascade) || a_mixCascade == null)
 		{
 			return ErrorCodes.E_INVALID_SERVICE;
 		}
@@ -211,7 +213,7 @@ final public class DirectProxy implements Runnable, AnonService
 		}
 		catch (Exception e1)
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Could not set accept time out!" , e1);
+			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Could not set accept time out!", e1);
 		}
 
 		while (!Thread.currentThread().isInterrupted())
@@ -260,7 +262,6 @@ final public class DirectProxy implements Runnable, AnonService
 
 			if (remember == REMEMBER_NOTHING && rememberTime < System.currentTimeMillis())
 			{
-
 
 				AllowUnprotectedConnectionCallback.Answer answer;
 				AllowUnprotectedConnectionCallback callback = ms_callback;
@@ -324,7 +325,7 @@ final public class DirectProxy implements Runnable, AnonService
 			{
 				return;
 			}
-
+			int i = 0;
 			while (threadRunLoop.isAlive())
 			{
 				threadRunLoop.interrupt();
@@ -336,6 +337,19 @@ final public class DirectProxy implements Runnable, AnonService
 				{
 					//LogHolder.log(LogLevel.ERR, LogType.NET, "Direct Proxy Server could not be stopped!!!");
 				}
+				if (i > 3)
+				{
+					try
+					{
+						threadRunLoop.stop();
+					}
+					catch (Exception e)
+					{
+					}
+				}
+				else if(i>6)
+					break;
+				i++;
 			}
 			threadRunLoop = null;
 		}
@@ -389,7 +403,6 @@ final public class DirectProxy implements Runnable, AnonService
 			{
 				// ignored
 			}
-
 
 			try
 			{
