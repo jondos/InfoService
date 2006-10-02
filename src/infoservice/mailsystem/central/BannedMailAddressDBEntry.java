@@ -64,6 +64,11 @@ public class BannedMailAddressDBEntry extends AbstractDatabaseEntry {
     return m_mailAddress.toString();
   }
 
+  public long getLastUpdate()
+  {
+	  return getVersionNumber();
+  }
+
  /**
    * Returns a version number which is used to determine the more recent entry, if two entries are
    * compared (higher version number -> more recent entry).
