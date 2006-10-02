@@ -33,6 +33,9 @@ package anon.infoservice;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import anon.util.IXMLEncodable;
+import anon.util.XMLUtil;
+
 /**
  * This is a generic definition for a database entry. Every database entry must implement this
  * methods.
@@ -78,16 +81,6 @@ public abstract class AbstractDatabaseEntry
 	public abstract String getId();
 
 	/**
-	 * If two entries have the same serial, they are assumed to be identical. This is good for performance
-	 * aspects, as JAP does not have to re-download identical entries.
-	 * @return the serial of this entry or null if this cascade does not support the serial feature
-	 */
-	public String getSerial()
-	{
-		return null;
-	}
-
-	/**
 	 * Returns the time (see System.currentTimeMillis()) when this DatabaseEntry will be removed
 	 * from the Database, if it is not updated meanwhile.
 	 *
@@ -99,7 +92,14 @@ public abstract class AbstractDatabaseEntry
 	}
 
 	/**
-	 * Returns the time in milliseconds when this db entry was created.
+	 * Returns the time in milliseconds when this db entry was created from the origin instance.
+	 * @return the time in milliseconds when this db entry was created from the origin instance
+	 */
+	public abstract long getLastUpdate();
+
+	/**
+	 * Returns the time in milliseconds when this db entry was create, that means read from the network or
+	 * created from internal values.
 	 * @return the time in milliseconds when this db entry was created
 	 */
 	public final long getCreationTime()

@@ -101,7 +101,7 @@ public class TorDirectoryServer extends AbstractDatabaseEntry
 	public String downloadTorNodesInformation()
 	{
 		LogHolder.log(LogLevel.INFO, LogType.NET,
-			"TorDirectoryServer: downloadTorNodesInformation: Try to get tor nodes list from http://" +
+			"Try to get tor nodes list from http://" +
 					  m_url.getHost() + ":" + Integer.toString(m_url.getPort()) + m_url.getFileName());
 		String torNodesList = null;
 		try
@@ -153,6 +153,11 @@ public class TorDirectoryServer extends AbstractDatabaseEntry
 	 *         compared (higher version number -> more recent entry).
 	 */
 	public long getVersionNumber()
+	{
+		return m_creationTimeStamp;
+	}
+
+	public long getLastUpdate()
 	{
 		return m_creationTimeStamp;
 	}

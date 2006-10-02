@@ -75,4 +75,9 @@ public class DNSCacheEntry extends AbstractDatabaseEntry {
 	  return getExpireTime();
 	}
 
+	public long getLastUpdate()
+	{
+		return m_lastUpdate;
+	}
+
 }

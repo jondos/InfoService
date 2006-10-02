@@ -42,6 +42,7 @@ import logging.LogType;
  */
 public class InfoServicePropagandist implements Runnable
 {
+	private static long ms_serialNumber;
 
   /**
    * Stores whether ther is already an instance of InfoServicePropagandist running or not.
@@ -56,6 +57,7 @@ public class InfoServicePropagandist implements Runnable
     if (alreadyRunning == false)
     {
       alreadyRunning = true;
+	  ms_serialNumber = System.currentTimeMillis();
       InfoServicePropagandist propaganda = new InfoServicePropagandist();
       Thread propagandist = new Thread(propaganda);
       propagandist.start();
@@ -74,7 +76,7 @@ public class InfoServicePropagandist implements Runnable
       if (virtualListeners.size() > 0)
       {
         InfoServiceDBEntry generatedOwnEntry = new InfoServiceDBEntry(Configuration.getInstance().getOwnName(),
-			virtualListeners, Configuration.getInstance().holdForwarderList(), false);
+			virtualListeners, Configuration.getInstance().holdForwarderList(), false, ms_serialNumber);
         /* put the own entry in the database -> it is forwarded automatically to all neighbour
          * infoservices, which are also in the database
          */

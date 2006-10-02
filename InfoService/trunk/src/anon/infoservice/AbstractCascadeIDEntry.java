@@ -130,6 +130,11 @@ public abstract class AbstractCascadeIDEntry extends AbstractDatabaseEntry imple
 		return m_ID;
 	}
 
+	public long getLastUpdate()
+	{
+		return m_version;
+	}
+
 	/**
 	 * Returns version number which is used to determine the more recent infoservice entry, if two entries
 	 * are compared (higher version number -> more recent entry).
