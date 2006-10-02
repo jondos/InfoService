@@ -182,7 +182,12 @@
   <node name="anon.util" type="Package"/>
   <node name="captcha" type="Package"/>
   <node name="infoservice" type="Package"/>
+  <node name="infoservice.dynamic" type="Package"/>
+  <node name="infoservice.japforwarding" type="Package"/>
+  <node name="infoservice.mailsystem" type="Package"/>
+  <node name="infoservice.mailsystem" type="Package"/>
   <node name="infoservice.tor" type="Package"/>
+  <node name="logging" type="Package"/>
   <node name="InfoService.jar" type="Archive">
     <property category="archiving" name="archiverClass" value="com.borland.jbuilder.wizard.archive.ApplicationArchiver"/>
     <property category="archiving" name="buildWithProject" value="0"/>
