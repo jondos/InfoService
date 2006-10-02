@@ -93,7 +93,6 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	private volatile int m_numChannels = 0;
 
-
 	private boolean m_bReconnecting = false;
 	private final Object THREAD_SYNC = new Object();
 	private final Object SHUTDOWN_SYNC = new Object();
@@ -156,7 +155,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		// HTTP
 		m_Anon = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_ANON);
 		m_Anon.setProxy(a_proxyInterface);
-		((AnonClient)m_Anon).setPaymentProxy(a_paymentProxyInterface);
+		( (AnonClient) m_Anon).setPaymentProxy(a_paymentProxyInterface);
 		setDummyTraffic( -1);
 		m_forwardedConnection = false;
 		m_anonServiceListener = new Vector();
@@ -344,13 +343,22 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				m_Mixminion.shutdown();
 			}
 
-
+			int i = 0;
 			while (threadRun.isAlive())
 			{
 				try
 				{
 					threadRun.interrupt();
 					threadRun.join(1000);
+					if (i == 3)
+					{
+						threadRun.stop();
+					}
+					else if (i > 6)
+					{
+						break;
+					}
+					i++;
 
 				}
 				catch (InterruptedException e)
@@ -364,10 +372,10 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			disconnected();
 		}
 		/*
-			synchronized (THREAD_SYNC)
-			{
-				THREAD_SYNC.notify();
-			}*/
+		 synchronized (THREAD_SYNC)
+		 {
+		  THREAD_SYNC.notify();
+		 }*/
 
 	}
 
@@ -389,7 +397,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		}
 		catch (Exception e1)
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Could not set accept time out!" , e1);
+			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Could not set accept time out!", e1);
 		}
 		try
 		{
@@ -464,7 +472,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	}
 
 	//synchronized
-		void reconnect()
+	void reconnect()
 	{
 		synchronized (THREAD_SYNC)
 		{
@@ -509,7 +517,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			}
 			m_bReconnecting = false;
 
-			if ((threadRun == null || !isConnected()) &&
+			if ( (threadRun == null || !isConnected()) &&
 				!m_currentMixCascade.isReconnectedAutomatically())
 			{
 				stop();
@@ -676,7 +684,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	private void fireDisconnected()
 	{
-		synchronized(m_anonServiceListener)
+		synchronized (m_anonServiceListener)
 		{
 			Enumeration e = m_anonServiceListener.elements();
 			while (e.hasMoreElements())
@@ -688,7 +696,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	private void fireConnecting(AnonServerDescription a_serverDescription)
 	{
-		synchronized(m_anonServiceListener)
+		synchronized (m_anonServiceListener)
 		{
 			Enumeration e = m_anonServiceListener.elements();
 			while (e.hasMoreElements())
@@ -701,7 +709,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	private void fireConnectionEstablished(AnonServerDescription a_serverDescription)
 	{
-		synchronized(m_anonServiceListener)
+		synchronized (m_anonServiceListener)
 		{
 			Enumeration e = m_anonServiceListener.elements();
 			while (e.hasMoreElements())
@@ -714,7 +722,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	private void fireConnectionError()
 	{
-		synchronized(m_anonServiceListener)
+		synchronized (m_anonServiceListener)
 		{
 			Enumeration e = m_anonServiceListener.elements();
 			while (e.hasMoreElements())
@@ -729,7 +737,6 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		LogHolder.log(LogLevel.INFO, LogType.NET, "AnonProxy received connecting.");
 		fireConnecting(a_serverDescription);
 	}
-
 
 	public void connectionEstablished(AnonServerDescription a_serverDescription)
 	{
@@ -759,7 +766,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	public synchronized void addEventListener(AnonServiceEventListener l)
 	{
-		synchronized(m_anonServiceListener)
+		synchronized (m_anonServiceListener)
 		{
 			Enumeration e = m_anonServiceListener.elements();
 			while (e.hasMoreElements())
@@ -795,7 +802,6 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		}
 	}
 
-
 	public void packetMixed(long a_totalBytes)
 	{
 		Enumeration e = m_anonServiceListener.elements();
@@ -827,19 +833,22 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		{
 			return null;
 		}
+
 		public MixCascade getCurrentMixCascade()
 		{
 			return null;
 		}
+
 		public void keepCurrentService(boolean a_bKeepCurrentCascade)
 		{
 		}
+
 		public boolean isServiceAutoSwitched()
 		{
 			return false;
 		}
 
-		public  boolean isReconnectedAutomatically()
+		public boolean isReconnectedAutomatically()
 		{
 			return false;
 		}
@@ -873,12 +882,11 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		{
 			return m_mixCascadeContainer.isServiceAutoSwitched();
 		}
+
 		public boolean isReconnectedAutomatically()
 		{
 			/** @todo reconnect is not yet supported with forwarded connections */
-			return !m_forwardedConnection && m_mixCascadeContainer.isReconnectedAutomatically();
+			return!m_forwardedConnection && m_mixCascadeContainer.isReconnectedAutomatically();
 		}
 	}
 }
-
-
