@@ -86,6 +86,11 @@ public class MailAddressDBEntry extends AbstractDatabaseEntry {
     return getExpireTime();
   }
 
+  public long getLastUpdate()
+  {
+	  return getVersionNumber();
+  }
+
   /**
    * Returns a list of timestamps (as Long objects storing the corresponding
    * System.currentTimeMillis() values) when we have sent a reply to this mailaddress. Only the
