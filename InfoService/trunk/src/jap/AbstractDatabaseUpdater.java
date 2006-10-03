@@ -60,6 +60,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	private boolean m_successfulUpdate = false;
 	private boolean m_bAutoUpdateChanged = false;
 	private boolean m_bInitialRun = true;
+	private boolean m_bFirstUpdateDone = false;
 	// patch for JDK 1.1.8 and JView
 	private boolean m_interrupted = false;
 	private boolean m_bUpdating = false;
@@ -329,7 +330,82 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	 */
 	protected void updateInternal()
 	{
-		Hashtable newEntries = getUpdatedEntries();
+		Hashtable serials = getEntrySerials();
+		Hashtable hashEntriesToUpdate;
+		Hashtable hashEntriesKept;
+		String key;
+		AbstractDatabaseEntry entry;
+		Enumeration enumSerials;
+
+		if (Thread.currentThread().isInterrupted())
+		{
+			// this thread is being stopped; ignore this error
+			m_successfulUpdate = true;
+			return;
+		}
+		else if (serials == null)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.THREAD, getUpdatedClassName() + "update failed!");
+			m_successfulUpdate = false;
+			return;
+		}
+
+		if (serials.size() > 0)
+		{
+			hashEntriesToUpdate = new Hashtable(serials.size());
+			hashEntriesKept = new Hashtable(serials.size());
+		}
+		else
+		{
+			hashEntriesToUpdate = new Hashtable();
+			hashEntriesKept = new Hashtable();
+		}
+
+		enumSerials = serials.keys();
+		while (enumSerials.hasMoreElements())
+		{
+			key = (String)enumSerials.nextElement();
+			entry = Database.getInstance(getUpdatedClass()).getEntryById(key);
+			if (entry != null &&
+				((AbstractDatabaseEntry)serials.get(key)).getVersionNumber() == entry.getVersionNumber())
+			{
+				// do not update this entry
+				entry.resetCreationTime();
+				hashEntriesKept.put(entry.getId(), entry);
+			}
+			else
+			{
+				// force update of this entry
+				hashEntriesToUpdate.put(key, serials.get(key));
+			}
+		}
+
+		if (Thread.currentThread().isInterrupted())
+		{
+			// this thread is being stopped; ignore this error
+			m_successfulUpdate = true;
+			return;
+		}
+
+		// get the entries
+		Hashtable newEntries;
+		if (hashEntriesKept.size() == 0)
+		{
+			newEntries = getUpdatedEntries(null);
+		}
+		else
+		{
+			newEntries = getUpdatedEntries(hashEntriesToUpdate);
+		}
+
+		// add the entries that have not changed
+		Enumeration enumEntriesKept = hashEntriesKept.keys();
+		while (enumEntriesKept.hasMoreElements())
+		{
+			key = (String)enumEntriesKept.nextElement();
+			newEntries.put(key, hashEntriesKept.get(key));
+		}
+
 		if (Thread.currentThread().isInterrupted())
 		{
 			// this thread is being stopped; ignore this error
@@ -337,8 +413,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 		}
 		else if (newEntries == null)
 		{
-			LogHolder.log(LogLevel.ERR, LogType.THREAD,
-						  getUpdatedClassName() + "update failed!");
+			LogHolder.log(LogLevel.ERR, LogType.THREAD, getUpdatedClassName() + "update failed!");
 			m_successfulUpdate = false;
 
 		}
@@ -347,9 +422,10 @@ public abstract class AbstractDatabaseUpdater implements Observer
 			LogHolder.log(LogLevel.DEBUG, LogType.THREAD,
 						  getUpdatedClassName() + "update was successful.");
 			boolean updated = false;
+			m_bFirstUpdateDone = true; // indicate that at least one update was successful
 			m_successfulUpdate = true;
-			/* we have successfully downloaded the list of running infoservices -> update the
-			 * internal database of known infoservices
+			/* we have successfully downloaded the requested database entries
+			 * -> update the internal database
 			 */
 			Enumeration entries = newEntries.elements();
 			while (entries.hasMoreElements())
@@ -373,9 +449,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 				}
 			}
 
-
 			updated = doCleanup(newEntries) || updated;
-
 
 			if ((getUpdatedClass() == MixCascade.class) && updated)
 			{
@@ -425,6 +499,15 @@ public abstract class AbstractDatabaseUpdater implements Observer
 		return bUpdated;
 	}
 
+	public boolean isFirstUpdateDone()
+	{
+		return m_bFirstUpdateDone;
+	}
+
+	/**
+	 * May be overwritten if an update is currently no wanted.
+	 * @return boolean
+	 */
 	protected boolean isUpdatePaused()
 	{
 		return false;
@@ -438,7 +521,9 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	{
 	}
 
-	protected abstract Hashtable getUpdatedEntries();
+	protected abstract Hashtable getEntrySerials();
+
+	protected abstract Hashtable getUpdatedEntries(Hashtable a_entriesToUpdate);
 
 	private String getUpdatedClassName()
 	{

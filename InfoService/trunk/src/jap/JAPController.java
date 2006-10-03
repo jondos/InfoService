@@ -429,10 +429,22 @@ public final class JAPController extends Observable implements IProxyListener, O
 				m_MixCascadeUpdater.start(false);
 				m_minVersionUpdater.start(false);
 				m_javaVersionUpdater.start(false);*/
-				m_minVersionUpdater.updateAsync();
-				m_javaVersionUpdater.updateAsync();
-				m_InfoServiceUpdater.updateAsync();
-				m_MixCascadeUpdater.updateAsync();
+				if (!m_InfoServiceUpdater.isFirstUpdateDone())
+				{
+					m_InfoServiceUpdater.update();
+				}
+				if (!m_MixCascadeUpdater.isFirstUpdateDone())
+				{
+					m_MixCascadeUpdater.update();
+				}
+				if (!m_minVersionUpdater.isFirstUpdateDone())
+				{
+					m_minVersionUpdater.update();
+				}
+				if (!m_javaVersionUpdater.isFirstUpdateDone())
+				{
+					m_javaVersionUpdater.update();
+				}
 			}
 		});
 		run.setDaemon(true);
@@ -3266,7 +3278,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						LogHolder.log(LogLevel.NOTICE, LogType.THREAD, "Shutting down direct proxy...");
 						getInstance().m_finishSplash.setText(JAPMessages.getString(MSG_STOPPING_PROXY));
-						m_Controller.m_proxyDirect.shutdown();
+						DirectProxy proxy = m_Controller.m_proxyDirect;
+						if (proxy != null)
+						{
+							proxy.shutdown();
+						}
 						LogHolder.log(LogLevel.NOTICE, LogType.THREAD, "Shutting down direct proxy - Done!");
 					}
 					catch (Exception a_e)
@@ -3334,26 +3350,38 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	/**
 	 * Updates the list of known InfoServices.
+	 * @param a_bDoOnlyIfNotYetUpdated only updates the infoservices if not at least one successful
+	 * update has been done yet
 	 * @return true if the update was successful; false otherwise
 	 */
-	public boolean updateInfoServices()
+	public boolean updateInfoServices(boolean a_bDoOnlyIfNotYetUpdated)
 	{
+		if (a_bDoOnlyIfNotYetUpdated && m_InfoServiceUpdater.isFirstUpdateDone())
+		{
+			return true;
+		}
 		return m_InfoServiceUpdater.update();
 	}
 
 	/**
 	 * Get all available mixcascades from the infoservice and store it in the database.
 	 * @param bShowError should an Error Message be displayed if something goes wrong ?
+	 * @param a_bDoOnlyIfNotYetUpdated only updates the cascades if not at least one successful update
+	 * has been done yet
 	 */
-	public void fetchMixCascades(boolean bShowError, Component a_view)
+	public void fetchMixCascades(boolean bShowError, Component a_view, boolean a_bDoOnlyIfNotYetUpdated)
 	{
-		LogHolder.log(LogLevel.INFO, LogType.MISC, "Trying to fetch mixcascades from infoservice.");
+		if (a_bDoOnlyIfNotYetUpdated && m_MixCascadeUpdater.isFirstUpdateDone())
+		{
+			return;
+		}
 
+		LogHolder.log(LogLevel.INFO, LogType.MISC, "Trying to fetch mixcascades from infoservice.");
 		while (!m_MixCascadeUpdater.update())
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET, "No connection to infoservices.");
 			if (!JAPModel.isSmallDisplay() &&
-				(bShowError || Database.getInstance(MixCascade.class).getNumberofEntries() == 0))
+				(bShowError || Database.getInstance(MixCascade.class).getNumberOfEntries() == 0))
 			{
 				if (!JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed() && !isAnonConnected())
 				{
@@ -3363,7 +3391,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					if (returnValue == JAPDialog.RETURN_VALUE_YES)
 					{
 						JAPModel.getInstance().allowInfoServiceViaDirectConnection(true);
-						updateInfoServices();
+						updateInfoServices(false);
 						continue;
 					}
 				}

@@ -53,18 +53,18 @@ final public class Constants
 	/**
 	 * The standard timeout for infoservice database entries in an infoservice.
 	 */
-	public static final long TIMEOUT_INFOSERVICE = 11 * 60 * 1000L; // 11 minutes
+	public static final long TIMEOUT_INFOSERVICE = 15 * 60 * 1000L; // 15 minutes
 	public static final long TIMEOUT_MIX = 15 * 60 * 1000L; // 15 minutes
 	public static final long TIMEOUT_MIXCASCADE = 15 * 60 * 1000L; // 15 minutes
 	public static final long TIMEOUT_STATUS = 240 * 1000L; // 240 seconds
-	public static final long TIMEOUT_PAYMENT_INSTANCE = 11 * 60 * 1000L; // 11 minutes
+	public static final long TIMEOUT_PAYMENT_INSTANCE = 15 * 60 * 1000L; // 15 minutes
 
 	/**
 	 * The timeout for all entries in the database of JAP forwarders. If we don't get a new  update
 	 * message from the forwarder within that time, it is removed from the database. The default is
-	 * 11 minutes, so there is no problem, if the forwarder updates the entry every 10 minutes.
+	 * 15 minutes, so there is no problem, if the forwarder updates the entry every 10 minutes.
 	 */
-	public static final long TIMEOUT_JAP_FORWARDERS = 11 * 60 * (long) 1000;
+	public static final long TIMEOUT_JAP_FORWARDERS = 15 * 60 * (long) 1000;
 
 	/**
 	 * This is the timeout in seconds for verifying a JAP forwarding server (contacting the server
@@ -91,6 +91,6 @@ final public class Constants
 	/**
 	 * This is the version number of the infoservice software.
 	 */
-	public static final String INFOSERVICE_VERSION = "IS.07.030"; //never change the layout of this line!
+	public static final String INFOSERVICE_VERSION = "IS.07.031"; //never change the layout of this line!
 
 }

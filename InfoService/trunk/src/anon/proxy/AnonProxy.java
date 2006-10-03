@@ -359,7 +359,6 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 						break;
 					}
 					i++;
-
 				}
 				catch (InterruptedException e)
 				{

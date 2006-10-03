@@ -2232,9 +2232,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			public void run()
 			{
 				//setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-
-				m_Controller.updateInfoServices();
-				m_Controller.fetchMixCascades(bShowError, JAPController.getInstance().getViewWindow());
+				m_Controller.updateInfoServices(!bShowError);
+				m_Controller.fetchMixCascades(bShowError, JAPController.getInstance().getViewWindow(),
+											  !bShowError);
 				//setCursor(Cursor.getDefaultCursor());
 				SwingUtilities.invokeLater(new Runnable()
 				{

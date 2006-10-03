@@ -51,7 +51,7 @@ public class MinVersionUpdater extends AbstractDatabaseUpdater
 		return JAPMinVersion.class;
 	}
 
-	protected Hashtable getUpdatedEntries()
+	protected Hashtable getUpdatedEntries(Hashtable a_dummy)
 	{
 		Hashtable hashtable = new Hashtable();
 		JAPMinVersion version = InfoServiceHolder.getInstance().getNewVersionNumber();
@@ -66,7 +66,7 @@ public class MinVersionUpdater extends AbstractDatabaseUpdater
 	{
 		public long getUpdateInterval()
 		{
-			if (Database.getInstance(JAPMinVersion.class).getNumberofEntries() > 0)
+			if (Database.getInstance(JAPMinVersion.class).getNumberOfEntries() > 0)
 			{
 				return UPDATE_INTERVAL_MS;
 			}
@@ -76,4 +76,10 @@ public class MinVersionUpdater extends AbstractDatabaseUpdater
 			}
 		}
 	}
+
+	protected Hashtable getEntrySerials()
+	{
+		return new Hashtable();
+	}
+
 }

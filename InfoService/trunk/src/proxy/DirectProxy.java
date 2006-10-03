@@ -347,8 +347,10 @@ final public class DirectProxy implements Runnable, AnonService
 					{
 					}
 				}
-				else if(i>6)
+				else if (i > 6)
+				{
 					break;
+				}
 				i++;
 			}
 			threadRunLoop = null;

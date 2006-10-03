@@ -70,7 +70,7 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 		public Hashtable parse(Element a_elemSerials) throws XMLParseException
 		{
 			if (a_elemSerials == null || a_elemSerials.getNodeName() == null ||
-				a_elemSerials.getNodeName().equals(XML_ELEMENT_NAME))
+				!a_elemSerials.getNodeName().equals(XML_ELEMENT_NAME))
 			{
 				throw new XMLParseException(XMLParseException.NODE_NULL_TAG);
 			}
@@ -95,14 +95,14 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 				id = XMLUtil.parseAttribute(serialNodes.item(i), XML_ATTR_ID, null);
 				if (id != null)
 				{
-					serial = XMLUtil.parseAttribute(serialNodes.item(i), XML_ATTR_SERIAL, 0);
+					serial = XMLUtil.parseAttribute(serialNodes.item(i), XML_ATTR_SERIAL, 0L);
 				}
 				else
 				{
 					serial = 0;
 				}
 
-				hashSerials.put(id, new Long(serial));
+				hashSerials.put(id, new DummyDBEntry(id, serial));
 			}
 
 			return hashSerials;
@@ -131,6 +131,35 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 				XMLUtil.setAttribute(nodeASerial, XML_ATTR_SERIAL, currentEntry.getVersionNumber());
 			}
 			return nodeSerials;
+		}
+
+		private class DummyDBEntry extends AbstractDatabaseEntry
+		{
+			private String m_id;
+			private long m_version;
+
+			public DummyDBEntry(String a_id, long a_version)
+			{
+				super(0);
+
+				m_id = a_id;
+				m_version = a_version;
+			}
+			public long getLastUpdate()
+			{
+				return 0;
+			}
+
+			public String getId()
+			{
+				return m_id;
+			}
+
+			public long getVersionNumber()
+			{
+				return m_version;
+			}
+
 		}
 	}
 

@@ -772,7 +772,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 				if (a_bForceCascadeUpdate)
 				{
-					m_Controller.fetchMixCascades(bErr, component);
+					m_Controller.fetchMixCascades(bErr, component, false);
 				}
 				//Update the temporary infoservice database
 				m_infoService.fill(a_bCheckInfoServiceUpdateStatus);
@@ -780,7 +780,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 				//getRootPanel().setCursor(c);
 
-				if (Database.getInstance(MixCascade.class).getNumberofEntries() == 0)
+				if (Database.getInstance(MixCascade.class).getNumberOfEntries() == 0)
 				{
 					if (!JAPModel.isSmallDisplay() && false)
 					{

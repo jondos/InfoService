@@ -74,7 +74,14 @@ public class InfoServiceUpdater extends AbstractDatabaseUpdater
 		}
 	}
 
-	protected Hashtable getUpdatedEntries()
+	protected Hashtable getEntrySerials()
+	{
+		//return InfoServiceHolder.getInstance().getInfoServiceSerials();
+		return new Hashtable();
+	}
+
+
+	protected Hashtable getUpdatedEntries(Hashtable a_entriesToUpdate)
 	{
 		return  InfoServiceHolder.getInstance().getInfoServices();
 	}
