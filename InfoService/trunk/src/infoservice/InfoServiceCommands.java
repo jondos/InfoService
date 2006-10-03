@@ -60,9 +60,16 @@ import anon.crypto.SignatureCreator;
 /**
  * This is the implementation of all commands the InfoService supports.
  */
-public class InfoServiceCommands implements JWSInternalCommands
+final public class InfoServiceCommands implements JWSInternalCommands
 {
     private DynamicNetworkingHelper m_networkingHelper = new DynamicNetworkingHelper();
+		//Ok the cache the StatusInfo DB here for performance reasonses (the database objete itself will always remain the same during the lifetime of the Is -so
+		//no problem so far
+		private Database m_statusinfoDB;
+		public InfoServiceCommands()
+		{
+		m_statusinfoDB=Database.getInstance(StatusInfo.class);
+		}
 	/**
 	 * This method is called, when we receive data directly from a infoservice or when we receive
 	 * data from a remote infoservice, which posts data about another infoservice.
@@ -586,12 +593,10 @@ public class InfoServiceCommands implements JWSInternalCommands
 	private HttpResponseStructure japGetCascadeStatus(String a_cascadeId)
 	{
 		/* this is only the default, if something is going wrong */
-		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
-			HTTP_RETURN_INTERNAL_SERVER_ERROR);
+		HttpResponseStructure httpResponse = null;
 		try
 		{
-			StatusInfo statusEntry = (StatusInfo) Database.getInstance(StatusInfo.class).getEntryById(
-				a_cascadeId);
+			StatusInfo statusEntry = (StatusInfo)m_statusinfoDB.getEntryById(a_cascadeId);
 			if (statusEntry == null)
 			{
 				/* we don't have a status for the given id */
@@ -599,12 +604,12 @@ public class InfoServiceCommands implements JWSInternalCommands
 			}
 			else
 			{
-				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,
-					statusEntry.getStatusXmlData());
+				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,statusEntry.getStatusXmlData());
 			}
 		}
 		catch (Exception e)
 		{
+			httpResponse=new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
 			LogHolder.log(LogLevel.ERR, LogType.NET, e);
 		}
 		return httpResponse;
@@ -1262,7 +1267,16 @@ public class InfoServiceCommands implements JWSInternalCommands
 												InetAddress a_sourceAddress)
 	{
 		HttpResponseStructure httpResponse = null;
-		if ((command.equals("/infoserver") || command.equals("/infoservice")) &&
+		if ( (command.startsWith("/mixcascadestatus/")) && (method == Constants.REQUEST_METHOD_GET))
+		{
+			/* JAP or someone else wants to get information about the status of the cascade with the
+			 * given ID
+			 * Full command: GET /mixcascadestatus/cascadeid
+			 */
+			String cascadeId = command.substring(18);
+			httpResponse = japGetCascadeStatus(cascadeId);
+		}		
+		else if ((command.equals("/infoserver") || command.equals("/infoservice")) &&
 			 (method == Constants.REQUEST_METHOD_POST))
 		{
 			/** message from another infoservice (can be forwared by an infoservice), which includes
@@ -1351,15 +1365,6 @@ public class InfoServiceCommands implements JWSInternalCommands
 			 * includes status information (traffic) of that cascade
 			 */
 			httpResponse = cascadePostStatus(postData);
-		}
-		else if ( (command.startsWith("/mixcascadestatus/")) && (method == Constants.REQUEST_METHOD_GET))
-		{
-			/* JAP or someone else wants to get information about the status of the cascade with the
-			 * given ID
-			 * Full command: GET /mixcascadestatus/cascadeid
-			 */
-			String cascadeId = command.substring(18);
-			httpResponse = japGetCascadeStatus(cascadeId);
 		}
 		else if ( (command.equals("/status")) && (method == Constants.REQUEST_METHOD_GET))
 		{
