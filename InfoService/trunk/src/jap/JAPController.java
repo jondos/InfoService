@@ -424,26 +424,31 @@ public final class JAPController extends Observable implements IProxyListener, O
 			public void run()
 			{
 				m_feedback.start(false);
-				/*
-				m_InfoServiceUpdater.start(false);
-				m_MixCascadeUpdater.start(false);
-				m_minVersionUpdater.start(false);
-				m_javaVersionUpdater.start(false);*/
-				if (!m_InfoServiceUpdater.isFirstUpdateDone())
+				if (JAPModel.getInstance().isInfoServiceDisabled())
 				{
-					m_InfoServiceUpdater.update();
+					m_InfoServiceUpdater.start(false);
+					m_MixCascadeUpdater.start(false);
+					m_minVersionUpdater.start(false);
+					m_javaVersionUpdater.start(false);
 				}
-				if (!m_MixCascadeUpdater.isFirstUpdateDone())
+				else
 				{
-					m_MixCascadeUpdater.update();
-				}
-				if (!m_minVersionUpdater.isFirstUpdateDone())
-				{
-					m_minVersionUpdater.update();
-				}
-				if (!m_javaVersionUpdater.isFirstUpdateDone())
-				{
-					m_javaVersionUpdater.update();
+					if (!m_InfoServiceUpdater.isFirstUpdateDone())
+					{
+						m_InfoServiceUpdater.update();
+					}
+					if (!m_MixCascadeUpdater.isFirstUpdateDone())
+					{
+						m_MixCascadeUpdater.update();
+					}
+					if (!m_minVersionUpdater.isFirstUpdateDone())
+					{
+						m_minVersionUpdater.update();
+					}
+					if (!m_javaVersionUpdater.isFirstUpdateDone())
+					{
+						m_javaVersionUpdater.update();
+					}
 				}
 			}
 		});
@@ -990,7 +995,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 								currentCascade = new MixCascade( (Element) nodeCascade, Long.MAX_VALUE);
 								try
 								{
-
 									Database.getInstance(MixCascade.class).update(currentCascade);
 								}
 								catch (Exception e)

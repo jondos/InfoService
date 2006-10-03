@@ -32,7 +32,6 @@ import java.util.Enumeration;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import anon.crypto.CertPath;
 import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
@@ -49,8 +48,11 @@ import logging.LogType;
  */
 public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IXMLEncodable
 {
+	public static final String DEFAULT_NAME = "AN.ON Mix";
+
 	public static final String XML_ELEMENT_CONTAINER_NAME = "Mixes";
 	public static final String XML_ELEMENT_NAME = "Mix";
+
 
     /* LERNGRUPPE: Mix types */
     public static final int FIRST_MIX = 0;
@@ -239,7 +241,7 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 		  }
 	  }
 
-	  m_name = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_mixNode, "Name"), "AN.ON Mix");
+	  m_name = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_mixNode, "Name"), DEFAULT_NAME);
 
 	  Node operatorNode = XMLUtil.getFirstChildByName(a_mixNode, "Operator");
 	  Node locationNode = XMLUtil.getFirstChildByName(a_mixNode, "Location");
@@ -366,6 +368,12 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
   public String getName() {
     return m_name;
   }
+
+  public XMLSignature getSignature()
+  {
+	  return m_mixSignature;
+  }
+
 
   /**
    * Returns the certificate of the mix

@@ -116,7 +116,7 @@ public class CertificateManager implements Observer
 	{
 		synchronized (m_certificateLocks)
 		{
-			JAPCertificate newCertificate = a_newEntry.getMixCascadeCertificate();
+			JAPCertificate newCertificate = a_newEntry.getCertificate();
 			Integer oldEntryCertificateLock = null;
 			boolean removeCertificateLock = false;
 			if (newCertificate != null)

@@ -458,10 +458,17 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 		{
 			m_mixIds = (Vector)a_mixIDs.clone();
 		}
+		m_mixInfos = new MixInfo[m_mixIds.size()];
+		for (int i = 0; i < m_mixInfos.length; i++)
+		{
+			m_mixInfos[i] = null;
+		}
+
 		/* some more values */
 		m_userDefined = true;
 		m_mixCascadeCertificate = null;
-		m_compressedXmlStructure = ZLibTools.compress(XMLUtil.toByteArray(generateXmlRepresentation()));
+		m_xmlStructure = generateXmlRepresentation();
+		m_compressedXmlStructure = ZLibTools.compress(XMLUtil.toByteArray(m_xmlStructure));
 		createMixIDString();
 	}
 
@@ -724,8 +731,8 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 			/* set the lastUpdate time */
 			m_lastUpdate = System.currentTimeMillis();
 		}
-
-		m_compressedXmlStructure = ZLibTools.compress(XMLUtil.toByteArray(generateXmlRepresentation()));
+		m_xmlStructure = generateXmlRepresentation();
+		m_compressedXmlStructure = ZLibTools.compress(XMLUtil.toByteArray(m_xmlStructure));
 	}
 
 	/**
@@ -748,9 +755,14 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 						JAPCertificate.CERTIFICATE_TYPE_MIX, false, false);
 				}
 			}
+			String id = getMixId(0);
+			if (id == null)
+			{
+				// the cascade id should be the same as the the id of the first mix, but ok...
+				id = getId();
+			}
 			StatusInfo statusInfo =
-				InfoServiceHolder.getInstance().getStatusInfo(getId(), getNumberOfMixes());
-
+				InfoServiceHolder.getInstance().getStatusInfo(id, getNumberOfMixes());
 			if (certificateLock != -1)
 			{
 				/* remove the lock on the certificate */
@@ -834,7 +846,7 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 	 *
 	 * @return The certificate of this mixcascade or null, if there is no appended certificate.
 	 */
-	public JAPCertificate getMixCascadeCertificate()
+	public JAPCertificate getCertificate()
 	{
 		return m_mixCascadeCertificate;
 	}

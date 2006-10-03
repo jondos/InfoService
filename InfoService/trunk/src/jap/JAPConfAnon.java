@@ -1437,11 +1437,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 							{
 								mixId = (String) mixIDs.elementAt(i);
 								mixinfo = cascade.getMixInfo(i);
-								/** @todo remove the isFromCascade() test if all mixes are updated */
-								if (mixinfo == null ||  mixinfo.isFromCascade())
+								if (mixinfo == null ||  mixinfo.getVersionNumber() <= 0)
 								{
-									mixinfo = (MixInfo) Database.getInstance(MixInfo.class).getEntryById(
-										mixId);
+									mixinfo =
+										(MixInfo) Database.getInstance(MixInfo.class).getEntryById(mixId);
 								}
 								if (!JAPModel.isInfoServiceDisabled() && !cascade.isUserDefined() &&
 									(mixinfo == null || mixinfo.isFromCascade()))
@@ -2114,23 +2113,20 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			MixInfo info = null;
 
 			info = a_cascade.getMixInfo(a_mixId);
-			/** @todo remove the isFromCascade() test if all mixes are updated */
-			if (info == null || info.isFromCascade())
+
+			if (info == null || info.getVersionNumber() <= 0)
 			{
 				info = (MixInfo) Database.getInstance(MixInfo.class).getEntryById(a_mixId);
 			}
 
-			if (info == null)
+			if (info == null || info.getMixCertificate() == null)
 			{
-				MixCascade cascade = (MixCascade) Database.getInstance(MixCascade.class).getEntryById(a_mixId);
-				if (cascade != null && cascade.getSignature() != null)
+				if (a_cascade.getSignature() != null)
 				{
-					//System.out.println(cascade.getMixCascadeCertificate().getId());
-					info = new MixInfo(cascade.getId(), cascade.getSignature().getCertPath());
+					info = new MixInfo(MixInfo.DEFAULT_NAME, a_cascade.getSignature().getCertPath());
 				}
-
-				//System.out.println(info + ":" + a_mixId);
 			}
+
 			return info;
 		}
 	}
