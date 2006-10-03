@@ -617,15 +617,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		m_locationLabel.setToolTipText(m_infoService.getLocation(cascade, selectedMixId));
 
+
 		m_serverInfo = m_infoService.getMixInfo(cascade, selectedMixId);
-		if(m_serverInfo != null)
-		{
-			m_serverCert = m_serverInfo.getMixCertificate();
-		}
-		else
-		{
-			m_serverCert = null;
-		}
+		m_serverCert = m_infoService.getMixCertificate(cascade, selectedMixId);
+
 		/*if (m_serverCert == null && cascade != null && server == 0)
 		{
 			// get the certificate for the first mix
@@ -2118,7 +2113,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			{
 				info = (MixInfo) Database.getInstance(MixInfo.class).getEntryById(a_mixId);
 			}
-
 			if (info == null || info.getMixCertificate() == null)
 			{
 				if (a_cascade.getSignature() != null)

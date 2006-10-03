@@ -230,6 +230,11 @@ public class CertificateStore extends Observable implements IXMLEncodable
 	{
 		int lockId = -1;
 		boolean bChanged = false;
+
+		if (a_certificate == null)
+		{
+			return lockId;
+		}
 		synchronized (m_trustedCertificates)
 		{
 			if (!m_trustedCertificates.containsKey(getCertificateId(a_certificate, a_certificateType)))

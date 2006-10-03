@@ -32,7 +32,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -48,8 +47,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.html.HTML;
-import javax.swing.text.html.HTML.*;
-//import javax.swing.text.html.HTML.Tag;
+import javax.swing.text.html.HTML.Attribute;
+import javax.swing.text.html.HTML.Tag;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.HTMLEditorKit.ParserCallback;
 import javax.swing.text.html.parser.DTD;
