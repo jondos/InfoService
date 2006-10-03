@@ -54,14 +54,16 @@ public class CertPath
 	 */
 	protected CertPath(JAPCertificate firstCert)
 	{
-		if(firstCert == null)
+		m_certificates = new Vector();
+
+		if (firstCert == null)
 		{
+			m_certCount = -1;
 			return;
 		}
-		m_certificates = new Vector();
+
 		this.add(firstCert);
 	}
-
 
 	/**
 	 * Adds a certificate to next higher level of this CertPath,
@@ -70,7 +72,7 @@ public class CertPath
 	 */
 	protected void add(JAPCertificate a_certificate)
 	{
-	    if(!m_certificates.contains(a_certificate))
+		if (!m_certificates.contains(a_certificate))
 		{
 			m_certificates.insertElementAt(a_certificate, 0);
 			m_certCount++;
@@ -85,7 +87,7 @@ public class CertPath
 	{
 		m_certificates.removeElement(a_certificate);
 		m_certCount--;
-    }
+	}
 
 	/**
 	 * Removes all certificates except the one on the lowest level
@@ -95,7 +97,14 @@ public class CertPath
 	{
 		JAPCertificate firstCertificate = this.getFirstCertificate();
 		m_certificates.removeAllElements();
-		m_certCount = 0;
+		if (firstCertificate != null)
+		{
+			m_certCount = 0;
+		}
+		else
+		{
+			m_certCount = -1;
+		}
 		this.add(firstCertificate);
 	}
 
@@ -105,7 +114,11 @@ public class CertPath
 	 */
 	protected JAPCertificate getLatestAddedCertificate()
 	{
-		return (JAPCertificate)m_certificates.firstElement();
+		if (m_certificates.size() > 0)
+		{
+			return (JAPCertificate) m_certificates.firstElement();
+		}
+		return null;
 	}
 
 	/**
@@ -116,7 +129,11 @@ public class CertPath
 	 */
 	public JAPCertificate getFirstCertificate()
 	{
-		return (JAPCertificate)m_certificates.lastElement();
+		if (m_certificates.size() > 0)
+		{
+			return (JAPCertificate) m_certificates.lastElement();
+		}
+		return null;
 	}
 
 	/**
@@ -127,12 +144,12 @@ public class CertPath
 	 */
 	public JAPCertificate getSecondCertificate()
 	{
-		if(m_certificates.size() <= 1)
+		if (m_certificates.size() <= 1)
 		{
 			return null;
 		}
 		//return the Certificate at Index size-2 (size-1 would be the last one)
-		return (JAPCertificate)m_certificates.elementAt(m_certificates.size()-2);
+		return (JAPCertificate) m_certificates.elementAt(m_certificates.size() - 2);
 	}
 
 	/**
@@ -146,13 +163,13 @@ public class CertPath
 	 */
 	protected void setDocType(int a_documentClass)
 	{
-		switch(a_documentClass)
+		switch (a_documentClass)
 		{
 			case SignatureVerifier.DOCUMENT_CLASS_MIX:
 				m_rootCertificateClass = JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX;
 				break;
 			case SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE:
-			    m_rootCertificateClass = JAPCertificate.CERTIFICATE_TYPE_ROOT_INFOSERVICE;
+				m_rootCertificateClass = JAPCertificate.CERTIFICATE_TYPE_ROOT_INFOSERVICE;
 				break;
 			case SignatureVerifier.DOCUMENT_CLASS_UPDATE:
 				m_rootCertificateClass = JAPCertificate.CERTIFICATE_TYPE_UPDATE;
@@ -172,20 +189,26 @@ public class CertPath
 	private CertificateInfoStructure getVerifier(boolean checkValidity)
 	{
 		Vector rootCertificates = SignatureVerifier.getInstance().getVerificationCertificateStore().
-			                                 getAvailableCertificatesByType(m_rootCertificateClass);
-	    JAPCertificate lastCertificate = (JAPCertificate)this.getLatestAddedCertificate();
-		CertificateInfoStructure verifyingCertificate = (CertificateInfoStructure)lastCertificate.getVerifier(rootCertificates.elements(), checkValidity);
-		if(verifyingCertificate != null)
+			getAvailableCertificatesByType(m_rootCertificateClass);
+		JAPCertificate lastCertificate = (JAPCertificate)this.getLatestAddedCertificate();
+		if (lastCertificate == null)
 		{
-			return verifyingCertificate;//SignatureVerifier.getInstance().getVerificationCertificateStore().getCertificateInfoStructure(verifyingCertificate);
+			return null;
+		}
+		CertificateInfoStructure verifyingCertificate = (CertificateInfoStructure) lastCertificate.
+			getVerifier(rootCertificates.elements(), checkValidity);
+		if (verifyingCertificate != null)
+		{
+			return verifyingCertificate; //SignatureVerifier.getInstance().getVerificationCertificateStore().getCertificateInfoStructure(verifyingCertificate);
 		}
 		//if there was no verifier in the available root certs, try to find a verifier in the unavailable ones
 		rootCertificates = SignatureVerifier.getInstance().getVerificationCertificateStore().
-			                                 getUnavailableCertificatesByType(m_rootCertificateClass);
-		verifyingCertificate = (CertificateInfoStructure)lastCertificate.getVerifier(rootCertificates.elements(),checkValidity);
-		if(verifyingCertificate != null)
+			getUnavailableCertificatesByType(m_rootCertificateClass);
+		verifyingCertificate = (CertificateInfoStructure) lastCertificate.getVerifier(rootCertificates.
+			elements(), checkValidity);
+		if (verifyingCertificate != null)
 		{
-			return verifyingCertificate;//SignatureVerifier.getInstance().getVerificationCertificateStore().getCertificateInfoStructure(verifyingCertificate);
+			return verifyingCertificate; //SignatureVerifier.getInstance().getVerificationCertificateStore().getCertificateInfoStructure(verifyingCertificate);
 		}
 		return null;
 	}
@@ -199,21 +222,25 @@ public class CertPath
 	public boolean verify()
 	{
 		Enumeration rootCertificates = SignatureVerifier.getInstance().getVerificationCertificateStore().
-				getAvailableCertificatesByType(m_rootCertificateClass).elements();
-		while (rootCertificates.hasMoreElements())
+			getAvailableCertificatesByType(m_rootCertificateClass).elements();
+		JAPCertificate verifier = getLatestAddedCertificate();
+		if (verifier != null)
 		{
-			if (this.getLatestAddedCertificate().verify(
-				( (CertificateInfoStructure) rootCertificates.nextElement()).getCertificate()))
+			while (rootCertificates.hasMoreElements())
 			{
-				return true;
+				if (verifier.verify(
+					( (CertificateInfoStructure) rootCertificates.nextElement()).getCertificate()))
+				{
+					return true;
+				}
 			}
 		}
 		return false;
 	}
 
 	/**
-	 * Returns the number of ceritificates in this CertPath
-	 * @return the number of ceritificates in this CertPath
+	 * Returns the number of certificates in this CertPath
+	 * @return the number of certificates in this CertPath
 	 */
 	public int getCertCount()
 	{
@@ -226,34 +253,34 @@ public class CertPath
 	 * there is one. The isEnabled() field of the CIS is used to mark if the certs
 	 * are verified.
 	 * @return an Enumeration of CertificateInfoStructures of the included certs plus
-	 *         the verifier as first element if ther is one.
+	 *         the verifier as first element if there is one.
 	 */
 	public Enumeration getCertificates()
 	{
 		boolean verifierFound = false;
-	    Enumeration certificates = m_certificates.elements();
+		Enumeration certificates = m_certificates.elements();
 		Vector certificateIS = new Vector();
 		//try to find a verifier
-	    CertificateInfoStructure verifier = this.getVerifier(false);
+		CertificateInfoStructure verifier = this.getVerifier(false);
 
-	    if(verifier != null)
+		if (verifier != null)
 		{
 			verifierFound = true;
 			//if the verifying certificate is not already in the CertPath we add it to the top level
-			if(!m_certificates.contains(verifier.getCertificate()))//.equals(this.getLatestAddedCertificate()))
+			if (!m_certificates.contains(verifier.getCertificate())) //.equals(this.getLatestAddedCertificate()))
 			{
 				certificateIS.addElement(verifier);
 			}
 		}
-		if(certificates.hasMoreElements())
+		if (certificates.hasMoreElements())
 		{
 			//Mark the first CIS, if there is no verifier for the CertsPath
-			JAPCertificate cert = (JAPCertificate)certificates.nextElement();
+			JAPCertificate cert = (JAPCertificate) certificates.nextElement();
 			certificateIS.addElement(new CertificateInfoStructure(cert, null, 1,
-					  verifierFound, false, false, false));
-			while(certificates.hasMoreElements())
+				verifierFound, false, false, false));
+			while (certificates.hasMoreElements())
 			{
-				cert = (JAPCertificate)certificates.nextElement();
+				cert = (JAPCertificate) certificates.nextElement();
 				certificateIS.addElement(new CertificateInfoStructure(cert, null, 1, true, false, false, false));
 			}
 		}
@@ -272,11 +299,11 @@ public class CertPath
 		String tabs = new String();
 		Enumeration certificates = m_certificates.elements();
 
-	    while(certificates.hasMoreElements())
+		while (certificates.hasMoreElements())
 		{
 			tabs += "\t";
 			certPath += "\n" + tabs +
-				        ((JAPCertificate)certificates.nextElement()).getSubject().getCommonName();
+				( (JAPCertificate) certificates.nextElement()).getSubject().getCommonName();
 		}
 		return certPath;
 	}

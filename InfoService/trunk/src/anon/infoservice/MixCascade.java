@@ -32,17 +32,15 @@ import java.util.Vector;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 import org.w3c.dom.Node;
-
+import org.w3c.dom.NodeList;
 import anon.AnonServerDescription;
 import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
 import anon.crypto.XMLSignature;
+import anon.util.XMLParseException;
 import anon.util.XMLUtil;
 import anon.util.ZLibTools;
-import anon.util.XMLParseException;
-import anon.util.IXMLEncodable;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;

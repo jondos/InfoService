@@ -1372,12 +1372,13 @@ public final class XMLSignature implements IXMLEncodable
 			return false;
 		}
 
-		if (!checkSignature(a_signature, a_publicKey))
+		if (!checkMessageDigest(a_node, a_signature))
 		{
+			a_signature.m_certPath = new CertPath(null);
 			return false;
 		}
 
-		if (!checkMessageDigest(a_node, a_signature))
+		if (!checkSignature(a_signature, a_publicKey))
 		{
 			return false;
 		}
