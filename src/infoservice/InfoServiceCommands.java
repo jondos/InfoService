@@ -860,13 +860,11 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	 */
 	private HttpResponseStructure getCascadeInfo(String a_cascadeId, boolean a_bCompressed)
 	{
-		/* this is only the default, if something is going wrong */
-		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
-			HTTP_RETURN_INTERNAL_SERVER_ERROR);
+		HttpResponseStructure httpResponse;
 		try
 		{
-			MixCascade mixCascadeEntry = (MixCascade) (Database.getInstance(MixCascade.class).getEntryById(
-				a_cascadeId));
+			MixCascade mixCascadeEntry =
+				(MixCascade) (Database.getInstance(MixCascade.class).getEntryById(a_cascadeId));
 			if (mixCascadeEntry == null)
 			{
 				/* we don't have a mixcascade with the given id */
@@ -891,10 +889,43 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		catch (Exception e)
 		{
+			httpResponse =
+				new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
 			LogHolder.log(LogLevel.ERR, LogType.MISC, e);
 		}
 		return httpResponse;
 	}
+
+	private HttpResponseStructure getInfoServiceInfo(String a_infoserviceId)
+	{
+		HttpResponseStructure httpResponse;
+		try
+		{
+			InfoServiceDBEntry infoserviceEntry =
+				(InfoServiceDBEntry) (Database.getInstance(InfoServiceDBEntry.class).getEntryById(
+								a_infoserviceId));
+			if (infoserviceEntry == null)
+			{
+				/* we don't have a mixcascade with the given id */
+				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_NOT_FOUND);
+			}
+			else
+			{
+				/* send XML-Document */
+				httpResponse = new HttpResponseStructure(
+					HttpResponseStructure.HTTP_TYPE_TEXT_XML,
+					XMLUtil.toString(infoserviceEntry.getXmlStructure()));
+			}
+		}
+		catch (Exception e)
+		{
+			httpResponse =
+				new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
+			LogHolder.log(LogLevel.ERR, LogType.MISC, e);
+		}
+		return httpResponse;
+	}
+
 
 	private HttpResponseStructure echoIP(InetAddress a_sourceAddress)
 	{
@@ -1275,15 +1306,24 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 */
 			String cascadeId = command.substring(18);
 			httpResponse = japGetCascadeStatus(cascadeId);
-		}		
+		}
 		else if ((command.equals("/infoserver") || command.equals("/infoservice")) &&
 			 (method == Constants.REQUEST_METHOD_POST))
 		{
 			/** message from another infoservice (can be forwared by an infoservice), which includes
 			 * information about that infoservice
-			 * @todo remove old /infoserver string
+			 * @todo remove old /infoserver
 			 */
 			httpResponse = infoServerPostHelo(postData);
+		}
+		else if (command.startsWith("/infoservice/") && (method == Constants.REQUEST_METHOD_GET))
+		{
+			/* get information about the InfoService with the given ID (it's the same information as
+			 * /infoservices but there you get information about all known infoservices)
+			 * Full command: GET /infoservice/infoserviceId
+			 */
+			String infoserviceId = command.substring(13);
+			httpResponse = getInfoServiceInfo(infoserviceId);
 		}
 		else if ( (command.equals("/infoservices")) && (method == Constants.REQUEST_METHOD_GET))
 		{

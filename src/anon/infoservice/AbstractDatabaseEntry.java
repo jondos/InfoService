@@ -107,6 +107,12 @@ public abstract class AbstractDatabaseEntry
 		return m_creationTime;
 	}
 
+	public final void resetCreationTime()
+	{
+		m_creationTime = System.currentTimeMillis();
+	}
+
+
 	/**
 	 * Returns version number which is used to determine the more recent infoservice entry, if two
 	 * entries are compared (higher version number -> more recent entry).

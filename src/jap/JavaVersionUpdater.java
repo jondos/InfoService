@@ -52,7 +52,7 @@ public class JavaVersionUpdater extends AbstractDatabaseUpdater
 		return JavaVersionDBEntry.class;
 	}
 
-	protected Hashtable getUpdatedEntries()
+	protected Hashtable getUpdatedEntries(Hashtable a_dummy)
 	{
 		Hashtable hashtable = InfoServiceHolder.getInstance().getLatestJavaVersions();
 		if (hashtable == null)
@@ -66,7 +66,7 @@ public class JavaVersionUpdater extends AbstractDatabaseUpdater
 	{
 		public long getUpdateInterval()
 		{
-			if (Database.getInstance(JAPMinVersion.class).getNumberofEntries() > 0)
+			if (Database.getInstance(JAPMinVersion.class).getNumberOfEntries() > 0)
 			{
 				return UPDATE_INTERVAL_MS;
 			}
@@ -76,4 +76,10 @@ public class JavaVersionUpdater extends AbstractDatabaseUpdater
 			}
 		}
 	}
+
+	protected Hashtable getEntrySerials()
+	{
+		return new Hashtable();
+	}
+
 }

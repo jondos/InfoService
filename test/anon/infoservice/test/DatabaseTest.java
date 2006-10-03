@@ -122,7 +122,7 @@ public class DatabaseTest extends PrivateTestCase
 
 		// test if it is possible to add an entry
 		database.update(dbEntry);
-		assertEquals(1, database.getNumberofEntries());
+		assertEquals(1, database.getNumberOfEntries());
 		assertSame(dbEntry, database.getEntryById(dbEntry.getId()));
 		assertEquals(1, database.getTimeoutListSize());
 		assertTrue(database.isEntryIdInTimeoutList(dbEntry.getId()));
@@ -131,7 +131,7 @@ public class DatabaseTest extends PrivateTestCase
 		// test if older entries are dropped
 		dbEntry_sameID.setVersionNumber(-1);
 		database.update(dbEntry_sameID);
-		assertEquals(1, database.getNumberofEntries());
+		assertEquals(1, database.getNumberOfEntries());
 		assertSame(dbEntry, database.getEntryById(dbEntry_sameID.getId()));
 		assertEquals(1, database.getTimeoutListSize());
 		assertTrue(database.isEntryIdInTimeoutList(dbEntry.getId()));
@@ -146,7 +146,7 @@ public class DatabaseTest extends PrivateTestCase
 
 		// test adding a new entry with an unknown id
 		database.update(dbEntry_otherID);
-		assertEquals(2, database.getNumberofEntries());
+		assertEquals(2, database.getNumberOfEntries());
 		assertEquals(2, database.getTimeoutListSize());
 		assertTrue(database.isEntryIdInTimeoutList(dbEntry_otherID.getId()));
 		expectedJobs.addElement(dbEntry_otherID);

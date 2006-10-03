@@ -154,6 +154,39 @@ public class SignatureVerifier implements IXMLEncodable
                 return m_trustedCertificates;
         }
 
+		/**
+		 * Verifies the signature of an XML document against the store of trusted certificates.
+		 * This methode returns true, if the signature of the document is valid, the signing certificate
+		 * can be derived from one of the trusted certificates (or is one of them) and if all of the
+		 * needed certificates in the path have the permission to sign documents of this class. This
+		 * method also returns always true if signature checking is disabled.
+		 *
+		 * @param a_rootNode The root node of the document. The Signature node must be one of the
+		 *                   children of the root node.
+		 * @param a_documentClass The class of the document. See the constants in this class.
+		 *
+		 * @return True, if the signature (and appended certificate) could be verified against the
+		 *         trusted certificates or false if not.
+		 *
+		 * @todo The ID within the document should be compared to the ID stored in the certificate.
+		 * @todo the return value should be the certificate that successfully verified the signature
+		 */
+		public boolean verifyXml(Document a_rootNode, int a_documentClass)
+		{
+			if (!m_checkSignatures )
+			{
+				/* accept every document without testing the signature */
+				return true;
+			}
+
+			if (a_rootNode == null)
+			{
+				return false;
+			}
+			return verifyXml(a_rootNode.getDocumentElement(), a_documentClass);
+		}
+
+
         /**
          * Verifies the signature of an XML document against the store of trusted certificates.
          * This methode returns true, if the signature of the document is valid, the signing certificate
@@ -180,6 +213,10 @@ public class SignatureVerifier implements IXMLEncodable
 			}
 			else
 			{
+				if (a_rootNode == null)
+				{
+					return false;
+				}
 				XMLSignature signature = this.getVerifiedXml(a_rootNode, a_documentClass);
 				if(signature != null)
 				{

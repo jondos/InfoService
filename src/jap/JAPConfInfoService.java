@@ -300,7 +300,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 				{
 					public void run()
 					{
-						while (!JAPController.getInstance().updateInfoServices())
+						while (!JAPController.getInstance().updateInfoServices(false))
 						{
 							if (!JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed() &&
 								!JAPController.getInstance().isAnonConnected())
@@ -312,7 +312,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 								if (returnValue == JAPDialog.RETURN_VALUE_YES)
 								{
 									JAPModel.getInstance().allowInfoServiceViaDirectConnection(true);
-									JAPController.getInstance().updateInfoServices();
+									JAPController.getInstance().updateInfoServices(false);
 									continue;
 								}
 							}

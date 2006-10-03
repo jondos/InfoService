@@ -36,6 +36,7 @@ import java.util.Hashtable;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.zip.GZIPInputStream;
+import java.security.SignatureException;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
@@ -684,14 +685,14 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 
 	/**
 	 * This returns the filename (InfoService command), where this InfoServerDBEntry is posted at
-	 * other InfoServices. It's always '/infoserver'.
+	 * other InfoServices. It's always '/infoservice'.
 	 *
 	 * @return The filename where the information about this InfoServerDBEntry is posted at other
 	 *         InfoServices when this entry is forwarded.
 	 */
 	public String getPostFile()
 	{
-		return "/infoserver";
+		return "/infoservice";
 	}
 
 	/**
@@ -827,7 +828,7 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 									HttpRequestStructure.HTTP_COMMAND_POST)
 								{
 									LogHolder.log(LogLevel.DEBUG, LogType.NET,
-												  "InfoServiceDBEntry: getXmlDocument: Post: " +
+												  "Post: " +
 												  currentConnection.getHost() + ":" +
 												  Integer.toString(currentConnection.getPort()) +
 												  a_httpRequest.getRequestFileName());
@@ -966,6 +967,14 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 	{
 		Document doc =
 			getXmlDocument(HttpRequestStructure.createGetRequest("/cascades.z"));
+
+		if (!SignatureVerifier.getInstance().verifyXml(doc,
+			SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE))
+		{
+			// signature could not be verified
+			throw new SignatureException("Document could not be verified!");
+		}
+
 		NodeList mixCascadesNodes = doc.getElementsByTagName(MixCascade.XML_ELEMENT_CONTAINER_NAME);
 		if (mixCascadesNodes.getLength() == 0)
 		{
@@ -975,6 +984,8 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 		NodeList mixCascadeNodes = mixCascadesNode.getElementsByTagName(MixCascade.XML_ELEMENT_NAME);
 		Hashtable mixCascades = new Hashtable();
 		MixCascade currentCascade;
+
+
 		for (int i = 0; i < mixCascadeNodes.getLength(); i++)
 		{
 			Element mixCascadeNode = (Element) (mixCascadeNodes.item(i));
@@ -1052,15 +1063,24 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 	public Hashtable getInfoServices() throws Exception
 	{
 		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/infoservices"));
+
+		if (!SignatureVerifier.getInstance().verifyXml(doc,
+			SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE))
+		{
+				// signature could not be verified
+				throw new SignatureException("Document could not be verified!");
+		}
+
 		NodeList infoServicesNodes = doc.getElementsByTagName(XML_ELEMENT_CONTAINER_NAME);
 		if (infoServicesNodes.getLength() == 0)
 		{
-			throw (new Exception("InfoService: getInfoServices: Error in XML structure."));
+			throw (new Exception("Error in XML structure."));
 		}
 		Element infoServicesNode = (Element) (infoServicesNodes.item(0));
 		NodeList infoServiceNodes = infoServicesNode.getElementsByTagName(XML_ELEMENT_NAME);
 		Hashtable infoServices = new Hashtable();
 		InfoServiceDBEntry currentEntry;
+
 		for (int i = 0; i < infoServiceNodes.getLength(); i++)
 		{
 			Element infoServiceNode = (Element) (infoServiceNodes.item(i));
@@ -1078,7 +1098,7 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 				{
 					/* an error while parsing the node occured -> we don't use this mixcascade */
 					LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
-								  "InfoService: getInfoServices: Error in InfoService XML node.");
+								  "Error in InfoService XML node.");
 				}
 			}
 			else
@@ -1090,6 +1110,37 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 		}
 		return infoServices;
 	}
+
+
+	public Hashtable getMixCascadeSerials() throws Exception
+	{
+		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/cascadeserials.z"));
+
+		if (!SignatureVerifier.getInstance().verifyXml(doc, SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE))
+		{
+			/* signature is invalid -> throw an exception */
+			throw (new SignatureException("Cannot verify the signature: " + XMLUtil.toString(doc)));
+		}
+
+		return new AbstractDistributableDatabaseEntry.Serials(MixCascade.class).parse(
+			  doc.getDocumentElement());
+	}
+
+	public Hashtable getInfoServiceSerials() throws Exception
+	{
+		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/infoserviceserials.z"));
+
+		if (!SignatureVerifier.getInstance().verifyXml(doc, SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE))
+		{
+			/* signature is invalid -> throw an exception */
+			throw (new SignatureException("Cannot verify the signature: " + XMLUtil.toString(doc)));
+		}
+
+		return new AbstractDistributableDatabaseEntry.Serials(InfoServiceDBEntry.class).parse(
+			  doc.getDocumentElement());
+	}
+
+
 
 	/**
 	 * Get the MixInfo for the mix with the given ID. If we can't get a connection with the
@@ -1105,15 +1156,14 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 		NodeList mixNodes = doc.getElementsByTagName("Mix");
 		if (mixNodes.getLength() == 0)
 		{
-			throw (new Exception("InfoService: getMixInfo: Error in XML structure."));
+			throw (new Exception("Error in XML structure."));
 		}
 		Element mixNode = (Element) (mixNodes.item(0));
 		/* check the signature */
 		if (SignatureVerifier.getInstance().verifyXml(mixNode, SignatureVerifier.DOCUMENT_CLASS_MIX) == false)
 		{
 			/* signature is invalid -> throw an exception */
-			throw (new Exception(
-				"InfoServiceDBEntry: getMixInfo: Cannot verify the signature for Mix entry: " +
+			throw (new Exception("Cannot verify the signature for Mix entry: " +
 				XMLUtil.toString(mixNode)));
 		}
 		/* signature was valid */

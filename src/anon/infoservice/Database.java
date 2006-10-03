@@ -595,7 +595,7 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 	 * Returns the number of DatabaseEntries in the Database.
 	 * @return the number of DatabaseEntries in the Database
 	 */
-	public int getNumberofEntries()
+	public int getNumberOfEntries()
 	{
 		return m_serviceDatabase.size();
 	}

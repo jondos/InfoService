@@ -58,7 +58,7 @@ final class JAPFeedback extends AbstractDatabaseUpdater
 			JAPController.getInstance().getCurrentMixCascade().isUserDefined();
 	}
 
-	protected Hashtable getUpdatedEntries()
+	protected Hashtable getUpdatedEntries(Hashtable a_dummy)
 	{
 		StatusInfo info = JAPController.getInstance().getCurrentMixCascade().fetchCurrentStatus();
 		Hashtable hashtable = new Hashtable();
@@ -68,4 +68,10 @@ final class JAPFeedback extends AbstractDatabaseUpdater
 		}
 		return hashtable;
 	}
+
+	protected Hashtable getEntrySerials()
+	{
+		return new Hashtable();
+	}
+
 }

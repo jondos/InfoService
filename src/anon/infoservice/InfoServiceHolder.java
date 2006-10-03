@@ -118,6 +118,9 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 
 	private static final int GET_LATEST_JAVA = 13;
 
+	private static final int GET_INFOSERVICE_SERIALS = 14;
+	private static final int GET_MIXCASCADE_SERIALS = 15;
+
 	private static final String XML_ATTR_ASKED_INFO_SERVICES = "askedInfoServices";
 
 	/**
@@ -342,12 +345,13 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 		 * a lot of IS...
 		 */
 		if (functionNumber == GET_INFOSERVICES || functionNumber == GET_MIXCASCADES
-			|| functionNumber == GET_STATUSINFO)
+			|| functionNumber == GET_INFOSERVICE_SERIALS || functionNumber == GET_MIXCASCADE_SERIALS ||
+			functionNumber == GET_STATUSINFO)
 		{
 			result = new Hashtable();
 			if (functionNumber == GET_STATUSINFO)
 			{
-				// example: enter numer of asked IS here, or keep default of 1
+				// example: enter number of asked IS here, or keep default of 1
 			}
 			else
 			{
@@ -408,7 +412,14 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 					{
 						tempHashtable.put(info.getId(), info);
 					}
-
+				}
+				else if (functionNumber == GET_MIXCASCADE_SERIALS)
+				{
+					tempHashtable = currentInfoService.getMixCascadeSerials();
+				}
+				else if (functionNumber == GET_INFOSERVICE_SERIALS)
+				{
+					tempHashtable = currentInfoService.getInfoServiceSerials();
 				}
 				else if (functionNumber == GET_NEWVERSIONNUMBER)
 				{
@@ -527,6 +538,12 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 		return (Hashtable) (fetchInformation(GET_MIXCASCADES, null));
 	}
 
+	public Hashtable getMixCascadeSerials()
+	{
+		return (Hashtable) (fetchInformation(GET_MIXCASCADE_SERIALS, null));
+	}
+
+
 	/**
 	 * Get a Vector of all payment instances the preferred infoservice knows. If we can't get a the
 	 * information from preferred infoservice, another known infoservice is asked. If we have gotten
@@ -564,6 +581,12 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	{
 		return (Hashtable) (fetchInformation(GET_INFOSERVICES, null));
 	}
+
+	public Hashtable getInfoServiceSerials()
+	{
+		return (Hashtable) (fetchInformation(GET_INFOSERVICE_SERIALS, null));
+	}
+
 
 	/**
 	 * Get the MixInfo for the mix with the given ID. If we can't get a the information from
