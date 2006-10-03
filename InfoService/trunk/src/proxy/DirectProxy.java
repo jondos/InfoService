@@ -225,6 +225,7 @@ final public class DirectProxy implements Runnable, AnonService
 			}
 			catch (InterruptedIOException e1)
 			{
+				Thread.yield();
 				continue;
 			}
 			catch (SocketException e2)
@@ -329,6 +330,7 @@ final public class DirectProxy implements Runnable, AnonService
 			while (threadRunLoop.isAlive())
 			{
 				threadRunLoop.interrupt();
+				Thread.yield();
 				try
 				{
 					threadRunLoop.join(1000);
@@ -337,7 +339,7 @@ final public class DirectProxy implements Runnable, AnonService
 				{
 					//LogHolder.log(LogLevel.ERR, LogType.NET, "Direct Proxy Server could not be stopped!!!");
 				}
-				if (i == 3)
+				if (i > 3)
 				{
 					try
 					{
@@ -347,10 +349,13 @@ final public class DirectProxy implements Runnable, AnonService
 					{
 					}
 				}
+<<<<<<< DirectProxy.java
+=======
 				else if (i > 6)
 				{
 					break;
 				}
+>>>>>>> 1.35
 				i++;
 			}
 			threadRunLoop = null;
