@@ -274,13 +274,13 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 		  {
 			  throw (new XMLParseException("LastUpdate", m_mixId));
 		  }
-		  m_lastUpdate = XMLUtil.parseValue(lastUpdateNode, 0);
+		  m_lastUpdate = XMLUtil.parseValue(lastUpdateNode, 0L);
 	  }
 	  else
 	  {
 		  m_lastUpdate = System.currentTimeMillis() - Constants.TIMEOUT_MIX;
 	  }
-	  m_serial = XMLUtil.parseValue(lastUpdateNode, 0);
+	  m_serial = XMLUtil.parseValue(lastUpdateNode, 0L);
 
 	  m_mixLocation = new ServiceLocation(locationNode, m_mixCertificate);
 	  //get the Operator Certificate from the CertPath
