@@ -79,6 +79,8 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
    */
   private long m_lastUpdate;
 
+  private long m_serial;
+
   /**
    * The name of the mix.
    */
@@ -163,10 +165,12 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 	  super(Long.MAX_VALUE);
 	  m_mixId = a_mixID;
 	  m_name = a_mixID;
+	  m_type = -1;
 	  m_bFromCascade = true;
 	  m_mixCertPath = a_certPath;
 	  m_mixCertificate = a_certPath.getFirstCertificate();
 	  m_lastUpdate = 0;
+	  m_serial = 0;
 	  m_mixLocation = new ServiceLocation(null, m_mixCertificate);
 	  m_mixOperator = new ServiceOperator(null, m_mixCertPath.getSecondCertificate());
 	  m_freeMix = false;
@@ -235,22 +239,14 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 		  }
 	  }
 
-	  Node operatorNode = null;
-	  Node locationNode = null;
+	  m_name = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_mixNode, "Name"), "AN.ON Mix");
+
+	  Node operatorNode = XMLUtil.getFirstChildByName(a_mixNode, "Operator");
+	  Node locationNode = XMLUtil.getFirstChildByName(a_mixNode, "Location");
+	  Node lastUpdateNode = XMLUtil.getFirstChildByName(a_mixNode, "LastUpdate");
+
 	  if (!a_bFromCascade)
 	  {
-		  /* get the name */
-		  NodeList nameNodes = a_mixNode.getElementsByTagName("Name");
-		  if (nameNodes.getLength() == 0)
-		  {
-			  throw (new XMLParseException("Name"));
-		  }
-		  else
-		  {
-			  Element nameNode = (Element) (nameNodes.item(0));
-			  m_name = nameNode.getFirstChild().getNodeValue();
-		  }
-
 		  /* Parse the MixType */
 		  Node typeNode =  XMLUtil.getFirstChildByName(a_mixNode, "MixType");
 		  if (typeNode == null)
@@ -260,42 +256,29 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 		  m_type = parseMixType(typeNode.getFirstChild().getNodeValue());
 
 		  /* Parse dynamic property */
-		  Node tmp = XMLUtil.getFirstChildByName(a_mixNode, "Dynamic");
-		  m_dynamic = XMLUtil.parseValue(tmp, false);
-
-		  /* get the location */
-		  locationNode = XMLUtil.getFirstChildByName(a_mixNode, "Location");
-
-		  /* get the operator */
-		  operatorNode = XMLUtil.getFirstChildByName(a_mixNode, "Operator");
+		  m_dynamic = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_mixNode, "Dynamic"), false);
 
 		  /* get the software information */
-		  NodeList softwareNodes = a_mixNode.getElementsByTagName("Software");
-		  if (softwareNodes.getLength() == 0)
+		  Node softwareNode = XMLUtil.getFirstChildByName(a_mixNode, "Software");
+		  if (softwareNode == null)
 		  {
 			  throw (new XMLParseException("Software", m_mixId));
 		  }
-		  Element softwareNode = (Element) (softwareNodes.item(0));
 		  m_mixSoftware = new ServiceSoftware(softwareNode);
 
 		  /* get LastUpdate information */
-		  NodeList lastUpdateNodes = a_mixNode.getElementsByTagName("LastUpdate");
-		  if (lastUpdateNodes.getLength() == 0)
+
+		  if (lastUpdateNode == null)
 		  {
 			  throw (new XMLParseException("LastUpdate", m_mixId));
 		  }
-		  Element lastUpdateNode = (Element) (lastUpdateNodes.item(0));
-		  m_lastUpdate = Long.parseLong(lastUpdateNode.getFirstChild().getNodeValue());
+		  m_lastUpdate = XMLUtil.parseValue(lastUpdateNode, 0);
 	  }
 	  else
 	  {
 		  m_lastUpdate = System.currentTimeMillis() - Constants.TIMEOUT_MIX;
 	  }
-
-	  if (m_name == null)
-	  {
-		  m_name = m_mixId;
-	  }
+	  m_serial = XMLUtil.parseValue(lastUpdateNode, 0);
 
 	  m_mixLocation = new ServiceLocation(locationNode, m_mixCertificate);
 	  //get the Operator Certificate from the CertPath
@@ -368,10 +351,11 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
    * Returns the time when this mix entry was created by the origin mix.
    *
    * @return A version number which is used to determine the more recent mix entry, if two
-   *         entries are compared (higher version number -> more recent entry).
+   *         entries are compared (higher version number -> more recent entry); 0 if no version number
+   *         was found in this MixInfo object
    */
   public long getVersionNumber() {
-    return getLastUpdate();
+    return m_serial;
   }
 
   /**

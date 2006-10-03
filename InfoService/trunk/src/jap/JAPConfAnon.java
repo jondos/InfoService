@@ -85,7 +85,6 @@ import anon.util.Util;
 import gui.CertDetailsDialog;
 import gui.CountryMapper;
 import gui.GUIUtils;
-import gui.JAPHelp;
 import gui.JAPJIntField;
 import gui.JAPMessages;
 import gui.MapBox;
@@ -516,7 +515,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		if (selectedMixId != null)
 		{
-			String version = GUIUtils.trim(m_infoService.getMixVersion(selectedMixId));
+			String version = GUIUtils.trim(m_infoService.getMixVersion(cascade, selectedMixId));
 			if (version != null)
 			{
 				version = ", " + JAPMessages.getString(MSG_MIX_VERSION) + "=" + version;
@@ -528,7 +527,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 			m_lblMix.setToolTipText(JAPMessages.getString(MSG_MIX_ID) + "=" + selectedMixId + version);
 			//m_lblMix.setText(JAPMessages.getString("infoAboutMix") +
-			String name = GUIUtils.trim(m_infoService.getName(selectedMixId), 40);
+			String name = GUIUtils.trim(m_infoService.getName(cascade, selectedMixId), 40);
 			if (name == null)
 			{
 				m_lblMix.setText(DEFAULT_MIX_NAME);
@@ -578,10 +577,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		//m_nrLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
 
-		m_operatorLabel.setText(GUIUtils.trim(m_infoService.getOperator(selectedMixId)));
+		m_operatorLabel.setText(GUIUtils.trim(m_infoService.getOperator(cascade, selectedMixId)));
 		//m_operatorLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
 
-		m_operatorLabel.setToolTipText(m_infoService.getUrl(selectedMixId));
+		m_operatorLabel.setToolTipText(m_infoService.getUrl(cascade, selectedMixId));
 
 		if (getUrlFromLabel(m_operatorLabel) != null)
 		{
@@ -592,8 +591,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			m_operatorLabel.setForeground(m_nrLabel.getForeground());
 		}
 
-		m_emailLabel.setText(GUIUtils.trim(m_infoService.getEMail(selectedMixId)));
-		m_emailLabel.setToolTipText(m_infoService.getEMail(selectedMixId));
+		m_emailLabel.setText(GUIUtils.trim(m_infoService.getEMail(cascade, selectedMixId)));
+		m_emailLabel.setToolTipText(m_infoService.getEMail(cascade, selectedMixId));
 		if (getEMailFromLabel(m_emailLabel) != null)
 		{
 			m_emailLabel.setForeground(Color.blue);
@@ -602,12 +601,12 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			m_emailLabel.setForeground(m_nrLabel.getForeground());
 		}
-		m_emailLabel.setToolTipText(m_infoService.getEMail(selectedMixId));
+		m_emailLabel.setToolTipText(m_infoService.getEMail(cascade, selectedMixId));
 
 
 
-		m_locationCoordinates = m_infoService.getCoordinates(selectedMixId);
-		m_locationLabel.setText(GUIUtils.trim(m_infoService.getLocation(selectedMixId)));
+		m_locationCoordinates = m_infoService.getCoordinates(cascade, selectedMixId);
+		m_locationLabel.setText(GUIUtils.trim(m_infoService.getLocation(cascade, selectedMixId)));
 		if (m_locationCoordinates != null)
 		{
 			m_locationLabel.setForeground(Color.blue);
@@ -616,9 +615,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			m_locationLabel.setForeground(m_nrLabel.getForeground());
 		}
-		m_locationLabel.setToolTipText(m_infoService.getLocation(selectedMixId));
+		m_locationLabel.setToolTipText(m_infoService.getLocation(cascade, selectedMixId));
 
-		m_serverInfo = m_infoService.getMixInfo(selectedMixId);
+		m_serverInfo = m_infoService.getMixInfo(cascade, selectedMixId);
 		if(m_serverInfo != null)
 		{
 			m_serverCert = m_serverInfo.getMixCertificate();
@@ -1437,7 +1436,13 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 							for (int i = 0; i < mixIDs.size(); i++)
 							{
 								mixId = (String) mixIDs.elementAt(i);
-								mixinfo = (MixInfo) Database.getInstance(MixInfo.class).getEntryById(mixId);
+								mixinfo = cascade.getMixInfo(i);
+								/** @todo remove the isFromCascade() test if all mixes are updated */
+								if (mixinfo == null ||  mixinfo.isFromCascade())
+								{
+									mixinfo = (MixInfo) Database.getInstance(MixInfo.class).getEntryById(
+										mixId);
+								}
 								if (!JAPModel.isInfoServiceDisabled() && !cascade.isUserDefined() &&
 									(mixinfo == null || mixinfo.isFromCascade()))
 								{
@@ -1815,9 +1820,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			return cascade.getPorts();
 		}
 
-		public String getMixVersion(String a_mixID)
+		public String getMixVersion(MixCascade a_cascade, String a_mixID)
 		{
-			MixInfo mixinfo = getMixInfo(a_mixID);
+			MixInfo mixinfo = getMixInfo(a_cascade, a_mixID);
 			if (mixinfo != null)
 			{
 				ServiceSoftware software = mixinfo.getServiceSoftware();
@@ -1829,9 +1834,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			return null;
 		}
 
-		public JAPCertificate getMixCertificate(String a_mixID)
+		public JAPCertificate getMixCertificate(MixCascade a_cascade, String a_mixID)
 		{
-			MixInfo mixinfo = getMixInfo(a_mixID);
+			MixInfo mixinfo = getMixInfo(a_cascade, a_mixID);
 			JAPCertificate certificate = null;
 			if (mixinfo != null)
 			{
@@ -1845,13 +1850,13 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		 * @param a_mixId String
 		 * @return String
 		 */
-		public String getEMail(String a_mixId)
+		public String getEMail(MixCascade a_cascade, String a_mixId)
 		{
 			ServiceOperator operator;
 			MixInfo info;
 			String strEmail = null;
 
-			info = getMixInfo(a_mixId);
+			info = getMixInfo(a_cascade, a_mixId);
 			if (info != null)
 			{
 				operator = info.getServiceOperator();
@@ -1874,9 +1879,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		 * @param a_mixId String
 		 * @return String
 		 */
-		public String getOperator(String a_mixId)
+		public String getOperator(MixCascade a_cascade, String a_mixId)
 		{
-			ServiceOperator operator = getServiceOperator(a_mixId);
+			ServiceOperator operator = getServiceOperator(a_cascade, a_mixId);
 			String strOperator = null;
 			if (operator != null)
 			{
@@ -1894,9 +1899,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		 * @param a_mixId String
 		 * @return String
 		 */
-		public String getUrl(String a_mixId)
+		public String getUrl(MixCascade a_cascade, String a_mixId)
 		{
-			ServiceOperator operator = getServiceOperator(a_mixId);
+			ServiceOperator operator = getServiceOperator(a_cascade, a_mixId);
 			String strUrl = null;
 			if (operator != null)
 			{
@@ -1926,10 +1931,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			return strUrl;
 		}
 
-		public String getName(String a_mixId)
+		public String getName(MixCascade a_cascade, String a_mixId)
 		{
 			String name;
-			MixInfo info = getMixInfo(a_mixId);
+			MixInfo info = getMixInfo(a_cascade, a_mixId);
 			if (info == null)
 			{
 				return null;
@@ -1948,9 +1953,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		 * @param a_mixId String
 		 * @return String
 		 */
-		public String getLocation(String a_mixId)
+		public String getLocation(MixCascade a_cascade, String a_mixId)
 		{
-			ServiceLocation location = getServiceLocation(a_mixId);
+			ServiceLocation location = getServiceLocation(a_cascade, a_mixId);
 			String strLocation = "";
 
 			if (location != null)
@@ -2011,9 +2016,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			return false;
 		}
 
-		public Vector getCoordinates(String a_mixId)
+		public Vector getCoordinates(MixCascade a_cascade, String a_mixId)
 		{
-			ServiceLocation location = getServiceLocation(a_mixId);
+			ServiceLocation location = getServiceLocation(a_cascade, a_mixId);
 			Vector coordinates;
 
 			if (location == null || location.getLatitude() == null || location.getLongitude() == null)
@@ -2046,9 +2051,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			return (MixCascade) Database.getInstance(MixCascade.class).getEntryById(a_cascadeId);
 		}
 
-		private ServiceLocation getServiceLocation(String a_mixId)
+		private ServiceLocation getServiceLocation(MixCascade a_cascade, String a_mixId)
 		{
-			MixInfo info = getMixInfo(a_mixId);
+			MixInfo info = getMixInfo(a_cascade, a_mixId);
 
 			if (info != null)
 			{
@@ -2075,9 +2080,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			return null;
 		}
 
-		private ServiceOperator getServiceOperator(String a_mixId)
+		private ServiceOperator getServiceOperator(MixCascade a_cascade, String a_mixId)
 		{
-			MixInfo info = getMixInfo(a_mixId);
+			MixInfo info = getMixInfo(a_cascade, a_mixId);
 
 			if (info != null)
 			{
@@ -2104,10 +2109,17 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			return null;
 		}
 
-		private MixInfo getMixInfo(String a_mixId)
+		private MixInfo getMixInfo(MixCascade a_cascade, String a_mixId)
 		{
+			MixInfo info = null;
 
-			MixInfo info = (MixInfo) Database.getInstance(MixInfo.class).getEntryById(a_mixId);
+			info = a_cascade.getMixInfo(a_mixId);
+			/** @todo remove the isFromCascade() test if all mixes are updated */
+			if (info == null || info.isFromCascade())
+			{
+				info = (MixInfo) Database.getInstance(MixInfo.class).getEntryById(a_mixId);
+			}
+
 			if (info == null)
 			{
 				MixCascade cascade = (MixCascade) Database.getInstance(MixCascade.class).getEntryById(a_mixId);

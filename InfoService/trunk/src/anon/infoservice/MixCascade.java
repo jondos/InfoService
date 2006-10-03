@@ -305,21 +305,20 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 		{
 			m_mixCascadeId = (String)m_mixIds.elementAt(0);
 		}
+		Node lastUpdateNode = XMLUtil.getFirstChildByName(a_mixCascadeNode, "LastUpdate");
+		m_lastUpdate = XMLUtil.parseValue(lastUpdateNode,
+											  System.currentTimeMillis() - Constants.TIMEOUT_MIXCASCADE);
 		if (!m_bFromCascade)
 		{
-			/* get the LastUpdate timestamp */
-			NodeList lastUpdateNodes = a_mixCascadeNode.getElementsByTagName("LastUpdate");
-			if (lastUpdateNodes.getLength() == 0)
+			if (lastUpdateNode == null)
 			{
 				throw new XMLParseException("LastUpdate");
 			}
-			Element lastUpdateNode = (Element) (lastUpdateNodes.item(0));
-			m_lastUpdate = Long.parseLong(lastUpdateNode.getFirstChild().getNodeValue());
+
 			m_serial = XMLUtil.parseAttribute(a_mixCascadeNode, XML_ATTR_SERIAL, m_lastUpdate);
 		}
 		else
 		{
-			m_lastUpdate = System.currentTimeMillis() - Constants.TIMEOUT_MIXCASCADE;
 			m_serial = XMLUtil.parseAttribute(a_mixCascadeNode, XML_ATTR_SERIAL, Long.MIN_VALUE);
 		}
 		if (a_bDoSignatureCheck)
