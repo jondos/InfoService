@@ -302,7 +302,7 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 				/* this is a new unknown service */
 				addEntry = true;
 			}
-			else if (newEntry.getVersionNumber() > oldEntry.getVersionNumber())
+			else if (newEntry.getLastUpdate() > oldEntry.getLastUpdate())
 			{
 				// we know this service, and the entry is newer than the one we have stored
 				addEntry = true;

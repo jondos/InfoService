@@ -33,6 +33,7 @@
 package anon.infoservice;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 import org.w3c.dom.Element;
 
 import anon.util.IXMLEncodable;
@@ -43,7 +44,7 @@ import anon.util.XMLUtil;
  * Holds the information about the used software of a service.
  */
 public class ServiceSoftware implements IXMLEncodable {
-  
+
   /**
    * This is the version of the used software.
    */
@@ -67,7 +68,7 @@ public class ServiceSoftware implements IXMLEncodable {
    *
    * @exception XMLParseException if an error occurs while parsing the xml structure
    */
-  public ServiceSoftware(Element a_element) throws XMLParseException {
+  public ServiceSoftware(Node a_element) throws XMLParseException {
     /* get the version */
     m_strVersion = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_element, "Version"), null);
     if (m_strVersion == null) {
