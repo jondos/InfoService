@@ -136,12 +136,11 @@ public class KeyExchangeManager {
 		   /* process the received XML structure */
 		   MixCascade cascade = new MixCascade(XMLUtil.toXMLDocument(xmlData).getDocumentElement(),
 											   Long.MAX_VALUE, a_cascade.getId());
-		  /* verify the signature */
-		  /*if (SignatureVerifier.getInstance().verifyXml(cascade.getXmlStructure(),
-			  SignatureVerifier.DOCUMENT_CLASS_MIX) == false)
+
+		  if (!cascade.getSignature().isVerified())
 		  {
 			  throw (new SignatureException("Received XML structure has an invalid signature."));
-		  }*/
+		  }
 
 		  if (a_cascade.isUserDefined())
 		  {
@@ -162,27 +161,29 @@ public class KeyExchangeManager {
 				  }
 			  }
 		  }
+
 		  Database.getInstance(MixInfo.class).update(
-			  new MixInfo(cascade.getId(), cascade.getSignature().getCertPath()));
+			  new MixInfo(MixInfo.DEFAULT_NAME, cascade.getSignature().getCertPath()));
 
 		  /*
 		   * get the appended certificate of the signature and store it in the
 		   * certificate store (needed for verification of the MixCascadeStatus
 		   * messages)
 		   */
-		  if (cascade.getMixCascadeCertificate() != null &&
+		  if (cascade.getCertificate() != null &&
 		          cascade.getSignature() != null &&
 				      cascade.getSignature().getCertPath() != null)
 		  {
+
 			  // add certificate only if the CertPath is valid
-			  if(cascade.getSignature().getCertPath().verify())
-		  {
-			  m_mixCascadeCertificateLock = SignatureVerifier.getInstance().
+			  if (cascade.getSignature().isVerified())
+			  {
+				  m_mixCascadeCertificateLock = SignatureVerifier.getInstance().
 					  getVerificationCertificateStore().addCertificateWithoutVerification(
-					  cascade.getMixCascadeCertificate(),
+						  cascade.getCertificate(),
 						  JAPCertificate.CERTIFICATE_TYPE_MIX, false, false);
-			  LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-							"Added appended certificate from the MixCascade structure to the certificate store.");
+				  LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+								"Added appended certificate from the MixCascade structure to the certificate store.");
 			  }
 		  }
 		  else
@@ -234,7 +235,7 @@ public class KeyExchangeManager {
 		 m_mixParameters = new MixParameters[cascade.getNumberOfMixes()];
 		  for (int i = 0; i < cascade.getNumberOfMixes(); i++)
 		  {
-			  if (i > 0 && !cascade.getMixInfo(i).getMixCertPath().verify())
+			  if (i > 0 && !cascade.getMixInfo(i).getSignature().isVerified())
 			  {
 				  throw (new SignatureException(
 					  "Received XML structure has an invalid signature for Mix " +
@@ -247,7 +248,6 @@ public class KeyExchangeManager {
 				  (oldMixinfo == null || !oldMixinfo.getMixCertificate().equals(mixinfo.getMixCertificate())))
 			  {
 				  // update the database so the the (new) certificate gets available
-
 				  Database.getInstance(MixInfo.class).update(mixinfo);
 			  }
 			  Element currentMixNode = mixinfo.getXmlStructure();
@@ -460,7 +460,7 @@ public class KeyExchangeManager {
 
 			  keyDoc.getDocumentElement().appendChild(XMLUtil.importNode(keyDoc, keySignatureNode, true));
 
-			  if (XMLSignature.verify(keyDoc, cascade.getMixCascadeCertificate()) == null)
+			  if (XMLSignature.verify(keyDoc, cascade.getCertificate()) == null)
 			  {
 				  throw (new SignatureException("Invalid symmetric keys signature received."));
 			  }
