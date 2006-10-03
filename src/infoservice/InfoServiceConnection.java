@@ -95,10 +95,10 @@ public class InfoServiceConnection implements Runnable
 	{
 		try
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.NET,
-						  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-						  "): Handle connection from: " + m_socket.getInetAddress().getHostAddress() + ":" +
-						  m_socket.getPort());
+			//LogHolder.log(LogLevel.DEBUG, LogType.NET,
+			//			  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
+			//			  "): Handle connection from: " + m_socket.getInetAddress().getHostAddress() + ":" +
+			//			  m_socket.getPort());
 			try
 			{
 				m_socket.setSoTimeout(Constants.COMMUNICATION_TIMEOUT);
@@ -142,9 +142,9 @@ public class InfoServiceConnection implements Runnable
 					InfoServiceConnectionReader connectionReader = new InfoServiceConnectionReader(
 						streamFromClient, Constants.MAX_REQUEST_HEADER_SIZE);
 					String requestLine = readRequestLine(connectionReader);
-					LogHolder.log(LogLevel.DEBUG, LogType.NET,
-								  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-								  "): Client: " + m_socket.getInetAddress() +  " Request line: " + requestLine);
+					//LogHolder.log(LogLevel.DEBUG, LogType.NET,
+					//			  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
+					//			  "): Client: " + m_socket.getInetAddress() +  " Request line: " + requestLine);
 					StringTokenizer requestLineTokenizer = new StringTokenizer(requestLine, " ");
 					if (requestLineTokenizer.countTokens() != 3)
 					{
@@ -175,9 +175,9 @@ public class InfoServiceConnection implements Runnable
 					while (headerLines.hasMoreElements())
 					{
 						String currentHeaderLine = (String) (headerLines.nextElement());
-						LogHolder.log(LogLevel.DEBUG, LogType.NET,
-									  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-									  "): Processing header line: " + currentHeaderLine);
+						//LogHolder.log(LogLevel.DEBUG, LogType.NET,
+						//			  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
+						//			  "): Processing header line: " + currentHeaderLine);
 						/* everything until the first ':' is the field-name, everything after the first ':'
 						 * belongs to the field-value
 						 */
@@ -195,10 +195,10 @@ public class InfoServiceConnection implements Runnable
 							try
 							{
 								contentLength = Integer.parseInt(currentHeaderFieldValue);
-								LogHolder.log(LogLevel.DEBUG, LogType.NET,
-											  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-											  "): Read 'Content-Length: " + Integer.toString(contentLength) +
-											  "' from header.");
+								//LogHolder.log(LogLevel.DEBUG, LogType.NET,
+								//			  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
+								//			  "): Read 'Content-Length: " + Integer.toString(contentLength) +
+								//			  "' from header.");
 							}
 							catch (Exception e)
 							{
@@ -233,10 +233,10 @@ public class InfoServiceConnection implements Runnable
 							postDataRead.write(byteRead);
 						}
 						postData = postDataRead.toByteArray();
-						LogHolder.log(LogLevel.DEBUG, LogType.NET,
-									  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-									  "): Post-Data received for request: " + requestUrl + ": " +
-									  postDataRead.toString());
+						//LogHolder.log(LogLevel.DEBUG, LogType.NET,
+						//			  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
+							//		  "): Post-Data received for request: " + requestUrl + ": " +
+						//			  postDataRead.toString());
 					}
 				}
 				catch (Exception e)
@@ -279,10 +279,10 @@ public class InfoServiceConnection implements Runnable
 				{
 					try
 					{
-						LogHolder.log(LogLevel.DEBUG, LogType.NET,
-									  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-									  "): Response for request: " + requestUrl + ": " +
-									  (new String(response.getResponseData())));
+						//LogHolder.log(LogLevel.DEBUG, LogType.NET,
+						//			  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
+						//			  "): Response for request: " + requestUrl + ": " +
+						//			  (new String(response.getResponseData())));
 						byte[] theResponse = response.getResponseData();
 						int index = 0;
 						int len = theResponse.length;
@@ -351,9 +351,9 @@ public class InfoServiceConnection implements Runnable
 							  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
 							  "): Error while closing connection: " + e.toString());
 			}
-			LogHolder.log(LogLevel.DEBUG, LogType.NET,
-						  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-						  "): Connection thread finished.");
+		//	LogHolder.log(LogLevel.DEBUG, LogType.NET,
+		//				  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
+		//				  "): Connection thread finished.");
 		}
 		catch (Throwable t)
 		{
@@ -375,9 +375,10 @@ public class InfoServiceConnection implements Runnable
 	 */
 	private String readRequestLine(InfoServiceConnectionReader a_inputData) throws Exception
 	{
+		//StringBuffer readBuffer=new StringBuffer(256);
 		ByteArrayOutputStream readBuffer = new ByteArrayOutputStream(256);
 		boolean requestLineReadingDone = false;
-		while (requestLineReadingDone == false)
+		while (!requestLineReadingDone)
 		{
 			int byteRead = a_inputData.read();
 			if (byteRead == -1)

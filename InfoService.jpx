@@ -82,7 +82,7 @@
   <property category="runtime.4" name="BuildTargetOnRun" value="&lt;None&gt;"/>
   <property category="runtime.4" name="ConfigurationName" value="InfoService altervativ Config"/>
   <property category="runtime.4" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
-  <property category="runtime.4" name="application.class" value="InfoService"/>
+  <property category="runtime.4" name="application.class" value="infoservice.InfoService"/>
   <property category="runtime.4" name="application.parameters" value="InfoService.properties"/>
   <property category="runtime.4" name="custom.init_required" value="0"/>
   <property category="runtime.4" name="custom.jdk" value="java version 1.5.0-rc-b63"/>
