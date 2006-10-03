@@ -350,13 +350,9 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				{
 					threadRun.interrupt();
 					threadRun.join(1000);
-					if (i == 3)
+					if (i > 3)
 					{
 						threadRun.stop();
-					}
-					else if (i > 6)
-					{
-						break;
 					}
 					i++;
 				}
