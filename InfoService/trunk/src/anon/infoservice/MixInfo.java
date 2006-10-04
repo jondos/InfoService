@@ -246,6 +246,7 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 	  Node operatorNode = XMLUtil.getFirstChildByName(a_mixNode, "Operator");
 	  Node locationNode = XMLUtil.getFirstChildByName(a_mixNode, "Location");
 	  Node lastUpdateNode = XMLUtil.getFirstChildByName(a_mixNode, "LastUpdate");
+	  Node softwareNode = XMLUtil.getFirstChildByName(a_mixNode, "Software");
 
 	  if (!a_bFromCascade)
 	  {
@@ -261,12 +262,11 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 		  m_dynamic = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_mixNode, "Dynamic"), false);
 
 		  /* get the software information */
-		  Node softwareNode = XMLUtil.getFirstChildByName(a_mixNode, "Software");
+
 		  if (softwareNode == null)
 		  {
 			  throw (new XMLParseException("Software", m_mixId));
 		  }
-		  m_mixSoftware = new ServiceSoftware(softwareNode);
 
 		  /* get LastUpdate information */
 
@@ -280,7 +280,13 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
 	  {
 		  m_lastUpdate = System.currentTimeMillis() - Constants.TIMEOUT_MIX;
 	  }
+
 	  m_serial = XMLUtil.parseValue(lastUpdateNode, 0L);
+
+	  if (softwareNode != null)
+	  {
+		  m_mixSoftware = new ServiceSoftware(softwareNode);
+	  }
 
 	  m_mixLocation = new ServiceLocation(locationNode, m_mixCertificate);
 	  //get the Operator Certificate from the CertPath
