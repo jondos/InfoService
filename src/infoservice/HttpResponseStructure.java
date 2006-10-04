@@ -31,6 +31,7 @@ import java.util.Date;
 
 import org.w3c.dom.Document;
 
+import anon.infoservice.HTTPConnectionFactory;
 import anon.util.XMLUtil;
 
 /**
@@ -80,7 +81,8 @@ public final class HttpResponseStructure {
    */
   public static final int HTTP_TYPE_APPLICATION_JNLP = 10;
 
-  public static final int HTTP_TYPE_APPLICATION_ZLIB = 11;
+  public static final int HTTP_ENCODING_PLAIN = HTTPConnectionFactory.HTTP_ENCODING_PLAIN;
+  public static final int HTTP_ENCODING_ZLIB = HTTPConnectionFactory.HTTP_ENCODING_ZLIB;
 
 
   /**
@@ -98,11 +100,15 @@ public final class HttpResponseStructure {
   private static final String HTTP_RETURN_INTERNAL_SERVER_ERROR_STRING = "500 Internal Server Error";
 
   private static final String HTTP_HEADER_TYPE_STRING = "Content-type: ";
+  private static final String HTTP_HEADER_ENCODING_STRING = "Content-Encoding: ";
   private static final String HTTP_HEADER_LENGTH_STRING = "Content-length: ";
   private static final String HTTP_HEADER_DATE_STRING = "Date: ";
   private static final String HTTP_HEADER_EXPIRES_STRING = "Expires: ";
   private static final String HTTP_HEADER_CACHE_CONTROL_STRING = "Cache-Control: ";
   private static final String HTTP_HEADER_PRAGMA_STRING = "Pragma: ";
+
+  private static final String HTTP_ENCODING_PLAIN_STRING = "plain";
+  private static final String HTTP_ENCODING_ZLIB_STRING = HTTPConnectionFactory.HTTP_ENCODING_ZLIB_STRING;
 
   private static final String HTTP_TYPE_APPLICATION_JNLP_STRING = "application/x-java-jnlp-file";
   private static final String HTTP_TYPE_APPLICATION_ZLIB_STRING = "application/x-compress";
@@ -129,19 +135,34 @@ public final class HttpResponseStructure {
    */
   public HttpResponseStructure(int a_returnCode) {
     if (a_returnCode == HTTP_RETURN_OK) {
-      m_httpReturnData = createHttpMessage(HTTP_RETURN_OK, HTTP_TYPE_NO_TYPE, null, false);
+      m_httpReturnData = createHttpMessage(HTTP_RETURN_OK, HTTP_TYPE_NO_TYPE, HTTP_ENCODING_PLAIN, null, false);
     }
     else if (a_returnCode == HTTP_RETURN_BAD_REQUEST) {
-      m_httpReturnData = createHttpMessage(HTTP_RETURN_BAD_REQUEST, HTTP_TYPE_TEXT_HTML, HTML_BAD_REQUEST.getBytes(), false);
+      m_httpReturnData = createHttpMessage(HTTP_RETURN_BAD_REQUEST, HTTP_TYPE_TEXT_HTML, HTTP_ENCODING_PLAIN,
+										   HTML_BAD_REQUEST.getBytes(), false);
     }
     else if (a_returnCode == HTTP_RETURN_NOT_FOUND) {
-      m_httpReturnData = createHttpMessage(HTTP_RETURN_NOT_FOUND, HTTP_TYPE_TEXT_HTML, HTML_NOT_FOUND.getBytes(), false);
+      m_httpReturnData = createHttpMessage(HTTP_RETURN_NOT_FOUND, HTTP_TYPE_TEXT_HTML, HTTP_ENCODING_PLAIN,
+										   HTML_NOT_FOUND.getBytes(), false);
     }
     else {
       /* any other error code is treated as internal server error */
-      m_httpReturnData = createHttpMessage(HTTP_RETURN_INTERNAL_SERVER_ERROR, HTTP_TYPE_TEXT_HTML, HTML_INTERNAL_SERVER_ERROR.getBytes(), false);
+      m_httpReturnData = createHttpMessage(HTTP_RETURN_INTERNAL_SERVER_ERROR, HTTP_TYPE_TEXT_HTML,
+										   HTTP_ENCODING_PLAIN, HTML_INTERNAL_SERVER_ERROR.getBytes(), false);
     }
   }
+
+  /**
+  * Creates a new HTTP response with HTTP return code OK (200) and the specified XML data in the
+  * content part.
+  *
+  * @param a_xmlDocument The XML data for the body of the HTTP response.
+  */
+ public HttpResponseStructure(Document a_xmlDocument)
+ {
+	 this(a_xmlDocument, HTTP_ENCODING_PLAIN);
+ }
+
 
   /**
    * Creates a new HTTP response with HTTP return code OK (200) and the specified XML data in the
@@ -149,13 +170,15 @@ public final class HttpResponseStructure {
    *
    * @param a_xmlDocument The XML data for the body of the HTTP response.
    */
-  public HttpResponseStructure(Document a_xmlDocument) {
+  public HttpResponseStructure(Document a_xmlDocument, int a_supportedEncodings) {
     String xmlString = XMLUtil.toString(a_xmlDocument);
     if (xmlString == null) {
-      m_httpReturnData = createHttpMessage(HTTP_RETURN_INTERNAL_SERVER_ERROR, HTTP_TYPE_TEXT_HTML, HTML_INTERNAL_SERVER_ERROR.getBytes(), false);
+      m_httpReturnData = createHttpMessage(HTTP_RETURN_INTERNAL_SERVER_ERROR, HTTP_TYPE_TEXT_HTML,
+										   HTTP_ENCODING_PLAIN, HTML_INTERNAL_SERVER_ERROR.getBytes(), false);
     }
     else {
-      m_httpReturnData = createHttpMessage(HTTP_RETURN_OK, HTTP_TYPE_TEXT_XML, xmlString.getBytes(), false);
+      m_httpReturnData = createHttpMessage(HTTP_RETURN_OK, HTTP_TYPE_TEXT_XML,
+										   a_supportedEncodings, xmlString.getBytes(), false);
     }
   }
 
@@ -167,8 +190,9 @@ public final class HttpResponseStructure {
    *                       class.
    * @param a_httpData The content data for the HTTP response.
    */
-  public HttpResponseStructure(int a_httpDataType, String a_httpData) {
-    m_httpReturnData = createHttpMessage(HTTP_RETURN_OK, a_httpDataType, a_httpData.getBytes(), false);
+  public HttpResponseStructure(int a_httpDataType, int a_httpEncoding, String a_httpData) {
+    m_httpReturnData = createHttpMessage(HTTP_RETURN_OK, a_httpDataType, a_httpEncoding,
+										 a_httpData.getBytes(), false);
   }
 
   /**
@@ -179,8 +203,8 @@ public final class HttpResponseStructure {
    *                       class.
    * @param a_httpData The content data for the HTTP response.
    */
-  public HttpResponseStructure(int a_httpDataType, byte[] a_httpData) {
-	m_httpReturnData = createHttpMessage(HTTP_RETURN_OK, a_httpDataType, a_httpData, false);
+  public HttpResponseStructure(int a_httpDataType, int a_httpEncoding, byte[] a_httpData) {
+	m_httpReturnData = createHttpMessage(HTTP_RETURN_OK, a_httpDataType, a_httpEncoding, a_httpData, false);
   }
 
   /**
@@ -197,8 +221,9 @@ public final class HttpResponseStructure {
    *                     parameter is set to false, the full response including header and
    *                     data is created.
    */
-  public HttpResponseStructure(int a_httpDataType, String a_httpData, boolean a_onlyHeader) {
-    m_httpReturnData = createHttpMessage(HTTP_RETURN_OK, a_httpDataType, a_httpData.getBytes(), a_onlyHeader);
+  public HttpResponseStructure(int a_httpDataType, int a_httpEncoding, String a_httpData, boolean a_onlyHeader) {
+    m_httpReturnData = createHttpMessage(HTTP_RETURN_OK, a_httpDataType, a_httpEncoding,
+										 a_httpData.getBytes(), a_onlyHeader);
   }
 
 
@@ -235,7 +260,8 @@ public final class HttpResponseStructure {
    *
    * @return The created HTTP response.
    */
-  private byte[] createHttpMessage(int a_httpReturnCode, int a_httpDataType, byte[] a_httpData, boolean a_onlyHeader) {
+  private byte[] createHttpMessage(int a_httpReturnCode, int a_httpDataType, int a_httpEncoding,
+								   byte[] a_httpData, boolean a_onlyHeader) {
     String httpHeader = HTTP_11_STRING;
     /* set the return code */
     if (a_httpReturnCode == HTTP_RETURN_OK) {
@@ -270,12 +296,21 @@ public final class HttpResponseStructure {
       if (a_httpDataType == HTTP_TYPE_APPLICATION_JNLP) {
         httpHeader = httpHeader + HTTP_TYPE_APPLICATION_JNLP_STRING;
       }
-	  if (a_httpDataType == HTTP_TYPE_APPLICATION_ZLIB)
-	  {
-		   httpHeader = httpHeader + HTTP_TYPE_APPLICATION_ZLIB_STRING;
-	  }
       httpHeader = httpHeader + HTTP_CRLF_STRING;
     }
+
+	// set the encoding
+	if (a_httpEncoding != HTTP_ENCODING_PLAIN)
+	{
+		httpHeader = httpHeader + HTTP_HEADER_ENCODING_STRING;
+		if (a_httpEncoding == HTTP_ENCODING_ZLIB)
+		{
+			//httpHeader += "gzip";
+			httpHeader += HTTP_ENCODING_ZLIB_STRING;
+		}
+		httpHeader += HTTP_CRLF_STRING;
+	}
+
     /* set some more header fields */
     String currentDate = Configuration.getInstance().getHttpDateFormat().format(new Date());
     httpHeader = httpHeader + HTTP_HEADER_EXPIRES_STRING + currentDate + HTTP_CRLF_STRING +

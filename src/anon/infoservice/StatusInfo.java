@@ -294,6 +294,11 @@ public class StatusInfo extends AbstractDatabaseEntry implements IDistributable
     return m_statusXmlData.getBytes();
   }
 
+  public int getPostEncoding()
+  {
+	  return HTTPConnectionFactory.HTTP_ENCODING_PLAIN;
+  }
+
   /**
    * Returns the XML structure of this status entry as we received it.
    *

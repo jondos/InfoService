@@ -730,13 +730,13 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 	 * @param lastConnectionDescriptor The HTTPConnectionDescriptor of the last connection try (the
 	 *                                 last output of this function) or null, if you want a new
 	 *                                 connection (connection to preferedListenerInterface is opened).
-	 *
+	 * @param a_supportedEncodings supported http encodings ussed to receive the data (e.g. HTTP_ENCODING_ZLIB)
 	 * @return HTTPConnectionDescriptor with a connection to the next ListenerInterface in the list
 	 *         or to the preferedListenerInterface, if you supplied null.
 	 * @todo Create the connections via a changing proxy interface!!
 	 */
 	private HTTPConnectionDescriptor connectToInfoService(HTTPConnectionDescriptor lastConnectionDescriptor,
-		ImmutableProxyInterface a_proxy)
+		ImmutableProxyInterface a_proxy, int a_supportedEncodings)
 	{
 		int nextIndex = m_preferedListenerInterface;
 		if (lastConnectionDescriptor != null)
@@ -748,11 +748,19 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 		m_preferedListenerInterface = nextIndex;
 		/* create the connection descriptor */
 		ListenerInterface target = (ListenerInterface) (m_listenerInterfaces.elementAt(nextIndex));
-		HTTPConnection connection = HTTPConnectionFactory.getInstance().createHTTPConnection(target, a_proxy);
+		HTTPConnection connection =
+			HTTPConnectionFactory.getInstance().createHTTPConnection(
+					 target, a_proxy, a_supportedEncodings, true);
 		return new HTTPConnectionDescriptor(connection, target);
 	}
 
 	private Document getXmlDocument(final HttpRequestStructure a_httpRequest) throws Exception
+	{
+		return getXmlDocument(a_httpRequest, HTTPConnectionFactory.HTTP_ENCODING_PLAIN);
+	}
+
+	private Document getXmlDocument(final HttpRequestStructure a_httpRequest, int a_supportedEncodings)
+		throws Exception
 	{
 		/* make sure that we are connected */
 		int connectionCounter = 0;
@@ -790,14 +798,14 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 
 				// get the next connection descriptor by supplying the last one
 				currentConnectionDescriptor = connectToInfoService(currentConnectionDescriptor,
-					proxyInterfaceGetter.getProxyInterface());
+					proxyInterfaceGetter.getProxyInterface(), a_supportedEncodings);
 
 				final HTTPConnection currentConnection = currentConnectionDescriptor.getConnection();
 				currentConnection.setTimeout(GET_XML_CONNECTION_TIMEOUT);
 
 				// use a Vector as storage for the the result of the communication
 				final Vector responseStorage = new Vector();
-				final Vector headerContentTypeStorage = new Vector();
+				final Vector headerContentEncoding = new Vector();
 
 				// * we need the possibility to interrupt the infoservice communication,
 				// * but also we need to know whether the operation was interupted by an
@@ -847,7 +855,7 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 							}
 							if (response != null)
 							{
-								headerContentTypeStorage.addElement(response.getHeader("Content-type"));
+								headerContentEncoding.addElement(response.getHeader("Content-Encoding"));
 								InputStream responseStream = response.getInputStream();
 								ByteArrayOutputStream tempStream = new ByteArrayOutputStream();
 								byte[] tempBuffer = new byte[1000];
@@ -891,9 +899,15 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 						if (responseStorage.size() > 0)
 						{
 							byte[] response;
-							if (headerContentTypeStorage.size() > 0 &&
-								headerContentTypeStorage.firstElement().equals("application/x-compress"))
+							if (headerContentEncoding.size() > 0 &&
+								headerContentEncoding.firstElement() != null &&
+								headerContentEncoding.firstElement().equals(
+								HTTPConnectionFactory.HTTP_ENCODING_ZLIB_STRING))
 							{
+								/*
+								 * Normally java does this automatically, but perhaps there are old JREs that
+								 * do not...
+								 */
 								response = ZLibTools.decompress( (byte[]) (responseStorage.firstElement()));
 							}
 							else
@@ -943,7 +957,8 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 	 */
 	public MixCascade getMixCascadeInfo(String a_cascadeID) throws Exception
 	{
-		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/cascadeinfo.z/" + a_cascadeID));
+		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/cascadeinfo/" + a_cascadeID),
+									  HTTPConnectionFactory.HTTP_ENCODING_ZLIB);
 		Element mixNode = doc.getDocumentElement();
 
 		/* check the signature */
@@ -966,7 +981,8 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 	public Hashtable getMixCascades() throws Exception
 	{
 		Document doc =
-			getXmlDocument(HttpRequestStructure.createGetRequest("/cascades.z"));
+			getXmlDocument(HttpRequestStructure.createGetRequest("/cascades"),
+						   HTTPConnectionFactory.HTTP_ENCODING_ZLIB);
 
 		if (!SignatureVerifier.getInstance().verifyXml(doc,
 			SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE))
@@ -1114,7 +1130,8 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 
 	public Hashtable getMixCascadeSerials() throws Exception
 	{
-		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/cascadeserials.z"));
+		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/cascadeserials"),
+									  HTTPConnectionFactory.HTTP_ENCODING_ZLIB);
 
 		if (!SignatureVerifier.getInstance().verifyXml(doc, SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE))
 		{
@@ -1128,7 +1145,8 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 
 	public Hashtable getInfoServiceSerials() throws Exception
 	{
-		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/infoserviceserials.z"));
+		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/infoserviceserials"),
+									  HTTPConnectionFactory.HTTP_ENCODING_ZLIB);
 
 		if (!SignatureVerifier.getInstance().verifyXml(doc, SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE))
 		{
@@ -1156,7 +1174,7 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 		NodeList mixNodes = doc.getElementsByTagName("Mix");
 		if (mixNodes.getLength() == 0)
 		{
-			throw (new Exception("Error in XML structure."));
+			throw (new Exception("Error in XML structure for mix with ID " + mixId));
 		}
 		Element mixNode = (Element) (mixNodes.item(0));
 		/* check the signature */
@@ -1186,7 +1204,7 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 		NodeList mixCascadeStatusNodes = doc.getElementsByTagName("MixCascadeStatus");
 		if (mixCascadeStatusNodes.getLength() == 0)
 		{
-			throw (new Exception("Error in XML structure."));
+			throw (new Exception("Error in XML structure for cascade with ID" + cascadeId));
 		}
 		Element mixCascadeStatusNode = (Element) (mixCascadeStatusNodes.item(0));
 		/* check the signature */

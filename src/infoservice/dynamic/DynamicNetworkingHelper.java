@@ -139,8 +139,9 @@ public class DynamicNetworkingHelper
 		{
 			docConnectivity = constructAnswer("Failed");
 		}
-		httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK, XMLUtil
-				.toString(docConnectivity));
+		httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,
+												 HttpResponseStructure.HTTP_ENCODING_PLAIN,
+												 XMLUtil.toString(docConnectivity));
 		return httpResponse;
 	}
 

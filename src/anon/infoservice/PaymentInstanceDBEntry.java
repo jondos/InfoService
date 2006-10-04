@@ -35,16 +35,11 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import anon.crypto.JAPCertificate;
-import anon.pay.BI;
-import anon.util.IXMLEncodable;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 
 /** Holds the information of a payment instance for storing in the InfoService.*/
-public class PaymentInstanceDBEntry extends AbstractDatabaseEntry implements IDistributable, IXMLEncodable
+public class PaymentInstanceDBEntry extends AbstractDistributableDatabaseEntry
 {
 	/**
 	 * This is the ID of this payment instance.
@@ -222,17 +217,6 @@ public class PaymentInstanceDBEntry extends AbstractDatabaseEntry implements IDi
 	}
 
 	/**
-	 * This returns the data, which are posted to other InfoServices. It's the whole XML structure
-	 * of this PaymentInstanceDBEntry.
-	 *
-	 * @return The data, which are posted to other InfoServices when this entry is forwarded.
-	 */
-	public byte[] getPostData()
-	{
-		return (XMLUtil.toString(m_xmlDescription).getBytes());
-	}
-
-	/**
 	 * Returns the name of the XML element constructed by this class.
 	 *
 	 * @return the name of the XML element constructed by this class
@@ -242,22 +226,9 @@ public class PaymentInstanceDBEntry extends AbstractDatabaseEntry implements IDi
 		return "PaymentInstance";
 	}
 
-	/**
-	 * Creates an XML node for this PaymentInstance.
-	 * @param a_doc The XML document, which is the environment for the created XML node.
-	 * @return The InfoService XML node.
-	 */
-	public Element toXmlElement(Document a_doc)
+	public Element getXmlStructure()
 	{
-		Element returnXmlStructure = null;
-		try
-		{
-			returnXmlStructure = (Element) (XMLUtil.importNode(a_doc, m_xmlDescription, true));
-		}
-		catch (Exception e)
-		{
-		}
-		return returnXmlStructure;
+		return m_xmlDescription;
 	}
 
 }

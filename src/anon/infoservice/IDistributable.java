@@ -51,6 +51,12 @@ public interface IDistributable
 	public String getPostFile();
 
 	/**
+	 * Returns the content encoding of the post data.
+	 * @return the content encoding of the post data
+	 */
+	public int getPostEncoding();
+
+	/**
 	 * Returns the data to post to the other infoservice. In general this should be an XML structure
 	 * with the data of this entry.
 	 *

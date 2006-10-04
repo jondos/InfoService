@@ -36,6 +36,7 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 import anon.infoservice.Constants;
+import anon.infoservice.HTTPConnectionFactory;
 import anon.util.TimedOutputStream;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -132,6 +133,7 @@ public class InfoServiceConnection implements Runnable
 				String requestMethod = "";
 				String requestUrl = "";
 				byte[] postData = null;
+				int supportedEncodings = HttpResponseStructure.HTTP_ENCODING_PLAIN;
 
 				try
 				{
@@ -206,6 +208,17 @@ public class InfoServiceConnection implements Runnable
 									e.toString()));
 							}
 						}
+
+						if (currentHeaderFieldName.equalsIgnoreCase("Accept-Encoding") ||
+							currentHeaderFieldName.equalsIgnoreCase("Content-Encoding")) // for post
+						{
+							if (currentHeaderFieldValue != null &&
+								currentHeaderFieldValue.indexOf(
+								HTTPConnectionFactory.HTTP_ENCODING_ZLIB_STRING) >= 0)
+							{
+								supportedEncodings = HttpResponseStructure.HTTP_ENCODING_ZLIB;
+							}
+						}
 					}
 
 					/* read the POST data, if it is a POST request */
@@ -254,7 +267,7 @@ public class InfoServiceConnection implements Runnable
 					if (m_serverImplementation != null)
 					{
 						response = m_serverImplementation.processCommand(internalRequestMethodCode,
-							requestUrl, postData, m_socket.getInetAddress());
+							supportedEncodings, requestUrl, postData, m_socket.getInetAddress());
 						if (response == null)
 						{
 							LogHolder.log(LogLevel.ERR, LogType.NET,

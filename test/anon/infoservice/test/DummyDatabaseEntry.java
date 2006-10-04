@@ -29,6 +29,7 @@ package anon.infoservice.test;
 
 import anon.infoservice.AbstractDatabaseEntry;
 import anon.infoservice.IDistributable;
+import anon.infoservice.HTTPConnectionFactory;
 
 /**
  * This class is a dummy implementation and for testing purposes only.
@@ -57,6 +58,11 @@ public class DummyDatabaseEntry extends AbstractDatabaseEntry implements IDistri
 	public void setPostData(String a_postData)
 	{
 		m_postData = a_postData;
+	}
+
+	public int getPostEncoding()
+	{
+		return HTTPConnectionFactory.HTTP_ENCODING_PLAIN;
 	}
 
 	public String getPostFile()

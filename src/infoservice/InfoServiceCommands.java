@@ -155,16 +155,15 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	/**
 	 * Sends the complete list of all known infoservices to the client.
 	 *
-	 * @param a_bCompressed if the recevied data is compressed as zlib stream
+	 * @param a_supportedEncodings defines the encoding supported by the client (deflate, gzip,...)
 	 * @param a_bSerialsOnly only return a list with IS serial numbers so that the caller may decide
 	 * which InfoServices have changed since the last request
 	 * @return The HTTP response for the client.
 	 */
-	private HttpResponseStructure japFetchInfoServers(boolean a_bCompressed, boolean a_bSerialsOnly)
+	private HttpResponseStructure japFetchInfoServers(int a_supportedEncodings, boolean a_bSerialsOnly)
 	{
 		/* this is only the default, if something is going wrong */
-		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
-			HTTP_RETURN_INTERNAL_SERVER_ERROR);
+		HttpResponseStructure httpResponse;
 		try
 		{
 			Document doc = XMLUtil.createDocument();
@@ -195,10 +194,10 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				infoServicesNode);
 			doc.appendChild(infoServicesNode);
 			/* send the XML document to the client */
-			if (a_bCompressed)
+			if ((a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
 			{
 				httpResponse = new HttpResponseStructure(
-					HttpResponseStructure.HTTP_TYPE_APPLICATION_ZLIB,
+					HttpResponseStructure.HTTP_TYPE_TEXT_XML, HttpResponseStructure.HTTP_ENCODING_ZLIB,
 					ZLibTools.compress(XMLUtil.toByteArray(doc)));
 			}
 			else
@@ -208,6 +207,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		catch (Exception e)
 		{
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
 			LogHolder.log(LogLevel.ERR, LogType.NET, e);
 		}
 		return httpResponse;
@@ -220,8 +220,8 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	 */
 	private HttpResponseStructure japFetchPaymentInstanceInfo(String a_piID)
 	{
-		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
-			HTTP_RETURN_INTERNAL_SERVER_ERROR);
+		HttpResponseStructure httpResponse =
+			new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
 		try
 		{
 			Enumeration en = Database.getInstance(PaymentInstanceDBEntry.class).getEntrySnapshotAsEnumeration();
@@ -238,6 +238,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		catch (Exception e)
 		{
+
 			LogHolder.log(LogLevel.ERR, LogType.NET, e);
 		}
 
@@ -252,8 +253,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	private HttpResponseStructure japFetchPaymentInstances()
 	{
 		/* this is only the default, if something is going wrong */
-		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
-			HTTP_RETURN_INTERNAL_SERVER_ERROR);
+		HttpResponseStructure httpResponse;
 		try
 		{
 			Document doc = XMLUtil.createDocument();
@@ -278,6 +278,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		catch (Exception e)
 		{
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
 			LogHolder.log(LogLevel.ERR, LogType.NET, e);
 		}
 		return httpResponse;
@@ -288,11 +289,11 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	 * receive data from a remote infoservice, which posts data about a mixcascade.
 	 *
 	 * @param a_postData The data we have received.
-	 * @param a_bCompressed if the recevied data is compressed as zlib stream
+	 * @param a_encoding the encoding chosen by the client
 	 *
 	 * @return The HTTP response for the client.
 	 */
-	private HttpResponseStructure cascadePostHelo(byte[] a_postData, boolean a_bCompressed)
+	private HttpResponseStructure cascadePostHelo(byte[] a_postData, int a_encoding)
 	{
 		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK);
 		try
@@ -302,16 +303,20 @@ final public class InfoServiceCommands implements JWSInternalCommands
 
 			/* verify the signature */
 			MixCascade mixCascadeEntry;
-			if (a_bCompressed)
+			if (a_encoding == HttpResponseStructure.HTTP_ENCODING_ZLIB)
 			{
 				mixCascadeEntry = new MixCascade(a_postData, false);
 			}
-			else
+			else if (a_encoding == HttpResponseStructure.HTTP_ENCODING_PLAIN)
 			{
 				Element mixCascadeNode =
 					(Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData),
 					MixCascade.XML_ELEMENT_NAME));
 				mixCascadeEntry = new MixCascade(mixCascadeNode, false);
+			}
+			else
+			{
+				throw new Exception("Unsupported post encoding:" + a_encoding);
 			}
 
 			/*
@@ -339,14 +344,14 @@ final public class InfoServiceCommands implements JWSInternalCommands
 
 	/**
 	 * Sends the complete list of all known mixcascades to the client.
-	 * @param a_bCompressed if the data should be sent compressed
+	 * @param a_supportedEncodings defines the encoding supported by the client (deflate, gzip,...)
+	 * @param a_bSerialsOnly if only the serials of the db entries should be returned
 	 * @return The HTTP response for the client.
 	 */
-	private HttpResponseStructure japFetchCascades(boolean a_bCompressed, boolean a_bSerialsOnly)
+	private HttpResponseStructure japFetchCascades(int a_supportedEncodings, boolean a_bSerialsOnly)
 	{
 		/* this is only the default, if something is going wrong */
-		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
-			HTTP_RETURN_INTERNAL_SERVER_ERROR);
+		HttpResponseStructure httpResponse;
 		try
 		{
 			Document doc = XMLUtil.createDocument();
@@ -380,10 +385,11 @@ final public class InfoServiceCommands implements JWSInternalCommands
 
 
 			/* send the XML document to the client */
-			if (a_bCompressed)
+			if ((a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
 			{
 				httpResponse = new HttpResponseStructure(
-								HttpResponseStructure.HTTP_TYPE_APPLICATION_ZLIB,
+								HttpResponseStructure.HTTP_TYPE_TEXT_XML,
+								HttpResponseStructure.HTTP_ENCODING_ZLIB,
 								ZLibTools.compress(XMLUtil.toByteArray(doc)));
 			}
 			else
@@ -394,6 +400,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		catch (Exception e)
 		{
 			/* should never occur */
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
 			LogHolder.log(LogLevel.ERR, LogType.NET, e);
 		}
 		return httpResponse;
@@ -484,6 +491,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				{
 					/* send back the XML structure of the cascade the mix belongs to */
 					httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,
+						HttpResponseStructure.HTTP_ENCODING_PLAIN,
 						XMLUtil.toString(assignedCascade.getXmlStructure()));
 				}
 				/* update the database in every case */
@@ -515,8 +523,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	private HttpResponseStructure japGetMix(String a_mixId)
 	{
 		/* this is only the default, if something is going wrong */
-		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
-			HTTP_RETURN_INTERNAL_SERVER_ERROR);
+		HttpResponseStructure httpResponse;
 		try
 		{
 			MixInfo mixEntry = (MixInfo) (Database.getInstance(MixInfo.class).getEntryById(a_mixId));
@@ -527,12 +534,14 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			else
 			{
 				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,
+					HttpResponseStructure.HTTP_ENCODING_PLAIN,
 					XMLUtil.toString(mixEntry.getXmlStructure()));
 			}
 		}
 		catch (Exception e)
 		{
 			/* should never occur */
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
 			LogHolder.log(LogLevel.ERR, LogType.NET, e);
 		}
 		return httpResponse;
@@ -604,7 +613,8 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			}
 			else
 			{
-				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,statusEntry.getStatusXmlData());
+				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,
+					HttpResponseStructure.HTTP_ENCODING_PLAIN, statusEntry.getStatusXmlData());
 			}
 		}
 		catch (Exception e)
@@ -617,8 +627,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 
 	private HttpResponseStructure getLatestJavaVersions()
 	{
-		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
-			HTTP_RETURN_INTERNAL_SERVER_ERROR);
+		HttpResponseStructure httpResponse;
 		Document doc = XMLUtil.createDocument();
 		try
 		{
@@ -631,6 +640,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		catch (Exception e)
 		{
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
 			LogHolder.log(LogLevel.ERR, LogType.NET, e);
 		}
 		return httpResponse;
@@ -688,8 +698,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	private HttpResponseStructure humanGetStatus()
 	{
 		/* this is only the default, if something is going wrong */
-		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
-			HTTP_RETURN_INTERNAL_SERVER_ERROR);
+		HttpResponseStructure httpResponse;
 		try
 		{
 			String htmlData = "<HTML>\n" +
@@ -763,10 +772,12 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				"  </BODY>\n" +
 				"</HTML>\n";
 			/* send content */
-			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_HTML, htmlData);
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_HTML,
+				HttpResponseStructure.HTTP_ENCODING_PLAIN, htmlData);
 		}
 		catch (Exception e)
 		{
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
 			LogHolder.log(LogLevel.ERR, LogType.MISC, e);
 		}
 		return httpResponse;
@@ -781,8 +792,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	private HttpResponseStructure fetchAllMixes()
 	{
 		/* this is only the default, if something is going wrong */
-		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
-			HTTP_RETURN_INTERNAL_SERVER_ERROR);
+		HttpResponseStructure httpResponse;
 		try
 		{
 			/* create xml document */
@@ -805,6 +815,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		catch (Exception e)
 		{
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
 			LogHolder.log(LogLevel.ERR, LogType.MISC, e);
 		}
 		return httpResponse;
@@ -819,8 +830,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	private HttpResponseStructure fetchAvailableMixes()
 	{
 		/* this is only the default, if something is going wrong */
-		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
-			HTTP_RETURN_INTERNAL_SERVER_ERROR);
+		HttpResponseStructure httpResponse;
 		try
 		{
 			/* create xml document */
@@ -845,6 +855,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		catch (Exception e)
 		{
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
 			LogHolder.log(LogLevel.ERR, LogType.MISC, e);
 		}
 		return httpResponse;
@@ -855,10 +866,10 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	 * Sends the XML encoded mixcascade entry the ID given by cascadeId to the client.
 	 *
 	 * @param a_cascadeId The ID of the requested mixcascade.
-	 * @param a_bCompressed if the data should be sent compressed
+	 * @param a_supportedEncodings defines the encoding supported by the client (deflate, gzip,...)
 	 * @return The HTTP response for the client.
 	 */
-	private HttpResponseStructure getCascadeInfo(String a_cascadeId, boolean a_bCompressed)
+	private HttpResponseStructure getCascadeInfo(int a_supportedEncodings, String a_cascadeId)
 	{
 		HttpResponseStructure httpResponse;
 		try
@@ -873,16 +884,16 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			else
 			{
 				/* send XML-Document */
-				if (a_bCompressed)
+				if ((a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
 				{
 					httpResponse = new HttpResponseStructure(
-						HttpResponseStructure.HTTP_TYPE_APPLICATION_ZLIB,
+						HttpResponseStructure.HTTP_TYPE_TEXT_XML, HttpResponseStructure.HTTP_ENCODING_ZLIB,
 						mixCascadeEntry.getCompressedData());
 				}
 				else
 				{
 					httpResponse = new HttpResponseStructure(
-						HttpResponseStructure.HTTP_TYPE_TEXT_XML,
+						HttpResponseStructure.HTTP_TYPE_TEXT_XML, HttpResponseStructure.HTTP_ENCODING_PLAIN,
 						XMLUtil.toString(mixCascadeEntry.getXmlStructure()));
 				}
 			}
@@ -913,14 +924,13 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			{
 				/* send XML-Document */
 				httpResponse = new HttpResponseStructure(
-					HttpResponseStructure.HTTP_TYPE_TEXT_XML,
+					HttpResponseStructure.HTTP_TYPE_TEXT_XML, HttpResponseStructure.HTTP_ENCODING_PLAIN,
 					XMLUtil.toString(infoserviceEntry.getXmlStructure()));
 			}
 		}
 		catch (Exception e)
 		{
-			httpResponse =
-				new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
 			LogHolder.log(LogLevel.ERR, LogType.MISC, e);
 		}
 		return httpResponse;
@@ -938,7 +948,8 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		nodeEchoIP.appendChild(nodeIP);
 		SignatureCreator.getInstance().signXml(SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE, nodeEchoIP);
 		XMLUtil.setValue(nodeIP, a_sourceAddress.getHostAddress());
-		httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK,
+		httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,
+												 HttpResponseStructure.HTTP_ENCODING_PLAIN,
 												 XMLUtil.toString(docEchoIP));
 
 		return httpResponse;
@@ -949,23 +960,25 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	 * JAP clients with tor integration. If we don't have a current tor nodes list, we return -1
 	 * and the client will get an http error. So the client will ask another infoservice.
 	 *
-	 * @param a_compressed Whether to send the compressed version of the TOR nodes list to the
-	 *                     client (true) or the uncompressed version (false).
+	 * @param a_supportedEncodings defines the encoding supported by the client (deflate, gzip,...)
 	 *
 	 * @return The HTTP response for the client.
 	 */
-	private HttpResponseStructure getTorNodesList(boolean a_compressed)
+	private HttpResponseStructure getTorNodesList(int a_supportedEncodings)
 	{
 		/* this is only the default, if we don't have a TOR list */
 		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
 			HTTP_RETURN_NOT_FOUND);
 		Node torNodesList = null;
-		if (a_compressed == true)
+		int encoding;
+		if ((a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
 		{
+			encoding = HttpResponseStructure.HTTP_ENCODING_ZLIB;
 			torNodesList = TorDirectoryAgent.getInstance().getCompressedTorNodesList();
 		}
 		else
 		{
+			encoding = HttpResponseStructure.HTTP_ENCODING_PLAIN;
 			torNodesList = TorDirectoryAgent.getInstance().getTorNodesList();
 		}
 		if (torNodesList != null)
@@ -975,7 +988,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				/* create xml document */
 				Document doc = XMLUtil.createDocument();
 				doc.appendChild(XMLUtil.importNode(doc, torNodesList, true));
-				httpResponse = new HttpResponseStructure(doc);
+				httpResponse = new HttpResponseStructure(doc, encoding);
 			}
 			catch (Exception e)
 			{
@@ -1039,7 +1052,8 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		String answer = JapForwardingTools.addForwarder(a_postData, a_sourceAddress);
 		if (answer != null)
 		{
-			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML, answer);
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,
+				HttpResponseStructure.HTTP_ENCODING_PLAIN, answer);
 		}
 		return httpResponse;
 	}
@@ -1060,7 +1074,8 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		String answer = JapForwardingTools.renewForwarder(a_postData);
 		if (answer != null)
 		{
-			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML, answer);
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,
+				HttpResponseStructure.HTTP_ENCODING_PLAIN, answer);
 		}
 		return httpResponse;
 	}
@@ -1083,7 +1098,8 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		String answer = JapForwardingTools.getForwarder();
 		if (answer != null)
 		{
-			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML, answer);
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,
+				HttpResponseStructure.HTTP_ENCODING_PLAIN,answer);
 		}
 		return httpResponse;
 	}
@@ -1144,6 +1160,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		if (minVersionEntry != null)
 		{
 			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,
+				HttpResponseStructure.HTTP_ENCODING_PLAIN,
 				XMLUtil.toString(minVersionEntry.getXmlStructure()));
 		}
 		return httpResponse;
@@ -1227,11 +1244,13 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			if (a_httpMethod == Constants.REQUEST_METHOD_GET)
 			{
 				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_APPLICATION_JNLP,
+					HttpResponseStructure.HTTP_ENCODING_PLAIN,
 					XMLUtil.toString(jnlpFile.getXmlStructure()));
 			}
 			else if (a_httpMethod == Constants.REQUEST_METHOD_HEAD)
 			{
 				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_APPLICATION_JNLP,
+					HttpResponseStructure.HTTP_ENCODING_PLAIN,
 					XMLUtil.toString(jnlpFile.getXmlStructure()), true);
 			}
 			else
@@ -1262,6 +1281,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			if (strReportedProxies != null)
 			{
 				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_PLAIN,
+					HttpResponseStructure.HTTP_ENCODING_PLAIN,
 					strReportedProxies);
 			}
 
@@ -1273,6 +1293,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				strConfiguredProxies += " " + strReportedProxies;
 			}
 			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_PLAIN,
+				HttpResponseStructure.HTTP_ENCODING_PLAIN,
 				strConfiguredProxies);
 		}
 		return httpResponse;
@@ -1283,6 +1304,8 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	 *
 	 * @param method The HTTP method used within the request from the client. See the REQUEST_METHOD
 	 *               constants in anon.infoservice.Constants.
+	 * @param a_supportedEncodings The HTTP encodings supported by the client. See the HTTP_ENCODING
+   * constants in HttpResonseStructure.
 	 * @param command The URL requested from the client within the HTTP request. Normally this
 	 *                should be an absolute path with a filename.
 	 * @param postData The HTTP content data (maybe of size 0), if the request was an HTTP POST. If
@@ -1294,8 +1317,8 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	 * @return The response to send back to the client. This value is null, if the request cannot
 	 *         be handled by this implementation (maybe because of an invalid command, ...).
 	 */
-	public HttpResponseStructure processCommand(int method, String command, byte[] postData,
-												InetAddress a_sourceAddress)
+	public HttpResponseStructure processCommand(int method, int a_supportedEncodings,
+												String command, byte[] postData, InetAddress a_sourceAddress)
 	{
 		HttpResponseStructure httpResponse = null;
 		if ( (command.startsWith("/mixcascadestatus/")) && (method == Constants.REQUEST_METHOD_GET))
@@ -1328,56 +1351,56 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		else if ( (command.equals("/infoservices")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			/* JAP or someone else wants to get information about all infoservices we know */
-			httpResponse = japFetchInfoServers(false, false);
+			httpResponse = japFetchInfoServers(a_supportedEncodings, false);
 		}
 		else if ( (command.equals("/infoservices.z")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			/* JAP or someone else wants to get information about all infoservices we know */
-			httpResponse = japFetchInfoServers(true, false);
+			httpResponse = japFetchInfoServers(HttpResponseStructure.HTTP_ENCODING_ZLIB, false);
 		}
 		else if ( (command.equals("/infoserviceserials")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 					/* JAP or someone else wants to get information about all infoservices we know */
-					httpResponse = japFetchInfoServers(false, true);
+					httpResponse = japFetchInfoServers(a_supportedEncodings, true);
 		}
 		else if ( (command.equals("/infoserviceserials.z")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			/* JAP or someone else wants to get information about all infoservices we know */
-			httpResponse = japFetchInfoServers(true, true);
+			httpResponse = japFetchInfoServers(HttpResponseStructure.HTTP_ENCODING_ZLIB, true);
 		}
 		else if ( (command.equals("/cascade")) && (method == Constants.REQUEST_METHOD_POST))
 		{
 			/* message from the first mix of a cascade (can be forwarded by an infoservice), which
 			 * includes information about the cascade, or from other IS
 			 */
-			httpResponse = cascadePostHelo(postData, false);
+			httpResponse = cascadePostHelo(postData, a_supportedEncodings);
 		}
 		else if ( (command.equals("/cascade.z")) && (method == Constants.REQUEST_METHOD_POST))
 		{
 			/* message from the first mix of a cascade (can be forwarded by an infoservice), which
 			 * includes information about the cascade, or from other IS
 			 */
-			httpResponse = cascadePostHelo(postData, true);
+			httpResponse = cascadePostHelo(postData, HttpResponseStructure.HTTP_ENCODING_ZLIB);
 		}
 		else if ( (command.equals("/cascadeserials")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			/* JAP or someone else wants to get information about all cascade serial numbers we know */
-			httpResponse = japFetchCascades(false, true);
+			httpResponse = japFetchCascades(a_supportedEncodings, true);
 		}
 		else if ( (command.equals("/cascadeserials.z")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			/* JAP or someone else wants to get information about all cascade serial numbers we know */
-			httpResponse = japFetchCascades(true, true);
+			httpResponse = japFetchCascades(HttpResponseStructure.HTTP_ENCODING_ZLIB, true);
 		}
 		else if ( (command.equals("/cascades")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			/* JAP or someone else wants to get information about all cascades we know */
-			httpResponse = japFetchCascades(false, false);
+			httpResponse = japFetchCascades(a_supportedEncodings, false);
 		}
 		else if ( (command.equals("/cascades.z")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			/* JAP  wants to get information about all cascades we know */
-			httpResponse = japFetchCascades(true, false);
+			httpResponse = japFetchCascades(HttpResponseStructure.HTTP_ENCODING_ZLIB, false);
 		}
 		else if ( (command.equals("/helo")) && (method == Constants.REQUEST_METHOD_POST))
 		{
@@ -1428,7 +1451,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 * Full command: GET /cascadeinfo/cascadeid
 			 */
 			String cascadeId = command.substring(13);
-			httpResponse = getCascadeInfo(cascadeId, false);
+			httpResponse = getCascadeInfo(a_supportedEncodings, cascadeId);
 		}
 		else if ( (command.startsWith("/cascadeinfo.z/")) &&
 				  (method == Constants.REQUEST_METHOD_GET))
@@ -1438,18 +1461,18 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 * Full command: GET /cascadeinfo.z/cascadeid
 			 */
 			String cascadeId = command.substring(15);
-			httpResponse = getCascadeInfo(cascadeId, true);
+			httpResponse = getCascadeInfo(HttpResponseStructure.HTTP_ENCODING_ZLIB, cascadeId);
 		}
 
 		else if ( (command.equals("/tornodes")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			/* get the list with all known tor nodes in an XML structure */
-			httpResponse = getTorNodesList(false);
+			httpResponse = getTorNodesList(a_supportedEncodings);
 		}
 		else if ((command.equals("/compressedtornodes")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			/* get the list with all known tor nodes in an XML structure */
-			httpResponse = getTorNodesList(true);
+			httpResponse = getTorNodesList(HttpResponseStructure.HTTP_ENCODING_ZLIB);
 		}
 		else if ( (command.equals("/compressedmixminionnodes")) && (method == Constants.REQUEST_METHOD_GET))
 		{
