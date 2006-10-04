@@ -45,6 +45,7 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 	implements IDistributable, IXMLEncodable
 {
 	public static final String XML_ATTR_SERIAL = "serial";
+	public static final String XML_ATTR_VERIFIED = "verified";
 
 	public AbstractDistributableDatabaseEntry(long a_expireTime)
 	{
@@ -129,6 +130,9 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 				nodeSerials.appendChild(nodeASerial);
 				XMLUtil.setAttribute(nodeASerial, XML_ATTR_ID, currentEntry.getId());
 				XMLUtil.setAttribute(nodeASerial, XML_ATTR_SERIAL, currentEntry.getVersionNumber());
+				/** @todo add information if this information is verified and valid */
+				//XMLUtil.setAttribute(nodeASerial, XML_ATTR_VERIFIED, currentEntry.verify());
+
 			}
 			return nodeSerials;
 		}
