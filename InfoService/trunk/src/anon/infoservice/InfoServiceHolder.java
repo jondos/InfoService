@@ -469,6 +469,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 					Enumeration newEntries = ((Hashtable)tempHashtable).elements();
 					AbstractDatabaseEntry currentEntry;
 					AbstractDatabaseEntry hashedEntry;
+					AbstractDistributableDatabaseEntry.SerialDBEntry currentSerialEntry, hashedSerialEntry;
 					while (newEntries.hasMoreElements())
 					{
 						currentEntry = (AbstractDatabaseEntry)newEntries.nextElement();
@@ -476,7 +477,28 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 						{
 							hashedEntry =
 								(AbstractDatabaseEntry)((Hashtable)result).get(currentEntry.getId());
-							if (hashedEntry.getExpireTime() >= currentEntry.getExpireTime())
+
+							if (currentEntry instanceof AbstractDistributableDatabaseEntry.SerialDBEntry &&
+								hashedEntry instanceof AbstractDistributableDatabaseEntry.SerialDBEntry)
+							{
+								currentSerialEntry =
+									(AbstractDistributableDatabaseEntry.SerialDBEntry)currentEntry;
+								hashedSerialEntry =
+									(AbstractDistributableDatabaseEntry.SerialDBEntry)hashedEntry;
+								if (currentSerialEntry.getVersionNumber() !=
+									hashedSerialEntry.getVersionNumber())
+								{
+									/**
+									 * Alert: two or more InfoServices report different version numbers.
+									 * Marks this serial entry so that the caller knows he must ask all
+									 * InfoServices for this entry.
+									 */
+
+									}
+							}
+
+
+							if (hashedEntry.getLastUpdate() >= currentEntry.getLastUpdate())
 							{
 								continue;
 							}

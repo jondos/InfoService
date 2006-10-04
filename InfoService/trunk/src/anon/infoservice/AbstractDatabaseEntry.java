@@ -30,18 +30,13 @@
  */
 package anon.infoservice;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
-import anon.util.IXMLEncodable;
-import anon.util.XMLUtil;
-
 /**
  * This is a generic definition for a database entry. Every database entry must implement this
  * methods.
  */
 public abstract class AbstractDatabaseEntry
 {
+	public static final String XML_LAST_UPDATE = "LastUpdate";
 
 	/**
 	 * Stores the time when this entry will be deleted from the database.
