@@ -797,7 +797,12 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 	 */
 	public String getPostFile()
 	{
-		return "/cascade.z";
+		return "/cascade";
+	}
+
+	public int getPostEncoding()
+	{
+		return HTTPConnectionFactory.HTTP_ENCODING_ZLIB;
 	}
 
 	/**

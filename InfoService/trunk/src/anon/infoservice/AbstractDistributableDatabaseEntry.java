@@ -103,7 +103,7 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 					serial = 0;
 				}
 
-				hashSerials.put(id, new DummyDBEntry(id, serial));
+				hashSerials.put(id, new SerialDBEntry(id, serial));
 			}
 
 			return hashSerials;
@@ -132,17 +132,16 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 				XMLUtil.setAttribute(nodeASerial, XML_ATTR_SERIAL, currentEntry.getVersionNumber());
 				/** @todo add information if this information is verified and valid */
 				//XMLUtil.setAttribute(nodeASerial, XML_ATTR_VERIFIED, currentEntry.verify());
-
 			}
 			return nodeSerials;
 		}
 
-		private class DummyDBEntry extends AbstractDatabaseEntry
+		public class SerialDBEntry extends AbstractDatabaseEntry
 		{
 			private String m_id;
 			private long m_version;
 
-			public DummyDBEntry(String a_id, long a_version)
+			public SerialDBEntry(String a_id, long a_version)
 			{
 				super(0);
 
@@ -184,6 +183,15 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 	public byte[] getPostData()
 	{
 		return (XMLUtil.toString(getXmlStructure()).getBytes());
+	}
+
+	/**
+	 * Returns the content encoding of the post data.
+	 * @return the content encoding of the post data
+	 */
+	public int getPostEncoding()
+	{
+		return HTTPConnectionFactory.HTTP_ENCODING_PLAIN;
 	}
 
 	/**

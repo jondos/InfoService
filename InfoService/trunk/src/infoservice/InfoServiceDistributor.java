@@ -318,7 +318,8 @@ public class InfoServiceDistributor implements IDistributor {
     boolean connected = true;
     HTTPConnection connection = null;
     try {
-      connection = HTTPConnectionFactory.getInstance().createHTTPConnection(a_listener);
+      connection = HTTPConnectionFactory.getInstance().createHTTPConnection(
+			a_listener, a_information.getPostEncoding(), false);
       /* post the information */
       HTTPResponse response = connection.Post(a_information.getPostFile(), a_information.getPostData());
       /* wait for the response with the status code */

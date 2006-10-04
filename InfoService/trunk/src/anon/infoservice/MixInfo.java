@@ -46,7 +46,7 @@ import logging.LogType;
 /**
  * Holds the information of one single mix.
  */
-public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IXMLEncodable
+public class MixInfo extends AbstractDistributableDatabaseEntry implements IDistributable, IXMLEncodable
 {
 	public static final String DEFAULT_NAME = "AN.ON Mix";
 
@@ -466,15 +466,7 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
     return postFileName;
   }
 
-  /**
-   * This returns the data posted when this mix information is forwarded to other
-   * infoservices. It's the XML structure of this mix as we received it.
-   *
-   * @return The data posted to other infoservices when this entry is forwarded.
-   */
-  public byte[] getPostData() {
-    return XMLUtil.toString(m_xmlStructure).getBytes();
-  }
+
 
   /**
    * Returns the XML structure for this mix entry.
@@ -485,26 +477,7 @@ public class MixInfo extends AbstractDatabaseEntry implements IDistributable, IX
     return m_xmlStructure;
   }
 
-  /**
-   * Returns an XML node for this MixInfo. This structure includes a Signature node if the
-   * MixInfo information was created by the corresponding Mix itself.
-   *
-   * @param a_doc The XML document, which is the environment for the created XML node.
-   *
-   * @return The MixInfo XML node.
-   */
-  public Element toXmlElement(Document a_doc)
-  {
-	  Element importedXmlStructure = null;
-	  try
-	  {
-		  importedXmlStructure = (Element) (XMLUtil.importNode(a_doc, m_xmlStructure, true));
-	  }
-	  catch (Exception e)
-	  {
-	  }
-	  return importedXmlStructure;
-	}
+
   /**
    * LERNGRUPPE
    * Returns the type of this mix

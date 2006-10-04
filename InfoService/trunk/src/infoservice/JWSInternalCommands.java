@@ -34,12 +34,14 @@ import java.net.InetAddress;
  * InfoServiceConnection.
  */
 public interface JWSInternalCommands {
-  
+
 	/**
    * This is definition of the handler for processing an HTTP request.
    *
    * @param method The HTTP method used within the request from the client. See the REQUEST_METHOD
    *               constants in anon.infoservice.Constants.
+   * @param a_supportedEncodings The HTTP encodings supported by the client. See the HTTP_ENCODING
+   * constants in HttpResonseStructure.
    * @param command The URL requested from the client within the HTTP request. Normally this
    *                should be an absolute path with a filename.
    * @param postData The HTTP content data (maybe of size 0), if the request was an HTTP POST. If
@@ -51,6 +53,7 @@ public interface JWSInternalCommands {
    * @return The response to send back to the client. This value is null, if the request cannot
    *         be handled by the implementation (maybe because of an invalid command, ...).
 	 */
-  public HttpResponseStructure processCommand(int method, String command, byte[] postData, InetAddress a_sourceAddress);
+  public HttpResponseStructure processCommand(int method, int a_supportedEncodings,
+											  String command, byte[] postData, InetAddress a_sourceAddress);
 
 }

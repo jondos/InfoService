@@ -43,6 +43,11 @@ import logging.LogType;
  */
 public class HTTPConnectionFactory
 {
+	public static final int HTTP_ENCODING_PLAIN = 0;
+	public static final int HTTP_ENCODING_ZLIB = 1;
+
+	public static final String HTTP_ENCODING_ZLIB_STRING = "deflate";
+
 	/**
 	 * Defines the HTTPConnection class for that this factory constructs instances.
 	 */
@@ -189,11 +194,27 @@ public class HTTPConnectionFactory
 	 * This method creates a new instance of HTTPConnection. The current proxy settings are used.
 	 *
 	 * @param target The ListenerInterface of the connection target.
-	 *
 	 * @return A new instance of HTTPConnection with a connection to the specified target and the
 	 *         current proxy settings.
 	 */
 	public synchronized HTTPConnection createHTTPConnection(ListenerInterface target)
+	{
+		return createHTTPConnection(target, HTTP_ENCODING_PLAIN, true);
+	}
+
+
+	/**
+	 * This method creates a new instance of HTTPConnection. The current proxy settings are used.
+	 *
+	 * @param target The ListenerInterface of the connection target.
+	 * @param a_encoding http encoding used to send the data (e.g. HTTP_ENCODING_ZLIB)
+	 *  @param a_bGet if encoding is set to another value than HTTP_ENCODING_PLAIN, it must be specified if
+	 *  this is a get or a post statement
+	 * @return A new instance of HTTPConnection with a connection to the specified target and the
+	 *         current proxy settings.
+	 */
+	public synchronized HTTPConnection createHTTPConnection(ListenerInterface target,
+		int a_encoding, boolean a_bGet)
 	{
 		HTTPConnection newConnection = null;
 		synchronized (this)
@@ -243,6 +264,21 @@ public class HTTPConnectionFactory
 		/* set some header infos */
 		replaceHeader(newConnection, new NVPair("Cache-Control", "no-cache"));
 		replaceHeader(newConnection, new NVPair("Pragma", "no-cache"));
+		if (a_encoding != HTTP_ENCODING_PLAIN)
+		{
+			if ((a_encoding & HTTP_ENCODING_ZLIB) > 0)
+			{
+				if (a_bGet)
+				{
+					replaceHeader(newConnection, new NVPair("Accept-Encoding", HTTP_ENCODING_ZLIB_STRING));
+				}
+				else
+				{
+					replaceHeader(newConnection, new NVPair("Content-Encoding", HTTP_ENCODING_ZLIB_STRING));
+				}
+			}
+		}
+
 		newConnection.setAllowUserInteraction(false);
 		/* set the timeout for all network operations */
 		newConnection.setTimeout(getTimeout() * 1000);
@@ -263,12 +299,31 @@ public class HTTPConnectionFactory
 	public synchronized HTTPConnection createHTTPConnection(ListenerInterface target,
 		ImmutableProxyInterface a_proxySettings)
 	{
+		return createHTTPConnection(target, a_proxySettings, HTTP_ENCODING_PLAIN, true);
+	}
+
+	/**
+	 * This method creates a new instance of HTTPConnection using the specified proxy settings
+	 * (ignoring the default settings).
+	 *
+	 * @param target The ListenerInterface of the connection target.
+	 * @param a_proxySettings The proxy settings to use for this single connection. If the proxy
+	 *                        settings are null, no proxy is used.
+	 * @param a_bGet if encoding is set to another value than HTTP_ENCODING_PLAIN, it must be specified if
+	 * this is a get or a post statement
+	 * @param a_encoding http encoding used to send the data (e.g. HTTP_ENCODING_ZLIB)
+	 * @return A new instance of HTTPConnection with a connection to the specified target and the
+	 *         current proxy settings.
+	 */
+	public synchronized HTTPConnection createHTTPConnection(ListenerInterface target,
+		ImmutableProxyInterface a_proxySettings, int a_encoding, boolean a_bGet)
+	{
 		/* tricky: change the global proxy settings, create the connection and restore the original
 		 * proxy settings -> no problem because all methods are synchronized
 		 */
 		ImmutableProxyInterface oldProxySettings = m_proxyInterface;
 		setNewProxySettings(a_proxySettings, m_bUseAuth);
-		HTTPConnection createdConnection = createHTTPConnection(target);
+		HTTPConnection createdConnection = createHTTPConnection(target, a_encoding, a_bGet);
 		setNewProxySettings(oldProxySettings, m_bUseAuth);
 		return createdConnection;
 	}
