@@ -46,6 +46,7 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 {
 	public static final String XML_ATTR_SERIAL = "serial";
 	public static final String XML_ATTR_VERIFIED = "verified";
+	public static final String XML_ATTR_LAST_UPDATE = "lastUpdate";
 
 	public AbstractDistributableDatabaseEntry(long a_expireTime)
 	{
@@ -77,7 +78,7 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 			}
 
 			String id;
-			long serial;
+			long serial, lastUpdate;
 			Hashtable hashSerials;
 			NodeList serialNodes =
 				a_elemSerials.getElementsByTagName(XMLUtil.getXmlElementName(m_thisDBEntryClass));
@@ -97,13 +98,14 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 				if (id != null)
 				{
 					serial = XMLUtil.parseAttribute(serialNodes.item(i), XML_ATTR_SERIAL, 0L);
+					lastUpdate = XMLUtil.parseAttribute(serialNodes.item(i), XML_ATTR_LAST_UPDATE, 0L);
 				}
 				else
 				{
-					serial = 0;
+					continue;
 				}
 
-				hashSerials.put(id, new SerialDBEntry(id, serial));
+				hashSerials.put(id, new SerialDBEntry(id, serial, lastUpdate));
 			}
 
 			return hashSerials;
@@ -130,39 +132,41 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 				nodeSerials.appendChild(nodeASerial);
 				XMLUtil.setAttribute(nodeASerial, XML_ATTR_ID, currentEntry.getId());
 				XMLUtil.setAttribute(nodeASerial, XML_ATTR_SERIAL, currentEntry.getVersionNumber());
+				XMLUtil.setAttribute(nodeASerial, XML_ATTR_LAST_UPDATE, currentEntry.getLastUpdate());
 				/** @todo add information if this information is verified and valid */
 				//XMLUtil.setAttribute(nodeASerial, XML_ATTR_VERIFIED, currentEntry.verify());
 			}
 			return nodeSerials;
 		}
+	}
 
-		public class SerialDBEntry extends AbstractDatabaseEntry
+	public static class SerialDBEntry extends AbstractDatabaseEntry
+	{
+		private String m_id;
+		private long m_version;
+		private long m_lastUpdate;
+
+		public SerialDBEntry(String a_id, long a_version, long a_lastUpdate)
 		{
-			private String m_id;
-			private long m_version;
+			super(0);
 
-			public SerialDBEntry(String a_id, long a_version)
-			{
-				super(0);
+			m_id = a_id;
+			m_version = a_version;
+			m_lastUpdate = a_lastUpdate;
+		}
+		public long getLastUpdate()
+		{
+			return m_lastUpdate;
+		}
 
-				m_id = a_id;
-				m_version = a_version;
-			}
-			public long getLastUpdate()
-			{
-				return 0;
-			}
+		public String getId()
+		{
+			return m_id;
+		}
 
-			public String getId()
-			{
-				return m_id;
-			}
-
-			public long getVersionNumber()
-			{
-				return m_version;
-			}
-
+		public long getVersionNumber()
+		{
+			return m_version;
 		}
 	}
 
