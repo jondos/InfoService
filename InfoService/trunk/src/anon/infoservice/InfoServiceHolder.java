@@ -346,14 +346,14 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 		 */
 		if (functionNumber == GET_INFOSERVICES || functionNumber == GET_MIXCASCADES
 			|| functionNumber == GET_INFOSERVICE_SERIALS || functionNumber == GET_MIXCASCADE_SERIALS ||
-			functionNumber == GET_STATUSINFO)
+			functionNumber == GET_CASCADEINFO)
 		{
 			result = new Hashtable();
-			if (functionNumber == GET_STATUSINFO)
+			//if (functionNumber == GET_CASCADEINFO)
 			{
 				// example: enter number of asked IS here, or keep default of 1
 			}
-			else
+			//else
 			{
 				// try up to a certain maximum of InfoServices
 				askInfoServices = m_nrAskedInfoServices;
@@ -404,14 +404,8 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 				}
 				else if (functionNumber == GET_STATUSINFO)
 				{
-					tempHashtable = new Hashtable();
-					StatusInfo info =
-						currentInfoService.getStatusInfo( (String) (arguments.elementAt(0)),
+					result = currentInfoService.getStatusInfo( (String) (arguments.elementAt(0)),
 						( (Integer) (arguments.elementAt(1))).intValue());
-					if (info != null)
-					{
-						tempHashtable.put(info.getId(), info);
-					}
 				}
 				else if (functionNumber == GET_MIXCASCADE_SERIALS)
 				{
@@ -452,7 +446,13 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 				}
 				else if (functionNumber == GET_CASCADEINFO)
 				{
-					result = currentInfoService.getMixCascadeInfo((String) arguments.firstElement());
+					AbstractDatabaseEntry dbEntry =
+						currentInfoService.getMixCascadeInfo((String) arguments.firstElement());
+					tempHashtable = new Hashtable();
+					if (dbEntry != null)
+					{
+						tempHashtable.put(dbEntry.getId(), dbEntry);
+					}
 				}
 
 				if ((tempHashtable == null && result == null) ||
@@ -488,13 +488,18 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 								if (currentSerialEntry.getVersionNumber() !=
 									hashedSerialEntry.getVersionNumber())
 								{
+									LogHolder.log(LogLevel.NOTICE, LogType.NET,
+												  "InfoServices report different serial numbers!");
 									/**
-									 * Alert: two or more InfoServices report different version numbers.
-									 * Marks this serial entry so that the caller knows he must ask all
-									 * InfoServices for this entry.
+									 * Alert: Two or more InfoServices report different version numbers.
+									 * This could be a try to keep the caller from updating this entry.
+									 * Mark this serial entry, so that the caller knows he must update this
+									 * entry.
 									 */
-
-									}
+									((Hashtable)result).put(currentSerialEntry.getId(),
+										new AbstractDistributableDatabaseEntry.SerialDBEntry(
+										currentSerialEntry.getId(), 0, Long.MAX_VALUE));
+								}
 							}
 
 
@@ -533,7 +538,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 
 		if (result != null && (!(result instanceof Hashtable) || ((Hashtable)result).size() > 0) )
 		{
-			if (functionNumber == GET_STATUSINFO)
+			if (functionNumber == GET_CASCADEINFO)
 			{
 				result = ((Hashtable) result).elements().nextElement();
 			}
