@@ -473,6 +473,7 @@ public final class XMLSignature implements IXMLEncodable
 					getVerifier(a_node, signature, a_directCertificatePaths, a_bCheckValidity);
 				if (signature.m_certPath != null)
 				{
+					signature.m_bVerified = true;
 					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
 								  "Trying to verify signature against direct certificates -success");
 				}
@@ -538,23 +539,22 @@ public final class XMLSignature implements IXMLEncodable
 					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
 								  "Trying to verify signature against first certifcate -success!");
 				}
-			}
 
-
-			//the first (=Mix) cert could verify the signature
-			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-						  "Trying to verify last certificate against root certificates...");
-			currentCertificate = signature.m_certPath.getLatestAddedCertificate();
-			if (currentCertificate != null && currentCertificate.verify(a_rootCertificates))
-			{
-				signature.m_bVerified = true;
+				//the first (=Mix) cert could verify the signature
 				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-							  "Trying to verify last certificate against root certificates -success");
-			}
-			else
-			{
-				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-							  "Trying to verify last certificate against root certificates -failed");
+							  "Trying to verify last certificate against root certificates...");
+				currentCertificate = signature.m_certPath.getLatestAddedCertificate();
+				if (currentCertificate != null && currentCertificate.verify(a_rootCertificates))
+				{
+					signature.m_bVerified = true;
+					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+								  "Trying to verify last certificate against root certificates -success");
+				}
+				else
+				{
+					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+								  "Trying to verify last certificate against root certificates -failed");
+				}
 			}
 
 			if (!signature.isVerified() && !oneCertAppended) //the last certificate in the Path could not be verified

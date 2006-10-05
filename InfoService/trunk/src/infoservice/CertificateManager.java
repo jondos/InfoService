@@ -131,13 +131,13 @@ public class CertificateManager implements Observer
 					if (oldEntryCertificateLock != null)
 					{
 						LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-							"CertificateManager: updateEntry: The lock on the certificate of the MixCascade '" +
+							"The lock on the certificate of the MixCascade '" +
 									  a_newEntry.getId() + "' was updated in the certificate store.");
 					}
 					else
 					{
 						LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-							"CertificateManager: updateEntry: The lock on the certificate of the MixCascade '" +
+							"The lock on the certificate of the MixCascade '" +
 									  a_newEntry.getId() + "' was added to the certificate store.");
 					}
 				}
