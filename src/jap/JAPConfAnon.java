@@ -905,7 +905,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	{
 		if(m_serverInfo != null)
 		{
-			return m_serverInfo.getMixCertPath().verify();
+			return m_serverInfo.getCertPath().verify();
 		}
 		return false;
 	}
@@ -1085,7 +1085,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			{
 				CertDetailsDialog dialog = new CertDetailsDialog(getRootPanel().getParent(),
 					m_serverCert.getX509Certificate(), isServerCertVerified(),
-					JAPController.getInstance().getLocale(), m_serverInfo.getMixCertPath());
+					JAPController.getInstance().getLocale(), m_serverInfo.getCertPath());
 				dialog.pack();
 				dialog.setVisible(true);
 			}

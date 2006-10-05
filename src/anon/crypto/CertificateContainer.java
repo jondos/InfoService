@@ -298,6 +298,7 @@ public class CertificateContainer implements IXMLEncodable
 		synchronized (this)
 		{
 			returnValue = !SignatureVerifier.getInstance().isCheckSignatures() ||
+				!SignatureVerifier.getInstance().isCheckSignatures(m_certificateType) ||
 				(( (!m_certificateNeedsVerification) || (m_parentCertificate != null)) && m_enabled);
 		}
 		return returnValue;
