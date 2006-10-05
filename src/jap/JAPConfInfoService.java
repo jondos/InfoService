@@ -407,10 +407,10 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 
 
-	    final JButton settingsInfoServiceConfigBasicSettingsViewCertButton =
+	    final JButton viewCertButton =
 			new JButton(JAPMessages.getString(MSG_VIEW_CERT));
 		//settingsInfoServiceConfigBasicSettingsViewCertButton.setFont(getFontSetting());
-		settingsInfoServiceConfigBasicSettingsViewCertButton.addActionListener(new ActionListener()
+		viewCertButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent a_event)
 			{
@@ -811,13 +811,13 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 							addInfoServicePanel.setVisible(true);
 							settingsInfoServiceConfigBasicSettingsRemoveButton.setEnabled(true);
 							mb_newInfoService = false;
-							settingsInfoServiceConfigBasicSettingsViewCertButton.setEnabled(false);
+							viewCertButton.setEnabled(false);
 						}
 						else
 						{
 							addInfoServicePanel.setVisible(false);
 							descriptionPanel.setVisible(true);
-							settingsInfoServiceConfigBasicSettingsViewCertButton.setEnabled(true);
+							viewCertButton.setEnabled(selectedInfoService.getCertificate() != null);
 						}
 					}
 
@@ -877,7 +877,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		buttonPanelConstraints.gridx = 2;
 		buttonPanelConstraints.gridy = 0;
 		//buttonPanelConstraints.weightx = 1.0;
-		buttonPanel.add(settingsInfoServiceConfigBasicSettingsViewCertButton, buttonPanelConstraints);
+		buttonPanel.add(viewCertButton, buttonPanelConstraints);
 
 
 		buttonPanelConstraints.gridx = 3;
@@ -1017,11 +1017,12 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 							Database.getInstance(InfoServiceDBEntry.class).remove(selectedInfoService);
 						}
 					}
-					InfoServiceDBEntry newInfoService = new InfoServiceDBEntry(infoServiceName,
+					InfoServiceDBEntry newInfoService = new InfoServiceDBEntry(infoServiceName, null,
 						new
 						ListenerInterface(addInfoServiceHostField.getText().trim(),
 										  Integer.parseInt(addInfoServicePortField.getText().trim())).
-						toVector(), false, true);
+						toVector(), false, true, 0, 0);
+					newInfoService.setUserDefined(true);
 					Database.getInstance(InfoServiceDBEntry.class).update(newInfoService);
 					addInfoServicePanel.setVisible(false);
 					addInfoServiceHostField.setText("");

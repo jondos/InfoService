@@ -75,8 +75,11 @@ public class InfoServicePropagandist implements Runnable
       Vector virtualListeners = Configuration.getInstance().getVirtualListeners();
       if (virtualListeners.size() > 0)
       {
-        InfoServiceDBEntry generatedOwnEntry = new InfoServiceDBEntry(Configuration.getInstance().getOwnName(),
-			virtualListeners, Configuration.getInstance().holdForwarderList(), false, ms_serialNumber);
+        InfoServiceDBEntry generatedOwnEntry =
+			new InfoServiceDBEntry(Configuration.getInstance().getOwnName(),
+								   Configuration.getInstance().getID(),
+			virtualListeners, Configuration.getInstance().holdForwarderList(), false,
+			System.currentTimeMillis(), ms_serialNumber);
         /* put the own entry in the database -> it is forwarded automatically to all neighbour
          * infoservices, which are also in the database
          */

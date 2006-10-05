@@ -38,6 +38,7 @@ import org.w3c.dom.Element;
 import anon.util.XMLUtil;
 import anon.util.Util;
 import anon.util.IXMLEncodable;
+import anon.util.XMLParseException;
 import anon.infoservice.MixCascade;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -802,7 +803,13 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 		if (infoServiceNode != null)
 		{
 			/* there is a preferred infoservice -> parse it */
-			preferredInfoService = new InfoServiceDBEntry(infoServiceNode);
+			try
+			{
+				preferredInfoService = new InfoServiceDBEntry(infoServiceNode);
+			}
+			catch (XMLParseException a_e)
+			{
+			}
 		}
 
 		synchronized (this)

@@ -44,6 +44,7 @@ import java.util.Vector;
 
 import anon.crypto.JAPCertificate;
 import anon.crypto.PKCS12;
+import anon.crypto.X509SubjectKeyIdentifier;
 import anon.crypto.SignatureCreator;
 import anon.crypto.SignatureVerifier;
 import anon.infoservice.Constants;
@@ -97,6 +98,11 @@ public class Configuration
 	 * importance.
 	 */
 	private String m_strOwnName;
+
+	/**
+	 * The InfoService ID. It is the SubjectPublicKeyIdentifier of the certificate.
+	 */
+	private String m_strID;
 
 	/**
 	 * Maximum size in bytes of HTTP POST data. We will not accept the post of longer messages.
@@ -255,6 +261,8 @@ public class Configuration
 					 */
 					SignatureCreator.getInstance().setSigningKey(SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE,
 						infoServiceMessagesPrivateKey);
+					m_strID = new X509SubjectKeyIdentifier(
+									   infoServiceMessagesPrivateKey.getPublicKey()).getValueWithoutColon();
 				}
 				catch (FileNotFoundException e)
 				{
@@ -573,10 +581,9 @@ public class Configuration
 			for (int i = 0; i < m_initialNeighbourInfoServices.size(); i++)
 			{
 				entry =
-					new InfoServiceDBEntry(null,
+					new InfoServiceDBEntry(null, null,
 										   ( (ListenerInterface) m_initialNeighbourInfoServices.elementAt(i)).
-										   toVector(),
-										   false, false);
+										   toVector(), false, false, System.currentTimeMillis(), 0);
 				/** @todo don't know why, this leads to "NoSuchMethodError" (Z)V on some systems */
 				//entry.setNeighbour(true);
 				Database.getInstance(InfoServiceDBEntry.class).update(entry);
@@ -765,6 +772,11 @@ public class Configuration
 	public Vector getVirtualListeners()
 	{
 		return m_virtualListenerList;
+	}
+
+	public String getID()
+	{
+		return m_strID;
 	}
 
 	/**

@@ -128,6 +128,10 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 			while (knownEntries.hasMoreElements())
 			{
 				currentEntry = (AbstractDistributableDatabaseEntry) knownEntries.nextElement();
+				if (currentEntry.getVersionNumber() <= 0)
+				{
+					continue;
+				}
 				nodeASerial = a_doc.createElement(XMLUtil.getXmlElementName(m_thisDBEntryClass));
 				nodeSerials.appendChild(nodeASerial);
 				XMLUtil.setAttribute(nodeASerial, XML_ATTR_ID, currentEntry.getId());
