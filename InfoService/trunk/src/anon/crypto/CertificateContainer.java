@@ -49,16 +49,13 @@ public class CertificateContainer implements IXMLEncodable
 	private static final String XML_SETTINGS_ROOT_NODE_NAME = "CertificateContainer";
 
 	/**
-	 * Stores the corresponding certificate for this CertificateContainer.
-	 */
-	private JAPCertificate m_certificate;
-
-	/**
 	 * Stores the parent certificate (the certificate against which verification of this certificate
 	 * was successful) of this certificate. This value is only not null, if this certificate needs
 	 * verification and the parent certificate is activated within the same certificate store.
 	 */
 	private JAPCertificate m_parentCertificate;
+
+	private CertPath m_certPath;
 
 	/**
 	 * Stores the certificate type of this certificate. See the CERTIFICATE_TYPE constants within
@@ -121,11 +118,32 @@ public class CertificateContainer implements IXMLEncodable
 	public CertificateContainer(JAPCertificate a_certificate, int a_certificateType,
 								boolean a_certificateNeedsVerification)
 	{
-		m_certificate = a_certificate;
+		this(new CertPath(a_certificate), a_certificateType, a_certificateNeedsVerification);
+	}
+
+
+	/**
+	 * Creates a new instance of CertificateContainer. Only instances of CertificateStore should
+	 * call this constructor.
+	 *
+	 * @param a_certificate The certificate for which the container is built.
+	 * @param a_certificateType The type of the certificate.
+	 * @param a_certificateNeedsVerification Whether this certificate is only valid within the
+	 *                                       certificate store, if it can be verified against an
+	 *                                       active root certificate from the store.
+	 */
+	public CertificateContainer(CertPath a_certPath, int a_certificateType,
+								boolean a_certificateNeedsVerification)
+	{
+		if (a_certPath == null || a_certPath.getFirstCertificate() == null)
+		{
+			throw new IllegalArgumentException("Invalid cert path!");
+		}
+		m_certPath = a_certPath;
 		m_certificateType = a_certificateType;
 		m_certificateNeedsVerification = a_certificateNeedsVerification;
-		m_parentCertificate = null;
 		m_enabled = true;
+		m_parentCertificate = null;
 		m_onlyHardRemovable = false;
 		m_lockList = new Vector();
 	}
@@ -147,20 +165,19 @@ public class CertificateContainer implements IXMLEncodable
 			"CertificateType"));
 		if (certificateTypeNode == null)
 		{
-			throw (new Exception("CertificateContainer: Constructor: No CertificateType node found."));
+			throw (new Exception("No CertificateType node found."));
 		}
 		/* CertificateType node found -> get the value */
 		m_certificateType = XMLUtil.parseValue(certificateTypeNode, -1);
 		if (m_certificateType == -1)
 		{
-			throw (new Exception("CertificateContainer: Constructor: Invalid CertificateType value."));
+			throw (new Exception("Invalid CertificateType value."));
 		}
 		Element certificateNeedsVerificationNode = (Element) (XMLUtil.getFirstChildByName(
 			a_certificateContainerNode, "CertificateNeedsVerification"));
 		if (certificateNeedsVerificationNode == null)
 		{
-			throw (new Exception(
-				"CertificateContainer: Constructor: No CertificateNeedsVerification node found."));
+			throw (new Exception("No CertificateNeedsVerification node found."));
 		}
 		/* CertificateNeedsVerification node found -> get the value */
 		m_certificateNeedsVerification = XMLUtil.parseValue(certificateNeedsVerificationNode, true);
@@ -168,7 +185,7 @@ public class CertificateContainer implements IXMLEncodable
 			"CertificateEnabled"));
 		if (certificateEnabledNode == null)
 		{
-			throw (new Exception("CertificateContainer: Constructor: No CertificateEnabled node found."));
+			throw (new Exception("No CertificateEnabled node found."));
 		}
 		/* CertificateEnabled node found -> get the value */
 		m_enabled = XMLUtil.parseValue(certificateEnabledNode, false);
@@ -176,17 +193,24 @@ public class CertificateContainer implements IXMLEncodable
 			"CertificateData"));
 		if (certificateDataNode == null)
 		{
-			throw (new Exception("CertificateContainer: Constructor: No CertificateData node found."));
+			throw (new Exception("No CertificateData node found."));
 		}
 		/* CertificateData node found -> get the certificate */
-		m_certificate = JAPCertificate.getInstance(XMLUtil.getFirstChildByName(certificateDataNode,
+		JAPCertificate certificate =
+			JAPCertificate.getInstance(XMLUtil.getFirstChildByName(certificateDataNode,
 			JAPCertificate.XML_ELEMENT_NAME));
-		if (m_certificate == null)
+		if (certificate == null)
 		{
-			throw (new Exception(
-				"CertificateContainer: Constructor: Invalid CertificateData value. Cannot get the certificate."));
+			m_certPath = new CertPath((Element)XMLUtil.getFirstChildByName(
+						 certificateDataNode, CertPath.XML_ELEMENT_NAME));
+			//throw (new Exception("Invalid CertificateData value. Cannot get the certificate."));
 		}
-		/* initialize also some other values */
+		else
+		{
+			// for compatibility with older versions of this class
+			m_certPath = new CertPath(certificate);
+		}
+
 		m_parentCertificate = null;
 		/* only hard removable certificates can be persistent */
 		m_onlyHardRemovable = true;
@@ -200,7 +224,12 @@ public class CertificateContainer implements IXMLEncodable
 	 */
 	public JAPCertificate getCertificate()
 	{
-		return m_certificate;
+		return m_certPath.getFirstCertificate();
+	}
+
+	public CertPath getCertPath()
+	{
+		return m_certPath;
 	}
 
 	/**
@@ -228,6 +257,8 @@ public class CertificateContainer implements IXMLEncodable
 	{
 		return m_parentCertificate;
 	}
+
+
 
 	/**
 	 * Returns the certificate type of this certificate. See the CERTIFICATE_TYPE constants within
@@ -266,7 +297,8 @@ public class CertificateContainer implements IXMLEncodable
 		boolean returnValue = false;
 		synchronized (this)
 		{
-			returnValue = ( (!m_certificateNeedsVerification) || (m_parentCertificate != null)) && m_enabled;
+			returnValue = !SignatureVerifier.getInstance().isCheckSignatures() ||
+				(( (!m_certificateNeedsVerification) || (m_parentCertificate != null)) && m_enabled);
 		}
 		return returnValue;
 	}
@@ -359,7 +391,7 @@ public class CertificateContainer implements IXMLEncodable
 	 */
 	public CertificateInfoStructure getInfoStructure()
 	{
-		return (new CertificateInfoStructure(m_certificate, m_parentCertificate, m_certificateType, m_enabled,
+		return (new CertificateInfoStructure(m_certPath, m_parentCertificate, m_certificateType, m_enabled,
 											 m_certificateNeedsVerification, m_onlyHardRemovable, m_bNotRemovable));
 	}
 
@@ -384,7 +416,7 @@ public class CertificateContainer implements IXMLEncodable
 			Element certificateEnabledNode = a_doc.createElement("CertificateEnabled");
 			XMLUtil.setValue(certificateEnabledNode, m_enabled);
 			Element certificateDataNode = a_doc.createElement("CertificateData");
-			certificateDataNode.appendChild(m_certificate.toXmlElement(a_doc));
+			certificateDataNode.appendChild(m_certPath.toXmlElement(a_doc));
 			certificateContainerNode.appendChild(certificateTypeNode);
 			certificateContainerNode.appendChild(certificateNeedsVerificationNode);
 			certificateContainerNode.appendChild(certificateEnabledNode);
@@ -408,7 +440,8 @@ public class CertificateContainer implements IXMLEncodable
 			return false;
 		}
 		//it is a certificateContainer, now compare the certificate ids.
-		return m_certificate.getId().equals( ( (CertificateContainer) a_certificateContainer).getCertificate().getId());
+		return m_certPath.getFirstCertificate().getId().equals(
+			  ( (CertificateContainer) a_certificateContainer).getCertificate().getId());
 	}
 
 	/**
@@ -419,7 +452,7 @@ public class CertificateContainer implements IXMLEncodable
 	 */
 	public String getId()
 	{
-		return m_certificate.getId();
+		return m_certPath.getFirstCertificate().getId();
 	}
 
 	/**
@@ -429,6 +462,6 @@ public class CertificateContainer implements IXMLEncodable
 	 */
 	public int hashCode()
 	{
-		return m_certificate.hashCode();
+		return m_certPath.getFirstCertificate().hashCode();
 	}
 }

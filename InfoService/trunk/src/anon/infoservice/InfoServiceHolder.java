@@ -392,7 +392,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 					tempHashtable = currentInfoService.getMixCascades();
 				}
 				else if (functionNumber == GET_INFOSERVICES)
-				{
+				{//System.out.println(currentInfoService.getId());
 					tempHashtable = currentInfoService.getInfoServices();
 				}
 				else if (functionNumber == GET_MIXINFO)
@@ -489,22 +489,54 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 								if (currentSerialEntry.getVersionNumber() !=
 									hashedSerialEntry.getVersionNumber())
 								{
-									LogHolder.log(LogLevel.NOTICE, LogType.NET,
-												  "InfoServices report different serial numbers!");
+									LogHolder.log(LogLevel.WARNING, LogType.NET,
+												  "InfoServices report different serial numbers for " +
+												  currentSerialEntry.getId() + "!");
 									/**
 									 * Alert: Two or more InfoServices report different version numbers.
 									 * This could be a try to keep the caller from updating this entry.
 									 * Mark this serial entry, so that the caller knows he must update this
 									 * entry.
 									 */
-									((Hashtable)result).put(currentSerialEntry.getId(),
-										new AbstractDistributableDatabaseEntry.SerialDBEntry(
-										currentSerialEntry.getId(), 0, Long.MAX_VALUE));
+									currentSerialEntry = new AbstractDistributableDatabaseEntry.SerialDBEntry(
+										currentSerialEntry.getId(), 0, Long.MAX_VALUE, // force update of hash
+										currentSerialEntry.isVerified(), currentSerialEntry.isValid());
 								}
+
+								if (currentSerialEntry.isVerified() != hashedSerialEntry.isVerified())
+								{
+									LogHolder.log(LogLevel.WARNING, LogType.NET,
+												  "InfoServices report different verification status for " +
+												  currentSerialEntry.getId() + "!");
+									/**
+									 * This may only be used for filtring if allInfoServices think this entry
+									 * is unverified.
+									 * If at least one IS reports it as verified, it must not be filtered.
+									 */
+									currentSerialEntry = new AbstractDistributableDatabaseEntry.SerialDBEntry(
+										currentSerialEntry.getId(), currentSerialEntry.getVersionNumber(),
+										Long.MAX_VALUE, true, currentSerialEntry.isValid());
+								}
+
+								if (currentSerialEntry.isValid() != hashedSerialEntry.isValid())
+								{
+									LogHolder.log(LogLevel.WARNING, LogType.NET,
+												  "InfoServices report different validity status for " +
+												  currentSerialEntry.getId() + "!");
+									/**
+									 * This may only be used for filtring if allInfoServices think this entry
+									 * is invalid.
+									 * If at least one IS reports it as valid, it must not be filtered.
+									 */
+									currentSerialEntry = new AbstractDistributableDatabaseEntry.SerialDBEntry(
+										currentSerialEntry.getId(), currentSerialEntry.getVersionNumber(),
+										Long.MAX_VALUE, currentSerialEntry.isVerified(), true);
+								}
+								currentEntry = currentSerialEntry;
 							}
 
 
-							if (hashedEntry.getLastUpdate() >= currentEntry.getLastUpdate())
+							if (hashedEntry.getLastUpdate() > currentEntry.getLastUpdate())
 							{
 								continue;
 							}
@@ -527,8 +559,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 			catch (Exception e)
 			{
 				LogHolder.log(LogLevel.INFO, LogType.NET,
-							  "Contacting IS " + currentInfoService.getName() + " produced an error!");
-				LogHolder.log(LogLevel.DEBUG, LogType.NET, e);
+							  "Contacting IS " + currentInfoService.getName() + " produced an error!", e);
 				/* if there was an error, remove currentInfoService from the list and try another
 				 * infoservice
 				 */

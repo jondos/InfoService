@@ -75,7 +75,7 @@ public class DynamicNetworkingHelper
 			if (SignatureVerifier.getInstance().verifyXml(mixCascadeNode,
 				SignatureVerifier.DOCUMENT_CLASS_MIX) == true)
 			{
-				MixCascade mixCascadeEntry = new MixCascade(mixCascadeNode, false);
+				MixCascade mixCascadeEntry = new MixCascade(mixCascadeNode);
 				TemporaryCascade tmp = new TemporaryCascade(mixCascadeEntry);
 				Database.getInstance(TemporaryCascade.class).update(tmp);
 			}

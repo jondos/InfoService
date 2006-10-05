@@ -268,25 +268,27 @@ public class SignatureVerifier implements IXMLEncodable
 						break;
 					}
 				}
-				Vector additionalCertificates = new Vector();
+				Vector additionalCertPaths = new Vector();
 				Enumeration additionalCertificatesEnumerator = additionalCertificateInfoStructures.elements();
 				while (additionalCertificatesEnumerator.hasMoreElements())
 				{
-					additionalCertificates.addElement( ( (CertificateInfoStructure) (
-						additionalCertificatesEnumerator.nextElement())).getCertificate());
+					additionalCertPaths.addElement( ( (CertificateInfoStructure) (
+						additionalCertificatesEnumerator.nextElement())).getCertPath());
 				}
 				/* get the root certificates for verifying appended certificates */
 				Vector rootCertificates = new Vector();
 				if ( (a_documentClass == DOCUMENT_CLASS_MIX) ||
-					(a_documentClass == DOCUMENT_CLASS_INFOSERVICE))
+					(a_documentClass == DOCUMENT_CLASS_INFOSERVICE) ||
+				   (a_documentClass == DOCUMENT_CLASS_UPDATE))
 				{
-					/* if it is not an update message, we accept also all signatures which can be verified
-					 * against the root certificates
-					 */
 					int rootType = JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX;
 					if (a_documentClass == DOCUMENT_CLASS_INFOSERVICE)
 					{
 						rootType = JAPCertificate.CERTIFICATE_TYPE_ROOT_INFOSERVICE;
+					}
+					else if (a_documentClass == DOCUMENT_CLASS_UPDATE)
+					{
+						rootType = JAPCertificate.CERTIFICATE_TYPE_ROOT_UPDATE;
 					}
 					Vector rootCertificateInfoStructures = m_trustedCertificates.
 						getAvailableCertificatesByType(rootType);
@@ -297,21 +299,11 @@ public class SignatureVerifier implements IXMLEncodable
 							nextElement())).getCertificate());
 					}
 				}
-				/*try{
-					System.out.println("Root:"+((JAPCertificate)rootCertificates.firstElement()).getSubject().getCommonName());
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				try{
-					System.out.println("Direct:"+((JAPCertificate)additionalCertificates.firstElement()).getSubject().getCommonName());
-				} catch (Exception e) {
-				    e.printStackTrace();
-				}*/
 
 				/* now we have everything -> verify the signature */
 				try
 				{
-					signature = XMLSignature.getVerified(a_rootNode, rootCertificates, additionalCertificates, false);
+					signature = XMLSignature.getVerified(a_rootNode, rootCertificates, additionalCertPaths, false);
 					signature.getCertPath().setDocType(a_documentClass);
 					if (!isCheckSignatures())
 					{

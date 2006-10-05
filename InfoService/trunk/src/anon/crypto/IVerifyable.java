@@ -28,38 +28,24 @@
 /* Hint: This file may be only a copy of the original file which is always in the JAP source tree!
  * If you change something - do not forget to add the changes also to the JAP source tree!
  */
-package anon.infoservice;
+package anon.crypto;
 
 /**
- * This is a generic definition of information that is sent to other infoservices.
+ * Defines an interface for verification and validation.
+ *
+ * @author Rolf Wendolsky
  */
-public interface IDistributable
+public interface IVerifyable
 {
 	/**
-	 * Returns a ID for this information. It is used as an identifier for logging status information.
-	 * @return The ID of this information.
+	 * Returns if the object has been verified by checking its signature(s).
+	 * @return if the object has been verified by checking its signature(s)
 	 */
-	public String getId();
+	public boolean isVerified();
 
 	/**
-	 * Returns the filename (InfoService command) to which the data of this entry is posted at the
-	 * other infoservice.
-	 *
-	 * @return The filename, where the data is posted when this entry is forwarded.
+	 * Returns if the object is valid at this time
+	 * @return if the object is valid at this time
 	 */
-	public String getPostFile();
-
-	/**
-	 * Returns the content encoding of the post data.
-	 * @return the content encoding of the post data
-	 */
-	public int getPostEncoding();
-
-	/**
-	 * Returns the data to post to the other infoservice. In general this should be an XML structure
-	 * with the data of this entry.
-	 *
-	 * @return The data to post to the other infoservice when this entry is forwarded.
-	 */
-	public byte[] getPostData();
+	public boolean isValid();
 }

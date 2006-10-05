@@ -59,12 +59,14 @@ import anon.util.ZLibTools;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.util.Date;
+import anon.crypto.IVerifyable;
 
 
 /**
  * Holds the information for an infoservice.
  */
-public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
+public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry implements IVerifyable
 {
 	public static final String XML_ELEMENT_CONTAINER_NAME = "InfoServices";
 	public static final String XML_ELEMENT_NAME = "InfoService";
@@ -140,6 +142,8 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 	 */
 	private JAPCertificate m_certificate;
 
+	private XMLSignature m_signature;
+
 	/**
 	 *
 	 */
@@ -213,6 +217,18 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 		/* store the XML representation */
 		m_xmlDescription = a_infoServiceNode;
 
+		// verify the signature
+		m_signature = SignatureVerifier.getInstance().getVerifiedXml(a_infoServiceNode,
+			SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE);
+		if (m_signature != null)
+		{
+			m_certPath = m_signature.getCertPath();
+			if (m_certPath != null)
+			{
+				m_certificate = m_certPath.getFirstCertificate();
+			}
+		}
+
 		/* get the information, whether this infoservice was user-defined within the JAP client */
 		if (XMLUtil.getFirstChildByName(a_infoServiceNode, "UserDefined") == null)
 		{
@@ -232,6 +248,12 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 
 		/* get the ID */
 		m_strInfoServiceId = a_infoServiceNode.getAttribute(XML_ATTR_ID);
+
+		/* test the ID */
+		if (!checkId())
+		{
+			throw new XMLParseException(XMLParseException.ROOT_TAG, "Malformed ID: " + m_strInfoServiceId);
+		}
 
 		/* get the name */
 		m_strName = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_infoServiceNode, "Name"), null);
@@ -292,31 +314,6 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 		{
 			/* there is a ForwarderList node -> this infoservice keeps a primary forwarder list */
 			m_bPrimaryForwarderList = true;
-		}
-
-
-		try
-	    {
-			XMLSignature documentSignature = SignatureVerifier.getInstance().getVerifiedXml(a_infoServiceNode,
-				SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE);
-			if (documentSignature != null)
-			{
-				m_certPath = documentSignature.getCertPath();
-				if (m_certPath != null)
-				{
-					m_certificate = m_certPath.getFirstCertificate();
-				}
-			}
-		}
-		catch (Exception e)
-		{
-		}
-		if (!m_userDefined &&
-			(m_certificate == null ||
-			 !m_strInfoServiceId.equals(
-					  new X509SubjectKeyIdentifier(m_certificate.getPublicKey()).getValueWithoutColon())))
-		{
-		   throw new XMLParseException(XMLParseException.ROOT_TAG, "Malformed ID: " + m_strInfoServiceId);
 		}
 
 		/* at the moment every infoservice talks with all other infoservices */
@@ -472,8 +469,12 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 		/* sign the XML node */
 		try
 		{
-			SignatureCreator.getInstance().signXml(SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE,
-				infoServiceNode);
+			m_signature = SignatureCreator.getInstance().getSignedXml(
+				 SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE, infoServiceNode);
+			if (m_signature != null)
+			{
+				m_certPath = m_signature.getCertPath();
+			}
 		}
 		catch (Exception a_e)
 		{
@@ -505,6 +506,36 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 	public String getName()
 	{
 		return m_strName;
+	}
+
+	public boolean isVerified()
+	{
+		if (m_signature != null)
+		{
+			return m_signature.isVerified();
+		}
+		return false;
+	}
+
+	public boolean isValid()
+	{
+		if (m_certPath != null)
+		{
+			return m_certPath.checkValidity(new Date());
+		}
+		return false;
+	}
+
+	/**
+	 * Checks if the ID is valid.
+	 * @return boolean
+	 */
+	public boolean checkId()
+	{
+		return m_userDefined ||
+			(m_certificate != null &&
+			 m_strInfoServiceId.equals(
+					  new X509SubjectKeyIdentifier(m_certificate.getPublicKey()).getValueWithoutColon()));
 	}
 
 	public JAPCertificate getCertificate()
@@ -893,7 +924,8 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 		}
 		// all interfaces tested, we can't find a valid interface //
 
-		throw (new Exception("Can't connect to infoservice. Connections to all ListenerInterfaces failed."));
+		throw (new Exception("Can't connect to infoservice " + getId() +
+							 ". Connections to all ListenerInterfaces failed."));
 	}
 
 	/**
@@ -957,8 +989,7 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 			{
 				currentCascade = new MixCascade(mixCascadeNode, Long.MAX_VALUE);
 				mixCascades.put(currentCascade.getId(), currentCascade);
-				if (currentCascade.getSignature() == null ||
-					!currentCascade.getSignature().isVerified())
+				if (currentCascade.isVerified())
 				{
 					LogHolder.log(LogLevel.INFO, LogType.MISC,
 								  "Cannot verify the signature for MixCascade entry: " +
@@ -1025,6 +1056,7 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 	 */
 	public Hashtable getInfoServices() throws Exception
 	{
+
 		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/infoservices"));
 
 		if (!SignatureVerifier.getInstance().verifyXml(doc,
@@ -1047,28 +1079,25 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 		for (int i = 0; i < infoServiceNodes.getLength(); i++)
 		{
 			Element infoServiceNode = (Element) (infoServiceNodes.item(i));
-			/* check the signature */
-			if (SignatureVerifier.getInstance().verifyXml(infoServiceNode,
-				SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE))
+			try
 			{
-				/* signature is valid */
-				try
+				currentEntry = new InfoServiceDBEntry(infoServiceNode);
+
+				if (currentEntry.isVerified())
 				{
-					currentEntry = new InfoServiceDBEntry(infoServiceNode);
 					infoServices.put(currentEntry.getId(), currentEntry);
 				}
-				catch (Exception e)
+				else
 				{
-					/* an error while parsing the node occured -> we don't use this mixcascade */
-					LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
-								  "Error in InfoService XML node.");
+					LogHolder.log(LogLevel.ERR, LogType.MISC,
+								  "Cannot verify the signature for InfoService entry: " +
+								  XMLUtil.toString(infoServiceNode));
 				}
 			}
-			else
+			catch (Exception e)
 			{
-				LogHolder.log(LogLevel.ERR, LogType.MISC,
-							  "Cannot verify the signature for InfoService entry: " +
-							  XMLUtil.toString(infoServiceNode));
+				/* an error while parsing the node occured -> we don't use this infoservice */
+				LogHolder.log(LogLevel.ERR, LogType.MISC, "Error in InfoService XML node:" + e.toString());
 			}
 		}
 		return infoServices;
@@ -1124,15 +1153,15 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 			throw (new Exception("Error in XML structure for mix with ID " + mixId));
 		}
 		Element mixNode = (Element) (mixNodes.item(0));
+		MixInfo info =  new MixInfo(mixNode, Long.MAX_VALUE, false);
 		/* check the signature */
-		if (SignatureVerifier.getInstance().verifyXml(mixNode, SignatureVerifier.DOCUMENT_CLASS_MIX) == false)
+		if (!info.isVerified())
 		{
 			/* signature is invalid -> throw an exception */
-			throw (new Exception("Cannot verify the signature for Mix entry: " +
-				XMLUtil.toString(mixNode)));
+			throw (new Exception("Cannot verify the signature for Mix entry: " + XMLUtil.toString(mixNode)));
 		}
 		/* signature was valid */
-		return new MixInfo(false, mixNode, Long.MAX_VALUE, false);
+		return info;
 	}
 
 	/**
@@ -1154,9 +1183,9 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 			throw (new Exception("Error in XML structure for cascade with ID" + cascadeId));
 		}
 		Element mixCascadeStatusNode = (Element) (mixCascadeStatusNodes.item(0));
+		StatusInfo info = new StatusInfo(mixCascadeStatusNode, cascadeLength);
 		/* check the signature */
-		if (SignatureVerifier.getInstance().verifyXml(mixCascadeStatusNode,
-			SignatureVerifier.DOCUMENT_CLASS_MIX) == false)
+		if (!info.isVerified())
 		{
 			/* signature is invalid -> throw an exception */
 			throw (new Exception(
@@ -1164,7 +1193,7 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry
 				XMLUtil.toString(mixCascadeStatusNode)));
 		}
 		/* signature was valid */
-		return new StatusInfo(mixCascadeStatusNode, cascadeLength);
+		return info;
 	}
 
 	/**

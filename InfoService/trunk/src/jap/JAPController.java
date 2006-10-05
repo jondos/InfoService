@@ -1032,14 +1032,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 							try
 							{
 								Database.getInstance(MixInfo.class).update(
-									new MixInfo(false, (Element)nodeMix, Long.MAX_VALUE, false));
+									new MixInfo((Element)nodeMix, Long.MAX_VALUE, false));
 							}
 							catch (Exception e)
 							{
 								try
 								{
 									Database.getInstance(MixInfo.class).update(
-										new MixInfo(false, (Element) nodeMix, Long.MAX_VALUE, true));
+										new MixInfo((Element) nodeMix, Long.MAX_VALUE, true));
 								}
 								catch (Exception a_e)
 								{
@@ -4039,6 +4039,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			SignatureVerifier.getInstance().getVerificationCertificateStore().
 				addCertificateWithoutVerification(updateMessagesCert, JAPCertificate.CERTIFICATE_TYPE_UPDATE, true, true);
+			SignatureVerifier.getInstance().getVerificationCertificateStore().
+				addCertificateWithoutVerification(updateMessagesCert, JAPCertificate.CERTIFICATE_TYPE_ROOT_UPDATE, true, true);
+
 		}
 		else
 		{

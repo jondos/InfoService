@@ -504,7 +504,7 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 			}
 			catch (Exception e)
 			{
-				LogHolder.log(LogLevel.WARNING, LogType.MISC, "Could not load db entries from XML!", e);
+				LogHolder.log(LogLevel.WARNING, LogType.MISC, "Could not load db entry from XML!", e);
 				/* if there was an error, it does not matter */
 			}
 		}

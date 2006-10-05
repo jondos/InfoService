@@ -35,11 +35,15 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import anon.util.XMLUtil;
+import anon.crypto.SignatureVerifier;
+import anon.crypto.XMLSignature;
+import anon.crypto.CertPath;
+import anon.crypto.IVerifyable;
 
 /**
  * Holds the information of a mixcascade status.
  */
-public class StatusInfo extends AbstractDatabaseEntry implements IDistributable
+public class StatusInfo extends AbstractDatabaseEntry implements IDistributable, IVerifyable
 {
 	public static final int ANON_LEVEL_MIN = 0;
 	public static final int ANON_LEVEL_FAIR = 3;
@@ -95,6 +99,9 @@ public class StatusInfo extends AbstractDatabaseEntry implements IDistributable
    */
   private String m_statusXmlData;
 
+  private XMLSignature m_signature;
+  private CertPath m_certPath;
+
   /**
    * Returns a new StatusInfo with dummy values (everything is set to -1). The LastUpdate time is
    * set to the current system time. This function is used every time, we can't get the StatusInfo
@@ -144,6 +151,21 @@ public class StatusInfo extends AbstractDatabaseEntry implements IDistributable
      * not have a database of status entries -> no timeout for the JAP client necessary
      */
     super(System.currentTimeMillis() + Constants.TIMEOUT_STATUS);
+
+	// verify the signature
+	try
+	{
+		m_signature = SignatureVerifier.getInstance().getVerifiedXml(a_statusNode,
+			SignatureVerifier.DOCUMENT_CLASS_MIX);
+		if (m_signature != null)
+		{
+			m_certPath = m_signature.getCertPath();
+		}
+	}
+	catch (Exception e)
+	{
+	}
+
     /* get all the attributes of MixCascadeStatus */
     m_mixCascadeId = a_statusNode.getAttribute("id");
     /* get the values */
@@ -270,6 +292,24 @@ public class StatusInfo extends AbstractDatabaseEntry implements IDistributable
    */
   public int getAnonLevel() {
     return m_anonLevel;
+  }
+
+  public boolean isVerified()
+  {
+	  if (m_signature != null)
+	  {
+		  return m_signature.isVerified();
+	  }
+	  return false;
+  }
+
+  public boolean isValid()
+  {
+	  if (m_certPath != null)
+	  {
+		  return m_certPath.checkValidity(new Date());
+	  }
+	  return false;
   }
 
   /**

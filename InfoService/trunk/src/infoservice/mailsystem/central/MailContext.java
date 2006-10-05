@@ -92,7 +92,7 @@ public class MailContext {
    * mail requests from localhost are accepted.
    */
   private int m_centralProcessPort;
-  
+
 
   /**
    * Creates a new instance of MailContext. We load the configuration from the specified file and
@@ -122,9 +122,9 @@ public class MailContext {
     /* read the port where to listen for mail requests */
     m_centralProcessPort = Integer.parseInt(mailConfig.getProperty("MailSystemMainProcessPort").trim());
     if ((m_centralProcessPort < 1) || (m_centralProcessPort > 65535)) {
-      throw (new Exception("MailContext: Constructor: MailSystemMainProcessPort is invalid."));
+      throw (new Exception("MailSystemMainProcessPort is invalid."));
     }
- 
+
     /* try to read the infoservices to use */
     String infoServiceList = mailConfig.getProperty("MailSystemInfoServiceList");
     if (infoServiceList != null) {
@@ -133,10 +133,10 @@ public class MailContext {
       StringTokenizer stInfoServiceList = new StringTokenizer(infoServiceList, ",");
       while (stInfoServiceList.hasMoreTokens()) {
         StringTokenizer stCurrentInfoService = new StringTokenizer(stInfoServiceList.nextToken(), ":");
-        Database.getInstance(InfoServiceDBEntry.class).update(new InfoServiceDBEntry(null, new ListenerInterface(stCurrentInfoService.nextToken().trim(), Integer.parseInt(stCurrentInfoService.nextToken().trim())).toVector(), false, true, System.currentTimeMillis() + INFOSERVICE_TIMEOUT));
+        Database.getInstance(InfoServiceDBEntry.class).update(new InfoServiceDBEntry(null, null, new ListenerInterface(stCurrentInfoService.nextToken().trim(), Integer.parseInt(stCurrentInfoService.nextToken().trim())).toVector(), true, true, 0, 0));
       }
     }
-    InfoServiceHolder.getInstance().setChangeInfoServices(true);      
+    InfoServiceHolder.getInstance().setChangeInfoServices(true);
   }
 
 
@@ -181,7 +181,7 @@ public class MailContext {
   public int getCentralProcessPort() {
     return m_centralProcessPort;
   }
-  
+
 }
 
 

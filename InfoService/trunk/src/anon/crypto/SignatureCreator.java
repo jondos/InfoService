@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2005, The JAP-Team
+ Copyright (c) 2000 - 2006, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -30,6 +30,8 @@ package anon.crypto;
 import java.util.Hashtable;
 
 import org.w3c.dom.Node;
+
+import anon.crypto.XMLSignature;
 
 public class SignatureCreator
 {
@@ -75,17 +77,18 @@ public class SignatureCreator
 		}
 	}
 
-	public boolean signXml(int a_documentClass, Node a_nodeToSign)
+	public XMLSignature getSignedXml(int a_documentClass, Node a_nodeToSign)
 	{
-		boolean nodeSigned = false;
 		PKCS12 signatureKey = null;
+		XMLSignature createdSignature = null;
+
 		synchronized (m_signatureKeys)
 		{
 			signatureKey = (PKCS12) (m_signatureKeys.get(new Integer(a_documentClass)));
 		}
+
 		if (signatureKey != null)
 		{
-			XMLSignature createdSignature = null;
 			try
 			{
 				createdSignature = XMLSignature.sign(a_nodeToSign, signatureKey);
@@ -93,12 +96,12 @@ public class SignatureCreator
 			catch (Exception e)
 			{
 			}
-			if (createdSignature != null)
-			{
-				/* signing the node was successful */
-				nodeSigned = true;
-			}
 		}
-		return nodeSigned;
+		return createdSignature;
+	}
+
+	public boolean signXml(int a_documentClass, Node a_nodeToSign)
+	{
+		return getSignedXml(a_documentClass, a_nodeToSign) != null;
 	}
 }
