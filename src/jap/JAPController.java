@@ -4039,9 +4039,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			SignatureVerifier.getInstance().getVerificationCertificateStore().
 				addCertificateWithoutVerification(updateMessagesCert, JAPCertificate.CERTIFICATE_TYPE_UPDATE, true, true);
-			SignatureVerifier.getInstance().getVerificationCertificateStore().
-				addCertificateWithoutVerification(updateMessagesCert, JAPCertificate.CERTIFICATE_TYPE_ROOT_UPDATE, true, true);
-
+			//SignatureVerifier.getInstance().getVerificationCertificateStore().
+				//addCertificateWithoutVerification(updateMessagesCert, JAPCertificate.CERTIFICATE_TYPE_ROOT_UPDATE, true, true);
 		}
 		else
 		{

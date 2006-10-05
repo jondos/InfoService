@@ -270,10 +270,14 @@ public class SignatureVerifier implements IXMLEncodable
 				}
 				Vector additionalCertPaths = new Vector();
 				Enumeration additionalCertificatesEnumerator = additionalCertificateInfoStructures.elements();
+				CertificateInfoStructure certStructure;
 				while (additionalCertificatesEnumerator.hasMoreElements())
 				{
-					additionalCertPaths.addElement( ( (CertificateInfoStructure) (
-						additionalCertificatesEnumerator.nextElement())).getCertPath());
+					certStructure = (CertificateInfoStructure) additionalCertificatesEnumerator.nextElement();
+					if (certStructure.isAvailable())
+					{
+						additionalCertPaths.addElement(certStructure.getCertPath());
+					}
 				}
 				/* get the root certificates for verifying appended certificates */
 				Vector rootCertificates = new Vector();
@@ -295,8 +299,11 @@ public class SignatureVerifier implements IXMLEncodable
 					Enumeration rootCertificatesEnumerator = rootCertificateInfoStructures.elements();
 					while (rootCertificatesEnumerator.hasMoreElements())
 					{
-						rootCertificates.addElement( ( (CertificateInfoStructure) (rootCertificatesEnumerator.
-							nextElement())).getCertificate());
+						certStructure = (CertificateInfoStructure) rootCertificatesEnumerator.nextElement();
+						if (certStructure.isAvailable())
+						{
+							rootCertificates.addElement(certStructure.getCertificate());
+						}
 					}
 				}
 
