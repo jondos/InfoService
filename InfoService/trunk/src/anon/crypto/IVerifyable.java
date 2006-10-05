@@ -48,4 +48,6 @@ public interface IVerifyable
 	 * @return if the object is valid at this time
 	 */
 	public boolean isValid();
+
+	public CertPath getCertPath();
 }

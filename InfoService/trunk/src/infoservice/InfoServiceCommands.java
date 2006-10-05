@@ -89,8 +89,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 
 			InfoServiceDBEntry newEntry = new InfoServiceDBEntry(infoServiceNode, false);
 			/* verify the signature --> if requested */
-			if (!Configuration.getInstance().isInfoServiceMessageSignatureCheckEnabled() ||
-				newEntry.isVerified())
+			if (newEntry.isVerified())
 			{
 				Database.getInstance(InfoServiceDBEntry.class).update(newEntry);
 			}

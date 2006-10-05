@@ -399,7 +399,7 @@ public class MixInfo extends AbstractDistributableDatabaseEntry implements IVeri
    * For MixInfo-Objects in the InfoService the CertPath is null
    * @return the CertPath of the mix
    */
-  public CertPath getMixCertPath()
+  public CertPath getCertPath()
   {
 	  return m_mixCertPath;
   }

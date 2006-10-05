@@ -146,7 +146,8 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 				if (currentEntry instanceof IVerifyable)
 				{
 					XMLUtil.setAttribute(nodeASerial, XML_ATTR_VERIFIED,
-										 ((IVerifyable)currentEntry).isVerified());
+										 ((IVerifyable)currentEntry).isVerified() &&
+						((IVerifyable)currentEntry).getCertPath().verify());
 					XMLUtil.setAttribute(nodeASerial, XML_ATTR_VALID,
 										 ((IVerifyable)currentEntry).isValid());
 				}
@@ -155,7 +156,7 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 		}
 	}
 
-	public static class SerialDBEntry extends AbstractDatabaseEntry implements IVerifyable
+	public static class SerialDBEntry extends AbstractDatabaseEntry
 	{
 		private String m_id;
 		private long m_version;

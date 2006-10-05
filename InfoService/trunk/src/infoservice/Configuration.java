@@ -133,11 +133,6 @@ public class Configuration
 	private String m_strProxyAddresses;
 
 	/**
-	 * Stores, whether the Signatures of InfoService Messages are verified.
-	 */
-	private boolean m_bCheckInfoServiceSignatures = true;
-
-	/**
 	 * Stores the date format information for HTTP headers.
 	 */
 	private SimpleDateFormat m_httpDateFormat;
@@ -289,10 +284,9 @@ public class Configuration
 								  "Disabling signature verification for all documents.");
 				}
 			}
-			if (SignatureVerifier.getInstance().isCheckSignatures())
+			//if (SignatureVerifier.getInstance().isCheckSignatures())
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-							  "Signature verification is enabled, loading certificates...");
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Loading certificates...");
 				/* load the trusted mix root certificates */
 				String trustedRootCertificateFiles = a_properties.getProperty("trustedRootCertificateFiles");
 				if ( (trustedRootCertificateFiles != null) && (!trustedRootCertificateFiles.trim().equals("")))
@@ -451,22 +445,55 @@ public class Configuration
 					LogHolder.log(LogLevel.WARNING, LogType.MISC, "No trusted update certificates specified.");
 				}
 
-				m_bCheckInfoServiceSignatures = true;
 				try
 				{
 					String b = a_properties.getProperty("checkInfoServiceSignatures").trim();
 					if (b.equalsIgnoreCase("false"))
 					{
-						m_bCheckInfoServiceSignatures = false;
-
+						SignatureVerifier.getInstance().setCheckSignatures(
+											  SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE, false);
 					}
 				}
 				catch (Exception e)
 				{
 					LogHolder.log(LogLevel.WARNING, LogType.MISC,
 								  "Could not read 'checkInfoServiceSignatures' setting - default to: " +
-								  m_bCheckInfoServiceSignatures);
+								  SignatureVerifier.getInstance().isCheckSignatures(
+						SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE));
 				}
+				try
+				{
+					String b = a_properties.getProperty("checkMixSignatures").trim();
+					if (b.equalsIgnoreCase("false"))
+					{
+						SignatureVerifier.getInstance().setCheckSignatures(
+											  SignatureVerifier.DOCUMENT_CLASS_MIX, false);
+					}
+				}
+				catch (Exception e)
+				{
+					LogHolder.log(LogLevel.WARNING, LogType.MISC,
+								  "Could not read 'checkMixSignatures' setting - default to: " +
+								  SignatureVerifier.getInstance().isCheckSignatures(
+									  SignatureVerifier.DOCUMENT_CLASS_MIX));
+				}
+				try
+				{
+					String b = a_properties.getProperty("checkUpdateSignatures").trim();
+					if (b.equalsIgnoreCase("false"))
+					{
+						SignatureVerifier.getInstance().setCheckSignatures(
+							SignatureVerifier.DOCUMENT_CLASS_UPDATE, false);
+					}
+				}
+				catch (Exception e)
+				{
+					LogHolder.log(LogLevel.WARNING, LogType.MISC,
+								  "Could not read 'checkUpdateSignatures' setting - default to: " +
+								  SignatureVerifier.getInstance().isCheckSignatures(
+									  SignatureVerifier.DOCUMENT_CLASS_UPDATE));
+				}
+
 				/* start the certificate manager, which manages the appended certificates of the
 				 * MixCascade entries for verification of the StatusInfo entries
 				 */
@@ -863,15 +890,6 @@ public class Configuration
 	public boolean isRootOfUpdateInformation()
 	{
 		return m_bRootOfUpdateInformation;
-	}
-
-	/**
-	 * Returns, whether the Signatures of InfoService Messaegs should be checked.
-	 *
-	 */
-	public boolean isInfoServiceMessageSignatureCheckEnabled()
-	{
-		return m_bCheckInfoServiceSignatures;
 	}
 
 	/**

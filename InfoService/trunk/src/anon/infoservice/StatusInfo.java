@@ -312,6 +312,11 @@ public class StatusInfo extends AbstractDatabaseEntry implements IDistributable,
 	  return false;
   }
 
+  public CertPath getCertPath()
+  {
+	  return m_certPath;
+  }
+
   /**
    * This returns the filename (InfoService command), where this status entry is posted at other
    * infoservices. It's always '/feedback'. This method is used within the context of the

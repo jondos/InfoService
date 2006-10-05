@@ -29,9 +29,11 @@ package anon.crypto;
 
 import java.util.Enumeration;
 import java.util.Vector;
+import java.util.Hashtable;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 import anon.util.XMLUtil;
 import anon.util.IXMLEncodable;
@@ -41,7 +43,6 @@ import anon.util.IXMLEncodable;
  */
 public class SignatureVerifier implements IXMLEncodable
 {
-
         /**
          * This is the class for all documents coming from mixes (mixinfo, cascadeinfo, status).
          */
@@ -63,10 +64,20 @@ public class SignatureVerifier implements IXMLEncodable
          */
         public static final String XML_ELEMENT_NAME = "SignatureVerification";
 
+		private static final String XML_ATTR_CHECK = "check";
+		private static final String XML_DOCUMENT_CLASS = "DocumentClass";
+		private static final String XML_ATTR_CLASS = "class";
+
         /**
          * Stores the instance of SignatureVerifier (Singleton).
          */
         private static SignatureVerifier ms_svInstance;
+
+		/**
+		 * Stores whether signature checks for a document type are done or not.
+		 * It holde the document type as Integer key and a Boolean.
+		 */
+		private Hashtable m_hashSignatureChecks;
 
         /**
          * Stores all trusted certificates.
@@ -85,6 +96,7 @@ public class SignatureVerifier implements IXMLEncodable
         private SignatureVerifier()
         {
                 m_trustedCertificates = new CertificateStore();
+				m_hashSignatureChecks = new Hashtable();
                 m_checkSignatures = true;
         }
 
@@ -96,16 +108,15 @@ public class SignatureVerifier implements IXMLEncodable
          */
         public static SignatureVerifier getInstance()
         {
-                synchronized (SignatureVerifier.class)
-                {
-                        if (ms_svInstance == null)
-                        {
-                                ms_svInstance = new SignatureVerifier();
-                        }
-                }
-                return ms_svInstance;
-        }
-
+			synchronized (SignatureVerifier.class)
+			{
+				if (ms_svInstance == null)
+				{
+					ms_svInstance = new SignatureVerifier();
+				}
+			}
+			return ms_svInstance;
+		}
         /**
          * Returns the name of the XML node used to store all settings of the SignatureVerifier
          * instance. This name can be used to find the XML node within a document when the settings
@@ -119,7 +130,7 @@ public class SignatureVerifier implements IXMLEncodable
         }
 
         /**
-         * Enables or disables the check of signatures. If signature checking is disabled, the veriy
+         * Enables or disables the check of signatures. If signature checking is disabled, the verify
          * methods will return true in every case without checking anything. If this value is enabled,
          * every signature is verified against the internal certificate store.
          *
@@ -128,8 +139,23 @@ public class SignatureVerifier implements IXMLEncodable
          */
         public void setCheckSignatures(boolean a_checkSignaturesEnabled)
         {
-                m_checkSignatures = a_checkSignaturesEnabled;
+			m_checkSignatures = a_checkSignaturesEnabled;
         }
+
+		public void setCheckSignatures(int a_documentClass, boolean a_bCheckignatures)
+		{
+			m_hashSignatureChecks.put(new Integer(a_documentClass), new Boolean(a_bCheckignatures));
+		}
+
+		public boolean isCheckSignatures(int a_documentClass)
+		{
+			Boolean bCheckSignatures = (Boolean)m_hashSignatureChecks.get(new Integer(a_documentClass));
+			if (bCheckSignatures == null)
+			{
+				return true;
+			}
+			return bCheckSignatures.booleanValue();
+		}
 
         /**
          * Returns whether signature verification is enabled or not. If signature checking is disabled,
@@ -141,7 +167,7 @@ public class SignatureVerifier implements IXMLEncodable
          */
         public boolean isCheckSignatures()
         {
-                return m_checkSignatures;
+			return m_checkSignatures;
         }
 
         /**
@@ -173,7 +199,7 @@ public class SignatureVerifier implements IXMLEncodable
 		 */
 		public boolean verifyXml(Document a_rootNode, int a_documentClass)
 		{
-			if (!m_checkSignatures )
+			if (!m_checkSignatures || !isCheckSignatures(a_documentClass))
 			{
 				/* accept every document without testing the signature */
 				return true;
@@ -206,7 +232,7 @@ public class SignatureVerifier implements IXMLEncodable
          */
         public boolean verifyXml(Element a_rootNode, int a_documentClass)
         {
-			if (!m_checkSignatures )
+			if (!m_checkSignatures || !isCheckSignatures(a_documentClass))
 			{
 			/* accept every document without testing the signature */
 				return true;
@@ -311,11 +337,11 @@ public class SignatureVerifier implements IXMLEncodable
 				try
 				{
 					signature = XMLSignature.getVerified(a_rootNode, rootCertificates, additionalCertPaths, false);
-					signature.getCertPath().setDocType(a_documentClass);
-					if (!isCheckSignatures())
+					if (!isCheckSignatures() || !isCheckSignatures(a_documentClass))
 					{
 						signature.setVerified(true);
 					}
+					signature.getCertPath().setDocType(a_documentClass);
 				}
 				catch (Exception e)
 				{
@@ -335,16 +361,32 @@ public class SignatureVerifier implements IXMLEncodable
          */
         public Element toXmlElement(Document a_doc)
         {
-                Element signatureVerificationNode = a_doc.createElement(XML_ELEMENT_NAME);
-                synchronized (m_trustedCertificates)
-                {
-                        Element checkSignaturesNode = a_doc.createElement("CheckSignatures");
-                        XMLUtil.setValue(checkSignaturesNode, m_checkSignatures);
-                        Element trustedCertificatesNode = m_trustedCertificates.toXmlElement(a_doc);
-                        signatureVerificationNode.appendChild(checkSignaturesNode);
-                        signatureVerificationNode.appendChild(trustedCertificatesNode);
-                }
-                return signatureVerificationNode;
+			Element signatureVerificationNode = a_doc.createElement(XML_ELEMENT_NAME);
+			synchronized (m_trustedCertificates)
+			{
+				Element checkSignaturesNode = a_doc.createElement("CheckSignatures");
+				XMLUtil.setAttribute(checkSignaturesNode, XML_ATTR_CHECK, m_checkSignatures);
+				synchronized (m_hashSignatureChecks)
+				{
+					Enumeration enumChecks = m_hashSignatureChecks.keys();
+					Integer documentClass;
+					boolean check;
+					Element elemTemp;
+					while (enumChecks.hasMoreElements())
+					{
+						documentClass = ((Integer)enumChecks.nextElement());
+						check = ((Boolean)m_hashSignatureChecks.get(documentClass)).booleanValue();
+						elemTemp = a_doc.createElement(XML_DOCUMENT_CLASS);
+						XMLUtil.setAttribute(elemTemp, XML_ATTR_CLASS, documentClass.intValue());
+						XMLUtil.setAttribute(elemTemp, XML_ATTR_CHECK, check);
+						checkSignaturesNode.appendChild(elemTemp);
+					}
+				}
+				Element trustedCertificatesNode = m_trustedCertificates.toXmlElement(a_doc);
+				signatureVerificationNode.appendChild(checkSignaturesNode);
+				signatureVerificationNode.appendChild(trustedCertificatesNode);
+			}
+			return signatureVerificationNode;
         }
 
         /**
@@ -357,27 +399,39 @@ public class SignatureVerifier implements IXMLEncodable
          */
         public void loadSettingsFromXml(Element a_signatureVerificationNode) throws Exception
         {
-                synchronized (m_trustedCertificates)
-                {
-                        /* parse the whole SignatureVerification XML structure */
-                        Element checkSignaturesNode = (Element) (XMLUtil.getFirstChildByName(a_signatureVerificationNode,
-                                "CheckSignatures"));
-                        if (checkSignaturesNode == null)
-                        {
-                                throw (new Exception("SignatureVerifier: loadSettingsFromXml: No CheckSignatures node found."));
-                        }
-                        /* CheckSignatures node found -> get the value */
-                        m_checkSignatures = XMLUtil.parseValue(checkSignaturesNode, true);
-                        Element trustedCertificatesNode = (Element) (XMLUtil.getFirstChildByName(
-                                a_signatureVerificationNode, CertificateStore.getXmlSettingsRootNodeName()));
-                        if (trustedCertificatesNode == null)
-                        {
-                                throw (new Exception(
-                                        "SignatureVerifier: loadSettingsFromXml: No TrustedCertificates node found."));
-                        }
-                        /* TrustedCertificates node found -> load the certificates  */
-                        m_trustedCertificates.loadSettingsFromXml(trustedCertificatesNode);
-                }
+			synchronized (m_trustedCertificates)
+			{
+				/* parse the whole SignatureVerification XML structure */
+				Element checkSignaturesNode = (Element) (XMLUtil.getFirstChildByName(a_signatureVerificationNode,
+					"CheckSignatures"));
+				if (checkSignaturesNode == null)
+				{
+					throw (new Exception("No CheckSignatures node found."));
+				}
+				/* CheckSignatures node found -> get the value */
+				m_checkSignatures = XMLUtil.parseAttribute(checkSignaturesNode, XML_ATTR_CHECK, true);
+				NodeList listCheckSignatures = checkSignaturesNode.getElementsByTagName(XML_DOCUMENT_CLASS);
+				int documentClass;
+				for (int i = 0; i < listCheckSignatures.getLength(); i++)
+				{
+					documentClass = XMLUtil.parseAttribute(listCheckSignatures.item(i), XML_ATTR_CLASS, -1);
+					if (documentClass >= 0)
+					{
+						m_hashSignatureChecks.put(new Integer(documentClass),
+												  new Boolean(XMLUtil.parseAttribute(
+							listCheckSignatures.item(i), XML_ATTR_CHECK, true)));
+					}
+				}
+
+				Element trustedCertificatesNode = (Element) (XMLUtil.getFirstChildByName(
+					a_signatureVerificationNode, CertificateStore.getXmlSettingsRootNodeName()));
+				if (trustedCertificatesNode == null)
+				{
+					throw (new Exception("No TrustedCertificates node found."));
+				}
+				/* TrustedCertificates node found -> load the certificates  */
+				m_trustedCertificates.loadSettingsFromXml(trustedCertificatesNode);
+			}
         }
 
 }
