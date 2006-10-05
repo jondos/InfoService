@@ -11,6 +11,9 @@ import anon.crypto.DSAKeyPair;
 import anon.crypto.PKCS12;
 import anon.crypto.Validity;
 import anon.crypto.X509DistinguishedName;
+import anon.crypto.X509Extensions;
+import anon.crypto.X509SubjectKeyIdentifier;
+
 public class KeyGenTest
 {
 	private static String ms_strInfoServiceName="InfoService";
@@ -29,7 +32,9 @@ public class KeyGenTest
 		DSAKeyPair keyPair = DSAKeyPair.getInstance(new SecureRandom(), 1024, 80);
 		FileOutputStream out1 = new FileOutputStream("private.pfx");
 		FileOutputStream out2 = new FileOutputStream("public.cer");
-		ownCertificate = new PKCS12(new X509DistinguishedName("cn="+ms_strInfoServiceName), keyPair, new Validity(new GregorianCalendar(),5));
+		X509Extensions extensions = new X509Extensions(new X509SubjectKeyIdentifier(keyPair.getPublic()));
+		ownCertificate = new PKCS12(new X509DistinguishedName("cn="+ms_strInfoServiceName), keyPair,
+									new Validity(new GregorianCalendar(),5), extensions);
 		ownCertificate.store(out1, strPasswd.toCharArray());
 		ownCertificate.getX509Certificate().store(out2);
 		out1.close();

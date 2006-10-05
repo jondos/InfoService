@@ -3991,7 +3991,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 				listeners.addElement(new ListenerInterface(JAPConstants.DEFAULT_INFOSERVICE_HOSTNAMES[i],
 					JAPConstants.DEFAULT_INFOSERVICE_PORT_NUMBERS[i][j]));
 			}
-			entries[i] = new InfoServiceDBEntry(JAPConstants.DEFAULT_INFOSERVICE_NAMES[i], listeners, false);
+			entries[i] = new InfoServiceDBEntry(
+						 JAPConstants.DEFAULT_INFOSERVICE_NAMES[i],
+						 JAPConstants.DEFAULT_INFOSERVICE_NAMES[i], listeners, false, true, 0, 0);
 		}
 
 		return entries;
