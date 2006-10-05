@@ -406,7 +406,7 @@ final public class JAPRoutingUseableMixCascades extends Observable implements Ob
 			a_allowedMixCascadesSettingsNode, "AllowedMixCascades"));
 		if (allowedMixCascadesNode == null)
 		{
-			LogHolder.log(LogLevel.ERR, LogType.MISC, "JAPRoutingUseableMixCascades: loadSettingsFromXml: Error in XML structure (AllowedMixCascades node): Skip loading of allowed mixcascades.");
+			LogHolder.log(LogLevel.ERR, LogType.MISC, "Error in XML structure (AllowedMixCascades node): Skip loading of allowed mixcascades.");
 			noError = false;
 		}
 		else
@@ -418,13 +418,13 @@ final public class JAPRoutingUseableMixCascades extends Observable implements Ob
 				Element mixCascadeNode = (Element) (mixCascadeNodes.item(i));
 				try
 				{
-					MixCascade currentMixCascade = new MixCascade(mixCascadeNode, true);
+					MixCascade currentMixCascade = new MixCascade(mixCascadeNode);
 					allowedMixCascades.addElement(currentMixCascade);
 				}
 				catch (Exception e)
 				{
 					LogHolder.log(LogLevel.ERR, LogType.MISC,
-								  "JAPRoutingUseableMixCascades: loadSettingsFromXml: Error while loading one allowed MixCascade: Skipping this MixCascade (" +
+								  "Error while loading one allowed MixCascade: Skipping this MixCascade (" +
 								  e.toString() + ").");
 					noError = false;
 				}

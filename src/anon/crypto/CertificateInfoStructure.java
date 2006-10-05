@@ -29,8 +29,7 @@ package anon.crypto;
 
 public class CertificateInfoStructure
 {
-
-  private JAPCertificate m_certificate;
+  private CertPath m_certPath;
 
   private JAPCertificate m_parentCertificate;
 
@@ -45,11 +44,25 @@ public class CertificateInfoStructure
 	private boolean m_bNotRemovable;
 
 	public CertificateInfoStructure(JAPCertificate a_certificate, JAPCertificate a_parentCertificate,
+										int a_certificateType, boolean a_enabled,
+										boolean a_certificateNeedsVerification, boolean a_onlyHardRemovable,
+									boolean a_notRemovable)
+	{
+		this (new CertPath(a_certificate), a_parentCertificate, a_certificateType, a_enabled,
+			  a_certificateNeedsVerification, a_onlyHardRemovable, a_notRemovable);
+	}
+
+
+	public CertificateInfoStructure(CertPath a_certPath, JAPCertificate a_parentCertificate,
 									int a_certificateType, boolean a_enabled,
 									boolean a_certificateNeedsVerification, boolean a_onlyHardRemovable,
 									boolean a_notRemovable)
 	{
-		m_certificate = a_certificate;
+		if (a_certPath == null || a_certPath.getFirstCertificate() == null)
+		{
+			throw new IllegalArgumentException("Invalid cert path!");
+		}
+		m_certPath = a_certPath;
 		m_parentCertificate = a_parentCertificate;
 		m_certificateType = a_certificateType;
 		m_enabled = a_enabled;
@@ -60,12 +73,18 @@ public class CertificateInfoStructure
 
 	public JAPCertificate getCertificate()
 	{
-		return m_certificate;
+		return m_certPath.getFirstCertificate();
 	}
 
 	public JAPCertificate getParentCertificate()
 	{
 		return m_parentCertificate;
+	}
+
+
+	public CertPath getCertPath()
+	{
+		return m_certPath;
 	}
 
 	public int getCertificateType()
@@ -83,7 +102,8 @@ public class CertificateInfoStructure
 		boolean returnValue = false;
 		synchronized (this)
 		{
-			returnValue = ( (!m_certificateNeedsVerification) || (m_parentCertificate != null)) && m_enabled;
+			returnValue = !SignatureVerifier.getInstance().isCheckSignatures() ||
+				(((!m_certificateNeedsVerification) || (m_parentCertificate != null)) && m_enabled);
 		}
 		return returnValue;
 	}

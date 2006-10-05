@@ -89,15 +89,15 @@ public class InfoServicePropagandist implements Runnable
          */
         InfoServiceDistributor.getInstance().addJobToInititalNeighboursQueue(generatedOwnEntry);
         LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-                "InfoServicePropagandist: run: Updating and propagating own InfoServerDBEntry.");
+                "Updating and propagating own InfoServerDBEntry.");
       }
       else
       {
         /* we need a listener-interface */
         LogHolder.log(LogLevel.EMERG, LogType.MISC,
-          "InfoServicePropagandist: run: There is no virtual listener interface configurated. Shutdown InfoService!");
+          "There is no virtual listener interface configurated. Shutdown InfoService!");
         System.out.println(
-          "InfoServicePropagandist: run: There is no virtual listener interface configurated. Shutdown InfoService!");
+          "There is no virtual listener interface configurated. Shutdown InfoService!");
         System.exit( -1);
       }
       /* sleep for one announce period and then announce again */

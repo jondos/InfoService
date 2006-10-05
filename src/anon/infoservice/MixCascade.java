@@ -29,6 +29,7 @@ package anon.infoservice;
 
 import java.util.Enumeration;
 import java.util.Vector;
+import java.util.Date;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -38,17 +39,20 @@ import anon.AnonServerDescription;
 import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
 import anon.crypto.XMLSignature;
+import anon.crypto.CertPath;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
 import anon.util.ZLibTools;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.crypto.IVerifyable;
 
 /**
  * Holds the information for a mixcascade.
  */
-public class MixCascade extends AbstractDistributableDatabaseEntry implements AnonServerDescription
+public class MixCascade extends AbstractDistributableDatabaseEntry implements AnonServerDescription,
+		IVerifyable
 
 {
 	public static final String XML_ELEMENT_NAME = "MixCascade";
@@ -106,6 +110,7 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 	private byte[] m_compressedXmlStructure;
 
 	private XMLSignature m_signature;
+	private CertPath m_certPath;
 
 	/**
 	 * True, if this MixCascade is user defined, false if the Information comes from the
@@ -130,10 +135,10 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 	 *
 	 * @param a_bCompressedMixCascadeNode The MixCascade node from a compressed XML document.
 	 */
-	public MixCascade(byte[] a_bCompressedMixCascadeNode, boolean a_bDoSignatureCheck)
+	public MixCascade(byte[] a_bCompressedMixCascadeNode)
 		throws XMLParseException
 	{
-		this(a_bCompressedMixCascadeNode, null, 0, null, a_bDoSignatureCheck);
+		this(a_bCompressedMixCascadeNode, null, 0, null);
 	}
 
 	/**
@@ -141,9 +146,9 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 	 *
 	 * @param a_mixCascadeNode The MixCascade node from an XML document.
 	 */
-	public MixCascade(Element a_mixCascadeNode,  boolean a_bDoSignatureCheck) throws XMLParseException
+	public MixCascade(Element a_mixCascadeNode) throws XMLParseException
 	{
-		this(null, a_mixCascadeNode, 0, null, a_bDoSignatureCheck);
+		this(null, a_mixCascadeNode, 0, null);
 	}
 
 	/**
@@ -155,7 +160,7 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 	public MixCascade(Element a_mixCascadeNode, long a_expireTime)
 		throws XMLParseException
 	{
-		this(null, a_mixCascadeNode, a_expireTime, null, true);
+		this(null, a_mixCascadeNode, a_expireTime, null);
 	}
 
 	/**
@@ -169,7 +174,7 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 	public MixCascade(Element a_mixCascadeNode, long a_expireTime, String a_mixIDFromCascade)
 		throws XMLParseException
 	{
-		this(null, a_mixCascadeNode, a_expireTime, a_mixIDFromCascade, true);
+		this(null, a_mixCascadeNode, a_expireTime, a_mixIDFromCascade);
 	}
 
 	/**
@@ -181,7 +186,7 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 	 * (it is stripped) it gets this mix id; otherwise it must be null
 	 */
 	private MixCascade(byte[] a_compressedMixCascadeNode, Element a_mixCascadeNode,
-					   long a_expireTime, String a_mixIDFromCascade, boolean a_bDoSignatureCheck)
+					   long a_expireTime, String a_mixIDFromCascade)
 		throws XMLParseException
 	{
 		/* use always the timeout for the infoservice context, because the JAP client currently does
@@ -201,6 +206,39 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 						 MixCascade.XML_ELEMENT_NAME));
 		}
 
+		/* try to get the certificate from the Signature node */
+		try
+		{
+			m_mixCascadeCertificate = null;
+			m_signature = SignatureVerifier.getInstance().getVerifiedXml(a_mixCascadeNode,
+				SignatureVerifier.DOCUMENT_CLASS_MIX);
+			if (m_signature != null)
+			{
+				m_certPath = m_signature.getCertPath();
+				if (m_certPath != null && m_certPath.getFirstCertificate() != null)
+				{
+					m_mixCascadeCertificate = m_certPath.getFirstCertificate();
+				}
+				else
+				{
+					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+								  "No appended certificates in the MixCascade structure.");
+				}
+			}
+			else
+			{
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+							  "No signature node found while looking for MixCascade certificate.");
+			}
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.MISC,
+						  "Error while looking for appended certificates in the MixCascade structure: " +
+						  e.toString());
+		}
+
+
 		/* get the ID */
 		if (a_mixCascadeNode == null || !a_mixCascadeNode.getNodeName().equals(XML_ELEMENT_NAME))
 		{
@@ -214,6 +252,9 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 		{
 			m_mixCascadeId = XMLUtil.parseAttribute(a_mixCascadeNode, "id", null);
 		}
+
+
+
 		/* get the name */
 		m_strName = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_mixCascadeNode, "Name"), null);
 		if (m_strName == null && !m_bFromCascade)
@@ -291,7 +332,7 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 		{
 			try
 			{
-				m_mixInfos[i] = new MixInfo(false, (Element) mixNodes.item(i), Long.MAX_VALUE, true);
+				m_mixInfos[i] = new MixInfo((Element) mixNodes.item(i), Long.MAX_VALUE, true);
 			}
 			catch (XMLParseException a_e)
 			{
@@ -319,42 +360,9 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 		{
 			m_serial = XMLUtil.parseAttribute(a_mixCascadeNode, XML_ATTR_SERIAL, Long.MIN_VALUE);
 		}
-		if (a_bDoSignatureCheck)
-		{
-			/* try to get the certificate from the Signature node */
-			try
-			{
-				m_mixCascadeCertificate = null;
-				m_signature = SignatureVerifier.getInstance().getVerifiedXml(a_mixCascadeNode,
-					SignatureVerifier.DOCUMENT_CLASS_MIX);
-				if (m_signature != null)
-				{
-					Enumeration appendedCertificates = m_signature.getCertificates().elements();
-					/* store the first certificate (there should be only one) -> needed for verification of the
-					 * MixCascadeStatus XML structure */
-					if (appendedCertificates.hasMoreElements())
-					{
-						m_mixCascadeCertificate = (JAPCertificate) (appendedCertificates.nextElement());
-					}
-					else
-					{
-						LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-									  "No appended certificates in the MixCascade structure.");
-					}
-				}
-				else
-				{
-					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-								  "No signature node found while looking for MixCascade certificate.");
-				}
-			}
-			catch (Exception e)
-			{
-				LogHolder.log(LogLevel.ERR, LogType.MISC,
-							  "Error while looking for appended certificates in the MixCascade structure: " +
-							  e.toString());
-			}
-		}
+
+
+
 		/* get the information, whether this mixcascade was user-defined within the JAP client */
 		m_userDefined = XMLUtil.parseAttribute(a_mixCascadeNode, XML_ATTR_USER_DEFINED, false);
 
@@ -742,16 +750,12 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 		synchronized (this)
 		{
 			int certificateLock = -1;
-			if (m_mixCascadeCertificate != null && m_signature != null && m_signature.getCertPath() != null)
-			{
-				//check if the Certificates are verified
-				if(m_signature.getCertPath().verify())
+			if (m_certPath.getFirstCertificate() != null && m_certPath != null && m_certPath.verify())
 			{
 				/* add the cascade certificate temporary to the certificate store */
 				certificateLock = SignatureVerifier.getInstance().getVerificationCertificateStore().
-						addCertificateWithoutVerification(m_mixCascadeCertificate,
-						JAPCertificate.CERTIFICATE_TYPE_MIX, false, false);
-				}
+					addCertificateWithoutVerification(m_certPath,
+					JAPCertificate.CERTIFICATE_TYPE_MIX, false, false);
 			}
 			String id = getMixId(0);
 			if (id == null)
@@ -759,8 +763,7 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 				// the cascade id should be the same as the the id of the first mix, but ok...
 				id = getId();
 			}
-			StatusInfo statusInfo =
-				InfoServiceHolder.getInstance().getStatusInfo(id, getNumberOfMixes());
+			StatusInfo statusInfo = InfoServiceHolder.getInstance().getStatusInfo(id, getNumberOfMixes());
 			if (certificateLock != -1)
 			{
 				/* remove the lock on the certificate */
@@ -854,9 +857,27 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 		return m_mixCascadeCertificate;
 	}
 
-	public XMLSignature getSignature()
+	public CertPath getCertPath()
 	{
-		return m_signature;
+		return m_certPath;
+	}
+
+	public boolean isVerified()
+	{
+		if (m_signature != null)
+		{
+			return m_signature.isVerified();
+		}
+		return false;
+	}
+
+	public boolean isValid()
+	{
+		if (m_certPath != null)
+		{
+			return m_certPath.checkValidity(new Date());
+		}
+		return false;
 	}
 
 	/**

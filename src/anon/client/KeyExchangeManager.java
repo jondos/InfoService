@@ -137,7 +137,7 @@ public class KeyExchangeManager {
 		   MixCascade cascade = new MixCascade(XMLUtil.toXMLDocument(xmlData).getDocumentElement(),
 											   Long.MAX_VALUE, a_cascade.getId());
 
-		  if (!cascade.getSignature().isVerified())
+		  if (!cascade.isVerified())
 		  {
 			  throw (new SignatureException("Received XML structure has an invalid signature."));
 		  }
@@ -163,28 +163,21 @@ public class KeyExchangeManager {
 		  }
 
 		  Database.getInstance(MixInfo.class).update(
-			  new MixInfo(MixInfo.DEFAULT_NAME, cascade.getSignature().getCertPath()));
+			  new MixInfo(MixInfo.DEFAULT_NAME, cascade.getCertPath()));
 
 		  /*
 		   * get the appended certificate of the signature and store it in the
 		   * certificate store (needed for verification of the MixCascadeStatus
 		   * messages)
 		   */
-		  if (cascade.getCertificate() != null &&
-		          cascade.getSignature() != null &&
-				      cascade.getSignature().getCertPath() != null)
+		  if (cascade.isVerified() && cascade.getCertificate() != null)
 		  {
-
-			  // add certificate only if the CertPath is valid
-			  if (cascade.getSignature().isVerified())
-			  {
-				  m_mixCascadeCertificateLock = SignatureVerifier.getInstance().
-					  getVerificationCertificateStore().addCertificateWithoutVerification(
-						  cascade.getCertificate(),
-						  JAPCertificate.CERTIFICATE_TYPE_MIX, false, false);
-				  LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-								"Added appended certificate from the MixCascade structure to the certificate store.");
-			  }
+			  m_mixCascadeCertificateLock = SignatureVerifier.getInstance().
+				  getVerificationCertificateStore().addCertificateWithoutVerification(
+					  cascade.getCertificate(),
+					  JAPCertificate.CERTIFICATE_TYPE_MIX, false, false);
+			  LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+							"Added appended certificate from the MixCascade structure to the certificate store.");
 		  }
 		  else
 		  {
@@ -235,7 +228,7 @@ public class KeyExchangeManager {
 		 m_mixParameters = new MixParameters[cascade.getNumberOfMixes()];
 		  for (int i = 0; i < cascade.getNumberOfMixes(); i++)
 		  {
-			  if (i > 0 && !cascade.getMixInfo(i).getSignature().isVerified())
+			  if (i > 0 && !cascade.getMixInfo(i).isVerified())
 			  {
 				  throw (new SignatureException(
 					  "Received XML structure has an invalid signature for Mix " +

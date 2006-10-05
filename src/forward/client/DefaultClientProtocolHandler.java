@@ -169,7 +169,7 @@ public class DefaultClientProtocolHandler
 			catch (Exception e)
 			{
 				throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR,
-												  "DefaultClientProtocolHandler: getConnectionDescriptor: XML transforming error (" +
+												  "XML transforming error (" +
 												  e.toString() + ")."));
 			}
 			sendProtocolMessage(protocolPacket);
@@ -183,14 +183,14 @@ public class DefaultClientProtocolHandler
 			catch (Exception e)
 			{
 				throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR,
-												  "DefaultClientProtocolHandler: getConnectionDescriptor: Error while parsing XML message (" +
+												  "Error while parsing XML message (" +
 												  e.toString() + ")."));
 			}
 			NodeList japRoutingNodes = doc.getElementsByTagName("JAPRouting");
 			if (japRoutingNodes.getLength() == 0)
 			{
 				throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR,
-												  "DefaultClientProtocolHandler: getConnectionDescriptor: Error in XML structure (JAPRouting node)."));
+												  "Error in XML structure (JAPRouting node)."));
 			}
 			Element japRoutingNode = (Element) (japRoutingNodes.item(0));
 			/* check the routing protocol version */
@@ -198,7 +198,7 @@ public class DefaultClientProtocolHandler
 			if (protocolNodes.getLength() == 0)
 			{
 				throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR,
-												  "DefaultClientProtocolHandler: getConnectionDescriptor: Error in XML structure (Protocol node)."));
+												  "Error in XML structure (Protocol node)."));
 			}
 			Element protocolNode = (Element) (protocolNodes.item(0));
 			int protocolVersion = -1;
@@ -208,12 +208,13 @@ public class DefaultClientProtocolHandler
 			}
 			catch (Exception e)
 			{
-				throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR, "DefaultClientProtocolHandler: getConnectionDescriptor: Error in XML structure (Protocol node -> version info)."));
+				throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR,
+												  "Error in XML structure (Protocol node -> version info)."));
 			}
 			if (protocolVersion != PROTOCOL_VERSION)
 			{
 				throw (new ClientForwardException(ClientForwardException.ERROR_VERSION_ERROR,
-												  "DefaultClientProtocolHandler: getConnectionDescriptor: Forwarder is using protocol version " +
+												  "Forwarder is using protocol version " +
 												  Integer.toString(protocolVersion) + ", but we use version " +
 												  Integer.toString(PROTOCOL_VERSION) + "."));
 			}
@@ -222,27 +223,27 @@ public class DefaultClientProtocolHandler
 			if (requestNodes.getLength() == 0)
 			{
 				throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR,
-												  "DefaultClientProtocolHandler: getConnectionDescriptor: Error in XML structure (Request node)."));
+												  "Error in XML structure (Request node)."));
 			}
 			Element requestNode = (Element) (requestNodes.item(0));
 			String subject = requestNode.getAttribute("subject");
 			if (!subject.equals("connection"))
 			{
 				throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR,
-												  "DefaultClientProtocolHandler: getConnectionDescriptor: Error in XML structure (Request node -> subject)."));
+												  "Error in XML structure (Request node -> subject)."));
 			}
 			String msg = requestNode.getAttribute("msg");
 			if (!msg.equals("offer"))
 			{
 				throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR,
-												  "DefaultClientProtocolHandler: getConnectionDescriptor: Error in XML structure (Request node -> msg)."));
+												  "Error in XML structure (Request node -> msg)."));
 			}
 			/* get all cascades supported by the forwarder */
 			NodeList allowedCascadesNodes = requestNode.getElementsByTagName("AllowedCascades");
 			if (allowedCascadesNodes.getLength() == 0)
 			{
 				throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR,
-												  "DefaultClientProtocolHandler: getConnectionDescriptor: Error in XML structure (AllowedCascades node)."));
+												  "Error in XML structure (AllowedCascades node)."));
 			}
 			Element allowedCascadesNode = (Element) (allowedCascadesNodes.item(0));
 			NodeList mixCascadeNodes = allowedCascadesNode.getElementsByTagName("MixCascade");
@@ -252,14 +253,12 @@ public class DefaultClientProtocolHandler
 				/* check the signature of the mixcascade structures */
 				try
 				{
-					MixCascade cascade = new MixCascade(currentMixCascadeNode, true);
-					if (cascade.getSignature() != null &&
-						cascade.getSignature().isVerified())
+					MixCascade cascade = new MixCascade(currentMixCascadeNode);
+					if (cascade.isVerified())
 					{
 						/* signature is valid, try to add that mixcascade to the descriptor mixcascade list */
 
 						connectionDescriptor.addMixCascade(cascade);
-
 					}
 					else
 					{
@@ -280,14 +279,14 @@ public class DefaultClientProtocolHandler
 			if (qualityOfServiceNodes.getLength() == 0)
 			{
 				throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR,
-												  "DefaultClientProtocolHandler: getConnectionDescriptor: Error in XML structure (QualityOfService node)."));
+												  "Error in XML structure (QualityOfService node)."));
 			}
 			Element qualityOfServiceNode = (Element) (qualityOfServiceNodes.item(0));
 			NodeList maximumBandwidthNodes = qualityOfServiceNode.getElementsByTagName("MaximumBandwidth");
 			if (maximumBandwidthNodes.getLength() == 0)
 			{
 				throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR,
-												  "DefaultClientProtocolHandler: getConnectionDescriptor: Error in XML structure (MaximumBandwidth node)."));
+												  "Error in XML structure (MaximumBandwidth node)."));
 			}
 			Element maximumBandwidthNode = (Element) (maximumBandwidthNodes.item(0));
 			int maximumBandwidth = -1;
@@ -301,7 +300,8 @@ public class DefaultClientProtocolHandler
 			if (maximumBandwidth < 0)
 			{
 				/* error while parsing or illegal value */
-				throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR, "DefaultClientProtocolHandler: getConnectionDescriptor: Error in XML structure (MaximumBandwidth has illegal value)."));
+				throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR,
+												  "Error in XML structure (MaximumBandwidth has illegal value)."));
 			}
 			connectionDescriptor.setMaximumBandwidth(maximumBandwidth);
 			NodeList guaranteedBandwidthNodes = qualityOfServiceNode.getElementsByTagName(
@@ -309,7 +309,7 @@ public class DefaultClientProtocolHandler
 			if (guaranteedBandwidthNodes.getLength() == 0)
 			{
 				throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR,
-												  "DefaultClientProtocolHandler: getConnectionDescriptor: Error in XML structure (GuaranteedBandwidth node)."));
+												  "Error in XML structure (GuaranteedBandwidth node)."));
 			}
 			Element guaranteedBandwidthNode = (Element) (guaranteedBandwidthNodes.item(0));
 			int guaranteedBandwidth = -1;
@@ -323,7 +323,8 @@ public class DefaultClientProtocolHandler
 			if (guaranteedBandwidth < 0)
 			{
 				/* error while parsing or illegal value */
-				throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR, "DefaultClientProtocolHandler: getConnectionDescriptor: Error in XML structure (GuaranteedBandwidth has illegal value)."));
+				throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR,
+												  "Error in XML structure (GuaranteedBandwidth has illegal value)."));
 			}
 			connectionDescriptor.setGuaranteedBandwidth(guaranteedBandwidth);
 			/* get the dummy traffic information */
@@ -331,7 +332,7 @@ public class DefaultClientProtocolHandler
 			if (dummyTrafficNodes.getLength() == 0)
 			{
 				throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR,
-												  "DefaultClientProtocolHandler: getConnectionDescriptor: Error in XML structure (DummyTraffic node)."));
+												  "Error in XML structure (DummyTraffic node)."));
 			}
 			Element dummyTrafficNode = (Element) (dummyTrafficNodes.item(0));
 			try
@@ -344,7 +345,8 @@ public class DefaultClientProtocolHandler
 			}
 			catch (Exception e)
 			{
-				throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR, "DefaultClientProtocolHandler: getConnectionDescriptor: Error in XML structure (DummyTraffic node -> interval info)."));
+				throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR,
+												  "Error in XML structure (DummyTraffic node -> interval info)."));
 			}
 			connectionDescriptor.setMinDummyTrafficInterval(m_minDummyTrafficInterval);
 			m_state = STATE_OFFER_RECEIVED;
@@ -353,7 +355,7 @@ public class DefaultClientProtocolHandler
 		{
 			/* wrong protocol state */
 			throw (new ClientForwardException(ClientForwardException.ERROR_PROTOCOL_ERROR,
-											  "DefaultClientProtocolHandler: getConnectionDescriptor: Wrong protocol state to call this method (current state: " +
+											  "Wrong protocol state to call this method (current state: " +
 											  Integer.toString(m_state) + ")."));
 		}
 		return connectionDescriptor;
@@ -383,7 +385,7 @@ public class DefaultClientProtocolHandler
 			catch (Exception e)
 			{
 				throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR,
-												  "DefaultClientProtocolHandler: selectMixCascade: XML DocumentBuilder error (" +
+												  "XML DocumentBuilder error (" +
 												  e.toString() + ")."));
 			}
 			Element japRoutingNode = doc.createElement("JAPRouting");
@@ -405,7 +407,7 @@ public class DefaultClientProtocolHandler
 			catch (Exception e)
 			{
 				throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR,
-												  "DefaultClientProtocolHandler: selectMixCascade: XML transforming error (" +
+												  "XML transforming error (" +
 												  e.toString() +
 												  ")."));
 			}
@@ -416,7 +418,7 @@ public class DefaultClientProtocolHandler
 		{
 			/* wrong protocol state */
 			throw (new ClientForwardException(ClientForwardException.ERROR_PROTOCOL_ERROR,
-											  "DefaultClientProtocolHandler: selectMixCascade: Wrong protocol state to call this method (current state: " +
+											  "Wrong protocol state to call this method (current state: " +
 											  Integer.toString(m_state) + ")."));
 		}
 	}
@@ -437,7 +439,7 @@ public class DefaultClientProtocolHandler
 		catch (Exception e)
 		{
 			throw (new ClientForwardException(ClientForwardException.ERROR_UNKNOWN_ERROR,
-											  "DefaultClientProtocolHandler: generateConnectionRequest: XML DocumentBuilder error (" +
+											  "XML DocumentBuilder error (" +
 											  e.toString() + ")."));
 		}
 		/* Create the JAPRouting element */
@@ -483,7 +485,7 @@ public class DefaultClientProtocolHandler
 			{
 				/* something is wrong, this is not a message for us -> throw an exception */
 				throw (new ClientForwardException(ClientForwardException.ERROR_PROTOCOL_ERROR,
-												  "DefaultClientProtocolHandler: readProtocolMessage: Protocol error (invalid start signature)."));
+												  "Protocol error (invalid start signature)."));
 			}
 			/* we have a valid start signature -> get the net length of the message */
 			byte[] netLength = new byte[4];
@@ -501,7 +503,7 @@ public class DefaultClientProtocolHandler
 			{
 				/* something is wrong, this is not a message for us -> throw an exception */
 				throw (new ClientForwardException(ClientForwardException.ERROR_PROTOCOL_ERROR,
-												  "DefaultClientProtocolHandler: readProtocolMessage: Protocol error (invalid length)."));
+												  "Protocol error (invalid length)."));
 			}
 			/* we got the length, read the message + end signature */
 			byte[] remainingMessage = new byte[incomingMessageLength + MESSAGE_END_SIGNATURE.length];
@@ -524,7 +526,7 @@ public class DefaultClientProtocolHandler
 			{
 				/* something is wrong, this is not a message for us -> throw an exception */
 				throw (new ClientForwardException(ClientForwardException.ERROR_PROTOCOL_ERROR,
-												  "DefaultClientProtocolHandler: readProtocolMessage: Protocol error (invalid end signature)."));
+												  "Protocol error (invalid end signature)."));
 			}
 			/* extract the message */
 			currentMessage = new byte[incomingMessageLength];
@@ -533,7 +535,7 @@ public class DefaultClientProtocolHandler
 		catch (IOException e)
 		{
 			throw (new ClientForwardException(ClientForwardException.ERROR_CONNECTION_ERROR,
-											  "DefaultClientProtocolHandler: readProtocolMessage: Connection error (" +
+											  "Connection error (" +
 											  e.toString() + ")."));
 		}
 		return currentMessage;
@@ -554,7 +556,7 @@ public class DefaultClientProtocolHandler
 		catch (IOException e)
 		{
 			throw (new ClientForwardException(ClientForwardException.ERROR_CONNECTION_ERROR,
-											  "DefaultClientProtocolHandler: sendProtocolMessage: Connection error (" +
+											  "Connection error (" +
 											  e.toString() + ")."));
 		}
 	}

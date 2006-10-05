@@ -71,6 +71,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import anon.crypto.JAPCertificate;
 import anon.crypto.XMLSignature;
+import anon.crypto.CertPath;
 import anon.crypto.X509SubjectAlternativeName;
 import anon.infoservice.Database;
 import anon.infoservice.DatabaseMessage;
@@ -2060,10 +2061,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				if (cascade != null)
 				{
 					// this is a first mix
-					XMLSignature signature = cascade.getSignature();
-					if (signature != null && signature.getCertPath() != null)
+					CertPath certPath = cascade.getCertPath();
+					if (certPath != null)
 					{
-						mixCertificate = signature.getCertPath().getSecondCertificate();
+						mixCertificate = certPath.getSecondCertificate();
 						if (mixCertificate != null)
 						{
 							return new ServiceLocation(null, mixCertificate);
@@ -2089,10 +2090,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				if (cascade != null)
 				{
 					// this is a first mix
-					XMLSignature signature = cascade.getSignature();
-					if (signature != null && signature.getCertPath() != null)
+					CertPath certPath = cascade.getCertPath();
+					if (certPath != null)
 					{
-						mixCertificate = signature.getCertPath().getSecondCertificate();
+						mixCertificate = certPath.getSecondCertificate();
 						if (mixCertificate != null)
 						{
 							return new ServiceOperator(null, mixCertificate);
@@ -2121,10 +2122,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 			if (info == null || info.getMixCertificate() == null)
 			{
-				if (a_cascade.getSignature() != null &&
-					a_cascade.getSignature().getCertPath().getFirstCertificate() != null)
+				if (a_cascade.getCertPath() != null &&
+					a_cascade.getCertPath().getFirstCertificate() != null)
 				{
-					info = new MixInfo(MixInfo.DEFAULT_NAME, a_cascade.getSignature().getCertPath());
+					info = new MixInfo(MixInfo.DEFAULT_NAME, a_cascade.getCertPath());
 				}
 			}
 

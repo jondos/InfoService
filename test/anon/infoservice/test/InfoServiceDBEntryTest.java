@@ -52,7 +52,7 @@ public class InfoServiceDBEntryTest extends XtendedPrivateTestCase
 	{
 		InfoServiceDBEntry dbEntry, dbEntryFromXML;
 
-		dbEntry = new InfoServiceDBEntry(null,new ListenerInterface("127.0.0.1", 50).toVector(), true, true);
+		dbEntry = new InfoServiceDBEntry("127.0.0.1", 50);
 		dbEntryFromXML = new InfoServiceDBEntry(XMLUtil.toXMLElement(dbEntry));
 
 		//dbEntry.

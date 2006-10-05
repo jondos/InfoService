@@ -86,12 +86,12 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Infoserver received: XML: " + (new String(a_postData)));
 			Element infoServiceNode = (Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData),
 				InfoServiceDBEntry.XML_ELEMENT_NAME));
+
+			InfoServiceDBEntry newEntry = new InfoServiceDBEntry(infoServiceNode, false);
 			/* verify the signature --> if requested */
 			if (!Configuration.getInstance().isInfoServiceMessageSignatureCheckEnabled() ||
-				SignatureVerifier.getInstance().verifyXml(infoServiceNode,
-				SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE) == true)
+				newEntry.isVerified())
 			{
-				InfoServiceDBEntry newEntry = new InfoServiceDBEntry(infoServiceNode, false);
 				Database.getInstance(InfoServiceDBEntry.class).update(newEntry);
 			}
 			else
@@ -305,14 +305,14 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			MixCascade mixCascadeEntry;
 			if (a_encoding == HttpResponseStructure.HTTP_ENCODING_ZLIB)
 			{
-				mixCascadeEntry = new MixCascade(a_postData, false);
+				mixCascadeEntry = new MixCascade(a_postData);
 			}
 			else if (a_encoding == HttpResponseStructure.HTTP_ENCODING_PLAIN)
 			{
 				Element mixCascadeNode =
 					(Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData),
 					MixCascade.XML_ELEMENT_NAME));
-				mixCascadeEntry = new MixCascade(mixCascadeNode, false);
+				mixCascadeEntry = new MixCascade(mixCascadeNode);
 			}
 			else
 			{
@@ -422,10 +422,10 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Mix HELO received: XML: " + (new String(a_postData)));
 			Element mixNode = (Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData),
 				MixInfo.XML_ELEMENT_NAME));
+			MixInfo mixEntry = new MixInfo(mixNode);
 			/* verify the signature */
-			if (SignatureVerifier.getInstance().verifyXml(mixNode, SignatureVerifier.DOCUMENT_CLASS_MIX))
+			if (mixEntry.isVerified())
 			{
-				MixInfo mixEntry = new MixInfo(true, mixNode);
 				Database.getInstance(MixInfo.class).update(mixEntry);
 				//extract possible last proxy addresses
 				VisibleProxyAddresses.addAddresses(mixNode);
@@ -465,10 +465,10 @@ final public class InfoServiceCommands implements JWSInternalCommands
 						  "Mix Configure received: XML: " + (new String(a_postData)));
 			Element mixNode = (Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData),
 				MixInfo.XML_ELEMENT_NAME));
+			MixInfo mixEntry = new MixInfo(mixNode);
 			/* verify the signature */
-			if (SignatureVerifier.getInstance().verifyXml(mixNode, SignatureVerifier.DOCUMENT_CLASS_MIX) == true)
+			if (mixEntry.isVerified())
 			{
-				MixInfo mixEntry = new MixInfo(true, mixNode);
 				/* check whether the mix is already assigned to a mixcascade */
 				Enumeration knownMixCascades = Database.getInstance(MixCascade.class).getEntryList().elements();
 				MixCascade assignedCascade = null;
@@ -562,12 +562,11 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Status received: XML: " + (new String(a_postData)));
 			Element mixCascadeStatusNode = (Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(
-				a_postData), StatusInfo.getXmlElementName()));
+						 a_postData), StatusInfo.getXmlElementName()));
+			StatusInfo statusEntry = new StatusInfo(mixCascadeStatusNode);
 			/* verify the signature */
-			if (SignatureVerifier.getInstance().verifyXml(mixCascadeStatusNode,
-				SignatureVerifier.DOCUMENT_CLASS_MIX) == true)
+			if (statusEntry.isVerified())
 			{
-				StatusInfo statusEntry = new StatusInfo(mixCascadeStatusNode);
 				Database.getInstance(StatusInfo.class).update(statusEntry);
 				/* update the statistics, if they are not enabled or we know the received status message
 				 * already, nothing is done by this call

@@ -117,6 +117,14 @@ public class CertificateStore extends Observable implements IXMLEncodable
 		return returnedCertificates;
 	}
 
+	public CertificateInfoStructure getCertificateInfoStructure(JAPCertificate a_certificate,
+		int a_certificateType)
+	{
+		return (CertificateInfoStructure)m_trustedCertificates.get(
+			  getCertificateId(a_certificate, a_certificateType));
+	}
+
+
 	public CertificateInfoStructure getCertificateInfoStructure(JAPCertificate a_certificate)
 	{
 		synchronized (m_trustedCertificates)
@@ -156,7 +164,7 @@ public class CertificateStore extends Observable implements IXMLEncodable
 		return returnedCertificates;
 	}
 
-	public int addCertificateWithVerification(JAPCertificate a_certificate, int a_certificateType,
+	public int addCertificateWithVerification(CertPath a_certificate, int a_certificateType,
 											  boolean a_onlyHardRemovable)
 	{
 		int lockId = -1;
@@ -172,13 +180,14 @@ public class CertificateStore extends Observable implements IXMLEncodable
 				{
 					rootType = JAPCertificate.CERTIFICATE_TYPE_ROOT_INFOSERVICE;
 				}
-				if (!m_trustedCertificates.containsKey(getCertificateId(a_certificate, a_certificateType)))
+				if (!m_trustedCertificates.containsKey(getCertificateId(a_certificate.getFirstCertificate(),
+					a_certificateType)))
 				{
 					/* the certificate isn't already in this certificate store */
-					CertificateContainer certificateContainer = new CertificateContainer(a_certificate,
-						a_certificateType, true);
-					m_trustedCertificates.put(getCertificateId(a_certificate, a_certificateType),
-											  certificateContainer);
+					CertificateContainer certificateContainer =
+						new CertificateContainer(a_certificate, a_certificateType, true);
+					m_trustedCertificates.put(getCertificateId(a_certificate.getFirstCertificate(),
+						a_certificateType), certificateContainer);
 					/* verify the new certificate against all enabled root certificates */
 					Enumeration rootCertificates = getAvailableCertificatesByType(rootType).elements();
 					boolean verificationSuccessful = false;
@@ -201,18 +210,20 @@ public class CertificateStore extends Observable implements IXMLEncodable
 				{
 					/* add a lock to the lock table */
 					lockId = getNextAvailableLockId();
-					m_lockTable.put(new Integer(lockId), getCertificateId(a_certificate, a_certificateType));
+					m_lockTable.put(new Integer(lockId), getCertificateId(a_certificate.getFirstCertificate(),
+						a_certificateType));
 					/* also add the new lock to the lock list of the certificate */
-					( (CertificateContainer) (m_trustedCertificates.get(getCertificateId(a_certificate,
+					( (CertificateContainer) (m_trustedCertificates.get(getCertificateId(
+									   a_certificate.getFirstCertificate(),
 						a_certificateType)))).getLockList().
 						addElement(new Integer(lockId));
 				}
 				else
 				{
 					/* enable the only hard removable flag */
-					( (CertificateContainer) (m_trustedCertificates.get(getCertificateId(a_certificate,
-						a_certificateType)))).
-						enableOnlyHardRemovable();
+					( (CertificateContainer) (m_trustedCertificates.get(getCertificateId(
+									   a_certificate.getFirstCertificate(),
+						a_certificateType)))).enableOnlyHardRemovable();
 				}
 				/* notify the observers, only meaningful, if setChanged() was called */
 			}
@@ -228,28 +239,36 @@ public class CertificateStore extends Observable implements IXMLEncodable
 	public int addCertificateWithoutVerification(JAPCertificate a_certificate, int a_certificateType,
 												 boolean a_onlyHardRemovable, boolean a_bNotRemovable)
 	{
+		return addCertificateWithoutVerification(new CertPath(a_certificate), a_certificateType,
+												 a_onlyHardRemovable, a_bNotRemovable);
+	}
+
+	public int addCertificateWithoutVerification(CertPath a_certPath, int a_certificateType,
+												 boolean a_onlyHardRemovable, boolean a_bNotRemovable)
+	{
 		int lockId = -1;
 		boolean bChanged = false;
 
-		if (a_certificate == null)
+		if (a_certPath == null)
 		{
 			return lockId;
 		}
 		synchronized (m_trustedCertificates)
 		{
-			if (!m_trustedCertificates.containsKey(getCertificateId(a_certificate, a_certificateType)))
+			if (!m_trustedCertificates.containsKey(getCertificateId(a_certPath.getFirstCertificate(),
+				a_certificateType)))
 			{
-				CertificateContainer newCertificateContainer = new CertificateContainer(a_certificate,
+				CertificateContainer newCertificateContainer = new CertificateContainer(a_certPath,
 					a_certificateType, false);
-				m_trustedCertificates.put(getCertificateId(a_certificate, a_certificateType),
-										  newCertificateContainer);
+				m_trustedCertificates.put(getCertificateId(a_certPath.getFirstCertificate(),
+					a_certificateType), newCertificateContainer);
 				if (a_certificateType == JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX ||
 					a_certificateType == JAPCertificate.CERTIFICATE_TYPE_ROOT_INFOSERVICE)
 				{
-					/* maybe with the new certificate we can activiate some other certificates already stored
+					/* maybe with the new certificate we can activate some other certificates already stored
 					 * in this certificate store
 					 */
-					activateAllDependentCertificates(a_certificate);
+					activateAllDependentCertificates(a_certPath.getFirstCertificate());
 				}
 				/* we have added one certificate */
 				bChanged = true;
@@ -258,22 +277,25 @@ public class CertificateStore extends Observable implements IXMLEncodable
 			{
 				/* add a lock to the lock table */
 				lockId = getNextAvailableLockId();
-				m_lockTable.put(new Integer(lockId), getCertificateId(a_certificate, a_certificateType));
+				m_lockTable.put(new Integer(lockId), getCertificateId(a_certPath.getFirstCertificate(),
+					a_certificateType));
 				/* also add the new lock to the lock list of the certificate */
-				( (CertificateContainer) (m_trustedCertificates.get(getCertificateId(a_certificate,
+				( (CertificateContainer) (m_trustedCertificates.get(
+								getCertificateId(a_certPath.getFirstCertificate(),
 					a_certificateType)))).getLockList().
 					addElement(new Integer(lockId));
 			}
 			else
 			{
 				/* enable the only hard removable flag */
-				( (CertificateContainer) (m_trustedCertificates.get(getCertificateId(a_certificate,
-					a_certificateType)))).
-					enableOnlyHardRemovable();
+				( (CertificateContainer) (m_trustedCertificates.get(getCertificateId(
+								a_certPath.getFirstCertificate(),
+								a_certificateType)))).enableOnlyHardRemovable();
 			}
 			if (a_bNotRemovable)
 			{
-				( (CertificateContainer) (m_trustedCertificates.get(getCertificateId(a_certificate,
+				( (CertificateContainer) (m_trustedCertificates.get(
+								getCertificateId(a_certPath.getFirstCertificate(),
 					a_certificateType)))).enableNotRemovable();
 			}
 		}
@@ -468,12 +490,12 @@ public class CertificateStore extends Observable implements IXMLEncodable
 					/* add the certificate to the list of trusted certificates */
 					if (currentCertificateContainer.getCertificateNeedsVerification())
 					{
-						addCertificateWithVerification(currentCertificateContainer.getCertificate(),
+						addCertificateWithVerification(currentCertificateContainer.getCertPath(),
 							currentCertificateContainer.getCertificateType(), true);
 					}
 					else
 					{
-						addCertificateWithoutVerification(currentCertificateContainer.getCertificate(),
+						addCertificateWithoutVerification(currentCertificateContainer.getCertPath(),
 							currentCertificateContainer.getCertificateType(), true, false);
 					}
 					/* enable or disable the certificate */
@@ -508,7 +530,7 @@ public class CertificateStore extends Observable implements IXMLEncodable
 						/* the current certificate needs verification but is not verified -> try to do it
 						 * with the specified certificate
 						 */
-						if (currentCertificateContainer.getCertificate().verify(a_certificate))
+						if (currentCertificateContainer.getCertPath().verify(a_certificate))
 						{
 							/* verification of the current certificate was successful */
 							currentCertificateContainer.setParentCertificate(a_certificate);

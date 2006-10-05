@@ -27,14 +27,16 @@
  */
 package anon.infoservice;
 
-import org.w3c.dom.Element;
-import anon.util.XMLUtil;
-import org.w3c.dom.Document;
-import anon.util.IXMLEncodable;
-import anon.util.XMLParseException;
 import java.util.Enumeration;
 import java.util.Hashtable;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import anon.crypto.IVerifyable;
+import anon.util.IXMLEncodable;
+import anon.util.XMLParseException;
+import anon.util.XMLUtil;
 
 /**
  * This class implements common methods that may be used by distributabe database entries.
@@ -46,6 +48,7 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 {
 	public static final String XML_ATTR_SERIAL = "serial";
 	public static final String XML_ATTR_VERIFIED = "verified";
+	public static final String XML_ATTR_VALID = "valid";
 	public static final String XML_ATTR_LAST_UPDATE = "lastUpdate";
 
 	public AbstractDistributableDatabaseEntry(long a_expireTime)
@@ -79,6 +82,7 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 
 			String id;
 			long serial, lastUpdate;
+			boolean bVerified, bValid;
 			Hashtable hashSerials;
 			NodeList serialNodes =
 				a_elemSerials.getElementsByTagName(XMLUtil.getXmlElementName(m_thisDBEntryClass));
@@ -99,13 +103,15 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 				{
 					serial = XMLUtil.parseAttribute(serialNodes.item(i), XML_ATTR_SERIAL, 0L);
 					lastUpdate = XMLUtil.parseAttribute(serialNodes.item(i), XML_ATTR_LAST_UPDATE, 0L);
+					bVerified = XMLUtil.parseAttribute(serialNodes.item(i), XML_ATTR_VERIFIED, false);
+					bValid = XMLUtil.parseAttribute(serialNodes.item(i), XML_ATTR_VALID, false);
 				}
 				else
 				{
 					continue;
 				}
 
-				hashSerials.put(id, new SerialDBEntry(id, serial, lastUpdate));
+				hashSerials.put(id, new SerialDBEntry(id, serial, lastUpdate, bVerified, bValid));
 			}
 
 			return hashSerials;
@@ -137,27 +143,48 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 				XMLUtil.setAttribute(nodeASerial, XML_ATTR_ID, currentEntry.getId());
 				XMLUtil.setAttribute(nodeASerial, XML_ATTR_SERIAL, currentEntry.getVersionNumber());
 				XMLUtil.setAttribute(nodeASerial, XML_ATTR_LAST_UPDATE, currentEntry.getLastUpdate());
-				/** @todo add information if this information is verified and valid */
-				//XMLUtil.setAttribute(nodeASerial, XML_ATTR_VERIFIED, currentEntry.verify());
+				if (currentEntry instanceof IVerifyable)
+				{
+					XMLUtil.setAttribute(nodeASerial, XML_ATTR_VERIFIED,
+										 ((IVerifyable)currentEntry).isVerified());
+					XMLUtil.setAttribute(nodeASerial, XML_ATTR_VALID,
+										 ((IVerifyable)currentEntry).isValid());
+				}
 			}
 			return nodeSerials;
 		}
 	}
 
-	public static class SerialDBEntry extends AbstractDatabaseEntry
+	public static class SerialDBEntry extends AbstractDatabaseEntry implements IVerifyable
 	{
 		private String m_id;
 		private long m_version;
 		private long m_lastUpdate;
+		private boolean m_bVerified;
+		private boolean m_bValid;
 
-		public SerialDBEntry(String a_id, long a_version, long a_lastUpdate)
+		public SerialDBEntry(String a_id, long a_version, long a_lastUpdate,
+							 boolean a_bVerified, boolean a_bValid)
 		{
 			super(0);
 
 			m_id = a_id;
 			m_version = a_version;
 			m_lastUpdate = a_lastUpdate;
+			m_bVerified = a_bVerified;
+			m_bValid = a_bValid;
 		}
+
+		public boolean isVerified()
+		{
+			return m_bVerified;
+		}
+
+		public boolean isValid()
+		{
+			return m_bValid;
+		}
+
 		public long getLastUpdate()
 		{
 			return m_lastUpdate;

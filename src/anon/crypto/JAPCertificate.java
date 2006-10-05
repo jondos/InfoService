@@ -99,6 +99,7 @@ public final class JAPCertificate implements IXMLEncodable, Cloneable, ICertific
 	 */
 	public static final int CERTIFICATE_TYPE_ROOT_MIX = 1;
 	public static final int CERTIFICATE_TYPE_ROOT_INFOSERVICE = 5;
+	public static final int CERTIFICATE_TYPE_ROOT_UPDATE = 6;
 
 	/**
 	 * This is the certificate type constant for mix certificates. Mix certificates are used to
