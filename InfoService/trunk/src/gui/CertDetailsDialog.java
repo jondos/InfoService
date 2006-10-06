@@ -719,7 +719,10 @@ public class CertDetailsDialog extends JAPDialog
 		JLabel title_extensions = new JLabel(JAPMessages.getString(TITLE_EXTENSIONS), JLabel.RIGHT);
 		title_extensions.setFont(TITLE_FONT);
 		title_extensions.setForeground(TITLE_COLOR);
-		detailsPanel.addRow(title_extensions, null, new JSeparator(JSeparator.HORIZONTAL));
+		if (extensionsVect.getSize() > 0)
+		{
+			detailsPanel.addRow(title_extensions, null, new JSeparator(JSeparator.HORIZONTAL));
+		}
 		String critical = null;
 
 		for (int i = 0; i < extensionsVect.getExtensions().size(); i++)
