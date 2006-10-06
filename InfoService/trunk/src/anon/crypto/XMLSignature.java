@@ -450,13 +450,6 @@ public final class XMLSignature implements IXMLEncodable
 			return null;
 		}
 
-		if (a_rootCertificates == null ||a_rootCertificates.size() == 0)
-		{
-			// There are no root certificates! The signature cannot be verified.
-			signature.m_certPath = new CertPath((JAPCertificate)null);
-			return signature;
-		}
-
 	    //start verification
 	    try
 		{

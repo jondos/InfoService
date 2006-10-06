@@ -102,9 +102,7 @@ public class CertificateInfoStructure
 		boolean returnValue = false;
 		synchronized (this)
 		{
-			returnValue = !SignatureVerifier.getInstance().isCheckSignatures() ||
-				!SignatureVerifier.getInstance().isCheckSignatures(m_certificateType) ||
-				(((!m_certificateNeedsVerification) || (m_parentCertificate != null)) && m_enabled);
+			returnValue = ((!m_certificateNeedsVerification) || (m_parentCertificate != null)) && m_enabled;
 		}
 		return returnValue;
 	}

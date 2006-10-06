@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.05.463"; //Never change the layout of this line!
+	public static final String aktVersion = "00.05.464"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -77,13 +77,13 @@ public final class JAPConstants
 	 * The name of the default infoservice.
 	 */
 	public static final String DEFAULT_INFOSERVICE_NAMES[] =
-		new String[]{"JAP-Team InfoService",
+		new String[]{"infoservice.inf.tu-dresden.de%3A80",
 		"4EAD8F831010B39FB3B014CFE433C2D8EB50D311",
 		"0BF136744FA4265B6BA09B60B0D0E051EE714073"};
 	public static final String DEFAULT_INFOSERVICE_HOSTNAMES[] =
-		new String[]{"infoservice.inf.tu-dresden.de", "132.199.134.2", "87.230.9.148"};
+		new String[]{"infoservice.inf.tu-dresden.de", "83.133.121.12", "87.230.9.148"};
 	public static final int DEFAULT_INFOSERVICE_PORT_NUMBERS[][] =
-		{{80, 6543}, {80, 6543}, {80}};
+		{{80, 6543}, {80}, {80}};
 
 	/**
 	 * This defines, whether automatic infoservice request are disabled as default.
