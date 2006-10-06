@@ -456,28 +456,7 @@ public final class XMLSignature implements IXMLEncodable
 			//get the included certificates
 			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "Looking for appended certificates...");
 			certificates = signature.getCertificates().elements();
-			if ( (certificates == null) || (!certificates.hasMoreElements()))
-			{
-				//no appended certificates were found, try to verify the signature using the direct certificates
-				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "No appended certificates found!");
-				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-							  "Trying to verify signature against direct certificates...");
-				signature.m_certPath =
-					getVerifier(a_node, signature, a_directCertificatePaths, a_bCheckValidity);
-				if (signature.m_certPath != null)
-				{
-					signature.m_bVerified = true;
-					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-								  "Trying to verify signature against direct certificates -success");
-				}
-				else
-				{
-					signature.m_certPath = new CertPath((JAPCertificate)null);
-					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-								  "Trying to verify signature against direct certificates...-failed");
-				}
-			}
-			else
+			if ( (certificates != null) && (certificates.hasMoreElements()))
 			{
 				//we found at least one certificate
 				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
@@ -547,6 +526,41 @@ public final class XMLSignature implements IXMLEncodable
 				{
 					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
 								  "Trying to verify last certificate against root certificates -failed");
+				}
+			}
+			else
+			{
+				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "No appended certificates found!");
+			}
+
+			if (!signature.isVerified())
+			{
+				CertPath certPathNew;
+
+				/**
+				 * Either no appended certificates were found, or the appended certificate path could not
+				 * be verified against the root certificates.
+				 * Try to verify the signature using the direct certificates
+				 */
+				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+							  "Trying to verify signature against direct certificates...");
+
+				certPathNew = getVerifier(a_node, signature, a_directCertificatePaths, a_bCheckValidity);
+				if (certPathNew != null)
+				{
+					signature.m_certPath = certPathNew;
+					signature.m_bVerified = true;
+					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+								  "Trying to verify signature against direct certificates -success");
+				}
+				else
+				{
+					if (signature.m_certPath == null)
+					{
+						signature.m_certPath = new CertPath((JAPCertificate)null);
+					}
+					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+								  "Trying to verify signature against direct certificates...-failed");
 				}
 			}
 
