@@ -251,10 +251,6 @@ public class CertificateStore extends Observable implements IXMLEncodable
 	public int addCertificateWithoutVerification(CertPath a_certPath, int a_certificateType,
 												 boolean a_onlyHardRemovable, boolean a_bNotRemovable)
 	{
-		if (a_certificateType == JAPCertificate.CERTIFICATE_TYPE_ROOT_UPDATE)
-		{
-			new Exception().printStackTrace();
-		}
 		int lockId = -1;
 		boolean bChanged = false;
 
