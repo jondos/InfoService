@@ -750,7 +750,7 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 		synchronized (this)
 		{
 			int certificateLock = -1;
-			if (m_certPath.getFirstCertificate() != null && m_certPath != null && m_certPath.verify())
+			if (m_certPath != null && m_certPath.getFirstCertificate() != null && m_certPath.verify())
 			{
 				/* add the cascade certificate temporary to the certificate store */
 				certificateLock = SignatureVerifier.getInstance().getVerificationCertificateStore().

@@ -92,6 +92,10 @@ public class SignatureCreator
 			try
 			{
 				createdSignature = XMLSignature.sign(a_nodeToSign, signatureKey);
+				if (createdSignature != null && createdSignature.getCertPath() != null)
+				{
+					createdSignature.getCertPath().setDocType(a_documentClass);
+				}
 			}
 			catch (Exception e)
 			{

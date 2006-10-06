@@ -666,8 +666,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			if (SignatureVerifier.getInstance().verifyXml(node,
 				SignatureVerifier.DOCUMENT_CLASS_UPDATE) == true)
 			{
-				Database.getInstance(JavaVersionDBEntry.class).update(
-					new JavaVersionDBEntry(node));
+				Database.getInstance(JavaVersionDBEntry.class).update(new JavaVersionDBEntry(node));
 				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK);
 			}
 			else

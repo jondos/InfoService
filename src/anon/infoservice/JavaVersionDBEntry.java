@@ -63,8 +63,6 @@ public class JavaVersionDBEntry  extends AbstractDistributableDatabaseEntry
 	private static final String XML_ELEM_LAST_UPDATE = "LastUpdate";
 
 	private static final String[] VENDOR_IDS = {VENDOR_ID_SUN_JAVA, VENDOR_ID_BLACKDOWN_JAVA};
-	//private static final String[] LATEST_KNOWN_VERSIONS =  {"1.5.0_08", "1.4.2-03"};
-
 
 	/**
 	 * This should be an infinite timeout (1000 years are infinite enough).
