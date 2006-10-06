@@ -330,11 +330,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 				new MixCascade(JAPConstants.DEFAULT_ANON_NAME,
 							   JAPConstants.DEFAULT_ANON_MIX_IDs[0], mixIDs, listeners);
 			m_currentMixCascade.setUserDefined(false, null);
+			Database.getInstance(CascadeIDEntry.class).update(new CascadeIDEntry(m_currentMixCascade));
 		}
 		catch (Exception e)
 		{
-			LogHolder.log(LogLevel.EMERG, LogType.NET,
-						  "JAPController: Constructor - default mix cascade! ", e);
 			LogHolder.log(LogLevel.EMERG, LogType.NET, e);
 		}
 		/* set a default infoservice */

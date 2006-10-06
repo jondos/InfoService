@@ -67,7 +67,7 @@ public final class JAPConstants
 	static final int DEFAULT_PORT_NUMBER = 4001;
 	static final boolean DEFAULT_LISTENER_IS_LOCAL = true;
 	static final String DEFAULT_ANON_NAME = "Dresden-Dresden";
-	static final String[] DEFAULT_ANON_MIX_IDs = new String[]{"141.76.45.36%3A6544", "141.76.45.36%3A6544"};
+	static final String[] DEFAULT_ANON_MIX_IDs = new String[]{"141.76.45.36%3A6544", "141.76.45.33%3A6545"};
 	static final String[] DEFAULT_ANON_HOSTS = {"mix.inf.tu-dresden.de", "141.76.45.33"};
 
 	static final int DEFAULT_ANON_PORT_NUMBERS[] =
