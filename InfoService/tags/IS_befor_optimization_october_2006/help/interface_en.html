@@ -1,0 +1,85 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="xhelpfrms.css">
+</head>
+<body>
+<!--#include virtual="/header_en.html"-->
+
+<H2>JAP User Interface</H2>
+<B>Activate Anonymity</B><br>
+
+To surf anonymously, JAP must first be started.  Then, the button "On" in the "Anonymity" area must be activated.  If the connection process was successful, the needle in the Anonym-O-Meter will show an indication.  Furthermore, the number of users of the currently selected mix cascade is shown.
+<P>
+<B>Indication for required updates</B><br>
+
+In the upper right corner of the window next to JAP's logo you can see a hint indicating that either Java or Jap has to be updated, or both. Clicking on it will show you which one to update. In case JAP needed an update, the update wizard will show up. In case of Java, a popup will show up telling you that a new Java version is available. Clicking "Help" in this window will explain to you <A href="updateJava_en.html">how to update Java</A>.
+<br>If you see no such hint, your JAP as well as your Java is up to date.
+<P>
+<B>Service selection</B><br>
+
+A list allowing for the selection of services is just beneath JAP's logo. It shows all available services as reported by the info service. If you choose a new service, JAP will connect to this cascade.
+<br>The symbol to the right updates this list.
+<br>The button "Details" will show you a settings window of JAP where you can learn more about available services.
+<br>Beneath the selection list you can see a hint indicating whether this service is free of charge or not.
+<P>
+
+<B>Anonym-O-Meter</B><br>
+
+The Anonym-O-Meter shows the user the current load of the anonymity service. This consists of:
+<UL>
+	<LI>The number of currently active users connected to the internet via JAP.
+	<LI>The traffic situation, in other words, the amount of data processed and forwarded per unit of time by the mix cascade.
+</UL>
+
+From this information, a partly subjective observation risk and the achievable anonymity can be inferred.  The more users are active and the more messages sent or received by them, the greater the anonymity of each individual message sent through the internet, since potentially any user could have sent the message.  If one assumes that an attacker controls a certain number of users or personally simulates fake users, it becomes increasingly difficult for such an attacker to control all but one user as the number of users increases.  In later versions of JAP, this type of attack will be prevented by users registering a so-called ticket at the mix cascade.  This ticket is a digital authorization code that uses a blind digital signature.
+<P>Click <A href="jap.JAPNewView_anonymometer_en.html">here</A> to view an explanation for the possible states of the Anonym-O-Meter.
+<P>
+<B>Balance</B><br>
+Cascades with costs will debit your <A href="payment_account_en.html">account</A> for traffic you created.
+<i>The following information is only visible in <a href="appearance_en.html#expertView">Expert View</a>.</i><P>
+Here you can see ...
+<UL>
+<LI>how much you spent during this session
+<LI>how much you spent all in all
+<LI>at what time your account information has been updated
+</UL>
+<P>
+<B>Own anonymized Data</B><br>
+To the user's information and to double check JAP's functioning, the amount of data transferred by the user via the anonymity service during the current session is shown.
+<i>The following information is only visible in <a href="appearance_en.html#expertView">Expert View</a>.</i><P>
+This information is separated by:
+<UL>
+<LI>World Wide Web
+<LI>other internet services
+</UL>
+<P>
+<B>Forwarder</B><br>
+<i>This information is only visible in <a href="appearance_en.html#expertView">Expert View</a>.</i><P>
+With the <A HREF="forwarding_server_en.html">forwarding function</A>, you can allow other JAP users to connect to the anonymization service via your system.  This is helpful if the other JAP user's internet provider or government has blocked access to the anonymization service.
+<BR>
+<B>Attention:</B> There is a risk that you could be suspected of a crime that another JAP user commits if your system was used as the forwarding system for that crime.
+<br>The following information belonging to the forwarder is being displayed:
+<UL>
+<LI>How many <b>forwarded connections</b>
+	<UL>
+	<LI>are currently running
+	<LI>have been accepted
+	<LI>have been rejected
+	</UL>
+<LI>What amount of <b>forwarded traffic</b> has resulted from the forwarder
+<LI>What <b>bandwidth</b> is used.
+</UL>
+<P>
+<B>Additional buttons</B>
+<UL>
+<LI>The <img src="miniwindow_button1.gif"> button will shrink JAP to a minimalistic window showing only the most important information. This window will automatically dock to screen's edge. You can then activate or deactivate Anonymity by clicking JAP's icon.
+You may also activate <A href="miniwindow_en.html">iconified window</A> by double clicking anywhere in JAP's main window.
+<LI><b>Help</b> opens JAP's help
+<LI><b>Assistant</b> will guide you through JAP's setup process
+<LI><b>Config</b> opens JAP's configuration window
+<LI><b>Exit</b> will disconnect from all services and close JAP
+</UL>
+<BR>
+<!--#include virtual="/footer_en.html"-->
+</body>
+</html>

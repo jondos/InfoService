@@ -1,0 +1,79 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="xhelpfrms.css">
+</head>
+<body>
+<!--#include virtual="/header.html"-->
+
+<H2>Vermeiden von Datenspuren im Internet: Internet Explorer</H2>
+
+Es wird empfohlen, den Internet Explorer NICHT zum anonymen Surfen zu verwenden. IE ist in dieser Hinsicht schlecht konfigurierbar und bietet durch die Unterst&uuml;tzung von ActiveX mehr Angriffspunkte.
+<br>Wer ihn dennoch verwenden m&ouml;chte, sollte einen <A href="noactive_general_de.html">Filterproxy einrichten</A>.
+<P>
+Kommerzielle Webserver verwenden h&auml;ufig Cookies, um Profile &uuml;ber das Verhalten der einzelnen Nutzer zu erstellen.
+Deshalb empfehlen wir, Cookies im Browser zu deaktivieren. Leider k&ouml;nnen dann viele Webseiten nicht mehr richtig genutzt werden, da sich die Anbieter oft die M&ouml;glichkeiten zum Profiling nicht nehmen lassen wollen.<br>
+Der <b>Internet Explorer 6.0</b> bietet deutlich umfangreichere Einstellungen f&uuml;r die Verwaltung von Cookies.
+
+<p>
+F&uuml;r eine einfache Datenschutz-Konfiguration gibt es die M&ouml;glichkeit,<b> Datenschutzeinstellungen als Datei zu importieren</b>.<br>
+Die im folgenden angebotene Konfigurationsdatei akzeptiert Cookies <b>nur</b> f&uuml;r die <b>aktuelle Sitzung</b> - bei einem wiederholten Besuch der Webseite werden Sie nicht wiedererkannt.
+<br>Es werden also keine Cookies auf der Festplatte gespeichert! Da die Cookies aber kurzfristig akzeptiert werden, haben Sie unbeschr&auml;nkten Zugang zu Webseiten, die Cookies verwenden.
+
+<h3>Datenschutz-Konfigurationsdatei installieren</h3>
+<ol>
+<li>
+<b>Download IE-Datenschutz-Konfigurationsdatei</b>
+<ul>
+<li><A HREF="./internetexplorer/ie_privacy_file.xml" type="application/ffr">ie_privacy_file.xml</A> (<A HREF="http://anon.inf.tu-dresden.de/ie_privacy_file.xml" type="application/ffr">online</A>) (Bitte als Datei speichern.)</li>
+</ul>
+</li>
+<li>
+<b>Importieren der Datenschutz-Konfigurationsdatei</b>
+<ol>
+<li>Internet Explorer Men&uuml;punkt "Extras/Internetoptionen..." anklicken.</li>
+<li>Seite "Datenschutz" ausw&auml;hlen.</li>
+<li>Auf Schaltfl&auml;che "Importieren..." klicken.</li>
+<li>Geladene Datei "ie_privacy_file.xml" ausw&auml;hlen und auf "&Ouml;ffnen" klicken.</li>
+</ol>
+</li>
+<li>
+Der erfolgreiche Import der Datei wird von Internet Explorer mit der Meldung "Datenschutzeinstellungsdatei wurde erfolgreich importiert" best&auml;tigt.
+</li>
+</ol>
+<P > <b>Hinweis:</b> Wollen Sie einigen Webseiten explizit erlauben, Cookies zu 
+  speichern, dann k&ouml;nnen Sie diese Webseiten bei den Datenschutzeinstellungen 
+  unter "Bearbeiten" eintragen. Dies k&ouml;nnte beispielsweise bei einer f&uuml;r Sie personalisiertem 
+  Portalseite sinnvoll sein, der Sie vertrauen. </p>
+
+<h3>Warum gen&uuml;gen nicht die Standard-Konfigurationsm&ouml;glichkeiten des IE?</h3>
+
+Im Internet Explorer 6.0 wird die Entscheidung einen Cookie zu akzeptieren, davon abh&auml;ngig gemacht, wie die Anbieter mit den erhaltenen Daten umgehen wollen.<br>
+Daf&uuml;r wird eine maschinenlesbare Privacy-Policy (nach P3P-Standard) des Anbieters ausgelesen und mit den Pr&auml;ferenzen des Nutzers verglichen.<br>
+Leider kann der Nutzer seine Pr&auml;ferenzen im Internet Explorer nur sehr grob einstellen. Es gibt nur einen Schieberegler mit den Stufen:
+<ul>
+<li>Alle Cookies annehmen.</li>
+<li>4 Stufen "niedrige" bis "hohe Sicherheit" (Cookies werden in Abh&auml;ngigkeit von der P3P-Policy behandelt)</li>
+<li>Cookies grunds&auml;tzlich ablehnen.</li>
+</ul>
+
+Man sollte nun annehmen, dass zumindest bei der Stufe "hohe Sicherheit" keine Cookies mehr von sogenannten Werberingen akzeptiert werden - dem ist aber nicht so.
+<p>
+Die Cookies eines der bekanntesten Anbieters werden auf der Stufe "hohe Sicherheit" klaglos akzeptiert, da f&uuml;r die Bewertung nur entscheidend ist, ob der jeweilige Anbieter Daten personenbezogen, also mit Name, Adresse usw. sammelt. Werberinge berufen sich aber darauf, Daten nur unter dem Cookie, also einem Pseudonym zu sammeln. Allerdings wird der Nutzer bei dem Besuch einer zum Werbering geh&ouml;renden Webseite ungefragt wiedererkannt ...
+<p>
+<h4>Im folgenden ein Auszug der Nutzerdaten, die der Werbering "doubleclick.net" sammelt:</h4>
+<ul>
+<li>Informationen &uuml;ber Finanzen (Kontostand, Zahlungs- und &Uuml;berziehungsverhalten),</li>
+<li>Zugeh&ouml;rigkeit zu Parteien, Vereinen, relig&ouml;sen Gruppen, Gewerkschaften,</li>
+<li>Informationen bez&uuml;glich geistiger und physischer Gesundheit, sexuellen Neigungen, Kauf von Produkten des Gesundheitswesens.</li>
+</ul>
+<p>
+Im Internet Explorer k&ouml;nnen Sie sich unter Men&uuml;punkt "Ansicht/Datenschutzbericht..." die P3P-Policy jeder Webseite, die &uuml;ber eine solche verf&uuml;gt, in nat&uuml;rlicher Sprache anschauen.
+<p>
+<b>Referenz: </b>
+<A HREF="http://anon.inf.tu-dresden.de/p3p_doubleclick.xml">Doubleclick P3P-Policy</A> geladen am 13. Dezember 2001.
+<P>
+<b>Test:</b> Unterziehen Sie diese Einstellungen einem <A href="security_test_de.html">Anonymit&auml;tstest</A>.
+<P>
+<!--#include virtual="/footer.html"-->
+</body>
+</html>

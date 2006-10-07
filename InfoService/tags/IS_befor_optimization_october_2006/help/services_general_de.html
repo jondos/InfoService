@@ -1,0 +1,44 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="xhelpfrms.css">
+</head>
+<body>
+<!--#include virtual="/header.html"-->
+
+<H2>Dienste: Allgemein</H2>
+<i>Dieses Panel steht nur in der <a href="appearance_de.html#expertView">Expertenansicht</a> zur Verf&uuml;gung.</i><P>
+Um zu diesem Einstellungsfenster zu kommen, klicken Sie im Hauptfenster von JAP auf <i>Einstellungen</i>, w&auml;hlen anschlie&szlig;end aus der linken Liste den Eintrag <i>Dienste</i> und &ouml;ffnen anschlie&szlig;end den Tab <i>Allgemein</i>.
+<UL>
+	<LI><B>Zuordnung von Internetdiensten zu Anonymisierungsdiensten</B><BR>
+	Diese &Uuml;bersicht zeigt an, welche Internetdienste momentan von welchem Anonymisierungsdienst behandelt werden. In sp&auml;teren Versionen des JAP werden Sie hier Ihre eigenen Zuordnungen vornehmen k&ouml;nnen, bisher dient es nur Ihrer Information.
+	<P>
+    <LI><B>Gesamten Datenverkehr ohne R&uuml;ckfrage blockieren, wenn Anonymit&auml;tsmodus aus:</B><BR>
+    Ist dieses Feld markiert, leitet JAP nicht-anonymen Verkehr nicht durch. Im Browser erscheint ein Hinweis, dass Surfen momentan nicht m&ouml;glich ist.
+    <br>Aktivieren Sie dieses Feld hingegen nicht, zeigt JAP ein Hinweisfenster mit der M&ouml;glichkeit, das nicht-anonyme Surfen kurzzeitig zu erlauben.
+    <br><A href="jap.JAPController_allowunprotected_de.html">Weitere Informationen</A>
+    <P>
+    <LI><B>Anonymit&auml;tsservice sofort nach Programmstart aktivieren:</B><BR>
+    Ist dieses Feld markiert, so baut der JAP gleich nach dem Start eine Verbindung zum Anonymisierungsdienst auf.
+    <P>
+    <LI><B>Automatisch wieder verbinden nach Verbindungsabbruch:</B><BR>
+    Setzen Sie hier einen Haken, wenn Sie wollen, dass der JAP automatisch die Verbindung zum Anonymiserungsdienst wieder herstellt, wenn diese unterbrochen wurde.
+    <P>
+    <LI><B>Mix-Kaskaden automatisch wechseln</B><BR>
+    Wenn Sie hier einen Haken setzen, haben Sie zwei weitere M&ouml;glichkeiten:<P>
+    <UL>
+    <LI><B>Alle Kaskaden gleicherma&szlig;en verwenden</B><BR>
+    Bei dieser Option wird beim Start von JAP eine zuf&auml;llige Kaskade aus allen verf&uuml;gbaren Kaskaden ausgew&auml;hlt. W&auml;hrend des Betriebs wird die Kaskade nur dann automatisch gewechselt, wenn die aktive Kaskade ausf&auml;llt.
+    <P>
+    <LI><B>Nur kostenpflichtige Kaskaden ausw&auml;hlen</B><BR>
+    Wie bei der ersten Option, nur werden hier ausschlie&szlig;lich kostenpflichtige Kaskaden ausgew&auml;hlt.
+    <P>
+    </UL>
+    <P>
+    <LI><B>Sende Dummy-Daten:</B><BR>
+    Hier k&ouml;nnen Sie festlegen ob und wie h&auml;ufig Pakete ohne Nutzinhalt verschickt werden, um f&uuml;r einen Beobachter eine laufende Kommunikation vorzut&auml;uschen.
+</UL>
+
+
+<!--#include virtual="/footer.html"-->
+</body>
+</html>

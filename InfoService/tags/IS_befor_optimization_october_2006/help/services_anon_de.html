@@ -1,0 +1,83 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="xhelpfrms.css">
+</head>
+<body>
+<!--#include virtual="/header.html"-->
+
+<H2>Dienste: AN.ON</H2>
+Um zu diesem Einstellungsfenster zu kommen, klicken Sie im Hauptfenster von JAP auf <i>Einstellungen</i>, w&auml;hlen anschlie&szlig;end aus der linken Liste den Eintrag <i>Dienste</i> und &ouml;ffnen anschlie&szlig;end den Tab <i>AN.ON</i>.
+Hier sehen Sie Informationen &uuml;ber die Anonymisierungsdienste des AN.ON-Projektes.
+<UL>
+    <LI><B>Verf&uuml;gbare Anonymisierungsdienste:</B><BR>
+    In dieser Liste befinden sich die Namen aller Dienste, auf die im Moment zugegriffen werden kann. Der Dienst, der in Ihrem JAP ausgew&auml;hlt ist, erscheint fett gedruckt. Wenn Sie einen Namen anklicken, erhalten Sie weitere Informationen &uuml;ber den Dienst.
+    <P>
+    <UL>
+        <LI><B>Nutzeranzahl:</B><BR>
+        Dieses Feld zeigt die Anzahl der Nutzer, die momentan mit dem markierten Dienst verbunden sind.
+        <P>
+        <LI><B>erreichbar &uuml;ber:</B><BR>
+        Hier sehen Sie den Hostnamen oder die IP-Adresse, &uuml;ber den der Dienst erreicht werden kann. Diese Adresse muss in Ihrer Firewall f&uuml;r ausgehende Verbindungen freigeschaltet sein, wenn Sie diesen Dienst nutzen wollen.
+        <P>
+        <LI><B>Ports:</B><BR>
+        Dies sind die Ports, auf denen der Dienst Verbindungen annimmt. Mindestens einer dieser Ports muss in Verbindung mit der obigen Adresse in Ihrer Firewall freigeschaltet sein.
+    </UL>
+    <P>
+    <LI><B>Neu laden:</B><BR>
+    Ein Klick auf diese Schaltfl&auml;che bewirkt, dass der JAP den InfoService erneut nach verf&uuml;gbaren Diensten abfragt.
+    <P>
+    <LI><B>Ausw&auml;hlen:</B><BR>
+    Dieser Knopf setzt den momentan markierten Dienst als aktiven Dienst. Der JAP wird versuchen, mit diesem Dienst eine Verbindung herzustellen, wenn die Anonymit&auml;t im Hauptfenster auf "Ein" geschaltet wird.
+    <P>
+    <LI><B>Hinzuf&uuml;gen:</B><BR>
+    Hiermit k&ouml;nnen Sie manuell einen Dienst eintragen, dessen Zugangsdaten Sie kennen, der aber nicht vom InfoService als verf&uuml;gbar gemeldet wurde. Nach einem Klick auf diese Schaltfl&auml;che erscheinen im unteren Teil des Fensters folgende Felder:
+    <P>
+    <UL>
+        <LI><B>Host:</B><BR>
+        Tragen Sie hier den Hostnamen oder die IP-Adresse des Dienstes ein.
+        <P>
+        <LI><B>Port:</B><BR>
+        Tragen Sie hier den Port des Dienstes ein.
+        <P>
+        <LI><B>Ok:</B><BR>
+        Wenn Sie die obigen Felder ausgef&uuml;llt haben, tragen Sie den Dienst hiermit in die Liste der verf&uuml;gbaren Dienste ein.
+        <P>
+        <LI><B>Abbrechen:</B><BR>
+        Hiermit machen brechen Sie den Vorgang ab. Der neu angelegte Dienst verschwindet wieder aus der Liste.
+        <P>
+	</UL>
+        <LI><B>L&ouml;schen:</B><BR>
+        Dieses Schaltfeld ist nur aktiv, wenn Sie einen bereits angelegten manuellen Dienst in der Liste ausw&auml;hlen. Damit entfernen Sie den gew&auml;hlten Dienst aus der Liste.
+    
+</UL>
+
+Der untere Teil des Fensters unterscheidet sich je nachdem, ob Sie einen manuell eingetragenen Dienst oder einen vom InfoService als verf&uuml;gbar gemeldeten Dienst markiert haben.
+<P>
+Ist ein manuell angelegter Dienst markiert, so k&ouml;nnen Sie dessen Daten &auml;ndern oder den Dienst aus der Liste l&ouml;schen.
+<P>
+Wenn ein  vom InfoService als verf&uuml;gbar gemeldeter Dienst markiert ist, erhalten Sie folgende Zusatzinformationen zu den einzelnen Servern des Dienstes:
+<UL>
+    <LI><B>Anzahl der Server des Dienstes:</B><BR>
+    Sie sehen eine grafische Darstellung der einzelnen Server des gew&auml;hlten Dienstes. Die Anzahl der Bilder entspricht der Anzahl der Server. Sie k&ouml;nnen die Server anklicken und erhalten dann folgende Informationen:
+    <P>
+    <UL>
+    	<LI><B>Position:</B><BR>
+        Hier k&ouml;nnen Sie sehen, welche Position der gew&auml;hlte Mix in der Kaskade einnimmt.
+        <P>
+        <LI><B>Betreiber:</B><BR>
+        Hier sehen Sie den Namen der Organisation, die den gew&auml;hlten Server betreibt. Wenn Sie die Maus &uuml;ber den Betreibernamen bewegen, zeigt sich die URL des Betreibers. Ein Klick auf den Betreiber &ouml;ffnet die Homepage des Betreibers.
+        <P>
+	<LI><B>Email:</B><BR>
+        Die Emailadresse geh&ouml;rt zum Ansprechpartner des gew&auml;hlten Servers. Ein Klick darauf &ouml;ffnet Ihr Emailprogramm.
+        <P>
+        <LI><B>Standort:</B><BR>
+        Der geographische Standort des Servers wird hier angezeigt. Ein Klick darauf &ouml;ffnet eine Karte.
+	<P>
+	<LI><B>Zertifikat:</B><BR>
+        Hier k&ouml;nnen Sie erkennen, ob das Zertifikat des Servers verifiziert werden konnte und ob es noch g&uuml;ltig ist oder schon abgelaufen. Mit einem Klick darauf k&ouml;nnen Sie das Zertifikat einsehen.
+    </UL>
+</UL>
+
+<!--#include virtual="/footer.html"-->
+</body>
+</html>

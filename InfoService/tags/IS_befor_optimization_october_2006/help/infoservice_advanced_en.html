@@ -1,0 +1,31 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="xhelpfrms.css">
+</head>
+<body>
+<!--#include virtual="/header_en.html"-->
+
+<H2>InfoService</H2>
+
+<H3>Advanced Settings</H3>
+<i>This panel is only available in <a href="appearance_en.html#expertView">Expert View</a></i>.<P>
+To get to this panel, press button <i>Settings</i> in JAP's main window, then choose the entry <i>InfoService</i> from the list to the left, then open the tab <i>Advanced Settings</i>.<br>
+<UL>
+    <LI><B>Enable automatic InfoService Requests</B><BR>
+    JAP occassionally attempts to automatically connect to the InfoService to request information.  If this checkbox is activated, these automatic connections are also activated.
+    <P>
+    <LI><B>Allow non-anonymous connections to InfoServices</B><BR>
+    If activated, JAP can connect to InfoServices even if you have no anonymized connection currently established.<br>
+    If this option is deactivated, information from InfoServices may be gathered through anonymized connections only.<br>
+    Thus, it is recommended to activate this option, since no other InfoService will be used if this one is offline.
+    <P>
+    <LI><B>Do redundant requests on different InfoServices:</B><BR>
+    It is recommended to activate this option.<br>
+    Define how many InfoServices will be queried. If you set this value to "3", for example, JAP will always try to reach 3 InfoServices. Should one of them appear to be offline, JAP will try to reach a substitute.
+    <br>The higher the value, the more fail safe JAP will become, the more time these queries will consume, however.
+    </UL>
+
+
+<!--#include virtual="/footer_en.html"-->
+</body>
+</html>
