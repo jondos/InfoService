@@ -70,7 +70,7 @@ import anon.IServiceContainer;
  */
 public class AnonClient implements AnonService, Observer, DataChainErrorListener {
 
-	private static final int LOGIN_TIMEOUT = 15000;
+	private static final int LOGIN_TIMEOUT = 30000;
 	private static final int CONNECT_TIMEOUT = 8000;
 	private static final int CONNECTION_ERROR_WAIT_TIME = 30000; // time interval to report proxy errors
 	 // 4 errors in 30 seconds should be enough to be sure there is really a connection error

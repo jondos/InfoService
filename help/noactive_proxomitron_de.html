@@ -4,12 +4,12 @@
 </head>
 <body>
 <!--#include virtual="/header.html"-->
-<H2>Datenspuren im Internet verhindern: Verwendung eines Filterproxys</H2>
+<H2>Verwendung eines Filterproxys</H2>
 <B>Proxomitron</B><P>
 Proxomitron ist offiziell nur f&uuml;r Windows geeignet, der Entwickler gibt jedoch an, das Programm lasse sich mit <A href="http://www.winehq.com/">WINE</A> auch auf Linux ausf&uuml;hren.
 <UL>
 <LI><B>Installation</B><P>
-Laden Sie sich Proxomitron in der Standard-Version <A href="http://www.buerschgens.de/Prox/Seiten/Download/index.html">von dieser Seite</A> herunter. Alternativ k&ouml;nnen Sie auch <A href="http://www.buerschgens.de/Prox/Seiten/Download/Proxomitron4.51-S-2.0.1.zip">diesen Link</A> zum direkten Download verwenden.
+Laden Sie sich Proxomitron in der Profi-Version <A href="http://www.buerschgens.de/Prox/Seiten/Download/index.html">von dieser Seite</A> herunter.
 <br>Proxomitron ben&ouml;tigt keine Installation. Entpacken Sie die heruntergeladene .zip Datei in einen beliebigen (neuen) Ordner.
 <LI><B>Einrichtung</B><P>
 Sie k&ouml;nnen entweder eine fertige Konfigurationsdatei <A href="./proxomitron/config_de/default.cfg">aus der mitgelieferten Hilfe</A> oder hier <A href="http://anon.inf.tu-dresden.de/help/jap_help/proxomitron/config_de/default.cfg">online</A> benutzen und im Proxomitron-Verzeichnis speichern <b>oder</b> die folgende Anleitung durcharbeiten (wenn Sie eine bestehende Proxomitron-Konfiguration &auml;ndern wollen):
@@ -56,24 +56,25 @@ Wer die Cookieverwaltung ebenfalls Proxomitron &uuml;berlassen m&ouml;chte, der 
 		<LI>"JS.Manip: Durch Skripten ausgelesene Browserdaten entfernen v.1.3.1"
 		<LI>"JS.Manip: Auslesen des Browsertyps durch Skripten verhindern v.2.0.3"
 		<LI>"JS.Manip: Auslesen der Referrer-Information durch Skripten verhindern v.2.0.2"
-		<LI>"JS: JavaScript (und andere Skriptsprachen) deaktivieren [MB] v.1.3.2"
-		<LI>"JS: Komprimiertes JavaScript deaktivieren [MB] v.1.3.1"
-		<LI>"JS: Verschl&uuml;sselte Skripten deaktivieren [MB] v.2.6.6"
-		<LI>"HTML: Unsichtbare iFrames entfernen [MB] v.1.3.4"
-		<LI>"Java: Nur auf bestimmten Seiten Java-Applets zulassen [MB] v.1.3.2" <b>*1)</b>
-		<LI>"Webbug-Filter: Daten sammelnde Skripten (Verbund) [MB] v.1.1.0"
-		<LI>"Webbug-Filter: Daten sammelnde Skripten (einzeln) [MB] v.1.4.0"
-		<LI>"Webbug-Filter: Daten sammelnde Skripten (Segment Typ A) [MB] v.1.2.0"
-		<LI>"Webbug-Filter: Daten sammelnde Skripten (Segment Typ B) [MB] v.1.2.0"
+		<LI>"JS: Alle Skripten deaktivieren [MB] v.1.3.3"
+		<LI>"JS: JavaScript-Cookies löschen [MB]"
+		<LI>"JS: Komprimiertes JavaScript deaktivieren [MB] v.1.3.2"
+		<LI>"JS: Verschl&uuml;sselte Skripten deaktivieren [MB] v.2.6.7"
+		<LI>"HTML: Unsichtbare iFrames entfernen [MB] v.1.3.6"
+		<LI>"Java: Nur auf bestimmten Seiten Java-Applets zulassen [MB] v.1.3.3" <b>*1)</b>
+		<LI>"Webbug-Filter: Daten sammelnde Skripten (Verbund) [MB] v.1.1.1"
+		<LI>"Webbug-Filter: Daten sammelnde Skripten (einzeln) [MB] v.1.4.2"
+		<LI>"Webbug-Filter: Daten sammelnde Skripten (Segment Typ A) [MB] v.1.2.1"
+		<LI>"Webbug-Filter: Daten sammelnde Skripten (Segment Typ B) [MB] v.1.2.1"
 		<LI>"Konf: Sichtbare Ersatzobjekte f&uuml;r entfernte Webbugs einf&uuml;gen [MB]"
 		<LI>"Konf: Sichtbare Ersatzobjekte einf&uuml;gen: Alle (auch weniger wichtige) [MB]"
 	</UL>
 <P>
-Eine Beschreibung f&uuml;r alle Seitenfilter finden Sie <A href="http://www.buerschgens.de/Prox/Seiten/Standard-Edition/Filter/Seitenfilter.html">hier</A>.
+Eine Beschreibung f&uuml;r alle Seitenfilter finden Sie <A href="http://www.buerschgens.de/Prox/Seiten/Profi-Edition/Filter/Seitenfilter.html">hier</A>.
 <b>(*1)</b> F&uuml;r diesen Filter m&uuml;ssen noch Ausnahmen deklariert werden, sonst wird Java auf allen Webseiten unterbunden. Dazu sind folgende Schritte notwendig (Tip: Kopieren Sie Bezeichnungen direkt aus dem Browser, um Schreibfehler zu vermeiden):
 <OL start="1" type="1">
 <LI><B>Den Filter &auml;ndern</B><BR>
-&Ouml;ffnen Sie die <i>Seitenfilter</i> und w&auml;hlen Sie dort den Filter "Java: Nur auf bestimmten Seiten Java-Applets zulassen [MB] v.1.3.2" und klicken Sie auf <i>Bearb.</i>. Ersetzen Sie im Feld <i>URL Entsprechung (URL Match)</i> den bestehenden Ausdruck durch diesen: "(^$LST(AllowAppletsOn))" (ohne Anf&uuml;hrungszeichen). Best&auml;tigen Sie zweimal mit <i>OK</i>.
+&Ouml;ffnen Sie die <i>Seitenfilter</i> und w&auml;hlen Sie dort den Filter "Java: Nur auf bestimmten Seiten Java-Applets zulassen [MB] v.1.3.3" und klicken Sie auf <i>Bearb.</i>. Ersetzen Sie im Feld <i>URL Entsprechung (URL Match)</i> den bestehenden Ausdruck durch diesen: "(^$LST(AllowAppletsOn))" (ohne Anf&uuml;hrungszeichen). Best&auml;tigen Sie zweimal mit <i>OK</i>.
 <br>Klicken Sie auf das Symbol <img src="proxomitron3_de.gif">, um die Einstellungen zu speichern.
 <P>
 <LI><B>Die Konfigurationsdatei anpassen</B><BR>
