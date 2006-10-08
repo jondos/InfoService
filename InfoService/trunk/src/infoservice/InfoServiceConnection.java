@@ -47,7 +47,7 @@ import logging.LogType;
  * HTTP/1.1 stuff (like persistent connections or special encodings). But parsing an HTTP/1.1
  * request is working.
  */
-public class InfoServiceConnection implements Runnable
+final public class InfoServiceConnection implements Runnable
 {
 
 	/**
@@ -55,6 +55,7 @@ public class InfoServiceConnection implements Runnable
 	 */
 	private Socket m_socket;
 
+	private InputStream m_inputStream;
 	/**
 	 * Stores the ID of the connection which is used in the log-output for identifying the current
 	 * connection.
@@ -66,6 +67,12 @@ public class InfoServiceConnection implements Runnable
 	 * the HTTP response which is sent back to the client.
 	 */
 	private JWSInternalCommands m_serverImplementation;
+
+	/**
+	 * This stores the currently number of bytes which can be read from the InputStream until the
+	 * data limit is exhausted.
+	 */
+	private int m_byteLimit;
 
 	/**
 	 * Creates a new instance of InfoServiceConnection for handling the received data as an HTTP
@@ -115,6 +122,7 @@ public class InfoServiceConnection implements Runnable
 			try
 			{
 				streamFromClient = m_socket.getInputStream();
+				m_inputStream=streamFromClient;
 				streamToClient = new TimedOutputStream(m_socket.getOutputStream(),
 					Constants.COMMUNICATION_TIMEOUT);
 				//streamToClient = m_socket.getOutputStream();
@@ -141,9 +149,8 @@ public class InfoServiceConnection implements Runnable
 					 * METHOD <space> REQUEST-URI <space> HTTP-VERSION <CRLF>
 					 * Attention: <CRLF> is removed from readRequestLine()
 					 */
-					InfoServiceConnectionReader connectionReader = new InfoServiceConnectionReader(
-						streamFromClient, Constants.MAX_REQUEST_HEADER_SIZE);
-					String requestLine = readRequestLine(connectionReader);
+					initReader(/*streamFromClient,*/ Constants.MAX_REQUEST_HEADER_SIZE);
+					String requestLine = readRequestLine();
 					//LogHolder.log(LogLevel.DEBUG, LogType.NET,
 					//			  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
 					//			  "): Client: " + m_socket.getInetAddress() +  " Request line: " + requestLine);
@@ -173,7 +180,7 @@ public class InfoServiceConnection implements Runnable
 
 					int contentLength = 0;
 					/* now process the HTTP request header */
-					Enumeration headerLines = readHeader(connectionReader).elements();
+					Enumeration headerLines = readHeader().elements();
 					while (headerLines.hasMoreElements())
 					{
 						String currentHeaderLine = (String) (headerLines.nextElement());
@@ -386,14 +393,14 @@ public class InfoServiceConnection implements Runnable
 	 *
 	 * @return The line read from the stream without the trailing CRLF.
 	 */
-	private String readRequestLine(InfoServiceConnectionReader a_inputData) throws Exception
+	private String readRequestLine() throws Exception
 	{
 		//StringBuffer readBuffer=new StringBuffer(256);
 		ByteArrayOutputStream readBuffer = new ByteArrayOutputStream(256);
 		boolean requestLineReadingDone = false;
 		while (!requestLineReadingDone)
 		{
-			int byteRead = a_inputData.read();
+			int byteRead = read();
 			if (byteRead == -1)
 			{
 				throw (new Exception("Unexpected end of request line. Request line was: " +
@@ -408,7 +415,7 @@ public class InfoServiceConnection implements Runnable
 			}
 			if (byteRead == 13)
 			{
-				byteRead = a_inputData.read();
+				byteRead = read();
 				if (byteRead != 10)
 				{
 					/* only complete <CRLF> is allowed */
@@ -426,6 +433,61 @@ public class InfoServiceConnection implements Runnable
 		return readBuffer.toString();
 	}
 
+	private void initReader(int limit)
+	{
+	m_byteLimit=limit;
+	}
+	/**
+	 * Reads one byte from the underlying InputStream. If the call is successful, the limit of bytes
+	 * able to read from the stream is also decremented by 1. If the end of the stream is reached or
+	 * there was an exception while reading from the stream, the byte limit is not decremented. In
+	 * the case of a read exception, this exception is thrown. If the byte limit is exhausted, also
+	 * an exception is thrown.
+	 *
+	 * @return The byte read from the stream or -1, if the end of the stream was reached.
+	 */
+	private int read() throws Exception
+	{
+		boolean limitReached = false;
+		synchronized (this)
+		{
+			if (m_byteLimit < 1)
+			{
+				limitReached = true;
+			}
+			else
+			{
+				m_byteLimit--;
+			}
+		}
+		if (limitReached == true)
+		{
+			throw (new Exception("Cannot read more bytes, message size limit reached."));
+		}
+		int returnByte = -1;
+		try
+		{
+			returnByte = m_inputStream.read();
+		}
+		catch (Exception e)
+		{
+			synchronized (this)
+			{
+				/* nothing was read -> re-increase the counter */
+				m_byteLimit++;
+			}
+			throw (e);
+		}
+		if (returnByte == -1)
+		{
+			synchronized (this)
+			{
+				/* nothing was read -> re-increase the counter */
+				m_byteLimit++;
+			}
+		}
+		return returnByte;
+	}
 	/**
 	 * Reads the whole header of an HTTP request (including the last CRLF signalizing the end of the
 	 * header, so the next byte read from the stream would be the first of the HTTP content). The
@@ -447,7 +509,7 @@ public class InfoServiceConnection implements Runnable
 	 *         and the whole line is within one String stored. The empty line which signals the end
 	 *         of the HTTP header is not included within the Vector.
 	 */
-	private Vector readHeader(InfoServiceConnectionReader a_inputData) throws Exception
+	private Vector readHeader() throws Exception
 	{
 		ByteArrayOutputStream readBuffer = new ByteArrayOutputStream(256);
 		Vector allHeaderLines = new Vector();
@@ -455,11 +517,11 @@ public class InfoServiceConnection implements Runnable
 		boolean headerReadingDone = false;
 		while (headerReadingDone == false)
 		{
-			int byteRead = a_inputData.read();
+			int byteRead = read();
 			/* first check, whether it is the <CR> -> read the next bytes in this case */
 			if (byteRead == 13)
 			{
-				byteRead = a_inputData.read();
+				byteRead = read();
 				if (byteRead != 10)
 				{
 					/* only complete <CRLF> is allowed in the header */
@@ -477,7 +539,7 @@ public class InfoServiceConnection implements Runnable
 					 * if next line starts with <space> or <TAB>, it's only a folded header line -> according
 					 * to the HTTP specification, it is no problem to remove <CRLF> in this case
 					 */
-					byteRead = a_inputData.read();
+					byteRead =read();
 					if ( (byteRead != 9) && (byteRead != 32))
 					{
 						/* <CRLF> was end of the header line -> add the header line to the Vector of header
@@ -488,7 +550,7 @@ public class InfoServiceConnection implements Runnable
 						/* maybe it was the last header line, then there is a second <CRLF> */
 						if (byteRead == 13)
 						{
-							byteRead = a_inputData.read();
+							byteRead = read();
 							if (byteRead != 10)
 							{
 								/* only complete <CRLF> is allowed in the header */
