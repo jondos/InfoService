@@ -338,6 +338,10 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 		{
 			/* use an empty list -> only preferred infoservice is used */
 			infoServiceList = new Vector();
+			if (currentInfoService != null)
+			{
+				infoServiceList.addElement(currentInfoService);
+			}
 		}
 
 		Object result = null;
@@ -359,6 +363,15 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 				// try up to a certain maximum of InfoServices
 				askInfoServices = m_nrAskedInfoServices;
 			}
+		}
+
+		if (functionNumber == GET_STATUSINFO)
+		{
+			/*
+			 * For performance reasons the requests must be distributed equally over all InfoServices.
+			 * Therefore the default InfoService is ignored.
+			 */
+			currentInfoService = null;
 		}
 
 		while ( ( (infoServiceList.size() > 0) || (currentInfoService != null)) &&
