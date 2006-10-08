@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.05.469"; //Never change the layout of this line!
+	public static final String aktVersion = "00.05.470"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -77,7 +77,7 @@ public final class JAPConstants
 	 * The name of the default infoservice.
 	 */
 	public static final String DEFAULT_INFOSERVICE_NAMES[] =
-		new String[]{"infoservice.inf.tu-dresden.de%3A80",
+		new String[]{"880D9306B90EC8309178376B43AC26652CE52B74",
 		"4EAD8F831010B39FB3B014CFE433C2D8EB50D311",
 		"0BF136744FA4265B6BA09B60B0D0E051EE714073"};
 	public static final String DEFAULT_INFOSERVICE_HOSTNAMES[] =
