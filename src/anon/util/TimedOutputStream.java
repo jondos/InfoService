@@ -33,7 +33,7 @@ import java.io.InterruptedIOException;
 import java.util.Hashtable;
 import java.util.Enumeration;
 
-/** This class implements an OutputStream, where a timeout for the write() operations can be set.
+/** This class implements an OutputStream, where a timeout for the write() and flush () operations can be set.
  *
  */
 
@@ -184,7 +184,26 @@ final public class TimedOutputStream extends OutputStream
 
 	public void flush() throws IOException
 	{
-		m_Out.flush();
+		m_TimeOutTick = ms_currentTick + m_TimeoutInTicks;
+		ms_hashtableOutputStreams.put(this, this);
+		m_bTimedOut = false;
+		try
+		{
+			m_Out.flush();
+		}
+		catch (IOException e)
+		{
+			ms_hashtableOutputStreams.remove(this);
+			if (m_bTimedOut) //I/O was interrupted
+			{
+				throw new InterruptedIOException("TimedOutputStream: flush() timed out!");
+			}
+			else
+			{
+				throw e;
+			}
+		}
+		ms_hashtableOutputStreams.remove(this);
 	}
 
 }
