@@ -74,7 +74,7 @@ public final class LogHolder
 	/**
 	 * Stores the Log instance.
 	 */
-	private Log m_logInstance;
+	private static Log ms_logInstance = new DummyLog();
 
 	/**
 	 * This creates a new instance of LogHolder. This is only used for setting some
@@ -82,7 +82,7 @@ public final class LogHolder
 	 */
 	private LogHolder()
 	{
-		m_logInstance = new DummyLog();
+		ms_logInstance = new DummyLog();
 	}
 
 	public void finalize() throws Throwable
@@ -146,7 +146,8 @@ public final class LogHolder
 	 * @param a_message an (optional) log message
 	 * @param a_throwable a Throwable to log
 	 */
-	public static synchronized void log(int a_logLevel, int a_logType, String a_message, Throwable a_throwable)
+	public static synchronized void log(int a_logLevel, int a_logType, String a_message,
+										Throwable a_throwable)
 	{
 		if (a_throwable == null)
 		{
@@ -171,11 +172,11 @@ public final class LogHolder
 			{
 				if (message.length() == 0)
 				{
-					message =  a_throwable.getMessage();
+					message = a_throwable.getMessage();
 				}
 				else
 				{
-					message += "\n" + LOGGED_THROWABLE +  a_throwable.getMessage();
+					message += "\n" + LOGGED_THROWABLE + a_throwable.getMessage();
 				}
 
 				getInstance().getLogInstance().log(a_logLevel, a_logType, a_throwable.toString());
@@ -184,11 +185,11 @@ public final class LogHolder
 			{
 				if (message.length() == 0)
 				{
-					message =  a_throwable.toString();
+					message = a_throwable.toString();
 				}
 				else
 				{
-					message +=  "\n" + LOGGED_THROWABLE + a_throwable.toString();
+					message += "\n" + LOGGED_THROWABLE + a_throwable.toString();
 				}
 
 				getInstance().getLogInstance().log(a_logLevel, a_logType,
@@ -208,7 +209,7 @@ public final class LogHolder
 
 				getInstance().getLogInstance().log(a_logLevel, a_logType,
 					Util.normaliseString(
-									   getCallingMethod(false) + ": ", LINE_LENGTH_HIGHEST_DETAIL) +
+						getCallingMethod(false) + ": ", LINE_LENGTH_HIGHEST_DETAIL) +
 					message);
 			}
 		}
@@ -230,36 +231,38 @@ public final class LogHolder
 		{
 			if (m_messageDetailLevel <= DETAIL_LEVEL_LOWEST)
 			{
-				getInstance().getLogInstance().log(logLevel, logType, message);
+				ms_logInstance.log(logLevel, logType, message);
 			}
 			else if (m_messageDetailLevel == DETAIL_LEVEL_LOWER)
 			{
 				if (a_bAddCallingClass)
 				{
-					getInstance().getLogInstance().log(logLevel, logType,
-						Util.normaliseString(
-							getCallingClassFile(false) + ": ", LINE_LENGTH_HIGH_DETAIL)
-						+ TRACED_LOG_MESSAGE);
+					ms_logInstance.log(logLevel, logType,
+									   Util.normaliseString(
+										   getCallingClassFile(false) + ": ", LINE_LENGTH_HIGH_DETAIL)
+									   + TRACED_LOG_MESSAGE);
 
 				}
-				getInstance().getLogInstance().log(logLevel, logType,
-												   Util.normaliseString(
-					getCallingClassFile(a_bAddCallingClass) + ": ", LINE_LENGTH_HIGH_DETAIL)
-												   + message);
+				ms_logInstance.log(logLevel, logType,
+								   Util.normaliseString(
+									   getCallingClassFile(a_bAddCallingClass) + ": ",
+									   LINE_LENGTH_HIGH_DETAIL)
+								   + message);
 			}
 			else
 			{
 				if (a_bAddCallingClass)
 				{
-					getInstance().getLogInstance().log(logLevel, logType,
-						Util.normaliseString(
-							getCallingMethod(false) + ": ", LINE_LENGTH_HIGHEST_DETAIL)
-						+ TRACED_LOG_MESSAGE);
+					ms_logInstance.log(logLevel, logType,
+									   Util.normaliseString(
+										   getCallingMethod(false) + ": ", LINE_LENGTH_HIGHEST_DETAIL)
+									   + TRACED_LOG_MESSAGE);
 				}
-				getInstance().getLogInstance().log(logLevel, logType,
-												   Util.normaliseString(
-					getCallingMethod(a_bAddCallingClass) + ": ", LINE_LENGTH_HIGHEST_DETAIL)
-												   + message);
+				ms_logInstance.log(logLevel, logType,
+								   Util.normaliseString(
+									   getCallingMethod(a_bAddCallingClass) + ": ",
+									   LINE_LENGTH_HIGHEST_DETAIL)
+								   + message);
 			}
 		}
 	}
@@ -283,10 +286,10 @@ public final class LogHolder
 	 */
 	public static synchronized void setLogInstance(Log logInstance)
 	{
-		getInstance().m_logInstance = logInstance;
-		if (getInstance().m_logInstance == null)
+		getInstance().ms_logInstance = logInstance;
+		if (getInstance().ms_logInstance == null)
 		{
-			getInstance().m_logInstance = new DummyLog();
+			getInstance().ms_logInstance = new DummyLog();
 		}
 	}
 
@@ -311,15 +314,15 @@ public final class LogHolder
 	 *
 	 * @return The current logInstance.
 	 */
-	private Log getLogInstance()
+	private static Log getLogInstance()
 	{
-		return m_logInstance;
+		return ms_logInstance;
 	}
 
 	private static boolean isLogged(int a_logLevel, int a_logType)
 	{
-		return (a_logLevel <= getInstance().getLogInstance().getLogLevel()) &&
-			( (a_logType & getInstance().getLogInstance().getLogType()) == a_logType);
+		return (a_logLevel <= ms_logInstance.getLogLevel()) &&
+			( (a_logType & ms_logInstance.getLogType()) == a_logType);
 	}
 
 	/**
@@ -367,7 +370,7 @@ public final class LogHolder
 			tokenizer.nextToken(); // jump over the "at"
 
 			/* identify the current stack trace method */
-			strCurrentMethod = tokenizer.nextToken().replace('/','.');
+			strCurrentMethod = tokenizer.nextToken().replace('/', '.');
 			if (strCurrentMethod.indexOf('(') > 0)
 			{
 				while (strCurrentMethod.indexOf(')') < 0)
@@ -385,7 +388,7 @@ public final class LogHolder
 				{
 					// get the class name of the calling class
 					strOwnClass = strCurrentMethod;
-					if ((index = strCurrentMethod.indexOf('(')) > 0)
+					if ( (index = strCurrentMethod.indexOf('(')) > 0)
 					{
 						strOwnClass = strCurrentMethod.substring(0, index);
 					}
@@ -395,10 +398,10 @@ public final class LogHolder
 					{
 						strOwnClass = strOwnClass.substring(0, strOwnClass.indexOf("$"));
 					}
-					}
+				}
 				else
 				{
-				break;
+					break;
 				}
 			}
 		}
