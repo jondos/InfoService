@@ -157,7 +157,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JPanel m_pnlVersion;
 	private JButton m_bttnHelp, m_bttnQuit, m_bttnIconify, m_bttnConf, m_btnAssistant;
 
-	private Icon[] meterIcons;
+	//private Icon[] meterIcons;
 	private JAPConf m_dlgConfig;
 	private Object LOCK_CONFIG = new Object();
 	private JAPViewIconified m_ViewIconified;
@@ -270,7 +270,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			setIconImage(ii.getImage());
 			// Load Images for "Anonymity Meter"
 		}
-		loadMeterIcons();
+		//loadMeterIcons();
 		// "NORTH": Image
 		ImageIcon northImage = GUIUtils.loadImageIcon(JAPMessages.getString("northPath"), true, false);
 		JLabel northLabel = new JLabel(northImage);
@@ -517,7 +517,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					if (JAPDialog.showConfirmDialog(JAPNewView.this,
 													JAPMessages.getString(MSG_IS_DISABLED_EXPLAIN),
 													JAPDialog.OPTION_TYPE_YES_NO,
-													JAPDialog.MESSAGE_TYPE_WARNING, meterIcons[2])
+													JAPDialog.MESSAGE_TYPE_WARNING,
+													GUIUtils.loadImageIcon(METERFNARRAY[2], true, true))
 						== JAPDialog.RETURN_VALUE_YES)
 					{
 						JAPModel.getInstance().setInfoServiceDisabled(false);
@@ -1276,7 +1277,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	}
 
 
-
+/*
 	private void loadMeterIcons()
 	{
 		// Load Images for "Anonymity Meter"
@@ -1307,7 +1308,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			catch (Exception e)
 			{}
 		}
-	}
+	}*/
 
 	/**Anon Level is >=0 amd <=5. If -1 no measure is available*/
 	private Icon getMeterImage(int iAnonLevel)
@@ -1321,24 +1322,24 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			//System.out.println("anon level");
 			if (iAnonLevel >= 0 && iAnonLevel <= 10)
 			{
-				return meterIcons[iAnonLevel + 3];
+				return GUIUtils.loadImageIcon(METERFNARRAY[iAnonLevel + 3], true, true);
 			}
 			else
 			{
-				return meterIcons[2]; //No measure available
+				return  GUIUtils.loadImageIcon(METERFNARRAY[2], true, true); //No measure available
 			}
 		}
 		else if (bAnonMode && !bConnected && bConnectionErrorShown)
 		{
 			//System.out.println("connection lost");
-			return meterIcons[1]; // connection lost
+			return GUIUtils.loadImageIcon(METERFNARRAY[1], true, true); // connection lost
 		}
 		else
 		{
 			//System.out.println("AnonMode:" + bAnonMode + " " + "Connected:" + bConnected + " " +
 				//			   "ShowError:" + bConnectionErrorShown);
 			//System.out.println("deactivated");
-			return meterIcons[0]; // Anon deactivated
+			return GUIUtils.loadImageIcon(METERFNARRAY[0], true, true); // Anon deactivated
 		}
 	}
 
@@ -1453,6 +1454,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					SwingUtilities.updateComponentTreeUI(view);
 					SwingUtilities.updateComponentTreeUI(DEFAULT_LABEL);
 					updateFonts();
+					onUpdateValues();
 					setOptimalSize();
 				}
 			};

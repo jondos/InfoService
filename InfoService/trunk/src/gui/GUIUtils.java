@@ -252,33 +252,89 @@ public final class GUIUtils
 	 */
 	public static ImageIcon loadImageIcon(String a_strRelativeImagePath, boolean a_bSync, boolean a_bScale)
 	{
-		ImageIcon img;
+		ImageIcon img = null;
 		int statusBits;
+		boolean bScalingDone = false;
+		String strScaledRelativeImagePath = null;
+
+		if (a_bScale && ms_resizer.getResizeFactor() != 1.0)
+		{
+			// we have to scale; look if there are pre-scaled graphics first
+			strScaledRelativeImagePath =
+				((int)(100 * ms_resizer.getResizeFactor())) + "/" +  a_strRelativeImagePath;
+		}
 
 		// try to load the image from the cache
-		if (ms_iconCache.containsKey(a_strRelativeImagePath))
+		if (strScaledRelativeImagePath != null && ms_iconCache.containsKey(strScaledRelativeImagePath))
+		{
+			img = new ImageIcon((Image)ms_iconCache.get(strScaledRelativeImagePath));
+			if (img != null)
+			{
+				bScalingDone = true;
+			}
+		}
+		else if (ms_iconCache.containsKey(a_strRelativeImagePath))
 		{
 			img = new ImageIcon((Image)ms_iconCache.get(a_strRelativeImagePath));
 		}
-		else if (ms_loadImages)
+
+		if (img == null && ms_loadImages)
 		{
 			// load image from the local classpath or the local directory
-			img = loadImageIconInternal(ResourceLoader.getResourceURL(a_strRelativeImagePath));
+			if (strScaledRelativeImagePath != null)
+			{
+				img = loadImageIconInternal(ResourceLoader.getResourceURL(strScaledRelativeImagePath));
+				if (img != null)
+				{
+					bScalingDone = true;
+				}
+			}
+
+			if (img == null)
+			{
+				img = loadImageIconInternal(ResourceLoader.getResourceURL(a_strRelativeImagePath));
+			}
 
 			if (img == null && (Toolkit.getDefaultToolkit().getColorModel().getPixelSize() <= 16))
 			{
 				// load the image from the low color image path
-				img = loadImageIconInternal(
-					ResourceLoader.getResourceURL(
+				if (strScaledRelativeImagePath != null)
+				{
+					img = loadImageIconInternal(
+									   ResourceLoader.getResourceURL(
+						JAPMessages.getString(MSG_DEFAULT_IMGAGE_PATH_LOWCOLOR) + strScaledRelativeImagePath));
+					if (img != null)
+					{
+						bScalingDone = true;
+					}
+				}
+				if (img == null)
+				{
+					img = loadImageIconInternal(
+									   ResourceLoader.getResourceURL(
 						JAPMessages.getString(MSG_DEFAULT_IMGAGE_PATH_LOWCOLOR) + a_strRelativeImagePath));
+				}
 			}
 
 			if (img == null || img.getImageLoadStatus() == MediaTracker.ERRORED)
 			{
 				// load the image from the default image path
-				img = loadImageIconInternal(
-					ResourceLoader.getResourceURL(
+				if (strScaledRelativeImagePath != null)
+				{
+					img = loadImageIconInternal(
+						ResourceLoader.getResourceURL(
+							JAPMessages.getString(MSG_DEFAULT_IMGAGE_PATH) + strScaledRelativeImagePath));
+						if (img != null)
+						{
+							bScalingDone = true;
+						}
+				}
+				if (img == null)
+				{
+					img = loadImageIconInternal(
+									   ResourceLoader.getResourceURL(
 						JAPMessages.getString(MSG_DEFAULT_IMGAGE_PATH) + a_strRelativeImagePath));
+				}
 			}
 
 			if (img != null)
@@ -293,7 +349,14 @@ public final class GUIUtils
 				}
 
 				// write the image to the cache
-				ms_iconCache.put(a_strRelativeImagePath, img.getImage());
+				if (strScaledRelativeImagePath != null && bScalingDone)
+				{
+					ms_iconCache.put(strScaledRelativeImagePath, img.getImage());
+				}
+				else
+				{
+					ms_iconCache.put(a_strRelativeImagePath, img.getImage());
+				}
 			}
 
 			statusBits = MediaTracker.ABORTED | MediaTracker.ERRORED;
@@ -303,12 +366,11 @@ public final class GUIUtils
 							  "Could not load requested image '" + a_strRelativeImagePath + "'!");
 			}
 		}
-		else
+
+		if (a_bScale && !bScalingDone && ms_loadImages && ms_resizer.getResizeFactor() != 1.0)
 		{
-			img = null;
-		}
-		if (a_bScale && ms_loadImages)
-		{
+			// this image must be scaled
+
 			final ImageIcon image = img;
 			WorkerContentPane.IReturnRunnable run = new WorkerContentPane.IReturnRunnable()
 			{
