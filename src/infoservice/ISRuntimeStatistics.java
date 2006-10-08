@@ -5,10 +5,10 @@ package infoservice;
 final class ISRuntimeStatistics
 {
 	//How many TCP/IP Connections did we receive?
-	static long ms_lTCPIPConnections=0;
+	static volatile long ms_lTCPIPConnections=0;
 
 	///How many get /mixcascadestatus command did we process?
-	static long ms_lNrOfGetMixCascadeStatusRequests=0;
+	static volatile long ms_lNrOfGetMixCascadeStatusRequests=0;
 
 	static String getAsHTML()
 	{
