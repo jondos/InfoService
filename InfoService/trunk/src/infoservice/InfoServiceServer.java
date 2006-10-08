@@ -65,6 +65,7 @@ final class InfoServiceServer implements Runnable
 					}
 					continue;
 				}
+				ISRuntimeStatistics.ms_lTCPIPConnections++;
 				try
 				{
 					InfoServiceConnection doIt = new InfoServiceConnection(socket, InfoService.getConnectionCounter(),

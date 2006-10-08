@@ -599,6 +599,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	 */
 	private HttpResponseStructure japGetCascadeStatus(String a_cascadeId)
 	{
+		ISRuntimeStatistics.ms_lNrOfGetMixCascadeStatusRequests++;
 		/* this is only the default, if something is going wrong */
 		HttpResponseStructure httpResponse = null;
 		try
@@ -761,6 +762,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 					"\n";
 			}
 			htmlData = htmlData + "    </TABLE><BR><BR><BR><BR>\n";
+			htmlData =htmlData+ISRuntimeStatistics.getAsHTML();
 			htmlData = htmlData + "    <P>Infoservice [" + Constants.INFOSERVICE_VERSION + "] Startup Time: " +
 				Configuration.getInstance().getStartupTime() +
 				"</P>\n" +
