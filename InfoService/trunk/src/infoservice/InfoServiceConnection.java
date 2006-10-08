@@ -388,8 +388,7 @@ final public class InfoServiceConnection implements Runnable
 			int byteRead = read();
 			if (byteRead == -1)
 			{
-				throw (new Exception("Unexpected end of request line. Request line was: " +
-									 m_tmpByteArrayOut.toString()));
+				throw (new Exception("Unexpected end of request line."));
 			}
 			/* check for illegal characters */
 			if ( ( (byteRead < 32) && (byteRead != 13)) || (byteRead == 127))
