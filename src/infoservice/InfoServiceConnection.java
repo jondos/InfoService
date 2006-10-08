@@ -74,6 +74,8 @@ final public class InfoServiceConnection implements Runnable
 	 */
 	private int m_byteLimit;
 
+	//ByteArrayOutputStream used on different places of this class.
+	private ByteArrayOutputStream m_tmpByteArrayOut;
 	/**
 	 * Creates a new instance of InfoServiceConnection for handling the received data as an HTTP
 	 * request.
@@ -93,6 +95,7 @@ final public class InfoServiceConnection implements Runnable
 		m_socket = a_socket;
 		m_connectionId = a_connectionId;
 		m_serverImplementation = a_serverImplementation;
+		m_tmpByteArrayOut = new ByteArrayOutputStream(512);
 	}
 
 	/**
@@ -122,7 +125,7 @@ final public class InfoServiceConnection implements Runnable
 			try
 			{
 				streamFromClient = m_socket.getInputStream();
-				m_inputStream=streamFromClient;
+				m_inputStream = streamFromClient;
 				streamToClient = new TimedOutputStream(m_socket.getOutputStream(),
 					Constants.COMMUNICATION_TIMEOUT);
 				//streamToClient = m_socket.getOutputStream();
@@ -149,16 +152,16 @@ final public class InfoServiceConnection implements Runnable
 					 * METHOD <space> REQUEST-URI <space> HTTP-VERSION <CRLF>
 					 * Attention: <CRLF> is removed from readRequestLine()
 					 */
-					initReader(/*streamFromClient,*/ Constants.MAX_REQUEST_HEADER_SIZE);
+					initReader( /*streamFromClient,*/Constants.MAX_REQUEST_HEADER_SIZE);
 					String requestLine = readRequestLine();
 					//LogHolder.log(LogLevel.DEBUG, LogType.NET,
 					//			  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
 					//			  "): Client: " + m_socket.getInetAddress() +  " Request line: " + requestLine);
 					StringTokenizer requestLineTokenizer = new StringTokenizer(requestLine, " ");
-					if (requestLineTokenizer.countTokens() != 3)
-					{
-						throw (new Exception("Invalid HTTP request line: " + requestLine));
-					}
+					/*if (requestLineTokenizer.countTokens() != 3)
+					   {
+					 throw (new Exception("Invalid HTTP request line: " + requestLine));
+					   }*/
 					requestMethod = requestLineTokenizer.nextToken();
 					requestUrl = requestLineTokenizer.nextToken();
 					if (requestMethod.equals("POST"))
@@ -221,7 +224,7 @@ final public class InfoServiceConnection implements Runnable
 						{
 							if (currentHeaderFieldValue != null &&
 								currentHeaderFieldValue.indexOf(
-								HTTPConnectionFactory.HTTP_ENCODING_ZLIB_STRING) >= 0)
+									HTTPConnectionFactory.HTTP_ENCODING_ZLIB_STRING) >= 0)
 							{
 								supportedEncodings = HttpResponseStructure.HTTP_ENCODING_ZLIB;
 							}
@@ -255,7 +258,7 @@ final public class InfoServiceConnection implements Runnable
 						postData = postDataRead.toByteArray();
 						//LogHolder.log(LogLevel.DEBUG, LogType.NET,
 						//			  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-							//		  "): Post-Data received for request: " + requestUrl + ": " +
+						//		  "): Post-Data received for request: " + requestUrl + ": " +
 						//			  postDataRead.toString());
 					}
 				}
@@ -263,7 +266,8 @@ final public class InfoServiceConnection implements Runnable
 				{
 					LogHolder.log(LogLevel.ERR, LogType.NET,
 								  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-								  "): Client: " + m_socket.getInetAddress() + " Invalid request - not processed", e);
+								  "): Client: " + m_socket.getInetAddress() +
+								  " Invalid request - not processed", e);
 					response = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);
 				}
 
@@ -371,9 +375,9 @@ final public class InfoServiceConnection implements Runnable
 							  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
 							  "): Error while closing connection: " + e.toString());
 			}
-		//	LogHolder.log(LogLevel.DEBUG, LogType.NET,
-		//				  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-		//				  "): Connection thread finished.");
+			//	LogHolder.log(LogLevel.DEBUG, LogType.NET,
+			//				  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
+			//				  "): Connection thread finished.");
 		}
 		catch (Throwable t)
 		{
@@ -396,7 +400,7 @@ final public class InfoServiceConnection implements Runnable
 	private String readRequestLine() throws Exception
 	{
 		//StringBuffer readBuffer=new StringBuffer(256);
-		ByteArrayOutputStream readBuffer = new ByteArrayOutputStream(256);
+		m_tmpByteArrayOut.reset();
 		boolean requestLineReadingDone = false;
 		while (!requestLineReadingDone)
 		{
@@ -404,14 +408,14 @@ final public class InfoServiceConnection implements Runnable
 			if (byteRead == -1)
 			{
 				throw (new Exception("Unexpected end of request line. Request line was: " +
-									 readBuffer.toString()));
+									 m_tmpByteArrayOut.toString()));
 			}
 			/* check for illegal characters */
 			if ( ( (byteRead < 32) && (byteRead != 13)) || (byteRead == 127))
 			{
 				throw (new Exception("Illegal character in request line found. Character (dec): " +
 									 Integer.toString(byteRead) + ". Request line was: " +
-									 readBuffer.toString()));
+									 m_tmpByteArrayOut.toString()));
 			}
 			if (byteRead == 13)
 			{
@@ -420,23 +424,24 @@ final public class InfoServiceConnection implements Runnable
 				{
 					/* only complete <CRLF> is allowed */
 					throw (new Exception("CR without LF found in request line: Request line was: " +
-										 readBuffer.toString()));
+										 m_tmpByteArrayOut.toString()));
 				}
 				/* <CRLF> found -> end of line */
 				requestLineReadingDone = true;
 			}
 			else
 			{
-				readBuffer.write(byteRead);
+				m_tmpByteArrayOut.write(byteRead);
 			}
 		}
-		return readBuffer.toString();
+		return m_tmpByteArrayOut.toString();
 	}
 
 	private void initReader(int limit)
 	{
-	m_byteLimit=limit;
+		m_byteLimit = limit;
 	}
+
 	/**
 	 * Reads one byte from the underlying InputStream. If the call is successful, the limit of bytes
 	 * able to read from the stream is also decremented by 1. If the end of the stream is reached or
@@ -448,19 +453,7 @@ final public class InfoServiceConnection implements Runnable
 	 */
 	private int read() throws Exception
 	{
-		boolean limitReached = false;
-		synchronized (this)
-		{
-			if (m_byteLimit < 1)
-			{
-				limitReached = true;
-			}
-			else
-			{
-				m_byteLimit--;
-			}
-		}
-		if (limitReached == true)
+		if (m_byteLimit < 1)
 		{
 			throw (new Exception("Cannot read more bytes, message size limit reached."));
 		}
@@ -468,26 +461,22 @@ final public class InfoServiceConnection implements Runnable
 		try
 		{
 			returnByte = m_inputStream.read();
+			m_byteLimit--;
 		}
 		catch (Exception e)
 		{
-			synchronized (this)
-			{
-				/* nothing was read -> re-increase the counter */
-				m_byteLimit++;
-			}
 			throw (e);
 		}
-		if (returnByte == -1)
-		{
-			synchronized (this)
-			{
-				/* nothing was read -> re-increase the counter */
-				m_byteLimit++;
-			}
-		}
+		//This does not seem to be usefull as -1 means that EOF was reached - so we can not read something anyway - can't we?
+		//Therefore i comment this out...
+		/*if (returnByte == -1)
+		   {
+		 // nothing was read -> re-increase the counter
+		 m_byteLimit++;
+		   }*/
 		return returnByte;
 	}
+
 	/**
 	 * Reads the whole header of an HTTP request (including the last CRLF signalizing the end of the
 	 * header, so the next byte read from the stream would be the first of the HTTP content). The
@@ -511,11 +500,11 @@ final public class InfoServiceConnection implements Runnable
 	 */
 	private Vector readHeader() throws Exception
 	{
-		ByteArrayOutputStream readBuffer = new ByteArrayOutputStream(256);
+		m_tmpByteArrayOut.reset();
 		Vector allHeaderLines = new Vector();
 		boolean startOfHeader = true;
 		boolean headerReadingDone = false;
-		while (headerReadingDone == false)
+		while (!headerReadingDone )
 		{
 			int byteRead = read();
 			/* first check, whether it is the <CR> -> read the next bytes in this case */
@@ -526,9 +515,9 @@ final public class InfoServiceConnection implements Runnable
 				{
 					/* only complete <CRLF> is allowed in the header */
 					throw (new Exception("CR without LF found in header: Current header line: " +
-										 readBuffer.toString()));
+										 m_tmpByteArrayOut.toString()));
 				}
-				if (startOfHeader == true)
+				if (startOfHeader)
 				{
 					/* header started with <CRLF> -> no header -> stop reading */
 					headerReadingDone = true;
@@ -539,14 +528,14 @@ final public class InfoServiceConnection implements Runnable
 					 * if next line starts with <space> or <TAB>, it's only a folded header line -> according
 					 * to the HTTP specification, it is no problem to remove <CRLF> in this case
 					 */
-					byteRead =read();
+					byteRead = read();
 					if ( (byteRead != 9) && (byteRead != 32))
 					{
 						/* <CRLF> was end of the header line -> add the header line to the Vector of header
 						 * lines (without trailing <CRLF>)
 						 */
-						allHeaderLines.addElement(readBuffer.toString());
-						readBuffer.reset();
+						allHeaderLines.addElement(m_tmpByteArrayOut.toString());
+						m_tmpByteArrayOut.reset();
 						/* maybe it was the last header line, then there is a second <CRLF> */
 						if (byteRead == 13)
 						{
@@ -563,9 +552,9 @@ final public class InfoServiceConnection implements Runnable
 					}
 				}
 			}
-			if (headerReadingDone == false)
+			if (!headerReadingDone)
 			{
-				if (startOfHeader == true)
+				if (startOfHeader)
 				{
 					/* header not started with <CRLF> -> header is not empty */
 					startOfHeader = false;
@@ -573,17 +562,17 @@ final public class InfoServiceConnection implements Runnable
 				if (byteRead == -1)
 				{
 					throw (new Exception("Unexpected end of header. Current header line: " +
-										 readBuffer.toString()));
+										 m_tmpByteArrayOut.toString()));
 				}
 				/* check for illegal characters */
 				if ( ( (byteRead < 32) && (byteRead != 9)) || (byteRead == 127))
 				{
 					throw (new Exception("Illegal character in header found. Character (dec): " +
 										 Integer.toString(byteRead) + ". Current header line: " +
-										 readBuffer.toString()));
+										 m_tmpByteArrayOut.toString()));
 				}
 				/* valid character -> add it to the buffer */
-				readBuffer.write(byteRead);
+				m_tmpByteArrayOut.write(byteRead);
 			}
 		}
 		return allHeaderLines;

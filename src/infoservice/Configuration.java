@@ -62,7 +62,7 @@ import infoservice.tor.MixminionDirectoryAgent;
 import anon.infoservice.JavaVersionDBEntry;
 import anon.infoservice.InfoServiceDBEntry;
 
-public class Configuration
+final public class Configuration
 {
 	/**
 	 * Stores the instance of Configuration (Singleton).
@@ -135,7 +135,7 @@ public class Configuration
 	/**
 	 * Stores the date format information for HTTP headers.
 	 */
-	private SimpleDateFormat m_httpDateFormat;
+	private static SimpleDateFormat ms_httpDateFormat;
 
 	/**
 	 * Stores, whether we are the "root" of the JAP update information (JNLP-Files + JAPMinVersion).
@@ -737,8 +737,8 @@ public class Configuration
 							  m_holdForwarderList);
 			}
 			/* do some more initialization stuff */
-			m_httpDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
-			m_httpDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+			ms_httpDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
+			ms_httpDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
 
 
 			m_NrOfThreads = Constants.MAX_NR_OF_CONCURRENT_CONNECTIONS;
@@ -878,9 +878,9 @@ public class Configuration
 	 *
 	 * @return The HTTP-header date format.
 	 */
-	public SimpleDateFormat getHttpDateFormat()
+	public static SimpleDateFormat getHttpDateFormat()
 	{
-		return m_httpDateFormat;
+		return ms_httpDateFormat;
 	}
 
 	/**

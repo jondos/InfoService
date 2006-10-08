@@ -613,7 +613,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			else
 			{
 				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,
-					HttpResponseStructure.HTTP_ENCODING_PLAIN, statusEntry.getStatusXmlData());
+					HttpResponseStructure.HTTP_ENCODING_PLAIN, statusEntry.getPostData());
 			}
 		}
 		catch (Exception e)
