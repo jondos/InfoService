@@ -46,7 +46,7 @@ final public class TimedOutputStream extends OutputStream
 	private static Thread ms_threadInterrupt;
 	private static Hashtable ms_hashtableOutputStreams;
 	private static long ms_currentTick;
-	final static long MS_PER_TICK = 10000;
+	final static long MS_PER_TICK = 5000;
 
 	final static private class TimedOutputStreamInterrupt implements Runnable
 	{
