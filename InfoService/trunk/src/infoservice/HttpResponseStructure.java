@@ -106,6 +106,8 @@ public final class HttpResponseStructure
 	private static final String HTTP_HEADER_EXPIRES_STRING = "Expires: ";
 	private static final String HTTP_HEADER_CACHE_CONTROL_STRING = "Cache-Control: ";
 	private static final String HTTP_HEADER_PRAGMA_STRING = "Pragma: ";
+	private final static String HTTP_HEADER_CACHE_CONTROL_STRINGS=HTTP_HEADER_CACHE_CONTROL_STRING+
+			"no-cache"+HTTP_CRLF_STRING+HTTP_HEADER_PRAGMA_STRING+"no-cache"+HTTP_CRLF_STRING;
 
 	private static final String HTTP_ENCODING_PLAIN_STRING = "plain";
 	private static final String HTTP_ENCODING_ZLIB_STRING = HTTPConnectionFactory.HTTP_ENCODING_ZLIB_STRING;
@@ -273,7 +275,9 @@ public final class HttpResponseStructure
 	private byte[] createHttpMessage(int a_httpReturnCode, int a_httpDataType, int a_httpEncoding,
 									 byte[] a_httpData, boolean a_onlyHeader)
 	{
-		StringBuffer httpHeader = new StringBuffer(HTTP_11_STRING);
+		//StringBuffer httpHeader = new StringBuffer(HTTP_11_STRING);
+		StringBuilder httpHeader = new StringBuilder(2048);
+		httpHeader.append(HTTP_11_STRING);
 		/* set the return code */
 		if (a_httpReturnCode == HTTP_RETURN_OK)
 		{
@@ -341,12 +345,8 @@ public final class HttpResponseStructure
 		httpHeader.append(HTTP_HEADER_DATE_STRING);
 		httpHeader.append(currentDate);
 		httpHeader.append(HTTP_CRLF_STRING);
-		httpHeader.append(HTTP_HEADER_CACHE_CONTROL_STRING);
-		httpHeader.append("no-cache");
-		httpHeader.append(HTTP_CRLF_STRING);
-		httpHeader.append(HTTP_HEADER_PRAGMA_STRING);
-		httpHeader.append("no-cache");
-		httpHeader.append(HTTP_CRLF_STRING);
+		httpHeader.append(HTTP_HEADER_CACHE_CONTROL_STRINGS);
+
 		httpHeader.append(HTTP_CRLF_STRING);
 		byte[] createdHttpResponse = null;
 		/* now add the data, if there are any, else return only the header */
