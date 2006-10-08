@@ -325,10 +325,10 @@ final public class InfoServiceConnection implements Runnable
 					}
 					catch (Exception e)
 					{
-						LogHolder.log(LogLevel.ERR, LogType.NET,
+						/*LogHolder.log(LogLevel.ERR, LogType.NET,
 									  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
 									  "): Error while sending the response to the client: " +
-									  m_socket.getInetAddress(), e);
+									  m_socket.getInetAddress(), e);*/
 					}
 				}
 			}
