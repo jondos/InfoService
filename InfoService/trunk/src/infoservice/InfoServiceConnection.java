@@ -121,13 +121,11 @@ final public class InfoServiceConnection implements Runnable
 							  "): Cannot set socket timeout: " + e.toString());
 			}
 			InputStream streamFromClient = null;
-			OutputStream streamToClient = null;
+//			OutputStream streamToClient = null;
 			try
 			{
 				streamFromClient = m_socket.getInputStream();
 				m_inputStream = streamFromClient;
-				streamToClient = new TimedOutputStream(m_socket.getOutputStream(),
-					Constants.COMMUNICATION_TIMEOUT);
 				//streamToClient = m_socket.getOutputStream();
 			}
 			catch (Exception e)
@@ -137,7 +135,7 @@ final public class InfoServiceConnection implements Runnable
 							  "): Error while accessing the socket streams: " + e.toString());
 			}
 
-			if ( (streamFromClient != null) && (streamToClient != null))
+			if (streamFromClient != null)
 			{
 				HttpResponseStructure response = null;
 				int internalRequestMethodCode = 0;
@@ -307,18 +305,23 @@ final public class InfoServiceConnection implements Runnable
 						//			  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
 						//			  "): Response for request: " + requestUrl + ": " +
 						//			  (new String(response.getResponseData())));
+						TimedOutputStream streamToClient = new TimedOutputStream(m_socket.getOutputStream(),
+							Constants.COMMUNICATION_TIMEOUT);
+
 						byte[] theResponse = response.getResponseData();
 						int index = 0;
 						int len = theResponse.length;
 						//we send the data bakch to the client in chunks of 10000 bytes in order
 						//to avoid unwanted timeouts for large messages and slow connections
-						while (len > 0)
+						while (len > 10000)
 						{
-							int aktLen = Math.min(len, 10000);
-							streamToClient.write(theResponse, index, aktLen);
-							index += aktLen;
-							len -= aktLen;
+							streamToClient.write(theResponse, index, 10000);
+							index += 10000;
+							len -= 10000;
 						}
+						streamToClient.write(theResponse, index, len);
+						streamToClient.flush();
+						streamToClient.close();
 					}
 					catch (Exception e)
 					{
@@ -327,17 +330,6 @@ final public class InfoServiceConnection implements Runnable
 									  "): Error while sending the response to the client: " +
 									  m_socket.getInetAddress(), e);
 					}
-				}
-				try
-				{
-					streamToClient.flush();
-				}
-				catch (Exception e)
-				{
-					/* if we get an error here, normally there was already one -> log only for debug reasons */
-					LogHolder.log(LogLevel.DEBUG, LogType.NET,
-								  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-								  "): Error while flushing output stream to client: " + e.toString());
 				}
 			}
 
@@ -352,17 +344,6 @@ final public class InfoServiceConnection implements Runnable
 				LogHolder.log(LogLevel.DEBUG, LogType.NET,
 							  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
 							  "): Error while closing input stream from client: " + e.toString());
-			}
-			try
-			{
-				streamToClient.close();
-			}
-			catch (Exception e)
-			{
-				/* if we get an error here, normally there was already one -> log only for debug reasons */
-				LogHolder.log(LogLevel.DEBUG, LogType.NET,
-							  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-							  "): Error while closing output stream to client: " + e.toString());
 			}
 			try
 			{
@@ -504,7 +485,7 @@ final public class InfoServiceConnection implements Runnable
 		Vector allHeaderLines = new Vector();
 		boolean startOfHeader = true;
 		boolean headerReadingDone = false;
-		while (!headerReadingDone )
+		while (!headerReadingDone)
 		{
 			int byteRead = read();
 			/* first check, whether it is the <CR> -> read the next bytes in this case */

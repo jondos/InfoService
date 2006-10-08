@@ -41,7 +41,7 @@ final public class TimedOutputStream extends OutputStream
 {
 	private OutputStream m_Out;
 	private long m_TimeoutInTicks;
-	long m_TimeOutTick;
+	private volatile long m_TimeOutTick;
 	private volatile boolean m_bTimedOut;
 	private static Thread ms_threadInterrupt;
 	private static Hashtable ms_hashtableOutputStreams;
