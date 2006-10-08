@@ -163,7 +163,6 @@
   <property category="runtime.0" name="ConfigurationName" value="JAP"/>
   <property category="runtime.0" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
   <property category="runtime.0" name="application.class" value="JAP"/>
-  <property category="runtime.0" name="application.parameters" value="--showDialogFormat"/>
   <property category="runtime.0" name="custom.init_required" value="0"/>
   <property category="runtime.0" name="custom.required.1" value="http"/>
   <property category="runtime.0" name="custom.required.2" value="mac"/>
@@ -337,7 +336,7 @@
   <property category="sys" name="ExcludeClassEnabled" value="0"/>
   <property category="sys" name="IncludeTestPath" value="1"/>
   <property category="sys" name="InstanceVisibility" value="0"/>
-  <property category="sys" name="JDK" value="java version 1.3.1-root_1.3.1_030912-1952"/>
+  <property category="sys" name="JDK" value="java version 1.5.0_07-b03"/>
   <property category="sys" name="LastTag" value="192"/>
   <property category="sys" name="Libraries" value="http;mac;Apache XML-RPC;BouncyCastleLightForJAP;JUnit;junitx;Swing;ApacheBzip2;Log4j;ApacheFTPClient;XML-1.0"/>
   <property category="sys" name="MakeStable" value="0"/>
@@ -353,10 +352,16 @@
   <property category="sys" name="enable.auto.packages" value="false"/>
   <property category="team" name="ignorePath.0" value="bak"/>
   <property category="team" name="ignorePath.1" value="classes"/>
+  <property category="team" name="ignorePath.10" value="public.cer"/>
+  <property category="team" name="ignorePath.11" value="InfoService.jpx"/>
   <property category="team" name="ignorePath.2" value="classes_all"/>
   <property category="team" name="ignorePath.3" value="classes_infoservice"/>
   <property category="team" name="ignorePath.4" value="JAP.jar"/>
   <property category="team" name="ignorePath.5" value="JAP.refactor"/>
+  <property category="team" name="ignorePath.6" value="InfoService.jar"/>
+  <property category="team" name="ignorePath.7" value="InfoService.log"/>
+  <property category="team" name="ignorePath.8" value="InfoService.refactor"/>
+  <property category="team" name="ignorePath.9" value="private.pfx"/>
   <property category="together" name="language" value="java"/>
   <node name="certificates" type="NavigationDirectory">
     <property category="directorynode" name="url" value="certificates"/>
@@ -813,14 +818,83 @@
     <property category="archiving" name="contentRules.39" value="F:help/misc_en.html;help/misc_en.html"/>
     <property category="archiving" name="contentRules.390" value="F:help/security_test_de.html;help/security_test_de.html"/>
     <property category="archiving" name="contentRules.391" value="F:help/security_test_en.html;help/security_test_en.html"/>
+    <property category="archiving" name="contentRules.392" value="F:help/payment_account_de.html;help/payment_account_de.html"/>
+    <property category="archiving" name="contentRules.393" value="F:help/payment_account_en.html;help/payment_account_en.html"/>
+    <property category="archiving" name="contentRules.394" value="F:help/proxy_overview_de.html;help/proxy_overview_de.html"/>
+    <property category="archiving" name="contentRules.395" value="F:help/proxy_overview_en.html;help/proxy_overview_en.html"/>
+    <property category="archiving" name="contentRules.396" value="F:help/japconf_de.html;help/japconf_de.html"/>
+    <property category="archiving" name="contentRules.397" value="F:help/japconf_en.html;help/japconf_en.html"/>
+    <property category="archiving" name="contentRules.398" value="F:help/miniwindow_button1.gif;help/miniwindow_button1.gif"/>
+    <property category="archiving" name="contentRules.399" value="F:help/miniwindow_button2.gif;help/miniwindow_button2.gif"/>
     <property category="archiving" name="contentRules.4" value="F:help/anon_en.html;help/anon_en.html"/>
     <property category="archiving" name="contentRules.40" value="F:help/smile.gif;help/smile.gif"/>
+    <property category="archiving" name="contentRules.400" value="F:help/miniwindow_de.gif;help/miniwindow_de.gif"/>
+    <property category="archiving" name="contentRules.401" value="F:help/miniwindow_de.html;help/miniwindow_de.html"/>
+    <property category="archiving" name="contentRules.402" value="F:help/miniwindow_en.gif;help/miniwindow_en.gif"/>
+    <property category="archiving" name="contentRules.403" value="F:help/miniwindow_en.html;help/miniwindow_en.html"/>
+    <property category="archiving" name="contentRules.404" value="F:help/miniwindow_icon.gif;help/miniwindow_icon.gif"/>
+    <property category="archiving" name="contentRules.405" value="F:images/110/jap.JAPNewView_meter00.gif;images/110/jap.JAPNewView_meter00.gif"/>
+    <property category="archiving" name="contentRules.406" value="F:images/110/jap.JAPNewView_meter01.gif;images/110/jap.JAPNewView_meter01.gif"/>
+    <property category="archiving" name="contentRules.407" value="F:images/110/jap.JAPNewView_meter02.gif;images/110/jap.JAPNewView_meter02.gif"/>
+    <property category="archiving" name="contentRules.408" value="F:images/110/jap.JAPNewView_meter03.gif;images/110/jap.JAPNewView_meter03.gif"/>
+    <property category="archiving" name="contentRules.409" value="F:images/110/jap.JAPNewView_meter04.gif;images/110/jap.JAPNewView_meter04.gif"/>
     <property category="archiving" name="contentRules.41" value="F:help/steps_de.html;help/steps_de.html"/>
+    <property category="archiving" name="contentRules.410" value="F:images/110/jap.JAPNewView_meter05.gif;images/110/jap.JAPNewView_meter05.gif"/>
+    <property category="archiving" name="contentRules.411" value="F:images/110/jap.JAPNewView_meter06.gif;images/110/jap.JAPNewView_meter06.gif"/>
+    <property category="archiving" name="contentRules.412" value="F:images/110/jap.JAPNewView_meter07.gif;images/110/jap.JAPNewView_meter07.gif"/>
+    <property category="archiving" name="contentRules.413" value="F:images/110/jap.JAPNewView_meter08.gif;images/110/jap.JAPNewView_meter08.gif"/>
+    <property category="archiving" name="contentRules.414" value="F:images/110/jap.JAPNewView_meter09.gif;images/110/jap.JAPNewView_meter09.gif"/>
+    <property category="archiving" name="contentRules.415" value="F:images/110/jap.JAPNewView_meter10.gif;images/110/jap.JAPNewView_meter10.gif"/>
+    <property category="archiving" name="contentRules.416" value="F:images/110/jap.JAPNewView_meterAnonDeactivated.gif;images/110/jap.JAPNewView_meterAnonDeactivated.gif"/>
+    <property category="archiving" name="contentRules.417" value="F:images/110/jap.JAPNewView_meterConnecting.gif;images/110/jap.JAPNewView_meterConnecting.gif"/>
+    <property category="archiving" name="contentRules.418" value="F:images/110/jap.JAPNewView_meterNoMeasure.gif;images/110/jap.JAPNewView_meterNoMeasure.gif"/>
+    <property category="archiving" name="contentRules.419" value="F:images/120/jap.JAPNewView_meter00.gif;images/120/jap.JAPNewView_meter00.gif"/>
     <property category="archiving" name="contentRules.42" value="F:help/steps_en.html;help/steps_en.html"/>
+    <property category="archiving" name="contentRules.420" value="F:images/120/jap.JAPNewView_meter01.gif;images/120/jap.JAPNewView_meter01.gif"/>
+    <property category="archiving" name="contentRules.421" value="F:images/120/jap.JAPNewView_meter02.gif;images/120/jap.JAPNewView_meter02.gif"/>
+    <property category="archiving" name="contentRules.422" value="F:images/120/jap.JAPNewView_meter03.gif;images/120/jap.JAPNewView_meter03.gif"/>
+    <property category="archiving" name="contentRules.423" value="F:images/120/jap.JAPNewView_meter04.gif;images/120/jap.JAPNewView_meter04.gif"/>
+    <property category="archiving" name="contentRules.424" value="F:images/120/jap.JAPNewView_meter05.gif;images/120/jap.JAPNewView_meter05.gif"/>
+    <property category="archiving" name="contentRules.425" value="F:images/120/jap.JAPNewView_meter06.gif;images/120/jap.JAPNewView_meter06.gif"/>
+    <property category="archiving" name="contentRules.426" value="F:images/120/jap.JAPNewView_meter07.gif;images/120/jap.JAPNewView_meter07.gif"/>
+    <property category="archiving" name="contentRules.427" value="F:images/120/jap.JAPNewView_meter08.gif;images/120/jap.JAPNewView_meter08.gif"/>
+    <property category="archiving" name="contentRules.428" value="F:images/120/jap.JAPNewView_meter09.gif;images/120/jap.JAPNewView_meter09.gif"/>
+    <property category="archiving" name="contentRules.429" value="F:images/120/jap.JAPNewView_meter10.gif;images/120/jap.JAPNewView_meter10.gif"/>
     <property category="archiving" name="contentRules.43" value="F:help/trouble_de.html;help/trouble_de.html"/>
+    <property category="archiving" name="contentRules.430" value="F:images/120/jap.JAPNewView_meterAnonDeactivated.gif;images/120/jap.JAPNewView_meterAnonDeactivated.gif"/>
+    <property category="archiving" name="contentRules.431" value="F:images/120/jap.JAPNewView_meterConnecting.gif;images/120/jap.JAPNewView_meterConnecting.gif"/>
+    <property category="archiving" name="contentRules.432" value="F:images/120/jap.JAPNewView_meterNoMeasure.gif;images/120/jap.JAPNewView_meterNoMeasure.gif"/>
+    <property category="archiving" name="contentRules.433" value="F:images/130/jap.JAPNewView_meter00.gif;images/130/jap.JAPNewView_meter00.gif"/>
+    <property category="archiving" name="contentRules.434" value="F:images/130/jap.JAPNewView_meter01.gif;images/130/jap.JAPNewView_meter01.gif"/>
+    <property category="archiving" name="contentRules.435" value="F:images/130/jap.JAPNewView_meter02.gif;images/130/jap.JAPNewView_meter02.gif"/>
+    <property category="archiving" name="contentRules.436" value="F:images/130/jap.JAPNewView_meter03.gif;images/130/jap.JAPNewView_meter03.gif"/>
+    <property category="archiving" name="contentRules.437" value="F:images/130/jap.JAPNewView_meter04.gif;images/130/jap.JAPNewView_meter04.gif"/>
+    <property category="archiving" name="contentRules.438" value="F:images/130/jap.JAPNewView_meter05.gif;images/130/jap.JAPNewView_meter05.gif"/>
+    <property category="archiving" name="contentRules.439" value="F:images/130/jap.JAPNewView_meter06.gif;images/130/jap.JAPNewView_meter06.gif"/>
     <property category="archiving" name="contentRules.44" value="F:help/trouble_en.html;help/trouble_en.html"/>
+    <property category="archiving" name="contentRules.440" value="F:images/130/jap.JAPNewView_meter07.gif;images/130/jap.JAPNewView_meter07.gif"/>
+    <property category="archiving" name="contentRules.441" value="F:images/130/jap.JAPNewView_meter08.gif;images/130/jap.JAPNewView_meter08.gif"/>
+    <property category="archiving" name="contentRules.442" value="F:images/130/jap.JAPNewView_meter09.gif;images/130/jap.JAPNewView_meter09.gif"/>
+    <property category="archiving" name="contentRules.443" value="F:images/130/jap.JAPNewView_meter10.gif;images/130/jap.JAPNewView_meter10.gif"/>
+    <property category="archiving" name="contentRules.444" value="F:images/130/jap.JAPNewView_meterAnonDeactivated.gif;images/130/jap.JAPNewView_meterAnonDeactivated.gif"/>
+    <property category="archiving" name="contentRules.445" value="F:images/130/jap.JAPNewView_meterConnecting.gif;images/130/jap.JAPNewView_meterConnecting.gif"/>
+    <property category="archiving" name="contentRules.446" value="F:images/130/jap.JAPNewView_meterNoMeasure.gif;images/130/jap.JAPNewView_meterNoMeasure.gif"/>
+    <property category="archiving" name="contentRules.447" value="F:images/140/jap.JAPNewView_meter00.gif;images/140/jap.JAPNewView_meter00.gif"/>
+    <property category="archiving" name="contentRules.448" value="F:images/140/jap.JAPNewView_meter01.gif;images/140/jap.JAPNewView_meter01.gif"/>
+    <property category="archiving" name="contentRules.449" value="F:images/140/jap.JAPNewView_meter02.gif;images/140/jap.JAPNewView_meter02.gif"/>
     <property category="archiving" name="contentRules.45" value="F:help/update_de.html;help/update_de.html"/>
+    <property category="archiving" name="contentRules.450" value="F:images/140/jap.JAPNewView_meter03.gif;images/140/jap.JAPNewView_meter03.gif"/>
+    <property category="archiving" name="contentRules.451" value="F:images/140/jap.JAPNewView_meter04.gif;images/140/jap.JAPNewView_meter04.gif"/>
+    <property category="archiving" name="contentRules.452" value="F:images/140/jap.JAPNewView_meter05.gif;images/140/jap.JAPNewView_meter05.gif"/>
+    <property category="archiving" name="contentRules.453" value="F:images/140/jap.JAPNewView_meter06.gif;images/140/jap.JAPNewView_meter06.gif"/>
+    <property category="archiving" name="contentRules.454" value="F:images/140/jap.JAPNewView_meter07.gif;images/140/jap.JAPNewView_meter07.gif"/>
+    <property category="archiving" name="contentRules.455" value="F:images/140/jap.JAPNewView_meter08.gif;images/140/jap.JAPNewView_meter08.gif"/>
+    <property category="archiving" name="contentRules.456" value="F:images/140/jap.JAPNewView_meter09.gif;images/140/jap.JAPNewView_meter09.gif"/>
+    <property category="archiving" name="contentRules.457" value="F:images/140/jap.JAPNewView_meter10.gif;images/140/jap.JAPNewView_meter10.gif"/>
+    <property category="archiving" name="contentRules.458" value="F:images/140/jap.JAPNewView_meterAnonDeactivated.gif;images/140/jap.JAPNewView_meterAnonDeactivated.gif"/>
+    <property category="archiving" name="contentRules.459" value="F:images/140/jap.JAPNewView_meterConnecting.gif;images/140/jap.JAPNewView_meterConnecting.gif"/>
     <property category="archiving" name="contentRules.46" value="F:help/update_en.html;help/update_en.html"/>
+    <property category="archiving" name="contentRules.460" value="F:images/140/jap.JAPNewView_meterNoMeasure.gif;images/140/jap.JAPNewView_meterNoMeasure.gif"/>
     <property category="archiving" name="contentRules.47" value="F:help/xdeu.gif;help/xdeu.gif"/>
     <property category="archiving" name="contentRules.48" value="F:help/xeng.gif;help/xeng.gif"/>
     <property category="archiving" name="contentRules.49" value="F:help/xhelpfrms.css;help/xhelpfrms.css"/>
