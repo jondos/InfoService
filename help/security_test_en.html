@@ -8,11 +8,12 @@
 We will use test sites which let us know whether your browser (and filter proxy, if any) is correctly configured.
 <br>You may try both sites or choose one.<P>
 <B>Seite 1</B><br>
-<A href="http://www.leader.ru/secure/who.html">This site</A> shows a quick overview of all the HEADER information that your browser gives to the site. The topic <i>Collected Information</i> shows this information.
-<br>In order to see what effect the settings bring about, the following preceeding is recommended:
+<A href="http://www.leader.ru/secure/who.html">This site (leader.ru)</A> shows a quick overview of all the HEADER information that your browser gives to the site. The topic <i>Collected Information</i> shows this information.
+In order to see what effect the settings bring about, the following preceeding is recommended:
 <OL>
-	<LI>At the beginning, visit the site without JAP and <A href="noactive_general_en.html">filter proxy</A> resp. <A href="noactive_en.html">correct browser settings</A>. Write down the following values (or memorize them):
-	<br><br>
+	<LI>At the beginning, visit the site without or with deactivated JAP and <A href="noactive_general_en.html">filter proxy</A> resp. correct <A href="noactive_en.html">data protection settings for your browser</A>. Write down the following values (or memorize them):
+	<br>
+	<br>
 	<OL type=I>
 		<LI><i>Reported remote address</i> (shows your external IP address)
 		<LI><i>Browser</i> (exact name of your browser including versioning number)
@@ -21,7 +22,7 @@ We will use test sites which let us know whether your browser (and filter proxy,
 	</OL>
 	And now have a look at the information gathered about your system under the topic <i>Additional Information</i>.
 	<P>
-	<LI>Now reload the site with activated JAP (and filter proxy).
+  <LI>Now reload the site with activated JAP (and filter proxy).
 	<OL type=I>
 		<LI>This should not be the same as before.
 		<LI>Data should be faked (Firefox -> Opera) or significantly less detailed.
@@ -31,18 +32,19 @@ We will use test sites which let us know whether your browser (and filter proxy,
 	The information from <i>Additional Information</i> should be gone almost entirely.
 </OL>
 <B>Seite 2</B><br>
-<A href="http://www.gurusheaven.de/index_sicherheit.html">This site</A> also performs some tests and explains them (german language).
-<br>In the left menu, click <i>Anonymit&auml;ts-Test</i> and then the subentry <i>Zum Anonymit&auml;ts-Test</i>. This site, too, should be visited with JAP and <A href="noactive_general_de.html">Filterproxy</A> resp. <A href="noactive_de.html">correct browser settings</A> disabled once and then enabled in order to see the difference.
-<br>The following should be different:
+<A href="http://www.gurusheaven.de/index_sicherheit.html">This site (gurushaven.de)</A> also performs some tests and explains them (german language).
+In the left menu, click <i>Anonymit&auml;ts-Test</i> and then the subentry <i>Zum Anonymit&auml;ts-Test</i>. This site, too, should be visited with JAP and <A href="noactive_general_de.html">Filterproxy</A> resp. correct <A href="noactive_de.html">data protection settings for your browser</A> disabled once and then enabled in order to see the difference.
+<br>
+The following should be different:
 <UL>
 	<LI><b>Detaillierte Anzeige Deiner Bildschirmeinstellungen:</b> The values of screen resolution etc should be incorrect.
 	<LI><b>Anzeige Deiner (&ouml;ffentlichen) IP-Adresse:</b> The shown IP address should not match your own external IP address.
 	<LI><b>Anzeige Deiner "echten", privaten IP Adresse trotz NAT an der Firewall:</b> This Java applet should have been deactivatet. When using proxomitron, a corresponding message will occur.
 	<LI><b>Anzeige des Referers (Referrer):</b> Referer should be "http://www.gurusheaven.de/security/anonymitaets_test.shtml". No referer at all is also ok but might cause trouble on certain sites in rare cases.
 </UL>
-In case the results of the test do not meet requirements this might be due to the following reasons:
-<UL>
-	<LI>No <A href="noactive_general_en.html">filter proxy</A> has been used.
+In case the results of the test do not meet requirements this might be due to the following reasons:<UL><LI>JAP has not <a href="browser_en.html">been installed</a> correctly 
+    <LI>Not have not set the <a href="noactive_en.html">data protection configuration for your browser</a> correctly 
+  <LI>No <A href="noactive_general_en.html">filter proxy</A> has been used.
 	<LI>Filter proxy is not using correct filter settings.
 	<LI>Filter proxy is not using JAP as external proxy.
 	<LI>Your browser is not using the filter proxy as proxy.
@@ -54,6 +56,7 @@ Further test sites:
 <LI><B><A href="https://www.astalavista.net/?cmd=net">Astalavista</A></B> Displays connection information (HTTPS)
 <LI><B><A href="http://proxyjudge.org/">Proxyjudge</A></B> Attempts to make a statement about anonymity level (improper rating scheme)
 <LI><B><A href="http://www.rrdb.org/check_yourself.php?l=en">RRDB</A></B> Displays connection information
+<LI><B><a href="http://www.netreal.de/test/ip/">NetReal</a></B> German site with good explanations
 <LI><B><a href="http://gemal.dk/browserspy/">Browserspy</a></B> Holds a big list with identifying attributes 
 </UL>
 <!--#include virtual="/footer_en.html"-->
