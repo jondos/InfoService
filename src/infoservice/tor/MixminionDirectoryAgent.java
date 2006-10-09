@@ -170,7 +170,7 @@ public class MixminionDirectoryAgent implements Runnable
 	{
 		while (true)
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.NET,
+			LogHolder.log(LogLevel.INFO, LogType.NET,
 						  "MixminionDirectoryAgent: run: Try to fetch the mixminion nodes list from the known mixminion directory servers.");
 
 			Element mixminionNodesListNode = null;
