@@ -97,19 +97,19 @@ public class PaymentInstanceDBEntry extends AbstractDistributableDatabaseEntry
 		NodeList networkNodes = elemRoot.getElementsByTagName("Network");
 		if (networkNodes.getLength() == 0)
 		{
-			throw (new XMLParseException("PaymentDBEntry: Error in XML structure."));
+			throw (new XMLParseException("Error in XML structure."));
 		}
 		Element networkNode = (Element) (networkNodes.item(0));
 		NodeList listenerInterfacesNodes = networkNode.getElementsByTagName("ListenerInterfaces");
 		if (listenerInterfacesNodes.getLength() == 0)
 		{
-			throw (new XMLParseException("PaymentDBEntry: Error in XML structure."));
+			throw (new XMLParseException("Error in XML structure."));
 		}
 		Element listenerInterfacesNode = (Element) (listenerInterfacesNodes.item(0));
 		NodeList listenerInterfaceNodes = listenerInterfacesNode.getElementsByTagName("ListenerInterface");
 		if (listenerInterfaceNodes.getLength() == 0)
 		{
-			throw (new XMLParseException("PaymentDBEntry: Error in XML structure."));
+			throw (new XMLParseException("Error in XML structure."));
 		}
 		m_listenerInterfaces = new Vector();
 		for (int i = 0; i < listenerInterfaceNodes.getLength(); i++)

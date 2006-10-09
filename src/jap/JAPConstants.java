@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.05.472"; //Never change the layout of this line!
+	public static final String aktVersion = "00.05.473"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -191,10 +191,10 @@ public final class JAPConstants
 		"firefox", "iexplore", "explorer", "mozilla", "konqueror", "mozilla-firefox", "firebird", "opera"
 	};
 
-	public final static String PI_ID = "PIjapteam";
+	public final static String PI_ID = "3ADE1713CAFA6470FADCC3395415F8950C42CD2E";
 	public final static String PI_NAME = "JAP Team PI";
-	public final static String PI_HOST = "anon.inf.tu-dresden.de";
-	public final static int PI_PORT = 2342;
+	public final static String PI_HOST = "87.230.9.148";
+	public final static int PI_PORT = 443;
 	public final static String PI_CERT = "bi.cer";
 	public final static String CERTSPATH = "certificates/";
 	public final static String INFOSERVICE_CERTSPATH = "acceptedInfoServiceCAs/";

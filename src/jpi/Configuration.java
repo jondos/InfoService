@@ -41,7 +41,6 @@ import anon.pay.xml.XMLPaymentOptions;
 import anon.pay.xml.XMLPaymentOption;
 import java.util.Enumeration;
 import java.util.Vector;
-import anon.util.Util;
 import java.util.StringTokenizer;
 import anon.infoservice.ListenerInterface;
 import anon.crypto.X509SubjectKeyIdentifier;

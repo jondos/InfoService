@@ -1017,7 +1017,7 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry imple
 		NodeList paymentInstancesNodes = doc.getElementsByTagName("PaymentInstances");
 		if (paymentInstancesNodes.getLength() == 0)
 		{
-			throw (new Exception("InfoService: getPaymentInstances: Error in XML structure."));
+			throw (new Exception("Error in XML structure."));
 		}
 		Element paymentInstancesNode = (Element) (paymentInstancesNodes.item(0));
 		NodeList paymentInstanceNodes = paymentInstancesNode.getElementsByTagName("PaymentInstance");
@@ -1034,7 +1034,7 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry imple
 			{
 				/* an error while parsing the node occured -> we don't use this payment instance */
 				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
-							  "InfoService: getPaymentInstances: Error in PaymentInstance XML node.");
+							  "Error in PaymentInstance XML node.");
 			}
 
 		}
