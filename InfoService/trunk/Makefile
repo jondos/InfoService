@@ -1,10 +1,10 @@
 JARS=/opt/java/log4j/log4j.jar:/opt/java/BouncyCastle/BouncyCastleLightForJAP.jar:/opt/java/http/http.jar:/opt/java/jai/jai_core.jar:/opt/java/jaf/activation.jar:/opt/java/mail/mail.jar:/opt/java/Bzip2/ApacheBzip2.jar:/opt/java/Jama/Jama.jar
 
-JAVAC=/opt/jdk1.5/bin/javac
-JAVACOPTS=-classpath $(JARS):./src/ -O -target 1.5 -g:none
+JAVAC=/opt/java/jdk1.6/bin/javac
+JAVACOPTS=-classpath $(JARS):./src/ -O -target 1.6 -g:none
 JAVACOPTS_DEBUG=-classpath $(JARS):./src/ -target 1.5 -g 
 #JAVACOPTS=-classpath $(JARS) -target 1.4 -g
-JAR=/opt/jdk1.5/bin/jar
+JAR=/opt/java/jdk1.6/bin/jar
 JAROPTS=i
 GCJ=gcj-3.4
 GCJOPTS=--main=infoservice.InfoService -classpath ./src/:$(JARS):$(HOME)/jaxp.jar $(HOME)/jaxp.jar $(HOME)/crimson.jar /opt/java/Bzip2/ApacheBzip2.jar /opt/java/Jama/Jama.jar /opt/java/log4j/log4j.jar /opt/java/BouncyCastle/BouncyCastleLightForJAP.jar /opt/java/http/http.jar 
