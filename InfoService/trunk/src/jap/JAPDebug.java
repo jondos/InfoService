@@ -278,7 +278,7 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 		}
 		else if (b && !m_bConsole)
 		{
-			m_frameConsole = new JAPDialog(parent, "Debug-Console");
+			m_frameConsole = new JAPDialog(parent, "Debug-Console", false);
 			m_textareaConsole = new JTextArea(null, 20, 30);
 			m_textareaConsole.setEditable(false);
 			Font f = Font.decode("Courier");
