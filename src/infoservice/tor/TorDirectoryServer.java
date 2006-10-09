@@ -34,6 +34,8 @@ import anon.util.ZLibTools;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import HTTPClient.HTTPConnection;
+import HTTPClient.HTTPResponse;
 
 /**
  * This is the implementation for an entry in the tor directory server database.
@@ -95,19 +97,22 @@ public class TorDirectoryServer extends AbstractDatabaseEntry
 	 * method is successful, the raw TOR nodes structure from the TOR directory server is returned.
 	 * If there was an error while fetching the nodes list, null is returned.
 	 *
-	 * @return A String with the plain information (already decompressed) about the running TOR
+	 * @return A byte[] with the plain information (already decompressed) about the running TOR
 	 *         nodes or null, if there was an error while fetching the list.
 	 */
-	public String downloadTorNodesInformation()
+	public byte[] downloadTorNodesInformation()
 	{
 		LogHolder.log(LogLevel.INFO, LogType.NET,
 			"Try to get tor nodes list from http://" +
 					  m_url.getHost() + ":" + Integer.toString(m_url.getPort()) + m_url.getFileName());
-		String torNodesList = null;
+		byte[] torNodesList = null;
 		try
 		{
-			byte[] torNodesListCompressedData = HTTPConnectionFactory.getInstance().createHTTPConnection(new
-				ListenerInterface(m_url.getHost(), m_url.getPort())).Get(m_url.getFileName()).getData();
+			HTTPConnection conn=HTTPConnectionFactory.getInstance().createHTTPConnection(new
+				ListenerInterface(m_url.getHost(), m_url.getPort()));
+			conn.removeModule(Class.forName("HTTPClient.ContentEncodingModule"));
+			HTTPResponse resp=conn.Get(m_url.getFileName());
+			byte[] torNodesListCompressedData =resp.getData();
 			if (torNodesListCompressedData != null)
 			{
 				/* decompress it */
@@ -120,7 +125,9 @@ public class TorDirectoryServer extends AbstractDatabaseEntry
 					 */
 					decompressedData = torNodesListCompressedData;
 				}
-				torNodesList = new String(decompressedData);
+				torNodesList = decompressedData;
+				decompressedData = torNodesListCompressedData=null;
+				System.gc();
 			}
 		}
 		catch (Exception e)

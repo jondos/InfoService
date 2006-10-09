@@ -41,6 +41,8 @@ import anon.crypto.MyRandom;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.io.InputStreamReader;
+import java.io.ByteArrayInputStream;
 
 public class ORList
 {
@@ -94,7 +96,7 @@ public class ORList
 	{
 		try
 		{
-			String doc = m_orlistFetcher.getORList();
+			byte[] doc = m_orlistFetcher.getORList();
 			if (doc == null)
 			{
 				return false;
@@ -232,13 +234,13 @@ public class ORList
 	 * @throws Exception
 	 * @return false if document is not a valid directory, true otherwise
 	 */
-	private boolean parseDocument(String strDocument) throws Exception
+	private boolean parseDocument(byte[] strDocument) throws Exception
 	{
 		Vector ors = new Vector();
 		Vector exitnodes = new Vector();
 		Vector middlenodes = new Vector();
 		Hashtable orswn = new Hashtable();
-		LineNumberReader reader = new LineNumberReader(new StringReader(strDocument));
+		LineNumberReader reader = new LineNumberReader(new InputStreamReader(new ByteArrayInputStream(strDocument)));
 		String strRunningOrs = " ";
 		Date published = null;
 		String aktLine = reader.readLine();

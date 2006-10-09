@@ -35,7 +35,7 @@ final public class InfoServiceORListFetcher implements ORListFetcher
 	{
 	}
 
-	public String getORList()
+	public byte[] getORList()
 	{
 		return InfoServiceHolder.getInstance().getTorNodesList();
 	}
