@@ -622,7 +622,7 @@ final public class Configuration
 			/* set some default values */
 			m_lStatusStatisticsInterval = 3600 * (long) (1000); // 1 hour
 			m_strStatusStatisticsLogDir = ""; // log to the current directory
-			if (m_bStatusStatisticsEnabled == true)
+			if (m_bStatusStatisticsEnabled )
 			{
 				/* overwrite the default values */
 				long tempInterval = Long.parseLong(a_properties.getProperty("statusStatisticsInterval").trim()) *
@@ -639,7 +639,7 @@ final public class Configuration
 			/* get the settings for fetching the tor nodes list */
 			boolean fetchTorNodesList = a_properties.getProperty("fetchTorNodesList").trim().equalsIgnoreCase(
 				"enabled");
-			if (fetchTorNodesList == true)
+			if (fetchTorNodesList)
 			{
 				/* set some default values */
 				long fetchTorNodesListInterval = 600L * 1000L;
@@ -694,8 +694,7 @@ final public class Configuration
 				long fetchMixminionNodesListInterval = 600L * 1000L;
 				/* overwrite the default values */
 				long tempInterval = Long.parseLong(a_properties.getProperty("fetchMixminionNodesListInterval").
-					trim()) *
-					1000;
+					trim()) *1000L;
 				if (tempInterval > 0)
 				{
 					/* set only to valid values */

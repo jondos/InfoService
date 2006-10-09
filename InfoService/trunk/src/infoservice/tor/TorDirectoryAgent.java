@@ -139,6 +139,7 @@ public class TorDirectoryAgent implements Runnable
 				/* start the internal thread */
 				Thread fetchThread = new Thread(this, "TorDirectoryAgent Update Thread");
 				fetchThread.setDaemon(true);
+				fetchThread.setPriority(Thread.MIN_PRIORITY);
 				fetchThread.start();
 			}
 		}
@@ -191,7 +192,7 @@ public class TorDirectoryAgent implements Runnable
 		{
 			try
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.NET,
+				LogHolder.log(LogLevel.INFO, LogType.NET,
 							  "TorDirectoryAgent: run: Try to fetch the tor nodes list from the known tor directory servers.");
 				Database db = Database.getInstance(TorDirectoryServer.class);
 				Vector torServers = null;
@@ -337,8 +338,7 @@ public class TorDirectoryAgent implements Runnable
 			}
 			catch (Throwable t)
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.NET,
-							  "TorDirectoryAgent: run: Exception!");
+				LogHolder.log(LogLevel.DEBUG, LogType.NET,"TorDirectoryAgent: run: Exception!");
 				LogHolder.log(LogLevel.DEBUG, LogType.NET, t);
 			}
 			try
