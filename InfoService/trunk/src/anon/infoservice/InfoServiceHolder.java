@@ -744,9 +744,9 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	 *
 	 * @return The raw tor nodes list as it is distributed by the tor directory servers.
 	 */
-	public String getTorNodesList()
+	public byte[] getTorNodesList()
 	{
-		return (String) (fetchInformation(GET_TORNODESLIST, null));
+		return (byte[]) (fetchInformation(GET_TORNODESLIST, null));
 	}
 
 	public MixCascade getMixCascadeInfo(String a_cascadeID)

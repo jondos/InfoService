@@ -39,7 +39,7 @@ public class DummyORListFetcher implements ORListFetcher {
   /**
    * Stores the raw TOR nodes list, which shall be parsed.
    */
-  private String m_torNodesListStructure;
+  private byte[] m_torNodesListStructure;
 
 
   /**
@@ -48,7 +48,7 @@ public class DummyORListFetcher implements ORListFetcher {
    *
    * @param a_torNodesListStructure The raw TOR nodes list, which shall be parsed later.
    */
-  public DummyORListFetcher(String a_torNodesListStructure) {
+  public DummyORListFetcher(byte[] a_torNodesListStructure) {
     m_torNodesListStructure = a_torNodesListStructure;
   }
 
@@ -58,7 +58,7 @@ public class DummyORListFetcher implements ORListFetcher {
    *
    * @return The raw TOR nodes list specified in the constructor.
    */
-  public String getORList() {
+  public byte[] getORList() {
     return m_torNodesListStructure;
   }
 }

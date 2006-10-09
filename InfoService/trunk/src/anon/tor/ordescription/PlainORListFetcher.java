@@ -52,7 +52,7 @@ public class PlainORListFetcher implements ORListFetcher
 		m_ORListPort = port;
 	}
 
-	public String getORList()
+	public byte[] getORList()
 	{
 		try
 		{
@@ -64,7 +64,7 @@ public class PlainORListFetcher implements ORListFetcher
 			{
 				return null;
 			}
-			String doc = resp.getText();
+			byte[] doc = resp.getData();
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[UPDATE OR-LIST] Update finished");
 			return doc;
 		}

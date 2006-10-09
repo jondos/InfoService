@@ -236,7 +236,7 @@ public class TorDirectoryAgent implements Runnable
 				while ( (torNodesListNode == null) && (torServers.size() > 0))
 				{
 					TorDirectoryServer currentDirectoryServer = (TorDirectoryServer) (torServers.firstElement());
-					String torNodesListInformation = currentDirectoryServer.downloadTorNodesInformation();
+					byte[] torNodesListInformation = currentDirectoryServer.downloadTorNodesInformation();
 					torServers.removeElementAt(0);
 					if (torNodesListInformation != null)
 					{
@@ -268,14 +268,14 @@ public class TorDirectoryAgent implements Runnable
 								/* create the TorNodesList element */
 								torNodesListNode = XMLUtil.createDocument().createElement("TorNodesList");
 								torNodesListNode.setAttribute("xml:space", "preserve");
-								XMLUtil.setValue(torNodesListNode, torNodesListInformation);
+								XMLUtil.setValue(torNodesListNode, new String(torNodesListInformation));
 								/* create also a compressed version, which needs less transfer capacity */
 								/* create the TorNodesListCompressed element */
 								torNodesListCompressedNode = XMLUtil.createDocument().createElement(
 									"TorNodesListCompressed");
 								torNodesListCompressedNode.setAttribute("xml:space", "preserve");
 								String bzip2CompressedTorNodesList = Base64.encode(BZip2Tools.compress(
-									torNodesListInformation.getBytes()), false);
+									torNodesListInformation), false);
 								XMLUtil.setValue(torNodesListCompressedNode, bzip2CompressedTorNodesList);
 								/* downloading the information was successful from that server, so update the prefered
 								 * TOR directory server entry, if it was another one

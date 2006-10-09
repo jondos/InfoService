@@ -34,5 +34,5 @@ public interface ORListFetcher
 	 * @return
 	 * the router informations from the directory
 	 */
-	public String getORList();
+	public byte[] getORList();
 }

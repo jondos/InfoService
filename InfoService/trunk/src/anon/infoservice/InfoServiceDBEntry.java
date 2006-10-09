@@ -1313,15 +1313,15 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry imple
 	 *
 	 * @return The raw tor nodes list as it is distributed by the tor directory servers.
 	 */
-	public String getTorNodesList() throws Exception
+	public byte[] getTorNodesList() throws Exception
 	{
-		String list = null;
+		byte[] list = null;
 		try
 		{ //Compressed first
 			Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/compressedtornodes"));
 			Element torNodeList = doc.getDocumentElement();
 			String strCompressedTorNodesList = XMLUtil.parseValue(torNodeList, null);
-			list = new String(BZip2Tools.decompress(Base64.decode(strCompressedTorNodesList)));
+			list = BZip2Tools.decompress(Base64.decode(strCompressedTorNodesList));
 		}
 		catch (Exception e)
 		{
@@ -1332,7 +1332,7 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry imple
 			{
 				Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/tornodes"));
 				Element torNodeList = doc.getDocumentElement();
-				list = XMLUtil.parseValue(torNodeList, null);
+				list = XMLUtil.parseValue(torNodeList, null).getBytes();
 			}
 			catch (Exception e)
 			{
