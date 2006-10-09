@@ -1352,20 +1352,10 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			/* JAP or someone else wants to get information about all infoservices we know */
 			httpResponse = japFetchInfoServers(a_supportedEncodings, false);
 		}
-		else if ( (command.equals("/infoservices.z")) && (method == Constants.REQUEST_METHOD_GET))
-		{
-			/* JAP or someone else wants to get information about all infoservices we know */
-			httpResponse = japFetchInfoServers(HttpResponseStructure.HTTP_ENCODING_ZLIB, false);
-		}
 		else if ( (command.equals("/infoserviceserials")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 					/* JAP or someone else wants to get information about all infoservices we know */
 					httpResponse = japFetchInfoServers(a_supportedEncodings, true);
-		}
-		else if ( (command.equals("/infoserviceserials.z")) && (method == Constants.REQUEST_METHOD_GET))
-		{
-			/* JAP or someone else wants to get information about all infoservices we know */
-			httpResponse = japFetchInfoServers(HttpResponseStructure.HTTP_ENCODING_ZLIB, true);
 		}
 		else if ( (command.equals("/cascade")) && (method == Constants.REQUEST_METHOD_POST))
 		{
@@ -1373,13 +1363,6 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 * includes information about the cascade, or from other IS
 			 */
 			httpResponse = cascadePostHelo(postData, a_supportedEncodings);
-		}
-		else if ( (command.equals("/cascade.z")) && (method == Constants.REQUEST_METHOD_POST))
-		{
-			/* message from the first mix of a cascade (can be forwarded by an infoservice), which
-			 * includes information about the cascade, or from other IS
-			 */
-			httpResponse = cascadePostHelo(postData, HttpResponseStructure.HTTP_ENCODING_ZLIB);
 		}
 		else if ( (command.equals("/cascadeserials")) && (method == Constants.REQUEST_METHOD_GET))
 		{
@@ -1395,11 +1378,6 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		{
 			/* JAP or someone else wants to get information about all cascades we know */
 			httpResponse = japFetchCascades(a_supportedEncodings, false);
-		}
-		else if ( (command.equals("/cascades.z")) && (method == Constants.REQUEST_METHOD_GET))
-		{
-			/* JAP  wants to get information about all cascades we know */
-			httpResponse = japFetchCascades(HttpResponseStructure.HTTP_ENCODING_ZLIB, false);
 		}
 		else if ( (command.equals("/helo")) && (method == Constants.REQUEST_METHOD_POST))
 		{
@@ -1452,17 +1430,6 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			String cascadeId = command.substring(13);
 			httpResponse = getCascadeInfo(a_supportedEncodings, cascadeId);
 		}
-		else if ( (command.startsWith("/cascadeinfo.z/")) &&
-				  (method == Constants.REQUEST_METHOD_GET))
-		{
-			/* get information about the cascade with the given ID (it's the same information as
-			 * /cascades but there you get information about all known cascades)
-			 * Full command: GET /cascadeinfo.z/cascadeid
-			 */
-			String cascadeId = command.substring(15);
-			httpResponse = getCascadeInfo(HttpResponseStructure.HTTP_ENCODING_ZLIB, cascadeId);
-		}
-
 		else if ( (command.equals("/tornodes")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			/* get the list with all known tor nodes in an XML structure */
