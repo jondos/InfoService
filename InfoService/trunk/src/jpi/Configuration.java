@@ -44,6 +44,7 @@ import java.util.Vector;
 import anon.util.Util;
 import java.util.StringTokenizer;
 import anon.infoservice.ListenerInterface;
+import anon.crypto.X509SubjectKeyIdentifier;
 
 /**
  * Loads and stores all configuration data, keys
@@ -52,7 +53,7 @@ import anon.infoservice.ListenerInterface;
 public class Configuration
 {
 	/** Versionsnummer --> Please update if you change anything*/
-	public static final String BEZAHLINSTANZ_VERSION = "BI.02.025";
+	public static final String BEZAHLINSTANZ_VERSION = "BI.02.026";
 
 	public static IMyPrivateKey getPrivateKey()
 	{
@@ -332,8 +333,6 @@ public class Configuration
 			return false; // Panic!
 		}
 
-		// parse ID (the unique BI-Id)
-		m_ID = props.getProperty("id");
 
 		// parse Name (the name of the BI)
 		m_Name = props.getProperty("name");
@@ -473,6 +472,12 @@ public class Configuration
 			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 			return false;
 		}
+
+		// parse ID (the unique BI-Id)
+		//m_ID = props.getProperty("id");
+		//changed to use the certificate's subjectkeyidentifier instead of an arbitrary String as id
+		m_ID = new X509SubjectKeyIdentifier(m_ownX509Certificate.getPublicKey()).getValueWithoutColon();
+
 
 		// parse infoservice configuration
 		try
