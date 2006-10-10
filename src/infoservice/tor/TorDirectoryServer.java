@@ -116,6 +116,9 @@ public class TorDirectoryServer extends AbstractDatabaseEntry
 				"Try to get tor nodes list from http://" +
 						  m_url.getHost() + ":" + Integer.toString(m_url.getPort()) + m_url.getFileName()+"conn.Get() called");
 			 torNodesList=resp.getData();
+			 LogHolder.log(LogLevel.INFO, LogType.NET,
+				 "Got the list from http://" +
+						   m_url.getHost() + ":" + Integer.toString(m_url.getPort()) + m_url.getFileName());
 		}
 		catch (Throwable e)
 		{
@@ -124,9 +127,6 @@ public class TorDirectoryServer extends AbstractDatabaseEntry
 						  e.toString() + ").");
 			torNodesList = null;
 		}
-		LogHolder.log(LogLevel.INFO, LogType.NET,
-			"Got the list from http://" +
-					  m_url.getHost() + ":" + Integer.toString(m_url.getPort()) + m_url.getFileName());
 		return torNodesList;
 	}
 
