@@ -46,7 +46,6 @@ import javax.swing.JButton;
 import javax.swing.JSlider;
 import javax.swing.SwingConstants;
 
-import gui.JAPHelp;
 import gui.JAPMessages;
 import gui.GUIUtils;
 import gui.JAPMultilineLabel;
@@ -94,9 +93,6 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	private static final String MSG_EVERY_SECONDS = JAPConfAnonGeneral.class.getName() + "_everySeconds";
 
 
-
-
-
 	private static final String IMG_ARROW_RIGHT = JAPConfAnonGeneral.class.getName() + "_arrowRight.gif";
 	private static final String IMG_ARROW_LEFT = JAPConfAnonGeneral.class.getName() + "_arrowLeft.gif";
 
@@ -109,14 +105,10 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	private JCheckBox m_cbAutoConnect;
 	private JCheckBox m_cbAutoReConnect;
 	private JCheckBox m_cbAutoChooseCascades;
-	private JRadioButton m_cbRestrictAutoChoose;
-	private JRadioButton m_cbRestrictAutoChoosePay;
-	private JRadioButton m_cbDoNotRestrictAutoChoose;
 	private JSlider m_sliderDummyTrafficIntervall;
 	private JAPController m_Controller;
 	private JComboBox[] m_comboServices;
 
-	private JPanel m_panelRestrictedCascades;
 
 	private JList m_knownCascadesList;
 
@@ -181,30 +173,6 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_cbAutoConnect.setSelected(JAPModel.isAutoConnect());
 		m_cbAutoReConnect.setSelected(JAPModel.isAutomaticallyReconnected());
 		m_cbAutoChooseCascades.setSelected(JAPModel.getInstance().isCascadeAutoSwitched());
-		if (JAPModel.getInstance().getAutomaticCascadeChangeRestriction().equals(
-			  JAPModel.AUTO_CHANGE_RESTRICT))
-		{
-		   m_cbRestrictAutoChoose.setSelected(true);
-		   m_panelRestrictedCascades.setEnabled(true);
-		}
-		else if (JAPModel.getInstance().getAutomaticCascadeChangeRestriction().equals(
-			  JAPModel.AUTO_CHANGE_RESTRICT_TO_PAY))
-		{
-			m_cbRestrictAutoChoosePay.setSelected(true);
-			m_panelRestrictedCascades.setEnabled(false);
-		}
-		else
-		{
-			m_cbDoNotRestrictAutoChoose.setSelected(true);
-			m_panelRestrictedCascades.setEnabled(false);
-		}
-		//m_cbAutoChooseCascades.setEnabled(m_cbAutoReConnect.isSelected());
-
-		m_cbRestrictAutoChoose.setEnabled(m_cbAutoChooseCascades.isSelected());
-		m_cbDoNotRestrictAutoChoose.setEnabled(m_cbAutoChooseCascades.isSelected());
-		m_cbRestrictAutoChoosePay.setEnabled(m_cbAutoChooseCascades.isSelected());
-		m_panelRestrictedCascades.setEnabled(m_panelRestrictedCascades.isEnabled() &&
-											 m_cbAutoChooseCascades.isSelected());
 
 		m_comboServices[2].setEnabled(JAPModel.getInstance().isMixMinionActivated());
 		m_comboServices[3].setEnabled(JAPModel.getInstance().isTorActivated());
@@ -240,18 +208,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		JAPModel.getInstance().setAutoConnect(m_cbAutoConnect.isSelected());
 		JAPModel.getInstance().setAutoReConnect(m_cbAutoReConnect.isSelected());
 		JAPModel.getInstance().setCascadeAutoSwitch(m_cbAutoChooseCascades.isSelected());
-		if (m_cbRestrictAutoChoose.isSelected())
-		{
-			JAPModel.getInstance().setAutomaticCascadeChangeRestriction(JAPModel.AUTO_CHANGE_RESTRICT);
-		}
-		else if (m_cbRestrictAutoChoosePay.isSelected())
-		{
-			JAPModel.getInstance().setAutomaticCascadeChangeRestriction(JAPModel.AUTO_CHANGE_RESTRICT_TO_PAY);
-		}
-		else
-		{
-			JAPModel.getInstance().setAutomaticCascadeChangeRestriction(JAPModel.AUTO_CHANGE_NO_RESTRICTION);
-		}
+
 		return true;
 	}
 
@@ -260,59 +217,11 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		JPanel panelRoot = getRootPanel();
 		panelRoot.removeAll();
 
-		//Font font = getFontSetting();
 		m_cbDenyNonAnonymousSurfing = new JCheckBox(JAPMessages.getString(MSG_DENY_NON_ANONYMOUS_SURFING));
-		//m_cbDenyNonAnonymousSurfing.setFont(font);
 		m_cbAutoConnect = new JCheckBox(JAPMessages.getString("settingsautoConnectCheckBox"));
-		//m_cbAutoConnect.setFont(font);
 		m_cbAutoReConnect = new JCheckBox(JAPMessages.getString("settingsautoReConnectCheckBox"));
-		//m_cbAutoReConnect.setFont(font);
 		m_cbAutoChooseCascades = new JCheckBox(JAPMessages.getString(MSG_AUTO_CHOOSE_CASCADES));
-		//m_cbAutoChooseCascades.setFont(font);
-		m_cbDoNotRestrictAutoChoose = new JRadioButton(JAPMessages.getString(MSG_DO_NOT_RESTRICT_AUTO_CHOOSE));
-		//m_cbDoNotRestrictAutoChoose.setFont(font);
-		m_cbRestrictAutoChoosePay = new JRadioButton(JAPMessages.getString(MSG_RESTRICT_AUTO_CHOOSE_PAY));
-		//m_cbRestrictAutoChoosePay.setFont(font);
-		m_cbRestrictAutoChoose = new JRadioButton(JAPMessages.getString(MSG_RESTRICT_AUTO_CHOOSE) + ":");
-		//m_cbRestrictAutoChoose.setFont(font);
-		/** @todo Implement and show the whitelist button */
-		m_cbRestrictAutoChoose.setVisible(false);
-		ButtonGroup groupAutoChoose = new ButtonGroup();
-		groupAutoChoose.add(m_cbDoNotRestrictAutoChoose);
-		groupAutoChoose.add(m_cbRestrictAutoChoosePay);
-		groupAutoChoose.add(m_cbRestrictAutoChoose);
 
-
-		m_cbAutoReConnect.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent a_event)
-			{
-				//m_cbAutoChooseCascades.setEnabled(m_cbAutoReConnect.isSelected());
-				m_cbRestrictAutoChoose.setEnabled(m_cbAutoChooseCascades.isSelected());
-				m_cbRestrictAutoChoosePay.setEnabled(m_cbAutoChooseCascades.isSelected());
-				m_cbDoNotRestrictAutoChoose.setEnabled(m_cbAutoChooseCascades.isSelected());
-				m_panelRestrictedCascades.setEnabled(
-					m_cbAutoChooseCascades.isSelected() && m_cbRestrictAutoChoose.isSelected());
-			}
-		});
-		m_cbAutoChooseCascades.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent a_event)
-			{
-				m_cbRestrictAutoChoose.setEnabled(m_cbAutoChooseCascades.isSelected());
-				m_cbRestrictAutoChoosePay.setEnabled(m_cbAutoChooseCascades.isSelected());
-				m_cbDoNotRestrictAutoChoose.setEnabled(m_cbAutoChooseCascades.isSelected());
-				m_panelRestrictedCascades.setEnabled(m_cbAutoChooseCascades.isSelected() &&
-					m_cbRestrictAutoChoose.isSelected());
-			}
-		});
-		m_cbRestrictAutoChoose.addChangeListener(new ChangeListener()
-		{
-			public void stateChanged(ChangeEvent a_event)
-			{
-				m_panelRestrictedCascades.setEnabled(m_cbRestrictAutoChoose.isSelected());
-			}
-		});
 
 		m_cbDummyTraffic = new JCheckBox(JAPMessages.getString("ngConfAnonGeneralSendDummy"));
 
@@ -385,26 +294,9 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		c.gridy++;
 		panelRoot.add(m_cbAutoReConnect, c);
 		c.gridy++;
-		Insets insets = c.insets;
+
 		//c.insets = new Insets(insets.top, insets.left + 20, insets.bottom, insets.right);
 		panelRoot.add(m_cbAutoChooseCascades, c);
-		c.gridy++;
-		c.insets = new Insets(c.insets.top, c.insets.left + 20, c.insets.bottom, c.insets.right);
-		panelRoot.add(m_cbDoNotRestrictAutoChoose, c);
-		c.gridy++;
-		panelRoot.add(m_cbRestrictAutoChoosePay, c);
-		c.gridy++;
-		panelRoot.add(m_cbRestrictAutoChoose, c);
-		c.insets = insets;
-		c.gridy++;
-
-
-
-		m_panelRestrictedCascades = createRestrictedCacadesPanel();
-		/** @todo Implement and show the whitelist */
-		m_panelRestrictedCascades.setVisible(false);
-
-		panelRoot.add(m_panelRestrictedCascades, c);
 		c.gridy++;
 		c.weightx = 0.0;
 		c.gridwidth = 1;
@@ -464,8 +356,6 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_cbAutoConnect.setSelected(true);
 		m_cbAutoReConnect.setSelected(true);
 		m_cbAutoChooseCascades.setSelected(true);
-		m_cbDoNotRestrictAutoChoose.setSelected(true);
-		m_panelRestrictedCascades.setEnabled(false);
 	}
 
 	public String getHelpContext()

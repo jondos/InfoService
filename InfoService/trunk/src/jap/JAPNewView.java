@@ -98,6 +98,7 @@ import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
 import update.JAPUpdateWizard;
+import javax.swing.JComboBox;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver, Observer
@@ -123,6 +124,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String MSG_IS_DISABLED_EXPLAIN = JAPNewView.class.getName() + "_isDisabledExplain";
 	private static final String MSG_IS_DEACTIVATED = JAPNewView.class.getName() + "_isDisabled";
 	private static final String MSG_IS_TOOLTIP = JAPNewView.class.getName() + "_isDisabledTooltip";
+
+	private static final String MSG_IS_TRUST_PARANOID = JAPNewView.class.getName() + "_trustParanoid";
+	private static final String MSG_IS_TRUST_SUSPICIOUS = JAPNewView.class.getName() + "_trustSuspicious";
+	private static final String MSG_IS_TRUST_HIGH = JAPNewView.class.getName() + "_trustHigh";
+	private static final String MSG_IS_TRUST_ALL = JAPNewView.class.getName() + "_trustAll";
+	private static final String MSG_IS_EDIT_TRUST = JAPNewView.class.getName() + "_editTrust";
 
 
 	private JobQueue m_transferedBytesJobs;
@@ -222,6 +229,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private ComponentMovedAdapter m_helpMovedAdapter;
 	private ComponentMovedAdapter m_miniMovedAdapter;
 
+	private boolean m_bTrustChanged = false;
+
 	private boolean m_bIsSimpleView;
 
 	public JAPNewView(String s, JAPController a_controller)
@@ -270,7 +279,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			setIconImage(ii.getImage());
 			// Load Images for "Anonymity Meter"
 		}
-		//loadMeterIcons();
+		// preload meter icons
+
 		// "NORTH": Image
 		ImageIcon northImage = GUIUtils.loadImageIcon(JAPMessages.getString("northPath"), true, false);
 		JLabel northLabel = new JLabel(northImage);
@@ -282,6 +292,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.fill = GridBagConstraints.NONE;
 		c.weighty = 1;
 		northPanel.add(northLabel, c);
+
+
+
+
 
 		m_pnlVersion = new JPanel(new GridBagLayout());
 		GridBagConstraints constrVersion = new GridBagConstraints();
@@ -342,7 +356,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		});
 		m_pnlVersion.add(m_labelUpdate, constrVersion);
 
-		c.gridx = 1;
+		c.gridy = 0;
 		c.anchor = GridBagConstraints.SOUTHEAST;
 		c.weighty = 0;
 		m_labelVersion = new JLabel(JAPConstants.aktVersion);
@@ -365,7 +379,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 		c.gridwidth = 2;
 		c.gridx = 0;
-		c.gridy = 1;
+		c.gridy++;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
 		c.insets = new Insets(5, 10, 5, 10);
@@ -427,7 +441,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		});
 
 		c1.insets = new Insets(0, 5, 0, 0);
-		c1.gridwidth = 2;
+		c1.gridwidth = 3;
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.weightx = 1;
 		m_panelAnonService.add(m_comboAnonServices, c1);
@@ -457,7 +471,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_bttnReload.setBorder(new EmptyBorder(0, 0, 0, 0));
 		m_bttnReload.setFocusPainted(false);
 
-		c1.gridx = 3;
+		c1.gridx = 4;
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
 		m_panelAnonService.add(m_bttnReload, c1);
@@ -469,10 +483,17 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				showConfigDialog(JAPConf.ANON_TAB);
 			}
 		});
-		c1.gridx = 4;
+		c1.gridx = 5;
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
 		m_panelAnonService.add(m_bttnAnonDetails, c1);
+
+		c1.gridx = 0;
+		c1.gridy = 1;
+		c1.anchor = GridBagConstraints.WEST;
+		c1.insets = new Insets(5, 0, 0, 0);
+		JLabel lblTrust = new JLabel(JAPMessages.getString(JAPConfTrust.MSG_TITLE) + ":");
+		m_panelAnonService.add(lblTrust, c1);
 
 		c1.gridx = 1;
 		c1.gridy = 1;
@@ -491,17 +512,34 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 			}
 		});
-		m_panelAnonService.add(m_lblPrice, c1);
+		//m_panelAnonService.add(m_lblPrice, c1);
+		final JComboBox comboFilter = new JComboBox(new Object[]{JAPMessages.getString(MSG_IS_TRUST_ALL),
+											  JAPMessages.getString(MSG_IS_TRUST_HIGH),
+											  JAPMessages.getString(MSG_IS_TRUST_SUSPICIOUS),
+											  JAPMessages.getString(MSG_IS_TRUST_PARANOID)});
 
-		c1.gridx = 2;
-		c1.weightx = 1;
-		c1.gridwidth = 3;
-		c1.anchor = GridBagConstraints.EAST;
+		comboFilter.setSelectedIndex(JAPModel.getInstance().getTrustModel().getGeneralTrust());
+		comboFilter.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent a_event)
+			{
+				JAPModel.getInstance().getTrustModel().setGeneralTrust(comboFilter.getSelectedIndex());
+			}
+		});
+		m_panelAnonService.add(comboFilter, c1);
+		c1.gridx++;
+		JButton btnEditTrust = new JButton(JAPMessages.getString(MSG_IS_EDIT_TRUST));
+		btnEditTrust.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				showConfigDialog(JAPConf.ANON_TRUST_TAB);
+			}
+		});
+		m_panelAnonService.add(btnEditTrust, c1);
+
 		m_lblISRequestsDeactivated = new JLabel(JAPMessages.getString(MSG_IS_DEACTIVATED));
-		m_lblISRequestsDeactivated.setToolTipText(JAPMessages.getString(MSG_IS_TOOLTIP));
-		m_lblISRequestsDeactivated.setForeground(Color.red);
-		m_lblISRequestsDeactivated.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-		m_lblISRequestsDeactivated.setVisible(false);
+		m_lblISRequestsDeactivated.setForeground(m_panelAnonService.getBackground());
 		m_lblISRequestsDeactivated.addMouseListener(new MouseAdapter()
 		{
 			public void mouseClicked(MouseEvent e)
@@ -538,18 +576,22 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					}
 
 				}
-
-
 				m_bEnableISClicked = false;
 			}
 		});
+
+		c1.anchor = GridBagConstraints.EAST;
+		c1.gridx++;
+		c1.gridwidth = 3;
 		m_panelAnonService.add(m_lblISRequestsDeactivated, c1);
+
+
 
 
 		c1.insets = new Insets(5, 20, 0, 0);
 		c.weighty = 1;
 		c.gridwidth = 2;
-		c.gridy = 2;
+		c.gridy++;
 		c.gridx = 0;
 		c.anchor = GridBagConstraints.WEST;
 		northPanel.add(m_panelAnonService, c);
@@ -557,7 +599,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 //------------------------------------------------------
 		c.gridwidth = 2;
 		c.gridx = 0;
-		c.gridy = 3;
+		c.gridy++;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
 		northPanel.add(new JSeparator(), c);
@@ -689,7 +731,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
 		c.anchor = GridBagConstraints.NORTHWEST;
-		c.gridy = 4;
+		c.gridy++;
 		m_flippingpanelAnon.setFlipped(true);
 		if (m_bIsSimpleView)
 		{
@@ -703,7 +745,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 //-----------------------------------------------------------
 		c.gridwidth = 2;
 		c.gridx = 0;
-		c.gridy = 5;
+		c.gridy++;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
 		northPanel.add(new JSeparator(), c);
@@ -715,7 +757,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			c.fill = GridBagConstraints.HORIZONTAL;
 			c.weightx = 1;
 			c.anchor = GridBagConstraints.NORTHWEST;
-			c.gridy = 6;
+			c.gridy++;
 			m_flippingPanelPayment.setFlipped(false);
 			if (m_bIsSimpleView)
 			{
@@ -729,7 +771,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			// Separator
 			c.gridwidth = 2;
 			c.gridx = 0;
-			c.gridy = 7;
+			c.gridy++;
 			c.fill = GridBagConstraints.HORIZONTAL;
 			c.weightx = 1;
 			northPanel.add(new JSeparator(), c);
@@ -869,7 +911,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
 		c.anchor = GridBagConstraints.NORTHWEST;
-		c.gridy = 8;
+		c.gridy++;
 		if (m_bIsSimpleView)
 		{
 			northPanel.add(m_flippingpanelOwnTraffic.getSmallPanel(), c);
@@ -882,7 +924,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 //-----------------------------------------------------------
 		c.gridwidth = 2;
 		c.gridx = 0;
-		c.gridy = 9;
+		c.gridy++;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
 		northPanel.add(new JSeparator(), c);
@@ -891,7 +933,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
 		c.anchor = GridBagConstraints.NORTHWEST;
-		c.gridy = 10;
+		c.gridy++;
 		m_flippingpanelForward = buildForwarderPanel();
 		if (!m_bIsSimpleView)
 		{
@@ -900,13 +942,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 //-----------------------------------------------------------
 			c.gridwidth = 2;
 			c.gridx = 0;
-			c.gridy = 11;
+			c.gridy++;
 			c.fill = GridBagConstraints.HORIZONTAL;
 			c.weightx = 1;
 			northPanel.add(new JSeparator(), c);
 		}
 //Status
-		c.gridy = 12;
+		c.gridy++;
 		m_StatusPanel = new StatusPanel();
 		northPanel.add(m_StatusPanel, c);
 
@@ -959,7 +1001,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JAPUtil.setMnemonic(m_bttnQuit, JAPMessages.getString("quitButtonMn"));
 		JAPUtil.setMnemonic(m_btnAssistant, JAPMessages.getString(MSG_MN_ASSISTANT));
 
-		c.gridy = 13;
+		c.gridy++;
 		northPanel.add(buttonPanel, c);
 
 
@@ -1026,6 +1068,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		Database.getInstance(NewCascadeIDEntry.class).addObserver(this);
 		Database.getInstance(CascadeIDEntry.class).addObserver(this);
 		Database.getInstance(JavaVersionDBEntry.class).addObserver(this);
+		JAPModel.getInstance().getTrustModel().addObserver(this);
 
 		JAPModel.getInstance().addObserver(this);
 
@@ -1450,12 +1493,27 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				public void run()
 				{
-					//JAPModel.FontResize resize = (JAPModel.FontResize) a_message;
+					// preload meter icons
+					for (int i = 0; i < METERFNARRAY.length; i++)
+					{
+						GUIUtils.loadImageIcon(METERFNARRAY[i], true, true);
+					}
 					SwingUtilities.updateComponentTreeUI(view);
 					SwingUtilities.updateComponentTreeUI(DEFAULT_LABEL);
 					updateFonts();
 					onUpdateValues();
 					setOptimalSize();
+				}
+			};
+		}
+		else if (a_observable instanceof TrustModel)
+		{
+			run = new Runnable()
+			{
+				public void run()
+				{
+					m_bTrustChanged = true;
+					onUpdateValues();
 				}
 			};
 		}
@@ -1466,10 +1524,21 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				public void run()
 				{
-					m_lblISRequestsDeactivated.setVisible(!JAPController.getInstance().isShuttingDown()
+					if(!JAPController.getInstance().isShuttingDown()
 						&& (JAPModel.getInstance().isInfoServiceDisabled() ||
 							(!JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed() &&
-							!JAPController.getInstance().isAnonConnected())));
+							!JAPController.getInstance().isAnonConnected())))
+					{
+						m_lblISRequestsDeactivated.setForeground(Color.red);
+						m_lblISRequestsDeactivated.setToolTipText(JAPMessages.getString(MSG_IS_TOOLTIP));
+						m_lblISRequestsDeactivated.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+					}
+					else
+					{
+						m_lblISRequestsDeactivated.setToolTipText(null);
+						m_lblISRequestsDeactivated.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+						m_lblISRequestsDeactivated.setForeground(m_panelAnonService.getBackground());
+					}
 				}
 			};
 		}
@@ -1904,11 +1973,21 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 								   vi.getJapVersion().compareTo(JAPConstants.aktVersion) > 0) ||
 								 JavaVersionDBEntry.getNewJavaVersion() != null);
 
-	   m_lblISRequestsDeactivated.setVisible(
-		   !JAPController.getInstance().isShuttingDown()
+	   if( !JAPController.getInstance().isShuttingDown()
 		   && (JAPModel.getInstance().isInfoServiceDisabled() ||
 			   (!JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed() &&
-				!JAPController.getInstance().isAnonConnected())));
+				!JAPController.getInstance().isAnonConnected())))
+	   {
+		   m_lblISRequestsDeactivated.setForeground(Color.red);
+		   m_lblISRequestsDeactivated.setToolTipText(JAPMessages.getString(MSG_IS_TOOLTIP));
+		   m_lblISRequestsDeactivated.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+	   }
+	   else
+	   {
+		   m_lblISRequestsDeactivated.setToolTipText(null);
+		   m_lblISRequestsDeactivated.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+		   m_lblISRequestsDeactivated.setForeground(m_panelAnonService.getBackground());
+	   }
 
 
 		MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
@@ -1919,15 +1998,23 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			hashAvailableCascades.put(currentMixCascade.getId(), currentMixCascade);
 		}
 		m_bIgnoreAnonComboEvents = true;
-		if (!equals(m_comboAnonServices, hashAvailableCascades))
+		if (m_bTrustChanged || !equals(m_comboAnonServices, hashAvailableCascades))
 		{
+			m_bTrustChanged = false;
+
 			m_comboAnonServices.removeAllItems();
 			if (hashAvailableCascades != null && hashAvailableCascades.size() > 0)
 			{
 				Enumeration enumer = hashAvailableCascades.elements();
+				MixCascade cascade;
 				while (enumer.hasMoreElements())
 				{
-					m_comboAnonServices.addMixCascade( (MixCascade) enumer.nextElement());
+					cascade = (MixCascade) enumer.nextElement();
+					if (cascade.equals(currentMixCascade) ||
+						JAPModel.getInstance().getTrustModel().isTrusted(cascade))
+					{
+						m_comboAnonServices.addMixCascade(cascade);
+					}
 				}
 			}
 			else

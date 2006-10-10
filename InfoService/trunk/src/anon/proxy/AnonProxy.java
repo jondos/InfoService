@@ -53,6 +53,8 @@ import logging.LogType;
 import anon.AnonServerDescription;
 import anon.pay.IAIEventListener;
 import anon.infoservice.IMutableProxyInterface;
+import anon.client.ITrustModel;
+import java.security.SignatureException;
 
 /**
  * This calls implements a proxy one can use for convienient access to the
@@ -857,6 +859,12 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		{
 			m_mixCascadeContainer = a_mixCascadeContainer;
 		}
+
+		public void checkTrust(MixCascade a_cascade) throws TrustException, SignatureException
+		{
+			m_mixCascadeContainer.checkTrust(a_cascade);
+		}
+
 
 		public MixCascade getNextMixCascade()
 		{
