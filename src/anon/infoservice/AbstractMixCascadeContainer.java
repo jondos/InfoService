@@ -33,12 +33,15 @@ package anon.infoservice;
 
 import anon.AnonServerDescription;
 import anon.IServiceContainer;
+import java.security.SignatureException;
+import anon.client.ITrustModel;
+import anon.client.BasicTrustModel;
 
 /**
  * This class keeps and returns one or more objects of the class MixCascade.
  * @author Rolf Wendolsky
  */
-public abstract class AbstractMixCascadeContainer implements IServiceContainer
+public abstract class AbstractMixCascadeContainer extends BasicTrustModel implements IServiceContainer
 {
 	/**
 	 * Must return a MixCascade and never null. The returned MixCascade may change
