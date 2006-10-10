@@ -112,9 +112,12 @@ public class TorDirectoryServer extends AbstractDatabaseEntry
 				ListenerInterface(m_url.getHost(), m_url.getPort()));
 			conn.removeModule(Class.forName("HTTPClient.ContentEncodingModule"));
 			HTTPResponse resp=conn.Get(m_url.getFileName());
-			return resp.getData();
+			LogHolder.log(LogLevel.INFO, LogType.NET,
+				"Try to get tor nodes list from http://" +
+						  m_url.getHost() + ":" + Integer.toString(m_url.getPort()) + m_url.getFileName()+"conn.Get() called");
+			 torNodesList=resp.getData();
 		}
-		catch (Exception e)
+		catch (Throwable e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET,
 				"TorDirectoryServer: downloadTorNodesInformation: Error while getting tor nodes list (" +
