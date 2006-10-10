@@ -31,6 +31,9 @@ import java.io.ByteArrayOutputStream;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * This class provides some utility methods for ZLib compression.
@@ -79,10 +82,13 @@ public class ZLibTools
 			ByteArrayOutputStream unzippedData = new ByteArrayOutputStream();
 			Inflater unzipper = new Inflater();
 			unzipper.setInput(a_data);
-			byte[] currentByte = new byte[1];
-			while (unzipper.inflate(currentByte) == 1)
+			byte[] currentByte = new byte[10000];
+			int len;
+			while ((len=unzipper.inflate(currentByte)) >0)
 			{
-				unzippedData.write(currentByte);
+				LogHolder.log(LogLevel.DEBUG, LogType.NET,
+							  "ZLIb decompress() decommpressed "+len+" Bytes..");
+				unzippedData.write(currentByte,0,len);
 			}
 			unzippedData.flush();
 			resultData = unzippedData.toByteArray();
