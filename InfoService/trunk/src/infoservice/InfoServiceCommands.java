@@ -1009,18 +1009,15 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	private HttpResponseStructure getMixminionNodesList()
 	{
 		/* this is only the default, if we don't have a TOR list */
-		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
-			HTTP_RETURN_NOT_FOUND);
-		Node mixminionNodesList = null;
+		HttpResponseStructure httpResponse = null;
+		byte[] mixminionNodesList = null;
 		mixminionNodesList = MixminionDirectoryAgent.getInstance().getMixminionNodesList();
 		if (mixminionNodesList != null)
 		{
 			try
 			{
-				/* create xml document */
-				Document doc = XMLUtil.createDocument();
-				doc.appendChild(XMLUtil.importNode(doc, mixminionNodesList, true));
-				httpResponse = new HttpResponseStructure(doc);
+				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_PLAIN,
+					HttpResponseStructure.HTTP_ENCODING_ZLIB,mixminionNodesList);
 			}
 			catch (Exception e)
 			{
@@ -1028,6 +1025,11 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				httpResponse = new HttpResponseStructure(HttpResponseStructure.
 					HTTP_RETURN_INTERNAL_SERVER_ERROR);
 			}
+		}
+		else
+		{
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.
+				HTTP_RETURN_INTERNAL_SERVER_ERROR);
 		}
 		return httpResponse;
 	}
@@ -1440,7 +1442,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			/* get the list with all known tor nodes in an XML structure */
 			httpResponse = getTorNodesList(HttpResponseStructure.HTTP_ENCODING_ZLIB);
 		}
-		else if ( (command.equals("/compressedmixminionnodes")) && (method == Constants.REQUEST_METHOD_GET))
+		else if ( (command.equals("/mixminionnodes")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			/* get the list with all known mixminion nodes in an XML structure */
 			httpResponse = getMixminionNodesList();

@@ -740,6 +740,12 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry imple
 	private Document getXmlDocument(final HttpRequestStructure a_httpRequest, int a_supportedEncodings)
 		throws Exception
 	{
+		return DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
+			ByteArrayInputStream(doHttpRequest(a_httpRequest,a_supportedEncodings)));
+	}
+		private byte[] doHttpRequest(final HttpRequestStructure a_httpRequest, int a_supportedEncodings)
+			throws Exception
+		{
 		/* make sure that we are connected */
 		int connectionCounter = 0;
 		HTTPConnectionDescriptor currentConnectionDescriptor = null;
@@ -892,10 +898,8 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry imple
 							{
 								response = (byte[]) (responseStorage.firstElement());
 							}
-							Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
-								ByteArrayInputStream(response));
 							// fetching the document was successful, leave this method //
-							return doc;
+							return response;
 						}
 					}
 					catch (NoSuchElementException e)
@@ -1358,19 +1362,9 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry imple
 		String list = null;
 		try
 		{ //Compressed first
-			Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/compressedmixminionnodes"));
-			Element mixminionNodeList = doc.getDocumentElement();
-			String strCompressedMixminionNodesList = XMLUtil.parseValue(mixminionNodeList, null);
-			ByteArrayInputStream bin = new ByteArrayInputStream(Base64.decode(strCompressedMixminionNodesList));
-			GZIPInputStream gzipIn = new GZIPInputStream(bin, 4096);
-			StringBuffer sblist = new StringBuffer(200000);
-			byte[] bout = new byte[4096];
-			int len = 0;
-			while ( (len = gzipIn.read(bout)) > 0)
-			{
-				sblist.append(new String(bout, 0, len));
-			}
-			list = sblist.toString();
+			byte[] bytes=doHttpRequest(HttpRequestStructure.createGetRequest("/mixminionnodes"),
+									   HTTPConnectionFactory.HTTP_ENCODING_ZLIB);
+			list = new String(bytes);
 		}
 		catch (Exception e)
 		{
