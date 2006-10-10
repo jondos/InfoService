@@ -38,6 +38,8 @@ import anon.util.Base64;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.io.InputStreamReader;
+import java.io.ByteArrayInputStream;
 
 
 public class MMRList
@@ -88,7 +90,7 @@ public class MMRList
 	{
 		try
 		{
-			String doc = m_mmrlistFetcher.getMMRList();
+			byte[] doc = m_mmrlistFetcher.getMMRList();
 
 			if (doc == null)
 			{
@@ -256,14 +258,14 @@ public class MMRList
 	 * @return false if document is not a valid directory, true otherwise
 	 */
 
-	private boolean parseDocument(String strDocument) throws Exception
+	private boolean parseDocument(byte[] document) throws Exception
 	{
 		Vector mmrs = new Vector();
 		Vector enodes = new Vector();
 		Vector fnodes = new Vector();
 
 		Hashtable mmrswn = new Hashtable();
-		LineNumberReader reader = new LineNumberReader(new StringReader(strDocument));
+		LineNumberReader reader = new LineNumberReader(new InputStreamReader(new ByteArrayInputStream(document)));
 		String aktLine = reader.readLine();
 
 		//down servers

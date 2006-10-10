@@ -84,12 +84,8 @@ public class ZLibTools
 			unzipper.setInput(a_data);
 			byte[] currentByte = new byte[10000];
 			int len;
-			LogHolder.log(LogLevel.INFO, LogType.NET,
-						  "ZLIb decompress() start decommpress of "+a_data.length+" Bytes..");
 			while ((len=unzipper.inflate(currentByte)) >0)
 			{
-				LogHolder.log(LogLevel.INFO, LogType.NET,
-							  "ZLIb decompress() decommpressed "+len+" Bytes..");
 				unzippedData.write(currentByte,0,len);
 			}
 			unzippedData.flush();
@@ -97,7 +93,7 @@ public class ZLibTools
 		}
 		catch (Throwable e)
 		{
-			LogHolder.log(LogLevel.INFO, LogType.NET,
+			LogHolder.log(LogLevel.INFO, LogType.MISC,
 						  "ZLIb decompress() decommpressed failed!");
 			/* something was wrong with the compressed data */
 		}

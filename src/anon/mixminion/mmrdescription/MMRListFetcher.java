@@ -34,5 +34,5 @@ public interface MMRListFetcher
 	 * @return
 	 * the router informations from the directory
 	 */
-	public String getMMRList();
+	public byte[] getMMRList();
 }
