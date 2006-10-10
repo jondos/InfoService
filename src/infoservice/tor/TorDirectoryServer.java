@@ -121,6 +121,9 @@ public class TorDirectoryServer extends AbstractDatabaseEntry
 						  e.toString() + ").");
 			torNodesList = null;
 		}
+		LogHolder.log(LogLevel.INFO, LogType.NET,
+			"Got the list from http://" +
+					  m_url.getHost() + ":" + Integer.toString(m_url.getPort()) + m_url.getFileName());
 		return torNodesList;
 	}
 
