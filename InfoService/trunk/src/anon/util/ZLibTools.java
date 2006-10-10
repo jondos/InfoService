@@ -38,7 +38,7 @@ import logging.LogType;
 /**
  * This class provides some utility methods for ZLib compression.
  */
-public class ZLibTools
+final public class ZLibTools
 {
 
 	/**
