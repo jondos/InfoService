@@ -100,7 +100,7 @@ public class TorDirectoryServer extends AbstractDatabaseEntry
 	 * @return A byte[] with the plain information (already decompressed) about the running TOR
 	 *         nodes or null, if there was an error while fetching the list.
 	 */
-	public byte[] downloadTorNodesInformation()
+	public byte[] downloadCompressedTorNodesInformation()
 	{
 		LogHolder.log(LogLevel.INFO, LogType.NET,
 			"Try to get tor nodes list from http://" +
@@ -112,23 +112,7 @@ public class TorDirectoryServer extends AbstractDatabaseEntry
 				ListenerInterface(m_url.getHost(), m_url.getPort()));
 			conn.removeModule(Class.forName("HTTPClient.ContentEncodingModule"));
 			HTTPResponse resp=conn.Get(m_url.getFileName());
-			byte[] torNodesListCompressedData =resp.getData();
-			if (torNodesListCompressedData != null)
-			{
-				/* decompress it */
-				byte[] decompressedData = ZLibTools.decompress(torNodesListCompressedData);
-				if (decompressedData == null)
-				{
-					/* uups, maybe the data were not compressed or they are decompressed already by the
-					 * HTTPClient library (some versions seem to do so, some not), also no problem, if the
-					 * data are really invalid, it's detected by the TorDirectoryAgent
-					 */
-					decompressedData = torNodesListCompressedData;
-				}
-				torNodesList = decompressedData;
-				decompressedData = torNodesListCompressedData=null;
-				System.gc();
-			}
+			return resp.getData();
 		}
 		catch (Exception e)
 		{
