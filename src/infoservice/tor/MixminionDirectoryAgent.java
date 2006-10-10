@@ -29,13 +29,9 @@ package infoservice.tor;
 
 import java.net.URL;
 
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import HTTPClient.HTTPConnection;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.ListenerInterface;
-import anon.util.Base64;
-import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -62,7 +58,7 @@ public class MixminionDirectoryAgent implements Runnable
 	 * Stores the XML container with the current tor nodes list. If we don't have a topical list,
 	 * this value is null.
 	 */
-	private Node m_currentMixminionNodesList;
+	private byte[] m_currentMixminionNodesList;
 
 	/**
 	 * Stores the cycle time (in milliseconds) for updating the tor nodes list. Until the update
@@ -124,11 +120,13 @@ public class MixminionDirectoryAgent implements Runnable
 	}
 
 	/**
-	 * Returns the XML container with the current Mixminion nodes list. If we don't have a topical list,
+	 * Returns the ZLib commpresed current Mixminion nodes list. If we don't have a topical list,
 	 * the returned value is null.
 	 * The xml-struct is as follows:
-	 * <MixminionNodesList>
-	 *  ... <!-- the bzip2 compressed and base64 codes original mixminion nodes list -->
+	 * The following does not exist at the moment...
+	 *  * <MixminionNodesList>
+	 *  ... <!-- the original mixminion nodes list -->
+	*
 	 *   <ReliabilityNodesList generated="..."> <!-- generated is the dat, when the list was originaly generated
 	 *                                               in seconds since the epoch
 	 *                                            -->
@@ -155,10 +153,10 @@ public class MixminionDirectoryAgent implements Runnable
 	 *   <ReliabilityNodesList>
 	 * </MixminionNodesList>
 	 *
-	 * @return The XML structur with the current tor nodes list or null, if we don't have a topical
+	 * @return The ZLib compressed current mixminion nodes list or null, if we don't have a topical
 	 *         list.
 	 */
-	public Node getMixminionNodesList()
+	public byte[] getMixminionNodesList()
 	{
 		return m_currentMixminionNodesList;
 	}
@@ -173,31 +171,30 @@ public class MixminionDirectoryAgent implements Runnable
 			LogHolder.log(LogLevel.INFO, LogType.NET,
 						  "MixminionDirectoryAgent: run: Try to fetch the mixminion nodes list from the known mixminion directory servers.");
 
-			Element mixminionNodesListNode = null;
 			try
 			{
 				HTTPConnection con = HTTPConnectionFactory.getInstance().createHTTPConnection(
 					new ListenerInterface(m_urlDirectoryServer.getHost(),
 										  m_urlDirectoryServer.getPort()));
 				con.removeModule(Class.forName("HTTPClient.ContentEncodingModule"));
-				byte[] mixminionNodesListCompressedData = con.Get(m_urlDirectoryServer.getFile()).getData();
+				m_currentMixminionNodesList = con.Get(m_urlDirectoryServer.getFile()).getData();
 
-				String mixminionNodesListInformation = Base64.encode(mixminionNodesListCompressedData, false);
-				/* create the MixminionNodesList XML structure for the clients */
+/*				String mixminionNodesListInformation = Base64.encode(mixminionNodesListCompressedData, false);
+				//create the MixminionNodesList XML structure for the clients
 				mixminionNodesListNode = XMLUtil.createDocument().createElement("MixminionNodesList");
 				mixminionNodesListNode.setAttribute("xml:space", "preserve");
 				XMLUtil.setValue(mixminionNodesListNode, mixminionNodesListInformation);
 				//getReliabilityList();
-			}
+*/			}
 			catch (Exception e)
 			{
 				LogHolder.log(LogLevel.ERR, LogType.MISC,
 							  "MixminionDirectoryAgent: run: Error while creating the XML structure with the Mixminion nodes list: " +
 							  e.toString());
-				mixminionNodesListNode = null;
+				m_currentMixminionNodesList = null;
 			}
 
-			if (mixminionNodesListNode == null)
+			if (m_currentMixminionNodesList == null)
 			{
 				LogHolder.log(LogLevel.ERR, LogType.NET,
 							  "MixminionDirectoryAgent: run: Could not fetch the mixminion nodes list from the known tor directory servers.");
@@ -206,7 +203,6 @@ public class MixminionDirectoryAgent implements Runnable
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.NET,
 							  "MixminionDirectoryAgent: run: Fetched the list of mixminion nodes successfully.");
-				m_currentMixminionNodesList = mixminionNodesListNode;
 			}
 			try
 			{
