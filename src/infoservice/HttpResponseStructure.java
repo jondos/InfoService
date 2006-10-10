@@ -336,6 +336,10 @@ public final class HttpResponseStructure
 			{
 				httpHeader.append(HTTP_ENCODING_ZLIB_STRING);
 			}
+			else if (a_httpEncoding == HTTP_ENCODING_GZIP)
+			{
+				httpHeader.append(HTTP_ENCODING_GZIP_STRING);
+			}
 			httpHeader.append(HTTP_CRLF_STRING);
 		}
 

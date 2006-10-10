@@ -1017,7 +1017,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			try
 			{
 				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_PLAIN,
-					HttpResponseStructure.HTTP_ENCODING_ZLIB,mixminionNodesList);
+					HttpResponseStructure.HTTP_ENCODING_GZIP,mixminionNodesList);
 			}
 			catch (Exception e)
 			{
