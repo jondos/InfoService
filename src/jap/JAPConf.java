@@ -100,6 +100,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 	final static public String INFOSERVICE_TAB = "INFOSERVICE_TAB";
 	final static public String ANON_TAB = "ANON_TAB";
 	final static public String ANON_SERVICES_TAB = "SERVICES_TAB";
+	final static public String ANON_TRUST_TAB = "ANON_TRUST_TAB";
 	final static public String CERT_TAB = "CERT_TAB";
 	final static public String TOR_TAB = "TOR_TAB";
 	final static public String DEBUG_TAB = "DEBUG_TAB";
@@ -204,12 +205,13 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 
 
 		m_confServices = new JAPConfServices();
+		DefaultMutableTreeNode nodeAnon =
+			m_moduleSystem.addComponent(rootNode, null, "ngAnonymitaet", null, null);
 		if (!m_bIsSimpleView)
 		{
-			DefaultMutableTreeNode nodeAnon =
-				m_moduleSystem.addComponent(rootNode, null, "ngAnonymitaet", null, null);
 			m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfInfoService(), INFOSERVICE_TAB);
 			m_moduleSystem.addConfigurationModule(nodeAnon, m_confServices, ANON_SERVICES_TAB);
+			m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfTrust(), ANON_TRUST_TAB);
 			m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfForwardingServer(),
 												  FORWARDING_SERVER_TAB);
 			m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfCert(), CERT_TAB);
@@ -220,12 +222,14 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 				m_moduleSystem.addConfigurationModule(debugNode, new JAPConfForwardingState(),
 					FORWARDING_STATE_TAB);
 			}
-			m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeAnon.getPath()));
 		}
 		else
 		{
-			m_moduleSystem.addConfigurationModule(rootNode, m_confServices, ANON_SERVICES_TAB);
+			m_moduleSystem.addConfigurationModule(nodeAnon, m_confServices, ANON_SERVICES_TAB);
+			m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfTrust(), ANON_TRUST_TAB);
 		}
+		m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeAnon.getPath()));
+
 		m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeNet.getPath()));
 
 		m_moduleSystem.getConfigurationTree().setSelectionRow(0);
@@ -1112,10 +1116,14 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 	 */
 	public void selectCard(String a_strSelectedCard)
 	{
-		if (a_strSelectedCard.equals(JAPConf.ANON_TAB))
+		if (a_strSelectedCard.equals(ANON_TAB))
 		{
-			m_moduleSystem.selectNode(JAPConf.ANON_SERVICES_TAB);
+			m_moduleSystem.selectNode(ANON_SERVICES_TAB);
 			m_confServices.selectAnonTab();
+		}
+		else if (a_strSelectedCard.equals(ANON_TRUST_TAB))
+		{
+			m_moduleSystem.selectNode(JAPConf.ANON_TRUST_TAB);
 		}
 		else
 		{

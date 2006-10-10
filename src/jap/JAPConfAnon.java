@@ -193,7 +193,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private final Object LOCK_OBSERVABLE = new Object();
 
 	/** the Certificate of the selected Mix-Server */
-	private JAPCertificate m_serverCert;
+	private CertPath m_serverCert;
 	private MixInfo m_serverInfo;
 
 	private Vector m_locationCoordinates;
@@ -620,7 +620,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 
 		m_serverInfo = m_infoService.getMixInfo(cascade, selectedMixId);
-		m_serverCert = m_infoService.getMixCertificate(cascade, selectedMixId);
+		m_serverCert = m_infoService.getMixCertPath(cascade, selectedMixId);
 
 		/*if (m_serverCert == null && cascade != null && server == 0)
 		{
@@ -632,11 +632,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			m_viewCertLabel.setText((isServerCertVerified() ? JAPMessages.getString(CertDetailsDialog.MSG_CERT_VERIFIED) + "," :
 				JAPMessages.getString(CertDetailsDialog.MSG_CERT_NOT_VERIFIED) + ","));
 			m_viewCertLabel.setForeground(isServerCertVerified() ? Color.blue : Color.red);
-			m_viewCertLabelValidity.setText((m_serverCert.getValidity().isValid(new Date()) ? " " +
+			m_viewCertLabelValidity.setText((m_serverCert.checkValidity(new Date()) ? " " +
 				 JAPMessages.getString(CertDetailsDialog.MSG_CERTVALID) : " " +
 				 JAPMessages.getString(JAPMessages.getString(CertDetailsDialog.MSG_CERTNOTVALID))));
 			m_viewCertLabelValidity.setForeground(
-						 m_serverCert.getValidity().isValid(new Date()) ? Color.blue : Color.red);
+						 m_serverCert.checkValidity(new Date()) ? Color.blue : Color.red);
 			m_viewCertLabel.setToolTipText(
 						 m_viewCertLabel.getText() + m_viewCertLabelValidity.getText());
 			m_viewCertLabelValidity.setToolTipText(
@@ -1084,7 +1084,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			if (m_serverCert != null && m_serverInfo != null)
 			{
 				CertDetailsDialog dialog = new CertDetailsDialog(getRootPanel().getParent(),
-					m_serverCert.getX509Certificate(), isServerCertVerified(),
+					m_serverCert.getFirstCertificate(), isServerCertVerified(),
 					JAPController.getInstance().getLocale(), m_serverInfo.getCertPath());
 				dialog.pack();
 				dialog.setVisible(true);
@@ -1829,13 +1829,13 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			return null;
 		}
 
-		public JAPCertificate getMixCertificate(MixCascade a_cascade, String a_mixID)
+		public CertPath getMixCertPath(MixCascade a_cascade, String a_mixID)
 		{
 			MixInfo mixinfo = getMixInfo(a_cascade, a_mixID);
-			JAPCertificate certificate = null;
+			CertPath certificate = null;
 			if (mixinfo != null)
 			{
-				certificate = mixinfo.getMixCertificate();
+				certificate = mixinfo.getCertPath();
 			}
 			return certificate;
 		}

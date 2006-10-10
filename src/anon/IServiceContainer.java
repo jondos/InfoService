@@ -31,13 +31,15 @@
  */
 package anon;
 
+import anon.client.ITrustModel;
+
 /**
  * This interface is needed to pass through the keepCurrentService method in order to
  * disallow reusing the current cascade in case of an unrecoverable error (e.g. payment).
  *
  * @author Rolf Wendolsky
  */
-public interface IServiceContainer
+public interface IServiceContainer extends ITrustModel
 {
 	/**
 	 * Allows to return the current Service that was returned also the next time this method is called.

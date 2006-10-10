@@ -38,6 +38,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.IServiceContainer;
+import anon.infoservice.MixCascade;
 
 /**
  * @author Stefan Lieske
@@ -55,6 +56,16 @@ public abstract class AbstractControlChannel extends AbstractChannel
 		{
 			m_serviceContainer = new IServiceContainer()
 			{
+				public boolean isTrusted(MixCascade a_cascade)
+				{
+					// not important in this context
+					return true;
+				}
+				public void checkTrust(MixCascade a_cascade) throws TrustException
+				{
+					// not important in this context
+				}
+
 				public void keepCurrentService(boolean a_bKeepCurrentService)
 				{
 				}

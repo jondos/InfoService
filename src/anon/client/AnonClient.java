@@ -70,6 +70,10 @@ import anon.IServiceContainer;
  */
 public class AnonClient implements AnonService, Observer, DataChainErrorListener {
 
+	/**
+	 * @todo For most people, 15s are sufficient, but some cannot connect with this short
+	 * timeout. Make this configurable.
+	 */
 	private static final int LOGIN_TIMEOUT = 30000;
 	private static final int CONNECT_TIMEOUT = 8000;
 	private static final int CONNECTION_ERROR_WAIT_TIME = 30000; // time interval to report proxy errors
@@ -578,7 +582,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 	}
 
 	private int initializeProtocol(Socket a_connectedSocket, final AnonServerDescription a_mixCascade,
-								   IServiceContainer a_serviceContainer)
+								   final IServiceContainer a_serviceContainer)
 	{
 		synchronized (m_internalSynchronization)
 		{
@@ -606,7 +610,8 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 						try
 						{
 							m_keyExchangeManager = new KeyExchangeManager(m_socketHandler.getInputStream(),
-								m_socketHandler.getOutputStream(), (MixCascade) a_mixCascade);
+								m_socketHandler.getOutputStream(), (MixCascade) a_mixCascade,
+								a_serviceContainer);
 						}
 						catch (Exception a_e)
 						{
@@ -649,6 +654,12 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 				closeSocketHandler();
 				return ErrorCodes.E_INTERRUPTED;
 			}
+			catch (ITrustModel.TrustException a_e)
+			{
+				LogHolder.log(LogLevel.INFO, LogType.NET, a_e);
+				closeSocketHandler();
+				return ErrorCodes.E_NOT_TRUSTED;
+			}
 			catch (Exception e)
 			{
 				LogHolder.log(LogLevel.ERR, LogType.NET, e);
@@ -666,8 +677,8 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 				/* ignore it */
 			}
 
-
-			m_multiplexer = new Multiplexer(m_socketHandler.getInputStream(), m_socketHandler.getOutputStream(),
+			m_multiplexer = new Multiplexer(m_socketHandler.getInputStream(),
+											m_socketHandler.getOutputStream(),
 											m_keyExchangeManager, new SecureRandom());
 			m_socketHandler.addObserver(this);
 			m_packetCounter = new PacketCounter();

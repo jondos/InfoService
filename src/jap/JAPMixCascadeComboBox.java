@@ -235,7 +235,8 @@ final class JAPMixCascadeComboBoxListCellRender implements ListCellRenderer
 		}
 		else
 		{
-			if (cascade.isCertified())
+
+			//if (JAPModel.getInstance().getTrustModel().isTrusted(cascade))
 			{
 				if (cascade.isPayment())
 				{
@@ -246,9 +247,9 @@ final class JAPMixCascadeComboBoxListCellRender implements ListCellRenderer
 					l = m_componentAvailableCascade;
 				}
 			}
-			else
+			//else
 			{
-				l = m_componentNotCertifiedCascade;
+				//return new JLabel();
 			}
 		}
 		l.setText(GUIUtils.trim(cascade.getName()));

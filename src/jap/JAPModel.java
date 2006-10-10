@@ -121,7 +121,8 @@ public final class JAPModel extends Observable
 	private boolean m_bMixMinionActivated;
 
 	private boolean m_bChooseCascasdeConnectionAutomatically;
-	private String m_automaticCascadeChangeRestriction;
+
+	private TrustModel m_trustModel = new TrustModel();
 
 	private String m_strLookAndFeel;
 	private Vector m_vecLookAndFeels = new Vector();
@@ -541,6 +542,12 @@ public final class JAPModel extends Observable
 		return ms_TheModel.m_iDummyTrafficIntervall;
 	}
 
+	public TrustModel getTrustModel()
+	{
+		return m_trustModel;
+	}
+
+
 	protected void setHttpListenerPortNumber(int p)
 	{
 		m_HttpListenerPortNumber = p;
@@ -585,27 +592,6 @@ public final class JAPModel extends Observable
 				setChanged();
 			}
 			notifyObservers(CHANGED_NOTIFY_JAVA_UPDATES);
-		}
-	}
-
-
-	public String getAutomaticCascadeChangeRestriction()
-	{
-		return m_automaticCascadeChangeRestriction;
-	}
-
-	public void setAutomaticCascadeChangeRestriction(String a_restriction)
-	{
-		if (a_restriction != null &&
-			(a_restriction.equals(AUTO_CHANGE_NO_RESTRICTION) ||
-			a_restriction.equals(AUTO_CHANGE_RESTRICT_TO_PAY) ||
-			a_restriction.equals(AUTO_CHANGE_RESTRICT)))
-		{
-			m_automaticCascadeChangeRestriction = a_restriction;
-		}
-		else
-		{
-			m_automaticCascadeChangeRestriction = AUTO_CHANGE_NO_RESTRICTION;
 		}
 	}
 

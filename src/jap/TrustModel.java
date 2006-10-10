@@ -187,9 +187,9 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 			for (int i = 0; i < a_cascade.getNumberOfMixes(); i++)
 			{
 				info = a_cascade.getMixInfo(i);
-				if (info == null || info.getCertPath() == null || !info.getCertPath().verify())
+				if (info == null || !info.isVerified())
 				{
-					throw new TrustException("Not all mixes have valid certificates!");
+					throw new SignatureException("Mix " + (i + 1) + " has no valid signature!");
 				}
 			}
 		}

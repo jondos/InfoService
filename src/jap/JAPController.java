@@ -111,6 +111,8 @@ import platform.AbstractOS;
 import proxy.DirectProxy;
 import proxy.DirectProxy.AllowUnprotectedConnectionCallback;
 import update.JAPUpdateWizard;
+import anon.client.ITrustModel;
+import java.security.SignatureException;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -143,6 +145,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 		"_disableGoodByMessage";
 	private static final String MSG_NEW_OPTIONAL_VERSION = JAPController.class.getName() +
 		"_newOptionalVersion";
+	private static final String MSG_CASCADE_NOT_TRUSTED = JAPController.class.getName() +
+		"_cascadeNotTrusted";
+
 	private static final String MSG_ALLOWUNPROTECTED = JAPController.class.getName() + "_allowunprotected";
 	public static final String MSG_IS_NOT_ALLOWED = JAPController.class.getName() + "_isNotAllowed";
 	public static final String MSG_ASK_SWITCH = JAPController.class.getName() + "_askForSwitchOnError";
@@ -815,9 +820,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				Element autoChange =
 					(Element)XMLUtil.getFirstChildByName(
 									   root, AutoSwitchedMixCascade.XML_ELEMENT_CONTAINER_NAME);
-				JAPModel.getInstance().setAutomaticCascadeChangeRestriction(
-								XMLUtil.parseAttribute(autoChange,
-					JAPModel.XML_RESTRICT_CASCADE_AUTO_CHANGE, JAPModel.AUTO_CHANGE_NO_RESTRICTION));
+
 				if (autoChange != null)
 				{
 					autoChange.getElementsByTagName(AutoSwitchedMixCascade.XML_ELEMENT_NAME);
@@ -978,6 +981,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					addDefaultCertificates();
 				}
+
+				/* load trust model */
+				JAPModel.getInstance().getTrustModel().parse(
+								(Element)XMLUtil.getFirstChildByName(root, TrustModel.XML_ELEMENT_NAME));
 
 				/* try to load information about cascades */
 				Node nodeCascades = XMLUtil.getFirstChildByName(root, MixCascade.XML_ELEMENT_CONTAINER_NAME);
@@ -1958,8 +1965,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 								 JAPModel.getInstance().isNonAnonymousSurfingDenied());
 			XMLUtil.setAttribute(e, XML_ATTR_SHOW_CONFIG_ASSISTANT, m_bShowConfigAssistant);
 			Element autoSwitch = doc.createElement(AutoSwitchedMixCascade.XML_ELEMENT_CONTAINER_NAME);
-			XMLUtil.setAttribute(autoSwitch, JAPModel.XML_RESTRICT_CASCADE_AUTO_CHANGE,
-								 JAPModel.getInstance().getAutomaticCascadeChangeRestriction());
 
 
 			e.appendChild(autoSwitch);
@@ -2051,6 +2056,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 				XMLUtil.setValue(elemLookAndFeel, ((File)vecUIFiles.elementAt(i)).getAbsolutePath());
 				elemLookAndFeels.appendChild(elemLookAndFeel);
 			}
+
+			/* store trust model */
+			e.appendChild(JAPModel.getInstance().getTrustModel().toXmlElement(doc));
 
 			/*stores MixCascades*/
 			Element elemCascades = doc.createElement(MixCascade.XML_ELEMENT_CONTAINER_NAME);
@@ -2701,6 +2709,27 @@ public final class JAPController extends Observable implements IProxyListener, O
 							getView().doClickOnCascadeChooser();
 						}
 
+					}
+					else if (ret == ErrorCodes.E_NOT_TRUSTED &&
+							 ! (cascadeContainer.isReconnectedAutomatically() &&
+								cascadeContainer.isServiceAutoSwitched()))
+					{
+						canStartService = false;
+						m_proxyAnon.stop();
+						m_proxyAnon = null;
+						if (JAPDialog.
+							showConfirmDialog(getViewWindow(),
+											  JAPMessages.getString(MSG_CASCADE_NOT_TRUSTED) + "<br><br>" +
+											  JAPMessages.getString(MSG_ASK_SWITCH), JAPDialog.OPTION_TYPE_YES_NO,
+											  JAPDialog.MESSAGE_TYPE_ERROR,
+											  onTopAdapter) == JAPDialog.RETURN_VALUE_YES)
+						{
+							JAPModel.getInstance().setCascadeAutoSwitch(true);
+						}
+						else
+						{
+							getView().doClickOnCascadeChooser();
+						}
 					}
 					else if (ret == ErrorCodes.E_SUCCESS ||
 							 (ret != ErrorCodes.E_INTERRUPTED &&
@@ -4331,22 +4360,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 					MixCascade currentCascade = null;
 					Vector availableCascades;
 					boolean forward = true;
-					boolean bRestrictToPay = false;
 
-					if (JAPModel.getInstance().getAutomaticCascadeChangeRestriction().equals(
-						JAPModel.AUTO_CHANGE_RESTRICT))
-					{
-						availableCascades = Database.getInstance(AutoSwitchedMixCascade.class).getEntryList();
-					}
-					else
-					{
-						availableCascades = Database.getInstance(MixCascade.class).getEntryList();
-						if (JAPModel.getInstance().getAutomaticCascadeChangeRestriction().equals(
-											  JAPModel.AUTO_CHANGE_RESTRICT_TO_PAY))
-						{
-							bRestrictToPay = true;
-						}
-					}
+					availableCascades = Database.getInstance(MixCascade.class).getEntryList();
+
 					if (availableCascades.size() > 0)
 					{
 						int chosenCascadeIndex = m_random.nextInt();
@@ -4371,8 +4387,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							if (!m_alreadyTriedCascades.containsKey(currentCascade.getId()))
 							{
 								m_alreadyTriedCascades.put(currentCascade.getId(), currentCascade);
-								if (isSuitableCascade(currentCascade) &&
-									(!bRestrictToPay || currentCascade.isPayment()))
+								if (isSuitableCascade(currentCascade))
 								{
 									// found a suitable cascade
 									break;
@@ -4394,6 +4409,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 						if (i == availableCascades.size())
 						{
 							// no suitable cascade was found
+							if (m_alreadyTriedCascades.size() == 0)
+							{
+								// Perhaps we should insert a timeout here?
+							}
 							currentCascade = null;
 						}
 					}
@@ -4470,7 +4489,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			 * Cascade is not suitable if payment and the warning dialog is shown or no account is available
 			 * Otherwise the user would have to answer a dialog which is not good for automatic connections.
 			 */
-			return! (a_cascade.isPayment() &&
+			return isTrusted(a_cascade) && !(a_cascade.isPayment() &&
 					 ( (! (a_cascade instanceof AutoSwitchedMixCascade) &&
 						!JAPController.getInstance().getDontAskPayment()) ||
 					  PayAccountsFile.getInstance().getNumAccounts() == 0 ||
@@ -4489,6 +4508,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 			{
 				m_bKeepCurrentCascade = a_bKeepCurrentCascade;
 			}
+		}
+
+		public void checkTrust(MixCascade a_cascade) throws TrustException, SignatureException
+		{
+			JAPModel.getInstance().getTrustModel().checkTrust(a_cascade);
 		}
 	}
 }

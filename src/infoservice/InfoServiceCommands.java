@@ -1372,11 +1372,6 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			/* JAP or someone else wants to get information about all cascade serial numbers we know */
 			httpResponse = japFetchCascades(a_supportedEncodings, true);
 		}
-		else if ( (command.equals("/cascadeserials.z")) && (method == Constants.REQUEST_METHOD_GET))
-		{
-			/* JAP or someone else wants to get information about all cascade serial numbers we know */
-			httpResponse = japFetchCascades(HttpResponseStructure.HTTP_ENCODING_ZLIB, true);
-		}
 		else if ( (command.equals("/cascades")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			/* JAP or someone else wants to get information about all cascades we know */

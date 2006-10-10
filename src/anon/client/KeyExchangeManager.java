@@ -38,7 +38,6 @@ import java.io.EOFException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
-import java.util.Vector;
 import java.security.SignatureException;
 
 import org.w3c.dom.Document;
@@ -96,6 +95,7 @@ public class KeyExchangeManager {
 
   private SymCipher m_multiplexerOutputStreamCipher;
 
+
   /**
    * @todo allow to connect if one or more mixes (user specified) cannot be verified
    * @param a_inputStream InputStream
@@ -107,9 +107,10 @@ public class KeyExchangeManager {
    * @throws UnknownProtocolVersionException
    * @todo remove MixInfo entries when changes in the certificate ID of a mix are discovered
    */
-  public KeyExchangeManager(InputStream a_inputStream, OutputStream a_outputStream,
-							MixCascade a_cascade) throws
-	  XMLParseException, SignatureException, IOException, UnknownProtocolVersionException
+  public KeyExchangeManager(InputStream a_inputStream, OutputStream a_outputStream, MixCascade a_cascade,
+							ITrustModel a_trustModel)
+	  throws XMLParseException, SignatureException, IOException, UnknownProtocolVersionException,
+	  ITrustModel.TrustException
   {
 	  try
 	  {
@@ -137,11 +138,6 @@ public class KeyExchangeManager {
 		   MixCascade cascade = new MixCascade(XMLUtil.toXMLDocument(xmlData).getDocumentElement(),
 											   Long.MAX_VALUE, a_cascade.getId());
 
-		  if (!cascade.isVerified())
-		  {
-			  throw (new SignatureException("Received XML structure has an invalid signature."));
-		  }
-
 		  if (a_cascade.isUserDefined())
 		  {
 			  cascade.setUserDefined(true, a_cascade);
@@ -165,12 +161,15 @@ public class KeyExchangeManager {
 		  Database.getInstance(MixInfo.class).update(
 			  new MixInfo(MixInfo.DEFAULT_NAME, cascade.getCertPath()));
 
+		  /** Very important: Check if this cascade is trusted. Otherwise, an exception is thrown. */
+		  a_trustModel.checkTrust(cascade);
+
 		  /*
 		   * get the appended certificate of the signature and store it in the
 		   * certificate store (needed for verification of the MixCascadeStatus
 		   * messages)
 		   */
-		  if (cascade.isVerified() && cascade.getCertificate() != null)
+		  if (cascade.getCertificate() != null)
 		  {
 			  m_mixCascadeCertificateLock = SignatureVerifier.getInstance().
 				  getVerificationCertificateStore().addCertificateWithoutVerification(
