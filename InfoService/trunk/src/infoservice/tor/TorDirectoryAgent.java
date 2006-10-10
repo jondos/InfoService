@@ -222,11 +222,9 @@ public class TorDirectoryAgent implements Runnable
 					if (torNodesCommpressedListInformation != null)
 					{
 						/* decompress it */
-						LogHolder.log(LogLevel.INFO, LogType.NET,
-								"Start decommpressing the tor nodes list");
+						LogHolder.log(LogLevel.INFO, LogType.NET,"Start decommpressing the tor nodes list");
 						torNodesListInformation = ZLibTools.decompress(torNodesCommpressedListInformation);
-						LogHolder.log(LogLevel.INFO, LogType.NET,
-							"Decommpressed the tor nodes list");
+						LogHolder.log(LogLevel.INFO, LogType.NET,"Decommpressed the tor nodes list");
 					}
 					if (torNodesListInformation != null)
 					{
