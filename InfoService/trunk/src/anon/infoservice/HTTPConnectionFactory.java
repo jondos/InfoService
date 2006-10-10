@@ -45,8 +45,10 @@ public class HTTPConnectionFactory
 {
 	public static final int HTTP_ENCODING_PLAIN = 0;
 	public static final int HTTP_ENCODING_ZLIB = 1;
+	public static final int HTTP_ENCODING_GZIP = 2;
 
 	public static final String HTTP_ENCODING_ZLIB_STRING = "deflate";
+	public static final String HTTP_ENCODING_GZIP_STRING = "gzip";
 
 	/**
 	 * Defines the HTTPConnection class for that this factory constructs instances.

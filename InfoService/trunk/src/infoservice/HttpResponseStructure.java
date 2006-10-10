@@ -84,6 +84,7 @@ public final class HttpResponseStructure
 
 	public static final int HTTP_ENCODING_PLAIN = HTTPConnectionFactory.HTTP_ENCODING_PLAIN;
 	public static final int HTTP_ENCODING_ZLIB = HTTPConnectionFactory.HTTP_ENCODING_ZLIB;
+	public static final int HTTP_ENCODING_GZIP = HTTPConnectionFactory.HTTP_ENCODING_GZIP;
 
 	/**
 	 * This constant is used, when no content type shall be specified in the HTTP header.
@@ -111,6 +112,7 @@ public final class HttpResponseStructure
 
 	private static final String HTTP_ENCODING_PLAIN_STRING = "plain";
 	private static final String HTTP_ENCODING_ZLIB_STRING = HTTPConnectionFactory.HTTP_ENCODING_ZLIB_STRING;
+	private static final String HTTP_ENCODING_GZIP_STRING = HTTPConnectionFactory.HTTP_ENCODING_GZIP_STRING;
 
 	private static final String HTTP_TYPE_APPLICATION_JNLP_STRING = "application/x-java-jnlp-file";
 	private static final String HTTP_TYPE_APPLICATION_ZLIB_STRING = "application/x-compress";
