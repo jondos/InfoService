@@ -30,21 +30,13 @@ package infoservice.tor;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
 import anon.tor.ordescription.ORDescription;
 import anon.tor.ordescription.ORList;
 import anon.infoservice.Database;
-import anon.util.Base64;
-import anon.util.BZip2Tools;
-import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.util.ZLibTools;
 
 /**
  * This class is responsible for fetching the information about the active tor nodes. This class
@@ -64,16 +56,16 @@ public class TorDirectoryAgent implements Runnable
 	private static TorDirectoryAgent ms_tdaInstance;
 
 	/**
-	 * Stores the XML container with the current tor nodes list. If we don't have a topical list,
+	 * Stores the current tor nodes list. If we don't have a topical list,
 	 * this value is null.
 	 */
-	private Node m_currentTorNodesList;
+	private byte[] m_currentTorNodesList;
 
 	/**
-	 * Stores the XML container with the current BZip2 compressed tor nodes list. If we don't have
+	 * Stores the compressed tor nodes list. If we don't have
 	 * a topical list, this value is null.
 	 */
-	private Node m_currentCompressedTorNodesList;
+	private byte[] m_currentCompressedTorNodesList;
 
 	/**
 	 * Stores the cycle time (in milliseconds) for updating the tor nodes list. Until the update
@@ -146,40 +138,28 @@ public class TorDirectoryAgent implements Runnable
 	}
 
 	/**
-	 * Returns the XML container with the current tor nodes list. If we don't have a topical list,
+	 * Returns the current tor nodes list. If we don't have a topical list,
 	 * the returned value is null.
 	 *
-	 * @return The XML structur with the current tor nodes list or null, if we don't have a topical
+	 * @return The current tor nodes list or null, if we don't have a topical
 	 *         list.
 	 */
-	public Node getTorNodesList()
+	public byte[] getTorNodesList()
 	{
-		Node torNodes = null;
-		synchronized (this)
-		{
-			/* fetch always the current list */
-			torNodes = m_currentTorNodesList;
-		}
-		return torNodes;
+		return m_currentTorNodesList;
 	}
 
 	/**
-	 * Returns the XML container with the current BZip2 compressed tor nodes list (same uncompressed
+	 * Returns the compressed tor nodes list (same uncompressed
 	 * data as obtained by the getTorNodesList() call). If we don't have a topical list, the
 	 * returned value is null.
 	 *
-	 * @return The XML structur with the current BZip2 compressed tor nodes list or null, if we
+	 * @return The compressed tor nodes list or null, if we
 	 *         don't have a topical list.
 	 */
-	public Node getCompressedTorNodesList()
+	public byte[] getCompressedTorNodesList()
 	{
-		Node torNodes = null;
-		synchronized (this)
-		{
-			/* fetch always the current list */
-			torNodes = m_currentCompressedTorNodesList;
-		}
-		return torNodes;
+		return m_currentCompressedTorNodesList;
 	}
 
 	/**
@@ -227,17 +207,23 @@ public class TorDirectoryAgent implements Runnable
 					/* add the prefered directory server at the top of the list, so it is used first */
 					torServers.insertElementAt(preferedDirectoryServer, 0);
 				}
-				Element torNodesListNode = null;
-				Element torNodesListCompressedNode = null;
+				byte[] torNodesList = null;
+				byte[] torNodesListCompressed = null;
 				//all servers timed out --> restart with configured ones...
 				//if(torServers.size()==0)
 				//{
 				//}
-				while ( (torNodesListNode == null) && (torServers.size() > 0))
+				while ( (torNodesList == null) && (torServers.size() > 0))
 				{
 					TorDirectoryServer currentDirectoryServer = (TorDirectoryServer) (torServers.firstElement());
-					byte[] torNodesListInformation = currentDirectoryServer.downloadTorNodesInformation();
+					byte[] torNodesCommpressedListInformation = currentDirectoryServer.downloadCompressedTorNodesInformation();
+					byte[] torNodesListInformation	=null;
 					torServers.removeElementAt(0);
+					if (torNodesCommpressedListInformation != null)
+					{
+						/* decompress it */
+						torNodesListInformation = ZLibTools.decompress(torNodesCommpressedListInformation);
+					}
 					if (torNodesListInformation != null)
 					{
 						/* we have gotten a structure of TOR nodes, try to parse it */
@@ -266,17 +252,8 @@ public class TorDirectoryAgent implements Runnable
 							{
 								/* create the TorNodesList XML structure for the clients */
 								/* create the TorNodesList element */
-								torNodesListNode = XMLUtil.createDocument().createElement("TorNodesList");
-								torNodesListNode.setAttribute("xml:space", "preserve");
-								XMLUtil.setValue(torNodesListNode, new String(torNodesListInformation));
-								/* create also a compressed version, which needs less transfer capacity */
-								/* create the TorNodesListCompressed element */
-								torNodesListCompressedNode = XMLUtil.createDocument().createElement(
-									"TorNodesListCompressed");
-								torNodesListCompressedNode.setAttribute("xml:space", "preserve");
-								String bzip2CompressedTorNodesList = Base64.encode(BZip2Tools.compress(
-									torNodesListInformation), false);
-								XMLUtil.setValue(torNodesListCompressedNode, bzip2CompressedTorNodesList);
+								torNodesList = torNodesListInformation;
+								torNodesListCompressed = torNodesCommpressedListInformation;
 								/* downloading the information was successful from that server, so update the prefered
 								 * TOR directory server entry, if it was another one
 								 */
@@ -304,12 +281,12 @@ public class TorDirectoryAgent implements Runnable
 								LogHolder.log(LogLevel.ERR, LogType.MISC,
 											  "TorDirectoryAgent: run: Error while creating the XML structure with the TOR nodes list: " +
 											  e.toString());
-								torNodesListNode = null;
+								torNodesList = null;
 							}
 						}
 					}
 				}
-				if (torNodesListNode == null)
+				if (torNodesList == null)
 				{
 					LogHolder.log(LogLevel.ERR, LogType.NET,
 								  "TorDirectoryAgent: run: Could not fetch the tor nodes list from the known tor directory servers.");
@@ -322,19 +299,16 @@ public class TorDirectoryAgent implements Runnable
 					}
 					/** @todo maybe it would be a good idea to ask all neighbour infoservices */
 				}
-				if (torNodesListNode != null)
+				if (torNodesList != null)
 				{
 					LogHolder.log(LogLevel.DEBUG, LogType.NET,
 								  "TorDirectoryAgent: run: Fetched the list of tor nodes successfully.");
 				}
-				synchronized (this)
-				{
 					/* we need exclusive access, if we don't have a new tor nodes list, we set the value to
 					 * null -> asking clients get a http error and ask another infoservice
 					 */
-					m_currentTorNodesList = torNodesListNode;
-					m_currentCompressedTorNodesList = torNodesListCompressedNode;
-				}
+					m_currentTorNodesList = torNodesList;
+					m_currentCompressedTorNodesList = torNodesListCompressed;
 			}
 			catch (Throwable t)
 			{

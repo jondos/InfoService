@@ -62,14 +62,15 @@ import anon.crypto.SignatureCreator;
  */
 final public class InfoServiceCommands implements JWSInternalCommands
 {
-    private DynamicNetworkingHelper m_networkingHelper = new DynamicNetworkingHelper();
-		//Ok the cache the StatusInfo DB here for performance reasonses (the database objete itself will always remain the same during the lifetime of the Is -so
-		//no problem so far
-		private Database m_statusinfoDB;
-		public InfoServiceCommands()
-		{
-		m_statusinfoDB=Database.getInstance(StatusInfo.class);
-		}
+	private DynamicNetworkingHelper m_networkingHelper = new DynamicNetworkingHelper();
+	//Ok the cache the StatusInfo DB here for performance reasonses (the database objete itself will always remain the same during the lifetime of the Is -so
+	//no problem so far
+	private Database m_statusinfoDB;
+	public InfoServiceCommands()
+	{
+		m_statusinfoDB = Database.getInstance(StatusInfo.class);
+	}
+
 	/**
 	 * This method is called, when we receive data directly from a infoservice or when we receive
 	 * data from a remote infoservice, which posts data about another infoservice.
@@ -173,7 +174,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			{
 				infoServicesNode =
 					new AbstractDistributableDatabaseEntry.Serials(
-									   InfoServiceDBEntry.class).toXmlElement(doc);
+						InfoServiceDBEntry.class).toXmlElement(doc);
 			}
 			else
 			{
@@ -193,7 +194,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				infoServicesNode);
 			doc.appendChild(infoServicesNode);
 			/* send the XML document to the client */
-			if ((a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
+			if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
 			{
 				httpResponse = new HttpResponseStructure(
 					HttpResponseStructure.HTTP_TYPE_TEXT_XML, HttpResponseStructure.HTTP_ENCODING_ZLIB,
@@ -319,15 +320,15 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			}
 
 			/*
-			if (mixCascadeEntry.getMixCascadeSignature() == null ||
-				!mixCascadeEntry.getMixCascadeSignature().isVerified())
-			{
-				LogHolder.log(LogLevel.WARNING, LogType.NET,
-							  "Signature check failed for MixCascade entry! XML: " + (new String(a_postData)));
-				httpResponse = new HttpResponseStructure(HttpResponseStructure.
-					HTTP_RETURN_INTERNAL_SERVER_ERROR);
-			}
-			else*/
+				if (mixCascadeEntry.getMixCascadeSignature() == null ||
+			 !mixCascadeEntry.getMixCascadeSignature().isVerified())
+				{
+			 LogHolder.log(LogLevel.WARNING, LogType.NET,
+				  "Signature check failed for MixCascade entry! XML: " + (new String(a_postData)));
+			 httpResponse = new HttpResponseStructure(HttpResponseStructure.
+			  HTTP_RETURN_INTERNAL_SERVER_ERROR);
+				}
+				else*/
 			{
 				Database.getInstance(MixCascade.class).update(mixCascadeEntry);
 			}
@@ -339,7 +340,6 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		return httpResponse;
 	}
-
 
 	/**
 	 * Sends the complete list of all known mixcascades to the client.
@@ -382,14 +382,13 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				mixCascadesNode);
 			doc.appendChild(mixCascadesNode);
 
-
 			/* send the XML document to the client */
-			if ((a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
+			if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
 			{
 				httpResponse = new HttpResponseStructure(
-								HttpResponseStructure.HTTP_TYPE_TEXT_XML,
-								HttpResponseStructure.HTTP_ENCODING_ZLIB,
-								ZLibTools.compress(XMLUtil.toByteArray(doc)));
+					HttpResponseStructure.HTTP_TYPE_TEXT_XML,
+					HttpResponseStructure.HTTP_ENCODING_ZLIB,
+					ZLibTools.compress(XMLUtil.toByteArray(doc)));
 			}
 			else
 			{
@@ -561,7 +560,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Status received: XML: " + (new String(a_postData)));
 			Element mixCascadeStatusNode = (Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(
-						 a_postData), StatusInfo.getXmlElementName()));
+				a_postData), StatusInfo.getXmlElementName()));
 			StatusInfo statusEntry = new StatusInfo(mixCascadeStatusNode);
 			/* verify the signature */
 			if (statusEntry.isVerified())
@@ -604,7 +603,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		HttpResponseStructure httpResponse = null;
 		try
 		{
-			StatusInfo statusEntry = (StatusInfo)m_statusinfoDB.getEntryById(a_cascadeId);
+			StatusInfo statusEntry = (StatusInfo) m_statusinfoDB.getEntryById(a_cascadeId);
 			if (statusEntry == null)
 			{
 				/* we don't have a status for the given id */
@@ -618,7 +617,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		catch (Exception e)
 		{
-			httpResponse=new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
 			LogHolder.log(LogLevel.ERR, LogType.NET, e);
 		}
 		return httpResponse;
@@ -662,7 +661,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 						  "Latest Java versions received. XML: " + (new String(a_postData)));
 
 			Element node = (Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(
-						 a_postData), JavaVersionDBEntry.XML_ELEMENT_NAME));
+				a_postData), JavaVersionDBEntry.XML_ELEMENT_NAME));
 			/* verify the signature */
 			if (SignatureVerifier.getInstance().verifyXml(node,
 				SignatureVerifier.DOCUMENT_CLASS_UPDATE) == true)
@@ -762,7 +761,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 					"\n";
 			}
 			htmlData = htmlData + "    </TABLE><BR><BR><BR><BR>\n";
-			htmlData =htmlData+ISRuntimeStatistics.getAsHTML();
+			htmlData = htmlData + ISRuntimeStatistics.getAsHTML();
 			htmlData = htmlData + "    <P>Infoservice [" + Constants.INFOSERVICE_VERSION + "] Startup Time: " +
 				Configuration.getInstance().getStartupTime() +
 				"</P>\n" +
@@ -860,7 +859,6 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		return httpResponse;
 	}
 
-
 	/**
 	 * Sends the XML encoded mixcascade entry the ID given by cascadeId to the client.
 	 *
@@ -883,7 +881,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			else
 			{
 				/* send XML-Document */
-				if ((a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
+				if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
 				{
 					httpResponse = new HttpResponseStructure(
 						HttpResponseStructure.HTTP_TYPE_TEXT_XML, HttpResponseStructure.HTTP_ENCODING_ZLIB,
@@ -913,7 +911,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		{
 			InfoServiceDBEntry infoserviceEntry =
 				(InfoServiceDBEntry) (Database.getInstance(InfoServiceDBEntry.class).getEntryById(
-								a_infoserviceId));
+					a_infoserviceId));
 			if (infoserviceEntry == null)
 			{
 				/* we don't have a mixcascade with the given id */
@@ -934,7 +932,6 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		return httpResponse;
 	}
-
 
 	private HttpResponseStructure echoIP(InetAddress a_sourceAddress)
 	{
@@ -966,11 +963,10 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	private HttpResponseStructure getTorNodesList(int a_supportedEncodings)
 	{
 		/* this is only the default, if we don't have a TOR list */
-		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
-			HTTP_RETURN_NOT_FOUND);
-		Node torNodesList = null;
+		HttpResponseStructure httpResponse = null;
+		byte[] torNodesList = null;
 		int encoding;
-		if ((a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
+		if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
 		{
 			encoding = HttpResponseStructure.HTTP_ENCODING_ZLIB;
 			torNodesList = TorDirectoryAgent.getInstance().getCompressedTorNodesList();
@@ -985,9 +981,8 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			try
 			{
 				/* create xml document */
-				Document doc = XMLUtil.createDocument();
-				doc.appendChild(XMLUtil.importNode(doc, torNodesList, true));
-				httpResponse = new HttpResponseStructure(doc, encoding);
+				httpResponse = new HttpResponseStructure( HttpResponseStructure.HTTP_TYPE_TEXT_PLAIN,
+					encoding,torNodesList);
 			}
 			catch (Exception e)
 			{
@@ -996,6 +991,12 @@ final public class InfoServiceCommands implements JWSInternalCommands
 					HTTP_RETURN_INTERNAL_SERVER_ERROR);
 			}
 		}
+		else
+		{
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.
+				HTTP_RETURN_INTERNAL_SERVER_ERROR);
+		}
+
 		return httpResponse;
 	}
 
@@ -1017,7 +1018,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			try
 			{
 				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_PLAIN,
-					HttpResponseStructure.HTTP_ENCODING_GZIP,mixminionNodesList);
+					HttpResponseStructure.HTTP_ENCODING_GZIP, mixminionNodesList);
 			}
 			catch (Exception e)
 			{
@@ -1100,7 +1101,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		if (answer != null)
 		{
 			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,
-				HttpResponseStructure.HTTP_ENCODING_PLAIN,answer);
+				HttpResponseStructure.HTTP_ENCODING_PLAIN, answer);
 		}
 		return httpResponse;
 	}
@@ -1306,7 +1307,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	 * @param method The HTTP method used within the request from the client. See the REQUEST_METHOD
 	 *               constants in anon.infoservice.Constants.
 	 * @param a_supportedEncodings The HTTP encodings supported by the client. See the HTTP_ENCODING
-   * constants in HttpResonseStructure.
+	 * constants in HttpResonseStructure.
 	 * @param command The URL requested from the client within the HTTP request. Normally this
 	 *                should be an absolute path with a filename.
 	 * @param postData The HTTP content data (maybe of size 0), if the request was an HTTP POST. If
@@ -1331,8 +1332,8 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			String cascadeId = command.substring(18);
 			httpResponse = japGetCascadeStatus(cascadeId);
 		}
-		else if ((command.equals("/infoserver") || command.equals("/infoservice")) &&
-			 (method == Constants.REQUEST_METHOD_POST))
+		else if ( (command.equals("/infoserver") || command.equals("/infoservice")) &&
+				 (method == Constants.REQUEST_METHOD_POST))
 		{
 			/** message from another infoservice (can be forwared by an infoservice), which includes
 			 * information about that infoservice
@@ -1356,8 +1357,8 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		else if ( (command.equals("/infoserviceserials")) && (method == Constants.REQUEST_METHOD_GET))
 		{
-					/* JAP or someone else wants to get information about all infoservices we know */
-					httpResponse = japFetchInfoServers(a_supportedEncodings, true);
+			/* JAP or someone else wants to get information about all infoservices we know */
+			httpResponse = japFetchInfoServers(a_supportedEncodings, true);
 		}
 		else if ( (command.equals("/cascade")) && (method == Constants.REQUEST_METHOD_POST))
 		{
@@ -1434,13 +1435,8 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		else if ( (command.equals("/tornodes")) && (method == Constants.REQUEST_METHOD_GET))
 		{
-			/* get the list with all known tor nodes in an XML structure */
+			/* get the list with all known tor nodes */
 			httpResponse = getTorNodesList(a_supportedEncodings);
-		}
-		else if ((command.equals("/compressedtornodes")) && (method == Constants.REQUEST_METHOD_GET))
-		{
-			/* get the list with all known tor nodes in an XML structure */
-			httpResponse = getTorNodesList(HttpResponseStructure.HTTP_ENCODING_ZLIB);
 		}
 		else if ( (command.equals("/mixminionnodes")) && (method == Constants.REQUEST_METHOD_GET))
 		{
@@ -1527,15 +1523,15 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			String piID = command.substring(17);
 			httpResponse = japFetchPaymentInstanceInfo(piID);
 		}
-        // LERNGRUPPE
-        else if (command.startsWith("/connectivity") && (method == Constants.REQUEST_METHOD_POST))
-        {
-                httpResponse = m_networkingHelper.mixPostConnectivityTest(a_sourceAddress, postData);
-        }
-        else if (command.startsWith("/dynacasade") && (method == Constants.REQUEST_METHOD_POST))
-        {
-                httpResponse = m_networkingHelper.lastMixPostDynaCascade(postData);
-        }
+		// LERNGRUPPE
+		else if (command.startsWith("/connectivity") && (method == Constants.REQUEST_METHOD_POST))
+		{
+			httpResponse = m_networkingHelper.mixPostConnectivityTest(a_sourceAddress, postData);
+		}
+		else if (command.startsWith("/dynacasade") && (method == Constants.REQUEST_METHOD_POST))
+		{
+			httpResponse = m_networkingHelper.lastMixPostDynaCascade(postData);
+		}
 
 		return httpResponse;
 	}
