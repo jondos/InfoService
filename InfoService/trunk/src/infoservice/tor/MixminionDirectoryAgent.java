@@ -113,6 +113,7 @@ public class MixminionDirectoryAgent implements Runnable
 				m_updateInterval = a_updateInterval;
 				/* start the internal thread */
 				Thread fetchThread = new Thread(this, "MixminionDirectoryAgent Update Thread");
+				fetchThread.setPriority(Thread.MIN_PRIORITY);
 				fetchThread.setDaemon(true);
 				fetchThread.start();
 			}

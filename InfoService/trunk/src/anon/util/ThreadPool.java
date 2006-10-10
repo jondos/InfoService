@@ -137,6 +137,11 @@ public final class ThreadPool
 
 	public ThreadPool(String name, int n)
 	{
+		this(name,n,Thread.NORM_PRIORITY);
+	}
+
+	public ThreadPool(String name, int n,int priority)
+		{
 		cvFlag = new BusyFlag();
 		cvAvailable = new CondVar(cvFlag);
 		cvEmpty = new CondVar(cvFlag);
@@ -150,6 +155,8 @@ public final class ThreadPool
 		for (int i = 0; i < n; i++)
 		{
 			poolThreads[i] = new ThreadPoolThread(this, i, name);
+			poolThreads[i].setPriority(priority);
+			poolThreads[i].setDaemon(true);
 			poolThreads[i].start();
 		}
 	}
