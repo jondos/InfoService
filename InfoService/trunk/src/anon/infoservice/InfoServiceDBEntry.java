@@ -51,7 +51,7 @@ import anon.crypto.SignatureCreator;
 import anon.crypto.SignatureVerifier;
 import anon.crypto.XMLSignature;
 import anon.crypto.X509SubjectKeyIdentifier;
-import anon.util.BZip2Tools;
+//import anon.util.BZip2Tools;
 import anon.util.Base64;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
@@ -1321,26 +1321,11 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry imple
 	{
 		byte[] list = null;
 		try
-		{ //Compressed first
-			Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/compressedtornodes"));
-			Element torNodeList = doc.getDocumentElement();
-			String strCompressedTorNodesList = XMLUtil.parseValue(torNodeList, null);
-			list = BZip2Tools.decompress(Base64.decode(strCompressedTorNodesList));
+		{
+			list=doHttpRequest(HttpRequestStructure.createGetRequest("/tornodes"),HTTPConnectionFactory.HTTP_ENCODING_ZLIB);
 		}
 		catch (Exception e)
 		{
-		}
-		if (list == null) //umcompressed...
-		{
-			try
-			{
-				Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/tornodes"));
-				Element torNodeList = doc.getDocumentElement();
-				list = XMLUtil.parseValue(torNodeList, null).getBytes();
-			}
-			catch (Exception e)
-			{
-			}
 		}
 		if (list == null)
 		{
@@ -1357,14 +1342,13 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry imple
 	 *
 	 * @return The raw mixminion nodes list as it is distributed by the tor directory servers.
 	 */
-	public String getMixminionNodesList() throws Exception
+	public byte[] getMixminionNodesList() throws Exception
 	{
-		String list = null;
+		byte[] list = null;
 		try
 		{ //Compressed first
-			byte[] bytes=doHttpRequest(HttpRequestStructure.createGetRequest("/mixminionnodes"),
+			list=doHttpRequest(HttpRequestStructure.createGetRequest("/mixminionnodes"),
 									   HTTPConnectionFactory.HTTP_ENCODING_ZLIB);
-			list = new String(bytes);
 		}
 		catch (Exception e)
 		{

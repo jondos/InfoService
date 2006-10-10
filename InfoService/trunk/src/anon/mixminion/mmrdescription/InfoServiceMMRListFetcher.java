@@ -35,7 +35,7 @@ final public class InfoServiceMMRListFetcher implements MMRListFetcher
 	{
 	}
 
-	public String getMMRList()
+	public byte[] getMMRList()
 	{
 		return InfoServiceHolder.getInstance().getMixminionNodesList();
 	}

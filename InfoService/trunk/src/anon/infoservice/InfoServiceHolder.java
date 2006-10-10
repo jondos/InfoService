@@ -761,9 +761,9 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	 *
 	 * @return The raw mixminion nodes list as it is distributed by the mixminion directory servers.
 	 */
-	public String getMixminionNodesList()
+	public byte[] getMixminionNodesList()
 	{
-		return (String) (fetchInformation(GET_MIXMINIONNODESLIST, null));
+		return (byte[]) (fetchInformation(GET_MIXMINIONNODESLIST, null));
 	}
 
 	/**
