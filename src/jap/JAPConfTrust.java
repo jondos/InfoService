@@ -129,6 +129,16 @@ final class JAPConfTrust extends AbstractJAPConfModule
 			  JAPMessages.getString(MSG_TRUST_HIGH), JAPMessages.getString(MSG_TRUST_EXCLUSIVE)});
 		constraints.gridx = 1;
 		panelRoot.add(m_comboTrustPay, constraints);
+		/*
+		m_comboTrustPay.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent a_event)
+			{
+				System.out.println(m_comboTrustPay.isVisible());
+				JAPModel.getInstance().getTrustModel().showTrustWarning(m_comboTrustPay);
+			}
+		});*/
+
 
 		constraints.gridy++;
 		constraints.gridx = 0;
@@ -138,6 +148,15 @@ final class JAPConfTrust extends AbstractJAPConfModule
 			  JAPMessages.getString(MSG_TRUST_HIGH)});
 		constraints.gridx = 1;
 		panelRoot.add(m_comboTrustExpiredCerts, constraints);
+		/*
+		m_comboTrustExpiredCerts.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent a_event)
+			{
+				JAPModel.getInstance().getTrustModel().showTrustWarning(m_comboTrustExpiredCerts);
+			}
+		});*/
+
 
 
 		constraints.gridy++;

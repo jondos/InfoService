@@ -524,6 +524,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			public void actionPerformed(ActionEvent a_event)
 			{
 				JAPModel.getInstance().getTrustModel().setGeneralTrust(comboFilter.getSelectedIndex());
+				JAPModel.getInstance().getTrustModel().showTrustWarning(comboFilter);
 			}
 		});
 		m_panelAnonService.add(comboFilter, c1);
