@@ -502,6 +502,9 @@ public class ConfigAssistant extends JAPDialog
 
 		DialogContentPane paneExplainNoServiceAvailable = new SimpleWizardContentPane(
 			  this, JAPMessages.getString(MSG_EXPLAIN_NO_SERVICE_AVAILABLE, new Object[]{
+										  JAPMessages.getString("ngBttnAnonDetails"),
+										  JAPMessages.getString("ngAnonGeneralPanelTitle"),
+										  JAPMessages.getString(JAPConfAnonGeneral.MSG_CONNECTION_TIMEOUT),
 										  JAPMessages.getString("confButton"),
 										  JAPMessages.getString("confTreeForwardingClientLeaf")}),
 			  layout, new DialogContentPane.Options(paneAnonTest))

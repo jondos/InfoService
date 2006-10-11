@@ -94,6 +94,11 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 	private static final String MSG_REALLY_DELETE = JAPConfInfoService.class.getName() + "_reallyDelete";
 	private static final String MSG_USE_MORE_IS = JAPConfInfoService.class.getName() + "_useMoreIS";
 	private static final String MSG_EXPLANATION = JAPConfInfoService.class.getName() + "_explanation";
+	private static final String MSG_CONNECT_TIMEOUT = JAPConfInfoService.class.getName() + "_connectTimeout";
+
+	private static final Integer[] CONNECT_TIMEOUTS =
+		new Integer[]{new Integer(5), new Integer(10), new Integer(15), new Integer(20), new Integer(25),
+		new Integer(30), new Integer(40), new Integer(50), new Integer(60)};
 
 
 	/**
@@ -129,6 +134,8 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 	private CertPath m_selectedISCertPath;
 
 	private JTabbedPane m_infoServiceTabPane;
+
+	private JComboBox m_comboTimeout;
 
 	public JAPConfInfoService()
 	{
@@ -1325,13 +1332,12 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		advancedPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
 		advancedPanelConstraints.fill = GridBagConstraints.NONE;
 		advancedPanelConstraints.weightx = 0.0;
-		advancedPanelConstraints.gridwidth = 2;
+		advancedPanelConstraints.gridwidth = 3;
 
 		advancedPanelConstraints.gridx = 0;
 		advancedPanelConstraints.gridy = 0;
 		advancedPanelConstraints.insets = new Insets(5, 5, 10, 5);
-		advancedPanelLayout.setConstraints(
-			m_allowAutomaticIS, advancedPanelConstraints);
+		advancedPanelLayout.setConstraints(m_allowAutomaticIS, advancedPanelConstraints);
 		advancedPanel.add(m_allowAutomaticIS);
 
 		advancedPanelConstraints.gridy = 1;
@@ -1341,7 +1347,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 		advancedPanelConstraints.gridx = 0;
 		advancedPanelConstraints.gridy = 2;
-		advancedPanelConstraints.gridwidth = 1;
+		advancedPanelConstraints.gridwidth = 2;
 		//advancedPanelConstraints.insets = new Insets(0, 5, 20, 5);
 		if (JAPConstants.m_bReleasedVersion)
 		{
@@ -1358,6 +1364,8 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 			askedInfoServices[i] = new Integer(i + 1);
 		}
 		m_cmbAskedInfoServices = new JComboBox(askedInfoServices);
+		advancedPanelConstraints.gridwidth = 1;
+		advancedPanelConstraints.gridx++;
 		advancedPanelConstraints.gridx++;
 		advancedPanel.add(m_cmbAskedInfoServices, advancedPanelConstraints);
 
@@ -1374,12 +1382,23 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 			  MSG_EXPLANATION, new Object[]{new Integer(InfoServiceHolder.DEFAULT_OF_ASKED_INFO_SERVICES)}));
 		advancedPanelConstraints.gridy++;
 		advancedPanelConstraints.gridx = 0;
-		advancedPanelConstraints.gridwidth = 2;
+		advancedPanelConstraints.gridwidth = 3;
 		advancedPanelConstraints.fill = GridBagConstraints.BOTH;
 		advancedPanel.add(m_lblExplanation, advancedPanelConstraints);
 
+		advancedPanelConstraints.gridy++;
+		advancedPanelConstraints.gridx = 0;
+		advancedPanelConstraints.gridwidth = 1;
+		advancedPanel.add(new JLabel(JAPMessages.getString(MSG_CONNECT_TIMEOUT) + " (s):"), advancedPanelConstraints);
+		m_comboTimeout = new JComboBox(CONNECT_TIMEOUTS);
+		advancedPanelConstraints.fill = GridBagConstraints.NONE;
+		advancedPanelConstraints.gridx++;
+		advancedPanel.add(m_comboTimeout, advancedPanelConstraints);
+
+
 		advancedPanelConstraints.weightx = 1.0;
 		advancedPanelConstraints.weighty = 1.0;
+		advancedPanelConstraints.gridwidth = 3;
 		advancedPanelConstraints.gridy++;
 		advancedPanel.add(new JLabel(), advancedPanelConstraints);
 
@@ -1395,6 +1414,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		m_cmbAskedInfoServices.setSelectedIndex(InfoServiceHolder.DEFAULT_OF_ASKED_INFO_SERVICES - 1);
 		m_cbxUseRedundantISRequests.setSelected(true);
 		m_allowAutomaticIS.setSelected(true);
+		setConnectionTimeout(InfoServiceDBEntry.DEFAULT_GET_XML_CONNECTION_TIMEOUT);
 	}
 
 	protected void onUpdateValues()
@@ -1420,6 +1440,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 		m_lblExplanation.setFont(new JLabel().getFont());
 		m_settingsInfoServiceConfigBasicSettingsDescriptionLabel.setFont(new JLabel().getFont());
+		setConnectionTimeout(InfoServiceDBEntry.getConnectionTimeout());
 	}
 
 	public String getHelpContext()
@@ -1442,6 +1463,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		InfoServiceHolder.getInstance().setNumberOfAskedInfoServices(
 			  m_cmbAskedInfoServices.getSelectedIndex() + 1);
 		JAPModel.getInstance().setInfoServiceDisabled(!m_allowAutomaticIS.isSelected());
+		InfoServiceDBEntry.setConnectionTimeout(((Integer)m_comboTimeout.getSelectedItem()).intValue() * 1000);
 		return true;
 	}
 
@@ -1474,6 +1496,35 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 			}
 		}
 		return i;
+	}
+
+	private void setConnectionTimeout(int a_timeoutMS)
+	{
+		int timeout = a_timeoutMS / 1000;
+
+		if (timeout >= ((Integer)m_comboTimeout.getItemAt(m_comboTimeout.getItemCount() - 1)).intValue())
+		{
+			m_comboTimeout.setSelectedIndex(m_comboTimeout.getItemCount() - 1);
+			InfoServiceDBEntry.setConnectionTimeout(
+				 ((Integer)m_comboTimeout.getSelectedItem()).intValue() * 1000);
+		}
+		else if (timeout <=((Integer)m_comboTimeout.getItemAt(0)).intValue())
+		{
+			m_comboTimeout.setSelectedIndex(0);
+			InfoServiceDBEntry.setConnectionTimeout(
+						 ((Integer)m_comboTimeout.getSelectedItem()).intValue() * 1000);
+		}
+		else
+		{
+			for (int i = 1; i < m_comboTimeout.getItemCount(); i++)
+			{
+				if (timeout <= ((Integer)m_comboTimeout.getItemAt(i)).intValue())
+				{
+					m_comboTimeout.setSelectedIndex(i);
+					break;
+				}
+			}
+		}
 	}
 
 }

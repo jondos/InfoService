@@ -71,7 +71,9 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry imple
 	public static final String XML_ELEMENT_CONTAINER_NAME = "InfoServices";
 	public static final String XML_ELEMENT_NAME = "InfoService";
 
-	private static final int GET_XML_CONNECTION_TIMEOUT = 10000;
+	public static final int DEFAULT_GET_XML_CONNECTION_TIMEOUT = 10000;
+
+	private static int m_getXmlConnectionTimeout = DEFAULT_GET_XML_CONNECTION_TIMEOUT;
 
 	/**
 	 * A proxy interface that is used for all connections and may change over time.
@@ -408,6 +410,19 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry imple
 
 		/* generate the XML representation for this InfoServiceDBEntry */
 		m_xmlDescription = generateXmlRepresentation();
+	}
+
+	public static void setConnectionTimeout(int a_timeoutMS)
+	{
+		if (a_timeoutMS >= 1000)
+		{
+			m_getXmlConnectionTimeout = a_timeoutMS;
+		}
+	}
+
+	public static int getConnectionTimeout()
+	{
+		return m_getXmlConnectionTimeout;
 	}
 
 	public static void setMutableProxyInterface(IMutableProxyInterface a_proxyInterface)
@@ -785,7 +800,7 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry imple
 					proxyInterfaceGetter.getProxyInterface(), a_supportedEncodings);
 
 				final HTTPConnection currentConnection = currentConnectionDescriptor.getConnection();
-				currentConnection.setTimeout(GET_XML_CONNECTION_TIMEOUT);
+				currentConnection.setTimeout(m_getXmlConnectionTimeout);
 
 				// use a Vector as storage for the the result of the communication
 				final Vector responseStorage = new Vector();

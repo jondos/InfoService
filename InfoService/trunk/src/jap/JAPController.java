@@ -112,6 +112,7 @@ import proxy.DirectProxy;
 import proxy.DirectProxy.AllowUnprotectedConnectionCallback;
 import update.JAPUpdateWizard;
 import anon.client.ITrustModel;
+import anon.client.AnonClient;
 import java.security.SignatureException;
 
 /* This is the Controller of All. It's a Singleton!*/
@@ -177,6 +178,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private static final String XML_ALLOW_NON_ANONYMOUS_UPDATE = "AllowDirectUpdate";
 	private static final String XML_ATTR_AUTO_CHOOSE_CASCADES = "AutoChooseCascades";
 	private static final String XML_ATTR_SHOW_CONFIG_ASSISTANT = "showConfigAssistant";
+	private static final String XML_ATTR_LOGIN_TIMEOUT = "loginTimeout";
+	private static final String XML_ATTR_INFOSERVICE_CONNECT_TIMEOUT = "isConnectTimeout";
 
 	// store classpath as it may not be created successfully after update
 	private final String CLASS_PATH = ClassUtil.getClassPath().trim();
@@ -812,10 +815,20 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_bShowConfigAssistant =
 						XMLUtil.parseAttribute(root, XML_ATTR_SHOW_CONFIG_ASSISTANT, false);
 				}
+				AnonClient.setLoginTimeout(XMLUtil.parseAttribute(root, XML_ATTR_LOGIN_TIMEOUT,
+					AnonClient.DEFAULT_LOGIN_TIMEOUT));
+				InfoServiceDBEntry.setConnectionTimeout(XMLUtil.parseAttribute(root,
+					XML_ATTR_INFOSERVICE_CONNECT_TIMEOUT,
+					InfoServiceDBEntry.DEFAULT_GET_XML_CONNECTION_TIMEOUT));
+
+
+
 				JAPModel.getInstance().setCascadeAutoSwitch(
 								XMLUtil.parseAttribute(root, XML_ATTR_AUTO_CHOOSE_CASCADES, true));
 				JAPModel.getInstance().denyNonAnonymousSurfing(
 								XMLUtil.parseAttribute(root, JAPModel.XML_DENY_NON_ANONYMOUS_SURFING, false));
+
+
 
 				Element autoChange =
 					(Element)XMLUtil.getFirstChildByName(
@@ -1965,6 +1978,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 								 JAPModel.getInstance().isNonAnonymousSurfingDenied());
 			XMLUtil.setAttribute(e, XML_ATTR_SHOW_CONFIG_ASSISTANT, m_bShowConfigAssistant);
 			Element autoSwitch = doc.createElement(AutoSwitchedMixCascade.XML_ELEMENT_CONTAINER_NAME);
+
+			XMLUtil.setAttribute(e, XML_ATTR_LOGIN_TIMEOUT, AnonClient.getLoginTimeout());
+			XMLUtil.setAttribute(e, XML_ATTR_INFOSERVICE_CONNECT_TIMEOUT,
+								 InfoServiceDBEntry.getConnectionTimeout());
 
 
 			e.appendChild(autoSwitch);
@@ -4411,7 +4428,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							// no suitable cascade was found
 							if (m_alreadyTriedCascades.size() == 0)
 							{
-								// Perhaps we should insert a timeout here?
+								/** @todo Perhaps we should insert a timeout here? */
 							}
 							currentCascade = null;
 						}
