@@ -197,9 +197,12 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 
 		if (a_cascade.isPayment())
 		{
-			if (m_trustPay < m_generalTrust)
+			if (m_trustPay != TRUST_HIGH)
 			{
-				throw new TrustException("Payment is not trusted!");
+				if (m_trustPay < m_generalTrust)
+				{
+					throw new TrustException("Payment is not trusted!");
+				}
 			}
 		}
 		else if (m_trustPay == TRUST_EXCLUSIVE)
