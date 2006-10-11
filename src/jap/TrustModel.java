@@ -180,6 +180,12 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 			return;
 		}
 
+		if (a_cascade.isUserDefined())
+		{
+			// do not make further tests
+			return;
+		}
+
 		if (m_generalTrust == GENERAL_TRUST_PARANOID)
 		{
 			// test if all mixes have valid certificates; do more later...
@@ -193,7 +199,6 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 				}
 			}
 		}
-
 
 		if (a_cascade.isPayment())
 		{

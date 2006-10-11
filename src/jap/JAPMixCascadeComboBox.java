@@ -157,9 +157,6 @@ final class JAPMixCascadeComboBoxModel extends DefaultComboBoxModel
 
 final class JAPMixCascadeComboBoxListCellRender implements ListCellRenderer
 {
-	/** @todo Create a new icon. */
-	private static final String IMG_CASCADE_FILTERED = "cdisabled.gif";
-
 	private final Color m_newCascadeColor = new Color(255, 255, 170);
 
 	private JLabel m_componentNoServer;
@@ -169,6 +166,8 @@ final class JAPMixCascadeComboBoxListCellRender implements ListCellRenderer
 	private JLabel m_componentAvailableCascade;
 	private JLabel m_componentNotCertifiedCascade;
 	private JLabel m_componentPaymentCascade;
+	private JLabel m_componentNotTrustedManualCascade;
+	private JLabel m_componentNotTrustedPaymentCascade;
 
 	public JAPMixCascadeComboBoxListCellRender()
 	{
@@ -198,10 +197,25 @@ final class JAPMixCascadeComboBoxListCellRender implements ListCellRenderer
 		m_componentAvailableCascade.setBorder(new EmptyBorder(1, 3, 1, 3));
 
 		m_componentNotCertifiedCascade = new JLabel(GUIUtils.loadImageIcon(
-			  IMG_CASCADE_FILTERED, true));
+			  JAPConstants.IMAGE_CASCADE_INTERNET_NOT_TRUSTED, true));
 		m_componentNotCertifiedCascade.setHorizontalAlignment(SwingConstants.LEFT);
 		m_componentNotCertifiedCascade.setOpaque(true);
 		m_componentNotCertifiedCascade.setBorder(new EmptyBorder(1, 3, 1, 3));
+
+		m_componentNotTrustedManualCascade = new JLabel(GUIUtils.loadImageIcon(
+			  JAPConstants.IMAGE_CASCADE_MANUAL_NOT_TRUSTED, true));
+		m_componentNotTrustedManualCascade.setHorizontalAlignment(SwingConstants.LEFT);
+		m_componentNotTrustedManualCascade.setOpaque(true);
+		m_componentNotTrustedManualCascade.setBorder(new EmptyBorder(1, 3, 1, 3));
+
+		m_componentNotTrustedPaymentCascade = new JLabel(GUIUtils.loadImageIcon(
+			  JAPConstants.IMAGE_CASCADE_PAYMENT_NOT_TRUSTED, true));
+		m_componentNotTrustedPaymentCascade.setHorizontalAlignment(SwingConstants.LEFT);
+		m_componentNotTrustedPaymentCascade.setOpaque(true);
+		m_componentNotTrustedPaymentCascade.setBorder(new EmptyBorder(1, 3, 1, 3));
+
+
+
 
 		m_componentPaymentCascade = new JLabel(GUIUtils.loadImageIcon(JAPConstants.
 			IMAGE_CASCADE_PAYMENT, true));
@@ -234,27 +248,38 @@ final class JAPMixCascadeComboBoxListCellRender implements ListCellRenderer
 		JLabel l;
 		if (cascade.isUserDefined())
 		{
-			l = m_componentUserDefinedCascade;
+			//if (JAPModel.getInstance().getTrustModel().isTrusted(cascade))
+			{
+				l = m_componentUserDefinedCascade;
+			}
+			//else
+			{
+			//	l = m_componentNotTrustedManualCascade;
+			}
+		}
+		else if (cascade.isPayment())
+		{
+			if (JAPModel.getInstance().getTrustModel().isTrusted(cascade))
+			{
+				l = m_componentPaymentCascade;
+			}
+			else
+			{
+				l = m_componentNotTrustedPaymentCascade;
+			}
 		}
 		else
 		{
-
 			if (JAPModel.getInstance().getTrustModel().isTrusted(cascade))
 			{
-				if (cascade.isPayment())
-				{
-					l = m_componentPaymentCascade;
-				}
-				else
-				{
-					l = m_componentAvailableCascade;
-				}
+				l = m_componentAvailableCascade;
 			}
 			else
 			{
 				l = m_componentNotCertifiedCascade;
 			}
 		}
+
 		l.setText(GUIUtils.trim(cascade.getName()));
 		if (isSelected)
 		{

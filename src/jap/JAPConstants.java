@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.05.477"; //Never change the layout of this line!
+	public static final String aktVersion = "00.05.479"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -155,9 +155,11 @@ public final class JAPConstants
 	public static final String IMAGE_WARNING = "warning.gif";
 	public static final String IMAGE_INFORMATION = "information.gif";
 	public static final String IMAGE_ERROR = "error.gif";
+	public static final String IMAGE_CASCADE_MANUAL_NOT_TRUSTED = "cdisabled.gif";
 	public static final String IMAGE_CASCADE_MANUELL = "servermanuell.gif";
-	public static final String IMAGE_CASCADE_NOT_CERTIFIED = "servermanuell.gif";
+	public static final String IMAGE_CASCADE_INTERNET_NOT_TRUSTED = "cdisabled.gif";
 	public static final String IMAGE_CASCADE_PAYMENT = "serverwithpayment.gif";
+	public static final String IMAGE_CASCADE_PAYMENT_NOT_TRUSTED = "cdisabled.gif";
 	public static final String IMAGE_CASCADE_INTERNET = "serverfrominternet.gif";
 	public static final String IMAGE_INFOSERVICE_MANUELL = "infoservicemanuell.gif";
 	public static final String IMAGE_INFOSERVICE_INTERNET = "infoservicefrominternet.gif";
