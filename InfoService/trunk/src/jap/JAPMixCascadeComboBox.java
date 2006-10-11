@@ -157,6 +157,9 @@ final class JAPMixCascadeComboBoxModel extends DefaultComboBoxModel
 
 final class JAPMixCascadeComboBoxListCellRender implements ListCellRenderer
 {
+	/** @todo Create a new icon. */
+	private static final String IMG_CASCADE_FILTERED = "cdisabled.gif";
+
 	private final Color m_newCascadeColor = new Color(255, 255, 170);
 
 	private JLabel m_componentNoServer;
@@ -194,8 +197,8 @@ final class JAPMixCascadeComboBoxListCellRender implements ListCellRenderer
 		m_componentAvailableCascade.setOpaque(true);
 		m_componentAvailableCascade.setBorder(new EmptyBorder(1, 3, 1, 3));
 
-		m_componentNotCertifiedCascade = new JLabel(GUIUtils.loadImageIcon(JAPConstants.
-			IMAGE_CASCADE_NOT_CERTIFIED, true));
+		m_componentNotCertifiedCascade = new JLabel(GUIUtils.loadImageIcon(
+			  IMG_CASCADE_FILTERED, true));
 		m_componentNotCertifiedCascade.setHorizontalAlignment(SwingConstants.LEFT);
 		m_componentNotCertifiedCascade.setOpaque(true);
 		m_componentNotCertifiedCascade.setBorder(new EmptyBorder(1, 3, 1, 3));
@@ -236,7 +239,7 @@ final class JAPMixCascadeComboBoxListCellRender implements ListCellRenderer
 		else
 		{
 
-			//if (JAPModel.getInstance().getTrustModel().isTrusted(cascade))
+			if (JAPModel.getInstance().getTrustModel().isTrusted(cascade))
 			{
 				if (cascade.isPayment())
 				{
@@ -247,9 +250,9 @@ final class JAPMixCascadeComboBoxListCellRender implements ListCellRenderer
 					l = m_componentAvailableCascade;
 				}
 			}
-			//else
+			else
 			{
-				//return new JLabel();
+				l = m_componentNotCertifiedCascade;
 			}
 		}
 		l.setText(GUIUtils.trim(cascade.getName()));

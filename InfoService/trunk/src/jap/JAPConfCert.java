@@ -59,7 +59,6 @@ import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
 import gui.CAListCellRenderer;
 import gui.CertDetailsDialog;
-import gui.JAPHelp;
 import gui.JAPMessages;
 import gui.dialog.JAPDialog;
 
