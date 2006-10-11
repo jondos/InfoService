@@ -380,7 +380,6 @@ final public class InfoServiceConnection implements Runnable
 	 */
 	private String readRequestLine() throws Exception
 	{
-		//StringBuffer readBuffer=new StringBuffer(256);
 		m_tmpByteArrayOut.reset();
 		boolean requestLineReadingDone = false;
 		while (!requestLineReadingDone)
