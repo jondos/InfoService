@@ -40,9 +40,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Image;
 import java.awt.Insets;
-import java.awt.MediaTracker;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -104,6 +102,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	JAPObserver, Observer
 {
 	public static final String MSG_UPDATE = JAPNewView.class.getName() + "_update";
+	public static final String MSG_NO_REAL_PAYMENT = JAPNewView.class.getName() + "_noRealPayment";
 
 	private static final String MSG_UPDATE_TOOL_TIP = JAPNewView.class.getName() + "_updateToolTip";
 	private static final String MSG_ANONYMETER_TOOL_TIP = JAPNewView.class.getName() + "_anonymeterToolTip";
@@ -118,7 +117,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		"_tooltipNewServicesFound";
 	private static final String MSG_NO_COSTS = JAPNewView.class.getName() + "_noCosts";
 	private static final String MSG_WITH_COSTS = JAPNewView.class.getName() + "_withCosts";
-	private static final String MSG_NO_REAL_PAYMENT = JAPNewView.class.getName() + "_noRealPayment";
 	private static final String MSG_BTN_ASSISTANT = JAPNewView.class.getName() + "_btnAssistant";
 	private static final String MSG_MN_ASSISTANT = JAPNewView.class.getName() + "_mnAssistant";
 	private static final String MSG_IS_DISABLED_EXPLAIN = JAPNewView.class.getName() + "_isDisabledExplain";
