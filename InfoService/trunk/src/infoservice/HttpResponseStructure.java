@@ -33,6 +33,7 @@ import org.w3c.dom.Document;
 
 import anon.infoservice.HTTPConnectionFactory;
 import anon.util.XMLUtil;
+import anon.util.MyStringBuilder;
 
 /**
  * This class stores the HTTP response for the requests which reaches the InfoService. Every
@@ -277,8 +278,7 @@ public final class HttpResponseStructure
 	private byte[] createHttpMessage(int a_httpReturnCode, int a_httpDataType, int a_httpEncoding,
 									 byte[] a_httpData, boolean a_onlyHeader)
 	{
-		//StringBuffer httpHeader = new StringBuffer(HTTP_11_STRING);
-		StringBuilder httpHeader = new StringBuilder(2048);
+		MyStringBuilder httpHeader = new MyStringBuilder(2048);
 		httpHeader.append(HTTP_11_STRING);
 		/* set the return code */
 		if (a_httpReturnCode == HTTP_RETURN_OK)

@@ -1,5 +1,7 @@
 package infoservice;
 
+import anon.util.MyStringBuilder;
+
 /**
  * This class collects some statistic information about the IS runtime.*/
 final class ISRuntimeStatistics
@@ -12,7 +14,7 @@ final class ISRuntimeStatistics
 
 	static String getAsHTML()
 	{
-		StringBuffer sb=new StringBuffer();
+		MyStringBuilder sb=new MyStringBuilder(512);
 		sb.append("TCP/IP Connections received: ");
 		sb.append(ms_lTCPIPConnections);
 		sb.append("<br>");
