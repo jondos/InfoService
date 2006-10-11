@@ -29,6 +29,7 @@ package jap;
 
 import java.security.SignatureException;
 import java.util.Date;
+import java.awt.Component;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Document;
@@ -39,6 +40,8 @@ import anon.infoservice.MixCascade;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
 import anon.infoservice.MixInfo;
+import gui.JAPMessages;
+import gui.dialog.JAPDialog;
 
 
 /**
@@ -49,6 +52,8 @@ import anon.infoservice.MixInfo;
 public class TrustModel extends BasicTrustModel implements IXMLEncodable
 {
 	public static final String XML_ELEMENT_NAME = "TrustModel";
+
+	public static final String MSG_WARNING_FILTER = JAPConfTrust.class.getName() + "_warningTrustFilter";
 
 	public static final int TRUST_NONE = 0;
 	public static final int TRUST_LITTLE = 1;
@@ -69,6 +74,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 	private static final String XML_ELEM_EXPIRED = "ExpiredCerts";
 
 	private static final String XML_ATTR_TRUST = "trust";
+	private static final String XML_ATTR_SHOW_WARNING = "showWarning";
 	private static final String[] XML_ATTR_VALUE_TRUST = new String[]{"none", "little", "high", "exclusive"};
 	private static final String[] XML_ATTR_VALUE_GENERAL_TRUST =
 		new String[]{"paranoid", "suspicious", "high", "all"};
@@ -78,6 +84,8 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 
 	private int m_generalTrust = DEFAULT_TRUST;
 
+	private boolean m_bShowWarning = true;
+
 	public void parse(Element a_trustModelElement)
 	{
 		if (a_trustModelElement == null)
@@ -86,6 +94,8 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 		}
 		m_generalTrust = parseGeneralTrust(
 			  XMLUtil.parseAttribute(a_trustModelElement, XML_ATTR_TRUST, null), m_generalTrust);
+		m_bShowWarning = XMLUtil.parseAttribute(a_trustModelElement, XML_ATTR_SHOW_WARNING, m_bShowWarning);
+
 		m_trustPay = parseTrust(XMLUtil.parseAttribute(
 			  XMLUtil.getFirstChildByName(a_trustModelElement, XML_ELEM_PAY),
 			  XML_ATTR_TRUST, null), m_trustPay);
@@ -105,6 +115,8 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 		Element elemTemp;
 
 		XMLUtil.setAttribute(elemTrustModel, XML_ATTR_TRUST, XML_ATTR_VALUE_GENERAL_TRUST[m_generalTrust]);
+		XMLUtil.setAttribute(elemTrustModel, XML_ATTR_SHOW_WARNING, m_bShowWarning);
+
 
 		elemTemp = a_doc.createElement(XML_ELEM_PAY);
 		XMLUtil.setAttribute(elemTemp, XML_ATTR_TRUST, XML_ATTR_VALUE_TRUST[m_trustPay]);
@@ -115,6 +127,18 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 		elemTrustModel.appendChild(elemTemp);
 
 		return elemTrustModel;
+	}
+
+	public void showTrustWarning(Component a_component)
+	{
+		if (JAPModel.getInstance().getTrustModel().isWarningShown())
+		{
+			JAPDialog.LinkedCheckBox checkbox = new JAPDialog.LinkedCheckBox(false);
+			JAPDialog.showMessageDialog(a_component,
+										JAPMessages.getString(TrustModel.MSG_WARNING_FILTER),
+										checkbox);
+			JAPModel.getInstance().getTrustModel().setShowWarning(!checkbox.getState());
+		}
 	}
 
 	public void setGeneralTrust(int a_trust)
@@ -128,6 +152,16 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 			}
 			notifyObservers();
 		}
+	}
+
+	public void setShowWarning(boolean a_bShow)
+	{
+		m_bShowWarning = a_bShow;
+	}
+
+	public boolean isWarningShown()
+	{
+		return m_bShowWarning;
 	}
 
 	public int getGeneralTrust()
