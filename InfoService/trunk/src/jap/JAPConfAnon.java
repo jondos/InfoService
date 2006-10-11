@@ -122,6 +122,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private static final String MSG_FIRST_MIX_TEXT = JAPConfAnon.class.getName() + "_firstMixText";
 	private static final String MSG_MIDDLE_MIX_TEXT = JAPConfAnon.class.getName() + "_middleMixText";
 	private static final String MSG_LAST_MIX_TEXT = JAPConfAnon.class.getName() + "_lastMixText";
+	private static final String MSG_NOT_TRUSTWORTHY = JAPConfAnon.class.getName() + "_notTrustworthy";
+	private static final String MSG_EXPLAIN_NOT_TRUSTWORTHY =
+		JAPConfAnon.class.getName() + "_explainNotTrustworthy";
 
 
 	private static final String DEFAULT_MIX_NAME = "AN.ON Mix";
@@ -453,6 +456,26 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.gridx = 2;
 		c.gridwidth = 2;
 		m_payLabel = new JLabel("");
+		m_payLabel.addMouseListener(new MouseAdapter()
+		{
+			public void mouseClicked(MouseEvent a_event)
+			{
+				if (m_payLabel.getCursor() != Cursor.getDefaultCursor())
+				{
+					if (m_payLabel.getForeground() == Color.red)
+					{
+						JAPDialog.showMessageDialog(m_payLabel,
+							JAPMessages.getString(MSG_EXPLAIN_NOT_TRUSTWORTHY),
+							new JAPDialog.LinkedHelpContext(JAPConfTrust.class.getName()));
+					}
+					else
+					{
+						JAPDialog.showMessageDialog(m_payLabel,
+							JAPMessages.getString(JAPNewView.MSG_NO_REAL_PAYMENT));
+					}
+				}
+			}
+		});
 		m_cascadesPanel.add(m_payLabel, c);
 
 		c.insets = new Insets(5, 5, 0, 5);
@@ -1251,12 +1274,25 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					m_portsLabel.setText(m_infoService.getPorts(cascadeId));
 					m_cascadesPanel.remove(m_lblPorts);
 					m_cascadesPanel.add(m_lblPorts, m_constrPorts);
-					if (m_infoService.isPay(cascadeId))
+					if (!cascade.isUserDefined() &&
+						!JAPModel.getInstance().getTrustModel().isTrusted(cascade))
 					{
+						m_payLabel.setForeground(Color.red);
+						m_payLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+						m_payLabel.setText(JAPMessages.getString(MSG_NOT_TRUSTWORTHY));
+						m_payLabel.setToolTipText(JAPMessages.getString(MSG_EXPLAIN_NOT_TRUSTWORTHY));
+					}
+					else if (m_infoService.isPay(cascadeId))
+					{
+						m_payLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+						m_payLabel.setForeground(Color.blue);
 						m_payLabel.setText(JAPMessages.getString(MSG_PAYCASCADE));
+						m_payLabel.setToolTipText(JAPMessages.getString(JAPNewView.MSG_NO_REAL_PAYMENT));
 					}
 					else
 					{
+						m_payLabel.setCursor(Cursor.getDefaultCursor());
+						m_payLabel.setToolTipText("");
 						m_payLabel.setText("");
 					}
 				}
