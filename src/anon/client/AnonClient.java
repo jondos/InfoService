@@ -74,11 +74,13 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 	 * @todo For most people, 15s are sufficient, but some cannot connect with this short
 	 * timeout. Make this configurable.
 	 */
-	private static final int LOGIN_TIMEOUT = 30000;
+	public static final int DEFAULT_LOGIN_TIMEOUT = 15000;
 	private static final int CONNECT_TIMEOUT = 8000;
 	private static final int CONNECTION_ERROR_WAIT_TIME = 30000; // time interval to report proxy errors
 	 // 4 errors in 30 seconds should be enough to be sure there is really a connection error
 	private static final int CONNECTION_ERROR_WAIT_COUNT = 4;
+
+	private static int m_loginTimeout = DEFAULT_LOGIN_TIMEOUT;
 
 	private Multiplexer m_multiplexer;
 
@@ -260,6 +262,19 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		}
 
 		return run.getStatus();
+	}
+
+	public static void setLoginTimeout(int a_loginTimeoutMS)
+	{
+		if (a_loginTimeoutMS >= 1000)
+		{
+			m_loginTimeout = a_loginTimeoutMS;
+		}
+	}
+
+	public static int getLoginTimeout()
+	{
+		return m_loginTimeout;
 	}
 
 	public void setPaymentProxy(IMutableProxyInterface a_paymentProxyInterface)
@@ -595,7 +610,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 				try
 				{
 					/* limit timeouts while login procedure */
-					a_connectedSocket.setSoTimeout(LOGIN_TIMEOUT);
+					a_connectedSocket.setSoTimeout(m_loginTimeout);
 				}
 				catch (SocketException e)
 				{

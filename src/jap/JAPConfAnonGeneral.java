@@ -30,16 +30,10 @@ package jap;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import javax.swing.JCheckBox;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.JRadioButton;
-import javax.swing.ButtonGroup;
 import javax.swing.JPanel;
 import javax.swing.JComboBox;
 import javax.swing.JButton;
@@ -59,8 +53,13 @@ import java.util.Dictionary;
 import java.util.Observable;
 import java.util.Hashtable;
 
+import anon.client.AnonClient;
+
 final class JAPConfAnonGeneral extends AbstractJAPConfModule
 {
+	public static final String MSG_CONNECTION_TIMEOUT =
+		JAPConfAnonGeneral.class.getName() + "_loginTimeout";
+
 	public static final String MSG_DENY_NON_ANONYMOUS_SURFING = JAPConfAnonGeneral.class.getName() +
 		"_denyNonAnonymousSurfing";
 	private static final String MSG_AUTO_CHOOSE_CASCADES = JAPConfAnonGeneral.class.getName() +
@@ -93,12 +92,17 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	private static final String MSG_EVERY_SECONDS = JAPConfAnonGeneral.class.getName() + "_everySeconds";
 
 
+
 	private static final String IMG_ARROW_RIGHT = JAPConfAnonGeneral.class.getName() + "_arrowRight.gif";
 	private static final String IMG_ARROW_LEFT = JAPConfAnonGeneral.class.getName() + "_arrowLeft.gif";
 
 	private static final int DT_INTERVAL_STEPLENGTH = 5;
 	private static final int DT_INTERVAL_STEPS = 12;
 	private static final int DT_INTERVAL_DEFAULT = 6;
+
+	private static final Integer[] LOGIN_TIMEOUTS =
+		new Integer[]{new Integer(5), new Integer(10), new Integer(15), new Integer(20), new Integer(25),
+		new Integer(30), new Integer(40), new Integer(50), new Integer(60)};
 
 	private JCheckBox m_cbDenyNonAnonymousSurfing;
 	private JCheckBox m_cbDummyTraffic;
@@ -108,6 +112,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	private JSlider m_sliderDummyTrafficIntervall;
 	private JAPController m_Controller;
 	private JComboBox[] m_comboServices;
+	private JComboBox m_comboTimeout;
 
 
 	private JList m_knownCascadesList;
@@ -176,6 +181,8 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 
 		m_comboServices[2].setEnabled(JAPModel.getInstance().isMixMinionActivated());
 		m_comboServices[3].setEnabled(JAPModel.getInstance().isTorActivated());
+
+		setLoginTimeout(AnonClient.getLoginTimeout());
 	}
 
 
@@ -208,6 +215,8 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		JAPModel.getInstance().setAutoConnect(m_cbAutoConnect.isSelected());
 		JAPModel.getInstance().setAutoReConnect(m_cbAutoReConnect.isSelected());
 		JAPModel.getInstance().setCascadeAutoSwitch(m_cbAutoChooseCascades.isSelected());
+
+		AnonClient.setLoginTimeout(((Integer)m_comboTimeout.getSelectedItem()).intValue() * 1000);
 
 		return true;
 	}
@@ -279,7 +288,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		c.gridx = 0;
 		c.gridy = 0;
 		c.gridheight = 1;
-		c.gridwidth = 2;
+		c.gridwidth = 3;
 		c.insets = new Insets(10, 10, 0, 10);
 		c.anchor = GridBagConstraints.NORTHWEST;
 		c.fill = GridBagConstraints.BOTH;
@@ -299,10 +308,10 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		panelRoot.add(m_cbAutoChooseCascades, c);
 		c.gridy++;
 		c.weightx = 0.0;
-		c.gridwidth = 1;
+		c.gridwidth = 2;
 		panelRoot.add(m_cbDummyTraffic, c);
 
-		c.gridx++;
+
 		m_sliderDummyTrafficIntervall = new JSlider(SwingConstants.HORIZONTAL,
 													DT_INTERVAL_STEPLENGTH,
 													DT_INTERVAL_STEPS * DT_INTERVAL_STEPLENGTH,
@@ -319,13 +328,26 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_sliderDummyTrafficIntervall.setPaintLabels(true);
 		m_sliderDummyTrafficIntervall.setPaintTicks(true);
 		m_sliderDummyTrafficIntervall.setSnapToTicks(true);
+		c.gridx++;
+		c.gridx++;
+		c.gridwidth = 1;
 		panelRoot.add(m_sliderDummyTrafficIntervall, c);
+
+		c.gridy++;
+		c.gridx = 0;
+		c.gridwidth = 1;
+		panelRoot.add(new JLabel(JAPMessages.getString(MSG_CONNECTION_TIMEOUT) + " (s):"), c);
+		m_comboTimeout = new JComboBox(LOGIN_TIMEOUTS);
+		c.fill = GridBagConstraints.NONE;
+		c.gridx++;
+		panelRoot.add(m_comboTimeout, c);
+
 
 		c.gridy++;
 		c.gridx = 0;
 		c.weighty = 1.0;
 		c.weightx = 1.0;
-		c.gridwidth = 2;
+		c.gridwidth = 3;
 		c.fill = GridBagConstraints.BOTH;
 		panelRoot.add(new JLabel(), c);
 
@@ -356,6 +378,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_cbAutoConnect.setSelected(true);
 		m_cbAutoReConnect.setSelected(true);
 		m_cbAutoChooseCascades.setSelected(true);
+		setLoginTimeout(AnonClient.DEFAULT_LOGIN_TIMEOUT);
 	}
 
 	public String getHelpContext()
@@ -459,5 +482,32 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		panel.add(allowedCascadesScrollPane, c);
 
 		return panel;
+	}
+
+	private void setLoginTimeout(int a_timeoutMS)
+	{
+		int timeout = a_timeoutMS / 1000;
+
+		if (timeout >= ((Integer)m_comboTimeout.getItemAt(m_comboTimeout.getItemCount() - 1)).intValue())
+		{
+			m_comboTimeout.setSelectedIndex(m_comboTimeout.getItemCount() - 1);
+			AnonClient.setLoginTimeout(((Integer)m_comboTimeout.getSelectedItem()).intValue() * 1000);
+		}
+		else if (timeout <=((Integer)m_comboTimeout.getItemAt(0)).intValue())
+		{
+			m_comboTimeout.setSelectedIndex(0);
+			AnonClient.setLoginTimeout(((Integer)m_comboTimeout.getSelectedItem()).intValue() * 1000);
+		}
+		else
+		{
+			for (int i = 1; i < m_comboTimeout.getItemCount(); i++)
+			{
+				if (timeout <= ((Integer)m_comboTimeout.getItemAt(i)).intValue())
+				{
+					m_comboTimeout.setSelectedIndex(i);
+					break;
+				}
+			}
+		}
 	}
 }

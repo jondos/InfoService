@@ -528,7 +528,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 			m_lblMix.setToolTipText(JAPMessages.getString(MSG_MIX_ID) + "=" + selectedMixId + version);
 			//m_lblMix.setText(JAPMessages.getString("infoAboutMix") +
-			String name = GUIUtils.trim(m_infoService.getName(cascade, selectedMixId), 40);
+			String name = GUIUtils.trim(m_infoService.getName(cascade, selectedMixId), 80);
 			if (name == null)
 			{
 				m_lblMix.setText(DEFAULT_MIX_NAME);

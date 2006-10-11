@@ -24,19 +24,14 @@ To get to this panel, press button <i>Settings</i> in JAP's main window, then ch
     Check this box if you want JAP to automatically reconnect to the anonymization service if the connection is lost.
     <P>
     <LI><B>Automatically change Mix cascades</B><BR>
-    Checking this box will give you two more options:<P>
-    <UL>
-    <LI><B>Equally choose all cascades</B><BR>
-    With this option activated, JAP will choose a cascade by chance. During anonymous browsing, however, cascades will only be switched if the active cascade is offline.
-    <P>
-    <LI><B>Only choose payment cascades</B><BR>
-    Similar to the first option, with the distinction that the random cascade will exclusively be chosen from payment cascades.
-    <P>
-    </UL>
-    <P>
-    <LI><B>Send dummy packet</B><BR>
+    With this option activated, JAP will choose a cascade by chance according to your <a href="jap.JAPConfTrust_en.html">trust settings</a>. During anonymous browsing, however, cascades will only be switched if the active cascade is offline.
+      <P>
+  <LI><B>Send dummy packet</B><BR>
     Here you can decide if fake packets without any content should be sent and if so, how often.  This simulates continuous communication for any potential observers.
-</UL>
+      <P>
+    <LI><B>Login timeout</B><br>
+  If your internet connection is too slow, a too short timeout for the login to services may lead prevent JAP from establishing an anonymous connection. A too high timeout may cause long waiting times when connecting if the currently chosen service is slow or not available. Therefore set the timeout lower or higher as you need.
+  </UL>
 
 
 <!--#include virtual="/footer.html"-->

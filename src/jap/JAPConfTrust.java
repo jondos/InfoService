@@ -157,7 +157,7 @@ final class JAPConfTrust extends AbstractJAPConfModule
 
 	public String getHelpContext()
 	{
-		return "index";
+		return getClass().getName();
 	}
 
 	protected void onRootPanelShown()
