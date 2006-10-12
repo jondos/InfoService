@@ -535,7 +535,7 @@ public class PaymentMainPanel extends FlippingPanel
 				String message = JAPMessages.getString("aiErrorMessage") + "<br>" + error;
 				if (!JAPModel.getInstance().isCascadeAutoSwitched())
 				{
-					message += "<br><br>" + MSG_ENABLE_AUTO_SWITCH;
+					message += "<br><br>" + JAPMessages.getString(MSG_ENABLE_AUTO_SWITCH);
 					if (JAPDialog.showYesNoDialog(PaymentMainPanel.this, message))
 					{
 						JAPModel.getInstance().setCascadeAutoSwitch(true);
