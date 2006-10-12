@@ -962,6 +962,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	 */
 	private HttpResponseStructure getTorNodesList(int a_supportedEncodings)
 	{
+		ISRuntimeStatistics.ms_lNrOfGetTorNodesRequests++;
 		/* this is only the default, if we don't have a TOR list */
 		HttpResponseStructure httpResponse = null;
 		byte[] torNodesList = null;
@@ -1154,17 +1155,19 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	 */
 	private HttpResponseStructure japGetCurrentJapVersion()
 	{
+		ISRuntimeStatistics.ms_lNrOfGetMinJapVersion++;
 		/* this is only the default, if we don't know the current JAP version */
-		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
-			HTTP_RETURN_NOT_FOUND);
+		HttpResponseStructure httpResponse = null;
 		JAPMinVersion minVersionEntry = (JAPMinVersion) (Database.getInstance(JAPMinVersion.class).
 			getEntryById("JAPMinVersion"));
 		if (minVersionEntry != null)
 		{
 			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,
-				HttpResponseStructure.HTTP_ENCODING_PLAIN,
-				XMLUtil.toString(minVersionEntry.getXmlStructure()));
+				HttpResponseStructure.HTTP_ENCODING_PLAIN,minVersionEntry.getPostData());
 		}
+		else
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.
+			HTTP_RETURN_NOT_FOUND);
 		return httpResponse;
 	}
 
