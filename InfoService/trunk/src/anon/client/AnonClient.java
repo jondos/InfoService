@@ -281,7 +281,10 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 
 	public void setPaymentProxy(IMutableProxyInterface a_paymentProxyInterface)
 	{
-		m_paymentProxyInterface = a_paymentProxyInterface;
+		if (a_paymentProxyInterface != null)
+		{
+			m_paymentProxyInterface = a_paymentProxyInterface;
+		}
 	}
 
 	public int setProxy(IMutableProxyInterface a_proxyInterface)
