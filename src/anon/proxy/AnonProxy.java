@@ -89,7 +89,8 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	private ServerSocket m_socketListener;
 
-	private IMutableProxyInterface m_proxyInterface;
+	private IMutableProxyInterface m_proxyInterface =
+		new IMutableProxyInterface.DummyMutableProxyInterface();
 
 	private IProxyListener m_ProxyListener;
 

@@ -84,7 +84,8 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 
 	private Multiplexer m_multiplexer;
 
-	private IMutableProxyInterface m_proxyInterface;
+	private IMutableProxyInterface m_proxyInterface =
+		new IMutableProxyInterface.DummyMutableProxyInterface();
 
 	private Object m_internalSynchronization;
 
@@ -111,7 +112,8 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 
 	private Pay m_paymentInstance;
 
-	private IMutableProxyInterface m_paymentProxyInterface;
+	private IMutableProxyInterface m_paymentProxyInterface =
+		new IMutableProxyInterface.DummyMutableProxyInterface();
 
 	private boolean m_connected;
 

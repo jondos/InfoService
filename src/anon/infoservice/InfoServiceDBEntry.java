@@ -78,7 +78,8 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry imple
 	/**
 	 * A proxy interface that is used for all connections and may change over time.
 	 */
-	private static IMutableProxyInterface m_proxyInterface;
+	private static IMutableProxyInterface m_proxyInterface =
+		new IMutableProxyInterface.DummyMutableProxyInterface();
 
 	/**
 	 * This is the ID of this infoservice.
