@@ -28,7 +28,6 @@
 package anon.tor.ordescription;
 
 import java.io.LineNumberReader;
-import java.io.StringReader;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -44,7 +43,7 @@ import logging.LogType;
 import java.io.InputStreamReader;
 import java.io.ByteArrayInputStream;
 
-public class ORList
+final public class ORList
 {
 
 	private Vector m_onionrouters;
