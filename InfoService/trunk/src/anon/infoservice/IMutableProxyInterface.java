@@ -64,6 +64,10 @@ public interface IMutableProxyInterface
 
 		public IProxyInterfaceGetter getProxyInterface(boolean a_bAnonInterface)
 		{
+			if (a_bAnonInterface)
+			{
+				return null;
+			}
 			return m_dummyGetter;
 		}
 	}
