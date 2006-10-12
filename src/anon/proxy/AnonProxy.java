@@ -140,21 +140,41 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	 * @param a_listener
 	 *          A ServerSocket, where the AnonProxy listens for new requests (e.g.
 	 *          from a web browser).
+	 */
+	public AnonProxy(ServerSocket a_listener)
+	{
+		this (a_listener, null, null);
+	}
+
+	/**
+	 * Creates a new AnonProxy. This proxy uses as default only the AN.ON service.
+	 * If you also want to use TOR and Mixminion you have to enable them by
+	 * calling setTorParams() and setMixmininoParams().
+	 *
+	 * @see setTorParams()
+	 * @see setMixminionParams()
+	 *
+	 * @param a_listener
+	 *          A ServerSocket, where the AnonProxy listens for new requests (e.g.
+	 *          from a web browser).
 	 * @param a_proxyInterface
 	 *          describes a proxy the AnonProxy should use to establish
 	 *          connections to the anon servers (e.g. if you are behind some
 	 *          firewall etc.)
 	 */
-	public AnonProxy(ServerSocket listener, IMutableProxyInterface a_proxyInterface,
+	public AnonProxy(ServerSocket a_listener, IMutableProxyInterface a_proxyInterface,
 					 IMutableProxyInterface a_paymentProxyInterface)
 	{
-		if (listener == null)
+		if (a_listener == null)
 		{
 			throw new IllegalArgumentException("Socket listener is null!");
 		}
 
-		m_socketListener = listener;
-		m_proxyInterface = a_proxyInterface;
+		m_socketListener = a_listener;
+		if (a_proxyInterface != null)
+		{
+			m_proxyInterface = a_proxyInterface;
+		}
 		// HTTP
 		m_Anon = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_ANON);
 		m_Anon.setProxy(a_proxyInterface);
