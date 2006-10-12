@@ -129,6 +129,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String MSG_IS_TRUST_ALL = JAPNewView.class.getName() + "_trustAll";
 	private static final String MSG_IS_EDIT_TRUST = JAPNewView.class.getName() + "_editTrust";
 
+	private static final String MSG_TRUST_FILTER = JAPNewView.class.getName() + "_trustFilter";
+
+
 
 	private JobQueue m_transferedBytesJobs;
 
@@ -490,7 +493,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.gridy = 1;
 		c1.anchor = GridBagConstraints.WEST;
 		c1.insets = new Insets(5, 0, 0, 0);
-		JLabel lblTrust = new JLabel(JAPMessages.getString(JAPConfTrust.MSG_TITLE) + ":");
+		JLabel lblTrust = new JLabel(JAPMessages.getString(MSG_TRUST_FILTER) + ":");
 		m_panelAnonService.add(lblTrust, c1);
 
 		c1.gridx = 1;
