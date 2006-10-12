@@ -51,4 +51,20 @@ public interface IMutableProxyInterface
 	{
 		public ImmutableProxyInterface getProxyInterface();
 	}
+
+	public static class DummyMutableProxyInterface implements IMutableProxyInterface
+	{
+		private IProxyInterfaceGetter m_dummyGetter = new IProxyInterfaceGetter()
+		{
+			public ImmutableProxyInterface getProxyInterface()
+			{
+				return null;
+			}
+		} ;
+
+		public IProxyInterfaceGetter getProxyInterface(boolean a_bAnonInterface)
+		{
+			return m_dummyGetter;
+		}
+	}
 }
