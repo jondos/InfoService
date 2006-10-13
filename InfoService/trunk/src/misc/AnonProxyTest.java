@@ -18,6 +18,8 @@ public class AnonProxyTest
 	{
 		try
 		{
+
+
 			//just to ensure that we see some debug messages...
 			SystemErrLog log=new SystemErrLog();
 			log.setLogType(LogType.ALL);
@@ -28,9 +30,9 @@ public class AnonProxyTest
 
 			//we need to disbale certificate checks (better: set valid root certifcates for productive environments!)
 			SignatureVerifier.getInstance().setCheckSignatures(false);
-			InfoServiceHolder ih=InfoServiceHolder.getInstance();
-			ih.setPreferredInfoService(new InfoServiceDBEntry("infoservice.inf.tu-dresden.de",80));
-			Object o=ih.getInfoServices();
+			//InfoServiceHolder ih=InfoServiceHolder.getInstance();
+			//ih.setPreferredInfoService(new InfoServiceDBEntry("infoservice.inf.tu-dresden.de",80));
+			//Object o=ih.getInfoServices();
 			theProxy.setMixCascade(new SimpleMixCascadeContainer(
 						 new MixCascade(null, null, "mix.inf.tu-dresden.de", 6544)));
 			theProxy.start();
