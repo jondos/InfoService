@@ -32,6 +32,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.security.SignatureException;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Locale;
@@ -41,7 +42,6 @@ import java.util.Random;
 import java.util.Vector;
 
 import java.awt.Component;
-import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Point;
@@ -62,6 +62,8 @@ import anon.AnonServerDescription;
 import anon.AnonServiceEventAdapter;
 import anon.AnonServiceEventListener;
 import anon.ErrorCodes;
+import anon.client.AnonClient;
+import anon.client.ITrustModel;
 import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
 import anon.infoservice.AbstractMixCascadeContainer;
@@ -88,18 +90,18 @@ import anon.pay.PayAccountsFile;
 import anon.proxy.AnonProxy;
 import anon.proxy.IProxyListener;
 import anon.tor.TorAnonServerDescription;
-import anon.util.JobQueue;
 import anon.util.ClassUtil;
 import anon.util.IMiscPasswordReader;
 import anon.util.IPasswordReader;
+import anon.util.JobQueue;
 import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
 import forward.server.ForwardServerManager;
 import gui.GUIUtils;
 import gui.JAPMessages;
+import gui.dialog.DialogContentPane;
 import gui.dialog.JAPDialog;
 import gui.dialog.JAPDialog.LinkedCheckBox;
-import gui.dialog.DialogContentPane;
 import gui.dialog.PasswordContentPane;
 import jap.forward.JAPRoutingEstablishForwardedConnectionDialog;
 import jap.forward.JAPRoutingMessage;
@@ -111,9 +113,6 @@ import platform.AbstractOS;
 import proxy.DirectProxy;
 import proxy.DirectProxy.AllowUnprotectedConnectionCallback;
 import update.JAPUpdateWizard;
-import anon.client.ITrustModel;
-import anon.client.AnonClient;
-import java.security.SignatureException;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -334,9 +333,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 			{
 				mixIDs.addElement(JAPConstants.DEFAULT_ANON_MIX_IDs[i]);
 			}
-			m_currentMixCascade =
-				new MixCascade(JAPConstants.DEFAULT_ANON_NAME,
-							   JAPConstants.DEFAULT_ANON_MIX_IDs[0], mixIDs, listeners);
+			m_currentMixCascade = new MixCascade(JAPConstants.DEFAULT_ANON_NAME,
+												 JAPConstants.DEFAULT_ANON_MIX_IDs[0], mixIDs, listeners);
 			m_currentMixCascade.setUserDefined(false, null);
 			Database.getInstance(CascadeIDEntry.class).update(new CascadeIDEntry(m_currentMixCascade));
 		}

@@ -62,6 +62,8 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 
 	//private static final String XML_ELEM_RSA_KEY_VALUE = "RSAKeyValue";
 
+	private boolean m_bDefaultVerified = false;
+
 	/**
 	 * This is the ID of the mixcascade.
 	 */
@@ -472,6 +474,7 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 
 		/* some more values */
 		m_userDefined = true;
+		m_bDefaultVerified = true;
 		m_mixCascadeCertificate = null;
 		m_xmlStructure = generateXmlRepresentation();
 		m_compressedXmlStructure = ZLibTools.compress(XMLUtil.toByteArray(m_xmlStructure));
@@ -868,7 +871,7 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 		{
 			return m_signature.isVerified();
 		}
-		return false;
+		return m_bDefaultVerified;
 	}
 
 	public boolean isValid()
@@ -944,12 +947,6 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 		}
 
 		return mixCascadeNode;
-	}
-
-
-	public boolean isCertified()
-	{
-		return true;
 	}
 
 	public boolean isPayment()
