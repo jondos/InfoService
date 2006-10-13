@@ -68,7 +68,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 
 	public static final int DEFAULT_TRUST_PAY = TRUST_HIGH;
 	public static final int DEFAULT_TRUST_EXPIRED_CERTS = TRUST_LITTLE;
-	public static final int DEFAULT_TRUST = GENERAL_TRUST_HIGH;
+	public static final int DEFAULT_TRUST = GENERAL_TRUST_ALL;
 
 	private static final String XML_ELEM_PAY = "Payment";
 	private static final String XML_ELEM_EXPIRED = "ExpiredCerts";
@@ -92,8 +92,8 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 		{
 			return;
 		}
-		m_generalTrust = parseGeneralTrust(
-			  XMLUtil.parseAttribute(a_trustModelElement, XML_ATTR_TRUST, null), m_generalTrust);
+		//m_generalTrust = parseGeneralTrust(
+			//  XMLUtil.parseAttribute(a_trustModelElement, XML_ATTR_TRUST, null), m_generalTrust);
 		m_bShowWarning = XMLUtil.parseAttribute(a_trustModelElement, XML_ATTR_SHOW_WARNING, m_bShowWarning);
 
 		m_trustPay = parseTrust(XMLUtil.parseAttribute(

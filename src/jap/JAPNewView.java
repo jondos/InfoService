@@ -292,9 +292,61 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.anchor = GridBagConstraints.NORTHWEST;
 		c.fill = GridBagConstraints.NONE;
 		c.weighty = 1;
+		c.gridheight = 2;
 		northPanel.add(northLabel, c);
 
 
+		m_lblISRequestsDeactivated = new JLabel(JAPMessages.getString(MSG_IS_DEACTIVATED));
+		m_lblISRequestsDeactivated.setForeground(northPanel.getBackground());
+		m_lblISRequestsDeactivated.addMouseListener(new MouseAdapter()
+		{
+			public void mouseClicked(MouseEvent e)
+			{
+				if (m_bEnableISClicked)
+				{
+					return;
+				}
+				m_bEnableISClicked = true;
+
+				if (JAPModel.getInstance().isInfoServiceDisabled())
+				{
+					if (JAPDialog.showConfirmDialog(JAPNewView.this,
+													JAPMessages.getString(MSG_IS_DISABLED_EXPLAIN),
+													JAPDialog.OPTION_TYPE_YES_NO,
+													JAPDialog.MESSAGE_TYPE_WARNING,
+													GUIUtils.loadImageIcon(METERFNARRAY[2], true, true))
+						== JAPDialog.RETURN_VALUE_YES)
+					{
+						JAPModel.getInstance().setInfoServiceDisabled(false);
+					}
+				}
+
+				if (!JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed() &&
+					!JAPController.getInstance().isAnonConnected())
+				{
+					if (JAPDialog.showConfirmDialog(JAPNewView.this, JAPMessages.getString(
+						JAPController.MSG_IS_NOT_ALLOWED),
+													JAPDialog.OPTION_TYPE_YES_NO,
+													JAPDialog.MESSAGE_TYPE_WARNING)
+						== JAPDialog.RETURN_VALUE_YES)
+					{
+						JAPModel.getInstance().allowInfoServiceViaDirectConnection(true);
+					}
+
+				}
+				m_bEnableISClicked = false;
+			}
+		});
+
+		c.anchor = GridBagConstraints.EAST;
+		c.gridx++;
+		c.gridx++;
+		c.gridheight = 1;
+		c.gridy = 0;
+		Insets insets = c.insets;
+		c.insets = new Insets(0, 0, 0, 10);
+		northPanel.add(m_lblISRequestsDeactivated, c);
+		c.insets = insets;
 
 
 
@@ -357,7 +409,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		});
 		m_pnlVersion.add(m_labelUpdate, constrVersion);
 
-		c.gridy = 0;
+		c.gridy = 1;
 		c.anchor = GridBagConstraints.SOUTHEAST;
 		c.weighty = 0;
 		m_labelVersion = new JLabel(JAPConstants.aktVersion);
@@ -494,7 +546,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.anchor = GridBagConstraints.WEST;
 		c1.insets = new Insets(5, 0, 0, 0);
 		JLabel lblTrust = new JLabel(JAPMessages.getString(MSG_TRUST_FILTER) + ":");
-		m_panelAnonService.add(lblTrust, c1);
+		//m_panelAnonService.add(lblTrust, c1);
 
 		c1.gridx = 1;
 		c1.gridy = 1;
@@ -528,7 +580,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				JAPModel.getInstance().getTrustModel().showTrustWarning(comboFilter);
 			}
 		});
-		m_panelAnonService.add(comboFilter, c1);
+		//m_panelAnonService.add(comboFilter, c1);
 		c1.gridx++;
 		JButton btnEditTrust = new JButton(JAPMessages.getString(MSG_IS_EDIT_TRUST));
 		btnEditTrust.addActionListener(new ActionListener()
@@ -538,55 +590,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				showConfigDialog(JAPConf.ANON_TRUST_TAB);
 			}
 		});
-		m_panelAnonService.add(btnEditTrust, c1);
-
-		m_lblISRequestsDeactivated = new JLabel(JAPMessages.getString(MSG_IS_DEACTIVATED));
-		m_lblISRequestsDeactivated.setForeground(m_panelAnonService.getBackground());
-		m_lblISRequestsDeactivated.addMouseListener(new MouseAdapter()
-		{
-			public void mouseClicked(MouseEvent e)
-			{
-				if (m_bEnableISClicked)
-				{
-					return;
-				}
-				m_bEnableISClicked = true;
-
-				if (JAPModel.getInstance().isInfoServiceDisabled())
-				{
-					if (JAPDialog.showConfirmDialog(JAPNewView.this,
-													JAPMessages.getString(MSG_IS_DISABLED_EXPLAIN),
-													JAPDialog.OPTION_TYPE_YES_NO,
-													JAPDialog.MESSAGE_TYPE_WARNING,
-													GUIUtils.loadImageIcon(METERFNARRAY[2], true, true))
-						== JAPDialog.RETURN_VALUE_YES)
-					{
-						JAPModel.getInstance().setInfoServiceDisabled(false);
-					}
-				}
-
-				if (!JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed() &&
-					!JAPController.getInstance().isAnonConnected())
-				{
-					if (JAPDialog.showConfirmDialog(JAPNewView.this, JAPMessages.getString(
-									   JAPController.MSG_IS_NOT_ALLOWED),
-						JAPDialog.OPTION_TYPE_YES_NO,
-						JAPDialog.MESSAGE_TYPE_WARNING)
-						== JAPDialog.RETURN_VALUE_YES)
-					{
-						JAPModel.getInstance().allowInfoServiceViaDirectConnection(true);
-					}
-
-				}
-				m_bEnableISClicked = false;
-			}
-		});
-
-		c1.anchor = GridBagConstraints.EAST;
-		c1.gridx++;
-		c1.gridwidth = 3;
-		m_panelAnonService.add(m_lblISRequestsDeactivated, c1);
-
+		//m_panelAnonService.add(btnEditTrust, c1);
 
 
 
