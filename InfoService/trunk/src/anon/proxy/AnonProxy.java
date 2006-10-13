@@ -177,7 +177,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		}
 		// HTTP
 		m_Anon = AnonServiceFactory.getAnonServiceInstance(AnonServiceFactory.SERVICE_ANON);
-		m_Anon.setProxy(a_proxyInterface);
+		m_Anon.setProxy(m_proxyInterface);
 		( (AnonClient) m_Anon).setPaymentProxy(a_paymentProxyInterface);
 		setDummyTraffic( -1);
 		m_forwardedConnection = false;
