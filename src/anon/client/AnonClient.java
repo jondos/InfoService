@@ -68,7 +68,8 @@ import anon.IServiceContainer;
 /**
  * @author Stefan Lieske
  */
-public class AnonClient implements AnonService, Observer, DataChainErrorListener {
+public class AnonClient implements AnonService, Observer, DataChainErrorListener
+{
 
 	/**
 	 * @todo For most people, 15s are sufficient, but some cannot connect with this short
@@ -77,15 +78,14 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 	public static final int DEFAULT_LOGIN_TIMEOUT = 15000;
 	private static final int CONNECT_TIMEOUT = 8000;
 	private static final int CONNECTION_ERROR_WAIT_TIME = 30000; // time interval to report proxy errors
-	 // 4 errors in 30 seconds should be enough to be sure there is really a connection error
+	// 4 errors in 30 seconds should be enough to be sure there is really a connection error
 	private static final int CONNECTION_ERROR_WAIT_COUNT = 4;
 
 	private static int m_loginTimeout = DEFAULT_LOGIN_TIMEOUT;
 
 	private Multiplexer m_multiplexer;
 
-	private IMutableProxyInterface m_proxyInterface =
-		new IMutableProxyInterface.DummyMutableProxyInterface();
+	private IMutableProxyInterface m_proxyInterface;
 
 	private Object m_internalSynchronization;
 
@@ -126,7 +126,6 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 	{
 		m_socketHandler = null;
 		m_multiplexer = null;
-		m_proxyInterface = null;
 		m_packetCounter = null;
 		m_dummyTrafficControlChannel = null;
 		m_dummyTrafficInterval = -1;
@@ -138,6 +137,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		m_internalSynchronizationForDummyTraffic = new Object();
 		m_eventListeners = new Vector();
 		m_connected = false;
+		m_proxyInterface = new IMutableProxyInterface.DummyMutableProxyInterface();
 	}
 
 	public AnonClient(Socket a_connectedSocket)
@@ -281,17 +281,29 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 
 	public void setPaymentProxy(IMutableProxyInterface a_paymentProxyInterface)
 	{
-		if (a_paymentProxyInterface != null)
+		if (a_paymentProxyInterface == null)
+		{
+			m_paymentProxyInterface = new IMutableProxyInterface.DummyMutableProxyInterface();
+		}
+		else
 		{
 			m_paymentProxyInterface = a_paymentProxyInterface;
 		}
+
 	}
 
 	public int setProxy(IMutableProxyInterface a_proxyInterface)
 	{
 		synchronized (m_internalSynchronization)
 		{
-			m_proxyInterface = a_proxyInterface;
+			if (a_proxyInterface == null)
+			{
+				m_proxyInterface = new IMutableProxyInterface.DummyMutableProxyInterface();
+			}
+			else
+			{
+				m_proxyInterface = a_proxyInterface;
+			}
 		}
 		return ErrorCodes.E_SUCCESS;
 	}
@@ -524,8 +536,8 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		return m_paymentInstance;
 	}
 
-	private Socket connectMixCascade(final MixCascade a_mixCascade, ImmutableProxyInterface a_proxyInterface)
-		throws InterruptedIOException
+	private Socket connectMixCascade(final MixCascade a_mixCascade, ImmutableProxyInterface a_proxyInterface) throws
+		InterruptedIOException
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.NET,
 					  "Trying to connect to MixCascade '" + a_mixCascade.toString() + "'...");
@@ -548,11 +560,11 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		notificationThread.setDaemon(true);
 		notificationThread.start();
 
-
 		Socket connectedSocket = null;
 		HTTPConnection connction;
 		int i = 0;
-		while ((i < a_mixCascade.getNumberOfListenerInterfaces()) && (connectedSocket == null) && (!Thread.currentThread().isInterrupted()))
+		while ( (i < a_mixCascade.getNumberOfListenerInterfaces()) && (connectedSocket == null) &&
+			   (!Thread.currentThread().isInterrupted()))
 		{
 			/* try out all interfaces of the mixcascade until we have a connection */
 			try
@@ -748,7 +760,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 			notificationThread.start();
 
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
-					  "Connect to MixCascade '" + a_mixCascade.toString() + "'!");
+						  "Connect to MixCascade '" + a_mixCascade.toString() + "'!");
 
 			/* AnonClient successfully started */
 			m_connected = true;
@@ -782,7 +794,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 			catch (Exception e)
 			{
 				LogHolder.log(LogLevel.ERR, LogType.NET,
-					"Fetching of timestamps failed - closing connection.", e);
+							  "Fetching of timestamps failed - closing connection.", e);
 				return ErrorCodes.E_UNKNOWN;
 			}
 		}
