@@ -116,7 +116,7 @@ public final class JAPConstants
 	static final int DEFAULT_VIEW = VIEW_NORMAL;
 
 	static final boolean DEFAULT_SAVE_MAIN_WINDOW_POSITION = true;
-	static final boolean DEFAULT_SAVE_MINI_WINDOW_POSITION = false;
+	static final boolean DEFAULT_SAVE_MINI_WINDOW_POSITION = true;
 	static final boolean DEFAULT_SAVE_CONFIG_WINDOW_POSITION = false;
 	static final boolean DEFAULT_SAVE_HELP_WINDOW_POSITION = true;
 	static final boolean DEFAULT_SAVE_HELP_WINDOW_SIZE = true;
