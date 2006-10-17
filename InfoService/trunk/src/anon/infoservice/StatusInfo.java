@@ -39,6 +39,9 @@ import anon.crypto.SignatureVerifier;
 import anon.crypto.XMLSignature;
 import anon.crypto.CertPath;
 import anon.crypto.IVerifyable;
+import anon.crypto.JAPCertificate;
+import anon.crypto.X509SubjectKeyIdentifier;
+import anon.util.XMLParseException;
 
 /**
  * Holds the information of a mixcascade status.
@@ -102,6 +105,7 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 
 	private XMLSignature m_signature;
 	private CertPath m_certPath;
+	private JAPCertificate m_certificate;
 
 	/**
 	 * Returns a new StatusInfo with dummy values (everything is set to -1). The LastUpdate time is
@@ -164,6 +168,10 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 			if (m_signature != null)
 			{
 				m_certPath = m_signature.getCertPath();
+				if (m_certPath != null)
+				{
+					m_certificate = m_certPath.getFirstCertificate();
+				}
 			}
 		}
 		catch (Exception e)
@@ -172,6 +180,12 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 
 		/* get all the attributes of MixCascadeStatus */
 		m_mixCascadeId = a_statusNode.getAttribute("id");
+
+		if (!checkId())
+		{
+			throw new XMLParseException(XMLParseException.ROOT_TAG, "Malformed ID: " + m_mixCascadeId);
+		}
+
 		/* get the values */
 		m_currentRisk = Integer.parseInt(a_statusNode.getAttribute("currentRisk"));
 		m_mixedPackets = Long.parseLong(a_statusNode.getAttribute("mixedPackets"));
@@ -327,9 +341,21 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 		return false;
 	}
 
+	public JAPCertificate getCertificate()
+	{
+		return m_certificate;
+	}
+
 	public CertPath getCertPath()
 	{
 		return m_certPath;
+	}
+
+	public boolean checkId()
+	{
+		return getCertificate() != null &&
+			 getId().equals(new X509SubjectKeyIdentifier(
+				 getCertificate().getPublicKey()).getValueWithoutColon());
 	}
 
 	/**

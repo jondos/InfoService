@@ -35,7 +35,6 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.NoSuchElementException;
 import java.util.Vector;
-import java.util.zip.GZIPInputStream;
 import java.security.SignatureException;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -51,8 +50,6 @@ import anon.crypto.SignatureCreator;
 import anon.crypto.SignatureVerifier;
 import anon.crypto.XMLSignature;
 import anon.crypto.X509SubjectKeyIdentifier;
-//import anon.util.BZip2Tools;
-import anon.util.Base64;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
 import anon.util.ZLibTools;
@@ -66,7 +63,7 @@ import anon.crypto.IVerifyable;
 /**
  * Holds the information for an infoservice.
  */
-public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry implements IVerifyable
+public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEntry implements IVerifyable
 {
 	public static final String XML_ELEMENT_CONTAINER_NAME = "InfoServices";
 	public static final String XML_ELEMENT_NAME = "InfoService";
@@ -542,16 +539,9 @@ public class InfoServiceDBEntry extends AbstractDistributableDatabaseEntry imple
 		return false;
 	}
 
-	/**
-	 * Checks if the ID is valid.
-	 * @return boolean
-	 */
 	public boolean checkId()
 	{
-		return m_userDefined ||
-			(m_certificate != null &&
-			 m_strInfoServiceId.equals(
-					  new X509SubjectKeyIdentifier(m_certificate.getPublicKey()).getValueWithoutColon()));
+		return m_userDefined || super.checkId();
 	}
 
 	public JAPCertificate getCertificate()

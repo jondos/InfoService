@@ -236,8 +236,8 @@ public class KeyExchangeManager {
 
 			  MixInfo mixinfo = cascade.getMixInfo(i);
 			  MixInfo oldMixinfo = (MixInfo) Database.getInstance(MixInfo.class).getEntryById(mixinfo.getId());
-			  if (mixinfo.getMixCertificate() != null &&
-				  (oldMixinfo == null || !oldMixinfo.getMixCertificate().equals(mixinfo.getMixCertificate())))
+			  if (mixinfo.getCertificate() != null &&
+				  (oldMixinfo == null || !oldMixinfo.getCertificate().equals(mixinfo.getCertificate())))
 			  {
 				  // update the database so the the (new) certificate gets available
 				  Database.getInstance(MixInfo.class).update(mixinfo);

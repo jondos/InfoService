@@ -51,7 +51,7 @@ import anon.crypto.IVerifyable;
 /**
  * Holds the information for a mixcascade.
  */
-public class MixCascade extends AbstractDistributableDatabaseEntry implements AnonServerDescription,
+public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry implements AnonServerDescription,
 		IVerifyable
 
 {
@@ -255,7 +255,14 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 			m_mixCascadeId = XMLUtil.parseAttribute(a_mixCascadeNode, "id", null);
 		}
 
+		/* get the information, whether this mixcascade was user-defined within the JAP client */
+		m_userDefined = XMLUtil.parseAttribute(a_mixCascadeNode, XML_ATTR_USER_DEFINED, false);
 
+		/* test the ID */
+		if (!checkId())
+		{
+			throw new XMLParseException(XMLParseException.ROOT_TAG, "Malformed ID: " + m_mixCascadeId);
+		}
 
 		/* get the name */
 		m_strName = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_mixCascadeNode, "Name"), null);
@@ -327,6 +334,12 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 		{
 			Element mixNode = (Element) (mixNodes.item(i));
 			m_mixIds.addElement(mixNode.getAttribute("id"));
+			if (i == 0 && !m_mixIds.lastElement().equals(m_mixCascadeId))
+			{
+				// The cascade has another id as the first mix!
+				throw new XMLParseException(XMLParseException.ROOT_TAG,
+											"Cascade ID not ID of first mix: " + m_mixCascadeId);
+			}
 			m_mixNodes.addElement(mixNode);
 		}
 		m_mixInfos = new MixInfo[mixNodes.getLength()];
@@ -362,11 +375,6 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 		{
 			m_serial = XMLUtil.parseAttribute(a_mixCascadeNode, XML_ATTR_SERIAL, Long.MIN_VALUE);
 		}
-
-
-
-		/* get the information, whether this mixcascade was user-defined within the JAP client */
-		m_userDefined = XMLUtil.parseAttribute(a_mixCascadeNode, XML_ATTR_USER_DEFINED, false);
 
 		/* store the xml structure */
 		if (a_compressedMixCascadeNode != null)
@@ -583,6 +591,11 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 			}
 		}
 		return objectEquals;
+	}
+
+	public boolean checkId()
+	{
+		return m_userDefined || super.checkId();
 	}
 
 	/**
@@ -819,7 +832,6 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 	 */
 	public byte[] getPostData()
 	{
-		//return ZLibTools.decompress(m_compressedXmlStructure);
 		return m_compressedXmlStructure;
 	}
 
@@ -836,17 +848,6 @@ public class MixCascade extends AbstractDistributableDatabaseEntry implements An
 	public Element getXmlStructure()
 	{
 		return m_xmlStructure;
-		/*
-		try
-		{
-			return XMLUtil.toXMLDocument(ZLibTools.decompress(m_compressedXmlStructure)).getDocumentElement();
-
-		}
-		catch (XMLParseException a_e)
-		{
-			// should not happen
-			return null;
-		}*/
 	}
 
 	/**

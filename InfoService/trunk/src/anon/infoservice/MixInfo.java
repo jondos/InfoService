@@ -44,7 +44,7 @@ import java.util.Date;
 /**
  * Holds the information of one single mix.
  */
-public class MixInfo extends AbstractDistributableDatabaseEntry implements IVerifyable
+public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry implements IVerifyable
 {
 	public static final String DEFAULT_NAME = "AN.ON Mix";
 
@@ -230,6 +230,10 @@ public class MixInfo extends AbstractDistributableDatabaseEntry implements IVeri
 						e.toString());
 	  }
 
+	  if (!checkId())
+	  {
+		  throw new XMLParseException(XMLParseException.ROOT_TAG, "Malformed ID: " + m_mixId);
+	  }
 
 	  m_name = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_mixNode, "Name"), DEFAULT_NAME);
 
@@ -383,13 +387,12 @@ public class MixInfo extends AbstractDistributableDatabaseEntry implements IVeri
 	  return false;
   }
 
-
   /**
    * Returns the certificate of the mix
    * For MixInfo-Objects in the InfoService the certificate is null
    * @return the certificate of the mix
    */
-  public JAPCertificate getMixCertificate()
+  public JAPCertificate getCertificate()
   {
 	  return m_mixCertificate;
   }
