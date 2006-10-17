@@ -2177,7 +2177,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				}
 			}
 
-			if (info == null || info.getMixCertificate() == null)
+			if (info == null || info.getCertificate() == null)
 			{
 				if (a_cascade.getCertPath() != null &&
 					a_cascade.getCertPath().getFirstCertificate() != null)
