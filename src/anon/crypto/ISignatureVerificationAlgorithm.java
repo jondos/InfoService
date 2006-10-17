@@ -66,7 +66,7 @@ public interface ISignatureVerificationAlgorithm
 
 	/**
 	 * Returns a description of the the signature algorithm for XML signatures as defined in
-	 * {@link http://www.w3.org/TR/xmldsig-core/#sec-AlgID}. This description is optional,
+	 * http://www.w3.org/TR/xmldsig-core/#sec-AlgID. This description is optional,
 	 * documents may be signed without it.
 	 * @return a description of the the signature algorithm for XML signatures
 	 * @see http://www.w3.org/TR/xmldsig-core/#sec-AlgID
