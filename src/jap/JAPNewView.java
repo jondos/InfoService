@@ -104,7 +104,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	public static final String MSG_UPDATE = JAPNewView.class.getName() + "_update";
 	public static final String MSG_NO_REAL_PAYMENT = JAPNewView.class.getName() + "_noRealPayment";
 
-	private static final String MSG_UPDATE_TOOL_TIP = JAPNewView.class.getName() + "_updateToolTip";
 	private static final String MSG_ANONYMETER_TOOL_TIP = JAPNewView.class.getName() + "_anonymeterToolTip";
 	private static final String MSG_SERVICE_NAME = JAPNewView.class.getName() + "_ngAnonymisierungsdienst";
 	private static final String MSG_ERROR_DISCONNECTED = JAPNewView.class.getName() + "_errorDisconnected";
@@ -159,9 +158,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	//private JLabel meterLabel;
 	private JLabel m_lblPrice;
-	private JLabel m_lblISRequestsDeactivated;
 	private JLabel m_labelVersion;
-	private JLabel m_labelUpdate;
 	private JPanel m_pnlVersion;
 	private JButton m_bttnHelp, m_bttnQuit, m_bttnIconify, m_bttnConf, m_btnAssistant;
 
@@ -217,8 +214,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JAPProgressBar m_progForwarderActivity;
 	private JAPProgressBar m_progForwarderActivitySmall;
 
-	private boolean m_bUpdateClicked = false;
-	private boolean m_bEnableISClicked = false;
+	private int m_updateAvailableID = -1;
+	private int m_enableInfoServiceID = -1;
+	private final Object SYNC_STATUS_ENABLE_IS = new Object();
+	private final Object SYNC_STATUS_UPDATE_AVAILABLE = new Object();
+	private ActionListener m_listenerUpdate;
+	private ActionListener m_listenerEnableIS;
 
 	private long m_lTrafficWWW, m_lTrafficOther;
 
@@ -270,44 +271,50 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			}
 		});
 
-		m_flippingpanelOwnTraffic = new FlippingPanel(this);
-		m_flippingpanelForward = new FlippingPanel(this);
-
-		// Load Icon in upper left corner of the frame window
-		ImageIcon ii = GUIUtils.loadImageIcon(JAPConstants.IICON16FN, true, false);
-		if (ii != null)
+		m_listenerUpdate = new ActionListener()
 		{
-			setIconImage(ii.getImage());
-			// Load Images for "Anonymity Meter"
-		}
-		// preload meter icons
-
-		// "NORTH": Image
-		ImageIcon northImage = GUIUtils.loadImageIcon(JAPMessages.getString("northPath"), true, false);
-		JLabel northLabel = new JLabel(northImage);
-		JPanel northPanel = new JPanel();
-		GridBagLayout gbl = new GridBagLayout();
-		GridBagConstraints c = new GridBagConstraints();
-		northPanel.setLayout(gbl);
-		c.anchor = GridBagConstraints.NORTHWEST;
-		c.fill = GridBagConstraints.NONE;
-		c.weighty = 1;
-		c.gridheight = 2;
-		northPanel.add(northLabel, c);
-
-
-		m_lblISRequestsDeactivated = new JLabel(JAPMessages.getString(MSG_IS_DEACTIVATED));
-		m_lblISRequestsDeactivated.setForeground(northPanel.getBackground());
-		m_lblISRequestsDeactivated.addMouseListener(new MouseAdapter()
-		{
-			public void mouseClicked(MouseEvent e)
+			public void actionPerformed(ActionEvent a_event)
 			{
-				if (m_bEnableISClicked)
-				{
-					return;
-				}
-				m_bEnableISClicked = true;
+				boolean bUpdated = false;
+				Enumeration entries =
+					Database.getInstance(JAPVersionInfo.class).getEntrySnapshotAsEnumeration();
+				JavaVersionDBEntry versionEntry = JavaVersionDBEntry.getNewJavaVersion();
 
+				if (entries.hasMoreElements())
+				{
+					JAPVersionInfo vi = (JAPVersionInfo) entries.nextElement();
+					if (vi != null && vi.getJapVersion() != null &&
+						vi.getJapVersion().compareTo(JAPConstants.aktVersion) > 0)
+					{
+						JAPUpdateWizard wz = new JAPUpdateWizard(vi, JAPController.getInstance().getViewWindow());
+						/* we got the JAPVersionInfo from the infoservice */
+						if (wz.getStatus() == JAPUpdateWizard.UPDATESTATUS_ERROR)
+						{
+							/* Download failed -> alert, and reset anon mode to false */
+							LogHolder.log(LogLevel.ERR, LogType.MISC, "Some update problem.");
+							JAPDialog.showErrorDialog(JAPController.getInstance().getViewWindow(),
+													  JAPMessages.getString("downloadFailed") +
+													  JAPMessages.getString("infoURL"), LogType.MISC);
+						}
+						else if (wz.getStatus() == JAPUpdateWizard.UPDATESTATUS_SUCCESS)
+						{
+							bUpdated = true;
+						}
+					}
+				}
+				// Do not execute other objects after successfully finishing the wizard!
+
+				if (!bUpdated && versionEntry != null)
+				{
+					showJavaUpdateDialog(versionEntry);
+				}
+			}
+		};
+
+		m_listenerEnableIS = new ActionListener()
+		{
+			public void actionPerformed(ActionEvent a_event)
+			{
 				if (JAPModel.getInstance().isInfoServiceDisabled())
 				{
 					if (JAPDialog.showConfirmDialog(JAPNewView.this,
@@ -334,19 +341,41 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					}
 
 				}
-				m_bEnableISClicked = false;
 			}
-		});
+		};
+
+
+		m_flippingpanelOwnTraffic = new FlippingPanel(this);
+		m_flippingpanelForward = new FlippingPanel(this);
+
+		// Load Icon in upper left corner of the frame window
+		ImageIcon ii = GUIUtils.loadImageIcon(JAPConstants.IICON16FN, true, false);
+		if (ii != null)
+		{
+			setIconImage(ii.getImage());
+			// Load Images for "Anonymity Meter"
+		}
+		// preload meter icons
+
+		// "NORTH": Image
+		ImageIcon northImage = GUIUtils.loadImageIcon(JAPMessages.getString("northPath"), true, false);
+		JLabel northLabel = new JLabel(northImage);
+		JPanel northPanel = new JPanel();
+		GridBagLayout gbl = new GridBagLayout();
+		GridBagConstraints c = new GridBagConstraints();
+		northPanel.setLayout(gbl);
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.fill = GridBagConstraints.NONE;
+		c.weighty = 1;
+		c.gridheight = 2;
+		northPanel.add(northLabel, c);
+
 
 		c.anchor = GridBagConstraints.EAST;
 		c.gridx++;
 		c.gridx++;
 		c.gridheight = 1;
 		c.gridy = 0;
-		Insets insets = c.insets;
-		c.insets = new Insets(0, 0, 0, 10);
-		northPanel.add(m_lblISRequestsDeactivated, c);
-		c.insets = insets;
 
 
 
@@ -356,58 +385,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		constrVersion.insets = new Insets(0, 0, 0, 10);
 		constrVersion.gridx = 0;
 		constrVersion.gridy = 0;
-		m_labelUpdate = new JLabel(">>" + JAPMessages.getString(MSG_UPDATE) + "<<");
-		m_labelUpdate.setToolTipText(JAPMessages.getString(MSG_UPDATE_TOOL_TIP));
 
-		m_labelUpdate.setForeground(Color.blue);
-		m_labelUpdate.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-		m_labelUpdate.addMouseListener(new MouseAdapter()
-		{
-			public void mouseClicked(MouseEvent e)
-			{
-				if (m_bUpdateClicked)
-				{
-					return;
-				}
-				m_bUpdateClicked = true;
-
-				boolean bUpdated = false;
-				Enumeration entries =
-					Database.getInstance(JAPVersionInfo.class).getEntrySnapshotAsEnumeration();
-				JavaVersionDBEntry versionEntry = JavaVersionDBEntry.getNewJavaVersion();
-
-				if (entries.hasMoreElements())
-				{
-					JAPVersionInfo vi =  (JAPVersionInfo) entries.nextElement();
-					if (vi != null && vi.getJapVersion() != null &&
-						vi.getJapVersion().compareTo(JAPConstants.aktVersion) > 0)
-					{
-						JAPUpdateWizard wz = new JAPUpdateWizard(vi, JAPController.getInstance().getViewWindow());
-						/* we got the JAPVersionInfo from the infoservice */
-						if (wz.getStatus() == JAPUpdateWizard.UPDATESTATUS_ERROR)
-						{
-							/* Download failed -> alert, and reset anon mode to false */
-							LogHolder.log(LogLevel.ERR, LogType.MISC, "Some update problem.");
-							JAPDialog.showErrorDialog(JAPController.getInstance().getViewWindow(),
-								JAPMessages.getString("downloadFailed") +
-								JAPMessages.getString("infoURL"), LogType.MISC);
-						}
-						else if (wz.getStatus() == JAPUpdateWizard.UPDATESTATUS_SUCCESS)
-						{
-							bUpdated = true;
-						}
-					}
-				}
-				// Do not execute other objects after successfully finishing the wizard!
-
-				if (!bUpdated && versionEntry != null)
-				{
-					showJavaUpdateDialog(versionEntry);
-				}
-				m_bUpdateClicked = false;
-			}
-		});
-		m_pnlVersion.add(m_labelUpdate, constrVersion);
 
 		c.gridy = 1;
 		c.anchor = GridBagConstraints.SOUTHEAST;
@@ -1535,15 +1513,26 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 							(!JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed() &&
 							!JAPController.getInstance().isAnonConnected())))
 					{
-						m_lblISRequestsDeactivated.setForeground(Color.red);
-						m_lblISRequestsDeactivated.setToolTipText(JAPMessages.getString(MSG_IS_TOOLTIP));
-						m_lblISRequestsDeactivated.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+						synchronized (SYNC_STATUS_ENABLE_IS)
+						{
+							if (m_enableInfoServiceID < 0)
+							{
+								m_enableInfoServiceID = m_StatusPanel.addStatusMsg(
+									JAPMessages.getString(MSG_IS_DEACTIVATED),
+									JAPDialog.MESSAGE_TYPE_WARNING, false, m_listenerEnableIS);
+							}
+						}
 					}
 					else
 					{
-						m_lblISRequestsDeactivated.setToolTipText(null);
-						m_lblISRequestsDeactivated.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-						m_lblISRequestsDeactivated.setForeground(m_panelAnonService.getBackground());
+						synchronized (SYNC_STATUS_ENABLE_IS)
+						{
+							if (m_enableInfoServiceID >= 0)
+							{
+								m_StatusPanel.removeStatusMsg(m_enableInfoServiceID);
+								m_enableInfoServiceID = -1;
+							}
+						}
 					}
 				}
 			};
@@ -1562,8 +1551,16 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				final JavaVersionDBEntry entry = (JavaVersionDBEntry) message.getMessageData();
 				if (JavaVersionDBEntry.isJavaTooOld(entry))
 				{
-					m_labelUpdate.setVisible(true);
-
+					synchronized (SYNC_STATUS_UPDATE_AVAILABLE)
+					{
+						if (m_updateAvailableID < 0)
+						{
+							m_updateAvailableID = m_StatusPanel.addStatusMsg(
+								JAPMessages.getString(MSG_UPDATE),
+								JAPDialog.MESSAGE_TYPE_INFORMATION,
+								false, m_listenerUpdate);
+						}
+					}
 					if (JAPModel.getInstance().isReminderForJavaUpdateActivated() &&
 						!JAPController.getInstance().isConfigAssistantShown())
 					{
@@ -1975,24 +1972,57 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			vi = (JAPVersionInfo) entries.nextElement();
 		}
 
-		m_labelUpdate.setVisible( (vi != null && vi.getJapVersion() != null &&
-								   vi.getJapVersion().compareTo(JAPConstants.aktVersion) > 0) ||
-								 JavaVersionDBEntry.getNewJavaVersion() != null);
+		if ( (vi != null && vi.getJapVersion() != null &&
+			  vi.getJapVersion().compareTo(JAPConstants.aktVersion) > 0) ||
+			 JavaVersionDBEntry.getNewJavaVersion() != null)
+		{
+			synchronized (SYNC_STATUS_UPDATE_AVAILABLE)
+			{
+				if (m_updateAvailableID < 0)
+				{
+					m_updateAvailableID = m_StatusPanel.addStatusMsg(
+						JAPMessages.getString(MSG_UPDATE), JAPDialog.MESSAGE_TYPE_INFORMATION,
+						false, m_listenerUpdate);
+				}
+			}
+		}
+		else
+		{
+			synchronized (SYNC_STATUS_UPDATE_AVAILABLE)
+			{
+				if (m_updateAvailableID >= 0)
+				{
+					m_StatusPanel.removeStatusMsg(m_updateAvailableID);
+					m_updateAvailableID = -1;
+				}
+			}
+		}
 
 	   if( !JAPController.getInstance().isShuttingDown()
 		   && (JAPModel.getInstance().isInfoServiceDisabled() ||
 			   (!JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed() &&
 				!JAPController.getInstance().isAnonConnected())))
 	   {
-		   m_lblISRequestsDeactivated.setForeground(Color.red);
-		   m_lblISRequestsDeactivated.setToolTipText(JAPMessages.getString(MSG_IS_TOOLTIP));
-		   m_lblISRequestsDeactivated.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		   synchronized (SYNC_STATUS_ENABLE_IS)
+		   {
+			   if (m_enableInfoServiceID < 0)
+			   {
+				   m_enableInfoServiceID = m_StatusPanel.addStatusMsg(
+								   JAPMessages.getString(MSG_IS_DEACTIVATED),
+								   JAPDialog.MESSAGE_TYPE_WARNING, false, m_listenerEnableIS);
+			   }
+		   }
 	   }
 	   else
 	   {
-		   m_lblISRequestsDeactivated.setToolTipText(null);
-		   m_lblISRequestsDeactivated.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-		   m_lblISRequestsDeactivated.setForeground(m_panelAnonService.getBackground());
+		   synchronized (SYNC_STATUS_ENABLE_IS)
+		   {
+			   if (m_enableInfoServiceID >= 0)
+			   {
+				   m_StatusPanel.removeStatusMsg(m_enableInfoServiceID);
+				   m_enableInfoServiceID = -1;
+			   }
+		   }
 	   }
 
 
@@ -2350,8 +2380,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		Font labelFont = DEFAULT_LABEL.getFont();
 		m_labelVersion.setFont(new Font(labelFont.getName(), labelFont.getStyle(),
 										( (int) (labelFont.getSize() * 0.8))));
+		/*
 		m_labelUpdate.setFont(new Font(labelFont.getName(), labelFont.getStyle(),
 									   ( (int) (labelFont.getSize() * 0.8))));
+							  */
 	}
 
 	private static boolean equals(JAPMixCascadeComboBox a_one, Hashtable a_two)

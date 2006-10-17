@@ -75,7 +75,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 	 * @todo For most people, 15s are sufficient, but some cannot connect with this short
 	 * timeout. Make this configurable.
 	 */
-	public static final int DEFAULT_LOGIN_TIMEOUT = 15000;
+	public static final int DEFAULT_LOGIN_TIMEOUT = 20000;
 	private static final int CONNECT_TIMEOUT = 8000;
 	private static final int CONNECTION_ERROR_WAIT_TIME = 30000; // time interval to report proxy errors
 	// 4 errors in 30 seconds should be enough to be sure there is really a connection error

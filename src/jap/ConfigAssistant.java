@@ -505,6 +505,7 @@ public class ConfigAssistant extends JAPDialog
 										  JAPMessages.getString("ngBttnAnonDetails"),
 										  JAPMessages.getString("ngAnonGeneralPanelTitle"),
 										  JAPMessages.getString(JAPConfAnonGeneral.MSG_CONNECTION_TIMEOUT),
+										  JAPMessages.getString("ngSettingsViewNormal"),
 										  JAPMessages.getString("confButton"),
 										  JAPMessages.getString("confTreeForwardingClientLeaf")}),
 			  layout, new DialogContentPane.Options(paneAnonTest))
