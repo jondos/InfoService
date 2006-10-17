@@ -27,9 +27,10 @@
  */
 package gui;
 
+
 public interface IStatusLine
 {
-	public int addStatusMsg(String msg, int type,boolean bAutoRemove);
+	public int addStatusMsg(String msg, int type, boolean bAutoRemove);
 
 	public void removeStatusMsg(int id);
 }

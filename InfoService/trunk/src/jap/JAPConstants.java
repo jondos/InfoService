@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.05.485"; //Never change the layout of this line!
+	public static final String aktVersion = "00.05.486"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -67,7 +67,8 @@ public final class JAPConstants
 	static final int DEFAULT_PORT_NUMBER = 4001;
 	static final boolean DEFAULT_LISTENER_IS_LOCAL = true;
 	static final String DEFAULT_ANON_NAME = "Dresden-Dresden";
-	static final String[] DEFAULT_ANON_MIX_IDs = new String[]{"141.76.45.36%3A6544", "141.76.45.33%3A6545"};
+	static final String[] DEFAULT_ANON_MIX_IDs = new String[]{"BA6F90FB9120E0998ACFCC3A601F1B406A4655A1	",
+		"75ACF4F101510607BA3E9E348821D8697BE8FC58"};
 	static final String[] DEFAULT_ANON_HOSTS = {"mix.inf.tu-dresden.de", "141.76.45.33"};
 
 	static final int DEFAULT_ANON_PORT_NUMBERS[] =
