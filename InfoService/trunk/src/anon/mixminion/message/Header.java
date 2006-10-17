@@ -40,7 +40,7 @@ import logging.LogLevel;
 import logging.LogType;
 
 /**
- * @author Stefan Rönisch
+ * @author Stefan Roenisch
  */
 public class Header
 {
@@ -66,7 +66,7 @@ public class Header
 	 * @param hops
 	 * @param recipient
 	 */
-	public Header(Vector path, Vector secrets, ExitInformation exitInfo) 
+	public Header(Vector path, Vector secrets, ExitInformation exitInfo)
 	{
 		m_header = buildHeader(path, secrets, exitInfo);
 
@@ -103,7 +103,7 @@ public class Header
 		routingInformation.addElement(null);
 		junkKeys.addElement(null);
 		subSecret.addElement(null);
-		
+
 		for (int i = 1; i <= internodes; i++)
 		{
 
@@ -220,7 +220,7 @@ public class Header
 			ForwardInformation ri;
 			if (i == internodes)
 			{
-				ri = (ForwardInformation) exitInfo; 
+				ri = (ForwardInformation) exitInfo;
 			}
 			else
 			{
