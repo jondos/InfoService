@@ -193,6 +193,12 @@ public class KeyExchangeManager {
 
 		  m_protocolWithTimestamp = false;
 		  m_paymentRequired = cascade.isPayment();
+		  if (m_paymentRequired &&
+			  !cascade.getPaymentProtocolVersion().equals(MixCascade.SUPPORTED_PAYMENT_PROTOCOL_VERSION))
+		  {
+			  throw (new UnknownProtocolVersionException(
+				  "Unsupported payment protocol version ('" + cascade.getPaymentProtocolVersion() + "')."));
+		  }
 		  m_firstMixSymmetricCipher = null;
 		  /*
 		   * lower protocol versions not listed here are obsolete and not supported
@@ -224,18 +230,32 @@ public class KeyExchangeManager {
 				  "Unknown channel protocol version used ('" + cascade.getMixProtocolVersion() + "')."));
 		  }
 
-		 m_mixParameters = new MixParameters[cascade.getNumberOfMixes()];
+		  m_mixParameters = new MixParameters[cascade.getNumberOfMixes()];
 		  for (int i = 0; i < cascade.getNumberOfMixes(); i++)
 		  {
-			  if (i > 0 && !cascade.getMixInfo(i).isVerified())
+			  MixInfo mixinfo = cascade.getMixInfo(i);
+
+			  if (mixinfo == null)
+			  {
+				  if (i == 0)
+				  {
+					  mixinfo = new MixInfo(cascade.getId(), cascade.getCertPath());
+				  }
+				  else
+				  {
+					  // should not happen
+					  throw new XMLParseException("Could not get MixInfo object for Mix " + i + "!");
+				  }
+			  }
+
+			  if (i > 0 && !mixinfo.isVerified())
 			  {
 				  throw (new SignatureException(
 					  "Received XML structure has an invalid signature for Mix " +
 					  Integer.toString(i) + "."));
 			  }
 
-			  MixInfo mixinfo = cascade.getMixInfo(i);
-			 // if (mixinfo == null &&
+
 
 			  MixInfo oldMixinfo = (MixInfo) Database.getInstance(MixInfo.class).getEntryById(mixinfo.getId());
 			  if (mixinfo.getCertificate() != null &&
@@ -351,8 +371,7 @@ public class KeyExchangeManager {
 		  if (m_firstMixSymmetricCipher == null)
 		  {
 			  /*
-			   * create a new MixPacket with the keys (channel id and flags doesn't
-			   * matter)
+			   * create a new MixPacket with the keys (channel id and flags don't matter)
 			   */
 			  MixPacket keyPacket = new MixPacket(0);
 			  byte[] keyPacketIdentifier = "KEYPACKET".getBytes();

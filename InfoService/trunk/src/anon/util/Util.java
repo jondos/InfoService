@@ -228,6 +228,17 @@ public final class Util
 		return value;
 	}
 
+	private static void swap(String a_IDs[], String a_values[], int a, int b)
+	{
+		String temp = a_IDs[a];
+		a_IDs[a] = a_IDs[b];
+		a_IDs[b] = temp;
+
+		temp = a_values[a];
+		a_values[a] = a_values[b];
+		a_values[b] = temp;
+	}
+
 	/**
 	 * Sorts a Vector alphabetically using the toString() method of each object.
 	 * @param a_vector a Vector
@@ -341,6 +352,37 @@ public final class Util
 			}
 		}
 		return (integerPart + ( (float) mantissaPart / afterCommaDigits)) * sign;
+	}
+
+
+	public static void sort(String[] a_ids, String[] a_values)
+	{
+		quicksort(a_ids, a_values, 0, a_ids.length - 1);
+	}
+
+	private static int divide(String a_IDs[], String a_values[],  int a_left, int a_right)
+	{
+		int index = a_left;
+		for (int pointer = a_left; pointer < a_right; pointer++)
+		{
+			if (a_IDs[pointer].compareTo(a_IDs[a_right]) <= 0)
+			{
+				swap(a_IDs, a_values, index, pointer);
+				index++;
+			}
+		}
+		swap(a_IDs, a_values, index, a_right);
+		return index;
+	}
+
+	private static void quicksort(String a_IDs[], String a_values[], int a_left, int a_right)
+	{
+		if (a_right > a_left)
+		{
+			int divisor = divide(a_IDs, a_values, a_left, a_right);
+			quicksort(a_IDs, a_values, a_left, divisor - 1);
+			quicksort(a_IDs, a_values, divisor + 1, a_right);
+		}
 	}
 
 	/**

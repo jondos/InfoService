@@ -122,6 +122,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String MSG_WITH_COSTS = JAPNewView.class.getName() + "_withCosts";
 	private static final String MSG_BTN_ASSISTANT = JAPNewView.class.getName() + "_btnAssistant";
 	private static final String MSG_MN_ASSISTANT = JAPNewView.class.getName() + "_mnAssistant";
+	private static final String MSG_MN_DETAILS = JAPNewView.class.getName() + "_mnDetails";
 	private static final String MSG_IS_DISABLED_EXPLAIN = JAPNewView.class.getName() + "_isDisabledExplain";
 	private static final String MSG_IS_DEACTIVATED = JAPNewView.class.getName() + "_isDisabled";
 	private static final String MSG_IS_TOOLTIP = JAPNewView.class.getName() + "_isDisabledTooltip";
@@ -525,6 +526,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.fill = GridBagConstraints.NONE;
 		m_panelAnonService.add(m_bttnReload, c1);
 		m_bttnAnonDetails = new JButton(JAPMessages.getString("ngBttnAnonDetails"));
+		m_bttnAnonDetails.setToolTipText(JAPMessages.getString("ngBttnAnonDetails"));
+		m_bttnAnonDetails.setMnemonic(JAPMessages.getString(MSG_MN_DETAILS).charAt(0));
+
 		m_bttnAnonDetails.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -970,10 +974,15 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JPanel buttonPanel = new JPanel(gbl1);
 		//m_bttnHelp = new JButton(JAPMessages.getString("helpButton"));
 		m_bttnHelp = new JButton();
+		m_bttnHelp.setToolTipText(JAPMessages.getString("helpButton"));
 		m_btnAbout = new JButton();
+		m_btnAbout.setToolTipText(JAPMessages.getString("aboutBox"));
 		m_bttnQuit = new JButton(JAPMessages.getString("quitButton"));
+		m_bttnQuit.setToolTipText(JAPMessages.getString("quitButton"));
 		m_btnAssistant = new JButton(JAPMessages.getString(MSG_BTN_ASSISTANT));
+		m_btnAssistant.setToolTipText(JAPMessages.getString(MSG_BTN_ASSISTANT));
 		m_bttnConf = new JButton(JAPMessages.getString("confButton"));
+		m_bttnConf.setToolTipText(JAPMessages.getString("confButton"));
 		m_bttnIconify = new JButton();
 		m_bttnIconify.setToolTipText(JAPMessages.getString("iconifyWindow"));
 

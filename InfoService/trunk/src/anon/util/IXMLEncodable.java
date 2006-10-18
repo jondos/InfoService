@@ -43,7 +43,7 @@ public interface IXMLEncodable
 	/**
 	 * The version attribute used for a lot of tags.
 	 */
-	public static final String XML_VERSION = "version";
+	public static final String XML_ATTR_VERSION = "version";
 
 	/**
 	 * The id attribute used for a lot of tags.
