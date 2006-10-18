@@ -3389,7 +3389,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	{
 		try
 		{
-			new JAPAbout(getInstance().getViewWindow());
+			new JAPAboutNew(getInstance().getViewWindow()).setVisible(true);
 		}
 		catch (Throwable t)
 		{
