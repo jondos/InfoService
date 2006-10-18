@@ -270,7 +270,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 				Element elemAccount;
 				Element elemAccountsFile = a_doc.createElement(XML_ELEMENT_NAME);
 
-				elemAccountsFile.setAttribute(XML_VERSION, "1.0");
+				elemAccountsFile.setAttribute(XML_ATTR_VERSION, "1.0");
 				XMLUtil.setAttribute(elemAccountsFile, XML_ATTR_IGNORE_AI_ERRORS,
 									 m_bIgnoreAIAccountErrorMessages);
 				XMLUtil.setAttribute(elemAccountsFile, XML_ATTR_ENABLE_BALANCE_AUTO_UPDATE,

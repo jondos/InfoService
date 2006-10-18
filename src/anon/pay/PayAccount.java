@@ -204,7 +204,7 @@ public class PayAccount implements IXMLEncodable
 				return this.toXmlElement(a_doc, null);
 			}
 			Element elemRoot = a_doc.createElement(XML_ELEMENT_NAME);
-			elemRoot.setAttribute(XML_VERSION, VERSION);
+			elemRoot.setAttribute(XML_ATTR_VERSION, VERSION);
 			Element elemTmp;
 
 			// import AccountCertificate XML Representation

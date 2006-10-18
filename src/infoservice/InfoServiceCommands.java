@@ -46,7 +46,10 @@ import anon.infoservice.MixInfo;
 import anon.infoservice.PaymentInstanceDBEntry;
 import anon.infoservice.StatusInfo;
 import anon.util.XMLUtil;
+import infoservice.agreement.InfoserviceAgreementAdapter;
+import infoservice.dynamic.DynamicCommandsExtension;
 import infoservice.dynamic.DynamicNetworkingHelper;
+import infoservice.dynamic.TemporaryCascade;
 import infoservice.japforwarding.JapForwardingTools;
 import infoservice.tor.MixminionDirectoryAgent;
 import infoservice.tor.TorDirectoryAgent;
@@ -62,8 +65,13 @@ import anon.crypto.SignatureCreator;
  */
 final public class InfoServiceCommands implements JWSInternalCommands
 {
-	private DynamicNetworkingHelper m_networkingHelper = new DynamicNetworkingHelper();
-	//Ok the cache the StatusInfo DB here for performance reasonses (the database objete itself will always remain the same during the lifetime of the Is -so
+	private InfoserviceAgreementAdapter m_agreementAdapter = new InfoserviceAgreementAdapter();
+
+	private DynamicCommandsExtension m_dynamicExtension = new DynamicCommandsExtension();
+
+	// Ok the cache the StatusInfo DB here for performance reasonses (the
+	// database objete itself will always remain the same during the lifetime of
+	// the Is -so
 	//no problem so far
 	private Database m_statusinfoDB;
 	public InfoServiceCommands()
@@ -72,8 +80,9 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	}
 
 	/**
-	 * This method is called, when we receive data directly from a infoservice or when we receive
-	 * data from a remote infoservice, which posts data about another infoservice.
+	 * This method is called, when we receive data directly from a infoservice
+	 * or when we receive data from a remote infoservice, which posts data about
+	 * another infoservice.
 	 *
 	 * @param a_postData The data we have received.
 	 *
@@ -320,17 +329,54 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			}
 
 			/*
-				if (mixCascadeEntry.getMixCascadeSignature() == null ||
-			 !mixCascadeEntry.getMixCascadeSignature().isVerified())
+			 * if (mixCascadeEntry.getMixCascadeSignature() == null ||
+			 * !mixCascadeEntry.getMixCascadeSignature().isVerified()) {
+			 * LogHolder.log(LogLevel.WARNING, LogType.NET, "Signature check
+			 * failed for MixCascade entry! XML: " + (new String(a_postData)));
+			 * httpResponse = new HttpResponseStructure(HttpResponseStructure.
+			 * HTTP_RETURN_INTERNAL_SERVER_ERROR); } else
+			 */
+			 {
+				// LERNGRUPPE
+				// remove temporary cascades if existig
+				TemporaryCascade tmp = (TemporaryCascade) Database.getInstance(
+					TemporaryCascade.class).getEntryById(mixCascadeEntry.getId());
+				if (tmp != null)
 				{
-			 LogHolder.log(LogLevel.WARNING, LogType.NET,
-				  "Signature check failed for MixCascade entry! XML: " + (new String(a_postData)));
-			 httpResponse = new HttpResponseStructure(HttpResponseStructure.
-			  HTTP_RETURN_INTERNAL_SERVER_ERROR);
-				}
-				else*/
+					MixCascade tmpCascade = tmp.getRealCascade();
+					// If the posting cascade is the same as the temp cascade,
+					// delete the temp cascade
+					if (mixCascadeEntry.getMixIDsAsString().equals(tmpCascade.getMixIDsAsString()))
+					{
+						LogHolder.log(LogLevel.INFO, LogType.NET, "Removing temporary cascade "
+									  + tmpCascade.getId());
+						Database.getInstance(TemporaryCascade.class).remove(tmp);
+						Database.getInstance(MixCascade.class).update(mixCascadeEntry);
+					}
+//                    else
+//                    {
+//                        // It might be, that a former first mix posted a helo
+//                        // for an already deleted cascade
+//                        // We consider the temp cascade to be fresher, so we
+//                        // ignore the helo of an old cascade
+//                        LogHolder.log(LogLevel.INFO, LogType.NET, "Ignoring helo of old cascade "
+//                                + mixCascadeEntry.getId());
+//                        Enumeration h = mixCascadeEntry.getMixIds().elements();
+//                        int v = 1;
+//                        while(h.hasMoreElements()) {
+//                            System.err.println(v + ": " + h.nextElement().toString());
+//                            v++;
+//                        }
+//                        System.err.println("----------------------------------------------");
+//
+//                    }
+			 }
+				else
 			{
+					// Seems to be a subsequent call or a non-dynamic cascade
 				Database.getInstance(MixCascade.class).update(mixCascadeEntry);
+			}
+
 			}
 		}
 		catch (Exception e)
@@ -982,8 +1028,8 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			try
 			{
 				/* create xml document */
-				httpResponse = new HttpResponseStructure( HttpResponseStructure.HTTP_TYPE_TEXT_PLAIN,
-					encoding,torNodesList);
+				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_PLAIN,
+					encoding, torNodesList);
 			}
 			catch (Exception e)
 			{
@@ -1163,11 +1209,13 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		if (minVersionEntry != null)
 		{
 			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,
-				HttpResponseStructure.HTTP_ENCODING_PLAIN,minVersionEntry.getPostData());
+				HttpResponseStructure.HTTP_ENCODING_PLAIN, minVersionEntry.getPostData());
 		}
 		else
+		{
 			httpResponse = new HttpResponseStructure(HttpResponseStructure.
-			HTTP_RETURN_NOT_FOUND);
+				HTTP_RETURN_NOT_FOUND);
+		}
 		return httpResponse;
 	}
 
@@ -1524,11 +1572,33 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		// LERNGRUPPE
 		else if (command.startsWith("/connectivity") && (method == Constants.REQUEST_METHOD_POST))
 		{
-			httpResponse = m_networkingHelper.mixPostConnectivityTest(a_sourceAddress, postData);
+			httpResponse = m_dynamicExtension.mixPostConnectivityTest(a_sourceAddress, postData);
 		}
 		else if (command.startsWith("/dynacasade") && (method == Constants.REQUEST_METHOD_POST))
 		{
-			httpResponse = m_networkingHelper.lastMixPostDynaCascade(postData);
+			httpResponse = m_dynamicExtension.lastMixPostDynaCascade(postData);
+		}
+		else if ( (command.startsWith("/newcascadeinformationavailable/"))
+				 && (method == Constants.REQUEST_METHOD_GET))
+		{
+			String piID = command.substring(32);
+			httpResponse = m_dynamicExtension.isNewCascadeAvailable(piID);
+		}
+		else if ( (command.startsWith("/reconfigure/"))
+				 && (method == Constants.REQUEST_METHOD_GET))
+		{
+			String piID = command.substring(13);
+			httpResponse = m_dynamicExtension.reconfigureMix(piID);
+		}
+		else if (command.startsWith("/agreement") && (method == Constants.REQUEST_METHOD_POST))
+		{
+			httpResponse = m_agreementAdapter.handleMessage(postData);
+		}
+		else if (command.startsWith("/startagreement")
+				 && (method == Constants.REQUEST_METHOD_GET))
+		{
+			m_agreementAdapter.initializeOnce();
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK);
 		}
 
 		return httpResponse;

@@ -51,10 +51,11 @@ import anon.crypto.IVerifyable;
 /**
  * Holds the information for a mixcascade.
  */
-public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry implements AnonServerDescription,
-		IVerifyable
-
+public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
+	implements AnonServerDescription, IVerifyable
 {
+	public static final String SUPPORTED_PAYMENT_PROTOCOL_VERSION = "0.1";
+
 	public static final String XML_ELEMENT_NAME = "MixCascade";
 	public static final String XML_ELEMENT_CONTAINER_NAME = "MixCascades";
 
@@ -126,6 +127,8 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry impl
 	private boolean m_isPayment;
 
 	private String m_mixProtocolVersion;
+
+	private String m_paymentProtocolVersion;
 
 	/**
 	 * If this MixCascade has been recevied directly from a cascade connection.
@@ -279,14 +282,10 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry impl
 		}
 		/* get payment info */
 		Node payNode = XMLUtil.getFirstChildByName(a_mixCascadeNode, "Payment");
-		if (payNode != null)
-		{
-			m_isPayment = XMLUtil.parseAttribute(payNode, "required", false);
-		}
-		else
-		{
-			m_isPayment = false;
-		}
+		m_isPayment = XMLUtil.parseAttribute(payNode, "required", false);
+		m_paymentProtocolVersion = XMLUtil.parseAttribute(payNode, XML_ATTR_VERSION,
+			SUPPORTED_PAYMENT_PROTOCOL_VERSION);
+
 
 		if (!m_bFromCascade)
 		{
@@ -522,6 +521,11 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry impl
 	public String getMixProtocolVersion()
 	{
 		return m_mixProtocolVersion;
+	}
+
+	public String getPaymentProtocolVersion()
+	{
+		return m_paymentProtocolVersion;
 	}
 
 	/**

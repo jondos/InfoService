@@ -1295,13 +1295,23 @@ public final class XMLSignature implements IXMLEncodable
 				NamedNodeMap attr = elem.getAttributes();
 				if (attr.getLength() > 0)
 				{
+					// sort attributes by name
+					String[] nodeNames = new String[attr.getLength()];
+					String[] nodeValues = new String[attr.getLength()];
+					for (int i = 0; i < attr.getLength(); i++)
+					{
+						nodeNames[i] = attr.item(i).getNodeName();
+						nodeValues[i] = attr.item(i).getNodeValue();
+					}
+					Util.sort(nodeNames, nodeValues);
+
 					for (int i = 0; i < attr.getLength(); i++)
 					{
 						o.write(' ');
-						o.write(attr.item(i).getNodeName().getBytes());
+						o.write(nodeNames[i].getBytes());
 						o.write('=');
 						o.write('\"');
-						o.write(attr.item(i).getNodeValue().getBytes());
+						o.write(nodeValues[i].getBytes());
 						o.write('\"');
 					}
 				}
