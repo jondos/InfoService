@@ -161,6 +161,10 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
   public MixInfo(String a_mixID, CertPath a_certPath)
   {
 	  super(Long.MAX_VALUE);
+	  if (a_mixID == null)
+	  {
+		  throw new IllegalArgumentException("No Mix ID!");
+	  }
 	  m_mixId = a_mixID;
 	  m_name = a_mixID;
 	  m_type = -1;

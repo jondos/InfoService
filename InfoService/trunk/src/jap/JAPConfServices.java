@@ -116,10 +116,13 @@ public class JAPConfServices extends AbstractJAPConfModule
 			{
 				m_tabsAnon.addTab(anonModule.getTabTitle(), anonModule.getRootPanel());
 				m_tabbedModules.addElement(anonModule);
-				m_tabsAnon.addTab(torModule.getTabTitle(), torModule.getRootPanel());
-				m_tabbedModules.addElement(torModule);
-				m_tabsAnon.addTab(mixminionModule.getTabTitle(), mixminionModule.getRootPanel());
-				m_tabbedModules.addElement(mixminionModule);
+				if (!JAPConstants.m_bReleasedVersion)
+				{
+					m_tabsAnon.addTab(torModule.getTabTitle(), torModule.getRootPanel());
+					m_tabbedModules.addElement(torModule);
+					m_tabsAnon.addTab(mixminionModule.getTabTitle(), mixminionModule.getRootPanel());
+					m_tabbedModules.addElement(mixminionModule);
+				}
 				m_tabsAnon.addTab(anonGeneralModule.getTabTitle(), anonGeneralModule.getRootPanel());
 				m_tabbedModules.addElement(anonGeneralModule);
 				rootPanel.add(m_tabsAnon, rootPanelConstraints);

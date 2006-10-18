@@ -999,7 +999,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 			{
 				currentCascade = new MixCascade(mixCascadeNode, Long.MAX_VALUE);
 				mixCascades.put(currentCascade.getId(), currentCascade);
-				if (currentCascade.isVerified())
+				if (!currentCascade.isVerified())
 				{
 					LogHolder.log(LogLevel.INFO, LogType.MISC,
 								  "Cannot verify the signature for MixCascade entry: " +
