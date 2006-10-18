@@ -97,7 +97,7 @@ public final class JAPAboutAutoScroller extends Canvas implements Runnable
 		//m_textArea.setEnabled(false);
 		m_textArea.setDoubleBuffered(false);
 		m_textArea.setBackground(new Color(204, 204, 204));
-	m_textArea.setSize(m_iScrollAreaWidth, 10000);
+		m_textArea.setSize(m_iScrollAreaWidth, 10000);
 		m_textArea.setContentType("text/html");
 		m_textArea.setText(htmlText.trim());
 		m_iTextHeight = m_textArea.getPreferredSize().height;

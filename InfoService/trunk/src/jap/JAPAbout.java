@@ -28,21 +28,19 @@
 package jap;
 
 import java.awt.Color;
-import java.awt.Cursor;
-import java.awt.Frame;
-import java.awt.Window;
 import java.awt.Insets;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import javax.swing.ImageIcon;
-import javax.swing.JDialog;
 
 import anon.util.ResourceLoader;
+import gui.GUIUtils;
 import gui.JAPAboutAutoScroller;
-import gui.*;
-import gui.dialog.*;
+import gui.JAPMessages;
+import gui.dialog.JAPDialog;
 
 final class JAPAbout extends JAPDialog
 {
