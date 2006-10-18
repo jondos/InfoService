@@ -145,8 +145,6 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 			{
 				m_cbAutoConnect.setSelected(JAPModel.getInstance().isAutoConnect());
 			}
-
-
 		}
 	}
 
@@ -294,7 +292,10 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		c.fill = GridBagConstraints.BOTH;
 		c.weightx = 1;
 		c.weighty = 1;
-		panelRoot.add(panelServices, c);
+		if (!JAPConstants.m_bReleasedVersion)
+		{
+			panelRoot.add(panelServices, c);
+		}
 		c.weighty = 0;
 		c.gridy++;
 		panelRoot.add(m_cbDenyNonAnonymousSurfing, c);
@@ -377,7 +378,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_sliderDummyTrafficIntervall.setValue(DT_INTERVAL_DEFAULT);
 		m_cbAutoConnect.setSelected(true);
 		m_cbAutoReConnect.setSelected(true);
-		m_cbAutoChooseCascades.setSelected(true);
+		m_cbAutoChooseCascades.setSelected(false);
 		setLoginTimeout(AnonClient.DEFAULT_LOGIN_TIMEOUT);
 	}
 

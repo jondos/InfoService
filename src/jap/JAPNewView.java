@@ -104,6 +104,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	public static final String MSG_UPDATE = JAPNewView.class.getName() + "_update";
 	public static final String MSG_NO_REAL_PAYMENT = JAPNewView.class.getName() + "_noRealPayment";
 
+	public static final String IMG_HELP = JAPNewView.class.getName() + "_help.gif";
+
 	private static final String MSG_ANONYMETER_TOOL_TIP = JAPNewView.class.getName() + "_anonymeterToolTip";
 	private static final String MSG_SERVICE_NAME = JAPNewView.class.getName() + "_ngAnonymisierungsdienst";
 	private static final String MSG_ERROR_DISCONNECTED = JAPNewView.class.getName() + "_errorDisconnected";
@@ -114,6 +116,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String MSG_LBL_NEW_SERVICES_FOUND = JAPNewView.class.getName() + "_newServicesFound";
 	private static final String MSG_TOOLTIP_NEW_SERVICES_FOUND = JAPNewView.class.getName() +
 		"_tooltipNewServicesFound";
+	private static final String MSG_NEW_SERVICES_FOUND_EXPLAIN =
+		JAPNewView.class.getName() + "_newServicesFoundExplanation";
 	private static final String MSG_NO_COSTS = JAPNewView.class.getName() + "_noCosts";
 	private static final String MSG_WITH_COSTS = JAPNewView.class.getName() + "_withCosts";
 	private static final String MSG_BTN_ASSISTANT = JAPNewView.class.getName() + "_btnAssistant";
@@ -130,7 +134,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private static final String MSG_TRUST_FILTER = JAPNewView.class.getName() + "_trustFilter";
 
-
+	private static final String IMG_ICONIFY = JAPNewView.class.getName() + "_iconify.gif";
+	private static final String IMG_ABOUT = JAPNewView.class.getName() + "_about.gif";
 
 	private JobQueue m_transferedBytesJobs;
 
@@ -160,7 +165,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JLabel m_lblPrice;
 	private JLabel m_labelVersion;
 	private JPanel m_pnlVersion;
-	private JButton m_bttnHelp, m_bttnQuit, m_bttnIconify, m_bttnConf, m_btnAssistant;
+	private JButton m_bttnHelp, m_bttnQuit, m_bttnIconify, m_bttnConf, m_btnAssistant, m_btnAbout;
 
 	//private Icon[] meterIcons;
 	private JAPConf m_dlgConfig;
@@ -216,10 +221,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private int m_updateAvailableID = -1;
 	private int m_enableInfoServiceID = -1;
+	private int m_newServicesID = -1;
 	private final Object SYNC_STATUS_ENABLE_IS = new Object();
 	private final Object SYNC_STATUS_UPDATE_AVAILABLE = new Object();
+	private final Object SYNC_NEW_SERVICES = new Object();
 	private ActionListener m_listenerUpdate;
 	private ActionListener m_listenerEnableIS;
+	private ActionListener m_listenerNewServices;
 
 	private long m_lTrafficWWW, m_lTrafficOther;
 
@@ -339,11 +347,21 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					{
 						JAPModel.getInstance().allowInfoServiceViaDirectConnection(true);
 					}
-
 				}
 			}
 		};
 
+
+		m_listenerNewServices = new ActionListener()
+		{
+			public void actionPerformed(ActionEvent a_event)
+			{
+				JAPDialog.showMessageDialog(JAPNewView.this,
+											JAPMessages.getString(MSG_NEW_SERVICES_FOUND_EXPLAIN,
+											JAPMessages.getString(MSG_SERVICE_NAME)));
+				m_comboAnonServices.showPopup();
+			}
+		};
 
 		m_flippingpanelOwnTraffic = new FlippingPanel(this);
 		m_flippingpanelForward = new FlippingPanel(this);
@@ -405,7 +423,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		constrVersion.gridx++;
 		constrVersion.insets = new Insets(0, 0, 0, 0);
 		m_pnlVersion.add(m_labelVersion, constrVersion);
-		northPanel.add(m_pnlVersion, c);
+		//northPanel.add(m_pnlVersion, c);
 
 
 		c.gridwidth = 2;
@@ -667,6 +685,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 		c1.gridx = 3;
 		c1.anchor = GridBagConstraints.WEST;
+		c1.insets = new Insets(0, 10, 0, 0);
 		p.add(p2, c1);
 		m_flippingpanelAnon.setFullPanel(p);
 
@@ -949,11 +968,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		gbl1 = new GridBagLayout();
 		c1 = new GridBagConstraints();
 		JPanel buttonPanel = new JPanel(gbl1);
-		m_bttnHelp = new JButton(JAPMessages.getString("helpButton"));
+		//m_bttnHelp = new JButton(JAPMessages.getString("helpButton"));
+		m_bttnHelp = new JButton();
+		m_btnAbout = new JButton();
 		m_bttnQuit = new JButton(JAPMessages.getString("quitButton"));
 		m_btnAssistant = new JButton(JAPMessages.getString(MSG_BTN_ASSISTANT));
 		m_bttnConf = new JButton(JAPMessages.getString("confButton"));
-		m_bttnIconify = new JButton(GUIUtils.loadImageIcon(JAPConstants.ICONIFYICONFN, true));
+		m_bttnIconify = new JButton();
 		m_bttnIconify.setToolTipText(JAPMessages.getString("iconifyWindow"));
 
 		// Add real buttons
@@ -961,21 +982,24 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		buttonPanel.add(m_bttnIconify, c1);
 		//buttonPanel.add(m_bttnInfo);
 		c1.gridx = 1;
-		c1.insets = new Insets(0, 10, 0, 0);
+		c1.insets = new Insets(0, 5, 0, 0);
+		buttonPanel.add(m_btnAbout, c1);
+		c1.gridx++;
 		buttonPanel.add(m_bttnHelp, c1);
-		c1.gridx = 2;
+		c1.gridx++;
 		buttonPanel.add(m_btnAssistant, c1);
-		c1.gridx = 3;
+		c1.gridx++;
 		buttonPanel.add(m_bttnConf, c1);
 
-		c1.gridx = 4;
-		c1.weightx = 1;
+		c1.gridx++;
+		//c1.weightx = 1;
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		buttonPanel.add(new JLabel(), c1);
-		c1.gridx = 5;
+		c1.gridx++;
 		buttonPanel.add(m_bttnQuit, c1);
 		m_bttnIconify.addActionListener(this);
 		m_bttnConf.addActionListener(this);
+		m_btnAbout.addActionListener(this);
 		m_bttnHelp.addActionListener(this);
 		m_bttnQuit.addActionListener(this);
 		m_btnAssistant.addActionListener(this);
@@ -1412,8 +1436,15 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				if (Database.getInstance(NewCascadeIDEntry.class).getEntryById(
 								cascade.getMixIDsAsString()) != null)
 				{
-					addStatusMsg(JAPMessages.getString(MSG_LBL_NEW_SERVICES_FOUND),
-								 JOptionPane.INFORMATION_MESSAGE, true);
+					synchronized (SYNC_NEW_SERVICES)
+					{
+						if (m_newServicesID < 0)
+						{
+							m_newServicesID = m_StatusPanel.addStatusMsg(
+								JAPMessages.getString(MSG_LBL_NEW_SERVICES_FOUND),
+								JOptionPane.INFORMATION_MESSAGE, false, m_listenerNewServices);
+						}
+					}
 				}
 			}
 			else if (message.getMessageCode() == DatabaseMessage.ENTRY_REMOVED||
@@ -1429,6 +1460,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					Enumeration newEntries = Database.getInstance(NewCascadeIDEntry.class).
 						getEntrySnapshotAsEnumeration();
 					NewCascadeIDEntry currentEntry;
+					boolean bHide = true;
 					while (newEntries.hasMoreElements())
 					{
 						currentEntry = (NewCascadeIDEntry) newEntries.nextElement();
@@ -1436,7 +1468,20 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 											  currentEntry.getCascadeId()) != null &&
 							!currentEntry.getCascadeId().equals(cascade.getId()))
 						{
+							bHide = false;
 							break;
+						}
+					}
+					if (bHide)
+					{
+						// hide the new services hint if no new service are visible any more
+						synchronized (SYNC_NEW_SERVICES)
+						{
+							if (m_newServicesID >= 0)
+							{
+								m_StatusPanel.removeStatusMsg(m_newServicesID);
+								m_newServicesID = -1;
+							}
 						}
 					}
 				}
@@ -1464,11 +1509,50 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				return;
 			}
+			boolean bHide = false;
 			if (message.getMessageCode() == DatabaseMessage.ENTRY_ADDED ||
 				message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED)
 			{
-				addStatusMsg(JAPMessages.getString(MSG_LBL_NEW_SERVICES_FOUND),
-							 JOptionPane.INFORMATION_MESSAGE, true);
+				synchronized (SYNC_NEW_SERVICES)
+				{
+					if (m_newServicesID < 0)
+					{
+						m_newServicesID = m_StatusPanel.addStatusMsg(
+											  JAPMessages.getString(MSG_LBL_NEW_SERVICES_FOUND),
+											  JOptionPane.INFORMATION_MESSAGE, false, m_listenerNewServices);
+					}
+				}
+			}
+			else if (message.getMessageCode() == DatabaseMessage.ENTRY_REMOVED)
+			{
+				Enumeration newCascades =
+					Database.getInstance(NewCascadeIDEntry.class).getEntrySnapshotAsEnumeration();
+				bHide = true;
+				while (newCascades.hasMoreElements())
+				{
+					if (Database.getInstance(MixCascade.class).getEntryById(
+									   ((NewCascadeIDEntry)newCascades.nextElement()).getCascadeId()) != null)
+					{
+						bHide = false;
+						break;
+					}
+				}
+			}
+			else if (message.getMessageCode() == DatabaseMessage.ALL_ENTRIES_REMOVED)
+			{
+				bHide = true;
+			}
+			if (bHide)
+			{
+				// hide the new services hint if no new service are visible any more
+				synchronized (SYNC_NEW_SERVICES)
+				{
+					if (m_newServicesID >= 0)
+					{
+						 m_StatusPanel.removeStatusMsg(m_newServicesID);
+						 m_newServicesID = -1;
+					}
+				}
 			}
 		}
 		else if (a_message instanceof JAPModel.FontResize && a_message != null)
@@ -1714,6 +1798,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					 showConfigDialog(JAPConf.INFO_TAB);
 					  else if (event.getSource() == anonB)
 					 showConfigDialog(JAPConf.ANON_TAB);*/
+				}
+				else if (source == m_btnAbout)
+				{
+					JAPController.aboutJAP();
 				}
 				else if (source == m_btnAssistant)
 				{
@@ -2384,6 +2472,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelUpdate.setFont(new Font(labelFont.getName(), labelFont.getStyle(),
 									   ( (int) (labelFont.getSize() * 0.8))));
 							  */
+		m_bttnIconify.setIcon(GUIUtils.loadImageIcon(IMG_ICONIFY, true));
+		m_bttnHelp.setIcon(GUIUtils.loadImageIcon(IMG_HELP, true));
+		m_btnAbout.setIcon(GUIUtils.loadImageIcon(IMG_ABOUT, true));
 	}
 
 	private static boolean equals(JAPMixCascadeComboBox a_one, Hashtable a_two)

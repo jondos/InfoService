@@ -822,7 +822,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 
 				JAPModel.getInstance().setCascadeAutoSwitch(
-								XMLUtil.parseAttribute(root, XML_ATTR_AUTO_CHOOSE_CASCADES, true));
+								XMLUtil.parseAttribute(root, XML_ATTR_AUTO_CHOOSE_CASCADES, false));
 				JAPModel.getInstance().denyNonAnonymousSurfing(
 								XMLUtil.parseAttribute(root, JAPModel.XML_DENY_NON_ANONYMOUS_SURFING, false));
 
@@ -2584,7 +2584,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_proxyAnon.setMixCascade(cascadeContainer);
 					if (!bSwitchCascade)
 					{
-						if (JAPModel.getInstance().isTorActivated() && !bForwardedConnection)
+						if (JAPModel.getInstance().isTorActivated() && !bForwardedConnection &&
+							!JAPConstants.m_bReleasedVersion)
 						{
 							TorAnonServerDescription td = new TorAnonServerDescription(true,
 								JAPModel.isPreCreateAnonRoutesEnabled());
@@ -2597,7 +2598,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 						{
 							m_proxyAnon.setTorParams(null);
 						}
-						if (JAPModel.getInstance().isMixMinionActivated() && !bForwardedConnection)
+						if (JAPModel.getInstance().isMixMinionActivated() && !bForwardedConnection &&
+							!JAPConstants.m_bReleasedVersion)
 						{
 							m_proxyAnon.setMixminionParams(new MixminionServiceDescription(JAPModel.
 								getMixminionRouteLen(), JAPModel.getMixminionMyEMail()));

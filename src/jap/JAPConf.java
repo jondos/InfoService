@@ -78,8 +78,8 @@ import jap.pay.AccountSettingsPanel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import gui.GUIUtils;
 import java.awt.Dimension;
+import gui.GUIUtils;
 
 final public class JAPConf extends JAPDialog implements ActionListener, Observer
 {
@@ -239,7 +239,8 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
-		m_bttnHelp = new JButton(JAPMessages.getString("updateM_bttnHelp"));
+		//m_bttnHelp = new JButton(JAPMessages.getString("updateM_bttnHelp"));
+		m_bttnHelp = new JButton(GUIUtils.loadImageIcon(JAPNewView.IMG_HELP, true));
 		buttonPanel.add(m_bttnHelp);
 		m_bttnHelp.addActionListener(this);
 
@@ -1101,8 +1102,24 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 	{
 		if (a_message instanceof JAPModel.FontResize)
 		{
-			// font changed
-			SwingUtilities.updateComponentTreeUI(getContentPane());
+			Runnable run = new Runnable()
+			{
+				public void run()
+				{
+					// font changed
+					SwingUtilities.updateComponentTreeUI(getContentPane());
+					m_bttnHelp.setIcon(GUIUtils.loadImageIcon(JAPNewView.IMG_HELP, true));
+				}
+			};
+			if (SwingUtilities.isEventDispatchThread())
+			{
+				run.run();
+			}
+			else
+			{
+				SwingUtilities.invokeLater(run);
+			}
+
 		}
 	}
 

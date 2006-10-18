@@ -235,6 +235,8 @@ public class KeyExchangeManager {
 			  }
 
 			  MixInfo mixinfo = cascade.getMixInfo(i);
+			 // if (mixinfo == null &&
+
 			  MixInfo oldMixinfo = (MixInfo) Database.getInstance(MixInfo.class).getEntryById(mixinfo.getId());
 			  if (mixinfo.getCertificate() != null &&
 				  (oldMixinfo == null || !oldMixinfo.getCertificate().equals(mixinfo.getCertificate())))

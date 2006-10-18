@@ -190,10 +190,11 @@ final public class JAPSplash extends Window implements ISplashResponse
 		m_strVersion = "Version: " + JAPConstants.aktVersion;
 		m_fntFont = new Font("Sans", Font.PLAIN, 9);
 		FontMetrics fontmetrics = t.getFontMetrics(m_fntFont);
-		m_iXVersion = 350 - 10 - fontmetrics.stringWidth(m_strVersion);
-		m_iYVersion = 158;
-		setLocation( -350, -173);
-		setSize(350, 173);
+		m_iXVersion = 457 - 10 - fontmetrics.stringWidth(m_strVersion);
+		m_iYVersion = 178 - 15;
+		//setLocation( -350, -173);
+		//setSize(350, 173);
+		setSize(457, 178);
 		try
 		{
 			ma.waitForAll();
@@ -221,7 +222,7 @@ final public class JAPSplash extends Window implements ISplashResponse
 	{
 		if (m_imgOffScreen == null)
 		{
-			m_imgOffScreen = createImage(350, 173);
+			m_imgOffScreen = createImage(457, 178);
 		}
 		Graphics goff = m_imgOffScreen.getGraphics();
 		if (m_imgSplash != null)
@@ -232,6 +233,8 @@ final public class JAPSplash extends Window implements ISplashResponse
 		{
 			goff.drawImage(m_imgBusy, 15, 150, this);
 		}
+		goff.setColor(Color.gray);
+		goff.drawRect(0, 0, 456, 177);
 		goff.setFont(m_fntFont);
 		goff.setColor(Color.black);
 		goff.drawString(m_strLoading, 17, 140);
