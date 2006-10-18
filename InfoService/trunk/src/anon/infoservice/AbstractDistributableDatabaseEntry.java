@@ -141,15 +141,16 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 				nodeASerial = a_doc.createElement(XMLUtil.getXmlElementName(m_thisDBEntryClass));
 				nodeSerials.appendChild(nodeASerial);
 				XMLUtil.setAttribute(nodeASerial, XML_ATTR_ID, currentEntry.getId());
-				XMLUtil.setAttribute(nodeASerial, XML_ATTR_SERIAL, currentEntry.getVersionNumber());
 				XMLUtil.setAttribute(nodeASerial, XML_ATTR_LAST_UPDATE, currentEntry.getLastUpdate());
+				XMLUtil.setAttribute(nodeASerial, XML_ATTR_SERIAL, currentEntry.getVersionNumber());
 				if (currentEntry instanceof IVerifyable)
 				{
+					XMLUtil.setAttribute(nodeASerial, XML_ATTR_VALID,
+										 ((IVerifyable)currentEntry).isValid());
+
 					XMLUtil.setAttribute(nodeASerial, XML_ATTR_VERIFIED,
 										 ((IVerifyable)currentEntry).isVerified() &&
 						((IVerifyable)currentEntry).getCertPath().verify());
-					XMLUtil.setAttribute(nodeASerial, XML_ATTR_VALID,
-										 ((IVerifyable)currentEntry).isValid());
 				}
 			}
 			return nodeSerials;
