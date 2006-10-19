@@ -55,7 +55,6 @@ import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.Database;
 import gui.GUIUtils;
-import gui.JAPHelp;
 import gui.JAPMessages;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -75,6 +74,7 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		"_remindOptionalUpdate";
 	private static final String MSG_REMIND_JAVA_UPDATE = JAPConfUpdate.class.getName() +
 		"_remindJavaUpdate";
+	private static final String MSG_INFO = JAPConfUpdate.class.getName() + "_info";
 
 	//private JDialog m_Dialog;
 	private JTextArea m_taInfo;
@@ -269,15 +269,23 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 		gridBagPanel.setConstraints(m_comboType, c);
 		latestPanel.add(m_comboType);
 
-		//The Info-Panel
-		titledBorder = new TitledBorder(" Info ");
-		JPanel infoPanel = new JPanel(new GridLayout(1, 1));
-		infoPanel.setBorder(titledBorder);
+
+		JPanel infoPanel = new JPanel(new GridBagLayout());
+		GridBagConstraints constraints = new GridBagConstraints();
 		m_taInfo = new JTextArea();
 		m_taInfo.setEditable(false);
 		m_taInfo.setHighlighter(null);
 		JScrollPane scrollpane = new JScrollPane(m_taInfo);
-		infoPanel.add(scrollpane);
+		constraints.gridx = 0;
+		constraints.gridy = 0;
+		constraints.anchor = GridBagConstraints.NORTHWEST;
+		infoPanel.add(new JLabel(JAPMessages.getString(MSG_INFO)), constraints);
+		constraints.gridy++;
+		constraints.weightx = 1;
+		constraints.weighty = 1;
+		constraints.fill = GridBagConstraints.BOTH;
+		constraints.insets = new Insets(10, 0, 0, 0);
+		infoPanel.add(scrollpane, constraints);
 
 		//Putting it all together
 		GridBagConstraints cFrame = new GridBagConstraints();

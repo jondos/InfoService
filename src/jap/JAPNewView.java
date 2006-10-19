@@ -104,8 +104,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	public static final String MSG_UPDATE = JAPNewView.class.getName() + "_update";
 	public static final String MSG_NO_REAL_PAYMENT = JAPNewView.class.getName() + "_noRealPayment";
 
-	public static final String IMG_HELP = JAPNewView.class.getName() + "_help.gif";
-
 	private static final String MSG_ANONYMETER_TOOL_TIP = JAPNewView.class.getName() + "_anonymeterToolTip";
 	private static final String MSG_SERVICE_NAME = JAPNewView.class.getName() + "_ngAnonymisierungsdienst";
 	private static final String MSG_ERROR_DISCONNECTED = JAPNewView.class.getName() + "_errorDisconnected";
@@ -2482,7 +2480,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 									   ( (int) (labelFont.getSize() * 0.8))));
 							  */
 		m_bttnIconify.setIcon(GUIUtils.loadImageIcon(IMG_ICONIFY, true));
-		m_bttnHelp.setIcon(GUIUtils.loadImageIcon(IMG_HELP, true));
+		m_bttnHelp.setIcon(GUIUtils.loadImageIcon(JAPHelp.IMG_HELP, true));
 		m_btnAbout.setIcon(GUIUtils.loadImageIcon(IMG_ABOUT, true));
 	}
 

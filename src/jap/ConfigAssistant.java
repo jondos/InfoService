@@ -262,7 +262,7 @@ public class ConfigAssistant extends JAPDialog
 		lblImage = new JLabel(JAPMessages.getString(MSG_ANON_HP));
 		registerLink(lblImage, JAPMessages.getString(MSG_ANON_HP), false);
 		paneHelp.getContentPane().add(lblImage, constraints);
-		lblImage = new JLabel(GUIUtils.loadImageIcon(JAPNewView.IMG_HELP));
+		lblImage = new JLabel(GUIUtils.loadImageIcon(JAPHelp.IMG_HELP));
 		lblImage.setBorder(border);
 		constraints.gridy++;
 		paneHelp.getContentPane().add(lblImage, constraints);
