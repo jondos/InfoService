@@ -29,6 +29,9 @@ package anon.infoservice;
 
 import anon.crypto.JAPCertificate;
 import anon.crypto.X509SubjectKeyIdentifier;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  *
@@ -50,8 +53,13 @@ public abstract class AbstractDistributableCertifiedDatabaseEntry extends Abstra
 	 */
 	public boolean checkId()
 	{
-		return getCertificate() != null &&
-			 getId().equals(new X509SubjectKeyIdentifier(
+		JAPCertificate cert=getCertificate();
+		if(cert==null)
+		{
+			LogHolder.log(LogLevel.INFO,LogType.CRYPTO,"AbstractDistributableCertifiedDatabaseEntry::checkId() -- cert is NULL!");
+			return false;
+		}
+		return  getId().equals(new X509SubjectKeyIdentifier(
 				 getCertificate().getPublicKey()).getValueWithoutColon());
 	}
 
