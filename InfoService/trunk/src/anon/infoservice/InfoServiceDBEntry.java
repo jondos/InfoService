@@ -252,7 +252,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		/* test the ID */
 		if (!checkId())
 		{
-			throw new XMLParseException(XMLParseException.ROOT_TAG, "Malformed ID: " + m_strInfoServiceId);
+			throw new XMLParseException(XMLParseException.ROOT_TAG, "Malformed InfoService ID: " + m_strInfoServiceId);
 		}
 
 		/* get the name */
