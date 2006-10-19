@@ -60,7 +60,31 @@ public class InfoService
 		{
 			if (fn.equalsIgnoreCase("--generatekey"))
 			{
-				InfoService.generateKeyPair();
+				int i = 1;
+				String isName=null;
+				String passwd=null;
+				try
+				{
+					while (i < argv.length)
+					{
+						String arg = argv[i].trim();
+						if (arg.equals("--name"))
+						{
+							i++;
+							isName = argv[i].trim();
+						}
+						else if (arg.equals("--passwd"))
+						{
+							i++;
+							passwd = argv[i].trim();
+						}
+						i++;
+					}
+				}
+				catch (Throwable t)
+				{
+				}
+				InfoService.generateKeyPair(isName, passwd);
 				System.exit(0);
 			}
 			else if (fn.equalsIgnoreCase("--version"))
@@ -87,12 +111,12 @@ public class InfoService
 	/**
 	 * Generates a key pair for the infoservice
 	 */
-	private static void generateKeyPair()
+	private static void generateKeyPair(String isName, String passwd)
 	{
 		try
 		{
 			System.out.println("Start generating new KeyPair (this can take some minutes)...");
-			KeyGenTest.generateKeys();
+			KeyGenTest.generateKeys(isName, passwd);
 			System.out.println("Finished generating new KeyPair!");
 		}
 		catch (Exception e)
