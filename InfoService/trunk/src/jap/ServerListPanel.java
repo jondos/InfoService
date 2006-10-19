@@ -100,8 +100,12 @@ final public class ServerListPanel extends JPanel implements ActionListener
 			{
 				JSeparator line = new JSeparator();
 				line.setPreferredSize(new Dimension(50, 3));
+				line.setMaximumSize(new Dimension(50, 3));
 				line.setSize(50, 3);
+				line.setMinimumSize(new Dimension(5,3));
+				constraints.weightx = 0.5;
 				la.setConstraints(line, constraints);
+				constraints.weightx = 0;
 				add(line);
 			}
 			//Create the mix icon and place it in the panel
@@ -135,7 +139,7 @@ final public class ServerListPanel extends JPanel implements ActionListener
 			m_bEnabled = a_enabled;
 			m_mixButtons[i].setEnabled(m_bEnabled);
 		}
-		constraints.weightx = 0;
+		constraints.weightx = 1.0;
 		constraints.gridheight = 1;
 		Color color = null;
 		if (!a_enabled)
