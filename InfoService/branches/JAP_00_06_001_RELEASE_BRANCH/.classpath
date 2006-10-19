@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry path="test" kind="src"/>
+	<classpathentry excluding="infoservice/|jpi/" including="JAP.java|JAPMacintosh.java|JAPMessages.properties|JAPMessages_de.properties|JAPMessages_en.properties|JAPMessages_fr.properties|anon/|forward/|gui/|jap/|jarify/|logging/|platform/|proxy/|update/" path="src" kind="src"/>
+	<classpathentry path="org.eclipse.jdt.USER_LIBRARY/JAPLibraries" kind="con"/>
+	<classpathentry path="org.eclipse.jdt.launching.JRE_CONTAINER" kind="con"/>
+	<classpathentry path="build" kind="output"/>
+</classpath>

@@ -1,0 +1,31 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="xhelpfrms.css">
+</head>
+<body>
+<!--#include virtual="/header_en.html"-->
+
+<H2>Proxy settings for browsers: SeaMonkey</H2>
+
+To set up JAP for SeaMonkey, do the following steps:
+<BR><BR>
+1.) From the menu "Edit", choose the submenu "Preferences...". The settings window will open. Unfold the "Advanced" branch and choose "Proxies". Choose "Manual proxy configuration".
+<BR><BR>
+<CENTER><IMG SRC="seamonkey1_en.gif"></CENTER>
+<BR><BR>
+If you want specify addresses where JAP shall not be used, you can enter those exceptions into the field <i>No Proxy for:</i>, separated by commas.
+<br>Please note that exceptions can be managed in a more flexible way using <a href="noactive_proxomitron_en.html">Proxomitron</a>.
+<br>
+2.) To change the proxy server, click on the "Advanced..." button. Activate "Use HTTP Proxy settings for all protocols" and enter "127.0.0.1" as the server and "4001" as the port (without the quotation marks).
+<BR><BR>
+<CENTER><IMG SRC="seamonkey2_en.gif"></CENTER>
+<BR><BR>
+We recommend to even set proxy settings on JAP, that JAP does not support, to avoid an accidental deanonymisation. That's the reason for choosing option "Use HTTP Proxy settings for all protocols" above.
+<P>
+<B>Note:</B> If you set a different <A HREF="portlistener_en.html">listener port</A> in JAP, you'll have to enter this port here too, rather than 4001.
+<BR><BR>
+
+<!--#include virtual="/footer_en.html"-->
+
+</body>
+</html>
