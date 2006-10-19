@@ -61,7 +61,7 @@ final public class Constants
     public static final long TIMEOUT_TEMPORARY_CASCADE = 10 * 60 * 1000L; // 10 minutes
 
     /**
-     * Minium and maximum length of dynamically build cascades 
+     * Minium and maximum length of dynamically build cascades
      */
     public static final int MAX_CASCADE_LENGTH = 4;
     public static final int MIN_CASCADE_LENGTH = 2;
@@ -97,6 +97,6 @@ final public class Constants
 	/**
 	 * This is the version number of the infoservice software.
 	 */
-	public static final String INFOSERVICE_VERSION = "IS.07.048"; //never change the layout of this line!
+	public static final String INFOSERVICE_VERSION = "IS.07.049"; //never change the layout of this line!
 
 }
