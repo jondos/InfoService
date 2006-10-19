@@ -1,0 +1,33 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="xhelpfrms.css">
+</head>
+<body>
+<!--#include virtual="/header_en.html"-->
+
+<H2>Payment: Advanced Settings</H2>
+<i>This panel is only available in <a href="appearance_en.html#expertView">Expert View</a>.</i><P>
+To get to this panel, press button <i>Settings</i> in JAP's main window, then choose the entry <i>Payment</i> from the list to the left, then open the tab <i>Advanced Settings</i><br>.
+In this dialog you may specify advanced settings for payment.
+<P>
+<UL>
+    <LI><B>Show confirm dialog before using a service with costs</B><BR>
+    Activating this option will cause JAP to display a confirmation dialog each time a service with costs is about to be used. This also means that JAP will not be able to connect to a service with costs automatically during startup.
+    <P>
+    <LI><B>Allow non-anonymous connections to payment instances</B><BR>
+    If activated, JAP can get information about your account balance even if you have no anonymized connection currently established.<br>
+    If this option is deactivated, account information may be gathered through anonymized connections only.<br>
+    Thus, it is recommended to activate this option.
+    <P><LI><B>Show error messages from accounting instance (Only available in development version)</B><BR>
+    If activated, error messages concerning the accounting instance will be shown. It is recommended to do so.<br>
+    <br>In stable versions, this is always activated.
+    <P>
+    <LI><B>Automatically update account balance</B><BR>
+    If activated, JAP will try to update your account balance at fixed intervals.<br>
+    If you do not allow this, JAP will not automatically show your current account balance. Your account will still be managed correctly by the payment instance, anyway.
+    <P>
+</UL>
+
+<!--#include virtual="/footer_en.html"-->
+</body>
+</html>

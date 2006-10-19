@@ -1,0 +1,71 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="xhelpfrms.css">
+</head>
+<body>
+<!--#include virtual="/header_pt.html"-->
+<h2>Servidor de Reencaminhamento</h2>
+<p>Nesta janela, pode escolher a
+forma como o JAP actua como um cliente de reencaminhamento. Com esta
+fun&ccedil;&atilde;o, outros utilizadores do JAP que
+n&atilde;o se conseguem ligar directamente ao servi&ccedil;o de
+anonimato, podem-se ligar usando o seu JAP como um ponto de acesso.
+Tenha aten&ccedil;&atilde;o, contudo, que h&aacute; um
+risco de ser suspeito de um crime que outro utilizador do JAP cometa,
+se o seu sistema for usado como um sistema de reencaminhamento para
+esse crime.
+</p>
+<h3>Configura&ccedil;&otilde;es
+do Servidor de Reencaminhamento</h3>
+<p>
+</p>
+<ul>
+  <li><b>Porta
+do servidor de reencaminhamento</b><br>
+Introduza o n&uacute;mero da porta que o seu programa JAP usa para
+a entrada de liga&ccedil;&otilde;es de reencaminhamento. Esta
+porta deve estar aberta para a entrada de
+liga&ccedil;&otilde;es na sua firewall.
+    <p> </p>
+  </li>
+  <li><b>Minha
+liga&ccedil;&atilde;o &agrave; Internet</b><br>
+Seleccione o tipo e a velocidade da sua liga&ccedil;&atilde;o
+&agrave; Internet. O valor no campo"Largura de banda Max."
+&eacute; automaticamente configurado.
+    <p> </p>
+  </li>
+  <li><b>Percentagem
+de Reencaminhamento</b><br>
+Escolha uma percentagem neste campo para definir quanto da sua largura
+de banda de upstream pode ser usada para reencaminhamento.
+    <p> </p>
+  </li>
+  <li><b>Largura
+de banda usada Max.&nbsp;</b><br>
+A largura de banda realmente usada para reencaminhamento com base nas
+configura&ccedil;&otilde;es &eacute; mostrada aqui.
+  </li>
+</ul>
+<h3>Misturas em Cascata suportadas</h3>
+Esta sec&ccedil;&atilde;o permite-lhe modificar dois
+par&acirc;metros. Permitir a todos os clientes que utilizam o seu
+JAP como reencaminhador aceder a todas as misturas conhecidas pelo seu
+pr&oacute;prio cliente ("Permitir acesso do cliente a todas as
+misturas dispon&iacute;veis"), ou apenas permitir o acesso a
+algumas misturas. Que misturas ficar&atilde;o acess&iacute;veis
+ser&aacute; determinado pelos bot&otilde;es "Adicionar
+&agrave;s cascatas permitidas" e "Remover das cascatas permitidas".
+&nbsp;O acesso &eacute; permitido apenas &agrave;s misturas
+(cascatas) que se encontram na lista "Misturas em cascata permitidas".
+<h3>Registo no InfoService</h3>
+Para que os utilizadores que necessitam de um servidor de
+reencaminhamento encontrem o seu servidor de reencaminhamento JAP, este
+deve estar registado como reencaminhador pelo menos num InfoService.
+Pode registar o JAP em todos os InfoServices ou apenas em alguns. O
+procedimento &eacute; an&aacute;logo ao das Misturas em Cascata
+Suportadas.
+<!--#include virtual="/footer_pt.html"-->
+</body>
+</html>
