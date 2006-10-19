@@ -264,7 +264,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		/* test the ID */
 		if (!checkId())
 		{
-			throw new XMLParseException(XMLParseException.ROOT_TAG, "Malformed Mix ID: " + m_mixCascadeId);
+			throw new XMLParseException(XMLParseException.ROOT_TAG, "Malformed Mix-Cascade ID: " + m_mixCascadeId);
 		}
 
 		/* get the name */

@@ -236,7 +236,7 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 
 	  if (!checkId())
 	  {
-		  throw new XMLParseException(XMLParseException.ROOT_TAG, "Malformed ID: " + m_mixId);
+		  throw new XMLParseException(XMLParseException.ROOT_TAG, "Malformed Mix ID: " + m_mixId);
 	  }
 
 	  m_name = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_mixNode, "Name"), DEFAULT_NAME);

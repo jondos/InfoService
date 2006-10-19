@@ -183,7 +183,7 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 
 		if (!checkId())
 		{
-			throw new XMLParseException(XMLParseException.ROOT_TAG, "Malformed ID: " + m_mixCascadeId);
+			throw new XMLParseException(XMLParseException.ROOT_TAG, "Malformed Status-Entry for Mix ID: " + m_mixCascadeId);
 		}
 
 		/* get the values */
