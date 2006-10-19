@@ -48,7 +48,7 @@ final public class JAPSplash extends Window implements ISplashResponse
 {
 	private static final String IMGPATHHICOLOR = "images/";
 	private static final String IMGPATHLOWCOLOR = "images/lowcolor/";
-	private static final String SPLASHFN = "splash.gif";
+	private static final String SPLASHFN = "splash.jpg";
 
 	private Image m_imgSplash;
 	private Image m_imgBusy;
