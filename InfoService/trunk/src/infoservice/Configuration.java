@@ -586,7 +586,7 @@ final public class Configuration
 			/* Create the list of all neighbour infoservices. So we know, where to announce ourself at
 			 * startup.
 			 */
-			StringTokenizer stNeighbours = new StringTokenizer(a_properties.getProperty("neighbours").trim(),
+			StringTokenizer stNeighbours = new StringTokenizer(a_properties.getProperty("neighbours","").trim(),
 				",");
 			m_initialNeighbourInfoServices = new Vector();
 			while (stNeighbours.hasMoreTokens())
