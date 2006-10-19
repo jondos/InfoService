@@ -46,6 +46,7 @@ import org.w3c.dom.Node;
 import anon.util.IXMLEncodable;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
+
 /**
  * Saves the information about a network server.
  */
@@ -106,12 +107,16 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 		}
 
 		setHostname(strHostname);
+		//TRy Type and NetworkRptocol for backward compatibility...
+		String strProtocol = XMLUtil.parseValue(XMLUtil.getFirstChildByName(listenerInterfaceNode, "Type"), null);
+		if (strProtocol == null)
+		{
+			strProtocol = XMLUtil.parseValue(XMLUtil.getFirstChildByName(listenerInterfaceNode,
+				"NetworkProtocol"), null);
+		}
+		setProtocol(strProtocol);
 
-		setProtocol(XMLUtil.parseValue(
-			XMLUtil.getFirstChildByName(listenerInterfaceNode, "Type"), null));
-
-		setPort(XMLUtil.parseValue(
-			XMLUtil.getFirstChildByName(listenerInterfaceNode, "Port"), -1));
+		setPort(XMLUtil.parseValue(XMLUtil.getFirstChildByName(listenerInterfaceNode, "Port"), -1));
 
 		setUseInterface(true);
 	}
@@ -362,34 +367,34 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	 * @return The host of this interface with additional information.
 	 */
 	/*public String getHostAndIp()
-	{
-		String hostAndIp = m_strHostname;
-		try
-		{
-			InetAddress interfaceAddress = InetAddress.getByName(m_strHostname);
-			if (isValidIP(m_strHostname))
-			{
-				// inetHost is an IP, try to add the hostname
-				String hostName = interfaceAddress.getHostName();
-				if ( (!hostName.equals(m_strHostname)) && (isValidHostname(hostName)))
-				{
-					// we got the hostname via DNS, add it
-					hostAndIp = hostAndIp + " (" + hostName + ")";
-				}
-			}
-			else
-			{
-				// inetHost is a hostname, add the IP
-				hostAndIp = hostAndIp + " (" + interfaceAddress.getHostAddress() + ")";
-			}
-		}
-		catch (java.net.UnknownHostException e)
-		{
-			// can't resolve inetHost, maybe we are behind a proxy, return only inetHost
-		}
-		return hostAndIp;
-	}
-*/
+	  {
+	 String hostAndIp = m_strHostname;
+	 try
+	 {
+	  InetAddress interfaceAddress = InetAddress.getByName(m_strHostname);
+	  if (isValidIP(m_strHostname))
+	  {
+	   // inetHost is an IP, try to add the hostname
+	   String hostName = interfaceAddress.getHostName();
+	   if ( (!hostName.equals(m_strHostname)) && (isValidHostname(hostName)))
+	   {
+		// we got the hostname via DNS, add it
+		hostAndIp = hostAndIp + " (" + hostName + ")";
+	   }
+	  }
+	  else
+	  {
+	   // inetHost is a hostname, add the IP
+	   hostAndIp = hostAndIp + " (" + interfaceAddress.getHostAddress() + ")";
+	  }
+	 }
+	 catch (java.net.UnknownHostException e)
+	 {
+	  // can't resolve inetHost, maybe we are behind a proxy, return only inetHost
+	 }
+	 return hostAndIp;
+	  }
+	 */
 
 
 	/**
@@ -541,26 +546,26 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 		Element listenerInterfaceNode = doc.createElement(a_strXmlElementName);
 		/* Create the child nodes of ListenerInterface (Type, Port, Host) */
 		Element typeNode = doc.createElement("Type");
-		XMLUtil.setValue(typeNode,getProtocolAsString());
+		XMLUtil.setValue(typeNode, getProtocolAsString());
 		Element portNode = doc.createElement("Port");
-		XMLUtil.setValue(portNode,m_iInetPort);
+		XMLUtil.setValue(portNode, m_iInetPort);
 		Element hostNode = doc.createElement("Host");
-		XMLUtil.setValue(hostNode,m_strHostname);
+		XMLUtil.setValue(hostNode, m_strHostname);
 		/*String ipString = null;
-		try
-		{
-			InetAddress interfaceAddress = InetAddress.getByName(m_strHostname);
-			ipString = interfaceAddress.getHostAddress();
-		}
-		catch (Exception e)
-		{
-			// maybe inetHost is a hostname and no IP, but this solution is better than nothing
-			ipString = m_strHostname;
-		}
-		Element ipNode = doc.createElement("IP");
-		ipNode.appendChild(doc.createTextNode(ipString));
-	*/
-	listenerInterfaceNode.appendChild(typeNode);
+		   try
+		   {
+		 InetAddress interfaceAddress = InetAddress.getByName(m_strHostname);
+		 ipString = interfaceAddress.getHostAddress();
+		   }
+		   catch (Exception e)
+		   {
+		 // maybe inetHost is a hostname and no IP, but this solution is better than nothing
+		 ipString = m_strHostname;
+		   }
+		   Element ipNode = doc.createElement("IP");
+		   ipNode.appendChild(doc.createTextNode(ipString));
+		 */
+		listenerInterfaceNode.appendChild(typeNode);
 		listenerInterfaceNode.appendChild(portNode);
 		listenerInterfaceNode.appendChild(hostNode);
 		//listenerInterfaceNode.appendChild(ipNode);
@@ -569,7 +574,8 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 
 	public String toString()
 	{
-		return "ListenerInterface (Protocol: "+getProtocolAsString()+")- Host: "+getHost()+" Port: "+getPort();
+		return "ListenerInterface (Protocol: " + getProtocolAsString() + ")- Host: " + getHost() + " Port: " +
+			getPort();
 	}
 
 }
