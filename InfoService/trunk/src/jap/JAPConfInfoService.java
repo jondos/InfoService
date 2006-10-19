@@ -286,7 +286,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		//knownInfoServicesListScrollPane.setPreferredSize( (new JTextArea(10, 20)).getPreferredSize());
 		//knownInfoServicesListScrollPane.setMinimumSize( (new JTextArea(10, 20)).getPreferredSize());
 
-		final JButton settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton = new JButton("   " +
+		final JButton settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton = new JButton(
 			JAPMessages.getString("settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton"));
 		//settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setFont(getFontSetting());
 		settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setIcon(GUIUtils.loadImageIcon(
@@ -870,13 +870,14 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		buttonPanelConstraints.gridx = 0;
 		buttonPanelConstraints.gridy = 0;
 		//buttonPanelConstraints.weightx = 1.0;
-		buttonPanelConstraints.insets = new Insets(0, 0, 0, 10);
+		buttonPanelConstraints.insets = new Insets(0, 10, 0, 10);
 		buttonPanelLayout.setConstraints(settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton,
 										 buttonPanelConstraints);
 		buttonPanel.add(settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton);
 
 		buttonPanelConstraints.gridx = 1;
 		buttonPanelConstraints.gridy = 0;
+		buttonPanelConstraints.insets = new Insets(0, 0, 0, 10);
 		buttonPanelLayout.setConstraints(settingsInfoServiceConfigBasicSettingsSetPreferredButton,
 										 buttonPanelConstraints);
 		buttonPanel.add(settingsInfoServiceConfigBasicSettingsSetPreferredButton);

@@ -229,17 +229,14 @@ final class JAPConfMixminion extends AbstractJAPConfModule implements ActionList
 
 		//test
 		p= new JPanel(new GridBagLayout());
-		GridBagConstraints c4 = new GridBagConstraints();
-		c4.anchor = GridBagConstraints.NORTHWEST;
-		c4.insets = new Insets(2, 5, 2, 5);
-		c4.fill = GridBagConstraints.NONE;
+
 		m_lblEMail = new JLabel(JAPMessages.getString("mixminionEMail"));
 		p.add(m_lblEMail, c3);
 		m_email = new JTextField();
-		m_email.setSize(1,50);
-		c4.gridx = 1;
-		c4.fill = GridBagConstraints.HORIZONTAL;
-		p.add(m_email, c4);
+		c3.gridx++;
+		c3.weightx = 1;
+		c3.fill = GridBagConstraints.HORIZONTAL;
+		p.add(m_email, c3);
 
 		m_borderEMail = new TitledBorder(JAPMessages.getString("mixminionEMailSettings"));
 		p.setBorder(m_borderEMail);

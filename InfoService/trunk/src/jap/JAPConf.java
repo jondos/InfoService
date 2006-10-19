@@ -240,7 +240,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
 		//m_bttnHelp = new JButton(JAPMessages.getString("updateM_bttnHelp"));
-		m_bttnHelp = new JButton(GUIUtils.loadImageIcon(JAPNewView.IMG_HELP, true));
+		m_bttnHelp = new JButton(GUIUtils.loadImageIcon(JAPHelp.IMG_HELP, true));
 		buttonPanel.add(m_bttnHelp);
 		m_bttnHelp.addActionListener(this);
 
@@ -1108,7 +1108,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 				{
 					// font changed
 					SwingUtilities.updateComponentTreeUI(getContentPane());
-					m_bttnHelp.setIcon(GUIUtils.loadImageIcon(JAPNewView.IMG_HELP, true));
+					m_bttnHelp.setIcon(GUIUtils.loadImageIcon(JAPHelp.IMG_HELP, true));
 				}
 			};
 			if (SwingUtilities.isEventDispatchThread())

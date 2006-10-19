@@ -83,6 +83,8 @@ public final class JAPHelp extends JAPDialog
 {
 	public static final String INDEX_CONTEXT = "index";
 
+	public static final String IMG_HELP = JAPHelp.class.getName() + "_help.gif";
+
 	// messages
 	public static final String MSG_HELP_BUTTON = JAPHelp.class.getName() + ("_helpButton");
 	public static final String MSG_HELP_MENU_ITEM = JAPHelp.class.getName() + ("_helpMenuItem");
@@ -251,7 +253,8 @@ public final class JAPHelp extends JAPDialog
 	 */
 	public static JButton createHelpButton(IHelpContext a_helpContext)
 	{
-		JButton helpButton = new JButton(JAPMessages.getString(MSG_HELP_BUTTON));
+		JButton helpButton = new JButton(GUIUtils.loadImageIcon(JAPHelp.IMG_HELP, true));
+		helpButton.setToolTipText(JAPMessages.getString(MSG_HELP_BUTTON));
 		helpButton.addActionListener(new HelpContextActionListener(a_helpContext));
 		return helpButton;
 	}
