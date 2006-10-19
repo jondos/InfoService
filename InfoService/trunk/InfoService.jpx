@@ -189,6 +189,7 @@
 <node name="anon.util" type="Package"/>
 <node name="captcha" type="Package"/>
 <node name="infoservice" type="Package"/>
+<node name="infoservice.agreement" type="Package"/>
 <node name="infoservice.dynamic" type="Package"/>
 <node name="infoservice.japforwarding" type="Package"/>
 <node name="infoservice.mailsystem" type="Package"/>
