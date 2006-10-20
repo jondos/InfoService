@@ -96,6 +96,7 @@ import anon.util.IPasswordReader;
 import anon.util.JobQueue;
 import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
+import anon.util.Util;
 import forward.server.ForwardServerManager;
 import gui.GUIUtils;
 import gui.JAPMessages;
@@ -3504,7 +3505,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 			return 1;
 		}
 		if (viRelease != null && viRelease.getJapVersion() != null && vi.getJapVersion() != null &&
-			viRelease.getJapVersion().equals(vi.getJapVersion()))
+		Util.convertVersionStringToNumber(viRelease.getJapVersion()) + 2 >= //patch
+		Util.convertVersionStringToNumber(vi.getJapVersion()) &&  // patch
+		viRelease.getJapVersion().compareTo(JAPConstants.aktVersion) > 0) // patch
+	//			viRelease.getJapVersion().equals(vi.getJapVersion()))
 		{
 			// developer and release version are equal; recommend to switch to release
 			recommendToSwitchToRelease = true;
