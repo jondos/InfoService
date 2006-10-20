@@ -32,6 +32,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Vector;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -283,8 +284,23 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			public void actionPerformed(ActionEvent a_event)
 			{
 				boolean bUpdated = false;
-				Enumeration entries =
-					Database.getInstance(JAPVersionInfo.class).getEntrySnapshotAsEnumeration();
+				Vector vecVersions = new Vector();
+				JAPVersionInfo viTemp;
+
+				viTemp = (JAPVersionInfo)Database.getInstance(JAPVersionInfo.class).getEntryById(
+								JAPVersionInfo.ID_RELEASE);
+				if (viTemp != null)
+				{
+					vecVersions.addElement(viTemp);
+				}
+				viTemp = (JAPVersionInfo)Database.getInstance(JAPVersionInfo.class).getEntryById(
+								JAPVersionInfo.ID_DEVELOPMENT);
+				if (viTemp != null)
+				{
+					vecVersions.addElement(viTemp);
+				}
+
+				Enumeration entries = vecVersions.elements();
 				JavaVersionDBEntry versionEntry = JavaVersionDBEntry.getNewJavaVersion();
 
 				while (entries.hasMoreElements())
@@ -293,7 +309,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					if (vi != null && vi.getJapVersion() != null &&
 						vi.getJapVersion().compareTo(JAPConstants.aktVersion) > 0)
 					{
-
 						if (JAPConstants.m_bReleasedVersion && !vi.getId().equals(JAPVersionInfo.ID_RELEASE))
 						{
 							continue;
