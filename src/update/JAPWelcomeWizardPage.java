@@ -72,7 +72,8 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 		setPageTitle(JAPMessages.getString("updateWelcomeWizardPageTitle",
 										   new Object[]{
 										   a_versionInfo.getJapVersion() +
-										   (JAPConstants.m_bReleasedVersion ? "" : "-dev")}));
+										   (a_versionInfo.getId().equals(JAPVersionInfo.ID_RELEASE) ?
+											"" : "-dev")}));
 
 		GridBagLayout m_panelComponentsLayout = new GridBagLayout();
 		GridBagConstraints m_panelConstraints = new GridBagConstraints();
