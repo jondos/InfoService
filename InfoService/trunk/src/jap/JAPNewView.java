@@ -312,6 +312,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						{
 							bUpdated = true;
 						}
+						break;
 					}
 				}
 				// Do not execute other objects after successfully finishing the wizard!

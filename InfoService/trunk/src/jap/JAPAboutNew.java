@@ -51,7 +51,8 @@ public class JAPAboutNew extends JAPDialog
 
 	public JAPAboutNew(Component a_parent)
 	{
-		super(a_parent, JAPMessages.getString(MSG_VERSION) + " " + JAPConstants.aktVersion);
+		super(a_parent, JAPMessages.getString(MSG_VERSION) + " " + JAPConstants.aktVersion +
+			(JAPConstants.m_bReleasedVersion ? "" : "-dev"));
 		DialogContentPane contentPane =
 			new DialogContentPane(this, (DialogContentPane.Layout)null, new DialogContentPane.Options(DialogContentPane.OPTION_TYPE_DEFAULT));
 		contentPane.setDefaultButtonOperation(DialogContentPane.ON_CLICK_DISPOSE_DIALOG);
