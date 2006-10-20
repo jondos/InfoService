@@ -1998,22 +1998,22 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	public void saveWindowPositions()
 	{
-		if (m_mainMovedAdapter.hasMoved())
+		//if (m_mainMovedAdapter.hasMoved())
 		{
 			JAPModel.getInstance().setMainWindowLocation(getLocation());
 		}
 		synchronized (SYNC_ICONIFIED_VIEW)
 		{
-			if (getViewIconified() != null && m_miniMovedAdapter != null && m_miniMovedAdapter.hasMoved())
+			if (getViewIconified() != null && m_miniMovedAdapter != null) // && m_miniMovedAdapter.hasMoved())
 			{
 				JAPModel.getInstance().setIconifiedWindowLocation(getViewIconified().getLocation());
 			}
 		}
-		if (m_dlgConfig != null && m_configMovedAdapter.hasMoved())
+		if (m_dlgConfig != null) // && m_configMovedAdapter.hasMoved())
 		{
 			JAPModel.getInstance().setConfigWindowLocation(m_dlgConfig.getLocation());
 		}
-		if (m_helpMovedAdapter.hasMoved())
+		//if (m_helpMovedAdapter.hasMoved())
 		{
 			JAPModel.getInstance().setHelpWindowLocation(JAPHelp.getInstance().getLocation());
 		}
