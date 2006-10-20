@@ -42,7 +42,7 @@ public final class JAPConstants
 	//because CVS will expand the $Date$
 	//to the date of the last commmit of this file
 
-	public final static boolean m_bReleasedVersion = true; //Set to true if this is a stable (release) Version
+	public final static boolean m_bReleasedVersion = false; //Set to true if this is a stable (release) Version
 	private static final String RELEASE_DATE = "2006/10/19 16:01:00"; // Set only to a Value, if m_bReleaseVersion=true
 
 	public static final String CURRENT_CONFIG_VERSION = "0.24";

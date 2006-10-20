@@ -70,7 +70,9 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 		//this.updateWizard = updateWizard;
 		setIcon(GUIUtils.loadImageIcon(JAPConstants.DOWNLOADFN, false));
 		setPageTitle(JAPMessages.getString("updateWelcomeWizardPageTitle",
-										   new Object[]{a_versionInfo.getJapVersion()}));
+										   new Object[]{
+										   a_versionInfo.getJapVersion() +
+										   (JAPConstants.m_bReleasedVersion ? "" : "-dev")}));
 
 		GridBagLayout m_panelComponentsLayout = new GridBagLayout();
 		GridBagConstraints m_panelConstraints = new GridBagConstraints();

@@ -40,7 +40,6 @@ import HTTPClient.HTTPResponse;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.ListenerInterface;
-import anon.infoservice.ImmutableProxyInterface;
 import gui.JAPMessages;
 import gui.wizard.BasicWizard;
 import gui.wizard.BasicWizardHost;
