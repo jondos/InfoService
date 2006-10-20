@@ -287,12 +287,17 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					Database.getInstance(JAPVersionInfo.class).getEntrySnapshotAsEnumeration();
 				JavaVersionDBEntry versionEntry = JavaVersionDBEntry.getNewJavaVersion();
 
-				if (entries.hasMoreElements())
+				while (entries.hasMoreElements())
 				{
 					JAPVersionInfo vi = (JAPVersionInfo) entries.nextElement();
 					if (vi != null && vi.getJapVersion() != null &&
 						vi.getJapVersion().compareTo(JAPConstants.aktVersion) > 0)
 					{
+
+						if (JAPConstants.m_bReleasedVersion && !vi.getId().equals(JAPVersionInfo.ID_RELEASE))
+						{
+							continue;
+						}
 						JAPUpdateWizard wz = new JAPUpdateWizard(vi, JAPController.getInstance().getViewWindow());
 						/* we got the JAPVersionInfo from the infoservice */
 						if (wz.getStatus() == JAPUpdateWizard.UPDATESTATUS_ERROR)
