@@ -55,7 +55,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	 */
 	private static final long KEEP_ENTRY_FACTOR = 3l;
 
-	private static final long MIN_WAITING_TIME_MS = 15000;
+	private static final long MIN_WAITING_TIME_MS = 20000;
 
 	private IUpdateInterval m_updateInterval;
 	private Thread m_updateThread;
