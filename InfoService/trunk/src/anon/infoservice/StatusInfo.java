@@ -29,6 +29,7 @@ package anon.infoservice;
 
 import java.text.NumberFormat;
 import java.util.Date;
+import java.security.SignatureException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -181,6 +182,10 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 		/* get all the attributes of MixCascadeStatus */
 		m_mixCascadeId = a_statusNode.getAttribute("id");
 
+		if (m_certificate == null)
+		{
+			throw new SignatureException("There is no known certificate to verify the StatusInfo signature!");
+		}
 		if (!checkId())
 		{
 			throw new XMLParseException(XMLParseException.ROOT_TAG, "Malformed Status-Entry for Mix ID: " + m_mixCascadeId);

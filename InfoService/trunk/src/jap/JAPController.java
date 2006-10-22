@@ -169,6 +169,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public static final String MSG_VERSION_RELEASE = JAPController.class.getName() + "_versionRelease";
 	public static final String MSG_VERSION_DEVELOPER = JAPController.class.getName() + "_versionDeveloper";
 	public static final String MSG_ASK_WHICH_VERSION = JAPController.class.getName() + "_askWhichVersion";
+	private static final String MSG_CASCADE_NOT_PARSABLE =
+		JAPController.class.getName() + "_cascadeNotParsable";
 
 
 	private static final String XML_ELEM_LOOK_AND_FEEL = "LookAndFeel";
@@ -2472,15 +2474,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 		public void runJob()
 		{
-			boolean bRetryOnError;
-			/*
-			synchronized (m_inititalRunSync)
-			{
-				bRetryOnError = m_bInitialRun && JAPModel.getAutoConnect();
-				m_bInitialRun = false;
-			}*/
-
-
 			if (!Thread.currentThread().isInterrupted())
 			{
 				/* job was not canceled -> we have to do it */
@@ -2582,7 +2575,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 					//m_proxyAnon.setMixCascade(new SimpleMixCascadeContainer(
 					//			   m_Controller.getCurrentMixCascade()));
 					cascadeContainer = new AutoSwitchedMixCascadeContainer();
-					m_proxyAnon.setMixCascade(cascadeContainer);
 					if (!bSwitchCascade)
 					{
 						if (JAPModel.getInstance().isTorActivated() && !bForwardedConnection &&
@@ -2620,12 +2612,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 						m_proxyDirect = null;
 
 						LogHolder.log(LogLevel.DEBUG, LogType.NET, "Try to start AN.ON service...");
-						ret = m_proxyAnon.start();
 					}
-					else
-					{
-						ret = m_proxyAnon.switchCascade();
-					}
+					ret = m_proxyAnon.start(cascadeContainer);
+
 
 					JAPDialog.LinkedInformationAdapter onTopAdapter =
 						new JAPDialog.LinkedInformationAdapter()
@@ -2662,86 +2651,48 @@ public final class JAPController extends Observable implements IProxyListener, O
 							  });
 						JAPController.getInstance().getView().disableSetAnonMode();
 					}
-					else if (ret == AnonProxy.E_MIX_PROTOCOL_NOT_SUPPORTED &&
-							 ! (cascadeContainer.isReconnectedAutomatically() &&
+					else if ((ret == AnonProxy.E_MIX_PROTOCOL_NOT_SUPPORTED ||
+							 ret == AnonProxy.E_SIGNATURE_CHECK_FIRSTMIX_FAILED ||
+							 ret == AnonProxy.E_SIGNATURE_CHECK_OTHERMIX_FAILED ||
+							 ret == ErrorCodes.E_NOT_TRUSTED ||
+							 ret == ErrorCodes.E_NOT_PARSABLE) &&
+							!(cascadeContainer.isReconnectedAutomatically() &&
 								cascadeContainer.isServiceAutoSwitched()))
 					{
+						String strMessage;
+
 						canStartService = false;
 						m_proxyAnon.stop();
 						m_proxyAnon = null;
-						if (JAPDialog.showConfirmDialog(getViewWindow(),
-							JAPMessages.getString("errorMixProtocolNotSupported") + "<br><br>" +
-								JAPMessages.getString(MSG_ASK_SWITCH), JAPDialog.OPTION_TYPE_YES_NO,
-								JAPDialog.MESSAGE_TYPE_ERROR,
-							 onTopAdapter) == JAPDialog.RETURN_VALUE_YES)
+
+						if (ret == AnonProxy.E_MIX_PROTOCOL_NOT_SUPPORTED)
 						{
-							JAPModel.getInstance().setCascadeAutoSwitch(true);
+							strMessage = JAPMessages.getString("errorMixProtocolNotSupported");
 						}
-						else
+						else if (ret == AnonProxy.E_SIGNATURE_CHECK_FIRSTMIX_FAILED)
 						{
-							getView().doClickOnCascadeChooser();
+							strMessage =
+								JAPMessages.getString("errorMixFirstMixSigCheckFailed");
 						}
-					}
-					//otte
-					else if (ret == AnonProxy.E_SIGNATURE_CHECK_FIRSTMIX_FAILED &&
-							 ! (cascadeContainer.isReconnectedAutomatically() &&
-								cascadeContainer.isServiceAutoSwitched()))
-					{
-						canStartService = false;
-						m_proxyAnon.stop();
-						m_proxyAnon = null;
+						else if (ret == AnonProxy.E_SIGNATURE_CHECK_OTHERMIX_FAILED)
+						{
+							strMessage = JAPMessages.getString("errorMixOtherMixSigCheckFailed");
+						}
+						else if (ret == ErrorCodes.E_NOT_TRUSTED)
+						{
+							strMessage =  JAPMessages.getString(MSG_CASCADE_NOT_TRUSTED);
+						}
+						else // if (ret == ErrorCodes.E_NOT_PARSABLE)
+						{
+							strMessage = JAPMessages.getString(MSG_CASCADE_NOT_PARSABLE);
+						}
+						strMessage += "<br><br>" + JAPMessages.getString(MSG_ASK_SWITCH);
 						if (JAPDialog.showConfirmDialog(getViewWindow(),
-							JAPMessages.getString("errorMixFirstMixSigCheckFailed") + "<br><br>" +
-							JAPMessages.getString(MSG_ASK_SWITCH), JAPDialog.OPTION_TYPE_YES_NO,
+							strMessage, JAPDialog.OPTION_TYPE_YES_NO,
 							JAPDialog.MESSAGE_TYPE_ERROR,
 							onTopAdapter) == JAPDialog.RETURN_VALUE_YES)
 						{
-							JAPModel.getInstance().setCascadeAutoSwitch(true);
-						}
-						else
-						{
-							getView().doClickOnCascadeChooser();
-						}
-
-
-					}
-
-					else if (ret == AnonProxy.E_SIGNATURE_CHECK_OTHERMIX_FAILED &&
-							 ! (cascadeContainer.isReconnectedAutomatically() &&
-								cascadeContainer.isServiceAutoSwitched()))
-					{
-						canStartService = false;
-						m_proxyAnon.stop();
-						m_proxyAnon = null;
-						if (JAPDialog.
-							showConfirmDialog(getViewWindow(),
-											  JAPMessages.getString("errorMixOtherMixSigCheckFailed") + "<br><br>" +
-											  JAPMessages.getString(MSG_ASK_SWITCH), JAPDialog.OPTION_TYPE_YES_NO,
-											  JAPDialog.MESSAGE_TYPE_ERROR,
-											  onTopAdapter) == JAPDialog.RETURN_VALUE_YES)
-						{
-							JAPModel.getInstance().setCascadeAutoSwitch(true);
-						}
-						else
-						{
-							getView().doClickOnCascadeChooser();
-						}
-
-					}
-					else if (ret == ErrorCodes.E_NOT_TRUSTED &&
-							 ! (cascadeContainer.isReconnectedAutomatically() &&
-								cascadeContainer.isServiceAutoSwitched()))
-					{
-						canStartService = false;
-						m_proxyAnon.stop();
-						m_proxyAnon = null;
-						if (JAPDialog.
-							showConfirmDialog(getViewWindow(),
-											  JAPMessages.getString(MSG_CASCADE_NOT_TRUSTED) + "<br><br>" +
-											  JAPMessages.getString(MSG_ASK_SWITCH), JAPDialog.OPTION_TYPE_YES_NO,
-											  JAPDialog.MESSAGE_TYPE_ERROR,
-											  onTopAdapter) == JAPDialog.RETURN_VALUE_YES)
-						{
+							JAPModel.getInstance().setAutoReConnect(true);
 							JAPModel.getInstance().setCascadeAutoSwitch(true);
 						}
 						else
@@ -3505,10 +3456,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 			return 1;
 		}
 		if (viRelease != null && viRelease.getJapVersion() != null && vi.getJapVersion() != null &&
-		Util.convertVersionStringToNumber(viRelease.getJapVersion()) + 2 >= //patch
-		Util.convertVersionStringToNumber(vi.getJapVersion()) &&  // patch
-		viRelease.getJapVersion().compareTo(JAPConstants.aktVersion) > 0) // patch
-	//			viRelease.getJapVersion().equals(vi.getJapVersion()))
+			//Util.convertVersionStringToNumber(viRelease.getJapVersion()) + 2 >= //patch
+			//Util.convertVersionStringToNumber(vi.getJapVersion()) &&  // patch
+			//viRelease.getJapVersion().compareTo(JAPConstants.aktVersion) > 0) // patch
+			viRelease.getJapVersion().equals(vi.getJapVersion()))
 		{
 			// developer and release version are equal; recommend to switch to release
 			recommendToSwitchToRelease = true;

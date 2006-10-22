@@ -33,9 +33,8 @@ public class AnonProxyTest
 			//InfoServiceHolder ih=InfoServiceHolder.getInstance();
 			//ih.setPreferredInfoService(new InfoServiceDBEntry("infoservice.inf.tu-dresden.de",80));
 			//Object o=ih.getInfoServices();
-			theProxy.setMixCascade(new SimpleMixCascadeContainer(
+			theProxy.start(new SimpleMixCascadeContainer(
 						 new MixCascade(null, null, "mix.inf.tu-dresden.de", 6544)));
-			theProxy.start();
 			synchronized(theProxy)
 				{
 					theProxy.wait();

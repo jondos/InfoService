@@ -228,7 +228,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	 * @param newMixCascade
 	 *          The new MixCascade we are connected to.
 	 */
-	public void setMixCascade(AbstractMixCascadeContainer newMixCascade)
+	private void setMixCascade(AbstractMixCascadeContainer newMixCascade)
 	{
 		if (newMixCascade == null)
 		{
@@ -334,16 +334,6 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		{
 			// this is a direct proxy!
 		}
-	}
-
-	public int switchCascade()
-	{
-		return connect(true);
-	}
-
-	public int start()
-	{
-		return connect(false);
 	}
 
 	public void stop()
@@ -515,7 +505,8 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			}
 			m_bReconnecting = true;
 
-			while (threadRun != null && m_currentMixCascade.isReconnectedAutomatically())
+			while (threadRun != null && m_currentMixCascade.isReconnectedAutomatically() &&
+				   !m_Anon.isConnected() && !Thread.currentThread().isInterrupted())
 			{
 				LogHolder.log(LogLevel.ERR, LogType.NET, "Try reconnect to AN.ON service");
 				int ret = m_Anon.initialize(m_currentMixCascade.getNextMixCascade(), m_currentMixCascade);
@@ -552,59 +543,42 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		m_ProxyListener = l;
 	}
 
-	protected synchronized void decNumChannels()
-	{
-		m_numChannels--;
-		if (m_ProxyListener != null)
-		{
-			m_ProxyListener.channelsChanged(m_numChannels);
-		}
-	}
-
-	protected synchronized void incNumChannels()
-	{
-		m_numChannels++;
-		if (m_ProxyListener != null)
-		{
-			m_ProxyListener.channelsChanged(m_numChannels);
-		}
-	}
-
-	protected synchronized void transferredBytes(long bytes, int protocolType)
-	{
-		if (m_ProxyListener != null)
-		{
-			m_ProxyListener.transferedBytes(bytes, protocolType);
-		}
-	}
-
-	private int connect(boolean a_bSwitch)
+	public int start(AbstractMixCascadeContainer a_newMixCascade)
 	{
 		synchronized (THREAD_SYNC)
 		{
 			boolean bConnectionError = false;
-
-			if (a_bSwitch)
+			AbstractMixCascadeContainer newMixCascade;
+			boolean bSwitch = false;
+			if (a_newMixCascade == null)
 			{
-				THREAD_SYNC.notifyAll();
+				newMixCascade = new DummyMixCascadeContainer();
+			}
+			else
+			{
+				newMixCascade = new EncapsulatedMixCascadeContainer(a_newMixCascade);
+			}
 
+			if (getMixCascade() != newMixCascade.getCurrentMixCascade() && threadRun != null)
+			{
+				bSwitch = true;
+				THREAD_SYNC.notifyAll();
 				synchronized (SHUTDOWN_SYNC)
 				{
-					if (threadRun == null)
-					{
-						// the thread has been stopped
-						Thread.currentThread().interrupt();
-						return ErrorCodes.E_INTERRUPTED;
-					}
-
 					m_Anon.shutdown();
 
+					int i = 0;
 					while (threadRun.isAlive())
 					{
 						try
 						{
 							threadRun.interrupt();
 							threadRun.join(1000);
+							if (i > 3)
+							{
+								threadRun.stop();
+							}
+							i++;
 						}
 						catch (InterruptedException e)
 						{
@@ -612,13 +586,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 					}
 				}
 			}
-			else
-			{
-				if (threadRun != null)
-				{
-					return ErrorCodes.E_SUCCESS;
-				}
-			}
+			m_currentMixCascade = newMixCascade;
 
 			/*
 			  if (cascade.getId().equals("Tor"))
@@ -641,7 +609,8 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 					(!m_currentMixCascade.isServiceAutoSwitched() &&
 					 // these errors cannot be 'healed'
 					 (ret == E_SIGNATURE_CHECK_FIRSTMIX_FAILED ||
-					  ret == E_SIGNATURE_CHECK_OTHERMIX_FAILED || ret == E_MIX_PROTOCOL_NOT_SUPPORTED)))
+					  ret == E_SIGNATURE_CHECK_OTHERMIX_FAILED || ret == E_MIX_PROTOCOL_NOT_SUPPORTED ||
+					  ret == ErrorCodes.E_NOT_PARSABLE)))
 				{
 					return ret;
 				}
@@ -656,7 +625,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			}
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "AN.ON initialized");
 
-			if (a_bSwitch)
+			if (bSwitch)
 			{
 				synchronized (SHUTDOWN_SYNC)
 				{
@@ -697,6 +666,32 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				return ErrorCodes.E_CONNECT;
 			}
 			return ErrorCodes.E_SUCCESS;
+		}
+	}
+
+	protected synchronized void decNumChannels()
+	{
+		m_numChannels--;
+		if (m_ProxyListener != null)
+		{
+			m_ProxyListener.channelsChanged(m_numChannels);
+		}
+	}
+
+	protected synchronized void incNumChannels()
+	{
+		m_numChannels++;
+		if (m_ProxyListener != null)
+		{
+			m_ProxyListener.channelsChanged(m_numChannels);
+		}
+	}
+
+	protected synchronized void transferredBytes(long bytes, int protocolType)
+	{
+		if (m_ProxyListener != null)
+		{
+			m_ProxyListener.transferedBytes(bytes, protocolType);
 		}
 	}
 
