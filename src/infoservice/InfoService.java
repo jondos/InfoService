@@ -32,6 +32,7 @@ import java.util.Enumeration;
 import java.util.Properties;
 
 import anon.infoservice.Constants;
+import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.Database;
 import anon.infoservice.ListenerInterface;
 import anon.util.ThreadPool;
@@ -99,6 +100,7 @@ public class InfoService
 		{
 			InfoService s1 = new InfoService(fn);
 			s1.startServer();
+			System.out.println("InfoService is running!");
 		}
 		catch (Exception e)
 		{
@@ -149,6 +151,7 @@ public class InfoService
 
 	private void startServer() throws Exception
 	{
+		HTTPConnectionFactory.getInstance().setTimeout(Constants.COMMUNICATION_TIMEOUT);
 		/* initialize Distributor */
 		InfoServiceDistributor.getInstance();
 		Database.registerDistributor(InfoServiceDistributor.getInstance());
