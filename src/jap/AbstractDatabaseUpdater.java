@@ -96,6 +96,8 @@ public abstract class AbstractDatabaseUpdater implements Observer
 		{
 			public void run()
 			{
+				long lastUpdate = System.currentTimeMillis();
+				long waitingTime;
 				LogHolder.log(LogLevel.INFO, LogType.THREAD,
 							  getUpdatedClassName() + "update thread started.");
 				while (!Thread.currentThread().isInterrupted() && !m_interrupted)
@@ -115,7 +117,12 @@ public abstract class AbstractDatabaseUpdater implements Observer
 								}
 								else
 								{
-									Thread.currentThread().wait(m_updateInterval.getUpdateInterval());
+									waitingTime = Math.max(m_updateInterval.getUpdateInterval() -
+										(System.currentTimeMillis() - lastUpdate), 0);
+									LogHolder.log(LogLevel.ERR, LogType.THREAD,
+										"Update waiting time for " + getUpdatedClass().getName() +
+										": " + waitingTime);
+									Thread.currentThread().wait(waitingTime);
 								}
 							}
 							catch (InterruptedException a_e)
@@ -140,7 +147,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 					{
 						LogHolder.log(LogLevel.INFO, LogType.THREAD,
 									  "Updating " + getUpdatedClassName() + "list.");
-
+						lastUpdate = System.currentTimeMillis();
 						updateInternal();
 					}
 				}
