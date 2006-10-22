@@ -119,7 +119,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 								{
 									waitingTime = Math.max(m_updateInterval.getUpdateInterval() -
 										(System.currentTimeMillis() - lastUpdate), 0);
-									LogHolder.log(LogLevel.ERR, LogType.THREAD,
+									LogHolder.log(LogLevel.NOTICE, LogType.THREAD,
 										"Update waiting time for " + getUpdatedClass().getName() +
 										": " + waitingTime);
 									Thread.currentThread().wait(waitingTime);
