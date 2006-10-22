@@ -104,6 +104,7 @@ public class InfoServiceDistributor implements IDistributor {
        */
       public void run()
       {
+		  Runnable run;
         while (true)
         {
           IDistributable currentJob = null;
@@ -129,15 +130,25 @@ public class InfoServiceDistributor implements IDistributor {
           }
           if (currentJob != null)
           {
-            LogHolder.log(LogLevel.DEBUG, LogType.NET,
-                    "InfoServiceDistributor: defaultJobQueueThread: run: Forward entry " +
-                    currentJob.getId() + " to all running neighbour infoservices.");
-            Enumeration runningNeighbourInfoServices = getNeighbourList().elements();
-            while (runningNeighbourInfoServices.hasMoreElements())
-            {
-              sendToInfoService( (InfoServiceDBEntry) (runningNeighbourInfoServices.nextElement()),
-                        currentJob);
-            }
+			  final IDistributable job = currentJob;
+
+			  // do this as a thread, so that the other distributables are not influenced
+			  run = new Runnable()
+			  {
+				  public void run()
+				  {
+					  LogHolder.log(LogLevel.DEBUG, LogType.NET,
+									"Forward entry " +
+									job.getId() + " to all running neighbour infoservices.");
+					  Enumeration runningNeighbourInfoServices = getNeighbourList().elements();
+					  while (runningNeighbourInfoServices.hasMoreElements())
+					  {
+						  sendToInfoService( (InfoServiceDBEntry) (runningNeighbourInfoServices.nextElement()),
+											job);
+					  }
+				  }
+			  };
+			  new Thread(run, "Distributed Entry").run();
           }
         }
       }
