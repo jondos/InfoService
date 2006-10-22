@@ -237,15 +237,9 @@ public class KeyExchangeManager {
 
 			  if (mixinfo == null)
 			  {
-				  if (i == 0)
-				  {
-					  mixinfo = new MixInfo(cascade.getId(), cascade.getCertPath());
-				  }
-				  else
-				  {
-					  // should not happen
-					  throw new XMLParseException("Could not get MixInfo object for Mix " + i + "!");
-				  }
+				  // should not happen
+				  throw new XMLParseException("Could not get MixInfo object for Mix " + i + "!");
+
 			  }
 
 			  if (i > 0 && !mixinfo.isVerified())

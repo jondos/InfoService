@@ -58,6 +58,7 @@ import anon.infoservice.ImmutableProxyInterface;
 import anon.infoservice.MixCascade;
 import anon.pay.AIControlChannel;
 import anon.pay.Pay;
+import anon.util.XMLParseException;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -177,16 +178,17 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 					{
 						LogHolder.log(LogLevel.ERR, LogType.NET,
 									  "AnonClient was already connected when connecting!");
+						/*
 						shutdown();
 						if (isConnected())
-						{
+						{*/
 							status = ErrorCodes.E_ALREADY_CONNECTED;
 							synchronized (m_threadInitialise)
 							{
 								m_threadInitialise.notify();
 							}
 							return;
-						}
+						//}
 					}
 					synchronized (CONN_ERR_SYNC)
 					{
@@ -691,6 +693,12 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 				LogHolder.log(LogLevel.INFO, LogType.NET, a_e);
 				closeSocketHandler();
 				return ErrorCodes.E_NOT_TRUSTED;
+			}
+			catch (XMLParseException a_e)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.NET, a_e);
+				closeSocketHandler();
+				return ErrorCodes.E_NOT_PARSABLE;
 			}
 			catch (Exception e)
 			{
