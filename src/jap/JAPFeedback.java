@@ -33,12 +33,15 @@ import anon.infoservice.StatusInfo;
 
 final class JAPFeedback extends AbstractDatabaseUpdater
 {
-	private static final long UPDATE_INTERVAL_MS = 60000l;
+	public static final long UPDATE_INTERVAL_MS = 60000l;
+	private static final long MIN_UPDATE_INTERVAL_MS = 15000l;
 
+	private DynamicUpdateInterval m_updateInterval;
 
 	public JAPFeedback()
 	{
-		super(new ConstantUpdateInterval(UPDATE_INTERVAL_MS));
+		super(new DynamicUpdateInterval());
+		m_updateInterval = (DynamicUpdateInterval)getUpdateInterval();
 	}
 
 	public Class getUpdatedClass()
@@ -64,7 +67,19 @@ final class JAPFeedback extends AbstractDatabaseUpdater
 		Hashtable hashtable = new Hashtable();
 		if (info != null)
 		{
+			if (info.getExpireTime() <= (System.currentTimeMillis() + UPDATE_INTERVAL_MS))
+			{
+				m_updateInterval.setUpdateInterval(MIN_UPDATE_INTERVAL_MS);
+			}
+			else
+			{
+				m_updateInterval.setUpdateInterval(UPDATE_INTERVAL_MS);
+			}
 			hashtable.put(info.getId(), info);
+		}
+		else
+		{
+			m_updateInterval.setUpdateInterval(MIN_UPDATE_INTERVAL_MS);
 		}
 		return hashtable;
 	}
@@ -72,6 +87,21 @@ final class JAPFeedback extends AbstractDatabaseUpdater
 	protected Hashtable getEntrySerials()
 	{
 		return new Hashtable();
+	}
+
+	private static class DynamicUpdateInterval implements IUpdateInterval
+	{
+		long m_updateInterval = UPDATE_INTERVAL_MS;
+
+		public void setUpdateInterval(long a_updateInterval)
+		{
+			m_updateInterval = a_updateInterval;
+		}
+
+		public long getUpdateInterval()
+		{
+			return m_updateInterval;
+		}
 	}
 
 }

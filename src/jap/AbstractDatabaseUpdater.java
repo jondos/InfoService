@@ -304,6 +304,11 @@ public abstract class AbstractDatabaseUpdater implements Observer
 		}
 	}
 
+	public final IUpdateInterval getUpdateInterval()
+	{
+		return m_updateInterval;
+	}
+
 	public abstract Class getUpdatedClass();
 
 	protected static class ConstantUpdateInterval implements IUpdateInterval
