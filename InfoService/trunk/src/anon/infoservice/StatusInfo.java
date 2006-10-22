@@ -184,7 +184,9 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 
 		if (m_certificate == null)
 		{
-			throw new SignatureException("There is no known certificate to verify the StatusInfo signature!");
+			throw new SignatureException(
+				 "There is no known certificate to verify the StatusInfo signature of Mix with ID: " +
+				 m_mixCascadeId);
 		}
 		if (!checkId())
 		{
