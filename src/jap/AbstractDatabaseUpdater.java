@@ -55,6 +55,8 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	 */
 	private static final long KEEP_ENTRY_FACTOR = 3l;
 
+	private static final long MIN_WAITING_TIME_MS = 15000;
+
 	private IUpdateInterval m_updateInterval;
 	private Thread m_updateThread;
 	private boolean m_successfulUpdate = false;
@@ -118,7 +120,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 								else
 								{
 									waitingTime = Math.max(m_updateInterval.getUpdateInterval() -
-										(System.currentTimeMillis() - lastUpdate), 0);
+										(System.currentTimeMillis() - lastUpdate), MIN_WAITING_TIME_MS);
 									LogHolder.log(LogLevel.NOTICE, LogType.THREAD,
 										"Update waiting time for " + getUpdatedClass().getName() +
 										": " + waitingTime);
