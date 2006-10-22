@@ -33,7 +33,7 @@ import anon.infoservice.StatusInfo;
 
 final class JAPFeedback extends AbstractDatabaseUpdater
 {
-	public static final long UPDATE_INTERVAL_MS = 60000l;
+	public static final long UPDATE_INTERVAL_MS = 70000l;
 	private static final long MIN_UPDATE_INTERVAL_MS = 20000l;
 
 	private DynamicUpdateInterval m_updateInterval;
