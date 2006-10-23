@@ -181,7 +181,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private static final String XML_ATTR_AUTO_CHOOSE_CASCADES = "AutoChooseCascades";
 	private static final String XML_ATTR_SHOW_CONFIG_ASSISTANT = "showConfigAssistant";
 	private static final String XML_ATTR_LOGIN_TIMEOUT = "loginTimeout";
-	private static final String XML_ATTR_INFOSERVICE_CONNECT_TIMEOUT = "isConnectTimeout";
+	private static final String XML_ATTR_INFOSERVICE_CONNECT_TIMEOUT = "isConnectionTimeout";
 
 	// store classpath as it may not be created successfully after update
 	private final String CLASS_PATH = ClassUtil.getClassPath().trim();

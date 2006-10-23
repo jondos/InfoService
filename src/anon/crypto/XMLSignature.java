@@ -1474,7 +1474,6 @@ public final class XMLSignature implements IXMLEncodable
 			return false;
 		}
 		byte[] buff = toCanonical(a_node, a_signature.getSignatureElement());
-//	String s=new String(buff);
 		digest = sha1.digest(buff);
 		if (!MessageDigest.isEqual(Base64.decode(a_signature.getDigestValue()), digest))
 		{
