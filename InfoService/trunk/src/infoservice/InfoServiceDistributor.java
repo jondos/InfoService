@@ -104,7 +104,6 @@ public class InfoServiceDistributor implements IDistributor {
        */
       public void run()
       {
-		  Runnable run;
         while (true)
         {
           IDistributable currentJob = null;
