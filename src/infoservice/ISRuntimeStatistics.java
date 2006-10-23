@@ -33,6 +33,10 @@ final class ISRuntimeStatistics
 		sb.append(ms_NumberFormat.format(ms_lNrOfGetTorNodesRequests));
 		sb.append("</td></tr><tr><td>GET Requests for Min JAP Version: </td><td>");
 		sb.append(ms_NumberFormat.format(ms_lNrOfGetMinJapVersion));
+		sb.append("</td></tr><tr><td>Total Memory: </td><td>");
+		sb.append(ms_NumberFormat.format(Runtime.getRuntime().totalMemory()));
+		sb.append("</td></tr><tr><td>Free Memory: </td><td>");
+		sb.append(ms_NumberFormat.format(Runtime.getRuntime().freeMemory()));
 		sb.append("</td></tr></table>");
 		return sb.toString();
 	}
