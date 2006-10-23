@@ -85,7 +85,7 @@ final public class Constants
 	 */
 	public static final int COMMUNICATION_TIMEOUT = 30000; // 30 seconds
 
-	public static final long ANNOUNCE_PERIOD = 10 * 60 * (long) (1000); // 10 minutes
+	public static final long ANNOUNCE_PERIOD = 5 * 60 * (long) (1000); // 5 minutes
 
 	public static final long UPDATE_INFORMATION_ANNOUNCE_PERIOD = 10 * 60 * (long) (1000); // 10 minutes
 
