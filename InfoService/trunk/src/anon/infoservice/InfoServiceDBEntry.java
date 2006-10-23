@@ -68,7 +68,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 	public static final String XML_ELEMENT_CONTAINER_NAME = "InfoServices";
 	public static final String XML_ELEMENT_NAME = "InfoService";
 
-	public static final int DEFAULT_GET_XML_CONNECTION_TIMEOUT = 10000;
+	public static final int DEFAULT_GET_XML_CONNECTION_TIMEOUT = 20000;
 
 	private static int m_getXmlConnectionTimeout = DEFAULT_GET_XML_CONNECTION_TIMEOUT;
 

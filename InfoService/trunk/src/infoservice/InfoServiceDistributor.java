@@ -43,6 +43,7 @@ import anon.infoservice.ListenerInterface;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.infoservice.AbstractDatabaseEntry;
 
 /**
  * This is the implementation of the forwarding code. Every information which to send to
@@ -129,15 +130,27 @@ public class InfoServiceDistributor implements IDistributor {
           }
           if (currentJob != null)
           {
-			  LogHolder.log(LogLevel.DEBUG, LogType.NET,
-							"Forward entry " +
-							currentJob.getId() + " to all running neighbour infoservices.");
-			  Enumeration runningNeighbourInfoServices = getNeighbourList().elements();
-			  while (runningNeighbourInfoServices.hasMoreElements())
+			  final IDistributable job = currentJob;
+/*			  new Thread(new Runnable()
 			  {
-				  sendToInfoService( (InfoServiceDBEntry) (runningNeighbourInfoServices.nextElement()),
-									currentJob);
-			  }
+				  public void run()
+				  { */
+					  InfoServiceDBEntry entry;
+					  LogHolder.log(LogLevel.DEBUG, LogType.NET,
+									"Forward entry " +
+									job.getId() + " to all running neighbour infoservices.");
+					  Enumeration runningNeighbourInfoServices = getNeighbourList().elements();
+					  while (runningNeighbourInfoServices.hasMoreElements())
+					  {
+						  entry = (InfoServiceDBEntry) (runningNeighbourInfoServices.nextElement());
+						  if (!sendToInfoService(entry, job))
+						  {
+							  LogHolder.log(LogLevel.ERR, LogType.NET, "Could not send entry " + job +
+								  "to InfoService " + entry + "!");
+						  }
+					  }
+				/*  }
+			  }, "Distribute single entry").start(); */
 		  }
         }
       }
@@ -170,7 +183,7 @@ public class InfoServiceDistributor implements IDistributor {
               {
                 m_initialNeighboursJobQueue.wait();
                 LogHolder.log(LogLevel.DEBUG, LogType.NET,
-                  "InfoServiceDistributor: initialNeighboursJobQueueThread: run: There is something to do. Wake up...");
+                  "There is something to do. Wake up...");
               }
               catch (InterruptedException e)
               {
@@ -179,17 +192,30 @@ public class InfoServiceDistributor implements IDistributor {
           }
           if (currentJob != null)
           {
-            LogHolder.log(LogLevel.DEBUG, LogType.NET,
-              "InfoServiceDistributor: initialNeighboursJobQueueThread: run: Forward entry " +
-                    currentJob.getId() + " to initial neighbour infoservices.");
-            Enumeration initialNeighbours = Configuration.getInstance().
-              getInitialNeighbourInfoServices().elements();
-            while (initialNeighbours.hasMoreElements())
-            {
-              /* we have only the interfaces of the initial neighbours */
-              sendToInterface( (ListenerInterface) (initialNeighbours.nextElement()),
-                      currentJob);
-            }
+			  final IDistributable job = currentJob;
+
+			  /*new Thread(new Runnable()
+			  {
+				  public void run()
+				  {*/
+					  ListenerInterface listener;
+					  LogHolder.log(LogLevel.DEBUG, LogType.NET,
+									"Forward entry " + job.getId() +
+									" to initial neighbour infoservices.");
+					  Enumeration initialNeighbours = Configuration.getInstance().
+						  getInitialNeighbourInfoServices().elements();
+					  while (initialNeighbours.hasMoreElements())
+					  {
+						  listener = (ListenerInterface) initialNeighbours.nextElement();
+						  /* we have only the interfaces of the initial neighbours */
+						  if (!sendToInterface(listener, job))
+						  {
+							  LogHolder.log(LogLevel.ERR, LogType.NET, "Could not send entry " + job +
+											"to InfoService " + listener + "!");
+						  }
+					  }
+	/*			  }
+            }, "Distribute single initial neighbour entry").start(); */
           }
         }
       }
@@ -294,12 +320,12 @@ public class InfoServiceDistributor implements IDistributor {
            * currentInterface is a direct reference to that stored in the database of all
            * infoservices.
            */
-          currentInterface.setUseInterface(false);
+          //currentInterface.setUseInterface(false);
           LogHolder.log(LogLevel.ERR, LogType.NET,
-                  "InfoServiceDistributor: sendToInfoService: Couldn't reach InfoService " +
+                  "Could not reach InfoService " +
                   a_infoservice.getId() + " at " + currentInterface.getHost() + ":" +
-                  Integer.toString(currentInterface.getPort()) +
-                  " -> invalidate that interface.");
+                  Integer.toString(currentInterface.getPort())); // +
+//                  " -> invalidate that interface.");
         }
       }
     }
