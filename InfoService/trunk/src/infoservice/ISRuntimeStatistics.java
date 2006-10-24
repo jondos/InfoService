@@ -94,6 +94,7 @@ final class ISRuntimeStatistics
 		sb.append(ms_NumberFormat.format(ms_lNrOfGetPaymentRequests));
 		sb.append("</td></tr><tr><td>Unknown Requests: </td><td>");
 		sb.append(ms_NumberFormat.format(ms_lNrOfUnknownRequests));
+		sb.append("</td></tr><tr><td><br></td><td>");
 		sb.append("</td></tr><tr><td>Total Memory: </td><td>");
 		sb.append(ms_NumberFormat.format(Runtime.getRuntime().totalMemory()));
 		sb.append("</td></tr><tr><td>Free Memory: </td><td>");
