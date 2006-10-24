@@ -1578,6 +1578,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		else if ( (command.startsWith("/cascadeinfo/")) && (method == Constants.REQUEST_METHOD_GET))
 		{
+			ISRuntimeStatistics.ms_lNrOfGetCascadeinfoRequests++;
 			/* get information about the cascade with the given ID (it's the same information as
 			 * /cascades but there you get information about all known cascades)
 			 * Full command: GET /cascadeinfo/cascadeid
