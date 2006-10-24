@@ -523,6 +523,7 @@ final public class JAPDll {
 	{
 		JAPController.getInstance().getViewWindow().setVisible(true);
 		JAPController.getInstance().getViewWindow().toFront();
+		JAPController.getInstance().getViewWindow().repaint();
 		return 0;
 	}
 

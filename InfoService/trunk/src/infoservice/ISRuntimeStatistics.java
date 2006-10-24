@@ -88,7 +88,7 @@ final class ISRuntimeStatistics
 		sb.append(ms_NumberFormat.format(ms_lNrOfGetForwarding));
 		sb.append("</td></tr><tr><td>GET Requests for /tornodes: </td><td>");
 		sb.append(ms_NumberFormat.format(ms_lNrOfGetTorNodesRequests));
-		sb.append("</td></tr><tr><td>GET Requests for Min JAP Version: </td><td>");
+		sb.append("</td></tr><tr><td>GET Requests for /currentjapversion: </td><td>");
 		sb.append(ms_NumberFormat.format(ms_lNrOfGetMinJapVersion));
 		sb.append("</td></tr><tr><td>GET Requests for Payment: </td><td>");
 		sb.append(ms_NumberFormat.format(ms_lNrOfGetPaymentRequests));
