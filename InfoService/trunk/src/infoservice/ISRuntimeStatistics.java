@@ -70,7 +70,7 @@ final class ISRuntimeStatistics
 		sb.append("</td></tr><tr><td>Total other than GET/POST Requests: </td><td>");
 		sb.append(ms_NumberFormat.format(ms_lNrOfOtherMethod));
 		sb.append("</td></tr><tr><td><br></td><td>");
-		sb.append("</td></tr><tr><td>GET Requests for Cascade Status: </td><td>");
+		sb.append("</td></tr><tr><td>GET Requests for /mixcascadestatus/: </td><td>");
 		sb.append(ms_NumberFormat.format(ms_lNrOfGetMixCascadeStatusRequests));
 		sb.append("</td></tr><tr><td>GET Requests for /cascadeserials: </td><td>");
 		sb.append(ms_NumberFormat.format(ms_lNrOfGetCascadeserialsRequests));
