@@ -40,7 +40,7 @@ final class JAPFeedback extends AbstractDatabaseUpdater
 
 	public JAPFeedback()
 	{
-		super(new DynamicUpdateInterval());
+		super(new DynamicUpdateInterval(UPDATE_INTERVAL_MS));
 		m_updateInterval = (DynamicUpdateInterval)getUpdateInterval();
 	}
 
@@ -71,6 +71,11 @@ final class JAPFeedback extends AbstractDatabaseUpdater
 			{
 				m_updateInterval.setUpdateInterval(MIN_UPDATE_INTERVAL_MS);
 			}
+			else if (info.getExpireTime() <=
+					 (System.currentTimeMillis() + (1.5d * UPDATE_INTERVAL_MS)))
+			{
+				m_updateInterval.setUpdateInterval(Math.max(UPDATE_INTERVAL_MS / 2, MIN_UPDATE_INTERVAL_MS));
+			}
 			else
 			{
 				m_updateInterval.setUpdateInterval(UPDATE_INTERVAL_MS);
@@ -88,20 +93,4 @@ final class JAPFeedback extends AbstractDatabaseUpdater
 	{
 		return new Hashtable();
 	}
-
-	private static class DynamicUpdateInterval implements IUpdateInterval
-	{
-		long m_updateInterval = UPDATE_INTERVAL_MS;
-
-		public void setUpdateInterval(long a_updateInterval)
-		{
-			m_updateInterval = a_updateInterval;
-		}
-
-		public long getUpdateInterval()
-		{
-			return m_updateInterval;
-		}
-	}
-
 }

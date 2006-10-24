@@ -102,5 +102,4 @@ final class ISRuntimeStatistics
 		sb.append("</td></tr></table>");
 		return sb.toString();
 	}
-
 }

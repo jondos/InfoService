@@ -44,7 +44,7 @@ public class JavaVersionUpdater extends AbstractDatabaseUpdater
 
 	public JavaVersionUpdater()
 	{
-		super(new DynamicUpdateInterval());
+		super(new DynamicUpdateInterval(UPDATE_INTERVAL_MS_SHORT));
 	}
 
 	public Class getUpdatedClass()
@@ -57,24 +57,11 @@ public class JavaVersionUpdater extends AbstractDatabaseUpdater
 		Hashtable hashtable = InfoServiceHolder.getInstance().getLatestJavaVersions();
 		if (hashtable == null)
 		{
+			((DynamicUpdateInterval)getUpdateInterval()).setUpdateInterval(UPDATE_INTERVAL_MS_SHORT);
 			return new Hashtable();
 		}
+		((DynamicUpdateInterval)getUpdateInterval()).setUpdateInterval(UPDATE_INTERVAL_MS);
 		return hashtable;
-	}
-
-	private static class DynamicUpdateInterval implements IUpdateInterval
-	{
-		public long getUpdateInterval()
-		{
-			if (Database.getInstance(JAPMinVersion.class).getNumberOfEntries() > 0)
-			{
-				return UPDATE_INTERVAL_MS;
-			}
-			else
-			{
-				return UPDATE_INTERVAL_MS_SHORT;
-			}
-		}
 	}
 
 	protected Hashtable getEntrySerials()

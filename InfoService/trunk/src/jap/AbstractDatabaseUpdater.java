@@ -87,6 +87,26 @@ public abstract class AbstractDatabaseUpdater implements Observer
 		init();
 	}
 
+	protected static class DynamicUpdateInterval implements IUpdateInterval
+	{
+		private long m_updateInterval;
+
+		public DynamicUpdateInterval(long a_updateInterval)
+		{
+			setUpdateInterval(a_updateInterval);
+		}
+
+		public void setUpdateInterval(long a_updateInterval)
+		{
+			m_updateInterval = a_updateInterval;
+		}
+
+		public long getUpdateInterval()
+		{
+			return m_updateInterval;
+		}
+	}
+
 	/**
 	 * May be used to re-initialise the thread after stopping it.
 	 */
