@@ -696,7 +696,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Status received: XML: " + (new String(a_postData)));
 			Element mixCascadeStatusNode = (Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(
-				a_postData), StatusInfo.getXmlElementName()));
+				a_postData), StatusInfo.XML_ELEMENT_NAME));
 			StatusInfo statusEntry = new StatusInfo(mixCascadeStatusNode);
 			/* verify the signature */
 			if (statusEntry.isVerified())
