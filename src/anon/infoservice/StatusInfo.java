@@ -49,6 +49,8 @@ import anon.util.XMLParseException;
  */
 public final class StatusInfo extends AbstractDatabaseEntry implements IDistributable, IVerifyable
 {
+	public static final String XML_ELEMENT_NAME = "MixCascadeStatus";
+
 	public static final int ANON_LEVEL_MIN = 0;
 	public static final int ANON_LEVEL_FAIR = 3;
 	public static final int ANON_LEVEL_HIGH = 8;
@@ -130,7 +132,7 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 	 */
 	public static String getXmlElementName()
 	{
-		return "MixCascadeStatus";
+		return XML_ELEMENT_NAME;
 	}
 
 	/**
@@ -160,6 +162,16 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 		 * not have a database of status entries -> no timeout for the JAP client necessary
 		 */
 		super(System.currentTimeMillis() + Constants.TIMEOUT_STATUS);
+
+		if (a_statusNode == null)
+		{
+			throw new XMLParseException(XMLParseException.NODE_NULL_TAG);
+		}
+		if (!a_statusNode.getNodeName().equals(XML_ELEMENT_NAME))
+		{
+			throw new XMLParseException(XMLParseException.ROOT_TAG);
+		}
+
 
 		// verify the signature
 		try
