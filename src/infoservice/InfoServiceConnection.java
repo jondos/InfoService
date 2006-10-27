@@ -274,6 +274,8 @@ final public class InfoServiceConnection implements Runnable
 			}
 			catch (Exception e)
 			{
+				LogHolder.log(LogLevel.ERR, LogType.NET,
+				"InfoServiceConnection (" + Integer.toString(m_connectionId) +" - has an Error -",e);
 				closeSockets();
 				return;
 			}
