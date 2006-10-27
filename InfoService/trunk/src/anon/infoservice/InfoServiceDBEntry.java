@@ -29,6 +29,7 @@ package anon.infoservice;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.util.Enumeration;
@@ -846,7 +847,9 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 							if (response != null)
 							{
 								headerContentEncoding.addElement(response.getHeader("Content-Encoding"));
-								InputStream responseStream = response.getInputStream();
+								//InputStream responseStream = response.getInputStream();
+								DataInputStream responseStream =
+									new DataInputStream(response.getInputStream());
 								ByteArrayOutputStream tempStream = new ByteArrayOutputStream();
 								byte[] tempBuffer = new byte[1000];
 								while (!Thread.interrupted())
