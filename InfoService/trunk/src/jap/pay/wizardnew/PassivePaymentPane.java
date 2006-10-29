@@ -56,7 +56,6 @@ import logging.LogType;
 import gui.JAPJIntField;
 import java.util.Date;
 import gui.GUIUtils;
-import gui.JAPMultilineLabel;
 import anon.util.Base64;
 
 public class PassivePaymentPane extends DialogContentPane implements IWizardSuitable
@@ -94,7 +93,7 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 	private JAPJIntField m_tfCardNumber1, m_tfCardNumber2, m_tfCardNumber3, m_tfCardNumber4,
 		m_tfCardCheckNumber;
 
-	public PassivePaymentPane(JAPDialog a_parentDialog, DialogContentPane a_previousContentPane)
+	public PassivePaymentPane(final JAPDialog a_parentDialog, DialogContentPane a_previousContentPane)
 	{
 		super(a_parentDialog, "Dummy Text",
 			  new Layout(JAPMessages.getString(MSG_ENTER), MESSAGE_TYPE_PLAIN),
@@ -378,7 +377,6 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		m_c.anchor = m_c.NORTHWEST;
 		m_c.fill = m_c.NONE;
 
-		setText(m_selectedOption.getDetailedInfo(m_language));
 		m_c.gridwidth = 1;
 
 		String acceptedCards = m_paymentOptions.getAcceptedCreditCards();
@@ -400,6 +398,7 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		m_c.gridwidth = 4;
 		m_c.gridx++;
 		m_c.weightx = 1.0;
+		m_c.insets = new Insets(0, 5, 0, 5);
 		m_rootPanel.add(panelCardNumer, m_c);
 
 		GridBagConstraints constrCardNr = new GridBagConstraints();
@@ -430,7 +429,7 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		//m_rootPanel.add(m_tfCardNumber4, m_c);
 		panelCardNumer.add(m_tfCardNumber4, constrCardNr);
 
-
+		m_c.insets = new Insets(5, 5, 5, 5);
 		m_c.weightx = 0;
 		m_c.gridx = 0;
 		m_c.gridy++;
@@ -469,9 +468,16 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		}
 		m_rootPanel.add(m_cbYear, m_c);
 
+		m_c.gridx++;
+		m_c.gridwidth = 2;
+		m_c.gridheight = 2;
+		m_rootPanel.add(new JLabel(GUIUtils.loadImageIcon(IMG_CREDITCARDSECURITY, true)), m_c);
+
+
 		m_c.gridx = 0;
 		m_c.gridy++;
 		m_c.gridwidth = 1;
+		m_c.gridheight = 1;
 		m_c.fill = GridBagConstraints.HORIZONTAL;
 		m_rootPanel.add(new JLabel(JAPMessages.getString(MSG_CARDCHECKNUMBER)), m_c);
 		m_c.gridx++;
@@ -479,9 +485,6 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		m_tfCardCheckNumber = new JAPJIntField(bounds, true);
 		m_rootPanel.add(m_tfCardCheckNumber, m_c);
 
-		m_c.gridx++;
-		m_c.gridwidth = 2;
-		m_rootPanel.add(new JLabel(GUIUtils.loadImageIcon(IMG_CREDITCARDSECURITY, true)), m_c);
-
+		setText(m_selectedOption.getDetailedInfo(m_language));
 	}
 }

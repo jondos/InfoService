@@ -2014,7 +2014,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	}
 
 	/**
-	 * Use this method to set a new text for the content pane. Not that this is only possible if
+	 * Use this method to set a new text for the content pane. Note that this is only possible if
 	 * <UL>
 	 *   <LI> the content pane is not part of a visible dialog (isVisible() == false) and </LI>
 	 *   <LI> the content pane already has a text field (maybe a dummy String) and </LI>
@@ -2022,9 +2022,9 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 * </UL>
 	 * The new text will not influence the current size or the preferred size of the content pane and
 	 * the dialog. If the text is too big to show it completely, a link is generated that opens an
-	 * extra dialog to view the text.
-	 * @todo Look for a better measure; it sems that there is enough space, but the text is not displayed
-	 * fully
+	 * extra dialog to view the text. HINT: Please use this method ONLY if the whole layout ouf the
+	 * content pane has already been set. Otherwise, the text size cannot be calculated correctly if the
+	 * text is too big for the dialog!
 	 * @param a_strText a new text for this content pane
 	 */
 	public synchronized void setText(String a_strText)
