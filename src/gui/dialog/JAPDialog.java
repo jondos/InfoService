@@ -2834,6 +2834,16 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	}
 
 	/**
+	 * Returns the preferred size of the dialog window.
+	 * @return the preferred size of the dialog window
+	 */
+	public final Dimension getPreferredSize()
+	{
+		return m_internalDialog.getPreferredSize();
+	}
+
+
+	/**
 	 * Sets the size of the dialog window.
 	 * @param a_width the new window width
 	 * @param a_height the new window height
