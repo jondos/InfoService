@@ -331,7 +331,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		{
 			Element mixNode = (Element) (mixNodes.item(i));
 			m_mixIds.addElement(mixNode.getAttribute("id"));
-			if (i == 0 && !m_mixIds.lastElement().equals(m_mixCascadeId))
+			if (i == 0 && !isUserDefined() && !m_mixIds.lastElement().equals(m_mixCascadeId))
 			{
 				// The cascade has another id as the first mix!
 				throw new XMLParseException(XMLParseException.ROOT_TAG,
