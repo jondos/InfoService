@@ -85,6 +85,8 @@ public final class JAPModel extends Observable
 	private int m_HttpListenerPortNumber = JAPConstants.DEFAULT_PORT_NUMBER; // port number of HTTP  listener
 	private boolean m_bHttpListenerIsLocal = JAPConstants.DEFAULT_LISTENER_IS_LOCAL; // indicates whether listeners serve for localhost only or not
 	private ProxyInterface m_proxyInterface = null;
+	private ProxyInterface m_proxyAnon;
+	private final Object SYNC_ANON_PROXY = new Object();
 	private IMutableProxyInterface m_mutableProxyInterface;
 	private boolean m_bAutoConnect; // autoconnect after program start
 	private boolean m_bAutoReConnect; // autoReconnects after loosing connection to mix
@@ -1171,7 +1173,14 @@ public final class JAPModel extends Observable
 		{
 			public ImmutableProxyInterface getProxyInterface()
 			{
-				return new ProxyInterface("localhost", getHttpListenerPortNumber(), null); // AN.ON
+				synchronized (SYNC_ANON_PROXY)
+				{
+					if (m_proxyAnon == null || m_proxyAnon.getPort() != getHttpListenerPortNumber())
+					{
+						m_proxyAnon = new ProxyInterface("localhost", getHttpListenerPortNumber(), null);
+					}
+				}
+				return m_proxyAnon; // AN.ON
 			}
 		};
 

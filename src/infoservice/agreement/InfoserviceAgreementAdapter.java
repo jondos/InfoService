@@ -29,7 +29,7 @@ import anon.infoservice.ListenerInterface;
 /**
  * @author LERNGRUPPE An adapter for the infoservice to give them the ability to
  *         handle the agreement protocol.
- * 
+ *
  */
 public class InfoserviceAgreementAdapter implements IInfoService
 {
@@ -90,7 +90,7 @@ public class InfoserviceAgreementAdapter implements IInfoService
 
     /**
      * Generates an <code>InfoServiceDBEntry</code> for this InfoService
-     * 
+     *
      * @return The <code>InfoServiceDBEntry</code>
      */
     InfoServiceDBEntry generateInfoServiceSelf()
@@ -104,7 +104,7 @@ public class InfoserviceAgreementAdapter implements IInfoService
     /**
      * Creates a new <code>InfoserviceAgreementAdapter</code>. This adapter
      * is used to connect the real InfoService to the agreement extension.
-     * 
+     *
      * @param a_cmds
      *            The connection object to serve network and communication.
      */
@@ -145,7 +145,7 @@ public class InfoserviceAgreementAdapter implements IInfoService
      * a_postData is parsed to an IAgreementMessage and then put into the
      * message queue. Messages are only accepted if an agreement is currently
      * running or we are in the timeframe to start an new one
-     * 
+     *
      * @param a_postData
      *            The post data of the request containing an XML encoded
      *            IAgreementMessage
@@ -182,7 +182,7 @@ public class InfoserviceAgreementAdapter implements IInfoService
      * LERNGRUPPE This gets called when the AgreementHandler has reached
      * angreement with the others. When this happens it is time to wire new
      * cascades :-)
-     * 
+     *
      * @param a_newCommonRandomSeed
      *            the agreed-upon random seed
      */
@@ -218,7 +218,7 @@ public class InfoserviceAgreementAdapter implements IInfoService
 
     /**
      * Prepare the agreement protocol (e.g. freeze status)
-     * 
+     *
      */
     public void prepareAgreementProtocol()
     {
@@ -247,7 +247,7 @@ public class InfoserviceAgreementAdapter implements IInfoService
 
     /**
      * Start agreement protocol.
-     * 
+     *
      */
     void startAgreementProtocol()
     {
@@ -314,7 +314,7 @@ public class InfoserviceAgreementAdapter implements IInfoService
 
     /**
      * Sends a message to a specified infoservice.
-     * 
+     *
      * @param a_id
      *            The id of the receiver.
      * @param a_message
@@ -336,7 +336,7 @@ public class InfoserviceAgreementAdapter implements IInfoService
 
     /**
      * Sends a message to all known infoservices.
-     * 
+     *
      * @param a_message
      *            The message to send.
      */
@@ -362,7 +362,7 @@ public class InfoserviceAgreementAdapter implements IInfoService
 
     /**
      * Encapsulates logic for sending a message to a infoservice.
-     * 
+     *
      * @param a_infoservice
      *            The target infoservice.
      * @param postFile
@@ -391,7 +391,7 @@ public class InfoserviceAgreementAdapter implements IInfoService
                     connected = true;
                 } else
                 {
-                    currentInterface.setUseInterface(false);
+                    //currentInterface.setUseInterface(false);
                 }
             }
         }
@@ -401,7 +401,7 @@ public class InfoserviceAgreementAdapter implements IInfoService
     /**
      * Encapsulates logic for sending a message to a specified listenere
      * interface.
-     * 
+     *
      * @param a_listener
      *            The network interface.
      * @param postFile
@@ -452,7 +452,7 @@ public class InfoserviceAgreementAdapter implements IInfoService
 
     /**
      * Logs info messages, calls <code>log</code>
-     * 
+     *
      * @param a_message
      */
     void info(String a_message)
@@ -462,7 +462,7 @@ public class InfoserviceAgreementAdapter implements IInfoService
 
     /**
      * Actually logs a message
-     * 
+     *
      * @param a_lvl
      *            The <code>LogLevel</code> to use
      * @param a_message
