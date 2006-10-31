@@ -77,7 +77,7 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	 * interface (causes can be firewalls, another network, ...). This is only meaningful for
 	 * non-local (remote) interfaces.
 	 */
-	private boolean m_bUseInterface;
+	private boolean m_bUseInterface = false;
 
 	/**
 	 * Creates a new ListenerInterface from XML description (ListenerInterface node).

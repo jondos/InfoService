@@ -243,29 +243,27 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 						  e.toString());
 		}
 
+		/* get the information, whether this mixcascade was user-defined within the JAP client */
+		m_userDefined = XMLUtil.parseAttribute(a_mixCascadeNode, XML_ATTR_USER_DEFINED, false);
 
 		/* get the ID */
 		if (a_mixCascadeNode == null || !a_mixCascadeNode.getNodeName().equals(XML_ELEMENT_NAME))
 		{
 			throw new XMLParseException(XML_ELEMENT_NAME);
 		}
-		if (m_bFromCascade && a_mixIDFromCascade.trim().length() > 0)
+		m_mixCascadeId = XMLUtil.parseAttribute(a_mixCascadeNode, "id", null);
+		if (m_mixCascadeId == null)
 		{
-			m_mixCascadeId = a_mixIDFromCascade;
-		}
-		else
-		{
-			m_mixCascadeId = XMLUtil.parseAttribute(a_mixCascadeNode, "id", null);
-		}
+			Node nodeMix =
+				XMLUtil.getFirstChildByName(XMLUtil.getFirstChildByName(a_mixCascadeNode, "Mixes"), "Mix");
 
-		/* get the information, whether this mixcascade was user-defined within the JAP client */
-		m_userDefined = XMLUtil.parseAttribute(a_mixCascadeNode, XML_ATTR_USER_DEFINED, false);
-
-		/* test the ID */
+			m_mixCascadeId = XMLUtil.parseAttribute(nodeMix, "id", a_mixIDFromCascade);
+		}
 		if (!checkId())
 		{
 			throw new XMLParseException(XMLParseException.ROOT_TAG, "Malformed Mix-Cascade ID: " + m_mixCascadeId);
 		}
+
 
 		/* get the name */
 		m_strName = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_mixCascadeNode, "Name"), null);
@@ -385,6 +383,12 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 			m_compressedXmlStructure = ZLibTools.compress(XMLUtil.toByteArray(a_mixCascadeNode));
 		}
 		m_xmlStructure = a_mixCascadeNode;
+
+		// restore the id if needed
+		if (m_bFromCascade && a_mixIDFromCascade.trim().length() > 0)
+		{
+			m_mixCascadeId = a_mixIDFromCascade;
+		}
 
 		createMixIDString();
 	}

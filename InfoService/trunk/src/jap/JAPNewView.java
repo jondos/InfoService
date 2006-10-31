@@ -2162,8 +2162,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				while (enumer.hasMoreElements())
 				{
 					cascade = (MixCascade) enumer.nextElement();
-					if (cascade.equals(currentMixCascade) ||
-						JAPModel.getInstance().getTrustModel().isTrusted(cascade))
+					//if (cascade.equals(currentMixCascade) ||
+						//JAPModel.getInstance().getTrustModel().isTrusted(cascade))
 					{
 						m_comboAnonServices.addMixCascade(cascade);
 					}
