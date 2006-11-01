@@ -291,9 +291,9 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 						while (cascades.hasMoreElements())
 						{
 							cascade = (MixCascade)cascades.nextElement();
-							if (!JAPModel.getInstance().getTrustModel().isTrusted(cascade))
+							//if (!JAPModel.getInstance().getTrustModel().isTrusted(cascade))
 							{
-								continue;
+								//continue;
 							}
 
 							if (cascade.isPayment())
