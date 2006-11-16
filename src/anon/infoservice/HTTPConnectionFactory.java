@@ -237,12 +237,19 @@ public class HTTPConnectionFactory
 							{
 								return null;
 							}
-
+							/*
+							System.out.println("Challenge:" +
+											   challenge.getHost() + ":" + challenge.getPort() + ":" + challenge.toString());
+*/
 							if (bAlreadyTried)
 							{
-								// passwords seems to be bad; request new password
+
+								// password seems to be bad; request new password
 								if (m_proxyInterface instanceof ProxyInterface)
 								{
+									/*
+									System.out.println("Challenge bad:" +
+										challenge.getHost() + ":" + challenge.getPort() + ":" + challenge.toString());*/
 									( (ProxyInterface) m_proxyInterface).clearAuthenticationPassword();
 								}
 								else
