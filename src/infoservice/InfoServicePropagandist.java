@@ -28,6 +28,7 @@
 package infoservice;
 
 import java.util.Vector;
+import java.util.Enumeration;
 import anon.infoservice.Constants;
 import anon.infoservice.Database;
 import anon.infoservice.InfoServiceDBEntry;
@@ -59,7 +60,7 @@ public class InfoServicePropagandist implements Runnable
       alreadyRunning = true;
 	  ms_serialNumber = System.currentTimeMillis();
       InfoServicePropagandist propaganda = new InfoServicePropagandist();
-      Thread propagandist = new Thread(propaganda);
+      Thread propagandist = new Thread(propaganda, "Propaganda Thread");
       propagandist.start();
     }
   }
@@ -83,7 +84,22 @@ public class InfoServicePropagandist implements Runnable
         /* put the own entry in the database -> it is forwarded automatically to all neighbour
          * infoservices, which are also in the database
          */
-        Database.getInstance(InfoServiceDBEntry.class).update(generatedOwnEntry);
+        if (!Database.getInstance(InfoServiceDBEntry.class).update(generatedOwnEntry))
+		{
+			LogHolder.log(LogLevel.ALERT, LogType.MISC, "Could not update own InfoService entry: " +
+						  generatedOwnEntry.getName() + ":" + generatedOwnEntry.getId() + ":" +
+						  generatedOwnEntry.getLastUpdate() + ":" + generatedOwnEntry.getVersionNumber());
+			Enumeration entries =
+				Database.getInstance(InfoServiceDBEntry.class).getEntrySnapshotAsEnumeration();
+			InfoServiceDBEntry entry;
+			while(entries.hasMoreElements())
+			{
+				entry = (InfoServiceDBEntry)entries.nextElement();
+				LogHolder.log(LogLevel.ALERT, LogType.MISC, entry.getName() + ":" + entry.getId() + ":" +
+							  entry.getLastUpdate() + ":" + entry.getVersionNumber());
+			}
+		}
+
         /* send it also to all initial neighbour infoservices -> they will always find us, after
          * they come up
          */

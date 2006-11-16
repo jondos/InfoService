@@ -202,16 +202,56 @@ public class InfoServiceDistributor implements IDistributor {
 					  LogHolder.log(LogLevel.DEBUG, LogType.NET,
 									"Forward entry " + job.getId() +
 									" to initial neighbour infoservices.");
-					  Enumeration initialNeighbours = Configuration.getInstance().
+					  Enumeration enumInitialNeighbours = Configuration.getInstance().
 						  getInitialNeighbourInfoServices().elements();
-					  while (initialNeighbours.hasMoreElements())
+					  Vector vecInitialNeighbours = new Vector();
+					  Vector neighbourList = getNeighbourList();
+					  Vector listeners;
+					  InfoServiceDBEntry entry;
+					  ListenerInterface currentNeigbourInterface;
+					  neighbours:
+					  while (enumInitialNeighbours.hasMoreElements())
 					  {
-						  listener = (ListenerInterface) initialNeighbours.nextElement();
+						  currentNeigbourInterface = (ListenerInterface)enumInitialNeighbours.nextElement();
+						  for (int i = 0; i < neighbourList.size(); i++)
+						  {
+							  entry = (InfoServiceDBEntry)neighbourList.elementAt(i);
+							  listeners = entry.getListenerInterfaces();
+							  for (int j = 0; j < listeners.size(); j++)
+							  {
+								  if (((ListenerInterface)listeners.elementAt(j)).isValid() &&
+									  ((ListenerInterface)listeners.elementAt(j)).equals(
+									  currentNeigbourInterface))
+								  {
+									  // we already have this interface in the database
+									  continue neighbours;
+								  }
+							  }
+						  }
+						  // this interface is not in the database
+						  vecInitialNeighbours.addElement(currentNeigbourInterface);
+					  }
+
+					  enumInitialNeighbours = vecInitialNeighbours.elements();
+					  while (enumInitialNeighbours.hasMoreElements())
+					  {
+						  listener = (ListenerInterface) enumInitialNeighbours.nextElement();
 						  /* we have only the interfaces of the initial neighbours */
 						  if (!sendToInterface(listener, job))
 						  {
 							  LogHolder.log(LogLevel.ERR, LogType.NET, "Could not send entry " + job +
-											"to InfoService " + listener + "!");
+											" to initial neighbour InfoService: " + listener + "!");
+						  }
+					  }
+
+					  Enumeration runningNeighbourInfoServices = neighbourList.elements();
+					  while (runningNeighbourInfoServices.hasMoreElements())
+					  {
+						  entry = (InfoServiceDBEntry) (runningNeighbourInfoServices.nextElement());
+						  if (!sendToInfoService(entry, job))
+						  {
+							  LogHolder.log(LogLevel.ERR, LogType.NET, "Could not send entry " + job +
+								  " to neighbour InfoService " + entry + "!");
 						  }
 					  }
 	/*			  }

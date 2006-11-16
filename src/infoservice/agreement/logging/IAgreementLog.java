@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2005, The JAP-Team
+ Copyright (c) 2000 - 2006, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -25,46 +25,56 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package infoservice.agreement.multicast.messages;
+package infoservice.agreement.logging;
 
-import infoservice.agreement.multicast.AgreementMessageTypes;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-
-import anon.util.XMLUtil;
-
-public class EchoMessage extends AMessage
+public interface IAgreementLog
 {
+    // public static final int LOG_DEBUG = 0;
+    //
+    // public static final int LOG_INFO = 1;
+    //
+    // public static final int LOG_ERROR = 2;
+    //
+    // public static final int LOG_FATAL = 3;
+    //
+    // /**
+    // * Sets the LogLevel for this log
+    // *
+    // * @param a_logLevel
+    // * he LogLevel to be set
+    // */
+    // public void setLogLevel(int a_logLevel);
 
     /**
-     * Creates an <code>EchoMessage</code>. It is used as a reply to a
-     * received <code>InitMessage</code>
+     * Log a message at debug level
      * 
      * @param a_msg
-     *            The <code>InitMessage</code> to be echoed
-     * @param a_senderId
-     *            The id of the echoing InfoService
-     * @param m_lastCommonRandom
+     *            The message to log
      */
-    public EchoMessage(InitMessage a_msg, String a_senderId)
-    {
-        super(a_msg.getConsensusId(), AgreementMessageTypes.MESSAGE_TYPE_ECHO, a_msg
-                .getInitiatorsId(), a_msg.getProposal(), a_msg.getLastCommonRandom());
-        this.m_initiatorsId = a_msg.getInitiatorsId();
-        this.m_senderId = a_senderId;
-    }
+    public abstract void debug(String a_msg);
 
-    /*
-     * (non-Javadoc)
+    /**
+     * Log a message at info level
      * 
-     * @see infoservice.agreement.multicast.messages.AMessage#appendCustomNodes(org.w3c.dom.Document,
-     *      org.w3c.dom.Node)
+     * @param a_msg
+     *            The message to log
      */
-    protected void appendCustomNodes(Document a_doc, Node a_rootElem)
-    {
-        Node tmp = a_doc.createElement("SenderId");
-        XMLUtil.setValue(tmp, this.m_senderId);
-        a_rootElem.appendChild(tmp);
-    }
+    public abstract void info(String a_msg);
+
+    /**
+     * Log a message at error level
+     * 
+     * @param a_msg
+     *            The message to log
+     */
+    public abstract void error(String a_msg);
+
+    /**
+     * Log a message at fatal level
+     * 
+     * @param a_msg
+     *            The message to log
+     */
+    public abstract void fatal(String a_msg);
+
 }

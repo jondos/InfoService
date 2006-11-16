@@ -27,7 +27,7 @@
  */
 package infoservice.agreement.multicast.messages;
 
-import infoservice.agreement.AgreementMessageTypes;
+import infoservice.agreement.multicast.AgreementMessageTypes;
 
 public class ConfirmationMessage extends CommitMessage
 {

@@ -27,7 +27,8 @@
  */
 package infoservice.agreement.multicast.messages;
 
-import infoservice.agreement.AgreementMessageTypes;
+import infoservice.agreement.logging.GiveThingsAName;
+import infoservice.agreement.multicast.AgreementMessageTypes;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -135,20 +136,24 @@ public class CommitMessage extends AMessage
      */
     public String toString()
     {
+        String sendersName = GiveThingsAName.getNameForNumber(m_senderId);
+        String initiatorsName = GiveThingsAName.getNameForNumber(getInitiatorsId());
         StringBuffer buf = new StringBuffer();
-        buf.append("ConsensusID: " + m_consensusId);
-        buf.append(" SenderId: " + m_senderId);
-        buf.append(" Initiator: " + getInitiatorsId());
+        buf.append("ConsensusID: " + m_consensusId.substring(0, 2));
+        // buf.append(" SenderId: " + m_senderId);
+        buf.append(" SenderId: " + sendersName);
+        // buf.append(" Initiator: " + getInitiatorsId());
+        buf.append(" Initiator: " + initiatorsName);
         buf.append(" <" + AgreementMessageTypes.getTypeAsString(getMessageType()) + ">");
         buf.append(" Proposal: " + getProposal());
-        buf.append(" LCR: " + this.m_lastCommonRandom.toString());
+        buf.append(" LCR: " + this.m_lastCommonRandom.toString().substring(0, 2));
 
         EchoMessage echo = null;
         Enumeration en = this.m_EchoMessages.elements();
         while (en.hasMoreElements())
         {
             echo = (EchoMessage) en.nextElement();
-            buf.append("\n     EchoMessage" + echo.getHashKey());
+            buf.append("\n     EchoMessage" + echo);
         }
         return buf.toString();
     }
@@ -172,10 +177,9 @@ public class CommitMessage extends AMessage
         while (en.hasMoreElements())
         {
             EchoMessage msg = (EchoMessage) m_EchoMessages.get(en.nextElement());
-            Document doc = msg.toXML();
             Node node = msg.toXML().getFirstChild();
-            /*
-             * TODO This happend sometimes but I think the problem is solved,
+            /**
+             * @todo This happend sometimes but I think the problem is solved,
              * leave it just to be sure. As a note: It might be that the problem
              * came from AMessage.toXML not beeing synchronized
              */

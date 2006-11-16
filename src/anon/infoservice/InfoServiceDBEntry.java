@@ -296,8 +296,8 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		m_preferedListenerInterface = 0;
 
 		/* get the creation timestamp */
-		m_creationTimeStamp = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_infoServiceNode, "LastUpdate"),
-												 -1L);
+		m_creationTimeStamp =
+			XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_infoServiceNode, "LastUpdate"), -1L);
 		if (m_creationTimeStamp == -1)
 		{
 			throw new XMLParseException("LastUpdate");
@@ -441,6 +441,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		/* Create the InfoService element */
 		Element infoServiceNode = doc.createElement(XML_ELEMENT_NAME);
 		XMLUtil.setAttribute(infoServiceNode, XML_ATTR_ID, m_strInfoServiceId);
+		XMLUtil.setAttribute(infoServiceNode, XML_ATTR_SERIAL, m_serial);
 		/* Create the child nodes of InfoService */
 		Element nameNode = doc.createElement("Name");
 		XMLUtil.setValue(nameNode, m_strName);

@@ -27,7 +27,7 @@
  */
 package infoservice.agreement.multicast.messages;
 
-import infoservice.agreement.interfaces.IAgreementMessage;
+import infoservice.agreement.multicast.interfaces.IAgreementMessage;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -73,7 +73,8 @@ public class RawMessage
             data = ZLibTools.decompress(m_postData);
             Document doc = XMLUtil.toXMLDocument(data);
             message = EchoMulticastMessageFactory.getInstance().parseMessage(doc);
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             LogHolder.log(LogLevel.ERR, LogType.ALL,
                     "Couldn't create IAgreementMessage from the data: " + e.toString());

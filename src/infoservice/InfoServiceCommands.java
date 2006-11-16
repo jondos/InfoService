@@ -27,14 +27,28 @@
  */
 package infoservice;
 
+import infoservice.agreement.IInfoServiceAgreementAdapter;
+import infoservice.dynamic.DynamicCommandsExtension;
+import infoservice.dynamic.DynamicConfiguration;
+import infoservice.japforwarding.JapForwardingTools;
+import infoservice.tor.MixminionDirectoryAgent;
+import infoservice.tor.TorDirectoryAgent;
+
 import java.net.InetAddress;
 import java.util.Date;
 import java.util.Enumeration;
 
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+
+import anon.crypto.SignatureCreator;
 import anon.crypto.SignatureVerifier;
+import anon.infoservice.AbstractDistributableDatabaseEntry;
 import anon.infoservice.Constants;
 import anon.infoservice.Database;
 import anon.infoservice.InfoServiceDBEntry;
@@ -46,19 +60,7 @@ import anon.infoservice.MixInfo;
 import anon.infoservice.PaymentInstanceDBEntry;
 import anon.infoservice.StatusInfo;
 import anon.util.XMLUtil;
-import infoservice.agreement.InfoserviceAgreementAdapter;
-import infoservice.dynamic.DynamicCommandsExtension;
-import infoservice.dynamic.DynamicNetworkingHelper;
-import infoservice.dynamic.TemporaryCascade;
-import infoservice.japforwarding.JapForwardingTools;
-import infoservice.tor.MixminionDirectoryAgent;
-import infoservice.tor.TorDirectoryAgent;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 import anon.util.ZLibTools;
-import anon.infoservice.AbstractDistributableDatabaseEntry;
-import anon.crypto.SignatureCreator;
 
 /**
  * This is the implementation of all commands the InfoService supports.
@@ -91,8 +93,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	private final Object SYNC_CACHE_INFOSERVICESERIALS = new Object();
 	private long m_lastInfoserviceserialsUpdate = 0;
 
-	private InfoserviceAgreementAdapter m_agreementAdapter = new InfoserviceAgreementAdapter();
-
+    private IInfoServiceAgreementAdapter m_agreementAdapter = DynamicConfiguration.getInstance().getAgreementHandler();
 	private DynamicCommandsExtension m_dynamicExtension = new DynamicCommandsExtension();
 
 	// Ok the cache the StatusInfo DB here for performance reasonses (the
@@ -822,6 +823,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		return httpResponse;
 	}
 
+	
 	/**
 	 * Sends a generated HTML file with all status entrys to the client. This function is not used
 	 * by the JAP client. It's intended to use with a webbrowser to see the status of all cascades.
@@ -1441,6 +1443,8 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		return httpResponse;
 	}
+	
+
 
 	/**
 	 * This is the handler for processing the InfoService commands.
@@ -1519,7 +1523,8 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			/* message from the first mix of a cascade (can be forwarded by an infoservice), which
 			 * includes information about the cascade, or from other IS
 			 */
-			httpResponse = cascadePostHelo(postData, a_supportedEncodings);
+//			httpResponse = cascadePostHelo(postData, a_supportedEncodings);
+            httpResponse = m_dynamicExtension.cascadePostHelo(postData, a_supportedEncodings);
 		}
 		else if ( (command.equals("/cascadeserials")) && (method == Constants.REQUEST_METHOD_GET))
 		{
@@ -1707,13 +1712,20 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		else if (command.startsWith("/agreement") && (method == Constants.REQUEST_METHOD_POST))
 		{
+
 			httpResponse = m_agreementAdapter.handleMessage(postData);
+
 		}
 		else if (command.startsWith("/startagreement")
 				 && (method == Constants.REQUEST_METHOD_GET))
 		{
-			m_agreementAdapter.initializeOnce();
+			m_agreementAdapter.startProtocolByOperator();
 			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK);
+		}
+		else if (command.startsWith("/virtualcascades")
+				 && (method == Constants.REQUEST_METHOD_GET))
+		{			
+			httpResponse = m_dynamicExtension.virtualCascadeStatus();
 		}
 		else
 		{
