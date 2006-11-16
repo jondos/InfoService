@@ -47,9 +47,6 @@ import anon.infoservice.MixInfo;
  */
 public class DynamicCascadeConfigurator
 {
-    /* The strategy how to build cascades */
-    private IDynamicCascadeBuildingStrategy m_strategy = new ComleteRandomStrategy();
-
     /**
      * This method gets called to build new cascades. The given seed is used as
      * the seed for the Pseudorandomnumbergenerator such that all InfoServices
@@ -100,12 +97,15 @@ public class DynamicCascadeConfigurator
             return;
         }
 
+        Database.getInstance(VirtualCascade.class).removeAll();
+
         Vector newDynamicCascades = null;
         try
         {
-            newDynamicCascades = m_strategy.createCascades(firstMixes, middleMixes, lastMixes,
-                    a_seed);
-        } catch (Exception e)
+            newDynamicCascades = DynamicConfiguration.getInstance().getCascadeBuildingStrategy()
+                    .createCascades(firstMixes, middleMixes, lastMixes, a_seed);
+        }
+        catch (Exception e)
         {
             LogHolder.log(LogLevel.ERR, LogType.ALL, "Error while building new cascades: "
                     + e.toString());
@@ -116,21 +116,34 @@ public class DynamicCascadeConfigurator
         while (enumCascades.hasMoreElements())
         {
             MixCascade cascade = (MixCascade) enumCascades.nextElement();
-            TemporaryCascade tmp = new TemporaryCascade(cascade);
-            Database.getInstance(TemporaryCascade.class).update(tmp);
+            VirtualCascade tmp = new VirtualCascade(cascade);
             // Remove existing cascades containing one of the member-mixes
             // as they are terminated as soon as a mix calls reconfigure
             Enumeration enMixes = cascade.getMixIds().elements();
+            boolean addTemporaryCascade = true;
             while (enMixes.hasMoreElements())
             {
                 String mixId = enMixes.nextElement().toString();
                 MixCascade oldCascade = getCurrentCascade(mixId);
-                if (oldCascade != null && !cascade.getMixIDsAsString().equals(oldCascade.getMixIDsAsString()))
+                if (oldCascade != null)
                 {
-                    Database.getInstance(MixCascade.class).remove(oldCascade);
+                    if (!cascade.getMixIDsAsString().equals(oldCascade.getMixIDsAsString()))
+                    {
+                        Database.getInstance(MixCascade.class).remove(oldCascade);
+                    }
+                    else
+                    {
+                        // We are lucky guys and picked the same cascade
+                        // again...forget the temporary cascade
+                        addTemporaryCascade = false;
+                        break;
+                    }
                 }
             }
-
+            if (addTemporaryCascade)
+            {
+                Database.getInstance(VirtualCascade.class).update(tmp);
+            }
         }
         LogHolder.log(LogLevel.INFO, LogType.ALL, "Cascades  are ready!");
     }

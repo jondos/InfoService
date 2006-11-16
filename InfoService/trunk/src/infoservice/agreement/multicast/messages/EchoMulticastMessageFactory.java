@@ -27,8 +27,8 @@
  */
 package infoservice.agreement.multicast.messages;
 
-import infoservice.agreement.AgreementMessageTypes;
-import infoservice.agreement.interfaces.IAgreementMessage;
+import infoservice.agreement.multicast.AgreementMessageTypes;
+import infoservice.agreement.multicast.interfaces.IAgreementMessage;
 
 import java.util.Hashtable;
 
@@ -95,7 +95,8 @@ public class EchoMulticastMessageFactory
             tmp = XMLUtil.getFirstChildByName(rootNode, "SenderId");
             senderId = getNodeValue(tmp);
             senderOk = checkOriginator(rootNode, senderId);
-        } else
+        }
+        else
         {
             senderOk = checkOriginator(rootNode, initiatorsId);
         }
@@ -109,13 +110,15 @@ public class EchoMulticastMessageFactory
                 .equalsIgnoreCase(nodeName))
         {
             message = new InitMessage(initiatorsId, proposal, lastCommonRandom);
-        } else if (AgreementMessageTypes.getTypeAsString(AgreementMessageTypes.MESSAGE_TYPE_ECHO)
+        }
+        else if (AgreementMessageTypes.getTypeAsString(AgreementMessageTypes.MESSAGE_TYPE_ECHO)
                 .equalsIgnoreCase(nodeName))
         {
             InitMessage tmpMsg = new InitMessage(initiatorsId, proposal, lastCommonRandom);
             message = new EchoMessage(tmpMsg, senderId);
             message.setXmlDocument(a_doc);
-        } else if (AgreementMessageTypes.getTypeAsString(AgreementMessageTypes.MESSAGE_TYPE_COMMIT)
+        }
+        else if (AgreementMessageTypes.getTypeAsString(AgreementMessageTypes.MESSAGE_TYPE_COMMIT)
                 .equalsIgnoreCase(nodeName))
         {
             tmp = XMLUtil.getFirstChildByName(rootNode, "EchoMessages");
@@ -126,15 +129,18 @@ public class EchoMulticastMessageFactory
                 EchoMessage tmpMsg = createEchoMessage(echo);
                 echoMessages.put(tmpMsg.getHashKey(), tmpMsg);
                 echo = echo.getNextSibling();
-            } while (echo != null);
+            }
+            while (echo != null);
             InitMessage tmpMsg = new InitMessage(initiatorsId, proposal, lastCommonRandom);
             message = new CommitMessage(tmpMsg, senderId, echoMessages);
-        } else if (AgreementMessageTypes.getTypeAsString(AgreementMessageTypes.MESSAGE_TYPE_REJECT)
+        }
+        else if (AgreementMessageTypes.getTypeAsString(AgreementMessageTypes.MESSAGE_TYPE_REJECT)
                 .equalsIgnoreCase(nodeName))
         {
             InitMessage tmpMsg = new InitMessage(initiatorsId, proposal, lastCommonRandom);
             message = new RejectMessage(tmpMsg, senderId, lastCommonRandom);
-        } else if (AgreementMessageTypes.getTypeAsString(
+        }
+        else if (AgreementMessageTypes.getTypeAsString(
                 AgreementMessageTypes.MESSAGE_TYPE_CONFIRMATION).equalsIgnoreCase(nodeName))
         {
             tmp = XMLUtil.getFirstChildByName(rootNode, "EchoMessages");
@@ -145,12 +151,14 @@ public class EchoMulticastMessageFactory
                 EchoMessage tmpMsg = createEchoMessage(echo);
                 echoMessages.put(tmpMsg.getHashKey(), tmpMsg);
                 echo = echo.getNextSibling();
-            } while (echo != null);
+            }
+            while (echo != null);
 
             InitMessage tmpMsg = new InitMessage(initiatorsId, proposal, lastCommonRandom);
             message = new ConfirmationMessage(new CommitMessage(tmpMsg, senderId, echoMessages),
                     senderId);
-        } else
+        }
+        else
         {
             LogHolder.log(LogLevel.ERR, LogType.ALL,
                     "Couldn't determine type of agreement message: " + nodeName);
@@ -188,7 +196,8 @@ public class EchoMulticastMessageFactory
                 JAPCertificate cert = (JAPCertificate) t.getCertificates().firstElement();
                 ski = new X509SubjectKeyIdentifier(cert.getPublicKey()).getValueWithoutColon();
             }
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             // Ignored
         }

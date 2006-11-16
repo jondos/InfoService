@@ -1,29 +1,52 @@
+/*
+ Copyright (c) 2000 - 2006, The JAP-Team
+ All rights reserved.
+ Redistribution and use in source and binary forms, with or without modification,
+ are permitted provided that the following conditions are met:
+
+ - Redistributions of source code must retain the above copyright notice,
+ this list of conditions and the following disclaimer.
+
+ - Redistributions in binary form must reproduce the above copyright notice,
+ this list of conditions and the following disclaimer in the documentation and/or
+ other materials provided with the distribution.
+
+ - Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+ may be used to endorse or promote products derived from this software without specific
+ prior written permission.
+
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+ OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
+ BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
+ */
 package infoservice.agreement.multicast;
 
-import infoservice.agreement.AgreementConstants;
-import infoservice.agreement.AgreementMessageTypes;
-import infoservice.agreement.AgreementTimeOutThread;
-import infoservice.agreement.CommitmentMessage;
-import infoservice.agreement.interfaces.IAgreementHandler;
-import infoservice.agreement.interfaces.IAgreementMessage;
-import infoservice.agreement.interfaces.IConsensusLog;
-import infoservice.agreement.interfaces.IInfoService;
-import infoservice.agreement.logging.FileLogger;
+import infoservice.agreement.common.AgreementConstants;
+import infoservice.agreement.common.TimeoutThread;
+import infoservice.agreement.logging.GiveThingsAName;
+import infoservice.agreement.logging.IAgreementLog;
+import infoservice.agreement.multicast.interfaces.IAgreementHandler;
+import infoservice.agreement.multicast.interfaces.IAgreementMessage;
+import infoservice.agreement.multicast.interfaces.IConsensusLog;
+import infoservice.agreement.multicast.interfaces.IInfoService;
 import infoservice.agreement.multicast.messages.AMessage;
 import infoservice.agreement.multicast.messages.CommitMessage;
+import infoservice.agreement.multicast.messages.CommitmentMessage;
 import infoservice.agreement.multicast.messages.ConfirmationMessage;
 import infoservice.agreement.multicast.messages.EchoMessage;
 import infoservice.agreement.multicast.messages.InitMessage;
 import infoservice.agreement.multicast.messages.RejectMessage;
+import infoservice.dynamic.DynamicConfiguration;
 
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
-
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
-import java.text.DateFormat;
 
 /**
  * @author LERNGRUPPE This class represents a dealer witch takes care about all
@@ -51,7 +74,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
     /**
      * A little logger to write out log informations to filesystem.
      */
-    private FileLogger m_logger;
+    private IAgreementLog m_logger;
 
     /**
      * Holds the last agreed random number or an init value at start up.
@@ -66,7 +89,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
     /**
      * A thread used for giving time out signal.
      */
-    private AgreementTimeOutThread m_agreementTimeOutThread = null;
+    private TimeoutThread m_agreementTimeOutThread = null;
 
     /**
      * The CommitmentMessage is not a part of the reliable broadcast protocol.
@@ -91,8 +114,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
      * Determines whether the agreement protocol is active runnig. Notize: The
      * passiv part is just running.
      */
-    private boolean m_agreementIsStillRunning = false;
-
+    // private boolean m_agreementIsStillRunning = false;
     /**
      * Indicates the current phase of the commitment scheme.
      */
@@ -101,21 +123,21 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
     /**
      * Creates an agereement handler witch runs the
      * multycast-agreement-protocol.
-     *
+     * 
      * @param a_infoService
      *            The infoservice belongs to.
      */
     public EchoMulticastAgreementHandlerImpl(IInfoService a_infoService)
     {
         this.m_infoService = a_infoService;
-        this.m_logger = new FileLogger(this.m_infoService);
+        // this.m_logger = new AgreementFileLog(this.m_infoService);
         this.m_lastCommonRandom = AgreementConstants.DEFAULT_COMMON_RANDOM;
     }
 
     /**
      * This is the main handle point for incomming messages according to this
      * agreement protocol.
-     *
+     * 
      * @param a_msg
      *            The incomming message.
      */
@@ -123,29 +145,26 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
     {
         if (a_msg == null)
             return;
-        if (this.m_agreementIsStillRunning)
+
+        switch (a_msg.getMessageType())
         {
-            switch (a_msg.getMessageType())
-            {
-                case AgreementMessageTypes.MESSAGE_TYPE_INIT:
-                    handleInitMessage((InitMessage) a_msg);
-                    break;
-                case AgreementMessageTypes.MESSAGE_TYPE_ECHO:
-                    handleEchoMessage((EchoMessage) a_msg);
-                    break;
-                case AgreementMessageTypes.MESSAGE_TYPE_COMMIT:
-                    handleCommitMessage((CommitMessage) a_msg);
-                    break;
-                case AgreementMessageTypes.MESSAGE_TYPE_REJECT:
-                    handleRejectMessage((RejectMessage) a_msg);
-                    break;
-                case AgreementMessageTypes.MESSAGE_TYPE_CONFIRMATION:
-                    handleConfirmationMessage((ConfirmationMessage) a_msg);
-                    break;
-            }
-        } else
-        {
-            debug(" ----- DISCARD INCOMMING MESSAGE CAUSE AGREEMENT IS OVER " + a_msg);
+            case AgreementMessageTypes.MESSAGE_TYPE_INIT:
+                handleInitMessage((InitMessage) a_msg);
+                break;
+            case AgreementMessageTypes.MESSAGE_TYPE_ECHO:
+                handleEchoMessage((EchoMessage) a_msg);
+                break;
+            case AgreementMessageTypes.MESSAGE_TYPE_COMMIT:
+                handleCommitMessage((CommitMessage) a_msg);
+                break;
+            case AgreementMessageTypes.MESSAGE_TYPE_REJECT:
+                handleRejectMessage((RejectMessage) a_msg);
+                break;
+            case AgreementMessageTypes.MESSAGE_TYPE_CONFIRMATION:
+                handleConfirmationMessage((ConfirmationMessage) a_msg);
+                break;
+            default:
+                debug(" ----- DISCARD INCOMMING MESSAGE CAUSE AGREEMENT IS OVER " + a_msg);
         }
 
     }
@@ -155,7 +174,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
      * massage on a
      * <code>CommitMessage</CommitMessage> if no agreement is reached yet and perform
      * handleCommitMessage(..).
-     *
+     * 
      * @param a_message
      *            The message.
      */
@@ -177,7 +196,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
      * This method handles all incomming reject-messages. This messagetype will
      * be sent by nodes for receiving invalid init-messages. Especially in the
      * case of incorrect agreement-identifier <code>lastCommonRandom</code>.
-     *
+     * 
      * @param a_message
      *            The message.
      */
@@ -209,10 +228,9 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
                     this.m_currentMessage, this.m_lastCommonRandom);
 
             /* get the new log */
-            getConsensusLog(msg);
-
+            // getConsensusLog(msg);
             debug(" ----> I GOT A NEW CHANCE TO SEND InitMessage TO ALL " + msg);
-            debug(" ----> SEND initmessage TO ALL " + msg);
+            debug(" ----> SEND INIT-Message TO ALL " + msg);
 
             handleInitMessage(msg);
             this.m_infoService.multicastMessage(msg);
@@ -224,7 +242,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
      * start the agreement timeout thread, than we check whether the currend
      * agreement id is part of this message. If so, we create a log entry an
      * send a echo message, otherwise we send a reject message.
-     *
+     * 
      * @param a_message
      *            The InitMessage.
      */
@@ -234,7 +252,8 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
         if (this.m_agreementTimeOutThread == null && !this.m_agreementTimeoutThreadIsStarted)
         {
             this.m_agreementTimeoutThreadIsStarted = true;
-            this.m_agreementTimeOutThread = new AgreementTimeOutThread(this);
+            this.m_agreementTimeOutThread = new TimeoutThread(this, DynamicConfiguration
+                    .getInstance().getEmcGlobalTimeout());
             this.m_agreementTimeOutThread.start();
         }
 
@@ -248,11 +267,13 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
                     this.m_lastCommonRandom);
             this.m_infoService.sendMessageTo(a_message.getInitiatorsId(), msg);
 
-            debug(" ----> REJECT  InitMessage FROM " + a_message.getInitiatorsId() + " ("
+            String initName = GiveThingsAName.getNameForNumber(a_message.getInitiatorsId());
+            debug(" ----> REJECT  InitMessage FROM " + initName + " ("
                     + a_message.getLastCommonRandom() + "!=" + this.m_lastCommonRandom + ") "
                     + a_message);
             return;
         }
+
         /*
          * Create or get the corresponding consensus log entry for this
          * InitMessage and add it
@@ -272,15 +293,15 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
         if (a_message.getInitiatorsId().equals(this.getInfoService().getIdentifier()))
             this.handleEchoMessage(echoMessage);
         this.m_infoService.sendMessageTo(echoMessage.getInitiatorsId(), echoMessage);
-
-        debug(" ----> SEND EchoMessage TO NODE " + echoMessage.getInitiatorsId() + " " + a_message);
+        String initName = GiveThingsAName.getNameForNumber(echoMessage.getInitiatorsId());
+        debug(" ----> SEND EchoMessage TO " + initName + " " + a_message);
     }
 
     /**
      * If an EchoMessage received, it will be handled by two steps. At first we
      * add it in the log-hashtable and at second there is to decide whether
      * there are enough EchoMessages collected for executing a CommitMessage.
-     *
+     * 
      * @param a_message
      *            the EchoMessage
      */
@@ -322,7 +343,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
     /**
      * Check and add a CommitMessage. If Ok, create and send a
      * ConfirmationMessage to all.
-     *
+     * 
      * @param a_message
      *            The message
      */
@@ -372,18 +393,24 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
             if (l.isComitted())
                 count++;
         }
-        info("HAVE " + count + " COMMITS, NEED " + m_infoService.getNumberOfAllInfoservices());
+        info("GOT COMMIT FOR " + GiveThingsAName.getNameForNumber(a_message.getInitiatorsId())
+                + ": HAVE NOW " + count + " COMMITS, NEED AT LEAST "
+                + ((2 * m_infoService.getNumberOfAllInfoservices() + 1) / 3));
     }
 
     /**
      * Call this methode to initialize the agreement protocol.
-     *
+     * 
      * @param lastRandom
      *            Should be the common random number from the las agreement or
      *            an initial value shared by all infoservices.
      */
-    public void startAgreementProtocol()
+    public void startAgreementCommitmentProtocol()
     {
+        if (this.m_agreementTimeoutThreadIsStarted)
+        {
+            return;
+        }
         /*
          * First round. Create a CommitmentMessage
          */
@@ -392,16 +419,13 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
         this.m_currentMessage = this.m_commitmentMessage.getHashValueAndRandomOne();
         /* Start first round */
         this.m_currentPhase = 1;
-        /*
-         * System.out.println(this.getInfoService().getIdentifier() + "> Start
-         * agreement phase 1 now ... " + this.m_currentMessage);
-         */
+
         sendReliableBroadcastMessage(this.m_currentMessage);
     }
 
     /**
      * Starts the reliable broadcast and performs the given message.
-     *
+     * 
      * @param a_message
      *            The message to send.
      */
@@ -422,11 +446,26 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
     /**
      * Initialize some variables and reset the time out thread.
      */
-    public void prepareAgreementsStart()
+    public void reset()
+    {
+
+        this.m_agreementTimeOutThread = null;
+        this.m_agreementTimeoutThreadIsStarted = false;
+        this.m_currentAgreementResults = new Hashtable();
+        this.m_phaseOneAgreemetResults = new Hashtable();
+        m_currentPhase = 0;
+        m_logHashTable = new Hashtable();
+        m_currentMessage = "";
+    }
+
+    /**
+     * Initialize some variables and reset the time out thread.
+     */
+    public void softReset()
     {
         this.m_agreementTimeOutThread = null;
         this.m_agreementTimeoutThreadIsStarted = false;
-        this.m_agreementIsStillRunning = true;
+        // this.m_agreementIsStillRunning = true;
         this.m_currentAgreementResults = new Hashtable();
         if (m_currentPhase != 1)
         {// we need the results in phase 2
@@ -439,7 +478,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
     /**
      * Gets the appropriate consensus log entry by consensus id or, if not yet
      * in the store, creates a new one and adds is to the store.
-     *
+     * 
      * @param a_msg
      *            The message, which contains all informations to construct a
      *            log id.
@@ -447,6 +486,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
      */
     private synchronized ConsensusLogEchoMulticast getConsensusLog(AMessage a_msg)
     {
+
         synchronized (this.m_logHashTable)
         {
             ConsensusLogEchoMulticast consensusLog = (ConsensusLogEchoMulticast) this.m_logHashTable
@@ -465,13 +505,14 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
     /**
      * This method is called by the <code>ConsensusLogTimeoutThread</code> at
      * the moment of expiration.
-     *
+     * 
      * @param consensus
      *            The log entry.
      */
     public void notifyConsensusLogTimeout(IConsensusLog consensus)
     {
-        info(" ----- CONSENSUSLOG TIMOUT FOR " + consensus.getInitiatorId());
+        String name = GiveThingsAName.getNameForNumber(consensus.getInitiatorId());
+        info(" ----- CONSENSUSLOG TIMOUT FOR " + name);
     }
 
     /**
@@ -480,81 +521,14 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
      */
     private void notifyBabylonianConfusion()
     {
-        debug("BABYLONIAN CONFUSION!!");
-        // TODO Send mail to an operator
-    }
-
-    /**
-     * This method is called if the complete agreement timed out.
-     */
-    public void notifyAgreementTimeout()
-    {
-        this.m_agreementIsStillRunning = false;
-        debug(" AGREEMENT TIMED OUT");
-
-        // Just for debugging purposes
-        info(" AGREEMENT TIMED OUT: " + DateFormat.getDateTimeInstance().format(new Date()));
-
-        this.m_agreementTimeOutThread.setStopped(true);
-
-        switch (m_currentPhase)
-        {
-            case 1:
-            {
-                /*
-                 * Let's start phase 2 save the results fro phase 1
-                 */
-                this.m_phaseOneAgreemetResults = this.m_currentAgreementResults;
-                this.prepareAgreementsStart();
-                /* create the message for phase 2 */
-                this.m_currentMessage = this.m_commitmentMessage.getConcatenation();
-                // System.out.println(this.getInfoService().getIdentifier() + ">
-                // Start agreement phase 2 now ... "
-                // + this.m_currentMessage);
-                /* set second round number and start */
-                this.m_currentPhase = 2;
-
-                /* Wait to give others the chance to reach the timeout too */
-                new Thread()
-                {
-                    public void run()
-                    {
-                        try
-                        {
-                            Thread.sleep(AgreementConstants.AGREEMENT_PHASE_GAP);
-                        } catch (InterruptedException e)
-                        {
-                            /* not good, but nothing we can do about it now */
-                        }
-                        // Just for debugging purposes
-                        info("Start new round now!!!! " + DateFormat.getDateTimeInstance().format(new Date()));
-                        sendReliableBroadcastMessage(m_currentMessage);
-                    }
-                }.start();
-
-                break;
-            }
-            case 2:
-            {
-                /* Set the new common random value */
-                Long newCommonRandom = this.checkTheResults();
-                if (newCommonRandom != null)
-                {
-                    this.m_lastCommonRandom = newCommonRandom.toString();
-                }
-                /* reset phase to zero */
-                this.m_currentPhase = 0;
-                /* call the infoservice */
-                m_infoService.notifyAgreement(newCommonRandom);
-                break;
-            }
-        }
+        info(" --- BABYLONIAN CONFUSION!! ---");
+        /** @todo Send mail to an operator */
     }
 
     /**
      * Evaluate the results, combine the random numbers of all infoservices and
      * return this new common random value or null.
-     *
+     * 
      * @return New common random value or null.
      */
     private Long checkTheResults()
@@ -585,9 +559,9 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
                     randNumber = CommitmentMessage
                             .extractRandomOneFromHashAndRandomOneConcatenation(value1);
                     hash = CommitmentMessage.extractHashFromHashAndRandomOneConcatenation(value1);
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
-                    e.printStackTrace();
                     continue;
                 }
                 /* check the randomOne number */
@@ -603,7 +577,8 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
                     debug("check hash values failed" + hash + "-> " + cmMessage.getHashCode());
                     continue;
                 }
-                debug("AGREEMENT FOR: " + key + ": " + cmMessage.getProposal());
+                String nameFOrKey = GiveThingsAName.getNameForNumber(key.toString());
+                debug("AGREEMENT FOR: " + nameFOrKey + ": " + cmMessage.getProposal());
                 results.put(key, cmMessage.getProposal());
             }
         }
@@ -624,32 +599,10 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
         return Long.valueOf(comRand);
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see infoservice.agreement.interfaces.IAgreementHandler#isAgreementRuns()
-     */
-    public boolean isAgreementRuns()
-    {
-        return m_agreementIsStillRunning;
-    }
-
-    /**
-     * Sets a value which determines whether the agreement protocol is active
-     * runnig. Notize: The passiv part can just running.
-     *
-     * @param isStillRunning
-     *            Value to set.
-     */
-    public void setAgreementIsStillRunning(boolean isStillRunning)
-    {
-        m_agreementIsStillRunning = isStillRunning;
-    }
-
     /**
      * Gets he value which holds the last agreed random number or an init value
      * at start up.
-     *
+     * 
      * @return
      */
     public String getLastCommonRandom()
@@ -659,7 +612,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
 
     /*
      * (non-Javadoc)
-     *
+     * 
      * @see infoservice.agreement.interfaces.IAgreementHandler#setLastCommonRandom(java.lang.String)
      */
     public void setLastCommonRandom(String commonRandom)
@@ -669,40 +622,103 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
 
     /**
      * Logs debug messages
-     *
+     * 
      * @param a_message
      *            The message to log.
      */
     private void debug(String a_message)
     {
-        log(LogLevel.DEBUG, this.m_infoService.getIdentifier() + a_message);
+        this.m_logger.debug(a_message);
     }
 
     /**
      * Logs info messages
-     *
+     * 
      * @param a_message
      */
     void info(String a_message)
     {
-        log(LogLevel.INFO, a_message);
-    }
-
-    private void log(int a_lvl, String a_message)
-    {
-        LogHolder.log(a_lvl, LogType.NET, a_message);
-        if (this.m_logger != null)
-            this.m_logger.writeOut(a_message);
+        this.m_logger.info(a_message);
     }
 
     /*
      * (non-Javadoc)
-     *
+     * 
      * @see infoservice.agreement.interfaces.IAgreementHandler#getInfoService()
      */
     public IInfoService getInfoService()
     {
         return this.m_infoService;
+    }
+
+    public void timeout(Object a_value)
+    {
+        // this.m_agreementIsStillRunning = false;
+        debug(" AGREEMENT TIMED OUT");
+
+        // Just for debugging purposes
+        info(" AGREEMENT TIMED OUT: " + new Date().toString());
+
+        if (this.m_agreementTimeOutThread != null)
+            this.m_agreementTimeOutThread.cancel();
+
+        switch (m_currentPhase)
+        {
+            case 1:
+            {
+                /*
+                 * Let's start phase 2 save the results fro phase 1
+                 */
+                this.m_phaseOneAgreemetResults = this.m_currentAgreementResults;
+                this.softReset();
+                /* create the message for phase 2 */
+                this.m_currentMessage = this.m_commitmentMessage.getConcatenation();
+                /* set second round number and start */
+                this.m_currentPhase = 2;
+
+                /* Wait to give others the chance to reach the timeout too */
+                new Thread()
+                {
+                    public void run()
+                    {
+                        try
+                        {
+                            Thread.sleep(DynamicConfiguration.getInstance().getAgreementPhaseGap());
+                        }
+                        catch (InterruptedException e)
+                        {
+                            /* not good, but nothing we can do about it now */
+                        }
+                        // Just for debugging purposes
+                        info("Start reveal phase...");
+                        sendReliableBroadcastMessage(m_currentMessage);
+                    }
+                }.start();
+
+                break;
+            }
+            case 2:
+            {
+                /* Set the new common random value */
+                Long oldCmmonRandom = new Long(Long.parseLong(this.m_lastCommonRandom));
+                Long newCommonRandom = this.checkTheResults();
+                if (newCommonRandom != null)
+                {
+                    this.m_lastCommonRandom = newCommonRandom.toString();
+                }
+                /* reset phase to zero */
+                this.m_currentPhase = 0;
+                /* call the infoservice */
+                m_infoService.notifyAgreement(oldCmmonRandom, newCommonRandom);
+                break;
+            }
+        }
+
+    }
+
+    public void setLog(IAgreementLog a_log)
+    {
+        this.m_logger = a_log;
     }
 
 }

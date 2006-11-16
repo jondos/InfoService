@@ -27,12 +27,14 @@
  */
 package infoservice.dynamic;
 
+import infoservice.Configuration;
 import infoservice.HttpResponseStructure;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.Random;
 
@@ -46,8 +48,10 @@ import org.w3c.dom.Node;
 
 import anon.crypto.SignatureCreator;
 import anon.crypto.SignatureVerifier;
+import anon.infoservice.Constants;
 import anon.infoservice.Database;
 import anon.infoservice.MixCascade;
+import anon.infoservice.MixInfo;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
 
@@ -58,6 +62,7 @@ import anon.util.XMLUtil;
  * 
  * @author LERNGRUPPE
  */
+
 public class DynamicCommandsExtension
 {
     /**
@@ -70,7 +75,7 @@ public class DynamicCommandsExtension
      * 
      * @return The HTTP response for the client.
      */
-    public HttpResponseStructure cascadePostHelo(byte[] a_postData)
+    public HttpResponseStructure cascadePostHelo(byte[] a_postData, int a_encoding)
     {
         HttpResponseStructure httpResponse = new HttpResponseStructure(
                 HttpResponseStructure.HTTP_RETURN_OK);
@@ -78,33 +83,39 @@ public class DynamicCommandsExtension
         {
             LogHolder.log(LogLevel.DEBUG, LogType.NET, "MixCascade HELO received: XML: "
                     + (new String(a_postData)));
-            Element mixCascadeNode = (Element) (XMLUtil.getFirstChildByName(XMLUtil
-                    .toXMLDocument(a_postData), MixCascade.XML_ELEMENT_NAME));
+
             /* verify the signature */
-            /*
-             * LERNGRUPPE: Signature is valid if digest can be confirmed and ID
-             * equals subjectKeyIdentifier of the certificate
-             */
-            MixCascade mixCascadeEntry = new MixCascade(mixCascadeNode);
-            if (SignatureVerifier.getInstance().verifyXml(mixCascadeNode,
-                    SignatureVerifier.DOCUMENT_CLASS_MIX))
+            MixCascade mixCascadeEntry;
+            if (a_encoding == HttpResponseStructure.HTTP_ENCODING_ZLIB)
             {
-                // remove temporary cascades if existig
-                MixCascade temporaryCascade = getTemporaryCascade(mixCascadeEntry.getId());
-                if (temporaryCascade != null)
-                {
-                    Database.getInstance(TemporaryCascade.class).remove(temporaryCascade);
-                }
-                Database.getInstance(MixCascade.class).update(mixCascadeEntry);
-            } else
-            {
-                LogHolder.log(LogLevel.WARNING, LogType.NET,
-                        "Signature check failed for MixCascade entry! XML: "
-                                + (new String(a_postData)));
-                httpResponse = new HttpResponseStructure(
-                        HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
+                mixCascadeEntry = new MixCascade(a_postData);
             }
-        } catch (Exception e)
+            else if (a_encoding == HttpResponseStructure.HTTP_ENCODING_PLAIN)
+            {
+                Element mixCascadeNode = (Element) (XMLUtil.getFirstChildByName(XMLUtil
+                        .toXMLDocument(a_postData), MixCascade.XML_ELEMENT_NAME));
+                mixCascadeEntry = new MixCascade(mixCascadeNode);
+            }
+            else
+            {
+                throw new Exception("Unsupported post encoding:" + a_encoding);
+            }
+            // remove temporary cascades if existig
+            VirtualCascade temporaryCascade = (VirtualCascade) Database.getInstance(
+                    VirtualCascade.class).getEntryById(mixCascadeEntry.getId());
+            if (temporaryCascade != null)
+            {
+                if (temporaryCascade.getRealCascade().getMixIDsAsString().equals(
+                        mixCascadeEntry.getMixIDsAsString()))
+                {
+                    Database.getInstance(VirtualCascade.class).remove(temporaryCascade);
+
+                }
+            }
+
+            Database.getInstance(MixCascade.class).update(mixCascadeEntry);
+        }
+        catch (Exception e)
         {
             LogHolder.log(LogLevel.ERR, LogType.NET, e);
             httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);
@@ -180,7 +191,7 @@ public class DynamicCommandsExtension
 
     /**
      * Returns a temporary cascade for the mix with the given ID. Not the
-     * TemporaryCascade-object, but the real MixCascade is returned
+     * VirtualCascade-object, but the real MixCascade is returned
      * 
      * @param a_mixId
      *            The ID of the mix in question
@@ -189,13 +200,13 @@ public class DynamicCommandsExtension
      */
     private MixCascade getTemporaryCascade(String a_mixId)
     {
-        Enumeration knownTemporaryMixCascades = Database.getInstance(TemporaryCascade.class)
+        Enumeration knownTemporaryMixCascades = Database.getInstance(VirtualCascade.class)
                 .getEntryList().elements();
         MixCascade assignedTemporaryCascade = null;
         while (knownTemporaryMixCascades.hasMoreElements() && (assignedTemporaryCascade == null))
         {
-            MixCascade currentCascade = ((TemporaryCascade) (knownTemporaryMixCascades
-                    .nextElement())).getRealCascade();
+            MixCascade currentCascade = ((VirtualCascade) (knownTemporaryMixCascades.nextElement()))
+                    .getRealCascade();
             if (currentCascade.getMixIds().contains(a_mixId))
             {
                 /* the mix is assigned to that cascade */
@@ -258,9 +269,10 @@ public class DynamicCommandsExtension
                     SignatureVerifier.DOCUMENT_CLASS_MIX) == true)
             {
                 MixCascade mixCascadeEntry = new MixCascade(mixCascadeNode);
-                TemporaryCascade tmp = new TemporaryCascade(mixCascadeEntry);
-                Database.getInstance(TemporaryCascade.class).update(tmp);
-            } else
+                VirtualCascade tmp = new VirtualCascade(mixCascadeEntry);
+                Database.getInstance(VirtualCascade.class).update(tmp);
+            }
+            else
             {
                 LogHolder.log(LogLevel.WARNING, LogType.NET,
                         "Signature check failed for MixCascade entry! XML: "
@@ -268,7 +280,8 @@ public class DynamicCommandsExtension
                 httpResponse = new HttpResponseStructure(
                         HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
             }
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             LogHolder.log(LogLevel.ERR, LogType.NET, e);
             httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);
@@ -316,7 +329,8 @@ public class DynamicCommandsExtension
         if (isReachable(a_sourceAddress, port))
         {
             docConnectivity = constructAnswer("OK");
-        } else
+        }
+        else
         {
             docConnectivity = constructAnswer("Failed");
         }
@@ -408,7 +422,8 @@ public class DynamicCommandsExtension
 
             in.close();
             socket.close();
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             return null;
         }
@@ -434,11 +449,189 @@ public class DynamicCommandsExtension
             Node rootNode = doc.getFirstChild();
             Element portNode = (Element) XMLUtil.getFirstChildByName(rootNode, "Port");
             port = XMLUtil.parseValue(portNode, -1);
-        } catch (XMLParseException e)
+        }
+        catch (XMLParseException e)
         {
             // we can ignore this
         }
         return port;
     }
 
+    /**
+     * Sends a generated HTML file with all status entrys to the client. This
+     * function is not used by the JAP client. It's intended to use with a
+     * webbrowser to see the status of all cascades.
+     * 
+     * @return The HTTP response for the client.
+     */
+    public HttpResponseStructure virtualCascadeStatus()
+    {
+        /* this is only the default, if something is going wrong */
+        HttpResponseStructure httpResponse;
+        try
+        {
+            String virtualCascades = getCascadeHtmlTable(VirtualCascade.class);
+            String realCascades = getCascadeHtmlTable(MixCascade.class);
+
+            String htmlData = "<HTML>\n"
+                    + "  <HEAD>\n"
+                    + "    <TITLE>INFOSERVICE - Virtual-Cascades Status</TITLE>\n"
+                    + "    <STYLE TYPE=\"text/css\">\n"
+                    + "      <!--\n"
+                    + "        h1 {color:blue; text-align:center;}\n"
+                    + "        b,h3,h4,h5 {font-weight:bold; color:maroon;}\n"
+                    + "        body {margin-top:0px; margin-left:0px; margin-width:0px; margin-height:0px; background-color:white; color:black;}\n"
+                    + "        h1,h2,h3,h4,h5,p,address,ol,ul,tr,td,th,blockquote,body,.smalltext,.leftcol {font-family:geneva,arial,helvetica,sans-serif;}\n"
+                    + "        p,address,ol,ul,tr,td,th,blockquote {font-size:11pt;}\n"
+                    + "        .leftcol,.smalltext {font-size: 10px;}\n"
+                    + "        h1 {font-size:17px;}\n"
+                    + "        h2 {font-size:16px;}\n"
+                    + "        h3 {font-size:15px;}\n"
+                    + "        h4 {font-size:14px;}\n"
+                    + "        h5 {font-size:13px;}\n"
+                    + "        address {font-style:normal;}\n"
+                    + "        hr {color:#cccccc;}\n"
+                    + "        h2,.leftcol {font-weight:bold; color:#006699;}\n"
+                    + "        a:link {color:#006699; font-weight:bold; text-decoration:none;}\n"
+                    + "        a:visited {color:#666666; font-weight:bold; text-decoration:none;}\n"
+                    + "        a:active {color:#006699; font-weight:bold; text-decoration:none;}\n"
+                    + "        a:hover {color:#006699; font-weight:bold; text-decoration:underline;}\n"
+                    + "        th {color:white; background:#006699; font-weight:bold; text-align:left;}\n"
+                    + "        td.name {border-bottom-style:solid; border-bottom-width:1pt; border-color:#006699; background:#eeeeff;}\n"
+                    + "        td.status {border-bottom-style:solid; border-bottom-width:1pt; border-color:#006699;}\n"
+                    + "      -->\n" + "    </STYLE>\n"
+                    + "    <META HTTP-EQUIV=\"refresh\" CONTENT=\"10\">\n" + "  </HEAD>\n"
+                    + "  <BODY BGCOLOR=\"#FFFFFF\">\n" + "    <P ALIGN=\"right\">"
+                    + (new Date()).toString() + "</P>\n"
+                    + "    <H2>INFOSERVICE - Virtual-Cascades Status</H2><BR><BR>\n"
+                    + "<h3>Real cascades</h3>";
+
+            htmlData += realCascades;
+            htmlData += "<br/><h3>Virtual cascades</h3>";
+            htmlData += virtualCascades;
+
+            htmlData += "<h3>Unused mixes</h3>";
+            htmlData += "    <TABLE ALIGN=\"center\" BORDER=\"0\" width=\"100%\">\n";
+            htmlData += "      <COLGROUP>\n";
+            htmlData += "        <COL>\n";
+            htmlData += "        <COL>\n";
+            htmlData += "        <COL>\n";
+            htmlData += "        <COL>\n";
+            htmlData += "        </COLGROUP>\n";
+            htmlData += "      <TR>\n";
+            htmlData += "        <TH>Mix Id</TH>\n";
+            htmlData += "        <TH>Mix Host</TH>\n";
+            htmlData += "        <TH>Mix Port</TH>\n";
+            htmlData += "        <TH>Mix Type</TH>\n";
+            htmlData += "      </TR>\n";
+            Enumeration enumer2 = Database.getInstance(VirtualCascade.class)
+                    .getEntrySnapshotAsEnumeration();
+            MixCascade mixCascade2 = null;
+            while (enumer2.hasMoreElements())
+            {
+                mixCascade2 = ((VirtualCascade) (enumer2.nextElement())).getRealCascade();
+                if (mixCascade2.getNumberOfMixes() != 1)
+                    continue;
+                Enumeration enumMixID2 = mixCascade2.getMixIds().elements();
+                String mixId2 = "";
+                if (enumMixID2.hasMoreElements())
+                {
+                    mixId2 = (String) enumMixID2.nextElement();
+                }
+                else
+                {
+                    return new HttpResponseStructure(
+                            HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
+                }
+                MixInfo mixInfo2 = (MixInfo) Database.getInstance(MixInfo.class).getEntryById(
+                        mixId2);
+                htmlData += "<TR>\n";
+                htmlData += "<TD>" + mixInfo2.getId() + "</TD>\n";
+                htmlData += "<TD>" + mixInfo2.getFirstHostName() + "</TD>\n";
+                htmlData += "<TD>" + mixInfo2.getFirstPort() + "</TD>\n";
+                htmlData += "<TD>" + mixInfo2.getTypeAsString() + "</TD>\n";
+                htmlData += "</TR>\n";
+            }
+            htmlData = htmlData + "    </TABLE><BR><BR><BR><BR>\n";
+            htmlData = htmlData + "    <P>Infoservice [" + Constants.INFOSERVICE_VERSION
+                    + "] Startup Time: " + Configuration.getInstance().getStartupTime() + "</P>\n"
+                    + "    <HR noShade SIZE=\"1\">\n"
+                    + "    <ADDRESS>&copy; 2000 - 2006 The JAP Team</ADDRESS>\n" + "  </BODY>\n"
+                    + "</HTML>\n";
+            /* send content */
+            httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_HTML,
+
+            HttpResponseStructure.HTTP_ENCODING_PLAIN, htmlData);
+        }
+        catch (Exception e)
+        {
+            httpResponse = new HttpResponseStructure(
+                    HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
+            LogHolder.log(LogLevel.ERR, LogType.MISC, e);
+        }
+        return httpResponse;
+    }
+
+    private String getCascadeHtmlTable(Class a_clazz) throws Exception
+    {
+        String htmlData = ""
+                + "    <TABLE ALIGN=\"center\" BORDER=\"0\" width=\"100%\">\n"
+                + "      <COLGROUP>\n"
+                // + " <COL>\n"
+                + "        <COL>\n"
+                + "        <COL>\n"
+                + "        <COL>\n"
+                + "        <COL>\n"
+                + "        <COL>\n"
+                + "        </COLGROUP>\n"
+                + "      <TR>\n"
+                // + " <TH>Cascade Name</TH>\n"
+                + "        <TH>Cascade ID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TH>\n"
+                + "        <TH>Mix Host</TH>\n" + "        <TH>Mix Port</TH>\n"
+                + "        <TH>Mix Type</TH>\n" + "        <TH>Mix Id</TH>\n" + "      </TR>\n";
+        /* get all status entrys from database */
+        Enumeration enumer = Database.getInstance(a_clazz).getEntrySnapshotAsEnumeration();
+        MixCascade mixCascade = null;
+        while (enumer.hasMoreElements())
+        {
+            if (a_clazz.equals(VirtualCascade.class))
+                mixCascade = ((VirtualCascade) (enumer.nextElement())).getRealCascade();
+            else
+                mixCascade = (MixCascade) enumer.nextElement();
+
+            if (mixCascade.getNumberOfMixes() == 1)
+                continue;
+            Enumeration enumMixID = mixCascade.getMixIds().elements();
+            String mixId = "";
+            if (enumMixID.hasMoreElements())
+            {
+                mixId = (String) enumMixID.nextElement();
+            }
+            MixInfo mixInfo = (MixInfo) Database.getInstance(MixInfo.class).getEntryById(mixId);
+            htmlData += "<TR>\n";
+            htmlData += "<TD>" + mixCascade.getId() + "</TD>\n";
+            htmlData += "<TD>" + mixInfo.getFirstHostName() + "</TD>\n";
+            htmlData += "<TD>" + mixInfo.getFirstPort() + "</TD>\n";
+            htmlData += "<TD>" + mixInfo.getTypeAsString() + "</TD>\n";
+            htmlData += "<TD>" + mixInfo.getId() + "</TD>\n";
+            htmlData += "</TR>\n";
+            for (int i = 1; i < mixCascade.getNumberOfMixes() && enumMixID.hasMoreElements(); i++)
+            {
+                mixId = (String) enumMixID.nextElement();
+                mixInfo = (MixInfo) Database.getInstance(MixInfo.class).getEntryById(mixId);
+                htmlData += "<TR>\n";
+                htmlData += "<TD>" + "</TD>\n";
+                htmlData += "<TD>" + mixInfo.getFirstHostName() + "</TD>\n";
+                htmlData += "<TD>" + mixInfo.getFirstPort() + "</TD>\n";
+                htmlData += "<TD>" + mixInfo.getTypeAsString() + "</TD>\n";
+                htmlData += "<TD>" + mixInfo.getId() + "</TD>\n";
+                htmlData += "</TR>\n";
+            }
+            htmlData += "<TR>\n";
+            htmlData += "<TD colspann=\"6\">&nbsp;</TD>\n";
+            htmlData += "</TR>\n";
+        }
+        htmlData = htmlData + "    </TABLE><BR><BR>\n";
+        return htmlData;
+    }
 }

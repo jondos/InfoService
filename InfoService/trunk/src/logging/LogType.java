@@ -39,7 +39,7 @@ public final class LogType
 {
 	/** The human readyble names of all log types. New log types must be added here, too. */
 	private static final String[] STR_LOG_TYPES =
-		{"NUL", "GUI", "NET", "THREAD", "MISC", "PAY", "TOR", "CRYPTO", "FILTER", "ALL"};
+		{"NUL", "GUI", "NET", "THREAD", "MISC", "PAY", "TOR", "CRYPTO", "FILTER", "AGREEMENT", "ALL"};
 
 	/** The concatenation string of the human readable log types. */
 	private static final String STR_ADD_LOG_TYPE = "+";
@@ -75,6 +75,9 @@ public final class LogType
 
 	/** Indicates messages from the http filter system */
 	public static final int FILTER = LOG_TYPES[8];
+
+        /** Indicates messages from the paw filter system */
+        public static final int AGREEMENT = LOG_TYPES[9];
 
 	/** Indicates all messages*/
 	public static final int ALL = createLogTypeALL();

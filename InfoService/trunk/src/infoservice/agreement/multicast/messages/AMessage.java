@@ -27,8 +27,9 @@
  */
 package infoservice.agreement.multicast.messages;
 
-import infoservice.agreement.AgreementMessageTypes;
-import infoservice.agreement.interfaces.IAgreementMessage;
+import infoservice.agreement.logging.GiveThingsAName;
+import infoservice.agreement.multicast.AgreementMessageTypes;
+import infoservice.agreement.multicast.interfaces.IAgreementMessage;
 
 import org.bouncycastle.crypto.digests.SHA1Digest;
 import org.w3c.dom.Document;
@@ -88,7 +89,8 @@ public abstract class AMessage implements IAgreementMessage
         if (a_consensusId == null && a_messageType == AgreementMessageTypes.MESSAGE_TYPE_INIT)
         {
             this.m_consensusId = createConsensusId();
-        } else
+        }
+        else
         {
             this.m_consensusId = a_consensusId;
         }
@@ -113,7 +115,7 @@ public abstract class AMessage implements IAgreementMessage
     private String createConsensusId()
     {
         SHA1Digest digest = new SHA1Digest();
-        byte[] proposalBytes = (m_initiatorsId + m_lastCommonRandom).getBytes(); 
+        byte[] proposalBytes = (m_initiatorsId + m_lastCommonRandom).getBytes();
         digest.update(proposalBytes, 0, proposalBytes.length);
         byte[] tmp = new byte[digest.getDigestSize()];
         digest.doFinal(tmp, 0);
@@ -296,12 +298,14 @@ public abstract class AMessage implements IAgreementMessage
      */
     public String toString()
     {
+        String name = GiveThingsAName.getNameForNumber(getInitiatorsId());
         StringBuffer buf = new StringBuffer();
-        buf.append("ConsensusID: " + m_consensusId);
-        buf.append(" Initiator: " + getInitiatorsId());
+        buf.append("ConsensusID: " + (m_consensusId.substring(0, 2)));
+        // buf.append(" Initiator: " + getInitiatorsId());
+        buf.append(" Initiator: " + name);
         buf.append(" <" + AgreementMessageTypes.getTypeAsString(getMessageType()) + ">");
         buf.append(" Propsal: " + getProposal());
-        buf.append(" LCR: " + this.m_lastCommonRandom.toString());
+        buf.append(" LCR: " + (this.m_lastCommonRandom.substring(0, 2)).toString());
         return buf.toString();
     }
 

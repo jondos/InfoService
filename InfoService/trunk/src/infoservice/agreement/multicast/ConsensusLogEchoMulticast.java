@@ -1,22 +1,46 @@
+/*
+ Copyright (c) 2000 - 2006, The JAP-Team
+ All rights reserved.
+ Redistribution and use in source and binary forms, with or without modification,
+ are permitted provided that the following conditions are met:
+
+ - Redistributions of source code must retain the above copyright notice,
+ this list of conditions and the following disclaimer.
+
+ - Redistributions in binary form must reproduce the above copyright notice,
+ this list of conditions and the following disclaimer in the documentation and/or
+ other materials provided with the distribution.
+
+ - Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+ may be used to endorse or promote products derived from this software without specific
+ prior written permission.
+
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+ OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
+ BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
+ */
 package infoservice.agreement.multicast;
 
-import infoservice.agreement.AgreementMessageTypes;
-import infoservice.agreement.ConsensusLogTimeoutThread;
-import infoservice.agreement.interfaces.IAgreementHandler;
-import infoservice.agreement.interfaces.IConsensusLog;
-import infoservice.agreement.logging.FileLogger;
+import infoservice.agreement.common.TimeoutThread;
+import infoservice.agreement.logging.GiveThingsAName;
+import infoservice.agreement.logging.IAgreementLog;
+import infoservice.agreement.multicast.interfaces.IAgreementHandler;
+import infoservice.agreement.multicast.interfaces.IConsensusLog;
 import infoservice.agreement.multicast.messages.AMessage;
 import infoservice.agreement.multicast.messages.CommitMessage;
 import infoservice.agreement.multicast.messages.EchoMessage;
 import infoservice.agreement.multicast.messages.InitMessage;
 import infoservice.agreement.multicast.messages.RejectMessage;
+import infoservice.dynamic.DynamicConfiguration;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
-
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 
 /**
  * 
@@ -49,7 +73,7 @@ public class ConsensusLogEchoMulticast implements IConsensusLog
     /**
      * A logger.
      */
-    private FileLogger m_logger = null;
+    private IAgreementLog m_logger = null;
 
     /**
      * Indicates whether the agreement for this log entry is reached.
@@ -70,7 +94,7 @@ public class ConsensusLogEchoMulticast implements IConsensusLog
     /**
      * Holds the timeout thread.
      */
-    private ConsensusLogTimeoutThread timeoutThread;
+    private TimeoutThread timeoutThread;
 
     /**
      * An Instance of the agreement handler to get some information about the
@@ -139,7 +163,7 @@ public class ConsensusLogEchoMulticast implements IConsensusLog
      *            A filelogger.
      */
     public ConsensusLogEchoMulticast(EchoMulticastAgreementHandlerImpl a_handler,
-            String a_consensusId, FileLogger a_log, String a_initiatorsId)
+            String a_consensusId, IAgreementLog a_log, String a_initiatorsId)
     {
         initializeConsensusLog(a_handler, a_consensusId, a_log, a_initiatorsId);
     }
@@ -155,7 +179,7 @@ public class ConsensusLogEchoMulticast implements IConsensusLog
      *            A filelogger.
      */
     public ConsensusLogEchoMulticast(EchoMulticastAgreementHandlerImpl a_handler,
-            InitMessage a_initMessage, FileLogger a_log)
+            InitMessage a_initMessage, IAgreementLog a_log)
     {
         this.initializeConsensusLog(a_handler, a_initMessage.getConsensusId(), a_log, a_initMessage
                 .getInitiatorsId());
@@ -170,14 +194,15 @@ public class ConsensusLogEchoMulticast implements IConsensusLog
      * @param a_initiatorsId
      */
     private void initializeConsensusLog(EchoMulticastAgreementHandlerImpl a_handler,
-            String a_consensusId, FileLogger a_log, String a_initiatorsId)
+            String a_consensusId, IAgreementLog a_log, String a_initiatorsId)
     {
         this.m_handler = a_handler;
         this.m_criticalMasses = ((this.m_handler.getInfoService().getNumberOfAllInfoservices() * 2) + 1) / 3;
         this.m_consensusId = a_consensusId;
         this.m_initiatorId = a_initiatorsId;
         this.m_logger = a_log;
-        this.timeoutThread = new ConsensusLogTimeoutThread(this);
+        this.timeoutThread = new TimeoutThread(this, DynamicConfiguration.getInstance()
+                .getEmcConsensusLogTimeout());
         this.timeoutThread.start();
 
     }
@@ -194,7 +219,7 @@ public class ConsensusLogEchoMulticast implements IConsensusLog
     {
         if (!a_msg.isSignatureOK())
         {
-            log("checkGeneric: " + AgreementMessageTypes.getTypeAsString(a_msg.getMessageType())
+            debug("checkGeneric: " + AgreementMessageTypes.getTypeAsString(a_msg.getMessageType())
                     + ":Invalid signature");
             return false;
         }
@@ -202,7 +227,7 @@ public class ConsensusLogEchoMulticast implements IConsensusLog
         // consusID-check
         if (!this.getConsensusID().equals(a_msg.getConsensusId()))
         {
-            log("checkGeneric: " + AgreementMessageTypes.getTypeAsString(a_msg.getMessageType())
+            debug("checkGeneric: " + AgreementMessageTypes.getTypeAsString(a_msg.getMessageType())
                     + ": Wrong consensus id" + "\n" + this.getConsensusID() + "\n"
                     + a_msg.getConsensusId());
             return false;
@@ -210,7 +235,7 @@ public class ConsensusLogEchoMulticast implements IConsensusLog
         // Timeout check
         if (this.m_timedOut)
         {
-            log("checkGeneric: " + AgreementMessageTypes.getTypeAsString(a_msg.getMessageType())
+            debug("checkGeneric: " + AgreementMessageTypes.getTypeAsString(a_msg.getMessageType())
                     + ": Timed out!!!  LogId: " + this.getConsensusID());
             return false;
         }
@@ -230,7 +255,8 @@ public class ConsensusLogEchoMulticast implements IConsensusLog
             return false;
         this.m_initMessage = a_msg;
         this.m_initiatorId = a_msg.getInitiatorsId();
-        log(" <---- ADD InitMessage FROM " + a_msg.getInitiatorsId() + " " + a_msg);
+        String initiatorsName = GiveThingsAName.getNameForNumber(a_msg.getInitiatorsId());
+        debug(" <---- ADD InitMessage FROM " + initiatorsName + " " + a_msg);
         return true;
     }
 
@@ -244,7 +270,7 @@ public class ConsensusLogEchoMulticast implements IConsensusLog
     {
         if (this.m_initMessage != null)
         {
-            log("OVERWRITE ERROR: addInitMessage(): " + a_msg);
+            debug("OVERWRITE ERROR: addInitMessage(): " + a_msg);
             return false;
         }
 
@@ -265,7 +291,8 @@ public class ConsensusLogEchoMulticast implements IConsensusLog
             return false;
 
         this.m_echoMessagesHashTable.put(a_msg.getHashKey(), a_msg);
-        log(" <---- ADD EchoMessage FROM " + a_msg.getSenderId() + " " + a_msg);
+        String sendersName = GiveThingsAName.getNameForNumber(a_msg.getSenderId());
+        debug(" <---- ADD EchoMessage FROM " + sendersName + " " + a_msg);
         return true;
     }
 
@@ -283,7 +310,7 @@ public class ConsensusLogEchoMulticast implements IConsensusLog
         // Duplicate Check
         if (this.m_echoMessagesHashTable.containsKey(a_msg.getHashKey()))
         {
-            log(" ----- DISCARD DUPLICATE EchoMessage FROM " + a_msg.getSenderId() + " " + a_msg);
+            debug(" ----- DISCARD DUPLICATE EchoMessage FROM " + a_msg.getSenderId() + " " + a_msg);
             return false;
         }
         return true;
@@ -303,7 +330,8 @@ public class ConsensusLogEchoMulticast implements IConsensusLog
         this.setAgreed(true);
 
         this.m_commitMessagesHashTable.put(a_msg.getHashKey(), a_msg);
-        log(" <---- ADD CommitMessage FROM " + a_msg.getSenderId() + " " + a_msg);
+        String sendersName = GiveThingsAName.getNameForNumber(a_msg.getSenderId());
+        debug(" <---- ADD CommitMessage FROM " + sendersName + " " + a_msg);
         return true;
     }
 
@@ -321,7 +349,7 @@ public class ConsensusLogEchoMulticast implements IConsensusLog
         // Duplicate Check
         if (this.m_commitMessagesHashTable.containsKey(a_msg.getHashKey()))
         {
-            log("addCommitMessage(): Duplicate :: " + a_msg);
+            debug("addCommitMessage(): Duplicate :: " + a_msg);
             return false;
         }
         // check whether all EchoMessages are unique and guilty
@@ -344,7 +372,7 @@ public class ConsensusLogEchoMulticast implements IConsensusLog
         // Check whether the amount of EchoMessages holds the crtitical amount
         if (a_msg.getEchoMessages().size() < this.m_criticalMasses)
         {
-            log("addCommitMessage(): CriticalMass (" + this.m_criticalMasses
+            debug("addCommitMessage(): CriticalMass (" + this.m_criticalMasses
                     + ") can't be achieved by " + a_msg.getEchoMessages().size()
                     + " EchoMessages:: \n" + a_msg);
             return false;
@@ -365,8 +393,8 @@ public class ConsensusLogEchoMulticast implements IConsensusLog
             return;
 
         this.m_rejectMessagesHashTable.put(a_msg.getHashKey(), a_msg);
-
-        log(" <---- ADD RejectMessage FROM " + a_msg.getSenderId() + " " + a_msg);
+        String sendersName = GiveThingsAName.getNameForNumber(a_msg.getSenderId());
+        debug(" <---- ADD RejectMessage FROM " + sendersName + " " + a_msg);
     }
 
     /**
@@ -385,7 +413,7 @@ public class ConsensusLogEchoMulticast implements IConsensusLog
         // Duplicate Check
         if (this.m_rejectMessagesHashTable.containsKey(a_msg.getHashKey()))
         {
-            log("addRejectMessage(): Duplicate :: " + a_msg);
+            debug("addRejectMessage(): Duplicate :: " + a_msg);
             return false;
         }
 
@@ -424,7 +452,7 @@ public class ConsensusLogEchoMulticast implements IConsensusLog
             if (count >= this.m_criticalMasses)
             {
                 this.m_lastCommonRandom = prop;
-                log(" ----> RESET lastCommonRandom TO " + m_lastCommonRandom);
+                debug(" ----> RESET lastCommonRandom TO " + m_lastCommonRandom);
                 return;
             }
         }
@@ -458,13 +486,15 @@ public class ConsensusLogEchoMulticast implements IConsensusLog
      */
     public CommitMessage tryToCreateACommitMessage()
     {
-
+        debug("tryToCreateACommitMessage() Got " + this.getEchoMessageCount() + " Need "
+                + m_criticalMasses);
         CommitMessage commit = null;
         if (this.getEchoMessageCount() >= m_criticalMasses)
         {
             InitMessage mesg = this.getInitMessages();
             if (mesg == null)
             {
+                debug("UHHHHHH MY INIT MESSAGE IS NULL!!");
                 return null;
             }
             commit = new CommitMessage(this.getInitMessages(), this.m_handler.getInfoService()
@@ -536,19 +566,7 @@ public class ConsensusLogEchoMulticast implements IConsensusLog
      */
     public void stopTimeout()
     {
-        this.timeoutThread.setStopped(true);
-    }
-
-    /**
-     * On creating a consensuslog a timer will be set. If the timer expired, the
-     * log entry will be closed and all stored data will be evaluated.
-     */
-    public synchronized void notifyTimeout()
-    {
-        this.m_timedOut = true;
-        this.m_handler.notifyConsensusLogTimeout(this);
-
-        log(" TIMEOUT " + this.m_initMessage);
+        this.timeoutThread.cancel();
     }
 
     /**
@@ -627,18 +645,20 @@ public class ConsensusLogEchoMulticast implements IConsensusLog
 
     }
 
-    /**
-     * Logs out on file.
-     * 
-     * @param a_message
-     *            The message to log.
-     */
-    private void log(String a_message)
+    private void debug(String a_message)
     {
-        LogHolder.log(LogLevel.DEBUG, LogType.NET, this.m_handler.getInfoService().getIdentifier()
-                + a_message);
-        if (this.m_logger != null)
-            this.m_logger.writeOut(this.m_handler.getInfoService().getIdentifier() + a_message);
+        this.m_logger.debug(a_message);
     }
 
+    /**
+     * On creating a consensuslog a timer will be set. If the timer expired, the
+     * log entry will be closed and all stored data will be evaluated.
+     */
+    public void timeout(Object a_value)
+    {
+        this.m_timedOut = true;
+        this.m_handler.notifyConsensusLogTimeout(this);
+
+        debug(" TIMEOUT " + this.m_initMessage);
+    }
 }

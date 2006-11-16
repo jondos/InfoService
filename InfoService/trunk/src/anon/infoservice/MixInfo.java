@@ -29,6 +29,8 @@ package anon.infoservice;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
 import anon.crypto.CertPath;
 import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
@@ -40,6 +42,7 @@ import logging.LogLevel;
 import logging.LogType;
 import anon.crypto.IVerifyable;
 import java.util.Date;
+import java.util.Vector;
 
 /**
  * Holds the information of one single mix.
@@ -501,6 +504,21 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
   {
       return m_type;
   }
+  
+  /**
+   * LERNGRUPPE
+   * Returns the type of this mix
+   * @return The type as  string
+   */
+  public String getTypeAsString()
+  {
+      switch(m_type) {
+      case 0: return "First Mix";
+      case 1: return "Middle Mix";
+      case 2: return "Last Mix";
+      default: return "Unknown type!";
+      }
+  }
 
   /**
    * LERNGRUPPE
@@ -513,5 +531,70 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
   {
     return m_dynamic;
   }
+  
+  
+ /**
+  * LERNGRUPPE
+  * Extracts the host name from  first listenerinterface.
+  * @return host
+  * @throws Exception 
+  */
+  public String getFirstHostName() throws Exception {
+
+	  String result = "";
+	  Element mix = this.getXmlStructure();
+      NodeList listenerInterfacesNodes = mix.getElementsByTagName("ListenerInterfaces");
+      if (listenerInterfacesNodes.getLength() == 0)
+      {
+          throw (new Exception("Mix has no ListenerInterfaces in its XML structure."));
+      }
+      Element listenerInterfacesNode = (Element) (listenerInterfacesNodes.item(0));
+      NodeList listenerInterfaceNodes = listenerInterfacesNode
+              .getElementsByTagName("ListenerInterface");
+      if (listenerInterfaceNodes.getLength() == 0)
+      {
+          throw (new Exception("First Mix has no ListenerInterfaces in its XML structure."));
+      }
+
+      for (int i = 0; i < listenerInterfaceNodes.getLength(); i++)
+      {
+          Element listenerInterfaceNode = (Element) (listenerInterfaceNodes.item(i));
+          result =   new ListenerInterface(listenerInterfaceNode).getHost();
+          break;
+      }
+      return result;
+  }
+  
+  /**
+   * LERNGRUPPE
+   * Extracts the port from  first listenerinterface.
+   * @return host
+   * @throws Exception 
+   */
+   public int getFirstPort() throws Exception {
+
+ 	  int result = -1;
+ 	  Element mix = this.getXmlStructure();
+       NodeList listenerInterfacesNodes = mix.getElementsByTagName("ListenerInterfaces");
+       if (listenerInterfacesNodes.getLength() == 0)
+       {
+           throw (new Exception("Mix has no ListenerInterfaces in its XML structure."));
+       }
+       Element listenerInterfacesNode = (Element) (listenerInterfacesNodes.item(0));
+       NodeList listenerInterfaceNodes = listenerInterfacesNode
+               .getElementsByTagName("ListenerInterface");
+       if (listenerInterfaceNodes.getLength() == 0)
+       {
+           throw (new Exception("First Mix has no ListenerInterfaces in its XML structure."));
+       }
+
+       for (int i = 0; i < listenerInterfaceNodes.getLength(); i++)
+       {
+           Element listenerInterfaceNode = (Element) (listenerInterfaceNodes.item(i));
+           result =   new ListenerInterface(listenerInterfaceNode).getPort();
+           break;
+       }
+       return result;
+   }
 
 }

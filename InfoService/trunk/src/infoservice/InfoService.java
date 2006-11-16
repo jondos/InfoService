@@ -27,6 +27,8 @@
  */
 package infoservice;
 
+import infoservice.dynamic.DynamicConfiguration;
+
 import java.io.FileInputStream;
 import java.util.Enumeration;
 import java.util.Properties;
@@ -146,6 +148,17 @@ public class InfoService
 			System.exit(1);
 		}
 		new Configuration(properties);
+        
+        Properties dynamicProperties = new Properties();
+        try
+        {
+            dynamicProperties.load(new FileInputStream(Constants.DYNAMIC_CONFIGURATION_FILENAME));
+        }
+        catch (Exception a_e)
+        {
+            LogHolder.log(LogLevel.WARNING, LogType.ALL, "Error reading dynamic configuration, using default!");
+        }
+        DynamicConfiguration.getInstance().readConfiguration(dynamicProperties);
 		m_connectionCounter = 0;
 	}
 

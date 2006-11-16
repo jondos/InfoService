@@ -27,16 +27,12 @@
  */
 package infoservice.dynamic;
 
-import java.util.Date;
-import java.util.Enumeration;
 import java.util.Random;
 import java.util.Vector;
 
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.infoservice.Constants;
-import anon.infoservice.MixCascade;
 
 /**
  * This is an implementation of a <code>IDynamicCascadeBuildingStrategy</code>.
@@ -85,7 +81,8 @@ public class ComleteRandomStrategy extends ADynamicCascadeBuildingStrategy
             throw new Exception("Invalid parameters");
 
         // Are there enough Mixes available? If not -> return null.
-        if (firstAndMiddleMixes.size() < Constants.MAX_CASCADE_LENGTH - 1 || lastMixes.size() == 0)
+        if (firstAndMiddleMixes.size() < DynamicConfiguration.getInstance().getMaxCascadeLength() - 1
+                || lastMixes.size() == 0)
             throw new Exception("Not enough mixes to build cascades");
 
         /*
@@ -115,9 +112,9 @@ public class ComleteRandomStrategy extends ADynamicCascadeBuildingStrategy
         LogHolder.log(LogLevel.DEBUG, LogType.ALL, "Count of middle and lfirst mixes: "
                 + numberOfFirstAndMiddleMixes);
         LogHolder.log(LogLevel.DEBUG, LogType.ALL, "Upper bound for length: "
-                + Constants.MAX_CASCADE_LENGTH);
+                + DynamicConfiguration.getInstance().getMaxCascadeLength());
         LogHolder.log(LogLevel.DEBUG, LogType.ALL, "Lower bound for length: "
-                + Constants.MIN_CASCADE_LENGTH);
+                + DynamicConfiguration.getInstance().getMinCascadeLength());
 
         while (thereAreEnoughMixesAvailable)
         {
@@ -125,28 +122,36 @@ public class ComleteRandomStrategy extends ADynamicCascadeBuildingStrategy
             for (int i = 0; i < ratioFirstQuantity; i++)
             {
                 if (numberOfLastMixes - 1 >= 0
-                        && numberOfFirstAndMiddleMixes - Constants.MAX_CASCADE_LENGTH + 1 >= 0)
+                        && numberOfFirstAndMiddleMixes
+                                - DynamicConfiguration.getInstance().getMaxCascadeLength() + 1 >= 0)
                 {
                     numberOfLastMixes--;
-                    numberOfFirstAndMiddleMixes -= Constants.MAX_CASCADE_LENGTH - 1;
+                    numberOfFirstAndMiddleMixes -= DynamicConfiguration.getInstance()
+                            .getMaxCascadeLength() - 1;
                     amountOfQuantityOne++;
-                } else
+                }
+                else
                 {
                     thereAreEnoughMixesAvailable = false;
                     break;
                 }
             }
             // //At second the Cascades which are reduced by one mix
-            if (Constants.MAX_CASCADE_LENGTH - 1 >= Constants.MIN_CASCADE_LENGTH)
+            if (DynamicConfiguration.getInstance().getMaxCascadeLength() - 1 >= DynamicConfiguration
+                    .getInstance().getMinCascadeLength())
                 for (int i = 0; i < ratioSecondQuantity; i++)
                 {
-                    if (thereAreEnoughMixesAvailable && numberOfLastMixes - 1 >= 0
-                            && numberOfFirstAndMiddleMixes - Constants.MAX_CASCADE_LENGTH + 2 >= 0)
+                    if (thereAreEnoughMixesAvailable
+                            && numberOfLastMixes - 1 >= 0
+                            && numberOfFirstAndMiddleMixes
+                                    - DynamicConfiguration.getInstance().getMaxCascadeLength() + 2 >= 0)
                     {
                         numberOfLastMixes--;
-                        numberOfFirstAndMiddleMixes -= Constants.MAX_CASCADE_LENGTH - 2;
+                        numberOfFirstAndMiddleMixes -= DynamicConfiguration.getInstance()
+                                .getMaxCascadeLength() - 2;
                         amountOfQuantityTwo++;
-                    } else
+                    }
+                    else
                     {
                         thereAreEnoughMixesAvailable = false;
                         break;
@@ -154,16 +159,21 @@ public class ComleteRandomStrategy extends ADynamicCascadeBuildingStrategy
                 }
 
             // At third the Cascades which are reduced by two mixes
-            if (Constants.MAX_CASCADE_LENGTH - 2 >= Constants.MIN_CASCADE_LENGTH)
+            if (DynamicConfiguration.getInstance().getMaxCascadeLength() - 2 >= DynamicConfiguration
+                    .getInstance().getMinCascadeLength())
                 for (int i = 0; i < ratioThirdQuantity; i++)
                 {
-                    if (thereAreEnoughMixesAvailable && numberOfLastMixes - 1 >= 0
-                            && numberOfFirstAndMiddleMixes - Constants.MAX_CASCADE_LENGTH + 3 >= 0)
+                    if (thereAreEnoughMixesAvailable
+                            && numberOfLastMixes - 1 >= 0
+                            && numberOfFirstAndMiddleMixes
+                                    - DynamicConfiguration.getInstance().getMaxCascadeLength() + 3 >= 0)
                     {
                         numberOfLastMixes--;
-                        numberOfFirstAndMiddleMixes -= Constants.MAX_CASCADE_LENGTH - 3;
+                        numberOfFirstAndMiddleMixes -= DynamicConfiguration.getInstance()
+                                .getMaxCascadeLength() - 3;
                         amountOfQuantityThree++;
-                    } else
+                    }
+                    else
                     {
                         thereAreEnoughMixesAvailable = false;
                         break;
@@ -181,8 +191,8 @@ public class ComleteRandomStrategy extends ADynamicCascadeBuildingStrategy
 
         for (int i = 0; i < amountOfQuantityOne; i++)
         {
-            Vector cascArr = new Vector(Constants.MAX_CASCADE_LENGTH);
-            for (int j = 1; j < Constants.MAX_CASCADE_LENGTH; j++)
+            Vector cascArr = new Vector(DynamicConfiguration.getInstance().getMaxCascadeLength());
+            for (int j = 1; j < DynamicConfiguration.getInstance().getMaxCascadeLength(); j++)
             {
                 cascArr.addElement(firstAndMiddleMixes.get(firstAndMiddleMixesIndex));
                 firstAndMiddleMixesIndex++;
@@ -194,8 +204,9 @@ public class ComleteRandomStrategy extends ADynamicCascadeBuildingStrategy
 
         for (int i = 0; i < amountOfQuantityTwo; i++)
         {
-            Vector cascArr = new Vector(Constants.MAX_CASCADE_LENGTH - 1);
-            for (int j = 1; j < Constants.MAX_CASCADE_LENGTH - 1; j++)
+            Vector cascArr = new Vector(
+                    DynamicConfiguration.getInstance().getMaxCascadeLength() - 1);
+            for (int j = 1; j < DynamicConfiguration.getInstance().getMaxCascadeLength() - 1; j++)
             {
                 cascArr.addElement(firstAndMiddleMixes.get(firstAndMiddleMixesIndex));
                 firstAndMiddleMixesIndex++;
@@ -208,8 +219,9 @@ public class ComleteRandomStrategy extends ADynamicCascadeBuildingStrategy
         for (int i = 0; i < amountOfQuantityThree; i++)
         {
             // wire it
-            Vector cascArr = new Vector(Constants.MAX_CASCADE_LENGTH - 2);
-            for (int j = 1; j < Constants.MAX_CASCADE_LENGTH - 2; j++)
+            Vector cascArr = new Vector(
+                    DynamicConfiguration.getInstance().getMaxCascadeLength() - 2);
+            for (int j = 1; j < DynamicConfiguration.getInstance().getMaxCascadeLength() - 2; j++)
             {
                 cascArr.addElement(firstAndMiddleMixes.get(firstAndMiddleMixesIndex));
                 firstAndMiddleMixesIndex++;
@@ -220,19 +232,25 @@ public class ComleteRandomStrategy extends ADynamicCascadeBuildingStrategy
         }
 
         LogHolder.log(LogLevel.INFO, LogType.ALL, "Cascades of length "
-                + Constants.MAX_CASCADE_LENGTH + " : " + amountOfQuantityOne);
+                + DynamicConfiguration.getInstance().getMaxCascadeLength() + " : "
+                + amountOfQuantityOne);
         LogHolder.log(LogLevel.INFO, LogType.ALL, "Cascades of length "
-                + (Constants.MAX_CASCADE_LENGTH - 1) + " : " + amountOfQuantityTwo);
+                + (DynamicConfiguration.getInstance().getMaxCascadeLength() - 1) + " : "
+                + amountOfQuantityTwo);
         LogHolder.log(LogLevel.INFO, LogType.ALL, "Cascades of length "
-                + (Constants.MAX_CASCADE_LENGTH - 2) + " : " + amountOfQuantityThree);
+                + (DynamicConfiguration.getInstance().getMaxCascadeLength() - 2) + " : "
+                + amountOfQuantityThree);
         LogHolder.log(LogLevel.INFO, LogType.ALL, "Remaining last mixes:             "
                 + numberOfLastMixes);
         LogHolder.log(LogLevel.INFO, LogType.ALL, "Remaining middle and first: "
                 + numberOfFirstAndMiddleMixes);
 
-        // TODO Build cascades of length one for the remaining mixes
-        // The mix will known that this means there is no new cascade for it but
-        // its old one has been terminated. This could be done more explicitly
+        /**
+         * @todo Build cascades of length one for the remaining mixes The mix
+         *       will known that this means there is no new cascade for it but
+         *       its old one has been terminated. This could be done more
+         *       explicitly
+         */
         for (; firstAndMiddleMixesIndex < firstAndMiddleMixes.size(); firstAndMiddleMixesIndex++)
         {
             Vector cascArr = new Vector();
@@ -247,21 +265,24 @@ public class ComleteRandomStrategy extends ADynamicCascadeBuildingStrategy
             result.add(buildCascade(cascArr));
         }
 
-//        Enumeration k = result.elements();
-//        System.err.println(new Date().toLocaleString() + " - BUILD " + result.size() + " CASCADES USING " + seedForRandomGenerator +":");
-//        while(k.hasMoreElements())
-//        {
-//            MixCascade c = (MixCascade) k.nextElement();
-//            System.err.println("CASCADE: " + c.getId() + " HAS " + c.getMixIds().size());
-//            Enumeration h = c.getMixIds().elements();
-//            int v = 1;
-//            while(h.hasMoreElements()) {
-//                System.err.println(v + ": " + h.nextElement().toString());
-//                v++;
-//            }
-//            System.err.println("----------------------------------------------");
-//        }
-//        System.err.println    ("##############################################");
+        // Enumeration k = result.elements();
+        // System.err.println(new Date().toLocaleString() + " - BUILD " +
+        // result.size() + " CASCADES USING " + seedForRandomGenerator +":");
+        // while(k.hasMoreElements())
+        // {
+        // MixCascade c = (MixCascade) k.nextElement();
+        // System.err.println("CASCADE: " + c.getId() + " HAS " +
+        // c.getMixIds().size());
+        // Enumeration h = c.getMixIds().elements();
+        // int v = 1;
+        // while(h.hasMoreElements()) {
+        // System.err.println(v + ": " + h.nextElement().toString());
+        // v++;
+        // }
+        // System.err.println("----------------------------------------------");
+        // }
+        // System.err.println
+        // ("##############################################");
         return result;
     }
 

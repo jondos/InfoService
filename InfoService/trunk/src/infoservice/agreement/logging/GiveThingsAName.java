@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2005, The JAP-Team
+ Copyright (c) 2000 - 2006, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -25,46 +25,37 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package infoservice.agreement.multicast.messages;
 
-import infoservice.agreement.multicast.AgreementMessageTypes;
+package infoservice.agreement.logging;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-
-import anon.util.XMLUtil;
-
-public class EchoMessage extends AMessage
+/**
+ * 
+ * @author LERNGRUPPE
+ * 
+ * This is a helper class. For testing and debugging purposes we need a human
+ * readable identificator.
+ * 
+ */
+public class GiveThingsAName
 {
 
+    // private static String[] names =
+    // { "Peter ", "Klara ", "Inge ", "Hans ", "Otto ", "Claudi", "Ingo ",
+    // "Lumich", "Beate ",
+    // "Chris ", "Leo ", "Bert ", "Paul ", "Heide " };
+
     /**
-     * Creates an <code>EchoMessage</code>. It is used as a reply to a
-     * received <code>InitMessage</code>
+     * Gets a name as match for a given number. This is maybe not absolute
+     * correct (modulo-matching) but helpful.
      * 
-     * @param a_msg
-     *            The <code>InitMessage</code> to be echoed
-     * @param a_senderId
-     *            The id of the echoing InfoService
-     * @param m_lastCommonRandom
+     * @param s
+     * @return
      */
-    public EchoMessage(InitMessage a_msg, String a_senderId)
+    public static String getNameForNumber(String s)
     {
-        super(a_msg.getConsensusId(), AgreementMessageTypes.MESSAGE_TYPE_ECHO, a_msg
-                .getInitiatorsId(), a_msg.getProposal(), a_msg.getLastCommonRandom());
-        this.m_initiatorsId = a_msg.getInitiatorsId();
-        this.m_senderId = a_senderId;
+        // int i = Math.abs(s.hashCode());
+        // return names[i % names.length];
+        return s.substring(0, 4);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see infoservice.agreement.multicast.messages.AMessage#appendCustomNodes(org.w3c.dom.Document,
-     *      org.w3c.dom.Node)
-     */
-    protected void appendCustomNodes(Document a_doc, Node a_rootElem)
-    {
-        Node tmp = a_doc.createElement("SenderId");
-        XMLUtil.setValue(tmp, this.m_senderId);
-        a_rootElem.appendChild(tmp);
-    }
 }
