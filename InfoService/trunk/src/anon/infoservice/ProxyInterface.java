@@ -318,6 +318,9 @@ public final class ProxyInterface extends ListenerInterface
 		if (m_authenticationPassword == null || m_authenticationPassword.length() == 0)
 		{
 			m_authenticationPassword = m_passwordReader.readPassword(this);
+			/*
+			if (m_authenticationPassword == null)
+			System.out.println("set and null");*/
 		}
 		if (m_authenticationPassword == null)
 		{
@@ -330,6 +333,9 @@ public final class ProxyInterface extends ListenerInterface
 
 	public void clearAuthenticationPassword()
 	{
+		/*
+		new Exception().printStackTrace();
+		System.out.println("clear: " + m_authenticationPassword);*/
 		m_authenticationPassword = null;
 	}
 
@@ -358,6 +364,8 @@ public final class ProxyInterface extends ListenerInterface
 				m_authenticationUserID = a_authenticationUserID;
 				// reset the password
 				m_authenticationPassword = null;
+			/*	new Exception().printStackTrace();
+				System.out.println("reset");*/
 				if (isAuthenticationUsed() && isValid())
 				{
 					getAuthenticationPassword();
@@ -470,10 +478,11 @@ public final class ProxyInterface extends ListenerInterface
 		super.setUseInterface(a_bUseInterface);
 		m_bUseInterface = a_bUseInterface;
 
-		if (isValid() && isAuthenticationUsed())
+		if (isValid() && isAuthenticationUsed() &&
+			m_passwordReader != null && m_authenticationPassword == null)
 		{
 			// read the password, if it is not done before
-			//getAuthenticationPassword();
+			getAuthenticationPassword();
 		}
 	}
 }
