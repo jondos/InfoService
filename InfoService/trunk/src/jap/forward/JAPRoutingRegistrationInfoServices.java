@@ -532,7 +532,7 @@ public class JAPRoutingRegistrationInfoServices extends Observable implements Ob
 				Element infoServiceNode = (Element) (infoServiceNodes.item(i));
 				try
 				{
-					InfoServiceDBEntry currentInfoService = new InfoServiceDBEntry(infoServiceNode);
+					InfoServiceDBEntry currentInfoService = new InfoServiceDBEntry(infoServiceNode, true);
 					/* try to get an updated version of the InfoService from the database of all InfoServices */
 					InfoServiceDBEntry updatedInfoService = (InfoServiceDBEntry) (Database.getInstance(
 						InfoServiceDBEntry.class).getEntryById(currentInfoService.getId()));

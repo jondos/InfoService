@@ -48,6 +48,12 @@ public abstract class AbstractDistributableCertifiedDatabaseEntry extends Abstra
 	public abstract JAPCertificate getCertificate();
 
 	/**
+	 * Returns if this entry has been verified with a certificate chain.
+	 * @return if this entry has been verified with a certificate chain
+	 */
+	public abstract boolean isVerified();
+
+	/**
 	 * Checks if the ID is valid.
 	 * @return boolean
 	 */
