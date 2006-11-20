@@ -59,6 +59,7 @@ import logging.LogLevel;
 import logging.LogType;
 import java.util.Date;
 import anon.crypto.IVerifyable;
+import anon.util.ClassUtil;
 
 
 /**
@@ -973,50 +974,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 	 */
 	public Hashtable getMixCascades() throws Exception
 	{
-		Document doc =
-			getXmlDocument(HttpRequestStructure.createGetRequest("/cascades"),
-						   HTTPConnectionFactory.HTTP_ENCODING_ZLIB);
-
-		if (!SignatureVerifier.getInstance().verifyXml(doc,
-			SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE))
-		{
-			// signature could not be verified
-			throw new SignatureException("Document could not be verified!");
-		}
-
-		NodeList mixCascadesNodes = doc.getElementsByTagName(MixCascade.XML_ELEMENT_CONTAINER_NAME);
-		if (mixCascadesNodes.getLength() == 0)
-		{
-			throw (new XMLParseException(MixCascade.XML_ELEMENT_CONTAINER_NAME, "Node missing!"));
-		}
-		Element mixCascadesNode = (Element) (mixCascadesNodes.item(0));
-		NodeList mixCascadeNodes = mixCascadesNode.getElementsByTagName(MixCascade.XML_ELEMENT_NAME);
-		Hashtable mixCascades = new Hashtable();
-		MixCascade currentCascade;
-
-
-		for (int i = 0; i < mixCascadeNodes.getLength(); i++)
-		{
-			Element mixCascadeNode = (Element) (mixCascadeNodes.item(i));
-			/* signature is valid */
-			try
-			{
-				currentCascade = new MixCascade(mixCascadeNode, Long.MAX_VALUE);
-				mixCascades.put(currentCascade.getId(), currentCascade);
-				if (!currentCascade.isVerified())
-				{
-					LogHolder.log(LogLevel.INFO, LogType.MISC,
-								  "Cannot verify the signature for MixCascade entry: " +
-								  XMLUtil.toString(mixCascadeNode));
-				}
-			}
-			catch (Exception e)
-			{
-				/* an error while parsing the node occured -> we don't use this mixcascade */
-				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Error in MixCascade XML node.");
-			}
-		}
-		return mixCascades;
+		return getMixCascades(true);
 	}
 
 	/**
@@ -1062,40 +1020,70 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		return new PaymentInstanceDBEntry(paymentInstance);
 	}
 
-	/**
-	 * Get a Vector of all infoservices the infoservice knows. If we can't get a connection with
-	 * the infoservice, an Exception is thrown.
-	 *
-	 * @return The Vector of all infoservices.
-	 */
-	public Hashtable getInfoServices() throws Exception
+	private static class EntryGetter
 	{
+		String m_postFile;
+		Class m_dbEntryClass;
+		boolean m_bJAPContext;
+	}
 
-		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/infoservices"));
+	private Hashtable getEntries(EntryGetter a_getter) throws Exception
+	{
+		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest(a_getter.m_postFile),
+									  HTTPConnectionFactory.HTTP_ENCODING_ZLIB);
 
-		if (!SignatureVerifier.getInstance().verifyXml(doc,
-			SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE))
+
+		if (!SignatureVerifier.getInstance().verifyXml(doc, SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE))
 		{
-				// signature could not be verified
-				throw new SignatureException("Document could not be verified!");
+			// signature could not be verified
+			throw new SignatureException("Document could not be verified!");
 		}
 
-		NodeList infoServicesNodes = doc.getElementsByTagName(XML_ELEMENT_CONTAINER_NAME);
+		NodeList infoServicesNodes =
+			doc.getElementsByTagName(XMLUtil.getXmlElementContainerName(a_getter.m_dbEntryClass));
 		if (infoServicesNodes.getLength() == 0)
 		{
-			throw (new Exception("Error in XML structure."));
+			throw (new XMLParseException(XMLUtil.getXmlElementContainerName(a_getter.m_dbEntryClass),
+										 "Error in XML structure."));
 		}
 		Element infoServicesNode = (Element) (infoServicesNodes.item(0));
-		NodeList infoServiceNodes = infoServicesNode.getElementsByTagName(XML_ELEMENT_NAME);
+		NodeList infoServiceNodes =
+			infoServicesNode.getElementsByTagName(XMLUtil.getXmlElementName(a_getter.m_dbEntryClass));
 		Hashtable infoServices = new Hashtable();
-		InfoServiceDBEntry currentEntry;
+		AbstractDistributableCertifiedDatabaseEntry currentEntry;
 
 		for (int i = 0; i < infoServiceNodes.getLength(); i++)
 		{
 			Element infoServiceNode = (Element) (infoServiceNodes.item(i));
 			try
 			{
-				currentEntry = new InfoServiceDBEntry(infoServiceNode);
+				if (a_getter.m_dbEntryClass == InfoServiceDBEntry.class)
+				{
+					currentEntry = new InfoServiceDBEntry(infoServiceNode, a_getter.m_bJAPContext);
+				}
+				else if (a_getter.m_dbEntryClass == MixCascade.class)
+				{
+					if (a_getter.m_bJAPContext)
+					{
+						currentEntry = new MixCascade(infoServiceNode, Long.MAX_VALUE);
+					}
+					else
+					{
+						currentEntry = new MixCascade(infoServiceNode);
+					}
+				}
+				else
+				{
+					if (a_getter.m_bJAPContext)
+					{
+						currentEntry = new MixInfo(infoServiceNode, Long.MAX_VALUE, false);
+					}
+					else
+					{
+						currentEntry = new MixInfo(infoServiceNode);
+					}
+				}
+
 
 				if (currentEntry.isVerified())
 				{
@@ -1104,17 +1092,58 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 				else
 				{
 					LogHolder.log(LogLevel.ERR, LogType.MISC,
-								  "Cannot verify the signature for InfoService entry: " +
+								  "Cannot verify the signature for " +
+								  ClassUtil.getShortClassName(a_getter.m_dbEntryClass) + " entry: " +
 								  XMLUtil.toString(infoServiceNode));
 				}
 			}
 			catch (Exception e)
 			{
-				/* an error while parsing the node occured -> we don't use this infoservice */
-				LogHolder.log(LogLevel.ERR, LogType.MISC, "Error in InfoService XML node:" + e.toString());
+				/* an error while parsing the node occured -> we don't use this db entry */
+				LogHolder.log(LogLevel.ERR, LogType.MISC, "Error in " +
+							  ClassUtil.getShortClassName(a_getter.m_dbEntryClass) +
+							  " XML node:" + e.toString());
 			}
 		}
 		return infoServices;
+	}
+
+	public Hashtable getInfoServices(boolean a_bJAPClientContext) throws Exception
+	{
+		EntryGetter getter = new EntryGetter();
+		getter.m_bJAPContext = a_bJAPClientContext;
+		getter.m_dbEntryClass = InfoServiceDBEntry.class;
+		getter.m_postFile = "/infoservices";
+		return getEntries(getter);
+	}
+
+	public Hashtable getMixCascades(boolean a_bJAPClientContext) throws Exception
+	{
+		EntryGetter getter = new EntryGetter();
+		getter.m_bJAPContext = a_bJAPClientContext;
+		getter.m_dbEntryClass = MixCascade.class;
+		getter.m_postFile = "/cascades";
+		return getEntries(getter);
+	}
+
+	public Hashtable getMixes(boolean a_bJAPClientContext) throws Exception
+	{
+		EntryGetter getter = new EntryGetter();
+		getter.m_bJAPContext = a_bJAPClientContext;
+		getter.m_dbEntryClass = MixInfo.class;
+		getter.m_postFile = "/mixes";
+		return getEntries(getter);
+	}
+
+	/**
+	 * Get a Vector of all infoservices the infoservice knows. If we can't get a connection with
+	 * the infoservice, an Exception is thrown.
+	 *
+	 * @return The Vector of all infoservices.
+	 */
+	public Hashtable getInfoServices() throws Exception
+	{
+		return getInfoServices(true);
 	}
 
 
