@@ -319,7 +319,8 @@ public class InfoServiceDistributor implements IDistributor {
     {
       InfoServiceDBEntry currentInfoService = (InfoServiceDBEntry) (enumer.nextElement());
 
-      if (currentInfoService.isNeighbour() && !targets.contains(currentInfoService))
+      if (currentInfoService.isNeighbour() && !targets.contains(currentInfoService) &&
+		  !Configuration.getInstance().getID().equals(currentInfoService.getId()))
       {
         /* if currentInfoService is a neighbour of our one, put it in the target list */
         targets.addElement(currentInfoService);
