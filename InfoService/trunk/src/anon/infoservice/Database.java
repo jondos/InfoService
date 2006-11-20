@@ -269,16 +269,33 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 	}
 
 	/**
+		 * Updates an entry in the database. If the entry is an unknown or if it is newer then the
+		 * one stored in the database for this service, the new entry is stored in the database and
+		 * forwarded to all neighbour infoservices.
+		 *
+		 * @param newEntry The database entry to update.
+		 * @exception IllegalArgumentException if the database entry is not of the type the Database
+		 * can store
+		 * @return if the database has been changed
+		 */
+	public boolean update(AbstractDatabaseEntry newEntry) throws IllegalArgumentException
+	{
+		return update(newEntry, true);
+	}
+
+	/**
 	 * Updates an entry in the database. If the entry is an unknown or if it is newer then the
 	 * one stored in the database for this service, the new entry is stored in the database and
 	 * forwarded to all neighbour infoservices.
 	 *
 	 * @param newEntry The database entry to update.
+	 * @param a_bDistribute distribute to other InfoServices if distributor object is set; should be default
 	 * @exception IllegalArgumentException if the database entry is not of the type the Database
 	 * can store
 	 * @return if the database has been changed
 	 */
-	public boolean update(AbstractDatabaseEntry newEntry) throws IllegalArgumentException
+	public boolean update(AbstractDatabaseEntry newEntry, boolean a_bDistribute)
+		throws IllegalArgumentException
 	{
 		if (newEntry == null)
 		{
@@ -371,7 +388,7 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 							  " entries stored in this database. The new entry has position " +
 							  Integer.toString(i) + "/" + Integer.toString(m_timeoutList.size()) +
 							  " in the database-timeout list.");
-				if (newEntry instanceof IDistributable)
+				if (newEntry instanceof IDistributable && a_bDistribute)
 				{
 					// forward new entries
 					if (m_distributor != null)
