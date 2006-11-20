@@ -75,62 +75,70 @@ public class InfoServicePropagandist implements Runnable
   public void run()
   {
 	  // fetch all available InfoServices and MixCascades from the neighbour InfoServices
-	  Hashtable hashEntries = new Hashtable();
+	  Hashtable hashEntries;
 	  Enumeration enumNeighbours;
 	  Enumeration enumTmp;
 	  AbstractDatabaseEntry tmpEtry;
-
-	  for (int i = 0; i < 2; i++)
-	  {
-		  hashEntries.clear();
-		  enumNeighbours = Database.getInstance(InfoServiceDBEntry.class).getEntrySnapshotAsEnumeration();
-		  while (enumNeighbours.hasMoreElements())
-		  {
-			  try
-			  {
-				  if (i == 0)
-				  {
-					  enumTmp =
-						  ( (InfoServiceDBEntry) enumNeighbours.nextElement()).getInfoServices().elements();
-				  }
-				  else
-				  {
-					  enumTmp =
-						  ( (InfoServiceDBEntry) enumNeighbours.nextElement()).getMixCascades().elements();
-				  }
-			  }
-			  catch (Exception a_e)
-			  {
-				  // ignore
-				  enumTmp = new Hashtable().elements();
-			  }
-			  while (enumTmp.hasMoreElements())
-			  {
-				  tmpEtry = (AbstractDatabaseEntry) enumTmp.nextElement();
-				  hashEntries.put(tmpEtry.getId(), tmpEtry);
-			  }
-		  }
-		  enumTmp = hashEntries.elements();
-		  while (enumTmp.hasMoreElements())
-		  {
-			  if (i == 0)
-			  {
-				  Database.getInstance(InfoServiceDBEntry.class).update( (InfoServiceDBEntry)
-					  enumTmp.nextElement());
-			  }
-			  else
-			  {
-				  Database.getInstance(MixCascade.class).update( (MixCascade)
-					  enumTmp.nextElement());
-			  }
-		  }
-	  }
+	  boolean bInit = true;
 
     while (true)
     {
       Vector virtualListeners = Configuration.getInstance().getVirtualListeners();
       if (virtualListeners.size() > 0)
       {
+		  for (int i = 0; i < 2; i++)
+		  {
+			  if (i == 1 && !bInit)
+			  {
+				  // update MixCascades at startup only
+				  break;
+			  }
+
+			  hashEntries = new Hashtable();
+			  enumNeighbours = Database.getInstance(InfoServiceDBEntry.class).getEntrySnapshotAsEnumeration();
+			  while (enumNeighbours.hasMoreElements())
+			  {
+				  try
+				  {
+					  if (i == 0)
+					  {
+						  enumTmp =
+							  ( (InfoServiceDBEntry) enumNeighbours.nextElement()).getInfoServices().elements();
+					  }
+					  else
+					  {
+						  enumTmp =
+							  ( (InfoServiceDBEntry) enumNeighbours.nextElement()).getMixCascades().elements();
+					  }
+				  }
+				  catch (Exception a_e)
+				  {
+					  // ignore
+					  enumTmp = new Hashtable().elements();
+				  }
+				  while (enumTmp.hasMoreElements())
+				  {
+					  tmpEtry = (AbstractDatabaseEntry) enumTmp.nextElement();
+					  hashEntries.put(tmpEtry.getId(), tmpEtry);
+				  }
+			  }
+			  enumTmp = hashEntries.elements();
+			  while (enumTmp.hasMoreElements())
+			  {
+				  if (i == 0)
+				  {
+					  Database.getInstance(InfoServiceDBEntry.class).update( (InfoServiceDBEntry)
+						  enumTmp.nextElement(), false);
+				  }
+				  else
+				  {
+					  Database.getInstance(MixCascade.class).update( (MixCascade)
+						  enumTmp.nextElement(), false);
+				  }
+			  }
+		  }
+		  bInit = false;
+
         InfoServiceDBEntry generatedOwnEntry =
 			new InfoServiceDBEntry(Configuration.getInstance().getOwnName(),
 								   Configuration.getInstance().getID(),
