@@ -302,7 +302,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		{
 			throw new XMLParseException("LastUpdate");
 		}
-		m_serial = XMLUtil.parseAttribute(a_infoServiceNode, XML_ATTR_SERIAL, m_creationTimeStamp);
+		m_serial = XMLUtil.parseAttribute(a_infoServiceNode, XML_ATTR_SERIAL, 0L);
 
 		/* get the information, whether this infoservice keeps a list of JAP forwarders */
 		if (XMLUtil.getFirstChildByName(a_infoServiceNode, "ForwarderList") == null)

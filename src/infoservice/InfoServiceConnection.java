@@ -40,6 +40,7 @@ import anon.util.TimedOutputStream;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.io.*;
 
 /**
  * This is a simple implementation of an HTTP server. This implementation doesn't support the most
@@ -275,7 +276,8 @@ final public class InfoServiceConnection implements Runnable
 			catch (Exception e)
 			{
 				LogHolder.log(LogLevel.ERR, LogType.NET,
-				"InfoServiceConnection (" + Integer.toString(m_connectionId) +" - has an Error -",e);
+				"InfoServiceConnection (" + Integer.toString(m_connectionId) +
+				", " + m_socket.getInetAddress() + ") - has an Error -",e);
 				closeSockets();
 				return;
 			}
@@ -287,6 +289,7 @@ final public class InfoServiceConnection implements Runnable
 			{
 				LogHolder.log(LogLevel.ERR, LogType.NET,
 							  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
+							  ", " + m_socket.getInetAddress() +
 							  "): Response could not be generated: Request: " + requestMethod +
 							  " " + requestUrl);
 				response = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_NOT_FOUND);
@@ -305,7 +308,7 @@ final public class InfoServiceConnection implements Runnable
 				byte[] theResponse = response.getResponseData();
 				int index = 0;
 				int len = theResponse.length;
-				//we send the data bakch to the client in chunks of 10000 bytes in order
+				//we send the data batch to the client in chunks of 10000 bytes in order
 				//to avoid unwanted timeouts for large messages and slow connections
 				while (len > 10000)
 				{
@@ -319,46 +322,39 @@ final public class InfoServiceConnection implements Runnable
 			}
 			catch (Exception e)
 			{
-				/*LogHolder.log(LogLevel.ERR, LogType.NET,
+				LogHolder.log(LogLevel.ERR, LogType.NET,
 				  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-				  "): Error while sending the response to the client: " +
-				  m_socket.getInetAddress(), e);*/
+				  ", " + m_socket.getInetAddress() +
+				  "): Error while sending the response to the client." , e);
 			}
-
-			/* try to close everything */
-			try
-			{
-				m_inputStream.close();
-			}
-			catch (Exception e)
-			{
-				/* if we get an error here, normally there was already one -> log only for debug reasons */
-				LogHolder.log(LogLevel.DEBUG, LogType.NET,
-							  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-							  "): Error while closing input stream from client: " + e.toString());
-			}
-			try
-			{
-				m_socket.close();
-			}
-			catch (Exception e)
-			{
-				/* if we get an error here, normally there was already one -> log only for debug reasons */
-				LogHolder.log(LogLevel.DEBUG, LogType.NET,
-							  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-							  "): Error while closing connection: " + e.toString());
-			}
-			//	LogHolder.log(LogLevel.DEBUG, LogType.NET,
-			//				  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-			//				  "): Connection thread finished.");
 		}
 		catch (Throwable t)
 		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.NET, "Caught an unexpected connection error!", t);
 		}
+
+		/* try to close everything */
+		closeSockets();
 	}
 
 	private void closeSockets()
 	{
+		m_serverImplementation = null;
+		m_tmpByteArrayOut = null;
+
+		try
+		{
+			m_socket.getOutputStream().close();
+		}
+		catch (IOException a_e)
+		{
+			/* if we get an error here, normally there was already one -> log only for debug reasons */
+			LogHolder.log(LogLevel.DEBUG, LogType.NET,
+						  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
+						  ", " + m_socket.getInetAddress() +
+						  "): Error while closing output stream to client!", a_e);
+		}
+
 		try
 		{
 			m_inputStream.close();
@@ -368,8 +364,10 @@ final public class InfoServiceConnection implements Runnable
 			/* if we get an error here, normally there was already one -> log only for debug reasons */
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
 						  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-						  "): Error while closing input stream from client: " + e.toString());
+						  ", " + m_socket.getInetAddress() +
+						  "): Error while closing input stream from client!", e);
 		}
+		m_inputStream = null;
 		try
 		{
 			m_socket.close();
@@ -379,8 +377,10 @@ final public class InfoServiceConnection implements Runnable
 			/* if we get an error here, normally there was already one -> log only for debug reasons */
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
 						  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-						  "): Error while closing connection: " + e.toString());
+						  ", " + m_socket.getInetAddress() +
+						  "): Error while closing connection!", e);
 		}
+		m_socket = null;
 	}
 
 	/**
@@ -402,30 +402,41 @@ final public class InfoServiceConnection implements Runnable
 		boolean requestLineReadingDone = false;
 		while (!requestLineReadingDone)
 		{
-			int byteRead = read();
-			if (byteRead == -1)
+			try
 			{
-				return null;
-			}
-			/* check for illegal characters */
-			if ( ( (byteRead < 32) && (byteRead != 13)) || (byteRead == 127))
-			{
-				return null;
-			}
-			if (byteRead == 13)
-			{
-				byteRead = read();
-				if (byteRead != 10)
+				int byteRead = read();
+				if (byteRead == -1)
 				{
-					/* only complete <CRLF> is allowed */
 					return null;
 				}
-				/* <CRLF> found -> end of line */
-				requestLineReadingDone = true;
+				/* check for illegal characters */
+				if ( ( (byteRead < 32) && (byteRead != 13)) || (byteRead == 127))
+				{
+					return null;
+				}
+				if (byteRead == 13)
+				{
+					byteRead = read();
+					if (byteRead != 10)
+					{
+						/* only complete <CRLF> is allowed */
+						return null;
+					}
+					/* <CRLF> found -> end of line */
+					requestLineReadingDone = true;
+				}
+				else
+				{
+					m_tmpByteArrayOut.write(byteRead);
+				}
 			}
-			else
+			catch (Exception a_e)
 			{
-				m_tmpByteArrayOut.write(byteRead);
+				LogHolder.log(LogLevel.ERR, LogType.NET, "Error while reading request line. " +
+							  m_tmpByteArrayOut.size() +
+							  " bytes read: " +
+							  m_tmpByteArrayOut.toString());
+				throw a_e;
 			}
 		}
 		return m_tmpByteArrayOut.toString();

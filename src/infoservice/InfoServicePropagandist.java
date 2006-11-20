@@ -28,13 +28,16 @@
 package infoservice;
 
 import java.util.Vector;
+import java.util.Hashtable;
 import java.util.Enumeration;
 import anon.infoservice.Constants;
 import anon.infoservice.Database;
 import anon.infoservice.InfoServiceDBEntry;
+import anon.infoservice.MixCascade;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.infoservice.AbstractDatabaseEntry;
 
 /**
  * This is the implementation of the announcment of our own infoservice. It generates
@@ -71,6 +74,58 @@ public class InfoServicePropagandist implements Runnable
    */
   public void run()
   {
+	  // fetch all available InfoServices and MixCascades from the neighbour InfoServices
+	  Hashtable hashEntries = new Hashtable();
+	  Enumeration enumNeighbours;
+	  Enumeration enumTmp;
+	  AbstractDatabaseEntry tmpEtry;
+
+	  for (int i = 0; i < 2; i++)
+	  {
+		  hashEntries.clear();
+		  enumNeighbours = Database.getInstance(InfoServiceDBEntry.class).getEntrySnapshotAsEnumeration();
+		  while (enumNeighbours.hasMoreElements())
+		  {
+			  try
+			  {
+				  if (i == 0)
+				  {
+					  enumTmp =
+						  ( (InfoServiceDBEntry) enumNeighbours.nextElement()).getInfoServices().elements();
+				  }
+				  else
+				  {
+					  enumTmp =
+						  ( (InfoServiceDBEntry) enumNeighbours.nextElement()).getMixCascades().elements();
+				  }
+			  }
+			  catch (Exception a_e)
+			  {
+				  // ignore
+				  enumTmp = new Hashtable().elements();
+			  }
+			  while (enumTmp.hasMoreElements())
+			  {
+				  tmpEtry = (AbstractDatabaseEntry) enumTmp.nextElement();
+				  hashEntries.put(tmpEtry.getId(), tmpEtry);
+			  }
+		  }
+		  enumTmp = hashEntries.elements();
+		  while (enumTmp.hasMoreElements())
+		  {
+			  if (i == 0)
+			  {
+				  Database.getInstance(InfoServiceDBEntry.class).update( (InfoServiceDBEntry)
+					  enumTmp.nextElement());
+			  }
+			  else
+			  {
+				  Database.getInstance(MixCascade.class).update( (MixCascade)
+					  enumTmp.nextElement());
+			  }
+		  }
+	  }
+
     while (true)
     {
       Vector virtualListeners = Configuration.getInstance().getVirtualListeners();
@@ -98,6 +153,8 @@ public class InfoServicePropagandist implements Runnable
 				LogHolder.log(LogLevel.ALERT, LogType.MISC, entry.getName() + ":" + entry.getId() + ":" +
 							  entry.getLastUpdate() + ":" + entry.getVersionNumber());
 			}
+			// reset serial number
+			ms_serialNumber = System.currentTimeMillis();
 		}
 
         /* send it also to all initial neighbour infoservices -> they will always find us, after

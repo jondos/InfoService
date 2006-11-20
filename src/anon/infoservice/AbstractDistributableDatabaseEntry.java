@@ -37,6 +37,9 @@ import anon.crypto.IVerifyable;
 import anon.util.IXMLEncodable;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
+import logging.LogHolder;
+import logging.LogType;
+import logging.LogLevel;
 
 /**
  * This class implements common methods that may be used by distributabe database entries.
@@ -134,9 +137,13 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 			while (knownEntries.hasMoreElements())
 			{
 				currentEntry = (AbstractDistributableDatabaseEntry) knownEntries.nextElement();
+
 				if (currentEntry.getVersionNumber() <= 0)
-				{
-					continue;
+				{/*
+					LogHolder.log(LogLevel.ERR, LogType.MISC, "Invalid version number: " +
+								  currentEntry.getVersionNumber() + "\n" +
+								  XMLUtil.toString(currentEntry.getXmlStructure()));*/
+					//continue;
 				}
 				nodeASerial = a_doc.createElement(XMLUtil.getXmlElementName(m_thisDBEntryClass));
 				nodeSerials.appendChild(nodeASerial);

@@ -42,7 +42,6 @@ final class InfoServiceServer implements Runnable
 				catch (IOException ioe)
 				{
 					LogHolder.log(LogLevel.EXCEPTION, LogType.NET, "Accept-Exception: " + ioe);
-					//Hack!!! [i do not know how to get oterwise notice of "Too many open Files"]
 					if (socket != null)
 					{
 						try
@@ -53,6 +52,7 @@ final class InfoServiceServer implements Runnable
 						{
 						}
 					}
+					//Hack!!! [i do not know how to get oterwise notice of "Too many open Files"]
 					if (ioe.getMessage().equalsIgnoreCase("Too many open files"))
 					{
 						try
@@ -68,9 +68,11 @@ final class InfoServiceServer implements Runnable
 				ISRuntimeStatistics.ms_lTCPIPConnections++;
 				try
 				{
-					InfoServiceConnection doIt = new InfoServiceConnection(socket, InfoService.getConnectionCounter(),
+					InfoServiceConnection doIt = new InfoServiceConnection(socket,
+						InfoService.getConnectionCounter(),
 						m_IS.oicHandler);
 					m_IS.m_ThreadPool.addRequest(doIt);
+					doIt = null;
 				}
 				catch (Exception e2)
 				{
@@ -83,6 +85,7 @@ final class InfoServiceServer implements Runnable
 						catch (Exception ie)
 						{
 						}
+						socket = null;
 					}
 					LogHolder.log(LogLevel.EXCEPTION, LogType.THREAD, "Run-Loop-Exception: " + e2);
 				}
