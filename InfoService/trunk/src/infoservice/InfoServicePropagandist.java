@@ -27,17 +27,19 @@
  */
 package infoservice;
 
-import java.util.Vector;
-import java.util.Hashtable;
 import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Vector;
+
+import anon.infoservice.AbstractDatabaseEntry;
 import anon.infoservice.Constants;
 import anon.infoservice.Database;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.MixCascade;
+import anon.infoservice.MixInfo;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.infoservice.AbstractDatabaseEntry;
 
 /**
  * This is the implementation of the announcment of our own infoservice. It generates
@@ -86,11 +88,11 @@ public class InfoServicePropagandist implements Runnable
       Vector virtualListeners = Configuration.getInstance().getVirtualListeners();
       if (virtualListeners.size() > 0)
       {
-		  for (int i = 0; i < 2; i++)
+		  for (int i = 0; i < 3; i++)
 		  {
 			  if (i == 1 && !bInit)
 			  {
-				  // update MixCascades at startup only
+				  // update MixCascades and Mixes at startup only
 				  break;
 			  }
 
@@ -103,12 +105,20 @@ public class InfoServicePropagandist implements Runnable
 					  if (i == 0)
 					  {
 						  enumTmp =
-							  ( (InfoServiceDBEntry) enumNeighbours.nextElement()).getInfoServices().elements();
+							  ( (InfoServiceDBEntry) enumNeighbours.nextElement()).getInfoServices(
+							  false).elements();
+					  }
+					  else if (i == 1)
+					  {
+						  enumTmp =
+							  ( (InfoServiceDBEntry) enumNeighbours.nextElement()).getMixCascades(
+							  false).elements();
 					  }
 					  else
 					  {
 						  enumTmp =
-							  ( (InfoServiceDBEntry) enumNeighbours.nextElement()).getMixCascades().elements();
+							  ( (InfoServiceDBEntry) enumNeighbours.nextElement()).getMixes(
+							  false).elements();
 					  }
 				  }
 				  catch (Exception a_e)
@@ -130,9 +140,14 @@ public class InfoServicePropagandist implements Runnable
 					  Database.getInstance(InfoServiceDBEntry.class).update( (InfoServiceDBEntry)
 						  enumTmp.nextElement(), false);
 				  }
-				  else
+				  else if (i == 1)
 				  {
 					  Database.getInstance(MixCascade.class).update( (MixCascade)
+						  enumTmp.nextElement(), false);
+				  }
+				  else
+				  {
+					  Database.getInstance(MixInfo.class).update( (MixInfo)
 						  enumTmp.nextElement(), false);
 				  }
 			  }
