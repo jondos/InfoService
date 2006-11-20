@@ -86,6 +86,7 @@ final public class Constants
 	public static final int COMMUNICATION_TIMEOUT = 30000; // 30 seconds
 
 	public static final long ANNOUNCE_PERIOD = 5 * 60 * (long) (1000); // 5 minutes
+	//public static final long ANNOUNCE_PERIOD = 30 * (long) (1000); // 30 seconds
 
 	public static final long UPDATE_INFORMATION_ANNOUNCE_PERIOD = 10 * 60 * (long) (1000); // 10 minutes
 
@@ -97,7 +98,7 @@ final public class Constants
 	/**
 	 * This is the version number of the infoservice software.
 	 */
-	public static final String INFOSERVICE_VERSION = "IS.07.059"; //never change the layout of this line!
+	public static final String INFOSERVICE_VERSION = "IS.07.060"; //never change the layout of this line!
 
     public static final String DYNAMIC_CONFIGURATION_FILENAME = "dynamic.properties";
 

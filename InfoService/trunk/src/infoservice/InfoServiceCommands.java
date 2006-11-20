@@ -221,32 +221,21 @@ final public class InfoServiceCommands implements JWSInternalCommands
 							infoServicesNode);
 						doc.appendChild(infoServicesNode);
 
-						/* send the XML document to the client */
-						if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
-						{
-							httpResponse = new HttpResponseStructure(
-								HttpResponseStructure.HTTP_TYPE_TEXT_XML,
-								HttpResponseStructure.HTTP_ENCODING_ZLIB,
-								ZLibTools.compress(XMLUtil.toByteArray(doc)));
-						}
-						else
-						{
-							httpResponse = new HttpResponseStructure(doc);
-						}
-						if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
+						//if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
 						{
 							m_cachedInfoserviceserialsCompressedResponse = new HttpResponseStructure(
 								HttpResponseStructure.HTTP_TYPE_TEXT_XML,
 								HttpResponseStructure.HTTP_ENCODING_ZLIB,
 								ZLibTools.compress(XMLUtil.toByteArray(doc)));
 						}
-						else
+						//else
 						{
 							m_cachedInfoserviceserialsResponse = new HttpResponseStructure(doc);
 						}
 						m_lastInfoserviceserialsUpdate = System.currentTimeMillis();
 					}
 				}
+				/* send the XML document to the client */
 				if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
 				{
 					httpResponse = m_cachedInfoserviceserialsCompressedResponse;
@@ -278,14 +267,14 @@ final public class InfoServiceCommands implements JWSInternalCommands
 							infoServicesNode);
 						doc.appendChild(infoServicesNode);
 
-						if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
+						//if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
 						{
 							m_cachedInfoservicesCompressedResponse = new HttpResponseStructure(
 								HttpResponseStructure.HTTP_TYPE_TEXT_XML,
 								HttpResponseStructure.HTTP_ENCODING_ZLIB,
 								ZLibTools.compress(XMLUtil.toByteArray(doc)));
 						}
-						else
+						//else
 						{
 							m_cachedInfoservicesResponse = new HttpResponseStructure(doc);
 						}
@@ -457,22 +446,22 @@ final public class InfoServiceCommands implements JWSInternalCommands
 						SignatureCreator.getInstance().signXml(SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE,
 							mixCascadesNode);
 						doc.appendChild(mixCascadesNode);
-						/* send the XML document to the client */
-						if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
+
+						//if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
 						{
 							m_cachedCascadeserialsCompressedResponse = new HttpResponseStructure(
 								HttpResponseStructure.HTTP_TYPE_TEXT_XML,
 								HttpResponseStructure.HTTP_ENCODING_ZLIB,
 								ZLibTools.compress(XMLUtil.toByteArray(doc)));
 						}
-						else
+						//else
 						{
 							m_cachedCascadeserialsResponse = new HttpResponseStructure(doc);
 						}
 						m_lastCascadeserialsUpdate = System.currentTimeMillis();
 					}
 				}
-
+				/* send the XML document to the client */
 				if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
 				{
 					httpResponse = m_cachedCascadeserialsCompressedResponse;
@@ -507,14 +496,14 @@ final public class InfoServiceCommands implements JWSInternalCommands
 							mixCascadesNode);
 						doc.appendChild(mixCascadesNode);
 						/* send the XML document to the client */
-						if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
+						//if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
 						{
 							m_cachedCascadesCompressedResponse = new HttpResponseStructure(
 								HttpResponseStructure.HTTP_TYPE_TEXT_XML,
 								HttpResponseStructure.HTTP_ENCODING_ZLIB,
 								ZLibTools.compress(XMLUtil.toByteArray(doc)));
 						}
-						else
+						//else
 						{
 							m_cachedCascadesResponse = new HttpResponseStructure(doc);
 						}
@@ -823,7 +812,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		return httpResponse;
 	}
 
-	
+
 	/**
 	 * Sends a generated HTML file with all status entrys to the client. This function is not used
 	 * by the JAP client. It's intended to use with a webbrowser to see the status of all cascades.
@@ -1443,7 +1432,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		return httpResponse;
 	}
-	
+
 
 
 	/**
@@ -1724,7 +1713,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		else if (command.startsWith("/virtualcascades")
 				 && (method == Constants.REQUEST_METHOD_GET))
-		{			
+		{
 			httpResponse = m_dynamicExtension.virtualCascadeStatus();
 		}
 		else
