@@ -37,6 +37,7 @@ import java.net.Socket;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Random;
+import java.util.Vector;
 
 import logging.LogHolder;
 import logging.LogLevel;
@@ -524,27 +525,11 @@ public class DynamicCommandsExtension
             htmlData += "        <TH>Mix Port</TH>\n";
             htmlData += "        <TH>Mix Type</TH>\n";
             htmlData += "      </TR>\n";
-            Enumeration enumer2 = Database.getInstance(VirtualCascade.class)
-                    .getEntrySnapshotAsEnumeration();
-            MixCascade mixCascade2 = null;
-            while (enumer2.hasMoreElements())
+            Vector unusedMixes = getUnusedMixex();
+            Enumeration mixes = unusedMixes.elements();
+            while (mixes.hasMoreElements())
             {
-                mixCascade2 = ((VirtualCascade) (enumer2.nextElement())).getRealCascade();
-                if (mixCascade2.getNumberOfMixes() != 1)
-                    continue;
-                Enumeration enumMixID2 = mixCascade2.getMixIds().elements();
-                String mixId2 = "";
-                if (enumMixID2.hasMoreElements())
-                {
-                    mixId2 = (String) enumMixID2.nextElement();
-                }
-                else
-                {
-                    return new HttpResponseStructure(
-                            HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
-                }
-                MixInfo mixInfo2 = (MixInfo) Database.getInstance(MixInfo.class).getEntryById(
-                        mixId2);
+                MixInfo mixInfo2 = (MixInfo) mixes.nextElement();
                 htmlData += "<TR>\n";
                 htmlData += "<TD>" + mixInfo2.getId() + "</TD>\n";
                 htmlData += "<TD>" + mixInfo2.getFirstHostName() + "</TD>\n";
@@ -565,11 +550,91 @@ public class DynamicCommandsExtension
         }
         catch (Exception e)
         {
-            httpResponse = new HttpResponseStructure(
-                    HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
+            String htmlData = "<HTML>\n"
+                    + "  <HEAD>\n"
+                    + "    <TITLE>INFOSERVICE - Virtual-Cascades Status</TITLE>\n"
+                    + "    <STYLE TYPE=\"text/css\">\n"
+                    + "      <!--\n"
+                    + "        h1 {color:blue; text-align:center;}\n"
+                    + "        b,h3,h4,h5 {font-weight:bold; color:maroon;}\n"
+                    + "        body {margin-top:0px; margin-left:0px; margin-width:0px; margin-height:0px; background-color:white; color:black;}\n"
+                    + "        h1,h2,h3,h4,h5,p,address,ol,ul,tr,td,th,blockquote,body,.smalltext,.leftcol {font-family:geneva,arial,helvetica,sans-serif;}\n"
+                    + "        p,address,ol,ul,tr,td,th,blockquote {font-size:11pt;}\n"
+                    + "        .leftcol,.smalltext {font-size: 10px;}\n"
+                    + "        h1 {font-size:17px;}\n"
+                    + "        h2 {font-size:16px;}\n"
+                    + "        h3 {font-size:15px;}\n"
+                    + "        h4 {font-size:14px;}\n"
+                    + "        h5 {font-size:13px;}\n"
+                    + "        address {font-style:normal;}\n"
+                    + "        hr {color:#cccccc;}\n"
+                    + "        h2,.leftcol {font-weight:bold; color:#006699;}\n"
+                    + "        a:link {color:#006699; font-weight:bold; text-decoration:none;}\n"
+                    + "        a:visited {color:#666666; font-weight:bold; text-decoration:none;}\n"
+                    + "        a:active {color:#006699; font-weight:bold; text-decoration:none;}\n"
+                    + "        a:hover {color:#006699; font-weight:bold; text-decoration:underline;}\n"
+                    + "        th {color:white; background:#006699; font-weight:bold; text-align:left;}\n"
+                    + "        td.name {border-bottom-style:solid; border-bottom-width:1pt; border-color:#006699; background:#eeeeff;}\n"
+                    + "        td.status {border-bottom-style:solid; border-bottom-width:1pt; border-color:#006699;}\n"
+                    + "      -->\n" + "    </STYLE>\n"
+                    + "    <META HTTP-EQUIV=\"refresh\" CONTENT=\"10\">\n" + "  </HEAD>\n"
+                    + "  <BODY BGCOLOR=\"#FFFFFF\">\n"
+                    + "    <P ALIGN=\"right\"><h3>Updating status, please wait...</h3></p><br/>"
+                    + " <P>Infoservice [" + Constants.INFOSERVICE_VERSION + "] Startup Time: "
+                    + Configuration.getInstance().getStartupTime() + "</P>\n"
+                    + "    <HR noShade SIZE=\"1\">\n"
+                    + "    <ADDRESS>&copy; 2000 - 2006 The JAP Team</ADDRESS>\n" + "  </BODY>\n"
+                    + "</HTML>\n";
+            httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_HTML,
+                    HttpResponseStructure.HTTP_ENCODING_PLAIN, htmlData);
             LogHolder.log(LogLevel.ERR, LogType.MISC, e);
         }
         return httpResponse;
+    }
+
+    /**
+     * Returns a vector containing all unused dynamic mixes. A dynamic mix is
+     * considered unused if it is in no cascade at all or if it is used in a
+     * cascade only containing itself
+     * 
+     * @return
+     */
+    private Vector getUnusedMixex()
+    {
+        Vector result = new Vector();
+        // First the mixes in their own cascade
+        Enumeration enumer2 = Database.getInstance(VirtualCascade.class).getEntrySnapshotAsEnumeration();
+        MixCascade mixCascade2 = null;
+        while (enumer2.hasMoreElements())
+        {
+            mixCascade2 = ((VirtualCascade) (enumer2.nextElement())).getRealCascade();
+            if (mixCascade2.getNumberOfMixes() != 1)
+                continue;
+            Enumeration enumMixID2 = mixCascade2.getMixIds().elements();
+            String mixId = "";
+            if (enumMixID2.hasMoreElements())
+            {
+                mixId = (String) enumMixID2.nextElement();
+            }
+            else
+            {
+                // How can that be?
+                continue;
+            }
+            result.add( Database.getInstance(MixInfo.class).getEntryById(mixId));
+        }
+        
+        // Now the rest
+        Enumeration en = Database.getInstance(MixInfo.class).getEntrySnapshotAsEnumeration();
+        while(en.hasMoreElements())
+        {
+            MixInfo mix = (MixInfo) en.nextElement();
+            if(!mix.isDynamic())
+                continue;
+            if( getTemporaryCascade(mix.getId()) == null && getCurrentCascade(mix.getId()) == null)
+                result.add(mix);
+        }
+        return result;
     }
 
     private String getCascadeHtmlTable(Class a_clazz) throws Exception
