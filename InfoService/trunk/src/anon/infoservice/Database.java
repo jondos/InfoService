@@ -269,15 +269,15 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 	}
 
 	/**
-		 * Updates an entry in the database. If the entry is an unknown or if it is newer then the
-		 * one stored in the database for this service, the new entry is stored in the database and
-		 * forwarded to all neighbour infoservices.
-		 *
-		 * @param newEntry The database entry to update.
-		 * @exception IllegalArgumentException if the database entry is not of the type the Database
-		 * can store
-		 * @return if the database has been changed
-		 */
+	 * Updates an entry in the database. If the entry is an unknown or if it is newer then the
+	 * one stored in the database for this service, the new entry is stored in the database and
+	 * forwarded to all neighbour infoservices.
+	 *
+	 * @param newEntry The database entry to update.
+	 * @exception IllegalArgumentException if the database entry is not of the type the Database
+	 * can store
+	 * @return if the database has been changed
+	 */
 	public boolean update(AbstractDatabaseEntry newEntry) throws IllegalArgumentException
 	{
 		return update(newEntry, true);
@@ -313,20 +313,10 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 		{
 			/* we need exclusive access to the database */
 			oldEntry = (AbstractDatabaseEntry) (m_serviceDatabase.get(newEntry.getId()));
-			addEntry = false;
-			if (oldEntry == null)
-			{
-				/* this is a new unknown service */
-				addEntry = true;
-			}
-			else if (newEntry.getVersionNumber() > oldEntry.getVersionNumber() ||
-					 (newEntry.getLastUpdate() > oldEntry.getLastUpdate() &&
-					 newEntry.getVersionNumber() == oldEntry.getVersionNumber()))
-			{
-				// we know this service, and the entry is newer than the one we have stored
-				addEntry = true;
-				//m_timeoutList.removeElement(oldEntry.getId());
-			}
+			// check if this is an unknown entry, or if the entry is newer than the one we have stored
+			addEntry = newEntry.isNewerThan(oldEntry);
+			//if(addEntry && oldEntry != null) m_timeoutList.removeElement(oldEntry.getId());
+
 			if (addEntry)
 			{
 				// test first if the element has not yet expired
@@ -347,7 +337,7 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 					}
 					return false;
 				}
-				// remove any old entry with the same from the timeout list
+				// remove any old entry with the same id from the timeout list
 				while (m_timeoutList.removeElement(newEntry.getId()));
 
 				// add the entry to the database
