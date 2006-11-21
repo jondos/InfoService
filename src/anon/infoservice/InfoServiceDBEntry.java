@@ -196,6 +196,8 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		this(a_infoServiceNode,
 			 (a_japClientContext ? (System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE_JAP) :
 			  (System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE)));
+			  //XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_infoServiceNode, "LastUpdate"), -1L) +
+			  //Constants.TIMEOUT_INFOSERVICE));
 	}
 
 	/**

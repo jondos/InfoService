@@ -358,7 +358,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		}
 		Node lastUpdateNode = XMLUtil.getFirstChildByName(a_mixCascadeNode, "LastUpdate");
 		m_lastUpdate = XMLUtil.parseValue(lastUpdateNode,
-											  System.currentTimeMillis() - Constants.TIMEOUT_MIXCASCADE);
+										  System.currentTimeMillis() - Constants.TIMEOUT_MIXCASCADE);
 		if (!m_bFromCascade)
 		{
 			if (lastUpdateNode == null)

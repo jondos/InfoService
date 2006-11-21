@@ -57,10 +57,12 @@ import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.JavaVersionDBEntry;
 import anon.infoservice.MixCascade;
 import anon.infoservice.MixInfo;
+import anon.infoservice.AbstractDatabaseEntry;
 import anon.infoservice.PaymentInstanceDBEntry;
 import anon.infoservice.StatusInfo;
 import anon.util.XMLUtil;
 import anon.util.ZLibTools;
+import anon.infoservice.InfoServiceIDEntry;
 
 /**
  * This is the implementation of all commands the InfoService supports.
@@ -126,8 +128,14 @@ final public class InfoServiceCommands implements JWSInternalCommands
 
 			InfoServiceDBEntry newEntry = new InfoServiceDBEntry(infoServiceNode, false);
 			/* verify the signature --> if requested */
-			if (newEntry.isVerified())
+
+			AbstractDatabaseEntry idEntry = Database.getInstance(InfoServiceIDEntry.class).getEntryById(
+						 newEntry.getId());
+
+			if (newEntry.isVerified() && !newEntry.getId().equals(Configuration.getInstance().getID()) &&
+				newEntry.isNewerThan(idEntry))
 			{
+				Database.getInstance(InfoServiceIDEntry.class).update(new InfoServiceIDEntry(newEntry));
 				Database.getInstance(InfoServiceDBEntry.class).update(newEntry);
 			}
 			else
