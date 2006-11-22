@@ -37,6 +37,8 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import javax.swing.JLabel;
 import javax.swing.JPasswordField;
 import javax.swing.JPopupMenu;
@@ -66,6 +68,9 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 	public static final String MSG_ENTER_LBL = PasswordContentPane.class.getName() + "_enterPasswordLabel";
 	private static final int FIELD_LENGTH = 15;
 	private static final String MSG_TOO_SHORT = PasswordContentPane.class.getName() + "_tooShort";
+	private static final String MSG_CAPS_LOCK_PRESSED =
+		PasswordContentPane.class.getName() + "_pressedCapsLock";
+
 	private static final String MSG_WRONG_PASSWORD = PasswordContentPane.class.getName() + "_wrongPassword";
 	private static final String MSG_ENTER_PASSWORD_TITLE = PasswordContentPane.class.getName() + "_title";
 	private static final String MSG_CONFIRM_LBL = PasswordContentPane.class.getName() + "_confirmPasswordLabel";
@@ -223,8 +228,16 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 		layout.setConstraints(m_textConfirmPasswd, c);
 		getContentPane().add(m_textConfirmPasswd);
 
-
-
+		CapsLockAdapter keyAdapter = new CapsLockAdapter();
+		m_textConfirmPasswd.addKeyListener(keyAdapter);
+		if (m_textNewPasswd != null)
+		{
+			m_textNewPasswd.addKeyListener(keyAdapter);
+		}
+		if (m_textOldPasswd != null)
+		{
+			m_textOldPasswd.addKeyListener(keyAdapter);
+		}
 
 		addComponentListener(new SetFocusComponentAdapter());
 	}
@@ -433,6 +446,24 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 		}
 
 		return errors;
+	}
+
+	private class CapsLockAdapter extends KeyAdapter
+	{
+		private int m_messageID = 0;
+
+		public void keyPressed(KeyEvent a_event)
+		{
+			if (getContentPane().getToolkit().getLockingKeyState(KeyEvent.VK_CAPS_LOCK))
+			{
+				m_messageID =
+					printErrorStatusMessage(JAPMessages.getString(MSG_CAPS_LOCK_PRESSED), LogType.GUI);
+			}
+			else
+			{
+				clearStatusMessage(m_messageID);
+			}
+		}
 	}
 
 	private class SetFocusComponentAdapter extends ComponentAdapter

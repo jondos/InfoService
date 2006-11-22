@@ -202,6 +202,8 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	private JDialog m_tempDialog; // this is a temporary dialog used to construct the content pane
 	private boolean m_bDisposed = false;
 
+	private int m_idStatusMessage = 0;
+
 	/**
 	 * Contructs a new dialog content pane. Its layout is predefined, but may change if the content pane
 	 * is part of a wizard.
@@ -1497,6 +1499,14 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		return m_helpContext.getHelpContext();
 	}
 
+	public final void clearStatusMessage(int a_messageID)
+	{
+		if (m_idStatusMessage == a_messageID)
+		{
+			clearStatusMessage();
+		}
+	}
+
 	/**
 	 * Resets the text in the status message line to an empty String.
 	 */
@@ -1551,9 +1561,9 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 * @param a_logType the log type of this error
 	 * @param a_throwable a Throwable that has been catched in the context of this error
 	 */
-	public final void printErrorStatusMessage(int a_logType, Throwable a_throwable)
+	public final int printErrorStatusMessage(int a_logType, Throwable a_throwable)
 	{
-		printErrorStatusMessage(null, a_logType, a_throwable);
+		return printErrorStatusMessage(null, a_logType, a_throwable);
 	}
 
 
@@ -1564,9 +1574,9 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 * @param a_message an error message
 	 * @param a_logType the log type of this error
 	 */
-	public final void printErrorStatusMessage(String a_message, int a_logType)
+	public final int printErrorStatusMessage(String a_message, int a_logType)
 	{
-		printErrorStatusMessage(a_message, a_logType, null);
+		return printErrorStatusMessage(a_message, a_logType, null);
 	}
 
 	/**
@@ -1577,9 +1587,9 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 * @param a_logType the log type of this error
 	 * @param a_throwable a Throwable that has been catched in the context of this error
 	 */
-	public final void printErrorStatusMessage(String a_message, int a_logType, Throwable a_throwable)
+	public final int printErrorStatusMessage(String a_message, int a_logType, Throwable a_throwable)
 	{
-		printErrorStatusMessage(a_message, a_logType, a_throwable, true);
+		return printErrorStatusMessage(a_message, a_logType, a_throwable, true);
 	}
 
 	/**
@@ -1628,10 +1638,11 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	 * @param a_throwable a Throwable that has been catched in the context of this error
 	 * @param a_bShow if the message is shown to the user or logged only
 	 */
-	private void printErrorStatusMessage(String a_message, int a_logType, Throwable a_throwable,
+	private int printErrorStatusMessage(String a_message, int a_logType, Throwable a_throwable,
 								 boolean a_bShow)
 	{
 		boolean bPossibleApplicationError = false;
+		int idStatusMessage = 0;
 
 		try {
 
@@ -1651,7 +1662,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			{
 				if (a_bShow)
 				{
-					printStatusMessageInternal(a_message, MESSAGE_TYPE_ERROR);
+					idStatusMessage = printStatusMessageInternal(a_message, MESSAGE_TYPE_ERROR);
 				}
 				LogHolder.log(LogLevel.ERR, a_logType, a_message, true);
 				if (a_throwable != null)
@@ -1680,7 +1691,8 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		{
 			JAPDialog.showErrorDialog(getContentPane(), LogType.GUI, a_e);
 		}
-}
+		return idStatusMessage;
+	}
 
 
 	/**
@@ -2501,7 +2513,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	}
 
 
-	private final void printStatusMessageInternal(String a_strMessage, int a_messageType)
+	private final synchronized int printStatusMessageInternal(String a_strMessage, int a_messageType)
 	{
 		String strMessage;
 		String strColor;
@@ -2511,7 +2523,7 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 
 		if (a_strMessage == null || a_strMessage.trim().length() == 0)
 		{
-			return;
+			return 0;
 		}
 
 		// no HTML Tags are allowed in the message
@@ -2589,6 +2601,9 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 		strMessage = "<A style=\"color:" + strColor + "\"" + strHref + "> " + strMessage + " </A>";
 		m_lblMessage.setText(strMessage);
 		m_lblMessage.revalidate();
+
+		m_idStatusMessage++;
+		return m_idStatusMessage;
 	}
 
 	private class LinkedDialog extends MouseAdapter
