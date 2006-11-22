@@ -52,6 +52,7 @@ import gui.GUIUtils;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.Clipboard;
+import java.awt.Toolkit;
 
 
 public class PasswordContentPane extends DialogContentPane implements IMiscPasswordReader,
@@ -448,13 +449,29 @@ public class PasswordContentPane extends DialogContentPane implements IMiscPassw
 		return errors;
 	}
 
+	/**
+	 * Shows a warning when the caps lock key is pressed while entering passwords.
+	 * This does only work for JDKs >= 1.3
+	 */
 	private class CapsLockAdapter extends KeyAdapter
 	{
 		private int m_messageID = 0;
 
 		public void keyPressed(KeyEvent a_event)
 		{
-			if (getContentPane().getToolkit().getLockingKeyState(KeyEvent.VK_CAPS_LOCK))
+			boolean isCapsLockPressed = false;
+			try
+			{
+				isCapsLockPressed = ((Boolean)Toolkit.class.getMethod("getLockingKeyState", new Class[]
+					{int.class}).invoke(getContentPane().getToolkit(),
+										new Object[]{new Integer(KeyEvent.VK_CAPS_LOCK)})).booleanValue();
+			}
+			catch (Exception ex)
+			{
+			}
+
+
+			if (isCapsLockPressed)
 			{
 				m_messageID =
 					printErrorStatusMessage(JAPMessages.getString(MSG_CAPS_LOCK_PRESSED), LogType.GUI);
