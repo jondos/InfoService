@@ -123,7 +123,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
     /**
      * Creates an agereement handler witch runs the
      * multycast-agreement-protocol.
-     * 
+     *
      * @param a_infoService
      *            The infoservice belongs to.
      */
@@ -137,7 +137,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
     /**
      * This is the main handle point for incomming messages according to this
      * agreement protocol.
-     * 
+     *
      * @param a_msg
      *            The incomming message.
      */
@@ -174,7 +174,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
      * massage on a
      * <code>CommitMessage</CommitMessage> if no agreement is reached yet and perform
      * handleCommitMessage(..).
-     * 
+     *
      * @param a_message
      *            The message.
      */
@@ -196,7 +196,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
      * This method handles all incomming reject-messages. This messagetype will
      * be sent by nodes for receiving invalid init-messages. Especially in the
      * case of incorrect agreement-identifier <code>lastCommonRandom</code>.
-     * 
+     *
      * @param a_message
      *            The message.
      */
@@ -242,7 +242,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
      * start the agreement timeout thread, than we check whether the currend
      * agreement id is part of this message. If so, we create a log entry an
      * send a echo message, otherwise we send a reject message.
-     * 
+     *
      * @param a_message
      *            The InitMessage.
      */
@@ -301,7 +301,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
      * If an EchoMessage received, it will be handled by two steps. At first we
      * add it in the log-hashtable and at second there is to decide whether
      * there are enough EchoMessages collected for executing a CommitMessage.
-     * 
+     *
      * @param a_message
      *            the EchoMessage
      */
@@ -343,7 +343,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
     /**
      * Check and add a CommitMessage. If Ok, create and send a
      * ConfirmationMessage to all.
-     * 
+     *
      * @param a_message
      *            The message
      */
@@ -400,7 +400,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
 
     /**
      * Call this methode to initialize the agreement protocol.
-     * 
+     *
      * @param lastRandom
      *            Should be the common random number from the las agreement or
      *            an initial value shared by all infoservices.
@@ -425,7 +425,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
 
     /**
      * Starts the reliable broadcast and performs the given message.
-     * 
+     *
      * @param a_message
      *            The message to send.
      */
@@ -478,7 +478,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
     /**
      * Gets the appropriate consensus log entry by consensus id or, if not yet
      * in the store, creates a new one and adds is to the store.
-     * 
+     *
      * @param a_msg
      *            The message, which contains all informations to construct a
      *            log id.
@@ -505,7 +505,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
     /**
      * This method is called by the <code>ConsensusLogTimeoutThread</code> at
      * the moment of expiration.
-     * 
+     *
      * @param consensus
      *            The log entry.
      */
@@ -528,7 +528,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
     /**
      * Evaluate the results, combine the random numbers of all infoservices and
      * return this new common random value or null.
-     * 
+     *
      * @return New common random value or null.
      */
     private Long checkTheResults()
@@ -594,7 +594,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
         Enumeration emu = results.elements();
         while (emu.hasMoreElements())
         {
-            comRand += Long.valueOf(((String) emu.nextElement())).longValue();
+            comRand += Long.parseLong(((String) emu.nextElement()));
         }
         return Long.valueOf(comRand);
     }
@@ -602,7 +602,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
     /**
      * Gets he value which holds the last agreed random number or an init value
      * at start up.
-     * 
+     *
      * @return
      */
     public String getLastCommonRandom()
@@ -612,7 +612,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see infoservice.agreement.interfaces.IAgreementHandler#setLastCommonRandom(java.lang.String)
      */
     public void setLastCommonRandom(String commonRandom)
@@ -622,7 +622,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
 
     /**
      * Logs debug messages
-     * 
+     *
      * @param a_message
      *            The message to log.
      */
@@ -633,7 +633,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
 
     /**
      * Logs info messages
-     * 
+     *
      * @param a_message
      */
     void info(String a_message)
@@ -643,7 +643,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see infoservice.agreement.interfaces.IAgreementHandler#getInfoService()
      */
     public IInfoService getInfoService()
