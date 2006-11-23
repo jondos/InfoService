@@ -57,7 +57,7 @@ import logging.LogLevel;
  * This class is used for verifying a JAP forwarding server (whether it is accessable from
  * the outside world).
  */
-public class ServerVerifier
+final public class ServerVerifier
 {
 
 	/**
@@ -182,6 +182,7 @@ public class ServerVerifier
 				}
 			}
 		});
+		verifyThread.setName("infoservice.japforwarding.ServerVerifier");
 		verifyThread.setDaemon(true);
 		boolean verificationSuccess = false;
 		synchronized (verificationLock)
