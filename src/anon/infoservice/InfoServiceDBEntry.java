@@ -890,6 +890,15 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 				communicationThread.start();
 				try
 				{
+					/*
+					communicationThread.join(10 * 60 * 1000);
+					currentConnection.stop();
+					if (communicationThread.isAlive())
+					{
+						LogHolder.log(LogLevel.ERR, LogType.NET,
+									  "InfoService request timed out on thread join after 10 minutes!");
+						communicationThread.interrupt();
+					 }*/
 					communicationThread.join();
 					try
 					{
