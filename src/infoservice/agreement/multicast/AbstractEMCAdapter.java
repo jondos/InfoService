@@ -39,8 +39,6 @@ import java.util.TimeZone;
 
 public abstract class AbstractEMCAdapter implements IInfoService
 {
-    /** @fixme REMOVE ME! */
-    protected boolean m_agreementInitialized = false;
 
     /**
      * LERNGRUPPE The agreement handler. He encapsuletes all the logic for
@@ -148,18 +146,13 @@ public abstract class AbstractEMCAdapter implements IInfoService
      */
     protected void tryToStartAgreementMinute()
     {
-        /** @fixme REMOVE ME! */
-        if(!m_agreementInitialized)
-            return;
-        
-        
+
         Calendar c = Calendar.getInstance(TimeZone.getTimeZone("CET"));
         int hour = DynamicConfiguration.getInstance().getHourOfAgreement();
+        // debug("Stunde: "+ c.get(Calendar.HOUR_OF_DAY)+" Minute:"+
+        // +c.get(Calendar.MINUTE)+" hour: " + hour);
         /* Try to start the passive part */
         int passive = (int) ((DynamicConfiguration.getInstance().getPassivePhaseLength() / 1000) / 60);
-//        info("Stunde: "+ c.get(Calendar.HOUR_OF_DAY)+" Minute:"+
-//                +c.get(Calendar.MINUTE)+" hour: " + hour + ", passive: " + passive);
-
         if (c.get(Calendar.MINUTE) % hour >= hour - passive
                 && this.m_activeAgreementStarted == false && this.m_beInPassiveMode == false)
         {
@@ -297,7 +290,7 @@ public abstract class AbstractEMCAdapter implements IInfoService
 
                 try
                 {
-                    Thread.sleep(DynamicConfiguration.getInstance().getPassivePhaseLength());
+                    Thread.sleep(DynamicConfiguration.getInstance().getEmcGlobalTimeout());
                     startAgreementCommitmentProtocol();
                 }
                 catch (InterruptedException e)
@@ -346,7 +339,6 @@ public abstract class AbstractEMCAdapter implements IInfoService
         }
 
         info(" TRY TO START AGREEMENT BY OPERATOR ...\n");
-        m_agreementInitialized = true;
         this.restartAgreement();
     }
 
