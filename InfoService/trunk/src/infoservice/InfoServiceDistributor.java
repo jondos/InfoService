@@ -43,13 +43,14 @@ import anon.infoservice.ListenerInterface;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.infoservice.AbstractDatabaseEntry;
 
 /**
  * This is the implementation of the forwarding code. Every information which to send to
  * the other infoservices is processed by this class.
  */
-public class InfoServiceDistributor implements IDistributor {
+public class InfoServiceDistributor implements IDistributor
+{
+	private static final long TIMEOUT_QUEUE = 5000l; // time after that to look for jobs; for debugging only
 
   /**
    * Stores the instance of InfoServiceDatabase (Singleton).
@@ -164,106 +165,105 @@ public class InfoServiceDistributor implements IDistributor {
        * job is sent to all interfaces specified as initial neighbours of our infoservice. It
        * should only be used for the propaganda of the own infoservice entry.
        */
-      public void run()
-      {
-        while (true)
-        {
-          IDistributable currentJob = null;
-          synchronized (m_initialNeighboursJobQueue)
-          {
-            if (m_initialNeighboursJobQueue.size() > 0)
-            {
-              currentJob = (IDistributable) (m_initialNeighboursJobQueue.firstElement());
-              m_initialNeighboursJobQueue.removeElementAt(0);
-            }
-            else
-            {
-              /* if there are no more jobs in the queue, sleep until there are new ones */
-              try
-              {
-                m_initialNeighboursJobQueue.wait();
-                LogHolder.log(LogLevel.DEBUG, LogType.NET,
-                  "There is something to do. Wake up...");
-              }
-              catch (InterruptedException e)
-              {
-              }
-            }
-          }
-          if (currentJob != null)
-          {
-			  final IDistributable job = currentJob;
-
-			  /*new Thread(new Runnable()
+	  public void run()
+	  {
+		  IDistributable currentJob;
+		  while (true)
+		  {
+			  synchronized (m_initialNeighboursJobQueue)
 			  {
-				  public void run()
-				  {*/
-					  ListenerInterface listener;
-					  LogHolder.log(LogLevel.DEBUG, LogType.NET,
-									"Forward entry " + job.getId() +
-									" to initial neighbour infoservices.");
-					  Enumeration enumInitialNeighbours = Configuration.getInstance().
-						  getInitialNeighbourInfoServices().elements();
-					  Vector vecInitialNeighbours = new Vector();
-					  Vector neighbourList = getNeighbourList();
-					  Vector listeners;
-					  InfoServiceDBEntry entry;
-					  ListenerInterface currentNeigbourInterface;
-					  neighbours:
-					  while (enumInitialNeighbours.hasMoreElements())
+				  if (m_initialNeighboursJobQueue.size() > 0)
+				  {
+					  currentJob = (IDistributable) (m_initialNeighboursJobQueue.firstElement());
+					  m_initialNeighboursJobQueue.removeElementAt(0);
+				  }
+				  else
+				  {
+					  currentJob = null;
+					  /* if there are no more jobs in the queue, sleep until there are new ones */
+					  try
 					  {
-						  currentNeigbourInterface = (ListenerInterface)enumInitialNeighbours.nextElement();
-						  for (int i = 0; i < neighbourList.size(); i++)
+						  m_initialNeighboursJobQueue.wait(TIMEOUT_QUEUE);
+						  LogHolder.log(LogLevel.DEBUG, LogType.NET,
+										"There may be something to do. Wake up...");
+					  }
+					  catch (InterruptedException e)
+					  {
+					  }
+				  }
+			  }
+			  if (currentJob != null)
+			  {
+				  final IDistributable job = currentJob;
+
+				  /*new Thread(new Runnable()
+						 {
+				   public void run()
+				   {*/
+				  ListenerInterface listener;
+				  LogHolder.log(LogLevel.DEBUG, LogType.NET,
+								"Forward entry " + job.getId() +
+								" to initial neighbour infoservices.");
+				  Enumeration enumInitialNeighbours = Configuration.getInstance().
+					  getInitialNeighbourInfoServices().elements();
+				  Vector vecInitialNeighbours = new Vector();
+				  Vector neighbourList = getNeighbourList();
+				  Vector listeners;
+				  InfoServiceDBEntry entry;
+				  ListenerInterface currentNeigbourInterface;
+				  neighbours:while (enumInitialNeighbours.hasMoreElements())
+				  {
+					  currentNeigbourInterface = (ListenerInterface) enumInitialNeighbours.nextElement();
+					  for (int i = 0; i < neighbourList.size(); i++)
+					  {
+						  entry = (InfoServiceDBEntry) neighbourList.elementAt(i);
+						  listeners = entry.getListenerInterfaces();
+						  for (int j = 0; j < listeners.size(); j++)
 						  {
-							  entry = (InfoServiceDBEntry)neighbourList.elementAt(i);
-							  listeners = entry.getListenerInterfaces();
-							  for (int j = 0; j < listeners.size(); j++)
-							  {
-								  if (((ListenerInterface)listeners.elementAt(j)).isValid() &&
-									  ((ListenerInterface)listeners.elementAt(j)).equals(
+							  if ( ( (ListenerInterface) listeners.elementAt(j)).isValid() &&
+								  ( (ListenerInterface) listeners.elementAt(j)).equals(
 									  currentNeigbourInterface))
-								  {
-									  // we already have this interface in the database
-									  continue neighbours;
-								  }
+							  {
+								  // we already have this interface in the database
+								  continue neighbours;
 							  }
 						  }
-						  // this interface is not in the database
-						  vecInitialNeighbours.addElement(currentNeigbourInterface);
 					  }
+					  // this interface is not in the database
+					  vecInitialNeighbours.addElement(currentNeigbourInterface);
+				  }
 
-					  enumInitialNeighbours = vecInitialNeighbours.elements();
-					  while (enumInitialNeighbours.hasMoreElements())
+				  enumInitialNeighbours = vecInitialNeighbours.elements();
+				  while (enumInitialNeighbours.hasMoreElements())
+				  {
+					  listener = (ListenerInterface) enumInitialNeighbours.nextElement();
+					  /* we have only the interfaces of the initial neighbours */
+					  if (!sendToInterface(listener, job))
 					  {
-						  listener = (ListenerInterface) enumInitialNeighbours.nextElement();
-						  /* we have only the interfaces of the initial neighbours */
-						  if (!sendToInterface(listener, job))
-						  {
-							  LogHolder.log(LogLevel.ERR, LogType.NET, "Could not send entry " + job +
-											" to initial neighbour InfoService: " + listener + "!");
-						  }
+						  LogHolder.log(LogLevel.ERR, LogType.NET, "Could not send entry " + job +
+										" to initial neighbour InfoService: " + listener + "!");
 					  }
+				  }
 
-					  Enumeration runningNeighbourInfoServices = neighbourList.elements();
-					  while (runningNeighbourInfoServices.hasMoreElements())
+				  Enumeration runningNeighbourInfoServices = neighbourList.elements();
+				  while (runningNeighbourInfoServices.hasMoreElements())
+				  {
+					  entry = (InfoServiceDBEntry) (runningNeighbourInfoServices.nextElement());
+					  if (!sendToInfoService(entry, job))
 					  {
-						  entry = (InfoServiceDBEntry) (runningNeighbourInfoServices.nextElement());
-						  if (!sendToInfoService(entry, job))
-						  {
-							  LogHolder.log(LogLevel.ERR, LogType.NET, "Could not send entry " + job +
-								  " to neighbour InfoService " + entry + "!");
-						  }
+						  LogHolder.log(LogLevel.ERR, LogType.NET, "Could not send entry " + job +
+										" to neighbour InfoService " + entry + "!");
 					  }
-	/*			  }
-            }, "Distribute single initial neighbour entry").start(); */
-          }
-        }
-      }
-    });
-    initialNeighboursJobQueueThread.setDaemon(true);
-    initialNeighboursJobQueueThread.start();
+				  }
+				  /*			  }
+					}, "Distribute single initial neighbour entry").start(); */
+			  }
+		  }
+	  }
+});
+  initialNeighboursJobQueueThread.setDaemon(true);
+  initialNeighboursJobQueueThread.start();
   }
-
 
   /**
    * Adds a new job to the default job queue. So it is forwarded to all known and running
