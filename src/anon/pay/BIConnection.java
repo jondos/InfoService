@@ -70,6 +70,8 @@ import anon.infoservice.IMutableProxyInterface;
 
 public class BIConnection implements ICaptchaSender
 {
+	private static final int TIMEOUT = 120000;
+
 	private BI m_theBI;
 
 	private Socket m_socket;
@@ -170,7 +172,7 @@ public class BIConnection implements ICaptchaSender
 								  ":" + a_proxy.getPort());
 					tls = new TinyTLS(li.getHost(), li.getPort(), a_proxy);
 				}
-				tls.setSoTimeout(120000);
+				tls.setSoTimeout(TIMEOUT);
 				tls.setRootKey(m_theBI.getCertificate().getPublicKey());
 				tls.startHandshake();
 				m_socket = tls;

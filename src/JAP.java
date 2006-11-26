@@ -81,9 +81,6 @@ public class JAP
 	private static final String MSG_FINISH_RANDOM = JAP.class.getName() +  "_finishRandom";
 	private static final String MSG_START_LISTENER = JAP.class.getName() +  "_startListener";
 
-
-	private boolean bConsoleOnly = false;
-	private boolean loadPay = true;
 	private JAPController m_controller;
 
 	Hashtable m_arstrCmdnLnArgs = null;
@@ -130,6 +127,8 @@ public class JAP
 		String vendor = System.getProperty("java.vendor");
 		String os = System.getProperty("os.name");
 		String mrjVersion = System.getProperty("mrj.version");
+		boolean bConsoleOnly = false;
+		boolean loadPay = true;
 
 		if (isArgumentSet("--version") || isArgumentSet("-v"))
 		{
@@ -156,10 +155,11 @@ public class JAP
 		{
 			System.out.println("Usage:");
 			System.out.println("--help, -h:              Show this text.");
-			System.out.println("--console, -c:           Start JAP in console-only mode.");
+			System.out.println("--console:           Start JAP in console-only mode.");
 			System.out.println("--minimized, -m:         Minimize JAP on startup.");
 			System.out.println("--version, -v:           Print version information.");
 			System.out.println("--showDialogFormat       Show and set dialog format options.");
+			System.out.println("--noSplash, -s           Suppress splash screen on startup.");
 			System.out.println("--config, -c {Filename}: Force JAP to use a specific configuration file.");
 			System.exit(0);
 		}
@@ -230,6 +230,10 @@ public class JAP
 		{
 			splashText = "Lade Internationalisierung";
 		}
+		else if (defaultLocale.getLanguage().equals("fr"))
+		{
+			splashText = "Chargement des param\u00e8tres d'internationalisation";
+		}
 		else
 		{
 			splashText = "Loading internationalisation";
@@ -238,6 +242,11 @@ public class JAP
 		if (bConsoleOnly)
 		{
 			JAPDialog.setConsoleOnly(true);
+			splash = new ConsoleSplash();
+			splash.setText(splashText);
+		}
+		else if (isArgumentSet("--noSplash") || isArgumentSet("-s"))
+		{
 			splash = new ConsoleSplash();
 			splash.setText(splashText);
 		}
@@ -508,7 +517,10 @@ public class JAP
 				frameView.toFront();
 				GUIUtils.setAlwaysOnTop(frameView, false);
 			}
-			((JAPSplash)splash).dispose();
+			if (splash instanceof JAPSplash)
+			{
+				( (JAPSplash) splash).dispose();
+			}
 		}
 
 		//WP: check japdll.dll version
