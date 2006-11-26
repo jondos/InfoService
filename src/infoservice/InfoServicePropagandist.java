@@ -106,23 +106,23 @@ public class InfoServicePropagandist implements Runnable
 					{
 						try
 						{
+							tmpEntry = (AbstractDatabaseEntry)enumNeighbours.nextElement();
+							if (tmpEntry.getId().equals(Configuration.getInstance().getID()))
+							{
+								continue;
+							}
+
 							if (i == 0)
 							{
-								enumTmp =
-									( (InfoServiceDBEntry) enumNeighbours.nextElement()).getInfoServices(
-										false).elements();
+								enumTmp = ( (InfoServiceDBEntry) tmpEntry).getInfoServices(false).elements();
 							}
 							else if (i == 1)
 							{
-								enumTmp =
-									( (InfoServiceDBEntry) enumNeighbours.nextElement()).getMixCascades(
-										false).elements();
+								enumTmp = ( (InfoServiceDBEntry) tmpEntry).getMixCascades(false).elements();
 							}
 							else
 							{
-								enumTmp =
-									( (InfoServiceDBEntry) enumNeighbours.nextElement()).getMixes(
-										false).elements();
+								enumTmp = ( (InfoServiceDBEntry) tmpEntry).getMixes(false).elements();
 							}
 						}
 						catch (Exception a_e)

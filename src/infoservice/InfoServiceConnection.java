@@ -277,7 +277,8 @@ final public class InfoServiceConnection implements Runnable
 			{
 				LogHolder.log(LogLevel.ERR, LogType.NET,
 				"InfoServiceConnection (" + Integer.toString(m_connectionId) +
-				", " + m_socket.getInetAddress() + ") - has an Error -",e);
+//				", " + m_socket.getInetAddress() +
+				") - has an Error -",e);
 				closeSockets();
 				return;
 			}
@@ -289,7 +290,7 @@ final public class InfoServiceConnection implements Runnable
 			{
 				LogHolder.log(LogLevel.ERR, LogType.NET,
 							  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-							  ", " + m_socket.getInetAddress() +
+//							  ", " + m_socket.getInetAddress() +
 							  "): Response could not be generated: Request: " + requestMethod +
 							  " " + requestUrl);
 				response = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_NOT_FOUND);
@@ -324,7 +325,7 @@ final public class InfoServiceConnection implements Runnable
 			{
 				LogHolder.log(LogLevel.ERR, LogType.NET,
 				  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-				  ", " + m_socket.getInetAddress() +
+//				  ", " + m_socket.getInetAddress() +
 				  "): Error while sending the response to the client." , e);
 			}
 		}
@@ -351,7 +352,7 @@ final public class InfoServiceConnection implements Runnable
 			/* if we get an error here, normally there was already one -> log only for debug reasons */
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
 						  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-						  ", " + m_socket.getInetAddress() +
+//						  ", " + m_socket.getInetAddress() +
 						  "): Error while closing output stream to client!", a_e);
 		}
 
@@ -364,7 +365,7 @@ final public class InfoServiceConnection implements Runnable
 			/* if we get an error here, normally there was already one -> log only for debug reasons */
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
 						  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-						  ", " + m_socket.getInetAddress() +
+//						  ", " + m_socket.getInetAddress() +
 						  "): Error while closing input stream from client!", e);
 		}
 		m_inputStream = null;
@@ -377,7 +378,7 @@ final public class InfoServiceConnection implements Runnable
 			/* if we get an error here, normally there was already one -> log only for debug reasons */
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
 						  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-						  ", " + m_socket.getInetAddress() +
+//						  ", " + m_socket.getInetAddress() +
 						  "): Error while closing connection!", e);
 		}
 		m_socket = null;
