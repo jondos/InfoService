@@ -84,9 +84,9 @@ import anon.infoservice.MixInfo;
 import anon.infoservice.ProxyInterface;
 import anon.mixminion.MixminionServiceDescription;
 import anon.pay.BI;
+import anon.pay.BIConnection;
 import anon.pay.IAIEventListener;
 import anon.pay.PayAccount;
-import anon.pay.BIConnection;
 import anon.pay.PayAccountsFile;
 import anon.proxy.AnonProxy;
 import anon.proxy.IProxyListener;
@@ -97,7 +97,6 @@ import anon.util.IPasswordReader;
 import anon.util.JobQueue;
 import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
-import anon.util.Util;
 import forward.server.ForwardServerManager;
 import gui.GUIUtils;
 import gui.JAPMessages;
@@ -174,7 +173,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 		JAPController.class.getName() + "_cascadeNotParsable";
 	public static final String MSG_PAYMENT_DAMAGED = JAPController.class.getName() + "_paymentDamaged";
 	public static final String MSG_ACCOUNT_NOT_SAVED = JAPController.class.getName() + "_accountNotSaved";
-
 
 
 	private static final String XML_ELEM_LOOK_AND_FEEL = "LookAndFeel";
@@ -566,7 +564,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	public void setAskSavePayment(boolean a_bAsk)
 	{
-		m_bAskSavePayment = a_bAsk;
+		synchronized (this)
+		{
+			if (m_bAskSavePayment != a_bAsk)
+			{
+				m_bAskSavePayment = a_bAsk;
+			}
+			setChanged();
+			notifyObservers(new JAPControllerMessage(JAPControllerMessage.ASK_SAVE_PAYMENT_CHANGED));
+		}
 	}
 
 
@@ -3224,13 +3230,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						parent = (JAPSplash) getInstance().m_finishSplash;
 					}
-					boolean error = m_Controller.saveConfigFile();
-					if (error && bDoNotRestart)
-					{
-						JAPDialog.showErrorDialog(parent, JAPMessages.getString(MSG_ERROR_SAVING_CONFIG,
-							JAPModel.getInstance().getConfigFile() ), LogType.MISC);
-					}
-					if (parent != null && getInstance().m_bAskSavePayment)
+
+					if (parent != null && getInstance().m_bAskSavePayment && bDoNotRestart)
 					{
 						// we are in GUI mode
 						Enumeration enumAccounts = PayAccountsFile.getInstance().getAccounts();
@@ -3246,12 +3247,19 @@ public final class JAPController extends Observable implements IProxyListener, O
 									// skip closing JAP
 									((JAPSplash)getInstance().m_finishSplash).setVisible(false);
 									getInstance().getViewWindow().setEnabled(true);
-									getInstance().m_bAskSavePayment = !checkbox.getState();
+									getInstance().setAskSavePayment(!checkbox.getState());
 									return;
 								}
-								getInstance().m_bAskSavePayment = !checkbox.getState();
+								getInstance().setAskSavePayment(!checkbox.getState());
 							}
 						}
+					}
+
+					boolean error = m_Controller.saveConfigFile();
+					if (error && bDoNotRestart)
+					{
+						JAPDialog.showErrorDialog(parent, JAPMessages.getString(MSG_ERROR_SAVING_CONFIG,
+							JAPModel.getInstance().getConfigFile() ), LogType.MISC);
 					}
 
 					// disallow new connections
