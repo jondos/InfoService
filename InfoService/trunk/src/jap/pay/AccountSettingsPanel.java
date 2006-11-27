@@ -33,6 +33,8 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.Observer;
+import java.util.Observable;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -114,6 +116,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import javax.swing.JComboBox;
+import jap.JAPControllerMessage;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -122,7 +125,7 @@ import javax.swing.JComboBox;
  * @version 1.0
  */
 public class AccountSettingsPanel extends AbstractJAPConfModule implements
-	ListSelectionListener
+	ListSelectionListener, Observer
 {
 	protected static final String IMG_COINS_DISABLED = AccountSettingsPanel.class.getName() +
 		"_coins-disabled.gif";
@@ -283,6 +286,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private JCheckBox m_cbxAllowNonAnonymousConnection;
 	private JCheckBox m_cbxShowAIErrors;
 	private JCheckBox m_cbxBalanceAutoUpdateEnabled;
+	private JCheckBox m_cbxAskIfNotSaved;
 
 	private JLabel m_labelCreationDate;
 	private JLabel m_labelStatementDate;
@@ -304,12 +308,22 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	public AccountSettingsPanel()
 	{
 		super(null);
+		JAPController.getInstance().addObserver(this);
 	}
 
 	public void fontSizeChanged(JAPModel.FontResize a_fontSize, JLabel a_dummyLabel)
 	{
 		m_coinstack.setUI(new CoinstackProgressBarUI(GUIUtils.loadImageIcon(JAPConstants.
 			IMAGE_COIN_COINSTACK, true), 0, 8));
+	}
+
+	public void update(Observable a_observable, Object a_arg)
+	{
+		if (a_observable instanceof JAPController &&
+			((JAPControllerMessage)a_arg).getMessageCode() == JAPControllerMessage.ASK_SAVE_PAYMENT_CHANGED)
+		{
+			onUpdateValues();
+		}
 	}
 
 	/**
@@ -561,6 +575,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		m_cbxBalanceAutoUpdateEnabled = new JCheckBox(JAPMessages.getString(MSG_BALANCE_AUTO_UPDATE_ENABLED));
 
 		panelAdvanced.add(m_cbxBalanceAutoUpdateEnabled, advancedPanelConstraints);
+
+		advancedPanelConstraints.gridy++;
+		m_cbxAskIfNotSaved = new JCheckBox(JAPMessages.getString(MSG_ASK_IF_NOT_SAVED));
+		panelAdvanced.add(m_cbxAskIfNotSaved, advancedPanelConstraints);
 
 
 		advancedPanelConstraints.weightx = 0.0;
@@ -2278,6 +2296,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		JAPModel.getInstance().allowPaymentViaDirectConnection(m_cbxAllowNonAnonymousConnection.isSelected());
 		PayAccountsFile.getInstance().setIgnoreAIAccountError(!m_cbxShowAIErrors.isSelected());
 		PayAccountsFile.getInstance().setBalanceAutoUpdateEnabled(m_cbxBalanceAutoUpdateEnabled.isSelected());
+		JAPController.getInstance().setAskSavePayment(m_cbxAskIfNotSaved.isSelected());
 		BIConnection.setConnectionTimeout(((Integer)m_comboTimeout.getSelectedItem()).intValue() * 1000);
 		return true;
 	}
@@ -2303,6 +2322,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		m_cbxShowPaymentConfirmation.setSelected(true);
 		m_cbxAllowNonAnonymousConnection.setSelected(true);
 		m_cbxShowAIErrors.setSelected(true);
+		m_cbxAskIfNotSaved.setSelected(true);
 		m_cbxBalanceAutoUpdateEnabled.setSelected(true);
 		setConnectionTimeout(BIConnection.TIMEOUT_DEFAULT);
 	}
@@ -2315,6 +2335,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		m_cbxShowPaymentConfirmation.setSelected(!JAPController.getInstance().getDontAskPayment());
 		m_cbxAllowNonAnonymousConnection.setSelected(
 			  JAPModel.getInstance().isPaymentViaDirectConnectionAllowed());
+		m_cbxAskIfNotSaved.setSelected(JAPController.getInstance().isAskSavePayment());
 		m_cbxShowAIErrors.setSelected(!PayAccountsFile.getInstance().isAIAccountErrorIgnored());
 		m_cbxBalanceAutoUpdateEnabled.setSelected(PayAccountsFile.getInstance().isBalanceAutoUpdateEnabled());
 		setConnectionTimeout(BIConnection.getConnectionTimeout());
