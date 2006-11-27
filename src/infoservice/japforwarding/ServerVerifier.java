@@ -194,7 +194,11 @@ final public class ServerVerifier
 				verificationLock.wait( ( (long) Constants.FORWARDING_SERVER_VERIFY_TIMEOUT) * (long) 1000);
 				verificationSuccess = verificationLock.getSuccess();
 				/* try to stop the verification thread */
+				// I do not beleive, that this is sufficient, because it sets just set the interrupte state to ture
+				// without really suspending the trhead!
 				verifyThread.interrupt();
+				// do not delete the following line until your really know what you are doing
+				verifyThread.stop();
 			}
 			catch (Exception e)
 			{
