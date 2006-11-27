@@ -186,6 +186,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private static final String XML_ATTR_SHOW_CONFIG_ASSISTANT = "showConfigAssistant";
 	private static final String XML_ATTR_LOGIN_TIMEOUT = "loginTimeout";
 	private static final String XML_ATTR_INFOSERVICE_CONNECT_TIMEOUT = "isConnectionTimeout";
+	private static final String XML_ATTR_ASK_SAVE_PAYMENT = "askIfNotSaved";
 
 	// store classpath as it may not be created successfully after update
 	private final String CLASS_PATH = ClassUtil.getClassPath().trim();
@@ -234,6 +235,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private boolean mbDoNotAbuseReminder = false; // indicates if new warning message in setAnonMode (containing Do no abuse) has been shown
 	private boolean m_bForwarderNotExplain = false; //indicates if the warning message about forwarding should be shown
 	private boolean m_bPayCascadeNoAsk = false;
+
+	private boolean m_bAskSavePayment;
 
 	private long m_nrOfBytesWWW = 0;
 	private long m_nrOfBytesOther = 0;
@@ -555,6 +558,17 @@ public final class JAPController extends Observable implements IProxyListener, O
 			updateAccountStatements();
 		}
 	}
+
+	public boolean isAskSavePayment()
+	{
+		return m_bAskSavePayment;
+	}
+
+	public void setAskSavePayment(boolean a_bAsk)
+	{
+		m_bAskSavePayment = a_bAsk;
+	}
+
 
 	public boolean isShuttingDown()
 	{
@@ -1360,7 +1374,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						JAPModel.getInstance().allowPaymentViaDirectConnection(
 											  XMLUtil.parseAttribute(elemPay, XML_ALLOW_NON_ANONYMOUS_CONNECTION,
 							JAPConstants.DEFAULT_ALLOW_PAYMENT_NON_ANONYMOUS_CONNECTION));
-
+						m_bAskSavePayment = XMLUtil.parseAttribute(elemPay, XML_ATTR_ASK_SAVE_PAYMENT, true);
 						BIConnection.setConnectionTimeout(XMLUtil.parseAttribute(elemPay,
 							BIConnection.XML_ATTR_CONNECTION_TIMEOUT,
 							BIConnection.TIMEOUT_DEFAULT));
@@ -2043,7 +2057,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 					XMLUtil.setAttribute(elemPayment, XML_ALLOW_NON_ANONYMOUS_CONNECTION,
 										 JAPModel.getInstance().isPaymentViaDirectConnectionAllowed());
 					XMLUtil.setAttribute(elemPayment, BIConnection.XML_ATTR_CONNECTION_TIMEOUT,
-								 BIConnection.getConnectionTimeout());
+										 BIConnection.getConnectionTimeout());
+					XMLUtil.setAttribute(elemPayment, XML_ATTR_ASK_SAVE_PAYMENT, m_bAskSavePayment);
 					e.appendChild(elemPayment);
 
 					//Save the known PIs
@@ -3215,7 +3230,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						JAPDialog.showErrorDialog(parent, JAPMessages.getString(MSG_ERROR_SAVING_CONFIG,
 							JAPModel.getInstance().getConfigFile() ), LogType.MISC);
 					}
-					if (parent != null)
+					if (parent != null && getInstance().m_bAskSavePayment)
 					{
 						// we are in GUI mode
 						Enumeration enumAccounts = PayAccountsFile.getInstance().getAccounts();
@@ -3224,15 +3239,17 @@ public final class JAPController extends Observable implements IProxyListener, O
 							if (! ( (PayAccount) enumAccounts.nextElement()).isBackupDone())
 							{
 								JAPDialog.LinkedCheckBox checkbox =
-									new JAPDialog.LinkedCheckBox(false);
+									new JAPDialog.LinkedCheckBox(false, "payment_account");
 								if (!JAPDialog.showYesNoDialog(parent,
 									JAPMessages.getString(MSG_ACCOUNT_NOT_SAVED), checkbox))
 								{
 									// skip closing JAP
 									((JAPSplash)getInstance().m_finishSplash).setVisible(false);
 									getInstance().getViewWindow().setEnabled(true);
+									getInstance().m_bAskSavePayment = !checkbox.getState();
 									return;
 								}
+								getInstance().m_bAskSavePayment = !checkbox.getState();
 							}
 						}
 					}
