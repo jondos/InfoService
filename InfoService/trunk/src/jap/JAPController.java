@@ -86,6 +86,7 @@ import anon.mixminion.MixminionServiceDescription;
 import anon.pay.BI;
 import anon.pay.IAIEventListener;
 import anon.pay.PayAccount;
+import anon.pay.BIConnection;
 import anon.pay.PayAccountsFile;
 import anon.proxy.AnonProxy;
 import anon.proxy.IProxyListener;
@@ -171,6 +172,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public static final String MSG_ASK_WHICH_VERSION = JAPController.class.getName() + "_askWhichVersion";
 	private static final String MSG_CASCADE_NOT_PARSABLE =
 		JAPController.class.getName() + "_cascadeNotParsable";
+	public static final String MSG_PAYMENT_DAMAGED = JAPController.class.getName() + "_paymentDamaged";
+	public static final String MSG_ACCOUNT_NOT_SAVED = JAPController.class.getName() + "_accountNotSaved";
+
 
 
 	private static final String XML_ELEM_LOOK_AND_FEEL = "LookAndFeel";
@@ -1357,12 +1361,18 @@ public final class JAPController extends Observable implements IProxyListener, O
 											  XMLUtil.parseAttribute(elemPay, XML_ALLOW_NON_ANONYMOUS_CONNECTION,
 							JAPConstants.DEFAULT_ALLOW_PAYMENT_NON_ANONYMOUS_CONNECTION));
 
+						BIConnection.setConnectionTimeout(XMLUtil.parseAttribute(elemPay,
+							BIConnection.XML_ATTR_CONNECTION_TIMEOUT,
+							BIConnection.TIMEOUT_DEFAULT));
+
+
 						Element elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay,
 							JAPConstants.CONFIG_PAY_ACCOUNTS_FILE);
 
 						//Load known Payment instances
 						Node nodePIs = XMLUtil.getFirstChildByName(elemPay,
 							JAPConstants.CONFIG_PAYMENT_INSTANCES);
+
 						if (nodePIs != null)
 						{
 							Node nodePI = nodePIs.getFirstChild();
@@ -1398,7 +1408,16 @@ public final class JAPController extends Observable implements IProxyListener, O
 									return true;
 								}
 							};
-							final JAPDialog dialog = new JAPDialog((Component)a_splash,
+							Component background;
+							if (a_splash instanceof Component)
+							{
+								background = (Component)a_splash;
+							}
+							else
+							{
+								background = new Frame();
+							}
+							final JAPDialog dialog = new JAPDialog(background,
 								"JAP: " + JAPMessages.getString(MSG_ACCPASSWORDENTERTITLE), true);
 							dialog.setResizable(false);
 							/** @todo does only work with java 1.5+ as the dll is not loaded at this time */
@@ -1513,7 +1532,27 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 				catch (Exception e)
 				{
-					LogHolder.log(LogLevel.INFO, LogType.MISC, "Error loading Payment configuration.");
+					LogHolder.log(LogLevel.ALERT, LogType.PAY, "Error loading Payment configuration.");
+					if (JAPDialog.isConsoleOnly())
+					{
+						LogHolder.log(LogLevel.ALERT,  LogType.PAY, "Exiting...");
+						System.exit(1);
+					}
+					else
+					{
+						if (JAPDialog.showConfirmDialog(new Frame(), JAPMessages.getString(MSG_PAYMENT_DAMAGED),
+							JAPDialog.OPTION_TYPE_YES_NO, JAPDialog.MESSAGE_TYPE_ERROR,
+							new JAPDialog.LinkedInformationAdapter()
+						{
+							public boolean isOnTop()
+							{
+								return true;
+							}
+						}) != JAPDialog.RETURN_VALUE_YES)
+						{
+							System.exit(1);
+						}
+					}
 				}
 
 				/*loading Tor settings*/
@@ -2003,10 +2042,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 					Element elemPayment = doc.createElement(JAPConstants.CONFIG_PAYMENT);
 					XMLUtil.setAttribute(elemPayment, XML_ALLOW_NON_ANONYMOUS_CONNECTION,
 										 JAPModel.getInstance().isPaymentViaDirectConnectionAllowed());
+					XMLUtil.setAttribute(elemPayment, BIConnection.XML_ATTR_CONNECTION_TIMEOUT,
+								 BIConnection.getConnectionTimeout());
 					e.appendChild(elemPayment);
 
 					//Save the known PIs
 					Element elemPIs = doc.createElement(JAPConstants.CONFIG_PAYMENT_INSTANCES);
+
+
+
 					elemPayment.appendChild(elemPIs);
 					Enumeration pis = accounts.getKnownPIs();
 
@@ -3160,16 +3204,37 @@ public final class JAPController extends Observable implements IProxyListener, O
 						((JAPSplash)getInstance().m_finishSplash).setVisible(true);
 					}
 
+					Window parent = getInstance().getViewWindow();
+					if (getInstance().m_finishSplash instanceof JAPSplash)
+					{
+						parent = (JAPSplash) getInstance().m_finishSplash;
+					}
 					boolean error = m_Controller.saveConfigFile();
 					if (error && bDoNotRestart)
 					{
-						Window parent = getInstance().getViewWindow();
-						if (getInstance().m_finishSplash instanceof JAPSplash)
-						{
-							parent = (JAPSplash)getInstance().m_finishSplash;
-						}
 						JAPDialog.showErrorDialog(parent, JAPMessages.getString(MSG_ERROR_SAVING_CONFIG,
 							JAPModel.getInstance().getConfigFile() ), LogType.MISC);
+					}
+					if (parent != null)
+					{
+						// we are in GUI mode
+						Enumeration enumAccounts = PayAccountsFile.getInstance().getAccounts();
+						while (enumAccounts.hasMoreElements())
+						{
+							if (! ( (PayAccount) enumAccounts.nextElement()).isBackupDone())
+							{
+								JAPDialog.LinkedCheckBox checkbox =
+									new JAPDialog.LinkedCheckBox(false);
+								if (!JAPDialog.showYesNoDialog(parent,
+									JAPMessages.getString(MSG_ACCOUNT_NOT_SAVED), checkbox))
+								{
+									// skip closing JAP
+									((JAPSplash)getInstance().m_finishSplash).setVisible(false);
+									getInstance().getViewWindow().setEnabled(true);
+									return;
+								}
+							}
+						}
 					}
 
 					// disallow new connections

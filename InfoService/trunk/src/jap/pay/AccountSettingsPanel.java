@@ -106,12 +106,14 @@ import jap.JAPConstants;
 import jap.JAPController;
 import jap.JAPModel;
 import jap.JAPUtil;
+import jap.JAPConfInfoService;
 import jap.pay.wizardnew.MethodSelectionPane;
 import jap.pay.wizardnew.PassivePaymentPane;
 import jap.pay.wizardnew.PaymentInfoPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import javax.swing.JComboBox;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -259,6 +261,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 	private static final String MSG_FILE_EXISTS = AccountSettingsPanel.class.getName() + "_fileExists";
 
+	private static final Integer[] CONNECT_TIMEOUTS =
+		new Integer[]{new Integer(60), new Integer(80), new Integer(100), new Integer(120), new Integer(160),
+		new Integer(200), new Integer(250), new Integer(300)};
+
+
+
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
 	private JButton m_btnDeleteAccount;
@@ -283,6 +291,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private JLabel m_lblInactiveMessage, m_lblNoBackupMessage;
 	private JProgressBar m_coinstack;
 	private JList m_listAccounts;
+	private JComboBox m_comboTimeout;
 	private JPanel m_tabBasicSettings, m_tabAdvancedSettings;
 	private boolean m_bReady = true;
 	private boolean m_bDoNotCloseDialog = false;
@@ -523,6 +532,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		advancedPanelConstraints.anchor = GridBagConstraints.NORTHWEST;
 		advancedPanelConstraints.fill = GridBagConstraints.NONE;
 		advancedPanelConstraints.weightx = 1.0;
+		advancedPanelConstraints.gridwidth = 3;
 
 		advancedPanelConstraints.gridx = 0;
 		advancedPanelConstraints.gridy = 0;
@@ -546,10 +556,31 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		panelAdvanced.add(m_cbxShowAIErrors, advancedPanelConstraints);
 
 		advancedPanelConstraints.gridy = 3;
-		advancedPanelConstraints.weighty = 1.0;
 		m_cbxBalanceAutoUpdateEnabled = new JCheckBox(JAPMessages.getString(MSG_BALANCE_AUTO_UPDATE_ENABLED));
 
 		panelAdvanced.add(m_cbxBalanceAutoUpdateEnabled, advancedPanelConstraints);
+
+
+		advancedPanelConstraints.weightx = 0.0;
+		advancedPanelConstraints.gridy++;
+		advancedPanelConstraints.gridx = 0;
+		advancedPanelConstraints.gridwidth = 1;
+		advancedPanelConstraints.anchor = GridBagConstraints.WEST;
+		panelAdvanced.add(new JLabel(JAPMessages.getString(JAPConfInfoService.MSG_CONNECT_TIMEOUT) + " (s):"),
+						  advancedPanelConstraints);
+		m_comboTimeout = new JComboBox(CONNECT_TIMEOUTS);
+		advancedPanelConstraints.fill = GridBagConstraints.NONE;
+		advancedPanelConstraints.gridx++;
+
+		panelAdvanced.add(m_comboTimeout, advancedPanelConstraints);
+
+		advancedPanelConstraints.weightx = 1.0;
+		advancedPanelConstraints.weighty = 1.0;
+		advancedPanelConstraints.gridwidth = 3;
+		advancedPanelConstraints.gridx = 0;
+		advancedPanelConstraints.gridy++;
+		panelAdvanced.add(new JLabel(), advancedPanelConstraints);
+
 
 		updateValues(false);
 
@@ -2245,7 +2276,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		JAPModel.getInstance().allowPaymentViaDirectConnection(m_cbxAllowNonAnonymousConnection.isSelected());
 		PayAccountsFile.getInstance().setIgnoreAIAccountError(!m_cbxShowAIErrors.isSelected());
 		PayAccountsFile.getInstance().setBalanceAutoUpdateEnabled(m_cbxBalanceAutoUpdateEnabled.isSelected());
-
+		BIConnection.setConnectionTimeout(((Integer)m_comboTimeout.getSelectedItem()).intValue() * 1000);
 		return true;
 	}
 
@@ -2271,6 +2302,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		m_cbxAllowNonAnonymousConnection.setSelected(true);
 		m_cbxShowAIErrors.setSelected(true);
 		m_cbxBalanceAutoUpdateEnabled.setSelected(true);
+		setConnectionTimeout(BIConnection.TIMEOUT_DEFAULT);
 	}
 
 	/**
@@ -2283,7 +2315,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			  JAPModel.getInstance().isPaymentViaDirectConnectionAllowed());
 		m_cbxShowAIErrors.setSelected(!PayAccountsFile.getInstance().isAIAccountErrorIgnored());
 		m_cbxBalanceAutoUpdateEnabled.setSelected(PayAccountsFile.getInstance().isBalanceAutoUpdateEnabled());
-
+		setConnectionTimeout(BIConnection.getConnectionTimeout());
 		/*
 		PayAccountsFile accounts = PayAccountsFile.getInstance();
 		Enumeration enumAccounts = accounts.getAccounts();
@@ -2423,4 +2455,34 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		public void run()
 		{}
 	}
+
+	private void setConnectionTimeout(int a_timeoutMS)
+	{
+		int timeout = a_timeoutMS / 1000;
+
+		if (timeout >= ((Integer)m_comboTimeout.getItemAt(m_comboTimeout.getItemCount() - 1)).intValue())
+		{
+			m_comboTimeout.setSelectedIndex(m_comboTimeout.getItemCount() - 1);
+			BIConnection.setConnectionTimeout(
+				 ((Integer)m_comboTimeout.getSelectedItem()).intValue() * 1000);
+		}
+		else if (timeout <=((Integer)m_comboTimeout.getItemAt(0)).intValue())
+		{
+			m_comboTimeout.setSelectedIndex(0);
+			BIConnection.setConnectionTimeout(
+						 ((Integer)m_comboTimeout.getSelectedItem()).intValue() * 1000);
+		}
+		else
+		{
+			for (int i = 1; i < m_comboTimeout.getItemCount(); i++)
+			{
+				if (timeout <= ((Integer)m_comboTimeout.getItemAt(i)).intValue())
+				{
+					m_comboTimeout.setSelectedIndex(i);
+					break;
+				}
+			}
+		}
+	}
+
 }

@@ -46,6 +46,7 @@ import anon.crypto.ByteSignature;
 import anon.crypto.IMyPrivateKey;
 import anon.crypto.XMLSignature;
 import anon.crypto.tinytls.TinyTLS;
+import anon.infoservice.IMutableProxyInterface;
 import anon.infoservice.ImmutableProxyInterface;
 import anon.infoservice.ListenerInterface;
 import anon.pay.xml.XMLAccountCertificate;
@@ -66,11 +67,14 @@ import anon.util.captcha.ZipBinaryImageCaptchaClient;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.infoservice.IMutableProxyInterface;
 
 public class BIConnection implements ICaptchaSender
 {
-	private static final int TIMEOUT = 120000;
+	public static final int TIMEOUT_DEFAULT = 120000;
+
+	public static final String XML_ATTR_CONNECTION_TIMEOUT = "timeout";
+
+	private static int ms_connectionTimeout = TIMEOUT_DEFAULT;
 
 	private BI m_theBI;
 
@@ -95,6 +99,23 @@ public class BIConnection implements ICaptchaSender
 	{
 		m_theBI = theBI;
 		m_biConnectionListeners = new Vector();
+	}
+
+	public static void setConnectionTimeout(int a_timeout)
+	{
+		if (a_timeout >= 0)
+		{
+			ms_connectionTimeout = a_timeout;
+		}
+		else
+		{
+			ms_connectionTimeout = 0;
+		}
+	}
+
+	public static int getConnectionTimeout()
+	{
+		return ms_connectionTimeout;
 	}
 
 	/**
@@ -172,7 +193,7 @@ public class BIConnection implements ICaptchaSender
 								  ":" + a_proxy.getPort());
 					tls = new TinyTLS(li.getHost(), li.getPort(), a_proxy);
 				}
-				tls.setSoTimeout(TIMEOUT);
+				tls.setSoTimeout(ms_connectionTimeout);
 				tls.setRootKey(m_theBI.getCertificate().getPublicKey());
 				tls.startHandshake();
 				m_socket = tls;

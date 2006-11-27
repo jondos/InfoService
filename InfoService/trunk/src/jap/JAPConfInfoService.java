@@ -88,13 +88,14 @@ import logging.LogType;
  */
 public class JAPConfInfoService extends AbstractJAPConfModule implements Observer
 {
+	public static final String MSG_CONNECT_TIMEOUT = JAPConfInfoService.class.getName() + "_connectTimeout";
+
 	private static final String MSG_ALLOW_DIRECT_CONNECTION = JAPConfInfoService.class.getName() +
 		"_allowDirectConnection";
 	private static final String MSG_VIEW_CERT = JAPConfInfoService.class.getName() + "_viewCert";
 	private static final String MSG_REALLY_DELETE = JAPConfInfoService.class.getName() + "_reallyDelete";
 	private static final String MSG_USE_MORE_IS = JAPConfInfoService.class.getName() + "_useMoreIS";
 	private static final String MSG_EXPLANATION = JAPConfInfoService.class.getName() + "_explanation";
-	private static final String MSG_CONNECT_TIMEOUT = JAPConfInfoService.class.getName() + "_connectTimeout";
 
 	private static final Integer[] CONNECT_TIMEOUTS =
 		new Integer[]{new Integer(5), new Integer(10), new Integer(15), new Integer(20), new Integer(25),
