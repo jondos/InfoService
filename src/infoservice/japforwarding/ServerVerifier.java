@@ -90,6 +90,10 @@ final public class ServerVerifier
 	 */
 	private int m_serverPort;
 
+	/** Stores the thread number of the ServerVerifiy-Thread...*
+	 *
+	 */
+	private static long ms_lastServerVerifierThreadID=0;
 	/**
 	 * Creates a new ServerVerifier. It can verify the JAP forwarding server specified by the
 	 * address and port parameters.
@@ -182,7 +186,7 @@ final public class ServerVerifier
 				}
 			}
 		});
-		verifyThread.setName("infoservice.japforwarding.ServerVerifier");
+		verifyThread.setName("infoservice.japforwarding.ServerVerifier - "+ms_lastServerVerifierThreadID++);
 		verifyThread.setDaemon(true);
 		boolean verificationSuccess = false;
 		synchronized (verificationLock)
