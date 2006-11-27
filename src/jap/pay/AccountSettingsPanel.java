@@ -257,6 +257,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		AccountSettingsPanel.class.getName() + "_toolTipExpired";
 	private static final String MSG_PASSWORD_EXPORT =
 		AccountSettingsPanel.class.getName() + "_passwordExport";
+	private static final String MSG_ASK_IF_NOT_SAVED =
+		AccountSettingsPanel.class.getName() + "_askIfNotSaved";
 
 
 	private static final String MSG_FILE_EXISTS = AccountSettingsPanel.class.getName() + "_fileExists";
