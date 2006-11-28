@@ -2083,9 +2083,15 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			Database.getInstance(JAPVersionInfo.class).getEntrySnapshotAsEnumeration();
 		String strTemp;
 		JAPVersionInfo vi = null;
-		if (entries.hasMoreElements())
+		while (entries.hasMoreElements())
 		{
 			vi = (JAPVersionInfo) entries.nextElement();
+			if (JAPConstants.m_bReleasedVersion && !vi.getId().equals(JAPVersionInfo.ID_RELEASE))
+			{
+				vi = null;
+				continue;
+			}
+			break;
 		}
 
 		if ( (vi != null && vi.getJapVersion() != null &&
