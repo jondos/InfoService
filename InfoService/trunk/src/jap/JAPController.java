@@ -569,9 +569,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 			if (m_bAskSavePayment != a_bAsk)
 			{
 				m_bAskSavePayment = a_bAsk;
+				setChanged();
+				notifyObservers(new JAPControllerMessage(JAPControllerMessage.ASK_SAVE_PAYMENT_CHANGED));
 			}
-			setChanged();
-			notifyObservers(new JAPControllerMessage(JAPControllerMessage.ASK_SAVE_PAYMENT_CHANGED));
 		}
 	}
 
