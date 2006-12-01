@@ -322,7 +322,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		if (a_observable instanceof JAPController &&
 			((JAPControllerMessage)a_arg).getMessageCode() == JAPControllerMessage.ASK_SAVE_PAYMENT_CHANGED)
 		{
-			onUpdateValues();
+			m_cbxAskIfNotSaved.setSelected(JAPController.getInstance().isAskSavePayment());
 		}
 	}
 
