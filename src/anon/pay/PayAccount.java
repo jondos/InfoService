@@ -630,6 +630,7 @@ public class PayAccount implements IXMLEncodable
 	public BI getBI()
 	{
 		if (m_theBI == null)
+		{
 			try
 			{
 				m_theBI = PayAccountsFile.getInstance().getBI(m_strBiID);
@@ -637,6 +638,8 @@ public class PayAccount implements IXMLEncodable
 			catch (Exception e)
 			{
 			}
+		}
+
 		return m_theBI;
 	}
 

@@ -3251,6 +3251,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 									return;
 								}
 								getInstance().setAskSavePayment(!checkbox.getState());
+								break;
 							}
 						}
 					}

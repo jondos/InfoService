@@ -304,6 +304,20 @@ public class PaymentMainPanel extends FlippingPanel
 		updateDisplay(PayAccountsFile.getInstance().getActiveAccount());
 	}
 
+	public static String translateBIError(XMLErrorMessage a_msg)
+	{
+		String error = JAPMessages.getString("aiErrorMessage") + "<br>";
+		if (a_msg.getErrorCode() >= 0 && a_msg.getErrorCode() < MSG_PAYMENT_ERRORS.length)
+		{
+			error += JAPMessages.getString(MSG_PAYMENT_ERRORS[a_msg.getErrorCode()]);
+		}
+		else
+		{
+			error += a_msg.getErrorDescription();
+		}
+		return error;
+	}
+
 	/**
 	 * This should be called by the changelistener whenever the state of the
 	 * active account changes.
@@ -515,24 +529,18 @@ public class PaymentMainPanel extends FlippingPanel
 		 */
 		public void accountError(XMLErrorMessage msg)
 		{
+			new Exception().printStackTrace();
 			String error;
 			if (msg.getErrorCode() <= XMLErrorMessage.ERR_OK || msg.getErrorCode() < 0)
 			{
 				// no error
 				return;
 			}
-			if (msg.getErrorCode() < MSG_PAYMENT_ERRORS.length)
-			{
-				 error = JAPMessages.getString(MSG_PAYMENT_ERRORS[msg.getErrorCode()]);
-			}
-			else
-			{
-				 error = msg.getErrorDescription();
-			}
+			error = translateBIError(msg);
 			if (!m_bShowingError)
 			{
 				m_bShowingError = true;
-				String message = JAPMessages.getString("aiErrorMessage") + "<br>" + error;
+				String message = error;
 				if (!JAPModel.getInstance().isCascadeAutoSwitched())
 				{
 					message += "<br><br>" + JAPMessages.getString(MSG_ENABLE_AUTO_SWITCH);

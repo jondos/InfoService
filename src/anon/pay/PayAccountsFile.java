@@ -790,6 +790,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 			if (possibleBI.getID().equals(a_piID))
 			{
 				theBI = possibleBI;
+				break;
 			}
 		}
 		if (theBI == null)

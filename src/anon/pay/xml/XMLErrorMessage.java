@@ -13,7 +13,7 @@ import anon.util.XMLUtil;
  *
  * @author Bastian Voigt
  */
-public class XMLErrorMessage implements IXMLEncodable
+public class XMLErrorMessage extends Exception implements IXMLEncodable
 {
 	public static final int ERR_OK = 0;
 	public static final int ERR_INTERNAL_SERVER_ERROR = 1;
@@ -110,6 +110,11 @@ public class XMLErrorMessage implements IXMLEncodable
 		return m_iErrorCode;
 	}
 
+	public String getMessage()
+	{
+		return m_strErrMsg;
+	}
+
 	private void setValues(Element elemRoot) throws Exception
 	{
 		if (! (elemRoot.getTagName().equals(XML_ELEMENT_NAME)))
@@ -118,6 +123,5 @@ public class XMLErrorMessage implements IXMLEncodable
 		}
 		m_iErrorCode = Integer.parseInt(elemRoot.getAttribute("code"));
 		m_strErrMsg = XMLUtil.parseValue(elemRoot, "");
-
 	}
 }
