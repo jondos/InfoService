@@ -45,11 +45,13 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.Window;
+import java.awt.IllegalComponentStateException;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
+import java.awt.AWTEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentEvent;
@@ -70,6 +72,7 @@ import javax.swing.JTextPane;
 import javax.swing.LookAndFeel;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.plaf.FontUIResource;
 
@@ -81,6 +84,9 @@ import gui.dialog.WorkerContentPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.awt.EventQueue;
+import java.awt.event.WindowEvent;
+import java.awt.MenuComponent;
 
 /**
  * This class contains helper methods for the GUI.
@@ -106,6 +112,10 @@ public final class GUIUtils
 	private static final int MAXIMUM_TEXT_LENGTH = 60;
 
 	private static boolean ms_loadImages = true;
+
+	private static boolean ms_bCapturingMouseMovements = false;
+	private static Point ms_mousePosition;
+	private static final Object SYNC_MOUSE_POSITION = new Object();
 
 	private static final IIconResizer DEFAULT_RESIZER = new IIconResizer()
 	{
@@ -1038,6 +1048,10 @@ public final class GUIUtils
 			new Screen(new Point(0, 0), getDefaultScreenBounds(a_window))};
 	}
 
+	public static Screen getCurrentScreen(Component a_component)
+	{
+		return getCurrentScreen(getParentWindow(a_component));
+	}
 
 	public static Screen getCurrentScreen(Window a_window)
 	{
@@ -1396,6 +1410,175 @@ public final class GUIUtils
 	}
 
 	/**
+	 * Returns the current mouse position on the screen.
+	 * @return the current mouse position on the screen or null if the mouse position is unknown
+	 */
+	public static Point getMousePosition()
+	{
+		synchronized (SYNC_MOUSE_POSITION)
+		{
+			if (!ms_bCapturingMouseMovements)
+			{
+				Runnable run = new Runnable()
+				{
+					public void run()
+					{
+						SwingUtilities.invokeLater(new Runnable()
+						{
+							public void run()
+							{
+								EventQueue theQueue = Toolkit.getDefaultToolkit().getSystemEventQueue();
+								try
+								{
+									while (!JAPDialog.isConsoleOnly())
+									{
+										AWTEvent event = theQueue.getNextEvent();
+
+										Class classActiveEvent;
+										try
+										{
+											// java.awt.ActiveEvent is not known in JDKs < 1.2
+											classActiveEvent = Class.forName("java.awt.ActiveEvent");
+										}
+										catch (ClassNotFoundException a_e)
+										{
+											classActiveEvent = null;
+										}
+										if (classActiveEvent != null && classActiveEvent.isInstance(event))
+										{
+											// ((ActiveEvent) event).dispatch();
+											classActiveEvent.getMethod("dispatch", null).invoke(event, null);
+										}
+										else if (event.getSource() instanceof Component)
+										{
+											try
+											{
+												( (Component) event.getSource()).dispatchEvent(event);
+											}
+											catch (IllegalMonitorStateException a_e)
+											{
+												LogHolder.log(LogLevel.NOTICE, LogType.GUI, a_e);
+											}
+										}
+										else if (event.getSource() instanceof MenuComponent)
+										{
+											( (MenuComponent) event.getSource()).dispatchEvent(event);
+										}
+
+										if (event instanceof MouseEvent)
+										{
+											MouseEvent mouseEvent = (MouseEvent) event;
+											if (event.getSource() != null &&
+												event.getSource() instanceof Component)
+											{
+												Component component = (Component) event.getSource();
+												//synchronized (SYNC_MOUSE_POSITION)
+												{
+													try
+													{
+														ms_mousePosition = component.getLocationOnScreen();
+														ms_mousePosition.x += mouseEvent.getX();
+														ms_mousePosition.y += mouseEvent.getY();
+													}
+													catch (IllegalComponentStateException a_e)
+													{
+														// ignore
+													}
+												}
+											}
+										}
+
+										Thread.yield();
+									}
+								}
+								catch (Exception a_e)
+								{
+									LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, a_e);
+								}
+							}
+						});
+					}
+				};
+
+				if (SwingUtilities.isEventDispatchThread())
+				{
+					new Thread(run).start();
+				}
+				else
+				{
+					run.run();
+				}
+
+				/*
+				Toolkit.getDefaultToolkit().addAWTEventListener(new AWTEventListener()
+				{
+					public void eventDispatched(AWTEvent a_event)
+					{
+						MouseEvent event =  (MouseEvent) a_event;
+						if (event.getSource() != null && event.getSource() instanceof Component)
+						{
+							Component component = (Component)event.getSource();
+							synchronized (SYNC_MOUSE_POSITION)
+							{
+								try
+								{
+									ms_mousePosition = component.getLocationOnScreen();
+									ms_mousePosition.x += event.getX();
+									ms_mousePosition.y += event.getY();
+								}
+								catch (IllegalComponentStateException a_e)
+								{
+									// ignore
+								}
+							}
+						}
+					}
+				}, AWTEvent.MOUSE_EVENT_MASK);
+			    */
+			   ms_bCapturingMouseMovements = true;
+			}
+		}
+		return ms_mousePosition;
+	}
+
+	public static Point getMousePosition(Component a_component)
+	{
+		if (a_component == null)
+		{
+			return null;
+		}
+
+		Point currentPoint = getMousePosition();
+		if (currentPoint == null)
+		{
+			return null;
+		}
+
+		Point componentPoint;
+		try
+		{
+			componentPoint = a_component.getLocationOnScreen();
+		}
+		catch (IllegalComponentStateException a_e)
+		{
+			return null;
+		}
+
+		if (currentPoint.x < componentPoint.x ||
+			currentPoint.x > componentPoint.x + a_component.getSize().width  ||
+			currentPoint.y < componentPoint.y ||
+			currentPoint.y > componentPoint.y + a_component.getSize().height)
+		{
+			return null;
+		}
+
+		currentPoint.x -= componentPoint.x;
+		currentPoint.y -= componentPoint.y;
+
+		return currentPoint;
+	}
+
+	/**
 	 * Checks if a screen overlaps with the default screen and trims the screen area if needed.
 	 * @param a_screen Screen
 	 * @param a_window Window
@@ -1642,6 +1825,7 @@ public final class GUIUtils
 			m_icon.paintIcon(c, g, x, y);
 			scale(g, 1.0 / m_scaleWidth, 1.0 / m_scaleHeight);
 		}
+
 		private static void scale(Graphics a_graphics, double a_scaleWidth, double a_scaleHeight)
 		{
 			if (GRAPHICS_2D != null)

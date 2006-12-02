@@ -117,6 +117,7 @@ import logging.LogLevel;
 import logging.LogType;
 import javax.swing.JComboBox;
 import jap.JAPControllerMessage;
+import anon.pay.xml.XMLErrorMessage;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -1076,9 +1077,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					BIConnection piConn = new BIConnection(pi);
 
 					piConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
-					piConn.authenticate(PayAccountsFile.getInstance().getActiveAccount().
-										getAccountCertificate(),
-										PayAccountsFile.getInstance().getActiveAccount().getPrivateKey());
+					piConn.authenticate(a_accountCreationThread.getAccount().getAccountCertificate(),
+										//  PayAccountsFile.getInstance().getActiveAccount().getAccountCertificate(),
+										a_accountCreationThread.getAccount().getPrivateKey());
+										//PayAccountsFile.getInstance().getActiveAccount().getPrivateKey());
 					LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetching payment options");
 					m_paymentOptions = piConn.getPaymentOptions();
 					piConn.disconnect();
@@ -2362,7 +2364,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 	public void showPIerror(Component a_parent, Exception a_e)
 	{
-		if (!JAPModel.getInstance().isAnonConnected() &&
+		if (a_e instanceof XMLErrorMessage)
+		{
+			JAPDialog.showErrorDialog(a_parent,
+									  PaymentMainPanel.translateBIError((XMLErrorMessage)a_e), LogType.PAY);
+		}
+		else if (!JAPModel.getInstance().isAnonConnected() &&
 			!JAPModel.getInstance().isPaymentViaDirectConnectionAllowed())
 		{
 			int answer =

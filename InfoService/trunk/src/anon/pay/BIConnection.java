@@ -323,6 +323,11 @@ public class BIConnection implements ICaptchaSender
 			String strResponse = XMLUtil.toString(XMLUtil.toXMLDocument(xmlResponse));
 			m_httpClient.writeRequest("POST", "response", strResponse);
 			doc = m_httpClient.readAnswer();
+			XMLErrorMessage message = new XMLErrorMessage(doc);
+			if (message.getErrorCode() >= 0 && message.getErrorCode() != XMLErrorMessage.ERR_OK)
+			{
+				throw message;
+			}
 		}
 		else if (tagname.equals(XMLErrorMessage.XML_ELEMENT_NAME))
 		{
