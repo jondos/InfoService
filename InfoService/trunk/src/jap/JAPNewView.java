@@ -552,7 +552,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				showConfigDialog(JAPConf.ANON_TAB);
+				showConfigDialog(JAPConf.ANON_TAB, JAPController.getInstance().getCurrentMixCascade());
 			}
 		});
 		c1.gridx = 5;
@@ -585,31 +585,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			}
 		});
 		//m_panelAnonService.add(m_lblPrice, c1);
-		final JComboBox comboFilter = new JComboBox(new Object[]{JAPMessages.getString(MSG_IS_TRUST_ALL),
-											  JAPMessages.getString(MSG_IS_TRUST_HIGH),
-											  JAPMessages.getString(MSG_IS_TRUST_SUSPICIOUS),
-											  JAPMessages.getString(MSG_IS_TRUST_PARANOID)});
 
-		comboFilter.setSelectedIndex(JAPModel.getInstance().getTrustModel().getGeneralTrust());
-		comboFilter.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent a_event)
-			{
-				JAPModel.getInstance().getTrustModel().setGeneralTrust(comboFilter.getSelectedIndex());
-				JAPModel.getInstance().getTrustModel().showTrustWarning(comboFilter);
-			}
-		});
-		//m_panelAnonService.add(comboFilter, c1);
-		c1.gridx++;
-		JButton btnEditTrust = new JButton(JAPMessages.getString(MSG_IS_EDIT_TRUST));
-		btnEditTrust.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				showConfigDialog(JAPConf.ANON_TRUST_TAB);
-			}
-		});
-		//m_panelAnonService.add(btnEditTrust, c1);
 
 
 
@@ -1104,7 +1080,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		Database.getInstance(NewCascadeIDEntry.class).addObserver(this);
 		Database.getInstance(CascadeIDEntry.class).addObserver(this);
 		Database.getInstance(JavaVersionDBEntry.class).addObserver(this);
-		JAPModel.getInstance().getTrustModel().addObserver(this);
 
 		JAPModel.getInstance().addObserver(this);
 
@@ -1993,7 +1968,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private void showConfigDialog()
 	{
-		showConfigDialog(null);
+		showConfigDialog(null, null);
 	}
 
 	public void saveWindowPositions()
@@ -2020,7 +1995,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JAPModel.getInstance().setHelpWindowSize(JAPHelp.getInstance().getSize());
 	}
 
-	public void showConfigDialog(String card)
+	public void showConfigDialog(String card, Object a_value)
 	{
 		synchronized (LOCK_CONFIG)
 		{
@@ -2035,7 +2010,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 			if (card != null)
 			{
-				m_dlgConfig.selectCard(card);
+				m_dlgConfig.selectCard(card, a_value);
 			}
 
 			m_dlgConfig.setVisible(true);
@@ -2156,33 +2131,25 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			hashAvailableCascades.put(currentMixCascade.getId(), currentMixCascade);
 		}
 		m_bIgnoreAnonComboEvents = true;
-		if (m_bTrustChanged || !equals(m_comboAnonServices, hashAvailableCascades))
+		if (currentMixCascade == null)
+		{
+			m_comboAnonServices.setNoDataAvailable();
+		}
+		else if (m_bTrustChanged || !equals(currentMixCascade, m_comboAnonServices.getMixCascade()))
 		{
 			m_bTrustChanged = false;
-
+			boolean bShowPopup = m_comboAnonServices.isPopupVisible();
 			m_comboAnonServices.removeAllItems();
-			if (hashAvailableCascades != null && hashAvailableCascades.size() > 0)
+			m_comboAnonServices.setMixCascade(currentMixCascade);
+			if (bShowPopup)
 			{
-				Enumeration enumer = hashAvailableCascades.elements();
-				MixCascade cascade;
-				while (enumer.hasMoreElements())
-				{
-					cascade = (MixCascade) enumer.nextElement();
-					//if (cascade.equals(currentMixCascade) ||
-						//JAPModel.getInstance().getTrustModel().isTrusted(cascade))
-					{
-						m_comboAnonServices.addMixCascade(cascade);
-					}
-				}
-			}
-			else
-			{
-				m_comboAnonServices.setNoDataAvailable();
+				m_comboAnonServices.showPopup();
 			}
 		}
-		m_comboAnonServices.setToolTipText(currentMixCascade.getName());
-		if (m_comboAnonServices.getSelectedItem() == null ||
-			!m_comboAnonServices.getSelectedItem().equals(currentMixCascade))
+		//m_comboAnonServices.setToolTipText(currentMixCascade.getName());
+		m_comboAnonServices.setToolTipText(TrustModel.getCurrentTrustModel().getName());
+		if (m_comboAnonServices.getSelectedItem() == null) // ||
+//			!m_comboAnonServices.getSelectedItem().equals(currentMixCascade))
 		{
 			m_comboAnonServices.setSelectedItem(currentMixCascade);
 		}
@@ -2511,36 +2478,15 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_btnAbout.setIcon(GUIUtils.loadImageIcon(IMG_ABOUT, true));
 	}
 
-	private static boolean equals(JAPMixCascadeComboBox a_one, Hashtable a_two)
+	private static boolean equals(MixCascade a_one, MixCascade a_two)
 	{
-		int count;
-		if (a_one == null || a_two == null || a_one.getMixCascadeCount() == 0)
+		if ((a_one == null && a_two != null) || (a_one != null && a_two == null) ||
+			(a_one != null && (!a_one.equals(a_two) || a_one.isPayment() != a_two.isPayment() ||
+			 !a_one.getName().equals(a_two.getName()))))
 		{
 			return false;
 		}
-		synchronized (a_one)
-		{
-			synchronized (a_two)
-			{
-				count = a_one.getMixCascadeCount();
-				if (count != a_two.size())
-				{
-					return false;
-				}
-				MixCascade currentCascade;
-				MixCascade hashedCascade;
-				for (int i = 0; i < count; i++)
-				{
-					currentCascade = a_one.getMixCascadeItemAt(i);
-					hashedCascade = (MixCascade)a_two.get(currentCascade.getId());
-					if (hashedCascade == null || hashedCascade.isPayment() != currentCascade.isPayment() ||
-						!hashedCascade.getName().equals(currentCascade.getName()))
-					{
-						return false;
-					}
-				}
-			}
-		}
+
 		return true;
 	}
 	private final class ComponentMovedAdapter extends ComponentAdapter

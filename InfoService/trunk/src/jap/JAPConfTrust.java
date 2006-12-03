@@ -94,15 +94,15 @@ final class JAPConfTrust extends AbstractJAPConfModule
 	protected void onUpdateValues()
 	{
 		m_comboTrustPay.setSelectedIndex(
-			  JAPModel.getInstance().getTrustModel().getTrustPay());
+			  TrustModel.getCurrentTrustModel().getTrustPay());
 		m_comboTrustExpiredCerts.setSelectedIndex(
-			  JAPModel.getInstance().getTrustModel().getTrustExpiredCerts());
+			  TrustModel.getCurrentTrustModel().getTrustExpiredCerts());
 	}
 
 	protected boolean onOkPressed()
 	{
-		JAPModel.getInstance().getTrustModel().setTrustPay(m_comboTrustPay.getSelectedIndex());
-		JAPModel.getInstance().getTrustModel().setTrustExpiredCerts(
+		TrustModel.getCurrentTrustModel().setTrustPay(m_comboTrustPay.getSelectedIndex());
+		TrustModel.getCurrentTrustModel().setTrustExpiredCerts(
 			  m_comboTrustExpiredCerts.getSelectedIndex());
 
 		return true;
@@ -169,9 +169,9 @@ final class JAPConfTrust extends AbstractJAPConfModule
 	public void onResetToDefaultsPressed()
 	{
 		m_comboTrustPay.setSelectedIndex(
-			  JAPModel.getInstance().getTrustModel().DEFAULT_TRUST_PAY);
+			  TrustModel.getCurrentTrustModel().TRUST_DEFAULT);
 		m_comboTrustExpiredCerts.setSelectedIndex(
-			  JAPModel.getInstance().getTrustModel().DEFAULT_TRUST_EXPIRED_CERTS);
+			  TrustModel.getCurrentTrustModel().TRUST_DEFAULT);
 	}
 
 	public String getHelpContext()

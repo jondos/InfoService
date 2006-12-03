@@ -28,12 +28,14 @@
 package jap;
 
 import java.util.Vector;
+
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-
-import javax.swing.JPanel;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+
+import anon.infoservice.MixCascade;
 import gui.JAPMessages;
 
 /**
@@ -301,11 +303,12 @@ public class JAPConfServices extends AbstractJAPConfModule
 		return m_anonGeneralModule;
 	}
 
-	public synchronized void selectAnonTab()
+	public synchronized void selectAnonTab(MixCascade a_cascade)
 	{
 		if (JAPModel.getDefaultView() != JAPConstants.VIEW_SIMPLIFIED)
 		{
 			m_tabsAnon.setSelectedIndex(0);
 		}
+		m_anonModule.setSelectedCascade(a_cascade);
 	}
 }

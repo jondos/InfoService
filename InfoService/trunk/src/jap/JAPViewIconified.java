@@ -38,6 +38,7 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Point;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -93,9 +94,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 	private boolean m_anonModeDisabled = false;
 	private Object SYNC_CURSOR = new Object();
 
-	private JPopupMenu m_popup;
-	private Hashtable m_menuItems;
-	private ActionListener m_cascadeItemListener;
+	private CascadePopupMenu m_popup;
 
 	private GUIUtils.WindowDocker m_docker;
 
@@ -270,93 +269,10 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 			{
 				if (SwingUtilities.isRightMouseButton(a_event))
 				{
-					Hashtable hashCascades = Database.getInstance(MixCascade.class).getEntryHash();
-					MixCascade currentCascade = JAPController.getInstance().getCurrentMixCascade();
-					if (currentCascade != null)
-					{
-						hashCascades.put(currentCascade.getId(), currentCascade);
-					}
-					Enumeration cascades = hashCascades.elements();
-
-					if (cascades.hasMoreElements())
-					{
-						MixCascade cascade;
-						JMenuItem menuItem;
-
-						ImageIcon icon;
-						Vector userDefined = new Vector();
-
-						m_popup.removeAll();
-						m_menuItems.clear();
-						while (cascades.hasMoreElements())
-						{
-							cascade = (MixCascade)cascades.nextElement();
-							//if (!JAPModel.getInstance().getTrustModel().isTrusted(cascade))
-							{
-								//continue;
-							}
-
-							if (cascade.isPayment())
-							{
-								icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_PAYMENT);
-							}
-							else if (cascade.isUserDefined())
-							{
-								icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_MANUELL);
-							}
-							else
-							{
-								icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_INTERNET);
-							}
-							menuItem = new JMenuItem(
-								GUIUtils.trim(cascade.toString(), MAX_CASCADE_NAME_LENGTH), icon);
-							if (currentCascade != null && currentCascade.equals(cascade))
-							{
-								menuItem.setFont(new Font(menuItem.getFont().getName(), Font.BOLD,
-									menuItem.getFont().getSize()));
-								m_popup.insert(menuItem, 0);
-							}
-							else
-							{
-								menuItem.setFont(new Font(menuItem.getFont().getName(), Font.PLAIN,
-									menuItem.getFont().getSize()));
-								if (cascade.isUserDefined())
-								{
-									userDefined.addElement(menuItem);
-								}
-								else
-								{
-									m_popup.add(menuItem);
-								}
-							}
-							menuItem.addActionListener(m_cascadeItemListener);
-							m_menuItems.put(menuItem, cascade);
-						}
-						for (int i = 0; i < userDefined.size(); i++)
-						{
-							m_popup.add((JMenuItem)userDefined.elementAt(i));
-						}
-
-
-						int x = a_event.getX() + JAPViewIconified.this.getLocation().x;
-						int y = a_event.getY() + JAPViewIconified.this.getLocation().y;
-						GUIUtils.Screen screen =  GUIUtils.getCurrentScreen(JAPViewIconified.this);
-						Dimension size = m_popup.getPreferredSize();
-						if (x + size.width > screen.getX() +  screen.getWidth())
-						{
-							x = screen.getX() +  screen.getWidth() - size.width;
-						}
-						if (y + size.height > screen.getY() +  screen.getHeight())
-						{
-							y = screen.getY() +  screen.getHeight() - size.height;
-						}
-
-						// put it on the screen
-						x = Math.max(x, screen.getX()) - JAPViewIconified.this.getLocation().x;
-						y = Math.max(y, screen.getY()) - JAPViewIconified.this.getLocation().y;
-
-						m_popup.show(a_event.getComponent(), x, y);
-					}
+					m_popup.update(TrustModel.getCurrentTrustModel());
+					m_popup.show(JAPViewIconified.this,
+								 new Point(a_event.getX() + JAPViewIconified.this.getLocation().x,
+										   a_event.getY()  + JAPViewIconified.this.getLocation().y));
 				}
 				else
 				{
@@ -369,21 +285,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		});
 		setContentPane(p);
 
-		m_popup = new JPopupMenu();
-		m_popup.addMouseListener(new MouseAdapter()
-		{
-			public void mouseClicked(MouseEvent a_event)
-			{
-				if (SwingUtilities.isRightMouseButton(a_event))
-				{
-					m_popup.setVisible(false);
-				}
-			}
-		});
-		m_menuItems = new Hashtable();
-		m_cascadeItemListener = new CascadeItemListener();
-
-
+		m_popup = new CascadePopupMenu();
 		m_docker = new GUIUtils.WindowDocker(p);
 
 		pack();
@@ -666,18 +568,5 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		});
 		blinkThread.setDaemon(true);
 		blinkThread.start();
-	}
-
-	private class CascadeItemListener implements ActionListener
-	{
-		public void actionPerformed(ActionEvent a_event)
-		{
-			MixCascade cascade = (MixCascade)m_menuItems.get(a_event.getSource());
-			if (cascade != null)
-			{
-				JAPController.getInstance().setCurrentMixCascade(cascade);
-			}
-
-		}
 	}
 }

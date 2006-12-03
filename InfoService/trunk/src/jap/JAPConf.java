@@ -66,6 +66,7 @@ import javax.swing.tree.TreePath;
 import anon.infoservice.ImmutableListenerInterface;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.ProxyInterface;
+import anon.infoservice.MixCascade;
 import gui.JAPHelp;
 import gui.JAPJIntField;
 import gui.JAPMessages;
@@ -887,7 +888,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 			{
 				JAPDialog.showErrorDialog(ms_JapConfInstance,
 										  JAPMessages.getString("errorFirewallHostNotNull"), LogType.MISC);
-				this.selectCard(PROXY_TAB);
+				this.selectCard(PROXY_TAB, null);
 				return false;
 			}
 			try
@@ -903,7 +904,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 				JAPDialog.showErrorDialog(ms_JapConfInstance,
 										  JAPMessages.getString("errorFirewallServicePortWrong"),
 										  LogType.MISC);
-				this.selectCard(PROXY_TAB);
+				this.selectCard(PROXY_TAB, null);
 				return false;
 			}
 			if (m_cbProxyAuthentication.isSelected())
@@ -914,7 +915,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 					JAPDialog.showErrorDialog(ms_JapConfInstance,
 											  JAPMessages.getString("errorFirewallAuthUserIDNotNull"),
 											  LogType.MISC);
-					this.selectCard(PROXY_TAB);
+					this.selectCard(PROXY_TAB, null);
 					return false;
 				}
 			}
@@ -1131,12 +1132,19 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 	 * @param a_selectedCard The card to bring to the foreground. See the TAB constants in this
 	 *                       class.
 	 */
-	public void selectCard(String a_strSelectedCard)
+	public void selectCard(String a_strSelectedCard, Object a_value)
 	{
 		if (a_strSelectedCard.equals(ANON_TAB))
 		{
 			m_moduleSystem.selectNode(ANON_SERVICES_TAB);
-			m_confServices.selectAnonTab();
+			if (a_value instanceof MixCascade)
+			{
+				m_confServices.selectAnonTab((MixCascade)a_value);
+			}
+			else
+			{
+				m_confServices.selectAnonTab(null);
+			}
 		}
 		else if (a_strSelectedCard.equals(ANON_TRUST_TAB))
 		{

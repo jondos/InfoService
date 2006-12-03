@@ -849,7 +849,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 
 				JAPModel.getInstance().setCascadeAutoSwitch(
-								XMLUtil.parseAttribute(root, XML_ATTR_AUTO_CHOOSE_CASCADES, false));
+								XMLUtil.parseAttribute(root, XML_ATTR_AUTO_CHOOSE_CASCADES, true));
 				JAPModel.getInstance().denyNonAnonymousSurfing(
 								XMLUtil.parseAttribute(root, JAPModel.XML_DENY_NON_ANONYMOUS_SURFING, false));
 
@@ -1020,9 +1020,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 					addDefaultCertificates();
 				}
 
-				/* load trust model */
-				JAPModel.getInstance().getTrustModel().parse(
-								(Element)XMLUtil.getFirstChildByName(root, TrustModel.XML_ELEMENT_NAME));
+				/* load trust models */
+				TrustModel.fromXmlElement(
+								(Element)XMLUtil.getFirstChildByName(root,
+					TrustModel.XML_ELEMENT_CONTAINER_NAME));
 
 				/* try to load information about cascades */
 				Node nodeCascades = XMLUtil.getFirstChildByName(root, MixCascade.XML_ELEMENT_CONTAINER_NAME);
@@ -1620,14 +1621,16 @@ public final class JAPController extends Observable implements IProxyListener, O
 					Element elemMMMail = (Element) XMLUtil.getFirstChildByName(elemMixminion,
 							JAPConstants.CONFIG_MIXMINION_REPLY_MAIL);
 					String emaddress = XMLUtil.parseAttribute(elemMMMail,"MixminionSender", "");
+
+					/** @todo remove this fix for old config in a later version */
+					/*
 					if (strVersion == null || strVersion.compareTo(JAPConstants.CURRENT_CONFIG_VERSION) < 0)
 					{
-						/** @todo remove this fix for old config in a later version */
 						if (emaddress.equals("none"))
 						{
 							emaddress = "";
 						}
-					}
+					}*/
 
 
 					JAPModel.getInstance().setMixminionMyEMail(emaddress);
@@ -2140,8 +2143,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 				elemLookAndFeels.appendChild(elemLookAndFeel);
 			}
 
-			/* store trust model */
-			e.appendChild(JAPModel.getInstance().getTrustModel().toXmlElement(doc));
+			/* store trust models */
+			e.appendChild(TrustModel.toXmlElement(doc, TrustModel.XML_ELEMENT_CONTAINER_NAME));
 
 			/*stores MixCascades*/
 			Element elemCascades = doc.createElement(MixCascade.XML_ELEMENT_CONTAINER_NAME);
@@ -4578,7 +4581,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 		public void checkTrust(MixCascade a_cascade) throws TrustException, SignatureException
 		{
-			JAPModel.getInstance().getTrustModel().checkTrust(a_cascade);
+			TrustModel.getCurrentTrustModel().checkTrust(a_cascade);
 		}
 	}
 }

@@ -28,10 +28,10 @@
 package anon.client;
 
 import java.security.SignatureException;
+import java.util.Observable;
 
 import anon.client.ITrustModel.TrustException;
 import anon.infoservice.MixCascade;
-import java.util.Observable;
 
 /**
  * A trust model that only checks if a previously done signature verification was successful.
