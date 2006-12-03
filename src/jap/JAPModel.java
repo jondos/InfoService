@@ -124,8 +124,6 @@ public final class JAPModel extends Observable
 
 	private boolean m_bChooseCascasdeConnectionAutomatically;
 
-	private TrustModel m_trustModel = new TrustModel();
-
 	private String m_strLookAndFeel;
 	private Vector m_vecLookAndFeels = new Vector();
 	private LookAndFeelInfo[] m_systemLookAndFeels;
@@ -543,12 +541,6 @@ public final class JAPModel extends Observable
 	{
 		return ms_TheModel.m_iDummyTrafficIntervall;
 	}
-
-	public TrustModel getTrustModel()
-	{
-		return m_trustModel;
-	}
-
 
 	protected void setHttpListenerPortNumber(int p)
 	{

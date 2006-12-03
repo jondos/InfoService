@@ -27,6 +27,8 @@ import java.awt.event.MouseEvent;
 import javax.swing.SwingUtilities;
 import javax.swing.SingleSelectionModel;
 import javax.swing.event.ChangeListener;
+import anon.infoservice.NewCascadeIDEntry;
+import java.awt.Color;
 
 /**
  *
@@ -35,11 +37,14 @@ import javax.swing.event.ChangeListener;
 public class CascadePopupMenu
 {
 	private static final int MAX_CASCADE_NAME_LENGTH = 30;
+	private final Color m_newCascadeColor = new Color(255, 255, 170);
 
 	private ExitHandler m_exitHandler;
 	private JPopupMenu m_popup;
 	private Hashtable m_menuItems;
 	private ActionListener m_cascadeItemListener;
+	private TrustModel m_trustModel;
+	private int m_headerHeight = 0;
 
 	public CascadePopupMenu()
 	{
@@ -52,7 +57,6 @@ public class CascadePopupMenu
 		{
 			throw new IllegalArgumentException("Given argument is null!");
 		}
-
 		m_popup = a_popup;
 		m_popup.addMouseListener(new MouseAdapter()
 		{
@@ -78,6 +82,17 @@ public class CascadePopupMenu
 		m_menuItems = new Hashtable();
 		m_cascadeItemListener = new CascadeItemListener();
 		registerExitHandler(null);
+	}
+
+	public Point getRelativePosition(Point a_pointOnScreen)
+	{
+		return GUIUtils.getRelativePosition(a_pointOnScreen, m_popup);
+	}
+
+	public Point getMousePosition()
+	{
+		//m_popup.getMousePosition()
+		return GUIUtils.getMousePosition(m_popup);
 	}
 
 	public void registerExitHandler(ExitHandler a_exitHandler)
@@ -106,8 +121,31 @@ public class CascadePopupMenu
 					 location.y - parentWindow.getLocation().y);
 	}
 
-	public void update()
+	public void setLocation(Point a_point)
 	{
+		m_popup.setLocation(a_point);
+	}
+
+	public TrustModel getTrustModel()
+	{
+		return m_trustModel;
+	}
+
+	public int getHeaderHeight()
+	{
+		return m_headerHeight;
+	}
+
+	public boolean update(TrustModel a_trustModel)
+	{
+		boolean updated = false;
+
+		if (a_trustModel == null)
+		{
+			throw new IllegalArgumentException("Given argument is null!");
+		}
+		m_trustModel = a_trustModel;
+
 		Hashtable hashCascades = Database.getInstance(MixCascade.class).getEntryHash();
 		MixCascade currentCascade = JAPController.getInstance().getCurrentMixCascade();
 		if (currentCascade != null)
@@ -133,16 +171,19 @@ public class CascadePopupMenu
 			constraints.gridx = 0;
 			constraints.gridy = 0;
 			constraints.anchor = GridBagConstraints.CENTER;
-			panel.add(new JLabel("Test"), constraints);
+			panel.add(new JLabel(m_trustModel.getName()), constraints);
 			m_popup.add(panel);
+			JPopupMenu.Separator separator = new JPopupMenu.Separator();
+			m_popup.add(separator);
+			m_headerHeight = panel.getPreferredSize().height + separator.getPreferredSize().height;
+			//m_headerHeight = m_popup.getPreferredSize().height;
 
-			m_popup.addSeparator();
 			while (cascades.hasMoreElements())
 			{
 				cascade = (MixCascade) cascades.nextElement();
-				//if (!JAPModel.getInstance().getTrustModel().isTrusted(cascade))
+				if (!m_trustModel.isTrusted(cascade))
 				{
-					//continue;
+					continue;
 				}
 
 				if (cascade.isPayment())
@@ -158,7 +199,11 @@ public class CascadePopupMenu
 					icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_INTERNET);
 				}
 				menuItem = new JMenuItem(
-					GUIUtils.trim(cascade.toString(), MAX_CASCADE_NAME_LENGTH), icon);
+								GUIUtils.trim(cascade.toString(), MAX_CASCADE_NAME_LENGTH), icon);
+				if (isNewCascade(cascade))
+				{
+					menuItem.setBackground(m_newCascadeColor);
+				}
 				if (currentCascade != null && currentCascade.equals(cascade))
 				{
 					menuItem.setFont(new Font(menuItem.getFont().getName(), Font.BOLD,
@@ -180,12 +225,14 @@ public class CascadePopupMenu
 				}
 				menuItem.addActionListener(m_cascadeItemListener);
 				m_menuItems.put(menuItem, cascade);
+				updated = true;
 			}
 			for (int i = 0; i < userDefined.size(); i++)
 			{
 				m_popup.add( (JMenuItem) userDefined.elementAt(i));
 			}
 		}
+		return updated;
 	}
 
 	public Point calculateLocationOnScreen(Component a_parent, Point a_pointOnScreen)
@@ -210,11 +257,36 @@ public class CascadePopupMenu
 			return new Point(x, y);
 	}
 
+	public int getWidth()
+	{
+		return (int)m_popup.getPreferredSize().width;
+	}
 
+	public boolean isVisible()
+	{
+		return m_popup.isVisible();
+	}
+
+	public void setVisible(boolean a_bVisible)
+	{
+		m_popup.setVisible(a_bVisible);
+	}
 
 	public interface ExitHandler
 	{
 		public void exited();
+	}
+
+	private boolean isNewCascade(MixCascade a_cascade)
+	{
+		if ( (Database.getInstance(NewCascadeIDEntry.class).getNumberOfEntries() * 2 <
+			  Database.getInstance(MixCascade.class).getNumberOfEntries()) &&
+			 Database.getInstance(NewCascadeIDEntry.class).getEntryById(
+					  a_cascade.getMixIDsAsString()) != null)
+		{
+			   return true;
+		}
+		return false;
 	}
 
 	private class CascadeItemListener implements ActionListener
@@ -224,6 +296,7 @@ public class CascadePopupMenu
 			MixCascade cascade = (MixCascade)m_menuItems.get(a_event.getSource());
 			if (cascade != null)
 			{
+				TrustModel.setCurrentTrustModel(m_trustModel);
 				JAPController.getInstance().setCurrentMixCascade(cascade);
 				m_popup.setVisible(false);
 			}

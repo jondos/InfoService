@@ -479,7 +479,7 @@ public class PaymentMainPanel extends FlippingPanel
 							JAPMessages.getString("payCreateAccountQuestion"));
 						if (answer)
 						{
-							m_view.showConfigDialog(JAPConf.PAYMENT_TAB);
+							m_view.showConfigDialog(JAPConf.PAYMENT_TAB, null);
 						}
 					}
 				});

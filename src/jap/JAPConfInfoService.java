@@ -96,6 +96,9 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 	private static final String MSG_REALLY_DELETE = JAPConfInfoService.class.getName() + "_reallyDelete";
 	private static final String MSG_USE_MORE_IS = JAPConfInfoService.class.getName() + "_useMoreIS";
 	private static final String MSG_EXPLANATION = JAPConfInfoService.class.getName() + "_explanation";
+	private static final String MSG_ALL_INFO_SERVICES =
+		JAPConfInfoService.class.getName() + "_allInfoServices";
+
 
 	private static final Integer[] CONNECT_TIMEOUTS =
 		new Integer[]{new Integer(5), new Integer(10), new Integer(15), new Integer(20), new Integer(25),
@@ -1360,10 +1363,17 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		{
 			advancedPanel.add(m_cbxUseRedundantISRequests, advancedPanelConstraints);
 		}
-		Integer[] askedInfoServices = new Integer[InfoServiceHolder.MAXIMUM_OF_ASKED_INFO_SERVICES];
+		Object[] askedInfoServices = new Object[InfoServiceHolder.MAXIMUM_OF_ASKED_INFO_SERVICES];
 		for (int i = 0; i < askedInfoServices.length; i++)
 		{
-			askedInfoServices[i] = new Integer(i + 1);
+			if (i == (askedInfoServices.length - 1))
+			{
+				askedInfoServices[i] = JAPMessages.getString(MSG_ALL_INFO_SERVICES);
+			}
+			else
+			{
+				askedInfoServices[i] = new Integer(i + 1);
+			}
 		}
 		m_cmbAskedInfoServices = new JComboBox(askedInfoServices);
 		advancedPanelConstraints.gridwidth = 1;
@@ -1379,9 +1389,18 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 			}
 		});
 
-
+		Object recommendenNrOfIS;
+		if (InfoServiceHolder.DEFAULT_OF_ASKED_INFO_SERVICES ==
+			InfoServiceHolder.MAXIMUM_OF_ASKED_INFO_SERVICES)
+		{
+			recommendenNrOfIS = JAPMessages.getString(MSG_ALL_INFO_SERVICES);
+		}
+		else
+		{
+			recommendenNrOfIS = new Integer(InfoServiceHolder.DEFAULT_OF_ASKED_INFO_SERVICES);
+		}
 		m_lblExplanation = new JAPHtmlMultiLineLabel(JAPMessages.getString(
-			  MSG_EXPLANATION, new Object[]{new Integer(InfoServiceHolder.DEFAULT_OF_ASKED_INFO_SERVICES)}));
+			  MSG_EXPLANATION, new Object[]{recommendenNrOfIS}));
 		advancedPanelConstraints.gridy++;
 		advancedPanelConstraints.gridx = 0;
 		advancedPanelConstraints.gridwidth = 3;

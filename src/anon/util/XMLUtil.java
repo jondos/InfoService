@@ -83,10 +83,17 @@ public class XMLUtil
 	 * @param a_node an XML node
 	 * @throws XMLParseException if the given XML node is null
 	 */
-	public static void assertNotNull(Node a_node)
-		throws XMLParseException
+	public static void assertNotNull(Node a_node) throws XMLParseException
 	{
 		if (a_node == null)
+		{
+			throw new XMLParseException(XMLParseException.NODE_NULL_TAG);
+		}
+	}
+
+	public static void assertNotNull(Node a_node, String a_attribute) throws XMLParseException
+	{
+		if (parseAttribute(a_node, a_attribute, (String)null) == null)
 		{
 			throw new XMLParseException(XMLParseException.NODE_NULL_TAG);
 		}

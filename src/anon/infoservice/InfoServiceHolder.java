@@ -58,7 +58,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	public static final String XML_ELEMENT_NAME = "InfoServiceManagement";
 	public static final String XML_ELEM_CHANGE_INFO_SERVICES = "ChangeInfoService";
 	public static final int MAXIMUM_OF_ASKED_INFO_SERVICES = 10;
-	public static final int DEFAULT_OF_ASKED_INFO_SERVICES = 3;
+	public static final int DEFAULT_OF_ASKED_INFO_SERVICES = MAXIMUM_OF_ASKED_INFO_SERVICES;
 
 	/**
 	 * Function number for fetchInformation() - getMixCascades().
@@ -122,7 +122,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	private static final int GET_INFOSERVICE_SERIALS = 14;
 	private static final int GET_MIXCASCADE_SERIALS = 15;
 
-	private static final String XML_ATTR_ASKED_INFO_SERVICES = "askedInfoServices";
+	private static final String XML_ATTR_ASKED_INFO_SERVICES = "nrAskedInfoServices";
 
 	/**
 	 * Stores the instance of InfoServiceHolder (Singleton).
@@ -361,7 +361,15 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 			//else
 			{
 				// try up to a certain maximum of InfoServices
-				askInfoServices = m_nrAskedInfoServices;
+				if (MAXIMUM_OF_ASKED_INFO_SERVICES == m_nrAskedInfoServices)
+				{
+					// ask all InfoServices
+					askInfoServices = infoServiceList.size() + 1;
+				}
+				else
+				{
+					askInfoServices = m_nrAskedInfoServices;
+				}
 			}
 		}
 

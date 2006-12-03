@@ -465,8 +465,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					if (m_payLabel.getForeground() == Color.red)
 					{
 						JAPDialog.showMessageDialog(m_payLabel,
-							JAPMessages.getString(MSG_EXPLAIN_NOT_TRUSTWORTHY),
-							new JAPDialog.LinkedHelpContext(JAPConfTrust.class.getName()));
+							JAPMessages.getString(MSG_EXPLAIN_NOT_TRUSTWORTHY,
+												  TrustModel.getCurrentTrustModel().getName())); //,
+							//new JAPDialog.LinkedHelpContext(JAPConfTrust.class.getName()));
 					}
 					else
 					{
@@ -1205,6 +1206,14 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 	}
 
+	public void setSelectedCascade(MixCascade a_cascade)
+	{
+		if (a_cascade != null)
+		{
+			m_listMixCascade.setSelectedValue(a_cascade, true);
+		}
+	}
+
 	public void fontSizeChanged(final JAPModel.FontResize a_resize, final JLabel a_dummyLabel)
 	{
 		if (m_serverList != null)
@@ -1275,12 +1284,13 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					m_cascadesPanel.remove(m_lblPorts);
 					m_cascadesPanel.add(m_lblPorts, m_constrPorts);
 					if (!cascade.isUserDefined() &&
-						!JAPModel.getInstance().getTrustModel().isTrusted(cascade))
+						!TrustModel.getCurrentTrustModel().isTrusted(cascade))
 					{
 						m_payLabel.setForeground(Color.red);
 						m_payLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 						m_payLabel.setText(JAPMessages.getString(MSG_NOT_TRUSTWORTHY));
-						m_payLabel.setToolTipText(JAPMessages.getString(MSG_EXPLAIN_NOT_TRUSTWORTHY));
+						m_payLabel.setToolTipText(JAPMessages.getString(MSG_EXPLAIN_NOT_TRUSTWORTHY,
+												   TrustModel.getCurrentTrustModel().getName()));
 					}
 					else if (m_infoService.isPay(cascadeId))
 					{
@@ -1601,7 +1611,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				}
 				else if (cascade.isPayment())
 				{
-					if (JAPModel.getInstance().getTrustModel().isTrusted(cascade))
+					if (TrustModel.getCurrentTrustModel().isTrusted(cascade))
 					{
 						icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_PAYMENT, true);
 					}
@@ -1612,7 +1622,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				}
 				else
 				{
-					if (JAPModel.getInstance().getTrustModel().isTrusted(cascade))
+					if (TrustModel.getCurrentTrustModel().isTrusted(cascade))
 					{
 						icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_INTERNET, true);
 					}

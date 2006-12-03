@@ -29,72 +29,156 @@ package jap;
 
 import java.security.SignatureException;
 import java.util.Date;
+import java.util.Random;
+import java.util.Enumeration;
 import java.awt.Component;
+import java.util.Vector;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
 import anon.client.BasicTrustModel;
 import anon.client.ITrustModel.TrustException;
 import anon.infoservice.MixCascade;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
+import anon.util.XMLParseException;
 import anon.infoservice.MixInfo;
 import gui.JAPMessages;
 import gui.dialog.JAPDialog;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+import anon.infoservice.Database;
 
 
 /**
  * This is the general trust model for JAP.
  *
  * @author Rolf Wendolsky
+ * @todo The trust settings must be fully pluggable!!! They are currently hard-coded in separate methods...
  */
 public class TrustModel extends BasicTrustModel implements IXMLEncodable
 {
 	public static final String XML_ELEMENT_NAME = "TrustModel";
+	public static final String XML_ELEMENT_CONTAINER_NAME = "TrustModels";
 
 	public static final String MSG_WARNING_FILTER = JAPConfTrust.class.getName() + "_warningTrustFilter";
 
 	public static final int TRUST_NONE = 0;
 	public static final int TRUST_LITTLE = 1;
-	public static final int TRUST_HIGH = 2;
+	public static final int TRUST_DEFAULT = 2;
 	public static final int TRUST_EXCLUSIVE = 3;
-
-	public static final int GENERAL_TRUST_PARANOID = 3;
-	public static final int GENERAL_TRUST_SUSPICIOUS = 2;
-	public static final int GENERAL_TRUST_HIGH = 1;
-	public static final int GENERAL_TRUST_ALL = 0;
-
-
-	public static final int DEFAULT_TRUST_PAY = TRUST_HIGH;
-	public static final int DEFAULT_TRUST_EXPIRED_CERTS = TRUST_LITTLE;
-	public static final int DEFAULT_TRUST = GENERAL_TRUST_ALL;
 
 	private static final String XML_ELEM_PAY = "Payment";
 	private static final String XML_ELEM_EXPIRED = "ExpiredCerts";
-
+	private static final String XML_ATTR_CURRENT_TRUST_MODEL = "currentTrustModel";
 	private static final String XML_ATTR_TRUST = "trust";
+	private static final String XML_ATTR_NAME = "name";
 	private static final String XML_ATTR_SHOW_WARNING = "showWarning";
-	private static final String[] XML_ATTR_VALUE_TRUST = new String[]{"none", "little", "high", "exclusive"};
-	private static final String[] XML_ATTR_VALUE_GENERAL_TRUST =
-		new String[]{"paranoid", "suspicious", "high", "all"};
+	private static final String[] XML_ATTR_VALUE_TRUST = new String[]{"none", "little", "default", "exclusive"};
 
-	private int m_trustPay = DEFAULT_TRUST_PAY;
-	private int m_trustExpiredCerts = DEFAULT_TRUST_EXPIRED_CERTS;
+	private static final String MSG_CERTIFIED_CASCADES = TrustModel.class.getName() + "_certifiedCascades";
+	private static final String MSG_CASCADES_WITH_COSTS = TrustModel.class.getName() + "_cascadesWithCosts";
+	private static final String MSG_CASCADES_WITHOUT_COSTS =
+		TrustModel.class.getName() + "_cascadesWithoutCosts";
+	private static final String MSG_CASCADES_USER_DEFINED =
+		TrustModel.class.getName() + "_cascadesUserDefined";
 
-	private int m_generalTrust = DEFAULT_TRUST;
+	private static Vector ms_defaultTrustModels;
+	private static Vector ms_trustModels;
+	private static TrustModel ms_currentTrustModel;
 
-	private boolean m_bShowWarning = true;
+	private int m_trustPay = TRUST_DEFAULT;
+	private int m_trustExpiredCerts = TRUST_DEFAULT;
+	private int m_trustUserDefined = TRUST_DEFAULT;
 
-	public void parse(Element a_trustModelElement)
+	private String m_strName;
+	private long m_id;
+
+
+	static
 	{
-		if (a_trustModelElement == null)
+	    ms_defaultTrustModels = new Vector();
+
+		// initialise basic trust models
+		TrustModel model = new TrustModel();
+		model.setName(JAPMessages.getString(MSG_CERTIFIED_CASCADES));
+		model.m_id = 0;
+		model.setTrustExpiredCerts(TRUST_LITTLE);
+		model.setTrustPay(TRUST_DEFAULT);
+		ms_defaultTrustModels.addElement(model);
+
+		model = new TrustModel();
+		model.setName(JAPMessages.getString(MSG_CASCADES_WITH_COSTS));
+		model.m_id = 1;
+		model.setTrustPay(TRUST_EXCLUSIVE);
+		ms_defaultTrustModels.addElement(model);
+
+		model = new TrustModel();
+		model.setName(JAPMessages.getString(MSG_CASCADES_WITHOUT_COSTS));
+		model.m_id = 2;
+		model.setTrustPay(TRUST_NONE);
+		ms_defaultTrustModels.addElement(model);
+
+		model = new TrustModel()
 		{
-			return;
+			public boolean isAdded()
+			{
+				Enumeration enties = Database.getInstance(MixCascade.class).getEntrySnapshotAsEnumeration();
+				while (enties.hasMoreElements())
+				{
+					if (((MixCascade)enties.nextElement()).isUserDefined())
+					{
+						return true;
+					}
+				}
+				return false;
+			}
+		};
+		model.setName(JAPMessages.getString(MSG_CASCADES_USER_DEFINED));
+		model.m_id = 3;
+		model.m_trustUserDefined = TRUST_EXCLUSIVE;
+		ms_defaultTrustModels.addElement(model);
+
+
+		ms_trustModels = (Vector)ms_defaultTrustModels.clone();
+		setCurrentTrustModel((TrustModel)ms_defaultTrustModels.elementAt(0));
+	}
+
+	public TrustModel()
+	{
+		m_id = 0;
+		while (m_id >= 0 && m_id < ms_defaultTrustModels.size())
+		{
+			m_id = Math.abs(new Random().nextLong());
 		}
-		//m_generalTrust = parseGeneralTrust(
-			//  XMLUtil.parseAttribute(a_trustModelElement, XML_ATTR_TRUST, null), m_generalTrust);
-		m_bShowWarning = XMLUtil.parseAttribute(a_trustModelElement, XML_ATTR_SHOW_WARNING, m_bShowWarning);
+		m_strName = "Default trust model";
+	}
+
+	public TrustModel(TrustModel a_trustModel)
+	{
+		this();
+		if (a_trustModel == null)
+		{
+			throw new IllegalArgumentException("No argument given!");
+		}
+		setTrustExpiredCerts(a_trustModel.getTrustExpiredCerts());
+		setTrustPay(getTrustPay());
+	}
+
+	public TrustModel(Element a_trustModelElement) throws XMLParseException
+	{
+		XMLUtil.assertNodeName(a_trustModelElement, XML_ELEMENT_NAME);
+
+		//m_bShowWarning = XMLUtil.parseAttribute(a_trustModelElement, XML_ATTR_SHOW_WARNING, m_bShowWarning);
+		XMLUtil.assertNotNull(a_trustModelElement, XML_ATTR_ID);
+		XMLUtil.assertNotNull(a_trustModelElement, XML_ATTR_NAME);
+
+		m_id = XMLUtil.parseAttribute(a_trustModelElement, XML_ATTR_ID, -1l);
+		m_strName = XMLUtil.parseAttribute(a_trustModelElement, XML_ATTR_NAME, null);
+
 
 		m_trustPay = parseTrust(XMLUtil.parseAttribute(
 			  XMLUtil.getFirstChildByName(a_trustModelElement, XML_ELEM_PAY),
@@ -103,6 +187,164 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 			  XMLUtil.getFirstChildByName(a_trustModelElement, XML_ELEM_EXPIRED),
 			  XML_ATTR_TRUST, null), m_trustExpiredCerts);
 	}
+
+	public boolean equals(Object a_trustModel)
+	{
+		if (a_trustModel == null || !(a_trustModel instanceof TrustModel))
+		{
+			return false;
+		}
+		return getId() == ((TrustModel)a_trustModel).getId();
+	}
+
+	public int hashCode()
+	{
+		return (int)getId();
+	}
+
+	public static boolean addTrustModel(TrustModel a_trustModel)
+	{
+		synchronized (ms_trustModels)
+		{
+			if (a_trustModel != null && !ms_trustModels.contains(a_trustModel))
+			{
+				ms_trustModels.addElement(a_trustModel);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static TrustModel removeTrustModel(TrustModel a_trustModel)
+	{
+		if (a_trustModel.getId() < ms_defaultTrustModels.size())
+		{
+			// default models must not be removed
+			return null;
+		}
+		synchronized (ms_trustModels)
+		{
+			if (a_trustModel != null && ms_trustModels.removeElement(a_trustModel))
+			{
+				return a_trustModel;
+			}
+		}
+		return null;
+	}
+
+	public static Vector getTrustModels()
+	{
+		return (Vector)ms_trustModels.clone();
+	}
+
+	public static void setCurrentTrustModel(long a_id)
+	{
+		if (a_id < 0)
+		{
+			return;
+		}
+
+		synchronized (ms_trustModels)
+		{
+			for (int i = 0; i < ms_trustModels.size(); i++)
+			{
+				if (((TrustModel)ms_trustModels.elementAt(i)).getId() == a_id)
+				{
+					ms_currentTrustModel = (TrustModel)ms_trustModels.elementAt(i);
+					break;
+				}
+			}
+		}
+	}
+
+	public static void setCurrentTrustModel(TrustModel a_trustModel)
+	{
+		if (a_trustModel == null)
+		{
+			return;
+		}
+		synchronized (ms_trustModels)
+		{
+			if (!ms_trustModels.contains(a_trustModel))
+			{
+				ms_trustModels.addElement(a_trustModel);
+			}
+			ms_currentTrustModel = a_trustModel;
+		}
+
+	}
+
+	public static TrustModel getCurrentTrustModel()
+	{
+		return ms_currentTrustModel;
+	}
+
+	public static void fromXmlElement(Element a_container)
+	{
+		if (a_container == null || !a_container.getNodeName().equals(XML_ELEMENT_CONTAINER_NAME))
+		{
+			return;
+		}
+		ms_trustModels.removeAllElements();
+		ms_trustModels = (Vector)ms_defaultTrustModels.clone();
+		NodeList elements = a_container.getElementsByTagName(XML_ELEMENT_NAME);
+		for (int i = 0; i < elements.getLength(); i++)
+		{
+			try
+			{
+				addTrustModel(new TrustModel( (Element) elements.item(i)));
+			}
+			catch (Exception a_e)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Could not load trust model from XML!", a_e);
+			}
+		}
+		setCurrentTrustModel(XMLUtil.parseAttribute(a_container, XML_ATTR_CURRENT_TRUST_MODEL, 0l));
+	}
+
+	public static Element toXmlElement(Document a_doc, String a_xmlContainerName)
+	{
+		if (a_doc == null || a_xmlContainerName == null)
+		{
+			return null;
+		}
+
+		Element container = a_doc.createElement(a_xmlContainerName);
+		XMLUtil.setAttribute(container, XML_ATTR_CURRENT_TRUST_MODEL, getCurrentTrustModel().getId());
+		synchronized (ms_trustModels)
+		{
+			for (int i = ms_defaultTrustModels.size(); i < ms_trustModels.size(); i++)
+			{
+				container.appendChild(((TrustModel)ms_trustModels.elementAt(i)).toXmlElement(a_doc));
+			}
+		}
+		return container;
+	}
+
+	public void setName(String a_strName) throws IllegalArgumentException
+	{
+		if (a_strName == null || a_strName.trim().length() == 0)
+		{
+			throw new IllegalArgumentException("Invalid name for trust model!");
+		}
+		m_strName = a_strName;
+	}
+
+	public String getName()
+	{
+		return m_strName;
+	}
+
+	public String toString()
+	{
+		return m_strName;
+	}
+
+	public long getId()
+	{
+		return m_id;
+	}
+
 
 	public Element toXmlElement(Document a_doc)
 	{
@@ -114,9 +356,9 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 		Element elemTrustModel = a_doc.createElement(XML_ELEMENT_NAME);
 		Element elemTemp;
 
-		XMLUtil.setAttribute(elemTrustModel, XML_ATTR_TRUST, XML_ATTR_VALUE_GENERAL_TRUST[m_generalTrust]);
-		XMLUtil.setAttribute(elemTrustModel, XML_ATTR_SHOW_WARNING, m_bShowWarning);
-
+		//XMLUtil.setAttribute(elemTrustModel, XML_ATTR_SHOW_WARNING, m_bShowWarning);
+		XMLUtil.setAttribute(elemTrustModel, XML_ATTR_ID, m_id);
+		XMLUtil.setAttribute(elemTrustModel, XML_ATTR_NAME, m_strName);
 
 		elemTemp = a_doc.createElement(XML_ELEM_PAY);
 		XMLUtil.setAttribute(elemTemp, XML_ATTR_TRUST, XML_ATTR_VALUE_TRUST[m_trustPay]);
@@ -131,42 +373,14 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 
 	public void showTrustWarning(Component a_component)
 	{
-		if (JAPModel.getInstance().getTrustModel().isWarningShown())
+		//if (JAPModel.getInstance().getTrustModel().isWarningShown())
 		{
 			JAPDialog.LinkedCheckBox checkbox = new JAPDialog.LinkedCheckBox(false);
 			JAPDialog.showMessageDialog(a_component,
 										JAPMessages.getString(TrustModel.MSG_WARNING_FILTER),
 										checkbox);
-			JAPModel.getInstance().getTrustModel().setShowWarning(!checkbox.getState());
+			//JAPModel.getInstance().getTrustModel().setShowWarning(!checkbox.getState());
 		}
-	}
-
-	public void setGeneralTrust(int a_trust)
-	{
-		synchronized (this)
-		{
-			if (m_generalTrust != a_trust)
-			{
-				setChanged();
-				m_generalTrust = a_trust;
-			}
-			notifyObservers();
-		}
-	}
-
-	public void setShowWarning(boolean a_bShow)
-	{
-		m_bShowWarning = a_bShow;
-	}
-
-	public boolean isWarningShown()
-	{
-		return m_bShowWarning;
-	}
-
-	public int getGeneralTrust()
-	{
-		return m_generalTrust;
 	}
 
 	public void setTrustExpiredCerts(int a_trust)
@@ -205,43 +419,51 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 		return m_trustPay;
 	}
 
+	public boolean isAdded()
+	{
+		return true;
+	}
+
 	public void checkTrust(MixCascade a_cascade) throws TrustException, SignatureException
 	{
+		if (m_trustUserDefined == TRUST_EXCLUSIVE)
+		{
+			if (a_cascade != null && a_cascade.isUserDefined())
+			{
+				if (a_cascade.getCertificate() == null && (a_cascade.getNumberOfMixes() == 0 ||
+					a_cascade.getNumberOfMixes() == 1 &&
+					(a_cascade.getMixInfo(0) == null || a_cascade.getMixInfo(0).getCertificate() == null)))
+				{
+					// not yet connected; do not make further tests
+					return;
+				}
+			}
+			else
+			{
+				throw new TrustException("Only user-defined services allowed!");
+			}
+		}
+
 		super.checkTrust(a_cascade);
 
-		if (m_generalTrust == GENERAL_TRUST_ALL)
-		{
-			return;
-		}
 
-		if (a_cascade.isUserDefined())
-		{
-			// do not make further tests
-			return;
-		}
 
-		if (m_generalTrust == GENERAL_TRUST_PARANOID)
+		// test if all mixes have valid certificates.
+		MixInfo info;
+		for (int i = 0; i < a_cascade.getNumberOfMixes(); i++)
 		{
-			// test if all mixes have valid certificates; do more later...
-			MixInfo info;
-			for (int i = 0; i < a_cascade.getNumberOfMixes(); i++)
+			info = a_cascade.getMixInfo(i);
+			if (info == null || !info.isVerified())
 			{
-				info = a_cascade.getMixInfo(i);
-				if (info == null || !info.isVerified())
-				{
-					throw new SignatureException("Mix " + (i + 1) + " has no valid signature!");
-				}
+				throw new SignatureException("Mix " + (i + 1) + " has no valid signature!");
 			}
 		}
 
 		if (a_cascade.isPayment())
 		{
-			if (m_trustPay != TRUST_HIGH)
+			if (m_trustPay == TRUST_NONE)
 			{
-				if (m_trustPay < m_generalTrust)
-				{
-					throw new TrustException("Payment is not trusted!");
-				}
+				throw new TrustException("Payment is not allowed!");
 			}
 		}
 		else if (m_trustPay == TRUST_EXCLUSIVE)
@@ -251,29 +473,11 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 
 		if (a_cascade.getCertPath() != null && !a_cascade.getCertPath().checkValidity(new Date()))
 		{
-			if (m_trustExpiredCerts < m_generalTrust)
+			if (m_trustExpiredCerts == TRUST_NONE)
 			{
 				throw new TrustException("Expired certificates are not trusted!");
 			}
 		}
-	}
-
-	private int parseGeneralTrust(String a_trustValue, int a_default)
-	{
-		if (a_trustValue == null)
-		{
-			return a_default;
-		}
-
-		for (int i = 0; i < XML_ATTR_VALUE_GENERAL_TRUST.length; i++)
-		{
-			if (XML_ATTR_VALUE_GENERAL_TRUST[i].equals(a_trustValue))
-			{
-				return i;
-			}
-		}
-
-		return a_default;
 	}
 
 	private int parseTrust(String a_trustValue, int a_default)

@@ -378,7 +378,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_sliderDummyTrafficIntervall.setValue(DT_INTERVAL_DEFAULT);
 		m_cbAutoConnect.setSelected(true);
 		m_cbAutoReConnect.setSelected(true);
-		m_cbAutoChooseCascades.setSelected(false);
+		m_cbAutoChooseCascades.setSelected(true);
 		setLoginTimeout(AnonClient.DEFAULT_LOGIN_TIMEOUT);
 	}
 
