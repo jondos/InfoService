@@ -45,6 +45,7 @@ import java.util.Vector;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.util.Util;
 
 public abstract class PaxosAdapter extends PaxosAcceptor
 {
@@ -84,7 +85,7 @@ public abstract class PaxosAdapter extends PaxosAcceptor
 
     /**
      * Manually start an agreement
-     * 
+     *
      * @fixme remove me in production!
      */
     public void startProtocolByOperator()
@@ -175,14 +176,14 @@ public abstract class PaxosAdapter extends PaxosAcceptor
     /**
      * Tests if the PaxosInstance-identifier in this messages is acceptable,
      * i.e. is the same as our own
-     * 
+     *
      * @param a_msg
      *            The message to be tested
      * @return true if the identifier is ok, false otherwise
      */
     protected boolean roundNrAcceptable(PaxosMessage a_msg)
     {
-        String r1 = m_lastRandom.replace("--r", "");
+        String r1 = Util.replaceAll(m_lastRandom,"--r", "");
         String r2 = r1 + "--r";
         return (a_msg.getPaxosInstanceIdentifier().equals(r1) || a_msg.getPaxosInstanceIdentifier()
                 .equals(r2));
@@ -191,7 +192,7 @@ public abstract class PaxosAdapter extends PaxosAcceptor
     /**
      * Tests if the sender of this message is in the snapshot for the current
      * PaxosInstance.
-     * 
+     *
      * @param a_msg
      *            The message whose sender should be checked
      * @return true if the sender is not in the snapshot, false otherwise
@@ -205,7 +206,7 @@ public abstract class PaxosAdapter extends PaxosAcceptor
      * Sends a RejectMessage to the sender of the given message. This happens if
      * the PaxosInstance-identifier of the given message doesn't match our own
      * one
-     * 
+     *
      * @param a_msg
      *            The message whose sender will receive a RejectMessage
      */
@@ -217,7 +218,7 @@ public abstract class PaxosAdapter extends PaxosAcceptor
         PaxosMessage reject = new PaxosMessage(PaxosMessage.REJECT);
         reject.setInitiator(a_msg.getInitiator());
         reject.setSender(getIdentifier());
-        reject.setProposal(m_lastRandom.replace("--r", ""));
+        reject.setProposal(Util.replaceAll(m_lastRandom,"--r", ""));
         reject.setPaxosInstanceIdentifier(a_msg.getPaxosInstanceIdentifier());
         reject.setRound(a_msg.getRound());
         IPaxosTarget tmp = (IPaxosTarget) m_targets.get(a_msg.getSender());
@@ -228,7 +229,7 @@ public abstract class PaxosAdapter extends PaxosAcceptor
      * Handles an incomming message. A new agreement is startet if none is
      * running and the PaxosIdenifier of the incomming message is correct.
      * otherwise a RejectMessage will be sent
-     * 
+     *
      * @param a_msg
      *            The message to be handled
      * @return
@@ -297,7 +298,7 @@ public abstract class PaxosAdapter extends PaxosAcceptor
 
     /**
      * Handles the message by passing it to the underlying PaxosAcceptor
-     * 
+     *
      * @param a_msg
      *            The message to be handled
      */
@@ -311,7 +312,7 @@ public abstract class PaxosAdapter extends PaxosAcceptor
      * random is not correct. All executions with the old identifier will be
      * canceled and a new PaxosInstance with the correct identifier will be
      * started
-     * 
+     *
      * @param a_newRound
      */
     public void notifyReject(String a_newRound)
@@ -360,7 +361,7 @@ public abstract class PaxosAdapter extends PaxosAcceptor
     /**
      * If something went terribly wrong, this gets called. Should never happen
      * but who knows ;-)
-     * 
+     *
      * @todo Handle confusion (maybe send mail to operator...)
      */
     private void babylonianConfusion()
@@ -461,8 +462,7 @@ public abstract class PaxosAdapter extends PaxosAcceptor
         // If the last random was 00000, we don't use the outcome of this
         // agreement because of
         // a possible replay attack. Instead we restart the agreement :-)
-        final boolean needRestart = AgreementConstants.DEFAULT_COMMON_RANDOM.equals(m_lastRandom
-                .replace("--r", ""));
+        final boolean needRestart = AgreementConstants.DEFAULT_COMMON_RANDOM.equals(Util.replaceAll(m_lastRandom,"--r", ""));
         if (!needRestart)
         {
             // we don't use the value if less then 2 third of the infoservices
@@ -539,7 +539,7 @@ public abstract class PaxosAdapter extends PaxosAcceptor
 
     /**
      * What shall we do with an agreement? You can define it here
-     * 
+     *
      * @param a_agreement
      */
     protected abstract void useAgreement(long a_agreement);
@@ -554,7 +554,7 @@ public abstract class PaxosAdapter extends PaxosAcceptor
 
         /*
          * (non-Javadoc)
-         * 
+         *
          * @see java.lang.Thread#run()
          */
         public void run()
@@ -593,7 +593,7 @@ public abstract class PaxosAdapter extends PaxosAcceptor
         /**
          * Checks if the current time is acceptable to start a the passive phase
          * for the new agreement
-         * 
+         *
          * @return true if a new agreement can be startet, falso otherwise
          */
         private boolean timeForAgreement()
