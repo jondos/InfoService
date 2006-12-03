@@ -596,7 +596,7 @@ public class EchoMulticastAgreementHandlerImpl implements IAgreementHandler
         {
             comRand += Long.parseLong(((String) emu.nextElement()));
         }
-        return Long.valueOf(comRand);
+        return new Long(comRand);
     }
 
     /**

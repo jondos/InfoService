@@ -1110,6 +1110,7 @@
     <property category="nodeJavadoc" name="directory" value="doc"/>
     <property category="nodeJavadoc" name="displayAllOutput" value="1"/>
   </node>
+  <file path="build.xml"/>
   <file path="JAP.doxy"/>
   <file path="src/JAP.java"/>
   <file path="src/JAPMacintosh.java"/>
