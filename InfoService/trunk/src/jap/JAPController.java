@@ -3243,7 +3243,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 							if (! ( (PayAccount) enumAccounts.nextElement()).isBackupDone())
 							{
 								JAPDialog.LinkedCheckBox checkbox =
-									new JAPDialog.LinkedCheckBox(false, "payment_account");
+									new JAPDialog.LinkedCheckBox(false, "payment_account")
+								{
+									public boolean isOnTop()
+									{
+										return true;
+									}
+								};
+								System.out.println(parent);
 								if (!JAPDialog.showYesNoDialog(parent,
 									JAPMessages.getString(MSG_ACCOUNT_NOT_SAVED), checkbox))
 								{
