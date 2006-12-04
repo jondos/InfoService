@@ -33,7 +33,7 @@ import java.sql.DriverManager;
 /**
  * Klasse die ein Objekt liefert, welches {@link DBInterface} implementiert.
  * Zur Zeit ist nur der Zugriff auf eine Postgres-Datenbank implementiert.
- * Zur Unterstützung einer anderen Datenbank (z.B. MySQL) sind diese Klasse
+ * Zur Unterstuetzung einer anderen Datenbank (z.B. MySQL) sind diese Klasse
  * und gegebenenfalls {@link DataBase} anzupassen.
  *
  * @author Andreas Mueller
@@ -82,7 +82,7 @@ public abstract class DBSupplier
 	}
 
 	/**
-	 * Schließt die Datenbank.
+	 * Schliesst die Datenbank.
 	 *
 	 * @throws Exception
 	 */

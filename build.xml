@@ -15,6 +15,7 @@
   <path id="classpath_ftplib" location="${classpath_ftplib_file_name}"/>
   <path id="classpath_xml-rpc" location="${classpath_xmlrpc_file_name}"/>
   <path id="classpath_java_mail" location="${build.libs}/mail.jar"/>
+  <path id="classpath_mrj" location="${build.libs}/MRJClasses.zip"/>
   <path id="classpath_jama" location="${build.libs}/jama.jar"/>
   <path id="classpath_log4j" location="${classpath_log4j_file_name}"/>
   <path id="classpath_bouncycastle_jap" location="${classpath_bouncy_file_name}"/>
@@ -25,6 +26,7 @@
     <path refid="classpath_java_mail"/>
     <path refid="classpath_jama"/>
     <path refid="classpath_log4j"/>
+    <path refid="classpath_mrj"/>
     <path refid="classpath_bouncycastle_jap"/>
   </path>
   <target name="init-dirs">
@@ -42,6 +44,7 @@
     <get src="http://anon.inf.tu-dresden.de/develop/mail.jar" verbose="true" dest="${build.libs}/mail.jar">    </get>
     <get src="http://anon.inf.tu-dresden.de/develop/Jama.jar" verbose="true" dest="${build.libs}/jama.jar">    </get>
     <get src="http://anon.inf.tu-dresden.de/develop/log4j.jar" verbose="true" dest="${classpath_log4j_file_name}">    </get>
+    <get src="http://anon.inf.tu-dresden.de/develop/MRJClasses.zip" verbose="true" dest="${build.libs}/MRJClasses.zip">    </get>
   </target>
   <target name="init" depends="init-libs"/>
   <target name="compile" depends="init" description="compile the source ">
