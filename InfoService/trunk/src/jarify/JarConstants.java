@@ -32,7 +32,7 @@ package jarify;
  */
 final class JarConstants
 {
-	//~ Static variables/initializers ····················································
+	/// Static variables/initializers
 
 	/**
 	 * the realtiv path (to jar file) to meta-if directory
