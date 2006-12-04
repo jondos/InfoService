@@ -36,12 +36,15 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.IllegalComponentStateException;
 import java.awt.Point;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JScrollPane;
@@ -184,7 +187,9 @@ public class JAPMixCascadeComboBox extends JComboBox
 		private JLabel m_componentNotTrustedManualCascade;
 		private JLabel m_componentNotTrustedPaymentCascade;
 
-		private JMenu m_cascadePopupMenu;
+		private JLabel m_lblCascadePopupMenu;
+		private JLabel m_lblMenuArrow;
+		private JPanel m_cascadePopupMenu;
 		private CascadePopupMenu m_currentCascadePopup;
 
 		public JAPMixCascadeComboBoxListCellRender()
@@ -238,8 +243,25 @@ public class JAPMixCascadeComboBox extends JComboBox
 			m_componentPaymentCascade.setOpaque(true);
 			m_componentPaymentCascade.setBorder(new EmptyBorder(1, 3, 1, 3));
 
-
-			m_cascadePopupMenu = new JMenu();
+			m_lblCascadePopupMenu = new JLabel();
+			m_lblCascadePopupMenu.setOpaque(true);
+			m_cascadePopupMenu = new JPanel(new GridBagLayout());
+			m_cascadePopupMenu.setBorder(new EmptyBorder(1, 3, 1, 1));
+			GridBagConstraints contraints = new GridBagConstraints();
+			contraints.anchor = GridBagConstraints.WEST;
+			contraints.gridx = 0;
+			contraints.gridy = 0;
+			m_cascadePopupMenu.add(m_lblCascadePopupMenu, contraints);
+			contraints.gridx++;
+			contraints.anchor = GridBagConstraints.EAST;
+			contraints.weightx = 1.0;
+			m_lblMenuArrow = new JLabel(GUIUtils.loadImageIcon("arrow46.gif", true));
+			m_lblMenuArrow.setOpaque(true);
+			m_cascadePopupMenu.add(m_lblMenuArrow, contraints);
+			m_cascadePopupMenu.setOpaque(true);
+			//m_cascadePopupMenu.setIcon(GUIUtils.loadImageIcon("arrow46.gif"));
+			//m_cascadePopupMenu.setHorizontalTextPosition(JLabel.LEADING);
+			//m_cascadePopupMenu.setIconTextGap(500);
 			m_currentCascadePopup = new CascadePopupMenu();
 			/*
 			m_currentCascadePopup.registerExitHandler(new CascadePopupMenu.ExitHandler()
@@ -358,20 +380,25 @@ public class JAPMixCascadeComboBox extends JComboBox
 					m_cascadePopupMenu.setBackground(list.getBackground());
 					m_cascadePopupMenu.setForeground(list.getForeground());
 				}
+				m_lblMenuArrow.setBackground(m_cascadePopupMenu.getBackground());
+				m_lblMenuArrow.setForeground(m_cascadePopupMenu.getForeground());
+				m_lblCascadePopupMenu.setBackground(m_cascadePopupMenu.getBackground());
+				m_lblCascadePopupMenu.setForeground(m_cascadePopupMenu.getForeground());
+
 				if (((TrustModel)value).equals(TrustModel.getCurrentTrustModel()))
 				{
-					m_cascadePopupMenu.setFont(new Font(m_cascadePopupMenu.getFont().getName(),
+					m_lblCascadePopupMenu.setFont(new Font(m_lblCascadePopupMenu.getFont().getName(),
 						Font.BOLD,
-						m_cascadePopupMenu.getFont().getSize()));
+						m_lblCascadePopupMenu.getFont().getSize()));
 				}
 				else
 				{
-					m_cascadePopupMenu.setFont(new Font(m_cascadePopupMenu.getFont().getName(),
+					m_lblCascadePopupMenu.setFont(new Font(m_lblCascadePopupMenu.getFont().getName(),
 						Font.PLAIN,
-						m_cascadePopupMenu.getFont().getSize()));
+						m_lblCascadePopupMenu.getFont().getSize()));
 				}
 
-				m_cascadePopupMenu.setText(((TrustModel)value).getName());
+				m_lblCascadePopupMenu.setText(((TrustModel)value).getName());
 
 				return m_cascadePopupMenu;
 			}
