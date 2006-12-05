@@ -337,9 +337,9 @@ public class JAPMixCascadeComboBox extends JComboBox
 
 			if (isSelected && m_currentCascadePopup.isVisible() &&
 				m_currentCascadePopup.getTrustModel() != null &&
-				!m_currentCascadePopup.getTrustModel().equals(value))
+				!m_currentCascadePopup.getTrustModel().equals(value) &&
+				m_currentCascadePopup.getMousePosition() == null) // important for some L&Fs
 			{
-
 				m_currentCascadePopup.setVisible(false);
 			}
 
