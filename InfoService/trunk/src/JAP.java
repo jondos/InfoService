@@ -448,7 +448,7 @@ public class JAP
 		m_controller.addJAPObserver(view);
 		m_controller.addEventListener(view);
 		// Register the Main view where they are needed
-		m_controller.setView(view);
+		m_controller.setView(view, splash instanceof JAPSplash);
 
 		// Create the iconified view
 		if (!bConsoleOnly)
