@@ -31,6 +31,7 @@ import java.util.Vector;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.Insets;
 import java.awt.Font;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
@@ -102,16 +103,6 @@ public class SystrayPopupMenu extends PopupMenu
 			connected = JAPMessages.getString(MSG_NOT_CONNECTED);
 		}
 
-		label = new JLabel(JAPMessages.getString(MSG_CURRENT_SERVICE, new Object[]{connected, users}));
-		GUIUtils.setFontStyle(label, Font.BOLD);
-		JPanel panel = new JPanel(new GridBagLayout());
-		GridBagConstraints constraints = new GridBagConstraints();
-		constraints.gridx = 0;
-		constraints.gridy = 0;
-		constraints.anchor = GridBagConstraints.CENTER;
-		panel.add(label, constraints);
-		getPopupMenu().add(panel);
-
 
 		if (cascade.isPayment())
 		{
@@ -125,15 +116,13 @@ public class SystrayPopupMenu extends PopupMenu
 		{
 			icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_INTERNET);
 		}
+
 		label = new JLabel(GUIUtils.trim(cascade.getName()));
 		GUIUtils.setFontStyle(label, Font.BOLD);
 		label.setIcon(icon);
-		//label.setOpaque(true);
-		//label.setBackground(getPopupMenu().getBackground());
-		panel = new JPanel(new GridBagLayout());
-		//panel.setOpaque(true);
-		//panel.setBackground(getPopupMenu().getBackground());
-		constraints = new GridBagConstraints();
+
+		JPanel panel = new JPanel(new GridBagLayout());
+		GridBagConstraints constraints = new GridBagConstraints();
 		constraints.gridx = 0;
 		constraints.gridy = 0;
 		constraints.weightx = 1.0;
@@ -141,6 +130,19 @@ public class SystrayPopupMenu extends PopupMenu
 		constraints.anchor = GridBagConstraints.WEST;
 		panel.add(label, constraints);
 		getPopupMenu().add(panel);
+
+		panel = new JPanel(new GridBagLayout());
+		constraints = new GridBagConstraints();
+		constraints.gridx = 0;
+		constraints.gridy = 0;
+		constraints.weightx = 1.0;
+		constraints.fill = GridBagConstraints.HORIZONTAL;
+		constraints.anchor = GridBagConstraints.WEST;
+		constraints.insets = new Insets(0, icon.getIconWidth() + label.getIconTextGap(), 0, 0);
+		label = new JLabel("(" + connected + users + ")");
+		panel.add(label, constraints);
+		getPopupMenu().add(panel);
+
 
 
 		final JCheckBoxMenuItem cbxMenuItem = new JCheckBoxMenuItem(JAPMessages.getString(MSG_ANONYMITY_MODE));
