@@ -86,7 +86,7 @@ public class JAPMixCascadeComboBox extends JComboBox
 		return m_currentCascade;
 	}
 
-	public void showPopup()
+	public void showStaticPopup()
 	{
 		if (m_comboPopup != null)
 		{
@@ -302,7 +302,7 @@ public class JAPMixCascadeComboBox extends JComboBox
 									m_currentCascadePopup.setVisible(false);
 									if (m_comboPopup == null || !m_comboPopup.isVisible())
 									{
-										JAPMixCascadeComboBox.this.showPopup();
+										JAPMixCascadeComboBox.this.showStaticPopup();
 									}
 								}
 							}

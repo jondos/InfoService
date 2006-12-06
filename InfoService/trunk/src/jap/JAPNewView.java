@@ -2153,7 +2153,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			m_comboAnonServices.setMixCascade(currentMixCascade);
 			if (bShowPopup)
 			{
-				m_comboAnonServices.showPopup();
+				m_comboAnonServices.showStaticPopup();
 			}
 		}
 		//m_comboAnonServices.setToolTipText(currentMixCascade.getName());
