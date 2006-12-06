@@ -94,8 +94,6 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 	private boolean m_anonModeDisabled = false;
 	private Object SYNC_CURSOR = new Object();
 
-	private CascadePopupMenu m_popup;
-
 	private GUIUtils.WindowDocker m_docker;
 
 	private static Frame getParentFrame()
@@ -269,10 +267,17 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 			{
 				if (SwingUtilities.isRightMouseButton(a_event))
 				{
-					m_popup.update(TrustModel.getCurrentTrustModel());
-					m_popup.show(JAPViewIconified.this,
-								 new Point(a_event.getX() + JAPViewIconified.this.getLocation().x,
-										   a_event.getY()  + JAPViewIconified.this.getLocation().y));
+					SystrayPopupMenu popup = new SystrayPopupMenu(
+									   new SystrayPopupMenu.MainWindowListener()
+					{
+						public void onShowMainWindow()
+						{
+							switchBackToMainView();
+						}
+					});
+					popup.show(JAPViewIconified.this,
+							   new Point(a_event.getX() + JAPViewIconified.this.getLocation().x,
+										 a_event.getY()  + JAPViewIconified.this.getLocation().y));
 				}
 				else
 				{
@@ -285,7 +290,6 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		});
 		setContentPane(p);
 
-		m_popup = new CascadePopupMenu();
 		m_docker = new GUIUtils.WindowDocker(p);
 
 		pack();

@@ -10,7 +10,7 @@
 	#pragma once
 #endif // _MSC_VER > 1000
 
-#define JAPDLL_VERSION "00.02.003"
+#define JAPDLL_VERSION "00.03.001"
 
 // Fügen Sie hier Ihre Header-Dateien ein
 #include <windows.h>
@@ -28,6 +28,8 @@ struct t_find_window_by_name
 		HWND hWnd;
 	};
 	
+
+const char* JAVA_INTERFACE_CLASSNAME = "gui/JAPDll";
 
 // globales Window Handle --> if !=null --> JAP is minimized
 HWND g_hWnd=NULL;
@@ -50,7 +52,10 @@ HICON g_hiconWindowLarge;
 
 HANDLE g_hThread; //Handle for the Blinking-Thread
 BOOL g_isBlinking;
-VOID ShowWindowFromTaskbar() ;
+BOOL bPopupClosed = true;
+VOID ShowWindowFromTaskbar(BOOL) ;
+VOID showPopupMenu(HWND);
+VOID closePopupMenu();
 
 //Stores the Filename of the DLL
 TCHAR strModuleFileName[4100];
@@ -72,6 +77,7 @@ DWORD WINAPI MsgProcThread( LPVOID lpParam )
 		return TRUE;
 	}
 
+
 /*
  * Neue WndProc zum Handeln von Ereignissen, besonders WM_TASKBAREVENT, 
  * das gesendet wird wenn etwas an "unserem" Icon im Taskbar passiert.
@@ -79,11 +85,21 @@ DWORD WINAPI MsgProcThread( LPVOID lpParam )
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	{
 		if(msg==WM_TASKBAREVENT)
+		{
+			if (lParam == WM_LBUTTONUP || lParam == WM_RBUTTONUP || lParam == WM_MBUTTONUP)
 			{
-				if(lParam==WM_LBUTTONUP)
- 					ShowWindowFromTaskbar();
-				return 0;
-			}  
+				closePopupMenu();
+			}
+			if(lParam==WM_LBUTTONDBLCLK)
+			{
+ 				ShowWindowFromTaskbar(true);
+ 			}
+ 			else if (lParam == WM_RBUTTONUP)
+ 			{
+ 				showPopupMenu(hwnd);
+ 			}
+			return 0;
+		}  
 //  return CallWindowProc(g_lpPrevWndFunc,hwnd, msg, wParam, lParam);
 			return DefWindowProc(hwnd,msg,wParam,lParam);
 	}
@@ -142,46 +158,105 @@ BOOL APIENTRY DllMain( HINSTANCE hModule,
     return TRUE;
 	}
 
+
+
+VOID showPopupMenu(HWND hwnd)
+{
+	if (!bPopupClosed)
+	{
+		return;
+	}
+	JNIEnv* env=NULL;
+	if(gjavavm!=NULL)
+	{
+		gjavavm->AttachCurrentThread(&env,NULL);
+		if(env!=NULL)
+		{
+			jclass clazz=env->FindClass(JAVA_INTERFACE_CLASSNAME);
+			if(clazz!=NULL)
+				{
+					jmethodID mid=env->GetStaticMethodID(clazz,"showPopupMenu","(JJ)J");
+					if(mid!=NULL)
+					{
+						bPopupClosed = false;
+					
+						POINT position;
+						GetCursorPos(&position); 
+						
+						jvalue args[2];
+						args[0].j = position.x;
+						args[1].j = position.y;
+						env->CallStaticVoidMethodA(clazz,mid,args);
+					}
+				}
+		}
+		gjavavm->DetachCurrentThread();
+	}
+}
+
+
+VOID doJavaCall(char* a_method)
+{
+	JNIEnv* env=NULL;
+	if(gjavavm!=NULL)
+	{
+		gjavavm->AttachCurrentThread(&env,NULL);
+		if(env!=NULL)
+		{
+			jclass clazz=env->FindClass(JAVA_INTERFACE_CLASSNAME);
+			if(clazz!=NULL)
+				{
+					jmethodID mid=env->GetStaticMethodID(clazz,a_method,"()J");
+					if(mid!=NULL)
+					{
+						env->CallStaticVoidMethodA(clazz,mid,NULL);
+					}
+				}
+		}
+		gjavavm->DetachCurrentThread();
+	}
+}
+
+VOID closePopupMenu()
+{
+	doJavaCall("closePopupMenu");
+}
+
+
+void hideSystray()
+{
+	NOTIFYICONDATA nid;
+	nid.hWnd = g_hMsgWnd;
+	nid.cbSize = NOTIFYICONDATA_SIZE;
+	nid.uID = IDI_JAP;
+	nid.uFlags = 0;
+
+	Shell_NotifyIcon(NIM_DELETE, &nid);
+	DestroyWindow(g_hMsgWnd);
+	g_hMsgWnd=NULL;
+	g_hWnd=NULL;
+}
+
 /*
  * Zeigt g_hWnd (wieder) und entfernt das Icon aus dem Taskbar.
  * (Vorher sollte HideWindowInTaskbar aufgerufen worden sein)
  */
-VOID ShowWindowFromTaskbar() 
+VOID ShowWindowFromTaskbar(BOOL a_bCallJavaShowMainWindow) 
 	{
 		if(g_hWnd==NULL)
 			return;
 		SetWindowPos(g_hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE|SWP_NOMOVE/*|SWP_SHOWWINDOW*/);
 		
 		//ShowWindow(g_hWnd, SW_SHOWNORMAL);
-		JNIEnv* env=NULL;
-		if(gjavavm!=NULL)
-			{
-				gjavavm->AttachCurrentThread(&env,NULL);
-				if(env!=NULL)
-					{
-						jclass clazz=env->FindClass("gui/JAPDll");
-						if(clazz!=NULL)
-							{
-								jmethodID mid=env->GetStaticMethodID(clazz,"showMainWindow","()J");
-								if(mid!=NULL)
-									env->CallStaticVoidMethodA(clazz,mid,NULL);
-							}
-					}
-				gjavavm->DetachCurrentThread();
-			}
+		if (a_bCallJavaShowMainWindow)
+		{
+			doJavaCall("showMainWindow");
+		}
 		ShowWindow(g_hWnd,SW_SHOWNORMAL);
 		// Icondaten vorbereiten
-		NOTIFYICONDATA nid;
-		nid.hWnd = g_hMsgWnd;
-		nid.cbSize = NOTIFYICONDATA_SIZE;
-		nid.uID = IDI_JAP;
-		nid.uFlags = 0;
-
-		Shell_NotifyIcon(NIM_DELETE, &nid);
-		DestroyWindow(g_hMsgWnd);
-		g_hMsgWnd=NULL;
-		g_hWnd=NULL;
+		hideSystray();
 	}
+	
 
 /*
  * Versteckt g_hWnd und erzeugt ein Icon im Taskbar.
@@ -189,7 +264,9 @@ VOID ShowWindowFromTaskbar()
 bool HideWindowInTaskbar(HWND hWnd,JNIEnv * env, jclass clazz)
 {
 	if(hWnd==NULL)
+	{
 		return false;
+	}
 	int i=10;
 	//Warten falls g_hWnd noch von letzten Aufruf "blockiert"
 	while(g_hWnd!=NULL&&i>0)
@@ -391,6 +468,28 @@ JNIEXPORT void JNICALL Java_gui_JAPDll_onTraffic_1dll
 		OnTraffic();
 	}
 }
+
+JNIEXPORT void JNICALL Java_gui_JAPDll_popupClosed_1dll
+  (JNIEnv *, jclass) 
+{
+	if (g_hWnd != NULL) 
+	{
+		bPopupClosed = true;
+	}
+}
+
+JNIEXPORT void JNICALL Java_gui_JAPDll_hideSystray_1dll
+  (JNIEnv *, jclass) 
+{
+	hideSystray();
+}
+
+JNIEXPORT void JNICALL Java_gui_JAPDll_showWindowFromTaskbar_1dll
+  (JNIEnv *, jclass) 
+{
+	ShowWindowFromTaskbar(false);
+}
+
 
 JNIEXPORT jstring JNICALL Java_gui_JAPDll_getDllVersion_1dll
   (JNIEnv * env, jclass)

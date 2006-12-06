@@ -200,6 +200,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	//private Vector m_vectorMixCascadeDatabase = null;
 
 	private boolean m_bShutdown = false;
+	private Vector m_programExitListeners = new Vector();
 
 	private boolean m_bShowConfigAssistant = false;
 	private boolean m_bAssistantClicked = false;
@@ -400,6 +401,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 		return m_Controller;
 	}
 
+	public static interface ProgramExitListener
+	{
+		public void programExiting();
+	}
+
+
 	public class AnonConnectionChecker
 	{
 		public boolean checkAnonConnected()
@@ -407,6 +414,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 			return isAnonConnected();
 		}
 	}
+
+	public void addProgramExitListener(ProgramExitListener a_listener)
+	{
+		if (a_listener != null && !m_programExitListeners.contains(a_listener))
+		{
+			m_programExitListeners.addElement(a_listener);
+		}
+	}
+
 
 	public void setCommandLineArgs(String a_cmdArgs)
 	{
@@ -3189,7 +3205,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 				if (!JAPModel.getInstance().isNeverRemindGoodbye() && bDoNotRestart)
 				{
 					// show a Reminder message that active contents should be disabled
-					checkBox = new JAPDialog.LinkedCheckBox(false);
+					checkBox = new JAPDialog.LinkedCheckBox(false)
+					{
+						public boolean isOnTop()
+						{
+							return true;
+						}
+					};
 					returnValue = JAPDialog.showConfirmDialog(getInstance().getViewWindow(),
 						JAPMessages.getString(MSG_DISABLE_GOODBYE),
 						JAPDialog.OPTION_TYPE_OK_CANCEL, JAPDialog.MESSAGE_TYPE_INFORMATION, checkBox);
@@ -3250,7 +3272,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 										return true;
 									}
 								};
-								System.out.println(parent);
+
 								if (!JAPDialog.showYesNoDialog(parent,
 									JAPMessages.getString(MSG_ACCOUNT_NOT_SAVED), checkbox))
 								{
@@ -3264,6 +3286,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 								break;
 							}
 						}
+					}
+
+					Vector exitListeners = (Vector)getInstance().m_programExitListeners.clone();
+					for (int i = 0; i < exitListeners.size(); i++)
+					{
+						((ProgramExitListener)exitListeners.elementAt(i)).programExiting();
 					}
 
 					boolean error = m_Controller.saveConfigFile();
