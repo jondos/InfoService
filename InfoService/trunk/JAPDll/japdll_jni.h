@@ -38,6 +38,30 @@ JNIEXPORT jboolean JNICALL Java_gui_JAPDll_setWindowIcon_1dll
  */
 JNIEXPORT void JNICALL Java_gui_JAPDll_onTraffic_1dll
   (JNIEnv *, jclass);
+  
+/*
+ * Class:     gui_JAPDll
+ * Method:    popupClosed_dll
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_gui_JAPDll_popupClosed_1dll
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     gui_JAPDll
+ * Method:    hideSystray_dll
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_gui_JAPDll_hideSystray_1dll
+  (JNIEnv *, jclass);
+  
+/*
+ * Class:     gui_JAPDll
+ * Method:    showWindowFromTaskbar_dll
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_gui_JAPDll_showWindowFromTaskbar_1dll
+  (JNIEnv *, jclass);
 
 /*
  * Class:     gui_JAPDll

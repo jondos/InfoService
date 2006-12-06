@@ -31,25 +31,33 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.Hashtable;
+import java.util.Random;
 import javax.swing.JFileChooser;
+import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 
 import java.awt.Window;
+import java.awt.Point;
 
 import anon.util.ResourceLoader;
 import anon.util.ClassUtil;
 import gui.dialog.JAPDialog;
 import jap.JAPController;
 import jap.JAPModel;
+import jap.SystrayPopupMenu;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import jap.JAPSplash;
+import java.awt.Frame;
 
 
 final public class JAPDll {
 
 	//required japdll.dll version for this JAP-version
-	private static final String JAP_DLL_REQUIRED_VERSION = "00.02.003";
+	private static final String JAP_DLL_REQUIRED_VERSION = "00.03.001";
 	private static final String UPDATE_PATH =
 		ClassUtil.getClassDirectory(JAPDll.class).getParent() + File.separator;
 
@@ -67,6 +75,10 @@ final public class JAPDll {
 
 
 	private static Hashtable ms_hashOnTop = new Hashtable();
+
+	private static final Object SYNC_POPUP = new Object();
+	private static SystrayPopupMenu ms_popupMenu;
+	private static JWindow ms_popupWindow;
 
 	private static boolean m_sbHasOnTraffic = true;
 	public static void init()
@@ -90,7 +102,7 @@ final public class JAPDll {
 				});
 
 				boolean bUpdateDone = false;
-				if ( JAPModel.getInstance().getDLLupdate())
+				if (JAPModel.getInstance().getDLLupdate())
 				{
 					update();
 					bUpdateDone = true;
@@ -103,6 +115,20 @@ final public class JAPDll {
 					 JAPModel.getInstance().setDLLupdate(true);
 					 JAPController.getInstance().saveConfigFile();
 				}
+				JAPController.getInstance().addProgramExitListener(new JAPController.ProgramExitListener()
+				{
+					public void programExiting()
+					{
+						try
+						{
+							hideSystray_dll();
+						}
+						catch (Throwable a_e)
+						{
+							LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, a_e);
+						}
+					}
+				});
 			}
 		}
 		catch (Throwable t)
@@ -445,6 +471,21 @@ final public class JAPDll {
 		return false;
 	}
 
+	static private boolean showWindowFromTaskbar()
+	{
+		try
+		{
+			boolean value = showWindowFromTaskbar_dll();
+			showMainWindow();
+			return value;
+		}
+		catch (Throwable t)
+		{
+			return false;
+		}
+	}
+
+
 	static public boolean hideWindowInTaskbar(String caption)
 	{
 		try
@@ -527,14 +568,85 @@ final public class JAPDll {
 		return 0;
 	}
 
+	static public long closePopupMenu()
+	{
+		synchronized (SYNC_POPUP)
+		{
+			if (ms_popupMenu != null)
+			{
+				ms_popupMenu.setVisible(false);
+				ms_popupWindow.setVisible(false);
+				//ms_popupWindow.dispose();
+			}
+		}
+		return 0;
+	}
+
+	private static final String STR_HIDDEN_WINDOW = Double.toString(Math.random());
+
+	static public long showPopupMenu(long a_x, long a_y)
+	{
+		synchronized (SYNC_POPUP)
+		{
+			if (ms_popupWindow == null)
+			{
+				ms_popupWindow = new JWindow(new Frame(STR_HIDDEN_WINDOW));
+				ms_popupWindow.setName(STR_HIDDEN_WINDOW);
+				ms_popupWindow.pack();
+			}
+
+			Point mousePoint = new Point( (int) a_x, (int) a_y);
+
+			ms_popupMenu = new SystrayPopupMenu(new SystrayPopupMenu.MainWindowListener()
+			{
+				public void onShowMainWindow()
+				{
+					showWindowFromTaskbar();
+				}
+			});
+			ms_popupWindow.setLocation(mousePoint);
+
+
+			GUIUtils.setAlwaysOnTop(ms_popupWindow, true);
+			ms_popupWindow.setVisible(true);
+			ms_popupMenu.addPopupMenuListener(new PopupMenuListener()
+			{
+				public void popupMenuWillBecomeVisible(PopupMenuEvent e)
+				{
+				}
+
+				public void popupMenuWillBecomeInvisible(PopupMenuEvent e)
+				{
+					//ms_popupWindow.setVisible(false);
+					//ms_popupWindow.dispose();
+					popupClosed_dll();
+				}
+
+				public void popupMenuCanceled(PopupMenuEvent e)
+				{
+				}
+			});
+			Point preferredLocation = new Point(mousePoint.x, mousePoint.y - ms_popupMenu.getHeight());
+			ms_popupMenu.show(ms_popupWindow, preferredLocation);
+
+			return 0;
+		}
+	}
+
 
 	native static private void setWindowOnTop_dll(String caption, boolean onTop);
 
 	native static private boolean hideWindowInTaskbar_dll(String caption);
 
+	native static private boolean showWindowFromTaskbar_dll();
+
 	native static private boolean setWindowIcon_dll(String caption);
 
 	native static private void onTraffic_dll();
+
+	native static private void popupClosed_dll();
+
+	native static private void hideSystray_dll();
 
 	native static private String getDllVersion_dll();
 

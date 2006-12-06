@@ -1600,13 +1600,13 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 				if (cascade.isUserDefined())
 				{
-					//if (JAPModel.getInstance().getTrustModel().isTrusted(cascade))
+					if (TrustModel.getCurrentTrustModel().isTrusted(cascade))
 					{
 						icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_MANUELL, true);
 					}
-					//else
+					else
 					{
-					//	icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_MANUAL_NOT_TRUSTED, true);
+						icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_MANUAL_NOT_TRUSTED, true);
 					}
 				}
 				else if (cascade.isPayment())
