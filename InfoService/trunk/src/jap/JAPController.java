@@ -236,6 +236,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private boolean m_bPayCascadeNoAsk = false;
 
 	private boolean m_bAskSavePayment;
+	private boolean m_bPresentationMode = false;
 
 	private long m_nrOfBytesWWW = 0;
 	private long m_nrOfBytesOther = 0;
@@ -423,6 +424,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 	}
 
+	public void setPresentationMode(boolean a_bPresentationMode)
+	{
+		m_bPresentationMode = a_bPresentationMode;
+	}
 
 	public void setCommandLineArgs(String a_cmdArgs)
 	{
@@ -3470,10 +3475,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 	{
 		try
 		{
-			if(JAPConstants.m_bReleasedVersion)
-			new JAPAboutNew(getInstance().getViewWindow()).setVisible(true);
-		else
-			new JAPAbout(getInstance().getViewWindow());
+			if (getInstance().m_bPresentationMode)
+			{
+				new JAPAbout(getInstance().getViewWindow());
+			}
+			else
+			{
+				new JAPAboutNew(getInstance().getViewWindow()).setVisible(true);
+			}
 		}
 		catch (Throwable t)
 		{
