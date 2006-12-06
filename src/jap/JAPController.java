@@ -3769,12 +3769,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 	}
 
 	//---------------------------------------------------------------------
-	public void setView(IJAPMainView v)
+	public void setView(IJAPMainView v, boolean a_bAllowSplash)
 	{
 		synchronized (SYNC_VIEW)
 		{
 			m_View = v;
-			if (m_View instanceof Frame)
+			if (m_View instanceof Frame && a_bAllowSplash)
 			{
 				m_finishSplash = new JAPSplash((Frame)m_View, JAPMessages.getString(MSG_FINISHING));
 			}
