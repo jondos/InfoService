@@ -103,7 +103,7 @@ public class SystrayPopupMenu extends PopupMenu
 		}
 
 		label = new JLabel(JAPMessages.getString(MSG_CURRENT_SERVICE, new Object[]{connected, users}));
-		GUIUtils.setFontStyle(label, Font.PLAIN);
+		GUIUtils.setFontStyle(label, Font.BOLD);
 		JPanel panel = new JPanel(new GridBagLayout());
 		GridBagConstraints constraints = new GridBagConstraints();
 		constraints.gridx = 0;
