@@ -155,11 +155,12 @@ public class JAP
 		{
 			System.out.println("Usage:");
 			System.out.println("--help, -h:              Show this text.");
-			System.out.println("--console:           Start JAP in console-only mode.");
+			System.out.println("--console:               Start JAP in console-only mode.");
 			System.out.println("--minimized, -m:         Minimize JAP on startup.");
 			System.out.println("--version, -v:           Print version information.");
 			System.out.println("--showDialogFormat       Show and set dialog format options.");
 			System.out.println("--noSplash, -s           Suppress splash screen on startup.");
+			System.out.println("--presenation, -p        Presentation mode (slight GUI changes).");
 			System.out.println("--config, -c {Filename}: Force JAP to use a specific configuration file.");
 			System.exit(0);
 		}
@@ -359,6 +360,10 @@ public class JAP
 		// Create the controller object
 		splash.setText(JAPMessages.getString(MSG_STARTING_CONTROLLER));
 		m_controller = JAPController.getInstance();
+		if (isArgumentSet("--presentation") || isArgumentSet("-p"))
+		{
+			m_controller.setPresentationMode(true);
+		}
 		String cmdArgs = "";
 		if (m_temp != null)
 		{
@@ -367,6 +372,7 @@ public class JAP
 				cmdArgs += " " + m_temp[i];
 			}
 			m_controller.setCommandLineArgs(cmdArgs);
+
 		}
 		String configFileName = null;
 		/* check, whether there is the -config parameter, which means the we use userdefined config
