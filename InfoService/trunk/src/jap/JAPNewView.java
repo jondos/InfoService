@@ -268,6 +268,16 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private void init()
 	{
+		// important to initialise for TinyL&F!!!
+		new SystrayPopupMenu(new SystrayPopupMenu.MainWindowListener()
+		{
+			public void onShowMainWindow()
+			{
+
+			}
+		});
+
+
 		this.addMouseListener(new MouseAdapter()
 		{
 			public void mouseClicked(MouseEvent a_event)
