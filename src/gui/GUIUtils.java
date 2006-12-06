@@ -526,6 +526,16 @@ public final class GUIUtils
 		return ms_nativeGUILibrary.isAlwaysOnTop(a_Window);
 	}
 
+	public static void setFontStyle(Component a_component, int a_style)
+	{
+		if (a_component == null)
+		{
+			return;
+		}
+		a_component.setFont(
+			  new Font(a_component.getFont().getName(), a_style, a_component.getFont().getSize()));
+	}
+
 	/**
 	 * Tries to use the method setAlwaysOnTop of JRE 1.5.
 	 * @param a_Window Window
