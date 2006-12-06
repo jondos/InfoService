@@ -38,15 +38,14 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
 import anon.infoservice.Database;
 import anon.infoservice.StatusInfo;
 import anon.infoservice.MixCascade;
-import gui.JAPDll;
 import gui.JAPHelp;
 import gui.JAPMessages;
 import gui.PopupMenu;
@@ -148,9 +147,9 @@ public class SystrayPopupMenu extends PopupMenu
 		final JCheckBoxMenuItem cbxMenuItem = new JCheckBoxMenuItem(JAPMessages.getString(MSG_ANONYMITY_MODE));
 		GUIUtils.setFontStyle(cbxMenuItem, Font.PLAIN);
 		cbxMenuItem.setSelected(JAPController.getInstance().getAnonMode());
-		cbxMenuItem.addChangeListener(new ChangeListener()
+		cbxMenuItem.addItemListener(new ItemListener()
 		{
-			public void stateChanged(ChangeEvent a_event)
+			public void itemStateChanged(ItemEvent a_event)
 			{
 				JAPController.getInstance().setAnonMode(cbxMenuItem.isSelected());
 			}
