@@ -93,7 +93,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)/japdll.dll"
-				Version="00.03.001"
+				Version="00.03.002"
 				LinkIncremental="1"
 				IgnoreAllDefaultLibraries="FALSE"
 				GenerateDebugInformation="FALSE"

@@ -10,7 +10,7 @@
 	#pragma once
 #endif // _MSC_VER > 1000
 
-#define JAPDLL_VERSION "00.03.001"
+#define JAPDLL_VERSION "00.03.002"
 
 // Fügen Sie hier Ihre Header-Dateien ein
 #include <windows.h>
@@ -54,8 +54,9 @@ HANDLE g_hThread; //Handle for the Blinking-Thread
 BOOL g_isBlinking;
 BOOL bPopupClosed = true;
 VOID ShowWindowFromTaskbar(BOOL) ;
-VOID showPopupMenu(HWND);
+VOID showPopupMenu();
 VOID closePopupMenu();
+BOOL setTooltipText(const char*, BOOL);
 
 //Stores the Filename of the DLL
 TCHAR strModuleFileName[4100];
@@ -96,7 +97,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
  			}
  			else if (lParam == WM_RBUTTONUP)
  			{
- 				showPopupMenu(hwnd);
+ 				showPopupMenu();
  			}
 			return 0;
 		}  
@@ -160,7 +161,7 @@ BOOL APIENTRY DllMain( HINSTANCE hModule,
 
 
 
-VOID showPopupMenu(HWND hwnd)
+VOID showPopupMenu()
 {
 	if (!bPopupClosed)
 	{
@@ -261,7 +262,7 @@ VOID ShowWindowFromTaskbar(BOOL a_bCallJavaShowMainWindow)
 /*
  * Versteckt g_hWnd und erzeugt ein Icon im Taskbar.
  */
-bool HideWindowInTaskbar(HWND hWnd,JNIEnv * env, jclass clazz)
+bool HideWindowInTaskbar(HWND hWnd,JNIEnv * env)
 {
 	if(hWnd==NULL)
 	{
@@ -287,25 +288,21 @@ bool HideWindowInTaskbar(HWND hWnd,JNIEnv * env, jclass clazz)
 		}
 	if(g_hMsgWnd==NULL)
 		return false;
-	// Icondaten vorbereiten
-	NOTIFYICONDATA nid;
-	nid.hWnd = g_hMsgWnd;//hWnd;
-	nid.cbSize = NOTIFYICONDATA_SIZE;
-	nid.uID = IDI_JAP;
-	nid.uFlags = NIF_MESSAGE | NIF_TIP | NIF_ICON;
-	nid.uCallbackMessage = WM_TASKBAREVENT;
-	lstrcpy(nid.szTip, "JAP");
-	nid.hIcon = g_hiconJAP;
+		
+	//connect to VM
+	env->GetJavaVM(&gjavavm);	
+	
+
 
 	// Window verstecken
-	env->GetJavaVM(&gjavavm);
+	
 	//jmethodID mid=env->GetStaticMethodID(clazz,"hiddeMainWindow","()J");
 	//if(mid!=NULL)
 	//	env->CallStaticVoidMethodA(clazz,mid,NULL);
 	//else
 	//	ShowWindow(hWnd, SW_HIDE);
 	//Icon im Taskbar setzen
-	if(Shell_NotifyIcon(NIM_ADD, &nid)!=TRUE)
+	if(setTooltipText("JAP", TRUE)!=TRUE)
 		{
 			DestroyWindow(g_hMsgWnd);
 			g_hMsgWnd=NULL;
@@ -314,6 +311,32 @@ bool HideWindowInTaskbar(HWND hWnd,JNIEnv * env, jclass clazz)
 		}
 	g_hWnd=hWnd;
 	return true;
+}
+
+BOOL setTooltipText(const char* a_tooltip, BOOL a_bAdd)
+{
+	if (g_hMsgWnd == NULL)
+	{
+		return false;
+	}
+
+	// Icondaten vorbereiten
+	NOTIFYICONDATA nid;
+	nid.hWnd = g_hMsgWnd;//hWnd;
+	nid.cbSize = NOTIFYICONDATA_SIZE;
+	nid.uID = IDI_JAP;
+	nid.uFlags = NIF_MESSAGE | NIF_TIP | NIF_ICON;
+	nid.uCallbackMessage = WM_TASKBAREVENT;
+	lstrcpy(nid.szTip, a_tooltip);
+	nid.hIcon = g_hiconJAP;
+	if (a_bAdd)
+	{
+		return Shell_NotifyIcon(NIM_ADD, &nid);
+	}
+	else
+	{
+		return Shell_NotifyIcon(NIM_MODIFY, &nid);
+	}
 }
 
 /*
@@ -426,6 +449,16 @@ JNIEXPORT void JNICALL Java_gui_JAPDll_setWindowOnTop_1dll
   return;
 }
 
+
+JNIEXPORT jboolean JNICALL Java_gui_JAPDll_setTooltipText_1dll
+  (JNIEnv * env, jclass, jstring s)
+{
+	//env->GetStringUTFChars(s, 0);
+	//return FALSE;
+	return (jboolean)setTooltipText(env->GetStringUTFChars(s, 0), FALSE);
+}
+
+
 JNIEXPORT jboolean JNICALL Java_gui_JAPDll_hideWindowInTaskbar_1dll
   (JNIEnv * env, jclass javaclass, jstring s)
 {
@@ -435,7 +468,7 @@ JNIEXPORT jboolean JNICALL Java_gui_JAPDll_hideWindowInTaskbar_1dll
 	EnumWindows(&FindWindowByCaption, (LPARAM) &tmp);
 	jboolean ret=true;
 	if (tmp.hWnd!= NULL) 
-		ret=HideWindowInTaskbar(tmp.hWnd,env,javaclass);
+		ret=HideWindowInTaskbar(tmp.hWnd,env);
 	else
 		ret=false;
 	env->ReleaseStringUTFChars(s,tmp.name);

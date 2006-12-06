@@ -15,6 +15,9 @@ extern "C" {
 JNIEXPORT void JNICALL Java_gui_JAPDll_setWindowOnTop_1dll
   (JNIEnv *, jclass, jstring, jboolean);
 
+JNIEXPORT jboolean JNICALL Java_gui_JAPDll_setTooltipText_1dll
+  (JNIEnv *, jclass, jstring);
+
 /*
  * Class:     gui_JAPDll
  * Method:    hideWindowInTaskbar_dll

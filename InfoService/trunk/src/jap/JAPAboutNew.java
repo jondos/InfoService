@@ -35,6 +35,7 @@ import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
 
 import anon.util.ResourceLoader;
+import gui.JAPDll;
 import gui.JAPMessages;
 import gui.dialog.DialogContentPane;
 import gui.dialog.JAPDialog;
@@ -48,11 +49,15 @@ import gui.dialog.JAPDialog;
 public class JAPAboutNew extends JAPDialog
 {
 	private static final String MSG_VERSION = JAPAboutNew.class.getName() + "_version";
+	private static final String MSG_DLL_VERSION = JAPAboutNew.class.getName() + "_dllVersion";
 
 	public JAPAboutNew(Component a_parent)
 	{
-		super(a_parent, JAPMessages.getString(MSG_VERSION) + " " + JAPConstants.aktVersion +
-			(JAPConstants.m_bReleasedVersion ? "" : "-dev"));
+		super(a_parent, JAPMessages.getString(MSG_VERSION) + ": " + JAPConstants.aktVersion +
+			(JAPConstants.m_bReleasedVersion ? "" : "-dev") +
+		  (JAPDll.getDllVersion() != null ? " (" +  JAPMessages.getString(MSG_DLL_VERSION) + ": " +
+		   JAPDll.getDllVersion() + ")" :
+		   ""));
 		DialogContentPane contentPane =
 			new DialogContentPane(this, (DialogContentPane.Layout)null, new DialogContentPane.Options(DialogContentPane.OPTION_TYPE_DEFAULT));
 		contentPane.setDefaultButtonOperation(DialogContentPane.ON_CLICK_DISPOSE_DIALOG);

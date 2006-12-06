@@ -31,18 +31,18 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.Hashtable;
-import java.util.Random;
+
+import java.awt.Frame;
+import java.awt.Point;
+import java.awt.Window;
 import javax.swing.JFileChooser;
-import javax.swing.*;
-import javax.swing.filechooser.FileFilter;
+import javax.swing.JWindow;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
+import javax.swing.filechooser.FileFilter;
 
-import java.awt.Window;
-import java.awt.Point;
-
-import anon.util.ResourceLoader;
 import anon.util.ClassUtil;
+import anon.util.ResourceLoader;
 import gui.dialog.JAPDialog;
 import jap.JAPController;
 import jap.JAPModel;
@@ -50,14 +50,12 @@ import jap.SystrayPopupMenu;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import jap.JAPSplash;
-import java.awt.Frame;
 
 
 final public class JAPDll {
 
 	//required japdll.dll version for this JAP-version
-	private static final String JAP_DLL_REQUIRED_VERSION = "00.03.001";
+	private static final String JAP_DLL_REQUIRED_VERSION = "00.03.002";
 	private static final String UPDATE_PATH =
 		ClassUtil.getClassDirectory(JAPDll.class).getParent() + File.separator;
 
@@ -633,12 +631,40 @@ final public class JAPDll {
 		}
 	}
 
+	public static void setSystrayTooltip(String a_strTooltipText)
+	{
+		if (a_strTooltipText == null)
+		{
+			return;
+		}
+
+		if (a_strTooltipText.length() >= 60)
+		{
+			a_strTooltipText = a_strTooltipText.substring(0, 60);
+		}
+		a_strTooltipText = a_strTooltipText.trim();
+		if (a_strTooltipText.length() == 0)
+		{
+			return;
+		}
+
+		try
+		{
+			setTooltipText_dll(a_strTooltipText);
+		}
+		catch (Throwable a_e)
+		{
+			// ignore
+		}
+	}
 
 	native static private void setWindowOnTop_dll(String caption, boolean onTop);
 
 	native static private boolean hideWindowInTaskbar_dll(String caption);
 
 	native static private boolean showWindowFromTaskbar_dll();
+
+	native static private boolean setTooltipText_dll(String a_strTooltipText);
 
 	native static private boolean setWindowIcon_dll(String caption);
 

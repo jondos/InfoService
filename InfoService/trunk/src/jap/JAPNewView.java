@@ -133,6 +133,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String MSG_IS_EDIT_TRUST = JAPNewView.class.getName() + "_editTrust";
 
 	private static final String MSG_TRUST_FILTER = JAPNewView.class.getName() + "_trustFilter";
+	private static final String MSG_CONNECTED = JAPNewView.class.getName() + "_connected";
+
 
 	private static final String IMG_ICONIFY = JAPNewView.class.getName() + "_iconify.gif";
 	private static final String IMG_ABOUT = JAPNewView.class.getName() + "_about.gif";
@@ -626,7 +628,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelAnonymity = new JLabel(JAPMessages.getString("ngAnonymitaet"));
 		c1.insets = new Insets(0, 5, 0, 0);
 		p.add(m_labelAnonymity, c1);
-		m_labelAnonymityUserLabel = new JLabel(JAPMessages.getString("ngNrOfUsers"));
+		m_labelAnonymityUserLabel = new JLabel(JAPMessages.getString("ngNrOfUsers") + ":");
 		c1.gridy = 1;
 		c1.anchor = GridBagConstraints.WEST;
 		c1.insets = new Insets(10, 15, 0, 10);
@@ -2191,6 +2193,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			}
 			m_progressAnonLevel.setFilledBarColor(color);
 			m_progressAnonLevel.setValue(anonLevel + 1);
+
+			String strSystrayTooltip = "JAP";
+			if (m_Controller.isAnonConnected())
+			{
+				strSystrayTooltip += " (" + JAPMessages.getString(MSG_CONNECTED) + ")";
+			}
+			strSystrayTooltip += "\n" + GUIUtils.trim(currentMixCascade.getName(), 25);
+
 			if (m_Controller.isAnonConnected())
 			{
 				//m_bShowConnecting = false;
@@ -2202,6 +2212,26 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					//	userProgressBar.setMaximum(currentStatus.getNrOfActiveUsers());
 					//}
 					m_labelAnonymityUser.setText(Integer.toString(currentStatus.getNrOfActiveUsers()));
+					//strSystrayTooltip += "\n" + JAPMessages.getString("ngNrOfUsers") + ": " +
+						//currentStatus.getNrOfActiveUsers();
+					if (anonLevel >= StatusInfo.ANON_LEVEL_MIN)
+					{
+						strSystrayTooltip += "\n" + JAPMessages.getString(JAPViewIconified.MSG_ANON) + ": ";
+						//strSystrayTooltip += "\n" + "Test" + ": ";
+						//strSystrayTooltip += "\n" + "T";
+						if (anonLevel < StatusInfo.ANON_LEVEL_FAIR)
+						{
+							strSystrayTooltip += JAPMessages.getString(JAPViewIconified.MSG_ANON_LOW);
+						}
+						else if (anonLevel < StatusInfo.ANON_LEVEL_HIGH)
+						{
+							strSystrayTooltip += JAPMessages.getString(JAPViewIconified.MSG_ANON_FAIR);
+						}
+						else
+						{
+							strSystrayTooltip += JAPMessages.getString(JAPViewIconified.MSG_ANON_HIGH);
+						}
+					}
 					//userProgressBar.setString(String.valueOf(currentStatus.getNrOfActiveUsers()));
 					if (!isChangingTitle())
 					{
@@ -2252,6 +2282,16 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				m_labelAnonymityUser.setText("");
 				m_progressAnonLevel.setValue(0);
 			}
+			if (m_Controller.isAnonConnected())
+			{
+				JAPDll.setSystrayTooltip("JAP (connected)\n" + currentMixCascade.getName());
+			}
+
+			JAPDll.setSystrayTooltip(strSystrayTooltip);
+
+
+
+
 			LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Finished updateValues");
 			boolean bForwaringServerOn = JAPModel.getInstance().getRoutingSettings().getRoutingMode() ==
 				JAPRoutingSettings.ROUTING_MODE_SERVER;
