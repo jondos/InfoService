@@ -1442,6 +1442,24 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			if (message.getMessageCode() == DatabaseMessage.ENTRY_ADDED ||
 				message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED)
 			{
+				MixCascade currentCascade = JAPController.getInstance().getCurrentMixCascade();
+
+				if (currentCascade.equals(cascade) &&
+					TrustModel.getCurrentTrustModel().isTrusted(currentCascade) !=
+					TrustModel.getCurrentTrustModel().isTrusted(cascade)
+					)
+				{
+					JAPController.getInstance().setCurrentMixCascade(cascade);
+					run = new Runnable()
+					{
+						public void run()
+						{
+							m_bTrustChanged = true;
+							onUpdateValues();
+						}
+					};
+				}
+
 				Database.getInstance(CascadeIDEntry.class).update(new CascadeIDEntry(cascade));
 
 				/** @todo all databases should be synchronized... */
@@ -2152,6 +2170,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			m_bTrustChanged = false;
 			boolean bShowPopup = m_comboAnonServices.isPopupVisible();
 			m_comboAnonServices.removeAllItems();
+			m_comboAnonServices.setMixCascade(null);
 			m_comboAnonServices.setMixCascade(currentMixCascade);
 			if (bShowPopup)
 			{

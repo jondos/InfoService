@@ -65,6 +65,8 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 
 	private boolean m_bDefaultVerified = false;
 
+	private boolean m_bImplicitTrust = false;
+
 	/**
 	 * This is the ID of the mixcascade.
 	 */
@@ -751,9 +753,24 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		return m_userDefined;
 	}
 
-	public void setUserDefined(boolean b, MixCascade a_oldMixCascade)
+	/**
+	 * May be set by this application to show this service as trusted. TrustModel.isTrusted will then
+	 * return true, but TrustModel.checkTrust will still check the correct trust.
+	 * @param a_bImplicitTrust if this service is shown as trusted in this application
+	 */
+	public void showAsTrusted(boolean a_bImplicitTrust)
 	{
-		m_userDefined = b;
+		m_bImplicitTrust = a_bImplicitTrust;
+	}
+
+	public boolean isShownAsTrusted()
+	{
+		return m_bImplicitTrust;
+	}
+
+	public void setUserDefined(boolean a_bUserDefined, MixCascade a_oldMixCascade)
+	{
+		m_userDefined = a_bUserDefined;
 		if (m_userDefined && a_oldMixCascade != null && a_oldMixCascade.getId().equals(getId()))
 		{
 			m_strName = a_oldMixCascade.m_strName;
