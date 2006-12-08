@@ -53,12 +53,17 @@ public class BasicTrustModel extends Observable implements ITrustModel
 	}
 
 	/**
-	 * Does a call on checkTrust().
+	 * Does a call on checkTrust() after checking the isShownAsTrusted() attribute of the given cascade.
+	 * Should be called by GUI methods only, not for checking the trust to make a connection!
 	 * @param a_cascade MixCascade
 	 * @return boolean
 	 */
 	public final boolean isTrusted(MixCascade a_cascade)
 	{
+		if (a_cascade != null && a_cascade.isShownAsTrusted())
+		{
+			return true;
+		}
 		try
 		{
 			checkTrust(a_cascade);

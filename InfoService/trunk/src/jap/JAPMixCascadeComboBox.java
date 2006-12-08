@@ -113,6 +113,7 @@ public class JAPMixCascadeComboBox extends JComboBox
 		{
 			return;
 		}
+
 		if (m_currentCascade == null)
 		{
 			removeAllItems();
@@ -121,8 +122,12 @@ public class JAPMixCascadeComboBox extends JComboBox
 		{
 			super.removeItem(m_currentCascade);
 		}
+
 		m_currentCascade = cascade;
-		super.addItem(cascade);
+		if (m_currentCascade != null)
+		{
+			super.addItem(cascade);
+		}
 	}
 
 	public void removeAllItems()

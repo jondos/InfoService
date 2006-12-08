@@ -346,6 +346,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			m_currentMixCascade = new MixCascade(JAPConstants.DEFAULT_ANON_NAME,
 												 JAPConstants.DEFAULT_ANON_MIX_IDs[0], mixIDs, listeners);
 			m_currentMixCascade.setUserDefined(false, null);
+			m_currentMixCascade.showAsTrusted(true);
 			Database.getInstance(CascadeIDEntry.class).update(new CascadeIDEntry(m_currentMixCascade));
 		}
 		catch (Exception e)

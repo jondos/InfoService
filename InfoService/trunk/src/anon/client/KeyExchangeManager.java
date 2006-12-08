@@ -138,31 +138,77 @@ public class KeyExchangeManager {
 		   MixCascade cascade = new MixCascade(XMLUtil.toXMLDocument(xmlData).getDocumentElement(),
 											   Long.MAX_VALUE, a_cascade.getId());
 
+		  ITrustModel.TrustException excepTrust = null;
+		  SignatureException execSignature = null;
 		  if (a_cascade.isUserDefined())
 		  {
 			  cascade.setUserDefined(true, a_cascade);
 			  Database.getInstance(MixCascade.class).update(cascade);
+			  Database.getInstance(MixInfo.class).update(
+						   new MixInfo(MixInfo.DEFAULT_NAME, cascade.getCertPath()));
+			  a_trustModel.checkTrust(cascade);
 		  }
 		  else
 		  {
+			  Database.getInstance(MixInfo.class).update(
+						   new MixInfo(MixInfo.DEFAULT_NAME, cascade.getCertPath()));
 			  MixCascade cascadeInDB =
 				  (MixCascade) Database.getInstance(MixCascade.class).getEntryById(cascade.getId());
 			  if (cascadeInDB != null)
 			  {
-				  // check if the cascade has changed its composition since the last update
+				  // check if the cascade has changed its composition or trust since the last update
 				  if (!cascade.compareMixIDs(cascadeInDB))
 				  {
 					  // remove this cascade from DB as its values have changed
 					  Database.getInstance(MixCascade.class).remove(cascadeInDB);
 				  }
+				  boolean bCascadeTrust = false;
+				  boolean bCascadeInDBTrust = false;
+
+				  try
+				  {
+					  a_trustModel.checkTrust(cascade);
+					  bCascadeTrust = true;
+				  }
+				  catch (ITrustModel.TrustException a_e)
+				  {
+					  excepTrust = a_e;
+				  }
+				  catch (SignatureException a_e)
+				  {
+					  execSignature = a_e;
+				  }
+				  try
+				  {
+					  a_trustModel.checkTrust(cascadeInDB);
+					  bCascadeInDBTrust = true;
+				  }
+				  catch (ITrustModel.TrustException a_e)
+				  {
+				  }
+				  catch (SignatureException a_e)
+				  {
+				  }
+				  if (bCascadeTrust != bCascadeInDBTrust)
+				  {
+					  // remove this cascade from DB as its trust has changed
+					  Database.getInstance(MixCascade.class).remove(cascadeInDB);
+				  }
 			  }
 		  }
 
-		  Database.getInstance(MixInfo.class).update(
-			  new MixInfo(MixInfo.DEFAULT_NAME, cascade.getCertPath()));
+
 
 		  /** Very important: Check if this cascade is trusted. Otherwise, an exception is thrown. */
-		  a_trustModel.checkTrust(cascade);
+		  //a_trustModel.checkTrust(cascade);
+		  if (excepTrust != null)
+		  {
+			  throw excepTrust;
+		  }
+		  if (execSignature != null)
+		  {
+			  throw execSignature;
+		  }
 
 		  /*
 		   * get the appended certificate of the signature and store it in the
