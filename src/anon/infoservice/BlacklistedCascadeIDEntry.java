@@ -25,61 +25,26 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package anon.client;
+/* Hint: This file may be only a copy of the original file which is always in the JAP source tree!
+ * If you change something - do not forget to add the changes also to the JAP source tree!
+ */
+package anon.infoservice;
 
-import java.security.SignatureException;
-import java.util.Observable;
-
-import anon.infoservice.Database;
-import anon.client.ITrustModel.TrustException;
-import anon.infoservice.MixCascade;
-import anon.infoservice.BlacklistedCascadeIDEntry;
-
+import anon.util.ClassUtil;
 
 /**
- * A trust model that only checks if a previously done signature verification was successful.
+ * Cascades of this type are blacklisted
  *
  * @author Rolf Wendolsky
  */
-public class BasicTrustModel extends Observable implements ITrustModel
+public class BlacklistedCascadeIDEntry extends AbstractCascadeIDEntry
 {
-	public BasicTrustModel()
-	{
-	}
+	public static final String XML_ELEMENT_NAME =
+		ClassUtil.getShortClassName(BlacklistedCascadeIDEntry.class);
+	public static final String XML_ELEMENT_CONTAINER_NAME = "BlacklistedCascades";
 
-	public void checkTrust(MixCascade a_cascade) throws TrustException, SignatureException
+	public BlacklistedCascadeIDEntry(MixCascade a_cascade)
 	{
-		if (a_cascade == null || !a_cascade.isVerified())
-		{
-			throw (new SignatureException("Received structure has an invalid signature."));
-		}
+		super(a_cascade, Long.MAX_VALUE);
 	}
-
-	/**
-	 * Does a call on checkTrust() after checking the isShownAsTrusted() attribute of the given cascade.
-	 * Should be called by GUI methods only, not for checking the trust to make a connection!
-	 * @param a_cascade MixCascade
-	 * @return boolean
-	 */
-	public final boolean isTrusted(MixCascade a_cascade)
-	{
-		if (a_cascade != null && a_cascade.isShownAsTrusted())
-		{
-			return true;
-		}
-		try
-		{
-			checkTrust(a_cascade);
-			return true;
-		}
-		catch (TrustException a_e)
-		{
-			return false;
-		}
-		catch (SignatureException a_e)
-		{
-			return false;
-		}
-	}
-
 }

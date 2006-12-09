@@ -29,28 +29,28 @@ package jap;
 
 import java.security.SignatureException;
 import java.util.Date;
-import java.util.Random;
 import java.util.Enumeration;
-import java.awt.Component;
+import java.util.Random;
 import java.util.Vector;
+import java.util.Hashtable;
 
-import org.w3c.dom.Element;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-
 import anon.client.BasicTrustModel;
 import anon.client.ITrustModel.TrustException;
+import anon.infoservice.Database;
 import anon.infoservice.MixCascade;
-import anon.util.IXMLEncodable;
-import anon.util.XMLUtil;
-import anon.util.XMLParseException;
 import anon.infoservice.MixInfo;
+import anon.util.IXMLEncodable;
+import anon.util.XMLParseException;
+import anon.util.XMLUtil;
 import gui.JAPMessages;
-import gui.dialog.JAPDialog;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.infoservice.Database;
+import anon.client.ITrustModel;
+import anon.infoservice.BlacklistedCascadeIDEntry;
 
 
 /**
@@ -64,12 +64,10 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 	public static final String XML_ELEMENT_NAME = "TrustModel";
 	public static final String XML_ELEMENT_CONTAINER_NAME = "TrustModels";
 
-	public static final String MSG_WARNING_FILTER = JAPConfTrust.class.getName() + "_warningTrustFilter";
-
 	public static final int TRUST_NONE = 0;
-	public static final int TRUST_LITTLE = 1;
-	public static final int TRUST_DEFAULT = 2;
-	public static final int TRUST_EXCLUSIVE = 3;
+	public static final int TRUST_LITTLE = 10;
+	public static final int TRUST_DEFAULT = 20;
+	public static final int TRUST_EXCLUSIVE = 30;
 
 	private static final String XML_ELEM_PAY = "Payment";
 	private static final String XML_ELEM_EXPIRED = "ExpiredCerts";
@@ -187,6 +185,52 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 			  XMLUtil.getFirstChildByName(a_trustModelElement, XML_ELEM_EXPIRED),
 			  XML_ATTR_TRUST, null), m_trustExpiredCerts);
 	}
+
+
+	public static abstract class AbstractTrustFilter implements IXMLEncodable
+	{
+		public static final int CATEGORY_DEFAULT = 0;
+
+		private String m_strName;
+		private int m_category;
+		private int m_trust;
+		private Hashtable m_allowedTrustSettings;
+
+		private AbstractTrustFilter(String a_name, Hashtable a_allowedTrustSettings)
+		{
+			m_strName = a_name;
+			m_category = CATEGORY_DEFAULT;
+			m_allowedTrustSettings = (Hashtable)m_allowedTrustSettings.clone();
+		}
+
+		public final String getName()
+		{
+			return m_strName;
+		}
+
+		public final int getCategory()
+		{
+			return m_category;
+		}
+
+		public final int getTrust()
+		{
+			return m_trust;
+		}
+
+		public final void setTrust(int a_trust)
+		{
+			m_trust = a_trust;
+		}
+
+		public void checkTrust(MixCascade a_cascade) throws TrustException, SignatureException
+		{
+			// do nothing
+		}
+
+	}
+
+
 
 	public boolean equals(Object a_trustModel)
 	{
@@ -371,18 +415,6 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 		return elemTrustModel;
 	}
 
-	public void showTrustWarning(Component a_component)
-	{
-		//if (JAPModel.getInstance().getTrustModel().isWarningShown())
-		{
-			JAPDialog.LinkedCheckBox checkbox = new JAPDialog.LinkedCheckBox(false);
-			JAPDialog.showMessageDialog(a_component,
-										JAPMessages.getString(TrustModel.MSG_WARNING_FILTER),
-										checkbox);
-			//JAPModel.getInstance().getTrustModel().setShowWarning(!checkbox.getState());
-		}
-	}
-
 	public void setTrustExpiredCerts(int a_trust)
 	{
 		synchronized (this)
@@ -426,6 +458,12 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 
 	public void checkTrust(MixCascade a_cascade) throws TrustException, SignatureException
 	{
+		if (a_cascade != null && Database.getInstance(BlacklistedCascadeIDEntry.class).getEntryById(
+			  a_cascade.getMixIDsAsString()) != null)
+		{
+			throw (new TrustException("Cascade is in blacklist!"));
+		}
+
 		if (m_trustUserDefined == TRUST_EXCLUSIVE)
 		{
 			if (a_cascade != null && a_cascade.isUserDefined())

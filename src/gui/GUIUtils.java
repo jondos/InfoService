@@ -1579,9 +1579,12 @@ public final class GUIUtils
 								Component component = (Component) a_event.getSource();
 								try
 								{
-									ms_mousePosition = component.getLocationOnScreen();
-									ms_mousePosition.x += mouseEvent.getX();
-									ms_mousePosition.y += mouseEvent.getY();
+									synchronized (SYNC_MOUSE_POSITION)
+									{
+										ms_mousePosition = component.getLocationOnScreen();
+										ms_mousePosition.x += mouseEvent.getX();
+										ms_mousePosition.y += mouseEvent.getY();
+									}
 								}
 								catch (IllegalComponentStateException a_e)
 								{
@@ -1594,7 +1597,21 @@ public final class GUIUtils
 				addAWTEventListener(ms_mouseListener);
 			}
 		}
-		return ms_mousePosition;
+		if (ms_mousePosition == null)
+		{
+			return null;
+		}
+		return new Point(ms_mousePosition.x, ms_mousePosition.y);
+	}
+
+	public static Point getAbsolutePosition(Point a_positionRelativeToComponent, Component a_component)
+	{
+		if (a_positionRelativeToComponent == null || a_component == null)
+		{
+			return null;
+		}
+
+		return null;
 	}
 
 	public static Point getRelativePosition(Point a_positionOnScreen, Component a_component)

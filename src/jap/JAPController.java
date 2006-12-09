@@ -67,7 +67,6 @@ import anon.client.ITrustModel;
 import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
 import anon.infoservice.AbstractMixCascadeContainer;
-import anon.infoservice.AutoSwitchedMixCascade;
 import anon.infoservice.CascadeIDEntry;
 import anon.infoservice.Database;
 import anon.infoservice.DatabaseMessage;
@@ -114,6 +113,7 @@ import platform.AbstractOS;
 import proxy.DirectProxy;
 import proxy.DirectProxy.AllowUnprotectedConnectionCallback;
 import update.JAPUpdateWizard;
+import anon.infoservice.BlacklistedCascadeIDEntry;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -877,30 +877,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 
 
-				Element autoChange =
-					(Element)XMLUtil.getFirstChildByName(
-									   root, AutoSwitchedMixCascade.XML_ELEMENT_CONTAINER_NAME);
-
-				if (autoChange != null)
-				{
-					autoChange.getElementsByTagName(AutoSwitchedMixCascade.XML_ELEMENT_NAME);
-					Node nodeCascade = autoChange.getFirstChild();
-					while (nodeCascade != null)
-					{
-						if (nodeCascade.getNodeName().equals(
-							AutoSwitchedMixCascade.XML_ELEMENT_NAME))
-						{
-							try
-							{
-								Database.getInstance(AutoSwitchedMixCascade.class).update(
-									new AutoSwitchedMixCascade( (Element) nodeCascade, Long.MAX_VALUE));
-							}
-							catch (Exception e)
-							{}
-						}
-						nodeCascade = nodeCascade.getNextSibling();
-					}
-				}
 
 
 	            m_Model.setHttpListenerPortNumber(XMLUtil.parseAttribute(root,
@@ -1082,6 +1058,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 				Database.getInstance(CascadeIDEntry.class).loadFromXml(
 								(Element) XMLUtil.getFirstChildByName(root,
 					CascadeIDEntry.XML_ELEMENT_CONTAINER_NAME));
+
+				/* load the list of blacklisted cascades */
+				Database.getInstance(BlacklistedCascadeIDEntry.class).loadFromXml(
+								(Element) XMLUtil.getFirstChildByName(root,
+					BlacklistedCascadeIDEntry.XML_ELEMENT_CONTAINER_NAME));
+
 
 				/** @todo add Tor in a better way */
 	/**			Database.getInstance(MixCascade.class).update(
@@ -2062,21 +2044,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 			XMLUtil.setAttribute(e, JAPModel.XML_DENY_NON_ANONYMOUS_SURFING,
 								 JAPModel.getInstance().isNonAnonymousSurfingDenied());
 			XMLUtil.setAttribute(e, XML_ATTR_SHOW_CONFIG_ASSISTANT, m_bShowConfigAssistant);
-			Element autoSwitch = doc.createElement(AutoSwitchedMixCascade.XML_ELEMENT_CONTAINER_NAME);
 
 			XMLUtil.setAttribute(e, XML_ATTR_LOGIN_TIMEOUT, AnonClient.getLoginTimeout());
 			XMLUtil.setAttribute(e, XML_ATTR_INFOSERVICE_CONNECT_TIMEOUT,
 								 InfoServiceDBEntry.getConnectionTimeout());
 
 
-			e.appendChild(autoSwitch);
-			Enumeration autoSwitchCascades =
-				Database.getInstance(AutoSwitchedMixCascade.class).getEntrySnapshotAsEnumeration();
-			while (autoSwitchCascades.hasMoreElements())
-			{
-				autoSwitch.appendChild(
-								((AutoSwitchedMixCascade)autoSwitchCascades.nextElement()).toXmlElement(doc));
-			}
 
 			/* save payment configuration */
 			try
@@ -2180,6 +2153,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 			/* stores known cascades */
 			e.appendChild(Database.getInstance(CascadeIDEntry.class).toXmlElement(
 						 doc, CascadeIDEntry.XML_ELEMENT_CONTAINER_NAME));
+
+			/* stores blacklisted cascades */
+			e.appendChild(Database.getInstance(BlacklistedCascadeIDEntry.class).toXmlElement(
+						 doc, BlacklistedCascadeIDEntry.XML_ELEMENT_CONTAINER_NAME));
+
 
 			/*stores mixes */
 			Element elemMixes = doc.createElement(MixInfo.XML_ELEMENT_CONTAINER_NAME);
@@ -4582,30 +4560,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 				return false;
 			}
 
-			if (a_cascade instanceof AutoSwitchedMixCascade)
-			{
-				/*
-				 * This cascade has been explicitly chosen as candidate. Allow to use it if it has not
-				 * changed in the current database (that means other mixes are in the cascade).
-				 */
-				MixCascade comparedCascade =
-					(MixCascade) Database.getInstance(MixCascade.class).getEntryById(a_cascade.getId());
-				if (comparedCascade != null)
-				{
-					if (!a_cascade.compareMixIDs(comparedCascade))
-					{
-						// This is not the same cascade that was chosen before!
-						return false;
-					}
-				}
-			}
 			/*
 			 * Cascade is not suitable if payment and the warning dialog is shown or no account is available
 			 * Otherwise the user would have to answer a dialog which is not good for automatic connections.
 			 */
 			return isTrusted(a_cascade) && !(a_cascade.isPayment() &&
-					 ( (! (a_cascade instanceof AutoSwitchedMixCascade) &&
-						!JAPController.getInstance().getDontAskPayment()) ||
+					 ( !JAPController.getInstance().getDontAskPayment() ||
 					  PayAccountsFile.getInstance().getNumAccounts() == 0 ||
 					  PayAccountsFile.getInstance().getActiveAccount() == null ||
 					  PayAccountsFile.getInstance().getActiveAccount().getBalance().getCredit() == 0));
