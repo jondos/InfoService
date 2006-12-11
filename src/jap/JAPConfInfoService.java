@@ -759,13 +759,13 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 						}
 						m_hostLabel.setText(hosts);
 						m_portLabel.setText(ports);
-						/*
+
 						if (m_hostLabel.getRootPane() != null)
 						{
-							m_hostLabel.getRootPane().invalidate();
+							//m_hostLabel.getRootPane().invalidate();
 							m_hostLabel.getRootPane().revalidate();
-							m_hostLabel.getRootPane().repaint();
-						}*/
+							//m_hostLabel.getRootPane().repaint();
+						}
 						if (selectedInfoService.isUserDefined())
 						{
 							addInfoServiceHostField.setText(hosts);

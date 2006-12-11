@@ -114,6 +114,7 @@ import proxy.DirectProxy;
 import proxy.DirectProxy.AllowUnprotectedConnectionCallback;
 import update.JAPUpdateWizard;
 import anon.infoservice.BlacklistedCascadeIDEntry;
+import anon.infoservice.PreviouslyKnownCascadeIDEntry;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -348,6 +349,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 			m_currentMixCascade.setUserDefined(false, null);
 			m_currentMixCascade.showAsTrusted(true);
 			Database.getInstance(CascadeIDEntry.class).update(new CascadeIDEntry(m_currentMixCascade));
+			Database.getInstance(PreviouslyKnownCascadeIDEntry.class).update(
+						 new PreviouslyKnownCascadeIDEntry(m_currentMixCascade));
 		}
 		catch (Exception e)
 		{
@@ -1023,6 +1026,18 @@ public final class JAPController extends Observable implements IProxyListener, O
 								(Element)XMLUtil.getFirstChildByName(root,
 					TrustModel.XML_ELEMENT_CONTAINER_NAME));
 
+				/* load the list of blacklisted cascades */
+				Database.getInstance(BlacklistedCascadeIDEntry.class).loadFromXml(
+								(Element) XMLUtil.getFirstChildByName(root,
+					BlacklistedCascadeIDEntry.XML_ELEMENT_CONTAINER_NAME));
+				// do not blacklist the loaded cascades automatically
+				boolean bAutoBlacklist = XMLUtil.parseAttribute(XMLUtil.getFirstChildByName(root,
+					BlacklistedCascadeIDEntry.XML_ELEMENT_CONTAINER_NAME),
+					BlacklistedCascadeIDEntry.XML_ATTR_AUTO_BLACKLIST_NEW_CASCADES,
+					BlacklistedCascadeIDEntry.DEFAULT_AUTO_BLACKLIST);
+				BlacklistedCascadeIDEntry.putNewCascadesInBlacklist(false);
+
+
 				/* try to load information about cascades */
 				Node nodeCascades = XMLUtil.getFirstChildByName(root, MixCascade.XML_ELEMENT_CONTAINER_NAME);
 				MixCascade currentCascade;
@@ -1053,16 +1068,17 @@ public final class JAPController extends Observable implements IProxyListener, O
 						nodeCascade = nodeCascade.getNextSibling();
 					}
 				}
+				BlacklistedCascadeIDEntry.putNewCascadesInBlacklist(bAutoBlacklist);
 
 				/* load the list of known cascades */
 				Database.getInstance(CascadeIDEntry.class).loadFromXml(
 								(Element) XMLUtil.getFirstChildByName(root,
 					CascadeIDEntry.XML_ELEMENT_CONTAINER_NAME));
 
-				/* load the list of blacklisted cascades */
-				Database.getInstance(BlacklistedCascadeIDEntry.class).loadFromXml(
+				/* for the blacklist: */
+				Database.getInstance(PreviouslyKnownCascadeIDEntry.class).loadFromXml(
 								(Element) XMLUtil.getFirstChildByName(root,
-					BlacklistedCascadeIDEntry.XML_ELEMENT_CONTAINER_NAME));
+					PreviouslyKnownCascadeIDEntry.XML_ELEMENT_CONTAINER_NAME));
 
 
 				/** @todo add Tor in a better way */
@@ -2151,12 +2167,17 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 
 			/* stores known cascades */
-			e.appendChild(Database.getInstance(CascadeIDEntry.class).toXmlElement(
-						 doc, CascadeIDEntry.XML_ELEMENT_CONTAINER_NAME));
+			e.appendChild(Database.getInstance(CascadeIDEntry.class).toXmlElement(doc));
+			// known for the blacklist
+			e.appendChild(Database.getInstance(PreviouslyKnownCascadeIDEntry.class).toXmlElement(doc));
 
 			/* stores blacklisted cascades */
-			e.appendChild(Database.getInstance(BlacklistedCascadeIDEntry.class).toXmlElement(
-						 doc, BlacklistedCascadeIDEntry.XML_ELEMENT_CONTAINER_NAME));
+			Element elemBlacklist = Database.getInstance(BlacklistedCascadeIDEntry.class).toXmlElement(doc);
+			XMLUtil.setAttribute(elemBlacklist,
+								 BlacklistedCascadeIDEntry.XML_ATTR_AUTO_BLACKLIST_NEW_CASCADES,
+								 BlacklistedCascadeIDEntry.areNewCascadesInBlacklist());
+			e.appendChild(elemBlacklist);
+
 
 
 			/*stores mixes */

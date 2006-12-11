@@ -54,6 +54,7 @@ import java.util.Observable;
 import java.util.Hashtable;
 
 import anon.client.AnonClient;
+import anon.infoservice.BlacklistedCascadeIDEntry;
 
 final class JAPConfAnonGeneral extends AbstractJAPConfModule
 {
@@ -90,7 +91,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	private static final String MSG_TOOLTIP_SERVICE_DEACTIVATED = JAPConfAnonGeneral.class.getName() +
 		"_tooltipServiceDeactivated";
 	private static final String MSG_EVERY_SECONDS = JAPConfAnonGeneral.class.getName() + "_everySeconds";
-
+	private static final String MSG_LBL_WHITELIST = JAPConfAnonGeneral.class.getName() + "_autoBlacklist";
 
 
 	private static final String IMG_ARROW_RIGHT = JAPConfAnonGeneral.class.getName() + "_arrowRight.gif";
@@ -108,6 +109,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	private JCheckBox m_cbDummyTraffic;
 	private JCheckBox m_cbAutoConnect;
 	private JCheckBox m_cbAutoReConnect;
+	private JCheckBox m_cbAutoBlacklist;
 	private JCheckBox m_cbAutoChooseCascades;
 	private JSlider m_sliderDummyTrafficIntervall;
 	private JAPController m_Controller;
@@ -175,6 +177,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_cbDenyNonAnonymousSurfing.setSelected(JAPModel.getInstance().isNonAnonymousSurfingDenied());
 		m_cbAutoConnect.setSelected(JAPModel.isAutoConnect());
 		m_cbAutoReConnect.setSelected(JAPModel.isAutomaticallyReconnected());
+		m_cbAutoBlacklist.setSelected(BlacklistedCascadeIDEntry.areNewCascadesInBlacklist());
 		m_cbAutoChooseCascades.setSelected(JAPModel.getInstance().isCascadeAutoSwitched());
 
 		m_comboServices[2].setEnabled(JAPModel.getInstance().isMixMinionActivated());
@@ -210,6 +213,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 
 		// Anonservice settings
 		JAPModel.getInstance().denyNonAnonymousSurfing(m_cbDenyNonAnonymousSurfing.isSelected());
+		BlacklistedCascadeIDEntry.putNewCascadesInBlacklist(m_cbAutoBlacklist.isSelected());
 		JAPModel.getInstance().setAutoConnect(m_cbAutoConnect.isSelected());
 		JAPModel.getInstance().setAutoReConnect(m_cbAutoReConnect.isSelected());
 		JAPModel.getInstance().setCascadeAutoSwitch(m_cbAutoChooseCascades.isSelected());
@@ -228,6 +232,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_cbAutoConnect = new JCheckBox(JAPMessages.getString("settingsautoConnectCheckBox"));
 		m_cbAutoReConnect = new JCheckBox(JAPMessages.getString("settingsautoReConnectCheckBox"));
 		m_cbAutoChooseCascades = new JCheckBox(JAPMessages.getString(MSG_AUTO_CHOOSE_CASCADES));
+		m_cbAutoBlacklist = new JCheckBox(JAPMessages.getString(MSG_LBL_WHITELIST));
 
 
 		m_cbDummyTraffic = new JCheckBox(JAPMessages.getString("ngConfAnonGeneralSendDummy"));
@@ -250,7 +255,8 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		constrServices.gridwidth = 1;
 		constrServices.gridy = 0;
 		constrServices.anchor = GridBagConstraints.WEST;
-		constrServices.insets = new Insets(5, 5, 5, 5); // top,left,bottom,right
+		//constrServices.insets = new Insets(5, 5, 5, 5); // top,left,bottom,right
+		constrServices.insets = new Insets(2, 5, 2, 5);
 		m_comboServices = new JComboBox[services.length];
 		for (int i = 0; i < services.length; i++)
 		{
@@ -299,6 +305,8 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		c.weighty = 0;
 		c.gridy++;
 		panelRoot.add(m_cbDenyNonAnonymousSurfing, c);
+		c.gridy++;
+		panelRoot.add(m_cbAutoBlacklist, c);
 		c.gridy++;
 		panelRoot.add(m_cbAutoConnect, c);
 		c.gridy++;
@@ -374,6 +382,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	{
 		m_cbDenyNonAnonymousSurfing.setSelected(false);
 		m_cbDummyTraffic.setSelected(true);
+		m_cbAutoBlacklist.setSelected(BlacklistedCascadeIDEntry.DEFAULT_AUTO_BLACKLIST);
 		m_sliderDummyTrafficIntervall.setEnabled(true);
 		m_sliderDummyTrafficIntervall.setValue(DT_INTERVAL_DEFAULT);
 		m_cbAutoConnect.setSelected(true);

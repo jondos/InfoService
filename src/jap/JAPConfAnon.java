@@ -101,6 +101,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
+import anon.infoservice.PreviouslyKnownCascadeIDEntry;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener, Observer
@@ -964,7 +965,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 			if (valid)
 			{
+				Database.getInstance(PreviouslyKnownCascadeIDEntry.class).update(
+						 new PreviouslyKnownCascadeIDEntry(c));
 				Database.getInstance(MixCascade.class).update(c);
+				Database.getInstance(PreviouslyKnownCascadeIDEntry.class).remove(
+						 new PreviouslyKnownCascadeIDEntry(oldCascade));
 				Database.getInstance(MixCascade.class).remove(oldCascade);
 				if (JAPController.getInstance().getCurrentMixCascade().equals(oldCascade))
 				{
@@ -1044,8 +1049,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		try
 		{
 			final MixCascade c = new MixCascade(m_manHostField.getText(),
-										  Integer.parseInt(m_manPortField.getText()));
-
+												Integer.parseInt(m_manPortField.getText()));
+			Database.getInstance(PreviouslyKnownCascadeIDEntry.class).update(
+						 new PreviouslyKnownCascadeIDEntry(c));
 			Database.getInstance(MixCascade.class).update(c);
 			((MyTableModel)m_tableMixCascade.getModel()).addElement(c);
 			setSelectedCascade(c);
