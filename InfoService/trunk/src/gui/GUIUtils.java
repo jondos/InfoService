@@ -1604,16 +1604,6 @@ public final class GUIUtils
 		return new Point(ms_mousePosition.x, ms_mousePosition.y);
 	}
 
-	public static Point getAbsolutePosition(Point a_positionRelativeToComponent, Component a_component)
-	{
-		if (a_positionRelativeToComponent == null || a_component == null)
-		{
-			return null;
-		}
-
-		return null;
-	}
-
 	public static Point getRelativePosition(Point a_positionOnScreen, Component a_component)
 	{
 		if (a_positionOnScreen == null || a_component == null)

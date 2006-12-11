@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Observable;
 import java.util.Observer;
@@ -51,28 +50,33 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
 import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import javax.swing.DefaultListCellRenderer;
-import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
+import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.border.TitledBorder;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import anon.crypto.JAPCertificate;
-import anon.crypto.XMLSignature;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
+
+import anon.crypto.AbstractX509AlternativeName;
 import anon.crypto.CertPath;
+import anon.crypto.JAPCertificate;
+import anon.crypto.SignatureVerifier;
 import anon.crypto.X509SubjectAlternativeName;
+import anon.infoservice.BlacklistedCascadeIDEntry;
 import anon.infoservice.Database;
 import anon.infoservice.DatabaseMessage;
 import anon.infoservice.InfoServiceHolder;
@@ -81,6 +85,7 @@ import anon.infoservice.MixCascade;
 import anon.infoservice.MixInfo;
 import anon.infoservice.ServiceLocation;
 import anon.infoservice.ServiceOperator;
+import anon.infoservice.ServiceSoftware;
 import anon.infoservice.StatusInfo;
 import anon.util.Util;
 import gui.CertDetailsDialog;
@@ -88,19 +93,14 @@ import gui.CountryMapper;
 import gui.GUIUtils;
 import gui.JAPJIntField;
 import gui.JAPMessages;
+import gui.JAPMultilineLabel;
 import gui.MapBox;
-
 import gui.dialog.JAPDialog;
 import jap.forward.JAPRoutingMessage;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
-import anon.crypto.SignatureVerifier;
-import gui.JAPMultilineLabel;
-import anon.infoservice.ServiceSoftware;
-import anon.crypto.AbstractX509AlternativeName;
-import javax.swing.ImageIcon;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener, Observer
@@ -125,20 +125,20 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private static final String MSG_NOT_TRUSTWORTHY = JAPConfAnon.class.getName() + "_notTrustworthy";
 	private static final String MSG_EXPLAIN_NOT_TRUSTWORTHY =
 		JAPConfAnon.class.getName() + "_explainNotTrustworthy";
+	private static final String MSG_BLACKLISTED = JAPConfAnon.class.getName() + "_blacklisted";
+	private static final String MSG_EXPLAIN_BLACKLISTED = JAPConfAnon.class.getName() + "_explainBlacklisted";
 
 
 	private static final String DEFAULT_MIX_NAME = "AN.ON Mix";
 
 	private static final int MAX_HOST_LENGTH = 30;
 
-	private final Object MIX_COMBO_UPDATE_LOCK = new Object();
 	private boolean m_bUpdateServerPanel = true;
 
 	private InfoServiceTempLayer m_infoService;
 
 	private JList m_listMixCascade;
-
-	private JAPController m_Controller;
+	private JTable m_tableMixCascade;
 
 	private ServerListPanel m_serverList;
 	private JPanel pRoot;
@@ -155,7 +155,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private JAPMultilineLabel m_reachableLabel;
 	private JLabel m_portsLabel;
 
-
 	private GridBagLayout m_rootPanelLayout;
 	private GridBagConstraints m_rootPanelConstraints;
 
@@ -170,6 +169,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private JLabel m_emailLabel;
 	private JLabel m_locationLabel;
 	private JLabel m_payLabel;
+	private boolean m_blacklist;
 	private JLabel m_viewCertLabel;
 	private JLabel m_viewCertLabelValidity;
 
@@ -204,19 +204,20 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	protected JAPConfAnon(IJAPConfSavePoint savePoint)
 	{
 		super(null);
-		m_Controller = JAPController.getInstance();
-		m_infoService = new InfoServiceTempLayer(false);
+		if (m_infoService == null)
+		{
+			m_infoService = new InfoServiceTempLayer(false);
+		}
 	}
 
 	public void recreateRootPanel()
 	{
-		m_listMixCascade = new JList();
-		m_listMixCascade.addListSelectionListener(this);
-		m_listMixCascade.addMouseListener(this);
-		//m_listMixCascade.setFont(font);
+		//m_listMixCascade = new JList();
+		//m_listMixCascade.addListSelectionListener(this);
+		//m_listMixCascade.addMouseListener(this);
 
-		m_listMixCascade.setEnabled(true);
-		//m_lblCascadeInfo = new JLabel(JAPMessages.getString("infoAboutCascade"));
+		//m_listMixCascade.setEnabled(true);
+		////m_lblCascadeInfo = new JLabel(JAPMessages.getString("infoAboutCascade"));
 
 		m_lblMix = new JLabel();
 
@@ -329,8 +330,21 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 
 		m_listMixCascade = new JList();
-		m_listMixCascade.addListSelectionListener(this);
-		m_listMixCascade.addMouseListener(this);
+		m_tableMixCascade = new JTable();
+		m_tableMixCascade.setModel(new MyTableModel());
+		m_tableMixCascade.setTableHeader(null);
+		m_tableMixCascade.setIntercellSpacing(new Dimension(0,0));
+		m_tableMixCascade.setShowGrid(false);
+
+		m_tableMixCascade.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		m_tableMixCascade.getColumnModel().getColumn(0).setMaxWidth(1);
+		m_tableMixCascade.getColumnModel().getColumn(0).setPreferredWidth(1);
+		m_tableMixCascade.getColumnModel().getColumn(1).setCellRenderer(new MixCascadeCellRenderer());
+		m_tableMixCascade.addMouseListener(this);
+		m_tableMixCascade.getSelectionModel().addListSelectionListener(this);
+		//m_tableMixCascade.add
+
+
 		m_listMixCascade.setFixedCellWidth(30);
 		c.gridx = 0;
 		c.gridy = 1;
@@ -340,9 +354,16 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.weighty = 1.0;
 		c.fill = GridBagConstraints.BOTH;
 		c.insets = new Insets(5, 5, 5, 5);
-		JScrollPane scroll = new JScrollPane(m_listMixCascade);
+		JScrollPane scroll;
+
+		scroll = new JScrollPane(m_listMixCascade);
 		scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-		scroll.setMinimumSize(new Dimension(100, 100));
+		Dimension preferredSize = scroll.getPreferredSize();
+		scroll = new JScrollPane(m_tableMixCascade);
+		scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		//scroll.setMinimumSize(new Dimension(100, 100));
+		scroll.setPreferredSize(preferredSize);
+
 		m_cascadesPanel.add(scroll, c);
 
 		JPanel panelBttns = new JPanel(new GridBagLayout());
@@ -464,10 +485,19 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				{
 					if (m_payLabel.getForeground() == Color.red)
 					{
-						JAPDialog.showMessageDialog(m_payLabel,
-							JAPMessages.getString(MSG_EXPLAIN_NOT_TRUSTWORTHY,
-												  TrustModel.getCurrentTrustModel().getName())); //,
+						if (m_blacklist)
+						{
+							JAPDialog.showMessageDialog(m_payLabel,
+								JAPMessages.getString(MSG_EXPLAIN_BLACKLISTED));
+						}
+						else
+						{
+							JAPDialog.showMessageDialog(m_payLabel,
+								JAPMessages.getString(MSG_EXPLAIN_NOT_TRUSTWORTHY,
+								TrustModel.getCurrentTrustModel().getName())); //,
 							//new JAPDialog.LinkedHelpContext(JAPConfTrust.class.getName()));
+						}
+
 					}
 					else
 					{
@@ -527,11 +557,47 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		drawServerInfoPanel();
 	}
 
+	private void setPayLabel(MixCascade cascade)
+	{
+		if (!TrustModel.getCurrentTrustModel().isTrusted(cascade))
+		{
+			m_payLabel.setForeground(Color.red);
+			m_payLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+			if (Database.getInstance(BlacklistedCascadeIDEntry.class).getEntryById(
+				cascade.getMixIDsAsString()) == null)
+			{
+				m_payLabel.setText(JAPMessages.getString(MSG_NOT_TRUSTWORTHY));
+				m_payLabel.setToolTipText(JAPMessages.getString(MSG_EXPLAIN_NOT_TRUSTWORTHY,
+					TrustModel.getCurrentTrustModel().getName()));
+				m_blacklist = false;
+			}
+			else
+			{
+				m_payLabel.setText(JAPMessages.getString(MSG_BLACKLISTED));
+				m_payLabel.setToolTipText(JAPMessages.getString(MSG_EXPLAIN_BLACKLISTED,
+					TrustModel.getCurrentTrustModel().getName()));
+				m_blacklist = true;
+			}
+		}
+		else if (m_infoService.isPay(cascade.getId()))
+		{
+			m_payLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+			m_payLabel.setForeground(Color.blue);
+			m_payLabel.setText(JAPMessages.getString(MSG_PAYCASCADE));
+			m_payLabel.setToolTipText(JAPMessages.getString(JAPNewView.MSG_NO_REAL_PAYMENT));
+		}
+		else
+		{
+			m_payLabel.setCursor(Cursor.getDefaultCursor());
+			m_payLabel.setToolTipText("");
+			m_payLabel.setText("");
+		}
+	}
+
 	public synchronized void itemStateChanged(ItemEvent e)
 	{
 		int server = m_serverList.getSelectedIndex();
-
-		MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
+		MixCascade cascade = (MixCascade)m_tableMixCascade.getValueAt(m_tableMixCascade.getSelectedRow(), 1);
 		String selectedMixId = null;
 
 		if (cascade != null)
@@ -601,7 +667,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 
 		//m_nrLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
-
 		m_operatorLabel.setText(GUIUtils.trim(m_infoService.getOperator(cascade, selectedMixId)));
 		//m_operatorLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
 
@@ -702,78 +767,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	protected void onUpdateValues()
 	{
-		Vector entries = Database.getInstance(MixCascade.class).getEntryList();
-		Vector entriesUserDefined = new Vector();
-		DefaultListModel listModel = new DefaultListModel();
-		listModel.ensureCapacity(entries.size());
-
-		CustomRenderer cr = new CustomRenderer();
-		m_listMixCascade.setCellRenderer(cr);
-		MixCascade currentCascade = JAPController.getInstance().getCurrentMixCascade();
-		boolean bCurrentAlreadyAdded = false;
-		MixCascade cascade;
-		Enumeration it = entries.elements();
-		while (it.hasMoreElements())
+		MyTableModel model = (MyTableModel) m_tableMixCascade.getModel();
+		synchronized (model)
 		{
-			cascade = (MixCascade) it.nextElement();
-			if (cascade.equals(currentCascade))
-			{
-				bCurrentAlreadyAdded = true;
-			}
-
-			if (cascade.isUserDefined())
-			{
-				entriesUserDefined.addElement(cascade);
-				continue;
-			}
-			listModel.addElement(cascade);
+			model.update();
 		}
-
-		if (!bCurrentAlreadyAdded)
-		{
-			listModel.addElement(currentCascade);
-		}
-
-		if (entriesUserDefined.size() > 0)
-		{
-			for (int i = 0; i < entriesUserDefined.size(); i++)
-			{
-				listModel.addElement(entriesUserDefined.elementAt(i));
-			}
-		}
-
-
-		Object value = m_listMixCascade.getSelectedValue();
-
-		try
-		{
-			synchronized (MIX_COMBO_UPDATE_LOCK)
-			{
-				m_bUpdateServerPanel = ((m_manualPanel == null) || (!m_manualPanel.isVisible()));
-				m_listMixCascade.setModel(listModel);
-				m_listMixCascade.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-				if (value == null)
-				{
-					int index = m_listMixCascade.getFirstVisibleIndex();
-					if (index >= 0)
-					{
-						m_listMixCascade.setSelectedIndex(index);
-					}
-				}
-				else
-				{
-					m_listMixCascade.setSelectedValue(value, true);
-				}
-				m_bUpdateServerPanel = true;
-			}
-		}
-		catch (Exception a_e)
-		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, a_e);
-		}
-
-		LogHolder.log(LogLevel.DEBUG, LogType.GUI, "- select First Item -- finished!");
 	}
 
 	private void fetchCascades(final boolean bErr, final boolean a_bForceCascadeUpdate,
@@ -791,7 +789,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 				if (a_bForceCascadeUpdate)
 				{
-					m_Controller.fetchMixCascades(bErr, component, false);
+					JAPController.getInstance().fetchMixCascades(bErr, component, false);
 				}
 				//Update the temporary infoservice database
 				m_infoService.fill(a_bCheckInfoServiceUpdateStatus);
@@ -828,6 +826,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	/**
 	 * Deactivates GUI when no cascades are returned by the Infoservice
 	 */
+	/*
 	private void deactivate()
 	{
 		m_listMixCascade.removeAll();
@@ -845,7 +844,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		drawServerInfoPanel();
 		m_serverInfoPanel.setEnabled(false);
 
-	}
+	}*/
 
 	public void actionPerformed(ActionEvent e)
 	{
@@ -874,7 +873,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			MixCascade newCascade = null;
 			try
 			{
-				newCascade = (MixCascade) m_listMixCascade.getSelectedValue();
+				newCascade = (MixCascade) m_tableMixCascade.getValueAt(m_tableMixCascade.getSelectedRow(), 1);
 			}
 			catch (Exception ex)
 			{
@@ -882,9 +881,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			}
 			if (newCascade != null)
 			{
-				m_Controller.setCurrentMixCascade(newCascade);
+				JAPController.getInstance().setCurrentMixCascade(newCascade);
 				m_selectCascadeButton.setEnabled(false);
-				m_listMixCascade.repaint();
+				m_tableMixCascade.repaint();
 			}
 		}
 		else if (e.getSource() == m_manualCascadeButton)
@@ -912,7 +911,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		else if (e.getSource() == m_showEditPanelButton)
 		{
-			MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
+			MixCascade cascade =
+				(MixCascade) m_tableMixCascade.getValueAt(m_tableMixCascade.getSelectedRow(), 1);
 			drawManualPanel(cascade.getListenerInterface(0).getHost(),
 							String.valueOf(cascade.getListenerInterface(0).getPort()));
 			mb_manualCascadeNew = false;
@@ -942,7 +942,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		boolean valid = true;
 		try
 		{
-			MixCascade oldCascade = (MixCascade) m_listMixCascade.getSelectedValue();
+			MixCascade oldCascade =
+				(MixCascade) m_tableMixCascade.getValueAt(m_tableMixCascade.getSelectedRow(), 1);
 			final MixCascade c = new MixCascade(m_manHostField.getText(),
 										  Integer.parseInt(m_manPortField.getText()));
 			//Check if this cascade already exists
@@ -965,9 +966,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			{
 				Database.getInstance(MixCascade.class).update(c);
 				Database.getInstance(MixCascade.class).remove(oldCascade);
-				if (m_Controller.getCurrentMixCascade().equals(oldCascade))
+				if (JAPController.getInstance().getCurrentMixCascade().equals(oldCascade))
 				{
-					m_Controller.setCurrentMixCascade(c);
+					JAPController.getInstance().setCurrentMixCascade(c);
 					/**					if (m_Controller.isAnonConnected())
 						 {
 						  JAPDialog.showMessageDialog(this.getRootPanel(),
@@ -980,7 +981,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					public void run()
 					{
 						updateValues(true);
-						m_listMixCascade.setSelectedValue(c, true);
+						setSelectedCascade(c);
 					}
 				}).start();
 
@@ -1007,8 +1008,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	{
 		try
 		{
-			MixCascade cascade = (MixCascade) m_listMixCascade.getSelectedValue();
-			if (m_Controller.getCurrentMixCascade().equals(cascade))
+			MixCascade cascade =
+				(MixCascade) m_tableMixCascade.getValueAt(m_tableMixCascade.getSelectedRow(), 1);
+			if (JAPController.getInstance().getCurrentMixCascade().equals(cascade))
 			{
 				JAPDialog.showErrorDialog(this.getRootPanel(),
 										  JAPMessages.getString("activeCascadeDelete"),
@@ -1019,10 +1021,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				if (JAPDialog.showYesNoDialog(getRootPanel(), JAPMessages.getString(MSG_REALLY_DELETE)))
 				{
 					Database.getInstance(MixCascade.class).remove(cascade);
-					int index = m_listMixCascade.getFirstVisibleIndex();
-					if (index >= 0)
+
+					if (m_tableMixCascade.getRowCount() >= 0)
 					{
-						m_listMixCascade.setSelectedIndex(index);
+						m_tableMixCascade.getSelectionModel().setSelectionInterval(0, 0);
 					}
 				}
 			}
@@ -1045,8 +1047,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 										  Integer.parseInt(m_manPortField.getText()));
 
 			Database.getInstance(MixCascade.class).update(c);
-			((DefaultListModel)m_listMixCascade.getModel()).addElement(c);
-			m_listMixCascade.setSelectedValue(c, true);
+			((MyTableModel)m_tableMixCascade.getModel()).addElement(c);
+			setSelectedCascade(c);
 			updateValues(false);
 		}
 		catch (Exception a_e)
@@ -1079,28 +1081,25 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			AbstractOS.getInstance().openEMail(getEMailFromLabel(m_emailLabel));
 		}
-		else if (e.getSource() == m_listMixCascade)
+		else if (e.getSource() == m_tableMixCascade)
 		{
 			if (e.getClickCount() == 2)
 			{
-				int index = m_listMixCascade.locationToIndex(e.getPoint());
-				if (index < 0)
+				MixCascade c = null;
+				synchronized (m_tableMixCascade.getModel())
 				{
-					return;
+					c = ( (MixCascade) m_tableMixCascade.getValueAt(
+									   m_tableMixCascade.rowAtPoint(e.getPoint()), 1));
 				}
-				MixCascade c;
-				try
+				if (c != null)
 				{
-					c = (MixCascade) m_listMixCascade.getModel().getElementAt(index);
+					JAPController.getInstance().setCurrentMixCascade(c);
+					m_deleteCascadeButton.setEnabled(false);
+					m_showEditPanelButton.setEnabled(false);
+
+					m_tableMixCascade.repaint();
 				}
-				catch (ClassCastException a_e)
-				{
-					return;
-				}
-				m_Controller.setCurrentMixCascade(c);
-				m_deleteCascadeButton.setEnabled(false);
-				m_showEditPanelButton.setEnabled(false);
-				m_listMixCascade.repaint();
+				//m_listMixCascade.repaint();
 			}
 		}
 		else if (e.getSource() == m_viewCertLabel || e.getSource() == m_viewCertLabelValidity)
@@ -1184,7 +1183,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			if (!m_observablesRegistered)
 			{
 				/* register observables */
-				m_Controller.addObserver(this);
+				JAPController.getInstance().addObserver(this);
 				JAPModel.getInstance().getRoutingSettings().addObserver(this);
 				SignatureVerifier.getInstance().getVerificationCertificateStore().addObserver(this);
 				Database.getInstance(MixCascade.class).addObserver(this);
@@ -1199,23 +1198,43 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			fetchCascades(false, false, true);
 		}
 
-		int index = m_listMixCascade.getFirstVisibleIndex();
-		if (m_listMixCascade.getSelectedIndex() < 0 && index >= 0)
+
+		if (m_tableMixCascade.getRowCount() > 0 && m_tableMixCascade.getSelectedRow() < 0)
 		{
-			m_listMixCascade.setSelectedIndex(index);
+			m_tableMixCascade.getSelectionModel().setSelectionInterval(0, 0);
 		}
 	}
 
 	public void setSelectedCascade(MixCascade a_cascade)
 	{
-		if (a_cascade != null)
-		{
-			m_listMixCascade.setSelectedValue(a_cascade, true);
-		}
+		//m_listMixCascade.setSelectedValue(a_cascade, true);
+		((MyTableModel)m_tableMixCascade.getModel()).setSelectedCascade(a_cascade);
 	}
 
 	public void fontSizeChanged(final JAPModel.FontResize a_resize, final JLabel a_dummyLabel)
 	{
+		if (m_infoService == null)
+		{
+			m_infoService = new InfoServiceTempLayer(false);
+		}
+		onUpdateValues();
+		MyTableModel model = (MyTableModel) m_tableMixCascade.getModel();
+		synchronized (model)
+		{
+
+			// Determine highest cell in the row
+			//for (int i = 0; i < m_tableMixCascade.getColumnCount(); i++)
+			{
+				TableCellRenderer renderer = m_tableMixCascade.getCellRenderer(0, 1);
+				Component comp = m_tableMixCascade.prepareRenderer(renderer, 0, 1);
+				int height = comp.getPreferredSize().height - 2;
+				m_tableMixCascade.setRowHeight(height);
+			}
+
+
+		}
+
+
 		if (m_serverList != null)
 		{
 			m_serverList.fontSizeChanged(a_resize, a_dummyLabel);
@@ -1236,20 +1255,19 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	public void valueChanged(ListSelectionEvent e)
 	{
 		boolean bUpdateServerPanel;
-		synchronized (MIX_COMBO_UPDATE_LOCK)
+		synchronized (((MyTableModel)m_tableMixCascade.getModel()).SYNC_UPDATE_SERVER_PANEL)
 		{
 			bUpdateServerPanel = m_bUpdateServerPanel;
 		}
 
 		if (!e.getValueIsAdjusting() && bUpdateServerPanel)
 		{
-			if (m_listMixCascade.getSelectedIndex() >= 0)
+			MixCascade cascade = (MixCascade) m_tableMixCascade.getValueAt(
+				 m_tableMixCascade.getSelectedRow(), 1);
+			if (cascade != null)
 			{
-				MixCascade cascade;
 				String cascadeId;
 
-				cascade = (MixCascade) m_listMixCascade.getSelectedValue();
-				//System.out.println(cascade);
 				int selectedMix = m_serverList.getSelectedIndex();
 				if (cascade == null)
 				{
@@ -1283,28 +1301,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					m_portsLabel.setText(m_infoService.getPorts(cascadeId));
 					m_cascadesPanel.remove(m_lblPorts);
 					m_cascadesPanel.add(m_lblPorts, m_constrPorts);
-					if (!cascade.isUserDefined() &&
-						!TrustModel.getCurrentTrustModel().isTrusted(cascade))
-					{
-						m_payLabel.setForeground(Color.red);
-						m_payLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-						m_payLabel.setText(JAPMessages.getString(MSG_NOT_TRUSTWORTHY));
-						m_payLabel.setToolTipText(JAPMessages.getString(MSG_EXPLAIN_NOT_TRUSTWORTHY,
-												   TrustModel.getCurrentTrustModel().getName()));
-					}
-					else if (m_infoService.isPay(cascadeId))
-					{
-						m_payLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-						m_payLabel.setForeground(Color.blue);
-						m_payLabel.setText(JAPMessages.getString(MSG_PAYCASCADE));
-						m_payLabel.setToolTipText(JAPMessages.getString(JAPNewView.MSG_NO_REAL_PAYMENT));
-					}
-					else
-					{
-						m_payLabel.setCursor(Cursor.getDefaultCursor());
-						m_payLabel.setToolTipText("");
-						m_payLabel.setText("");
-					}
+					setPayLabel(cascade);
 				}
 				drawServerInfoPanel();
 
@@ -1321,7 +1318,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					m_showEditPanelButton.setEnabled(false);
 				}
 
-				if (m_Controller.getCurrentMixCascade().getName().equalsIgnoreCase(cascade.getName()))
+				MixCascade current = JAPController.getInstance().getCurrentMixCascade();
+				if (current != null && current.getName().equalsIgnoreCase(cascade.getName()))
 				{
 					m_selectCascadeButton.setEnabled(false);
 				}
@@ -1429,7 +1427,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					}
 					else if (message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED)
 					{
-						MixCascade currentCascade = (MixCascade) m_listMixCascade.getSelectedValue();
+						MixCascade currentCascade =
+							(MixCascade) m_tableMixCascade.getValueAt(m_tableMixCascade.getSelectedRow(), 1);
 						if (currentCascade != null &&
 							currentCascade.equals((MixCascade)message.getMessageData()))
 						{
@@ -1506,10 +1505,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				}
 				else if (message.getMessageData() instanceof StatusInfo)
 				{
-					MixCascade currentCascade = (MixCascade) m_listMixCascade.getSelectedValue();
+					MixCascade currentCascade =
+						(MixCascade) m_tableMixCascade.getValueAt(m_tableMixCascade.getSelectedRow(), 1);
 					if (currentCascade != null)
 					{
-						if (m_listMixCascade.getSelectedValue() != null &&
+						if (m_tableMixCascade.getSelectedRow() >= 0 &&
 							currentCascade.getId().equals(
 								( (StatusInfo) message.getMessageData()).getId()))
 						{
@@ -1519,10 +1519,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				}
 				else if (message.getMessageData() instanceof MixInfo)
 				{
-					MixCascade currentCascade = (MixCascade) m_listMixCascade.getSelectedValue();
+					MixCascade currentCascade =
+						(MixCascade) m_tableMixCascade.getValueAt(m_tableMixCascade.getSelectedRow(), 1);
 					if (currentCascade != null)
 					{
-						if (m_listMixCascade.getSelectedValue() != null &&
+						if (m_tableMixCascade.getSelectedRow() >= 0 &&
 							currentCascade.getMixIds().contains(
 							((MixInfo) message.getMessageData()).getId()))
 						{
@@ -1580,92 +1581,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			return null;
 		}
 
-	}
-
-	/*
-	 * Allows usage of icons in elements of the MixCascade list
-	 */
-	final class CustomRenderer extends DefaultListCellRenderer
-	{
-		public Component getListCellRendererComponent(JList list, Object value,
-			int index, boolean isSelected, boolean cellHasFocus)
-		{
-			JLabel l;
-			Component comp = super.getListCellRendererComponent(list, value,
-				index, isSelected, cellHasFocus);
-			if (comp instanceof JComponent && value != null && value instanceof MixCascade)
-			{
-				MixCascade cascade = (MixCascade)value;
-				ImageIcon icon;
-
-				if (cascade.isUserDefined())
-				{
-					if (TrustModel.getCurrentTrustModel().isTrusted(cascade))
-					{
-						icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_MANUELL, true);
-					}
-					else
-					{
-						icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_MANUAL_NOT_TRUSTED, true);
-					}
-				}
-				else if (cascade.isPayment())
-				{
-					if (TrustModel.getCurrentTrustModel().isTrusted(cascade))
-					{
-						icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_PAYMENT, true);
-					}
-					else
-					{
-						icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_PAYMENT_NOT_TRUSTED, true);
-					}
-				}
-				else
-				{
-					if (TrustModel.getCurrentTrustModel().isTrusted(cascade))
-					{
-						icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_INTERNET, true);
-					}
-					else
-					{
-						icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_INTERNET_NOT_TRUSTED, true);
-					}
-				}
-				l = new JLabel(GUIUtils.trim(cascade.getName()), icon, LEFT);
-
-				l.setToolTipText(cascade.getName());
-				if (isSelected)
-				{
-					l.setOpaque(true);
-					l.setBackground(Color.lightGray);
-				}
-				JAPController c = JAPController.getInstance();
-				Font f = l.getFont();
-				if (cascade.equals(c.getCurrentMixCascade()))
-				{
-					l.setFont(new Font(f.getName(), Font.BOLD, f.getSize()));
-				}
-				else
-				{
-					l.setFont(new Font(f.getName(), Font.PLAIN, f.getSize()));
-				}
-			}
-			else
-			{
-				if (value != null)
-				{
-					l = new JLabel(GUIUtils.trim(value.toString()));
-
-				}
-				else
-				{
-					l = new JLabel();
-				}
-
-			}
-
-			return l;
-		}
 	}
 
 	/**
@@ -2176,6 +2091,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			MixInfo info = null;
 			MixInfo tempInfo;
 
+			if (a_cascade == null || a_mixId == null)
+			{
+				return null;
+			}
+
 			info = a_cascade.getMixInfo(a_mixId);
 
 			if (info == null || info.getVersionNumber() <= 0)
@@ -2531,6 +2451,218 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			c.gridwidth = 3;
 			add(new JLabel(), c);
 			*/
+		}
+	}
+
+	class MixCascadeCellRenderer extends DefaultTableCellRenderer
+	{
+		public MixCascadeCellRenderer()
+		{
+			super();
+		}
+
+		public void setValue(Object value)
+		{
+			if (value == null)
+			{
+				setText("");
+				return;
+			}
+			else if (value instanceof MixCascade)
+			{
+				MixCascade cascade = (MixCascade)value;
+				ImageIcon icon;
+
+				if (cascade.isUserDefined())
+				{
+					if (TrustModel.getCurrentTrustModel().isTrusted(cascade))
+					{
+						icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_MANUELL, true);
+					}
+					else
+					{
+						icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_MANUAL_NOT_TRUSTED, true);
+					}
+				}
+				else if (cascade.isPayment())
+				{
+					if (TrustModel.getCurrentTrustModel().isTrusted(cascade))
+					{
+						icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_PAYMENT, true);
+					}
+					else
+					{
+						icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_PAYMENT_NOT_TRUSTED, true);
+					}
+				}
+				else
+				{
+					if (TrustModel.getCurrentTrustModel().isTrusted(cascade))
+					{
+						icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_INTERNET, true);
+					}
+					else
+					{
+						icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_INTERNET_NOT_TRUSTED, true);
+					}
+				}
+				setIcon(icon);
+				if (cascade.equals(JAPController.getInstance().getCurrentMixCascade()))
+				{
+					GUIUtils.setFontStyle(this, Font.BOLD);
+				}
+				else
+				{
+					GUIUtils.setFontStyle(this, Font.PLAIN);
+				}
+			}
+			setText(value.toString());
+		}
+	}
+
+	private class MyTableModel extends AbstractTableModel
+	{
+		public final Object SYNC_UPDATE_SERVER_PANEL = new Object();
+
+		private Vector m_vecCascades;
+
+		private MyTableModel()
+		{
+			update();
+		}
+
+		private String columnNames[] = new String[]
+			{
+			"B", "Cascade"};
+		private Class columnClasses[] = new Class[]
+			{
+			Boolean.class, Object.class};
+
+		public synchronized void addElement(MixCascade a_cascade)
+		{
+			m_vecCascades.addElement(a_cascade);
+			fireTableDataChanged();
+		}
+
+		public synchronized void update()
+		{
+			int value = m_tableMixCascade.getSelectedRow();
+			MixCascade cascade = null;
+			if (value >= 0)
+			{
+				cascade = (MixCascade)getValueAt(value, 1);
+			}
+
+			m_vecCascades = Database.getInstance(MixCascade.class).getEntryList();
+			MixCascade currentCascade = JAPController.getInstance().getCurrentMixCascade();
+
+			if (!m_vecCascades.contains(currentCascade))
+			{
+				m_vecCascades.addElement(currentCascade);
+			}
+
+			fireTableDataChanged();
+
+			synchronized (SYNC_UPDATE_SERVER_PANEL)
+			{
+				m_bUpdateServerPanel = ((m_manualPanel == null) || (!m_manualPanel.isVisible()));
+				int index = m_vecCascades.indexOf(cascade);
+				if (cascade == null || index < 0)
+				{
+					if (m_tableMixCascade.getRowCount() > 0)
+					{
+						m_tableMixCascade.setRowSelectionInterval(0, 0);
+					}
+				}
+				else
+				{
+					m_tableMixCascade.setRowSelectionInterval(index, index);
+				}
+				m_bUpdateServerPanel = true;
+			}
+		}
+
+
+		public int getColumnCount()
+		{
+			return columnNames.length;
+		}
+
+		public synchronized int getRowCount()
+		{
+			return m_vecCascades.size();
+		}
+
+		public synchronized void setSelectedCascade(MixCascade a_cascade)
+		{
+			if (a_cascade == null)
+			{
+				return;
+			}
+			int index = m_vecCascades.indexOf(a_cascade);
+			if (index >= 0)
+			{
+				m_tableMixCascade.setRowSelectionInterval(index, index);
+				m_tableMixCascade.scrollRectToVisible(m_tableMixCascade.getCellRect(index, index, true));
+			}
+		}
+
+		public synchronized Object getValueAt(int rowIndex, int columnIndex)
+		{
+			if (rowIndex < 0 || rowIndex >= m_vecCascades.size())
+			{
+				return null;
+			}
+			MixCascade cascade = (MixCascade)m_vecCascades.elementAt(rowIndex);
+			if (columnIndex == 0)
+			{
+				if (Database.getInstance(BlacklistedCascadeIDEntry.class).getEntryById(
+								cascade.getMixIDsAsString()) == null)
+				{
+					return new Boolean(true);
+				}
+				else
+				{
+					return new Boolean(false);
+				}
+			}
+			else
+			{
+				return cascade;
+			}
+		}
+
+		public Class getColumnClass(int columnIndex)
+		{
+			return columnClasses[columnIndex];
+		}
+
+		public String getColumnName(int columnIndex)
+		{
+			return columnNames[columnIndex];
+		}
+
+		public boolean isCellEditable(int rowIndex, int columnIndex)
+		{
+			if (columnIndex == 0)return true;
+			else return false;
+		}
+
+		public void setValueAt(Object aValue, int rowIndex, int columnIndex)
+		{
+			MixCascade cascade = (MixCascade) m_vecCascades.elementAt(rowIndex);
+			if (Boolean.FALSE.equals(aValue))
+			{
+				Database.getInstance(BlacklistedCascadeIDEntry.class).update(
+								new BlacklistedCascadeIDEntry( cascade));
+			}
+			else
+			{
+				Database.getInstance(BlacklistedCascadeIDEntry.class).remove(
+								cascade.getMixIDsAsString());
+			}
+			setPayLabel(cascade);
+			fireTableCellUpdated(rowIndex, 1);
 		}
 	}
 }
