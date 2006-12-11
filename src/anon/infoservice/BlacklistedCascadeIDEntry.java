@@ -30,7 +30,10 @@
  */
 package anon.infoservice;
 
+import org.w3c.dom.Element;
+
 import anon.util.ClassUtil;
+import anon.util.XMLParseException;
 
 /**
  * Cascades of this type are blacklisted
@@ -46,5 +49,9 @@ public class BlacklistedCascadeIDEntry extends AbstractCascadeIDEntry
 	public BlacklistedCascadeIDEntry(MixCascade a_cascade)
 	{
 		super(a_cascade, Long.MAX_VALUE);
+	}
+	public BlacklistedCascadeIDEntry(Element a_XmlElement) throws XMLParseException
+	{
+		super(a_XmlElement);
 	}
 }

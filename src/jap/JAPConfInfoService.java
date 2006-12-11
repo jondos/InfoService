@@ -171,7 +171,6 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 			/* insert all components in the root panel */
 			m_infoServiceTabPane = new JTabbedPane();
-			//infoServiceTabPane.setFont(getFontSetting());
 			m_infoServiceTabPane.insertTab(JAPMessages.getString(
 				"settingsInfoServiceConfigBasicSettingsTabTitle"), null, createInfoServiceConfigPanel(), null,
 										 0);
@@ -286,13 +285,9 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		});
 		JScrollPane knownInfoServicesListScrollPane = new JScrollPane(m_listKnownInfoServices);
 		knownInfoServicesListScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		//knownInfoServicesListScrollPane.setFont(getFontSetting());
-		//knownInfoServicesListScrollPane.setPreferredSize( (new JTextArea(10, 20)).getPreferredSize());
-		//knownInfoServicesListScrollPane.setMinimumSize( (new JTextArea(10, 20)).getPreferredSize());
 
 		final JButton settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton = new JButton(
 			JAPMessages.getString("settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton"));
-		//settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setFont(getFontSetting());
 		settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setIcon(GUIUtils.loadImageIcon(
 			JAPConstants.IMAGE_RELOAD, true, false));
 		settingsInfoServiceConfigBasicSettingsFetchInfoServicesButton.setDisabledIcon(GUIUtils.loadImageIcon(
@@ -361,7 +356,6 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 		JButton settingsInfoServiceConfigBasicSettingsSetPreferredButton = new JButton(JAPMessages.getString(
 			"settingsInfoServiceConfigBasicSettingsSetPreferredButton"));
-		//settingsInfoServiceConfigBasicSettingsSetPreferredButton.setFont(getFontSetting());
 		settingsInfoServiceConfigBasicSettingsSetPreferredButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent a_event)
@@ -372,7 +366,6 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 		final JButton settingsInfoServiceConfigBasicSettingsAddButton = new JButton(JAPMessages.getString(
 			"settingsInfoServiceConfigBasicSettingsAddButton"));
-		//settingsInfoServiceConfigBasicSettingsAddButton.setFont(getFontSetting());
 		settingsInfoServiceConfigBasicSettingsAddButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent a_event)
@@ -393,7 +386,6 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 			settingsInfoServiceConfigBasicSettingsRemoveButton = new JButton(JAPMessages.getString(
 				"settingsInfoServiceConfigBasicSettingsRemoveButton"));
-			//settingsInfoServiceConfigBasicSettingsRemoveButton.setFont(getFontSetting());
 			settingsInfoServiceConfigBasicSettingsRemoveButton.addActionListener(new ActionListener()
 			{
 				public void actionPerformed(ActionEvent a_event)
@@ -420,7 +412,6 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 	    final JButton viewCertButton =
 			new JButton(JAPMessages.getString(MSG_VIEW_CERT));
-		//settingsInfoServiceConfigBasicSettingsViewCertButton.setFont(getFontSetting());
 		viewCertButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent a_event)
@@ -725,45 +716,6 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 		JLabel settingsInfoServiceConfigBasicSettingsListLabel = new JLabel(JAPMessages.getString(
 			"settingsInfoServiceConfigBasicSettingsListLabel"));
-		//settingsInfoServiceConfigBasicSettingsListLabel.setFont(getFontSetting());
-
-		JLabel settingsInfoServiceConfigBasicSettingsInformationInterfacesLabel = new JLabel(JAPMessages.
-			getString("settingsInfoServiceConfigBasicSettingsInformationInterfacesLabel"));
-		//settingsInfoServiceConfigBasicSettingsInformationInterfacesLabel.setFont(getFontSetting());
-
-		/*final JTextArea infoServiceInterfaceInfoArea = new JTextArea();
-		  infoServiceInterfaceInfoArea.setFont(getFontSetting());
-		  infoServiceInterfaceInfoArea.setOpaque(false);
-		  infoServiceInterfaceInfoArea.setEditable(false);
-		  infoServiceInterfaceInfoArea.setLineWrap(false);
-		  infoServiceInterfaceInfoArea.addMouseListener(new MouseAdapter() {
-		  public void mousePressed(MouseEvent a_event) {
-		 handlePopupEvent(a_event);
-		  }
-
-		  public void mouseReleased(MouseEvent a_event) {
-		 handlePopupEvent(a_event);
-		   }
-
-		  private void handlePopupEvent(MouseEvent a_event) {
-		 if (a_event.isPopupTrigger()) {
-		   JPopupMenu rightButtonMenu = new JPopupMenu();
-		   JMenuItem copyItem = new JMenuItem(JAPMessages.getString("settingsInfoServiceConfigBasicSettingsInformationInterfacesAreaCopyItem"));
-		   String selectedText = infoServiceInterfaceInfoArea.getSelectedText();
-		   if ((selectedText == null) || (new String("")).equals(selectedText)) {
-		  copyItem.setEnabled(false);
-		  }
-		   copyItem.addActionListener(new ActionListener() {
-		  public void actionPerformed(ActionEvent a_event) {
-		 infoServiceInterfaceInfoArea.copy();
-		  }
-		   });
-		   rightButtonMenu.add(copyItem);
-		   rightButtonMenu.show(a_event.getComponent(), a_event.getX(), a_event.getY());
-		  }
-		 }
-		  });*/
-
 
 
 		m_listKnownInfoServices.addListSelectionListener(new ListSelectionListener()
@@ -807,12 +759,13 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 						}
 						m_hostLabel.setText(hosts);
 						m_portLabel.setText(ports);
+						/*
 						if (m_hostLabel.getRootPane() != null)
 						{
 							m_hostLabel.getRootPane().invalidate();
 							m_hostLabel.getRootPane().revalidate();
 							m_hostLabel.getRootPane().repaint();
-						}
+						}*/
 						if (selectedInfoService.isUserDefined())
 						{
 							addInfoServiceHostField.setText(hosts);
@@ -937,7 +890,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		configPanelConstraints.gridy = 1;
 		configPanelConstraints.weightx = 1.0;
 		configPanelConstraints.insets = new Insets(10, 0, 0, 5);
-		m_hostLabel = new JAPMultilineLabel("                                                      ");
+		m_hostLabel = new JAPMultilineLabel("                                                      ", null, null);
 		configPanel.add(m_hostLabel, configPanelConstraints);
 
 		configPanelConstraints.gridx = 1;
@@ -998,15 +951,11 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 		descriptionPanel.add(m_settingsInfoServiceConfigBasicSettingsDescriptionLabel);
 
 		addInfoServiceHostField = new JTextField(20);
-		//addInfoServiceHostField.setFont(getFontSetting());
 		addInfoServicePortField = new JAPJIntField(ListenerInterface.PORT_MAX_VALUE);
-		//addInfoServicePortField.setFont(getFontSetting());
 		addInfoServiceNameField = new JTextField(20);
-		//addInfoServiceNameField.setFont(getFontSetting());
 
 		JButton settingsInfoServiceConfigBasicSettingsAddInfoServiceAddButton = new JButton(JAPMessages.
 			getString("settingsInfoServiceConfigBasicSettingsAddInfoServiceAddButton"));
-		//settingsInfoServiceConfigBasicSettingsAddInfoServiceAddButton.setFont(getFontSetting());
 		settingsInfoServiceConfigBasicSettingsAddInfoServiceAddButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
@@ -1056,7 +1005,6 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 		JButton settingsInfoServiceConfigBasicSettingsAddInfoServiceCancelButton = new JButton(JAPMessages.
 			getString("cancelButton"));
-		//settingsInfoServiceConfigBasicSettingsAddInfoServiceCancelButton.setFont(getFontSetting());
 		settingsInfoServiceConfigBasicSettingsAddInfoServiceCancelButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent event)
@@ -1073,13 +1021,10 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 		JLabel settingsInfoServiceConfigBasicSettingsAddInfoServiceHostLabel = new JLabel(JAPMessages.
 			getString("settingsInfoServiceConfigBasicSettingsAddInfoServiceHostLabel"));
-		//settingsInfoServiceConfigBasicSettingsAddInfoServiceHostLabel.setFont(getFontSetting());
 		JLabel settingsInfoServiceConfigBasicSettingsAddInfoServicePortLabel = new JLabel(JAPMessages.
 			getString("settingsInfoServiceConfigBasicSettingsAddInfoServicePortLabel"));
-		//settingsInfoServiceConfigBasicSettingsAddInfoServicePortLabel.setFont(getFontSetting());
 		JLabel settingsInfoServiceConfigBasicSettingsAddInfoServiceNameLabel = new JLabel(JAPMessages.
 			getString("settingsInfoServiceConfigBasicSettingsAddInfoServiceNameLabel"));
-//		settingsInfoServiceConfigBasicSettingsAddInfoServiceNameLabel.setFont(getFontSetting());
 
 		JPanel addButtonsPanel = new JPanel();
 		FlowLayout addButtonsPanelLayout = new FlowLayout();
@@ -1241,7 +1186,6 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 
 		m_cbxUseRedundantISRequests = new JCheckBox(JAPMessages.getString(MSG_USE_MORE_IS) + ":");
 		m_cbxUseRedundantISRequests.setVisible(!JAPConstants.m_bReleasedVersion);
-		//settingsInfoServiceConfigAdvancedSettingsUseOnlyDefaultInfoServiceBox.setFont(getFontSetting());
 		m_cbxUseRedundantISRequests.addActionListener(new
 			ActionListener()
 		{

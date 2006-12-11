@@ -806,11 +806,19 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	public void addAIListener(IAIEventListener a_aiListener)
 	{
-		synchronized (THREAD_SYNC)
+		/** @todo check if needed */
+		//synchronized (THREAD_SYNC)
 		{
-			if (m_Anon instanceof AnonClient)
+			//if (m_Anon instanceof AnonClient)
 			{
-				( ( (AnonClient) m_Anon).getPay()).getAIControlChannel().addAIListener(a_aiListener);
+				try
+				{
+					(( (AnonClient) m_Anon).getPay()).getAIControlChannel().addAIListener(a_aiListener);
+				}
+				catch (ClassCastException a_e)
+				{
+					LogHolder.log(LogLevel.EMERG, LogType.NET, a_e);
+				}
 			}
 		}
 	}

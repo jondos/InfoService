@@ -340,6 +340,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 					Thread.yield();
 					continue;
 				}
+
 				else if (getSize().width > getScreenBounds().width ||
 						 getSize().height > getScreenBounds().height)
 				{

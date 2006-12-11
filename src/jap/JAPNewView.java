@@ -98,6 +98,7 @@ import logging.LogType;
 import platform.AbstractOS;
 import update.JAPUpdateWizard;
 import javax.swing.JComboBox;
+import anon.infoservice.BlacklistedCascadeIDEntry;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver, Observer
@@ -1091,7 +1092,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		Database.getInstance(MixCascade.class).addObserver(this);
 		Database.getInstance(NewCascadeIDEntry.class).addObserver(this);
 		Database.getInstance(CascadeIDEntry.class).addObserver(this);
-		Database.getInstance(JavaVersionDBEntry.class).addObserver(this);
+		Database.getInstance(BlacklistedCascadeIDEntry.class).addObserver(this);
+
 
 		JAPModel.getInstance().addObserver(this);
 
@@ -1426,6 +1428,25 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		else if (a_observable == Database.getInstance(JAPVersionInfo.class))
 		{
 			updateValues(false);
+		}
+		else if (a_observable == Database.getInstance(BlacklistedCascadeIDEntry.class))
+		{
+			DatabaseMessage message =  ((DatabaseMessage)a_message);
+			if (message == null)
+			{
+				return;
+			}
+			if (message.getMessageCode() != DatabaseMessage.INITIAL_OBSERVER_MESSAGE)
+			{
+				run = new Runnable()
+				{
+					public void run()
+					{
+						m_bTrustChanged = true;
+						onUpdateValues();
+					}
+				};
+			}
 		}
 		else if (a_observable == Database.getInstance(MixCascade.class))
 		{
