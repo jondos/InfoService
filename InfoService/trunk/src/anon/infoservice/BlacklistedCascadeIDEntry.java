@@ -30,9 +30,13 @@
  */
 package anon.infoservice;
 
+import java.util.Observer;
+import java.util.Observable;
+
 import org.w3c.dom.Element;
 
 import anon.util.ClassUtil;
+import anon.util.XMLUtil;
 import anon.util.XMLParseException;
 
 /**
@@ -42,9 +46,15 @@ import anon.util.XMLParseException;
  */
 public class BlacklistedCascadeIDEntry extends AbstractCascadeIDEntry
 {
+	public static final boolean DEFAULT_AUTO_BLACKLIST = false;
+
 	public static final String XML_ELEMENT_NAME =
 		ClassUtil.getShortClassName(BlacklistedCascadeIDEntry.class);
 	public static final String XML_ELEMENT_CONTAINER_NAME = "BlacklistedCascades";
+	public static final String XML_ATTR_AUTO_BLACKLIST_NEW_CASCADES = "autoBlacklistNewCascades";
+
+	private static boolean m_bNewCascadesInBlacklist = false;
+	private static Observer ms_observer;
 
 	public BlacklistedCascadeIDEntry(MixCascade a_cascade)
 	{
@@ -53,5 +63,52 @@ public class BlacklistedCascadeIDEntry extends AbstractCascadeIDEntry
 	public BlacklistedCascadeIDEntry(Element a_XmlElement) throws XMLParseException
 	{
 		super(a_XmlElement);
+	}
+
+	public static synchronized void putNewCascadesInBlacklist(boolean a_bPutNewInBlacklist)
+	{
+		if (ms_observer == null)
+		{
+			ms_observer = new Observer()
+			{
+				public void update(Observable a_observable, Object a_message)
+				{
+					synchronized (BlacklistedCascadeIDEntry.class)
+					{
+						DatabaseMessage message = ( (DatabaseMessage) a_message);
+						MixCascade cascade;
+
+						if (message.getMessageData() == null ||
+							! (message.getMessageData() instanceof MixCascade))
+						{
+							return;
+						}
+						cascade = (MixCascade) message.getMessageData();
+						if (Database.getInstance(PreviouslyKnownCascadeIDEntry.class).getEntryById(
+							cascade.getMixIDsAsString()) == null)
+						{
+							Database.getInstance(PreviouslyKnownCascadeIDEntry.class).update(
+								new PreviouslyKnownCascadeIDEntry(cascade));
+							if (message.getMessageCode() == DatabaseMessage.ENTRY_ADDED &&
+								m_bNewCascadesInBlacklist)
+							{
+								Database.getInstance(BlacklistedCascadeIDEntry.class).update(
+									new BlacklistedCascadeIDEntry(cascade));
+							}
+						}
+					}
+				}
+			};
+			Database.getInstance(MixCascade.class).addObserver(ms_observer);
+		}
+
+		if (m_bNewCascadesInBlacklist != a_bPutNewInBlacklist)
+		{
+			m_bNewCascadesInBlacklist = a_bPutNewInBlacklist;
+		}
+	}
+	public static synchronized boolean areNewCascadesInBlacklist()
+	{
+		return m_bNewCascadesInBlacklist;
 	}
 }
