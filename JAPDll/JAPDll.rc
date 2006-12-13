@@ -37,8 +37,8 @@ IDI_JAP_BLINK           ICON                    "jap_blink.ico"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,2,3,0
- PRODUCTVERSION 0,2,3,0
+ FILEVERSION 0,3,2,0
+ PRODUCTVERSION 0,3,2,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -54,12 +54,12 @@ BEGIN
         BLOCK "000004b0"
         BEGIN
             VALUE "FileDescription", "JAP GUI Support DLL"
-            VALUE "FileVersion", "0, 2, 3, 0"
+            VALUE "FileVersion", "0, 3, 2, 0"
             VALUE "InternalName", "JAPDll"
             VALUE "LegalCopyright", "Copyright © 2000-2006, The JAP-Team"
             VALUE "OriginalFilename", "JAPDll.dll"
             VALUE "ProductName", "JAP GUI Support DLL"
-            VALUE "ProductVersion", "0, 2, 3, 0"
+            VALUE "ProductVersion", "0, 3, 2, 0"
         END
     END
     BLOCK "VarFileInfo"
