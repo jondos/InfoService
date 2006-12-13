@@ -27,6 +27,9 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package anon.mixminion.message;
 
+import jap.JAPController;
+import jap.JAPModel;
+
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.StringReader;
@@ -42,7 +45,8 @@ public class Decoder {
 
 	//Kostanten
 	private final int KEY_LEN = 16;
-	private final int MAXHOPS = 20; //TODO
+	private final int MAXHOPS = 20; 
+	private final int PACKETSIZE = 28 * 1024 - 47;
 
 	private String m_message;
 	private String m_password;
@@ -62,13 +66,16 @@ public class Decoder {
 	 * @throws IOException
 	 */
 	public String decode() throws IOException {
-
+		
 		//get all user-secrets
 		Vector mykeys = (new Keyring(m_password)).getUserSecrets();
+		
 		//needed variables
 		byte[] tag = new byte[0];
 		String encrypted = "";
-		String plaintext = "Konnte nix entschluesseln";
+		String plaintext = "";
+		boolean success = false;
+		boolean fragment = false;
 
 		LineNumberReader reader = new LineNumberReader(new StringReader(m_message));
 		String aktLine = reader.readLine();
@@ -78,12 +85,14 @@ public class Decoder {
 		{
 			aktLine = reader.readLine();
 			if (aktLine.intern() == ".") return null;
+			
 		}
 
 		//Test Message-type: encrypted
 		aktLine = reader.readLine();
 		aktLine = aktLine.substring(14);
 		if (!aktLine.equals("encrypted")) {
+			//TODO what is with message parts(reassembling)
 			return null;
 		}
 
@@ -102,7 +111,6 @@ public class Decoder {
 		//decode in a byte array
 		byte[] enc_bytes = Base64.decode(encrypted);
 
-
 		//try to decrypt
 //		e2e-spec says:
 //		For all SEC_i:
@@ -117,7 +125,7 @@ public class Decoder {
 //		            If DECODE_PLAINTEXT_PAYLOAD(P_t) is not "Unknown", return it.
 
 		for (int i = 0; i<mykeys.size(); i++) {
-			byte[] aktkey = (byte[])mykeys.elementAt(i);
+			byte[] aktkey = (byte[])mykeys.elementAt(i); 
 			byte[] tempkey = ByteArrayUtil.conc(tag,aktkey,"Validate".getBytes());
 			if (MixMinionCryptoUtil.hash(tempkey)[19] == 0x00) {
 				byte[] key = ByteArrayUtil.copy(MixMinionCryptoUtil.hash(ByteArrayUtil.conc(tag,aktkey,"Generate".getBytes())),0,KEY_LEN);
@@ -127,21 +135,88 @@ public class Decoder {
 					byte[] streamkey = MixMinionCryptoUtil.hash(ByteArrayUtil.conc(ByteArrayUtil.copy(stream, j*KEY_LEN,KEY_LEN),
 							"PAYLOAD ENCRYPT".getBytes()));
 					temppayload = MixMinionCryptoUtil.SPRP_Encrypt(streamkey, temppayload);
-					if (testPayload(temppayload)) {
+					if (testPayload(temppayload) == 1) //we have a plaintext payload
+					{
 						int l = byteToInt(ByteArrayUtil.copy(temppayload,0,2),0);
 						temppayload = ByteArrayUtil.copy(temppayload,22,l);
 						//decompress
 						temppayload = MixMinionCryptoUtil.decompressData(temppayload);
 						plaintext = new String(temppayload);
+						success = true;
 						break;
 					}
+					else if (testPayload(temppayload) == 2)
+					{
+						//we have a fragment
+						System.out.println("Fragment");
+						fragment = true;
+						plaintext = trytoReassemble(temppayload);
+						if (plaintext != null) success =true;
+					}
+					
 				}
 
 
 			}
 
 		}
+		
+		//generate the result
+//		Date: Tue, 24 Oct 2006 14:12:48 +0200
+//		From: Anonymer Stefan <anostef@biw.de>
+//		MIME-Version: 1.0
+//		To: Fefan <LosRinos@gmx.de>
+//		Subject: mit anhang
+//		Content-Type: multipart/mixed;
+//		 boundary="------------040506060207010307050100"
+//
+//		This is a multi-part message in MIME format.
+//		--------------040506060207010307050100
+//		Content-Type: text/plain; charset=ISO-8859-15
+//		Content-Transfer-Encoding: 7bit
+//
+//		content
+//		...
+		String erg = "";
+		if (!success) 
+		{
+			if (fragment)
+			{
+				erg = "From: JAP-Decoder\n"+
+				"To: local user\n"+
+				"Subject: Fragment\n\n"+
+				"Für die Decodierung der Nachricht werden weitere Fragmente benötigt." +"\n\n";
+				plaintext = erg;
+			}
+			else
+			{
+				plaintext = "From: JAP-Decoder\n"+
+				"To: local user\n"+
+				"Subject: Fehler\n\n"+
+				"Leider konnte nichts decodiert werden.\n";
+			}
+			
+		}
+		else 
+		{
+ 
+			erg = "From: JAP-Decoder\n";
+			reader = new LineNumberReader(new StringReader(plaintext));
+			aktLine = reader.readLine();
 
+			if (aktLine.startsWith("MIME")) {
+				erg+=aktLine +"\n";
+				aktLine = reader.readLine();
+			}
+			erg += "To: local user\n";
+			aktLine = "Subject: " + aktLine.substring(7); //Titel: ...
+			while (aktLine != null) {
+				erg += aktLine + "\n";
+				aktLine = reader.readLine();
+			}
+			plaintext =  erg;
+			
+		}
 		return  plaintext;
 	}
 
@@ -150,23 +225,119 @@ public class Decoder {
 	 * @param payload
 	 * @return true if a message, false otherwise
 	 */
-	private boolean testPayload(byte[] payload) {
+	private int testPayload(byte[] payload) {
+
+		
 //		e2e spec says:
 //		If the first bit of P[0] is 0:
 //		      If P[2:HASH_LEN] = Hash(P[2+HASH_LEN:Len(P)-2-HASH_LEN]):
 //		         SZ = P[0:2]
 //		         Return "Singleton", P[2+HASH_LEN : SZ]
-//		      Otherwise,
-//		         Return "Unknown"
 		byte[] hash1 = ByteArrayUtil.copy(payload,2,20);
 		byte[] hash2 = MixMinionCryptoUtil.hash(ByteArrayUtil.copy(payload,22,payload.length-22));
 
 		int l = byteToInt(ByteArrayUtil.copy(payload,0,2),0);
-
-		return ByteArrayUtil.equal(hash1,hash2);
+		if (ByteArrayUtil.equal(hash1,hash2))
+		{
+			return 1;
+		}
+		
+//		      Otherwise,
+//		         Return "Unknown" -->we test if fragment
+//		is it a fragment?-->give it to the reassembler
+//		byte[] actual_fragment = frags[i];
+//		byte[] flag = new byte[3];
+//		flag = ByteArrayUtil.inttobyte(8388608+i,3);
+//		byte[] hash = MixMinionCryptoUtil.hash(ByteArrayUtil.conc(id, sz, actual_fragment));
+//		payloads[i] = ByteArrayUtil.conc(flag, hash, id, sz, actual_fragment);
+		hash1 = MixMinionCryptoUtil.hash(ByteArrayUtil.copy(payload,23,payload.length-23));
+		hash2 = ByteArrayUtil.copy(payload,3,20);
+		if (ByteArrayUtil.equal(hash1,hash2))
+		{
+			return 2;
+		}
+		return 0;
 
 	}
+	
+	/**
+	 * try's to reassemble the message the fragment belongs to and returns either null
+	 * or the reassembled message
+	 * @param fragment
+	 * @return
+	 */
+	private String trytoReassemble(byte[] fragment) {
+		
+		String erg = null;
+		//fetch vector with fragmentcontainers
+		Vector fragments = JAPModel.getMixminionFragments();
+		if ( fragments == null)
+		{
+			fragments = new Vector();
+		}
+		
+		//identify the fragment
+		byte[] id = ByteArrayUtil.copy(fragment,23,20);
+		int index = byteToInt(ByteArrayUtil.copy(fragment,1,2),0);
+		double messagesize = byteToInt(ByteArrayUtil.copy(fragment, 43, 4),0); 
+		System.out.println("MessageSize:" + messagesize + " index: " +index);
+		
+		//remove fragmentheader
+		fragment = ByteArrayUtil.copy(fragment,47,28*1024-47);
+		
+		//look for fragment container
+		FragmentContainer myfc = null;
+		int containerindex = -1;
+		
+		for (int i=0; i<fragments.size(); i++)
+		{
+			FragmentContainer fc = (FragmentContainer) fragments.elementAt(i);
+			if (ByteArrayUtil.equal(id, fc.getID()))
+			{
+				myfc = fc;
+				containerindex = i;
+				break;
+			}
+		}
+		
+		if (containerindex == -1) 
+		{
+			int payload_packets = (int) Math.ceil(messagesize / (double) PACKETSIZE);
+			
+			System.out.println("Numberof: " + payload_packets);
+			myfc = new FragmentContainer(id, payload_packets);
+		}
+		
+		if (myfc.addFragment(fragment, index))
+		{
+			//reassemble
+			byte[] payload = myfc.reassembleMessage();
+			//remove padding
+			payload = ByteArrayUtil.copy(payload, 0, (int)messagesize);
+			//unwhiten
+			payload = unwhiten(payload);
+			//remove header
+			int rs = byteToInt(ByteArrayUtil.copy(payload,3,1),0);
+			payload = ByteArrayUtil.copy(payload, 4+rs, payload.length-4-rs);
+			//decompress
+			payload = MixMinionCryptoUtil.decompressData(payload);
+			erg = new String(payload);
+		}
+		
+		if (containerindex == -1)
+		{
+			fragments.addElement(myfc);
+		}
+		else
+		{
+			fragments.setElementAt(myfc,containerindex);
+		}
+		JAPController.setMixminionFragments(fragments);
+		return erg;
+		
 
+	}
+	
 	/**
 	 * Calculates the int value of a given ByteArray
 	 * @param b
@@ -180,5 +351,16 @@ public class Decoder {
             value += (b[i + offset] & 0x000000FF) << shift;
         }
         return value;
+	}
+	
+	/**
+	 * Unwhites a ByteArray in the fashion of mixminion
+	 * @param m
+	 * @return
+	 */
+	private byte[] unwhiten(byte[] m) {
+		byte[] k_whiten = {0x57,0x48,0x49,0x54,0x45,0x4E};
+		byte[] valuetohash = ByteArrayUtil.conc(k_whiten,"WHITEN".getBytes());
+		return MixMinionCryptoUtil.SPRP_Decrypt(MixMinionCryptoUtil.hash(valuetohash),m);
 	}
 }

@@ -117,7 +117,7 @@ public class Pure16Code extends PureCode {
         }
     }
 
-    protected void decode(byte[][] pkts, int[] pktsOff, int[] index,
+    public void decode(byte[][] pkts, int[] pktsOff, int[] index,
                           int packetLength, boolean inOrder) {
         if (packetLength % 2 != 0) {
             throw new IllegalArgumentException("For 16 bit codes, buffers "+

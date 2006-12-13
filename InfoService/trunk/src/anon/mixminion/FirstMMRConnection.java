@@ -40,7 +40,6 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Calendar;
 import java.util.Random;
-
 import anon.crypto.AsymmetricCryptoKeyPair;
 import anon.crypto.JAPCertificate;
 import anon.crypto.X509DistinguishedName;
@@ -54,7 +53,6 @@ import anon.util.ByteArrayUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.util.Base64;
 
 /**
  * @author Christin Wolfram

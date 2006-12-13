@@ -29,15 +29,15 @@
 package anon.mixminion.message;
 
 
+import jap.JAPController;
+import jap.JAPModel;
+
 import java.io.IOException;
 import java.util.Vector;
-
-//import javax.swing.JFrame;
-//import javax.swing.JTextArea;
-
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.mixminion.EMail;
 import anon.mixminion.FirstMMRConnection;
 import anon.mixminion.Mixminion;
 import anon.mixminion.mmrdescription.InfoServiceMMRListFetcher;
@@ -51,41 +51,33 @@ import anon.mixminion.mmrdescription.PlainMMRListFetcher;
  */
 public class Message
 {
-	private String m_payload = null; // "raw"-Payload from the mail
-	private String[] m_recipient = null; // all recipients; if there is a replyblock in use: dont care
+	private EMail m_email = null;
+//	private String m_payload = null; // "raw"-Payload from the mail
+//	private String[] m_recipient = null; // all recipients; if there is a replyblock in use: dont care
 	private int m_hops = 0;
 	private String m_address; // E-Mail address of the sender; needed to build a Replyblock(this one is appended to the payload to allow a reply)
-	private boolean m_withreplyblock = false; // true if the the message should contain a Replyblock
 	private String m_decoded = null;
+	private String m_keyringpassword; 
+	private int m_rbs;
 
 
 	// Constants (from original Python-Implementation)
 	int MAX_FRAGMENTS_PER_CHUNK = 16;
 	double EXP_FACTOR = 1.3333333333333333;
 	// keyringpassword
-	String keyringpassword = "mussichnoch"; //FIXME
+	
 
 /**
- * usage:
- * for normal message: specify payload, recipient, hops,rb=null,myadress=dontcare,repliable=false
- * for repliable message specify above but: myadress=e-mail for replies, repliable=true
- * for message to an replyblock specify above possibilitys but: rb = Replyblock, recipient=dontcare
- * @param payload
- * @param recipient
- * @param hops
- * @param rb
- * @param myadress
- * @param repliable
+ * Constructor
  */
-	public Message(String payload, String[] recipient, int hops, String myadress, boolean repliable)
+	public Message(EMail email, int hops, String myadress, String password, int rbs)
 	{
-		this.m_payload = payload;
-		this.m_recipient = recipient;
+		this.m_email = email;
 		this.m_hops = hops;
 		this.m_address = myadress; //=Exit-Address in the ReplyBlock, which allows a recipient to reply
-		this.m_withreplyblock = repliable; //Message should be repliable
-//		// FIXME hops gerade machen
-//		m_hops = ( (m_hops + 1) / 2) * 2;
+		this.m_keyringpassword = password;
+		this.m_rbs = rbs; //=how many replyblocks to allow reply to me
+
 	}
 
 	public boolean send()
@@ -98,45 +90,37 @@ public class Message
 
 				{
 //		0. 	Check whether the user only wants to decode a payload, yes: decode it no: 0.1
-//		0.1 Look if the Sender has specified a ReplyBlock to send to
-//		0.2 Do we want to make the message repliable? yes: add a replyblock to the payload
-//      0.3 add ascii armor to the payload
+//		0.1 Look if the Sender has specified (a) ReplyBlock(s) to send to
+//		0.2 add m_rbs replyblocks to the payload
 //		1. Compress the message
 //		2. Choose whether SingleBlock or Fragmented Message Imlementation and build the payload(s)
 //		3. Choose whether in Reply or normal Forward Message
 //		4. Build the packets.
 //      5. Deliver each packet
 
-
 		//0.look if the user only wants a decoded representation
-		Decoder decoder = new Decoder(m_payload, keyringpassword);
-		String decoded = null;
-		try
+		String plaintext = null;
+		if (m_email.getType().equals("ENC")) 
 		{
-			decoded = decoder.decode();
-		} catch (IOException e2)
+			Decoder decoder = new Decoder(m_email.getPayload(), m_keyringpassword);
+			Vector decoded = new Vector();
+			
+			try
 			{
-			System.out.println("Decodier-Exception...");
-			}
+				plaintext = decoder.decode();
+										
+			} catch (IOException e2)
+				{
+				System.out.println("Decodier-Exception...");
+				}
 
-		if (decoded != null)
-		{
-			//TODO for the Moment we open a new window with the decoded content
-	/** Removed becaus no GUI in lib coding directive...
-	JFrame jf = new JFrame( "Decodiert:" );
-			jf.setDefaultCloseOperation( JFrame.DISPOSE_ON_CLOSE   );
-		    jf.setSize( 700, 1000 );
-
-		    JTextArea jt = new JTextArea();
-		    jt.append(decoded);
-		    jt.setVisible(true);
-		    jf.getContentPane().add(jt);
-		    jf.setVisible( true );
-		    //----
-*/			m_decoded=decoded;
+			decoded.addElement(plaintext);
+			JAPController.setMixminionMessages(decoded);
+			m_decoded=(String)decoded.elementAt(0);
 			return false;
 		}
 
+		
 		//There is a message to send....
 		//Needed Variables
 		byte[][] message_parts = null; // Array with finalized payload parts, each 28kb
@@ -145,61 +129,45 @@ public class Message
 		MessageImplementation payload_imp; //BridgeVariable, if single or multipart implemetation
 		ReplyImplementation message_imp; //BridgeVariable, if repliable or not
 
-
-		//0.1 possibly parse replyblock
-		String m_payload_temp = m_payload;
-		ReplyBlock rb = new ReplyBlock(null,null,null,10000); //if the payload contains a replyblock this one is initialised and used as header 2, otherwise the specified recipients are used to build header2
-		try
+		//0.1 replyblocks?
+		Vector replyblocks = null;
+		if (m_email.getType().equals("RPL")) 
 		{
-			//TODO do this stuff in the e-mail class
-			rb = rb.parseReplyBlock(m_payload_temp, null);
-		} catch (IOException e)
-		{
-			e.printStackTrace();
+			replyblocks = m_email.getReplyBlocks();
 		}
-		//remove the replyblock from the payload, he is not needed anymore
-		if (rb != null)
-	{
-			try
-			{
-				m_payload = rb.removeRepyBlock(m_payload);
-			} catch (IOException e1)
-		{
-				e1.printStackTrace();
-			}
-		}
-
+		
 		//prepare mmrlist
-		//TODO Logausgabe????
-		MMRList mmrlist = new MMRList(new InfoServiceMMRListFetcher()); //try to get it from the infoservice
-		if (!mmrlist.updateList()) //if this fails, try to get it directly from the server
+		//already fetched?
+		MMRList mmrlist = JAPModel.getMixminionMMRlist();
+		//if no get it
+		if (mmrlist == null) 
 		{
-			mmrlist = new MMRList(new PlainMMRListFetcher());
-			if (!mmrlist.updateList())  //if nothing works return false
+			mmrlist  = new MMRList(new InfoServiceMMRListFetcher()); //try to get it from the infoservice
+			if (!mmrlist.updateList()) //if this fails, try to get it directly from the server
 			{
-				return false;
+				mmrlist = new MMRList(new PlainMMRListFetcher());
+				if (!mmrlist.updateList())  //if nothing works return false
+				{
+					return false;
+				}
+				System.out.println("Größe: " +mmrlist.size());
 			}
+			JAPController.setMixminionMMRList(mmrlist);
 		}
 
-		//0.2 Do we want to send a ReplyBlock with the Message to allow a Reply?
-		//if so, we have to build a replyblock an add it to the payload...
 
-		if (m_withreplyblock) {
-			//build Repyblock
-			//TODO BETA We use the same Replyblock for every Message part
+		//0.2 build m_rbs replyblocks and add them to the payload...
+		for (int i = 0; i < m_rbs; i++)
+		{
 			Vector path_to_me = mmrlist.getByRandomWithExit(m_hops);
-			byte[] user_secret = new Keyring(keyringpassword).getNewSecret();
+			byte[] user_secret = new Keyring(m_keyringpassword).getNewSecret();
 			ReplyBlock reply_to_me = new ReplyBlock(m_address, path_to_me, user_secret);
 			reply_to_me.buildBlock();
-			m_payload = m_payload + reply_to_me.getReplyBlockasString();
-	}
-
-		//0.3 bring the payload in the right format
-		//TODO Test if this is necessary, because the server adds this too
-		m_payload = armorText(m_payload);
+			m_email.addRBtoPayload(reply_to_me.getReplyBlockasString());
+		}
 
 		//1. Compress  "raw" payload.
-		byte[] compressed_payload = MixMinionCryptoUtil.compressData(m_payload.getBytes());
+		byte[] compressed_payload = MixMinionCryptoUtil.compressData(m_email.getPayload().getBytes());
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 					  "[Message] Compressed Size = " + compressed_payload.length);
 
@@ -213,7 +181,8 @@ public class Message
 
 		else
 		{
-			payload_imp = new FragmentedMessage(m_recipient, m_payload.getBytes());
+			System.out.println("fragmente!");
+			payload_imp = new FragmentedMessage(m_email.getReceiver(), m_email.getPayload().getBytes());
 
 		}
 
@@ -231,16 +200,13 @@ public class Message
 		//3. Choose wether to send with in Reply to an ReplyBlock or without, note that the replyblock in the constructor
 		//contains the address of the recipient
 		//for every element in message_parts build a 32k message
-		if (rb != null)
+		if (m_email.getType().equals("RPL"))
 		{
-			//FIXME test whether the rb is within his time to live
-			if (!rb.timetoliveIsOK()) return false;
-			//
-			else message_imp = new ReplyMessage(message_parts, m_hops, rb, mmrlist);
+			message_imp = new ReplyMessage(message_parts, m_hops, replyblocks, mmrlist);
 		}
 
 		else {
-			message_imp = new NoReplyMessage(message_parts, m_hops, m_recipient, mmrlist);
+			message_imp = new NoReplyMessage(message_parts, m_hops, m_email.getReceiver(), mmrlist);
 		}
 
 
@@ -287,39 +253,6 @@ public class Message
 		}
 
 		return returnValue;
-	}
-
-	/**
-	 * Adds a ASCII Armor to the message
-	 * @param message
-	 * @return armoredText
-	 */
-
-	private String armorText(String message){
-        //FIXME Absender rausfiltern
-		m_payload = m_payload.substring(m_payload.indexOf("Subject:"), m_payload.length());
-//		//- davorsetzen
-//		LineNumberReader reader = new LineNumberReader(new StringReader(m_payload));
-//		String filtered ="";
-//
-//		while (1==1) {
-//			try {
-//				String aktLine = reader.readLine();
-//				if (aktLine == null) {
-//					break;
-//				}
-//				filtered += "\n" + "- " + aktLine ;
-//			} catch (IOException e) {
-//				break;
-//			}
-//		}
-
-		String result = new String();
-		    result = "-----BEGIN TYPE III ANONYMOUS MESSAGE-----\n";
-		    result = result + "Message-type: plaintext\n\n" +"Nachricht: \n";
-		    result = result + message + "\n";
-		    result = result + "-----END TYPE III ANONYMOUS MESSAGE-----\n";
-		    return result;
 	}
 
 	/**

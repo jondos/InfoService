@@ -66,20 +66,20 @@ public class MixminionSMTPChannel extends AbstractChannel
 
 	protected void close_impl()
 	{
-		// TODO Automatisch erstellter Methoden-Stub
+		
 
 	}
 
 	protected void toClient(String message) throws IOException
 	{
-//        System.out.print("(z->" + z + ") Sende zum Client: " + message);
+        //System.out.print("Sende zum Client: " + message);
         recv(message.getBytes(),0,message.length());
 	}
 
 	// 'send' empfaengt die Daten vom eMail-Progi
     protected void send(byte[] buff, int len) throws IOException {
 		String s = new String(buff, 0, len);
-//        System.out.print("(z=" + z + ") empfange vom Client: " + s);
+        //System.out.print("empfange vom Client: " + s);
 
 		// nach dem init //
         if (m_state==0)
@@ -155,49 +155,81 @@ public class MixminionSMTPChannel extends AbstractChannel
 
 			if (m_text.endsWith("\r\n.\r\n")) // wenn "." empfangen //
 			{
-                String[] rec = new String[m_receiver.size()];
+				//remove "\r\n.\r\n"
+                m_text= m_text.substring(0,m_text.length()-5);
+				String[] rec = new String[m_receiver.size()];
 				m_receiver.copyInto(rec);
-
                 EMail eMail = new EMail(rec,m_text);
-                String sender = eMail.getSender();
-
- 				//if a sender is specified in the config use this one otherwise the probably bad value of the message
-                if (Mixminion.getMyEMail() != "");
+                
+    
+                //test whether replyblock is usable
+                boolean ok = true;
+// TODO  abgelaufene rbs; rb history?             if (eMail.getType().equals("RPL"))
+//                {
+//                	Vector...
+//                    if (!eMail.getReplyBlock().timetoliveIsOK())
+//                    {
+//                   	 toClient("554 min one ReplyBlock is too old!\r\n");
+//                   	ok = false;
+//                    }
+//                }
+ 
+                
+                String sender = Mixminion.getMyEMail();
+                //test whether target for replyblock is specified
+                if (sender == "")
                 {
-                	sender = Mixminion.getMyEMail();
+                	 toClient("554 Keine Reply-E-Mail im JAP spezifiziert!\r\n");
+                	 ok = false;
                 }
                 
-                //for the Moment we always send with a replyblock
-                //TODO checkbox in the jap-config
-                boolean repliable = true;
-				
-                //get hops
-                int hops = Mixminion.getRouteLen();
+                //all ok? -->go on
+                if (ok)
+                {
+                    boolean success = false;
+                    Message m = null;
+     
+                	//get hops
+                    int hops = Mixminion.getRouteLen();
 
-                //for testing we send for the first specified recipient one message,
-                //later mixminion will support up to 8 recipients in in one packet.
-                //for now there is no such support
-                boolean success = false;
-                Message m = null;
-                
-         
-                //build message(s)
-                m = new Message(eMail.getPayload(), eMail.getReceiver(), hops, sender, repliable);
+                    //for testing we send for the first specified recipient one message,
+                    //later mixminion will support up to 8 recipients in in one packet.
+                    //for now there is no such support
+                   
+                    //Password
+                    PasswordManager pwm = new PasswordManager();
+                    String password = pwm.getPassword();
+             
+                    //build message(s)
+                    m = new Message(eMail, hops, sender, password, 3);
 
-                //send 	
-                success = m.send();
+                    //send 	
+                    success = m.send();
 
-				m_state = 5;
-                
-                if (success==true) toClient("250 OK\r\n");
-                else {
-                	//TODO which answer for which situation
-                	String clientanswer="";
-                	if (m.getDecoded() != null) clientanswer="250 OK\r\n" ;
-                	else clientanswer =	"554 Fehler beim Versenden der eMail zum MixMinionServer!\r\n";
-                	toClient(clientanswer);
+    				m_state = 5;
+                    
+                    if (success==true)
+                    {
+                    	toClient("250 OK\r\n");
+                    }
+                    else 
+                    {
+                    	
+                    	//1. something was to decode-->all is ok
+                    	//2. other
+                    	String clientanswer="";
+                    	if (m.getDecoded() != null) 
+                    		{
+                    		clientanswer="250 OK\r\n" ;
+                    		}
+                    	else 
+                    		{
+                    		clientanswer =	"554 Fehler beim Versenden der eMail zum MixMinionServer!\r\n";
+                    		}
+                    	toClient(clientanswer);
+                    }
                 }
-				}
+			}
 			}
         else if (m_state==5)
 		{
@@ -233,7 +265,7 @@ public class MixminionSMTPChannel extends AbstractChannel
 
 
     public int getOutputBlockSize() {
-		// TODO Automatisch erstellter Methoden-Stub
+		
 		return 1000;
 	}
 

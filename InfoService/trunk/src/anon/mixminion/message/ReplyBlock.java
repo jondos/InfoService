@@ -203,12 +203,12 @@ public class ReplyBlock {
 	/**
 	 *
 	 * @return Base64-encoded ReplyBlock with ascii armor
-	 * FIXME
+	 * 
 	 */
 	public String getReplyBlockasString() {
-		return "\n\n- -----BEGIN TYPE III REPLY BLOCK-----\nVERSION: 0.2\n"
+		return "\n\n:-----BEGIN TYPE III REPLY BLOCK-----\nVERSION: 0.2\n"
 				+ Base64.encodeBytes(getReplyBlockasBytes())
-				+ "\n- -----END TYPE III REPLY BLOCK-----";
+				+ "\n:-----END TYPE III REPLY BLOCK-----";
 	}
 
 	/**
@@ -227,58 +227,64 @@ public class ReplyBlock {
 	 * @return
 	 * @throws IOException
 	 */
-	public ReplyBlock parseReplyBlock(String message, byte[] block ) throws IOException {
-
+	public static Vector parseReplyBlocks(String message, byte[] block ) throws IOException {
+		Vector blocks = new Vector();
+		
 		message = message + "\n-----END OF PLAINTEXT MESSAGE-----"; //mark Message end
+		
 		LineNumberReader reader = new LineNumberReader(new StringReader(message));
 		String aktLine = reader.readLine();
-		while (!aktLine.startsWith("-----BEGIN TYPE III REPLY BLOCK-----") || aktLine.startsWith("- -----BEGIN TYPE III REPLY BLOCK-----")) {
-			aktLine = reader.readLine();
-			if (aktLine.startsWith("-----END OF PLAINTEXT MESSAGE-----") || aktLine.startsWith("-----END OF PLAINTEXT MESSAGE-----")) {
-				return null;
+		
+		while (true)
+		{
+			while (!aktLine.endsWith("-----BEGIN TYPE III REPLY BLOCK-----")) {
+				aktLine = reader.readLine();
+				if (aktLine.startsWith("-----END OF PLAINTEXT MESSAGE-----")) {
+					return blocks;
+				}
 			}
-		}
-		reader.readLine(); //skip Version
-		aktLine = reader.readLine();
-		String myBlock = "";
-		while (!aktLine.startsWith("-----END TYPE III REPLY BLOCK-----")) {
-			myBlock = myBlock + aktLine + "\n";
+			reader.readLine(); //skip Version
 			aktLine = reader.readLine();
-		}
+			String myBlock = "";
+			while (!aktLine.trim().endsWith("-----END TYPE III REPLY BLOCK-----")) {
+				myBlock = myBlock + aktLine + "\n";
+				aktLine = reader.readLine();
+			}
 
-		myBlock = myBlock.substring(0,myBlock.length()-1); //FIXME letztes Leerzeichen abschneiden anders/vermeiden?
-		//decode
-		byte[] mybyteblock = Base64.decode(myBlock);
-		//key-lifetime
-		byte[] tl = new byte[4];
-		for(int i = 0 ; i < 4 ; i++) {
-			tl[i] = mybyteblock[6 + i];
-		}
-		long time = byteToInt(tl,0);
-		//contentsize
-		byte[] cs = new byte[2]; cs[0]= mybyteblock[2058]; cs[1]=mybyteblock[2059];
-		int size = byteToInt(cs,0);
-		//routinginfo
-		RoutingInformation rInfo = new RoutingInformation();
-		rInfo.m_Type = RoutingInformation.TYPE_SWAP_FORWARD_TO_HOST;
-		//content
-		byte[] content = new byte[size];
-		for (int i = 2078; i<2078+size; i++) {
-			content[i-2078] = mybyteblock[i];
-		}
-		rInfo.m_Content = content;
-		//header
-		byte[] h = new byte[2048];
-		for (int i = 0; i<2048; i++) {
-			h[i] = mybyteblock[i+10];
-		}
-		//sharedsecret
-		byte[] secret = new byte[16];
-		for (int i = 0; i<16; i++) {
-			secret[i] = mybyteblock[2062+i];
-		}
+			myBlock = myBlock.substring(0,myBlock.length()-1); 
+			//decode
+			byte[] mybyteblock = Base64.decode(myBlock);
+			//key-lifetime
+			byte[] tl = new byte[4];
+			for(int i = 0 ; i < 4 ; i++) {
+				tl[i] = mybyteblock[6 + i];
+			}
+			long time = byteToInt(tl,0);
+			//contentsize
+			byte[] cs = new byte[2]; cs[0]= mybyteblock[2058]; cs[1]=mybyteblock[2059];
+			int size = byteToInt(cs,0);
+			//routinginfo
+			RoutingInformation rInfo = new RoutingInformation();
+			rInfo.m_Type = RoutingInformation.TYPE_SWAP_FORWARD_TO_HOST;
+			//content
+			byte[] content = new byte[size];
+			for (int i = 2078; i<2078+size; i++) {
+				content[i-2078] = mybyteblock[i];
+			}
+			rInfo.m_Content = content;
+			//header
+			byte[] h = new byte[2048];
+			for (int i = 0; i<2048; i++) {
+				h[i] = mybyteblock[i+10];
+			}
+			//sharedsecret
+			byte[] secret = new byte[16];
+			for (int i = 0; i<16; i++) {
+				secret[i] = mybyteblock[2062+i];
+			}
 
-		return new ReplyBlock(rInfo, h, secret,time);
+			blocks.addElement(new ReplyBlock(rInfo, h, secret,time));
+		}
 	}
 
 	/**
@@ -287,12 +293,24 @@ public class ReplyBlock {
 	 * @return message without the replyblock
 	 * @throws IOException
 	 */
-	public String removeRepyBlock(String message) throws IOException {
+	public static String removeRepyBlocks(String message) throws IOException {
 		LineNumberReader reader = new LineNumberReader(new StringReader(message));
 		String aktLine = reader.readLine();
 		String myBlock = "";
-		while (!aktLine.startsWith("-----BEGIN TYPE III REPLY BLOCK-----")) {
-			myBlock = myBlock + "\n" + aktLine;
+		boolean rb = false;
+		while (aktLine != null) {
+			if (aktLine.trim().endsWith("-----BEGIN TYPE III REPLY BLOCK-----"))
+			{
+				rb = true;
+			}
+			if (!rb)
+			{
+				myBlock = myBlock + "\n" + aktLine;
+			}
+			if (aktLine.trim().endsWith("-----END TYPE III REPLY BLOCK-----")) {
+				rb = false;
+			}
+
 			aktLine = reader.readLine();
 		}
 
@@ -317,7 +335,7 @@ public class ReplyBlock {
 	 * @param offset
 	 * @return int value of the bytearray
 	 */
-	private int byteToInt(byte[] b, int offset) {
+	private static int byteToInt(byte[] b, int offset) {
 		int value = 0;
         for (int i = 0; i < b.length; i++) {
             int shift = (b.length - 1 - i) * 8;

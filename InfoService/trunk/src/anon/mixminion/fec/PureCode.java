@@ -108,7 +108,7 @@ public class PureCode extends FECCode
 		}
 	}
 
-	protected void decode(byte[][] pkts, int[] pktsOff, int[] index,
+	public void decode(byte[][] pkts, int[] pktsOff, int[] index,
 						  int packetLength, boolean shuffled)
 	{
 		// This may be the second time shuffle has been called, if so

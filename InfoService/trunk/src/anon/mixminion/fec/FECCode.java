@@ -145,7 +145,7 @@ public abstract class FECCode
 	 * @param packetLength the packetLength in bytes.  All of the buffers
 	 * in pkts are assumed to be this long.
 	 */
-	protected abstract void decode(byte[][] pkts, int[] pktsOff,
+	public abstract void decode(byte[][] pkts, int[] pktsOff,
 								   int[] index, int packetLength,
 								   boolean shuffled);
 

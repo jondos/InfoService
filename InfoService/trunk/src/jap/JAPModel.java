@@ -40,6 +40,8 @@ import gui.JAPDll;
 import java.util.Observable;
 import jap.forward.JAPRoutingSettings;
 import anon.infoservice.IMutableProxyInterface;
+import anon.mixminion.mmrdescription.MMRList;
+
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import gui.GUIUtils;
@@ -150,8 +152,15 @@ public final class JAPModel extends Observable
 	private int m_TorMaxConnectionsPerRoute = JAPConstants.DEFAULT_TOR_MAX_CONNECTIONS_PER_ROUTE;
 	private int m_TorMaxRouteLen = JAPConstants.DEFAULT_TOR_MAX_ROUTE_LEN;
 	private int m_TorMinRouteLen = JAPConstants.DEFAULT_TOR_MIN_ROUTE_LEN;
-	private int m_MixminionRouteLen = JAPConstants.DEFAULT_MIXMINION_ROUTE_LEN;
-	private String m_MixminionMyEMail = JAPConstants.DEFAULT_MIXMINION_EMAIL;
+	private int m_mixminionRouteLen = JAPConstants.DEFAULT_MIXMINION_ROUTE_LEN;
+	private String m_mixminionMyEMail = JAPConstants.DEFAULT_MIXMINION_EMAIL;
+	//fixme sr
+	private String m_mixminionPassword = null;
+	private byte[] m_mixminionPasswordHash = null;
+	private String m_mixminionKeyring = "";
+	private Vector m_mixminionMessages = null;
+	private MMRList m_mixminionRouters = null;
+	private Vector m_mixminionFragments = null;
 	private boolean m_bPreCreateAnonRoutes = JAPConstants.DEFAULT_TOR_PRECREATE_ROUTES;
 	private boolean m_bUseProxyAuthentication = false;
 	private JAPController.AnonConnectionChecker m_connectionChecker;
@@ -1064,22 +1073,87 @@ public final class JAPModel extends Observable
 
 	protected void setMixminionRouteLen(int i)
 	{
-		m_MixminionRouteLen = i;
+		m_mixminionRouteLen = i;
 	}
 
 	public static int getMixminionRouteLen()
 	{
-		return ms_TheModel.m_MixminionRouteLen;
+		return ms_TheModel.m_mixminionRouteLen;
 	}
 
-	//von Stefan Roenisch
-	protected void setMixminionMyEMail(String address) {
-		m_MixminionMyEMail = address;
+	protected void setMixminionMyEMail(String address) 
+	{
+		m_mixminionMyEMail = address;
 	}
 
-	public static String getMixminionMyEMail() {
-		return ms_TheModel.m_MixminionMyEMail;
+	public static String getMixminionMyEMail() 
+	{
+		return ms_TheModel.m_mixminionMyEMail;
 	}
+
+	protected void setMixMinionPassword(String pw) 
+	{
+		m_mixminionPassword = pw;
+	}
+	public static String getMixMinionPassword() 
+	{
+		return ms_TheModel.m_mixminionPassword;
+	}
+
+	protected void setMixinionPasswordHash(byte[] hash) 
+	{
+		m_mixminionPasswordHash = hash;
+	}
+	
+	public static byte[] getMixMinionPasswordHash() 
+	{
+		return ms_TheModel.m_mixminionPasswordHash;
+	}
+	protected void resetMixMinionKeyringandPw() 
+	{
+		m_mixminionPasswordHash = null;
+		m_mixminionPassword = null;
+		m_mixminionKeyring = "";
+	}
+	protected void setMixminionMessages(Vector m) 
+	{
+		m_mixminionMessages = m;
+	}
+	public static Vector getMixminionMessages() 
+	{
+		return ms_TheModel.m_mixminionMessages;
+	}
+	
+	protected void setMixminionKeyring(String kr) 
+	{
+		m_mixminionKeyring = kr;
+	}
+	
+	public static String getMixminionKeyring() 
+	{
+		return ms_TheModel.m_mixminionKeyring;
+	}
+	
+	protected void setMixminionMMRList(MMRList m)
+	{
+		m_mixminionRouters = m;
+	}
+	
+	public static MMRList getMixminionMMRlist()
+	{
+		return ms_TheModel.m_mixminionRouters;
+	}
+	
+	protected void setMixminionFragments(Vector f)
+	{
+		m_mixminionFragments = f;
+	}
+	
+	public static Vector getMixminionFragments()
+	{
+		return ms_TheModel.m_mixminionFragments;
+	}
+	
 
 	protected void setUseProxyAuthentication(boolean a_bUseAuth)
 	{

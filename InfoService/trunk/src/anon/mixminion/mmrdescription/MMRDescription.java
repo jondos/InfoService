@@ -327,7 +327,7 @@ public class MMRDescription
 			String hostname = reader.readLine().substring(10);
 			//Port
 			String port = reader.readLine().substring(6);
-			//FIXME some routers define no port, they will be dropped
+			//some routers define no port, they will be dropped
 			if (port.startsWith("gest"))
 			{
 				return null;
@@ -387,10 +387,10 @@ public class MMRDescription
 
 	}
 
-	//FIXME only for testing purpose
+	//only for testing purpose
 	public String toString()
 	{
-		return "MMRRouter: " + this.m_name + " Exitnode:" + this.m_isExitNode + "Published: " + m_time;
+		return "MMRRouter: " + this.m_name + " Exitnode:" + this.m_isExitNode + " FRAGS: "+ this.allowsFragmented()+"Published: " + m_time;
 	}
 
 }

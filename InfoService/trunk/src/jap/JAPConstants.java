@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.06.035"; //Never change the layout of this line!
+	public static final String aktVersion = "00.06.036"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -277,6 +277,8 @@ public final class JAPConstants
 	public final static String CONFIG_TOR_PRECREATE_ANON_ROUTES = "PreCreateAnonRoutes";
 	public final static String CONFIG_ROUTE_LEN = "RouteLen";
 	public final static String CONFIG_MIXMINION_REPLY_MAIL = "MixminionREPLYMail";
+	public final static String CONFIG_MIXMINION_PASSWORD_HASH = "MixminionPasswordHash";
+	public final static String CONFIG_MIXMINION_KEYRING = "MixminionKeyring";
 	public final static String CONFIG_MIN = "min";
 	public final static String CONFIG_MAX = "max";
 	public final static String CONFIG_PAYMENT = "Payment";

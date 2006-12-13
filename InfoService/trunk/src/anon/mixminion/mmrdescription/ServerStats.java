@@ -55,6 +55,7 @@ public class ServerStats {
 	 *
 	 */
 	public ServerStats()
+	//FIXME Do this within the Infoservice!!!
 	//http://privacy.outel.org/minion/nlist.txt
 	{
 		m_Server = "privacy.outel.org";
