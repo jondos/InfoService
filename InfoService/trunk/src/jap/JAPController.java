@@ -2336,6 +2336,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			e.appendChild(elemTor);
 
 			/** add mixminion*/
+			try{
 			Element elemMixminion = doc.createElement(JAPConstants.CONFIG_Mixminion);
 			XMLUtil.setAttribute(elemMixminion, JAPModel.XML_ATTR_ACTIVATED,
 								 JAPModel.getInstance().isMixMinionActivated());
@@ -2355,7 +2356,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 			elemMixminion.appendChild(elemMMPwHash);
 			elemMixminion.appendChild(elemMMKeyring);
 			e.appendChild(elemMixminion);
+			}
+			catch(Exception em)
+			{
+				em.printStackTrace();
+				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Error in savin Mixminion settings -- ignoring...");
+				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, em);
 
+			}
 			e.appendChild(JAPModel.getInstance().getRoutingSettings().toXmlElement(doc));
 
 			XMLUtil.formatHumanReadable(doc);

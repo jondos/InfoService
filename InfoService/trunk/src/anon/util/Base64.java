@@ -511,6 +511,8 @@ public class Base64
 	 * @param source The data to convert
 
 	 * @param breakLines Break lines at 80 characters or less.
+	 *
+	 * @return the encoded bytes or null
 
 	 * @since 1.4
 
@@ -519,7 +521,8 @@ public class Base64
 	public static String encode(byte[] source, boolean breakLines)
 
 	{
-
+		if(source==null)
+			return null;
 		return encode(source, 0, source.length, breakLines);
 
 	} // end encodeBytes
@@ -666,7 +669,7 @@ public class Base64
 
 	 * @param breakLines Break lines at 80 characters or less.
 
-	 * @return the encoded string
+	 * @return the encoded string or null
 
 	 * @since 1.3
 
@@ -675,7 +678,8 @@ public class Base64
 	public static String encodeString(String s, boolean breakLines)
 
 	{
-
+		if(s==null)
+			return null;
 		return encode(s.getBytes(), breakLines);
 
 	} // end encodeString
