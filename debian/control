@@ -3,7 +3,7 @@ Section: misc
 Priority: optional
 Maintainer: JAP-Team <jap@inf.tu-dresden.de>
 Standards-Version: 3.6.1
-Build-Depends-Indep: debhelper, cdbs, ant
+Build-Depends-Indep: debhelper, cdbs, ant, java-gcj-compat-dev
 
 Package: jap
 Architecture: all
