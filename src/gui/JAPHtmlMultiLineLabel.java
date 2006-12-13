@@ -36,10 +36,11 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.PlainView;
 import javax.swing.text.View;
 import javax.swing.text.html.HTMLDocument;
-import javax.swing.text.html.HTMLWriter;
+//import javax.swing.text.html.HTMLWriter;
 
 import gui.dialog.JAPDialog;
 import logging.LogType;
+import javax.swing.text.html.MinimalHTMLWriter;
 
 /**
  * This class provides support for labels with more than one line which can also display HTML styled text.
@@ -240,7 +241,8 @@ public class JAPHtmlMultiLineLabel extends JLabel
 		try
 		{
 			document.remove(a_length, document.getLength() - a_length);
-			new HTMLWriter(writer, document).write();
+			MinimalHTMLWriter aw=new MinimalHTMLWriter(writer, document);
+			aw.write();
 			setText(writer.toString());
 		}
 		catch (Exception a_e)
