@@ -101,11 +101,9 @@ public class NoReplyMessage extends ReplyImplementation {
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 					  "[Message] make Header to Fragment_" + i_frag);
 		// build paths
-		//FIXME zufaellige aufteilung!
 		Vector wholepath = (Vector) paths.elementAt(i_frag);
 		Vector path1 = new Vector();
 		Vector path2 = new Vector();
-
 
 		path1 = MixMinionCryptoUtil.subVector(wholepath, 0, firstleg_hops);
 		path2 = MixMinionCryptoUtil.subVector(wholepath, firstleg_hops, secondleg_hops);
@@ -129,7 +127,7 @@ public class NoReplyMessage extends ReplyImplementation {
 		if (isfragmented)
 		{
 			exit2.m_Type = ExitInformation.TYPE_FRAGMENTED;
-			exit2.m_Content = "".getBytes();
+			exit2.m_Content = new byte[0];
 		}
 		else
 		{

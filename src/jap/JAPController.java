@@ -82,6 +82,7 @@ import anon.infoservice.MixCascade;
 import anon.infoservice.MixInfo;
 import anon.infoservice.ProxyInterface;
 import anon.mixminion.MixminionServiceDescription;
+import anon.mixminion.mmrdescription.MMRList;
 import anon.pay.BI;
 import anon.pay.BIConnection;
 import anon.pay.IAIEventListener;
@@ -115,6 +116,7 @@ import proxy.DirectProxy.AllowUnprotectedConnectionCallback;
 import update.JAPUpdateWizard;
 import anon.infoservice.BlacklistedCascadeIDEntry;
 import anon.infoservice.PreviouslyKnownCascadeIDEntry;
+import anon.util.Base64;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -710,8 +712,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 * </Tor>
 	 * <Mixminion>    //  Mixminion related seetings (since Version 0.22)
 	 * 	 <RouteLen>...</RouteLen> //How long should a route be
-	 *   <KeyRing>
-	 *   </KeyRing>
+	 * 	 <MixminionREPLYMail>xxx@yyy.xyz</MixminionREPLYMail> //destination of the replyblock route
+	 * 	 <MixminionPasswordHash>as String Base64</MixminionPasswordHash> //Hash of the user pw
+	 *   <KeyRing>String ASCII-Armor and Base64</KeyRing> //Keyring with usersecrets
 	 * </Mixminion>
 	 * <Payment //Since version 0.7
 	 *    biHost="..."                      // BI's Hostname
@@ -1637,23 +1640,29 @@ public final class JAPController extends Observable implements IProxyListener, O
 						JAPConstants.CONFIG_ROUTE_LEN);
 					int routeLen = XMLUtil.parseValue(elemMM, JAPModel.getMixminionRouteLen());
 					JAPModel.getInstance().setMixminionRouteLen(routeLen);
-					//FIXME sr
+
 					Element elemMMMail = (Element) XMLUtil.getFirstChildByName(elemMixminion,
 							JAPConstants.CONFIG_MIXMINION_REPLY_MAIL);
 					String emaddress = XMLUtil.parseAttribute(elemMMMail,"MixminionSender", "");
-
-					/** @todo remove this fix for old config in a later version */
-					/*
 					if (strVersion == null || strVersion.compareTo(JAPConstants.CURRENT_CONFIG_VERSION) < 0)
 					{
+						/** @todo remove this fix for old config in a later version */
 						if (emaddress.equals("none"))
 						{
 							emaddress = "";
 						}
-					}*/
-
-
+					}
 					JAPModel.getInstance().setMixminionMyEMail(emaddress);
+
+					Element elemMMPwHash = (Element) XMLUtil.getFirstChildByName(elemMixminion,
+							JAPConstants.CONFIG_MIXMINION_PASSWORD_HASH);
+					String pwhash = XMLUtil.parseValue(elemMMPwHash,null);
+					JAPModel.getInstance().setMixinionPasswordHash(Base64.decode(pwhash));
+					Element elemMMKeyring = (Element) XMLUtil.getFirstChildByName(elemMixminion,
+							JAPConstants.CONFIG_MIXMINION_KEYRING);
+					String keyring = XMLUtil.parseValue(elemMMKeyring,"");
+					JAPModel.getInstance().setMixminionKeyring(keyring);
+
 				}
 				catch (Exception ex)
 				{
@@ -2332,13 +2341,19 @@ public final class JAPController extends Observable implements IProxyListener, O
 								 JAPModel.getInstance().isMixMinionActivated());
 			Element elemMM = doc.createElement(JAPConstants.CONFIG_ROUTE_LEN);
 			XMLUtil.setValue(elemMM, JAPModel.getMixminionRouteLen());
-			//FIXME von sr
+
 			Element elemMMMail = doc.createElement(JAPConstants.CONFIG_MIXMINION_REPLY_MAIL);
-			XMLUtil.setValue(elemMMMail, JAPModel.getMixminionMyEMail());
 			XMLUtil.setAttribute(elemMMMail,"MixminionSender", JAPModel.getMixminionMyEMail());
+			Element elemMMPwHash = doc.createElement(JAPConstants.CONFIG_MIXMINION_PASSWORD_HASH);
+			XMLUtil.setValue(elemMMPwHash, Base64.encodeBytes(JAPModel.getMixMinionPasswordHash()));
+			Element elemMMKeyring = doc.createElement(JAPConstants.CONFIG_MIXMINION_KEYRING);
+			XMLUtil.setValue(elemMMKeyring, JAPModel.getMixminionKeyring());
+
 			//end
 			elemMixminion.appendChild(elemMM);
 			elemMixminion.appendChild(elemMMMail);
+			elemMixminion.appendChild(elemMMPwHash);
+			elemMixminion.appendChild(elemMMKeyring);
 			e.appendChild(elemMixminion);
 
 			e.appendChild(JAPModel.getInstance().getRoutingSettings().toXmlElement(doc));
@@ -3077,6 +3092,35 @@ public final class JAPController extends Observable implements IProxyListener, O
 		m_Model.setTorMaxRouteLen(max);
 		m_Model.setTorMinRouteLen(min);
 	}
+	public static void setMixminionPassword(String p)
+	{
+		m_Model.setMixMinionPassword(p);
+	}
+	public static void setMixminionPasswordHash(byte[] h)
+	{
+		m_Model.setMixinionPasswordHash(h);
+	}
+	public static void resetMixminionPassword()
+	{
+		m_Model.resetMixMinionKeyringandPw();
+	}
+	public static void setMixminionKeyring(String kr)
+	{
+		m_Model.setMixminionKeyring(kr);
+	}
+	public static void setMixminionMessages(Vector m)
+	{
+		m_Model.setMixminionMessages(m);
+	}
+	public static void setMixminionMMRList(MMRList m)
+	{
+		m_Model.setMixminionMMRList(m);
+	}
+	public static void setMixminionFragments(Vector f)
+	{
+		m_Model.setMixminionFragments(f);
+	}
+
 
 	//---------------------------------------------------------------------
 	private ServerSocket intern_startListener(int port, boolean bLocal)

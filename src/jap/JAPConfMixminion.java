@@ -46,13 +46,13 @@ import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 
+import anon.mixminion.PasswordManager;
 import anon.mixminion.mmrdescription.MMRDescription;
 import anon.mixminion.mmrdescription.MMRList;
 import anon.mixminion.mmrdescription.InfoServiceMMRListFetcher;
 import anon.mixminion.mmrdescription.PlainMMRListFetcher;
 
 import gui.JAPMessages;
-import gui.JAPHelp;
 import gui.dialog.JAPDialog;
 import logging.LogType;
 import gui.GUIUtils;
@@ -67,8 +67,8 @@ final class JAPConfMixminion extends AbstractJAPConfModule implements ActionList
 	private JCheckBox m_cbxActive;
 	private JTable m_tableRouters;
 	private JSlider m_sliderPathLen;
-	private JButton m_bttnFetchRouters;
-	private JLabel m_labelAvailableRouters, m_lblPathLen, m_lblEMail;
+	private JButton m_bttnFetchRouters, m_bttnChangePW, m_bttnResetKeyring;
+	private JLabel m_labelAvailableRouters, m_lblPathLen, m_lblEMail, m_lblKeyring;
 	private JScrollPane m_scrollPane;
 	private JPanel m_panelEMail, m_panelPreferences;
 	private TitledBorder m_borderPreferences;
@@ -198,6 +198,7 @@ final class JAPConfMixminion extends AbstractJAPConfModule implements ActionList
 		c2.gridx = 1;
 		c2.anchor = GridBagConstraints.EAST;
 		c2.insets = new Insets(5, 5, 5, 0);
+		
 		p.add(m_bttnFetchRouters, c2);
 		panelRoot.add(p, c);
 
@@ -228,15 +229,36 @@ final class JAPConfMixminion extends AbstractJAPConfModule implements ActionList
 		panelRoot.add(p, c);
 
 		//test
+
+		
 		p= new JPanel(new GridBagLayout());
 
 		m_lblEMail = new JLabel(JAPMessages.getString("mixminionEMail"));
+		c3.gridx = 0;
+		c3.gridy = 0;
 		p.add(m_lblEMail, c3);
 		m_email = new JTextField();
-		c3.gridx++;
-		c3.weightx = 1;
-		c3.fill = GridBagConstraints.HORIZONTAL;
+		c3.gridx = 1;
+		//c3.fill = GridBagConstraints.HORIZONTAL
+		c3.gridwidth = GridBagConstraints.REMAINDER;
 		p.add(m_email, c3);
+		m_lblKeyring = new JLabel(JAPMessages.getString("mixminionKeyring") + ":");
+		//c3.fill = GridBagConstraints.HORIZONTAL;
+		c3.weightx = 1;
+		c3.gridwidth = GridBagConstraints.RELATIVE;
+		c3.gridx = 0;
+		c3.gridy = 1;
+		p.add(m_lblKeyring, c3);
+		m_bttnChangePW = new JButton(JAPMessages.getString("mixminionBttnChangePassword"));
+		m_bttnChangePW.setActionCommand("changePW");
+		m_bttnChangePW.addActionListener(this);
+		c3.gridx = 1;
+		p.add(m_bttnChangePW, c3);
+		m_bttnResetKeyring = new JButton(JAPMessages.getString("mixminionBttnResetKeyring"));
+		m_bttnResetKeyring.setActionCommand("resetKeyring");
+		m_bttnResetKeyring.addActionListener(this);
+		c3.gridx = 2;
+		p.add(m_bttnResetKeyring,c3);
 
 		m_borderEMail = new TitledBorder(JAPMessages.getString("mixminionEMailSettings"));
 		p.setBorder(m_borderEMail);
@@ -270,6 +292,17 @@ final class JAPConfMixminion extends AbstractJAPConfModule implements ActionList
 		{
 			fetchRoutersAsync(true);
 
+		}
+		else if (actionEvent.getActionCommand().equals("changePW"))
+		{
+			PasswordManager pm = new PasswordManager();
+			pm.changePassword();
+			m_bttnResetKeyring.setEnabled(true);
+		}
+		else if (actionEvent.getActionCommand().equals("resetKeyring"))
+		{
+			JAPController.resetMixminionPassword();
+			m_bttnResetKeyring.setEnabled(false);
 		}
 	}
 
@@ -337,6 +370,8 @@ final class JAPConfMixminion extends AbstractJAPConfModule implements ActionList
 
 	public void onResetToDefaultsPressed()
 	{
+		JAPController.resetMixminionPassword();
+		m_bttnResetKeyring.setEnabled(false);
 		m_sliderPathLen.setValue(JAPConstants.DEFAULT_MIXMINION_ROUTE_LEN);
 		m_email.setText(JAPConstants.DEFAULT_MIXMINION_EMAIL);
 		m_cbxActive.setSelected(!JAPConstants.m_bReleasedVersion);

@@ -28,7 +28,6 @@
 package anon.mixminion.mmrdescription;
 
 import java.io.LineNumberReader;
-import java.io.StringReader;
 import java.util.Hashtable;
 import java.util.Vector;
 
@@ -228,6 +227,9 @@ public class MMRList
 				route.addElement(temp);
 			}
 			route.addElement(exit);
+			//test
+			//routes.addElement(mytesting());
+			//end
 			routes.addElement(route);
 		}
 
@@ -272,12 +274,16 @@ public class MMRList
 		ServerStats servSt = new ServerStats();
 		Vector downServers = servSt.getWhoIsDown();
 
-		if(aktLine==null)
-			return false;
+		if (aktLine == null)
+			{
+				return false;
+			}
+			
+		
 		for (; ; )
 		{
 			aktLine = reader.readLine();
-			if (aktLine == null)
+			if (aktLine == null )
 			{
 				break;
 			}
@@ -285,7 +291,7 @@ public class MMRList
 
 			if (aktLine.startsWith("[Server]"))
 			{
-
+				
 				MMRDescription mmrd = MMRDescription.parse(reader);
 				if ((mmrd != null)  && !downServers.contains(mmrd.getName()))
 				{
@@ -336,6 +342,12 @@ public class MMRList
 		m_mixminionroutersWithNames = mmrswn;
 		//test
 		//m_exitnodes=m_mixminionrouters=mytesting();
+		if (mmrswn.isEmpty()) 
+		{
+			System.out.println("Infoservice geht nicht!");
+			return false;
+		}
+		else
 		return true;
 	}
 
@@ -353,23 +365,23 @@ public class MMRList
 
 //		[Server]
 //		 Nickname: rinos
-//		 Identity: MIIBCgKCAQEAwYi8XHUVrwYEQJSA3gCbXX5A6B81T4Vfw3C1Sjof5RpYhZHf8BHHhOkm7JN0vkYKIzilr37W2KtV5g4hjJQCX+KR8RQhvYetFZzZ8fRjyO3ldfK273TuCXVJgmyf4cAFsNsm/hihNg8SaNmDXpxM0W6mJyvC+W+x+N6upjOBKED0dzLDBShgE0a6CiZrCTGjUrR9ZD3mG1jl+gHmiDvymYQV1XPoJYKQw9FMxTybPyMmLJ4p3ZRKQU2LEjNdQXmywTE6KC1MfD+nqY6P+CVDgjCf85zA2/DhUkuGMUlGt82fN0Sigy0uxqTNJIGZ8ozmatY5E2R+0waxwv4ek0rOjQIDAQAB
-//		 Digest: oZoRbjYxnqUVfdUGP/3fPQVFy5U=
+//		 Identity: MIIBCgKCAQEAs6lIEY4Vz2skNL8SHJKkO5hvfernaBkhO/RnowiyFD/TaHQ1kdxYryaIu3dQ3M03eh+k5VoPiU/sX9+OfmHu0hB4vIqm5c5UtOkigSZOhEBDnZ31OgmfrK0+TaQHqNoF9lgT95QC6KXUgdpbhz2Qklg6qNxPWAbKLlewr6g0RBO51pFM/KK4IF9DMu8jQ8dssmWddPWZcdmQuY77njVr83OcPkpP/T8K+heVdkw7/jmlPAJ+wC2iCgkOtM5NJhk6+8NqOA57P5xXkrcEJkA6qRG9pvYYKsN4lor3asETT+X8mMOEuAkkwBTkRkhovqhQ1WPR0MAHTXUKP1wYAjkB4QIDAQAB
+//		 Digest: nLrOnRowaQV/U/1XCUlXicIAIKc=
 //		 Signature: pg7tNp9vnxZw7AbtwhBO1UgIA/C0cpWdQPyVfFWIh0eIl7I9FveN2mS3+1K2Z3iyTZKDm4v0NRDuZQrlYWe7Nh5rU7y/OXV46IYEVFxcneFJ778wM0VmVWE1HtcNFAOsqfwq+lVJvZKsyY4hwtUtsv3wpSlRIBO+Qr4taqnrivoi/ilDjlNV2/M35+W3/+rkAGa/8aitilA48feV/s3BuoyQcYnAxeg5CDKUlF5YuKFFc2ge8sQX2ePcPl0E2Qp2i1mBYP6GoyHlv8CO87XL40S4kYxDAqj44hiAcZSdp8yVRvqXH6yMa4pXpnJfKyIlWR1xTkQ9Yv7bZNXwbR8Kkw==
-//		 Packet-Key: MIIBCgKCAQEA+IPzeiSReMfoNZ1PhqdN8Cy8Q9xJPdr5pcpTOZZ+d786urWWL1PPW+YQXr1fOBeqaxoag+GNxZdkep1z4Vejsxh6FYILAVSQhyJE3sXE24KyHyQgn7DhMF4FEOQvbqcJiI+hHlVR1zSAly/TCdZIvHYCgfI0tyLcD0HJ1T0aAINuWOPZefHi2ME7gGxJ3IDbL4JpNuRhmd5vJo8ShpvpJUT4BI1Yg9MymgiYFkDsBVmNlQEPrWkI8713go8221/bPc5X5K82Kq8QnkMwGILcB5xDxbljwIiOuyGpSshaU3lAsOy5NXf+s/0DiS7Q3GOfkt8S5OrSpns1V0rUl87JlQIDAQAB
+//		 Packet-Key: MIIBCgKCAQEA0SiCjybZ/+YsuHG9pgAIFNN0j+xF5ZPu3YI1F9MtgGkYQ7xfSrUJksbXprfo+QjJS5izTLkXQfFlUzViy0DMC7JHufofCh1o3lqryGnmE0S0XVD5Cvvz2OLMyRhINLmytp+CXx3E355EVmDebJNtqVRoZaPdZRnvQ2wkB5I6dhiAmhhzIAQVho4DQFf7+2Riv++1VP097TxAww/2gzdq7Pmv3PDd+TI2djAOMDMZO9ZjeZrCX+B7WGZxIBX/hISi9ck1AYq9ss1F4mAOHStgUFoD/iwcONh9OiLyGUhWdmZDrH4HwTutm8thTgt7l3w6LEnvi3Fg8YqeyAp2ocCMOwIDAQAB
 //		 Hostname: localhost
 //		 Port: 48099
-//		 Key-Digest: OxI12M4YvKMZnWJfV1leV6ywT10=
+//		 Key-Digest: MK2+xQEe59Zfwd+7nQ17PCgVBlg=
 
-		MMRDescription mym = new MMRDescription("localhost", "losrinos", 48099, Base64.decode("oZoRbjYxnqUVfdUGP/3fPQVFy5U="),
-						  Base64.decode("OxI12M4YvKMZnWJfV1leV6ywT10="), true, true, "egal",null);
-		mym.setIdentityKey(Base64.decode("MIIBCgKCAQEAwYi8XHUVrwYEQJSA3gCbXX5A6B81T4Vfw3C1Sjof5RpYhZHf8BHHhOkm7JN0vkYKIzilr37W2KtV5g4hjJQCX+KR8RQhvYetFZzZ8fRjyO3ldfK273TuCXVJgmyf4cAFsNsm/hihNg8SaNmDXpxM0W6mJyvC+W+x+N6upjOBKED0dzLDBShgE0a6CiZrCTGjUrR9ZD3mG1jl+gHmiDvymYQV1XPoJYKQw9FMxTybPyMmLJ4p3ZRKQU2LEjNdQXmywTE6KC1MfD+nqY6P+CVDgjCf85zA2/DhUkuGMUlGt82fN0Sigy0uxqTNJIGZ8ozmatY5E2R+0waxwv4ek0rOjQIDAQAB"));
-		mym.setPacketKey(Base64.decode("MIIBCgKCAQEA+IPzeiSReMfoNZ1PhqdN8Cy8Q9xJPdr5pcpTOZZ+d786urWWL1PPW+YQXr1fOBeqaxoag+GNxZdkep1z4Vejsxh6FYILAVSQhyJE3sXE24KyHyQgn7DhMF4FEOQvbqcJiI+hHlVR1zSAly/TCdZIvHYCgfI0tyLcD0HJ1T0aAINuWOPZefHi2ME7gGxJ3IDbL4JpNuRhmd5vJo8ShpvpJUT4BI1Yg9MymgiYFkDsBVmNlQEPrWkI8713go8221/bPc5X5K82Kq8QnkMwGILcB5xDxbljwIiOuyGpSshaU3lAsOy5NXf+s/0DiS7Q3GOfkt8S5OrSpns1V0rUl87JlQIDAQAB"));
+		MMRDescription mym = new MMRDescription("localhost", "rinos", 48099, Base64.decode("nLrOnRowaQV/U/1XCUlXicIAIKc="),
+						  Base64.decode("MK2+xQEe59Zfwd+7nQ17PCgVBlg="), true, true, "egal",null);
+		mym.setIdentityKey(Base64.decode("MIIBCgKCAQEAs6lIEY4Vz2skNL8SHJKkO5hvfernaBkhO/RnowiyFD/TaHQ1kdxYryaIu3dQ3M03eh+k5VoPiU/sX9+OfmHu0hB4vIqm5c5UtOkigSZOhEBDnZ31OgmfrK0+TaQHqNoF9lgT95QC6KXUgdpbhz2Qklg6qNxPWAbKLlewr6g0RBO51pFM/KK4IF9DMu8jQ8dssmWddPWZcdmQuY77njVr83OcPkpP/T8K+heVdkw7/jmlPAJ+wC2iCgkOtM5NJhk6+8NqOA57P5xXkrcEJkA6qRG9pvYYKsN4lor3asETT+X8mMOEuAkkwBTkRkhovqhQ1WPR0MAHTXUKP1wYAjkB4QIDAQAB"));
+		mym.setPacketKey(Base64.decode("MIIBCgKCAQEA0SiCjybZ/+YsuHG9pgAIFNN0j+xF5ZPu3YI1F9MtgGkYQ7xfSrUJksbXprfo+QjJS5izTLkXQfFlUzViy0DMC7JHufofCh1o3lqryGnmE0S0XVD5Cvvz2OLMyRhINLmytp+CXx3E355EVmDebJNtqVRoZaPdZRnvQ2wkB5I6dhiAmhhzIAQVho4DQFf7+2Riv++1VP097TxAww/2gzdq7Pmv3PDd+TI2djAOMDMZO9ZjeZrCX+B7WGZxIBX/hISi9ck1AYq9ss1F4mAOHStgUFoD/iwcONh9OiLyGUhWdmZDrH4HwTutm8thTgt7l3w6LEnvi3Fg8YqeyAp2ocCMOwIDAQAB"));
 
 		Vector retn = new Vector();
 		retn.addElement(mym);
 		retn.addElement(mym);
-		retn.addElement(mym);
+		
 		return retn;
 
 //////		//end

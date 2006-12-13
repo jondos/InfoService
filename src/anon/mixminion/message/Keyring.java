@@ -27,17 +27,13 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package anon.mixminion.message;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
-import java.io.FileReader;
+import jap.JAPController;
+import jap.JAPModel;
 import java.io.IOException;
 import java.io.LineNumberReader;
-import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import java.util.Calendar;
 import java.util.Vector;
-
 import anon.util.Base64;
 import anon.util.ByteArrayUtil;
 
@@ -50,7 +46,9 @@ public class Keyring {
 	final int KEY_LEN =16;
 	static final long KEY_LIFETIME = 3*30*24*60*60;
 	private Vector m_mykeys;
+	private Vector m_expiring;
 	private String m_password;
+	private int m_today;
 
 
 	/**
@@ -59,26 +57,17 @@ public class Keyring {
 	 */
 	public Keyring(String password) {
 		m_mykeys = new Vector();
+		m_expiring = new Vector();
 		m_password = password;
-
-	//try to load the keyring
-		String keyring=""; //data from the textfile
-		String aktLine="";
-	  	try
-		{
-	  		FileReader freader = new FileReader("keyring.txt");
-	  		BufferedReader in = new BufferedReader(freader);
-
-	  		while((aktLine = in.readLine()) != null)
-	  		{
-	  			keyring = keyring + "\n" +aktLine;
-	  		}
-	  	freader.close();
-	  	}
-	  		catch(Exception eve)
-	  	{
-	  		System.out.println("konnte datei nicht einlesen");
-	  	}
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(new java.util.Date());
+		int day = cal.get(Calendar.DAY_OF_YEAR);
+		int year = cal.get(Calendar.YEAR);
+		m_today = (((year-1970-1)*365)+day)*24*60*60;
+		 
+		
+		String keyring= JAPModel.getMixminionKeyring();
+			  	
         //If no Keyring exists, do nothing
 	  	if (keyring == "") {
 
@@ -135,16 +124,17 @@ public class Keyring {
 		//convert all keys in m_mykeys to m_data
 		byte[] itemdata = new byte[0];
 		for(int i = 0; i < m_mykeys.size(); i++ ) {
-			byte[] name = MixMinionCryptoUtil.randomArray(10); //TODO Naming?
-			name[9] = 0x00;
-			Calendar cal = Calendar.getInstance();
-			cal.setTime(new java.util.Date());
-			int day = cal.get(Calendar.DAY_OF_YEAR);
-			int year = cal.get(Calendar.YEAR);
-			byte[] expires = ByteArrayUtil.inttobyte(((((year-1970-1)*365)+day)*24*60*60)+KEY_LIFETIME,4);
+			
+			byte[] name = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x00};
+			byte[] expires = (byte[]) m_expiring.elementAt(i);
+			//to enable the user to decode messages even when the key is expired,
+			//we save all keys but them which are more than 3 months expired
+			if ((byteToInt(expires,0)+KEY_LIFETIME) > (m_today))
+			{	
 			byte[] item = ByteArrayUtil.conc(expires, name,(byte[]) m_mykeys.elementAt(i));
 			item = ByteArrayUtil.conc(new byte[1],ByteArrayUtil.inttobyte(item.length,2),item);
 			itemdata = ByteArrayUtil.conc(itemdata, item);
+			}
 		}
 
 		String packedRing = null;
@@ -220,32 +210,38 @@ public class Keyring {
 		byte[] hash = ByteArrayUtil.copy(data, data.length-20,20);
 		data = ByteArrayUtil.copy(data, 0, data.length-20);
 
-		byte[] hash2 = MixMinionCryptoUtil.hash(
-										ByteArrayUtil.conc(data, salt, magic));
+		byte[] mine = ByteArrayUtil.conc(data, salt, magic);
+		byte[] hash2 = MixMinionCryptoUtil.hash(mine);
 		if (!ByteArrayUtil.equal(hash,hash2)) {
 			System.out.println("falsches Passwort!");//TODO hier abbrechen...
 		}
 		//discard the padding
 		byte[] l = ByteArrayUtil.copy(data,0,4);
 		int datalength = byteToInt(l,0);
-		data = ByteArrayUtil.copy(data,4,datalength);
+		data = ByteArrayUtil.copy(data,4,datalength); //== itemdata
+
 
 		//get out the usersecrets
+//		   SURB keys have the following format:
+//        SURBKeyType    [00]
+//        SURBKeyLen     [2 octets]
+//        SURBKeyExpires [4 octets]
+//        SURBKeyName    [Variable; NUL-terminated]
+//        SURBKeySecret  [Variable]
 		int counter = 0;
-		int schl=0;
 		while(1==1) {
 			if ((counter >= data.length)) {
 				break;
 			}
 			if (data[counter] == 0x00) {
-				byte[] actsecret = ByteArrayUtil.copy(data, counter+17,20); //TODO lenght, date usw?
+				byte[] expires = ByteArrayUtil.copy(data,counter+3,4);
+				m_expiring.addElement(expires);
+				byte[] actsecret = ByteArrayUtil.copy(data, counter+17,20); 
 				m_mykeys.addElement(actsecret);
-				schl++;
-				counter = counter+32;
+				counter = counter+37;
 			}
-			counter = counter+1;
 		}
-
+		
 	}
 
 	/**
@@ -255,33 +251,31 @@ public class Keyring {
 	private byte[] makeNewKey() {
 
 		//build new secret
-		byte[] newsecret = MixMinionCryptoUtil.randomArray(20);
-		//add it to the keyvector
+		byte[] newsecret = MixMinionCryptoUtil.randomArray(20);			
+		byte[] expires = ByteArrayUtil.inttobyte(m_today+KEY_LIFETIME,4);
+		//add it to the keyvectors
 		m_mykeys.addElement(newsecret);
+		m_expiring.addElement(expires);
 
 //		save Keyring
 		saveKeyRing();
 		return newsecret;
 	}
 
+
+	public void changeKeyringPW(String newpw)
+	{
+		m_password = newpw;
+		saveKeyRing();
+	}
 	/**
 	 * saves the keyring
 	 *
 	 */
 	private void saveKeyRing() {
-		try {
-			   BufferedWriter out = new BufferedWriter(
-	                    new OutputStreamWriter(
-	                    new FileOutputStream( "keyring.txt" ) ) );
+		
+		JAPController.setMixminionKeyring(packKeyring());
 
-			    String s = packKeyring();
-			   	out.write( s, 0, s.length() );
-			   	out.close();
-			}
-			catch (IOException e) {
-				System.out.println("Konnte Keyring ne speichern");
-				e.printStackTrace();
-			}
 	}
 
 	/**

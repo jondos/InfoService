@@ -27,12 +27,24 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package anon.mixminion;
 
+import java.io.IOException;
+import java.io.LineNumberReader;
+import java.io.StringReader;
+import java.util.Vector;
+
+import anon.mixminion.message.ReplyBlock;
+
 
 public class EMail
 {
-    private String[] m_receiver = null;
+    
+	private String[] m_receiver = new String[1]; 
     private String m_payload = null;
-    private String m_sender = "";
+    private Vector m_replyblocks = new Vector();
+    private String m_type = "";//ENC;NOR;RPL
+    private String m_multipartid = "";
+    
+    
 
     /**
      * The Constructor of an eMail, which scould be send over the MixMinion-Net
@@ -41,12 +53,89 @@ public class EMail
      */
     public EMail(String[] receiver, String payload)
     {
-        this.m_receiver = receiver;
-        this.m_payload  = payload;
-        
+    	//there are three possibilities:
+    	//	1. encrypted Message to decode
+    	// 	2. reply  E-Mail recipient specified due Replyblock
+    	// 	3. normal E-Mail recipient specified due E-Mail-Header 
+    	
+    	//test 1.
+    	if (testonEncrypted(payload)) {
+    		m_type = "ENC";
+    		m_payload = payload;
+    	}
+    	// or 2./3.
+    	else  {
+    		  		
+    		//is/are there rb('s)?
+    		try
+    		{
+    			m_replyblocks = ReplyBlock.parseReplyBlocks(payload, null);
+    			
+    		} catch (IOException e)
+    		{
+    			e.printStackTrace();
+    		}
+    		
+    		//remove the replyblock from the payload, he is not needed anymore
+    		if (m_replyblocks.size() > 0)
+    		{
+    			m_type = "RPL";
+    			m_receiver[0] = "anonymous@fragmented.de";
+    			try
+    			{
+    				payload = ReplyBlock.removeRepyBlocks(payload);
+    			} catch (IOException e1)
+				{
+    				e1.printStackTrace();
+    			}
+    		}
+    		else
+    		{
+    			m_type = "NOR";
+    			//set receiver
+        		this.m_receiver = receiver;
+    		}
+    		
+    		//prepare the payload for normal/reply messages
+    		try 
+			{
+    			//remove the headers which make Probs with the anonymity
+    			this.m_payload  = trimPayload(payload);
+    		} catch (IOException e) 
+			{
+    			e.printStackTrace();
+    		} 		
+    	}
+    	
+     }
+    	
+
+    /**
+     * test a given E-Mail payload if its encrypted or not
+     * @param p
+     * @return
+     */
+    private boolean testonEncrypted(String p)
+    {
+    	LineNumberReader reader = new LineNumberReader(new StringReader(p));
+    	String aktLine = "start";
+
+    	while (1==1) 
+    	{
+    		try {
+				aktLine = reader.readLine();
+			} catch (IOException e) {
+				break;
+			}
+			if (aktLine == null) {
+				break;
+			}
+			else if (aktLine.startsWith("Message-type: encrypted")) {
+    			return true;
+    		}
+    	}
+    	return false;
     }
-
-
     /**
      * @return the Receivers of this eMail
      */
@@ -62,8 +151,50 @@ public class EMail
     {
         return m_payload;
     }
+    
+    /**
+     * Adds the specified Replyblock(as String) to the payload
+     * @param p
+     */
+    public void addRBtoPayload(String p)
+    {
+    	
+    	if (m_multipartid.equals(""))
+    	{
+    		m_payload += p;
+    	}
+    	else 
+    		{
+//    		
+//    		int index = m_payload.lastIndexOf("--" + m_multipartid + "\n"+
+//											"Content-Type:");
+//    		m_payload = m_payload.substring(0, index-1) + p + "\n\n" +
+//							m_payload.substring(index);
+    		
+    		m_payload = m_payload.substring(0, m_payload.indexOf("--" + m_multipartid +"--")) +
+						"\n--" + m_multipartid +"\nContent-Type: text/plain; charset=ISO-8859-15\n"+
+						"Content-Transfer-Encoding: 7bit\n" + p +"\n--" + m_multipartid +"--";
+    		//System.out.println(m_payload);
+    		}
+    }
+    /**
+     * 
+     * @return String NOR=Normal; RPL = Replymessage; ENC = content to decode locally
+     */
+    public String getType() 
+    {
+    	return m_type;
+    }
 
-
+    /**
+     * 
+     * @return ReplyBlock
+     */
+    public Vector getReplyBlocks() 
+    {
+    	return m_replyblocks;
+    }
+   
     public String toString()
     {
         String ret = "";
@@ -76,8 +207,71 @@ public class EMail
         return ret;
     }
     
-    public String getSender() {
-    	return "";//m_sender;
+    
+    /**
+     * removes/overwrites non anonym headers
+     * brings the ascii armor of an replyblock in the right form
+     * @param p
+     * @return
+     * @throws IOException
+     */
+    private String trimPayload(String p) throws IOException {
+		// from client there is something like this:
+//		Message-ID: <453E0340.6050709@biw.de>
+//		Date: Tue, 24 Oct 2006 14:12:48 +0200
+//		From: Anonymer Stefan <anostef@biw.de>
+//		User-Agent: Thunderbird 1.5.0.7 (Windows/20060909)
+//		MIME-Version: 1.0
+//		To: Fefan <LosRinos@gmx.de>
+//		Subject: mit anhang
+//		Content-Type: multipart/mixed;
+//		 boundary="------------040506060207010307050100"
+//
+//		This is a multi-part message in MIME format.
+//		--------------040506060207010307050100
+//		Content-Type: text/plain; charset=ISO-8859-15
+//		Content-Transfer-Encoding: 7bit
+//
+//		mit nem anhang
+    	String subject = "";
+    	String trimmed = "";
+    	String multi = "";
+     	//for normal messages:
+    	if (m_type.equals("NOR")) 
+		{
+			trimmed +=  "\nMessage created with JAP/Mixminion Anonymous Mailing\n\n";
+			multi = "- ";
+		}
+		LineNumberReader reader = new LineNumberReader(new StringReader(p));
+		String aktLine = reader.readLine();
+		while (!aktLine.startsWith("Subject")) {
+			aktLine = reader.readLine();
+		}
+		subject += "Titel: " + aktLine.substring(9) + "\n";
+		
+		while (aktLine.length() > 0) {
+			aktLine = reader.readLine();//Skip other headers
+			//if multipart
+			if (aktLine.startsWith("Content-Type: multipart/mixed;")) 
+			{
+				aktLine = reader.readLine();
+				trimmed += "MIME-Version: 1.0\n" + subject + "Content-Type: multipart/mixed;\n" +
+								aktLine.substring(0,11) + multi +
+								aktLine.substring(11)+"\n";
+				m_multipartid = aktLine.substring(11,aktLine.length()-1);
+			}
+		}
+		
+		if (m_multipartid.equals(""))
+		{
+			trimmed += subject;
+		}
+		
+		while (aktLine != null) {
+			trimmed += aktLine +"\n";
+			aktLine = reader.readLine();
+		}
+		return trimmed;
     }
     
  

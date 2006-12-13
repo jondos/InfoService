@@ -56,7 +56,7 @@ public class PlainMMRListFetcher implements MMRListFetcher
 	{
 		try
 		{
-			//FIXME only tested with mixminion.net on port 80
+			//only tested with mixminion.net on port 80
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 						  "[UPDATE OR-LIST] Starting update on " + m_MMRListServer + ":" + m_MMRListPort);
 			HTTPConnection http = new HTTPConnection(m_MMRListServer, m_MMRListPort);

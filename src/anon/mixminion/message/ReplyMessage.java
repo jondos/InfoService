@@ -47,7 +47,7 @@ public class ReplyMessage extends ReplyImplementation{
 	private MMRList m_mmrlist;
 	private int m_hops;
 	private byte[][] m_message_parts;
-	private ReplyBlock m_replyblock; //parsed replyblock from the payload
+	private Vector m_replyblocks; //parsed replyblock from the payload
 	private Vector m_start_server; //for every ready to send message the first server
 
 	/**
@@ -60,12 +60,12 @@ public class ReplyMessage extends ReplyImplementation{
 	 * @param recipient
 	 * @param replyblock
 	 */
-	public ReplyMessage(byte[][] message_parts, int hops, ReplyBlock replyblock, MMRList mmrlist) {
+	public ReplyMessage(byte[][] message_parts, int hops, Vector replyblocks, MMRList mmrlist) {
 
 		this.m_mmrlist = mmrlist;
 		this.m_hops = hops;
 		this.m_message_parts = message_parts;
-		this.m_replyblock = replyblock;
+		this.m_replyblocks = replyblocks;
 		this.m_start_server = new Vector();
 
 	}
@@ -75,11 +75,12 @@ public class ReplyMessage extends ReplyImplementation{
 		Vector ready_to_send_Messages = new Vector(); // returned
 		boolean isfragmented = m_message_parts.length > 1; //multipart?
 
-		//FIXME replymessage und fragmented nich moeglich, weil fuer jeden part ein replyblock noetig
+		//FIXME fragmented reply-messages are to decode local; not implemented yet 
 
 		if (isfragmented) {
-			System.out.println("nur ein replyblock fuer x parts...geht noch ne");
-			return null;
+			
+			System.out.println("Reply und Fragmente; Decodierung wird noch nicht möglich sein...");
+			//return null;
 		}
 
 
@@ -99,13 +100,21 @@ public class ReplyMessage extends ReplyImplementation{
 				paths = m_mmrlist.getByRandomWithFrag(m_hops, m_message_parts.length);
 			}
 
+		//enough replyblocks?
+		if (m_replyblocks.size() < m_message_parts.length)
+		{
+			//no?
+			return null;
+		}
+		
+		//okay build the parts
 		for (int i_frag = 0; i_frag < m_message_parts.length; i_frag++)
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 						  "[Message] make Header to Fragment_" + i_frag);
 
 			byte[] headerbytes_1 = null;;
-			byte[] headerbytes_2 = m_replyblock.getHeaderBytes();
+			byte[] headerbytes_2 = ((ReplyBlock)m_replyblocks.elementAt(i_frag)).getHeaderBytes();
 
 			Vector secrets = new Vector(); //Secrets in Header1
 			//Build first Header
@@ -118,9 +127,9 @@ public class ReplyMessage extends ReplyImplementation{
 					secrets.addElement(MixMinionCryptoUtil.randomArray(16));
 				}
 
-			//ExitInfos und Crossoverpoint definieren
+			//define ExitInfos and Crossoverpoint 
 			ExitInformation exit1 = new ExitInformation();
-			RoutingInformation ri1 = m_replyblock.getRouting();
+			RoutingInformation ri1 = ((ReplyBlock)m_replyblocks.elementAt(i_frag)).getRouting();
 			exit1.m_Type = ri1.m_Type;
 			exit1.m_Content = ri1.m_Content;
 
@@ -136,7 +145,7 @@ public class ReplyMessage extends ReplyImplementation{
 			/** Phase 1 - if H2 is a reply block **/
 				// Let K_surb = the end to end encryption key in H2
 				// P = SPRP_ Decrypt(K_SURB, "PAYLOAD ENCRYPT", P)
-				byte[] key = MixMinionCryptoUtil.hash(ByteArrayUtil.conc(m_replyblock.getSharedSecret(),"PAYLOAD ENCRYPT".getBytes()));
+				byte[] key = MixMinionCryptoUtil.hash(ByteArrayUtil.conc(((ReplyBlock)m_replyblocks.elementAt(i_frag)).getSharedSecret(),"PAYLOAD ENCRYPT".getBytes()));
 				payload = MixMinionCryptoUtil.SPRP_Decrypt(key,payload);
 
 			/** Phase 2: SPRP verschluesseln **/

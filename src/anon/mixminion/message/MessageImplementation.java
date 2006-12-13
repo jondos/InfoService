@@ -30,9 +30,7 @@ package anon.mixminion.message;
 
 /**
  * @author Stefan Roenisch
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
+
  */
 public abstract class MessageImplementation {
 
