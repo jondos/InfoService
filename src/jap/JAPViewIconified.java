@@ -319,11 +319,16 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		m_labelTraffic.setText(JAPMessages.getString("iconifiedViewNA"));
 		m_labelAnon.setText(JAPMessages.getString("iconifiedViewNA"));
 		//JAPDll.setWindowOnTop(this,STR_HIDDEN_WINDOW, true);
-		GUIUtils.setAlwaysOnTop(this, true);
+		//GUIUtils.setAlwaysOnTop(this, true);
 	}
 
 	public void setVisible(boolean a_bVisible)
 	{
+		if (a_bVisible)
+		{
+			GUIUtils.setAlwaysOnTop(this, JAPModel.getInstance().isMiniViewOnTop());
+		}
+
 		JAPController.getInstance().switchViewWindow(!a_bVisible);
 		super.setVisible(a_bVisible);
 	}

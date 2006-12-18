@@ -59,10 +59,12 @@ public final class JAPModel extends Observable
 	public static final String XML_CONFIG_WINDOW = "ConfigWindow";
 	public static final String XML_SIZE = "Size";
 	public static final String XML_ICONIFIED_WINDOW = "IconifiedWindow";
+	public static final String XML_ATTR_ICONIFIED_ON_TOP = "alwaysOnTop";
 	public static final String XML_HELP_WINDOW = "HelpWindow";
 	public static final String XML_ATTR_WIDTH = "width";
 	public static final String XML_ATTR_HEIGHT = "height";
 	public static final String XML_ATTR_SAVE = "save";
+
 
 	public static final String AUTO_CHANGE_NO_RESTRICTION = "none";
 	public static final String AUTO_CHANGE_RESTRICT_TO_PAY = "pay";
@@ -126,6 +128,7 @@ public final class JAPModel extends Observable
 
 	private boolean m_bChooseCascasdeConnectionAutomatically;
 
+	private boolean m_bMiniViewOnTop;
 	private String m_strLookAndFeel;
 	private Vector m_vecLookAndFeels = new Vector();
 	private LookAndFeelInfo[] m_systemLookAndFeels;
@@ -782,6 +785,16 @@ public final class JAPModel extends Observable
 		return ms_TheModel.m_bInfoServiceDisabled;
 	}
 
+	public boolean isMiniViewOnTop()
+	{
+		return m_bMiniViewOnTop;
+	}
+
+	public void setMiniViewOnTop(boolean a_bMiniViewOnTop)
+	{
+		m_bMiniViewOnTop = a_bMiniViewOnTop;
+	}
+
 	public GUIUtils.IIconResizer getIconResizer()
 	{
 		return m_resizer;
@@ -1081,79 +1094,79 @@ public final class JAPModel extends Observable
 		return ms_TheModel.m_mixminionRouteLen;
 	}
 
-	protected void setMixminionMyEMail(String address) 
+	protected void setMixminionMyEMail(String address)
 	{
 		m_mixminionMyEMail = address;
 	}
 
-	public static String getMixminionMyEMail() 
+	public static String getMixminionMyEMail()
 	{
 		return ms_TheModel.m_mixminionMyEMail;
 	}
 
-	protected void setMixMinionPassword(String pw) 
+	protected void setMixMinionPassword(String pw)
 	{
 		m_mixminionPassword = pw;
 	}
-	public static String getMixMinionPassword() 
+	public static String getMixMinionPassword()
 	{
 		return ms_TheModel.m_mixminionPassword;
 	}
 
-	protected void setMixinionPasswordHash(byte[] hash) 
+	protected void setMixinionPasswordHash(byte[] hash)
 	{
 		m_mixminionPasswordHash = hash;
 	}
-	
-	public static byte[] getMixMinionPasswordHash() 
+
+	public static byte[] getMixMinionPasswordHash()
 	{
 		return ms_TheModel.m_mixminionPasswordHash;
 	}
-	protected void resetMixMinionKeyringandPw() 
+	protected void resetMixMinionKeyringandPw()
 	{
 		m_mixminionPasswordHash = null;
 		m_mixminionPassword = null;
 		m_mixminionKeyring = "";
 	}
-	protected void setMixminionMessages(Vector m) 
+	protected void setMixminionMessages(Vector m)
 	{
 		m_mixminionMessages = m;
 	}
-	public static Vector getMixminionMessages() 
+	public static Vector getMixminionMessages()
 	{
 		return ms_TheModel.m_mixminionMessages;
 	}
-	
-	protected void setMixminionKeyring(String kr) 
+
+	protected void setMixminionKeyring(String kr)
 	{
 		m_mixminionKeyring = kr;
 	}
-	
-	public static String getMixminionKeyring() 
+
+	public static String getMixminionKeyring()
 	{
 		return ms_TheModel.m_mixminionKeyring;
 	}
-	
+
 	protected void setMixminionMMRList(MMRList m)
 	{
 		m_mixminionRouters = m;
 	}
-	
+
 	public static MMRList getMixminionMMRlist()
 	{
 		return ms_TheModel.m_mixminionRouters;
 	}
-	
+
 	protected void setMixminionFragments(Vector f)
 	{
 		m_mixminionFragments = f;
 	}
-	
+
 	public static Vector getMixminionFragments()
 	{
 		return ms_TheModel.m_mixminionFragments;
 	}
-	
+
 
 	protected void setUseProxyAuthentication(boolean a_bUseAuth)
 	{

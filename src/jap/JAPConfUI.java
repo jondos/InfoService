@@ -70,6 +70,7 @@ import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
 import platform.WindowsOS;
+import anon.infoservice.JavaVersionDBEntry;
 
 final class JAPConfUI extends AbstractJAPConfModule
 {
@@ -105,6 +106,9 @@ final class JAPConfUI extends AbstractJAPConfModule
 	private static final String MSG_WINDOW_HELP = JAPConfUI.class.getName() + "_windowHelp";
 	private static final String MSG_WINDOW_SIZE = JAPConfUI.class.getName() + "_windowSize";
 
+	private static final String MSG_MINI_ON_TOP = JAPConfUI.class.getName() + "_miniOnTop";
+	private static final String MSG_MINI_ON_TOP_TT = JAPConfUI.class.getName() + "_miniOnTopTT";
+
 
 
 	private TitledBorder m_borderLookAndFeel, m_borderView;
@@ -112,7 +116,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 	private JCheckBox m_cbSaveWindowLocationMain, m_cbSaveWindowLocationIcon, m_cbSaveWindowLocationConfig,
 		m_cbSaveWindowLocationHelp, m_cbSaveWindowSizeHelp, m_cbAfterStart;
 	private JRadioButton m_rbViewSimplified, m_rbViewNormal, m_rbViewMini, m_rbViewSystray;
-	private JCheckBox m_cbWarnOnClose;
+	private JCheckBox m_cbWarnOnClose, m_cbMiniOnTop;
 	private JSlider m_slidFontSize;
 	private JButton m_btnAddUI, m_btnDeleteUI;
 	private File m_currentDirectory;
@@ -665,6 +669,14 @@ final class JAPConfUI extends AbstractJAPConfModule
 		p.add(m_rbViewSimplified, c);
 
 		c.gridy++;
+		m_cbMiniOnTop = new JCheckBox(JAPMessages.getString(MSG_MINI_ON_TOP));
+		if (JAPDll.getDllVersion() == null && JavaVersionDBEntry.CURRENT_JAVA_VERSION.compareTo("1.5") < 0)
+		{
+			m_cbMiniOnTop.setEnabled(false);
+			m_cbMiniOnTop.setToolTipText(JAPMessages.getString(MSG_MINI_ON_TOP_TT));
+		}
+		p.add(m_cbMiniOnTop, c);
+		c.gridy++;
 
 		return p;
 	}
@@ -751,6 +763,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		JAPController.getInstance().setMoveToSystrayOnStartup(m_rbViewSystray.isSelected() &&
 			m_cbAfterStart.isSelected());
 		JAPModel.getInstance().setNeverRemindGoodbye(!m_cbWarnOnClose.isSelected());
+		JAPModel.getInstance().setMiniViewOnTop(m_cbMiniOnTop.isSelected());
 
 		Locale newLocale;
 		if (m_comboLanguage.getSelectedIndex() >= 0)
@@ -870,6 +883,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		m_rbViewSimplified.setSelected(JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED);
 		m_rbViewSystray.setSelected(JAPModel.getMoveToSystrayOnStartup());
 		m_rbViewMini.setSelected(JAPModel.getMinimizeOnStartup());
+		m_cbMiniOnTop.setSelected(JAPModel.getInstance().isMiniViewOnTop());
 		m_cbWarnOnClose.setSelected(!JAPModel.getInstance().isNeverRemindGoodbye());
 		boolean b = JAPModel.getMoveToSystrayOnStartup() || JAPModel.getMinimizeOnStartup();
 		for (int i = 0; i < m_comboDialogFormat.getItemCount(); i++)
@@ -904,6 +918,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		m_rbViewNormal.setSelected(JAPConstants.DEFAULT_VIEW == JAPConstants.VIEW_NORMAL);
 		m_rbViewSimplified.setSelected(JAPConstants.DEFAULT_VIEW == JAPConstants.VIEW_SIMPLIFIED);
 		m_rbViewSystray.setSelected(JAPConstants.DEFAULT_MOVE_TO_SYSTRAY_ON_STARTUP);
+		m_rbViewMini.setSelected(true);
 		m_rbViewMini.setSelected(JAPConstants.DEFAULT_MINIMIZE_ON_STARTUP);
 		m_cbWarnOnClose.setSelected(JAPConstants.DEFAULT_WARN_ON_CLOSE);
 		updateThirdPanel(JAPConstants.DEFAULT_MOVE_TO_SYSTRAY_ON_STARTUP ||
