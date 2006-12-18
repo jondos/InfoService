@@ -29,30 +29,30 @@ package jap;
 
 import java.util.Vector;
 
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.Insets;
-import java.awt.Font;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
-import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+import javax.swing.JPanel;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
 import anon.infoservice.Database;
-import anon.infoservice.StatusInfo;
 import anon.infoservice.MixCascade;
+import anon.infoservice.StatusInfo;
+import gui.GUIUtils;
 import gui.JAPHelp;
 import gui.JAPMessages;
 import gui.PopupMenu;
-import gui.GUIUtils;
-import java.awt.GridBagConstraints;
-import javax.swing.JPanel;
-import java.awt.GridBagLayout;
 
 /**
  *
@@ -128,7 +128,7 @@ public class SystrayPopupMenu extends PopupMenu
 		constraints.fill = GridBagConstraints.HORIZONTAL;
 		constraints.anchor = GridBagConstraints.WEST;
 		panel.add(label, constraints);
-		getPopupMenu().add(panel);
+		add(panel);
 
 		panel = new JPanel(new GridBagLayout());
 		constraints = new GridBagConstraints();
@@ -140,7 +140,7 @@ public class SystrayPopupMenu extends PopupMenu
 		constraints.insets = new Insets(0, icon.getIconWidth() + label.getIconTextGap(), 0, 0);
 		label = new JLabel("(" + connected + users + ")");
 		panel.add(label, constraints);
-		getPopupMenu().add(panel);
+		add(panel);
 
 
 
@@ -154,9 +154,9 @@ public class SystrayPopupMenu extends PopupMenu
 				JAPController.getInstance().setAnonMode(cbxMenuItem.isSelected());
 			}
 		});
-		getPopupMenu().add(cbxMenuItem);
+		add(cbxMenuItem);
 
-		getPopupMenu().addSeparator();
+		addSeparator();
 		menuItem = new JMenuItem(JAPMessages.getString(MSG_SHOW_MAIN_WINDOW));
 		GUIUtils.setFontStyle(menuItem, Font.PLAIN);
 		menuItem.addActionListener(new ActionListener()
@@ -166,11 +166,11 @@ public class SystrayPopupMenu extends PopupMenu
 				m_mainWindowListener.onShowMainWindow();
 			}
 		});
-		getPopupMenu().add(menuItem);
+		add(menuItem);
 
 		menuItem = new JMenuItem(JAPMessages.getString(JAPHelp.MSG_HELP_MENU_ITEM));
 		GUIUtils.setFontStyle(menuItem, Font.PLAIN);
-		getPopupMenu().add(menuItem);
+		add(menuItem);
 		menuItem.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent a_event)
@@ -182,7 +182,7 @@ public class SystrayPopupMenu extends PopupMenu
 			}
 		});
 
-		getPopupMenu().addSeparator();
+		addSeparator();
 		JMenu filterMenu;
 		Vector models = TrustModel.getTrustModels();
 
@@ -202,7 +202,7 @@ public class SystrayPopupMenu extends PopupMenu
 				}
 
 				final CascadePopupMenu tmpPopupCascade = new CascadePopupMenu(filterMenu.getPopupMenu());
-				getPopupMenu().add(filterMenu);
+				add(filterMenu);
 
 				filterMenu.addMenuListener(new MenuListener()
 				{
@@ -222,7 +222,7 @@ public class SystrayPopupMenu extends PopupMenu
 			}
 		}
 
-		getPopupMenu().addSeparator();
+
 		menuItem = new JMenuItem(JAPMessages.getString(MSG_EXIT));
 		GUIUtils.setFontStyle(menuItem, Font.PLAIN);
 		menuItem.addActionListener(new ActionListener()
@@ -232,9 +232,9 @@ public class SystrayPopupMenu extends PopupMenu
 				JAPController.getInstance().goodBye(true);
 			}
 		});
-		getPopupMenu().addSeparator();
-		getPopupMenu().add(menuItem);
-		getPopupMenu().pack();
+		addSeparator();
+		add(menuItem);
+		pack();
 	}
 
 	public static interface MainWindowListener

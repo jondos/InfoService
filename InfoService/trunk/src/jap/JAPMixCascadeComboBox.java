@@ -267,7 +267,7 @@ public class JAPMixCascadeComboBox extends JComboBox
 			//m_cascadePopupMenu.setIcon(GUIUtils.loadImageIcon("arrow46.gif"));
 			//m_cascadePopupMenu.setHorizontalTextPosition(JLabel.LEADING);
 			//m_cascadePopupMenu.setIconTextGap(500);
-			m_currentCascadePopup = new CascadePopupMenu();
+			m_currentCascadePopup = new CascadePopupMenu(true);
 			/*
 			m_currentCascadePopup.registerExitHandler(new CascadePopupMenu.ExitHandler()
 			{
