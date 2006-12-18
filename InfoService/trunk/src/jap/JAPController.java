@@ -1245,6 +1245,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 					JAPModel.getInstance().setConfigWindowLocation(location);
 				}
 				nodeWindow = XMLUtil.getFirstChildByName(elemGUI, JAPModel.XML_ICONIFIED_WINDOW);
+				JAPModel.getInstance().setMiniViewOnTop(
+								XMLUtil.parseAttribute(nodeWindow, JAPModel.XML_ATTR_ICONIFIED_ON_TOP, true));
 				nodeSize = XMLUtil.getFirstChildByName(nodeWindow, JAPModel.XML_SIZE);
 				if (!JAPDialog.isConsoleOnly())
 				{
@@ -2240,6 +2242,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 
 			elemWindow = doc.createElement(JAPModel.XML_ICONIFIED_WINDOW);
+			XMLUtil.setAttribute(
+					elemWindow, JAPModel.XML_ATTR_ICONIFIED_ON_TOP,
+					JAPModel.getInstance().isMiniViewOnTop());
 			if (JAPModel.getInstance().getIconifiedSize() != null)
 			{
 				elemSize = doc.createElement(JAPModel.XML_SIZE);
