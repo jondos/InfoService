@@ -508,6 +508,11 @@ public final class GUIUtils
 		}
 	}
 
+	public static boolean isAlwaysOnTop(Component a_component)
+	{
+		return isAlwaysOnTop(getParentWindow(a_component));
+	}
+
 	/**
 	 * Returns if the alwaysOnTop method of JRE 1.5 is set on a given Window.
 	 * @param a_Window a Window
@@ -536,6 +541,11 @@ public final class GUIUtils
 			  new Font(a_component.getFont().getName(), a_style, a_component.getFont().getSize()));
 	}
 
+	public static boolean setAlwaysOnTop(Component a_component, boolean a_bOnTop)
+	{
+		return setAlwaysOnTop(getParentWindow(a_component), a_bOnTop);
+	}
+
 	/**
 	 * Tries to use the method setAlwaysOnTop of JRE 1.5.
 	 * @param a_Window Window
@@ -544,6 +554,11 @@ public final class GUIUtils
 	 */
 	public static boolean setAlwaysOnTop(Window a_Window, boolean a_bOnTop)
 	{
+		if (a_Window == null)
+		{
+			return false;
+		}
+
 		try
 		{
 			Class[] c = new Class[1];
