@@ -32,11 +32,29 @@ import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Window;
 import javax.swing.event.PopupMenuListener;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.JPanel;
+import javax.swing.JWindow;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
+import javax.swing.JSeparator;
 import java.util.Random;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import javax.swing.BorderFactory;
+import java.awt.Window;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.Vector;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import javax.swing.JMenuItem;
+import javax.swing.JMenu;
+import anon.infoservice.JavaVersionDBEntry;
 
 /**
  *
@@ -45,29 +63,104 @@ import java.util.Random;
 public class PopupMenu
 {
 	private ExitHandler m_exitHandler;
-	private JPopupMenu m_popup;
+	private Component m_popup;
+	private GridBagConstraints m_constraints;
+	private Window m_parent;
+	private Vector m_popupListeners;
+	private Vector m_registeredComponents;
+	private boolean m_bCompatibilityMode;
 
 	public PopupMenu()
 	{
 		this (new JPopupMenu());
 	}
 
+	public PopupMenu(boolean a_bCompatibilityMode)
+	{
+		this(new JPopupMenu(), a_bCompatibilityMode);
+	}
+
+
 	public PopupMenu(JPopupMenu a_popup)
+	{
+		this(a_popup, false);
+	}
+
+	private PopupMenu(JPopupMenu a_popup, boolean a_bCompatibilityMode)
 	{
 		if (a_popup == null)
 		{
 			throw new IllegalArgumentException("Given argument is null!");
 		}
+		m_bCompatibilityMode = a_bCompatibilityMode;
 
-		m_popup = a_popup;
+
+		if (m_bCompatibilityMode)
+		{
+			m_popup = new JWindow();
+			JPanel contentPane = new JPanel();
+			contentPane.setBorder(new JPopupMenu().getBorder());
+			((JWindow)m_popup).setContentPane(contentPane);
+			((JWindow)m_popup).getContentPane().setLayout(new GridBagLayout());
+			m_popup.addComponentListener(new ComponentAdapter()
+			{
+				public void componentHidden(ComponentEvent a_event)
+				{
+					synchronized (m_popupListeners)
+					{
+						for (int i = 0; i < m_popupListeners.size(); i++)
+						{
+							( (PopupMenuListener) m_popupListeners.elementAt(i)).popupMenuWillBecomeInvisible(
+								new PopupMenuEvent(a_event.getSource()));
+						}
+					}
+
+				}
+			});
+		}
+		else
+		{
+			m_popup = a_popup;
+			((JPopupMenu)m_popup).addPopupMenuListener(new PopupMenuListener()
+			{
+				public void popupMenuWillBecomeVisible(PopupMenuEvent a_event)
+				{
+
+				}
+				public void popupMenuWillBecomeInvisible(PopupMenuEvent a_event)
+				{
+					if (GUIUtils.isAlwaysOnTop(m_popup))
+					{
+						GUIUtils.setAlwaysOnTop(m_popup, false);
+						GUIUtils.setAlwaysOnTop(m_parent, true);
+						m_parent = null;
+					}
+				}
+				public void popupMenuCanceled(PopupMenuEvent a_event)
+				{
+				}
+			});
+		}
+
+		m_popupListeners = new Vector();
+		m_registeredComponents = new Vector();
+
+
+		m_constraints = new GridBagConstraints();
+		m_constraints.gridx = 0;
+		m_constraints.gridy = 0;
+
+
+
 		m_popup.setName(Double.toString(new Random().nextDouble()));
-		m_popup.addMouseListener(new MouseAdapter()
+		MouseAdapter exitAdapter = new MouseAdapter()
 		{
 			public void mouseClicked(MouseEvent a_event)
 			{
 				if (SwingUtilities.isRightMouseButton(a_event))
 				{
-					m_popup.setVisible(false);
+					//m_popup.setVisible(false);
+					setVisible(false);
 				}
 			}
 			public void mouseExited(MouseEvent a_event)
@@ -78,22 +171,124 @@ public class PopupMenu
 					m_exitHandler.exited();
 				}
 			}
-		});
+		};
+
+
+		m_popup.addMouseListener(exitAdapter);
 
 		registerExitHandler(null);
 	}
 
+	protected void removeAll()
+	{
+		if (m_bCompatibilityMode)
+		{
+			((JWindow)m_popup).getContentPane().removeAll();
+
+			m_constraints.gridy = 0;
+			m_registeredComponents.removeAllElements();
+		}
+		else
+		{
+			( (JPopupMenu) m_popup).removeAll();
+		}
+	}
+
+	protected void insert(Component a_component, int a_index)
+	{
+		if (m_bCompatibilityMode)
+		{
+		add(a_component);
+	}
+		else
+		{
+			((JPopupMenu) m_popup).insert(a_component, a_index);
+		}
+	}
+
+	protected void addSeparator()
+	{
+		addSeparator(new JSeparator());
+	}
+
+	protected void addSeparator(JSeparator a_separator)
+	{
+		m_constraints.fill = GridBagConstraints.HORIZONTAL;
+		m_constraints.weighty = 1.0;
+		add(a_separator);
+		m_constraints.fill = GridBagConstraints.NONE;
+		m_constraints.weighty = 0.0;
+		m_constraints.gridy++;
+	}
+
+	protected void pack()
+	{
+		if (m_bCompatibilityMode)
+		{
+			((JWindow)m_popup).pack();
+		}
+		else
+		{
+			((JPopupMenu)m_popup).pack();
+		}
+	}
+
+	protected void add(Component a_component)
+	{
+		if (m_bCompatibilityMode)
+		{
+			if (a_component == null)
+			{
+				return;
+			}
+			((JWindow)m_popup).getContentPane().add(a_component, m_constraints);
+			m_constraints.gridy++;
+			m_registeredComponents.addElement(a_component);
+		}
+		else
+		{
+			((JPopupMenu)m_popup).add(a_component);
+		}
+	}
+
 	public final void addPopupMenuListener(PopupMenuListener a_listener)
 	{
-		m_popup.addPopupMenuListener(a_listener);
+		synchronized (m_popupListeners)
+		{
+			if (m_bCompatibilityMode)
+			{
+				if (a_listener != null && !m_popupListeners.contains(a_listener))
+				{
+					m_popupListeners.addElement(a_listener);
+				}
+			}
+			else
+			{
+				((JPopupMenu)m_popup).addPopupMenuListener(a_listener);
+			}
+		}
+
 	}
 
-	public final void removePopupMenuListener(PopupMenuListener a_listener)
+	public final boolean removePopupMenuListener(PopupMenuListener a_listener)
 	{
-		m_popup.removePopupMenuListener(a_listener);
+		synchronized (m_popupListeners)
+		{
+			if (m_bCompatibilityMode)
+			{
+				if (a_listener != null)
+				{
+					return m_popupListeners.removeElement(a_listener);
+				}
+			}
+			else
+			{
+				((JPopupMenu)m_popup).removePopupMenuListener(a_listener);
+			}
+		}
+		return false;
+
 	}
-
-
 
 
 	public final Point getRelativePosition(Point a_pointOnScreen)
@@ -103,7 +298,6 @@ public class PopupMenu
 
 	public final Point getMousePosition()
 	{
-		//m_popup.getMousePosition()
 		return GUIUtils.getMousePosition(m_popup);
 	}
 
@@ -125,12 +319,45 @@ public class PopupMenu
 		}
 	}
 
-	public final void show(Component a_parent, Point a_pointOnScreen)
+	public final synchronized void show(Component a_parent, Point a_pointOnScreen)
 	{
 		Point location = calculateLocationOnScreen(a_parent, a_pointOnScreen);
 		Window parentWindow = GUIUtils.getParentWindow(a_parent);
-		m_popup.show(a_parent, location.x - parentWindow.getLocation().x,
-					 location.y - parentWindow.getLocation().y);
+
+		//	((JPopupMenu)m_popup).show(a_parent, location.x - parentWindow.getLocation().x,
+		//	 location.y - parentWindow.getLocation().y);
+
+		m_popup.setLocation(location);
+		pack();
+		m_parent = null;
+		if (GUIUtils.isAlwaysOnTop(parentWindow))
+		{
+			//GUIUtils.setAlwaysOnTop(parentWindow, false);
+			m_parent = parentWindow;
+			/** @todo Find a better way to distinguish JDK version compatibility!  */
+			if (JavaVersionDBEntry.CURRENT_JAVA_VERSION.compareTo("1.6") < 0)
+			{
+				( (JPopupMenu) m_popup).setInvoker(m_parent);
+			}
+		}
+
+		if (m_bCompatibilityMode)
+		{
+			synchronized (m_popupListeners)
+			{
+				for (int i = 0; i < m_popupListeners.size(); i++)
+				{
+					( (PopupMenuListener) m_popupListeners.elementAt(i)).popupMenuWillBecomeVisible(
+						new PopupMenuEvent(m_popup));
+				}
+			}
+		}
+
+		setVisible(true);
+		if (m_parent != null)
+		{
+			GUIUtils.setAlwaysOnTop(m_popup, true);
+		}
 	}
 
 	public final void setLocation(Point a_point)
@@ -138,16 +365,12 @@ public class PopupMenu
 		m_popup.setLocation(a_point);
 	}
 
-	protected final JPopupMenu getPopupMenu()
-	{
-		return m_popup;
-	}
-
 	public final Point calculateLocationOnScreen(Component a_parent, Point a_pointOnScreen)
 	{
 			int x = a_pointOnScreen.x;
 			int y = a_pointOnScreen.y;
 			GUIUtils.Screen screen = GUIUtils.getCurrentScreen(a_parent);
+
 			Dimension size = m_popup.getPreferredSize();
 			if (x + size.width > screen.getX() + screen.getWidth())
 			{
@@ -181,8 +404,27 @@ public class PopupMenu
 		return m_popup.isVisible();
 	}
 
-	public final void setVisible(boolean a_bVisible)
+	public final synchronized void setVisible(boolean a_bVisible)
 	{
+		if (!a_bVisible && GUIUtils.isAlwaysOnTop(m_popup))
+		{
+			GUIUtils.setAlwaysOnTop(m_popup, false);
+			GUIUtils.setAlwaysOnTop(m_parent, true);
+			m_parent = null;
+		}
+		if (a_bVisible && m_bCompatibilityMode)
+		{
+			synchronized (m_popupListeners)
+			{
+				for (int i = 0; i < m_popupListeners.size(); i++)
+				{
+					( (PopupMenuListener) m_popupListeners.elementAt(i)).popupMenuWillBecomeVisible(
+						new PopupMenuEvent(m_popup));
+				}
+			}
+		}
+
+
 		m_popup.setVisible(a_bVisible);
 	}
 

@@ -40,6 +40,7 @@ import javax.swing.JWindow;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.SwingUtilities;
 
 import anon.util.ClassUtil;
 import anon.util.ResourceLoader;
@@ -572,9 +573,24 @@ final public class JAPDll {
 		{
 			if (ms_popupMenu != null)
 			{
-				ms_popupMenu.setVisible(false);
-				ms_popupWindow.setVisible(false);
-				//ms_popupWindow.dispose();
+				Runnable run = new Runnable()
+				{
+					public void run()
+					{
+						ms_popupMenu.setVisible(false);
+						ms_popupWindow.setVisible(false);
+						//ms_popupWindow.dispose();
+					}
+				};
+
+				if (SwingUtilities.isEventDispatchThread())
+				{
+					run.run();
+				}
+				else
+				{
+					SwingUtilities.invokeLater(run);
+				}
 			}
 		}
 		return 0;
