@@ -29,8 +29,6 @@ package jap;
 
 import java.util.Hashtable;
 import anon.infoservice.JavaVersionDBEntry;
-import anon.infoservice.Database;
-import anon.infoservice.JAPMinVersion;
 import anon.infoservice.InfoServiceHolder;
 
 /**

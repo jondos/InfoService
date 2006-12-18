@@ -49,6 +49,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
+import javax.swing.JSeparator;
 
 import anon.infoservice.Database;
 import anon.infoservice.MixCascade;
@@ -73,6 +74,13 @@ public class CascadePopupMenu extends PopupMenu
 	public CascadePopupMenu()
 	{
 		this (new JPopupMenu());
+	}
+
+	public CascadePopupMenu(boolean a_bCompatibilityMode)
+	{
+		super(a_bCompatibilityMode);
+		m_menuItems = new Hashtable();
+		m_cascadeItemListener = new CascadeItemListener();
 	}
 
 	public CascadePopupMenu(JPopupMenu a_popup)
@@ -120,7 +128,7 @@ public class CascadePopupMenu extends PopupMenu
 			ImageIcon icon;
 			Vector userDefined = new Vector();
 
-			getPopupMenu().removeAll();
+			removeAll();
 			m_menuItems.clear();
 
 
@@ -130,9 +138,9 @@ public class CascadePopupMenu extends PopupMenu
 			constraints.gridy = 0;
 			constraints.anchor = GridBagConstraints.CENTER;
 			panel.add(new JLabel(m_trustModel.getName()), constraints);
-			getPopupMenu().add(panel);
-			JPopupMenu.Separator separator = new JPopupMenu.Separator();
-			getPopupMenu().add(separator);
+			add(panel);
+			JSeparator separator = new JSeparator();
+			addSeparator(separator);
 			m_headerHeight = panel.getPreferredSize().height + separator.getPreferredSize().height;
 			//m_headerHeight = m_popup.getPreferredSize().height;
 
@@ -166,7 +174,7 @@ public class CascadePopupMenu extends PopupMenu
 				{
 					menuItem.setFont(new Font(menuItem.getFont().getName(), Font.BOLD,
 											  menuItem.getFont().getSize()));
-					getPopupMenu().insert(menuItem, 2);
+					insert(menuItem, 2);
 				}
 				else
 				{
@@ -178,7 +186,7 @@ public class CascadePopupMenu extends PopupMenu
 					}
 					else
 					{
-						getPopupMenu().add(menuItem);
+						add(menuItem);
 					}
 				}
 				menuItem.addActionListener(m_cascadeItemListener);
@@ -187,8 +195,12 @@ public class CascadePopupMenu extends PopupMenu
 			}
 			for (int i = 0; i < userDefined.size(); i++)
 			{
-				getPopupMenu().add( (JMenuItem) userDefined.elementAt(i));
+				add( (JMenuItem) userDefined.elementAt(i));
 			}
+		}
+		if (updated)
+		{
+			pack();
 		}
 		return updated;
 	}
