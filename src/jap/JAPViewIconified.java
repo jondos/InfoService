@@ -60,6 +60,7 @@ import gui.JAPMessages;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import gui.PopupMenu;
 
 final public class JAPViewIconified extends JWindow implements ActionListener
 {
@@ -259,9 +260,9 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		{
 			public void mouseClicked(MouseEvent a_event)
 			{
-				if (SwingUtilities.isRightMouseButton(a_event))
+				if (SwingUtilities.isRightMouseButton(a_event) || a_event.isPopupTrigger())
 				{
-					SystrayPopupMenu popup = new SystrayPopupMenu(
+					final SystrayPopupMenu popup = new SystrayPopupMenu(
 									   new SystrayPopupMenu.MainWindowListener()
 					{
 						public void onShowMainWindow()
@@ -269,6 +270,15 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 							switchBackToMainView();
 						}
 					});
+					/*
+					popup.registerExitHandler(new PopupMenu.ExitHandler()
+					{
+						public void exited()
+						{
+							popup.dispose();
+						}
+					});*/
+
 					popup.show(JAPViewIconified.this,
 							   new Point(a_event.getX() + JAPViewIconified.this.getLocation().x,
 										 a_event.getY()  + JAPViewIconified.this.getLocation().y));

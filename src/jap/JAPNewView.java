@@ -85,6 +85,7 @@ import gui.FlippingPanel;
 import gui.GUIUtils;
 import gui.JAPDll;
 import gui.JAPHelp;
+import gui.PopupMenu;
 import gui.JAPMessages;
 import gui.JAPProgressBar;
 import gui.dialog.JAPDialog;
@@ -99,6 +100,7 @@ import platform.AbstractOS;
 import update.JAPUpdateWizard;
 import javax.swing.JComboBox;
 import anon.infoservice.BlacklistedCascadeIDEntry;
+import java.awt.Point;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver, Observer
@@ -285,7 +287,33 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			public void mouseClicked(MouseEvent a_event)
 			{
-				if (a_event != null && a_event.getClickCount() == 2)
+				if (a_event == null)
+				{
+					return;
+				}
+				if (SwingUtilities.isRightMouseButton(a_event) || a_event.isPopupTrigger())
+				{
+					final SystrayPopupMenu popup = new SystrayPopupMenu(
+									   new SystrayPopupMenu.MainWindowListener()
+					{
+						public void onShowMainWindow()
+						{
+							// do nothing
+						}
+					});
+					popup.registerExitHandler(new PopupMenu.ExitHandler()
+					{
+						public void exited()
+						{
+							popup.dispose();
+						}
+					});
+					popup.show(JAPNewView.this,
+							   new Point(a_event.getX() + getLocation().x,
+										 a_event.getY()  + getLocation().y));
+
+				}
+				else if (a_event.getClickCount() == 2)
 				{
 					showIconifiedView();
 				}

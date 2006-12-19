@@ -66,6 +66,7 @@ public class PopupMenu
 	private Component m_popup;
 	private GridBagConstraints m_constraints;
 	private Window m_parent;
+	private boolean m_bParentOnTop = false;
 	private Vector m_popupListeners;
 	private Vector m_registeredComponents;
 	private boolean m_bCompatibilityMode;
@@ -134,6 +135,7 @@ public class PopupMenu
 						GUIUtils.setAlwaysOnTop(m_popup, false);
 						GUIUtils.setAlwaysOnTop(m_parent, true);
 						m_parent = null;
+						m_bParentOnTop = false;
 					}
 				}
 				public void popupMenuCanceled(PopupMenuEvent a_event)
@@ -330,16 +332,19 @@ public class PopupMenu
 		m_popup.setLocation(location);
 		pack();
 		m_parent = null;
+		m_bParentOnTop = false;
 		if (GUIUtils.isAlwaysOnTop(parentWindow))
 		{
+			m_bParentOnTop = true;
+		}
 			//GUIUtils.setAlwaysOnTop(parentWindow, false);
 			m_parent = parentWindow;
 			/** @todo Find a better way to distinguish JDK version compatibility!  */
-			if (JavaVersionDBEntry.CURRENT_JAVA_VERSION.compareTo("1.6") < 0)
+			if (!m_bCompatibilityMode && JavaVersionDBEntry.CURRENT_JAVA_VERSION.compareTo("1.6") < 0)
 			{
 				( (JPopupMenu) m_popup).setInvoker(m_parent);
 			}
-		}
+
 
 		if (m_bCompatibilityMode)
 		{
@@ -354,7 +359,7 @@ public class PopupMenu
 		}
 
 		setVisible(true);
-		if (m_parent != null)
+		if (m_parent != null && m_bParentOnTop)
 		{
 			GUIUtils.setAlwaysOnTop(m_popup, true);
 		}
@@ -404,13 +409,30 @@ public class PopupMenu
 		return m_popup.isVisible();
 	}
 
+	public final synchronized void dispose()
+	{
+		setVisible(false);
+		if (m_bCompatibilityMode)
+		{
+			((JWindow)m_popup).dispose();
+		}
+		else
+		{
+			//((JPopupMenu)m_popup).d;
+		}
+}
+
 	public final synchronized void setVisible(boolean a_bVisible)
 	{
 		if (!a_bVisible && GUIUtils.isAlwaysOnTop(m_popup))
 		{
 			GUIUtils.setAlwaysOnTop(m_popup, false);
-			GUIUtils.setAlwaysOnTop(m_parent, true);
+			if (m_parent != null && m_bParentOnTop)
+			{
+				GUIUtils.setAlwaysOnTop(m_parent, true);
+			}
 			m_parent = null;
+			m_bParentOnTop = false;
 		}
 		if (a_bVisible && m_bCompatibilityMode)
 		{
