@@ -288,7 +288,7 @@ public final class AnonProxyRequest implements Runnable
 		}
 		catch (Exception e)
 		{
-		e.printStackTrace();
+			LogHolder.log(LogLevel.INFO, LogType.NET, e);
 		}
 		closeRequest();
 		m_Proxy.decNumChannels();
