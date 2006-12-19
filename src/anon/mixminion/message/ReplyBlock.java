@@ -243,47 +243,56 @@ public class ReplyBlock {
 					return blocks;
 				}
 			}
-			reader.readLine(); //skip Version
-			aktLine = reader.readLine();
-			String myBlock = "";
-			while (!aktLine.trim().endsWith("-----END TYPE III REPLY BLOCK-----")) {
-				myBlock = myBlock + aktLine + "\n";
+			
+			if (!reader.readLine().startsWith(">")) //skip Version and test wheter wrong format due to inreply
+			{
+				aktLine = reader.readLine();
+				String myBlock = "";
+				while (!aktLine.trim().endsWith("-----END TYPE III REPLY BLOCK-----"))
+				{
+					myBlock = myBlock + aktLine + "\n";
+					aktLine = reader.readLine();
+				}
+
+				myBlock = myBlock.substring(0,myBlock.length()-1); 
+				//decode
+				byte[] mybyteblock = Base64.decode(myBlock);
+				//key-lifetime
+				byte[] tl = new byte[4];
+				for(int i = 0 ; i < 4 ; i++) {
+					tl[i] = mybyteblock[6 + i];
+				}
+				long time = byteToInt(tl,0);
+				//contentsize
+				byte[] cs = new byte[2]; cs[0]= mybyteblock[2058]; cs[1]=mybyteblock[2059];
+				int size = byteToInt(cs,0);
+				//routinginfo
+				RoutingInformation rInfo = new RoutingInformation();
+				rInfo.m_Type = RoutingInformation.TYPE_SWAP_FORWARD_TO_HOST;
+				//content
+				byte[] content = new byte[size];
+				for (int i = 2078; i<2078+size; i++) {
+					content[i-2078] = mybyteblock[i];
+				}
+				rInfo.m_Content = content;
+				//header
+				byte[] h = new byte[2048];
+				for (int i = 0; i<2048; i++) {
+					h[i] = mybyteblock[i+10];
+				}
+				//sharedsecret
+				byte[] secret = new byte[16];
+				for (int i = 0; i<16; i++) {
+					secret[i] = mybyteblock[2062+i];
+				}
+
+				blocks.addElement(new ReplyBlock(rInfo, h, secret,time));
+			}
+			else 
+			{
 				aktLine = reader.readLine();
 			}
-
-			myBlock = myBlock.substring(0,myBlock.length()-1); 
-			//decode
-			byte[] mybyteblock = Base64.decode(myBlock);
-			//key-lifetime
-			byte[] tl = new byte[4];
-			for(int i = 0 ; i < 4 ; i++) {
-				tl[i] = mybyteblock[6 + i];
-			}
-			long time = byteToInt(tl,0);
-			//contentsize
-			byte[] cs = new byte[2]; cs[0]= mybyteblock[2058]; cs[1]=mybyteblock[2059];
-			int size = byteToInt(cs,0);
-			//routinginfo
-			RoutingInformation rInfo = new RoutingInformation();
-			rInfo.m_Type = RoutingInformation.TYPE_SWAP_FORWARD_TO_HOST;
-			//content
-			byte[] content = new byte[size];
-			for (int i = 2078; i<2078+size; i++) {
-				content[i-2078] = mybyteblock[i];
-			}
-			rInfo.m_Content = content;
-			//header
-			byte[] h = new byte[2048];
-			for (int i = 0; i<2048; i++) {
-				h[i] = mybyteblock[i+10];
-			}
-			//sharedsecret
-			byte[] secret = new byte[16];
-			for (int i = 0; i<16; i++) {
-				secret[i] = mybyteblock[2062+i];
-			}
-
-			blocks.addElement(new ReplyBlock(rInfo, h, secret,time));
+			
 		}
 	}
 
