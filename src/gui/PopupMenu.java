@@ -151,6 +151,9 @@ public class PopupMenu
 		m_constraints = new GridBagConstraints();
 		m_constraints.gridx = 0;
 		m_constraints.gridy = 0;
+		m_constraints.weighty = 1.0;
+		m_constraints.fill = GridBagConstraints.HORIZONTAL;
+		m_constraints.anchor = GridBagConstraints.WEST;
 
 
 
@@ -215,11 +218,7 @@ public class PopupMenu
 
 	protected void addSeparator(JSeparator a_separator)
 	{
-		m_constraints.fill = GridBagConstraints.HORIZONTAL;
-		m_constraints.weighty = 1.0;
 		add(a_separator);
-		m_constraints.fill = GridBagConstraints.NONE;
-		m_constraints.weighty = 0.0;
 		m_constraints.gridy++;
 	}
 
