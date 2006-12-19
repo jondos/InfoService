@@ -293,6 +293,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 				if (SwingUtilities.isRightMouseButton(a_event) || a_event.isPopupTrigger())
 				{
+
 					final SystrayPopupMenu popup = new SystrayPopupMenu(
 									   new SystrayPopupMenu.MainWindowListener()
 					{

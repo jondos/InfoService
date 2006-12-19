@@ -642,6 +642,7 @@ final public class JAPDll {
 			});
 			Point preferredLocation = new Point(mousePoint.x, mousePoint.y - ms_popupMenu.getHeight());
 			ms_popupMenu.show(ms_popupWindow, preferredLocation);
+			ms_popupMenu.repaint();
 
 			return 0;
 		}
