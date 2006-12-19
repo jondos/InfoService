@@ -364,6 +364,11 @@ public class PopupMenu
 		}
 	}
 
+	public void repaint()
+	{
+		m_popup.repaint();
+	}
+
 	public final void setLocation(Point a_point)
 	{
 		m_popup.setLocation(a_point);
@@ -428,6 +433,9 @@ public class PopupMenu
 			GUIUtils.setAlwaysOnTop(m_popup, false);
 			if (m_parent != null && m_bParentOnTop)
 			{
+				m_parent.setVisible(true);
+				GUIUtils.setAlwaysOnTop(m_parent, false);
+				m_parent.setVisible(true);
 				GUIUtils.setAlwaysOnTop(m_parent, true);
 			}
 			m_parent = null;
