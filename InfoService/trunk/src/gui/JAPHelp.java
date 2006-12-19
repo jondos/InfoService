@@ -251,7 +251,8 @@ public final class JAPHelp extends JAPDialog
 	 */
 	public static JButton createHelpButton(IHelpContext a_helpContext)
 	{
-		JButton helpButton = new JButton(GUIUtils.loadImageIcon(JAPHelp.IMG_HELP, true));
+		//JButton helpButton = new JButton(GUIUtils.loadImageIcon(JAPHelp.IMG_HELP, true));
+		JButton helpButton = new JButton(JAPMessages.getString(MSG_HELP_BUTTON));
 		helpButton.setToolTipText(JAPMessages.getString(MSG_HELP_BUTTON));
 		helpButton.addActionListener(new HelpContextActionListener(a_helpContext));
 		return helpButton;
