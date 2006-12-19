@@ -980,9 +980,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		gbl1 = new GridBagLayout();
 		c1 = new GridBagConstraints();
 		JPanel buttonPanel = new JPanel(gbl1);
-		//m_bttnHelp = new JButton(JAPMessages.getString("helpButton"));
-		m_bttnHelp = new JButton();
-		m_bttnHelp.setToolTipText(JAPMessages.getString("helpButton"));
+		m_bttnHelp = new JButton(JAPMessages.getString(JAPHelp.MSG_HELP_BUTTON));
+		//m_bttnHelp = new JButton();
+		m_bttnHelp.setToolTipText(JAPMessages.getString(JAPHelp.MSG_HELP_BUTTON));
 		m_btnAbout = new JButton();
 		m_btnAbout.setToolTipText(JAPMessages.getString("aboutBox"));
 		m_bttnQuit = new JButton(JAPMessages.getString("quitButton"));
@@ -2564,7 +2564,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 									   ( (int) (labelFont.getSize() * 0.8))));
 							  */
 		m_bttnIconify.setIcon(GUIUtils.loadImageIcon(IMG_ICONIFY, true));
-		m_bttnHelp.setIcon(GUIUtils.loadImageIcon(JAPHelp.IMG_HELP, true));
+		//m_bttnHelp.setIcon(GUIUtils.loadImageIcon(JAPHelp.IMG_HELP, true));
 		m_btnAbout.setIcon(GUIUtils.loadImageIcon(IMG_ABOUT, true));
 	}
 
