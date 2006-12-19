@@ -288,7 +288,7 @@ public final class AnonProxyRequest implements Runnable
 		}
 		catch (Exception e)
 		{
-	//		e.printStackTrace();
+		e.printStackTrace();
 		}
 		closeRequest();
 		m_Proxy.decNumChannels();
