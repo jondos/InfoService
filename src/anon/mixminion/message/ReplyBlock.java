@@ -37,12 +37,11 @@ import java.util.Vector;
 import anon.mixminion.mmrdescription.MMRDescription;
 import anon.util.Base64;
 import anon.util.ByteArrayUtil;
-import java.util.Properties;
-import javax.mail.Session;
-import javax.mail.internet.MimeMessage;
-import java.io.ByteArrayInputStream;
-import javax.mail.*;
-import javax.mail.internet.MimeMultipart;
+//import java.util.Properties;
+//import javax.mail.Session;
+//import javax.mail.internet.MimeMessage;
+//import java.io.ByteArrayInputStream;
+//import javax.mail.internet.MimeMultipart;
 
 /**
  * @author Stefan Roenisch
