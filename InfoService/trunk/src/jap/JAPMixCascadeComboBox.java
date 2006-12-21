@@ -268,15 +268,19 @@ public class JAPMixCascadeComboBox extends JComboBox
 			//m_cascadePopupMenu.setHorizontalTextPosition(JLabel.LEADING);
 			//m_cascadePopupMenu.setIconTextGap(500);
 			m_currentCascadePopup = new CascadePopupMenu(true);
-			/*
+
 			m_currentCascadePopup.registerExitHandler(new CascadePopupMenu.ExitHandler()
 			{
 				public void exited()
 				{
 					m_currentCascadePopup.setVisible(false);
-					JAPMixCascadeComboBox.this.showPopup();
+					if (m_comboPopup == null || !m_comboPopup.isVisible())
+					{
+						JAPMixCascadeComboBox.this.showPopup();
+					}
 				}
-			});*/
+			});
+
 
 			GUIUtils.addAWTEventListener(new GUIUtils.AWTEventListener()
 			{
@@ -304,7 +308,7 @@ public class JAPMixCascadeComboBox extends JComboBox
 							{
 								if (m_currentCascadePopup.isVisible())
 								{
-									m_currentCascadePopup.setVisible(false);
+									//m_currentCascadePopup.setVisible(false);
 									if (m_comboPopup == null || !m_comboPopup.isVisible())
 									{
 										JAPMixCascadeComboBox.this.showStaticPopup();
