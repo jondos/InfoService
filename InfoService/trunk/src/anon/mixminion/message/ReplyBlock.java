@@ -37,6 +37,12 @@ import java.util.Vector;
 import anon.mixminion.mmrdescription.MMRDescription;
 import anon.util.Base64;
 import anon.util.ByteArrayUtil;
+import java.util.Properties;
+import javax.mail.Session;
+import javax.mail.internet.MimeMessage;
+import java.io.ByteArrayInputStream;
+import javax.mail.*;
+import javax.mail.internet.MimeMultipart;
 
 /**
  * @author Stefan Roenisch
@@ -203,7 +209,7 @@ public class ReplyBlock {
 	/**
 	 *
 	 * @return Base64-encoded ReplyBlock with ascii armor
-	 * 
+	 *
 	 */
 	public String getReplyBlockasString() {
 		return "\n\n:-----BEGIN TYPE III REPLY BLOCK-----\nVERSION: 0.2\n"
@@ -228,13 +234,36 @@ public class ReplyBlock {
 	 * @throws IOException
 	 */
 	public static Vector parseReplyBlocks(String message, byte[] block ) throws IOException {
-		Vector blocks = new Vector();
-		
+//sk13 parsing the message as mime message
+		// Get a Properties object needed for initalising a mail session object
+/*		Properties props = System.getProperties();
+		 // Get a mail  Session object
+	Session session = Session.getInstance(props, null);
+	try
+	{
+		MimeMessage msg = new MimeMessage(session, new ByteArrayInputStream(message.getBytes()));
+		Object o=msg.getContent();
+		if(o instanceof String)
+			message=(String)o;
+		else if(o instanceof MimeMultipart)
+		{//more todo here...
+			MimeMultipart multi=(MimeMultipart)o;
+			message=(String)multi.getBodyPart(0).getContent();
+		}
+
+
+	}
+	catch (MessagingException ex)
+	{
+	}
+	*/
+	Vector blocks = new Vector();
+
 		message = message + "\n-----END OF PLAINTEXT MESSAGE-----"; //mark Message end
-		
+
 		LineNumberReader reader = new LineNumberReader(new StringReader(message));
 		String aktLine = reader.readLine();
-		
+
 		while (true)
 		{
 			while (!aktLine.endsWith("-----BEGIN TYPE III REPLY BLOCK-----")) {
@@ -243,7 +272,7 @@ public class ReplyBlock {
 					return blocks;
 				}
 			}
-			
+
 			if (!reader.readLine().startsWith(">")) //skip Version and test wheter wrong format due to inreply
 			{
 				aktLine = reader.readLine();
@@ -254,7 +283,7 @@ public class ReplyBlock {
 					aktLine = reader.readLine();
 				}
 
-				myBlock = myBlock.substring(0,myBlock.length()-1); 
+				myBlock = myBlock.substring(0,myBlock.length()-1);
 				//decode
 				byte[] mybyteblock = Base64.decode(myBlock);
 				//key-lifetime
@@ -288,11 +317,11 @@ public class ReplyBlock {
 
 				blocks.addElement(new ReplyBlock(rInfo, h, secret,time));
 			}
-			else 
+			else
 			{
 				aktLine = reader.readLine();
 			}
-			
+
 		}
 	}
 
