@@ -436,22 +436,6 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 	{
 		if ( (a_object == m_socketHandler) && (a_argument instanceof IOException))
 		{
-			synchronized (m_eventListeners)
-			{
-				final Enumeration eventListenersList = m_eventListeners.elements();
-				Thread notificationThread = new Thread(new Runnable()
-				{
-					public void run()
-					{
-						while (eventListenersList.hasMoreElements())
-						{
-							( (AnonServiceEventListener) (eventListenersList.nextElement())).connectionError();
-						}
-					}
-				}, "ConnectionError notification");
-				notificationThread.setDaemon(true);
-				notificationThread.start();
-			}
 			/* shutdown everything */
 			new Thread(new Runnable()
 			{
@@ -459,6 +443,23 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 				public void run()
 				{
 					shutdown();
+					synchronized (m_eventListeners)
+					{
+						final Enumeration eventListenersList = m_eventListeners.elements();
+						Thread notificationThread = new Thread(new Runnable()
+						{
+							public void run()
+							{
+								while (eventListenersList.hasMoreElements())
+								{
+									( (AnonServiceEventListener) (eventListenersList.nextElement())).
+										connectionError();
+								}
+							}
+						}, "ConnectionError notification");
+						notificationThread.setDaemon(true);
+						notificationThread.start();
+					}
 				}
 			}).start();
 		}

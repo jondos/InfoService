@@ -101,21 +101,36 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 	    ms_defaultTrustModels = new Vector();
 
 		// initialise basic trust models
-		TrustModel model = new TrustModel();
-		model.setName(JAPMessages.getString(MSG_CERTIFIED_CASCADES));
+		TrustModel model = new TrustModel()
+		{
+			public String getName()
+			{
+				return JAPMessages.getString(MSG_CERTIFIED_CASCADES);
+			}
+		};
 		model.m_id = 0;
 		model.setTrustExpiredCerts(TRUST_LITTLE);
 		model.setTrustPay(TRUST_DEFAULT);
 		ms_defaultTrustModels.addElement(model);
 
-		model = new TrustModel();
-		model.setName(JAPMessages.getString(MSG_CASCADES_WITH_COSTS));
+		model = new TrustModel()
+		{
+			public String getName()
+			{
+				return JAPMessages.getString(MSG_CASCADES_WITH_COSTS);
+			}
+		};
 		model.m_id = 1;
 		model.setTrustPay(TRUST_EXCLUSIVE);
 		ms_defaultTrustModels.addElement(model);
 
-		model = new TrustModel();
-		model.setName(JAPMessages.getString(MSG_CASCADES_WITHOUT_COSTS));
+		model = new TrustModel()
+		{
+			public String getName()
+			{
+				return JAPMessages.getString(MSG_CASCADES_WITHOUT_COSTS);
+			}
+		};
 		model.m_id = 2;
 		model.setTrustPay(TRUST_NONE);
 		ms_defaultTrustModels.addElement(model);
@@ -134,8 +149,12 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 				}
 				return false;
 			}
+
+			public String getName()
+			{
+				return JAPMessages.getString(MSG_CASCADES_USER_DEFINED);
+			}
 		};
-		model.setName(JAPMessages.getString(MSG_CASCADES_USER_DEFINED));
 		model.m_id = 3;
 		model.m_trustUserDefined = TRUST_EXCLUSIVE;
 		ms_defaultTrustModels.addElement(model);
@@ -381,7 +400,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 
 	public String toString()
 	{
-		return m_strName;
+		return getName();
 	}
 
 	public long getId()
@@ -402,7 +421,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 
 		//XMLUtil.setAttribute(elemTrustModel, XML_ATTR_SHOW_WARNING, m_bShowWarning);
 		XMLUtil.setAttribute(elemTrustModel, XML_ATTR_ID, m_id);
-		XMLUtil.setAttribute(elemTrustModel, XML_ATTR_NAME, m_strName);
+		XMLUtil.setAttribute(elemTrustModel, XML_ATTR_NAME, getName());
 
 		elemTemp = a_doc.createElement(XML_ELEM_PAY);
 		XMLUtil.setAttribute(elemTemp, XML_ATTR_TRUST, XML_ATTR_VALUE_TRUST[m_trustPay]);

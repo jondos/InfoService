@@ -119,12 +119,14 @@ final class JAPConfMixminion extends AbstractJAPConfModule implements ActionList
 				m_labelAvailableRouters.setEnabled(m_cbxActive.isSelected());
 				m_tableRouters.setEnabled(m_cbxActive.isSelected());
 				m_bttnFetchRouters.setEnabled(m_cbxActive.isSelected());
+				m_bttnChangePW.setEnabled(m_cbxActive.isSelected());
+				m_bttnResetKeyring.setEnabled(m_cbxActive.isSelected());
+				m_lblKeyring.setEnabled(m_cbxActive.isSelected());
 				m_email.setEnabled(m_cbxActive.isSelected());
 				m_sliderPathLen.setEnabled(m_cbxActive.isSelected());
 				m_lblPathLen.setEnabled(m_cbxActive.isSelected());
 				m_lblEMail.setEnabled(m_cbxActive.isSelected());
 				m_scrollPane.setEnabled(m_cbxActive.isSelected());
-				TitledBorder border;
 				m_borderEMail = new TitledBorder(m_borderEMail.getTitle());
 				m_borderPreferences = new TitledBorder(m_borderPreferences.getTitle());
 				if (m_cbxActive.isSelected())
@@ -198,7 +200,7 @@ final class JAPConfMixminion extends AbstractJAPConfModule implements ActionList
 		c2.gridx = 1;
 		c2.anchor = GridBagConstraints.EAST;
 		c2.insets = new Insets(5, 5, 5, 0);
-		
+
 		p.add(m_bttnFetchRouters, c2);
 		panelRoot.add(p, c);
 
@@ -228,9 +230,6 @@ final class JAPConfMixminion extends AbstractJAPConfModule implements ActionList
 		c.fill = GridBagConstraints.HORIZONTAL;
 		panelRoot.add(p, c);
 
-		//test
-
-		
 		p= new JPanel(new GridBagLayout());
 
 		m_lblEMail = new JLabel(JAPMessages.getString("mixminionEMail"));
