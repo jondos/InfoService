@@ -88,6 +88,7 @@ import anon.infoservice.ServiceOperator;
 import anon.infoservice.ServiceSoftware;
 import anon.infoservice.StatusInfo;
 import anon.util.Util;
+import gui.JAPHelp;
 import gui.CertDetailsDialog;
 import gui.CountryMapper;
 import gui.GUIUtils;
@@ -128,6 +129,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		JAPConfAnon.class.getName() + "_explainNotTrustworthy";
 	private static final String MSG_BLACKLISTED = JAPConfAnon.class.getName() + "_blacklisted";
 	private static final String MSG_EXPLAIN_BLACKLISTED = JAPConfAnon.class.getName() + "_explainBlacklisted";
+	private static final String MSG_WHAT_IS_THIS = JAPConfAnon.class.getName() + "_whatIsThis";
+
 
 
 	private static final String DEFAULT_MIX_NAME = "AN.ON Mix";
@@ -166,6 +169,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private JLabel m_nrLblExplainBegin;
 	private JLabel m_nrLblExplain;
 	private JLabel m_nrLblExplainEnd;
+	private JPanel m_ExplainCertPanel;
+	private JLabel m_ExplainCertLabel, m_ExplainCertLabelBegin, m_ExplainCertLabelEnd;
 	private JLabel m_operatorLabel;
 	private JLabel m_emailLabel;
 	private JLabel m_locationLabel;
@@ -2437,18 +2442,79 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			c.gridwidth = 1;
 			add(l, c);
 
+			m_ExplainCertPanel = new JPanel(new GridBagLayout());
+			GridBagConstraints certConstraints = new GridBagConstraints();
+			certConstraints.gridx = 0;
+			certConstraints.gridy = 0;
+			certConstraints.anchor = GridBagConstraints.WEST;
+			certConstraints.fill = GridBagConstraints.HORIZONTAL;
+
 			m_viewCertLabel = new JLabel();
 			m_viewCertLabel.addMouseListener(a_listener);
-			c.gridx = 1;
+			/* c.gridx = 1;
 			c.gridwidth = 1;
 			c.insets = new Insets(5, 30, 5, 0);
-			add(m_viewCertLabel, c);
+			add(m_viewCertLabel, c);*/
+		    certConstraints.insets = new Insets(5, 30, 5, 0);
+		    m_ExplainCertPanel.add(m_viewCertLabel, certConstraints);
+
 			m_viewCertLabelValidity = new JLabel();
 			m_viewCertLabelValidity.addMouseListener(a_listener);
+			certConstraints.gridx++;
+			/*
 			c.gridx = 2;
 			c.gridwidth = 1;
 			c.insets = new Insets(5, 0, 5, 5);
-			add(m_viewCertLabelValidity, c);
+			add(m_viewCertLabelValidity, c);*/
+		    certConstraints.insets = new Insets(5, 0, 5, 0);
+		    m_ExplainCertPanel.add(m_viewCertLabelValidity, certConstraints);
+
+			certConstraints.gridx++;
+			certConstraints.insets = new Insets(5, 10, 5, 0);
+			m_ExplainCertLabelBegin = new JLabel("(");
+			m_ExplainCertPanel.add(m_ExplainCertLabelBegin, certConstraints);
+			certConstraints.gridx++;
+			certConstraints.insets = new Insets(5, 0, 5, 0);
+			m_ExplainCertLabel = new JLabel(JAPMessages.getString(MSG_WHAT_IS_THIS));
+			m_ExplainCertLabel.setForeground(Color.blue);
+			m_ExplainCertLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+			m_ExplainCertLabel.addMouseListener(new MouseAdapter()
+			{
+				public void mouseClicked(MouseEvent a_event)
+				{
+					if (m_bMixInfoShown)
+					{
+						return;
+					}
+					m_bMixInfoShown = true;
+
+					if (m_ExplainCertLabel.isVisible())
+					{
+						JAPHelp.getInstance().getContextObj().setContext("certificates");
+						JAPHelp.getInstance().setVisible(true);
+					}
+
+
+					m_bMixInfoShown = false;
+				}
+			});
+
+			m_ExplainCertPanel.add(m_ExplainCertLabel, certConstraints);
+			certConstraints.gridx++;
+			certConstraints.insets = new Insets(5, 0, 5, 5);
+			certConstraints.weightx = 1.0;
+			m_ExplainCertLabelEnd = new JLabel(")");
+			m_ExplainCertPanel.add(m_ExplainCertLabelEnd, certConstraints);
+
+
+
+			c.gridx = 1;
+			c.gridwidth = 2;
+			c.insets = new Insets(0, 0, 0, 0);
+			c.weightx = 1.0;
+			c.anchor = GridBagConstraints.WEST;
+			c.fill = GridBagConstraints.HORIZONTAL;
+			add(m_ExplainCertPanel, c);
 			/*
 			c.weightx = 1.0;
 			c.weighty = 1.0;
