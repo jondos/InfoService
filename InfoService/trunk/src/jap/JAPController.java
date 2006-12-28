@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2000 - 2004, The JAP-Team
+ Copyright (c) 2000 - 2006, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -184,7 +184,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private static final String XML_ATTR_LOOK_AND_FEEL = "current";
 	private static final String XML_ALLOW_NON_ANONYMOUS_CONNECTION = "AllowDirectConnection";
 	private static final String XML_ALLOW_NON_ANONYMOUS_UPDATE = "AllowDirectUpdate";
-	private static final String XML_ATTR_AUTO_CHOOSE_CASCADES = "AutoChooseCascades";
+	private static final String XML_ATTR_AUTO_CHOOSE_CASCADES = "AutoSwitchCascades";
 	private static final String XML_ATTR_SHOW_CONFIG_ASSISTANT = "showConfigAssistant";
 	private static final String XML_ATTR_LOGIN_TIMEOUT = "loginTimeout";
 	private static final String XML_ATTR_INFOSERVICE_CONNECT_TIMEOUT = "isConnectionTimeout";
