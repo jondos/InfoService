@@ -529,7 +529,6 @@ public class PaymentMainPanel extends FlippingPanel
 		 */
 		public void accountError(XMLErrorMessage msg)
 		{
-			new Exception().printStackTrace();
 			String error;
 			if (msg.getErrorCode() <= XMLErrorMessage.ERR_OK || msg.getErrorCode() < 0)
 			{

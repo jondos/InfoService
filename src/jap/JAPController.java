@@ -2366,10 +2366,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 			catch(Exception em)
 			{
-				em.printStackTrace();
-				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Error in savin Mixminion settings -- ignoring...");
-				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, em);
-
+				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
+							  "Error in savin Mixminion settings -- ignoring...", em);
 			}
 			e.appendChild(JAPModel.getInstance().getRoutingSettings().toXmlElement(doc));
 

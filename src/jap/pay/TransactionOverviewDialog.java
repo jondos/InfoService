@@ -105,7 +105,6 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
 			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
 						  "Could not create TransactionOverviewDialog: " + e.getMessage());
 		}
