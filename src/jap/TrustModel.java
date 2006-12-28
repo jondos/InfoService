@@ -544,8 +544,10 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 			}
 		}
 
-		super.checkTrust(a_cascade);
-
+		if (!a_cascade.isUserDefined())
+		{
+			super.checkTrust(a_cascade);
+		}
 
 
 		// test if all mixes have valid certificates.
