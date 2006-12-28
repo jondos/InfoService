@@ -1483,6 +1483,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 			cascade = (MixCascade)message.getMessageData();
 
+			if (message.getMessageCode() != DatabaseMessage.ENTRY_RENEWED &&
+				message.getMessageCode() != DatabaseMessage.INITIAL_OBSERVER_MESSAGE &&
+				cascade.isUserDefined())
+			{
+				m_bTrustChanged = true;
+			}
+
 			if (message.getMessageCode() == DatabaseMessage.ENTRY_ADDED ||
 				message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED)
 			{
