@@ -117,6 +117,7 @@ import update.JAPUpdateWizard;
 import anon.infoservice.BlacklistedCascadeIDEntry;
 import anon.infoservice.PreviouslyKnownCascadeIDEntry;
 import anon.util.Base64;
+import anon.infoservice.Constants;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -347,7 +348,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 				mixIDs.addElement(JAPConstants.DEFAULT_ANON_MIX_IDs[i]);
 			}
 			m_currentMixCascade = new MixCascade(JAPConstants.DEFAULT_ANON_NAME,
-												 JAPConstants.DEFAULT_ANON_MIX_IDs[0], mixIDs, listeners);
+												 JAPConstants.DEFAULT_ANON_MIX_IDs[0], mixIDs, listeners,
+												 System.currentTimeMillis() + Constants.TIMEOUT_MIXCASCADE);
 			m_currentMixCascade.setUserDefined(false, null);
 			m_currentMixCascade.showAsTrusted(true);
 			Database.getInstance(CascadeIDEntry.class).update(new CascadeIDEntry(m_currentMixCascade));
