@@ -32,23 +32,16 @@ import java.util.Hashtable;
 import java.util.Vector;
 
 import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Point;
-import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
-import javax.swing.SwingUtilities;
 import javax.swing.JSeparator;
 
 import anon.infoservice.Database;
@@ -114,7 +107,7 @@ public class CascadePopupMenu extends PopupMenu
 
 		Hashtable hashCascades = Database.getInstance(MixCascade.class).getEntryHash();
 		MixCascade currentCascade = JAPController.getInstance().getCurrentMixCascade();
-		if (currentCascade != null)
+		if (currentCascade != null && !hashCascades.containsKey(currentCascade.getId()))
 		{
 			hashCascades.put(currentCascade.getId(), currentCascade);
 		}
@@ -152,13 +145,13 @@ public class CascadePopupMenu extends PopupMenu
 					continue;
 				}
 
-				if (cascade.isPayment())
-				{
-					icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_PAYMENT);
-				}
-				else if (cascade.isUserDefined())
+				if (cascade.isUserDefined())
 				{
 					icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_MANUELL);
+				}
+				else if (cascade.isPayment())
+				{
+					icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_PAYMENT);
 				}
 				else
 				{
