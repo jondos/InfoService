@@ -51,6 +51,7 @@ import logging.LogLevel;
 import logging.LogType;
 import anon.client.ITrustModel;
 import anon.infoservice.BlacklistedCascadeIDEntry;
+import anon.infoservice.NewCascadeIDEntry;
 
 
 /**
@@ -83,6 +84,9 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 		TrustModel.class.getName() + "_cascadesWithoutCosts";
 	private static final String MSG_CASCADES_USER_DEFINED =
 		TrustModel.class.getName() + "_cascadesUserDefined";
+	private static final String MSG_CASCADES_NEW =
+		TrustModel.class.getName() + "_cascadesNew";
+
 
 	private static Vector ms_defaultTrustModels;
 	private static Vector ms_trustModels;
@@ -91,6 +95,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 	private int m_trustPay = TRUST_DEFAULT;
 	private int m_trustExpiredCerts = TRUST_DEFAULT;
 	private int m_trustUserDefined = TRUST_DEFAULT;
+	private int m_trustNew = TRUST_DEFAULT;
 
 	private String m_strName;
 	private long m_id;
@@ -158,6 +163,31 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 		model.m_id = 3;
 		model.m_trustUserDefined = TRUST_EXCLUSIVE;
 		ms_defaultTrustModels.addElement(model);
+
+
+		model = new TrustModel()
+		{
+			public boolean isAdded()
+			{
+				Enumeration enties = Database.getInstance(MixCascade.class).getEntrySnapshotAsEnumeration();
+				while (enties.hasMoreElements())
+				{
+					if (Database.getInstance(NewCascadeIDEntry.class).getEntryById(
+									   ((MixCascade)enties.nextElement()).getMixIDsAsString()) != null)
+						return true;
+				}
+				return false;
+			}
+
+			public String getName()
+			{
+				return JAPMessages.getString(MSG_CASCADES_NEW);
+			}
+		};
+		model.m_id = 4;
+		model.m_trustNew = TRUST_EXCLUSIVE;
+		//ms_defaultTrustModels.addElement(model);
+
 
 
 		ms_trustModels = (Vector)ms_defaultTrustModels.clone();
@@ -481,6 +511,19 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 			  a_cascade.getMixIDsAsString()) != null)
 		{
 			throw (new TrustException("Cascade is in blacklist!"));
+		}
+
+		if (m_trustNew == TRUST_EXCLUSIVE)
+		{
+			if (Database.getInstance(NewCascadeIDEntry.class).getEntryById(
+				 a_cascade.getMixIDsAsString()) != null)
+			{
+				return;
+			}
+			else
+			{
+				throw (new TrustException("Only new cascades are accepted!"));
+			}
 		}
 
 		if (m_trustUserDefined == TRUST_EXCLUSIVE)
