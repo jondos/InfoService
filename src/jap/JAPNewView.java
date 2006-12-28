@@ -1467,14 +1467,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			}
 			if (message.getMessageCode() != DatabaseMessage.INITIAL_OBSERVER_MESSAGE)
 			{
-				run = new Runnable()
-				{
-					public void run()
-					{
-						m_bTrustChanged = true;
-						onUpdateValues();
-					}
-				};
+				m_bTrustChanged = true;
+				updateValues(false);
 			}
 		}
 		else if (a_observable == Database.getInstance(MixCascade.class))
@@ -1496,18 +1490,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 				if (currentCascade.equals(cascade) &&
 					TrustModel.getCurrentTrustModel().isTrusted(currentCascade) !=
-					TrustModel.getCurrentTrustModel().isTrusted(cascade)
-					)
+					TrustModel.getCurrentTrustModel().isTrusted(cascade))
 				{
 					JAPController.getInstance().setCurrentMixCascade(cascade);
-					run = new Runnable()
-					{
-						public void run()
-						{
-							m_bTrustChanged = true;
-							onUpdateValues();
-						}
-					};
+					m_bTrustChanged = true;
 				}
 
 				Database.getInstance(CascadeIDEntry.class).update(new CascadeIDEntry(cascade));
@@ -1519,6 +1505,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				if (Database.getInstance(NewCascadeIDEntry.class).getEntryById(
 								cascade.getMixIDsAsString()) != null)
 				{
+					m_bTrustChanged = true;
 					synchronized (SYNC_NEW_SERVICES)
 					{
 						if (m_newServicesID < 0)
@@ -1535,6 +1522,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				if (Database.getInstance(NewCascadeIDEntry.class).getEntryById(cascade.getMixIDsAsString()) != null)
 				{
+					m_bTrustChanged = true;
 					/** @todo all databases should be synchronized... */
 					/*
 					 * Hide the new services hint if the last new service has been deleted from the database
@@ -1659,14 +1647,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 		else if (a_observable instanceof TrustModel)
 		{
-			run = new Runnable()
-			{
-				public void run()
-				{
-					m_bTrustChanged = true;
-					onUpdateValues();
-				}
-			};
+			m_bTrustChanged = true;
+			updateValues(false);
 		}
 		else if (a_message != null && (a_message.equals(JAPModel.CHANGED_INFOSERVICE_AUTO_UPDATE) ||
 				 a_message.equals(JAPModel.CHANGED_ALLOW_INFOSERVICE_DIRECT_CONNECTION)))
