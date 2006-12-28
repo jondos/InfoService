@@ -530,9 +530,9 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 		{
 			if (a_cascade != null && a_cascade.isUserDefined())
 			{
-				if (a_cascade.getCertificate() == null && (a_cascade.getNumberOfMixes() == 0 ||
-					a_cascade.getNumberOfMixes() == 1 &&
-					(a_cascade.getMixInfo(0) == null || a_cascade.getMixInfo(0).getCertificate() == null)))
+				//if (a_cascade.getCertificate() == null && (a_cascade.getNumberOfMixes() == 0 ||
+				//	a_cascade.getNumberOfMixes() == 1 &&
+				//	(a_cascade.getMixInfo(0) == null || a_cascade.getMixInfo(0).getCertificate() == null)))
 				{
 					// not yet connected; do not make further tests
 					return;

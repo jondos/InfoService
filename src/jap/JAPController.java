@@ -4456,7 +4456,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	public boolean getDontAskPayment()
 	{
-		return m_bPayCascadeNoAsk;
+		return true;
+		//return m_bPayCascadeNoAsk;
 	}
 
 	public void setDontAskPayment(boolean a_payCascadeNoAsk)
@@ -4642,11 +4643,14 @@ public final class JAPController extends Observable implements IProxyListener, O
 			 * Cascade is not suitable if payment and the warning dialog is shown or no account is available
 			 * Otherwise the user would have to answer a dialog which is not good for automatic connections.
 			 */
+			/*
 			return isTrusted(a_cascade) && !(a_cascade.isPayment() &&
 					 ( !JAPController.getInstance().getDontAskPayment() ||
 					  PayAccountsFile.getInstance().getNumAccounts() == 0 ||
 					  PayAccountsFile.getInstance().getActiveAccount() == null ||
-					  PayAccountsFile.getInstance().getActiveAccount().getBalance().getCredit() == 0));
+					  PayAccountsFile.getInstance().getActiveAccount().getBalance().getCredit() == 0));*/
+			return isTrusted(a_cascade);
+
 
 		}
 		public MixCascade getCurrentMixCascade()
