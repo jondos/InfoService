@@ -40,7 +40,6 @@
   <property category="generalFormatting2" name="tabSize" value="4"/>
   <property category="generalFormatting2" name="useTabChar" value="1"/>
   <property category="idl" name="ProcessIDL" value="false"/>
-  <property category="java" name="compiler" value="projectjavac"/>
   <property category="java.sapient" name="ACE" value="true"/>
   <property category="java.sapient" name="AFLV" value="true"/>
   <property category="java.sapient" name="AFP" value="true"/>
@@ -134,7 +133,6 @@
   <property category="java.sapient" name="UMM" value="true"/>
   <property category="java.sapient" name="URSP" value="true"/>
   <property category="javaFormatting" name="EventMatch" value="0"/>
-  <property category="javaFormatting" name="alwaysClasses" value="1"/>
   <property category="javaFormatting" name="classBraceNextLine" value="1"/>
   <property category="javaFormatting" name="extendsOnNewLine" value="0"/>
   <property category="javaFormatting" name="identCase" value="1"/>
@@ -336,7 +334,7 @@
   <property category="sys" name="ExcludeClassEnabled" value="0"/>
   <property category="sys" name="IncludeTestPath" value="1"/>
   <property category="sys" name="InstanceVisibility" value="0"/>
-  <property category="sys" name="JDK" value="java version 1.5.0_09-b01"/>
+  <property category="sys" name="JDK" value="java version 1.5.0_10-b03"/>
   <property category="sys" name="LastTag" value="192"/>
   <property category="sys" name="Libraries" value="http;mac;Apache XML-RPC;BouncyCastleLightForJAP;JUnit;junitx;Swing;ApacheBzip2;Log4j;ApacheFTPClient;XML-1.0"/>
   <property category="sys" name="MakeStable" value="0"/>
@@ -901,7 +899,20 @@
     <property category="archiving" name="contentRules.463" value="F:images/jap.JAPNewView_about.gif;images/jap.JAPNewView_about.gif"/>
     <property category="archiving" name="contentRules.464" value="F:images/jap.JAPNewView_help.gif;images/jap.JAPNewView_help.gif"/>
     <property category="archiving" name="contentRules.465" value="F:images/jap.JAPNewView_iconify.gif;images/jap.JAPNewView_iconify.gif"/>
+    <property category="archiving" name="contentRules.466" value="F:images/gui.JAPHelp_help.gif;images/gui.JAPHelp_help.gif"/>
+    <property category="archiving" name="contentRules.467" value="F:images/jap.JAPNewView_config.gif;images/jap.JAPNewView_config.gif"/>
+    <property category="archiving" name="contentRules.468" value="F:images/splash.jpg;images/splash.jpg"/>
+    <property category="archiving" name="contentRules.469" value="F:help/browser_firefox1_de.html;help/browser_firefox1_de.html"/>
     <property category="archiving" name="contentRules.47" value="F:help/xdeu.gif;help/xdeu.gif"/>
+    <property category="archiving" name="contentRules.470" value="F:help/browser_firefox1_en.html;help/browser_firefox1_en.html"/>
+    <property category="archiving" name="contentRules.471" value="F:help/browser_firefox2_de.html;help/browser_firefox2_de.html"/>
+    <property category="archiving" name="contentRules.472" value="F:help/browser_firefox2_en.html;help/browser_firefox2_en.html"/>
+    <property category="archiving" name="contentRules.473" value="F:help/certificates_de.html;help/certificates_de.html"/>
+    <property category="archiving" name="contentRules.474" value="F:help/certificates_en.html;help/certificates_en.html"/>
+    <property category="archiving" name="contentRules.475" value="F:help/firefox3_de.gif;help/firefox3_de.gif"/>
+    <property category="archiving" name="contentRules.476" value="F:help/firefox3_en.gif;help/firefox3_en.gif"/>
+    <property category="archiving" name="contentRules.477" value="F:help/supportedPrograms_de.html;help/supportedPrograms_de.html"/>
+    <property category="archiving" name="contentRules.478" value="F:help/supportedPrograms_en.html;help/supportedPrograms_en.html"/>
     <property category="archiving" name="contentRules.48" value="F:help/xeng.gif;help/xeng.gif"/>
     <property category="archiving" name="contentRules.49" value="F:help/xhelpfrms.css;help/xhelpfrms.css"/>
     <property category="archiving" name="contentRules.5" value="F:help/back.gif;help/back.gif"/>
@@ -1118,6 +1129,5 @@
   <file path="src/JAPMessages_en.properties"/>
   <file path="src/JAPMessages_fr.properties"/>
   <file path="src/JAPMessages_pt.properties"/>
-  <file path="magicdraw.magicdraw"/>
   <file path="MANIFEST.MF"/>
 </project>
