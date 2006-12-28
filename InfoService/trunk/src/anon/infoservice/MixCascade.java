@@ -923,10 +923,13 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		Element mixCascadeNode = doc.createElement(XML_ELEMENT_NAME);
 		XMLUtil.setAttribute(mixCascadeNode, "id", getId());
 		/* Create the child nodes of MixCascade (Name, Network, Mixes, LastUpdate) */
-		Element elemPay = doc.createElement("Payment");
-		XMLUtil.setAttribute(elemPay, "required", m_isPayment);
-		XMLUtil.setAttribute(elemPay, XML_ATTR_VERSION, m_paymentProtocolVersion);
-		mixCascadeNode.appendChild(elemPay);
+		if (m_isPayment)
+		{
+			Element elemPay = doc.createElement("Payment");
+			XMLUtil.setAttribute(elemPay, "required", m_isPayment);
+			XMLUtil.setAttribute(elemPay, XML_ATTR_VERSION, m_paymentProtocolVersion);
+			mixCascadeNode.appendChild(elemPay);
+		}
 
 		Element nameNode = doc.createElement("Name");
 		XMLUtil.setValue(nameNode, getName());
