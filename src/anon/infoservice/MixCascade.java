@@ -440,10 +440,13 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 
 	public MixCascade(String a_name, String a_id, Vector a_mixIDs, Vector a_listenerInterfaces) throws Exception
 	{
-		/* use always the timeout for the infoservice context, because the JAP client currently does
-		 * not have a database of mixcascade entries -> no timeout for the JAP client necessary
-		 */
-		super(System.currentTimeMillis() + Constants.TIMEOUT_MIXCASCADE);
+		this (a_name, a_id, a_mixIDs, a_listenerInterfaces, Long.MAX_VALUE);
+	}
+
+	public MixCascade(String a_name, String a_id, Vector a_mixIDs, Vector a_listenerInterfaces,
+					  long a_timeout) throws Exception
+	{
+		super(a_timeout);
 		ListenerInterface listener = (ListenerInterface) a_listenerInterfaces.elementAt(0);
 		String strHostName = listener.getHost();
 		String strPort = Integer.toString(listener.getPort());
