@@ -351,7 +351,7 @@ public class Header
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+			LogHolder.log(LogLevel.EXCEPTION, LogType.CRYPTO, e);
 			return null;
 		}
 	}
