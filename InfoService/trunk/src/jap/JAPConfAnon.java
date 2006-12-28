@@ -62,6 +62,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.border.TitledBorder;
@@ -991,7 +992,14 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					public void run()
 					{
 						updateValues(true);
-						setSelectedCascade(c);
+						SwingUtilities.invokeLater(
+						new Runnable()
+						{
+							public void run()
+							{
+								setSelectedCascade(c);
+							}
+						});
 					}
 				}).start();
 
@@ -1320,8 +1328,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				{
 				   m_deleteCascadeButton.setEnabled(
 					!JAPController.getInstance().getCurrentMixCascade().equals(cascade));
-					m_showEditPanelButton.setEnabled(
-					   !JAPController.getInstance().getCurrentMixCascade().equals(cascade));
+					m_showEditPanelButton.setEnabled(true);
+					//   !JAPController.getInstance().getCurrentMixCascade().equals(cascade));
 				}
 				else
 				{
@@ -2660,7 +2668,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			return columnNames.length;
 		}
 
-		public synchronized int getRowCount()
+		public int getRowCount()
 		{
 			return m_vecCascades.size();
 		}

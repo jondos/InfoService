@@ -143,6 +143,7 @@ public class KeyExchangeManager {
 		  if (a_cascade.isUserDefined())
 		  {
 			  cascade.setUserDefined(true, a_cascade);
+			  Database.getInstance(MixCascade.class).remove(cascade);
 			  Database.getInstance(MixCascade.class).update(cascade);
 			  Database.getInstance(MixInfo.class).update(
 						   new MixInfo(MixInfo.DEFAULT_NAME, cascade.getCertPath()));
