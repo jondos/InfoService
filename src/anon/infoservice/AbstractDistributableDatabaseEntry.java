@@ -40,6 +40,7 @@ import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogType;
 import logging.LogLevel;
+import anon.util.Util;
 
 /**
  * This class implements common methods that may be used by distributabe database entries.
@@ -57,6 +58,11 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 	public AbstractDistributableDatabaseEntry(long a_expireTime)
 	{
 		super(a_expireTime);
+	}
+
+	public static String getHttpRequestString(Class a_xmlEncodableClass)
+	{
+		return Util.getStaticFieldValue(a_xmlEncodableClass, IDistributable.FIELD_HTTP_REQUEST_STRING);
 	}
 
 	public static class Serials implements IXMLEncodable
@@ -152,9 +158,7 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 				XMLUtil.setAttribute(nodeASerial, XML_ATTR_SERIAL, currentEntry.getVersionNumber());
 				if (currentEntry instanceof IVerifyable)
 				{
-					XMLUtil.setAttribute(nodeASerial, XML_ATTR_VALID,
-										 ((IVerifyable)currentEntry).isValid());
-
+					XMLUtil.setAttribute(nodeASerial, XML_ATTR_VALID,((IVerifyable)currentEntry).isValid());
 					XMLUtil.setAttribute(nodeASerial, XML_ATTR_VERIFIED,
 										 ((IVerifyable)currentEntry).isVerified() &&
 						((IVerifyable)currentEntry).getCertPath().verify());

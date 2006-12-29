@@ -63,37 +63,36 @@ import anon.infoservice.StatusInfo;
 import anon.util.XMLUtil;
 import anon.util.ZLibTools;
 import anon.infoservice.InfoServiceIDEntry;
+import anon.util.IXMLEncodable;
+import anon.infoservice.MessageDBEntry;
 
 /**
  * This is the implementation of all commands the InfoService supports.
  */
 final public class InfoServiceCommands implements JWSInternalCommands
 {
-	private static final long CACHE_CASCADESERIALS_MS = 10000;
-	private static final long CACHE_CASCADES_MS = 10000;
-	private static final long CACHE_INFOSERVICES_MS = 10000;
-	private static final long CACHE_INFOSERVICESERIALS_MS = 10000;
+	private final HTTPResponseGetter m_isResponseGetter = new HTTPResponseGetter()
+	{
+		public Class getDatabaseClass()
+		{
+			return InfoServiceDBEntry.class;
+		}
+	};
+	private final HTTPResponseGetter m_cascadeResponseGetter = new HTTPResponseGetter()
+	{
+		public Class getDatabaseClass()
+		{
+			return MixCascade.class;
+		}
+	};
+	private final HTTPResponseGetter m_messageResponseGetter = new HTTPResponseGetter()
+	{
+		public Class getDatabaseClass()
+		{
+			return MessageDBEntry.class;
+		}
+	};
 
-	private HttpResponseStructure m_cachedCascadeserialsResponse;
-	private HttpResponseStructure m_cachedCascadeserialsCompressedResponse;
-	private final Object SYNC_CACHE_CASCADESERIALS = new Object();
-	private long m_lastCascadeserialsUpdate = 0;
-
-	private HttpResponseStructure m_cachedCascadesResponse;
-	private HttpResponseStructure m_cachedCascadesCompressedResponse;
-	private final Object SYNC_CACHE_CASCADES = new Object();
-	private long m_lastCascadesUpdate = 0;
-
-
-	private HttpResponseStructure m_cachedInfoservicesResponse;
-	private HttpResponseStructure m_cachedInfoservicesCompressedResponse;
-	private final Object SYNC_CACHE_INFOSERVICES = new Object();
-	private long m_lastInfoservicesUpdate = 0;
-
-	private HttpResponseStructure m_cachedInfoserviceserialsResponse;
-	private HttpResponseStructure m_cachedInfoserviceserialsCompressedResponse;
-	private final Object SYNC_CACHE_INFOSERVICESERIALS = new Object();
-	private long m_lastInfoserviceserialsUpdate = 0;
 
     private IInfoServiceAgreementAdapter m_agreementAdapter = DynamicConfiguration.getInstance().getAgreementHandler();
 	private DynamicCommandsExtension m_dynamicExtension = new DynamicCommandsExtension();
@@ -192,117 +191,6 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET, e);
 			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);
-		}
-		return httpResponse;
-	}
-
-	/**
-	 * Sends the complete list of all known infoservices to the client.
-	 *
-	 * @param a_supportedEncodings defines the encoding supported by the client (deflate, gzip,...)
-	 * @param a_bSerialsOnly only return a list with IS serial numbers so that the caller may decide
-	 * which InfoServices have changed since the last request
-	 * @return The HTTP response for the client.
-	 */
-	private HttpResponseStructure japFetchInfoServers(int a_supportedEncodings, boolean a_bSerialsOnly)
-	{
-		/* this is only the default, if something is going wrong */
-		HttpResponseStructure httpResponse;
-		try
-		{
-			Document doc;
-			/* create the InfoServices element */
-			Element infoServicesNode;
-
-			if (a_bSerialsOnly)
-			{
-				synchronized (SYNC_CACHE_INFOSERVICESERIALS)
-				{
-					if (m_lastInfoserviceserialsUpdate <
-						(System.currentTimeMillis() - CACHE_INFOSERVICESERIALS_MS))
-					{
-						doc = XMLUtil.createDocument();
-						infoServicesNode =
-							new AbstractDistributableDatabaseEntry.Serials(
-								InfoServiceDBEntry.class).toXmlElement(doc);
-						SignatureCreator.getInstance().signXml(SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE,
-							infoServicesNode);
-						doc.appendChild(infoServicesNode);
-
-						//if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
-						{
-							m_cachedInfoserviceserialsCompressedResponse = new HttpResponseStructure(
-								HttpResponseStructure.HTTP_TYPE_TEXT_XML,
-								HttpResponseStructure.HTTP_ENCODING_ZLIB,
-								ZLibTools.compress(XMLUtil.toByteArray(doc)));
-						}
-						//else
-						{
-							m_cachedInfoserviceserialsResponse = new HttpResponseStructure(doc);
-						}
-						m_lastInfoserviceserialsUpdate = System.currentTimeMillis();
-					}
-				}
-				/* send the XML document to the client */
-				if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
-				{
-					httpResponse = m_cachedInfoserviceserialsCompressedResponse;
-				}
-				else
-				{
-					httpResponse = m_cachedInfoserviceserialsResponse;
-				}
-			}
-			else
-			{
-				synchronized (SYNC_CACHE_INFOSERVICES)
-				{
-					if (m_lastInfoservicesUpdate < (System.currentTimeMillis() - CACHE_INFOSERVICES_MS))
-					{
-						doc = XMLUtil.createDocument();
-						infoServicesNode = doc.createElement("InfoServices");
-						/* append the nodes of all infoservices we know */
-						Enumeration allInfoServices = Database.getInstance(InfoServiceDBEntry.class).
-							getEntrySnapshotAsEnumeration();
-						while (allInfoServices.hasMoreElements())
-						{
-							/* import the infoservice node in this document */
-							Node infoServiceNode =
-								( (InfoServiceDBEntry) (allInfoServices.nextElement())).toXmlElement(doc);
-							infoServicesNode.appendChild(infoServiceNode);
-						}
-						SignatureCreator.getInstance().signXml(SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE,
-							infoServicesNode);
-						doc.appendChild(infoServicesNode);
-
-						//if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
-						{
-							m_cachedInfoservicesCompressedResponse = new HttpResponseStructure(
-								HttpResponseStructure.HTTP_TYPE_TEXT_XML,
-								HttpResponseStructure.HTTP_ENCODING_ZLIB,
-								ZLibTools.compress(XMLUtil.toByteArray(doc)));
-						}
-						//else
-						{
-							m_cachedInfoservicesResponse = new HttpResponseStructure(doc);
-						}
-						m_lastInfoservicesUpdate = System.currentTimeMillis();
-					}
-				}
-				if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
-				{
-					httpResponse = m_cachedInfoservicesCompressedResponse;
-				}
-				else
-				{
-					httpResponse = m_cachedInfoservicesResponse;
-				}
-			}
-		}
-		catch (Exception e)
-		{
-			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
-			LogHolder.log(LogLevel.ERR, LogType.NET, e);
 		}
 		return httpResponse;
 	}
@@ -427,115 +315,157 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		return httpResponse;
 	}
 
-	/**
-	 * Sends the complete list of all known mixcascades to the client.
-	 * @param a_supportedEncodings defines the encoding supported by the client (deflate, gzip,...)
-	 * @param a_bSerialsOnly if only the serials of the db entries should be returned
-	 * @return The HTTP response for the client.
-	 */
-	private HttpResponseStructure japFetchCascades(int a_supportedEncodings, boolean a_bSerialsOnly)
+	private abstract class HTTPResponseGetter
 	{
-		/* this is only the default, if something is going wrong */
-		HttpResponseStructure httpResponse;
-		try
-		{
-			Document doc;
-			/* create the MixCascades element */
-			Element mixCascadesNode;
-			if (a_bSerialsOnly)
-			{
-				synchronized (SYNC_CACHE_CASCADESERIALS)
-				{
-					if (m_lastCascadeserialsUpdate < (System.currentTimeMillis() - CACHE_CASCADESERIALS_MS))
-					{
-						doc = XMLUtil.createDocument();
-						mixCascadesNode =
-							new AbstractDistributableDatabaseEntry.Serials(MixCascade.class).toXmlElement(doc);
-						SignatureCreator.getInstance().signXml(SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE,
-							mixCascadesNode);
-						doc.appendChild(mixCascadesNode);
+		private static final long CACHE_SERIALS_MS = 10000;
+		private static final long CACHE_MS = 10000;
 
-						//if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
-						{
-							m_cachedCascadeserialsCompressedResponse = new HttpResponseStructure(
-								HttpResponseStructure.HTTP_TYPE_TEXT_XML,
-								HttpResponseStructure.HTTP_ENCODING_ZLIB,
-								ZLibTools.compress(XMLUtil.toByteArray(doc)));
-						}
-						//else
-						{
-							m_cachedCascadeserialsResponse = new HttpResponseStructure(doc);
-						}
-						m_lastCascadeserialsUpdate = System.currentTimeMillis();
+		private HttpResponseStructure m_cachedSerialsResponse;
+		private HttpResponseStructure m_cachedSerialsCompressedResponse;
+		private final Object SYNC_CACHE_SERIALS = new Object();
+		private long m_lastSerialsUpdate = 0;
+
+		private HttpResponseStructure m_cachedResponse;
+		private HttpResponseStructure m_cachedCompressedResponse;
+		private final Object SYNC_CACHE = new Object();
+		private long m_lastUpdate = 0;
+
+		public HTTPResponseGetter()
+		{
+		}
+		public abstract Class getDatabaseClass();
+
+		protected HttpResponseStructure fetchResponse(int a_supportedEncodings)
+		{
+			HttpResponseStructure httpResponse;
+			Document doc;
+			Element containerNode;
+
+			synchronized (SYNC_CACHE)
+			{
+				if (m_lastUpdate < (System.currentTimeMillis() - CACHE_MS))
+				{
+					doc = XMLUtil.createDocument();
+					containerNode = doc.createElement(XMLUtil.getXmlElementContainerName(getDatabaseClass()));
+
+					/* append the nodes of all mixcascades we know */
+					Enumeration knownMixCascades = Database.getInstance(getDatabaseClass()).
+						getEntrySnapshotAsEnumeration();
+					IXMLEncodable currentCascade;
+					Element node;
+					while (knownMixCascades.hasMoreElements())
+					{
+						/* import the MixCascade XML structure in this document */
+						currentCascade = (IXMLEncodable) (knownMixCascades.nextElement());
+						node = currentCascade.toXmlElement(doc);
+						containerNode.appendChild(node);
 					}
+					SignatureCreator.getInstance().signXml(SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE,
+						containerNode);
+					doc.appendChild(containerNode);
+					/* send the XML document to the client */
+					//if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
+					{
+						m_cachedCompressedResponse = new HttpResponseStructure(
+							HttpResponseStructure.HTTP_TYPE_TEXT_XML,
+							HttpResponseStructure.HTTP_ENCODING_ZLIB,
+							ZLibTools.compress(XMLUtil.toByteArray(doc)));
+					}
+					//else
+					{
+						m_cachedResponse = new HttpResponseStructure(doc);
+					}
+					m_lastUpdate = System.currentTimeMillis();
 				}
-				/* send the XML document to the client */
-				if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
-				{
-					httpResponse = m_cachedCascadeserialsCompressedResponse;
-				}
-				else
-				{
-					httpResponse = m_cachedCascadeserialsResponse;
-				}
+			}
+
+			if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
+			{
+				httpResponse = m_cachedCompressedResponse;
 			}
 			else
 			{
-				synchronized (SYNC_CACHE_CASCADES)
+				httpResponse = m_cachedResponse;
+			}
+			return httpResponse;
+		}
+
+
+		protected HttpResponseStructure fetchSerialsResponse(int a_supportedEncodings) throws Exception
+		{
+			HttpResponseStructure httpResponse;
+			Document doc;
+			Element node;
+
+			synchronized (SYNC_CACHE_SERIALS)
+			{
+				if (m_lastSerialsUpdate < (System.currentTimeMillis() - CACHE_SERIALS_MS))
 				{
-					if (m_lastCascadesUpdate < (System.currentTimeMillis() - CACHE_CASCADES_MS))
+					doc = XMLUtil.createDocument();
+					node =
+						new AbstractDistributableDatabaseEntry.Serials(getDatabaseClass()).toXmlElement(doc);
+					SignatureCreator.getInstance().signXml(SignatureVerifier.
+						DOCUMENT_CLASS_INFOSERVICE,
+						node);
+					doc.appendChild(node);
+
+					//if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
 					{
-						doc = XMLUtil.createDocument();
-						mixCascadesNode = doc.createElement(MixCascade.XML_ELEMENT_CONTAINER_NAME);
-
-						/* append the nodes of all mixcascades we know */
-						Enumeration knownMixCascades = Database.getInstance(MixCascade.class).
-							getEntrySnapshotAsEnumeration();
-						MixCascade currentCascade;
-						Element mixCascadeNode;
-						while (knownMixCascades.hasMoreElements())
-						{
-							/* import the MixCascade XML structure in this document */
-							currentCascade = (MixCascade) (knownMixCascades.nextElement());
-							mixCascadeNode = currentCascade.toXmlElement(doc);
-							mixCascadesNode.appendChild(mixCascadeNode);
-						}
-						SignatureCreator.getInstance().signXml(SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE,
-							mixCascadesNode);
-						doc.appendChild(mixCascadesNode);
-						/* send the XML document to the client */
-						//if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
-						{
-							m_cachedCascadesCompressedResponse = new HttpResponseStructure(
-								HttpResponseStructure.HTTP_TYPE_TEXT_XML,
-								HttpResponseStructure.HTTP_ENCODING_ZLIB,
-								ZLibTools.compress(XMLUtil.toByteArray(doc)));
-						}
-						//else
-						{
-							m_cachedCascadesResponse = new HttpResponseStructure(doc);
-						}
-						m_lastCascadesUpdate = System.currentTimeMillis();
+						m_cachedSerialsCompressedResponse = new HttpResponseStructure(
+							HttpResponseStructure.HTTP_TYPE_TEXT_XML,
+							HttpResponseStructure.HTTP_ENCODING_ZLIB,
+							ZLibTools.compress(XMLUtil.toByteArray(doc)));
 					}
+					//else
+					{
+						m_cachedSerialsResponse = new HttpResponseStructure(doc);
+					}
+					m_lastSerialsUpdate = System.currentTimeMillis();
 				}
+			}
+			/* send the XML document to the client */
+			if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
+			{
+				httpResponse = m_cachedSerialsCompressedResponse;
+			}
+			else
+			{
+				httpResponse = m_cachedSerialsResponse;
+			}
+			return httpResponse;
+		}
 
-				if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
+		/**
+		 * Sends the complete list of all known db entries to the client.
+		 *
+		 * @param a_supportedEncodings defines the encoding supported by the client (deflate, gzip,...)
+		 * @param a_bSerialsOnly only return a list with db entry serial numbers so that the caller may decide
+		 * which db entries have changed since the last request
+		 * @return The HTTP response for the client.
+		 */
+		public HttpResponseStructure fetchResponse(int a_supportedEncodings, boolean a_bSerialsOnly)
+		{
+			HttpResponseStructure httpResponse;
+			try
+			{
+				if (a_bSerialsOnly)
 				{
-					httpResponse = m_cachedCascadesCompressedResponse;
+					httpResponse = fetchSerialsResponse(a_supportedEncodings);
 				}
 				else
 				{
-					httpResponse = m_cachedCascadesResponse;
+					httpResponse = fetchResponse(a_supportedEncodings);
 				}
 			}
+			catch (Exception e)
+			{
+				/* should never occur */
+				httpResponse = new HttpResponseStructure(HttpResponseStructure.
+					HTTP_RETURN_INTERNAL_SERVER_ERROR);
+				LogHolder.log(LogLevel.ERR, LogType.NET, e);
+			}
+			return httpResponse;
 		}
-		catch (Exception e)
-		{
-			/* should never occur */
-			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
-			LogHolder.log(LogLevel.ERR, LogType.NET, e);
-		}
-		return httpResponse;
 	}
 
 	/**
@@ -1507,13 +1437,13 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		{
 			ISRuntimeStatistics.ms_lNrOfGetInfoservicesRequests++;
 			/* JAP or someone else wants to get information about all infoservices we know */
-			httpResponse = japFetchInfoServers(a_supportedEncodings, false);
+			httpResponse = m_isResponseGetter.fetchResponse(a_supportedEncodings, false);
 		}
 		else if ( (command.equals("/infoserviceserials")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			ISRuntimeStatistics.ms_lNrOfGetInfoserviceserialsRequests++;
 			/* JAP or someone else wants to get information about all infoservices we know */
-			httpResponse = japFetchInfoServers(a_supportedEncodings, true);
+			httpResponse = m_isResponseGetter.fetchResponse(a_supportedEncodings, true);
 		}
 		else if ( (command.equals("/cascade")) && (method == Constants.REQUEST_METHOD_POST))
 		{
@@ -1527,13 +1457,13 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		{
 			ISRuntimeStatistics.ms_lNrOfGetCascadeserialsRequests++;
 			/* JAP or someone else wants to get information about all cascade serial numbers we know */
-			httpResponse = japFetchCascades(a_supportedEncodings, true);
+			httpResponse = m_cascadeResponseGetter.fetchResponse(a_supportedEncodings, true);
 		}
 		else if ( (command.equals("/cascades")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			ISRuntimeStatistics.ms_lNrOfGetCascadesRequests++;
 			/* JAP or someone else wants to get information about all cascades we know */
-			httpResponse = japFetchCascades(a_supportedEncodings, false);
+			httpResponse = m_cascadeResponseGetter.fetchResponse(a_supportedEncodings, false);
 		}
 		else if ( (command.equals("/helo")) && (method == Constants.REQUEST_METHOD_POST))
 		{
@@ -1577,6 +1507,16 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		{
 			/* get information about all mixes (mixes of all cascades) */
 			httpResponse = fetchAvailableMixes();
+		}
+		else if ( (command.equals(MessageDBEntry.HTTP_REQUEST_STRING)) &&
+				  (method == Constants.REQUEST_METHOD_GET))
+		{
+			httpResponse = m_messageResponseGetter.fetchResponse(a_supportedEncodings, false);
+		}
+		else if ( (command.equals(MessageDBEntry.HTTP_SERIALS_REQUEST_STRING)) &&
+				  (method == Constants.REQUEST_METHOD_GET))
+		{
+			httpResponse = m_messageResponseGetter.fetchResponse(a_supportedEncodings, true);
 		}
 		else if ( (command.startsWith("/cascadeinfo/")) && (method == Constants.REQUEST_METHOD_GET))
 		{

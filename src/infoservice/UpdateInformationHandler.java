@@ -41,6 +41,7 @@ import anon.infoservice.Constants;
 import anon.infoservice.Database;
 import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.JAPMinVersion;
+import anon.infoservice.MessageDBEntry;
 import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -184,6 +185,8 @@ public class UpdateInformationHandler implements Runnable
 						InfoServiceDistributor.getInstance().addJob(distributable);
 					}
 				}
+
+				//Database.getInstance(MessageDBEntry.class).update(new MessageDBEntry());
 
 				try
 				{

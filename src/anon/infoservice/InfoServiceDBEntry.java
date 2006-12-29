@@ -30,13 +30,13 @@ package anon.infoservice;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
-import java.io.InputStream;
 import java.io.InterruptedIOException;
+import java.security.SignatureException;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.NoSuchElementException;
 import java.util.Vector;
-import java.security.SignatureException;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
@@ -46,20 +46,18 @@ import org.w3c.dom.NodeList;
 import HTTPClient.HTTPConnection;
 import HTTPClient.HTTPResponse;
 import anon.crypto.CertPath;
+import anon.crypto.IVerifyable;
 import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureCreator;
 import anon.crypto.SignatureVerifier;
 import anon.crypto.XMLSignature;
-import anon.crypto.X509SubjectKeyIdentifier;
+import anon.util.ClassUtil;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
 import anon.util.ZLibTools;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import java.util.Date;
-import anon.crypto.IVerifyable;
-import anon.util.ClassUtil;
 
 
 /**
@@ -1273,6 +1271,61 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		return new JAPMinVersion(japNode);
 	}
 
+
+	private Hashtable getUpdateEntries(Class a_distributable) throws Exception
+	{
+		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest(
+			  AbstractDistributableDatabaseEntry.getHttpRequestString(a_distributable)));
+
+		Node rootNode = XMLUtil.getFirstChildByName(doc, XMLUtil.getXmlElementContainerName(a_distributable));
+		if (rootNode == null || ! (rootNode instanceof Element))
+		{
+			throw (new XMLParseException(
+						 XMLUtil.getXmlElementContainerName(a_distributable), "Node missing!"));
+		}
+		NodeList nodes = ( (Element) rootNode).getElementsByTagName(
+			  XMLUtil.getXmlElementName(a_distributable));
+		Hashtable versionInfos = new Hashtable();
+		AbstractDistributableDatabaseEntry currentVersionInfo;
+		Element versionNode;
+		for (int i = 0; i < nodes.getLength(); i++)
+		{
+			versionNode = (Element) (nodes.item(i));
+			/* check the signature */
+			if (SignatureVerifier.getInstance().verifyXml(
+						 versionNode, SignatureVerifier.DOCUMENT_CLASS_UPDATE))
+			{
+				/* signature is valid */
+				try
+				{
+					currentVersionInfo = (AbstractDistributableDatabaseEntry)a_distributable.getConstructor(
+									   new Class[]{Element.class}).newInstance(new Object[]{versionNode});
+					versionInfos.put(currentVersionInfo.getId(), currentVersionInfo);
+				}
+				catch (Exception e)
+				{
+					/* an error while parsing the node occured -> we don't use this mixcascade */
+					LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Error in "+
+								  a_distributable.getName() + " XML node.");
+				}
+			}
+			else
+			{
+				LogHolder.log(LogLevel.INFO, LogType.MISC,
+							  "Cannot verify the signature for " +
+							   a_distributable.getName() + " entry: " +
+							  XMLUtil.toString(versionNode));
+			}
+		}
+		return versionInfos;
+	}
+
+	public Hashtable getMessages() throws Exception
+	{
+		return getUpdateEntries(MessageDBEntry.class);
+	}
+
+
 	/**
 	 * Get the latest java versions the infoservice knows ordered by vendors.
 	 * @throws java.lang.Exception If we can't get a connection to the infoservice
@@ -1280,45 +1333,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 	 */
 	public Hashtable getLatestJava() throws Exception
 	{
-		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest(
-				  JavaVersionDBEntry.HTTP_REQUEST_STRING));
-
-		Node rootNode = XMLUtil.getFirstChildByName(doc, JavaVersionDBEntry.XML_ELEMENT_CONTAINER_NAME);
-		if (rootNode == null || !(rootNode instanceof Element))
-		{
-			throw (new XMLParseException(JavaVersionDBEntry.XML_ELEMENT_CONTAINER_NAME, "Node missing!"));
-		}
-		NodeList nodes = ((Element)rootNode).getElementsByTagName(JavaVersionDBEntry.XML_ELEMENT_NAME);
-		Hashtable versionInfos = new Hashtable();
-		JavaVersionDBEntry currentVersionInfo;
-		Element versionNode;
-		for (int i = 0; i < nodes.getLength(); i++)
-		{
-			versionNode = (Element) (nodes.item(i));
-			/* check the signature */
-			if (SignatureVerifier.getInstance().verifyXml(versionNode,
-				SignatureVerifier.DOCUMENT_CLASS_UPDATE))
-			{
-				/* signature is valid */
-				try
-				{
-					currentVersionInfo = new JavaVersionDBEntry(versionNode);
-					versionInfos.put(currentVersionInfo.getId(), currentVersionInfo);
-				}
-				catch (Exception e)
-				{
-					/* an error while parsing the node occured -> we don't use this mixcascade */
-					LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Error in JavaVersionDBEntry XML node.");
-				}
-			}
-			else
-			{
-				LogHolder.log(LogLevel.INFO, LogType.MISC,
-							  "Cannot verify the signature for JavaVersionDBEntry entry: " +
-							  XMLUtil.toString(versionNode));
-			}
-		}
-		return versionInfos;
+		return getUpdateEntries(JavaVersionDBEntry.class);
 	}
 
 
@@ -1353,7 +1368,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		{
 			/* signature is invalid -> throw an exception */
 			throw (new Exception(
-				"InfoServiceDBEntry: getJAPVersionInfo: Cannot verify the signature for JAPVersionInfo entry: " +
+				"Cannot verify the signature for JAPVersionInfo entry: " +
 				XMLUtil.toString(jnlpNode)));
 		}
 		/* signature was valid */
