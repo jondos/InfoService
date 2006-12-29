@@ -4372,14 +4372,22 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	public void unrealisticBytes(long a_bytes)
 	{
-		GUIUtils.setAlwaysOnTop(getViewWindow(), true);
+		JAPDialog.LinkedInformationAdapter adapter =
+			new JAPDialog.LinkedInformationAdapter()
+		{
+			public boolean isOnTop()
+			{
+				return true;
+			}
+		};
+
 		boolean choice = JAPDialog.showYesNoDialog(
 			getViewWindow(),
 			JAPMessages.getString("unrealBytesDesc") + "<p>" +
 			JAPMessages.getString("unrealBytesDifference") + " " + a_bytes,
-			JAPMessages.getString("unrealBytesTitle")
+			JAPMessages.getString("unrealBytesTitle"),adapter
 			);
-		GUIUtils.setAlwaysOnTop(getViewWindow(),false);
+
 		if (!choice)
 		{
 			this.setAnonMode(false);
