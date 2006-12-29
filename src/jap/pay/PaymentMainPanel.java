@@ -36,6 +36,7 @@ package jap.pay;
 import java.sql.Timestamp;
 
 import java.awt.Dimension;
+import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -540,17 +541,31 @@ public class PaymentMainPanel extends FlippingPanel
 			{
 				m_bShowingError = true;
 				String message = error;
+				Component parent = PaymentMainPanel.this;
+				JAPDialog.LinkedInformationAdapter adapter =
+					new JAPDialog.LinkedInformationAdapter()
+				{
+					public boolean isOnTop()
+					{
+						return true;
+					}
+				};
+
+				if (!GUIUtils.getParentWindow(parent).isVisible())
+				{
+					parent = JAPController.getInstance().getViewWindow();
+				}
 				if (!JAPModel.getInstance().isCascadeAutoSwitched())
 				{
 					message += "<br><br>" + JAPMessages.getString(MSG_ENABLE_AUTO_SWITCH);
-					if (JAPDialog.showYesNoDialog(PaymentMainPanel.this, message))
+					if (JAPDialog.showYesNoDialog(parent, message, adapter))
 					{
 						JAPModel.getInstance().setCascadeAutoSwitch(true);
 					}
 				}
 				else
 				{
-					JAPDialog.showErrorDialog(PaymentMainPanel.this, message, LogType.PAY);
+					JAPDialog.showErrorDialog(parent, message, LogType.PAY, adapter);
 				}
 				m_bShowingError = false;
 			}

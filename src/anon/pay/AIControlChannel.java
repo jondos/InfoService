@@ -137,9 +137,11 @@ public class AIControlChannel extends XmlControlChannel {
       }
     }
     catch (Exception ex) {
-      LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
+      LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, ex);
 	   getServiceContainer().keepCurrentService(false); // reconnect to another cascade if possible
-      PayAccountsFile.getInstance().signalAccountError(new XMLErrorMessage(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR, ex.getClass().getName() + ": " + ex.getMessage()));
+      PayAccountsFile.getInstance().signalAccountError(
+			new XMLErrorMessage(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR,
+								ex.getClass().getName() + ": " + ex.getMessage()));
     }
   }
 
