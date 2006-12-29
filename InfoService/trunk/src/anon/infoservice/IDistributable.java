@@ -35,6 +35,8 @@ package anon.infoservice;
  */
 public interface IDistributable
 {
+	public static final String FIELD_HTTP_REQUEST_STRING = "HTTP_REQUEST_STRING";
+
 	/**
 	 * Returns a ID for this information. It is used as an identifier for logging status information.
 	 * @return The ID of this information.
