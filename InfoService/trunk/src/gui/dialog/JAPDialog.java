@@ -3500,6 +3500,9 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 					getContentPane().setVisible(false);
 					getContentPane().setVisible(true);
 				}
+				// this is needed to put the window to front in some cases, e.g. when closing JAP and not
+				// all accounts are saved
+				m_internalDialog.toFront(); /** @todo Check if this works and does not block anything! */
 			}
 			m_internalDialog.getTreeLock().notifyAll();
 		}

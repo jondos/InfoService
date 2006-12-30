@@ -56,6 +56,11 @@ public class ConsoleJAPMainView implements IJAPMainView
 	{
 	}
 
+	public void showConfigDialog()
+	{
+	}
+
+
 	/**
 	 * Shows the console view.
 	 */

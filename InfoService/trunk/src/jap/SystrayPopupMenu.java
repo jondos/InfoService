@@ -63,6 +63,7 @@ public class SystrayPopupMenu extends PopupMenu
 {
 	private static final String MSG_EXIT = SystrayPopupMenu.class.getName() + "_exit";
 	private static final String MSG_SHOW_MAIN_WINDOW = SystrayPopupMenu.class.getName() + "_showMainWindow";
+	private static final String MSG_SETTINGS= SystrayPopupMenu.class.getName() + "_settings";
 	private static final String MSG_ANONYMITY_MODE = SystrayPopupMenu.class.getName() + "_anonymityMode";
 	private static final String MSG_CURRENT_SERVICE = SystrayPopupMenu.class.getName() + "_currentService";
 	private static final String MSG_CONNECTED = SystrayPopupMenu.class.getName() + "_connected";
@@ -168,6 +169,21 @@ public class SystrayPopupMenu extends PopupMenu
 		});
 		add(menuItem);
 
+		menuItem = new JMenuItem(JAPMessages.getString(MSG_SETTINGS));
+		GUIUtils.setFontStyle(menuItem, Font.PLAIN);
+		menuItem.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent a_event)
+			{
+				m_mainWindowListener.onShowSettings();
+			}
+		});
+		add(menuItem);
+
+
+
+
+
 		menuItem = new JMenuItem(JAPMessages.getString(JAPHelp.MSG_HELP_MENU_ITEM));
 		GUIUtils.setFontStyle(menuItem, Font.PLAIN);
 		add(menuItem);
@@ -240,5 +256,6 @@ public class SystrayPopupMenu extends PopupMenu
 	public static interface MainWindowListener
 	{
 		public void onShowMainWindow();
+		public void onShowSettings();
 	}
 }

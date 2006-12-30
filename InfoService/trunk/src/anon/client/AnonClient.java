@@ -824,7 +824,11 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 			{
 				/* ignore it */
 			}
-			aiControlChannel.sendAccountCert();
+
+			if (!aiControlChannel.sendAccountCert())
+			{
+				return ErrorCodes.E_INTERRUPTED;
+			}
 		}
 		return ErrorCodes.E_SUCCESS;
 	}

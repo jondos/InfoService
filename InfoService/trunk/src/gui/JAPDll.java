@@ -74,6 +74,7 @@ final public class JAPDll {
 
 
 	private static Hashtable ms_hashOnTop = new Hashtable();
+	private static boolean ms_bInTaskbar = false;
 
 	private static final Object SYNC_POPUP = new Object();
 	private static SystrayPopupMenu ms_popupMenu;
@@ -470,13 +471,19 @@ final public class JAPDll {
 		return false;
 	}
 
-	static private boolean showWindowFromTaskbar()
+	public static synchronized boolean showWindowFromTaskbar()
 	{
 		try
 		{
-			boolean value = showWindowFromTaskbar_dll();
-			showMainWindow();
-			return value;
+			if (ms_bInTaskbar)
+			{
+				ms_bInTaskbar = false;
+				boolean value = showWindowFromTaskbar_dll();
+				showMainWindow();
+				ms_bInTaskbar = !value;
+				return value;
+			}
+			return false;
 		}
 		catch (Throwable t)
 		{
@@ -485,11 +492,16 @@ final public class JAPDll {
 	}
 
 
-	static public boolean hideWindowInTaskbar(String caption)
+	public static synchronized boolean hideWindowInTaskbar(String caption)
 	{
 		try
 		{
-			return hideWindowInTaskbar_dll(caption);
+			boolean bHidden = hideWindowInTaskbar_dll(caption);
+			if (!ms_bInTaskbar)
+			{
+				ms_bInTaskbar = bHidden;
+			}
+			return bHidden;
 		}
 		catch (Throwable t)
 		{
@@ -616,6 +628,17 @@ final public class JAPDll {
 				public void onShowMainWindow()
 				{
 					showWindowFromTaskbar();
+				}
+				public void onShowSettings()
+				{
+					//showWindowFromTaskbar();
+					new Thread(new Runnable()
+					{
+						public void run()
+						{
+							JAPController.getInstance().getView().showConfigDialog();
+						}
+					}).start();
 				}
 			});
 			ms_popupWindow.setLocation(mousePoint);

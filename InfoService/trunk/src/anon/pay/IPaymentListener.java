@@ -19,7 +19,7 @@ public interface IPaymentListener extends EventListener
 	 * The AI has signaled that the current cascade has to be payed for.
 	 * @param acc PayAccount
 	 */
-	void accountCertRequested(boolean usingCurrentAccount);
+	boolean accountCertRequested(boolean usingCurrentAccount);
 
 	/**
 	 * The AI has signaled an error.

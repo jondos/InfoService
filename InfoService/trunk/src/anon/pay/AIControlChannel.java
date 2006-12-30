@@ -283,14 +283,18 @@ public class AIControlChannel extends XmlControlChannel {
     }
   }
 
-  public void sendAccountCert()
+  public boolean sendAccountCert()
   {
 	  PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
-	  PayAccountsFile.getInstance().signalAccountRequest();
+	  if (!PayAccountsFile.getInstance().signalAccountRequest())
+	  {
+		  return false;
+	  }
 	  if (currentAccount != null)
 	  {
 		  sendXmlMessage(XMLUtil.toXMLDocument(currentAccount.getAccountCertificate()));
 	  }
+	  return true;
   }
 
   private void fireAIEvent(int a_eventType, long a_additionalInfo) {

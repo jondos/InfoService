@@ -40,6 +40,8 @@ public interface IJAPMainView extends JAPObserver, IStatusLine, AnonServiceEvent
 
 	public JAPViewIconified getViewIconified();
 
+	public void showConfigDialog();
+
 	public void doClickOnCascadeChooser();
 
 	public void disableSetAnonMode();

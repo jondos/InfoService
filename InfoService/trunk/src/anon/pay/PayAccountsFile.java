@@ -636,16 +636,21 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	/**
 	 * signalAccountRequest
 	 */
-	public void signalAccountRequest()
+	public boolean signalAccountRequest()
 	{
+		boolean m_bSuccess = true;
 		synchronized (m_paymentListeners)
 		{
 			Enumeration enumListeners = m_paymentListeners.elements();
 			while (enumListeners.hasMoreElements())
 			{
-				( (IPaymentListener) enumListeners.nextElement()).accountCertRequested(false);
+				if (!( (IPaymentListener) enumListeners.nextElement()).accountCertRequested(false))
+				{
+					m_bSuccess = false;
+				}
 			}
 		}
+		return m_bSuccess;
 	}
 
 	/**
