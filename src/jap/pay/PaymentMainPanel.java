@@ -93,6 +93,7 @@ public class PaymentMainPanel extends FlippingPanel
 	private static final String MSG_EXPERIMENTAL = PaymentMainPanel.class.getName() +
 		"_experimental";
 	private static final String MSG_WANNA_CHARGE = PaymentMainPanel.class.getName() + "_wannaCharge";
+	private static final String MSG_TT_CREATE_ACCOUNT = PaymentMainPanel.class.getName() + "_ttCreateAccount";
 
 
 
@@ -351,6 +352,9 @@ public class PaymentMainPanel extends FlippingPanel
 		{
 			m_BalanceTextSmall.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 			m_BalanceText.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+			m_BalanceTextSmall.setToolTipText(JAPMessages.getString(MSG_TT_CREATE_ACCOUNT));
+			m_BalanceText.setToolTipText(JAPMessages.getString(MSG_TT_CREATE_ACCOUNT));
+
 
 			m_BalanceText.setText(JAPMessages.getString(MSG_PAYMENTNOTACTIVE));
 			m_BalanceTextSmall.setText(JAPMessages.getString(MSG_PAYMENTNOTACTIVE));
@@ -367,6 +371,8 @@ public class PaymentMainPanel extends FlippingPanel
 		{
 			m_BalanceTextSmall.setCursor(Cursor.getDefaultCursor());
 			m_BalanceText.setCursor(Cursor.getDefaultCursor());
+			m_BalanceTextSmall.setToolTipText(null);
+			m_BalanceText.setToolTipText(null);
 
 			XMLBalance balance = activeAccount.getBalance();
 			if (balance != null)
