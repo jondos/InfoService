@@ -12,8 +12,7 @@
 <P>
 JAP Anon Proxy provides the functionality to surf the web without
 being observed. This means that neither the requested server nor any
-observer on the Internet can know which user has viewed which web page.
-
+observer on the Internet can know which user has viewed which web page - in short, <em>anonymity</em>. 
 <P>
 JAP has to be installed on the user's computer to allow him to surf the
 internet anonymously and without being observed. This is necessary since
@@ -28,6 +27,7 @@ users. Every user could have been responsible for any connection. Nobody,
 no outstanding person, no other user, not even the operator of the AN.ON
 service can determine which internet connections were requested by a
 certain user.
+<P>JAP fakes your <a href="http://www.whatismyip.com" target="_blank">IP address</a> against websites, and replaces it by another, fixed IP of the AN.ON system. Unfortunately this alone is not enough to ensure the web surfer's anonymity. On many websites there are so-called active contents that may lead to the disclosure of the IP address, and the web browsers send data that may be used for profiling. Currently, JAP does not block such content yet, but this may be done by <a href="noactive_en.html">additional applications</a>. 
 <h3>Anonymity costs </h3>
 <P>Strong anonymity is not for free - although the base service is offered without payment, users have to sustain a low speed. There won't be an anonyisation at DSL 10000. Otherwise, server with hundreds of GB per second would have to be offered in order to really supply thousands of users at the same time. This would be far too expensive for the operators and is unrealistic, as this would need hundresds of users, each of them paying hundreds of Euros per month, only to cover the server costs.
 <P>We decided to make a compromise between speed and costs for users: our commercial servers offer bandwidths between 64 and 128 kbit/s (ISDN speed), what should be enough for an untroubled web experience. For the allocation of this service quality, we request a little fee that is affordable for most people. Moreover, there will is a (remarkable) slower base service, that may be used without paying.
@@ -38,14 +38,10 @@ certain user.
 <P>
 The AN.ON service consists of several choosable Mix cascades whose Mixes are generally operated by different and independent organisations. These institutions  have declared in a
   <a href="http://anon.inf.tu-dresden.de/operators/help/operatorCommitment_en.html">voluntary commitment</a>  to neither store log files of the transported
-connections nor exchange sensitive data with other Mix  operators.
-
+connections nor exchange sensitive data with other Mix  operators. Moreover, the mix operators are <a href="certificates_en.html">certified</a>, so that their identity is always checkable.
 <P>
 However, since none of the interposed stations should be trusted completely,
-all data to be sent is encrypted several times (once per mix station).
-
-<P>
-The encryption of the requests and the decryption of the answers take place
+all data to be sent is encrypted several times (once per mix station). The encryption of the requests and the decryption of the answers take place
 in the JAP program. The user only has to <A HREF="browser_en.html">configure</A> the
 browser in a way that all web requests are directed through JAP.
 
