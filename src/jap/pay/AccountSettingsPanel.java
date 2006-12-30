@@ -1037,7 +1037,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		}
 	}
 
-	private void doChargeAccount(final PayAccount selectedAccount)
+	public void doChargeAccount(final PayAccount selectedAccount)
 	{
 		if (selectedAccount == null)
 		{
@@ -1297,7 +1297,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 *
 	 * @return boolean
 	 */
-	private void doCreateAccount()
+	public void doCreateAccount()
 	{
 		final JAPDialog d = new JAPDialog(getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
 		d.setDefaultCloseOperation(JAPDialog.DO_NOTHING_ON_CLOSE);

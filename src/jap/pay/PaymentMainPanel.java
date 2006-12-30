@@ -40,6 +40,8 @@ import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -66,6 +68,7 @@ import jap.JAPNewView;
 import jap.JAPUtil;
 import jap.JAPModel;
 import logging.LogType;
+import java.awt.Cursor;
 
 public class PaymentMainPanel extends FlippingPanel
 {
@@ -89,6 +92,8 @@ public class PaymentMainPanel extends FlippingPanel
 		"_enableAutoSwitch";
 	private static final String MSG_EXPERIMENTAL = PaymentMainPanel.class.getName() +
 		"_experimental";
+	private static final String MSG_WANNA_CHARGE = PaymentMainPanel.class.getName() + "_wannaCharge";
+
 
 
 	private static final String[] MSG_PAYMENT_ERRORS = {"_xmlSuccess", "_xmlErrorInternal",
@@ -300,6 +305,20 @@ public class PaymentMainPanel extends FlippingPanel
 		smallPanel.add(m_BalanceSmallProgressBar, c1);
 		this.setSmallPanel(smallPanel);
 
+		MouseAdapter adapter = new MouseAdapter()
+		{
+			public void mouseClicked(MouseEvent a_event)
+			{
+				if (((JLabel)a_event.getSource()).getCursor() != Cursor.getDefaultCursor())
+				{
+					m_view.showConfigDialog(JAPConf.PAYMENT_TAB, new Boolean(true));
+				}
+			}
+		};
+
+		m_BalanceTextSmall.addMouseListener(adapter);
+		m_BalanceText.addMouseListener(adapter);
+
 
 		PayAccountsFile.getInstance().addPaymentListener(m_MyPaymentListener);
 		updateDisplay(PayAccountsFile.getInstance().getActiveAccount());
@@ -307,7 +326,7 @@ public class PaymentMainPanel extends FlippingPanel
 
 	public static String translateBIError(XMLErrorMessage a_msg)
 	{
-		String error = JAPMessages.getString("aiErrorMessage") + "<br>";
+		String error = JAPMessages.getString("aiErrorMessage"); // + "<br>";
 		if (a_msg.getErrorCode() >= 0 && a_msg.getErrorCode() < MSG_PAYMENT_ERRORS.length)
 		{
 			error += JAPMessages.getString(MSG_PAYMENT_ERRORS[a_msg.getErrorCode()]);
@@ -330,10 +349,12 @@ public class PaymentMainPanel extends FlippingPanel
 		// payment disabled
 		if (activeAccount == null)
 		{
+			m_BalanceTextSmall.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+			m_BalanceText.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
 			m_BalanceText.setText(JAPMessages.getString(MSG_PAYMENTNOTACTIVE));
 			m_BalanceTextSmall.setText(JAPMessages.getString(MSG_PAYMENTNOTACTIVE));
-			m_BalanceText.setEnabled(false);
-			m_BalanceTextSmall.setEnabled(false);
+
 
 			m_BalanceProgressBar.setValue(0);
 			m_BalanceProgressBar.setEnabled(false);
@@ -344,6 +365,9 @@ public class PaymentMainPanel extends FlippingPanel
 		// we got everything under control, situation normal
 		else
 		{
+			m_BalanceTextSmall.setCursor(Cursor.getDefaultCursor());
+			m_BalanceText.setCursor(Cursor.getDefaultCursor());
+
 			XMLBalance balance = activeAccount.getBalance();
 			if (balance != null)
 			{
@@ -464,40 +488,77 @@ public class PaymentMainPanel extends FlippingPanel
 		 *
 		 * @param usingCurrentAccount boolean
 		 */
-		public void accountCertRequested(boolean blubb)
+		public boolean accountCertRequested(boolean blubb)
 		{
 			PayAccountsFile accounts = PayAccountsFile.getInstance();
+			boolean bSuccess = true;
+
+			final JAPDialog.LinkedInformationAdapter adapter =
+				new JAPDialog.LinkedInformationAdapter()
+			{
+				public boolean isOnTop()
+				{
+					return true;
+				}
+			};
+			Runnable run = null;
+
 			if (accounts.getNumAccounts() == 0)
 			{
 				JAPController.getInstance().setAnonMode(false);
+				bSuccess = false;
 
-				SwingUtilities.invokeLater(new Runnable()
+				run = new Runnable()
 				{
 					public void run()
 					{
 						boolean answer = JAPDialog.showYesNoDialog(
 											  JAPController.getInstance().getViewWindow(),
-							JAPMessages.getString("payCreateAccountQuestion"));
+							JAPMessages.getString("payCreateAccountQuestion"), adapter);
 						if (answer)
 						{
-							m_view.showConfigDialog(JAPConf.PAYMENT_TAB, null);
+							m_view.showConfigDialog(JAPConf.PAYMENT_TAB, new Boolean(true));
 						}
 					}
-				});
+				};
 			}
 			else
 			{
 				if (accounts.getActiveAccount() == null)
 				{
 					JAPController.getInstance().setAnonMode(false);
-					SwingUtilities.invokeLater(new Runnable()
+					bSuccess = false;
+					run = new Runnable()
 					{
 						public void run()
 						{
 							JAPDialog.showErrorDialog(JAPController.getInstance().getViewWindow(),
-								JAPMessages.getString(MSG_NO_ACTIVE_ACCOUNT), LogType.PAY);
+								JAPMessages.getString(MSG_NO_ACTIVE_ACCOUNT), LogType.PAY, adapter);
 						}
-					});
+					};
+				}
+				else if (accounts.getActiveAccount().getBalance().getCredit() <= 0)
+				{
+					JAPController.getInstance().setAnonMode(false);
+					bSuccess = false;
+
+					run = new Runnable()
+					{
+						public void run()
+						{
+							String message =
+								JAPMessages.getString(MSG_PAYMENT_ERRORS[XMLErrorMessage.ERR_ACCOUNT_EMPTY]) +
+								" " +
+								JAPMessages.getString(MSG_WANNA_CHARGE);
+							JAPController.getInstance().setAnonMode(false);
+							if (JAPDialog.showYesNoDialog(JAPController.getInstance().getViewWindow(),
+								message, adapter))
+							{
+								m_view.showConfigDialog(JAPConf.PAYMENT_TAB,
+									PayAccountsFile.getInstance().getActiveAccount());
+							}
+						}
+					};
 				}
 				else if (!JAPController.getInstance().getDontAskPayment())
 				{
@@ -513,14 +574,28 @@ public class PaymentMainPanel extends FlippingPanel
 					if (ret != JAPDialog.RETURN_VALUE_OK)
 					{
 						JAPController.getInstance().setAnonMode(false);
+						bSuccess = false;
 					}
 				}
 			}
+			if (run != null)
+			{
+				if (JAPDialog.isConsoleOnly())
+				{
+					run.run();
+				}
+				else
+				{
+					SwingUtilities.invokeLater(run);
+				}
+			}
+			return bSuccess;
 			/*
 			if (accounts.getActiveAccount() != null)
 			{
 				accounts.getActiveAccount().updated();
 			}*/
+
 		}
 
 		/**
@@ -542,8 +617,7 @@ public class PaymentMainPanel extends FlippingPanel
 				m_bShowingError = true;
 				String message = error;
 				Component parent = PaymentMainPanel.this;
-				JAPDialog.LinkedInformationAdapter adapter =
-					new JAPDialog.LinkedInformationAdapter()
+				JAPDialog.LinkedInformationAdapter adapter = new JAPDialog.LinkedInformationAdapter()
 				{
 					public boolean isOnTop()
 					{
@@ -555,7 +629,23 @@ public class PaymentMainPanel extends FlippingPanel
 				{
 					parent = JAPController.getInstance().getViewWindow();
 				}
-				if (!JAPModel.getInstance().isCascadeAutoSwitched())
+				if (msg.getErrorCode() == XMLErrorMessage.ERR_ACCOUNT_EMPTY)
+				{
+					message += "<br><br>" + JAPMessages.getString(MSG_WANNA_CHARGE);
+					JAPController.getInstance().setAnonMode(false);
+					if (JAPDialog.showYesNoDialog(parent, message, adapter))
+					{
+						new Thread(new Runnable()
+						{
+							public void run()
+							{
+								m_view.showConfigDialog(JAPConf.PAYMENT_TAB,
+									PayAccountsFile.getInstance().getActiveAccount());
+							}
+						}).start();
+					}
+				}
+				else if (!JAPModel.getInstance().isCascadeAutoSwitched())
 				{
 					message += "<br><br>" + JAPMessages.getString(MSG_ENABLE_AUTO_SWITCH);
 					if (JAPDialog.showYesNoDialog(parent, message, adapter))

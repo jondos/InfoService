@@ -81,6 +81,7 @@ import logging.LogLevel;
 import logging.LogType;
 import java.awt.Dimension;
 import gui.GUIUtils;
+import anon.pay.PayAccount;
 
 final public class JAPConf extends JAPDialog implements ActionListener, Observer
 {
@@ -161,6 +162,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 	private JAPConfModuleSystem m_moduleSystem;
 	private JAPConfServices m_confServices;
 	private AbstractJAPMainView m_parentView;
+	private AccountSettingsPanel m_accountSettings;
 
 	public static JAPConf getInstance()
 	{
@@ -190,7 +192,8 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		m_moduleSystem.addConfigurationModule(rootNode, confUI, UI_TAB);
 		if (m_bWithPayment)
 		{
-			m_moduleSystem.addConfigurationModule(rootNode, new AccountSettingsPanel(), PAYMENT_TAB);
+			m_accountSettings = new AccountSettingsPanel();
+			m_moduleSystem.addConfigurationModule(rootNode, m_accountSettings, PAYMENT_TAB);
 		}
 		if (!m_bIsSimpleView)
 		{
@@ -1133,27 +1136,51 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 	 * @param a_selectedCard The card to bring to the foreground. See the TAB constants in this
 	 *                       class.
 	 */
-	public void selectCard(String a_strSelectedCard, Object a_value)
+	public void selectCard(String a_strSelectedCard, final Object a_value)
 	{
-		if (a_strSelectedCard.equals(ANON_TAB))
+		if (a_strSelectedCard != null)
 		{
-			m_moduleSystem.selectNode(ANON_SERVICES_TAB);
-			if (a_value instanceof MixCascade)
+			if (a_strSelectedCard.equals(ANON_TAB))
 			{
-				m_confServices.selectAnonTab((MixCascade)a_value);
+				m_moduleSystem.selectNode(ANON_SERVICES_TAB);
+				if (a_value instanceof MixCascade)
+				{
+					m_confServices.selectAnonTab( (MixCascade) a_value);
+				}
+				else
+				{
+					m_confServices.selectAnonTab(null);
+				}
+			}
+			else if (a_strSelectedCard.equals(PAYMENT_TAB))
+			{
+				m_moduleSystem.selectNode(PAYMENT_TAB);
+
+				if (a_value != null)
+				{
+					new Thread(new Runnable()
+					{
+						public void run()
+						{
+							if (a_value instanceof Boolean && ((Boolean)a_value).booleanValue())
+							{
+								// create new account
+								m_accountSettings.doCreateAccount();
+							}
+							else if (a_value instanceof PayAccount)
+							{
+								// charge existing account
+								m_accountSettings.doChargeAccount((PayAccount)a_value);
+							}
+						}
+					}).start();
+
+				}
 			}
 			else
 			{
-				m_confServices.selectAnonTab(null);
+				m_moduleSystem.selectNode(a_strSelectedCard);
 			}
-		}
-		else if (a_strSelectedCard.equals(ANON_TRUST_TAB))
-		{
-			m_moduleSystem.selectNode(JAPConf.ANON_TRUST_TAB);
-		}
-		else
-		{
-			m_moduleSystem.selectNode(a_strSelectedCard);
 		}
 	}
 

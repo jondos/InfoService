@@ -278,7 +278,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			public void onShowMainWindow()
 			{
-
+			}
+			public void onShowSettings()
+			{
+				showConfigDialog(null, null);
 			}
 		});
 
@@ -300,6 +303,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						public void onShowMainWindow()
 						{
 							// do nothing
+						}
+						public void onShowSettings()
+						{
+							showConfigDialog();
 						}
 					});
 					popup.registerExitHandler(new PopupMenu.ExitHandler()
@@ -2035,7 +2042,21 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		help.loadCurrentContext();
 	}
 
-	private void showConfigDialog()
+	public void setVisible(boolean a_bVisible)
+	{
+		boolean bShow = true;
+		if (!isVisible())
+		{
+			bShow = !JAPDll.showWindowFromTaskbar();
+		}
+
+		if (bShow)
+		{
+			super.setVisible(a_bVisible);
+		}
+	}
+
+	public void showConfigDialog()
 	{
 		showConfigDialog(null, null);
 	}
@@ -2077,11 +2098,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				setCursor(c);
 			}
 
-			if (card != null)
-			{
-				m_dlgConfig.selectCard(card, a_value);
-			}
 
+			m_dlgConfig.selectCard(card, a_value);
 			m_dlgConfig.setVisible(true);
 		}
 	}

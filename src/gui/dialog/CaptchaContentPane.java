@@ -221,8 +221,9 @@ public class CaptchaContentPane extends DialogContentPane implements
 		return true;
 	}
 
-	public void accountCertRequested(boolean usingCurrentAccount)
+	public boolean accountCertRequested(boolean usingCurrentAccount)
 	{
+		return true;
 	}
 
 	public void accountError(XMLErrorMessage msg)

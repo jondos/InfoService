@@ -211,6 +211,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	private JobQueue m_anonJobQueue;
 
+	private int m_nrOfJAPStarts;
+	private boolean m_bChangedCascade;
+
 
 	/**
 	 * Stores the active MixCascade.
@@ -3341,6 +3344,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 									// skip closing JAP
 									((JAPSplash)getInstance().m_finishSplash).setVisible(false);
 									getInstance().getViewWindow().setEnabled(true);
+									getInstance().getView().getViewIconified().setEnabled(true);
 									getInstance().setAskSavePayment(!checkbox.getState());
 									return;
 								}
