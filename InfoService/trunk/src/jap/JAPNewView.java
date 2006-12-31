@@ -2045,7 +2045,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	public void setVisible(boolean a_bVisible)
 	{
 		boolean bShow = true;
-		if (!isVisible())
+		if (a_bVisible && !isVisible())
 		{
 			bShow = !JAPDll.showWindowFromTaskbar();
 		}
@@ -2055,6 +2055,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			super.setVisible(a_bVisible);
 		}
 	}
+
 
 	public void showConfigDialog()
 	{
