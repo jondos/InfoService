@@ -274,6 +274,10 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 						{
 							m_mainView.showConfigDialog();
 						}
+						public void onShowHelp()
+						{
+							switchBackToMainView();
+						}
 					});
 					/*
 					popup.registerExitHandler(new PopupMenu.ExitHandler()

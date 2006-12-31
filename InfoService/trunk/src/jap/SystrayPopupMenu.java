@@ -191,6 +191,7 @@ public class SystrayPopupMenu extends PopupMenu
 		{
 			public void actionPerformed(ActionEvent a_event)
 			{
+				m_mainWindowListener.onShowHelp();
 				JAPHelp.getInstance().getContextObj().setContext("index");
 				JAPHelp.getInstance().setAlwaysOnTop(true);
 				JAPHelp.getInstance().setVisible(true);
@@ -257,5 +258,6 @@ public class SystrayPopupMenu extends PopupMenu
 	{
 		public void onShowMainWindow();
 		public void onShowSettings();
+		public void onShowHelp();
 	}
 }

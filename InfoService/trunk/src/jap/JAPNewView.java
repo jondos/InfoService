@@ -283,6 +283,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				showConfigDialog(null, null);
 			}
+			public void onShowHelp()
+			{
+
+			}
 		});
 
 
@@ -307,6 +311,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						public void onShowSettings()
 						{
 							showConfigDialog();
+						}
+						public void onShowHelp()
+						{
+
 						}
 					});
 					popup.registerExitHandler(new PopupMenu.ExitHandler()

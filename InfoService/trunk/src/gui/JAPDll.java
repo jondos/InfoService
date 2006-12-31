@@ -629,6 +629,10 @@ final public class JAPDll {
 				{
 					showWindowFromTaskbar();
 				}
+				public void onShowHelp()
+				{
+
+				}
 				public void onShowSettings()
 				{
 					//showWindowFromTaskbar();
