@@ -44,6 +44,8 @@ import gui.dialog.JAPDialog;
  */
 public abstract class AbstractOS implements IExternalURLCaller, IExternalEMailCaller
 {
+	public static final String URL_MAIL_TO = "mailto:";
+
 	/**
 	 * Make sure that the default OS is the last OS in the array.
 	 */
@@ -132,9 +134,9 @@ public abstract class AbstractOS implements IExternalURLCaller, IExternalEMailCa
 		{
 			return false;
 		}
-		if (!a_mailto.startsWith("mailto:"))
+		if (!a_mailto.startsWith(URL_MAIL_TO))
 		{
-			return openLink("mailto:" + a_mailto);
+			return openLink(URL_MAIL_TO + a_mailto);
 		}
 		else
 		{

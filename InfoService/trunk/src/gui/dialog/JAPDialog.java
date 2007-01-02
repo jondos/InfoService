@@ -31,6 +31,7 @@ import java.util.EventListener;
 import java.util.Vector;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.net.URL;
 import java.lang.reflect.InvocationTargetException;
 import javax.accessibility.Accessible;
 import javax.accessibility.AccessibleContext;
@@ -74,6 +75,7 @@ import javax.swing.RootPaneContainer;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
+import platform.AbstractOS;
 import gui.GUIUtils;
 import gui.JAPHelpContext;
 import gui.JAPHtmlMultiLineLabel;
@@ -566,6 +568,54 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			return false;
 		}
 	}
+
+	/**
+	 * May be used to show a URL.
+	 */
+	public static abstract class AbstractLinkedURLAdapter extends LinkedInformationAdapter
+	{
+		public abstract URL getUrl();
+
+		/**
+		 * Returns <CODE>null</CODE> as no message is needed.
+		 * @return <CODE>null</CODE>
+		 */
+		public String getMessage()
+		{
+			URL url = getUrl();
+			if (url != null)
+			{
+				return getUrl().toString();
+			}
+			return null;
+		}
+		/**
+		 * Opens the URL.
+		 * @param a_bState is ignored
+		 */
+		public final void clicked(boolean a_bState)
+		{
+			AbstractOS.getInstance().openURL(getUrl());
+		}
+
+		/**
+		 * Returns TYPE_LINK.
+		 * @return TYPE_LINK
+		 */
+		public final int getType()
+		{
+			return TYPE_LINK;
+		}
+		/**
+		 * Returns false by default
+		 * @return false
+		 */
+		public boolean isApplicationModalityForced()
+		{
+			return false;
+		}
+	}
+
 
 	/**
 	 * This implementation of ILinkedInformation registers a help context in the dialog and displays a
