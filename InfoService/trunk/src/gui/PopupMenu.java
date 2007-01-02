@@ -130,13 +130,7 @@ public class PopupMenu
 				}
 				public void popupMenuWillBecomeInvisible(PopupMenuEvent a_event)
 				{
-					if (GUIUtils.isAlwaysOnTop(m_popup))
-					{
-						GUIUtils.setAlwaysOnTop(m_popup, false);
-						GUIUtils.setAlwaysOnTop(m_parent, true);
-						m_parent = null;
-						m_bParentOnTop = false;
-					}
+					resetParentOnTopAttribute();
 				}
 				public void popupMenuCanceled(PopupMenuEvent a_event)
 				{
@@ -424,22 +418,31 @@ public class PopupMenu
 		{
 			//((JPopupMenu)m_popup).d;
 		}
-}
+	}
 
-	public final synchronized void setVisible(boolean a_bVisible)
+	private final synchronized void resetParentOnTopAttribute()
 	{
-		if (!a_bVisible && GUIUtils.isAlwaysOnTop(m_popup))
+		if (GUIUtils.isAlwaysOnTop(m_popup))
 		{
 			GUIUtils.setAlwaysOnTop(m_popup, false);
-			if (m_parent != null && m_bParentOnTop)
+			Window parent = m_parent;
+			if (parent != null && m_bParentOnTop)
 			{
-				//m_parent.setVisible(true);
-				GUIUtils.setAlwaysOnTop(m_parent, false);
-				m_parent.setVisible(true);
-				GUIUtils.setAlwaysOnTop(m_parent, true);
+				GUIUtils.setAlwaysOnTop(parent, false);
+				parent.setVisible(true);
+				GUIUtils.setAlwaysOnTop(parent, true);
 			}
 			m_parent = null;
 			m_bParentOnTop = false;
+		}
+
+	}
+
+	public final synchronized void setVisible(boolean a_bVisible)
+	{
+		if (!a_bVisible)
+		{
+			resetParentOnTopAttribute();
 		}
 		if (a_bVisible && m_bCompatibilityMode)
 		{
