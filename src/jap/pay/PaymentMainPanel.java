@@ -34,6 +34,7 @@ package jap.pay;
  * @version 1.0
  */
 import java.sql.Timestamp;
+import java.net.URL;
 
 import java.awt.Dimension;
 import java.awt.Component;
@@ -94,6 +95,7 @@ public class PaymentMainPanel extends FlippingPanel
 		"_experimental";
 	private static final String MSG_WANNA_CHARGE = PaymentMainPanel.class.getName() + "_wannaCharge";
 	private static final String MSG_TT_CREATE_ACCOUNT = PaymentMainPanel.class.getName() + "_ttCreateAccount";
+	private static final String MSG_FREE_OF_CHARGE = PaymentMainPanel.class.getName() + "_freeOfCharge";
 
 
 
@@ -500,14 +502,34 @@ public class PaymentMainPanel extends FlippingPanel
 			boolean bSuccess = true;
 
 			final JAPDialog.LinkedInformationAdapter adapter =
-				new JAPDialog.LinkedInformationAdapter()
+				new JAPDialog.AbstractLinkedURLAdapter()
 			{
 				public boolean isOnTop()
 				{
 					return true;
 				}
+				public URL getUrl()
+				{
+					try
+					{
+						if (JAPMessages.getLocale().getLanguage().equals("de"))
+						{
+							return new URL("http://anon.inf.tu-dresden.de/kosten.html");
+						}
+						else
+						{
+							return new URL("http://anon.inf.tu-dresden.de/kosten_en.html");
+						}
+					}
+					catch (Exception a_e)
+					{
+						// ignore, should not happen
+						return null;
+					}
+				}
 			};
 			Runnable run = null;
+			final String strMessage = "(" + JAPMessages.getString(MSG_FREE_OF_CHARGE) + ")<br><br>";
 
 			if (accounts.getNumAccounts() == 0)
 			{
@@ -520,7 +542,7 @@ public class PaymentMainPanel extends FlippingPanel
 					{
 						boolean answer = JAPDialog.showYesNoDialog(
 											  JAPController.getInstance().getViewWindow(),
-							JAPMessages.getString("payCreateAccountQuestion"), adapter);
+							strMessage + JAPMessages.getString("payCreateAccountQuestion"), adapter);
 						if (answer)
 						{
 							m_view.showConfigDialog(JAPConf.PAYMENT_TAB, new Boolean(true));
@@ -539,7 +561,8 @@ public class PaymentMainPanel extends FlippingPanel
 						public void run()
 						{
 							JAPDialog.showErrorDialog(JAPController.getInstance().getViewWindow(),
-								JAPMessages.getString(MSG_NO_ACTIVE_ACCOUNT), LogType.PAY, adapter);
+								strMessage + JAPMessages.getString(MSG_NO_ACTIVE_ACCOUNT), LogType.PAY, adapter);
+							m_view.showConfigDialog(JAPConf.PAYMENT_TAB, null);
 						}
 					};
 				}
@@ -552,7 +575,7 @@ public class PaymentMainPanel extends FlippingPanel
 					{
 						public void run()
 						{
-							String message =
+							String message = strMessage +
 								JAPMessages.getString(MSG_PAYMENT_ERRORS[XMLErrorMessage.ERR_ACCOUNT_EMPTY]) +
 								" " +
 								JAPMessages.getString(MSG_WANNA_CHARGE);
@@ -571,7 +594,7 @@ public class PaymentMainPanel extends FlippingPanel
 					JAPDialog.LinkedCheckBox checkBox = new JAPDialog.LinkedCheckBox(false);
 
 					int ret = JAPDialog.showConfirmDialog(JAPController.getInstance().getViewWindow(),
-						JAPMessages.getString("payUseAccountQuestion") + "<br><br>" +
+						strMessage + JAPMessages.getString("payUseAccountQuestion") + "<br><br>" +
 						"<Font color=\"red\">" + JAPMessages.getString(MSG_EXPERIMENTAL) + "</Font>",
 						JAPDialog.OPTION_TYPE_OK_CANCEL, JAPDialog.MESSAGE_TYPE_INFORMATION,
 						checkBox);
