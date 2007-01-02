@@ -433,7 +433,7 @@ public class PopupMenu
 			GUIUtils.setAlwaysOnTop(m_popup, false);
 			if (m_parent != null && m_bParentOnTop)
 			{
-				m_parent.setVisible(true);
+				//m_parent.setVisible(true);
 				GUIUtils.setAlwaysOnTop(m_parent, false);
 				m_parent.setVisible(true);
 				GUIUtils.setAlwaysOnTop(m_parent, true);
