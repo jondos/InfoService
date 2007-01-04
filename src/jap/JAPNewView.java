@@ -279,9 +279,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			public void onShowMainWindow()
 			{
 			}
-			public void onShowSettings()
+			public void onShowSettings(String card, Object a_value)
 			{
-				showConfigDialog(null, null);
+				showConfigDialog(card, a_value);
 			}
 			public void onShowHelp()
 			{
@@ -308,9 +308,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						{
 							// do nothing
 						}
-						public void onShowSettings()
+						public void onShowSettings(String card, Object a_value)
 						{
-							showConfigDialog();
+							showConfigDialog(card, a_value);
 						}
 						public void onShowHelp()
 						{
@@ -2062,12 +2062,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			super.setVisible(a_bVisible);
 		}
-	}
-
-
-	public void showConfigDialog()
-	{
-		showConfigDialog(null, null);
 	}
 
 	public void saveWindowPositions()

@@ -69,6 +69,8 @@ public class SystrayPopupMenu extends PopupMenu
 	private static final String MSG_CONNECTED = SystrayPopupMenu.class.getName() + "_connected";
 	private static final String MSG_NOT_CONNECTED = SystrayPopupMenu.class.getName() + "_notConnected";
 	private static final String MSG_USER_NUMBER = SystrayPopupMenu.class.getName() + "_userNumber";
+	private static final String MSG_SHOW_DETAILS = SystrayPopupMenu.class.getName() + "_showDetails";
+
 
 	private MainWindowListener m_mainWindowListener;
 
@@ -144,7 +146,6 @@ public class SystrayPopupMenu extends PopupMenu
 		add(panel);
 
 
-
 		final JCheckBoxMenuItem cbxMenuItem = new JCheckBoxMenuItem(JAPMessages.getString(MSG_ANONYMITY_MODE));
 		GUIUtils.setFontStyle(cbxMenuItem, Font.PLAIN);
 		cbxMenuItem.setSelected(JAPController.getInstance().getAnonMode());
@@ -156,6 +157,20 @@ public class SystrayPopupMenu extends PopupMenu
 			}
 		});
 		add(cbxMenuItem);
+
+		menuItem = new JMenuItem(JAPMessages.getString(MSG_SHOW_DETAILS));
+		GUIUtils.setFontStyle(menuItem, Font.PLAIN);
+		menuItem.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent a_event)
+			{
+				m_mainWindowListener.onShowSettings(
+								JAPConf.ANON_TAB, JAPController.getInstance().getCurrentMixCascade());
+			}
+		});
+		add(menuItem);
+
+
 
 		addSeparator();
 		menuItem = new JMenuItem(JAPMessages.getString(MSG_SHOW_MAIN_WINDOW));
@@ -175,7 +190,7 @@ public class SystrayPopupMenu extends PopupMenu
 		{
 			public void actionPerformed(ActionEvent a_event)
 			{
-				m_mainWindowListener.onShowSettings();
+				m_mainWindowListener.onShowSettings(null, null);
 			}
 		});
 		add(menuItem);
@@ -257,7 +272,7 @@ public class SystrayPopupMenu extends PopupMenu
 	public static interface MainWindowListener
 	{
 		public void onShowMainWindow();
-		public void onShowSettings();
+		public void onShowSettings(String card, Object a_value);
 		public void onShowHelp();
 	}
 }

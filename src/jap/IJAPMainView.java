@@ -40,7 +40,7 @@ public interface IJAPMainView extends JAPObserver, IStatusLine, AnonServiceEvent
 
 	public JAPViewIconified getViewIconified();
 
-	public void showConfigDialog();
+	public void showConfigDialog(String card, Object a_value);
 
 	public void doClickOnCascadeChooser();
 

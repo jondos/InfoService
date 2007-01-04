@@ -633,14 +633,14 @@ final public class JAPDll {
 				{
 
 				}
-				public void onShowSettings()
+				public void onShowSettings(final String card, final Object a_value)
 				{
 					//showWindowFromTaskbar();
 					new Thread(new Runnable()
 					{
 						public void run()
 						{
-							JAPController.getInstance().getView().showConfigDialog();
+							JAPController.getInstance().getView().showConfigDialog(card, a_value);
 						}
 					}).start();
 				}
