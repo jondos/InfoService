@@ -77,9 +77,15 @@ public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 		super.setVisible(a_bVisible);
 	}
 
-	public void showConfigDialog()
+	public void showConfigDialog(String card, Object a_value)
 	{
 	}
+
+	public final void showConfigDialog()
+	{
+		showConfigDialog(null, null);
+	}
+
 
 	public void packetMixed(long a_totalBytes)
 	{

@@ -270,9 +270,9 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 							switchBackToMainView();
 						}
 
-						public void onShowSettings()
+						public void onShowSettings(String card, Object a_value)
 						{
-							m_mainView.showConfigDialog();
+							m_mainView.showConfigDialog(card, a_value);
 						}
 						public void onShowHelp()
 						{
