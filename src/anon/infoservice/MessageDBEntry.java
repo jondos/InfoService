@@ -27,10 +27,14 @@
  */
 package anon.infoservice;
 
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Hashtable;
+import java.util.Locale;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import anon.util.Base64;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
@@ -47,9 +51,9 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry
 	public static final String HTTP_REQUEST_STRING = "/messages";
 	public static final String HTTP_SERIALS_REQUEST_STRING = "/messageserials";
 
-	private static final String XML_HEADLINE = "Head";
 	private static final String XML_TEXT = "Text";
 	private static final String XML_URL = "URL";
+	private static final String XML_ATTR_LANG = "lang";
 
 	private static final long TIMEOUT = 3600 * 1000L; // one hour
 
@@ -59,13 +63,12 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry
 	private String m_id;
 	private Element m_xmlDescription;
 
-	private String m_text;
-	private String m_headline;
-	private URL m_url;
+	private Hashtable m_hashText = new Hashtable();
+	private Hashtable m_hashUrl = new Hashtable();
 
 	public MessageDBEntry(Element a_xmlElement) throws XMLParseException
 	{
-		super(TIMEOUT);
+		super(System.currentTimeMillis() +  TIMEOUT);
 		XMLUtil.assertNodeName(a_xmlElement, XML_ELEMENT_NAME);
 		m_serial = XMLUtil.parseAttribute(a_xmlElement, XML_ATTR_SERIAL, Long.MIN_VALUE);
 		m_id = XMLUtil.parseAttribute(a_xmlElement, XML_ATTR_ID, null);
@@ -73,33 +76,55 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry
 		{
 			throw new XMLParseException("No id given!");
 		}
-		m_text = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_xmlElement, XML_TEXT), null);
-		m_headline = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_xmlElement, XML_HEADLINE), null);
-		if (m_text == null || m_headline == null)
+		NodeList textNodes = a_xmlElement.getElementsByTagName(XML_TEXT);
+		String content, lang;
+
+		for (int i = 0; i < textNodes.getLength(); i++)
 		{
+			content = XMLUtil.parseValue(textNodes.item(i), null);
+			lang = XMLUtil.parseAttribute(textNodes.item(i), XML_ATTR_LANG, "en");
+			if (content != null)
+			{
+				content = Base64.decodeToString(content);
+				m_hashText.put(lang, content);
+			}
+		}
+		if (m_hashText.size() == 0)
+		{
+			// if there is not text, this in interpreted as dummy message
 			m_bIsDummy = true;
 		}
 		else
 		{
 			m_bIsDummy = false;
-		}
 
-		try
-		{
-			m_url = new URL(XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_xmlElement, XML_URL), null));
-		}
-		catch (Exception ex)
-		{
+			textNodes = a_xmlElement.getElementsByTagName(XML_URL);
+			for (int i = 0; i < textNodes.getLength(); i++)
+			{
+				content = XMLUtil.parseValue(textNodes.item(i), null);
+				lang = XMLUtil.parseAttribute(textNodes.item(i), XML_ATTR_LANG, "en");
+				if (content != null)
+				{
+					try
+					{
+						m_hashText.put(lang, new URL(content));
+					}
+					catch (MalformedURLException ex1)
+					{
+						// invalid url
+						continue;
+					}
+				}
+			}
 		}
 
 		m_creationTimeStamp = System.currentTimeMillis();
 		m_xmlDescription = a_xmlElement;
-
 	}
 
 	public MessageDBEntry()
 	{
-		super(TIMEOUT);
+		super(System.currentTimeMillis() + TIMEOUT);
 		m_bIsDummy = false;
 		m_serial = System.currentTimeMillis();
 		m_creationTimeStamp = System.currentTimeMillis();
@@ -108,34 +133,53 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry
 		Element elemTemp;
 
 		m_xmlDescription = doc.createElement(XML_ELEMENT_NAME);
-		elemTemp = doc.createElement(XML_HEADLINE);
-		XMLUtil.setValue(elemTemp, Base64.encode("Eine Überschrift...".getBytes(), true));
-		m_xmlDescription.appendChild(elemTemp);
 		elemTemp = doc.createElement(XML_TEXT);
-		XMLUtil.setValue(elemTemp, Base64.encode("Das ist mein Text!!".getBytes(), true));
+		XMLUtil.setValue(elemTemp, Base64.encode("Das ist mein Text!! Halalü!".getBytes(), true));
 		m_xmlDescription.appendChild(elemTemp);
 		elemTemp = doc.createElement(XML_URL);
-		XMLUtil.setValue(elemTemp, "http://www.anon-online.de");
+		XMLUtil.setAttribute(elemTemp, XML_ATTR_LANG, "de");
+		XMLUtil.setValue(elemTemp, "http://anon.inf.tu-dresden.de/kosten.html");
 		m_xmlDescription.appendChild(elemTemp);
+		elemTemp = doc.createElement(XML_URL);
+		XMLUtil.setAttribute(elemTemp, XML_ATTR_LANG, "en");
+		XMLUtil.setValue(elemTemp, "http://anon.inf.tu-dresden.de/kosten_en.html");
+		m_xmlDescription.appendChild(elemTemp);
+
 
 		XMLUtil.setAttribute(m_xmlDescription, XML_ATTR_ID, m_id);
 		XMLUtil.setAttribute(m_xmlDescription, XML_ATTR_LAST_UPDATE, m_creationTimeStamp);
 		XMLUtil.setAttribute(m_xmlDescription, XML_ATTR_SERIAL, m_serial);
 	}
 
-	public URL getURL()
+	public URL getURL(Locale a_locale)
 	{
-		return m_url;
+		if (a_locale == null)
+		{
+			return null;
+		}
+
+		URL url = (URL)m_hashUrl.get(a_locale.getLanguage());
+
+		if (url == null)
+		{
+			url = (URL)m_hashText.get("en");
+		}
+
+		return url;
 	}
 
-	public String getText()
+	public String getText(Locale a_locale)
 	{
-		return m_text;
-	}
-
-	public String getHead()
-	{
-		return m_headline;
+		if (a_locale == null)
+		{
+			return null;
+		}
+		String text = (String)m_hashText.get(a_locale.getLanguage());
+		if (text == null)
+		{
+			text = (String)m_hashText.get("en");
+		}
+		return text;
 	}
 
 	public boolean isDummy()
