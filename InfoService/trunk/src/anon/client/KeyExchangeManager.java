@@ -135,8 +135,8 @@ public class KeyExchangeManager {
 		  }
 
 		   /* process the received XML structure */
-		   MixCascade cascade = new MixCascade(XMLUtil.toXMLDocument(xmlData).getDocumentElement(),
-											   Long.MAX_VALUE, a_cascade.getId());
+		   Element elem = XMLUtil.toXMLDocument(xmlData).getDocumentElement();
+		   MixCascade cascade = new MixCascade(elem, Long.MAX_VALUE, a_cascade.getId());
 
 		  ITrustModel.TrustException excepTrust = null;
 		  SignatureException execSignature = null;

@@ -197,8 +197,6 @@ public class SystrayPopupMenu extends PopupMenu
 
 
 
-
-
 		menuItem = new JMenuItem(JAPMessages.getString(JAPHelp.MSG_HELP_MENU_ITEM));
 		GUIUtils.setFontStyle(menuItem, Font.PLAIN);
 		add(menuItem);

@@ -1133,6 +1133,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 		Database.getInstance(StatusInfo.class).addObserver(this);
 		Database.getInstance(JAPVersionInfo.class).addObserver(this);
+		Database.getInstance(JavaVersionDBEntry.class).addObserver(this);
 		Database.getInstance(MixCascade.class).addObserver(this);
 		Database.getInstance(NewCascadeIDEntry.class).addObserver(this);
 		Database.getInstance(CascadeIDEntry.class).addObserver(this);
@@ -1732,6 +1733,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 								false, m_listenerUpdate);
 						}
 					}
+
 					if (JAPModel.getInstance().isReminderForJavaUpdateActivated() &&
 						!JAPController.getInstance().isConfigAssistantShown())
 					{
