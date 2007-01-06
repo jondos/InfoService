@@ -1740,9 +1740,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				{
 					if (entry.isDummy())
 					{
-						m_StatusPanel.removeStatusMsg(((MessageDBEntry)m_messageIDs.get(entry.getId())).
-							getExternalIdentifier());
-						m_messageIDs.remove(entry.getId());
+						MessageDBEntry temp = (MessageDBEntry)m_messageIDs.remove(entry.getId());
+						if (temp != null)
+						{
+							m_StatusPanel.removeStatusMsg(temp.getExternalIdentifier());
+						}
 						return;
 					}
 
@@ -1805,9 +1807,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 				else if (entry != null && message.getMessageCode() == DatabaseMessage.ENTRY_REMOVED)
 				{
-					m_StatusPanel.removeStatusMsg(((MessageDBEntry)m_messageIDs.get(entry.getId())).
-												  getExternalIdentifier());
-					m_messageIDs.remove(entry.getId());
+					MessageDBEntry temp = (MessageDBEntry)m_messageIDs.remove(entry.getId());
+					if (temp != null)
+					{
+						m_StatusPanel.removeStatusMsg(temp.getExternalIdentifier());
+					}
+					return;
 				}
 				else if (message.getMessageCode() == DatabaseMessage.ALL_ENTRIES_REMOVED)
 				{
