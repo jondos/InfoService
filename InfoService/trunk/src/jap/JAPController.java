@@ -67,7 +67,9 @@ import anon.client.ITrustModel;
 import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
 import anon.infoservice.AbstractMixCascadeContainer;
+import anon.infoservice.BlacklistedCascadeIDEntry;
 import anon.infoservice.CascadeIDEntry;
+import anon.infoservice.Constants;
 import anon.infoservice.Database;
 import anon.infoservice.DatabaseMessage;
 import anon.infoservice.HTTPConnectionFactory;
@@ -80,6 +82,7 @@ import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
 import anon.infoservice.MixInfo;
+import anon.infoservice.PreviouslyKnownCascadeIDEntry;
 import anon.infoservice.ProxyInterface;
 import anon.mixminion.MixminionServiceDescription;
 import anon.mixminion.mmrdescription.MMRList;
@@ -91,6 +94,7 @@ import anon.pay.PayAccountsFile;
 import anon.proxy.AnonProxy;
 import anon.proxy.IProxyListener;
 import anon.tor.TorAnonServerDescription;
+import anon.util.Base64;
 import anon.util.ClassUtil;
 import anon.util.IMiscPasswordReader;
 import anon.util.IPasswordReader;
@@ -114,10 +118,8 @@ import platform.AbstractOS;
 import proxy.DirectProxy;
 import proxy.DirectProxy.AllowUnprotectedConnectionCallback;
 import update.JAPUpdateWizard;
-import anon.infoservice.BlacklistedCascadeIDEntry;
-import anon.infoservice.PreviouslyKnownCascadeIDEntry;
-import anon.util.Base64;
-import anon.infoservice.Constants;
+import anon.infoservice.DeletedMessageIDDBEntry;
+import anon.infoservice.DeletedMessageIDDBEntry;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -229,6 +231,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private MixCascadeUpdater m_MixCascadeUpdater;
 	private MinVersionUpdater m_minVersionUpdater;
 	private JavaVersionUpdater m_javaVersionUpdater;
+	private MessageUpdater m_messageUpdater;
 	private Object LOCK_VERSION_UPDATE = new Object();
 	private boolean m_bShowingVersionUpdate = false;
 
@@ -282,6 +285,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		m_MixCascadeUpdater = new MixCascadeUpdater();
 		m_minVersionUpdater = new MinVersionUpdater();
 		m_javaVersionUpdater = new JavaVersionUpdater();
+		m_messageUpdater = new MessageUpdater();
 
 		m_anonJobQueue = new JobQueue("Anon mode job queue");
 		m_Model = JAPModel.getInstance();
@@ -475,6 +479,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_MixCascadeUpdater.start(false);
 					m_minVersionUpdater.start(false);
 					m_javaVersionUpdater.start(false);
+					m_messageUpdater.start(false);
 				}
 				else
 				{
@@ -493,6 +498,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 					if (!m_javaVersionUpdater.isFirstUpdateDone())
 					{
 						m_javaVersionUpdater.update();
+					}
+					if (!m_messageUpdater.isFirstUpdateDone())
+					{
+						m_messageUpdater.update();
 					}
 				}
 			}
@@ -1124,6 +1133,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 						nodeMix = nodeMix.getNextSibling();
 					}
 				}
+
+				// load deleted messages
+				Database.getInstance(DeletedMessageIDDBEntry.class).loadFromXml(
+								(Element) XMLUtil.getFirstChildByName(root,
+					DeletedMessageIDDBEntry.XML_ELEMENT_CONTAINER_NAME));
+
 
 				//Load Locale-Settings
 				String strLocale =
@@ -2215,6 +2230,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 				Element elem = defaultMixCascade.toXmlElement(doc);
 				e.appendChild(elem);
 			}
+
+			// store deleted messages
+			e.appendChild(Database.getInstance(DeletedMessageIDDBEntry.class).toXmlElement(doc));
+
 
 			// adding GUI-Element
 			Element elemGUI = doc.createElement(JAPConstants.CONFIG_GUI);
@@ -3394,6 +3413,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							m_Controller.m_InfoServiceUpdater.stop();
 							m_Controller.m_minVersionUpdater.stop();
 							m_Controller.m_javaVersionUpdater.stop();
+							m_Controller.m_messageUpdater.stop();
 						}
 					}, "Finish IS threads");
 					finishIS.start();

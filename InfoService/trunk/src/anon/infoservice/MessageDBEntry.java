@@ -43,7 +43,7 @@ import anon.util.XMLUtil;
  * Used to send messages to JAP.
  * @author Rolf Wendolsky
  */
-public class MessageDBEntry extends AbstractDistributableDatabaseEntry
+public class MessageDBEntry extends AbstractDistributableDatabaseEntry implements IDistributable
 {
 	public static final String XML_ELEMENT_CONTAINER_NAME = "Messages";
 	public static final String XML_ELEMENT_NAME = "Message";
@@ -51,12 +51,17 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry
 	public static final String HTTP_REQUEST_STRING = "/messages";
 	public static final String HTTP_SERIALS_REQUEST_STRING = "/messageserials";
 
-	private static final String XML_TEXT = "Text";
-	private static final String XML_URL = "URL";
+	public static final String PROPERTY_NAME = "messageFileName";
+
+	public static final String POST_FILE = "/message";
+
+	private static final String XML_TEXT = "MessageText";
+	private static final String XML_URL = "MessageURL";
 	private static final String XML_ATTR_LANG = "lang";
 
-	private static final long TIMEOUT = 3600 * 1000L; // one hour
+	private static final long TIMEOUT = 7 * 24 * 60 * 60 * 1000L; // one week
 
+	private int m_externalIdentifier;
 	private long m_serial;
 	private long m_creationTimeStamp;
 	private boolean m_bIsDummy;
@@ -89,9 +94,9 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry
 				m_hashText.put(lang, content);
 			}
 		}
-		if (m_hashText.size() == 0)
+		if (m_hashText.size() == 0 || m_hashText.get("en") == null)
 		{
-			// if there is not text, this in interpreted as dummy message
+			// if there is not text (or no english text), this in interpreted as dummy message
 			m_bIsDummy = true;
 		}
 		else
@@ -107,7 +112,7 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry
 				{
 					try
 					{
-						m_hashText.put(lang, new URL(content));
+						m_hashUrl.put(lang, new URL(content));
 					}
 					catch (MalformedURLException ex1)
 					{
@@ -120,35 +125,6 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry
 
 		m_creationTimeStamp = System.currentTimeMillis();
 		m_xmlDescription = a_xmlElement;
-	}
-
-	public MessageDBEntry()
-	{
-		super(System.currentTimeMillis() + TIMEOUT);
-		m_bIsDummy = false;
-		m_serial = System.currentTimeMillis();
-		m_creationTimeStamp = System.currentTimeMillis();
-		m_id = "0";
-		Document doc = XMLUtil.createDocument();
-		Element elemTemp;
-
-		m_xmlDescription = doc.createElement(XML_ELEMENT_NAME);
-		elemTemp = doc.createElement(XML_TEXT);
-		XMLUtil.setValue(elemTemp, Base64.encode("Das ist mein Text!! Halalü!".getBytes(), true));
-		m_xmlDescription.appendChild(elemTemp);
-		elemTemp = doc.createElement(XML_URL);
-		XMLUtil.setAttribute(elemTemp, XML_ATTR_LANG, "de");
-		XMLUtil.setValue(elemTemp, "http://anon.inf.tu-dresden.de/kosten.html");
-		m_xmlDescription.appendChild(elemTemp);
-		elemTemp = doc.createElement(XML_URL);
-		XMLUtil.setAttribute(elemTemp, XML_ATTR_LANG, "en");
-		XMLUtil.setValue(elemTemp, "http://anon.inf.tu-dresden.de/kosten_en.html");
-		m_xmlDescription.appendChild(elemTemp);
-
-
-		XMLUtil.setAttribute(m_xmlDescription, XML_ATTR_ID, m_id);
-		XMLUtil.setAttribute(m_xmlDescription, XML_ATTR_LAST_UPDATE, m_creationTimeStamp);
-		XMLUtil.setAttribute(m_xmlDescription, XML_ATTR_SERIAL, m_serial);
 	}
 
 	public URL getURL(Locale a_locale)
@@ -182,6 +158,16 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry
 		return text;
 	}
 
+	public int getExternalIdentifier()
+	{
+		return m_externalIdentifier;
+	}
+
+	public void setExternalIdentifier(int a_identifier)
+	{
+		m_externalIdentifier = a_identifier;
+	}
+
 	public boolean isDummy()
 	{
 		return m_bIsDummy;
@@ -199,7 +185,7 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry
 
 	public String getPostFile()
 	{
-		return "/message";
+		return POST_FILE;
 	}
 
 	public long getLastUpdate()

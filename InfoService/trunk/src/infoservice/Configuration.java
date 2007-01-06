@@ -60,6 +60,7 @@ import logging.LogLevel;
 import logging.LogType;
 import infoservice.tor.MixminionDirectoryAgent;
 import anon.infoservice.JavaVersionDBEntry;
+import anon.infoservice.MessageDBEntry;
 import anon.infoservice.InfoServiceDBEntry;
 
 final public class Configuration
@@ -157,6 +158,8 @@ final public class Configuration
 	 * (path + filename).
 	 */
 	private File m_strJavaLatestVersionFile;
+
+	private File m_messageFile;
 
 	/**
 	 * Stores where the japMinVersion.xml is located in the local file system (path + filename).
@@ -529,6 +532,16 @@ final public class Configuration
 				{
 					LogHolder.log(LogLevel.WARNING, LogType.MISC, "Could not load Java version information!");
 				}
+
+				try
+				{
+					m_messageFile = new File(a_properties.getProperty(MessageDBEntry.PROPERTY_NAME).trim());
+				}
+				catch (Exception a_e)
+				{
+					LogHolder.log(LogLevel.WARNING, LogType.MISC, "Could not load message information!");
+				}
+
 
 				/* load the private key for signing our own infoservice messages */
 				String updatePkcs12KeyFile = a_properties.getProperty("updateInformationPrivateKey");
@@ -920,6 +933,11 @@ final public class Configuration
 	public File getJavaLatestVersionFile()
 	{
 		return m_strJavaLatestVersionFile;
+	}
+
+	public File getMessageFile()
+	{
+		return m_messageFile;
 	}
 
 

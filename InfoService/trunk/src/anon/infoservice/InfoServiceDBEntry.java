@@ -1272,59 +1272,95 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 	}
 
 
-	private Hashtable getUpdateEntries(Class a_distributable) throws Exception
+	private Hashtable getUpdateEntries(Class a_distributable, boolean a_bSerials) throws Exception
 	{
-		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest(
-			  AbstractDistributableDatabaseEntry.getHttpRequestString(a_distributable)));
+		Document doc;
+		if (a_bSerials)
+		{
+			doc = getXmlDocument(HttpRequestStructure.createGetRequest(
+				AbstractDistributableDatabaseEntry.getHttpSerialsRequestString(a_distributable)));
+		}
+		else
+		{
+			doc = getXmlDocument(HttpRequestStructure.createGetRequest(
+				AbstractDistributableDatabaseEntry.getHttpRequestString(a_distributable)));
+		}
 
-		Node rootNode = XMLUtil.getFirstChildByName(doc, XMLUtil.getXmlElementContainerName(a_distributable));
-		if (rootNode == null || ! (rootNode instanceof Element))
+		/** @todo check signatures for java versions, too! */
+		if (!(a_distributable.equals(JavaVersionDBEntry.class) && !a_bSerials) &&
+			!SignatureVerifier.getInstance().verifyXml(doc.getDocumentElement(),
+			SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE))
 		{
-			throw (new XMLParseException(
-						 XMLUtil.getXmlElementContainerName(a_distributable), "Node missing!"));
+			LogHolder.log(LogLevel.INFO, LogType.MISC, "Cannot verify the signature for " +
+						  a_distributable.getName() + " document: " +
+						  XMLUtil.toString(doc));
+			return new Hashtable();
 		}
-		NodeList nodes = ( (Element) rootNode).getElementsByTagName(
-			  XMLUtil.getXmlElementName(a_distributable));
-		Hashtable versionInfos = new Hashtable();
-		AbstractDistributableDatabaseEntry currentVersionInfo;
-		Element versionNode;
-		for (int i = 0; i < nodes.getLength(); i++)
+
+		if (a_bSerials)
 		{
-			versionNode = (Element) (nodes.item(i));
-			/* check the signature */
-			if (SignatureVerifier.getInstance().verifyXml(
-						 versionNode, SignatureVerifier.DOCUMENT_CLASS_UPDATE))
+			return new AbstractDistributableDatabaseEntry.Serials(a_distributable).parse(
+					 doc.getDocumentElement());
+		}
+		else
+		{
+			Node rootNode = XMLUtil.getFirstChildByName(doc,
+				XMLUtil.getXmlElementContainerName(a_distributable));
+			if (rootNode == null || ! (rootNode instanceof Element))
 			{
-				/* signature is valid */
-				try
+				throw (new XMLParseException(
+					XMLUtil.getXmlElementContainerName(a_distributable), "Node missing!"));
+			}
+			NodeList nodes = ( (Element) rootNode).getElementsByTagName(
+				XMLUtil.getXmlElementName(a_distributable));
+			Hashtable versionInfos = new Hashtable();
+			AbstractDistributableDatabaseEntry currentVersionInfo;
+			Element versionNode;
+			for (int i = 0; i < nodes.getLength(); i++)
+			{
+				versionNode = (Element) (nodes.item(i));
+				/* check the signature */
+				if (SignatureVerifier.getInstance().verifyXml(
+					versionNode, SignatureVerifier.DOCUMENT_CLASS_UPDATE))
 				{
-					currentVersionInfo = (AbstractDistributableDatabaseEntry)a_distributable.getConstructor(
-									   new Class[]{Element.class}).newInstance(new Object[]{versionNode});
-					versionInfos.put(currentVersionInfo.getId(), currentVersionInfo);
+					/* signature is valid */
+					try
+					{
+						currentVersionInfo = (AbstractDistributableDatabaseEntry) a_distributable.
+							getConstructor(
+								new Class[]
+								{Element.class}).newInstance(new Object[]
+							{versionNode});
+						versionInfos.put(currentVersionInfo.getId(), currentVersionInfo);
+					}
+					catch (Exception e)
+					{
+						/* an error while parsing the node occured -> we don't use this mixcascade */
+						LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Error in " +
+									  a_distributable.getName() + " XML node.");
+					}
 				}
-				catch (Exception e)
+				else
 				{
-					/* an error while parsing the node occured -> we don't use this mixcascade */
-					LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Error in "+
-								  a_distributable.getName() + " XML node.");
+					LogHolder.log(LogLevel.INFO, LogType.MISC,
+								  "Cannot verify the signature for " +
+								  a_distributable.getName() + " entry: " +
+								  XMLUtil.toString(versionNode));
 				}
 			}
-			else
-			{
-				LogHolder.log(LogLevel.INFO, LogType.MISC,
-							  "Cannot verify the signature for " +
-							   a_distributable.getName() + " entry: " +
-							  XMLUtil.toString(versionNode));
-			}
+			return versionInfos;
 		}
-		return versionInfos;
 	}
 
 	public Hashtable getMessages() throws Exception
 	{
-		return getUpdateEntries(MessageDBEntry.class);
+		return getUpdateEntries(MessageDBEntry.class, false);
 	}
 
+	public Hashtable getMessageSerials() throws Exception
+	{
+		return getUpdateEntries(MessageDBEntry.class, true);
+	}
 
 	/**
 	 * Get the latest java versions the infoservice knows ordered by vendors.
@@ -1333,8 +1369,14 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 	 */
 	public Hashtable getLatestJava() throws Exception
 	{
-		return getUpdateEntries(JavaVersionDBEntry.class);
+		return getUpdateEntries(JavaVersionDBEntry.class, false);
 	}
+
+	public Hashtable getLatestJavaSerials() throws Exception
+	{
+		return getUpdateEntries(JavaVersionDBEntry.class, true);
+	}
+
 
 
 	/**
