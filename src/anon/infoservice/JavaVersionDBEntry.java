@@ -28,11 +28,13 @@
 package anon.infoservice;
 
 import java.net.URL;
+import java.util.Hashtable;
 import java.util.Enumeration;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
 
@@ -47,6 +49,7 @@ public class JavaVersionDBEntry  extends AbstractDistributableDatabaseEntry
 	public static final String CURRENT_JAVA_VERSION = System.getProperty("java.version");
 
 	public static final String HTTP_REQUEST_STRING = "/currentjavaversion";
+	public static final String HTTP_SERIALS_REQUEST_STRING = "/currentjavaversionSerials";
 
 	public static final String PROPERTY_NAME = "jreVersionsFileName";
 
@@ -56,7 +59,10 @@ public class JavaVersionDBEntry  extends AbstractDistributableDatabaseEntry
 	public static final String XML_ELEMENT_NAME = "JavaVersion";
 	public static final String XML_ELEMENT_CONTAINER_NAME = "JavaVersionInfos";
 
+	private static final String OS_NAME = System.getProperty("os.name", "");
+
 	private static final String XML_ATTR_VENDOR = "vendor";
+	private static final String XML_ATTR_OPERATING_SYSTEM = "os";
 	private static final String XML_ELEM_VERSION = "LatestVersion";
 	private static final String XML_ELEM_DOWNLOAD_URL = "DownloadURL";
 	private static final String XML_ELEM_VENDOR_LONG = "VendorLongName";
@@ -136,6 +142,8 @@ public class JavaVersionDBEntry  extends AbstractDistributableDatabaseEntry
 	{
 		super(System.currentTimeMillis() + TIMEOUT);
 		Node currentElement;
+		NodeList nodes;
+		String strTemp;
 
 		if (a_xmlElement == null || !a_xmlElement.getNodeName().equals(XML_ELEMENT_NAME))
 		{
@@ -147,8 +155,21 @@ public class JavaVersionDBEntry  extends AbstractDistributableDatabaseEntry
 			throw new XMLParseException(XML_ELEMENT_NAME, "Unknown vendor!");
 		}
 
-		currentElement = XMLUtil.getFirstChildByName(a_xmlElement, XML_ELEM_VERSION);
-		m_latestVersion = XMLUtil.parseValue(currentElement, null);
+		nodes = a_xmlElement.getElementsByTagName(XML_ELEM_VERSION);
+		for (int i = 0; i < nodes.getLength(); i++)
+		{
+			strTemp = XMLUtil.parseAttribute(nodes.item(i), XML_ATTR_OPERATING_SYSTEM, "");
+			if ((m_latestVersion == null && strTemp.length() == 0) || OS_NAME.indexOf(strTemp) >= 0)
+			{
+				try
+				{
+					m_latestVersion = XMLUtil.parseValue(nodes.item(i), null);
+				}
+				catch (Exception a_e)
+				{
+				}
+			}
+		}
 		if (m_latestVersion == null)
 		{
 			throw new XMLParseException(XML_ELEM_VERSION);
@@ -161,15 +182,27 @@ public class JavaVersionDBEntry  extends AbstractDistributableDatabaseEntry
 			m_lastUpdate = System.currentTimeMillis();
 		}
 
-		currentElement = XMLUtil.getFirstChildByName(a_xmlElement, XML_ELEM_DOWNLOAD_URL);
-		try
+		nodes = a_xmlElement.getElementsByTagName(XML_ELEM_DOWNLOAD_URL);
+		for (int i = 0; i < nodes.getLength(); i++)
 		{
-			m_downloadURL = new URL(XMLUtil.parseValue(currentElement, null));
+			strTemp = XMLUtil.parseAttribute(nodes.item(i), XML_ATTR_OPERATING_SYSTEM, "");
+			if ((m_downloadURL == null && strTemp.length() == 0) || OS_NAME.indexOf(strTemp) >= 0)
+			{
+				try
+				{
+					m_downloadURL = new URL(XMLUtil.parseValue(nodes.item(i), null));
+				}
+				catch (Exception a_e)
+				{
+				}
+			}
 		}
-		catch (Exception a_e)
+		if (m_downloadURL == null)
 		{
 			throw new XMLParseException(XML_ELEM_DOWNLOAD_URL);
 		}
+
+
 		currentElement = XMLUtil.getFirstChildByName(a_xmlElement, XML_ELEM_VENDOR_LONG);
 		try
 		{

@@ -499,7 +499,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 
 	/**
 	 * Does some cleaup operations of the database. All old entries that were not updated by
-	 * the new entries are removed. Subclasses may overwrite this method to suppres or alter this
+	 * the new entries are removed. Subclasses may overwrite this method to suppress or alter this
 	 * behaviour. This method is called by updateInternal().
 	 * @param a_newEntries the list of new entries
 	 * @return boolean

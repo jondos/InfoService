@@ -121,6 +121,10 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 
 	private static final int GET_INFOSERVICE_SERIALS = 14;
 	private static final int GET_MIXCASCADE_SERIALS = 15;
+	private static final int GET_MESSAGES = 16;
+	private static final int GET_LATEST_JAVA_SERIALS = 17;
+	private static final int GET_MESSAGE_SERIALS = 18;
+
 
 	private static final String XML_ATTR_ASKED_INFO_SERVICES = "nrAskedInfoServices";
 
@@ -351,7 +355,9 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 		 */
 		if (functionNumber == GET_INFOSERVICES || functionNumber == GET_MIXCASCADES
 			|| functionNumber == GET_INFOSERVICE_SERIALS || functionNumber == GET_MIXCASCADE_SERIALS ||
-			functionNumber == GET_CASCADEINFO)
+			functionNumber == GET_CASCADEINFO || functionNumber == GET_LATEST_JAVA_SERIALS ||
+			functionNumber == GET_LATEST_JAVA || functionNumber == GET_MESSAGES ||
+			functionNumber == GET_MESSAGE_SERIALS)
 		{
 			result = new Hashtable();
 			//if (functionNumber == GET_CASCADEINFO)
@@ -400,9 +406,11 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 				currentInfoService = null;
 				continue;
 			}
-
-			LogHolder.log(LogLevel.NOTICE, LogType.NET,
+			//if (functionNumber == GET_LATEST_JAVA_SERIALS)
+			{
+				LogHolder.log(LogLevel.NOTICE, LogType.NET,
 							  "Trying InfoService: " + currentInfoService.getName(), true);
+			}
 			try
 			{
 				Hashtable tempHashtable = null;
@@ -413,7 +421,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 					tempHashtable = currentInfoService.getMixCascades();
 				}
 				else if (functionNumber == GET_INFOSERVICES)
-				{//System.out.println(currentInfoService.getId());
+				{
 					tempHashtable = currentInfoService.getInfoServices();
 				}
 				else if (functionNumber == GET_MIXINFO)
@@ -422,7 +430,19 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 				}
 				else if (functionNumber == GET_LATEST_JAVA)
 				{
-					result = currentInfoService.getLatestJava();
+					tempHashtable = currentInfoService.getLatestJava();
+				}
+				else if (functionNumber == GET_LATEST_JAVA_SERIALS)
+				{
+					tempHashtable = currentInfoService.getLatestJavaSerials();
+				}
+				else if (functionNumber == GET_MESSAGES)
+				{
+					tempHashtable = currentInfoService.getMessages();
+				}
+				else if (functionNumber == GET_MESSAGE_SERIALS)
+				{
+					tempHashtable = currentInfoService.getMessageSerials();
 				}
 				else if (functionNumber == GET_STATUSINFO)
 				{
@@ -727,6 +747,24 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	{
 		return (Hashtable) fetchInformation(GET_LATEST_JAVA, null);
 	}
+
+	public Hashtable getLatestJavaVersionSerials()
+	{
+		return (Hashtable) fetchInformation(GET_LATEST_JAVA_SERIALS, null);
+	}
+
+
+	public Hashtable getMessages()
+	{
+		return (Hashtable) fetchInformation(GET_MESSAGES, null);
+	}
+
+	public Hashtable getMessageSerials()
+	{
+		return (Hashtable) fetchInformation(GET_MESSAGE_SERIALS, null);
+	}
+
+
 
 	/**
 	 * Returns the JAPVersionInfo for the specified type. The JAPVersionInfo is generated from

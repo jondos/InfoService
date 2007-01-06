@@ -92,6 +92,14 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			return MessageDBEntry.class;
 		}
 	};
+	private final HTTPResponseGetter m_javaVersionResponseGetter = new HTTPResponseGetter()
+	{
+		public Class getDatabaseClass()
+		{
+			return JavaVersionDBEntry.class;
+		}
+	};
+
 
 
     private IInfoServiceAgreementAdapter m_agreementAdapter = DynamicConfiguration.getInstance().getAgreementHandler();
@@ -303,9 +311,6 @@ final public class InfoServiceCommands implements JWSInternalCommands
 
 
 			Database.getInstance(MixCascade.class).update(mixCascadeEntry);
-
-
-
 		}
 		catch (Exception e)
 		{
@@ -314,6 +319,40 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		return httpResponse;
 	}
+
+
+	private HttpResponseStructure messagePost(byte[] a_postData, int a_encoding)
+	{
+		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK);
+		try
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.NET,
+						  "Message received: XML: " + (new String(a_postData)));
+
+			/* verify the signature */
+			MessageDBEntry entry;
+			if (a_encoding == HttpResponseStructure.HTTP_ENCODING_PLAIN)
+			{
+				Element mixCascadeNode =
+					(Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData),
+					MessageDBEntry.XML_ELEMENT_NAME));
+				entry = new MessageDBEntry(mixCascadeNode);
+			}
+			else
+			{
+				throw new Exception("Unsupported post encoding:" + a_encoding);
+			}
+
+			Database.getInstance(MessageDBEntry.class).update(entry);
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.NET, e);
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);
+		}
+		return httpResponse;
+	}
+
 
 	private abstract class HTTPResponseGetter
 	{
@@ -687,8 +726,10 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		return httpResponse;
 	}
 
+    /*
 	private HttpResponseStructure getLatestJavaVersions()
 	{
+
 		HttpResponseStructure httpResponse;
 		Document doc = XMLUtil.createDocument();
 		try
@@ -706,7 +747,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			LogHolder.log(LogLevel.ERR, LogType.NET, e);
 		}
 		return httpResponse;
-	}
+	}*/
 
 	/**
 	 * This method is called, when we receive data from another infoservice with the lastest java version
@@ -1518,6 +1559,10 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		{
 			httpResponse = m_messageResponseGetter.fetchResponse(a_supportedEncodings, true);
 		}
+		else if ( (command.equals(MessageDBEntry.POST_FILE)) && (method == Constants.REQUEST_METHOD_POST))
+		{
+			httpResponse =messagePost(postData, a_supportedEncodings);
+		}
 		else if ( (command.startsWith("/cascadeinfo/")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			ISRuntimeStatistics.ms_lNrOfGetCascadeinfoRequests++;
@@ -1560,12 +1605,17 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		{
 			if (method == Constants.REQUEST_METHOD_GET)
 			{
-				httpResponse = getLatestJavaVersions();
+				httpResponse = 	m_javaVersionResponseGetter.fetchResponse(a_supportedEncodings, false);
+				//httpResponse = getLatestJavaVersions();
 			}
 			else if (method == Constants.REQUEST_METHOD_POST)
 			{
 				httpResponse = postLatestJavaVersions(postData);
 			}
+		}
+		else if (command.equals(JavaVersionDBEntry.HTTP_SERIALS_REQUEST_STRING))
+		{
+			httpResponse = 	m_javaVersionResponseGetter.fetchResponse(a_supportedEncodings, true);
 		}
 		else if ( (command.equals("/currentjapversion")) && (method == Constants.REQUEST_METHOD_POST))
 		{

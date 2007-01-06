@@ -186,7 +186,34 @@ public class UpdateInformationHandler implements Runnable
 					}
 				}
 
-				//Database.getInstance(MessageDBEntry.class).update(new MessageDBEntry());
+				try
+				{
+					entries =
+						XMLUtil.readElementsByTagName(Configuration.getInstance().getMessageFile(),
+													  MessageDBEntry.XML_ELEMENT_NAME);
+					for (int i = 0; i < entries.length; i++)
+					{
+						prepareEntryForPropaganda(entries[i]);
+
+						try
+						{
+							Database.getInstance(MessageDBEntry.class).update(new MessageDBEntry(entries[i]));
+						}
+						catch (Exception ex)
+						{
+							LogHolder.log(LogLevel.ERR, LogType.NET,
+										  "Error while processing message information.", ex);
+						}
+						entries[i] = null;
+					}
+					entries = null;
+				}
+				catch (Exception a_e)
+				{
+					LogHolder.log(LogLevel.ERR, LogType.NET,
+								  "Error while processing message information.", a_e);
+				}
+
 
 				try
 				{

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2006, The JAP-Team
+ Copyright (c) 2007, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -28,31 +28,31 @@
 package jap;
 
 import java.util.Hashtable;
-import anon.infoservice.JavaVersionDBEntry;
+import anon.infoservice.MessageDBEntry;
 import anon.infoservice.InfoServiceHolder;
 
 /**
- * Updates the latest java version.
+ * Updates the messages.
  * @author Rolf Wendolsky
  */
-public class JavaVersionUpdater extends AbstractDatabaseUpdater
+public class MessageUpdater extends AbstractDatabaseUpdater
 {
 	private static final long UPDATE_INTERVAL_MS = 1000 * 60 * 60 * 12l ; // half a day (update twice per day)
 	private static final long UPDATE_INTERVAL_MS_SHORT = 1000 * 60 * 10l; // 10 minutes
 
-	public JavaVersionUpdater()
+	public MessageUpdater()
 	{
 		super(new DynamicUpdateInterval(UPDATE_INTERVAL_MS_SHORT));
 	}
 
 	public Class getUpdatedClass()
 	{
-		return JavaVersionDBEntry.class;
+		return MessageDBEntry.class;
 	}
 
 	protected Hashtable getUpdatedEntries(Hashtable a_dummy)
 	{
-		Hashtable hashtable = InfoServiceHolder.getInstance().getLatestJavaVersions();
+		Hashtable hashtable = InfoServiceHolder.getInstance().getMessages();
 		if (hashtable == null)
 		{
 			((DynamicUpdateInterval)getUpdateInterval()).setUpdateInterval(UPDATE_INTERVAL_MS_SHORT);
@@ -64,8 +64,7 @@ public class JavaVersionUpdater extends AbstractDatabaseUpdater
 
 	protected Hashtable getEntrySerials()
 	{
-		//return new Hashtable();
-		Hashtable hashtable = InfoServiceHolder.getInstance().getLatestJavaVersionSerials();
+		Hashtable hashtable = InfoServiceHolder.getInstance().getMessageSerials();
 		if (hashtable == null)
 		{
 			((DynamicUpdateInterval)getUpdateInterval()).setUpdateInterval(UPDATE_INTERVAL_MS_SHORT);
@@ -73,5 +72,6 @@ public class JavaVersionUpdater extends AbstractDatabaseUpdater
 		}
 		((DynamicUpdateInterval)getUpdateInterval()).setUpdateInterval(UPDATE_INTERVAL_MS);
 		return hashtable;
+
 	}
 }

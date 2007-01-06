@@ -101,6 +101,10 @@ import update.JAPUpdateWizard;
 import javax.swing.JComboBox;
 import anon.infoservice.BlacklistedCascadeIDEntry;
 import java.awt.Point;
+import anon.infoservice.MessageDBEntry;
+import anon.infoservice.DeletedMessageIDDBEntry;
+import java.net.URL;
+import gui.dialog.DialogContentPane;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver, Observer
@@ -137,6 +141,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private static final String MSG_TRUST_FILTER = JAPNewView.class.getName() + "_trustFilter";
 	private static final String MSG_CONNECTED = JAPNewView.class.getName() + "_connected";
+
+	private static final String MSG_DELETE_MESSAGE = JAPNewView.class.getName() + "_deleteMessage";
+	private static final String MSG_VIEW_MESSAGE = JAPNewView.class.getName() + "_viewMessage";
 
 
 	private static final String IMG_ICONIFY = JAPNewView.class.getName() + "_iconify.gif";
@@ -225,6 +232,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JAPProgressBar m_progForwarderActivitySmall;
 
 	private int m_updateAvailableID = -1;
+	private Hashtable m_messageIDs = new Hashtable();
 	private int m_enableInfoServiceID = -1;
 	private int m_newServicesID = -1;
 	private final Object SYNC_STATUS_ENABLE_IS = new Object();
@@ -1138,6 +1146,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		Database.getInstance(NewCascadeIDEntry.class).addObserver(this);
 		Database.getInstance(CascadeIDEntry.class).addObserver(this);
 		Database.getInstance(BlacklistedCascadeIDEntry.class).addObserver(this);
+		Database.getInstance(MessageDBEntry.class).addObserver(this);
 
 
 		JAPModel.getInstance().addObserver(this);
@@ -1708,6 +1717,109 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					}
 				}
 			};
+		}
+		else if (a_observable ==  Database.getInstance(MessageDBEntry.class))
+		{
+			DatabaseMessage message = ( (DatabaseMessage) a_message);
+			if (message.getMessageData() == null)
+			{
+				return;
+			}
+
+			if (message.getMessageCode() == DatabaseMessage.INITIAL_OBSERVER_MESSAGE)
+			{
+				return;
+			}
+			final MessageDBEntry entry = (MessageDBEntry) message.getMessageData();
+			synchronized (m_messageIDs)
+			{
+
+				if (entry != null &&
+					(message.getMessageCode() == DatabaseMessage.ENTRY_ADDED ||
+					 message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED))
+				{
+					if (entry.isDummy())
+					{
+						m_StatusPanel.removeStatusMsg(((MessageDBEntry)m_messageIDs.get(entry.getId())).
+							getExternalIdentifier());
+						m_messageIDs.remove(entry.getId());
+						return;
+					}
+
+					DeletedMessageIDDBEntry deletedEntry = (DeletedMessageIDDBEntry)
+					Database.getInstance(DeletedMessageIDDBEntry.class).getEntryById(entry.getId());
+					if ((deletedEntry == null || deletedEntry.getVersionNumber() < entry.getVersionNumber()) &&
+						m_messageIDs.get(entry.getId()) == null && !entry.isDummy())
+					{
+						// this message has not been shown yet and is allowed to be shown
+						int id = m_StatusPanel.addStatusMsg(entry.getText(JAPMessages.getLocale()),
+							JAPDialog.MESSAGE_TYPE_INFORMATION,
+							false, new ActionListener()
+						{
+							public void actionPerformed(ActionEvent a_event)
+							{
+								int ret = JAPDialog.showConfirmDialog(JAPNewView.this,
+									entry.getText(JAPMessages.getLocale()),
+									JAPMessages.getString(JAPDialog.MSG_TITLE_INFO),
+									new JAPDialog.Options(JAPDialog.OPTION_TYPE_OK_CANCEL)
+								{
+									public String getCancelText()
+									{
+										return JAPMessages.getString(DialogContentPane.MSG_OK);
+									}
+
+									public String getYesOKText()
+									{
+										return JAPMessages.getString(MSG_DELETE_MESSAGE);
+									}
+
+								},
+									JAPDialog.MESSAGE_TYPE_INFORMATION,
+									new JAPDialog.AbstractLinkedURLAdapter()
+								{
+									public URL getUrl()
+									{
+										return entry.getURL(JAPMessages.getLocale());
+									}
+
+									public String getMessage()
+									{
+										return JAPMessages.getString(MSG_VIEW_MESSAGE);
+									}
+								});
+								if (ret == JAPDialog.RETURN_VALUE_OK)
+								{
+									synchronized (m_messageIDs)
+									{
+										m_StatusPanel.removeStatusMsg(entry.getExternalIdentifier());
+										m_messageIDs.remove(entry.getId());
+										Database.getInstance(DeletedMessageIDDBEntry.class).update(
+											new DeletedMessageIDDBEntry(entry));
+									}
+								}
+							}
+						});
+						entry.setExternalIdentifier(id);
+						m_messageIDs.put(entry.getId(), entry);
+					}
+				}
+				else if (entry != null && message.getMessageCode() == DatabaseMessage.ENTRY_REMOVED)
+				{
+					m_StatusPanel.removeStatusMsg(((MessageDBEntry)m_messageIDs.get(entry.getId())).
+												  getExternalIdentifier());
+					m_messageIDs.remove(entry.getId());
+				}
+				else if (message.getMessageCode() == DatabaseMessage.ALL_ENTRIES_REMOVED)
+				{
+					Enumeration enumIDs = m_messageIDs.elements();
+					while (enumIDs.hasMoreElements())
+					{
+						m_StatusPanel.removeStatusMsg( ( ( (MessageDBEntry) enumIDs.nextElement())).
+							getExternalIdentifier());
+					}
+					m_StatusPanel.removeAll();
+				}
+			}
 		}
 		else if (a_observable == Database.getInstance(JavaVersionDBEntry.class))
 		{

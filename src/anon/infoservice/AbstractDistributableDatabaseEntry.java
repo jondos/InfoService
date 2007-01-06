@@ -65,6 +65,11 @@ public abstract class AbstractDistributableDatabaseEntry extends AbstractDatabas
 		return Util.getStaticFieldValue(a_xmlEncodableClass, IDistributable.FIELD_HTTP_REQUEST_STRING);
 	}
 
+	public static String getHttpSerialsRequestString(Class a_xmlEncodableClass)
+	{
+		return Util.getStaticFieldValue(a_xmlEncodableClass, IDistributable.FIELD_HTTP_SERIALS_REQUEST_STRING);
+	}
+
 	public static class Serials implements IXMLEncodable
 	{
 		private static final String XML_ELEMENT_NAME = "Serials";

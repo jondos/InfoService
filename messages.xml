@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Messages>
+    <Message id="1" serial="1">
+        <!-- Text is Base64 encoded -->
+        <MessageText lang="de">QmVzdWNoZW4gU2llIHVuc2VyZSBJbnRlcm5ldHNlaXRlbiE=</MessageText>
+        <MessageText lang="en">VmlzaXQgb3VyIGludGVybmV0IHBhZ2VzIQ==</MessageText>
+	      <MessageURL lang="de">http://anon.inf.tu-dresden.de</MessageURL>
+	      <MessageURL lang="en">http://anon.inf.tu-dresden.de/index_en.html</MessageURL>
+    </Message>
+</Messages>
