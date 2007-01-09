@@ -42,6 +42,7 @@ import java.awt.event.MouseListener;
 import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import java.awt.Cursor;
 
 /**
  * This class is used for the various panels on the Jap's
@@ -59,6 +60,8 @@ import javax.swing.JPanel;
  */
 public class FlippingPanel extends JPanel
 {
+	private static final String MSG_CLICK_TO_SHOW = FlippingPanel.class.getName() + "_clickToShow";
+
 	private JPanel m_panelContainer;
 	private JPanel m_panelSmall;
 	private JPanel m_panelFull;
@@ -77,6 +80,8 @@ public class FlippingPanel extends JPanel
 		GridBagConstraints c = new GridBagConstraints();
 		setLayout(gbl);
 		m_labelBttn = new JLabel(GUIUtils.loadImageIcon(IMG_UP, true));
+		m_labelBttn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		m_labelBttn.setToolTipText(JAPMessages.getString(MSG_CLICK_TO_SHOW));
 		c.fill = GridBagConstraints.NONE;
 		c.weightx = 0;
 		c.weighty = 0;
