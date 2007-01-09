@@ -78,8 +78,8 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 	 */
 	public static final int DEFAULT_LOGIN_TIMEOUT = 20000;
 	private static final int CONNECT_TIMEOUT = 8000;
-	private static final int CONNECTION_ERROR_WAIT_TIME = 30000; // time interval to report proxy errors
-	// 4 errors in 30 seconds should be enough to be sure there is really a connection error
+	private static final int CONNECTION_ERROR_WAIT_TIME = 5000; // time interval to report proxy errors
+	// 4 errors in 5 seconds should be enough to be sure there is really a connection error
 	private static final int CONNECTION_ERROR_WAIT_COUNT = 4;
 
 	private static int m_loginTimeout = DEFAULT_LOGIN_TIMEOUT;
