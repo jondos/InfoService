@@ -90,8 +90,8 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		m_c.weightx = 0;
 		m_c.weightx = 0;
 		m_c.insets = new Insets(5, 5, 5, 5);
-		m_c.anchor = m_c.NORTHWEST;
-		m_c.fill = m_c.NONE;
+		m_c.anchor = GridBagConstraints.NORTHWEST;
+		m_c.fill = GridBagConstraints.NONE;
 
 		//Add some dummy labels for dialog sizing
 		/*
@@ -122,8 +122,8 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		m_c.weightx = 0;
 		m_c.weightx = 0;
 		m_c.insets = new Insets(5, 5, 5, 5);
-		m_c.anchor = m_c.NORTHWEST;
-		m_c.fill = m_c.NONE;
+		m_c.anchor = GridBagConstraints.NORTHWEST;
+		m_c.fill = GridBagConstraints.NONE;
 
 		//setText(selectedOption.getDetailedInfo(m_language));
 

@@ -47,6 +47,11 @@
     <get src="http://anon.inf.tu-dresden.de/develop/MRJClasses.zip" verbose="true" dest="${build.libs}/MRJClasses.zip">    </get>
   </target>
   <target name="init" depends="init-libs"/>
+  <target name="release-pre-compile" depends="init" description="set things so that we can compile a release version of JAP">
+  <!-- Set the flag in JAPConstants to "release" -->
+  <replaceregexp file="${src}/jap/JAPConstants.java" byline="true" match="m_bReleasedVersion( )*=( )*false" replace="m_bReleasedVersion = true">
+  </replaceregexp>
+  </target>
   <target name="compile" depends="init" description="compile the source ">
     <!-- Compile the java code from ${src} into ${build} -->
     <javac srcdir="${src}" destdir="${build}" classpathref="classpath_all"/>
@@ -72,6 +77,8 @@
       <zipfileset src="${classpath_bouncy_file_name}"/>
       <zipfileset src="${classpath_xmlrpc_file_name}"/>
     </jar>
+  </target>
+  <target name="dist-release" depends="release-pre-compile,dist" description="Generates a release version of JAP.jar(this mainly means that the JAP internal release flag is set to 'release'">
   </target>
   <target name="clean" description="clean up">
     <!-- Delete the ${build} and ${dist} directory trees -->

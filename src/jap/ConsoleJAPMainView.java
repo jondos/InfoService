@@ -95,7 +95,7 @@ public class ConsoleJAPMainView implements IJAPMainView
 				}
 
 			}
-			JAPController.getInstance().goodBye(true);
+			JAPController.goodBye(true);
 		}
 		catch (java.io.IOException a_e)
 		{
