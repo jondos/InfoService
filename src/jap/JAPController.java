@@ -993,7 +993,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 									 JAPController.getInstance().getViewWindow());
 
 				setDummyTraffic(XMLUtil.parseAttribute(root, JAPConstants.CONFIG_DUMMY_TRAFFIC_INTERVALL,
-					30000));
+					JAPConfAnonGeneral.DEFAULT_DUMMY_TRAFFIC_INTERVAL_SECONDS));
 				if (strVersion == null || strVersion.compareTo("0.24") < 0)
 				{
 					JAPModel.getInstance().setAutoConnect(
