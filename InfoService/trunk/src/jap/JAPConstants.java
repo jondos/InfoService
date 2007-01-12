@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.06.052"; //Never change the layout of this line!
+	public static final String aktVersion = "00.06.053"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -246,7 +246,7 @@ public final class JAPConstants
 	public final static String CONFIG_PROXY_AUTH_USER_ID = "proxyAuthUserID";
 	public final static String CONFIG_PROXY_AUTHORIZATION = "proxyAuthorization";
 	public final static String CONFIG_PROXY_MODE = "proxyMode";
-	public final static String CONFIG_DUMMY_TRAFFIC_INTERVALL = "DummyTrafficInterval";
+	public final static String CONFIG_DUMMY_TRAFFIC_INTERVALL = "DummytrafficInterval";
 	public final static String CONFIG_AUTO_CONNECT = "autoconnect";
 	public final static String CONFIG_AUTO_RECONNECT = "autoReconnect";
 	public final static String CONFIG_MINIMIZED_STARTUP = "minimizedStartup";

@@ -99,7 +99,9 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 
 	private static final int DT_INTERVAL_STEPLENGTH = 5;
 	private static final int DT_INTERVAL_STEPS = 12;
-	private static final int DT_INTERVAL_DEFAULT = 6;
+	private static final int DT_INTERVAL_DEFAULT = 2;
+	public static final int DEFAULT_DUMMY_TRAFFIC_INTERVAL_SECONDS =
+		DT_INTERVAL_STEPLENGTH * DT_INTERVAL_DEFAULT * 1000;
 
 	private static final Integer[] LOGIN_TIMEOUTS =
 		new Integer[]{new Integer(5), new Integer(10), new Integer(15), new Integer(20), new Integer(25),
