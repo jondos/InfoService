@@ -1472,9 +1472,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						{
 							//User has not pressed cancel and no io exception occured
 							showPIerror(d.getContentPane(), ex);
-							Thread.currentThread().interrupt();
-							break;
 						}
+						Thread.currentThread().interrupt();
+						break;
 					}
 				}
 				m_connectionError = null;
