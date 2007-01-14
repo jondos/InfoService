@@ -263,6 +263,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		AccountSettingsPanel.class.getName() + "_passwordExport";
 	private static final String MSG_ASK_IF_NOT_SAVED =
 		AccountSettingsPanel.class.getName() + "_askIfNotSaved";
+	private static final String MSG_NEW_CAPTCHA_HINT =
+		AccountSettingsPanel.class.getName() + "_newCaptchaHint";
+
 
 
 	private static final String MSG_FILE_EXISTS = AccountSettingsPanel.class.getName() + "_fileExists";
@@ -1707,6 +1710,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		m_bDoNotCloseDialog = false;
 		doChargeAccount(doIt, d, saveErrorPane, exportThread);
 		PITestWorkerPane.updateDialogOptimalSized(fetchBiWorker);
+		captcha.setText(captcha.getText() + " " + JAPMessages.getString(MSG_NEW_CAPTCHA_HINT,
+			JAPMessages.getString(MSG_NEWCAPTCHA)));
 		d.setLocationCenteredOnOwner();
 		d.setVisible(true);
 
