@@ -245,31 +245,8 @@ public class ConfigAssistant extends JAPDialog
 			}
 		});
 
-
-		DialogContentPane paneHelp = new SimpleWizardContentPane(
-			  this, JAPMessages.getString(MSG_HELP),
-			  layout, new DialogContentPane.Options(paneSetLang))
-		{
-			public boolean isMoveForwardAllowed()
-			{
-				return paneSetLang.isSkippedAsNextContentPane();
-			}
-		};
-		paneHelp.getContentPane().setLayout(new GridBagLayout());
-		constraints = new GridBagConstraints();
-		constraints.gridx = 0;
-		constraints.gridy = 0;
-		lblImage = new JLabel(JAPMessages.getString(MSG_ANON_HP));
-		registerLink(lblImage, JAPMessages.getString(MSG_ANON_HP), false);
-		paneHelp.getContentPane().add(lblImage, constraints);
-		lblImage = new JLabel(GUIUtils.loadImageIcon(JAPHelp.IMG_HELP));
-		lblImage.setBorder(border);
-		constraints.gridy++;
-		paneHelp.getContentPane().add(lblImage, constraints);
-
-
 		DialogContentPane paneBrowserConf = new SimpleWizardContentPane(
-				  this, JAPMessages.getString(MSG_BROWSER_CONF), layout, new DialogContentPane.Options(paneHelp))
+				  this, JAPMessages.getString(MSG_BROWSER_CONF), layout, new DialogContentPane.Options(paneSetLang))
 		{
 			public CheckError[] checkUpdate()
 			{
@@ -279,6 +256,10 @@ public class ConfigAssistant extends JAPDialog
 				}
 
 				return super.checkUpdate();
+			}
+			public boolean isMoveForwardAllowed()
+			{
+				return paneSetLang.isSkippedAsNextContentPane();
 			}
 		};
 		contentPane = paneBrowserConf.getContentPane();
@@ -643,10 +624,34 @@ public class ConfigAssistant extends JAPDialog
 		contentPane.add(m_radioAdvancedView, constraints);
 
 
+		DialogContentPane paneHelp = new SimpleWizardContentPane(
+			  this, JAPMessages.getString(MSG_HELP),
+			  layout, new DialogContentPane.Options(paneView))
+		{
+			/*
+			public boolean isMoveForwardAllowed()
+			{
+				return paneSetLang.isSkippedAsNextContentPane();
+			}*/
+		};
+		paneHelp.getContentPane().setLayout(new GridBagLayout());
+		constraints = new GridBagConstraints();
+		constraints.gridx = 0;
+		constraints.gridy = 0;
+		lblImage = new JLabel(JAPMessages.getString(MSG_ANON_HP));
+		registerLink(lblImage, JAPMessages.getString(MSG_ANON_HP), false);
+		paneHelp.getContentPane().add(lblImage, constraints);
+		lblImage = new JLabel(GUIUtils.loadImageIcon(JAPHelp.IMG_HELP));
+		lblImage.setBorder(border);
+		constraints.gridy++;
+		paneHelp.getContentPane().add(lblImage, constraints);
+
+
+
 		final DialogContentPane paneFinish = new SimpleWizardContentPane(
 			  this, JAPMessages.getString(MSG_FINISHED) + "<br><br>" +
 			  JAPMessages.getString(MSG_SELECT_VIEW_RESTART), layout,
-			  new DialogContentPane.Options(paneView))
+			  new DialogContentPane.Options(paneHelp))
 		{
 			public CheckError[] checkUpdate()
 			{

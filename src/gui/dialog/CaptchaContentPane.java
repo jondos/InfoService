@@ -95,7 +95,7 @@ public class CaptchaContentPane extends DialogContentPane implements
 		c.gridx = 0;
 
 		m_imageLabel = new JLabel();
-		m_imageLabel.setPreferredSize(new Dimension(300, 150));
+		m_imageLabel.setPreferredSize(new Dimension(300, 100));
 		rootPanel.add(m_imageLabel, c);
 
 		c.gridy++;
