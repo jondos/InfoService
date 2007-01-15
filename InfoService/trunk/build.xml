@@ -11,6 +11,7 @@
   <property name="japweb" location="/var/www/JapWeb/"/>
   <property name="japkeystore" location="/home/compile/.keystore"/>
   <property name="classpath_httplib_file_name" location="${build.libs}/HTTPClient.jar"/>
+  <property name="classpath_xmllib_file_name" location="${build.libs}/xml.jar"/>
   <property name="classpath_ftplib_file_name" location="${build.libs}/ApacheFTPClient.jar"/>
   <property name="classpath_log4j_file_name" location="${build.libs}/log4j.jar"/>
   <property name="classpath_bouncy_file_name" location="${build.libs}/BouncyCastleLightForJAP.jar"/>
@@ -42,6 +43,7 @@
   </target>
   <target name="init-libs" depends="init-dirs">
     <get src="http://anon.inf.tu-dresden.de/develop/http.jar" verbose="true" dest="${classpath_httplib_file_name}">    </get>
+    <get src="http://anon.inf.tu-dresden.de/develop/xml.jar" verbose="true" dest="${classpath_xmllib_file_name}">    </get>
     <get src="http://anon.inf.tu-dresden.de/develop/BouncyCastleLightForJAP.jar" verbose="true" dest="${classpath_bouncy_file_name}">    </get>
     <get src="http://anon.inf.tu-dresden.de/develop/ApacheFTPClient.jar" verbose="true" dest="${classpath_ftplib_file_name}">    </get>
     <get src="http://anon.inf.tu-dresden.de/develop/apache-xmlrpc-1.1.jar" verbose="true" dest="${classpath_xmlrpc_file_name}">    </get>
@@ -80,6 +82,7 @@
       <zipfileset dir="." includes="images/**/*"/>
       <zipfileset dir="." includes="certificates/**/*"/>
       <zipfileset src="${classpath_httplib_file_name}"/>
+      <zipfileset src="${classpath_xmllib_file_name}"/>
       <zipfileset src="${classpath_ftplib_file_name}"/>
       <zipfileset src="${classpath_log4j_file_name}"/>
       <zipfileset src="${classpath_bouncy_file_name}"/>
