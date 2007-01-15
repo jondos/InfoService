@@ -9,6 +9,7 @@
   <property name="japrelease.jnlp" location="/home/infoservice/japRelease.jnlp"/>
   <property name="japtomcat" location="/home/tomcat/wepapps/jap/"/>
   <property name="japweb" location="/var/www/JapWeb/"/>
+  <property name="japkeystore" location="/home/compile/.keystore"/>
   <property name="classpath_httplib_file_name" location="${build.libs}/HTTPClient.jar"/>
   <property name="classpath_ftplib_file_name" location="${build.libs}/ApacheFTPClient.jar"/>
   <property name="classpath_log4j_file_name" location="${build.libs}/log4j.jar"/>
@@ -84,7 +85,8 @@
   <target name="signJAP.jar" description="sings JAP.jar">
   <input message="Enter passwd for JAP signing key:" addproperty="japkeypass">
   </input>
-  <signjar jar="${dist}/JAP.jar" alias="jap" storepass="${japkeypass}" keypass="${japkeypass}" sigfile="JAP-TEAM">
+  <signjar jar="${dist}/JAP.jar" alias="jap" storepass="${japkeypass}" keypass="${japkeypass}"
+  sigfile="JAP-TEAM" keystore="${japkeystore}">
   </signjar>
   </target>
   <target name="dist-release" depends="release-pre-compile,dist,signJAP.jar" description="Generates a release version of JAP.jar(this mainly means that the JAP internal release flag is set to 'release'">  </target>
