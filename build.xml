@@ -84,7 +84,7 @@
       <zipfileset src="${classpath_log4j_file_name}"/>
       <zipfileset src="${classpath_bouncy_file_name}"/>
       <zipfileset src="${classpath_xmlrpc_file_name}"/>
-      <zipfileset src="${build.libs}/japdll.dll" fullpath="japdll.dll.${currentJAPDllVersion}"/>
+      <zipfileset file="${build.libs}/japdll.dll" fullpath="japdll.dll.${currentJAPDllVersion}"/>
     </jar>
   </target>
   <target name="signJAP.jar" description="sings JAP.jar">
