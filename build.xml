@@ -98,7 +98,7 @@
   </signjar>
   </target>
   <target name="dist-release" depends="release-pre-compile,dist,signJAP.jar" description="Generates a release version of JAP.jar(this mainly means that the JAP internal release flag is set to 'release'">  </target>
-  <target name="getcurrentversion" description="Sets the property 'currentVersion' to the value provided in JAPConstants.java">
+  <target name="getcurrentversion" description="Sets the property 'currentVersion', 'releaseDate' to the value provided in JAPConstants.java">
     <loadfile srcfile="${src}/jap/JAPConstants.java" property="currentVersion">
       <filterchain>
         <linecontains>
@@ -109,6 +109,16 @@
       </filterchain>
     </loadfile>
     <echo message="Current Version is: ${currentVersion}"/>
+    <loadfile srcfile="${src}/jap/JAPConstants.java" property="releaseDate">
+      <filterchain>
+        <linecontains>
+          <contains value="private static final String RELEASE_DATE"/>
+        </linecontains>
+        <containsregex pattern="(.*&quot;)(.*)(&quot;.*)" replace="\2"/>
+        <deletecharacters chars="\r\n" />
+      </filterchain>
+    </loadfile>
+    <echo message="Release Date is: ${releaseDate}"/>
   </target>
   <target name="getcurrentjapdllversion" description="Sets the property 'currentJAPDllVersion' to the value provided on the Web">
 
@@ -134,6 +144,11 @@
     <replaceregexp file="${japrelease.jnlp}"
     match="version=&quot;([0-9][0-9][\.][0-9][0-9][\.][0-9][0-9][0-9])&quot;"
     replace="version=&quot;${currentVersion}&quot;" byline="true">
+    </replaceregexp>
+    <!-- Sets the new release date in the JavaWebStart/JAP Update japRelease.jnlp -->
+    <replaceregexp file="${japrelease.jnlp}"
+    match="releaseDate=&quot;(.*)&quot;"
+    replace="releaseDate=&quot;${releaseDate}&quot;" byline="true">
     </replaceregexp>
 
   </target>
