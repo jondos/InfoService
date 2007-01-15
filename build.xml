@@ -105,7 +105,7 @@
     <!-- Copies the newly created JAP.jar to the Web-Server -->
     <copy file="${dist}/JAP.jar" todir="${japweb}/jap/">    </copy>
     <!-- Sets the new release version number according to JAPConstants.java -->
-    <echo message="${currentVersion}" file="{japweb}/japversionstable.txt"/>
+    <echo message="${currentVersion}" file="${japweb}/japversionstable.txt"/>
     <!-- Copy JAP.jar to the Tomcat directory for JAP Update functionality -->
     <copy file="${dist}/JAP.jar" tofile="${japtomcat}/signedJAP__V${currentVersion}.jar">
     </copy>
