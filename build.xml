@@ -49,6 +49,10 @@
     <get src="http://anon.inf.tu-dresden.de/develop/Jama.jar" verbose="true" dest="${build.libs}/jama.jar">    </get>
     <get src="http://anon.inf.tu-dresden.de/develop/log4j.jar" verbose="true" dest="${classpath_log4j_file_name}">    </get>
     <get src="http://anon.inf.tu-dresden.de/develop/MRJClasses.zip" verbose="true" dest="${build.libs}/MRJClasses.zip">    </get>
+    <get src="http://anon.inf.tu-dresden.de/develop/japdll.dll" verbose="true" dest="${build.libs}/japdll.dll">
+    </get>
+    <get src="http://anon.inf.tu-dresden.de/develop/japdllversion.txt" verbose="true" dest="${build.libs}/japdllversion.txt">
+    </get>
   </target>
   <target name="init" depends="init-libs"/>
   <target name="release-pre-compile" depends="init" description="set things so that we can compile a release version of JAP">
@@ -61,7 +65,7 @@
     <javac target="1.1" source="1.2" srcdir="${src}" destdir="${build}" classpathref="classpath_all"/>
   </target>
   <target name="dist" depends="compile,make-only-jap-jar" description="generate the distribution">  </target>
-  <target name="make-only-jap-jar">
+  <target name="make-only-jap-jar" depends="getcurrentjapdllversion">
     <!-- Create the distribution directory -->
     <mkdir dir="${dist}"/>
     <jar jarfile="${dist}/JAP.jar" manifest="MANIFEST.MF">
@@ -80,6 +84,7 @@
       <zipfileset src="${classpath_log4j_file_name}"/>
       <zipfileset src="${classpath_bouncy_file_name}"/>
       <zipfileset src="${classpath_xmlrpc_file_name}"/>
+      <zipfileset src="${build.libs}/japdll.dll" fullpath="japdll.dll.${currentJAPDllVersion}"/>
     </jar>
   </target>
   <target name="signJAP.jar" description="sings JAP.jar">
@@ -101,6 +106,15 @@
       </filterchain>
     </loadfile>
     <echo message="Current Version is: ${currentVersion}"/>
+  </target>
+  <target name="getcurrentjapdllversion" description="Sets the property 'currentJAPDllVersion' to the value provided on the Web">
+
+    <loadfile srcfile="${build.libs}/japdllversion.txt" property="currentJAPDllVersion">
+      <filterchain>
+        <deletecharacters chars="\r\n" />
+      </filterchain>
+    </loadfile>
+    <echo message="Current JAPDLL Version is: ${currentJAPDllVersion}"/>
   </target>
   <target name="new-jap-release-anon" depends="clean,dist-release,getcurrentversion" description="Makes a new release of JAP. Note: This target needs to be started on anon.inf.tu-dresden.de as root...">
     <!-- Copies the newly created JAP.jar to the Web-Server -->
