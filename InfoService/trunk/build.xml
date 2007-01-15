@@ -81,7 +81,13 @@
       <zipfileset src="${classpath_xmlrpc_file_name}"/>
     </jar>
   </target>
-  <target name="dist-release" depends="release-pre-compile,dist" description="Generates a release version of JAP.jar(this mainly means that the JAP internal release flag is set to 'release'">  </target>
+  <target name="signJAP.jar" description="sings JAP.jar">
+  <input message="Enter passwd for JAP signing key:" addproperty="japkeypass">
+  </input>
+  <signjar jar="${dist}/JAP.jar" alias="jap" storepass="${japkeypass}" keypass="${japkeypass}" sigfile="JAP-TEAM">
+  </signjar>
+  </target>
+  <target name="dist-release" depends="release-pre-compile,dist,signJAP.jar" description="Generates a release version of JAP.jar(this mainly means that the JAP internal release flag is set to 'release'">  </target>
   <target name="getcurrentversion" description="Sets the property 'currentVersion' to the value provided in JAPConstants.java">
     <loadfile srcfile="${src}/jap/JAPConstants.java" property="currentVersion">
       <filterchain>
