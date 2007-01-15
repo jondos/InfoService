@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="AN.ON" default="dist" basedir=".">
+  <description>Ant Build file for the various compontens of the AN.ON project</description>
+  <!-- set global properties for this build -->
+  <property name="src" location="src"/>
+  <property name="build" location="build"/>
+  <property name="build.libs" location="build/libs"/>
+  <property name="dist" location="dist"/>
+  <property name="japrelease.jnlp" location="/home/infoservice/japRelease.jnlp"/>
+  <property name="japtomcat" location="/home/tomcat/webapps/jap/"/>
+  <property name="japweb" location="/var/www/JapWeb/"/>
+  <property name="japkeystore" location="/home/compile/.keystore"/>
+  <property name="classpath_httplib_file_name" location="${build.libs}/HTTPClient.jar"/>
+  <property name="classpath_xmllib_file_name" location="${build.libs}/xml.jar"/>
+  <property name="classpath_ftplib_file_name" location="${build.libs}/ApacheFTPClient.jar"/>
+  <property name="classpath_log4j_file_name" location="${build.libs}/log4j.jar"/>
+  <property name="classpath_bouncy_file_name" location="${build.libs}/BouncyCastleLightForJAP.jar"/>
+  <property name="classpath_xmlrpc_file_name" location="${build.libs}/apache-xml-rpc-1.1.jar"/>
+  <path id="classpath_httplib" location="${classpath_httplib_file_name}"/>
+  <path id="classpath_ftplib" location="${classpath_ftplib_file_name}"/>
+  <path id="classpath_xml-rpc" location="${classpath_xmlrpc_file_name}"/>
+  <path id="classpath_java_mail" location="${build.libs}/mail.jar"/>
+  <path id="classpath_mrj" location="${build.libs}/MRJClasses.zip"/>
+  <path id="classpath_jama" location="${build.libs}/jama.jar"/>
+  <path id="classpath_log4j" location="${classpath_log4j_file_name}"/>
+  <path id="classpath_bouncycastle_jap" location="${classpath_bouncy_file_name}"/>
+  <path id="classpath_all">
+    <path refid="classpath_httplib"/>
+    <path refid="classpath_ftplib"/>
+    <path refid="classpath_xml-rpc"/>
+    <path refid="classpath_java_mail"/>
+    <path refid="classpath_jama"/>
+    <path refid="classpath_log4j"/>
+    <path refid="classpath_mrj"/>
+    <path refid="classpath_bouncycastle_jap"/>
+  </path>
+  <target name="init-dirs">
+    <!-- Create the time stamp -->
+    <tstamp/>
+    <!-- Create the build directory structure used by compile -->
+    <mkdir dir="${build}"/>
+    <mkdir dir="${build.libs}"/>
+  </target>
+  <target name="init-libs" depends="init-dirs">
+    <get src="http://anon.inf.tu-dresden.de/develop/http.jar" verbose="true" dest="${classpath_httplib_file_name}">    </get>
+    <get src="http://anon.inf.tu-dresden.de/develop/xml.jar" verbose="true" dest="${classpath_xmllib_file_name}">    </get>
+    <get src="http://anon.inf.tu-dresden.de/develop/BouncyCastleLightForJAP.jar" verbose="true" dest="${classpath_bouncy_file_name}">    </get>
+    <get src="http://anon.inf.tu-dresden.de/develop/ApacheFTPClient.jar" verbose="true" dest="${classpath_ftplib_file_name}">    </get>
+    <get src="http://anon.inf.tu-dresden.de/develop/apache-xmlrpc-1.1.jar" verbose="true" dest="${classpath_xmlrpc_file_name}">    </get>
+    <get src="http://anon.inf.tu-dresden.de/develop/mail.jar" verbose="true" dest="${build.libs}/mail.jar">    </get>
+    <get src="http://anon.inf.tu-dresden.de/develop/Jama.jar" verbose="true" dest="${build.libs}/jama.jar">    </get>
+    <get src="http://anon.inf.tu-dresden.de/develop/log4j.jar" verbose="true" dest="${classpath_log4j_file_name}">    </get>
+    <get src="http://anon.inf.tu-dresden.de/develop/MRJClasses.zip" verbose="true" dest="${build.libs}/MRJClasses.zip">    </get>
+    <get src="http://anon.inf.tu-dresden.de/develop/japdll.dll" verbose="true" dest="${build.libs}/japdll.dll">
+    </get>
+    <get src="http://anon.inf.tu-dresden.de/develop/japdllversion.txt" verbose="true" dest="${build.libs}/japdllversion.txt">
+    </get>
+  </target>
+  <target name="init" depends="init-libs"/>
+  <target name="release-pre-compile" depends="init" description="set things so that we can compile a release version of JAP">
+    <!-- Set the flag in JAPConstants to "release" -->
+    <replaceregexp file="${src}/jap/JAPConstants.java" byline="true" match="m_bReleasedVersion( )*=( )*false" replace="m_bReleasedVersion = true">    </replaceregexp>
+    <touch file="${src}/jap/JAPConstants.java">    </touch>
+  </target>
+  <target name="compile" depends="init" description="compile the source ">
+    <!-- Compile the java code from ${src} into ${build} -->
+    <javac target="1.1" source="1.2" srcdir="${src}" destdir="${build}" classpathref="classpath_all"/>
+  </target>
+  <target name="dist" depends="compile,make-only-jap-jar" description="generate the distribution">  </target>
+  <target name="make-only-jap-jar" depends="getcurrentjapdllversion">
+    <!-- Create the distribution directory -->
+    <mkdir dir="${dist}"/>
+    <jar jarfile="${dist}/JAP.jar" manifest="MANIFEST.MF" index="true" duplicate="preserve">
+      <fileset dir="${build}" includes="**/*.class">
+        <exclude name="jpi/**/*"/>
+        <exclude name="infoservice/**/*"/>
+        <exclude name="misc/**/*"/>
+        <exclude name="captcha/**/*"/>
+      </fileset>
+      <zipfileset dir="src" includes="JAPM*.properties"/>
+      <zipfileset dir="." includes="help/**/*"/>
+      <zipfileset dir="." includes="images/**/*"/>
+      <zipfileset dir="." includes="certificates/**/*"/>
+      <zipfileset src="${classpath_httplib_file_name}"/>
+      <zipfileset src="${classpath_xmllib_file_name}"/>
+      <zipfileset src="${classpath_ftplib_file_name}"/>
+      <zipfileset src="${classpath_log4j_file_name}"/>
+      <zipfileset src="${classpath_bouncy_file_name}"/>
+      <zipfileset src="${classpath_xmlrpc_file_name}"/>
+      <zipfileset file="${build.libs}/japdll.dll" fullpath="japdll.dll.${currentJAPDllVersion}"/>
+    </jar>
+  </target>
+  <target name="signJAP.jar" description="sings JAP.jar">
+  <input message="Enter passwd for JAP signing key:" addproperty="japkeypass">
+  </input>
+  <signjar jar="${dist}/JAP.jar" alias="jap" storepass="${japkeypass}" keypass="${japkeypass}"
+  sigfile="JAP-TEAM" keystore="${japkeystore}">
+  </signjar>
+  </target>
+  <target name="dist-release" depends="release-pre-compile,dist,signJAP.jar" description="Generates a release version of JAP.jar(this mainly means that the JAP internal release flag is set to 'release'">  </target>
+  <target name="getcurrentversion" description="Sets the property 'currentVersion', 'releaseDate' to the value provided in JAPConstants.java">
+    <loadfile srcfile="${src}/jap/JAPConstants.java" property="currentVersion">
+      <filterchain>
+        <linecontains>
+          <contains value="static final String aktVersion"/>
+        </linecontains>
+        <containsregex pattern="(.*)([0-9][0-9][\.][0-9][0-9][\.][0-9][0-9][0-9])(.*)" replace="\2"/>
+        <deletecharacters chars="\r\n" />
+      </filterchain>
+    </loadfile>
+    <echo message="Current Version is: ${currentVersion}"/>
+    <loadfile srcfile="${src}/jap/JAPConstants.java" property="releaseDate">
+      <filterchain>
+        <linecontains>
+          <contains value="private static final String RELEASE_DATE"/>
+        </linecontains>
+        <containsregex pattern="(.*&quot;)(.*)(&quot;.*)" replace="\2"/>
+        <deletecharacters chars="\r\n" />
+      </filterchain>
+    </loadfile>
+    <echo message="Release Date is: ${releaseDate}"/>
+  </target>
+  <target name="getcurrentjapdllversion" description="Sets the property 'currentJAPDllVersion' to the value provided on the Web">
+
+    <loadfile srcfile="${build.libs}/japdllversion.txt" property="currentJAPDllVersion">
+      <filterchain>
+        <deletecharacters chars="\r\n" />
+      </filterchain>
+    </loadfile>
+    <echo message="Current JAPDLL Version is: ${currentJAPDllVersion}"/>
+  </target>
+  <target name="new-jap-release-anon" depends="clean,dist-release,getcurrentversion" description="Makes a new release of JAP. Note: This target needs to be started on anon.inf.tu-dresden.de as root...">
+    <!-- Copies the newly created JAP.jar to the Web-Server -->
+    <copy file="${dist}/JAP.jar" todir="${japweb}/jap/">    </copy>
+    <!-- Sets the new release version number according to JAPConstants.java -->
+    <echo message="${currentVersion}" file="${japweb}/japversionstable.txt"/>
+    <!-- Copy JAP.jar to the Tomcat directory for JAP Update functionality -->
+    <copy file="${dist}/JAP.jar" tofile="${japtomcat}/signedJAP__V${currentVersion}.jar">
+    </copy>
+    <!-- Touch version.xml to make tomcat reread the JAP web-app -->
+    <touch file="${japtomcat}/version.xml">
+    </touch>
+    <!-- Sets the new version number in the JavaWebStart/JAP Update japRelease.jnlp -->
+    <replaceregexp file="${japrelease.jnlp}"
+    match="version=&quot;([0-9][0-9][\.][0-9][0-9][\.][0-9][0-9][0-9])&quot;"
+    replace="version=&quot;${currentVersion}&quot;" byline="true">
+    </replaceregexp>
+    <!-- Sets the new release date in the JavaWebStart/JAP Update japRelease.jnlp -->
+    <replaceregexp file="${japrelease.jnlp}"
+    match="releaseDate=&quot;([^&quot;]*)&quot;"
+    replace="releaseDate=&quot;${releaseDate}&quot;" byline="true">
+    </replaceregexp>
+
+  </target>
+  <target name="clean" description="clean up">
+    <!-- Delete the ${build} and ${dist} directory trees -->
+    <delete dir="${build}"/>
+    <delete dir="${dist}"/>
+  </target>
+</project>

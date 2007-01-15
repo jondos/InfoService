@@ -1,0 +1,41 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="xhelpfrms.css">
+</head>
+<body>
+<!--#include virtual="/header_en.html"-->
+
+<H1>Command line arguments for JAP</H1>
+
+JAP can be launched from the command line. Several commands can be specified on startup.
+<UL>
+  <B>Commands (<em>long version, short version</em> respective):</B>
+  <P>
+<LI><B> --help, -h</B>
+  <P>
+Shows a help message.
+<LI><B>--console</B>
+  <P>
+JAP will only be running on console. This means that no graphical user interface will be shown.<br>
+In order to quit JAP, type "exit" and press <i>Enter</i>.<br>
+In order to save configuration, type "save" and press <i>Enter</i>.
+<LI><B>--minimized, -m </B>
+  <P>
+JAP minimizes it's window during startup.
+<LI><B>--noSplash, -s</B>
+  <P> Suppresses the splash screen at JAP startup. Starting JAP will then seem to take a little bit longer, as it takes some time until the JAP main window is initialised. The spash screen's function is to bridge this time gap.
+  
+<LI><B>--version, -v</B>
+  <P>
+JAP will print version information for JAP und Java onto the console window.
+<LI><B>--config {Filename}, -c {Filename} </B>
+  <P>
+JAP will use this configuration file.
+</UL>
+<b>Example</b><P>
+In order to start JAP minimized, open a console window, switch to JAP's directory and enter the following command:<br>
+java -jar JAP.jar -minimized
+<!--#include virtual="/footer_en.html"-->
+
+</body>
+</html>
