@@ -7,7 +7,7 @@
   <property name="build.libs" location="build/libs"/>
   <property name="dist" location="dist"/>
   <property name="japrelease.jnlp" location="/home/infoservice/japRelease.jnlp"/>
-  <property name="japtomcat" location="/home/tomcat/wepapps/jap/"/>
+  <property name="japtomcat" location="/home/tomcat/webapps/jap/"/>
   <property name="japweb" location="/var/www/JapWeb/"/>
   <property name="japkeystore" location="/home/compile/.keystore"/>
   <property name="classpath_httplib_file_name" location="${build.libs}/HTTPClient.jar"/>
@@ -97,6 +97,7 @@
           <contains value="static final String aktVersion"/>
         </linecontains>
         <containsregex pattern="(.*)([0-9][0-9][\.][0-9][0-9][\.][0-9][0-9][0-9])(.*)" replace="\2"/>
+        <trim/>
       </filterchain>
     </loadfile>
     <echo message="Current Version is: ${currentVersion}"/>
