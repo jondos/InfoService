@@ -97,7 +97,7 @@
           <contains value="static final String aktVersion"/>
         </linecontains>
         <containsregex pattern="(.*)([0-9][0-9][\.][0-9][0-9][\.][0-9][0-9][0-9])(.*)" replace="\2"/>
-        <trim/>
+        <deletecharacters chars="\r\n" />
       </filterchain>
     </loadfile>
     <echo message="Current Version is: ${currentVersion}"/>
