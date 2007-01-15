@@ -58,7 +58,7 @@
   </target>
   <target name="compile" depends="init" description="compile the source ">
     <!-- Compile the java code from ${src} into ${build} -->
-    <javac srcdir="${src}" destdir="${build}" classpathref="classpath_all"/>
+    <javac target="1.1" srcdir="${src}" destdir="${build}" classpathref="classpath_all"/>
   </target>
   <target name="dist" depends="compile,make-only-jap-jar" description="generate the distribution">  </target>
   <target name="make-only-jap-jar">
@@ -101,7 +101,7 @@
     </loadfile>
     <echo message="Current Version is: ${currentVersion}"/>
   </target>
-  <target name="new-jap-release-anon" depends="dist-release,getcurrentversion" description="Makes a new release of JAP. Note: This target needs to be started on anon.inf.tu-dresden.de as root...">
+  <target name="new-jap-release-anon" depends="clean,dist-release,getcurrentversion" description="Makes a new release of JAP. Note: This target needs to be started on anon.inf.tu-dresden.de as root...">
     <!-- Copies the newly created JAP.jar to the Web-Server -->
     <copy file="${dist}/JAP.jar" todir="${japweb}/jap/">    </copy>
     <!-- Sets the new release version number according to JAPConstants.java -->
