@@ -70,7 +70,7 @@
   <target name="make-only-jap-jar" depends="getcurrentjapdllversion">
     <!-- Create the distribution directory -->
     <mkdir dir="${dist}"/>
-    <jar jarfile="${dist}/JAP.jar" manifest="MANIFEST.MF">
+    <jar jarfile="${dist}/JAP.jar" manifest="MANIFEST.MF" index="true" duplicate="preserve">
       <fileset dir="${build}" includes="**/*.class">
         <exclude name="jpi/**/*"/>
         <exclude name="infoservice/**/*"/>
