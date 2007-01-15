@@ -147,7 +147,7 @@
     </replaceregexp>
     <!-- Sets the new release date in the JavaWebStart/JAP Update japRelease.jnlp -->
     <replaceregexp file="${japrelease.jnlp}"
-    match="releaseDate=&quot;(.*)&quot;"
+    match="releaseDate=&quot;([^&quot;]*)&quot;"
     replace="releaseDate=&quot;${releaseDate}&quot;" byline="true">
     </replaceregexp>
 
