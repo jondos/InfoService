@@ -6,6 +6,9 @@
   <property name="build" location="build"/>
   <property name="build.libs" location="build/libs"/>
   <property name="dist" location="dist"/>
+  <property name="japrelease.jnlp" location="/home/infoservice/japRelease.jnlp"/>
+  <property name="japtomcat" location="/home/tomcat/wepapps/jap/"/>
+  <property name="japweb" location="/var/www/JapWeb/"/>
   <property name="classpath_httplib_file_name" location="${build.libs}/HTTPClient.jar"/>
   <property name="classpath_ftplib_file_name" location="${build.libs}/ApacheFTPClient.jar"/>
   <property name="classpath_log4j_file_name" location="${build.libs}/log4j.jar"/>
@@ -48,11 +51,9 @@
   </target>
   <target name="init" depends="init-libs"/>
   <target name="release-pre-compile" depends="init" description="set things so that we can compile a release version of JAP">
-  <!-- Set the flag in JAPConstants to "release" -->
-  <replaceregexp file="${src}/jap/JAPConstants.java" byline="true" match="m_bReleasedVersion( )*=( )*false" replace="m_bReleasedVersion = true">
-  </replaceregexp>
-  <touch file="${src}/jap/JAPConstants.java">
-  </touch>
+    <!-- Set the flag in JAPConstants to "release" -->
+    <replaceregexp file="${src}/jap/JAPConstants.java" byline="true" match="m_bReleasedVersion( )*=( )*false" replace="m_bReleasedVersion = true">    </replaceregexp>
+    <touch file="${src}/jap/JAPConstants.java">    </touch>
   </target>
   <target name="compile" depends="init" description="compile the source ">
     <!-- Compile the java code from ${src} into ${build} -->
@@ -80,7 +81,35 @@
       <zipfileset src="${classpath_xmlrpc_file_name}"/>
     </jar>
   </target>
-  <target name="dist-release" depends="release-pre-compile,dist" description="Generates a release version of JAP.jar(this mainly means that the JAP internal release flag is set to 'release'">
+  <target name="dist-release" depends="release-pre-compile,dist" description="Generates a release version of JAP.jar(this mainly means that the JAP internal release flag is set to 'release'">  </target>
+  <target name="getcurrentversion" description="Sets the property 'currentVersion' to the value provided in JAPConstants.java">
+    <loadfile srcfile="${src}/jap/JAPConstants.java" property="currentVersion">
+      <filterchain>
+        <linecontains>
+          <contains value="static final String aktVersion"/>
+        </linecontains>
+        <containsregex pattern="(.*)([0-9][0-9][\.][0-9][0-9][\.][0-9][0-9][0-9])(.*)" replace="\2"/>
+      </filterchain>
+    </loadfile>
+    <echo message="Current Version is: ${currentVersion}"/>
+  </target>
+  <target name="new-jap-release-anon" depends="dist-release,getcurrentversion" description="Makes a new release of JAP. Note: This target needs to be started on anon.inf.tu-dresden.de as root...">
+    <!-- Copies the newly created JAP.jar to the Web-Server -->
+    <copy file="${dist}/JAP.jar" todir="${japweb}/jap/">    </copy>
+    <!-- Sets the new release version number according to JAPConstants.java -->
+    <echo message="${currentVersion}" file="{japweb}/japversionstable.txt"/>
+    <!-- Copy JAP.jar to the Tomcat directory for JAP Update functionality -->
+    <copy file="${dist}/JAP.jar" tofile="${japtomcat}/signedJAP__V${currentVersion}.jar">
+    </copy>
+    <!-- Touch version.xml to make tomcat reread the JAP web-app -->
+    <touch file="${japtomcat}/version.xml">
+    </touch>
+    <!-- Sets the new version number in the JavaWebStart/JAP Update japRelease.jnlp -->
+    <replaceregexp file="${japrelease.jnlp}"
+    match="version=&quot;([0-9][0-9][\.][0-9][0-9][\.][0-9][0-9][0-9])&quot;"
+    replace="version=&quot;${currentVersion}&quot;" byline="true">
+    </replaceregexp>
+
   </target>
   <target name="clean" description="clean up">
     <!-- Delete the ${build} and ${dist} directory trees -->
