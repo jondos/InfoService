@@ -529,7 +529,7 @@ public class PaymentMainPanel extends FlippingPanel
 				}
 			};
 			Runnable run = null;
-			final String strMessage = JAPMessages.getString(MSG_FREE_OF_CHARGE) + "<br><br>";
+			final String strMessage = "";// = JAPMessages.getString(MSG_FREE_OF_CHARGE) + "<br><br>";
 
 			if (accounts.getNumAccounts() == 0)
 			{
