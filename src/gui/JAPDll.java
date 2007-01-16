@@ -85,7 +85,9 @@ final public class JAPDll {
 	{
 		try
 		{
-			if (System.getProperty("os.name", "").toLowerCase().indexOf("win") > -1)
+			String strOSName = System.getProperty("os.name", "");
+			if (strOSName == null // may be null in Java Webstart since version 1.6.0
+				|| strOSName.toLowerCase().indexOf("win") > -1)
 			{
 				GUIUtils.setNativeGUILibrary(new GUIUtils.NativeGUILibrary()
 				{
