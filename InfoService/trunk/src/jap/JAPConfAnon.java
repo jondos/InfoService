@@ -501,8 +501,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 						{
 							JAPDialog.showMessageDialog(m_payLabel,
 								JAPMessages.getString(MSG_EXPLAIN_NOT_TRUSTWORTHY,
-								TrustModel.getCurrentTrustModel().getName())); //,
-							//new JAPDialog.LinkedHelpContext(JAPConfTrust.class.getName()));
+								TrustModel.getCurrentTrustModel().getName()),
+								new JAPDialog.LinkedHelpContext(JAPConfTrust.class.getName())); //,
 						}
 
 					}
