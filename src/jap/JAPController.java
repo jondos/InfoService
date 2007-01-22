@@ -861,6 +861,59 @@ public final class JAPController extends Observable implements IProxyListener, O
 				//
 				setDefaultView(JAPConstants.VIEW_NORMAL);
 
+				//Loading debug settings
+				Element elemDebug = (Element) XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_DEBUG);
+				if (elemDebug != null)
+				{
+					try
+					{
+						Element elemLevel = (Element) XMLUtil.getFirstChildByName(elemDebug,
+							JAPConstants.CONFIG_LEVEL);
+						JAPDebug.getInstance().setLogLevel(XMLUtil.parseValue(
+							elemLevel, JAPDebug.getInstance().getLogLevel()));
+
+						Element elemLogDetail = (Element) XMLUtil.getFirstChildByName(elemDebug,
+							JAPConstants.CONFIG_LOG_DETAIL);
+						LogHolder.setDetailLevel(
+							XMLUtil.parseValue(elemLogDetail, LogHolder.getDetailLevel()));
+
+						Element elemType = (Element) XMLUtil.getFirstChildByName(elemDebug,
+							JAPConstants.CONFIG_TYPE);
+						if (elemType != null)
+						{
+							int debugtype = LogType.NUL;
+							int[] logTypes = LogType.getAvailableLogTypes();
+							for (int j = 0; j < logTypes.length; j++)
+							{
+								if (XMLUtil.parseAttribute(elemType, LogType.getLogTypeName(logTypes[j]), true))
+								{
+									debugtype |= logTypes[j];
+								}
+							}
+							JAPDebug.getInstance().setLogType(debugtype);
+						}
+						Node elemOutput = XMLUtil.getFirstChildByName(elemDebug, JAPConstants.CONFIG_OUTPUT);
+						if (elemOutput != null)
+						{
+							String strConsole = XMLUtil.parseValue(elemOutput, "");
+							if (strConsole != null && getView() != null)
+							{
+								strConsole.trim();
+								JAPDebug.showConsole(strConsole.equalsIgnoreCase(JAPConstants.CONFIG_CONSOLE),
+									getViewWindow());
+							}
+							Node elemFile = XMLUtil.getLastChildByName(elemOutput, JAPConstants.CONFIG_FILE);
+							JAPDebug.setLogToFile(XMLUtil.parseValue(elemFile, null));
+						}
+					}
+					catch (Exception ex)
+					{
+						LogHolder.log(LogLevel.INFO, LogType.MISC,
+									  " Error loading Debug Settings.");
+					}
+				}
+
+
 				String strVersion = XMLUtil.parseAttribute(root, JAPConstants.CONFIG_VERSION, null);
 	            m_Model.setDLLupdate(XMLUtil.parseAttribute(root, m_Model.DLL_VERSION_UPDATE, false));
 
@@ -1336,60 +1389,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 				if (strDefaultView.equals(JAPConstants.CONFIG_SIMPLIFIED))
 				{
 					setDefaultView(JAPConstants.VIEW_SIMPLIFIED);
-				}
-
-
-
-				//Loading debug settings
-				Element elemDebug = (Element) XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_DEBUG);
-				if (elemDebug != null)
-				{
-					try
-					{
-						Element elemLevel = (Element) XMLUtil.getFirstChildByName(elemDebug,
-							JAPConstants.CONFIG_LEVEL);
-						JAPDebug.getInstance().setLogLevel(XMLUtil.parseValue(
-							elemLevel, JAPDebug.getInstance().getLogLevel()));
-
-						Element elemLogDetail = (Element) XMLUtil.getFirstChildByName(elemDebug,
-							JAPConstants.CONFIG_LOG_DETAIL);
-						LogHolder.setDetailLevel(
-							XMLUtil.parseValue(elemLogDetail, LogHolder.getDetailLevel()));
-
-						Element elemType = (Element) XMLUtil.getFirstChildByName(elemDebug,
-							JAPConstants.CONFIG_TYPE);
-						if (elemType != null)
-						{
-							int debugtype = LogType.NUL;
-							int[] logTypes = LogType.getAvailableLogTypes();
-							for (int j = 0; j < logTypes.length; j++)
-							{
-								if (XMLUtil.parseAttribute(elemType, LogType.getLogTypeName(logTypes[j]), true))
-								{
-									debugtype |= logTypes[j];
-								}
-							}
-							JAPDebug.getInstance().setLogType(debugtype);
-						}
-						Node elemOutput = XMLUtil.getFirstChildByName(elemDebug, JAPConstants.CONFIG_OUTPUT);
-						if (elemOutput != null)
-						{
-							String strConsole = XMLUtil.parseValue(elemOutput, "");
-							if (strConsole != null && getView() != null)
-							{
-								strConsole.trim();
-								JAPDebug.showConsole(strConsole.equalsIgnoreCase(JAPConstants.CONFIG_CONSOLE),
-									getViewWindow());
-							}
-							Node elemFile = XMLUtil.getLastChildByName(elemOutput, JAPConstants.CONFIG_FILE);
-							JAPDebug.setLogToFile(XMLUtil.parseValue(elemFile, null));
-						}
-					}
-					catch (Exception ex)
-					{
-						LogHolder.log(LogLevel.INFO, LogType.MISC,
-									  " Error loading Debug Settings.");
-					}
 				}
 
 				/* load the infoservice management settings */
