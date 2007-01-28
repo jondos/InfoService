@@ -73,6 +73,7 @@ import java.awt.Cursor;
 
 public class PaymentMainPanel extends FlippingPanel
 {
+	private final long WARNING_AMOUNT = 50 * 1024 * 1024; // 50 MB
 
 	/** Messages */
 	private static final String MSG_TITLE = PaymentMainPanel.class.getName() +
@@ -324,7 +325,8 @@ public class PaymentMainPanel extends FlippingPanel
 
 
 		PayAccountsFile.getInstance().addPaymentListener(m_MyPaymentListener);
-		updateDisplay(PayAccountsFile.getInstance().getActiveAccount());
+		// do not show nearly empty dialog, as this would freeze the start sequence
+		updateDisplay(PayAccountsFile.getInstance().getActiveAccount(), false);
 	}
 
 	public static String translateBIError(XMLErrorMessage a_msg)
@@ -347,7 +349,7 @@ public class PaymentMainPanel extends FlippingPanel
 	 *
 	 * @param activeAccount PayAccount
 	 */
-	private void updateDisplay(PayAccount activeAccount)
+	private void updateDisplay(PayAccount activeAccount, boolean a_bWarnIfNearlyEmpty)
 	{
 		// payment disabled
 		if (activeAccount == null)
@@ -433,12 +435,13 @@ public class PaymentMainPanel extends FlippingPanel
 
 				m_labelTotalSpent.setText(JAPUtil.formatBytesValue(activeAccount.getSpent()));
 				// account is nearly empty
-				if (activeAccount.getCertifiedCredit() <= (1024 * 1024) && !m_notifiedEmpty &&
+				if (a_bWarnIfNearlyEmpty &&
+					activeAccount.getCertifiedCredit() <= WARNING_AMOUNT && !m_notifiedEmpty &&
 					activeAccount.getCertifiedCredit() != 0)
 				{
+					m_notifiedEmpty = true;
 					JAPDialog.showMessageDialog(JAPController.getInstance().getViewWindow(),
 												JAPMessages.getString(MSG_NEARLYEMPTY));
-					m_notifiedEmpty = true;
 				}
 
 			}
@@ -460,7 +463,7 @@ public class PaymentMainPanel extends FlippingPanel
 		 */
 		public void accountActivated(PayAccount acc)
 		{
-			updateDisplay(acc);
+			updateDisplay(acc, true);
 		}
 
 		/**
@@ -488,7 +491,7 @@ public class PaymentMainPanel extends FlippingPanel
 		 */
 		public void creditChanged(PayAccount acc)
 		{
-			updateDisplay(acc);
+			updateDisplay(acc, true);
 		}
 
 		/**
