@@ -5,7 +5,7 @@
 <body>
 <!--#include virtual="/header_en.html"-->
 
-<H1>Command line arguments for JAP</H1>
+<H2>Command line arguments for JAP</H2>
 
 JAP can be launched from the command line. Several commands can be specified on startup.
 <UL>
@@ -33,9 +33,13 @@ JAP will print version information for JAP und Java onto the console window.
 JAP will use this configuration file.
 </UL>
 <b>Example</b><P>
-In order to start JAP minimized, open a console window, switch to JAP's directory and enter the following command:<br>
-java -jar JAP.jar -minimized
-<!--#include virtual="/footer_en.html"-->
-
+In order to start JAP minimized, open a console window, switch to JAP's directory and enter the following command:
+<P><code>java -jar JAP.jar -minimized</code>
+<P>You may also use these arguments in Windows shortcuts. Just click on the JAP shortcut with the right mouse button, choose <em>Settings</em> and edit the shortcut as follows:
+<P>Target: &lt;Path to JAP.jar&gt;\jap.exe -minimized <br>
+Execute in: &lt;Path to JAP.jar&gt; 
+<P>Replace hereby &lt;Path to JAP.jar&gt; with the path where the JAP.jar and the japdll.dll are located (typically <code>C:\Programme\Jap</code>). 
+  <!--#include virtual="/footer_en.html"-->
+          
 </body>
 </html>
