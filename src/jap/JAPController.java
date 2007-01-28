@@ -3981,6 +3981,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			return;
 		}
+
 		Enumeration enumer = observerVector.elements();
 		while (enumer.hasMoreElements())
 		{
@@ -4315,6 +4316,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 								a_serverDescription);
 			}
 		}
+		transferedBytes(0, IProxyListener.PROTOCOL_WWW);
+		transferedBytes(0, IProxyListener.PROTOCOL_OTHER);
 	}
 
 	public void dataChainErrorSignaled()
@@ -4342,6 +4345,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 					//m_proxyAnon.stop();
 				}
 				m_proxyAnon = null;
+				m_nrOfBytesWWW = 0;
+				m_nrOfBytesOther = 0;
+				transferedBytes(0, IProxyListener.PROTOCOL_WWW);
+				transferedBytes(0, IProxyListener.PROTOCOL_OTHER);
 			}
 			synchronized (m_anonServiceListener)
 			{
@@ -4351,6 +4358,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					( (AnonServiceEventListener) e.nextElement()).disconnected();
 				}
 			}
+
 			m_finishSync.notifyAll();
 		}
 	}

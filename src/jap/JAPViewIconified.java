@@ -376,7 +376,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 			{
 				if (m_Controller.isAnonConnected())  //m_Controller.getAnonMode())
 				{
-					transferedBytes(0, IProxyListener.PROTOCOL_WWW);
+					//transferedBytes(0, IProxyListener.PROTOCOL_WWW);
 					MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
 					StatusInfo currentStatus = currentMixCascade.getCurrentStatus();
 					int anonLevel = currentStatus.getAnonLevel();
@@ -504,7 +504,8 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 	{
 		if (protocolType == IProxyListener.PROTOCOL_WWW)
 		{
-			m_lTrafficWWW = JAPModel.getInstance().getMixedBytes();
+			//m_lTrafficWWW = JAPModel.getInstance().getMixedBytes();
+			m_lTrafficWWW = b;
 		}
 		else if (protocolType == IProxyListener.PROTOCOL_OTHER)
 		{

@@ -2258,7 +2258,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				m_ViewIconified.updateValues(false);
 			}
 		}
-		transferedBytes(0, IProxyListener.PROTOCOL_WWW);
+		//transferedBytes(0, IProxyListener.PROTOCOL_WWW);
 
 		/*
 		 * Only things that have really changed are updated!
@@ -2612,7 +2612,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						// Nr of Bytes transmitted anonymously
 						if (protocolType == IProxyListener.PROTOCOL_WWW)
 						{
-							m_lTrafficWWW = JAPModel.getInstance().getMixedBytes();
+							//m_lTrafficWWW = JAPModel.getInstance().getMixedBytes();
+							m_lTrafficWWW = c;
 						}
 						else if (protocolType == IProxyListener.PROTOCOL_OTHER)
 						{
@@ -2621,20 +2622,29 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 						String unit = JAPUtil.formatBytesValueOnlyUnit(m_lTrafficWWW);
 						m_labelOwnTrafficUnitWWW.setText(unit);
+						m_labelOwnTrafficUnitWWW.revalidate();
 						String s = JAPUtil.formatBytesValueWithoutUnit(m_lTrafficWWW);
 						m_labelOwnTrafficBytesWWW.setText(s);
+						m_labelOwnTrafficBytesWWW.revalidate();
 						unit = JAPUtil.formatBytesValueOnlyUnit(m_lTrafficOther);
 						m_labelOwnTrafficUnitOther.setText(unit);
+						m_labelOwnTrafficUnitOther.revalidate();
 						s = JAPUtil.formatBytesValueWithoutUnit(m_lTrafficOther);
 						m_labelOwnTrafficBytesOther.setText(s);
+						m_labelOwnTrafficBytesOther.revalidate();
 						long sum = m_lTrafficWWW + m_lTrafficOther;
 						unit = JAPUtil.formatBytesValueOnlyUnit(sum);
 						m_labelOwnTrafficUnit.setText(unit);
+						m_labelOwnTrafficUnit.revalidate();
 						m_labelOwnTrafficUnitSmall.setText(unit);
+						m_labelOwnTrafficUnitSmall.revalidate();
 						s = JAPUtil.formatBytesValueWithoutUnit(sum);
 						m_labelOwnTrafficBytes.setText(s);
+						m_labelOwnTrafficBytes.revalidate();
 						m_labelOwnTrafficBytesSmall.setText(s);
+						m_labelOwnTrafficBytesSmall.revalidate();
 						JAPDll.onTraffic();
+
 					}
 				};
 
