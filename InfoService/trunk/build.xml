@@ -58,7 +58,31 @@
   </target>
   <target name="init" depends="init-libs"/>
   <target name="release-pre-compile" depends="init" description="set things so that we can compile a release version of JAP">
-    <!-- Set the flag in JAPConstants to "release" -->
+    <!-- Check whether the release flag was set to true ==> if this is not the case set it to relase and increment the version nubmer by one
+    -->
+    <loadfile srcfile="${src}/jap/JAPConstants.java" property="bIsReleaseVersion">
+      <filterchain>
+        <linecontains>
+          <contains value="m_bReleasedVersion"/>
+        </linecontains>
+        <containsregex pattern="(.*)m_bReleasedVersion( )*=( )*([falsetru]*)(.*)" replace="\4"/>
+        <deletecharacters chars="\r\n" />
+      </filterchain>
+    </loadfile>
+    <echo message="Is Current Version as Release version: ${bIsReleaseVersion}"/>
+    <loadfile srcfile="${src}/jap/JAPConstants.java" property="currentVersion">
+      <filterchain>
+        <linecontains>
+          <contains value="static final String aktVersion"/>
+        </linecontains>
+        <containsregex pattern="(.*)([0-9][0-9][\.][0-9][0-9][\.][0-9][0-9][0-9])(.*)" replace="\2"/>
+        <deletecharacters chars="\r\n" />
+      </filterchain>
+    </loadfile>
+    <echo message="Current Version is: ${currentVersion}"/>
+    <input message="Enter new Version number for JAP (xx.yy.zzz):" property="currentVersion">
+    </input>
+    <echo message="Current Version is: ${currentVersion}"/>
     <replaceregexp file="${src}/jap/JAPConstants.java" byline="true" match="m_bReleasedVersion( )*=( )*false" replace="m_bReleasedVersion = true">    </replaceregexp>
     <touch file="${src}/jap/JAPConstants.java">    </touch>
   </target>
