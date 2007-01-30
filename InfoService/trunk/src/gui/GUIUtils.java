@@ -86,6 +86,8 @@ import logging.LogLevel;
 import logging.LogType;
 import java.awt.EventQueue;
 import java.awt.MenuComponent;
+import java.applet.Applet;
+import java.awt.Container;
 
 /**
  * This class contains helper methods for the GUI.
@@ -441,6 +443,88 @@ public final class GUIUtils
 		catch (NullPointerException a_e)
 		{
 			return null;
+		}
+	}
+
+	public static void setLocationRelativeTo(Component a_component, Window a_movedWindow)
+	{
+		if (a_component == null && a_movedWindow == null)
+		{
+			return;
+		}
+
+		Container root = null;
+
+		if (a_component != null)
+		{
+			if (a_component instanceof Window || a_component instanceof Applet)
+			{
+				root = (Container) a_component;
+			}
+			else
+			{
+				Container parent;
+				for (parent = a_component.getParent(); parent != null; parent = parent.getParent())
+				{
+					if (parent instanceof Window || parent instanceof Applet)
+					{
+						root = parent;
+						break;
+					}
+				}
+			}
+		}
+
+		if ( (a_component != null && !a_component.isShowing()) || root == null ||
+			!root.isShowing())
+		{
+			Dimension paneSize = a_movedWindow.getSize();
+			Dimension screenSize = a_movedWindow.getToolkit().getScreenSize();
+
+			a_movedWindow.setLocation( (screenSize.width - paneSize.width) / 2,
+									  (screenSize.height - paneSize.height) / 2);
+		}
+		else
+		{
+			Dimension invokerSize = a_component.getSize();
+			Point invokerScreenLocation;
+
+			if (root instanceof Applet)
+			{
+				invokerScreenLocation = a_component.getLocationOnScreen();
+			}
+			else
+			{
+				invokerScreenLocation = new Point(0, 0);
+				Component tc = a_component;
+				while (tc != null)
+				{
+					Point tcl = tc.getLocation();
+					invokerScreenLocation.x += tcl.x;
+					invokerScreenLocation.y += tcl.y;
+					if (tc == root)
+					{
+						break;
+					}
+					tc = tc.getParent();
+				}
+			}
+
+			Rectangle windowBounds = a_movedWindow.getBounds();
+			int dx = invokerScreenLocation.x + ( (invokerSize.width - windowBounds.width) >> 1);
+			int dy = invokerScreenLocation.y + ( (invokerSize.height - windowBounds.height) >> 1);
+			Dimension ss = a_movedWindow.getToolkit().getScreenSize();
+
+			if (dy + windowBounds.height > ss.height)
+			{
+				dy = ss.height - windowBounds.height;
+				dx = invokerScreenLocation.x < (ss.width >> 1) ? invokerScreenLocation.x + invokerSize.width :
+					invokerScreenLocation.x - windowBounds.width;
+			}
+			if (dx + windowBounds.width > ss.width) dx = ss.width - windowBounds.width;
+			if (dx < 0) dx = 0;
+			if (dy < 0) dy = 0;
+			a_movedWindow.setLocation(dx, dy);
 		}
 	}
 

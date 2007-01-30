@@ -2640,7 +2640,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			{
 				if (a_bCenterOnParentComponent)
 				{
-					m_internalDialog.setLocationRelativeTo(getParentComponent());
+					GUIUtils.setLocationRelativeTo(getParentComponent(), m_internalDialog);
 				}
 				else
 				{
@@ -2921,7 +2921,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	public final void setLocationCenteredOn(Component a_component)
 	{
 		m_bLocationSetManually = true;
-		m_internalDialog.setLocationRelativeTo(a_component);
+		GUIUtils.setLocationRelativeTo(a_component, m_internalDialog);
 	}
 
 	/**
@@ -2931,7 +2931,7 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 	public final void setLocationCenteredOnParent()
 	{
 		m_bLocationSetManually = true;
-		m_internalDialog.setLocationRelativeTo(getParentComponent());
+		GUIUtils.setLocationRelativeTo(getParentComponent(), m_internalDialog);
 	}
 
 	/**
