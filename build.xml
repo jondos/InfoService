@@ -117,10 +117,9 @@
   </target>
   <target name="compile" depends="init" description="compile the source ">
     <!-- Compile the java code from ${src} into ${build} -->
-    <javac sourcepath="" target="1.1" source="1.2" srcdir="${src}"
+    <javac sourcepath="" target="1.1" source="1.2" srcdir="${src}" excludes="jpi/** infoservice/** misc/**"
     destdir="${build}" bootclasspathref="java_1_1_boot_classes" classpathref="classpath_all">
     <include name="**/*.java"/>
-    <exclude name="jpi/** infoservice/** misc/**"/>
     </javac>
 
   </target>
