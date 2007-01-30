@@ -58,7 +58,8 @@
   </target>
   <target name="init" depends="init-libs"/>
   <target name="release-pre-compile" depends="init" description="set things so that we can compile a release version of JAP">
-    <!-- Check whether the release flag was set to true ==> if this is not the case set it to relase and increment the version nubmer by one
+    <!-- Check whether the release flag was set to true ==> if this is not the case set it to relase and
+    increment the version nubmer by one and set the date to the current date
     -->
     <loadfile srcfile="${src}/jap/JAPConstants.java" property="bIsReleaseVersion">
       <filterchain>
@@ -70,20 +71,42 @@
       </filterchain>
     </loadfile>
     <echo message="Is Current Version as Release version: ${bIsReleaseVersion}"/>
-    <loadfile srcfile="${src}/jap/JAPConstants.java" property="currentVersion">
+    <loadfile srcfile="${src}/jap/JAPConstants.java" property="tmpCurrentVersion_LastValue">
       <filterchain>
         <linecontains>
           <contains value="static final String aktVersion"/>
         </linecontains>
-        <containsregex pattern="(.*)([0-9][0-9][\.][0-9][0-9][\.][0-9][0-9][0-9])(.*)" replace="\2"/>
+        <containsregex pattern="(.*)[0-9][0-9][\.][0-9][0-9][\.]([0-9][0-9][0-9])(.*)" replace="\2"/>
         <deletecharacters chars="\r\n" />
       </filterchain>
     </loadfile>
+    <loadfile srcfile="${src}/jap/JAPConstants.java" property="tmpCurrentVersion_FirstPart">
+      <filterchain>
+        <linecontains>
+          <contains value="static final String aktVersion"/>
+        </linecontains>
+        <containsregex pattern="(.*)([0-9][0-9][\.][0-9][0-9][\.])[0-9][0-9][0-9](.*)" replace="\2"/>
+        <deletecharacters chars="\r\n" />
+      </filterchain>
+    </loadfile>
+    <!-- Calculate current Date and new Version number with the help of a property file -->
+    <delete file="${src}/build.number">
+    </delete>
+    <propertyfile file="${src}/build.number">
+    <entry key="currentVersion_LastPart" value="1" operation="+" type="int" pattern="000" default="${tmpCurrentVersion_LastValue}"/>
+    <entry key="releaseDate" default="now" type="date" pattern="yyyy/MM/DD HH:mm:ss">
+    </entry>
+    </propertyfile>
+    <loadproperties srcfile="${src}/build.number">
+    </loadproperties>
+    <property name="currentVersion" value="${tmpCurrentVersion_FirstPart}${currentVersion_LastPart}">
+    </property>
     <echo message="Current Version is: ${currentVersion}"/>
-    <input message="Enter new Version number for JAP (xx.yy.zzz):" property="currentVersion">
-    </input>
-    <echo message="Current Version is: ${currentVersion}"/>
-    <replaceregexp file="${src}/jap/JAPConstants.java" byline="true" match="m_bReleasedVersion( )*=( )*false" replace="m_bReleasedVersion = true">    </replaceregexp>
+    <echo message="Current ReleaseDate is: ${releaseDate}"/>
+    <!-- Replace the values in JAPConstant.java -->
+    <replaceregexp file="${src}/jap/JAPConstants.java" byline="true" match="m_bReleasedVersion( )*=( )*false" replace="m_bReleasedVersion = true"></replaceregexp>
+    <replaceregexp file="${src}/jap/JAPConstants.java" byline="true" match="static final String aktVersion( )*=( )*&quot;[0-9][0-9][\.][0-9][0-9][\.][0-9][0-9][0-9]&quot;" replace="static final String aktVersion = &quot;${currentVersion}&quot;"/>
+    <replaceregexp file="${src}/jap/JAPConstants.java" byline="true" match="private static final String RELEASE_DATE = &quot;.*&quot;" replace="private static final String RELEASE_DATE = &quot;${releaseDate}&quot;"></replaceregexp>
     <touch file="${src}/jap/JAPConstants.java">    </touch>
   </target>
   <target name="compile" depends="init" description="compile the source ">
