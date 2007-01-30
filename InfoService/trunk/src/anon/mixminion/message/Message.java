@@ -150,7 +150,7 @@ public class Message
 				{
 					return false;
 				}
-				System.out.println("Groeﬂe: " +mmrlist.size());
+				System.out.println("Groesse: " +mmrlist.size());
 			}
 			JAPController.setMixminionMMRList(mmrlist);
 		}
