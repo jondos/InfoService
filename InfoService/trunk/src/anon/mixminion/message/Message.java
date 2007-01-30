@@ -57,7 +57,7 @@ public class Message
 	private int m_hops = 0;
 	private String m_address; // E-Mail address of the sender; needed to build a Replyblock(this one is appended to the payload to allow a reply)
 	private String m_decoded = null;
-	private String m_keyringpassword; 
+	private String m_keyringpassword;
 	private int m_rbs;
 
 
@@ -65,7 +65,7 @@ public class Message
 	int MAX_FRAGMENTS_PER_CHUNK = 16;
 	double EXP_FACTOR = 1.3333333333333333;
 	// keyringpassword
-	
+
 
 /**
  * Constructor
@@ -100,15 +100,15 @@ public class Message
 
 		//0.look if the user only wants a decoded representation
 		String plaintext = null;
-		if (m_email.getType().equals("ENC")) 
+		if (m_email.getType().equals("ENC"))
 		{
 			Decoder decoder = new Decoder(m_email.getPayload(), m_keyringpassword);
 			Vector decoded = new Vector();
-			
+
 			try
 			{
 				plaintext = decoder.decode();
-										
+
 			} catch (IOException e2)
 				{
 				System.out.println("Decodier-Exception...");
@@ -120,7 +120,7 @@ public class Message
 			return false;
 		}
 
-		
+
 		//There is a message to send....
 		//Needed Variables
 		byte[][] message_parts = null; // Array with finalized payload parts, each 28kb
@@ -131,16 +131,16 @@ public class Message
 
 		//0.1 replyblocks?
 		Vector replyblocks = null;
-		if (m_email.getType().equals("RPL")) 
+		if (m_email.getType().equals("RPL"))
 		{
 			replyblocks = m_email.getReplyBlocks();
 		}
-		
+
 		//prepare mmrlist
 		//already fetched?
 		MMRList mmrlist = JAPModel.getMixminionMMRlist();
 		//if no get it
-		if (mmrlist == null) 
+		if (mmrlist == null)
 		{
 			mmrlist  = new MMRList(new InfoServiceMMRListFetcher()); //try to get it from the infoservice
 			if (!mmrlist.updateList()) //if this fails, try to get it directly from the server
@@ -150,7 +150,7 @@ public class Message
 				{
 					return false;
 				}
-				System.out.println("Größe: " +mmrlist.size());
+				System.out.println("Groeße: " +mmrlist.size());
 			}
 			JAPController.setMixminionMMRList(mmrlist);
 		}
