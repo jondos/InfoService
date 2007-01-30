@@ -3,7 +3,7 @@
   <description>Ant Build file for the various compontens of the AN.ON project</description>
   <!-- set global properties for this build -->
   <property name="src" location="src"/>
-  <property name="excludesSrcJap" value="${src}/jpi/** ${src}/infoservice/** ${src}/misc/**">
+  <property name="excludesSrcJap" value="${src}/jpi/** ${src}/infoservice/** ${src}/misc/**"/>
   <property name="build" location="build"/>
   <property name="build.libs" location="build/libs"/>
   <property name="dist" location="dist"/>
