@@ -34,7 +34,7 @@
     <path refid="classpath_mrj"/>
     <path refid="classpath_bouncycastle_jap"/>
   </path>
-  <path id="java_1_1_boot_classes" location="${build.libs}/java1_1_classes.zip"/>
+  <path id="java_1_1_boot_classes" location="${build.libs}/java_1_1_classes.zip"/>
   <target name="init-dirs">
     <!-- Create the time stamp -->
     <tstamp/>
@@ -43,7 +43,7 @@
     <mkdir dir="${build.libs}"/>
   </target>
   <target name="init-libs" depends="init-dirs">
-    <get src="http://anon.inf.tu-dresden.de/develop/java1_1_classes.zip" verbose="true" dest="${build.libs}/java1_1_classes.zip">    </get>
+    <get src="http://anon.inf.tu-dresden.de/develop/java_1_1_classes.zip" verbose="true" dest="${build.libs}/java_1_1_classes.zip">    </get>
     <get src="http://anon.inf.tu-dresden.de/develop/http.jar" verbose="true" dest="${classpath_httplib_file_name}">    </get>
     <get src="http://anon.inf.tu-dresden.de/develop/xml.jar" verbose="true" dest="${classpath_xmllib_file_name}">    </get>
     <get src="http://anon.inf.tu-dresden.de/develop/BouncyCastleLightForJAP.jar" verbose="true" dest="${classpath_bouncy_file_name}">    </get>
