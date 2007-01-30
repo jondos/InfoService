@@ -3,7 +3,7 @@
   <description>Ant Build file for the various compontens of the AN.ON project</description>
   <!-- set global properties for this build -->
   <property name="src" location="src"/>
-  <property name="excludesSrcJap" value="${src}/jpi/** ${src}/infoservice/** ${src}/misc/**"/>
+  <property name="excludesSrcJap" location="${src}/jpi/** ${src}/infoservice/** ${src}/misc/**"/>
   <property name="build" location="build"/>
   <property name="build.libs" location="build/libs"/>
   <property name="dist" location="dist"/>
@@ -117,7 +117,7 @@
   </target>
   <target name="compile" depends="init" description="compile the source ">
     <!-- Compile the java code from ${src} into ${build} -->
-    <javac target="1.1" source="1.2" srcdir="${src}"  excludes="${src}/jpi/**"
+    <javac target="1.1" source="1.2" srcdir="${src}"  excludes="${excludesSrcJap}"
     destdir="${build}" bootclasspathref="java_1_1_boot_classes" classpathref="classpath_all"/>
 
   </target>
