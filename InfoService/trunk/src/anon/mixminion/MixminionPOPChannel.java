@@ -37,12 +37,12 @@ import java.util.Vector;
 import anon.shared.AbstractChannel;
 
 /**
- * @author Stefan Rönisch
+ * @author Stefan Roenisch
  *
- * 
+ *
  */
 public class MixminionPOPChannel extends AbstractChannel {
-	
+
 		/** the current State of the POPChannel **/
 		private int m_state = -1;
 		private Vector m_messages = new Vector(); //Vector with messages as Strings
@@ -72,7 +72,7 @@ public class MixminionPOPChannel extends AbstractChannel {
 
 		protected void close_impl()
 		{
-			
+
 		}
 
 		protected void toClient(String message) throws IOException
@@ -110,7 +110,7 @@ public class MixminionPOPChannel extends AbstractChannel {
 
 //			Client: pass xyz1230
 //			Server: +OK
-			
+
 	        else if (m_state==1)
 			{
 	            if(s.toUpperCase().startsWith("PASS"))
@@ -131,15 +131,15 @@ public class MixminionPOPChannel extends AbstractChannel {
 //			Server: .
 	        else if (m_state==2)
 			{
-	        	if(s.toUpperCase().startsWith("STAT")) 
+	        	if(s.toUpperCase().startsWith("STAT"))
 	        	{
-	        		
+
 	        		int size = 0;
 	        		for (int i = 0; i < m_messages.size(); i++) {
 	        			size += ((String) m_messages.elementAt(i)).getBytes().length;
 	        		}
 	        		toClient("+OK " + m_messages.size() +" " + size +"\r\n");
-	        		
+
 	        	}
 	        	else
 	        		{
@@ -167,7 +167,7 @@ public class MixminionPOPChannel extends AbstractChannel {
 	        		}
 	        		}
 			}
-		
+
 
 //			Client: RETR 1
 //			Server: +OK 120 octets
@@ -192,11 +192,11 @@ public class MixminionPOPChannel extends AbstractChannel {
 					String aktLine = reader.readLine();
 					//send the first requested lines of data
 					//3 Headers and the \n and the requestes lines...
-					for (int i = 0; (i < 4+lines) || (aktLine == null); i++) 
+					for (int i = 0; (i < 4+lines) || (aktLine == null); i++)
 					{
 						toClient(aktLine + "\r\n");
 						aktLine = reader.readLine();
-					}		
+					}
 					toClient(".\r\n");
 	        	}
 				else if (s.startsWith("RETR"))
@@ -209,7 +209,7 @@ public class MixminionPOPChannel extends AbstractChannel {
 						toClient(aktLine  + "\r\n");
 						aktLine = reader.readLine();
 					}
-					
+
 					toClient(".\r\n");
 				}
 				else if (s.startsWith("DELE"))
@@ -234,7 +234,7 @@ public class MixminionPOPChannel extends AbstractChannel {
 					}
 					JAPController.setMixminionMessages(m_messages);
 					toClient("+OK\r\n");
-					
+
 				}
 				else
 				{
@@ -248,7 +248,7 @@ public class MixminionPOPChannel extends AbstractChannel {
 
 
 	    public int getOutputBlockSize() {
-			// 
+			//
 			return 1000;
 		}
 

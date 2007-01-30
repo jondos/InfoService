@@ -80,7 +80,7 @@ public class ListenerInterfaceTest extends XtendedPrivateTestCase
 	{
 		assertTrue(!ListenerInterface.isValidHostname(null));
 		assertTrue(!ListenerInterface.isValidHostname(""));
-		assertTrue(ListenerInterface.isValidHostname("44t4zhs3lö"));
+		assertTrue(ListenerInterface.isValidHostname("44t4zhs3loe"));
 	}
 
 	/**

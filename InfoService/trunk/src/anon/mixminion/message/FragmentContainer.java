@@ -31,12 +31,12 @@ import anon.mixminion.fec.FECCodeFactory;
 import anon.util.ByteArrayUtil;
 
 /**
- * 
- * @author Stefan Rönisch
+ *
+ * @author Stefan Roenisch
  *
  */
 public class FragmentContainer {
-	
+
 	private byte[] m_id = null;
 	private int FRAGSIZE = 28 * 1024 - 47;
 	private byte[][] m_fragments;
@@ -44,10 +44,10 @@ public class FragmentContainer {
 	private int m_counter;
 	private int[] m_indizes;
 	private int m_numberoffrags;
-	private boolean[] m_add; 
-	
-	
-	
+	private boolean[] m_add;
+
+
+
 	/**
 	 * Constructor
 	 * Build a new Fragment Container with id of the message to reassemble
@@ -55,14 +55,14 @@ public class FragmentContainer {
 	 * @param id
 	 * @param numberoffrags
 	 */
-	public FragmentContainer(byte[] id, int numberoffrags) 
+	public FragmentContainer(byte[] id, int numberoffrags)
 	{
 		m_id = id;
 		m_numberoffrags = numberoffrags;
 		m_fragments = new byte[numberoffrags][FRAGSIZE];
 		m_counter = numberoffrags-1;
 		m_indizes = new int[numberoffrags];
-		
+
 		double exf = 4.0 / 3.0;
 		// Let K = Min(16, 2**CEIL(Log2(M_SIZE)))
 		double tmp = Math.log(m_numberoffrags) / Math.log(2);
@@ -76,18 +76,18 @@ public class FragmentContainer {
 
 	/**
 	 * Adds a Fragment with specified Index
-	 * returns true if enough packets are in the container to reassemble 
+	 * returns true if enough packets are in the container to reassemble
 	 * @param frag
 	 * @param index
 	 * @return
 	 */
 	public boolean addFragment(byte[] frag, int index)
-	{	
-		if (m_readytoreassemble) 
+	{
+		if (m_readytoreassemble)
 		{
 			return true;
 		}
-		
+
 		if (!m_add[index])
 		{
 			m_add[index] = true;
@@ -95,8 +95,8 @@ public class FragmentContainer {
 			m_fragments[m_counter] = frag;
 			m_counter--;
 		}
-		
-		
+
+
 		if (m_counter == -1)
 			{
 			m_readytoreassemble = true;
@@ -104,7 +104,7 @@ public class FragmentContainer {
 			}
 		else return false;
 	}
-	
+
 	/**
 	 * return the id of the container/message
 	 * @return
@@ -112,7 +112,7 @@ public class FragmentContainer {
 	public byte[] getID() {
 		return m_id;
 	}
-	
+
 	/**
 	 * reassembles the message if possible,
 	 * return null if impossible, otherwise a bytearray containing
@@ -133,16 +133,16 @@ public class FragmentContainer {
 			int k = (int) Math.min(16, tmp);
 			// Let N = Ceil(EXF*K)
 			int n = (int) Math.ceil(exf * k);
-			
+
 			FECCode fec = FECCodeFactory.getDefault().createFECCode(k,n);
 			int[] offsets = new int[m_numberoffrags];
-			
+
 			fec.decode(m_fragments,offsets,m_indizes,28 * 1024 - 47,false);
-			
+
 			for (int i = 0; i < k; i++) {
 				message = ByteArrayUtil.conc(message,m_fragments[i]);
 			}
-			
+
 			return message;
 		}
 		else
