@@ -113,7 +113,7 @@
   </target>
   <target name="compile" depends="init" description="compile the source ">
     <!-- Compile the java code from ${src} into ${build} -->
-    <javac target="1.1" source="1.2" srcdir="${src}" destdir="${build}" bootclasspathref="java1_1_boot_classes" classpathref="classpath_all"/>
+    <javac target="1.1" source="1.2" srcdir="${src}" destdir="${build}" bootclasspathref="java_1_1_boot_classes" classpathref="classpath_all"/>
   </target>
   <target name="dist" depends="compile,make-only-jap-jar" description="generate the distribution">  </target>
   <target name="make-only-jap-jar" depends="getcurrentjapdllversion">
