@@ -120,7 +120,7 @@
     <javac sourcepath="" target="1.1" source="1.2" srcdir="${src}"
     destdir="${build}" bootclasspathref="java_1_1_boot_classes" classpathref="classpath_all">
     <include name="**/*.java"/>
-    <exclude name="infoservice/**"/>
+    <exclude name="${excludesSrcJap}"/>
     </javac>
 
   </target>
