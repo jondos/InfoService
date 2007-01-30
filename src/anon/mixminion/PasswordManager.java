@@ -39,7 +39,7 @@ import anon.mixminion.message.MixMinionCryptoUtil;
 import anon.util.ByteArrayUtil;
 
 /**
- * @author Stefan Rönisch
+ * @author Stefan Roenisch
  *
  */
 public class PasswordManager

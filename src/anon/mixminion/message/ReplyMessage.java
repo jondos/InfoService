@@ -75,11 +75,11 @@ public class ReplyMessage extends ReplyImplementation{
 		Vector ready_to_send_Messages = new Vector(); // returned
 		boolean isfragmented = m_message_parts.length > 1; //multipart?
 
-		//FIXME fragmented reply-messages are to decode local; not implemented yet 
+		//FIXME fragmented reply-messages are to decode local; not implemented yet
 
 		if (isfragmented) {
-			
-			System.out.println("Reply und Fragmente; Decodierung wird noch nicht möglich sein...");
+
+			System.out.println("Reply und Fragmente; Decodierung wird noch nicht moeglich sein...");
 			//return null;
 		}
 
@@ -106,7 +106,7 @@ public class ReplyMessage extends ReplyImplementation{
 			//no?
 			return null;
 		}
-		
+
 		//okay build the parts
 		for (int i_frag = 0; i_frag < m_message_parts.length; i_frag++)
 		{
@@ -127,7 +127,7 @@ public class ReplyMessage extends ReplyImplementation{
 					secrets.addElement(MixMinionCryptoUtil.randomArray(16));
 				}
 
-			//define ExitInfos and Crossoverpoint 
+			//define ExitInfos and Crossoverpoint
 			ExitInformation exit1 = new ExitInformation();
 			RoutingInformation ri1 = ((ReplyBlock)m_replyblocks.elementAt(i_frag)).getRouting();
 			exit1.m_Type = ri1.m_Type;

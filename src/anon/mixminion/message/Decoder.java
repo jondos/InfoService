@@ -45,7 +45,7 @@ public class Decoder {
 
 	//Kostanten
 	private final int KEY_LEN = 16;
-	private final int MAXHOPS = 20; 
+	private final int MAXHOPS = 20;
 	private final int PACKETSIZE = 28 * 1024 - 47;
 
 	private String m_message;
@@ -66,10 +66,10 @@ public class Decoder {
 	 * @throws IOException
 	 */
 	public String decode() throws IOException {
-		
+
 		//get all user-secrets
 		Vector mykeys = (new Keyring(m_password)).getUserSecrets();
-		
+
 		//needed variables
 		byte[] tag = new byte[0];
 		String encrypted = "";
@@ -85,7 +85,7 @@ public class Decoder {
 		{
 			aktLine = reader.readLine();
 			if (aktLine.intern() == ".") return null;
-			
+
 		}
 
 		//Test Message-type: encrypted
@@ -125,7 +125,7 @@ public class Decoder {
 //		            If DECODE_PLAINTEXT_PAYLOAD(P_t) is not "Unknown", return it.
 
 		for (int i = 0; i<mykeys.size(); i++) {
-			byte[] aktkey = (byte[])mykeys.elementAt(i); 
+			byte[] aktkey = (byte[])mykeys.elementAt(i);
 			byte[] tempkey = ByteArrayUtil.conc(tag,aktkey,"Validate".getBytes());
 			if (MixMinionCryptoUtil.hash(tempkey)[19] == 0x00) {
 				byte[] key = ByteArrayUtil.copy(MixMinionCryptoUtil.hash(ByteArrayUtil.conc(tag,aktkey,"Generate".getBytes())),0,KEY_LEN);
@@ -153,14 +153,14 @@ public class Decoder {
 						plaintext = trytoReassemble(temppayload);
 						if (plaintext != null) success =true;
 					}
-					
+
 				}
 
 
 			}
 
 		}
-		
+
 		//generate the result
 //		Date: Tue, 24 Oct 2006 14:12:48 +0200
 //		From: Anonymer Stefan <anostef@biw.de>
@@ -178,14 +178,14 @@ public class Decoder {
 //		content
 //		...
 		String erg = "";
-		if (!success) 
+		if (!success)
 		{
 			if (fragment)
 			{
 				erg = "From: JAP-Decoder\n"+
 				"To: local user\n"+
 				"Subject: Fragment\n\n"+
-				"Für die Decodierung der Nachricht werden weitere Fragmente benötigt." +"\n\n";
+				"Fuer die Decodierung der Nachricht werden weitere Fragmente benoetigt." +"\n\n";
 				plaintext = erg;
 			}
 			else
@@ -195,11 +195,11 @@ public class Decoder {
 				"Subject: Fehler\n\n"+
 				"Leider konnte nichts decodiert werden.\n";
 			}
-			
+
 		}
-		else 
+		else
 		{
- 
+
 			erg = "From: JAP-Decoder\n";
 			reader = new LineNumberReader(new StringReader(plaintext));
 			aktLine = reader.readLine();
@@ -215,7 +215,7 @@ public class Decoder {
 				aktLine = reader.readLine();
 			}
 			plaintext =  erg;
-			
+
 		}
 		return  plaintext;
 	}
@@ -227,7 +227,7 @@ public class Decoder {
 	 */
 	private int testPayload(byte[] payload) {
 
-		
+
 //		e2e spec says:
 //		If the first bit of P[0] is 0:
 //		      If P[2:HASH_LEN] = Hash(P[2+HASH_LEN:Len(P)-2-HASH_LEN]):
@@ -241,7 +241,7 @@ public class Decoder {
 		{
 			return 1;
 		}
-		
+
 //		      Otherwise,
 //		         Return "Unknown" -->we test if fragment
 //		is it a fragment?-->give it to the reassembler
@@ -259,7 +259,7 @@ public class Decoder {
 		return 0;
 
 	}
-	
+
 	/**
 	 * try's to reassemble the message the fragment belongs to and returns either null
 	 * or the reassembled message
@@ -267,7 +267,7 @@ public class Decoder {
 	 * @return
 	 */
 	private String trytoReassemble(byte[] fragment) {
-		
+
 		String erg = null;
 		//fetch vector with fragmentcontainers
 		Vector fragments = JAPModel.getMixminionFragments();
@@ -275,20 +275,20 @@ public class Decoder {
 		{
 			fragments = new Vector();
 		}
-		
+
 		//identify the fragment
 		byte[] id = ByteArrayUtil.copy(fragment,23,20);
 		int index = byteToInt(ByteArrayUtil.copy(fragment,1,2),0);
-		double messagesize = byteToInt(ByteArrayUtil.copy(fragment, 43, 4),0); 
+		double messagesize = byteToInt(ByteArrayUtil.copy(fragment, 43, 4),0);
 		System.out.println("MessageSize:" + messagesize + " index: " +index);
-		
+
 		//remove fragmentheader
 		fragment = ByteArrayUtil.copy(fragment,47,28*1024-47);
-		
+
 		//look for fragment container
 		FragmentContainer myfc = null;
 		int containerindex = -1;
-		
+
 		for (int i=0; i<fragments.size(); i++)
 		{
 			FragmentContainer fc = (FragmentContainer) fragments.elementAt(i);
@@ -299,15 +299,15 @@ public class Decoder {
 				break;
 			}
 		}
-		
-		if (containerindex == -1) 
+
+		if (containerindex == -1)
 		{
 			int payload_packets = (int) Math.ceil(messagesize / (double) PACKETSIZE);
-			
+
 			System.out.println("Numberof: " + payload_packets);
 			myfc = new FragmentContainer(id, payload_packets);
 		}
-		
+
 		if (myfc.addFragment(fragment, index))
 		{
 			//reassemble
@@ -323,7 +323,7 @@ public class Decoder {
 			payload = MixMinionCryptoUtil.decompressData(payload);
 			erg = new String(payload);
 		}
-		
+
 		if (containerindex == -1)
 		{
 			fragments.addElement(myfc);
@@ -334,10 +334,10 @@ public class Decoder {
 		}
 		JAPController.setMixminionFragments(fragments);
 		return erg;
-		
+
 
 	}
-	
+
 	/**
 	 * Calculates the int value of a given ByteArray
 	 * @param b
@@ -352,7 +352,7 @@ public class Decoder {
         }
         return value;
 	}
-	
+
 	/**
 	 * Unwhites a ByteArray in the fashion of mixminion
 	 * @param m
