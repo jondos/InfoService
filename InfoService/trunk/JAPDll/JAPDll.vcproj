@@ -128,7 +128,7 @@
 				InlineFunctionExpansion="1"
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="g:\jdk1.1.8\include\;g:\jdk1.1.8\include\win32;C:\Programme\java\jdk1.1.8\include\;C:\Programme\java\jdk1.1.8\include\win32"
+				AdditionalIncludeDirectories="L:\Programme\Java\jdk1.5.0_09\include\win32;L:\Programme\Java\jdk1.5.0_09\include;g:\jdk1.1.8\include\;g:\jdk1.1.8\include\win32;C:\Programme\java\jdk1.1.8\include\;C:\Programme\java\jdk1.1.8\include\win32"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;JAPDLL_EXPORTS"
 				StringPooling="true"
 				ExceptionHandling="0"
@@ -218,7 +218,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="G:\jdk1.1.8\include;G:\jdk1.1.8\include\win32;C:\Programme\JBuilder8\jdk1.4\include\win32;C:\Programme\JBuilder8\jdk1.4\include"
+				AdditionalIncludeDirectories="L:\Programme\Java\jdk1.5.0_09\include\win32;L:\Programme\Java\jdk1.5.0_09\include\;G:\jdk1.1.8\include;G:\jdk1.1.8\include\win32;C:\Programme\JBuilder8\jdk1.4\include\win32;C:\Programme\JBuilder8\jdk1.4\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;JAPDLL_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -280,6 +280,46 @@
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
 			>
+			<File
+				RelativePath=".\gs_report.c"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories="&quot;$(DevEnvDir)\..\..\VC\crt\src&quot;;&quot;$(DevEnvDir)\VC\lib\PlatformSDK\Include&quot;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug_JDK1.4|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories="&quot;$(DevEnvDir)\..\..\VC\crt\src&quot;"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\invarg.c"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories="&quot;$(DevEnvDir)\..\..\VC\crt\src&quot;;&quot;$(DevEnvDir)\VC\lib\PlatformSDK\Include&quot;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug_JDK1.4|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories="&quot;$(DevEnvDir)\..\..\VC\crt\src&quot;"
+					/>
+				</FileConfiguration>
+			</File>
 			<File
 				RelativePath="japdll.cpp"
 				>
