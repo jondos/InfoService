@@ -10,7 +10,7 @@
 	#pragma once
 #endif // _MSC_VER > 1000
 
-#define JAPDLL_VERSION "00.03.002"
+#define JAPDLL_VERSION "00.03.003"
 
 // Fügen Sie hier Ihre Header-Dateien ein
 #include <windows.h>
@@ -170,7 +170,7 @@ VOID showPopupMenu()
 	JNIEnv* env=NULL;
 	if(gjavavm!=NULL)
 	{
-		gjavavm->AttachCurrentThread(&env,NULL);
+		gjavavm->AttachCurrentThread((void**)&env,NULL);
 		if(env!=NULL)
 		{
 			jclass clazz=env->FindClass(JAVA_INTERFACE_CLASSNAME);
@@ -201,7 +201,7 @@ VOID doJavaCall(char* a_method)
 	JNIEnv* env=NULL;
 	if(gjavavm!=NULL)
 	{
-		gjavavm->AttachCurrentThread(&env,NULL);
+		gjavavm->AttachCurrentThread((void**)&env,NULL);
 		if(env!=NULL)
 		{
 			jclass clazz=env->FindClass(JAVA_INTERFACE_CLASSNAME);
