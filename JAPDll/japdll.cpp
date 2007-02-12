@@ -170,7 +170,7 @@ VOID showPopupMenu()
 	JNIEnv* env=NULL;
 	if(gjavavm!=NULL)
 	{
-		gjavavm->AttachCurrentThread((void**)&env,NULL);
+		gjavavm->AttachCurrentThread(&env,NULL);
 		if(env!=NULL)
 		{
 			jclass clazz=env->FindClass(JAVA_INTERFACE_CLASSNAME);
@@ -201,7 +201,7 @@ VOID doJavaCall(char* a_method)
 	JNIEnv* env=NULL;
 	if(gjavavm!=NULL)
 	{
-		gjavavm->AttachCurrentThread((void**)&env,NULL);
+		gjavavm->AttachCurrentThread(&env,NULL);
 		if(env!=NULL)
 		{
 			jclass clazz=env->FindClass(JAVA_INTERFACE_CLASSNAME);
