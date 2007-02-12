@@ -128,7 +128,7 @@
 				InlineFunctionExpansion="1"
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="L:\Programme\Java\jdk1.5.0_09\include\win32;L:\Programme\Java\jdk1.5.0_09\include;g:\jdk1.1.8\include\;g:\jdk1.1.8\include\win32;C:\Programme\java\jdk1.1.8\include\;C:\Programme\java\jdk1.1.8\include\win32"
+				AdditionalIncludeDirectories="&quot;$(DevEnvDir)\..\..\VC\lib\PlatformSDK\Include&quot;;L:\Programme\Java\jdk1.5.0_09\include\win32;L:\Programme\Java\jdk1.5.0_09\include;g:\jdk1.1.8\include\;g:\jdk1.1.8\include\win32;C:\Programme\java\jdk1.1.8\include\;C:\Programme\java\jdk1.1.8\include\win32"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;JAPDLL_EXPORTS"
 				StringPooling="true"
 				ExceptionHandling="0"
@@ -153,8 +153,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)/japdll.dll"
-				Version="00.03.002"
+				Version="00.03.003"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="$(DevEnvDir)\..\..\VC\lib\PlatformSDK\lib"
 				IgnoreAllDefaultLibraries="false"
 				GenerateDebugInformation="false"
 				SubSystem="0"
@@ -353,6 +354,14 @@
 			<File
 				RelativePath="JAPDll.rc"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCResourceCompilerTool"
+						AdditionalIncludeDirectories="$(DevEnvDir)\..\..\VC\lib\PlatformSDK\Include"
+					/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 	</Files>

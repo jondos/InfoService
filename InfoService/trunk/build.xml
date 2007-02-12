@@ -2,6 +2,7 @@
 <project name="AN.ON" default="dist" basedir=".">
   <description>Ant Build file for the various compontens of the AN.ON project</description>
   <!-- set global properties for this build -->
+  <property name="javac1.3.exe" value="S:\Programme\jdk1.3.1_19\bin\javac" />
   <property name="src" location="src"/>
   <property name="excludesSrcJap" value="jpi/** infoservice/** misc/**"/>
   <property name="build" location="build"/>
@@ -63,7 +64,17 @@
     </get>
   </target>
   <target name="init" depends="init-libs"/>
-  <target name="release-pre-compile" depends="init" description="set things so that we can compile a release version of JAP">
+<target name="dist-pre-compile">
+  <!-- Use javac from Java1.3, because this compiler (at the moment) is the only one know
+      to produce byte codes which could be processed by all java 1.1 compatible implementation
+      Note: Java 1.4 and 1.5 are know to prodcue "bad" bytecode even if target="1.1" is specified!
+      -->
+   <property name="mycompilerversion" value="javac1.3">
+   </property>
+   <property name="mycompilerexecutable" value="${javac1.3.exe}">
+   </property>
+</target>
+  <target name="release-pre-compile" depends="init,dist-pre-compile" description="set things so that we can compile a release version of JAP">
     <!-- Check whether the release flag was set to true ==> if this is not the case set it to relase and
     increment the version nubmer by one and set the date to the current date
     -->
@@ -117,13 +128,13 @@
   </target>
   <target name="compile" depends="init" description="compile the source ">
     <!-- Compile the java code from ${src} into ${build} -->
-    <javac sourcepath="" target="1.1" source="1.2" srcdir="${src}" excludes="${excludesSrcJap}"
+    <javac sourcepath="" compiler="${mycompilerversion}" executable="${mycompilerexecutable}" fork="yes" target="1.1" source="1.2" srcdir="${src}" excludes="${excludesSrcJap}"
     destdir="${build}" bootclasspathref="java_1_1_boot_classes" classpathref="classpath_all">
     <include name="**/*.java"/>
     </javac>
 
   </target>
-  <target name="dist" depends="compile,make-only-jap-jar" description="generate the distribution">  </target>
+  <target name="dist" depends="clean,dist-pre-compile,compile,make-only-jap-jar" description="generate the distribution">  </target>
   <target name="make-only-jap-jar" depends="getcurrentjapdllversion">
     <!-- Create the distribution directory -->
     <mkdir dir="${dist}"/>
@@ -185,6 +196,14 @@
       </filterchain>
     </loadfile>
     <echo message="Current JAPDLL Version is: ${currentJAPDllVersion}"/>
+  </target>
+  <target name="sign_setup_files" description="Signes the setup files on the Web">
+    <input message="Enter passwd for JAP setup files signing key:" addproperty="japsetupfileskeypass">
+  </input>
+  <exec executable="/home/www/make_sig.bat">
+  <arg value="${japsetupfileskeypass}">
+  </arg>
+  </exec>
   </target>
   <target name="new-jap-release-anon" depends="clean,dist-release,getcurrentversion" description="Makes a new release of JAP. Note: This target needs to be started on anon.inf.tu-dresden.de as root...">
     <!-- Copies the newly created JAP.jar to the Web-Server -->
