@@ -2,7 +2,7 @@
 <project name="AN.ON" default="dist" basedir=".">
   <description>Ant Build file for the various compontens of the AN.ON project</description>
   <!-- set global properties for this build -->
-  <property name="javac1.3.exe" value="S:\Programme\jdk1.3.1_19\bin\javac" />
+  <property name="javac1.3.exe" value="/opt/java/jdk1.3/bin/javac" />
   <property name="src" location="src"/>
   <property name="excludesSrcJap" value="jpi/** infoservice/** misc/**"/>
   <property name="build" location="build"/>
@@ -111,7 +111,7 @@
     </delete>
     <propertyfile file="${src}/build.number">
     <entry key="currentVersion_LastPart" value="1" operation="+" type="int" pattern="000" default="${tmpCurrentVersion_LastValue}"/>
-    <entry key="releaseDate" default="now" type="date" pattern="yyyy/MM/DD HH:mm:ss">
+    <entry key="releaseDate" default="now" type="date" pattern="yyyy/MM/dd HH:mm:ss">
     </entry>
     </propertyfile>
     <loadproperties srcfile="${src}/build.number">
