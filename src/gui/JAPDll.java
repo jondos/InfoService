@@ -56,7 +56,7 @@ import logging.LogType;
 final public class JAPDll {
 
 	//required japdll.dll version for this JAP-version
-	private static final String JAP_DLL_REQUIRED_VERSION = "00.03.002";
+	private static final String JAP_DLL_REQUIRED_VERSION = "00.03.003";
 	private static final String UPDATE_PATH =
 		ClassUtil.getClassDirectory(JAPDll.class).getParent() + File.separator;
 
