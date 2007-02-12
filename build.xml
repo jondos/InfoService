@@ -197,7 +197,7 @@
     </loadfile>
     <echo message="Current JAPDLL Version is: ${currentJAPDllVersion}"/>
   </target>
-  <target name="sign_setup_files" description="Signes the setup files on the Web">
+  <target name="sign-setup-files" description="Signes the setup files on the Web">
     <input message="Enter passwd for JAP setup files signing key:" addproperty="japsetupfileskeypass">
   </input>
   <exec executable="/home/www/make_sig.bat">
@@ -205,7 +205,7 @@
   </arg>
   </exec>
   </target>
-  <target name="new-jap-release-anon" depends="clean,dist-release,getcurrentversion" description="Makes a new release of JAP. Note: This target needs to be started on anon.inf.tu-dresden.de as root...">
+  <target name="new-jap-release-anon" depends="clean,dist-release,getcurrentversion,sign-setup-files" description="Makes a new release of JAP. Note: This target needs to be started on anon.inf.tu-dresden.de as root...">
     <!-- Copies the newly created JAP.jar to the Web-Server -->
     <copy file="${dist}/JAP.jar" todir="${japweb}/jap/">    </copy>
     <!-- Sets the new release version number according to JAPConstants.java -->
