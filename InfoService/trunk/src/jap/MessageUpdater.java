@@ -37,7 +37,7 @@ import anon.infoservice.InfoServiceHolder;
  */
 public class MessageUpdater extends AbstractDatabaseUpdater
 {
-	private static final long UPDATE_INTERVAL_MS = 1000 * 60 * 60 * 12l ; // half a day (update twice per day)
+	private static final long UPDATE_INTERVAL_MS = 1000 * 60 * 60 * 1l ; // one hour
 	private static final long UPDATE_INTERVAL_MS_SHORT = 1000 * 60 * 10l; // 10 minutes
 
 	public MessageUpdater()
