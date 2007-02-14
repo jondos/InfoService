@@ -205,7 +205,7 @@
   </arg>
   </exec>
   </target>
-  <target name="new-jap-release-anon" depends="clean,dist-release,getcurrentversion,sign-setup-files" description="Makes a new release of JAP. Note: This target needs to be started on anon.inf.tu-dresden.de as root...">
+  <target name="copy-jap-release-files-to-web">
     <!-- Copies the newly created JAP.jar to the Web-Server -->
     <copy file="${dist}/JAP.jar" todir="${japweb}/jap/">    </copy>
     <!-- Sets the new release version number according to JAPConstants.java -->
@@ -227,6 +227,11 @@
     replace="releaseDate=&quot;${releaseDate}&quot;" byline="true">
     </replaceregexp>
 
+  </target>
+  <target name="make-relase-jap-dmg">
+    <exec executable="/home/compile/generation/test.japmac.dofinal"/>
+  </target>
+  <target name="new-jap-release-anon" depends="clean,dist-release,getcurrentversion,copy-jap-release-files-to-web,make-relase-jap-dmg,sign-setup-files" description="Makes a new release of JAP. Note: This target needs to be started on anon.inf.tu-dresden.de as root...">
   </target>
   <target name="clean" description="clean up">
     <!-- Delete the ${build} and ${dist} directory trees -->
