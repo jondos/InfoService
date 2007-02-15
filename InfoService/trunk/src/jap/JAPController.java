@@ -1625,8 +1625,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					Element elemTor = (Element) XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_TOR);
 					JAPModel.getInstance().setTorActivated(
-						XMLUtil.parseAttribute(elemTor, JAPModel.XML_ATTR_ACTIVATED,
-											   !JAPConstants.m_bReleasedVersion));
+						XMLUtil.parseAttribute(elemTor, JAPModel.XML_ATTR_ACTIVATED, false));
 					Element elem = (Element) XMLUtil.getFirstChildByName(elemTor,
 						JAPConstants.CONFIG_MAX_CONNECTIONS_PER_ROUTE);
 					setTorMaxConnectionsPerRoute(XMLUtil.parseValue(elem,
@@ -1655,8 +1654,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					Element elemMixminion = (Element) XMLUtil.getFirstChildByName(root,
 						JAPConstants.CONFIG_Mixminion);
 					JAPModel.getInstance().setMixMinionActivated(
-						XMLUtil.parseAttribute(elemMixminion, JAPModel.XML_ATTR_ACTIVATED,
-											   !JAPConstants.m_bReleasedVersion));
+						XMLUtil.parseAttribute(elemMixminion, JAPModel.XML_ATTR_ACTIVATED, false));
 					Element elemMM = (Element) XMLUtil.getFirstChildByName(elemMixminion,
 						JAPConstants.CONFIG_ROUTE_LEN);
 					int routeLen = XMLUtil.parseValue(elemMM, JAPModel.getMixminionRouteLen());
