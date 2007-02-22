@@ -36,7 +36,6 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
@@ -52,6 +51,7 @@ import anon.infoservice.Constants;
 import logging.LogHolder;
 import logging.LogType;
 import logging.LogLevel;
+import anon.util.XMLUtil;
 
 /**
  * This class is used for verifying a JAP forwarding server (whether it is accessable from
@@ -130,7 +130,7 @@ final public class ServerVerifier
 												  (int) (System.currentTimeMillis() - verifyStartTime));
 					sendProtocolMessage(xmlToProtocolPacket(generateConnectionVerify()), serverConnection);
 					byte[] message = readProtocolMessage(serverConnection);
-					Document doc = parseXmlData(message);
+					Document doc = XMLUtil.toXMLDocument(message);
 					/* work through the XML tree and verify the received answer */
 					NodeList japRoutingNodes = doc.getElementsByTagName("JAPRouting");
 					if (japRoutingNodes.getLength() == 0)
@@ -353,7 +353,8 @@ final public class ServerVerifier
 	 */
 	private Document generateConnectionVerify() throws Exception
 	{
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		Document doc = XMLUtil.createDocument();
+
 		/* Create the JAPRouting element */
 		Element japRoutingNode = doc.createElement("JAPRouting");
 		/* Create the child of JAPRouting (Request) */
@@ -417,19 +418,6 @@ final public class ServerVerifier
 		System.arraycopy(MESSAGE_END_SIGNATURE, 0, protocolPacket,
 						 MESSAGE_START_SIGNATURE.length + 4 + a_data.length, MESSAGE_END_SIGNATURE.length);
 		return protocolPacket;
-	}
-
-	/**
-	 * Parses a byte-array with XML data.
-	 *
-	 * @param a_xmlData A byte-array with XML data.
-	 *
-	 * @return A parsed XML document.
-	 */
-	private Document parseXmlData(byte[] a_xmlData) throws Exception
-	{
-		InputStream in = new ByteArrayInputStream(a_xmlData);
-		return DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
 	}
 
 }

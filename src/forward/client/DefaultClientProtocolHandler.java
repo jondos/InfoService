@@ -34,14 +34,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-//import javax.xml.transform.Result;
-//import javax.xml.transform.Source;
-//import javax.xml.transform.Transformer;
-//import javax.xml.transform.TransformerFactory;
-//import javax.xml.transform.dom.DOMSource;
-//import javax.xml.transform.stream.StreamResult;
-
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -178,7 +170,7 @@ public class DefaultClientProtocolHandler
 			try
 			{
 				/* all messages are XML documents */
-				doc = parseXmlData(message);
+				doc = XMLUtil.toXMLDocument(message);
 			}
 			catch (Exception e)
 			{
@@ -380,7 +372,7 @@ public class DefaultClientProtocolHandler
 			Document doc = null;
 			try
 			{
-				doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+				doc = XMLUtil.createDocument();
 			}
 			catch (Exception e)
 			{
@@ -434,7 +426,7 @@ public class DefaultClientProtocolHandler
 		Document doc = null;
 		try
 		{
-			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+			doc = XMLUtil.createDocument();
 		}
 		catch (Exception e)
 		{
@@ -596,18 +588,6 @@ public class DefaultClientProtocolHandler
 		return identical;
 	}
 
-	/**
-	 * Parses a byte-array with XML data.
-	 *
-	 * @param a_xmlData A byte-array with XML data.
-	 *
-	 * @return A parsed XML document.
-	 */
-	private Document parseXmlData(byte[] a_xmlData) throws Exception
-	{
-		InputStream in = new ByteArrayInputStream(a_xmlData);
-		return DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
-	}
 
 	/**
 	 * Creates a protocol packet from an XML structure.

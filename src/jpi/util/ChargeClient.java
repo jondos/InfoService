@@ -2,12 +2,12 @@ package jpi.util;
 
 import java.io.FileInputStream;
 import org.w3c.dom.Document;
-import javax.xml.parsers.DocumentBuilderFactory;
 import anon.crypto.tinytls.TinyTLS;
 import anon.crypto.JAPCertificate;
 import java.net.Socket;
 import anon.pay.HttpClient;
 import anon.pay.xml.XMLErrorMessage;
+import anon.util.XMLUtil;
 
 public class ChargeClient
 {
@@ -16,7 +16,7 @@ public class ChargeClient
 		try
 		{
 			FileInputStream f = new FileInputStream(a_file);
-			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(f);
+			Document doc = XMLUtil.readXMLDocument(f);
 			try
 			{
 				f.close();

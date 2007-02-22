@@ -29,8 +29,6 @@ package anon.pay.xml;
 
 import java.io.ByteArrayInputStream;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -55,7 +53,7 @@ public class XMLDescription implements IXMLEncodable // extends XMLDocument
 
 	public XMLDescription(byte[] data) throws Exception
 	{
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(data));
+		Document doc = XMLUtil.toXMLDocument(data);
 		setValues(doc);
 	}
 

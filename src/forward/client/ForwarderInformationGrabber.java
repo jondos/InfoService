@@ -29,8 +29,6 @@ package forward.client;
 
 import java.io.ByteArrayInputStream;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -42,6 +40,7 @@ import org.w3c.dom.NodeList;
 import anon.infoservice.InfoServiceHolder;
 import anon.util.captcha.IImageEncodedCaptcha;
 import anon.util.captcha.ZipBinaryImageCaptchaClient;
+import anon.util.XMLUtil;
 
 /**
  * This class provides some tools for the forwarding client to fetch and handle the information
@@ -138,8 +137,7 @@ public class ForwarderInformationGrabber
 		try
 		{
 			/* parse the user input */
-			ByteArrayInputStream in = new ByteArrayInputStream(a_xmlData.getBytes());
-			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
+            Document doc = XMLUtil.toXMLDocument(a_xmlData);
 			NodeList japForwarderNodes = doc.getElementsByTagName("JapForwarder");
 			if (japForwarderNodes.getLength() > 0)
 			{

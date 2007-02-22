@@ -29,7 +29,6 @@ package forward.server;
 
 import java.util.Observable;
 
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import logging.LogHolder;
 import logging.LogLevel;
@@ -40,6 +39,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import anon.infoservice.InfoServiceDBEntry;
+import anon.util.XMLUtil;
 
 /**
  * This class registers the port of a ServerSocketManager at the infoservice (the IP is detected
@@ -337,7 +337,7 @@ public class ServerSocketPropagandist extends Observable implements Runnable
 		/* create the announcement document */
 		try
 		{
-			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+			Document doc =XMLUtil.createDocument();
 			Element japForwarderNode = doc.createElement("JapForwarder");
 			Element plainInformationNode = doc.createElement("PlainInformation");
 			Element portNode = doc.createElement("Port");
@@ -476,7 +476,7 @@ public class ServerSocketPropagandist extends Observable implements Runnable
 		try
 		{
 			/* create the renew document */
-			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+			Document doc = XMLUtil.createDocument();
 			Element japForwarderNode = doc.createElement("JapForwarder");
 			Element plainInformationNode = doc.createElement("PlainInformation");
 			Element forwarderNode = doc.createElement("Forwarder");

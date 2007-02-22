@@ -36,7 +36,6 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Node;
 import java.util.Enumeration;
 import java.io.ByteArrayInputStream;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 /**
  * This class represents an external charge request. It can be used for charging
@@ -60,8 +59,7 @@ public class XMLExternalChargeRequest implements IXMLEncodable
 
 	public XMLExternalChargeRequest(String xml) throws Exception
 	{
-		ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes());
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
+		Document doc = XMLUtil.toXMLDocument(xml);
 		setValues(doc.getDocumentElement());
 	}
 

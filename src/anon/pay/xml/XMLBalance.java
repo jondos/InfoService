@@ -2,8 +2,6 @@ package anon.pay.xml;
 
 import java.io.ByteArrayInputStream;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -54,8 +52,7 @@ public class XMLBalance implements IXMLEncodable
 
 	public XMLBalance(String xmlDoc) throws Exception
 	{
-		ByteArrayInputStream in = new ByteArrayInputStream(xmlDoc.getBytes());
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(xmlDoc);
+		Document doc = XMLUtil.toXMLDocument(xmlDoc);
 		setValues(doc.getDocumentElement());
 		m_docTheBalance = doc;
 	}
