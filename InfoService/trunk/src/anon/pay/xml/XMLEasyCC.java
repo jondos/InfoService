@@ -29,8 +29,6 @@ package anon.pay.xml;
 
 import java.io.ByteArrayInputStream;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -93,16 +91,14 @@ public class XMLEasyCC implements IXMLEncodable
 
 	public XMLEasyCC(byte[] data) throws Exception
 	{
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
-			ByteArrayInputStream(data));
+		Document doc = XMLUtil.toXMLDocument(data);
 		setValues(doc.getDocumentElement());
 		m_docTheEasyCC = doc;
 	}
 
 	public XMLEasyCC(String xml) throws Exception
 	{
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
-			ByteArrayInputStream(xml.getBytes()));
+		Document doc = XMLUtil.toXMLDocument(xml);
 		setValues(doc.getDocumentElement());
 		m_docTheEasyCC = doc;
 	}

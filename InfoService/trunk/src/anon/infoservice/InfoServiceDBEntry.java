@@ -37,7 +37,6 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.NoSuchElementException;
 import java.util.Vector;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -749,8 +748,8 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 	private Document getXmlDocument(final HttpRequestStructure a_httpRequest, int a_supportedEncodings)
 		throws Exception
 	{
-		return DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
-			ByteArrayInputStream(doHttpRequest(a_httpRequest,a_supportedEncodings)));
+		byte[] response=doHttpRequest(a_httpRequest,a_supportedEncodings);
+    return XMLUtil.toXMLDocument(response);
 	}
 		private byte[] doHttpRequest(final HttpRequestStructure a_httpRequest, int a_supportedEncodings)
 			throws Exception

@@ -29,7 +29,6 @@ package anon.pay.xml;
 
 import java.io.ByteArrayInputStream;
 
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -114,16 +113,14 @@ public class XMLAccountCertificate implements IXMLEncodable
 	 */
 	public XMLAccountCertificate(String xml) throws Exception
 	{
-		ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes());
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
+		Document doc = XMLUtil.toXMLDocument(xml);
 		setValues(doc.getDocumentElement());
 		m_docTheAccountCert = doc;
 	}
 
 	public XMLAccountCertificate(byte[] xmldata) throws Exception
 	{
-		ByteArrayInputStream in = new ByteArrayInputStream(xmldata);
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
+		Document doc = XMLUtil.toXMLDocument(xmldata);
 		setValues(doc.getDocumentElement());
 		m_docTheAccountCert = doc;
 	}

@@ -30,12 +30,12 @@ package anon.pay.xml;
 import java.io.ByteArrayInputStream;
 import java.util.Enumeration;
 import java.util.Vector;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import anon.util.IXMLEncodable;
+import anon.util.XMLUtil;
 
 /**
  * This class is used by JAP to ask the Payment Instance about
@@ -66,15 +66,13 @@ public class XMLTransactionOverview implements IXMLEncodable
 
 	public XMLTransactionOverview(String xml) throws Exception
 	{
-		ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes());
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
+		Document doc = XMLUtil.toXMLDocument(xml);
 		setValues(doc.getDocumentElement());
 	}
 
 	public XMLTransactionOverview(byte[] xml) throws Exception
 	{
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
-			ByteArrayInputStream(xml));
+		Document doc = XMLUtil.toXMLDocument(xml);
 		setValues(doc.getDocumentElement());
 	}
 

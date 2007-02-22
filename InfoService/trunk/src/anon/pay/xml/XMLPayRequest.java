@@ -29,8 +29,6 @@ package anon.pay.xml;
 
 import java.io.ByteArrayInputStream;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -63,15 +61,13 @@ public class XMLPayRequest implements IXMLEncodable
 
 	public XMLPayRequest(String xml) throws Exception
 	{
-		ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes());
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
+        Document doc = XMLUtil.toXMLDocument(xml);
 		setValues(doc.getDocumentElement());
 	}
 
 	public XMLPayRequest(byte[] xml) throws Exception
 	{
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
-			ByteArrayInputStream(xml));
+        Document doc = XMLUtil.toXMLDocument(xml);
 		setValues(doc.getDocumentElement());
 	}
 

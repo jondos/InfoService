@@ -34,8 +34,6 @@ import java.io.DataOutputStream;
 import java.io.InputStream;
 import java.net.Socket;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -374,7 +372,7 @@ public class DefaultProtocolHandler implements IProtocolHandler {
    */
   private void messageReceived(byte[] a_newMessage) throws Exception {
     /* all messages are XML documents */
-    Document doc = parseXmlData(a_newMessage);
+    Document doc = XMLUtil.toXMLDocument(a_newMessage);
     /* the root node is always JAPRouting */
     NodeList japRoutingNodes = doc.getElementsByTagName("JAPRouting");
     if (japRoutingNodes.getLength() == 0) {
@@ -539,17 +537,6 @@ public class DefaultProtocolHandler implements IProtocolHandler {
     m_serverConnection.getOutputStream().write(m_incomingMessageBuffer.toByteArray());
   }
 
-  /**
-   * Parses a byte-array with XML data.
-   *
-   * @param a_xmlData A byte-array with XML data.
-   *
-   * @return A parsed XML document.
-   */
-  private Document parseXmlData(byte[] a_xmlData) throws Exception {
-    InputStream in = new ByteArrayInputStream(a_xmlData);
-    return DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
-  }
 
   /**
    * Creates the connection offer XML structure. This structure is sent directly after the
@@ -560,7 +547,7 @@ public class DefaultProtocolHandler implements IProtocolHandler {
    * @return The connection offer XML structure.
    */
   private Document generateConnectionOfferXml() throws Exception {
-    Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+    Document doc = XMLUtil.createDocument();
     /* Create the JAPRouting element */
     Element japRoutingNode = doc.createElement("JAPRouting");
     /* Create the children of JAPRouting (Protocol, Request) */
@@ -600,7 +587,7 @@ public class DefaultProtocolHandler implements IProtocolHandler {
    * @return The verify acknowledge XML structure.
    */
   private Document generateConnectionAcknowledgement() throws Exception {
-    Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+    Document doc = XMLUtil.createDocument();
     /* Create the JAPRouting element */
     Element japRoutingNode = doc.createElement("JAPRouting");
     /* Create the child of JAPRouting (Request) */

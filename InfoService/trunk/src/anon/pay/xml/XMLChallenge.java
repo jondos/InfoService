@@ -29,8 +29,6 @@ package anon.pay.xml;
 
 import java.io.ByteArrayInputStream;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -47,8 +45,7 @@ public class XMLChallenge implements IXMLEncodable
 
 	public XMLChallenge(String xml) throws Exception
 	{
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().
-			parse(new ByteArrayInputStream(xml.getBytes()));
+		Document doc = XMLUtil.toXMLDocument(xml);
 		setValues(doc.getDocumentElement());
 	}
 
@@ -71,8 +68,6 @@ public class XMLChallenge implements IXMLEncodable
 	/** Note: this does not parse XML, but sets the challenge byte-array directly... */
 	public XMLChallenge(byte[] data)
 	{
-		/*		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(data));
-		  setValues(doc.getDocumentElement());*/
 		m_arbChallenge = data;
 	}
 

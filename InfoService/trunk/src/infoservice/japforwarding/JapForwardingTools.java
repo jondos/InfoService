@@ -32,8 +32,6 @@ import java.net.InetAddress;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -128,8 +126,7 @@ public class JapForwardingTools
 			/* we have a primary forwarding list -> decode xml data */
 			try
 			{
-				Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
-					ByteArrayInputStream(a_receivedData));
+				Document doc = XMLUtil.toXMLDocument(a_receivedData);
 				/* walk through the japforwarder XML tree */
 				NodeList japForwarderNodes = doc.getElementsByTagName("JapForwarder");
 				if (japForwarderNodes.getLength() == 0)
@@ -155,7 +152,7 @@ public class JapForwardingTools
 				int portNumber = Integer.parseInt(portNode.getFirstChild().getNodeValue());
 
 				/* prepare the answer document */
-				Document answerDoc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+				Document answerDoc = XMLUtil.createDocument();
 				/* create the JapForwarder element */
 				Element answerJapForwarderNode = answerDoc.createElement("JapForwarder");
 
@@ -223,8 +220,7 @@ public class JapForwardingTools
 			/* we have a primary forwarding list -> decode xml data */
 			try
 			{
-				Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
-					ByteArrayInputStream(a_receivedData));
+				Document doc = XMLUtil.toXMLDocument(a_receivedData);
 				/* walk through the japforwarder XML tree */
 				NodeList japForwarderNodes = doc.getElementsByTagName("JapForwarder");
 				if (japForwarderNodes.getLength() == 0)
@@ -250,7 +246,7 @@ public class JapForwardingTools
 				String forwarderId = forwarderNode.getAttribute("id");
 
 				/* prepare the answer document */
-				Document answerDoc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+				Document answerDoc = XMLUtil.createDocument();
 				/* create the JapForwarder element */
 				Element answerJapForwarderNode = answerDoc.createElement("JapForwarder");
 
@@ -307,7 +303,7 @@ public class JapForwardingTools
 		try
 		{
 			/* prepare the answer document */
-			Document answerDoc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+			Document answerDoc = XMLUtil.createDocument();
 			/* create the JapForwarder element */
 			Node answerJapForwarderNode = answerDoc.createElement("JapForwarder");
 			if (Configuration.getInstance().holdForwarderList() == true)

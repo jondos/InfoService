@@ -30,8 +30,6 @@ package anon.pay.xml;
 import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-
 import org.bouncycastle.crypto.params.DSAParameters;
 import org.bouncycastle.crypto.params.DSAPublicKeyParameters;
 import org.w3c.dom.Document;
@@ -78,15 +76,13 @@ public class XMLJapPublicKey implements IXMLEncodable //extends XMLDocument
 
 	public XMLJapPublicKey(byte[] data) throws Exception
 	{
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new
-			ByteArrayInputStream(data));
+        Document doc = XMLUtil.toXMLDocument(data);
 		setPubKey(doc.getDocumentElement());
 	}
 
 	public XMLJapPublicKey(String data) throws Exception
 	{
-		ByteArrayInputStream in = new ByteArrayInputStream(data.getBytes());
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
+        Document doc = XMLUtil.toXMLDocument(data);
 		setPubKey(doc.getDocumentElement());
 	}
 
@@ -148,7 +144,6 @@ public class XMLJapPublicKey implements IXMLEncodable //extends XMLDocument
 
 	public Element toXmlElement(Document a_doc) //throws Exception
 	{
-		//Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 		Element elemRoot = a_doc.createElement(ms_elemName);
 //		a_doc.appendChild(elemRoot);
 		elemRoot.setAttribute("version", "1.0");

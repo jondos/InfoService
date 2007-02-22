@@ -76,9 +76,23 @@ public class XMLUtil
 	private static final String PACKAGE_TRANSFORMER = "javax.xml.transform.";
 	private static final String HIERARCHY_REQUEST_ERR = "HIERARCHY_REQUEST_ERR: ";
 	private static DocumentBuilder ms_DocumentBuilder;
+
+
+
 	private static boolean m_bCheckedHumanReadableFormatting = false;
 	private static boolean m_bNeedsHumanReadableFormatting = true;
 
+	static
+	{
+	  if(ms_DocumentBuilder==null)
+		  try{
+			  ms_DocumentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+		  }
+	  catch(Exception e)
+	  {
+
+	  }
+}
 	/**
 	 * Throws an XMLParseException if the given XML node is null.
 	 * @param a_node an XML node
@@ -1024,7 +1038,9 @@ public class XMLUtil
 
 		try
 		{
-			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(a_inputSource);
+			if(ms_DocumentBuilder==null)
+					ms_DocumentBuilder	 = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+			doc = ms_DocumentBuilder.parse(a_inputSource);
 			removeComments(doc);
 		}
 		catch (IOException a_e)
@@ -1144,7 +1160,19 @@ public class XMLUtil
 			return toXMLDocument((byte[])null);
 		}
 		InputSource is=new InputSource(new StringReader(a_xmlDocument));
-		return toXMLDocument(is);
+		try
+		{
+			return readXMLDocument(is);
+		}
+		catch (XMLParseException ex)
+		{
+			throw ex;
+		}
+		catch (IOException ex)
+		{
+			throw new XMLParseException(
+					 XMLParseException.ROOT_TAG, "Could not parse XML document: " +
+					ex.getMessage());		}
 	}
 
 	/**
@@ -1158,33 +1186,21 @@ public class XMLUtil
 	{
 		ByteArrayInputStream in = new ByteArrayInputStream(a_xmlDocument);
 		InputSource is=new InputSource(in);
-		return toXMLDocument(is);
-	}
-
-	/**
-	 * Transforms a InputSource into an XML document.
-	 * @return an XML document
-	 * @exception XMLParseException if the given byte array is no valid XML document
-	 */
-	public static Document toXMLDocument(InputSource is) throws XMLParseException
-	{
-		Document doc;
 		try
 		{
-			if (ms_DocumentBuilder == null)
-			{
-				ms_DocumentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-			}
-			doc = ms_DocumentBuilder.parse(is);
+			return readXMLDocument(is);
 		}
-		catch (Exception a_e)
+		catch (XMLParseException ex)
 		{
-			throw new XMLParseException(XMLParseException.ROOT_TAG,
-										"Could not transform bytes into an XML document.");
+			throw ex;
 		}
-		removeComments(doc);
-		return doc;
+		catch (Exception ex)
+		{
+			throw new XMLParseException(
+					 XMLParseException.ROOT_TAG, "Could not parse XML document: " +
+					ex.getMessage());		}
 	}
+
 
 	/**
 	 * Transforms an IXMLEncodable object into an XML document.
@@ -1210,17 +1226,11 @@ public class XMLUtil
 	 */
 	public static Element toXMLElement(IXMLEncodable a_xmlEncodable)
 	{
-		Document doc = null;
+		Document doc = createDocument();
 		Element element;
 
-		try
-		{
-			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		}
-		catch (ParserConfigurationException a_e)
-		{
+	if(doc==null)
 			return null;
-		}
 
 		element = a_xmlEncodable.toXmlElement(doc);
 

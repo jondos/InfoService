@@ -33,7 +33,6 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.security.SecureRandom;
 
-import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -43,6 +42,7 @@ import anon.infoservice.AbstractDatabaseEntry;
 import anon.infoservice.Constants;
 import anon.util.Base64;
 import captcha.*;
+import anon.util.XMLUtil;
 
 /**
  * This is the implementation of a JAP forwarder entry, which can be stored in the forwarder
@@ -293,7 +293,7 @@ public class ForwarderDBEntry extends AbstractDatabaseEntry
 		/* create the captcha, it is already Base64 encoded */
 		String captchaData = captchaGenerator.createCaptcha(captchaString);
 		/* we now have everything needed for creating the xml structure */
-		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		Document doc = XMLUtil.createDocument();
 		/* create the JapForwarder element */
 		Element japForwarderNode = doc.createElement("JapForwarder");
 		/* create the CaptchaEncoded element (child of JapForwarder) */
