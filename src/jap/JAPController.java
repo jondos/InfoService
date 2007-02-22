@@ -559,7 +559,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				public void run()
 				{
 					if (JAPController.getInstance().isConfigAssistantShown() &&
-						!JAPDialog.isConsoleOnly())
+						!(JAPDialog.isConsoleOnly()||JAPModel.isSmallDisplay()))
 					{
 						showInstallationAssistant();
 					}
@@ -3312,7 +3312,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 					if (getInstance().getViewWindow() != null)
 					{
 						getInstance().getViewWindow().setEnabled(false);
-						getInstance().m_View.getViewIconified().setEnabled(false);
+						JAPViewIconified viewiconified=getInstance().m_View.getViewIconified();
+						if(viewiconified!=null)
+							viewiconified.setEnabled(false);
 					}
 
 					getInstance().m_finishSplash.setText(JAPMessages.getString(MSG_SAVING_CONFIG));

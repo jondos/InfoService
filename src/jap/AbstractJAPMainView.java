@@ -72,7 +72,9 @@ public abstract class AbstractJAPMainView extends JFrame implements IJAPMainView
 	{
 		if (a_bVisible)
 		{
-			getViewIconified().setVisible(false);
+			JAPViewIconified viewiconified=this.getViewIconified();
+			if(viewiconified!=null)
+				viewiconified.setVisible(false);
 		}
 		super.setVisible(a_bVisible);
 	}

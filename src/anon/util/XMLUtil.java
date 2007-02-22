@@ -64,6 +64,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import java.util.Vector;
 import logging.LogType;
+import java.io.StringReader;
 /**
  * This class provides an easy interface to XML methods.
  */
@@ -1142,7 +1143,8 @@ public class XMLUtil
 		{
 			return toXMLDocument((byte[])null);
 		}
-		return toXMLDocument(a_xmlDocument.getBytes());
+		InputSource is=new InputSource(new StringReader(a_xmlDocument));
+		return toXMLDocument(is);
 	}
 
 	/**
@@ -1154,12 +1156,26 @@ public class XMLUtil
 	 */
 	public static Document toXMLDocument(byte[] a_xmlDocument) throws XMLParseException
 	{
-		ByteArrayInputStream in;
+		ByteArrayInputStream in = new ByteArrayInputStream(a_xmlDocument);
+		InputSource is=new InputSource(in);
+		return toXMLDocument(is);
+	}
+
+	/**
+	 * Transforms a InputSource into an XML document.
+	 * @return an XML document
+	 * @exception XMLParseException if the given byte array is no valid XML document
+	 */
+	public static Document toXMLDocument(InputSource is) throws XMLParseException
+	{
 		Document doc;
 		try
 		{
-			in = new ByteArrayInputStream(a_xmlDocument);
-			doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
+			if (ms_DocumentBuilder == null)
+			{
+				ms_DocumentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+			}
+			doc = ms_DocumentBuilder.parse(is);
 		}
 		catch (Exception a_e)
 		{

@@ -43,6 +43,7 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.Frame;
+import java.awt.image.ColorModel;
 
 final public class JAPSplash extends Window implements ISplashResponse
 {
@@ -73,6 +74,7 @@ final public class JAPSplash extends Window implements ISplashResponse
 		MediaTracker ma = new MediaTracker(this);
 		InputStream in = null;
 		Class c = null;
+		boolean bLowColorDisplay=false;
 		try
 		{
 			c = Class.forName("JAP");
@@ -80,8 +82,17 @@ final public class JAPSplash extends Window implements ISplashResponse
 		catch (Exception e)
 		{
 		}
-		if (t.getColorModel().getPixelSize() <= 16)
+		ColorModel colorModel=null;
+		try{//Do not remove the try-catch block as some faulty JRE throw a null pointer excpetion in getColorModel()
+			colorModel = t.getColorModel();
+		}catch(Throwable t1)
 		{
+
+		}
+
+		if (colorModel==null||colorModel.getPixelSize() <= 16)
+		{
+			bLowColorDisplay=true;
 			in = c.getResourceAsStream(IMGPATHLOWCOLOR + SPLASHFN);
 			if (in == null)
 			{
@@ -130,7 +141,7 @@ final public class JAPSplash extends Window implements ISplashResponse
 			}
 		}
 		in = null;
-		if (t.getColorModel().getPixelSize() <= 16)
+		if (bLowColorDisplay)
 		{
 			in = c.getResourceAsStream(IMGPATHLOWCOLOR + JAPConstants.BUSYFN);
 			if (in == null)
@@ -195,7 +206,7 @@ final public class JAPSplash extends Window implements ISplashResponse
 		//setLocation( -350, -173);
 		//setSize(350, 173);
 		setSize(457, 178);
-		try
+	 try
 		{
 			ma.waitForAll();
 		}
@@ -203,7 +214,8 @@ final public class JAPSplash extends Window implements ISplashResponse
 		{}
 		;
 		toFront();
-	}
+
+}
 
 	public void setText(String a_text)
 	{
