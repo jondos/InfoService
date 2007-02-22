@@ -100,5 +100,4 @@ final public class Constants
 	 */
 	public static final String INFOSERVICE_VERSION = "IS.07.068"; //never change the layout of this line!
 
-    public static final String DYNAMIC_CONFIGURATION_FILENAME = "dynamic.properties";
 }

@@ -62,6 +62,7 @@ import infoservice.tor.MixminionDirectoryAgent;
 import anon.infoservice.JavaVersionDBEntry;
 import anon.infoservice.MessageDBEntry;
 import anon.infoservice.InfoServiceDBEntry;
+import infoservice.dynamic.DynamicConfiguration;
 
 final public class Configuration
 {
@@ -260,7 +261,7 @@ final public class Configuration
 					SignatureCreator.getInstance().setSigningKey(SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE,
 						infoServiceMessagesPrivateKey);
 					m_strID = new X509SubjectKeyIdentifier(
-									   infoServiceMessagesPrivateKey.getPublicKey()).getValueWithoutColon();
+						infoServiceMessagesPrivateKey.getPublicKey()).getValueWithoutColon();
 				}
 				catch (FileNotFoundException e)
 				{
@@ -312,7 +313,8 @@ final public class Configuration
 						else
 						{
 							LogHolder.log(LogLevel.ERR, LogType.MISC,
-										  "Error loading trusted mix root certificate: " + currentCertificateFile);
+										  "Error loading trusted mix root certificate: " +
+										  currentCertificateFile);
 						}
 					}
 				}
@@ -321,7 +323,8 @@ final public class Configuration
 					LogHolder.log(LogLevel.WARNING, LogType.MISC, "No trusted root certificates specified.");
 				}
 				/* load the trusted infoservice root certificates */
-				trustedRootCertificateFiles = a_properties.getProperty("trustedInfoServiceRootCertificateFiles");
+				trustedRootCertificateFiles = a_properties.getProperty(
+					"trustedInfoServiceRootCertificateFiles");
 				if ( (trustedRootCertificateFiles != null) && (!trustedRootCertificateFiles.trim().equals("")))
 				{
 					StringTokenizer stTrustedRootCertificates = new StringTokenizer(
@@ -342,7 +345,8 @@ final public class Configuration
 						else
 						{
 							LogHolder.log(LogLevel.ERR, LogType.MISC,
-										  "Error loading trusted infoservice root certificate: " + currentCertificateFile);
+										  "Error loading trusted infoservice root certificate: " +
+										  currentCertificateFile);
 						}
 					}
 				}
@@ -454,7 +458,7 @@ final public class Configuration
 					if (b.equalsIgnoreCase("false"))
 					{
 						SignatureVerifier.getInstance().setCheckSignatures(
-											  SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE, false);
+							SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE, false);
 					}
 				}
 				catch (Exception e)
@@ -462,7 +466,7 @@ final public class Configuration
 					LogHolder.log(LogLevel.WARNING, LogType.MISC,
 								  "Could not read 'checkInfoServiceSignatures' setting - default to: " +
 								  SignatureVerifier.getInstance().isCheckSignatures(
-						SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE));
+									  SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE));
 				}
 				try
 				{
@@ -470,7 +474,7 @@ final public class Configuration
 					if (b.equalsIgnoreCase("false"))
 					{
 						SignatureVerifier.getInstance().setCheckSignatures(
-											  SignatureVerifier.DOCUMENT_CLASS_MIX, false);
+							SignatureVerifier.DOCUMENT_CLASS_MIX, false);
 					}
 				}
 				catch (Exception e)
@@ -542,7 +546,6 @@ final public class Configuration
 					LogHolder.log(LogLevel.WARNING, LogType.MISC, "Could not load message information!");
 				}
 
-
 				/* load the private key for signing our own infoservice messages */
 				String updatePkcs12KeyFile = a_properties.getProperty("updateInformationPrivateKey");
 				if ( (updatePkcs12KeyFile != null) && (!updatePkcs12KeyFile.trim().equals("")))
@@ -599,7 +602,8 @@ final public class Configuration
 			/* Create the list of all neighbour infoservices. So we know, where to announce ourself at
 			 * startup.
 			 */
-			StringTokenizer stNeighbours = new StringTokenizer(a_properties.getProperty("neighbours","").trim(),
+			StringTokenizer stNeighbours = new StringTokenizer(a_properties.getProperty("neighbours", "").
+				trim(),
 				",");
 			m_initialNeighbourInfoServices = new Vector();
 			while (stNeighbours.hasMoreTokens())
@@ -635,7 +639,7 @@ final public class Configuration
 			/* set some default values */
 			m_lStatusStatisticsInterval = 3600 * (long) (1000); // 1 hour
 			m_strStatusStatisticsLogDir = ""; // log to the current directory
-			if (m_bStatusStatisticsEnabled )
+			if (m_bStatusStatisticsEnabled)
 			{
 				/* overwrite the default values */
 				long tempInterval = Long.parseLong(a_properties.getProperty("statusStatisticsInterval").trim()) *
@@ -681,7 +685,7 @@ final public class Configuration
 						TorDirectoryAgent.getInstance().addTorDirectoryServer(new TorDirectoryServer(new
 							TorDirectoryServerUrl(torDirectoryServer.getHost(), torServerPort,
 												  torDirectoryServer.getFile()),
-							 1000L * 365L * 24L * 3600L * 1000L, true));
+							1000L * 365L * 24L * 3600L * 1000L, true));
 					}
 					catch (Exception e)
 					{
@@ -707,7 +711,7 @@ final public class Configuration
 				long fetchMixminionNodesListInterval = 600L * 1000L;
 				/* overwrite the default values */
 				long tempInterval = Long.parseLong(a_properties.getProperty("fetchMixminionNodesListInterval").
-					trim()) *1000L;
+					trim()) * 1000L;
 				if (tempInterval > 0)
 				{
 					/* set only to valid values */
@@ -752,18 +756,26 @@ final public class Configuration
 			ms_httpDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
 			ms_httpDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
 
-
 			m_NrOfThreads = Constants.MAX_NR_OF_CONCURRENT_CONNECTIONS;
 			try
 			{
 				String b = a_properties.getProperty("maxNrOfConcurrentConnections").trim();
-				m_NrOfThreads=Integer.parseInt(b);
+				m_NrOfThreads = Integer.parseInt(b);
 			}
 			catch (Exception e)
 			{
 				LogHolder.log(LogLevel.WARNING, LogType.MISC,
 							  "Could not read 'maxNrOfConcurrentConnections' setting - default to: " +
 							  m_NrOfThreads);
+			}
+			try
+			{
+				DynamicConfiguration.getInstance().readConfiguration(a_properties);
+			}
+			catch (Exception e2)
+			{
+				System.err.println("Error reading the configurastion information related to Dynamic Cascades");
+				System.err.println("Exception: " + e2.toString());
 			}
 
 		}
@@ -797,11 +809,12 @@ final public class Configuration
 		return m_hardwareListenerList;
 	}
 
-/** Returns how many concurrent connections this IS should handle*/
+	/** Returns how many concurrent connections this IS should handle*/
 	public int getNrOfConcurrentConnections()
 	{
 		return m_NrOfThreads;
 	}
+
 	/**
 	 * Returns the ListenerInterfaces of all Interfaces our infoservice
 	 * propagates to others.
@@ -939,7 +952,6 @@ final public class Configuration
 	{
 		return m_messageFile;
 	}
-
 
 	/**
 	 * Returns where the file with JAP minimal version number is located in the local file system
