@@ -88,6 +88,7 @@ import java.awt.EventQueue;
 import java.awt.MenuComponent;
 import java.applet.Applet;
 import java.awt.Container;
+import java.awt.image.ColorModel;
 
 /**
  * This class contains helper methods for the GUI.
@@ -308,8 +309,13 @@ public final class GUIUtils
 			{
 				img = loadImageIconInternal(ResourceLoader.getResourceURL(a_strRelativeImagePath));
 			}
-
-			if (img == null && (Toolkit.getDefaultToolkit().getColorModel().getPixelSize() <= 16))
+			ColorModel colorModel=null;
+			try{//Do not remove the try-catch block as some faulty JRE throw a null pointer excpetion in getColorModel()
+				colorModel = Toolkit.getDefaultToolkit().getColorModel();
+			}catch(Throwable t1)
+			{
+			}
+			if (img == null && (colorModel==null||colorModel.getPixelSize() <= 16))
 			{
 				// load the image from the low color image path
 				if (strScaledRelativeImagePath != null)
