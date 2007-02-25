@@ -194,17 +194,23 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 		/* get all the attributes of MixCascadeStatus */
 		m_mixCascadeId = a_statusNode.getAttribute("id");
 
-		if (m_certificate == null)
-		{
-			throw new SignatureException(
-				 "There is no known certificate to verify the StatusInfo signature of Mix with ID: " +
-				 m_mixCascadeId);
-		}
-		if (!checkId())
-		{
-			throw new XMLParseException(XMLParseException.ROOT_TAG, "Malformed Status-Entry for Mix ID: " + m_mixCascadeId);
-		}
-
+		//The following is a workaround becuase if signature check is disabled, then also
+		//the certificate sent with the POST HELO message are not stored....
+		//we should change this....
+		if(SignatureVerifier.getInstance().isCheckSignatures()&&
+			SignatureVerifier.getInstance().isCheckSignatures(SignatureVerifier.DOCUMENT_CLASS_MIX))
+			{
+				if (m_certificate == null)
+				{
+					throw new SignatureException(
+						 "There is no known certificate to verify the StatusInfo signature of Mix with ID: " +
+						 m_mixCascadeId);
+				}
+				if (!checkId())
+				{
+					throw new XMLParseException(XMLParseException.ROOT_TAG, "Malformed Status-Entry for Mix ID: " + m_mixCascadeId);
+				}
+			}
 		/* get the values */
 		m_currentRisk = Integer.parseInt(a_statusNode.getAttribute("currentRisk"));
 		m_mixedPackets = Long.parseLong(a_statusNode.getAttribute("mixedPackets"));
