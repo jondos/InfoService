@@ -90,7 +90,7 @@ final public class ORList
 	{
 		return size()-m_countHibernate;
 	}
-	
+
 	public synchronized void setFetcher(ORListFetcher fetcher)
 	{
 		m_orlistFetcher = fetcher;
@@ -162,12 +162,12 @@ final public class ORList
 		ORDescriptor ord = getByName(name);
 		if (ord == null)
 			return;
-		
+
 		m_onionrouters.removeElement(ord);
 		if(ord.isExitNode())
 		{
 			m_exitnodes.removeElement(ord);
-		} 
+		}
 		else
 		{
 			m_middlenodes.removeElement(ord);
@@ -185,17 +185,17 @@ final public class ORList
 		if(ord.isExitNode())
 		{
 			m_exitnodes.addElement(ord);
-		} 
+		}
 		else
 		{
 			m_middlenodes.addElement(ord);
 		}
-		
+
 		m_onionrouters.addElement(ord);
 		m_onionroutersWithNames.put(ord.getName(), ord);
 		LogHolder.log(LogLevel.DEBUG, LogType.TOR, "Added: " + ord);
 	}
-	
+
 	/**
 	 * selects a OR randomly from a given list of allowed OR names
 	 * @param orlist list of onionrouter names
@@ -207,7 +207,7 @@ final public class ORList
 		{
 			return null;
 		}
-		
+
 		ORDescriptor ord;
 		while(true)
 		{
@@ -235,7 +235,7 @@ final public class ORList
 		{
 			return null;
 		}
-		
+
 		ORDescriptor ord;
 		while (true)
 		{
@@ -245,7 +245,7 @@ final public class ORList
 				break;
 			}
 		}
-		
+
 		return ord;
 	}
 
@@ -262,7 +262,7 @@ final public class ORList
 		{
 			return null;
 		}
-		
+
 		//we know that the last node is an exit node, so we have to calculate a new probability
 		//p(x') = (p(x)-1/length)*(length/(length-1))
 		//p(x) ... probability for exit nodes    p(x') ... new probability for exit nodes
@@ -281,12 +281,12 @@ final public class ORList
 		if(m_rand.nextInt(denominator)>numerator)
 		{
 				ord = (ORDescriptor)this.m_middlenodes.elementAt(m_rand.nextInt(m_middlenodes.size()));
-			}	 
+			}
 			else
 		{
 				ord = (ORDescriptor)this.m_exitnodes.elementAt(m_rand.nextInt(m_exitnodes.size()));
 			}
-			
+
 			if (ord.getHibernate() == false)
 			{
 				break;
@@ -323,20 +323,20 @@ final public class ORList
 		StringTokenizer st;
 		byte[] b;
 		boolean hibernate = false;
-		
+
 		if(curLine == null || ! curLine.startsWith("network-status-version"))
 			return false;
-		
+
 		while (true)
 		{
 			reader.mark(200);
 			curLine = reader.readLine();
-			
+
 			if (curLine == null)
 			{
 				break;
 			}
-			
+
 			if (curLine.startsWith("published"))
 			{
 				st = new StringTokenizer(curLine, " ");
@@ -353,13 +353,13 @@ final public class ORList
 				String hashKey = st.nextToken() + "=";
 				String hashDescriptor = st.nextToken() + "=";
 				String strPublished = st.nextToken();
-				strPublished += " " + st.nextToken(); 
+				strPublished += " " + st.nextToken();
 				String address = st.nextToken();
 				String version;
 				Vector options = new Vector();
 				int port = Integer.parseInt(st.nextToken());
-				
-				
+
+
 				reader.mark(200);
 				curLine = reader.readLine();
 				if (! curLine.startsWith("s "))
@@ -370,15 +370,15 @@ final public class ORList
 			{
 					st = new StringTokenizer(curLine);
 					st.nextToken();
-					
+
 				while (st.hasMoreTokens())
 				{
-						options.add(st.nextToken());
+						options.addElement(st.nextToken());
 					}
 				}
-				
+
 				/** @todo handle status flags */
-				
+
 				curLine = reader.readLine();
 				if (curLine.startsWith("v "))
 					{
@@ -392,9 +392,9 @@ final public class ORList
 				{
 					reader.reset();
 					}
-				
+
 				/** @todo handle version of OR */
-						
+
 				ORDescriptor ord = getORDescriptor(nick);
 				/*if (ord != null && ! hashDescriptor.equals(ord.getHash()))
 				{
@@ -405,7 +405,7 @@ final public class ORList
 					else
 					{
 							b = m_orlistFetcher.getDescriptorByFingerprint(ord.getFingerprint());
-									
+
 							if (b != null)
 							{
 								if (ord != null && ord.getHibernate())
@@ -415,7 +415,7 @@ final public class ORList
 								remove(nick);
 								LineNumberReader l = new LineNumberReader(new InputStreamReader(new ByteArrayInputStream(b)));
 								ord = ORDescriptor.parse(l);
-						
+
 								// does not hibernate anymore, decrease number
 								if (hibernate && ! ord.getHibernate())
 			{
@@ -425,9 +425,9 @@ final public class ORList
 							}
 					}
 				}*/
-				
+
 				String digest = Base16.encode((Base64.decode(hashDescriptor)));
-				if (   (ord == null) 
+				if (   (ord == null)
 					|| ((ord.getHash() == null) || (! digest.equals(ord.getHash()))))
 				{
 					b = m_orlistFetcher.getDescriptor(digest);
@@ -441,7 +441,7 @@ final public class ORList
 						LineNumberReader l = new LineNumberReader(new InputStreamReader(new ByteArrayInputStream(b)));
 						ord = ORDescriptor.parse(l);
 						ord.setHash(digest);
-						
+
 						// does not hibernate anymore, decrease number
 						if (hibernate && ! ord.getHibernate())
 						{
@@ -452,10 +452,10 @@ final public class ORList
 					}
 				}
 			}
-		
+
 		return true;
 	}
-	
+
 	/**
 	 * parses the document and creates a list with all ORDescriptions
 	 * @param strDocument
@@ -467,20 +467,20 @@ final public class ORList
 		LineNumberReader reader = new LineNumberReader(new InputStreamReader(new ByteArrayInputStream(document)));
 		Date published = null;
 		String curLine = reader.readLine();
-		
+
 		if(curLine == null)
 			return false;
-		
+
 		for (;;)
 		{
 			reader.mark(200);
-			
+
 			curLine = reader.readLine();
 			if (curLine == null)
 			{
 				break;
 			}
-		
+
 			if (curLine.startsWith("router "))
 			{
 				reader.reset();
@@ -495,10 +495,10 @@ final public class ORList
 			}
 		}
 		}
-	
+
 		LogHolder.log(LogLevel.DEBUG, LogType.TOR, "Exit Nodes : "+ m_exitnodes.size()+" Non-Exit Nodes : " + m_middlenodes.size());
 		m_datePublished = published;
-		
+
 		return true;
 	}
 }

@@ -27,13 +27,21 @@
  */
 package anon.tor.ordescription;
 
+import java.io.InputStream;
+
 import HTTPClient.HTTPConnection;
 import HTTPClient.HTTPResponse;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 
-public class PlainORListFetcher implements ORListFetcher
+/**
+ * get descriptor and status documents from
+ * a directory server via HTTP 
+ * @author dhoske
+ *
+ */
+final public class PlainORListFetcher implements ORListFetcher
 {
 	private String m_ORListServer;
 	private int m_ORListPort;
@@ -46,33 +54,66 @@ public class PlainORListFetcher implements ORListFetcher
 	 * port of the directory server
 	 */
 	public PlainORListFetcher(String addr, int port)
-
 	{
 		m_ORListServer = addr;
 		m_ORListPort = port;
 	}
 
-	public byte[] getORList()
+	public byte[] getRouterStatus()
+	{
+		return getDocument("/tor/status/authority.z");
+	}
+	
+	public byte[] getDescriptor(String digest)
+	{
+		return getDocument("/tor/server/d/" + digest + ".z");
+	}
+	
+	public byte[] getDescriptorByFingerprint(String fingerprint)
+	{
+		return getDocument("/tor/server/fp/" + fingerprint + ".z");
+	}
+	
+	public byte[] getAllDescriptors()
+	{
+		return getDocument("/tor/");
+	}
+	
+	public byte[] getStatus(String fingerprint)
+	{
+		return getDocument("/tor/status/fp/" + fingerprint + ".z");
+	}
+	
+	/**
+	 * fetch document from directory server 
+	 * @param path path to document
+	 * @return
+	 * the document
+	 */
+	private byte[] getDocument(String path)
 	{
 		try
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-						  "[UPDATE OR-LIST] Starting update on " + m_ORListServer + ":" + m_ORListPort);
-			HTTPConnection http = new HTTPConnection(m_ORListServer, m_ORListPort);
-			HTTPResponse resp = http.Get("/");
+			LogHolder.log(LogLevel.DEBUG,LogType.TOR,"fetching " + path + " from directory server");
+			HTTPConnection http = new HTTPConnection(m_ORListServer,m_ORListPort);
+			http.addModule(Class.forName("HTTPClient.ContentEncodingModule"), -1);
+			HTTPResponse resp = http.Get(path);
+			
 			if (resp.getStatusCode() != 200)
 			{
 				return null;
 			}
+			
 			byte[] doc = resp.getData();
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[UPDATE OR-LIST] Update finished");
+			
+			if (doc.length <= 0)
+				return null;
 			return doc;
 		}
 		catch (Throwable t)
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
-						  "There was a problem with fetching the available ORRouters: " + t.getMessage());
-		}
+			LogHolder.log(LogLevel.DEBUG, LogType.TOR, "error while fetching " + path + " from directory server: " + t.getMessage());
 		return null;
+		}
 	}
 }

@@ -27,12 +27,43 @@
  */
 package anon.tor.ordescription;
 
+/**
+ * fetches descriptor and status documents
+ * for the ORs
+ * @author dhoske
+ *
+ */
 public interface ORListFetcher
 {
 	/**
-	 * gets the ORList
+	 * gets authoritive network-status
 	 * @return
-	 * the router informations from the directory
+	 * status document
 	 */
-	public byte[] getORList();
+	public byte[] getRouterStatus();
+	
+	/**
+	 * gets descriptor for OR with given digest
+	 * @param digest
+	 * @return
+	 * descriptor
+	 */
+	public byte[] getDescriptor(String digest);
+	
+	public byte[] getDescriptorByFingerprint(String fingerprint);
+	
+	/**
+	 * gets descriptors for all known ORs
+	 * @return
+	 * concatenated descriptors
+	 */
+	public byte[] getAllDescriptors();
+	
+	/**
+	 * gets network-status for host with given fingerprint
+	 * @param fingerprint
+	 * @return
+	 * status document
+	 */
+	public byte[] getStatus(String fingerprint);
 }
