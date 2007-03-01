@@ -167,10 +167,8 @@ public class XMLTransCert implements IXMLEncodable
 	 */
 	private Element internal_toXmlElement(Document a_doc)
 	{
-//		a_doc = getDocumentBuilder().newDocument();
 		Element elemRoot = a_doc.createElement("TransferCertificate");
 		elemRoot.setAttribute("version", "1.2");
-//		a_doc.appendChild(elemRoot);
 		Element elem = a_doc.createElement("AccountNumber");
 		XMLUtil.setValue(elem, Long.toString(m_accountNumber));
 		elemRoot.appendChild(elem);

@@ -36,6 +36,7 @@ import anon.infoservice.ListenerInterface;
 public class ORAcl
 {
 	private Vector m_Constraints;
+	
 	private class AclElement
 	{
 		byte[] arAdrWithMask;
@@ -50,10 +51,12 @@ public class ORAcl
 			arAdrWithMask = ia.getAddress();
 			ia = InetAddress.getByName(m);
 			arAdrMask = ia.getAddress();
+			
 			for (int i = 0; i < 4; i++)
 			{
 				arAdrWithMask[i] &= arAdrMask[i];
 			}
+			
 			portLow = l;
 			portHigh = h;
 			bIsAccept = baccept;
@@ -65,6 +68,7 @@ public class ORAcl
 			{
 				return false;
 			}
+			
 			if (adr != null)
 			{
 				InetAddress ia = InetAddress.getByName(adr);
@@ -77,6 +81,7 @@ public class ORAcl
 					}
 				}
 			}
+			
 			return true;
 		}
 
@@ -107,16 +112,19 @@ public class ORAcl
 		StringTokenizer st = new StringTokenizer(acl);
 		String s = st.nextToken();
 		boolean bAccept = false;
+		
 		if (s.equals("accept"))
 		{
 			bAccept = true;
 		}
+		
 		s = st.nextToken();
 		st = new StringTokenizer(s, ":");
 		String a = st.nextToken();
 		String ports = st.nextToken();
 		int l = 0xFFFF;
 		int h = 0;
+		
 		if (ports.equals("*"))
 		{
 			l = 0;
@@ -135,6 +143,7 @@ public class ORAcl
 				h = l;
 			}
 		}
+		
 		String adr = null;
 		String mask = null;
 		if (a.equals("*"))
@@ -202,6 +211,7 @@ public class ORAcl
 		{
 			return false;
 		}
+		
 		try
 		{
 			for (int i = 0; i < m_Constraints.size(); i++)
@@ -216,6 +226,7 @@ public class ORAcl
 		catch (Exception e)
 		{
 		}
+		
 		return false;
 	}
 
@@ -239,6 +250,7 @@ public class ORAcl
 		catch (Exception e)
 		{
 		}
+		
 		return false;
 	}
 

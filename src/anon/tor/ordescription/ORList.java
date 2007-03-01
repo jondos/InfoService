@@ -37,6 +37,8 @@ import java.util.TimeZone;
 import java.util.Vector;
 
 import anon.crypto.MyRandom;
+import anon.util.Base64;
+import anon.tor.util.Base16;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -45,7 +47,6 @@ import java.io.ByteArrayInputStream;
 
 final public class ORList
 {
-
 	private Vector m_onionrouters;
 	private Vector m_exitnodes;
 	private Vector m_middlenodes;
@@ -53,6 +54,7 @@ final public class ORList
 	private MyRandom m_rand;
 	private ORListFetcher m_orlistFetcher;
 	private Date m_datePublished;
+	private int m_countHibernate;
 	private final static DateFormat ms_DateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	static
 	{
@@ -70,6 +72,7 @@ final public class ORList
 		m_middlenodes = new Vector();
 		m_onionroutersWithNames = new Hashtable();
 		m_orlistFetcher = fetcher;
+		m_countHibernate = 0;
 		m_rand = new MyRandom();
 	}
 
@@ -83,6 +86,11 @@ final public class ORList
 		return m_onionrouters.size();
 	}
 
+	public synchronized int active()
+	{
+		return size()-m_countHibernate;
+	}
+	
 	public synchronized void setFetcher(ORListFetcher fetcher)
 	{
 		m_orlistFetcher = fetcher;
@@ -95,16 +103,18 @@ final public class ORList
 	{
 		try
 		{
-			byte[] doc = m_orlistFetcher.getORList();
-			if (doc == null)
+			if (size() == 0)
 			{
-				return false;
+				return parseFirstDocument(m_orlistFetcher.getAllDescriptors());
 			}
-			return parseDocument(doc);
+			else
+			{
+				return parseStatus(m_orlistFetcher.getRouterStatus(),true);
+			}
 		}
 		catch (Throwable t)
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+			LogHolder.log(LogLevel.DEBUG, LogType.TOR,
 						  "There was a problem with fetching the available ORRouters: " + t.getMessage());
 		}
 		return false;
@@ -137,9 +147,9 @@ final public class ORList
 	 * @return
 	 * ORDescription of the onion router
 	 */
-	public synchronized ORDescription getByName(String name)
+	public synchronized ORDescriptor getByName(String name)
 	{
-		return (ORDescription) m_onionroutersWithNames.get(name);
+		return (ORDescriptor) m_onionroutersWithNames.get(name);
 	}
 
 	/**
@@ -149,12 +159,16 @@ final public class ORList
 	 */
 	public synchronized void remove(String name)
 	{
-		ORDescription ord = getByName(name);
+		ORDescriptor ord = getByName(name);
+		if (ord == null)
+			return;
+		
 		m_onionrouters.removeElement(ord);
 		if(ord.isExitNode())
 		{
 			m_exitnodes.removeElement(ord);
-		} else
+		} 
+		else
 		{
 			m_middlenodes.removeElement(ord);
 		}
@@ -162,23 +176,77 @@ final public class ORList
 	}
 
 	/**
+	 * add an onion rotuer
+	 * @param ord
+	 * descriptor for router
+	 */
+	public synchronized void add(ORDescriptor ord)
+	{
+		if(ord.isExitNode())
+		{
+			m_exitnodes.addElement(ord);
+		} 
+		else
+		{
+			m_middlenodes.addElement(ord);
+		}
+		
+		m_onionrouters.addElement(ord);
+		m_onionroutersWithNames.put(ord.getName(), ord);
+		LogHolder.log(LogLevel.DEBUG, LogType.TOR, "Added: " + ord);
+	}
+	
+	/**
 	 * selects a OR randomly from a given list of allowed OR names
 	 * @param orlist list of onionrouter names
 	 * @return
 	 */
-	public synchronized ORDescription getByRandom(Vector allowedNames)
+	public synchronized ORDescriptor getByRandom(Vector allowedNames)
 	{
+		if (active() == 0)
+		{
+			return null;
+		}
+		
+		ORDescriptor ord;
+		while(true)
+		{
 		String orName = (String) allowedNames.elementAt( (m_rand.nextInt(allowedNames.size())));
-		return getByName(orName);
+			ord = getByName(orName);
+			if (ord == null)
+			{
+				return null;
+			}
+			if (ord.getHibernate() == false)
+			{
+				break;
+			}
+		}
+		return ord;
 	}
 
 	/**
-	 * selects a OR randomly
+	 * selects a OR randomly (it should not hibernate)
 	 * @return
 	 */
-	public synchronized ORDescription getByRandom()
+	public synchronized ORDescriptor getByRandom()
 	{
-		return (ORDescription)this.m_onionrouters.elementAt(m_rand.nextInt(m_onionrouters.size()));
+		if (active() == 0)
+		{
+			return null;
+		}
+		
+		ORDescriptor ord;
+		while (true)
+		{
+			ord = (ORDescriptor) this.m_onionrouters.elementAt(m_rand.nextInt(m_onionrouters.size()));
+			if (ord.getHibernate() == false)
+			{
+				break;
+			}
+		}
+		
+		return ord;
 	}
 
 	/**
@@ -188,9 +256,14 @@ final public class ORList
 	 * length of the circuit
 	 * @return
 	 */
-	public synchronized ORDescription getByRandom(int length)
+	public synchronized ORDescriptor getByRandom(int length)
 	{
-		//we know that the last node is an exit node, so we have to calculate a new probaility
+		if (active() == 0)
+		{
+			return null;
+		}
+		
+		//we know that the last node is an exit node, so we have to calculate a new probability
 		//p(x') = (p(x)-1/length)*(length/(length-1))
 		//p(x) ... probability for exit nodes    p(x') ... new probability for exit nodes
 		//p(x) = exit_nodes/number_of_routers
@@ -202,13 +275,25 @@ final public class ORList
 		//we double the probability of middlerouters, because original tor doesn't use them so often
 		denominator *=2;
 
+		ORDescriptor ord;
+		while (true)
+		{
 		if(m_rand.nextInt(denominator)>numerator)
 		{
-			return (ORDescription)this.m_middlenodes.elementAt(m_rand.nextInt(m_middlenodes.size()));
-		} else
+				ord = (ORDescriptor)this.m_middlenodes.elementAt(m_rand.nextInt(m_middlenodes.size()));
+			}	 
+			else
 		{
-			return (ORDescription)this.m_exitnodes.elementAt(m_rand.nextInt(m_exitnodes.size()));
+				ord = (ORDescriptor)this.m_exitnodes.elementAt(m_rand.nextInt(m_exitnodes.size()));
+			}
+			
+			if (ord.getHibernate() == false)
+			{
+				break;
 		}
+	}
+
+		return ord;
 	}
 
 	/**
@@ -218,108 +303,202 @@ final public class ORList
 	 * @return
 	 * ORDescription if the OR exist, null else
 	 */
-	public synchronized ORDescription getORDescription(String name)
+	public synchronized ORDescriptor getORDescriptor(String name)
 	{
 		if (this.m_onionroutersWithNames.containsKey(name))
 		{
-			return (ORDescription)this.m_onionroutersWithNames.get(name);
+			return (ORDescriptor)this.m_onionroutersWithNames.get(name);
 		}
 		return null;
 	}
 
+	/**
+	 * parse router status
+	 */
+	private boolean parseStatus(byte[] document, boolean change) throws Exception
+	{
+		LineNumberReader reader = new LineNumberReader(new InputStreamReader(new ByteArrayInputStream(document)));
+		Date published = null;
+		String curLine = reader.readLine();
+		StringTokenizer st;
+		byte[] b;
+		boolean hibernate = false;
+		
+		if(curLine == null || ! curLine.startsWith("network-status-version"))
+			return false;
+		
+		while (true)
+		{
+			reader.mark(200);
+			curLine = reader.readLine();
+			
+			if (curLine == null)
+			{
+				break;
+			}
+			
+			if (curLine.startsWith("published"))
+			{
+				st = new StringTokenizer(curLine, " ");
+				st.nextToken();
+				String strPublished = st.nextToken();
+				strPublished += " " + st.nextToken();
+				published = ms_DateFormat.parse(strPublished);
+			}
+			else if (curLine.startsWith("r "))
+			{
+				st = new StringTokenizer(curLine, " ");
+				st.nextToken();
+				String nick = st.nextToken();
+				String hashKey = st.nextToken() + "=";
+				String hashDescriptor = st.nextToken() + "=";
+				String strPublished = st.nextToken();
+				strPublished += " " + st.nextToken(); 
+				String address = st.nextToken();
+				String version;
+				Vector options = new Vector();
+				int port = Integer.parseInt(st.nextToken());
+				
+				
+				reader.mark(200);
+				curLine = reader.readLine();
+				if (! curLine.startsWith("s "))
+				{
+					reader.reset();
+			}
+				else
+			{
+					st = new StringTokenizer(curLine);
+					st.nextToken();
+					
+				while (st.hasMoreTokens())
+				{
+						options.add(st.nextToken());
+					}
+				}
+				
+				/** @todo handle status flags */
+				
+				curLine = reader.readLine();
+				if (curLine.startsWith("v "))
+					{
+					version = curLine.substring(2);
+				}
+				else if (curLine.startsWith("opt v "))
+						{
+					version = curLine.substring(6);
+						}
+				else
+				{
+					reader.reset();
+					}
+				
+				/** @todo handle version of OR */
+						
+				ORDescriptor ord = getORDescriptor(nick);
+				/*if (ord != null && ! hashDescriptor.equals(ord.getHash()))
+				{
+					if (! change)
+					{
+						ord.setHash(hashDescriptor);
+				}
+					else
+					{
+							b = m_orlistFetcher.getDescriptorByFingerprint(ord.getFingerprint());
+									
+							if (b != null)
+							{
+								if (ord != null && ord.getHibernate())
+								{
+									hibernate = true;
+			}
+								remove(nick);
+								LineNumberReader l = new LineNumberReader(new InputStreamReader(new ByteArrayInputStream(b)));
+								ord = ORDescriptor.parse(l);
+						
+								// does not hibernate anymore, decrease number
+								if (hibernate && ! ord.getHibernate())
+			{
+									m_countHibernate--;
+								}
+								add(ord);
+							}
+					}
+				}*/
+				
+				String digest = Base16.encode((Base64.decode(hashDescriptor)));
+				if (   (ord == null) 
+					|| ((ord.getHash() == null) || (! digest.equals(ord.getHash()))))
+				{
+					b = m_orlistFetcher.getDescriptor(digest);
+					if (b != null)
+					{
+						if (ord != null && ord.getHibernate())
+						{
+							hibernate = true;
+						}
+						remove(nick);
+						LineNumberReader l = new LineNumberReader(new InputStreamReader(new ByteArrayInputStream(b)));
+						ord = ORDescriptor.parse(l);
+						ord.setHash(digest);
+						
+						// does not hibernate anymore, decrease number
+						if (hibernate && ! ord.getHibernate())
+						{
+							m_countHibernate--;
+						}
+						add(ord);
+						}
+					}
+				}
+			}
+		
+		return true;
+	}
+	
 	/**
 	 * parses the document and creates a list with all ORDescriptions
 	 * @param strDocument
 	 * @throws Exception
 	 * @return false if document is not a valid directory, true otherwise
 	 */
-	private boolean parseDocument(byte[] strDocument) throws Exception
-	{
-		Vector ors = new Vector();
-		Vector exitnodes = new Vector();
-		Vector middlenodes = new Vector();
-		Hashtable orswn = new Hashtable();
-		LineNumberReader reader = new LineNumberReader(new InputStreamReader(new ByteArrayInputStream(strDocument)));
-		String strRunningOrs = " ";
+	private boolean parseFirstDocument(byte[] document) throws Exception
+			{
+		LineNumberReader reader = new LineNumberReader(new InputStreamReader(new ByteArrayInputStream(document)));
 		Date published = null;
-		String aktLine = reader.readLine();
-		if(aktLine==null||!aktLine.startsWith("signed-directory"))
+		String curLine = reader.readLine();
+		
+		if(curLine == null)
 			return false;
-		for (; ; )
+		
+		for (;;)
 		{
 			reader.mark(200);
-			aktLine = reader.readLine();
-			if (aktLine == null)
+			
+			curLine = reader.readLine();
+			if (curLine == null)
 			{
 				break;
 			}
-			//remove "opt"(optional) in front of line
-			if(aktLine.startsWith("opt "))
-			{
-				aktLine=aktLine.substring(4,aktLine.length());
-			}
-			//TODO: can be removed when no routers version <0.0.9pre5 are used in tor
-			if (aktLine.startsWith("running-routers"))
-			{
-				strRunningOrs = aktLine + " ";
-			}
-			//new in version 0.0.9pre5 - added instead of running-routers line
-			else if (aktLine.startsWith("router-status"))
-			{
-				strRunningOrs = " ";
-				StringTokenizer st = new StringTokenizer(aktLine, " ");
-				String token = st.nextToken();
-				while (st.hasMoreTokens())
-				{
-					token = st.nextToken();
-					//check if router is running
-					if (!token.startsWith("!"))
-					{
-						//check if the router is verified
-						if (!token.startsWith("$"))
-						{
-							strRunningOrs += (new StringTokenizer(token, "=")).nextToken() + " ";
-						}
-					}
-				}
-			}
-			else if (aktLine.startsWith("router"))
+		
+			if (curLine.startsWith("router "))
 			{
 				reader.reset();
-				ORDescription ord = ORDescription.parse(reader);
+				ORDescriptor ord = ORDescriptor.parse(reader);
 				if (ord != null)
 				{
-					if ( (strRunningOrs.indexOf(" " + ord.getName() + " ") >=
-						  0) /*&&(ord.getSoftware().startsWith("Tor 0.0.8"))*/)
+					if (ord.getHibernate())
 					{
-						if(ord.isExitNode())
-						{
-							exitnodes.addElement(ord);
-						} else
-						{
-							middlenodes.addElement(ord);
-						}
-						ors.addElement(ord);
-						orswn.put(ord.getName(), ord);
-						LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Added: " + ord);
+						m_countHibernate++;
 					}
-				}
-			}
-			else if (aktLine.startsWith("published"))
-			{
-				StringTokenizer st = new StringTokenizer(aktLine, " ");
-				st.nextToken(); //skip "published"
-				String strPublished = st.nextToken(); //day
-				strPublished += " " + st.nextToken(); //time
-				published = ms_DateFormat.parse(strPublished);
+					add(ord);
 			}
 		}
-		m_exitnodes = exitnodes;
-		m_middlenodes = middlenodes;
-		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Exit Nodes : "+exitnodes.size()+" Non-Exit Nodes : "+middlenodes.size());
-		m_onionrouters = ors;
-		m_onionroutersWithNames = orswn;
+		}
+	
+		LogHolder.log(LogLevel.DEBUG, LogType.TOR, "Exit Nodes : "+ m_exitnodes.size()+" Non-Exit Nodes : " + m_middlenodes.size());
 		m_datePublished = published;
+		
 		return true;
 	}
 }

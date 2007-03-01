@@ -51,7 +51,7 @@ import anon.tor.cells.Cell;
 import anon.tor.cells.CreateCell;
 import anon.tor.cells.RelayCell;
 
-import anon.tor.ordescription.ORDescription;
+import anon.tor.ordescription.ORDescriptor;
 import anon.crypto.tinytls.util.hash;
 import anon.util.ByteArrayUtil;
 import logging.LogHolder;
@@ -82,7 +82,7 @@ public class OnionRouter
 
 	private final static DHParameters DH_PARAMS = new DHParameters(SAFEPRIME, new BigInteger("2"));
 
-	private ORDescription m_description;
+	private ORDescriptor m_description;
 	private DHBasicAgreement m_dhe;
 	private MyAES m_encryptionEngine;
 	private MyAES m_decryptionEngine;
@@ -100,7 +100,7 @@ public class OnionRouter
 	 * ORDescription of the onionrouter
 	 * @throws IOException
 	 */
-	public OnionRouter(int circID, ORDescription description) throws IOException
+	public OnionRouter(int circID, ORDescriptor description) throws IOException
 	{
 		this.m_description = description;
 		this.m_circID = circID;
@@ -113,7 +113,7 @@ public class OnionRouter
 	 * @return
 	 * ORDescription
 	 */
-	public ORDescription getDescription()
+	public ORDescriptor getDescription()
 	{
 		return this.m_description;
 	}
@@ -239,7 +239,7 @@ public class OnionRouter
 	 * @throws IOException
 	 * @throws InvalidCipherTextException
 	 */
-	public RelayCell extendConnection(ORDescription description) throws IOException,
+	public RelayCell extendConnection(ORDescriptor description) throws IOException,
 		InvalidCipherTextException,Exception
 	{
 		RelayCell cell;

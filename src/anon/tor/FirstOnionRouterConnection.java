@@ -51,7 +51,9 @@ import anon.crypto.PKCS12;
 import anon.crypto.RSAKeyPair;
 import anon.crypto.tinytls.TinyTLS;
 import anon.tor.cells.Cell;
-import anon.tor.ordescription.ORDescription;
+import anon.tor.ordescription.ORDescriptor;
+import anon.infoservice.IMutableProxyInterface;
+import anon.infoservice.ImmutableProxyInterface;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -65,7 +67,7 @@ public class FirstOnionRouterConnection implements Runnable
 	//Name of the onionproxy
 	private static String OP_NAME = "JAPClient";
 	private TinyTLS m_tinyTLS;
-	private ORDescription m_description;
+	private ORDescriptor m_description;
 	private Thread m_readDataLoop;
 	private InputStream m_istream;
 	private OutputStream m_ostream;
@@ -86,7 +88,7 @@ public class FirstOnionRouterConnection implements Runnable
 	 * @param a_Tor
 	 * a tor instance
 	 */
-	public FirstOnionRouterConnection(ORDescription d, Tor a_Tor)
+	public FirstOnionRouterConnection(ORDescriptor d, Tor a_Tor)
 	{
 		m_inittimeout = 30000;
 		m_readDataLoop = null;
@@ -103,7 +105,7 @@ public class FirstOnionRouterConnection implements Runnable
 	 * @return
 	 * OR description
 	 */
-	public ORDescription getORDescription()
+	public ORDescriptor getORDescription()
 	{
 		return m_description;
 	}
@@ -128,7 +130,7 @@ public class FirstOnionRouterConnection implements Runnable
 	{
 		synchronized (m_oSendSync)
 		{
-			for (; ; )
+			for (;;)
 			{
 				try
 				{
@@ -181,11 +183,16 @@ public class FirstOnionRouterConnection implements Runnable
 	 */
 	public synchronized void connect() throws Exception
 	{
+		IMutableProxyInterface pi = m_Tor.getProxy();
+		ImmutableProxyInterface proxy = null;
+		if (pi != null)
+			proxy = pi.getProxyInterface(false).getProxyInterface();
+		
 		FirstOnionRouterConnectionThread forct =
 			new FirstOnionRouterConnectionThread(m_description.getAddress(),
 												 m_description.getPort(),
 												 m_inittimeout,
-												 m_Tor.getProxy().getProxyInterface(false).getProxyInterface());
+												 proxy);
 		m_tinyTLS = forct.getConnection();
 		m_tinyTLS.setRootKey(m_description.getSigningKey());
 
@@ -206,7 +213,7 @@ public class FirstOnionRouterConnection implements Runnable
 				 new X509DistinguishedName(X509DistinguishedName.LABEL_COMMON_NAME + "=" + OP_NAME + " <identity>"),
 				 kp2, new Validity(Calendar.getInstance(), 1));
 
-			//sign cert with pkcs12cert
+			// sign cert with pkcs12cert
 			JAPCertificate cert1 = cert.sign(pkcs12cert);
 			JAPCertificate cert2 = JAPCertificate.getInstance(pkcs12cert.getX509Certificate());
 
@@ -225,7 +232,7 @@ public class FirstOnionRouterConnection implements Runnable
 		m_istream = m_tinyTLS.getInputStream();
 		m_ostream = m_tinyTLS.getOutputStream();
 		m_Circuits = new Hashtable();
-		m_tinyTLS.setSoTimeout(1000); //this little timeout is ok because we handle it the rigth way!!
+		m_tinyTLS.setSoTimeout(1000); // this little timeout is ok because we handle it the rigth way!!
 		start();
 		m_bIsClosed = false;
 	}

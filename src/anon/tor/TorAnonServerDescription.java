@@ -169,5 +169,4 @@ public class TorAnonServerDescription implements AnonServerDescription
 	{
 		return m_iMaxConnectionsPerRoute;
 	}
-
 }
