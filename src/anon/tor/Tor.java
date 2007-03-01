@@ -57,6 +57,7 @@ import logging.LogType;
 import anon.infoservice.ListenerInterface;
 import anon.IServiceContainer;
 import anon.infoservice.IMutableProxyInterface;
+import anon.tor.ordescription.InfoServiceORListFetcher;
 
 /**
  * @author stefan
@@ -683,16 +684,16 @@ public class Tor implements Runnable, AnonService
 	 */
 	private void setORListServer(boolean bUseInfoService, String name, int port)
 	{
-	/*	if (bUseInfoService)
+		if (bUseInfoService)
 		{
-		//	m_orList.setFetcher(new InfoServiceORListFetcher());
+			m_orList.setFetcher(new InfoServiceORListFetcher());
 
 		}
 		else
-		{*/
+		{
 			m_orList.setFetcher(new PlainORListFetcher(name, port));
 
-	/*	}*/
+		}
 	}
 
 	/**
