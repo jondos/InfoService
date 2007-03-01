@@ -39,4 +39,29 @@ final public class InfoServiceORListFetcher implements ORListFetcher
 	{
 		return InfoServiceHolder.getInstance().getTorNodesList();
 	}
+	
+	public byte[] getAllDescriptors()
+	{
+		return InfoServiceHolder.getInstance().getTorNodesList();
+	}
+	
+	public byte[] getDescriptor(String digest)
+	{
+		return null;
+	}
+	
+	public byte[] getStatus(String fp)
+	{
+		return null;
+	}
+	
+	public byte[] getDescriptorByFingerprint(String fingerprint)
+	{
+		return null;
+	}
+	
+	public byte[] getRouterStatus()
+	{
+		return null;
+	}
 }

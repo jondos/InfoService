@@ -79,7 +79,7 @@ public class TorChannel extends AbstractChannel
 	{
 		if (m_bIsClosed)
 		{
-			throw new IOException("Tor-Channel is closed");
+			throw new IOException("Tor channel is closed");
 		}
 		byte[] b = arg0;
 		RelayCell cell;
@@ -109,7 +109,7 @@ public class TorChannel extends AbstractChannel
 			m_sendcellcounter--;
 			if (m_sendcellcounter < 10)
 			{
-				throw new IOException("Should never be here: Channel sendme <10");
+				throw new IOException("Should never be here: channel sendme <10");
 			}
 
 		}
@@ -150,7 +150,7 @@ public class TorChannel extends AbstractChannel
 	}
 
 	/**
-	 * connects to a host over the tor-network
+	 * connects to a host over the Tor network
 	 * @param addr
 	 * address
 	 * @param port

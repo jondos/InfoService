@@ -32,7 +32,7 @@ package anon.tor;
 
 import java.util.Vector;
 
-import anon.tor.ordescription.ORDescription;
+import anon.tor.ordescription.ORDescriptor;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -63,9 +63,9 @@ public class FirstOnionRouterConnectionFactory
 	 * @return
 	 * FirstOnionRouter
 	 */
-	public synchronized FirstOnionRouterConnection createFirstOnionRouterConnection(ORDescription d)
+	public synchronized FirstOnionRouterConnection createFirstOnionRouterConnection(ORDescriptor d)
 	{
-		ORDescription ord;
+		ORDescriptor ord;
 		FirstOnionRouterConnection fOR = null;
 		for (int i = 0; i < m_firstOnionRouters.size(); i++)
 		{

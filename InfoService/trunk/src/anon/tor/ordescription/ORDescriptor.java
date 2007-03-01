@@ -38,7 +38,7 @@ import anon.tor.util.Base16;
 
 import org.bouncycastle.crypto.digests.SHA1Digest;
 
-public class ORDescription
+public class ORDescriptor
 {
 	private String m_address;
 	private String m_name;
@@ -67,7 +67,7 @@ public class ORDescription
 	 * @param strSoftware
 	 * version of the onion router software
 	 */
-	public ORDescription(String address, String name, int port, String strSoftware)
+	public ORDescriptor(String address, String name, int port, String strSoftware)
 	{
 		this.m_address = address;
 		this.m_name = name;
@@ -296,13 +296,13 @@ public class ORDescription
 	{
 		if (onionrouter != null)
 		{
-			if(onionrouter instanceof ORDescription)
+			if(onionrouter instanceof ORDescriptor)
 			{
-				ORDescription or = (ORDescription)onionrouter;
+				ORDescriptor or = (ORDescriptor)onionrouter;
 				
 				if( m_address.equals(or.getAddress()) &&	
-				m_name.equals(or.getName()) &&
-				(m_port == or.getPort()))
+					m_name.equals(or.getName()) &&
+				   (m_port == or.getPort()))
 				{
 					return true;
 				}
@@ -326,7 +326,7 @@ public class ORDescription
 	 * @return
 	 * parsed descriptor (or null on error)
 	 */
-	public static ORDescription parse(LineNumberReader reader)
+	public static ORDescriptor parse(LineNumberReader reader)
 	{
 		try
 		{
@@ -400,7 +400,7 @@ public class ORDescription
 					StringBuffer buff = new StringBuffer();
 					st = new StringTokenizer(ln);
 					st.nextToken(); // skip "fingerprint"
-
+					
 					while (st.hasMoreTokens())
 					{
 						buff.append(st.nextToken());
@@ -495,13 +495,13 @@ public class ORDescription
 						if (ln == null)
 							return null;
 						if (ln.startsWith("-----END"))
-						{
+						{	
 							/*if (! checkSignature(router_doc.toString().getBytes(),buff.toString().getBytes(),signingkey))
 							{
 								return null;
 							}*/
 							
-							ORDescription ord = new ORDescription(adr, nickname, Integer.parseInt(orport),
+							ORDescriptor ord = new ORDescriptor(adr, nickname, Integer.parseInt(orport),
 								strSoftware);
 							if (! ord.setOnionKey(key) || ! ord.setSigningKey(signingkey))
 							{
@@ -522,9 +522,9 @@ public class ORDescription
 							catch (Exception e)
 							{
 							}
-
+							
 							return ord;
-				}
+						}
 						buff.append(ln);
 					}
 				}
@@ -552,7 +552,7 @@ public class ORDescription
 		dig.doFinal(out, 0);
 		return Base16.encode(out);
 	}
-
+	
 	private static boolean checkSignature(byte[] document, byte[] signature, byte[] identity)
 	{
 		try

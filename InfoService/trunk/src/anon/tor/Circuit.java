@@ -44,7 +44,7 @@ import anon.tor.cells.CreatedCell;
 import anon.tor.cells.DestroyCell;
 import anon.tor.cells.PaddingCell;
 import anon.tor.cells.RelayCell;
-import anon.tor.ordescription.ORDescription;
+import anon.tor.ordescription.ORDescriptor;
 import anon.util.ByteArrayUtil;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -61,7 +61,7 @@ public class Circuit
 	public final static int MAX_STREAMS_OVER_CIRCUIT = 1000;
 
 	private OnionRouter m_FirstOR;
-	private ORDescription m_lastORDescription;
+	private ORDescriptor m_lastORDescription;
 	private FirstOnionRouterConnection m_FirstORConnection;
 	private Vector m_onionRouters;
 
@@ -126,7 +126,7 @@ public class Circuit
 		m_MaxStreamsPerCircuit = MAX_STREAMS_OVER_CIRCUIT;
 		m_onionRouters = (Vector) orList.clone();
 		m_circuitLength = orList.size();
-		m_lastORDescription = (ORDescription) m_onionRouters.elementAt(m_circuitLength - 1);
+		m_lastORDescription = (ORDescriptor) m_onionRouters.elementAt(m_circuitLength - 1);
 		if (this.m_onionRouters.size() < 1)
 		{
 			throw new IOException("No Onionrouters defined for this circuit");
@@ -146,7 +146,7 @@ public class Circuit
 	protected void create() throws IOException
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.TOR, "[TOR] Creating Circuit '" + m_circID + "'");
-		m_FirstOR = new OnionRouter(m_circID, (ORDescription) (m_onionRouters.elementAt(0)));
+		m_FirstOR = new OnionRouter(m_circID, (ORDescriptor) (m_onionRouters.elementAt(0)));
 		try
 		{
 			synchronized (m_oNotifySync)
@@ -163,7 +163,7 @@ public class Circuit
 			LogHolder.log(LogLevel.DEBUG, LogType.TOR, "[TOR] created!");
 			for (int i = 1; i < this.m_onionRouters.size(); i++)
 			{
-				ORDescription nextOR = (ORDescription) (m_onionRouters.elementAt(i));
+				ORDescriptor nextOR = (ORDescriptor) (m_onionRouters.elementAt(i));
 				LogHolder.log(LogLevel.DEBUG, LogType.TOR, "[TOR] trying to extend!");
 				synchronized (m_oNotifySync)
 				{
