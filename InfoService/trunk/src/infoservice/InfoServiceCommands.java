@@ -1537,6 +1537,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		else if ( (command.equals("/status")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			/* get the status (traffic) information about all cascades for human view as html file */
+			ISRuntimeStatistics.ms_lNrOfGetStatus++;
 			httpResponse = humanGetStatus();
 		}
 		else if ( (command.equals("/mixes")) && (method == Constants.REQUEST_METHOD_GET))

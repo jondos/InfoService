@@ -65,6 +65,7 @@ import logging.LogLevel;
 import java.util.Vector;
 import logging.LogType;
 import java.io.StringReader;
+
 /**
  * This class provides an easy interface to XML methods.
  */
@@ -75,24 +76,26 @@ public class XMLUtil
 	private final static String XML_STR_BOOLEAN_FALSE = "false";
 	private static final String PACKAGE_TRANSFORMER = "javax.xml.transform.";
 	private static final String HIERARCHY_REQUEST_ERR = "HIERARCHY_REQUEST_ERR: ";
-	private static DocumentBuilder ms_DocumentBuilder;
-
-
+	private static DocumentBuilderFactory ms_DocumentBuilderFactory;
 
 	private static boolean m_bCheckedHumanReadableFormatting = false;
 	private static boolean m_bNeedsHumanReadableFormatting = true;
 
 	static
 	{
-	  if(ms_DocumentBuilder==null)
-		  try{
-			  ms_DocumentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-		  }
-	  catch(Exception e)
-	  {
+		if (ms_DocumentBuilderFactory == null)
+		{
+			try
+			{
+				ms_DocumentBuilderFactory = DocumentBuilderFactory.newInstance();
+			}
+			catch (Exception e)
+			{
 
-	  }
-}
+			}
+		}
+	}
+
 	/**
 	 * Throws an XMLParseException if the given XML node is null.
 	 * @param a_node an XML node
@@ -114,7 +117,6 @@ public class XMLUtil
 		}
 	}
 
-
 	/**
 	 * Throws an XMLParseException if the given XML node has not the expected name or if it is null.
 	 * If the given node is an XML document, the document element is returned. Otherwise, the given
@@ -125,8 +127,7 @@ public class XMLUtil
 	 * the given node is returned.
 	 * @throws XMLParseException if the given node has not the expected name or if it is null
 	 */
-	public static Node assertNodeName(Node a_node, String a_strExpectedName)
-		throws XMLParseException
+	public static Node assertNodeName(Node a_node, String a_strExpectedName) throws XMLParseException
 	{
 		if (a_node == null)
 		{
@@ -159,7 +160,6 @@ public class XMLUtil
 
 		return a_node;
 	}
-
 
 	/**
 	 * If the current node is of the type XML document, this method returns the document
@@ -264,10 +264,10 @@ public class XMLUtil
 		{
 			if (a_node instanceof Document)
 			{
-				a_node = ((Document)a_node).getDocumentElement();
+				a_node = ( (Document) a_node).getDocumentElement();
 			}
 
-			Attr at = ((Element)a_node).getAttributeNode(a_attribute);
+			Attr at = ( (Element) a_node).getAttributeNode(a_attribute);
 			return at.getValue().trim();
 		}
 		catch (Exception a_e)
@@ -329,7 +329,6 @@ public class XMLUtil
 
 		return i;
 	}
-
 
 	/**
 	 * Returns the value of the specified attribute of an XML element as long.
@@ -509,7 +508,6 @@ public class XMLUtil
 		return entries;
 	}
 
-
 	/**
 	 * Returns the child node of the given node with the given name.
 	 * @param a_node the node from that the search starts
@@ -596,8 +594,10 @@ public class XMLUtil
 	 */
 	public static void setValue(Node a_node, String a_value)
 	{
-		if(a_node==null||a_value==null)
+		if (a_node == null || a_value == null)
+		{
 			return;
+		}
 		a_node.appendChild(a_node.getOwnerDocument().createTextNode(a_value));
 	}
 
@@ -640,8 +640,10 @@ public class XMLUtil
 	 */
 	public static void setAttribute(Element a_element, String a_attribute, String a_value)
 	{
-		if(a_value==null||a_attribute==null||a_element==null)
+		if (a_value == null || a_attribute == null || a_element == null)
+		{
 			return;
+		}
 		a_element.setAttribute(a_attribute, a_value);
 	}
 
@@ -697,11 +699,11 @@ public class XMLUtil
 	{
 		try
 		{
-			if (ms_DocumentBuilder == null)
+			if (ms_DocumentBuilderFactory == null)
 			{
-				ms_DocumentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+				ms_DocumentBuilderFactory = DocumentBuilderFactory.newInstance();
 			}
-			return ms_DocumentBuilder.newDocument();
+			return ms_DocumentBuilderFactory.newDocumentBuilder().newDocument();
 		}
 		catch (ParserConfigurationException a_e)
 		{
@@ -772,8 +774,8 @@ public class XMLUtil
 			{
 				Node tmpParent = a_source.getParentNode();
 				if (tmpParent != null && tmpParent.getNodeType() != Node.ATTRIBUTE_NODE)
-			{
-				newnode = a_doc.createTextNode(a_source.getNodeValue());
+				{
+					newnode = a_doc.createTextNode(a_source.getNodeValue());
 				}
 				break;
 			}
@@ -908,7 +910,6 @@ public class XMLUtil
 
 	}
 
-
 	/**
 	 * Creates a byte array from the abstract tree of the node.
 	 * @param a_inputNode The node (incl. the whole tree) which is flattened to a byte array.
@@ -942,7 +943,7 @@ public class XMLUtil
 		String strXml;
 		try
 		{
-				strXml = toByteArrayOutputStream(a_node).toString("UTF8");
+			strXml = toByteArrayOutputStream(a_node).toString("UTF8");
 		}
 		catch (Exception a_e)
 		{
@@ -1031,29 +1032,30 @@ public class XMLUtil
 	 * @throws IOException if an I/O error occurs
 	 * @throws XMLParseException if the input stream could not be parsed correctly
 	 */
-	public static Document readXMLDocument(InputSource a_inputSource)
-		throws IOException, XMLParseException
+	public static Document readXMLDocument(InputSource a_inputSource) throws IOException, XMLParseException
 	{
 		Document doc = null;
 
 		try
 		{
-			if(ms_DocumentBuilder==null)
-					ms_DocumentBuilder	 = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-			doc = ms_DocumentBuilder.parse(a_inputSource);
+			if (ms_DocumentBuilderFactory == null)
+			{
+				ms_DocumentBuilderFactory = DocumentBuilderFactory.newInstance();
+			}
+			doc = ms_DocumentBuilderFactory.newDocumentBuilder().parse(a_inputSource);
+
 			removeComments(doc);
 		}
 		catch (IOException a_e)
-			{
+		{
 			throw a_e;
-			}
+		}
 		catch (Exception a_e)
-			{
-				throw new XMLParseException(
-						 XMLParseException.ROOT_TAG, "Could not parse XML document: " +
-					a_e.getMessage());
-			}
-
+		{
+			throw new XMLParseException(
+				XMLParseException.ROOT_TAG, "Could not parse XML document: " +
+				a_e.getMessage());
+		}
 
 		return doc;
 	}
@@ -1065,12 +1067,10 @@ public class XMLUtil
 	 * @throws IOException if an I/O error occurs
 	 * @throws XMLParseException if the input stream could not be parsed correctly
 	 */
-	public static Document readXMLDocument(InputStream a_inputStream)
-		throws IOException, XMLParseException
+	public static Document readXMLDocument(InputStream a_inputStream) throws IOException, XMLParseException
 	{
 		return readXMLDocument(new InputSource(a_inputStream));
 	}
-
 
 	/**
 	 * Reads an XML document from a Reader.
@@ -1079,8 +1079,7 @@ public class XMLUtil
 	 * @throws IOException if an I/O error occurs
 	 * @throws XMLParseException if the input stream could not be parsed correctly
 	 */
-	public static Document readXMLDocument(Reader a_reader)
-		throws IOException, XMLParseException
+	public static Document readXMLDocument(Reader a_reader) throws IOException, XMLParseException
 	{
 		return readXMLDocument(new InputSource(a_reader));
 	}
@@ -1098,7 +1097,7 @@ public class XMLUtil
 		Document doc = readXMLDocument(inputStream);
 		try
 		{
-				inputStream.close();
+			inputStream.close();
 		}
 		catch (IOException a_e)
 		{
@@ -1157,9 +1156,9 @@ public class XMLUtil
 	{
 		if (a_xmlDocument == null)
 		{
-			return toXMLDocument((byte[])null);
+			return toXMLDocument( (byte[])null);
 		}
-		InputSource is=new InputSource(new StringReader(a_xmlDocument));
+		InputSource is = new InputSource(new StringReader(a_xmlDocument));
 		try
 		{
 			return readXMLDocument(is);
@@ -1171,8 +1170,9 @@ public class XMLUtil
 		catch (IOException ex)
 		{
 			throw new XMLParseException(
-					 XMLParseException.ROOT_TAG, "Could not parse XML document: " +
-					ex.getMessage());		}
+				XMLParseException.ROOT_TAG, "Could not parse XML document: " +
+				ex.getMessage());
+		}
 	}
 
 	/**
@@ -1185,7 +1185,7 @@ public class XMLUtil
 	public static Document toXMLDocument(byte[] a_xmlDocument) throws XMLParseException
 	{
 		ByteArrayInputStream in = new ByteArrayInputStream(a_xmlDocument);
-		InputSource is=new InputSource(in);
+		InputSource is = new InputSource(in);
 		try
 		{
 			return readXMLDocument(is);
@@ -1197,10 +1197,10 @@ public class XMLUtil
 		catch (Exception ex)
 		{
 			throw new XMLParseException(
-					 XMLParseException.ROOT_TAG, "Could not parse XML document: " +
-					ex.getMessage());		}
+				XMLParseException.ROOT_TAG, "Could not parse XML document: " +
+				ex.getMessage());
+		}
 	}
-
 
 	/**
 	 * Transforms an IXMLEncodable object into an XML document.
@@ -1229,8 +1229,10 @@ public class XMLUtil
 		Document doc = createDocument();
 		Element element;
 
-	if(doc==null)
+		if (doc == null)
+		{
 			return null;
+		}
 
 		element = a_xmlEncodable.toXmlElement(doc);
 
@@ -1310,26 +1312,30 @@ public class XMLUtil
 			//calling any other method within JAPUtil.
 			//Dont no why --> maybe this has something to to with Just in Time compiling ?
 			/* DO NOT delete the following:
-			javax.xml.transform.Transformer transformer = javax.xml.transform.TransformerFactory.newInstance().newTransformer();
-			javax.xml.transform.Result r = new javax.xml.transform.stream.StreamResult(out);
-			javax.xml.transform.Source s = new javax.xml.transform.dom.DOMSource(node);
-			javax.xml.transform.Source s = new javax.xml.transform.dom.DOMSource(node);
-			transformer.transform(s,r);
-   */
+				javax.xml.transform.Transformer transformer = javax.xml.transform.TransformerFactory.newInstance().newTransformer();
+				javax.xml.transform.Result r = new javax.xml.transform.stream.StreamResult(out);
+				javax.xml.transform.Source s = new javax.xml.transform.dom.DOMSource(node);
+				javax.xml.transform.Source s = new javax.xml.transform.dom.DOMSource(node);
+				transformer.transform(s,r);
+			 */
 
 
 			Class transformerFactory = Class.forName(PACKAGE_TRANSFORMER + "TransformerFactory");
 			Object transformerFactoryInstance =
-				transformerFactory.getMethod("newInstance", (Class[])null).invoke(transformerFactory,(Object[]) null);
+				transformerFactory.getMethod("newInstance", (Class[])null).invoke(transformerFactory, (Object[])null);
 			Object transformer = transformerFactory.getMethod("newTransformer", (Class[])null).invoke(
-						 transformerFactoryInstance,(Object[]) null);
+				transformerFactoryInstance, (Object[])null);
 			//Object transformer = javax.xml.transform.TransformerFactory.newInstance().newTransformer();
 
 			Class result = Class.forName(PACKAGE_TRANSFORMER + "stream.StreamResult");
-			Object r = result.getConstructor(new Class[]{OutputStream.class}).newInstance(new Object[]{out});
+			Object r = result.getConstructor(new Class[]
+											 {OutputStream.class}).newInstance(new Object[]
+				{out});
 			//javax.xml.transform.Result r = new javax.xml.transform.stream.StreamResult(out);
 			Class source = Class.forName(PACKAGE_TRANSFORMER + "dom.DOMSource");
-			Object s = source.getConstructor(new Class[]{Node.class}).newInstance(new Object[]{node});
+			Object s = source.getConstructor(new Class[]
+											 {Node.class}).newInstance(new Object[]
+				{node});
 			//javax.xml.transform.Source s = new javax.xml.transform.dom.DOMSource(node);
 
 
@@ -1361,7 +1367,6 @@ public class XMLUtil
 			return null;
 		}
 	}
-
 
 	/**
 	 * Returns a node that is equal to the given name, starting from the given node
@@ -1424,7 +1429,10 @@ public class XMLUtil
 			test.appendChild(doc.createElement("test2"));
 			test.appendChild(doc.createElement("test3"));
 			tokenizer = new StringTokenizer(toString(test), "\n");
-			for (lines = 0; tokenizer.hasMoreTokens(); lines++, tokenizer.nextToken());
+			for (lines = 0; tokenizer.hasMoreTokens(); lines++, tokenizer.nextToken())
+			{
+				;
+			}
 			if (lines == 4)
 			{
 				// formatting is done automatically by JDKs < 1.4

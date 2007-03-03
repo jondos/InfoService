@@ -43,7 +43,7 @@ public class MessageHandlerThread extends Thread
      * LERNGRUPPE Creates a new <code>MessageHandler</code>. When notified it
      * will pop a message off the given queue and call the given handler to
      * handle it.
-     * 
+     *
      * @param a_handler
      *            The ArgreementHandler to handle the messages
      * @param a_queue
@@ -51,13 +51,14 @@ public class MessageHandlerThread extends Thread
      */
     public MessageHandlerThread(AbstractEMCAdapter a_handler, FifoQueue a_queue)
     {
+		super("infoservice.agreement.multicast.MessageHandlerThread");
         this.m_agreementHandler = a_handler;
         this.m_queue = a_queue;
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.lang.Runnable#run()
      */
     public void run()
@@ -93,7 +94,7 @@ public class MessageHandlerThread extends Thread
 
     /**
      * LERNGRUPPE Sets the m_bRunning member
-     * 
+     *
      * @param a_bRunning
      *            the new value of m_bRunning
      */

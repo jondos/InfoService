@@ -190,6 +190,7 @@
   <node name="captcha" type="Package"/>
   <node name="infoservice" type="Package"/>
   <node name="infoservice.agreement" type="Package"/>
+  <node name="infoservice.agreement.common" type="Package"/>
   <node name="infoservice.agreement.interfaces" type="Package"/>
   <node name="infoservice.agreement.multicast" type="Package"/>
   <node name="infoservice.agreement.paxos" type="Package"/>
