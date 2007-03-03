@@ -83,7 +83,7 @@ public abstract class AbstractEMCAdapter implements IInfoService
      * and at next <code>startAdapter()</code>-method. We have to do that
      * explicitly an NOT in the constructor. So we can take care that all
      * infoservices know about each other befor starting the protocol.
-     * 
+     *
      * @param a_log
      *            The logger to use.
      */
@@ -95,7 +95,7 @@ public abstract class AbstractEMCAdapter implements IInfoService
     /**
      * Sets the given AgreementHandler. You have to do that BEFORE you call
      * <code>startAdapter()</code>-method.
-     * 
+     *
      * @param p_agreementhandler
      */
     public void setIAgreementHandler(IAgreementHandler p_agreementhandler)
@@ -107,17 +107,17 @@ public abstract class AbstractEMCAdapter implements IInfoService
     /**
      * LERNGRUPPE Call this method to start the adapter. He will poll the
      * <code>tryToStartAgreement()</code>-method within an endless loop.
-     * 
+     *
      * Take care that
      * <code>setIAgreementHandler(IAgreementHandler p_agreementhandler)</code>
      * was called before!!!
-     * 
+     *
      */
     public void startAdapter()
     {
         info("AgreementAdapter has been started ...");
         reset();
-        new Thread()
+        new Thread("AbstractEMCAdapter - startAdapter()")
         {
             public void run()
             {
@@ -142,7 +142,7 @@ public abstract class AbstractEMCAdapter implements IInfoService
 
     /**
      * LERNGRUPPE Watch at the clock and start agreement at the right time.
-     * 
+     *
      */
     protected void tryToStartAgreementMinute()
     {
@@ -170,7 +170,7 @@ public abstract class AbstractEMCAdapter implements IInfoService
 
     /**
      * LERNGRUPPE Watch at the clock and start agreement at the right time.
-     * 
+     *
      */
     protected void tryToStartAgreementHour()
     {
@@ -199,7 +199,7 @@ public abstract class AbstractEMCAdapter implements IInfoService
     /**
      * LERNGRUPPE Handle incomming messages. And start agreement by yourself if
      * not done so.
-     * 
+     *
      * @param The
      *            message.
      */
@@ -224,7 +224,7 @@ public abstract class AbstractEMCAdapter implements IInfoService
      * LERNGRUPPE This gets called when the AgreementHandler has reached
      * angreement with the others. When this happens it is time to wire new
      * cascades :-)
-     * 
+     *
      * @param a_newCommonRandomSeed
      *            the agreed-upon random seed
      */
@@ -278,7 +278,7 @@ public abstract class AbstractEMCAdapter implements IInfoService
     /**
      * LERNGRUPPE Some times a restart of the protocol is necessary. This method
      * calls <code>startAgreementCommitmentProtocol()</code> after waiting.
-     * 
+     *
      */
     private void restartAgreement()
     {
@@ -307,7 +307,7 @@ public abstract class AbstractEMCAdapter implements IInfoService
      * listen for incomming messages. After spending some time doing that we
      * start with our own random value. This method starts step one. The
      * listening mode.
-     * 
+     *
      */
     public synchronized void startListeningMode()
     {
@@ -323,7 +323,7 @@ public abstract class AbstractEMCAdapter implements IInfoService
     /**
      * LERNGRUPPE Sometimes for testing reasons only a operator have to start
      * the protocol. This method do that an should never called in real life.
-     * 
+     *
      */
     public void startProtocolByOperator()
     {
@@ -345,7 +345,7 @@ public abstract class AbstractEMCAdapter implements IInfoService
     /**
      * LERNGRUPPE Starts the protocol after checking some status values for
      * security reasons. It delegates the call to the agreement handler.
-     * 
+     *
      */
     protected synchronized void startAgreementCommitmentProtocol()
     {
@@ -396,7 +396,7 @@ public abstract class AbstractEMCAdapter implements IInfoService
 
     /**
      * Resets the state variables.
-     * 
+     *
      */
     private void reset()
     {
@@ -408,7 +408,7 @@ public abstract class AbstractEMCAdapter implements IInfoService
 
     /**
      * Start to build the new cascades.
-     * 
+     *
      * @param l
      *            A long value which represents the common random number.
      */
@@ -417,20 +417,20 @@ public abstract class AbstractEMCAdapter implements IInfoService
     /**
      * Initialize the message queue handler thread. At this point in time
      * incomming messages will be queued but not yet handled.
-     * 
+     *
      */
     protected abstract void startListening();
 
     /**
      * This method is called in <code>startAgreementCommitmentProtocol()</code>
      * befor the call will be delegated.
-     * 
+     *
      */
     protected abstract void prepareStart() throws NullPointerException;
 
     /**
      * Sends the given message to the InfoService with the given ID
-     * 
+     *
      * @param a_id
      *            The ID of the InfoService
      * @param a_echoMessage
@@ -440,28 +440,28 @@ public abstract class AbstractEMCAdapter implements IInfoService
 
     /**
      * Multicasts the given message to all known InfoServices (except this one)
-     * 
+     *
      * @param a_message
      */
     public abstract void multicastMessage(final IAgreementMessage a_message);
 
     /**
      * Returns an unique identifier for this <code>IInfoService</code>
-     * 
+     *
      * @return An unique identifier for this <code>IInfoService</code>
      */
     public abstract String getIdentifier();
 
     /**
      * Returns the number of known InfoServices
-     * 
+     *
      * @return The number of known InfoServices
      */
     public abstract int getNumberOfAllInfoservices();
 
     /**
      * Set the Logger.
-     * 
+     *
      * @param a_log
      *            A logger.
      */
@@ -472,7 +472,7 @@ public abstract class AbstractEMCAdapter implements IInfoService
 
     /**
      * Gets the current logger.
-     * 
+     *
      * @return
      */
     public IAgreementLog getLog()
@@ -482,7 +482,7 @@ public abstract class AbstractEMCAdapter implements IInfoService
 
     /**
      * Loggs a debug message.
-     * 
+     *
      * @param a_msg
      *            A Message.
      */
@@ -493,7 +493,7 @@ public abstract class AbstractEMCAdapter implements IInfoService
 
     /**
      * Loggs a info message.
-     * 
+     *
      * @param a_msg
      *            A Message.
      */
@@ -504,7 +504,7 @@ public abstract class AbstractEMCAdapter implements IInfoService
 
     /**
      * Loggs a error message.
-     * 
+     *
      * @param a_msg
      *            A Message.
      */
@@ -515,7 +515,7 @@ public abstract class AbstractEMCAdapter implements IInfoService
 
     /**
      * Loggs a fatal message.
-     * 
+     *
      * @param a_msg
      *            A Message.
      */

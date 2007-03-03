@@ -56,7 +56,7 @@ import anon.infoservice.ListenerInterface;
 /**
  * @author LERNGRUPPE An adapter for the infoservice to give them the ability to
  *         handle the agreement protocol.
- * 
+ *
  */
 public class InfoserviceEMCAdapter extends AbstractEMCAdapter implements
         IInfoServiceAgreementAdapter
@@ -101,7 +101,7 @@ public class InfoserviceEMCAdapter extends AbstractEMCAdapter implements
 
     /**
      * Generates an <code>InfoServiceDBEntry</code> for this InfoService
-     * 
+     *
      * @return The <code>InfoServiceDBEntry</code>
      */
     InfoServiceDBEntry generateInfoServiceSelf()
@@ -115,7 +115,7 @@ public class InfoserviceEMCAdapter extends AbstractEMCAdapter implements
     /**
      * Creates a new <code>InfoserviceAgreementAdapter</code>. This adapter
      * is used to connect the real InfoService to the agreement extension.
-     * 
+     *
      * @param a_cmds
      *            The connection object to serve network and communication.
      */
@@ -124,7 +124,7 @@ public class InfoserviceEMCAdapter extends AbstractEMCAdapter implements
         super(new AgreementFileLog());
         m_self = generateInfoServiceSelf();
         this.setIAgreementHandler(new EchoMulticastAgreementHandlerImpl(this));
-        new Thread()
+        new Thread("InfoServiceEMCAdapter")
         {
             public void run()
             {
@@ -154,7 +154,7 @@ public class InfoserviceEMCAdapter extends AbstractEMCAdapter implements
 
     /**
      * Takes care that all infoservices know each other.
-     * 
+     *
      */
     protected void evangelizeThisInfoservice()
     {
@@ -168,7 +168,7 @@ public class InfoserviceEMCAdapter extends AbstractEMCAdapter implements
      * a_postData is parsed to an IAgreementMessage and then put into the
      * message queue. Messages are only accepted if an agreement is currently
      * running or we are in the timeframe to start an new one
-     * 
+     *
      * @param a_postData
      *            The post data of the request containing an XML encoded
      *            IAgreementMessage
@@ -285,7 +285,7 @@ public class InfoserviceEMCAdapter extends AbstractEMCAdapter implements
 
     /**
      * Sends a message to a specified infoservice.
-     * 
+     *
      * @param a_id
      *            The id of the receiver.
      * @param a_message
@@ -296,7 +296,7 @@ public class InfoserviceEMCAdapter extends AbstractEMCAdapter implements
         if (a_id.equals(m_self.getId()))
             return;
         /* Send the message asynchronously */
-        new Thread()
+        new Thread("InfoServiceEMCAdapter - sendMessageTo()")
         {
             public void run()
             {
@@ -307,7 +307,7 @@ public class InfoserviceEMCAdapter extends AbstractEMCAdapter implements
 
     /**
      * Sends a message to all known infoservices.
-     * 
+     *
      * @param a_message
      *            The message to send.
      */
@@ -321,7 +321,7 @@ public class InfoserviceEMCAdapter extends AbstractEMCAdapter implements
                 continue;
 
             /* Send the message asynchronously */
-            new Thread()
+            new Thread("InfoServiceEMCAdapter - multicastMessage")
             {
                 public void run()
                 {
@@ -333,7 +333,7 @@ public class InfoserviceEMCAdapter extends AbstractEMCAdapter implements
 
     /**
      * Encapsulates logic for sending a message to a infoservice.
-     * 
+     *
      * @param a_infoservice
      *            The target infoservice.
      * @param postFile
@@ -373,7 +373,7 @@ public class InfoserviceEMCAdapter extends AbstractEMCAdapter implements
     /**
      * Encapsulates logic for sending a message to a specified listenere
      * interface.
-     * 
+     *
      * @param a_listener
      *            The network interface.
      * @param postFile

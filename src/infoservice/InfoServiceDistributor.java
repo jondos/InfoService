@@ -157,6 +157,7 @@ public class InfoServiceDistributor implements IDistributor
       }
     });
     defaultJobQueueThread.setDaemon(true);
+	defaultJobQueueThread.setName("InfoServiceDistributor - DefaultQueue JOb Thread");
     defaultJobQueueThread.start();
     Thread initialNeighboursJobQueueThread = new Thread(new Runnable()
     {
@@ -262,6 +263,7 @@ public class InfoServiceDistributor implements IDistributor
 	  }
 });
   initialNeighboursJobQueueThread.setDaemon(true);
+  initialNeighboursJobQueueThread.setName("InfoServiceDistributor - Initial NeighboursQueue Job Thread");
   initialNeighboursJobQueueThread.start();
   }
 

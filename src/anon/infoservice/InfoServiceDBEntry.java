@@ -883,6 +883,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 						}
 					}
 				});
+				communicationThread.setName("InfoServiceDBEntry - Communication Thread");
 				communicationThread.setDaemon(true);
 				communicationThread.start();
 				try
