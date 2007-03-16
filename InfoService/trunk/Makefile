@@ -1,4 +1,4 @@
-JARS=/opt/java/log4j/log4j.jar:/opt/java/BouncyCastle/BouncyCastleLightForJAP.jar:/opt/java/http/http.jar:/opt/java/jai/jai_core.jar:/opt/java/jaf/activation.jar:/opt/java/mail/mail.jar:/opt/java/Bzip2/ApacheBzip2.jar:/opt/java/Jama/Jama.jar
+JARS=/opt/java/log4j/log4j.jar:/opt/java/BouncyCastle/BouncyCastleLightForJAP.jar:/opt/java/http/http.jar:/opt/java/jai/jai_core.jar:/opt/java/jaf/activation.jar:/opt/java/mail/mail.jar:/opt/java/Jama/Jama.jar
 
 JAVAC=/opt/java/jdk1.6/bin/javac
 JAVACOPTS=-classpath $(JARS):./src/ -O -target 1.6 -g:none
