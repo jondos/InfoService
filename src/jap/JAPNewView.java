@@ -604,7 +604,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_bttnReload.setDisabledIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true, false));
 		m_bttnReload.setBorder(new EmptyBorder(0, 0, 0, 0));
 		m_bttnReload.setFocusPainted(false);
-
+		m_bttnReload.setBorderPainted(true);
+		m_bttnReload.setContentAreaFilled(false);
 		c1.gridx = 4;
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
