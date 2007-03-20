@@ -119,7 +119,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 		m_bttnChooseJapFile.setActionCommand(COMMAND_SEARCH);
 
 		m_cbIncrementalUpdate = new JCheckBox(JAPMessages.getString("updateM_doIncrementalUpdate"));
-		m_cbIncrementalUpdate.setVisible(false); /** @todo does not work right now */
+		m_cbIncrementalUpdate.setVisible(!JAPConstants.m_bReleasedVersion); /** @todo does not work right now */
 		m_cbIncrementalUpdate.setToolTipText(JAPMessages.getString("updateM_doIncrementalUpdate"));
 		m_cbIncrementalUpdate.setSelected(m_bIncrementalUpdate);
 		m_panelConstraints.insets = new Insets(0, 10, 10, 0);
