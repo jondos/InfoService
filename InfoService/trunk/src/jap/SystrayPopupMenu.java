@@ -213,6 +213,16 @@ public class SystrayPopupMenu extends PopupMenu
 		});
 
 		addSeparator();
+		panel = new JPanel(new GridBagLayout());
+		constraints = new GridBagConstraints();
+		constraints.gridx = 0;
+		constraints.gridy = 0;
+		constraints.anchor = GridBagConstraints.CENTER;
+		panel.add(new JLabel(JAPMessages.getString("ngMixComboAvailableServers")), constraints);
+		add(panel);
+
+
+
 		JMenu filterMenu;
 		Vector models = TrustModel.getTrustModels();
 
