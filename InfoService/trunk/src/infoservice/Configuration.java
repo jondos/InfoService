@@ -596,8 +596,6 @@ final public class Configuration
 				m_strJapDevelopmentJnlpFile = null;
 				m_strJapMinVersionFile = null;
 			}
-			/* start the UpdateInformationHandler announce thread */
-			UpdateInformationHandler.getInstance();
 
 			/* Create the list of all neighbour infoservices. So we know, where to announce ourself at
 			 * startup.
@@ -628,10 +626,25 @@ final public class Configuration
 					new InfoServiceDBEntry(null, null,
 										   ( (ListenerInterface) m_initialNeighbourInfoServices.elementAt(i)).
 										   toVector(), false, false, System.currentTimeMillis(), 0);
-				/** @todo don't know why, this leads to "NoSuchMethodError" (Z)V on some systems */
+
 				//entry.setNeighbour(true);
+				try
+				{
+					InfoServiceDBEntry.class.getMethod("setNeighbour", new Class[]
+						{boolean.class}).invoke(
+							entry, new Object[]
+							{new Boolean(true)});
+				}
+				catch (Throwable a_e)
+				{
+					/** @todo don't know why, this leads to "NoSuchMethodError" (Z)V on some systems */
+					LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
+				}
 				Database.getInstance(InfoServiceDBEntry.class).update(entry);
 			}
+
+			/* start the UpdateInformationHandler announce thread */
+			UpdateInformationHandler.getInstance();
 
 			/* get the settings for status statistics */
 			m_bStatusStatisticsEnabled = a_properties.getProperty("statusStatistics").trim().equalsIgnoreCase(

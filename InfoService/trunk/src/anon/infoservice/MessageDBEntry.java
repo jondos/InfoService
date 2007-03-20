@@ -29,6 +29,7 @@ package anon.infoservice;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.SignatureException;
 import java.util.Hashtable;
 import java.util.Locale;
 
@@ -38,6 +39,7 @@ import org.w3c.dom.NodeList;
 import anon.util.Base64;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
+import anon.crypto.SignatureVerifier;
 
 /**
  * Used to send messages to JAP.
@@ -71,10 +73,16 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry implement
 	private Hashtable m_hashText = new Hashtable();
 	private Hashtable m_hashUrl = new Hashtable();
 
-	public MessageDBEntry(Element a_xmlElement) throws XMLParseException
+	public MessageDBEntry(Element a_xmlElement) throws XMLParseException, SignatureException
 	{
 		super(System.currentTimeMillis() +  TIMEOUT);
 		XMLUtil.assertNodeName(a_xmlElement, XML_ELEMENT_NAME);
+		if (SignatureVerifier.getInstance().getVerifiedXml(
+			  a_xmlElement, SignatureVerifier.DOCUMENT_CLASS_UPDATE) == null)
+		{
+			throw new SignatureException();
+		}
+
 		m_serial = XMLUtil.parseAttribute(a_xmlElement, XML_ATTR_SERIAL, Long.MIN_VALUE);
 		m_id = XMLUtil.parseAttribute(a_xmlElement, XML_ATTR_ID, null);
 		if (m_id == null)

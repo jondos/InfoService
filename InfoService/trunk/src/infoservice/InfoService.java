@@ -27,8 +27,6 @@
  */
 package infoservice;
 
-import infoservice.dynamic.DynamicConfiguration;
-
 import java.io.FileInputStream;
 import java.util.Enumeration;
 import java.util.Properties;

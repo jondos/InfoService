@@ -230,8 +230,11 @@ final public class InfoServiceConnection implements Runnable
 						}
 					}
 
-					if (currentHeaderFieldName.equalsIgnoreCase("Accept-Encoding") ||
-						currentHeaderFieldName.equalsIgnoreCase("Content-Encoding")) // for post
+					if ((currentHeaderFieldName.equalsIgnoreCase("Accept-Encoding") &&
+						(internalRequestMethodCode == Constants.REQUEST_METHOD_GET ||
+						 internalRequestMethodCode == Constants.REQUEST_METHOD_HEAD)) ||
+						(currentHeaderFieldName.equalsIgnoreCase("Content-Encoding") &&
+						 internalRequestMethodCode == Constants.REQUEST_METHOD_POST)) // for post
 					{
 						if (currentHeaderFieldValue != null &&
 							currentHeaderFieldValue.indexOf(
