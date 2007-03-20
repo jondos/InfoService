@@ -66,7 +66,8 @@ public abstract class AbstractDatabaseEntry
 	public final boolean isNewerThan(AbstractDatabaseEntry a_oldEntry)
 	{
 		return a_oldEntry == null || (getVersionNumber() > a_oldEntry.getVersionNumber() ||
-				(getVersionNumber() == getLastUpdate() && getLastUpdate() > a_oldEntry.getLastUpdate()));
+				(getLastUpdate() > a_oldEntry.getLastUpdate() &&
+				 getVersionNumber() == a_oldEntry.getVersionNumber()));
 	}
 
 	/**
@@ -101,6 +102,7 @@ public abstract class AbstractDatabaseEntry
 
 	/**
 	 * Returns the time in milliseconds when this db entry was created from the origin instance.
+	 * Never (!) insert the local creation time here, as this will DoS the InfoServices in an endless loop.
 	 * @return the time in milliseconds when this db entry was created from the origin instance
 	 */
 	public abstract long getLastUpdate();
@@ -124,6 +126,7 @@ public abstract class AbstractDatabaseEntry
 	/**
 	 * Returns version number which is used to determine the more recent infoservice entry, if two
 	 * entries are compared (higher version number -> more recent entry).
+	 * Never (!) insert the local creation time here, as this will DoS the InfoServices in an endless loop.
 	 *
 	 * @return The version number for this entry.
 	 */
