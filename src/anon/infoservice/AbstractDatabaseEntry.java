@@ -66,8 +66,7 @@ public abstract class AbstractDatabaseEntry
 	public final boolean isNewerThan(AbstractDatabaseEntry a_oldEntry)
 	{
 		return a_oldEntry == null || (getVersionNumber() > a_oldEntry.getVersionNumber() ||
-				(getLastUpdate() > a_oldEntry.getLastUpdate() &&
-				 getVersionNumber() == a_oldEntry.getVersionNumber()));
+				(getVersionNumber() == getLastUpdate() && getLastUpdate() > a_oldEntry.getLastUpdate()));
 	}
 
 	/**

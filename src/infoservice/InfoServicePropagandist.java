@@ -41,7 +41,6 @@ import anon.infoservice.InfoServiceIDEntry;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.infoservice.AbstractIDEntry;
 
 /**
  * This is the implementation of the announcment of our own infoservice. It generates

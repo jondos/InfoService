@@ -329,7 +329,6 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
 						  "Message received: XML: " + (new String(a_postData)));
 
-			/* verify the signature */
 			MessageDBEntry entry;
 			if (a_encoding == HttpResponseStructure.HTTP_ENCODING_PLAIN)
 			{
