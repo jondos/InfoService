@@ -33,7 +33,6 @@ import java.security.SignatureException;
 import java.util.Hashtable;
 import java.util.Locale;
 
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import anon.util.Base64;
@@ -65,7 +64,7 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry implement
 
 	private int m_externalIdentifier;
 	private long m_serial;
-	private long m_creationTimeStamp;
+	private long m_lastUpdate;
 	private boolean m_bIsDummy;
 	private String m_id;
 	private Element m_xmlDescription;
@@ -78,7 +77,7 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry implement
 		super(System.currentTimeMillis() +  TIMEOUT);
 		XMLUtil.assertNodeName(a_xmlElement, XML_ELEMENT_NAME);
 		if (SignatureVerifier.getInstance().getVerifiedXml(
-			  a_xmlElement, SignatureVerifier.DOCUMENT_CLASS_UPDATE) == null)
+			  a_xmlElement, SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE) == null)
 		{
 			throw new SignatureException();
 		}
@@ -131,7 +130,13 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry implement
 			}
 		}
 
-		m_creationTimeStamp = System.currentTimeMillis();
+		m_lastUpdate = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_xmlElement, XML_LAST_UPDATE), -1L);
+		if (m_lastUpdate == -1)
+		{
+			m_lastUpdate = System.currentTimeMillis();
+			//throw (new Exception("JAPMinVersion: Constructor: No LastUpdate node found."));
+		}
+
 		m_xmlDescription = a_xmlElement;
 	}
 
@@ -198,7 +203,7 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry implement
 
 	public long getLastUpdate()
 	{
-		return m_creationTimeStamp;
+		return m_lastUpdate;
 	}
 
 	public Element getXmlStructure()
