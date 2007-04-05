@@ -95,6 +95,8 @@ public class KeyExchangeManager {
 
   private SymCipher m_multiplexerOutputStreamCipher;
 
+  private MixCascade m_cascade;
+
 
   /**
    * @todo allow to connect if one or more mixes (user specified) cannot be verified
@@ -136,29 +138,29 @@ public class KeyExchangeManager {
 
 		   /* process the received XML structure */
 		   Element elem = XMLUtil.toXMLDocument(xmlData).getDocumentElement();
-		   MixCascade cascade = new MixCascade(elem, Long.MAX_VALUE, a_cascade.getId());
+		   m_cascade = new MixCascade(elem, Long.MAX_VALUE, a_cascade.getId());
 
 		  ITrustModel.TrustException excepTrust = null;
 		  SignatureException execSignature = null;
 		  if (a_cascade.isUserDefined())
 		  {
-			  cascade.setUserDefined(true, a_cascade);
-			  Database.getInstance(MixCascade.class).remove(cascade);
-			  Database.getInstance(MixCascade.class).update(cascade);
+			  m_cascade.setUserDefined(true, a_cascade);
+			  Database.getInstance(MixCascade.class).remove(m_cascade);
+			  Database.getInstance(MixCascade.class).update(m_cascade);
 			  Database.getInstance(MixInfo.class).update(
-						   new MixInfo(MixInfo.DEFAULT_NAME, cascade.getCertPath()));
-			  a_trustModel.checkTrust(cascade);
+						   new MixInfo(MixInfo.DEFAULT_NAME, m_cascade.getCertPath()));
+			  a_trustModel.checkTrust(m_cascade);
 		  }
 		  else
 		  {
 			  Database.getInstance(MixInfo.class).update(
-						   new MixInfo(MixInfo.DEFAULT_NAME, cascade.getCertPath()));
+						   new MixInfo(MixInfo.DEFAULT_NAME, m_cascade.getCertPath()));
 			  MixCascade cascadeInDB =
-				  (MixCascade) Database.getInstance(MixCascade.class).getEntryById(cascade.getId());
+				  (MixCascade) Database.getInstance(MixCascade.class).getEntryById(m_cascade.getId());
 			  if (cascadeInDB != null)
 			  {
 				  // check if the cascade has changed its composition or trust since the last update
-				  if (!cascade.compareMixIDs(cascadeInDB))
+				  if (!m_cascade.compareMixIDs(cascadeInDB))
 				  {
 					  // remove this cascade from DB as its values have changed
 					  Database.getInstance(MixCascade.class).remove(cascadeInDB);
@@ -168,7 +170,7 @@ public class KeyExchangeManager {
 
 				  try
 				  {
-					  a_trustModel.checkTrust(cascade);
+					  a_trustModel.checkTrust(m_cascade);
 					  bCascadeTrust = true;
 				  }
 				  catch (ITrustModel.TrustException a_e)
@@ -198,8 +200,6 @@ public class KeyExchangeManager {
 			  }
 		  }
 
-
-
 		  /** Very important: Check if this cascade is trusted. Otherwise, an exception is thrown. */
 		  //a_trustModel.checkTrust(cascade);
 		  if (excepTrust != null)
@@ -216,11 +216,11 @@ public class KeyExchangeManager {
 		   * certificate store (needed for verification of the MixCascadeStatus
 		   * messages)
 		   */
-		  if (cascade.getCertificate() != null)
+		  if (m_cascade.getCertificate() != null)
 		  {
 			  m_mixCascadeCertificateLock = SignatureVerifier.getInstance().
 				  getVerificationCertificateStore().addCertificateWithoutVerification(
-					  cascade.getCertificate(),
+					  m_cascade.getCertificate(),
 					  JAPCertificate.CERTIFICATE_TYPE_MIX, false, false);
 			  LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 							"Added appended certificate from the MixCascade structure to the certificate store.");
@@ -232,19 +232,18 @@ public class KeyExchangeManager {
 		  }
 
 		  /* get the used channel protocol version */
-		  if (cascade.getMixProtocolVersion() == null)
+		  if (m_cascade.getMixProtocolVersion() == null)
 		  {
 			  throw (new XMLParseException(XMLParseException.NODE_NULL_TAG,
 				  "MixProtocolVersion (channel) node expected in received XML structure."));
 		  }
 
 		  m_protocolWithTimestamp = false;
-		  m_paymentRequired = cascade.isPayment();
-		  if (m_paymentRequired &&
-			  !cascade.getPaymentProtocolVersion().equals(MixCascade.SUPPORTED_PAYMENT_PROTOCOL_VERSION))
+		  m_paymentRequired = m_cascade.isPayment();
+		  if (!m_cascade.isPaymentProtocolSupported())
 		  {
 			  throw (new UnknownProtocolVersionException(
-				  "Unsupported payment protocol version ('" + cascade.getPaymentProtocolVersion() + "')."));
+				  "Unsupported payment protocol version ('" + m_cascade.getPaymentProtocolVersion() + "')."));
 		  }
 		  m_firstMixSymmetricCipher = null;
 		  /*
@@ -252,35 +251,35 @@ public class KeyExchangeManager {
 		   * any more
 		   */
 		  LogHolder.log(LogLevel.DEBUG, LogType.NET,
-						"Cascade is using channel-protocol version '" + cascade.getMixProtocolVersion() +
+						"Cascade is using channel-protocol version '" + m_cascade.getMixProtocolVersion() +
 						"'.");
-		  if (cascade.getMixProtocolVersion().equals("0.2"))
+		  if (m_cascade.getMixProtocolVersion().equals("0.2"))
 		  {
 			  /* no modifications of the default-settings required */
 		  }
-		  else if (cascade.getMixProtocolVersion().equals("0.4"))
+		  else if (m_cascade.getMixProtocolVersion().equals("0.4"))
 		  {
 			  m_firstMixSymmetricCipher = new SymCipher();
 		  }
-		  else if (cascade.getMixProtocolVersion().equals("0.8"))
+		  else if (m_cascade.getMixProtocolVersion().equals("0.8"))
 		  {
 			  m_protocolWithTimestamp = true;
 			  m_firstMixSymmetricCipher = new SymCipher();
 		  }
-		  else if (cascade.getMixProtocolVersion().equalsIgnoreCase("0.9"))
+		  else if (m_cascade.getMixProtocolVersion().equalsIgnoreCase("0.9"))
 		  {
 			  m_firstMixSymmetricCipher = new SymCipher();
 		  }
 		  else
 		  {
 			  throw (new UnknownProtocolVersionException(
-				  "Unknown channel protocol version used ('" + cascade.getMixProtocolVersion() + "')."));
+				  "Unknown channel protocol version used ('" + m_cascade.getMixProtocolVersion() + "')."));
 		  }
 
-		  m_mixParameters = new MixParameters[cascade.getNumberOfMixes()];
-		  for (int i = 0; i < cascade.getNumberOfMixes(); i++)
+		 m_mixParameters = new MixParameters[m_cascade.getNumberOfMixes()];
+		  for (int i = 0; i < m_cascade.getNumberOfMixes(); i++)
 		  {
-			  MixInfo mixinfo = cascade.getMixInfo(i);
+			  MixInfo mixinfo = m_cascade.getMixInfo(i);
 
 			  if (mixinfo == null)
 			  {
@@ -298,9 +297,11 @@ public class KeyExchangeManager {
 
 
 
+
 			  MixInfo oldMixinfo = (MixInfo) Database.getInstance(MixInfo.class).getEntryById(mixinfo.getId());
 			  if (mixinfo.getCertificate() != null &&
-				  (oldMixinfo == null || !oldMixinfo.getCertificate().equals(mixinfo.getCertificate())))
+				  (oldMixinfo == null || oldMixinfo.getCertificate() == null ||
+				   !oldMixinfo.getCertificate().equals(mixinfo.getCertificate())))
 			  {
 				  // update the database so the the (new) certificate gets available
 				  Database.getInstance(MixInfo.class).update(mixinfo);
@@ -313,7 +314,7 @@ public class KeyExchangeManager {
 					  "Received XML structure contains an invalid public key for Mix " + Integer.toString(i) +
 					  "."));
 			  }
-			  if (i == (cascade.getNumberOfMixes() - 1))
+			  if (i == (m_cascade.getNumberOfMixes() - 1))
 			  {
 				  /* get the chain protocol version from the last mix */
 				  NodeList chainMixProtocolVersionNodes = currentMixNode.getElementsByTagName(
@@ -514,7 +515,7 @@ public class KeyExchangeManager {
 
 			  keyDoc.getDocumentElement().appendChild(XMLUtil.importNode(keyDoc, keySignatureNode, true));
 
-			  if (XMLSignature.verify(keyDoc, cascade.getCertificate()) == null)
+			  if (XMLSignature.verify(keyDoc, m_cascade.getCertificate()) == null)
 			  {
 				  throw (new SignatureException("Invalid symmetric keys signature received."));
 			  }
@@ -558,6 +559,11 @@ public class KeyExchangeManager {
 
   public MixParameters[] getMixParameters() {
     return m_mixParameters;
+  }
+
+  public MixCascade getConnectedCascade()
+  {
+	  return m_cascade;
   }
 
   public void removeCertificateLock() {

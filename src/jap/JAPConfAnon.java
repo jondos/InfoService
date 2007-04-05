@@ -873,6 +873,19 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		else if (e.getSource() == m_reloadCascadesButton)
 		{
+			// delete all non-manual cascades
+			synchronized (Database.getInstance(MixCascade.class))
+			{
+				Vector entries = Database.getInstance(MixCascade.class).getEntryList();
+				for (int i = 0; i < entries.size(); i++)
+				{
+					if (!((MixCascade)entries.elementAt(i)).isUserDefined())
+					{
+						Database.getInstance(MixCascade.class).remove((MixCascade)entries.elementAt(i));
+					}
+				}
+				//Database.getInstance(MixCascade.class).removeAll();
+			}
 			fetchCascades(true, true, false);
 		}
 		else if (e.getSource() == m_selectCascadeButton)

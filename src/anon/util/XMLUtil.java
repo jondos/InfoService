@@ -622,6 +622,17 @@ public class XMLUtil
 	}
 
 	/**
+	 * Inserts a double precision floating point value into an XML node.
+	 * @param a_node an XML node
+	 * @param a_value a double value
+	 */
+	public static void setValue(Node a_node, double a_value)
+	{
+		a_node.appendChild(a_node.getOwnerDocument().createTextNode(Double.toString(a_value)));
+	}
+
+
+	/**
 	 * Inserts a boolean value into an XML node.
 	 * @param a_node an XML node
 	 * @param a_bValue a boolean value
@@ -1044,7 +1055,7 @@ public class XMLUtil
 			}
 			doc = ms_DocumentBuilderFactory.newDocumentBuilder().parse(a_inputSource);
 
-			removeComments(doc);
+			//removeComments(doc);
 		}
 		catch (IOException a_e)
 		{
@@ -1245,6 +1256,8 @@ public class XMLUtil
 	 * @param node an XML Node
 	 * @return an XML Node in a ByteArrayOutputStream representation or null if no transformation
 	 * could be done
+	 * @todo this method does not work well on big XML files; e.g. cascades with new payment systems
+	 * cannot be verified after usage!
 	 */
 	private static ByteArrayOutputStream toByteArrayOutputStream(Node node)
 	{
@@ -1314,7 +1327,6 @@ public class XMLUtil
 			/* DO NOT delete the following:
 				javax.xml.transform.Transformer transformer = javax.xml.transform.TransformerFactory.newInstance().newTransformer();
 				javax.xml.transform.Result r = new javax.xml.transform.stream.StreamResult(out);
-				javax.xml.transform.Source s = new javax.xml.transform.dom.DOMSource(node);
 				javax.xml.transform.Source s = new javax.xml.transform.dom.DOMSource(node);
 				transformer.transform(s,r);
 			 */
@@ -1559,5 +1571,29 @@ public class XMLUtil
 			}
 		}
 		return 0;
+	}
+	/**
+	 * Takes a SHA-1 hash value, and if it is followed by a newline ("\n"),
+	 * strips off the newline so it will be usable as a pure hashvalue
+	 *
+	 * Call this after reading a hash value from an xml node value
+	 *
+	 * @param hashValue String: a SHA1 hash value
+	 * @return String: the input value, minus a trailing "\n"
+	 */
+	public static String stripNewlineFromHash(String hashValue)
+	{
+		final int SHA1_LENGTH = 27;
+		String lastTwoChars = hashValue.substring(SHA1_LENGTH+1);
+		if (hashValue.length() == SHA1_LENGTH+2 && lastTwoChars.equals("\n") )
+		{
+			hashValue = hashValue.substring(0,SHA1_LENGTH+1);
+		}
+		return hashValue;
+	}
+
+	public static void printXmlEncodable(IXMLEncodable xmlobject)
+	{
+		System.out.println(XMLUtil.toString(XMLUtil.toXMLElement(xmlobject)));
 	}
 }

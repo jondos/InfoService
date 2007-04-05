@@ -26,17 +26,26 @@ public class XMLErrorMessage extends Exception implements IXMLEncodable
 	public static final int ERR_NO_BALANCE = 8;
 	public static final int ERR_NO_CONFIRMATION = 9;
 	public static final int ERR_ACCOUNT_EMPTY = 10;
+	public static final int ERR_CASCADE_LENGTH = 11;
+	public static final int ERR_DATABASE_ERROR = 12;
+	public static final int ERR_INSUFFICIENT_BALANCE = 13;
+	public static final int ERR_NO_FLATRATE_OFFERED = 14;
+	public static final int ERR_INVALID_CODE = 15;
+	public static final int ERR_INVALID_CC = 16;
+	public static final int ERR_INVALID_PRICE_CERTS = 17;
 
 	private int m_iErrorCode;
 	private String m_strErrMsg;
 
 	/** default error descriptions */
+	/* length of the array is checked, you need to have a number of strings here that
+	   matches the number of constants defined for error codes !! */
 	private static final String[] m_errStrings =
 		{
 		"Success", "Internal Server Error",
 		"Wrong format", "Wrong Data", "Key not found", "Bad Signature", "Bad request",
 		"No account certificate", "No balance", "No cost confirmation",
-		"Account is empty"
+		"Account is empty","Cascade too long","Database error"
 	};
 
 	public static final String XML_ELEMENT_NAME = "ErrorMessage";
@@ -84,7 +93,7 @@ public class XMLErrorMessage extends Exception implements IXMLEncodable
 		m_iErrorCode = errorCode;
 		if (m_iErrorCode < 0 || m_iErrorCode > m_errStrings.length)
 		{
-			m_strErrMsg = "Unknown Error";
+			m_strErrMsg = "Unknown Message"; //says "message", not "error", since it doesn't have to be an error
 		}
 		else
 		{

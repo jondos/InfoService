@@ -54,6 +54,7 @@ import gui.dialog.WorkerContentPane;
 import jap.JAPConstants;
 import jap.JAPController;
 import logging.LogType;
+import anon.util.XMLUtil;
 
 public class MethodSelectionPane extends DialogContentPane implements IWizardSuitable, ActionListener
 {
@@ -71,8 +72,8 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 	private XMLPaymentOptions m_paymentOptions;
 	private GridBagConstraints m_c = new GridBagConstraints();
 	private XMLPaymentOption m_selectedPaymentOption;
-	private JComboBox m_cbAmount;
-	private JComboBox m_cbCurrency;
+//	private JComboBox m_cbAmount;
+//	private JComboBox m_cbCurrency;
 	private Container m_rootPanel;
 
 	public MethodSelectionPane(JAPDialog a_parentDialog, WorkerContentPane a_previousContentPane)
@@ -101,9 +102,11 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		{
 			addOption("Dummy");
 		}
+		/*
 		Vector dummyVector = new Vector();
 		dummyVector.addElement("EUR");
 		addCurrencies(dummyVector);
+	    */
 	}
 
 	private void addOption(String a_name)
@@ -119,6 +122,7 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		m_rootPanel.add(rb, m_c);
 	}
 
+/*
 	private void addCurrencies(Vector a_currencies)
 	{
 		m_c.insets = new Insets(5, 5, 5, 5);
@@ -145,7 +149,7 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		 }
 
 		   }
-		   );*/
+		   );
 		m_c.gridy++;
 		m_rootPanel.add(m_cbAmount, m_c);
 		m_c.gridx++;
@@ -154,17 +158,22 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		m_cbCurrency = new JComboBox(a_currencies);
 		m_rootPanel.add(m_cbCurrency, m_c);
 	}
+*/
 
+/*
 	public String getSelectedCurrency()
 	{
 		return (String) m_cbCurrency.getSelectedItem();
 	}
+*/
 
+/*
 	public String getAmount()
 	{
 		return (String) m_cbAmount.getSelectedItem();
 		//return m_tfAmount.getText();
 	}
+*/
 
 	public void actionPerformed(ActionEvent e)
 	{
@@ -196,8 +205,10 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		WorkerContentPane p = (WorkerContentPane) getPreviousContentPane();
 		Object value = p.getValue();
 		XMLPaymentOptions options = (XMLPaymentOptions) value;
+
 		m_paymentOptions = options;
-		Enumeration headings = options.getOptionHeadings(JAPController.getLocale().getLanguage());
+		String language = JAPController.getLocale().getLanguage();
+		Enumeration headings = options.getOptionHeadings(language);
 		Hashtable usedOptions = new Hashtable(); // holds type and option
 		/*
 		 * Add non-genric options that work with this JAP version and all generic options that have not
@@ -233,7 +244,7 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 						 JAPController.getLocale().getLanguage()));
 		}
 
-		addCurrencies(options.getCurrencies());
+//		addCurrencies(options.getCurrencies());
 	}
 
 	public CheckError[] checkYesOK()

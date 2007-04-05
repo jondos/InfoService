@@ -106,6 +106,10 @@ public class PayAccount implements IXMLEncodable
 
 	private boolean m_bBackupDone = false;
 
+	//if the user already has a flatrate, we don't let him buy another one
+	//this sets what counts as "empty" in terms of included volume
+	public static final int MAX_KBYTES_COUNTING_AS_EMPTY = 5000; //5 MB
+
 	/**
 	 * internal value for spent bytes. Basically this is the same as spent in
 	 * {@link anon.pay.xml.XMLBalance}, but the value in XMLBalance is calculated
@@ -304,7 +308,7 @@ public class PayAccount implements IXMLEncodable
 			while (en.hasMoreElements())
 			{
 				XMLEasyCC myCC = (XMLEasyCC) en.nextElement();
-				XMLEasyCC newCC = info.getCC(myCC.getAIName());
+				XMLEasyCC newCC = info.getCC( (String) myCC.getPriceCertHashes().elements().nextElement() ); //hash of first price cert
 				if ( (newCC != null) && (newCC.getTransferredBytes() > myCC.getTransferredBytes()))
 				{
 					if (newCC.verify(m_accountCertificate.getPublicKey()))
@@ -557,6 +561,20 @@ public class PayAccount implements IXMLEncodable
 		{
 			return m_accountInfo.getBalance();
 		}
+	}
+
+	public boolean isFlatrateActive()
+	{
+		boolean hasFlat = false;
+		XMLBalance curBalance = m_accountInfo.getBalance();
+		Timestamp endDate =curBalance.getFlatEnddate();
+		Timestamp now = new Timestamp(System.currentTimeMillis());
+		long flatBytes = curBalance.getVolumeBytesLeft();
+		if (endDate != null && endDate.after(now) && flatBytes > 0)
+		{
+			hasFlat = true;
+		}
+		return hasFlat;
 	}
 
 	/**

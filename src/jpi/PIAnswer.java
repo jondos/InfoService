@@ -51,15 +51,26 @@ public class PIAnswer
 	public final static int TYPE_TRANSFER_CERTIFICATE = 5;
 	public final static int TYPE_BALANCE = 6;
 	public final static int TYPE_PAYMENT_OPTIONS = 11;
+	public final static int TYPE_VOLUME_PLANS = 22;
+	public final static int TYPE_PAYMENT_SETTINGS = 21;
 	public final static int TYPE_TRANSACTION_OVERVIEW = 12;
 	public final static int TYPE_PASSIVE_PAYMENT = 13;
 	public final static int TYPE_CAPTCHA_REQUEST = 14;
+	public final static int TYPE_FLATRATE = 20;
 
 	//Bi --> AI
 	public final static int TYPE_PAYOFF = 7;
 	public final static int TYPE_SETTLE = 8;
 	public final static int TYPE_CONFIRM = 9;
 	public final static int TYPE_ACCOUNT_SNAPSHOT = 10;
+
+	//BI --> MixConfig
+	public final static int TYPE_OPERATORBALANCE = 15;
+	public final static int TYPE_BANKACCOUNT = 16;
+	public final static int TYPE_MIXINFO = 17;
+	public final static int TYPE_PRICECERT = 18;
+	public final static int TYPE_PRICECERTS = 19;
+
 
 	public PIAnswer(int type, IXMLEncodable content)
 	{

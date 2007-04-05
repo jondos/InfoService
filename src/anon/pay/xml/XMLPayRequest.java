@@ -49,7 +49,12 @@ import anon.util.XMLUtil;
  *   </CC>
  * </PayRequest>
  *
- *
+ *  To check if an instance of XMLPayRequest contains a BalanceRequest, AccountRequest or CC, use:
+ *  <ul>
+ *  <li>getBalanceTimestamp != null</li>
+ *  <li>isAccountRequest()</li>
+ *  <li>getCC() != null </li>
+ *  </ul>
  * @author Bastian Voigt, Stefan Koepsell
  */
 public class XMLPayRequest implements IXMLEncodable

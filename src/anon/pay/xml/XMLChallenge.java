@@ -41,6 +41,7 @@ public class XMLChallenge implements IXMLEncodable
 	//~ Constructors ***********************************************************
 
 	private byte[] m_arbChallenge;
+	private int m_prepaidBytes;
 	public static final String XML_ELEMENT_NAME = "Challenge";
 
 	public XMLChallenge(String xml) throws Exception
@@ -81,6 +82,12 @@ public class XMLChallenge implements IXMLEncodable
 		}
 		Element element = (Element) XMLUtil.getFirstChildByName(elemRoot, "DontPanic");
 		m_arbChallenge = Base64.decode(XMLUtil.parseValue(element, ""));
+		m_prepaidBytes = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, "PrepaidBytes"), 0);
+	}
+
+	public int getPrepaidBytes()
+	{
+		return m_prepaidBytes;
 	}
 
 	public byte[] getChallengeForSigning()

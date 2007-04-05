@@ -31,15 +31,16 @@ public class MD5Crypt implements ICrypt {
     private static final String magic = "$1$";
     private static final String itoa64 = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
-    private static String cryptTo64(int value, int length) {
-	StringBuffer output = new StringBuffer();
+    private static String cryptTo64(int value, int length)
+	{
+		StringBuffer output = new StringBuffer();
 
-	while (--length >= 0) {
-	    output.append(itoa64.substring(value & 0x3f, (value & 0x3f)+1));
-	    value >>=6;
-	}
+		while (--length >= 0) {
+			output.append(itoa64.substring(value & 0x3f, (value & 0x3f)+1));
+			value >>=6;
+		}
 
-	return (output.toString());
+		return (output.toString());
     }
 
 	/**

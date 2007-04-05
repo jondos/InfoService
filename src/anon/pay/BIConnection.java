@@ -67,6 +67,9 @@ import anon.util.captcha.ZipBinaryImageCaptchaClient;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.infoservice.IMutableProxyInterface;
+import anon.pay.xml.XMLPaymentSettings;
+import anon.pay.xml.XMLVolumePlans;
 
 public class BIConnection implements ICaptchaSender
 {
@@ -273,6 +276,14 @@ public class BIConnection implements ICaptchaSender
 		return cert;
 	}
 
+	public XMLErrorMessage buyFlatrate(long accountnumber) throws Exception
+	{
+		m_httpClient.writeRequest("POST", "buyflat", (new Long(accountnumber)).toString());
+		Document doc = m_httpClient.readAnswer();
+		XMLErrorMessage messageReturned = new XMLErrorMessage(doc);
+		return messageReturned;
+	}
+
 	/**
 	 * Fetches an account statement (balance cert. + costconfirmations)
 	 * from the BI.
@@ -305,6 +316,23 @@ public class BIConnection implements ICaptchaSender
 		Document doc = m_httpClient.readAnswer();
 		options = new XMLPaymentOptions(doc);
 		return options;
+	}
+
+	public XMLVolumePlans getVolumePlans() throws Exception
+	{
+		XMLVolumePlans plans;
+		m_httpClient.writeRequest("GET", "volumeplans", null);
+		Document doc = m_httpClient.readAnswer();
+		plans = new XMLVolumePlans(doc);
+		return plans;
+	}
+
+
+	public XMLPaymentSettings getPaymentSettings() throws Exception
+	{
+		m_httpClient.writeRequest("GET", "paymentsettings",null);
+		Document doc = m_httpClient.readAnswer();
+		return new XMLPaymentSettings(doc);
 	}
 
 	/** performs challenge-response authentication */
@@ -439,6 +467,18 @@ public class BIConnection implements ICaptchaSender
 		Document doc = m_httpClient.readAnswer();
 		XMLPaymentOptions paymentoptions = new XMLPaymentOptions(doc.getDocumentElement());
 		return paymentoptions;
+	}
+
+	public XMLPassivePayment fetchPaymentData(String transfernumber) throws Exception
+	{
+		m_httpClient.writeRequest("GET", "paymentdata",transfernumber);
+		Document doc = m_httpClient.readAnswer();
+		if (doc == null) //BI returned null == no matching record in passivepayments
+		{
+			return null;
+		}
+		XMLPassivePayment paymentdata = new XMLPassivePayment(doc.getDocumentElement());
+		return paymentdata;
 	}
 
 	/**

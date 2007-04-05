@@ -40,6 +40,17 @@ import jpi.db.DBSupplier;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.util.Vector;
+import anon.pay.xml.XMLPriceCertificate;
+import java.util.Enumeration;
+import java.util.*;
+import anon.util.EmailHandler;
+import anon.crypto.JAPCertificate;
+import anon.crypto.X509SubjectKeyIdentifier;
+import java.sql.Timestamp;
+import anon.crypto.XMLSignature;
+import org.w3c.dom.Node;
+import anon.util.XMLParseException;
 
 /**
  * This class implements the high-level communication with the AI.
@@ -69,6 +80,10 @@ public class PICommandAI implements PICommand
 	static final int CHALLENGE_SENT = 1;
 	static final int AUTHENTICATION_OK = 2;
 	static final int AUTHENTICATION_BAD = 3;
+
+	//if a non-pay Mix in a pay cascade has alreadey been emailed about it,
+	//we store its subjectkeyidentifier here to avoid sending another email with each new CC that is settled
+	private static final Vector notifiedMixes = new Vector();
 
 	/**
 	 * Erzeugt und initialisiert ein {@link PICommandAI} Objekt.
@@ -196,14 +211,7 @@ public class PICommandAI implements PICommand
 			return new XMLErrorMessage(XMLErrorMessage.ERR_WRONG_FORMAT,
 									   "could not parse CC:" + ex.getMessage());
 		}
-		/*		if (! (cc.getAIName().equals(m_aiName)))
-		  {
-		   LogHolder.log(LogLevel.DEBUG, LogType.MISC, "settle request: wrong AI name '"+cc.getAIName()+"'");
-		   return new XMLErrorMessage(XMLErrorMessage.ERR_WRONG_DATA,
-					"CC for wrong AI '" + cc.getAIName() + "' found, '" + m_aiName +
-					"' was expected");
-		  }*/
-		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "settle request: AI name '" + cc.getAIName() + "'");
+		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "settle request for cc #"+cc.getId() );
 
 		// check CC signature
 		XMLJapPublicKey keyParser = null;
@@ -237,20 +245,223 @@ public class PICommandAI implements PICommand
 			return new XMLErrorMessage(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR,
 									   "Error while verifying signature");
 		}
+		//check price certificates
+		//get price cert hashes from cc
+		Hashtable priceCertElements = cc.getPriceCertElements(); //getPriceCertElements = Hashtable including mix ids, vs. getPriceCerts = Enumeration of only the pc hashes
+		Vector ccPriceCerts = new Vector();
+		String oneCertHash;
+		XMLPriceCertificate completeCert;
+		//get corresponding price certs from database
+		for (Enumeration e = priceCertElements.elements(); e.hasMoreElements(); )
+		{
+			oneCertHash = (String) e.nextElement();
+			//cut off trailing newline if necessary
+			oneCertHash = XMLUtil.stripNewlineFromHash(oneCertHash);
+			completeCert = m_Database.getPriceCertForHash(oneCertHash);
+			ccPriceCerts.add(completeCert);
+		}
 
+		//check no of price certs (=number of mixes in cascade) < max cascade length
+		//there might be more (non-pay) Mixes in the Cascade, but the PI only cares about pay mixes, since those are the ones it has to pay
+		if (ccPriceCerts.size() > Integer.parseInt(Configuration.getMaxCascadeLength()) )
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "payment instance refuses to pay for cost confirmation, cascade is too long");
+			return new XMLErrorMessage(XMLErrorMessage.ERR_CASCADE_LENGTH,"No of price certs exceeds maximum cascade length of the pi");
+		}
+
+		//check whether cascade is all free or all pay mixes
+		Vector freeMixes = new Vector();
+		boolean isAllFree = true;
+		String curId;
+		Object curCert;
+		XMLPriceCertificate fullCert = null;
+		for (Enumeration e = priceCertElements.keys(); e.hasMoreElements(); )
+		{
+			curId = (String) e.nextElement();
+			curCert = priceCertElements.get(curId);
+			if (curCert instanceof String) //just to be sure, should always be a String, either "none" or a pc hash
+			{
+				curCert = XMLUtil.stripNewlineFromHash((String) curCert);
+				if ( curCert.equals("none") )
+				{
+					//we found a non-pay mix
+					freeMixes.add(curId);
+				} else
+				{
+					//only the hash, need to get full XMLPriceCertificate object from db
+					fullCert = m_Database.getPriceCertForHash((String)curCert);
+					if (fullCert != null)
+					{
+						isAllFree = false; //we found a pay Mix
+					}
+				}
+			}
+		}
+		if (isAllFree == false && freeMixes.size() > 0)
+		{
+			//for mixes in mixed pay/non-pay cascade, see if it's already been notified, and if not email its operator
+			Enumeration enumer = freeMixes.elements();
+			String freeMixId;
+			while (enumer.hasMoreElements())
+			{
+				freeMixId = (String) enumer.nextElement();
+				if (!notifiedMixes.contains(freeMixId))
+				{
+					String operatorEmailAddress = "foo@op.com";
+					JAPCertificate opCert = m_Database.getOperatorOfMix(freeMixId);
+					//get operator email from operator Cert
+					operatorEmailAddress = opCert.getAnyEmailAddress();
+					if (operatorEmailAddress != null) //will be null if no email address found in cert
+					{
+						EmailHandler.sendEmail(operatorEmailAddress, EmailHandler.JPI_ADDRESS,
+											   EmailHandler.SUBJECT_MIXEDCASCADE,
+											   EmailHandler.BODY_MIXEDCASCADE);
+						notifiedMixes.add(freeMixId);
+					}
+				}
+			}
+		}
+	//check if price certs are current (no newer price cert for same mix in database)
+	//if price certs don't need to be signed, skip this check
+	    if (!isAllFree && Configuration.isSignatureOnPriceRequired().booleanValue())
+		{
+			String curMixId;
+			XMLPriceCertificate aCert;
+			Vector priceCertsOfMix;
+			for (Enumeration en = ccPriceCerts.elements(); en.hasMoreElements(); )
+			{
+				aCert = (XMLPriceCertificate) en.nextElement();
+				curMixId = aCert.getSubjectKeyIdentifier();
+				//try to find a newer price cert for same mix in db
+				priceCertsOfMix = m_Database.getPriceCertsForMix(curMixId);
+				if (priceCertsOfMix == null)
+				{
+					//no price certs matching mix found in db
+					//should never happen, since we got the price cert whose subjectkeyidentifier is used in the query just a few lines ago
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY, "price cert vanished from database?");
+					return new XMLErrorMessage(XMLErrorMessage.ERR_DATABASE_ERROR,"Price cert used in the query vanished from database");
+				}
+				if (priceCertsOfMix.size() ==1)
+				{
+					//the price cert we got from the cc is the only one in the database for the mix
+					//for good measure, check for matching dates
+					java.sql.Timestamp ccTime = aCert.getSignatureTime();
+					java.sql.Timestamp dbTime = ( (XMLPriceCertificate) priceCertsOfMix.elementAt(0)).getSignatureTime();
+					if (!ccTime.equals(dbTime) ){
+						LogHolder.log(LogLevel.DEBUG, LogType.PAY, "mismatch between price certificates in db and cc");
+						return new XMLErrorMessage(XMLErrorMessage.ERR_DATABASE_ERROR,"mismatch between price certificates in db and cc");
+					}
+				}
+				if (priceCertsOfMix.size() > 1)
+				{
+					//several price certs for the same mix in database, check if the one in the CC is the newest
+					java.sql.Timestamp ccTime = aCert.getSignatureTime();
+					java.sql.Timestamp latestPriceCertTime = null;
+					//loop through CCs from db, and find the latest date
+					XMLPriceCertificate oneCert;
+					java.sql.Timestamp oneTime;
+					for (Enumeration e = priceCertsOfMix.elements(); e.hasMoreElements(); )
+					{
+						oneCert = (XMLPriceCertificate) e.nextElement();
+   						oneTime = oneCert.getSignatureTime();
+							if (oneTime != null) //cert is signed (assumption: no signatureTime set if not signed)
+							{
+								if (latestPriceCertTime == null || oneTime.after(latestPriceCertTime))
+								{
+									latestPriceCertTime = oneTime;
+								}
+							}
+
+					}
+					//refuse to settle CC if the price certs contained in it are not the most current ones
+					//(which means that whenever prices are changed, the CCs that are signed but yet unsettled become worthless
+					//but should only be the CCs of a minute or so, not more than a few cents)
+					if (latestPriceCertTime.after(ccTime) )
+					{
+						LogHolder.log(LogLevel.DEBUG, LogType.PAY,"price certs of the CC are outdated, PI refuses to settle");
+						return new XMLErrorMessage(XMLErrorMessage.ERR_DATABASE_ERROR,"price certs of the CC are outdated, PI refuses to settle");
+					}
+				}
+			}
+		}
+		//everything OK, PI will settle the CC
+		LogHolder.log(LogLevel.ERR, LogType.PAY, "PICommandAI:381:starting to settle CC");
 		try
 		{
-			XMLEasyCC oldCC = m_Database.getCC(cc.getAccountNumber(), cc.getAIName());
+			//check if a CC for this account at this cascade already is in database
+			XMLEasyCC oldCC = m_Database.getCC(cc.getAccountNumber(), cc.getCascadeID() );
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "settle request: Now storing CC in database");
+			//need two seperate Enumerations, since we need to pass it to two different methods
+			//(same Enumeration object will be empty after transversing it once)
+			Enumeration mixesToUpdate = cc.getMixIds();
+			Enumeration mixesWithStats = cc.getMixIds();
+			long newTraffic = 0;
 			if (oldCC == null)
 			{
 				m_Database.insertCC(cc);
+				newTraffic = cc.getTransferredBytes();
 			}
 			else if (oldCC.getTransferredBytes() < cc.getTransferredBytes())
 			{
 				m_Database.updateCC(cc);
+				newTraffic = cc.getTransferredBytes() - oldCC.getTransferredBytes();
 			}
+			else
+			{
+				return new XMLErrorMessage(XMLErrorMessage.ERR_INVALID_CC,"outdated cost confirmation, possible doublespending");
+			}
+		    //charge user account
+			if (! m_Database.debitAccount(cc.getAccountNumber(),cc.getPriceCertElements(), newTraffic ) )
+			{
+				return new XMLErrorMessage(XMLErrorMessage.ERR_ACCOUNT_EMPTY);
+			}
+
+			//do not pay out for PriceCerts that are not signed (if configured)
+			Hashtable acceptedPriceCerts = new Hashtable(); //key: ski of mix, value: hash of mixcert
+			if (Configuration.isSignatureOnPriceRequired().booleanValue() )
+			{
+				XMLPriceCertificate certToCheck;
+				//iterate over certs, and filter out the unsigned ones
+				for (Enumeration e = ccPriceCerts.elements(); e.hasMoreElements(); )
+				{
+					certToCheck = (XMLPriceCertificate) e.nextElement();
+					if (isValid(certToCheck))
+					{
+						String mixId = certToCheck.getSubjectKeyIdentifier();
+						String certHash = (String) priceCertElements.get(mixId);
+						acceptedPriceCerts.put(mixId,certHash);
+					} else
+					{
+						continue; //skip this cert
+					}
+				}
+			}
+			else
+			{
+				acceptedPriceCerts = cc.getPriceCertElements();
+			}
+
+			//pay Mixes
+			if (! m_Database.creditMixes(acceptedPriceCerts,newTraffic) )
+			{
+				return new XMLErrorMessage(XMLErrorMessage.ERR_DATABASE_ERROR);
+			}
+
+			//log stats, but only if set in Configuration
+			Boolean debug = Configuration.isLogPaymentStatsEnabled();
+			if (Configuration.isLogPaymentStatsEnabled().booleanValue() )
+			{
+				m_Database.writeMixStats(mixesWithStats, newTraffic);
+				m_Database.writeMixTraffic(mixesToUpdate, newTraffic);
+				String cascadeId = cc.getCascadeID();
+				m_Database.writeJapTraffic(newTraffic,cascadeId,cc.getAccountNumber());
+			}
+			//logically, writeMixStats() and writeMixTraffic() could be combined
+			//but we can only iterate over an Enumeration once, and updating two tables in the same iteration would be messy
+			//(Enumeration doesnt support clone, and Enumeration is what we get from XMLEasyCC)
+
 			return new XMLErrorMessage(XMLErrorMessage.ERR_OK);
+
 		}
 		catch (Exception ex3)
 		{
@@ -421,4 +632,50 @@ public class PICommandAI implements PICommand
 	   return tickCounter + 1;
 	  }
 	 }*/
+
+	 //takes the hash value of a price certificate (e.g. from a cost confirmation)
+	 //and returns the corresponding complete cc from the database
+	 private XMLPriceCertificate getPriceCertForHash(String hashValue)
+	 {
+		 //it is probably more efficient to let the database handle the comparions of all price certs,so we just pass the hashvalue through to it
+		 XMLPriceCertificate thePriceCert= m_Database.getPriceCertForHash(hashValue);
+		 if (thePriceCert != null)
+		 {
+			 return thePriceCert;
+		 }
+		 else
+		 {
+			 LogHolder.log(LogLevel.DEBUG, LogType.PAY, "BI knows no price certificate corresponding to the hash value "+hashValue);
+			 return null;		 }
+	 }
+
+	private boolean isValid(XMLPriceCertificate aPriceCert)
+	{
+		Timestamp sigTime = aPriceCert.getSignatureTime();
+
+		//signed at all?
+		if (sigTime == null )
+		{
+			return false;
+		}
+		//valid signature time?
+		Timestamp now = new Timestamp( new Date().getTime());
+		if (sigTime.after(now) )
+		{
+			return false;
+		}
+
+		//valid signature?
+		try
+		{
+			JAPCertificate biCert = Configuration.getOwnCertificate();
+			XMLSignature.verify(aPriceCert.getDocument(), biCert);
+		}
+		catch (XMLParseException ex)
+		{
+			//if we cant even parse the signature xml, the sig is certainly not valid
+			return false;
+		}
+		return true;
+	}
 }

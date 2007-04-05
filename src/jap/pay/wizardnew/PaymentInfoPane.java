@@ -55,6 +55,12 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.Cursor;
+import javax.swing.JLabel;
+import javax.swing.JComponent;
 
 public class PaymentInfoPane extends DialogContentPane implements IWizardSuitable,
 	ActionListener
@@ -73,6 +79,9 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 	private String m_language;
 	private XMLPaymentOption m_selectedOption;
 	private String m_strExtraInfo;
+	private XMLTransCert transCert;
+
+	private String m_url;
 
 	public PaymentInfoPane(JAPDialog a_parentDialog, DialogContentPane a_previousContentPane)
 	{
@@ -81,6 +90,7 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 			  new Options(OPTION_TYPE_OK_CANCEL, a_previousContentPane));
 		setDefaultButtonOperation(ON_CLICK_DISPOSE_DIALOG | ON_YESOK_SHOW_NEXT_CONTENT |
 								  ON_NO_SHOW_PREVIOUS_CONTENT);
+
 		m_language = JAPController.getLocale().getLanguage();
 		m_rootPanel = this.getContentPane();
 		m_rootPanel.setLayout(new GridBagLayout());
@@ -105,12 +115,30 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		getButtonCancel().setVisible(false);
 	}
 
+	/**
+	 * same as regular constructor, except it additionally takes a url
+	 * which will be added as the last extraInfo of the selected paymentOption,
+	 * and displayed prominently
+	 *
+	 * Use this for mixed payment options like paysafecard or call2pay,
+	 * whenever you need to construct a URL to display that is dependent on the current transaction
+	 * and therefor cannot be stored in the paymentoption itself
+	 *
+	 * @param a_parentDialog JAPDialog
+	 * @param a_previousContentPane DialogContentPane
+	 * @param a_url String
+	 */
+	public PaymentInfoPane(JAPDialog a_parentDialog, DialogContentPane a_previousContentPane, String a_url)
+	{
+		this(a_parentDialog,a_previousContentPane);
+		m_url = a_url;
+	}
+
 	public void showInfo()
 	{
 		XMLPaymentOption selectedOption = ( (MethodSelectionPane) getPreviousContentPane().
 										   getPreviousContentPane()).getSelectedPaymentOption();
-		XMLTransCert transCert = (XMLTransCert) ( (WorkerContentPane) getPreviousContentPane()).
-			getValue();
+	    transCert = (XMLTransCert) ( (WorkerContentPane) getPreviousContentPane()).getValue();
 		String htmlExtraInfo = "";
 		m_selectedOption = selectedOption;
 		m_rootPanel.removeAll();
@@ -129,17 +157,22 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 
 
 		m_strExtraInfo = selectedOption.getExtraInfo(m_language);
+		boolean isURL = false;
 		if (m_strExtraInfo != null)
 		{
 			m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%t",
 											 String.valueOf(transCert.getTransferNumber()));
 			m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%a",
-											 ( (MethodSelectionPane) getPreviousContentPane().
-											   getPreviousContentPane()).getAmount());
+											 ( (VolumePlanSelectionPane)
+											 getPreviousContentPane().getPreviousContentPane()
+											 .getPreviousContentPane().getPreviousContentPane()).getAmount());
 			m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%c",
-										   ( (MethodSelectionPane) getPreviousContentPane().
-											getPreviousContentPane()).
-										   getSelectedCurrency());
+										   ( (VolumePlanSelectionPane) getPreviousContentPane().
+											getPreviousContentPane().getPreviousContentPane().getPreviousContentPane()).
+										   getCurrency());
+
+		    //show customized url if one was given in the constructor
+			//might not be necesary, if we get by with the substitutions above
 
 			m_c.gridy++;
 			m_bttnCopy = new JButton(JAPMessages.getString(MSG_BUTTONCOPY));
@@ -152,10 +185,9 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 			m_rootPanel.add(m_bttnOpen, m_c);
 			m_bttnOpen.setVisible(false);
 
-
-			if (selectedOption.getExtraInfoType(m_language).equalsIgnoreCase(XMLPaymentOption.EXTRA_LINK))
+			isURL = selectedOption.getExtraInfoType(m_language).equalsIgnoreCase(XMLPaymentOption.EXTRA_LINK);
+			if (isURL)
 			{
-				/** @todo Make label clickable */
 				m_bttnOpen.setVisible(true);
 				htmlExtraInfo = "<br> <font color=blue><u><b>" + m_strExtraInfo + "</b></u></font>";
 			}
@@ -167,8 +199,13 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		}
 
 		setText(selectedOption.getDetailedInfo(m_language) + htmlExtraInfo);
+		if (isURL) setMouseListener(new LinkMouseListener());
 
+	}
 
+	public XMLTransCert getTransCert()
+	{
+		return transCert;
 	}
 
 	/**
@@ -240,5 +277,39 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		return null;
 	}
 
+
+}
+
+class LinkMouseListener extends MouseAdapter
+{
+	public void mouseClicked(MouseEvent e)
+	{
+		try
+		{
+			//Warning: will fail if LinkMouseListener is added to a JComponent other than a JLabel
+			JLabel source = (JLabel) e.getSource();
+			String linkText = source.getText();
+			URL linkUrl = new URL(linkText);
+			AbstractOS.getInstance().openURL(linkUrl);
+		} catch (ClassCastException cce)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.PAY, "opening a link failed, reason: called on non-JLabel component");
+		} catch (MalformedURLException mue)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.PAY, "opening a link failed, reason: malformed URL");
+		}
+	}
+
+	public void mouseEntered(MouseEvent e)
+	{
+		JComponent source = (JComponent) e.getSource();
+		source.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+	}
+
+	public void mouseExited(MouseEvent e)
+	{
+		JComponent source = (JComponent) e.getSource();
+		source.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+	}
 
 }

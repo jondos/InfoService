@@ -42,6 +42,7 @@ import logging.LogLevel;
 import logging.LogType;
 import anon.crypto.IVerifyable;
 import java.util.Date;
+import anon.pay.xml.XMLPriceCertificate;
 import java.util.Vector;
 
 /**
@@ -129,6 +130,16 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
   private CertPath m_mixCertPath;
 
   /**
+   *  The price certificate for the Mix
+   */
+  private XMLPriceCertificate m_priceCert;
+
+  /**
+   * Amount of bytes that the JAP has to prepay with this Cascade
+   */
+  private long m_prepaidIntervalKbytes;
+
+  /**
    * Stores the signature element for this mix.
    * The CertPath is not set (null) if the MixInfo-Object is in the InfoService
    */
@@ -179,6 +190,26 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 	  m_mixLocation = new ServiceLocation(null, m_mixCertificate);
 	  m_mixOperator = new ServiceOperator(null, m_mixCertPath.getSecondCertificate());
 	  m_freeMix = false;
+	  m_prepaidIntervalKbytes = 10240; //default of 10 MB
+  }
+
+  public MixInfo(String a_mixID, CertPath a_certPath, XMLPriceCertificate a_priceCert, long a_prepaidIntervalKbytes)
+  {
+	  super(Long.MAX_VALUE);
+	  m_mixId = a_mixID;
+	  m_name = a_mixID;
+	  m_type = -1;
+	  m_bFromCascade = true;
+	  m_mixCertPath = a_certPath;
+	  m_mixCertificate = a_certPath.getFirstCertificate();
+	  m_lastUpdate = 0;
+	  m_serial = 0;
+	  m_mixLocation = new ServiceLocation(null, m_mixCertificate);
+	  m_mixOperator = new ServiceOperator(null, m_mixCertPath.getSecondCertificate());
+	  m_freeMix = false;
+	  //
+	  m_priceCert = a_priceCert;
+	  m_prepaidIntervalKbytes = a_prepaidIntervalKbytes;
   }
 
   /**
@@ -252,8 +283,21 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 	  Node locationNode = XMLUtil.getFirstChildByName(a_mixNode, "Location");
 	  Node lastUpdateNode = XMLUtil.getFirstChildByName(a_mixNode, "LastUpdate");
 	  Node softwareNode = XMLUtil.getFirstChildByName(a_mixNode, "Software");
+	  Node prepaidIntervalNode = XMLUtil.getFirstChildByName(a_mixNode, "PrepaidIntervalKbytes");
 
-	  if (!a_bFromCascade)
+	  Node priceCertNode = XMLUtil.getFirstChildByName(a_mixNode, XMLPriceCertificate.XML_ELEMENT_NAME);
+	  if (priceCertNode != null)
+	  {
+		  m_priceCert = new XMLPriceCertificate((Element)priceCertNode);
+		  if (!m_priceCert.getSubjectKeyIdentifier().equals(getId()))
+		  {
+			  String message = "SKI in price certificate differs from Mix ID! SKI:"
+				  + m_priceCert.getSubjectKeyIdentifier() + " MixID: " + getId();
+			  LogHolder.log(LogLevel.ERR, LogType.PAY, message);
+		  }
+	  }
+
+	  if (!a_bFromCascade) //info from cascade does not contain these infos, so no use parsing them
 	  {
 		  /* Parse the MixType */
 		  Node typeNode =  XMLUtil.getFirstChildByName(a_mixNode, "MixType");
@@ -280,11 +324,15 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 			  throw (new XMLParseException("LastUpdate", m_mixId));
 		  }
 		  m_lastUpdate = XMLUtil.parseValue(lastUpdateNode, 0L);
+
 	  }
 	  else
 	  {
 		  m_lastUpdate = System.currentTimeMillis() - Constants.TIMEOUT_MIX;
 	  }
+	  //no Exception if the node is null, since it's okay not to set it
+	  //we'll just use 10 MB as a safe default
+	  m_prepaidIntervalKbytes = XMLUtil.parseValue(prepaidIntervalNode,10240);
 
 	  m_serial = XMLUtil.parseValue(lastUpdateNode, 0L);
 
@@ -309,6 +357,10 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 	   */
 	  m_freeMix = false;
 	  m_xmlStructure = a_mixNode;
+
+	  //TODO: insert price certificate?
+
+
   }
 
   /**
@@ -408,6 +460,21 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 	  return m_mixCertificate;
   }
 
+  public XMLPriceCertificate getPriceCertificate()
+  {
+      return m_priceCert;
+  }
+
+  public long getPrepaidInterval()
+  {
+	  return m_prepaidIntervalKbytes;
+  }
+
+  public void setPriceCertificate(XMLPriceCertificate newPriceCert)
+  {
+	  m_priceCert = newPriceCert;
+  }
+
   /**
    * Returns the CertPath of the mix
    * For MixInfo-Objects in the InfoService the CertPath is null
@@ -504,7 +571,7 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
   {
       return m_type;
   }
-  
+
   /**
    * LERNGRUPPE
    * Returns the type of this mix
@@ -531,13 +598,13 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
   {
     return m_dynamic;
   }
-  
-  
+
+
  /**
   * LERNGRUPPE
   * Extracts the host name from  first listenerinterface.
   * @return host
-  * @throws Exception 
+  * @throws Exception
   */
   public String getFirstHostName() throws Exception {
 
@@ -564,12 +631,12 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
       }
       return result;
   }
-  
+
   /**
    * LERNGRUPPE
    * Extracts the port from  first listenerinterface.
    * @return host
-   * @throws Exception 
+   * @throws Exception
    */
    public int getFirstPort() throws Exception {
 

@@ -1024,7 +1024,13 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 
 	public PaymentInstanceDBEntry getPaymentInstance(String a_piID) throws Exception
 	{
-		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/paymentinstance/" + a_piID));
+		HttpRequestStructure structure = HttpRequestStructure.createGetRequest("/paymentinstance/" + a_piID);
+		//System.out.println(structure.getRequestFileName());
+
+		//System.out.println(((ListenerInterface)getListenerInterfaces().elementAt(0)).toString());
+		Document doc = getXmlDocument(structure);
+
+		//System.out.println(XMLUtil.toString(doc));
 		Element paymentInstance = (Element) XMLUtil.getFirstChildByName(doc, "PaymentInstance");
 		return new PaymentInstanceDBEntry(paymentInstance);
 	}
@@ -1040,7 +1046,6 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 	{
 		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest(a_getter.m_postFile),
 									  HTTPConnectionFactory.HTTP_ENCODING_ZLIB);
-
 
 		if (!SignatureVerifier.getInstance().verifyXml(doc, SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE))
 		{

@@ -52,6 +52,10 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import java.io.DataOutputStream;
+import gui.dialog.JAPDialog;
+import javax.swing.JPanel;
+import java.io.PrintWriter;
+import java.io.FileOutputStream;
 
 /**
  * This class stores and creates signatures of XML nodes. The signing and verification processes
@@ -104,7 +108,7 @@ public final class XMLSignature implements IXMLEncodable
 	 * the values have to be at the same index of the Vectors
 	 */
 	private Vector m_appendedCerts;
-	/** Stores the XML represenation of the appended certificates */
+	/** Stores the XML representation of the appended certificates */
 	private Vector m_appendedCertXMLElements;
 	/** Stores the certification Path of this XMLSignature */
 	private CertPath m_certPath;
@@ -222,6 +226,63 @@ public final class XMLSignature implements IXMLEncodable
 	{
 		return signInternal(a_node, a_privateKey);
 	}
+
+	/**
+	 * getHashValueOfElement: takes an XML node and returns its hash value
+	 *
+	 * @param nodeToHash Node
+	 * @return String the SHA1 hash value of the node (might be null if an exception occured)
+	 */
+	public static String getHashValueOfElement(Node nodeToHash)
+	{
+		byte[] digestValue = null;
+		try
+		{
+			digestValue = MessageDigest.getInstance("SHA-1").digest(toCanonical(nodeToHash));
+		}
+		catch (Exception ex)
+		{
+			  LogHolder.log(LogLevel.WARNING, LogType.PAY, "could not create hash value of node");
+			  return null;
+		}
+		return Base64.encode(digestValue, 0, digestValue.length);
+	}
+	/**
+	 * Same method as getHashValueOfElement,
+	 * except the String returned is already Base64-encoded
+	 *
+	 * necessary to avoid discrepancies between the results of getHashValueOfElement
+	 * between the BI(Java) and PIG (Ruby/Java-bridge)
+	 *
+	 * @param nodeToHash Node
+	 * @return String
+	 */
+	public static String getEncodedHashValue(Element nodeToHash)
+	{
+		byte[] digestValue = null;
+		try
+		{
+			PrintWriter fileout = new PrintWriter(new FileOutputStream("/home/elmar/railswork/bigui/javalog.txt"),true);
+			fileout.println("THE NODE TO HASH: " + XMLUtil.toString(nodeToHash));
+
+			fileout.println("\nClass of nodToHash:"+nodeToHash.getClass().getName());
+
+			byte[] canonicalBytes = toCanonical(nodeToHash);
+			String canonicalString = new String(canonicalBytes);
+			fileout.println("\n\nafter canonicalisation:"+canonicalString);
+
+			//digestValue = MessageDigest.getInstance("SHA-1").digest(toCanonical(nodeToHash));
+			digestValue = MessageDigest.getInstance("SHA-1").digest(canonicalBytes);
+
+		}
+		catch (Exception ex)
+		{
+			  LogHolder.log(LogLevel.WARNING, LogType.PAY, "could not create hash value of node");
+			  return null;
+		}
+		return new String(Base64.encode(digestValue, false));
+	}
+
 
 	/**
 	 * Signs an XML node and creates a new XMLSignature from the signature. The signature is added
@@ -1239,7 +1300,7 @@ public final class XMLSignature implements IXMLEncodable
 	 * @return the node as a byte array (incl. the whole tree).
 	 * @exception XMLParseException if the node could not be properly transformed into bytes
 	 */
-	private static byte[] toCanonical(Node inputNode) throws XMLParseException
+	public static byte[] toCanonical(Node inputNode) throws XMLParseException
 	{
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		if (makeCanonical(inputNode, out, false, null) == -1)
@@ -1256,6 +1317,26 @@ public final class XMLSignature implements IXMLEncodable
 		}
 		return out.toByteArray();
 
+	}
+	/**
+	 * same as toCanonical(Node):byte[], except returning a String
+	 * only necessary for use in Ruby (since handling a Java byte array in Ruby wouldnt work)
+	 *
+	 * @param inputNode Node
+	 * @return String
+	 * @throws XMLParseException
+	 */
+	public static String toCanonicalString(Element input)
+	{
+		try
+		{
+			byte[] canonicalBytes = toCanonical(input);
+			return new String(canonicalBytes);
+		} catch (Exception e)
+		{
+			//nothing to be done from ruby
+			return ("canonicalization error");
+		}
 	}
 
 	/**

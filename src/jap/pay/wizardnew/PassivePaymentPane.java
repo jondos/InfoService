@@ -51,12 +51,12 @@ import gui.dialog.DialogContentPane;
 import gui.dialog.DialogContentPane.IWizardSuitable;
 import gui.dialog.JAPDialog;
 import gui.dialog.WorkerContentPane;
-import jap.JAPController;
 import logging.LogType;
 import gui.JAPJIntField;
 import java.util.Date;
 import gui.GUIUtils;
 import anon.util.Base64;
+import jap.JAPController;
 
 public class PassivePaymentPane extends DialogContentPane implements IWizardSuitable
 {
@@ -95,7 +95,7 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 
 	public PassivePaymentPane(final JAPDialog a_parentDialog, DialogContentPane a_previousContentPane)
 	{
-		super(a_parentDialog, "Dummy Text",
+		super(a_parentDialog, "Dummy Text<br>Dummy Text<br>DummyText",
 			  new Layout(JAPMessages.getString(MSG_ENTER), MESSAGE_TYPE_PLAIN),
 			  new Options(OPTION_TYPE_OK_CANCEL, a_previousContentPane));
 		setDefaultButtonOperation(ON_CLICK_DISPOSE_DIALOG | ON_YESOK_SHOW_NEXT_CONTENT |
@@ -212,13 +212,15 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		XMLTransCert transCert = (XMLTransCert) ( (WorkerContentPane) getPreviousContentPane().
 												 getPreviousContentPane()).
 			getValue();
-		String amount = ( (MethodSelectionPane) getPreviousContentPane().getPreviousContentPane().
-						 getPreviousContentPane()).getAmount();
-		String currency = ( (MethodSelectionPane) getPreviousContentPane().getPreviousContentPane().
-						   getPreviousContentPane()).getSelectedCurrency();
+		String amount = ( (VolumePlanSelectionPane) getPreviousContentPane().getPreviousContentPane().
+						 getPreviousContentPane().getPreviousContentPane().getPreviousContentPane()).getAmount();
+		String currency = ( (VolumePlanSelectionPane) getPreviousContentPane().getPreviousContentPane().
+						   getPreviousContentPane().getPreviousContentPane().getPreviousContentPane()).getCurrency();
 		XMLPassivePayment pp = new XMLPassivePayment();
 		pp.setTransferNumber(transCert.getTransferNumber());
-		pp.setAmount(Util.parseFloat(amount));
+
+		pp.setAmount(Util.parseFloat(amount)/100); //because pp expects whole euros as double, but we deal with eurocents
+
 		pp.setCurrency(currency);
 		pp.setPaymentName(m_selectedOption.getName());
 
@@ -239,10 +241,10 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		XMLTransCert transCert = (XMLTransCert) ( (WorkerContentPane) getPreviousContentPane().
 												 getPreviousContentPane()).
 			getValue();
-		String amount = ( (MethodSelectionPane) getPreviousContentPane().getPreviousContentPane().
-						 getPreviousContentPane()).getAmount();
-		String currency = ( (MethodSelectionPane) getPreviousContentPane().getPreviousContentPane().
-						   getPreviousContentPane()).getSelectedCurrency();
+		String amount = ( (VolumePlanSelectionPane) getPreviousContentPane().getPreviousContentPane().
+						 getPreviousContentPane().getPreviousContentPane().getPreviousContentPane()).getAmount();
+		String currency = ( (VolumePlanSelectionPane) getPreviousContentPane().getPreviousContentPane().
+						   getPreviousContentPane().getPreviousContentPane().getPreviousContentPane()).getCurrency();
 		XMLPassivePayment pp = new XMLPassivePayment();
 		pp.setTransferNumber(transCert.getTransferNumber());
 		pp.setAmount(Util.parseFloat(amount));
@@ -252,9 +254,13 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		while (fields.hasMoreElements())
 		{
 			Component comp = (Component) fields.nextElement();
+			JTextField curField;
 			if (comp instanceof JTextField)
 			{
-				pp.addData( ( (JTextField) comp).getName(), ( (JTextField) comp).getText());
+				curField = (JTextField) comp;
+				String name = curField.getName();
+				String text = curField.getText();
+				pp.addData( curField.getName(), curField.getText());
 			}
 			else if (comp instanceof JComboBox)
 			{

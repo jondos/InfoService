@@ -27,9 +27,11 @@
  */
 package jpi.db;
 
-import anon.pay.xml.XMLEasyCC;
-import anon.pay.xml.XMLPassivePayment;
-import java.util.Vector;
+import java.sql.*;
+import java.util.*;
+
+import anon.crypto.*;
+import anon.pay.xml.*;
 
 /**
  * The interface to the database. Implementation for Postgresql see
@@ -67,12 +69,32 @@ public abstract class DBInterface
 
 	/**
 	 * Returns the account balance
+	 * Elmar: use of Balance is deprecated and outdated (Balance does not contain the new account balance format)
+	 * Used getXmlBalance instead (the same as Balance in IXMLEncodable format, without CCs)
+	 * and getCostConfirmations() to get the CCs for an account
 	 *
 	 * @param accountnumber Kontonummer
 	 * @return Kontostand
 	 * @throws Exception
 	 */
 	public abstract Balance getBalance(long accountnumber) throws Exception;
+
+	/**
+	 * returns all balance data (new format including flatrate support) for an account
+	 * replaces getBalance()
+	 *
+	 * @param accountnumber long
+	 * @return XMLBalance
+	 */
+	public abstract XMLBalance getXmlBalance(long accountnumber);
+
+	/**
+	 * getCostConfirmations
+	 *
+	 * @param accountnumber long
+	 * @return Vector
+	 */
+	public abstract Vector getCostConfirmations(long accountnumber);
 
 	/**
 	 * F\uFFFDgt ein neues Konto in die Datenbank ein.
@@ -112,7 +134,7 @@ public abstract class DBInterface
 	 * @param transfer_num transfer number
 	 * @param account_num account number
 	 * @param maxbalance maxbalance at the time of transfernumber generation, stored with
-	 * the transfer number to prevent replay attacks
+	 * the transfer number to prevent replay attacks, stored in database in table transfers, column deposit
 	 * @param validTime valid time
 	 * @throws Exception
 	 */
@@ -136,12 +158,29 @@ public abstract class DBInterface
 	 */
 	public abstract String getXmlPublicKey(long accountnumber) throws Exception;
 
-	/** @todo document */
+
 	public abstract void insertCC(XMLEasyCC cc) throws Exception;
 
 	public abstract void updateCC(XMLEasyCC cc) throws Exception;
 
-	public abstract XMLEasyCC getCC(long accountNumber, String aiName) throws Exception;
+	public abstract void writeMixStats(Enumeration affectedMixes, long traffic);
+
+	public abstract void writeMixTraffic(Enumeration affectedMixes, long traffic);
+
+	/**
+	 * writeJapTraffic
+	 *
+	 * @param newTraffic long
+	 * @param firstMix String: aiId = subjectkeyidentifier of first mix
+	 * @param accountNumber long
+	 */
+	public abstract void writeJapTraffic(long newTraffic, String firstMix, long accountNumber);
+
+	public abstract boolean debitAccount(long accountnumber, Hashtable priceCertElements, long traffic);
+
+	public abstract boolean creditMixes(Hashtable priceCertElements, long traffic) throws SQLException;
+
+	public abstract XMLEasyCC getCC(long accountnumber, String aiName) throws Exception;
 
 	/*
 	 * Liefert den Kontoschnappschuss bei Abrechnung der Kosten durch eine AI.
@@ -428,8 +467,68 @@ public abstract class DBInterface
 
 	public abstract Vector getPendingPassivePayments();
 
-	public abstract String getPassivePaymentData(long a_id);
+	public abstract XMLPassivePayment getPassivePaymentData(String transfernumber);
 
 	public abstract void markPassivePaymentDone(long a_id);
+
+	public abstract XMLErrorMessage buyFlatrate(long a_accountnumber);
+
+	public abstract Hashtable getFlatrateConfig();
+
+	public abstract XMLPaymentOptions getPaymentOptionsFromDb();
+
+	public abstract XMLPaymentSettings getPaymentSettings();
+
+	//used by PICommandMC
+
+	public abstract void storePriceCert(XMLPriceCertificate a_priceCertificate) throws Exception;
+
+	public abstract void deletePriceCert(XMLPriceCertificate a_priceCertificate) throws Exception;
+
+	public abstract Vector getPriceCerts(String operatorCert);
+
+	public abstract int getOperatorBalance(String operatorCert);
+
+	public abstract String getOperatorInfo(String operatorCert);
+
+	public abstract java.sql.Timestamp getLastBalanceUpdate(String operatorCert);
+
+	public abstract String[] getBankAccount(String operatorCert);
+
+	public abstract void storeBankAccount(XMLBankAccount theAccount);
+
+	public abstract void handleTransferRequest(XMLTransferRequest theRequest);
+
+	//utility functions dealing with price certs
+
+	public abstract XMLPriceCertificate getPriceCertForHash(String hashValue);
+
+	public abstract Vector getPriceCertsForMix(String subjectKeyIdentifier);
+
+	public abstract JAPCertificate getOperatorOfMix(String subjectKeyIdentifier);
+
+	//methods for handling paysafecard payments
+
+	public abstract void storePaysafecardPayment(XMLPassivePayment a_passivePayment) throws Exception;
+
+	public abstract void purgePaysafecardPayments();
+
+	public abstract Vector getUsablePaysafecardPayments();
+
+	public abstract void setPaysafecardPaymentUsed(XMLPassivePayment pp);
+
+	//methods for handling coupons
+
+	public abstract void redeemCoupon(String couponCode, long transferNumber) throws Exception;
+
+	public abstract boolean checkValidity(String couponCode) throws Exception;
+
+	//methods for getting volume plans
+
+	public abstract XMLVolumePlans getVolumePlans();
+
+	public abstract XMLVolumePlan getVolumePlan(String name);
+
+	public abstract XMLErrorMessage buyVolumePlan(long accountNumber, XMLVolumePlan aPlan);
 
 }

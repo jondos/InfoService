@@ -65,6 +65,7 @@ import gui.SimpleFileFilter;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.util.Calendar;
 
 /**
  * This class contains static utility functions for Jap
@@ -105,9 +106,14 @@ public final class JAPUtil
 	}
 
 	/** Returns the desired unit for this amount of Bytes (Bytes, kBytes, MBytes,GBytes)*/
+	public static String formatBytesValueWithUnit(long c)
+	{
+		return formatBytesValueWithoutUnit(c) + " " + formatBytesValueOnlyUnit(c);
+	}
+
 	public static String formatBytesValueOnlyUnit(long c)
 	{
-		if (c < 10000)
+		if (c < 1000)
 		{
 			return JAPMessages.getString("Byte");
 		}
@@ -122,12 +128,14 @@ public final class JAPUtil
 		return JAPMessages.getString("GByte");
 	}
 
+
+
 	/** Returns a formated number which respects different units (Bytes, kBytes, MBytes, GBytes)*/
 	public static String formatBytesValueWithoutUnit(long c)
 	{
 		DecimalFormat df = (DecimalFormat) DecimalFormat.getInstance(JAPController.getLocale());
 		double d = c;
-		if (c < 10000)
+		if (c < 1000)
 		{
 			df.applyPattern("#,####");
 		}
@@ -158,7 +166,36 @@ public final class JAPUtil
 	 */
 	public static String formatBytesValue(long bytes)
 	{
-		return formatBytesValueWithoutUnit(bytes) + " " + formatBytesValueOnlyUnit(bytes);
+		return formatBytesValueWithUnit(bytes);
+	}
+
+	/**
+	 * deprecated, since balances are not stored as
+	 * @param centvalue long
+	 * @return String
+	 */
+	public static String formatEuroCentValue(long centvalue)
+	{
+		long whole = centvalue / 100;
+		long part = centvalue - (whole *100);
+		String wholeString = (new Long(whole)).toString();
+		String partString = (new Long(part)).toString();
+		String partFiller = part<10?"0":"";
+		String language = JAPMessages.getLocale().getLanguage();
+		return wholeString+getCurrencyDelimiter(language)+partFiller+partString+" Euro";
+	}
+
+
+
+	public static String getCurrencyDelimiter(String language)
+	{
+		if (language.equalsIgnoreCase("en"))
+		{
+			return new String(".");
+		} else
+		{
+			return new String(",");
+		}
 	}
 
 	public static int applyJarDiff(File fileOldJAR, File fileNewJAR,
@@ -425,6 +462,14 @@ public final class JAPUtil
 		return formatTimestamp(date, withTime, null);
 	}
 
+	/**
+	 * formatTimestamp
+	 *
+	 * @param date Timestamp
+	 * @param withTime boolean
+	 * @param a_language String: 2-letter code
+	 * @return String
+	 */
 	public static String formatTimestamp(Timestamp date, boolean withTime, String a_language)
 	{
 		SimpleDateFormat sdf;
@@ -453,4 +498,32 @@ public final class JAPUtil
 		return sdf.format(date);
 		}
 	}
+
+	/**
+	 * get the Enddate for a given duration
+	 *
+	 * @param duration int: e.g. 2
+	 * @param durationUnit String: e.g. "months"
+	 * @return Timestamp: now + (duration * unit)
+	 */
+	public static Timestamp getEnddate(int duration, String durationUnit)
+	{
+		Calendar now = Calendar.getInstance();
+		if (durationUnit.equals("days") || durationUnit.equals("day") )
+		{
+			now.add(Calendar.DATE,duration);
+		} else if (durationUnit.equalsIgnoreCase("weeks") || durationUnit.equalsIgnoreCase("week")  )
+		{
+			now.add(Calendar.WEEK_OF_YEAR,duration);
+		} else if (durationUnit.equalsIgnoreCase("months") || durationUnit.equalsIgnoreCase("month")  )
+		{
+			now.add(Calendar.MONTH,duration);
+		}
+		else if (durationUnit.equalsIgnoreCase("years") || durationUnit.equalsIgnoreCase("year") )
+		{
+			now.add(Calendar.YEAR,duration);
+		}
+		return new Timestamp(now.getTime().getTime());
+	}
+
 }

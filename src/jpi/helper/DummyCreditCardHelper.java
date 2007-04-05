@@ -79,15 +79,12 @@ public class DummyCreditCardHelper implements ICreditCardHelper
 					String[] payment = (String[]) payments.elementAt(i);
 				if (payment[1].toLowerCase().indexOf(CREDITCARD) != -1)
 					{
-						double ratePerMB = Configuration.getRatePerMB();
-						long cents = Long.parseLong(payment[3]) * 100;
-					double mb = cents / ratePerMB;
-						double amount = 1000 * 1000 * mb;
+						long cents = Long.parseLong(payment[3])*100;
 						LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 									  "Charging account with transfernumber: " + payment[2]
-								  + " Amount: " + (long) amount);
+								  + " Amount: " + cents);
 
-					db.chargeAccount(Long.parseLong(payment[2]), (long) amount);
+					db.chargeAccount(Long.parseLong(payment[2]), cents);
 						db.markPassivePaymentDone(Long.parseLong(payment[0]));
 					}
 				}

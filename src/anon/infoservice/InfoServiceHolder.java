@@ -55,7 +55,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	/**
 	 * Stores the name of the root node of the XML settings for this class.
 	 */
-	public static final String XML_ELEMENT_NAME = "InfoServiceManagement";
+	public static final String XML_ELEMENT_NAME = "InfoserviceManagement";
 	public static final String XML_ELEM_CHANGE_INFO_SERVICES = "ChangeInfoService";
 	public static final int MAXIMUM_OF_ASKED_INFO_SERVICES = 10;
 	public static final int DEFAULT_OF_ASKED_INFO_SERVICES = 4;
@@ -125,6 +125,10 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	private static final int GET_LATEST_JAVA_SERIALS = 17;
 	private static final int GET_MESSAGE_SERIALS = 18;
 
+	/**
+	 * This defines, whether there is an automatic change of infoservice after failure as default.
+	 */
+	public static final boolean DEFAULT_INFOSERVICE_CHANGES = true;
 
 	private static final String XML_ATTR_ASKED_INFO_SERVICES = "askedInfoservices";
 
@@ -153,7 +157,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	private InfoServiceHolder()
 	{
 		m_preferredInfoService = null;
-		m_changeInfoServices = true;
+		m_changeInfoServices = DEFAULT_INFOSERVICE_CHANGES;
 	}
 
 	/**

@@ -84,6 +84,7 @@ import gui.dialog.WorkerContentPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.util.Enumeration;
 import java.awt.EventQueue;
 import java.awt.MenuComponent;
 import java.applet.Applet;
@@ -1937,6 +1938,47 @@ public final class GUIUtils
 		}
 	}
 
+	/**
+	 * getMaxSize: takes a Vector of JComponents and returns a Dimension with width and height
+	 * equivalent to the maximum width and height among the Components of the Vector
+	 *
+	 * @param aComponents Vector
+	 * @return Dimension
+	 */
+	public static Dimension getMaxSize(Vector aComponents) {
+		Dimension targetSize = new Dimension(0,0);
+		int targetWidth = 0;
+		int targetHeight = 0;
+		//find max width and height
+		for (Enumeration widgets = aComponents.elements(); widgets.hasMoreElements(); )
+		{
+		  JComponent curWidget = (JComponent) widgets.nextElement();
+		  targetWidth = Math.max(targetSize.width, curWidget.getPreferredSize().width);
+		  targetHeight = Math.max(targetSize.height, curWidget.getPreferredSize().height);
+		  targetSize.setSize(targetWidth, targetHeight);
+		}
+		targetSize.setSize(targetWidth,targetHeight);
+		return targetSize;
+  }
+
+	/**
+	 * setSizes: takes a Vector of JCoponents and sets them all to the Dimension passed as parameter
+	 * (sets preferredSize as well as maximumSize)
+	 *
+	 * @param aComponents Vector
+	 * @param aDimension Dimension
+	 */
+	public static void setSizes(Vector aComponents, Dimension aDimension){
+	  JComponent curComp;
+	  for (Enumeration components = aComponents.elements(); components.hasMoreElements(); )
+	  {
+		  curComp = (JComponent) components.nextElement();
+		  curComp.setPreferredSize( new Dimension(aDimension.width, aDimension.height));
+		  curComp.setMaximumSize(new Dimension(aDimension.width, aDimension.height));
+	  }
+  }
+
+
 	/** * Diese Klasse dient dazu aus einem vorhandenen Icon ein neues Icon
 	 * herzustellen. Dazu werden neben dem vorhanden Icon die Skalierungsfaktoren angegeben.
 	 */
@@ -2021,5 +2063,7 @@ public final class GUIUtils
 				//g2.scale(m_scaleWidth, m_scaleHeight);
 			}
 		}
+
+
 	}
 }
