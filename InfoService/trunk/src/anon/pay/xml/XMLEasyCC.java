@@ -27,8 +27,6 @@
  */
 package anon.pay.xml;
 
-import java.io.ByteArrayInputStream;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -38,31 +36,26 @@ import anon.util.IXMLEncodable;
 import anon.crypto.IMyPrivateKey;
 import anon.crypto.XMLSignature;
 import anon.crypto.IMyPublicKey;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import org.w3c.dom.NodeList;
 
 /**
  * XML structure for a easy cost confirmation (without mircopayment function) which is sent to the AI by the Jap
- * <CC version "1.1">
- *   <AiID> ... </AiID>
- *   <PiID>....</PiID> <!-- since version 1.1 --->
- * 	 <AccountNumber> ... </AccountNumber>
- * 	 <TransferredBytes>... </TransferredBytes>
- * 	 <Signature>
- *    ... Signature des Kontoinhabers
- *  </Signature>
- * </CC>
- * @author Grischan Gl&auml;nzel, Bastian Voigt, Tobias Bayer
+ *
+ * @author Grischan Gl&auml;nzel, Bastian Voigt, Tobias Bayer, Elmar Schraml
  */
 public class XMLEasyCC implements IXMLEncodable
 {
 	//~ Instance fields ********************************************************
 
-	private String m_strAiName;
 	private long m_lTransferredBytes;
 	private long m_lAccountNumber;
+	private int m_id = 0; //to be used as primary key in the BI database, 0 if not yet stored in db
 	private static final String ms_strElemName = "CC";
+	private Hashtable m_priceCerts = new Hashtable(); //key: Subjectkeyidentifier of Mix (String, id attribute of pricecerthash element)
+									//value: value of PriceCerthash element (String)
+	private String m_cascadeID; //stored as its own variable, since Hashtable doesnt guarantee order (so we don't know which mix is the first one)
 	private Document m_docTheEasyCC;
 
 	/** The Payment Instance ID */
@@ -74,12 +67,25 @@ public class XMLEasyCC implements IXMLEncodable
 		return ms_strElemName;
 	}
 
-	public XMLEasyCC(String aiName, long accountNumber, long transferred, PKCS12 a_certificate) throws
+
+	/**
+	 * XMLEasyCC
+	 *  construct a CC including a Vector of price certificates (one per mix of the cascade)
+	 *  id is added when the CC is stored in the BI's database, so it's not passed as an argument here
+	 * @param accountNumber long
+	 * @param transferred long
+	 * @param a_certificate PKCS12
+	 * @param a_priceCerts Vector
+	 * @throws Exception
+	 */
+	public XMLEasyCC(long accountNumber, long transferred, PKCS12 a_certificate, Hashtable a_priceCerts, String a_AiName) throws
 		Exception
 	{
-		m_strAiName = aiName;
+		m_priceCerts = a_priceCerts;
 		m_lTransferredBytes = transferred;
 		m_lAccountNumber = accountNumber;
+		m_priceCerts = a_priceCerts;
+		m_cascadeID = a_AiName;
 		m_docTheEasyCC = XMLUtil.createDocument();
 		m_docTheEasyCC.appendChild(internal_toXmlElement(m_docTheEasyCC));
 
@@ -88,6 +94,7 @@ public class XMLEasyCC implements IXMLEncodable
 			XMLSignature.sign(m_docTheEasyCC, a_certificate);
 		}
 	}
+
 
 	public XMLEasyCC(byte[] data) throws Exception
 	{
@@ -118,43 +125,50 @@ public class XMLEasyCC implements IXMLEncodable
 		}
 		String strVersion=XMLUtil.parseAttribute(element,"version",null);
 		if (strVersion==null ||
-			!(strVersion.equals("1.1")||strVersion.equals("1.0")))
+			!(strVersion.equals("1.2")||strVersion.equals("1.1")))
 		{
 			throw new Exception("XMLEasyCC wrong version");
 		}
-
-		Element elem = (Element) XMLUtil.getFirstChildByName(element, "AiID");
-		if (elem == null)
-		{
-			throw new Exception("No AiID field present in cost confirmation");
-		}
-		else
-		{
-			m_strAiName = XMLUtil.parseValue(elem,null);
-			if (m_strAiName==null)
-			{
-				throw new Exception("AiID field empty in cost confirmation");
-			}
-		}
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-					  "AiID is " + m_strAiName);
-
+		Element elem;
 		elem = (Element) XMLUtil.getFirstChildByName(element, "AccountNumber");
 		m_lAccountNumber = XMLUtil.parseValue(elem, 0l);
 		elem = (Element) XMLUtil.getFirstChildByName(element, "TransferredBytes");
 		m_lTransferredBytes = XMLUtil.parseValue(elem, 0l);
 		elem = (Element) XMLUtil.getFirstChildByName(element, "PIID");
 		m_strPIID = XMLUtil.parseValue(elem, null);
+		elem = (Element) XMLUtil.getFirstChildByName(element, "Cascade");
+		m_cascadeID = XMLUtil.parseValue(elem, null);
+		Element elemPriceCerts;
+		elemPriceCerts	= (Element) XMLUtil.getFirstChildByName(element, "PriceCertificates");
+		Element elemHash; // = (Element) elemPriceCerts.getFirstChild();
+		String curHash;
+		String curId;
+		if (elemPriceCerts != null)
+		{
+			NodeList allHashes = elemPriceCerts.getElementsByTagName("PriceCertHash");
+			for (int i = 0; i < allHashes.getLength(); i++)
+			{
+				elemHash = (Element) allHashes.item(i);
+				curHash = XMLUtil.parseValue(elemHash, "abc");
+				curId = XMLUtil.parseAttribute(elemHash, "id", "abc");
+				if (curId.equals("abc"))
+				{
+					throw new Exception("wrong or missing id of price certificate");
+				}
+				else
+				{
+					m_priceCerts.put(curId, curHash.trim()); /** @todo trim is important to delete new lines */
+				}
+			}
+		}
 
 	}
 
 	private Element internal_toXmlElement(Document a_doc)
 	{
 		Element elemRoot = a_doc.createElement(ms_strElemName);
-		elemRoot.setAttribute("version", "1.1");
-		Element elem = a_doc.createElement("AiID");
-		XMLUtil.setValue(elem, m_strAiName);
-		elemRoot.appendChild(elem);
+		elemRoot.setAttribute("version", "1.2");
+		Element elem;
 
 		elem = a_doc.createElement("TransferredBytes");
 		XMLUtil.setValue(elem, Long.toString(m_lTransferredBytes));
@@ -171,15 +185,33 @@ public class XMLEasyCC implements IXMLEncodable
 		}
 		elemRoot.appendChild(elem);
 
+		elem = a_doc.createElement("Cascade");
+		if (m_cascadeID != null)
+		{
+			XMLUtil.setValue(elem, m_cascadeID);
+		}
+		elemRoot.appendChild(elem);
+
+		Element elemPriceCerts = a_doc.createElement("PriceCertificates");
+		elemRoot.appendChild(elemPriceCerts);
+		Enumeration certs = m_priceCerts.keys();
+		String curHash;
+		String curId;
+		Element curElem;
+		while(certs.hasMoreElements() )
+		{
+			curId = (String) certs.nextElement();
+			curHash = (String) m_priceCerts.get(curId);
+			curElem = a_doc.createElement("PriceCertHash");
+			XMLUtil.setValue(curElem,curHash);
+			XMLUtil.setAttribute(curElem,"id",curId);
+			elemPriceCerts.appendChild(curElem);
+		}
+
 		return elemRoot;
 	}
 
 //~ Methods ****************************************************************
-
-	public String getAIName()
-	{
-		return m_strAiName;
-	}
 
 	public String getPIID()
 	{
@@ -198,6 +230,30 @@ public class XMLEasyCC implements IXMLEncodable
 		m_docTheEasyCC.appendChild(internal_toXmlElement(m_docTheEasyCC));
 	}
 
+	/**
+	 * getId
+	 * Warning: field is not set as long as the CC has not been inserted in the payment instance's database
+	 * you only need it as db primary key, so there should be no need to call getId before the CC has been stored in the database
+	 *
+	 * @return int
+	 */
+	public int getId()
+	{
+		return m_id;
+	}
+
+	public void setId(int a_id)
+	{
+		m_id = a_id;
+	}
+
+	public void setCascadeID(String a_id)
+	{
+		m_cascadeID = a_id;
+		m_docTheEasyCC = XMLUtil.createDocument();
+		m_docTheEasyCC.appendChild(internal_toXmlElement(m_docTheEasyCC));
+	}
+
 	public long getAccountNumber()
 	{
 		return m_lAccountNumber;
@@ -207,6 +263,49 @@ public class XMLEasyCC implements IXMLEncodable
 	{
 		return m_lTransferredBytes;
 	}
+
+	public Enumeration getMixIds()
+	{
+		return m_priceCerts.keys();
+	}
+
+	/**
+	 * getAIName: returns the subjectkeyidentifier of the first Mix in the Cascade
+	 *
+	 * @return String
+	 */
+	public String getCascadeID() {
+		return m_cascadeID;
+	}
+
+	/**
+	 * getPriceCertElements
+	 *
+	 * @return Hashtable ( key: subjectkeyidentifier of mix (in xml: id attribute)
+	 *                     value: hash of price certificate )
+	 */
+	public Hashtable getPriceCertHashes()
+	{
+		return (Hashtable)m_priceCerts.clone();
+	}
+
+	public int getNrOfPriceCerts()
+	{
+		return m_priceCerts.size();
+	}
+
+	/**
+	 * setPriceCerts: inserts the hash values of known PriceCertificates
+	 *
+	 * @param a_priceCertHashes Vector
+	 */
+	public void setPriceCerts(Hashtable a_priceCertHashes)
+	{
+		m_priceCerts = a_priceCertHashes;
+		m_docTheEasyCC = XMLUtil.createDocument();
+		m_docTheEasyCC.appendChild(internal_toXmlElement(m_docTheEasyCC));
+	}
+
 
 	/** this makes the signature invalid! */
 	public synchronized void addTransferredBytes(long plusBytes)

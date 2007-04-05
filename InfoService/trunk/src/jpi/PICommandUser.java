@@ -67,6 +67,11 @@ import java.util.Vector;
 import jpi.helper.DummyCreditCardHelper;
 import org.w3c.dom.Document;
 import anon.util.XMLParseException;
+import anon.util.Base64;
+import jpi.helper.PaysafecardHandler;
+import anon.pay.xml.XMLVolumePlans;
+import anon.pay.xml.XMLVolumePlanPurchase;
+import anon.pay.xml.XMLVolumePlan;
 
 /**
  * This class contains the functionality for talking to a JAP. For
@@ -158,6 +163,9 @@ public class PICommandUser implements PICommand
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "request data: " + new String(request.data));
 		}
+
+		//getting
+
 		switch (m_iCurrentState)
 		{
 			// Initial state: the ssl connection was just
@@ -311,6 +319,54 @@ public class PICommandUser implements PICommand
 					}
 				}
 
+				else if (request.method.equals("GET") && request.url.equals("/volumeplans"))
+				{
+					try
+					{
+						reply = new PIAnswer(PIAnswer.TYPE_VOLUME_PLANS, getVolumePlans());
+						// go to state init again, user can authenticate again with different account
+						init();
+					}
+					catch (Exception ex)
+					{
+						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, ex);
+						reply = PIAnswer.getErrorAnswer(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR);
+					}
+				}
+
+
+				else if (request.method.equals("GET") && request.url.equals("/paymentsettings"))
+				{
+					try
+					{
+						reply = new PIAnswer(PIAnswer.TYPE_PAYMENT_SETTINGS , getPaymentSettings());
+						// go to state init again, user can authenticate again with different account
+						init();
+					}
+					catch (Exception ex)
+					{
+						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, ex);
+						reply = PIAnswer.getErrorAnswer(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR);
+					}
+				}
+
+
+				else if (request.method.equals("GET") && request.url.equals("/paymentdata"))
+				{
+					try
+					{
+						reply = new PIAnswer(PIAnswer.TYPE_PASSIVE_PAYMENT, getPaymentData(request.data) );
+						// go to state init again, user can authenticate again with different account
+						init();
+					}
+					catch (Exception ex)
+					{
+						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, ex);
+						reply = PIAnswer.getErrorAnswer(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR);
+					}
+				}
+
+
 				else if (request.method.equals("POST") && request.url.equals("/transactionoverview"))
 				{
 					try
@@ -341,6 +397,20 @@ public class PICommandUser implements PICommand
 						reply = PIAnswer.getErrorAnswer(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR);
 					}
 				}
+				else if (request.method.equals("POST") && request.url.equals("/buyflat"))
+				{
+					try
+					{
+						reply = new PIAnswer(PIAnswer.TYPE_FLATRATE, buyFlatrate(request.data));
+						// go to state init again, user can authenticate again with different account
+						init();
+					}
+					catch (Exception ex)
+					{
+						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, ex);
+						reply = PIAnswer.getErrorAnswer(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR);
+					}
+				}
 				break;
 		}
 		if (reply == null)
@@ -361,6 +431,42 @@ public class PICommandUser implements PICommand
 		return paymentOptions;
 	}
 
+	private IXMLEncodable getVolumePlans()
+	{
+		XMLVolumePlans volumePlans = Configuration.getVolumePlans();
+		return volumePlans;
+	}
+
+	private IXMLEncodable getPaymentSettings()
+	{
+		return m_Database.getPaymentSettings();
+	}
+
+	private IXMLEncodable getPaymentData(byte[] data)
+	{
+		XMLPassivePayment paymentdata = null;
+		//transfernumber is a long, but in the sql statement we'll need it as String again, no point in converting back and forth
+		String transfernumber = new String(data);
+		DBInterface db = null;
+				try
+				{
+					db = DBSupplier.getDataBase();
+				}
+				catch (Exception e)
+				{
+					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+								  "Could not connect to Database:" + e.getMessage());
+				}
+				if (db != null)
+				{
+					paymentdata = db.getPassivePaymentData(transfernumber);
+
+				}
+
+
+		return paymentdata;
+	}
+
 	/**
 	 * Stores a PassivePayment object the user has sent to the database
 	 * @param a_data byte[]
@@ -369,6 +475,7 @@ public class PICommandUser implements PICommand
 	private IXMLEncodable storePassivePayment(byte[] a_data)
 	{
 		XMLPassivePayment pp = null;
+		IXMLEncodable result = null;
 		try
 		{
 			pp = new XMLPassivePayment(a_data);
@@ -376,8 +483,41 @@ public class PICommandUser implements PICommand
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Could not parse XMLPassivePayment");
-			return new XMLErrorMessage(XMLErrorMessage.ERR_WRONG_FORMAT);
+			result =  new XMLErrorMessage(XMLErrorMessage.ERR_WRONG_FORMAT);
 		}
+		//if payment is made by paysafecard,call different method to store in different table
+		boolean isPaysafecard = pp.getPaymentName().equalsIgnoreCase("paysafecard");
+		if (isPaysafecard)
+		{
+			return storePaysafecardPayment(pp);
+		}
+
+		//if payment is made by coupon, call specific method to redeem it
+		if (pp.getPaymentName().equalsIgnoreCase("coupon"))
+		{
+			result = handleCoupon(pp);
+		}
+
+		//strings in passivepayment were XML-encoded, decode before handing it to the database
+		String key;
+		String curData;
+		String decodedData;
+		for (Enumeration allData = pp.getPaymentDataKeys(); allData.hasMoreElements(); )
+		{
+			key = (String) allData.nextElement();
+			curData = pp.getPaymentData(key);
+			//the manually added keys dont need to be decoded again //TODO: clean this up
+			if (! (key.equals("accountnumber") || key.equals("volumeplan")) )
+			{
+				decodedData = Base64.decodeToString(curData);
+				//pp's data is a hashtable ->setting data with the same key will overwrite the old data with the new decoded data
+				pp.addData(key, decodedData);
+			} else
+			{
+				pp.addData(key,curData);
+			}
+		}
+
 		/** Store in database*/
 		DBInterface db = null;
 		try
@@ -389,19 +529,97 @@ public class PICommandUser implements PICommand
 		{
 			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
 						  "Could not store passive payment data in database!");
-			return new XMLErrorMessage(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR);
+			result =  new XMLErrorMessage(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR);
 
 		}
 		if (!DummyCreditCardHelper.getInstance().chargePending())
 		{
 			LogHolder.log(LogLevel.ERR, LogType.PAY,
 						  "Could not directly charge pending payments!");
-			return new XMLErrorMessage(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR);
+			result = new  XMLErrorMessage(XMLErrorMessage.ERR_INTERNAL_SERVER_ERROR);
+		}
+
+		if (result != null && ((XMLErrorMessage) result).getErrorCode() != XMLErrorMessage.ERR_OK ) //an error occured upon payment
+		{
+			return result; //finish by sending the corresponding XMLErrorMessage
+		}
+		else //payment was okay
+		{
+			//use it to buy the volume plan
+			String planName = pp.getPaymentData("volumeplan");
+			String accNumAsString = pp.getPaymentData("accountnumber");
+			long accountNumber = Long.parseLong(accNumAsString);
+			XMLVolumePlanPurchase newPlan = new XMLVolumePlanPurchase(accountNumber, planName);
+			return buyVolumePlan(newPlan);
+		}
+
+	}
+
+	/**
+	 * storePaysafecardPayment
+	 * not to be called directly from the request data,
+	 * rather called by storePassivePayment if the XMLPassivepayment sent
+	 * turns out ot contain a payment via Paysafecard
+	 * (because it gets stored in a different database table,
+	 * plus we need to contact the Paysafecard server to create a disposition)
+	 *
+	 * @param pp XMLPassivePayment
+	 * @return IXMLEncodable
+	 */
+	private IXMLEncodable storePaysafecardPayment(XMLPassivePayment pp)
+	{
+		boolean allOk = true;
+		if (! PaysafecardHandler.createDisposition(pp) )
+		{
+			allOk = false;
+		}
+		try
+		{
+			DBInterface db = DBSupplier.getDataBase();
+			db.storePaysafecardPayment(pp);
+		}
+		catch (Exception e)
+		{
+			allOk = false;
+		}
+		if (allOk)
+		{
+			return new XMLErrorMessage(XMLErrorMessage.ERR_OK,"paysafecard payment was stored");
 		}
 		else
 		{
-		return new XMLErrorMessage(XMLErrorMessage.ERR_OK);
+			return new XMLErrorMessage(XMLErrorMessage.ERR_DATABASE_ERROR,"could not store psc payment");
 		}
+	}
+
+	private IXMLEncodable handleCoupon(XMLPassivePayment pp)
+	{
+		//check coupon code for validity
+		String code = pp.getPaymentData("code");
+		boolean isValid;
+		DBInterface db;
+		try
+		{
+			db = DBSupplier.getDataBase();
+			isValid = db.checkValidity(code);
+		} catch (Exception e)
+		{
+			return new XMLErrorMessage(XMLErrorMessage.ERR_DATABASE_ERROR,"Database error, could not check validity");
+		}
+		if ( ! isValid )
+		{
+			return new XMLErrorMessage(XMLErrorMessage.ERR_INVALID_CODE,"Coupon code is not valid");
+		}
+		//credit account
+		try
+		{
+			long tan = pp.getTransferNumber();
+			db.redeemCoupon(code,tan);
+		} catch (Exception e)
+		{
+			return new XMLErrorMessage(XMLErrorMessage.ERR_DATABASE_ERROR,"Redeeming the coupon failed");
+		}
+		return new XMLErrorMessage(XMLErrorMessage.ERR_OK, "Coupon was redeemed");
 	}
 
 	/**
@@ -558,20 +776,66 @@ public class PICommandUser implements PICommand
 	IXMLEncodable getBalance() throws Exception
 	{
 		long accountnumber = m_accountCertificate.getAccountNumber();
-		Balance bal = m_Database.getBalance(accountnumber);
-		XMLBalance xmlbal = new XMLBalance(
-			accountnumber, bal.deposit, bal.spent,
-			bal.timestamp, bal.validTime,
-			Configuration.getPrivateKey()
-			);
-		XMLAccountInfo info = new XMLAccountInfo(xmlbal);
 
-		for (Enumeration e = bal.confirms.elements(); e.hasMoreElements(); )
+		XMLBalance xmlbal = m_Database.getXmlBalance(accountnumber);
+		xmlbal.sign( Configuration.getPrivateKey() );
+		XMLAccountInfo info = new XMLAccountInfo(xmlbal);
+		Vector allCcs = m_Database.getCostConfirmations(accountnumber);
+		for (Enumeration e = allCcs.elements(); e.hasMoreElements(); )
 		{
-			info.addCC(new XMLEasyCC( (String) e.nextElement()));
+			info.addCC( (XMLEasyCC) e.nextElement() );
 		}
 
 		return info;
+	}
+
+	/**
+	 * buyFlatrate: deduct price of a flatrate from account, and set flatrate
+	 * @deprecated : was used for a single flatrate, to buy one of several offered volume plans,
+	 * use buyVolumePlan()
+	 *
+	 * @param data byte[] : the accountnumber
+	 * @return IXMLEncodable: an XMLErrorMessage with codes ERR_OK, ERR_INSUFFICIENT_BALANCE or ERR_NO_FLATRATE_OFFERED
+	 */
+	IXMLEncodable buyFlatrate(byte[] data)
+	{
+		long accountnumber = Long.parseLong(new String(data));
+		return m_Database.buyFlatrate(accountnumber);
+	}
+
+	IXMLEncodable buyVolumePlan(byte[] data)
+	{
+		XMLVolumePlanPurchase purchaseRequest;
+		IXMLEncodable result;
+		try
+		{
+			purchaseRequest = new XMLVolumePlanPurchase(new String(data));
+			result = buyVolumePlan(purchaseRequest);
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.PAY,
+					  "Could not construct a XMLVolumePlanPurchase from the request data sent");
+			result =  new XMLErrorMessage(XMLErrorMessage.ERR_BAD_REQUEST);
+		}
+		return result;
+}
+
+	IXMLEncodable buyVolumePlan(XMLVolumePlanPurchase a_Plan)
+	{
+		String planName = a_Plan.getPlanName();
+		XMLVolumePlan purchasedPlan = m_Database.getVolumePlan(planName);
+		long accountNumber = a_Plan.getAccountNumber();
+		XMLErrorMessage result = m_Database.buyVolumePlan(accountNumber, purchasedPlan);
+		if (result.getErrorCode() != XMLErrorMessage.ERR_OK)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.PAY, "Database reported error when trying to buy volume plan");
+			return new XMLErrorMessage(XMLErrorMessage.ERR_DATABASE_ERROR);
+		}
+		else
+		{
+			return new XMLErrorMessage(XMLErrorMessage.ERR_OK);
+		}
 	}
 
 	/**

@@ -126,11 +126,10 @@ public class JAPConfInfoServiceSavePoint implements IJAPConfSavePoint
 			catch (Exception e)
 			{
 				/* should not happen, if it happens, we can't do anything */
-				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
-							  "JAPConfInfoServiceSavePoint: restoreDefaults: Cannot create the default infoservice.");
+				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Cannot create the default infoservice.");
 			}
 			JAPController.getInstance().setInfoServiceDisabled(JAPConstants.DEFAULT_INFOSERVICE_DISABLED);
-			InfoServiceHolder.getInstance().setChangeInfoServices(JAPConstants.DEFAULT_INFOSERVICE_CHANGES);
+			InfoServiceHolder.getInstance().setChangeInfoServices(InfoServiceHolder.DEFAULT_INFOSERVICE_CHANGES);
 		}
 	}
 

@@ -189,6 +189,16 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 		return getInstance(a_bytes, new SingleStringPasswordReader(a_password));
 	}
 
+	public static PKCS12 getInstance(byte[] a_bytes, String a_password)
+	{
+		return getInstance(a_bytes, new SingleStringPasswordReader(a_password));
+	}
+
+	public static PKCS12 getInstance(String privCertString, String password)
+	{
+		return getInstance(privCertString.getBytes(),password.toCharArray());
+	}
+
 	/**
 	 * Loads a PKCS12 certificate from a byte array. The type of the encryption
 	 * algorithm is recognized dynamically.
@@ -223,6 +233,11 @@ public final class PKCS12 implements PKCSObjectIdentifiers, X509ObjectIdentifier
 	public static PKCS12 getInstance(InputStream a_stream, char[] password)
 	{
 		return getInstance(a_stream, new SingleStringPasswordReader(password));
+	}
+
+	public static PKCS12 getInstance(InputStream a_stream, String password)
+	{
+		return getInstance(a_stream,new SingleStringPasswordReader(password));
 	}
 
 	/**

@@ -487,6 +487,66 @@ public final class JAPCertificate implements IXMLEncodable, Cloneable, ICertific
 	}
 
 	/**
+	 * getAnyEmailAddress: checks all reasonably likely places in the certificate for an email address
+	 *
+	 * @return String: the first email address found, or null if none exists
+	 */
+	public String getAnyEmailAddress()
+	{
+		try
+		{
+			String emailAddress;
+			X509DistinguishedName disName = this.getSubject();
+			//first, try E
+			emailAddress = disName.getE_EmailAddress();
+			if (emailAddress != null)
+			{
+				return emailAddress;
+			}
+			//then, EmailAddress
+			emailAddress = disName.getEmailAddress();
+			if (emailAddress != null)
+			{
+				return emailAddress;
+			}
+			//check SubjectAlternativeName
+			X509Extensions allExtensions = this.getExtensions();
+			Vector allExtensionsVector = allExtensions.getExtensions();
+			AbstractX509Extension curExt;
+			X509SubjectAlternativeName name;
+			for (int idx = 0; idx < allExtensionsVector.size(); idx++)
+			{
+				curExt = (AbstractX509Extension) allExtensionsVector.elementAt(idx);
+				if (curExt instanceof X509SubjectAlternativeName)
+				{
+					name = (X509SubjectAlternativeName) curExt;
+					Vector tags = name.getTags();
+					Integer tag;
+					for (int i = 0; i < tags.size(); i++)
+					{
+
+						tag = (Integer) tags.elementAt(i);
+						if (tag.equals(AbstractX509AlternativeName.TAG_EMAIL))
+						{
+							emailAddress = (String) name.getValues().elementAt(tag.intValue());
+							if (emailAddress != null)
+							{
+								return emailAddress;
+							}
+						}
+					}
+				}
+			}
+		} catch (Exception e)
+		{
+			//lots of class casts etc, better check for exceptions
+			return null; //success is not guaranteed for this function anyway
+		}
+		//give up and return null
+		return null;
+	}
+
+	/**
 	 * Returns a reference to this certificate.
 	 * @return a reference to this certificate
 	 */

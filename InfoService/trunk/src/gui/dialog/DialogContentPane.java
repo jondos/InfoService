@@ -66,6 +66,7 @@ import gui.JAPMessages;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.awt.event.MouseListener;
 
 /**
  * This is a replacement for a dialog content pane. It defines an icon, buttons, a status bar for
@@ -2805,31 +2806,37 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 	private void createDefaultOptions()
 	{
 		m_panelOptions = new JPanel();
+
+		if (m_btnCancel == null)
+		{
+			m_btnCancel = new JButton();
+			m_btnCancel.addActionListener(m_buttonListener);
+		}
+		m_btnCancel.setText(JAPMessages.getString(MSG_CANCEL));
+		// the cancel button is always the first one if present
+		m_panelOptions.add(m_btnCancel);
+		m_btnCancel.setVisible(false);
+
+
 		if (OPTION_TYPE_YES_NO_CANCEL == m_optionType || OPTION_TYPE_OK_CANCEL == m_optionType ||
 			OPTION_TYPE_CANCEL == m_optionType)
 		{
-			if (m_btnCancel == null)
-			{
-				m_btnCancel = new JButton();
-				m_btnCancel.addActionListener(m_buttonListener);
-			}
-			m_btnCancel.setText(JAPMessages.getString(MSG_CANCEL));
-			// the cancel button is always the first one if present
-			m_panelOptions.add(m_btnCancel);
+			m_btnCancel.setVisible(true);
 		}
+
+		// Button No
+		if (m_btnNo == null)
+		{
+			m_btnNo = new JButton();
+			m_btnNo.addActionListener(m_buttonListener);
+		}
+		m_btnNo.setText(JAPMessages.getString(MSG_NO));
+		m_panelOptions.add(m_btnNo);
+		m_btnNo.setVisible(false);
 
 		if (OPTION_TYPE_YES_NO == m_optionType || OPTION_TYPE_YES_NO_CANCEL == m_optionType)
 		{
-			// Button No
-			if (m_btnNo == null)
-			{
-				m_btnNo = new JButton();
-				m_btnNo.addActionListener(m_buttonListener);
-			}
-			m_btnNo.setText(JAPMessages.getString(MSG_NO));
-			m_panelOptions.add(m_btnNo);
-
-
+			m_btnNo.setVisible(true);
 			// Button Yes/OK
 			if (m_btnYesOK == null)
 			{
@@ -2915,6 +2922,19 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			m_btnYesOK.setText(JAPMessages.getString(MSG_FINISH));
 		}
 		m_btnYesOK.invalidate();
+	}
+
+	public void setMouseListener(MouseListener a_listener)
+	{
+		if (m_strText == null)
+		{
+			throw new IllegalStateException("This content pane does not contain a text field!");
+		}
+		else
+		{
+			m_lblText.addMouseListener(a_listener);
+			m_lblSeeFullText.addMouseListener(a_listener);
+		}
 	}
 
 	private void createOptions()

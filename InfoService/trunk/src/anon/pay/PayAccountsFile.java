@@ -85,7 +85,7 @@ import logging.LogType;
  */
 public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 {
-	public static final String XML_ELEMENT_NAME = "PayAccountsFile";
+	public static final String XML_ELEMENT_NAME = "PayAccounts";
 
 	private static final String XML_ATTR_IGNORE_AI_ERRORS = "ignoreAIErrorMessages";
 	private static final String XML_ATTR_ENABLE_BALANCE_AUTO_UPDATE = "autoUpdateBalance";
@@ -771,6 +771,9 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	public BI getBI(String a_piID) throws Exception
 	{
 		BI theBI = null;
+
+
+
 		//First, try to get the BI from the Infoservice
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Trying to get " + a_piID + " from InfoService");
 
@@ -784,6 +787,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		{
 			// ignore
 		}
+
 
 		//If no infoservice could give us information about the PI, get it from the list of known PIs
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY,

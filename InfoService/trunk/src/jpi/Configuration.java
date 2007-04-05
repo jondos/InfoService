@@ -44,6 +44,11 @@ import java.util.Vector;
 import java.util.StringTokenizer;
 import anon.infoservice.ListenerInterface;
 import anon.crypto.X509SubjectKeyIdentifier;
+import anon.pay.xml.XMLPaymentSettings;
+import java.util.Hashtable;
+import anon.pay.xml.XMLVolumePlans;
+import anon.pay.xml.XMLVolumePlan;
+import jpi.db.DBSupplier;
 
 /**
  * Loads and stores all configuration data, keys
@@ -58,6 +63,8 @@ public class Configuration
 	{
 		return m_privateKey;
 	}
+
+	private static Hashtable m_settingsInDb;
 
 	/** private Constructor! */
 	private Configuration()
@@ -161,6 +168,7 @@ public class Configuration
 	}
 
 	/** holds the port where the JPI should listen for AI connections */
+	//Elmar: m_AIPort is never set!? (ListenerInterface holding the AI connection contains the port, too)
 	private static int m_AIPort;
 
 	/** returns the port where the JPI should listen for AI connections */
@@ -193,6 +201,9 @@ public class Configuration
 	/** Holds listener interface (only one!) for accounting instance connections*/
 	private static ListenerInterface ms_aiListenerInterface;
 
+	/** Holds listener interface for connections from MixConfig tools (only one for now, why only one for AI, but several for JAP?*/
+	private static ListenerInterface ms_mcListenerInterface;
+
 	/** Holds the private key */
 	private static IMyPrivateKey m_privateKey;
 
@@ -206,6 +217,181 @@ public class Configuration
 	public static ListenerInterface getAiListenerInterface()
 	{
 		return ms_aiListenerInterface;
+	}
+
+
+	/** Returns listener interface (only one!) for accounting instance connections*/
+	public static ListenerInterface getMCListenerInterface()
+	{
+		return ms_mcListenerInterface;
+	}
+
+	private static int ms_mcMaxConnections;
+
+	/** returns maximum concurrent connections for accounting instances*/
+	public static int getMaxMCConnections()
+	{
+		return ms_mcMaxConnections;
+	}
+
+	private static int ms_mpMaxConnections;
+	public static int getMaxMPConnections()
+	{
+		return ms_mpMaxConnections;
+	}
+
+	private static ListenerInterface ms_mpListenerInterface;
+	public static ListenerInterface getMPListenerInterface()
+	{
+		return ms_mpListenerInterface;
+	}
+
+
+	private static String ms_MaxCascadeLength;
+	public static String getMaxCascadeLength()
+	{
+		return ms_MaxCascadeLength;
+	}
+
+	//should payment statistic be logged?
+	private static boolean mb_logPaymentStatsEnabled;
+	public static Boolean isLogPaymentStatsEnabled()
+	{
+		return new Boolean(mb_logPaymentStatsEnabled);
+	}
+
+	//**************payment settings for flatrate ******************
+
+	private static boolean mb_flatEnabled;
+	//returns Object instead of primitive var for purposes of Reflection
+	public static Boolean isFlatEnabled()
+	{
+		return new Boolean(mb_flatEnabled);
+	}
+
+	private static boolean mb_volumeLimited;
+	//returns Object instead of primitive var for purposes of Reflection
+	public static Boolean isVolumeLimited()
+	{
+		return new Boolean(mb_volumeLimited);
+	}
+
+	private static long ml_volumeAmount;
+	//returns Object instead of primitive var for purposes of Reflection
+	public static Long getVolumeAmount()
+	{
+		return new Long(ml_volumeAmount);
+	}
+
+	private static boolean mb_durationLimited;
+	//returns Object instead of primitive var for purposes of Reflection
+	public static Boolean isDurationLimited()
+	{
+		return new Boolean(mb_durationLimited);
+	}
+
+	private static int mi_flatrateDuration;
+	//returns Integer instead of int for purposes of Reflection
+	public static Integer  getFlatrateDuration()
+	{
+		return new Integer(mi_flatrateDuration);
+	}
+
+	private static String ms_flatrateDurationUnit;
+	public static String getFlatrateDurationUnit()
+	{
+		return ms_flatrateDurationUnit;
+	}
+
+	private static int mi_flatratePrice;
+	//returns Integer instead of int for purposes of Reflection
+	public static Integer getFlatratePrice()
+	{
+		return new Integer(mi_flatratePrice);
+	}
+
+	//***************  paysafecard configuration ****************
+
+	private static String ms_merchantId ;
+	public static String getMerchantId()
+	{
+		return ms_merchantId ;
+	}
+
+	private static String ms_merchantName ;
+	public static String getMerchantName()
+	{
+		return ms_merchantName ;
+	}
+
+	private static String ms_clientCert ;
+	public static String getClientCert()
+	{
+		return ms_clientCert ;
+	}
+
+	private static String ms_clientCertPassword ;
+	public static String getClientCertPassword()
+	{
+		return ms_clientCertPassword ;
+	}
+
+	private static String ms_businessType ;
+	public static String getBusinessType()
+	{
+		return ms_businessType ;
+	}
+
+	private static String ms_okUrl ;
+	public static String getOkUrl()
+	{
+		return ms_okUrl ;
+	}
+
+	private static String ms_nokUrl ;
+	public static String getNokUrl()
+	{
+		return ms_nokUrl ;
+	}
+
+	private static String ms_confirmUrl ;
+	public static String getConfirmUrl()
+	{
+		return ms_confirmUrl ;
+	}
+
+	private static int mi_dispositionTimeout;
+	public static Integer getDispositionTimeout()
+	{
+		return new Integer(mi_dispositionTimeout);
+	}
+
+	private static int mi_cleanupInterval;
+	public static Integer getCleanupInterval()
+	{
+		return new Integer(mi_cleanupInterval);
+	}
+
+	private static int mi_logExpiration;
+	public static Integer getLogExpiration()
+	{
+		return new Integer(mi_logExpiration);
+	}
+
+
+	/************* micropayment configuration ***************/
+
+	private static boolean mb_isMicropaymentEnabled;
+	public static Boolean isMicropaymentEnabled()
+	{
+		return new Boolean(mb_isMicropaymentEnabled);
+	}
+
+
+	private static boolean mb_isSignatureOnPriceRequired;
+	public static Boolean isSignatureOnPriceRequired()
+	{
+		return new Boolean(mb_isSignatureOnPriceRequired);
 	}
 
 	/** Holds threshold for logging to stderr */
@@ -235,13 +421,54 @@ public class Configuration
 		return m_LogFileName;
 	}
 
-	/** Holds the payment options*/
+	/** Holds the payment options  - only filled from file */
 	private static XMLPaymentOptions ms_paymentOptions = new XMLPaymentOptions();
+	/** Holds the volumeplans  - only filled from file */
+	private static XMLVolumePlans ms_volumePlans = new XMLVolumePlans();
 
-	/** Returns the payment options*/
-	public static XMLPaymentOptions getPaymentOptions()
+	/** Returns the payment options as stored in the config file */
+	/* retained for compatibility, and to initially load the config from the file into the database
+	 * whenever PaymentOptions are used, you should call getPaymentOptions() without arguments instead
+	 * to get the most current values from the database
+	 */
+	public static XMLPaymentOptions getPaymentOptions(boolean fromFile)
 	{
 		return ms_paymentOptions;
+	}
+
+	public static XMLPaymentOptions getPaymentOptions(){
+		try
+		{
+			return DBSupplier.getDataBase().getPaymentOptionsFromDb();
+		} catch (Exception e)
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Could not get payment options from the database," +
+			"returning payments options from config file, you may or may not want this");
+			return ms_paymentOptions;
+		}
+	}
+
+	/**
+	 *
+	 * @param fromFile boolean: just a marker parameter, value doesnt matter
+	 * @return XMLVolumePlans: as stored in the config file
+	 */
+	public static XMLVolumePlans getVolumePlans(boolean fromFile)
+	{
+		return ms_volumePlans;
+	}
+
+	public static XMLVolumePlans getVolumePlans(){
+		try
+		{
+			return DBSupplier.getDataBase().getVolumePlans();
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Could not get volume plans from the database," +
+						  "returning volume plans from config file, you may or may not want this");
+			return ms_volumePlans;
+		}
 	}
 
 	/** Holds the credit card helper class name. The class is named *CreditCardHelper.
@@ -255,6 +482,13 @@ public class Configuration
 		return ms_creditCardHelper;
 	}
 
+	private static String ms_acceptedCreditCards;
+
+	public static String getAcceptedCreditCards()
+	{
+		return ms_acceptedCreditCards;
+	}
+
 	/**Holds the port where the JPI receives PayPal IPNs */
 	private static String ms_payPalport;
 
@@ -264,10 +498,15 @@ public class Configuration
 		return ms_payPalport;
 	}
 
-	/** Holds the rate per megabyte (in cents) */
+
+	/** Holds the rate per megabyte (in cents)
+	 *  not in use anymore after the introduction of price certificates */
+
 	private static double ms_ratePerMB;
 
-	/** Returns the rate per megabyte (in cents) */
+
+	/** Returns the rate per megabyte (in cents)
+	 *  not in use anymore after the introduction of price certificates */
 	public static double getRatePerMB()
 	{
 		return ms_ratePerMB;
@@ -301,6 +540,8 @@ public class Configuration
 
 	/** Keyfile password */
 	public static String ms_keyFilePassword;
+
+
 	/** Returns the keyfile password */
 	public static String getKeyFilePassword()
 	{
@@ -356,13 +597,27 @@ public class Configuration
 				ms_aiListenerInterface = new ListenerInterface(st.nextToken(), Integer.parseInt(st.nextToken()));
 			}
 
+	        String mcListener = props.getProperty("mclistener");
+			st = new StringTokenizer(mcListener, ":");
+			while (st.hasMoreTokens() )
+	        {
+				ms_mcListenerInterface = new ListenerInterface(st.nextToken(), Integer.parseInt(st.nextToken()) );
+			}
+
+			String mpListener = props.getProperty("mplistener");
+			st = new StringTokenizer(mpListener, ":");
+			while (st.hasMoreTokens() )
+			{
+				ms_mpListenerInterface = new ListenerInterface(st.nextToken(), Integer.parseInt(st.nextToken()) );
+			}
+
 		}
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.PAY,
-						  "ailistener and japlisteners in configfile '" +
+						  "ailistener, japlisteners and mclistener in configfile '" +
 						  configFileName +
-						  "' must be specified and must be in this format: host:port(,host2:port2...). ailistener may only contain one interface"
+						  "' must be specified and must be in this format: host:port(,host2:port2...). ailistener and mclistener may only contain one interface"
 				);
 			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 			return false;
@@ -382,6 +637,9 @@ public class Configuration
 			m_LogStderrThreshold = 1;
 			m_LogFileThreshold = 2;
 		}
+
+		//parse maximum cascade length
+		ms_MaxCascadeLength = props.getProperty("maxcascadelength");
 
 		// parse database configuration
 		m_dbHostname = props.getProperty("dbhost");
@@ -503,6 +761,38 @@ public class Configuration
 			return false;
 		}
 
+		//parse payment settings
+		//for backwards compatibility only, use plan<X> instead
+		mb_flatEnabled = Boolean.getBoolean(props.getProperty("flat_enabled","true") );
+		mb_durationLimited = Boolean.getBoolean(props.getProperty("duration_limited","true") );
+		mb_volumeLimited = Boolean.getBoolean(props.getProperty("volume_limited","true") );
+		mi_flatrateDuration = Integer.parseInt(props.getProperty("flatrate_duration","2") );
+		ms_flatrateDurationUnit = props.getProperty("flatrate_duration_unit","months");
+		ml_volumeAmount = Long.parseLong(props.getProperty("volume_amount","4000000") );
+		mi_flatratePrice  = Integer.parseInt(props.getProperty("flatrate_price","500") );
+
+		//parse paysafecard settings
+		ms_merchantId = props.getProperty("merchantid","1010000456");
+		ms_merchantName = props.getProperty("merchantname","An.ON");
+		ms_clientCert = props.getProperty("clientcert","CMS_1010000456_001_uni-regensburg.pem");
+		ms_clientCertPassword = props.getProperty("clientcertpassword","df7HN834bk");
+		ms_okUrl = props.getProperty("okurl","http://anon.inf.tu-dresden.de/psc_okay.html");
+		ms_nokUrl = props.getProperty("nokurl","http://anon.inf.tu-dresden.de/psc_failed.html");
+		ms_businessType = props.getProperty("businesstype","I");
+		ms_confirmUrl = props.getProperty("confirm_url","https://customer.test.at.paysafecard.com/psccustomer/GetCustomerPanelServlet");
+		mi_dispositionTimeout = Integer.parseInt(props.getProperty("disposition_timeout","60"));
+		mi_cleanupInterval = Integer.parseInt(props.getProperty("cleanup_interval","10"));
+		mi_logExpiration = Integer.parseInt(props.getProperty("log_expiration","7"));
+
+		//parse micropayment settings
+		mb_isMicropaymentEnabled = Boolean.getBoolean(props.getProperty("enable_micropayment","false"));
+
+
+		//parse payment statistics settings
+		String configValue = props.getProperty("log_payment_stats_enabled","true"); //debug
+		mb_logPaymentStatsEnabled = (new Boolean(configValue)).booleanValue();
+		ms_mpMaxConnections = Integer.parseInt(props.getProperty("mpconnections","10"));
+
 		//parse payment options
 		//parse currencies
 		int i = 1;
@@ -519,7 +809,8 @@ public class Configuration
 		}
 
 		//parse accepted credit cards
-		ms_paymentOptions.setAcceptedCreditCards(props.getProperty("acceptedcards", ""));
+		ms_acceptedCreditCards = props.getProperty("acceptedcards","");
+		ms_paymentOptions.setAcceptedCreditCards(ms_acceptedCreditCards);
 
 		//parse options
 		i = 1;
@@ -629,6 +920,28 @@ public class Configuration
 			i++;
 		}
 
+		//parse volume plans
+		i = 1;
+		while (true)
+		{
+			String name = props.getProperty("plan"+i+"name");
+			if (name == null) //no further volume plans exist
+			{
+				break;
+			}
+			//Assumption: if another option<X>name exists, all the other params will be set for this <X>, too
+			int price = Integer.parseInt(props.getProperty("plan"+i+"price"));
+			boolean durationLimited = Boolean.valueOf(props.getProperty("plan"+i+"durationlimited")).booleanValue();
+			boolean volumeLimited = Boolean.valueOf(props.getProperty("plan"+i+"volumelimited")).booleanValue();
+			int volumekbytes = Integer.parseInt(props.getProperty("plan"+i+"volumekbytes"));
+			int duration = Integer.parseInt(props.getProperty("plan"+i+"duration"));
+			String durationunit = props.getProperty("plan"+i+"durationunit");
+
+			XMLVolumePlan curPlan = new XMLVolumePlan(name,price,durationLimited,volumeLimited,duration,durationunit,volumekbytes);
+			ms_volumePlans.addVolumePlan(curPlan);
+			i++;
+		}
+
 		// Parse the CreditCardHelper classname
 		ms_creditCardHelper = props.getProperty("creditcardhelper", "Dummy");
 
@@ -647,7 +960,152 @@ public class Configuration
 		//Parse max connections
 		ms_aiConnections = Integer.parseInt(props.getProperty("aiconnections", "5"));
 		ms_japConnections = Integer.parseInt(props.getProperty("japconnections", "25"));
+		ms_mcMaxConnections = Integer.parseInt(props.getProperty("mcconnections","10"));
 
+
+		//get those settings that are stored in the database's paymentsettings table from the database
+		/*** not necessary, since updater thread is started, too ****** /
+		DBInterface dbConn = null;
+		try
+		{
+			dbConn = DBSupplier.getDataBase();
+			updateSettings(dbConn.getPaymentSettings() );
+		}
+		catch (Exception ex)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.PAY, "Configuration.init() could not access database to get payment settings");
+		}
+		*******/
 		return true;
+	}
+
+	/** was meant to be used in a loop setting variables via reflection
+	 *  unfortunately we have to do it by hand, since we can't access
+	 *  private member varialbes via reflection
+
+	 // add any option which you wish to be configurable in the database here
+	// Format: .put("name_in_configfile","ms_memberVariable");
+	// db always supplies Strings, will be parsed according to the type of the member variable
+	 //
+	private static void whichSettingsInDatabase()
+	{
+		m_settingsInDb = new Hashtable();
+		//flatrate options
+		m_settingsInDb.put("flat_enabled","");
+		m_settingsInDb.put("duration_limited","");
+		m_settingsInDb.put("flatrate_duration","");
+		m_settingsInDb.put("flatrate_duration_unit","");
+		m_settingsInDb.put("volume_limited","");
+		m_settingsInDb.put("volume_amount","");
+		m_settingsInDb.put("flatrate_price","");
+		m_settingsInDb.put("is_signature_on_price_required","");
+		//paysafecard options
+		m_settingsInDb.put("","");
+
+	}
+    ***********/
+
+   /**
+	* sets the internal varialbes of Configuration to current values from the database
+	*
+	* @param allSettings XMLPaymentSettings: a collection of payment settings gotten from the database
+	*/
+   public static void updateSettings(XMLPaymentSettings allSettings)
+	{
+		String dbValue;
+		/******** logging settings *****/
+		dbValue = allSettings.getSettingValue("log_payment_stats_enabled");
+		if (dbValue != null)
+		{
+			mb_logPaymentStatsEnabled = Boolean.getBoolean(dbValue);
+		}
+
+		/*** flatrate settings ***/
+		dbValue = allSettings.getSettingValue("flat_enabled");
+		if (dbValue != null)
+		{
+			mb_flatEnabled = Boolean.valueOf(dbValue).booleanValue();
+		}
+
+		dbValue = allSettings.getSettingValue("duration_limited");
+		if (dbValue != null)
+		{
+			mb_durationLimited = Boolean.valueOf(dbValue).booleanValue();
+		}
+
+		dbValue = allSettings.getSettingValue("flatrate_duration");
+		if (dbValue != null)
+		{
+			mi_flatrateDuration = Integer.parseInt(dbValue);
+		}
+
+		dbValue = allSettings.getSettingValue("flatrate_duration_unit");
+		if (dbValue != null)
+		{
+			ms_flatrateDurationUnit = dbValue;
+		}
+
+		dbValue = allSettings.getSettingValue("volume_limited");
+		if (dbValue != null)
+		{
+			mb_volumeLimited = Boolean.valueOf(dbValue).booleanValue();
+		}
+
+		dbValue = allSettings.getSettingValue("volume_amount");
+		if (dbValue != null)
+		{
+			ml_volumeAmount = Long.parseLong(dbValue);
+		}
+
+		dbValue = allSettings.getSettingValue("flatrate_price");
+		if (dbValue != null)
+		{
+			mi_flatratePrice = Integer.parseInt(dbValue);
+		}
+
+		dbValue = allSettings.getSettingValue("is_signature_on_price_required");
+		if (dbValue != null)
+		{
+			mb_isSignatureOnPriceRequired = Boolean.valueOf(dbValue).booleanValue();
+		}
+
+		/********** paysafecard settings ***************/
+		dbValue = allSettings.getSettingValue("okurl");
+		if (dbValue != null)
+		{
+			ms_okUrl = dbValue;
+		}
+
+		dbValue = allSettings.getSettingValue("nokurl");
+		if (dbValue != null)
+		{
+			ms_nokUrl = dbValue;
+		}
+
+		dbValue = allSettings.getSettingValue("confirm_url");
+		if (dbValue != null)
+		{
+			ms_confirmUrl = dbValue;
+		}
+
+		dbValue = allSettings.getSettingValue("disposition_timeout");
+		if (dbValue != null)
+		{
+			mi_dispositionTimeout = Integer.parseInt(dbValue);
+		}
+
+		dbValue = allSettings.getSettingValue("cleanup_interval");
+		if (dbValue != null)
+		{
+			mi_cleanupInterval = Integer.parseInt(dbValue);
+		}
+
+		dbValue = allSettings.getSettingValue("log_expiration");
+		if (dbValue != null)
+		{
+			mi_logExpiration = Integer.parseInt(dbValue);
+		}
+
+
 	}
 }

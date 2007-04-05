@@ -58,6 +58,7 @@ public abstract class XmlControlChannel extends StreamedControlChannel {
 
   protected void processMessage(byte[] a_message) {
     try {
+	  String msgReceived = new String(a_message);
       processXmlMessage(XMLUtil.toXMLDocument(a_message));
     }
     catch (XMLParseException e) {

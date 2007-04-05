@@ -30,7 +30,7 @@ package jap.pay;
 /**
  * This class is the main payment view on JAP's main gui window
  *
- * @author Bastian Voigt, Tobias Bayer
+ * @author Bastian Voigt, Tobias Bayer, Elmar Schraml
  * @version 1.0
  */
 import java.sql.Timestamp;
@@ -69,11 +69,12 @@ import jap.JAPNewView;
 import jap.JAPUtil;
 import jap.JAPModel;
 import logging.LogType;
+import java.util.Date;
 import java.awt.Cursor;
 
 public class PaymentMainPanel extends FlippingPanel
 {
-	private final long WARNING_AMOUNT = 50 * 1024 * 1024; // 50 MB
+	private final long WARNING_AMOUNT = 50 * 1024; // 50 MB (db stores in Kbyte!)
 
 	/** Messages */
 	private static final String MSG_TITLE = PaymentMainPanel.class.getName() +
@@ -94,6 +95,10 @@ public class PaymentMainPanel extends FlippingPanel
 		"_enableAutoSwitch";
 	private static final String MSG_EXPERIMENTAL = PaymentMainPanel.class.getName() +
 		"_experimental";
+	private static final String MSG_TITLE_FLAT = PaymentMainPanel.class.getName() + "_title_flat";
+	private static final String MSG_VALID_UNTIL = PaymentMainPanel.class.getName() + "_valid_until";
+	private static final String MSG_EURO_BALANCE = PaymentMainPanel.class.getName() + "_euro_balance";
+	private static final String MSG_NO_FLATRATE = PaymentMainPanel.class.getName() + "_no_flatrate";
 	private static final String MSG_WANNA_CHARGE = PaymentMainPanel.class.getName() + "_wannaCharge";
 	private static final String MSG_TT_CREATE_ACCOUNT = PaymentMainPanel.class.getName() + "_ttCreateAccount";
 	private static final String MSG_FREE_OF_CHARGE = PaymentMainPanel.class.getName() + "_freeOfCharge";
@@ -103,7 +108,8 @@ public class PaymentMainPanel extends FlippingPanel
 	private static final String[] MSG_PAYMENT_ERRORS = {"_xmlSuccess", "_xmlErrorInternal",
 		"_xmlErrorWrongFormat", "_xmlErrorWrongData", "_xmlErrorKeyNotFound", "_xmlErrorBadSignature",
 	"_xmlErrorBadRequest", "_xmlErrorNoAccountCert", "_xmlErrorNoBalance", "_xmlErrorNoConfirmation",
-	"_accountempty"};
+	"_accountempty", "_xmlErrorCascadeLength", "_xmlErrorDatabase", "_xmlErrorInsufficientBalance",
+	"_xmlErrorNoFlatrateOffered", "_xmlErrorInvalidCode", "_xmlErrorInvalidCC", "_xmlErrorInvalidPriceCerts"};
 
 	static
 	{
@@ -149,6 +155,11 @@ public class PaymentMainPanel extends FlippingPanel
 	private JLabel m_labelTitleSmall;
 	private JLabel m_labelTotalSpentHeader;
 	private JLabel m_labelSessionSpentHeader;
+
+	private JLabel m_labelValidUntilHeader;
+	private JLabel m_labelValidUntil;
+	private JLabel m_labelBalanceInEurosHeader;
+	private JLabel m_labelBalanceInEuros;
 
 	private long m_spentThisSession;
 
@@ -199,10 +210,61 @@ public class PaymentMainPanel extends FlippingPanel
 		c1.insets = new Insets(0, 5, 0, 0);
 		fullPanel.add(m_BalanceProgressBar, c1);
 
-		m_labelSessionSpentHeader = new JLabel(JAPMessages.getString(MSG_SESSIONSPENT));
+		//Elmar: suggestion for improvement:
+		//since all rows follow the same format, extract to a method like addRow(labelName)
+
+		//row for validtime of flatrate
+		m_labelValidUntilHeader = new JLabel(JAPMessages.getString(MSG_VALID_UNTIL));
 		c1.insets = new Insets(10, 20, 0, 0);
 		c1.gridx = 0;
 		c1.gridy = 1;
+		c1.anchor = GridBagConstraints.WEST;
+		c1.weightx = 0;
+		fullPanel.add(m_labelValidUntilHeader, c1);
+		spacer = new JPanel();
+		spacer.setPreferredSize(spacerDimension);
+		c1.gridx = 1;
+		c1.insets = new Insets(0, 0, 0, 0);
+		c1.weightx = 1;
+		c1.fill = GridBagConstraints.NONE;
+		fullPanel.add(spacer, c1);
+		m_labelValidUntil = new JLabel(" ");
+		m_labelValidUntil.setHorizontalAlignment(JLabel.RIGHT);
+		c1.insets = new Insets(10, 5, 0, 0);
+		c1.gridx = 2;
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.weightx = 0;
+		fullPanel.add(m_labelValidUntil, c1);
+
+		//row for bytes_left of flatrate
+		m_labelBalanceInEurosHeader = new JLabel(JAPMessages.getString(MSG_EURO_BALANCE));
+		c1.insets = new Insets(10, 20, 0, 0);
+		c1.gridx = 0;
+		c1.gridy = 2;
+		c1.anchor = GridBagConstraints.WEST;
+		c1.weightx = 0;
+		fullPanel.add(m_labelBalanceInEurosHeader, c1);
+		spacer = new JPanel();
+		spacer.setPreferredSize(spacerDimension);
+		c1.gridx = 1;
+		c1.insets = new Insets(0, 0, 0, 0);
+		c1.weightx = 1;
+		c1.fill = GridBagConstraints.NONE;
+		fullPanel.add(spacer, c1);
+		m_labelBalanceInEuros = new JLabel(" ");
+		m_labelBalanceInEuros.setHorizontalAlignment(JLabel.RIGHT);
+		c1.insets = new Insets(10, 5, 0, 0);
+		c1.gridx = 2;
+		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.weightx = 0;
+		fullPanel.add(m_labelBalanceInEuros, c1);
+
+
+		//row for bytes spent in this session
+		m_labelSessionSpentHeader = new JLabel(JAPMessages.getString(MSG_SESSIONSPENT));
+		c1.insets = new Insets(10, 20, 0, 0);
+		c1.gridx = 0;
+		c1.gridy = 3;
 		c1.anchor = GridBagConstraints.WEST;
 		c1.weightx = 0;
 		fullPanel.add(m_labelSessionSpentHeader, c1);
@@ -221,10 +283,11 @@ public class PaymentMainPanel extends FlippingPanel
 		c1.weightx = 0;
 		fullPanel.add(m_labelSessionSpent, c1);
 
+		//row for total spent
 		m_labelTotalSpentHeader = new JLabel(JAPMessages.getString(MSG_TOTALSPENT));
 		c1.insets = new Insets(10, 20, 0, 0);
 		c1.gridx = 0;
-		c1.gridy = 2;
+		c1.gridy = 4;
 		c1.anchor = GridBagConstraints.WEST;
 		c1.weightx = 0;
 		fullPanel.add(m_labelTotalSpentHeader, c1);
@@ -243,10 +306,11 @@ public class PaymentMainPanel extends FlippingPanel
 		c1.weightx = 0;
 		fullPanel.add(m_labelTotalSpent, c1);
 
+		//row for date of last update
 		m_dateLabel = new JLabel(JAPMessages.getString(MSG_LASTUPDATE));
 		c1.insets = new Insets(10, 20, 0, 0);
 		c1.gridx = 0;
-		c1.gridy = 3;
+		c1.gridy = 5;
 		c1.anchor = GridBagConstraints.WEST;
 		c1.weightx = 0;
 		fullPanel.add(m_dateLabel, c1);
@@ -266,6 +330,7 @@ public class PaymentMainPanel extends FlippingPanel
 		fullPanel.add(m_lastUpdateLabel, c1);
 		this.setFullPanel(fullPanel);
 
+		//build small panel
 		JPanel smallPanel = new JPanel();
 		smallPanel.setLayout(new GridBagLayout());
 		c1 = new GridBagConstraints();
@@ -381,61 +446,101 @@ public class PaymentMainPanel extends FlippingPanel
 			XMLBalance balance = activeAccount.getBalance();
 			if (balance != null)
 			{
+				//check for active flatrate
+				boolean flatIsActive = false;
+				Timestamp flatEnddate = balance.getFlatEnddate();
+				Timestamp now = new Timestamp(new Date().getTime() );
+				if (flatEnddate.after(now) )
+				{
+					flatIsActive = true;
+				}
+				//set flatrate-specific fields
+				if (flatIsActive)
+				{
+					m_BalanceProgressBar.setEnabled(false);
+					m_BalanceSmallProgressBar.setEnabled(false);
+					m_BalanceText.setText(JAPUtil.formatBytesValue(balance.getCredit()*1000) );
+					m_BalanceTextSmall.setText(JAPUtil.formatBytesValue(balance.getCredit()*1000) );
+					String language = JAPMessages.getLocale().getLanguage();
+					String endDateString = JAPUtil.formatTimestamp(balance.getFlatEnddate(),true,language);
+					m_labelValidUntil.setText(endDateString);
+					m_labelBalanceInEuros.setText(JAPUtil.formatEuroCentValue(balance.getBalance()));
+				}
+				else
+				{
+					m_labelValidUntil.setText(JAPMessages.getString(MSG_NO_FLATRATE));
+					m_labelBalanceInEuros.setText(JAPUtil.formatEuroCentValue(balance.getBalance()));
+
+					m_BalanceText.setEnabled(true);
+					if (activeAccount.getCertifiedCredit() < 0 )
+					{
+						m_BalanceText.setText(JAPUtil.formatBytesValue(0));
+						m_BalanceTextSmall.setText(JAPUtil.formatBytesValue(0));
+					}
+					else
+					{
+					m_BalanceText.setText(JAPUtil.formatBytesValue(activeAccount.getCertifiedCredit()*1000));
+					m_BalanceTextSmall.setText(JAPUtil.formatBytesValue(activeAccount.getCertifiedCredit()*1000));
+					}
+					m_BalanceTextSmall.setEnabled(true);
+
+					double deposit = (double) activeAccount.getDeposit();
+					double credit = (double) activeAccount.getCertifiedCredit();
+					double percent = credit / deposit;
+					if (percent > 0.83)
+					{
+						m_BalanceProgressBar.setValue(5);
+						m_BalanceSmallProgressBar.setValue(5);
+					}
+					else if (percent > 0.66)
+					{
+						m_BalanceProgressBar.setValue(4);
+						m_BalanceSmallProgressBar.setValue(4);
+					}
+					else if (percent > 0.49)
+					{
+						m_BalanceProgressBar.setValue(3);
+						m_BalanceSmallProgressBar.setValue(3);
+					}
+					else if (percent > 0.32)
+					{
+						m_BalanceProgressBar.setValue(2);
+						m_BalanceSmallProgressBar.setValue(2);
+					}
+					else if (credit > 0.15)
+					{
+						m_BalanceProgressBar.setValue(1);
+						m_BalanceSmallProgressBar.setValue(1);
+					}
+					else
+					{
+						m_BalanceProgressBar.setValue(0);
+						m_BalanceSmallProgressBar.setValue(0);
+					}
+					m_BalanceProgressBar.setEnabled(true);
+					m_BalanceSmallProgressBar.setEnabled(true);
+
+					if (activeAccount.getCertifiedCredit() <= (10) && !m_notifiedEmpty &&
+						activeAccount.getCertifiedCredit() != 0)
+					{
+						JAPDialog.showMessageDialog(JAPController.getInstance().getViewWindow(),
+													JAPMessages.getString(MSG_NEARLYEMPTY));
+						m_notifiedEmpty = true;
+					}
+
+
+				}
+				//set rest of the panel
 				m_spentThisSession = AIControlChannel.getBytes();
 				Timestamp t = balance.getTimestamp();
 				m_lastUpdateLabel.setText(JAPUtil.formatTimestamp(t, true, JAPController.getInstance().getLocale().getLanguage()));
-				m_BalanceText.setEnabled(true);
-				if (activeAccount.getCertifiedCredit() < 0 )
-				{
-					m_BalanceText.setText(JAPUtil.formatBytesValue(0));
-					m_BalanceTextSmall.setText(JAPUtil.formatBytesValue(0));
-				}
-				else
-				{
-				m_BalanceText.setText(JAPUtil.formatBytesValue(activeAccount.getCertifiedCredit()));
-				m_BalanceTextSmall.setText(JAPUtil.formatBytesValue(activeAccount.getCertifiedCredit()));
-				}
-				m_BalanceTextSmall.setEnabled(true);
-				m_labelSessionSpent.setText(JAPUtil.formatBytesValue(m_spentThisSession));
-				double deposit = (double) activeAccount.getDeposit();
-				double credit = (double) activeAccount.getCertifiedCredit();
-				double percent = credit / deposit;
-				if (percent > 0.83)
-				{
-					m_BalanceProgressBar.setValue(5);
-					m_BalanceSmallProgressBar.setValue(5);
-				}
-				else if (percent > 0.66)
-				{
-					m_BalanceProgressBar.setValue(4);
-					m_BalanceSmallProgressBar.setValue(4);
-				}
-				else if (percent > 0.49)
-				{
-					m_BalanceProgressBar.setValue(3);
-					m_BalanceSmallProgressBar.setValue(3);
-				}
-				else if (percent > 0.32)
-				{
-					m_BalanceProgressBar.setValue(2);
-					m_BalanceSmallProgressBar.setValue(2);
-				}
-				else if (credit > 0.15)
-				{
-					m_BalanceProgressBar.setValue(1);
-					m_BalanceSmallProgressBar.setValue(1);
-				}
-				else
-				{
-					m_BalanceProgressBar.setValue(0);
-					m_BalanceSmallProgressBar.setValue(0);
-				}
-				m_BalanceProgressBar.setEnabled(true);
-				m_BalanceSmallProgressBar.setEnabled(true);
 
-				m_labelTotalSpent.setText(JAPUtil.formatBytesValue(activeAccount.getSpent()));
+				m_labelSessionSpent.setText(JAPUtil.formatBytesValueWithUnit(m_spentThisSession));
+
+				m_labelTotalSpent.setText(JAPUtil.formatBytesValueWithUnit(activeAccount.getSpent()));
 				// account is nearly empty
-				if (a_bWarnIfNearlyEmpty &&
+
+				if (a_bWarnIfNearlyEmpty && //a_bWarnIfNearlyEmpty means warnings are not to be suppressed
 					activeAccount.getCertifiedCredit() <= WARNING_AMOUNT && !m_notifiedEmpty &&
 					activeAccount.getCertifiedCredit() != 0)
 				{
@@ -464,6 +569,11 @@ public class PaymentMainPanel extends FlippingPanel
 		public void accountActivated(PayAccount acc)
 		{
 			updateDisplay(acc, true);
+		}
+
+		public void flatrateBought(PayAccount acc)
+		{
+			updateDisplay(acc,true);
 		}
 
 		/**
@@ -569,6 +679,7 @@ public class PaymentMainPanel extends FlippingPanel
 						}
 					};
 				}
+				/*
 				else if (accounts.getActiveAccount().getBalance().getCredit() <= 0)
 				{
 					JAPController.getInstance().setAnonMode(false);
@@ -591,7 +702,7 @@ public class PaymentMainPanel extends FlippingPanel
 							}
 						}
 					};
-				}
+				}*/
 				else if (!JAPController.getInstance().getDontAskPayment())
 				{
 					JAPDialog.LinkedCheckBox checkBox = new JAPDialog.LinkedCheckBox(false);
@@ -661,10 +772,10 @@ public class PaymentMainPanel extends FlippingPanel
 				{
 					parent = JAPController.getInstance().getViewWindow();
 				}
+				JAPController.getInstance().setAnonMode(false);
 				if (msg.getErrorCode() == XMLErrorMessage.ERR_ACCOUNT_EMPTY)
 				{
 					message += "<br><br>" + JAPMessages.getString(MSG_WANNA_CHARGE);
-					JAPController.getInstance().setAnonMode(false);
 					if (JAPDialog.showYesNoDialog(parent, message, adapter))
 					{
 						new Thread(new Runnable()

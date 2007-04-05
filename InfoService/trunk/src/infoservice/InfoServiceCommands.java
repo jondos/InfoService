@@ -48,6 +48,7 @@ import org.w3c.dom.Node;
 
 import anon.crypto.SignatureCreator;
 import anon.crypto.SignatureVerifier;
+import anon.crypto.XMLSignature;
 import anon.infoservice.AbstractDistributableDatabaseEntry;
 import anon.infoservice.Constants;
 import anon.infoservice.Database;
@@ -65,6 +66,7 @@ import anon.util.ZLibTools;
 import anon.infoservice.InfoServiceIDEntry;
 import anon.util.IXMLEncodable;
 import anon.infoservice.MessageDBEntry;
+import anon.util.*;
 
 /**
  * This is the implementation of all commands the InfoService supports.
@@ -404,10 +406,19 @@ final public class InfoServiceCommands implements JWSInternalCommands
 					/* send the XML document to the client */
 					//if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
 					{
-						m_cachedCompressedResponse = new HttpResponseStructure(
-							HttpResponseStructure.HTTP_TYPE_TEXT_XML,
-							HttpResponseStructure.HTTP_ENCODING_ZLIB,
-							ZLibTools.compress(XMLUtil.toByteArray(doc)));
+						try
+						{
+							m_cachedCompressedResponse = new HttpResponseStructure(
+								HttpResponseStructure.HTTP_TYPE_TEXT_XML,
+								HttpResponseStructure.HTTP_ENCODING_ZLIB,
+								//ZLibTools.compress(XMLUtil.toByteArray(doc)));
+								ZLibTools.compress(XMLSignature.toCanonical(doc)));
+						}
+						catch (XMLParseException ex)
+						{
+							m_cachedCompressedResponse = new HttpResponseStructure(HttpResponseStructure.
+								HTTP_RETURN_INTERNAL_SERVER_ERROR);
+						}
 					}
 					//else
 					{
@@ -429,7 +440,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 
 
-		protected HttpResponseStructure fetchSerialsResponse(int a_supportedEncodings) throws Exception
+		protected HttpResponseStructure fetchSerialsResponse(int a_supportedEncodings)
 		{
 			HttpResponseStructure httpResponse;
 			Document doc;
@@ -449,10 +460,19 @@ final public class InfoServiceCommands implements JWSInternalCommands
 
 					//if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
 					{
-						m_cachedSerialsCompressedResponse = new HttpResponseStructure(
-							HttpResponseStructure.HTTP_TYPE_TEXT_XML,
-							HttpResponseStructure.HTTP_ENCODING_ZLIB,
-							ZLibTools.compress(XMLUtil.toByteArray(doc)));
+						try
+						{
+							m_cachedSerialsCompressedResponse = new HttpResponseStructure(
+								HttpResponseStructure.HTTP_TYPE_TEXT_XML,
+								HttpResponseStructure.HTTP_ENCODING_ZLIB,
+								//ZLibTools.compress(XMLUtil.toByteArray(doc)));
+								ZLibTools.compress(XMLSignature.toCanonical(doc)));
+						}
+						catch (XMLParseException ex)
+						{
+							m_cachedCompressedResponse = new HttpResponseStructure(HttpResponseStructure.
+								HTTP_RETURN_INTERNAL_SERVER_ERROR);
+						}
 					}
 					//else
 					{

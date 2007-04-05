@@ -36,6 +36,7 @@ import org.w3c.dom.NodeList;
 import anon.util.IXMLEncodable;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
+import java.util.Vector;
 
 /**
  * This class is used by JAP to send information necessary to process a
@@ -63,6 +64,7 @@ public class XMLPassivePayment implements IXMLEncodable
 	private static final String TRANSFER_NUM = "TransferNumber";
 	private static final String AMOUNT = "Amount";
 	private static final String CURRENCY = "Currency";
+	private static final String CHARGED = "Charged";
 	private static final String PAYMENT_DATA = "PaymentData";
 	private static final String REF = "ref";
 	private static final String PAYMENT_NAME = "PaymentName";
@@ -72,6 +74,7 @@ public class XMLPassivePayment implements IXMLEncodable
 	private String m_currency;
 	private double m_amount;
 	private String m_paymentName;
+	private boolean m_charged;
 
 	/**
 	 * Constructor
@@ -149,6 +152,7 @@ public class XMLPassivePayment implements IXMLEncodable
 		m_amount = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, AMOUNT), (double) 0);
 		m_currency = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, CURRENCY), null);
 		m_paymentName = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, PAYMENT_NAME), null);
+		m_charged = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, CHARGED), false);
 
 	}
 
@@ -186,6 +190,11 @@ public class XMLPassivePayment implements IXMLEncodable
 	public void setCurrency(String a_currency)
 	{
 		m_currency = a_currency;
+	}
+
+	public void setCharged(boolean charged)
+	{
+		m_charged = charged;
 	}
 
 	/**
@@ -234,6 +243,11 @@ public class XMLPassivePayment implements IXMLEncodable
 		return m_currency;
 	}
 
+	public boolean isCharged()
+	{
+		return m_charged;
+	}
+
 	/**
 	 * Gets all references that belong to this message
 	 * @return Enumeration
@@ -274,6 +288,11 @@ public class XMLPassivePayment implements IXMLEncodable
 		return data;
 	}
 
+	public Enumeration getPaymentDataKeys()
+	{
+		return m_paymentData.keys();
+	}
+
 	/**
 	 * Produces an XML element from the member values
 	 * @param a_doc Document
@@ -300,6 +319,10 @@ public class XMLPassivePayment implements IXMLEncodable
 
 		elem = a_doc.createElement(CURRENCY);
 		XMLUtil.setValue(elem, m_currency);
+		elemRoot.appendChild(elem);
+
+		elem = a_doc.createElement(CHARGED);
+		XMLUtil.setValue(elem, m_charged);
 		elemRoot.appendChild(elem);
 
 		Enumeration refs = m_paymentData.keys();

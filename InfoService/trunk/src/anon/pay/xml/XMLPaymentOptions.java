@@ -47,7 +47,7 @@ import org.w3c.dom.Node;
 public class XMLPaymentOptions implements IXMLEncodable
 {
 	private Vector m_currencies = new Vector();
-	private Vector m_paymentOptions = new Vector();
+	private Vector m_paymentOptions = new Vector(); //holds XMLPaymentOption objects
 	private String m_acceptedCreditCards;
 
 	public XMLPaymentOptions(String xml) throws Exception
@@ -82,8 +82,16 @@ public class XMLPaymentOptions implements IXMLEncodable
 
 		for (int i = 0; i < m_paymentOptions.size(); i++)
 		{
-			elem = ( (XMLPaymentOption) m_paymentOptions.elementAt(i)).toXmlElement(a_doc);
-			elemRoot.appendChild(elem);
+			try
+			{
+				XMLPaymentOption anOption = (XMLPaymentOption) m_paymentOptions.elementAt(i);
+				elem = anOption.toXmlElement(a_doc);
+				elemRoot.appendChild(elem);
+			}
+			catch (ClassCastException e)
+			{
+				//System.out.println(e.getMessage()); //just to check, message is normally null
+			}
 		}
 
 		elem = a_doc.createElement("AcceptedCards");
@@ -107,9 +115,11 @@ public class XMLPaymentOptions implements IXMLEncodable
 		}
 
 		NodeList options = elemRoot.getElementsByTagName("PaymentOption");
+		XMLPaymentOption anOption;
 		for (int i = 0; i < options.getLength(); i++)
 		{
-			m_paymentOptions.addElement( (Element) options.item(i));
+			anOption = new XMLPaymentOption((Element) options.item(i));
+			m_paymentOptions.addElement(anOption);
 		}
 
 		Node node = XMLUtil.getFirstChildByName(elemRoot, "AcceptedCards");
@@ -139,7 +149,7 @@ public class XMLPaymentOptions implements IXMLEncodable
 		{
 			try
 			{
-				XMLPaymentOption option = new XMLPaymentOption( (Element) m_paymentOptions.elementAt(i));
+				XMLPaymentOption option = (XMLPaymentOption) m_paymentOptions.elementAt(i);
 				optionHeadings.addElement(option.getHeading(a_language));
 			}
 			catch (Exception e)
@@ -149,6 +159,11 @@ public class XMLPaymentOptions implements IXMLEncodable
 			}
 		}
 		return optionHeadings.elements();
+	}
+
+
+	public Vector getAllOptions(){
+		   return m_paymentOptions;
 	}
 
 	/**
@@ -163,7 +178,7 @@ public class XMLPaymentOptions implements IXMLEncodable
 		{
 			try
 			{
-				XMLPaymentOption option = new XMLPaymentOption( (Element) m_paymentOptions.elementAt(i));
+				XMLPaymentOption option = (XMLPaymentOption) m_paymentOptions.elementAt(i);
 				String heading = option.getHeading(a_language);
 				if (heading.equalsIgnoreCase(a_heading))
 				{
@@ -184,7 +199,6 @@ public class XMLPaymentOptions implements IXMLEncodable
 
 	public Vector getCurrencies()
 	{
-		//return new Vector(m_currencies);
 		return (Vector) m_currencies.clone();
 	}
 

@@ -46,15 +46,16 @@ import java.io.OutputStream;
  * Bedient eine Verbindung innerhalb eines Threads. Die Http-Requests werden
  * mit Hilfe der Klasse {@link HttpServer} geparst und die Kommandos an
  * {@link PICommandUser} (bei einer JAP-Verbindung) bzw. an {@link PICommandAI}
- * (bei einer AI-Verbindung} weitergereicht und deren Antworten zur\uFFFDckgesendet.
+ * (bei einer AI-Verbindung} oder {@link PICommandMC} (MixConfig tool) weitergereicht
+ * und deren Antworten zur\uFFFDckgesendet.
  *
  * @author Andreas Mueller, Bastian Voigt
  */
 public class JPIConnection implements Runnable
 {
 
-	private boolean m_bIsAI;
-//	private String aiName;
+	private int m_type;
+
 
 	/** the socket */
 	private Socket m_socket;
@@ -68,10 +69,10 @@ public class JPIConnection implements Runnable
 	 * @param socket Socket
 	 * @param type AI- oder JAP-Verbindung (true = AI)
 	 */
-	public JPIConnection(Socket socket, boolean bIsAI) throws IOException
+	public JPIConnection(Socket socket, int type) throws IOException
 	{
 		m_socket = socket;
-		m_bIsAI = bIsAI;
+		m_type = type;
 	}
 
 
@@ -95,29 +96,43 @@ public class JPIConnection implements Runnable
 			m_outStream = new TimedOutputStream(m_socket.getOutputStream(),30000);
 			HttpServer server = new HttpServer(m_inStream, m_outStream);
 			PIRequest request;
-			if (!m_bIsAI)
-			{
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY,"Jap connected");
-				command = (PICommand)new PICommandUser();
-			}
-			else
-			{
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY,"AI connected");
 
-				/* some ssl-stuff: verify AI-name */
-				/*				try
-					{
-				 X509Certificate[] certs = ( (SSLSocket) m_sslSocket).getSession().getPeerCertificateChain();
-					   aiName = certs[0].getSubjectDN().getName();
-					}
-					catch (Exception e)
-					{
-					 LogHolder.log(LogLevel.DEBUG, LogType.PAY,"Could not get the peer's name from the SSL certificate");
-					 LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,e);
-					 //return;
-					}*/
-				command = (PICommand)new PICommandAI();
+			switch (m_type)
+			{
+				case PIServer.SERVING_AI:
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY,"AI connected");
+
+					/* some ssl-stuff: verify AI-name */
+					/*				try
+						{
+					 X509Certificate[] certs = ( (SSLSocket) m_sslSocket).getSession().getPeerCertificateChain();
+						   aiName = certs[0].getSubjectDN().getName();
+						}
+						catch (Exception e)
+						{
+						 LogHolder.log(LogLevel.DEBUG, LogType.PAY,"Could not get the peer's name from the SSL certificate");
+						 LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,e);
+						 //return;
+						}*/
+					command = (PICommand)new PICommandAI();
+					break;
+				case PIServer.SERVING_JAP:
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY,"Jap connected");
+					command = (PICommand)new PICommandUser();
+					break;
+				case PIServer.SERVING_MC:
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY,"MixConfig connected");
+					command = (PICommand)new PICommandMC();
+					break;
+				case PIServer.SERVING_MICROPAYMENT:
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY,"Micropayment connected");
+					command = (PICommand)new PICommandMC();
+					break;
+				default:
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY,"unknown server type requested, nothing connected");
 			}
+
+
 
 			PIAnswer answer;
 			while (true)
@@ -127,12 +142,12 @@ public class JPIConnection implements Runnable
 					request = server.parseRequest();
 					if (request == null)
 					{
-						break;
+						break; //Elmar: should be continue instead of break?
 					}
 					if(request.method.equals("GET")&&request.url.equals("/info"))
 					{
 						server.writeAnswer(200, JPIMain.getHTMLServerInfo());
-						break;
+						break; //Elmar: should be continue instead of break?
 					}
 					answer = command.next(request);
 					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Now sending answer: "+XMLUtil.toString(XMLUtil.toXMLDocument(answer.getContent())));
@@ -151,7 +166,7 @@ public class JPIConnection implements Runnable
 
 			try
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.MISC, (m_bIsAI?"AI":"Jap")+" disconnected");
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC," disconnected");
 				m_socket.shutdownOutput(); // make sure all pending data is sent before closing
 				m_socket.close();
 			}

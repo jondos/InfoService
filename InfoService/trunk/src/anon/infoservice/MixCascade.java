@@ -47,6 +47,8 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.crypto.IVerifyable;
+import anon.pay.xml.XMLPriceCertificate;
+import java.util.Hashtable;
 
 /**
  * Holds the information for a mixcascade.
@@ -54,7 +56,7 @@ import anon.crypto.IVerifyable;
 public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	implements AnonServerDescription, IVerifyable
 {
-	public static final String SUPPORTED_PAYMENT_PROTOCOL_VERSION = "0.1";
+	public static final String SUPPORTED_PAYMENT_PROTOCOL_VERSION = "2.0";
 
 	public static final String XML_ELEMENT_NAME = "MixCascade";
 	public static final String XML_ELEMENT_CONTAINER_NAME = "MixCascades";
@@ -97,6 +99,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	private String m_strMixIds;
 
 	private MixInfo[] m_mixInfos;
+	private int m_nrPriceCerts = 0;
 
 	private Vector m_mixNodes;
 
@@ -131,6 +134,9 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	private String m_mixProtocolVersion;
 
 	private String m_paymentProtocolVersion;
+
+	private Hashtable m_priceCertificateHashes = new Hashtable();
+	private Vector m_priceCertificates = new Vector();
 
 	/**
 	 * If this MixCascade has been recevied directly from a cascade connection.
@@ -254,7 +260,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 			throw new XMLParseException(XML_ELEMENT_NAME);
 		}
 		m_mixCascadeId = XMLUtil.parseAttribute(a_mixCascadeNode, "id", null);
-		if (m_mixCascadeId == null)
+		if (m_mixCascadeId == null) //get id of first mix, if cascade id is not set
 		{
 			Node nodeMix =
 				XMLUtil.getFirstChildByName(XMLUtil.getFirstChildByName(a_mixCascadeNode, "Mixes"), "Mix");
@@ -347,6 +353,13 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 			try
 			{
 				m_mixInfos[i] = new MixInfo((Element) mixNodes.item(i), Long.MAX_VALUE, true);
+				if (m_mixInfos[i].getPriceCertificate() != null)
+				{
+					m_priceCertificates.addElement(m_mixInfos[i].getPriceCertificate());
+					m_priceCertificateHashes.put(m_mixInfos[i].getId(),
+												 m_mixInfos[i].getPriceCertificate().getHashValue());
+					m_nrPriceCerts++;
+				}
 			}
 			catch (XMLParseException a_e)
 			{
@@ -382,7 +395,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		}
 		else
 		{
-			m_compressedXmlStructure = ZLibTools.compress(XMLUtil.toByteArray(a_mixCascadeNode));
+			m_compressedXmlStructure = ZLibTools.compress(XMLSignature.toCanonical(a_mixCascadeNode));
 		}
 		m_xmlStructure = a_mixCascadeNode;
 
@@ -493,7 +506,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		m_bDefaultVerified = true;
 		m_mixCascadeCertificate = null;
 		m_xmlStructure = generateXmlRepresentation();
-		m_compressedXmlStructure = ZLibTools.compress(XMLUtil.toByteArray(m_xmlStructure));
+		m_compressedXmlStructure = ZLibTools.compress(XMLSignature.toCanonical(m_xmlStructure));
 		createMixIDString();
 	}
 
@@ -665,13 +678,11 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	 */
 	public int getNumberOfMixes()
 	{
-		if (m_mixIds != null)
-		{
-			return m_mixIds.size();
-		}
-		return 0;
+		return m_mixIds.size();
 	}
 
+	//Elmar: not sure what this does, seems like m_strMixIds is all the elements of the Vector of MixIds concatenated
+	//if you need the subjectkeyidentifiers of the mixes of the cascade, use getMixIds()
 	public String getMixIDsAsString()
 	{
 		return m_strMixIds;
@@ -737,12 +748,8 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	 */
 	public Vector getMixIds()
 	{
-		Vector mixIdList = new Vector();
-		for (int i = 0; i < m_mixIds.size(); i++)
-		{
-			mixIdList.addElement(m_mixIds.elementAt(i));
-		}
-		return mixIdList;
+		//Elmar: why do we bother to copy everything into a new Vector instead of just returning m_mixIds ?
+		return (Vector)m_mixIds.clone();
 	}
 
 	/**
@@ -771,7 +778,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		return m_bImplicitTrust;
 	}
 
-	public void setUserDefined(boolean a_bUserDefined, MixCascade a_oldMixCascade)
+	public void setUserDefined(boolean a_bUserDefined, MixCascade a_oldMixCascade) throws XMLParseException
 	{
 		m_userDefined = a_bUserDefined;
 		if (m_userDefined && a_oldMixCascade != null && a_oldMixCascade.getId().equals(getId()))
@@ -782,7 +789,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 			m_lastUpdate = System.currentTimeMillis();
 		}
 		m_xmlStructure = generateXmlRepresentation();
-		m_compressedXmlStructure = ZLibTools.compress(XMLUtil.toByteArray(m_xmlStructure));
+		m_compressedXmlStructure = ZLibTools.compress(XMLSignature.toCanonical(m_xmlStructure));
 	}
 
 	/**
@@ -889,6 +896,27 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		return m_mixCascadeCertificate;
 	}
 
+	public Hashtable getPriceCertificateHashes()
+	{
+		return (Hashtable)m_priceCertificateHashes.clone();
+	}
+
+	/**
+	 * getPriceCertificates: utility method,
+	 * equivalent to getting the MixInfo for all Mixes, and calling getPriceCertificate on each one
+	 *
+	 * @return Vector containing one XMLPriceCertificate per Mix of the cascade
+	 */
+	public Vector getPriceCertificates()
+	{
+		return (Vector)m_priceCertificates.clone();
+	}
+
+	public int getNrOfPriceCerts()
+	{
+		return m_nrPriceCerts;
+	}
+
 	public CertPath getCertPath()
 	{
 		return m_certPath;
@@ -984,6 +1012,12 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		}
 
 		return mixCascadeNode;
+	}
+
+	public boolean isPaymentProtocolSupported()
+	{
+		return !m_isPayment ||
+			(m_isPayment && getPaymentProtocolVersion().equals(SUPPORTED_PAYMENT_PROTOCOL_VERSION));
 	}
 
 	public boolean isPayment()

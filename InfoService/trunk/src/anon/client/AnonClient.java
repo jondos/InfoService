@@ -702,8 +702,9 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 				return ErrorCodes.E_NOT_PARSABLE;
 			}
 			catch (Exception e)
-			{
+			{e.printStackTrace();
 				LogHolder.log(LogLevel.ERR, LogType.NET, e);
+				LogHolder.log(LogLevel.ERR, LogType.PAY, e.getMessage());
 				closeSocketHandler();
 				return ErrorCodes.E_UNKNOWN;
 			}
@@ -733,7 +734,8 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 			}
 			/* maybe we have to start some more services */
 			int errorCode = finishInitialization(m_multiplexer, m_keyExchangeManager, m_paymentProxyInterface,
-												 m_packetCounter, a_connectedSocket, a_serviceContainer);
+												 m_packetCounter, a_connectedSocket, a_serviceContainer,
+												 m_keyExchangeManager.getConnectedCascade() );
 			if (errorCode != ErrorCodes.E_SUCCESS)
 			{
 				shutdown();
@@ -779,7 +781,8 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 
 	private int finishInitialization(Multiplexer a_multiplexer, KeyExchangeManager a_keyExchangeManager,
 									 IMutableProxyInterface a_proxyInterface, PacketCounter a_packetCounter,
-									 Socket a_connectedSocket, IServiceContainer a_serviceContainer)
+									 Socket a_connectedSocket, IServiceContainer a_serviceContainer,
+									 MixCascade a_cascade)
 	{
 		if (a_keyExchangeManager.isProtocolWithTimestamp())
 		{
@@ -811,7 +814,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		 * disabled
 		 */
 		AIControlChannel aiControlChannel =
-			new AIControlChannel(a_multiplexer, a_proxyInterface, a_packetCounter, a_serviceContainer);
+			new AIControlChannel(a_multiplexer, a_proxyInterface, a_packetCounter, a_serviceContainer, a_cascade);
 		m_paymentInstance = new Pay(aiControlChannel);
 		if (a_keyExchangeManager.isPaymentRequired())
 		{

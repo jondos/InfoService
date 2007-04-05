@@ -27,7 +27,6 @@
  */
 package anon.pay.xml;
 
-import java.io.ByteArrayInputStream;
 import java.util.Enumeration;
 import java.util.Vector;
 
@@ -114,7 +113,7 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 	public Element toXmlElement(Document a_doc)
 	{
 		Element elemRoot = a_doc.createElement("AccountInfo");
-		elemRoot.setAttribute("version", "1.0");
+		elemRoot.setAttribute("version", "1.1");
 		Element elem;
 
 		// add balance
@@ -147,17 +146,16 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 	 */
 	public long addCC(XMLEasyCC cc) throws Exception
 	{
-		String aiName = cc.getAIName();
 		long oldBytes = 0;
 		Enumeration enumer = m_costConfirmations.elements();
-		XMLEasyCC tmp;
+		XMLEasyCC ccToAdd;
 		while (enumer.hasMoreElements())
 		{
-			tmp = (XMLEasyCC) enumer.nextElement();
-			if (tmp.getAIName().equals(aiName))
+			ccToAdd = (XMLEasyCC) enumer.nextElement();
+			if (1==1)//TODO: check hashes of price certs in CC vs. price certs of the Mixes used (used to be a check of the AiID)
 			{
-				oldBytes = tmp.getTransferredBytes();
-				m_costConfirmations.removeElement(tmp);
+				oldBytes = ccToAdd.getTransferredBytes();
+				m_costConfirmations.removeElement(ccToAdd);
 				break;
 			}
 		}
@@ -194,17 +192,15 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 	 * @param string String
 	 * @return XMLEasyCC
 	 */
-	public XMLEasyCC getCC(String aiName)
+	public XMLEasyCC getCC(String priceCertHash)
 	{
 		Enumeration enumer = m_costConfirmations.elements();
 		XMLEasyCC current;
 		while (enumer.hasMoreElements())
 		{
 			current = (XMLEasyCC) enumer.nextElement();
-			if (current.getAIName().equals(aiName))
-			{
-				return current;
-			}
+			//TODO: check hashes of price certs in CC vs. price certs of the Mixes used (used to be a check of the AiID)
+			return current;
 		}
 		return null;
 	}

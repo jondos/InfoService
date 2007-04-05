@@ -32,6 +32,10 @@ import java.util.Vector;
  * Data container for an account's balance
  *
  * @author Andreas Mueller, Bastian Voigt
+ *
+ * Elmar: only called by PICommandUser on Database, changed it so now we get a (then unsigned) XMLBalance
+ *        directly from the Database, so now this class is not needed any more and can be deleted
+ *        (so I won't bother to update it to the new accountbalance format)
  */
 public class Balance
 {

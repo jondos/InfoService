@@ -41,7 +41,7 @@ public class PIRequest
 {
 	public String method;
 	public String url;
-	public String getData;
+	public String getData; //params in the URL of a GET request (NOT an accessor for POST data!)
 	public int contentLength;
 	public byte[] data;
 

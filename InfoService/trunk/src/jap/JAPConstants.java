@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.07.027"; //Never change the layout of this line!
+	public static final String aktVersion = "00.08.006"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -67,14 +67,18 @@ public final class JAPConstants
 
 	static final int DEFAULT_PORT_NUMBER = 4001;
 	static final boolean DEFAULT_LISTENER_IS_LOCAL = true;
-	static final String DEFAULT_ANON_NAME = "Dresden-Dresden";
-	static final String[] DEFAULT_ANON_MIX_IDs = new String[]{"BA6F90FB9120E0998ACFCC3A601F1B406A4655A1",
-		"75ACF4F101510607BA3E9E348821D8697BE8FC58"};
-	static final String[] DEFAULT_ANON_HOSTS = {"mix.inf.tu-dresden.de", "141.76.45.33"};
+	static final String DEFAULT_ANON_NAME = "noCascadesAvail";
+	//static final String[] DEFAULT_ANON_MIX_IDs = new String[]{"BA6F90FB9120E0998ACFCC3A601F1B406A4655A1",
+		//"75ACF4F101510607BA3E9E348821D8697BE8FC58"};
+	static final String[] DEFAULT_ANON_MIX_IDs = new String[]{"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"};
+	//static final String[] DEFAULT_ANON_HOSTS = {"mix.inf.tu-dresden.de", "141.76.45.33"};
+	static final String[] DEFAULT_ANON_HOSTS = {"0.0.0.0"};
 
-	static final int DEFAULT_ANON_PORT_NUMBERS[] =
-		{
-		22, 80, 443, 6544};
+	//static final int DEFAULT_ANON_PORT_NUMBERS[] =
+	//	{
+	//	22, 80, 443, 6544};
+	static final int DEFAULT_ANON_PORT_NUMBERS[] = {6544};
+
 	/**
 	 * The name of the default infoservice.
 	 */
@@ -82,20 +86,19 @@ public final class JAPConstants
 		new String[]{"880D9306B90EC8309178376B43AC26652CE52B74",
 		"4EAD8F831010B39FB3B014CFE433C2D8EB50D311",
 		"6DA81C905C5818E2D95F45B6D6323EFB79F08137"};
+	//new String[]{"1AF4734DD3AA5BD1A8A4A2EDACAD825C711E1770"};
 	public static final String DEFAULT_INFOSERVICE_HOSTNAMES[] =
 		new String[]{"infoservice.inf.tu-dresden.de", "88.84.135.6", "85.31.187.19"};
+	//new String[]{"87.230.20.187"};
+
 	public static final int DEFAULT_INFOSERVICE_PORT_NUMBERS[][] =
 		{{80, 6543}, {80}, {80}};
+	//	{{80}};
 
 	/**
 	 * This defines, whether automatic infoservice request are disabled as default.
 	 */
 	public static final boolean DEFAULT_INFOSERVICE_DISABLED = false;
-
-	/**
-	 * This defines, whether there is an automatic change of infoservice after failure as default.
-	 */
-	public static final boolean DEFAULT_INFOSERVICE_CHANGES = true;
 
 	/**
 	 * This defines the timeout for infoservice communication (connections to the update server
@@ -194,17 +197,19 @@ public final class JAPConstants
 		"firefox", "iexplore", "explorer", "mozilla", "konqueror", "mozilla-firefox", "firebird", "opera"
 	};
 
-	public final static String PI_ID = "3ADE1713CAFA6470FADCC3395415F8950C42CD2E";
-	public final static String PI_NAME = "JAP Team PI";
-	public final static String PI_HOST = "87.230.17.174";
-	public final static int PI_PORT = 443;
-	public final static String PI_CERT = "bi.cer";
+	public final static String PI_ID =  "3ADE1713CAFA6470FADCC3395415F8950C42CD2E"; //"48A168293A85E0F0B5604E319D5E8B8FEA0DBB9D"; // "3ADE1713CAFA6470FADCC3395415F8950C42CD2E";
+	public final static String PI_NAME =  "newbi";  // "JAP Team PI";
+	public final static String PI_HOST =   "87.230.20.188";  // "87.230.9.148";
+	public final static int PI_PORT =  3017; // 443;
+	public final static String PI_CERT =   /*"jpinew.cer"; */ "bi.cer";
 	public final static String CERTSPATH = "certificates/";
 	public final static String INFOSERVICE_CERTSPATH = "acceptedInfoServiceCAs/";
 	public final static String MIX_CERTSPATH = "acceptedMixCAs/";
 	public final static String CERT_JAPCODESIGNING = "japcodesigning.cer";
 	public final static String CERT_JAPINFOSERVICEMESSAGES = "japupdatemessages.cer";
 	public static final boolean DEFAULT_CERT_CHECK_ENABLED = true;
+
+	public static final long MAX_PREPAY_INTERVAL_KBYTES = 105000; //a little over 100 MB
 
 	public final static int TOR_MAX_CONNECTIONS_PER_ROUTE = Circuit.MAX_STREAMS_OVER_CIRCUIT;
 	public final static int TOR_MAX_ROUTE_LEN = Tor.MAX_ROUTE_LEN;
@@ -285,7 +290,6 @@ public final class JAPConstants
 	public final static String CONFIG_PAYMENT = "Payment";
 	public final static String CONFIG_PAYMENT_INSTANCES = "PaymentInstances";
 	public final static String CONFIG_ENCRYPTED_DATA = "EncryptedData";
-	public final static String CONFIG_PAY_ACCOUNTS_FILE = "PayAccountsFile";
 	public final static String CONFIG_JAP_FORWARDING_SETTINGS = "JapForwardingSettings";
 
 	/** Supported non-generic payment names. Comma-separated list. e.g. "CreditCard,DirectDebit"*/

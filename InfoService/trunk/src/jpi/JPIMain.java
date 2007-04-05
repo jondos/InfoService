@@ -43,6 +43,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import logging.SystemErrLog;
+import jpi.db.ConfigurationUpdater;
 
 public class JPIMain
 {
@@ -73,7 +74,7 @@ public class JPIMain
 		SystemErrLog log1 = new SystemErrLog();
 		LogHolder.setLogInstance(log1);
 		log1.setLogType(LogType.ALL);
-		LogHolder.setDetailLevel(LogHolder.DETAIL_LEVEL_LOWEST);
+		//LogHolder.setDetailLevel(LogHolder.DETAIL_LEVEL_LOWEST);
 
 		// read config file
 		if (!Configuration.init(argv[0]))
@@ -150,6 +151,9 @@ public class JPIMain
 					DBSupplier.getDataBase().createTables();
 				}
 			}
+			//launch configuration updater thread
+			ConfigurationUpdater configUpdater = new ConfigurationUpdater();
+			configUpdater.start();
 
 			// launch database maintenance thread
 			DBSupplier.getDataBase().startCleanupThread();
@@ -167,16 +171,28 @@ public class JPIMain
 
 		while (japListeners.hasMoreElements())
 		{
-			PIServer userServer = new PIServer(false, (ListenerInterface) japListeners.nextElement());
+			PIServer userServer = new PIServer(PIServer.SERVING_JAP, (ListenerInterface) japListeners.nextElement());
 			Thread userThread = new Thread(userServer, userServer.toString());
 			userThread.start();
 		}
 
 		// start PIServer for AI connections
 		LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching PIServer for AI connections on port ");
-		PIServer aiServer = new PIServer(true, Configuration.getAiListenerInterface());
+		PIServer aiServer = new PIServer(PIServer.SERVING_AI, Configuration.getAiListenerInterface());
 		Thread aiThread = new Thread(aiServer, aiServer.toString());
 		aiThread.start();
+
+		//start MCServer for MixConfig connections
+		LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching MCServer for MixConfig connections");
+		PIServer mcServer = new PIServer(PIServer.SERVING_MC,Configuration.getMCListenerInterface() );
+		Thread mcThread = new Thread(mcServer,mcServer.toString() );
+		mcThread.start();
+
+		//start Micropayment server for Call2pay payments via micropayment.de (if enabled in config)
+		LogHolder.log(LogLevel.INFO, LogType.PAY, "JPIMain: Launching MicropaymentServer for Call 2 pay connections");
+		PIServer micropaymentServer = new PIServer(PIServer.SERVING_MICROPAYMENT,Configuration.getMPListenerInterface() );
+		Thread mpThread = new Thread(micropaymentServer,micropaymentServer.toString() );
+		mpThread.start();
 
 		//start the credit card helper
 		/*String strHelperClass = "jpi.helper." + Configuration.getCreditCardHelper() + "CreditCardHelper";

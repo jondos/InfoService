@@ -29,6 +29,7 @@ package jpi.db;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 
 /**
  * Klasse die ein Objekt liefert, welches {@link DBInterface} implementiert.
@@ -36,11 +37,18 @@ import java.sql.DriverManager;
  * Zur Unterstuetzung einer anderen Datenbank (z.B. MySQL) sind diese Klasse
  * und gegebenenfalls {@link DataBase} anzupassen.
  *
- * @author Andreas Mueller
+ * @author Andreas Mueller, Elmar Schraml
  */
 public abstract class DBSupplier
 {
 	private static Connection con = null;
+
+	//suggestion for improvement: use non-static variables, and replace initDataBase with getInstance()
+	private static String dbHost;
+	private static int    dbPort;
+	private static String dbUsername;
+	private static String dbPassword;
+	private static String dbDatabasename;
 
 	/**
 	 * Initialisiert die Verbindung zur Datenbank.
@@ -61,9 +69,20 @@ public abstract class DBSupplier
 			closeDataBase();
 		}
 		Class.forName("org.postgresql.Driver"); //check if driver class is present
-		con = DriverManager.getConnection("jdbc:postgresql://" + databaseHost + ":" +
-										  databasePort + "/" + databaseName, userName, password);
+		dbHost = databaseHost;
+		dbPort = databasePort;
+		dbUsername = userName;
+		dbPassword = password;
+		dbDatabasename = databaseName;
 
+		con = getNewConnection();
+
+	}
+
+	private static synchronized Connection getNewConnection() throws SQLException
+	{
+		return DriverManager.getConnection("jdbc:postgresql://" + dbHost + ":" +
+										  dbPort + "/" + dbDatabasename, dbUsername, dbPassword);
 	}
 
 	/**
@@ -74,9 +93,17 @@ public abstract class DBSupplier
 	 */
 	public static synchronized DBInterface getDataBase() throws Exception
 	{
-		if (con == null)
+		if (con == null) //connection died
 		{
-			throw new Exception("no connection to database");
+			//try to get a new connection
+			try
+			{
+				con = getNewConnection();
+			}
+			catch (SQLException e)
+			{
+				throw new Exception("no connection to database");
+			}
 		}
 		return (DBInterface)new DataBase(con);
 	}

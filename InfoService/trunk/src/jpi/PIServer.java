@@ -48,9 +48,15 @@ import logging.LogType;
 public class PIServer implements Runnable
 {
 	private TinyTLSServer m_serverSocket;
-	private boolean m_typeAI;
+	private int m_type;
 	private ListenerInterface m_listener;
 	private ThreadPool m_threadPool;
+
+	//constants to set the type of server (serving AI, JAP or MixConfig)
+	public static final int SERVING_JAP = 1;
+	public static final int SERVING_AI  = 2;
+	public static final int SERVING_MC  = 3;
+	public static final int SERVING_MICROPAYMENT = 4;
 
 	/**
 	 * Konstruktor f\uFFFDr Serversocket. Es gibt zwei Arten von Serversockets:
@@ -58,12 +64,13 @@ public class PIServer implements Runnable
 	 * Verbindungen von den Abrechnungsinstanzen. Wenn <b>typeai</b> gleich
 	 * <b>true</b> wird ein Abrechnungsinstanz-Socket erzeugt.
 	 *
-	 * @param typeai Socket f\uFFFDr AI- oder JAP-Verbindungen? (true = AI)
+	 * @param type Socket for AI-,MC- or JAP-Connections?
+	 * use one of the constants in this class (SERVING_JAP, SERVING_AI, SERVING_MC)
 	 */
-	public PIServer(boolean typeai, ListenerInterface a_listener)
+	public PIServer(int type, ListenerInterface a_listener)
 	{
 		m_listener = a_listener;
-		m_typeAI = typeai;
+		m_type = type;
 	}
 
 	/**
@@ -91,7 +98,7 @@ public class PIServer implements Runnable
 		}
 		catch (Exception e)
 		{
-			if (!m_typeAI)
+			if (m_type != PIServer.SERVING_AI)
 			{
 				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "PIServer (BI): Exception in run(): " + e);
 			}
@@ -100,13 +107,19 @@ public class PIServer implements Runnable
 
 		Socket acceptedSocket;
 		JPIConnection con;
-		if (!m_typeAI)
+		if (m_type == PIServer.SERVING_JAP)
 		{
 			m_threadPool = new ThreadPool("JAP Server Thread", Configuration.getMaxJapConnections());
 		}
-		else
+		else if (m_type == PIServer.SERVING_AI)
 		{
 			m_threadPool = new ThreadPool("AI Server Thread", Configuration.getMaxAiConnections());
+		} else if (m_type == PIServer.SERVING_MC)
+		{
+			m_threadPool = new ThreadPool("MC Server Thread", Configuration.getMaxMCConnections() );
+		}else if (m_type == PIServer.SERVING_MICROPAYMENT)
+		{
+			m_threadPool = new ThreadPool("Micropayment Server Thread", Configuration.getMaxMPConnections() );
 		}
 		while (true)
 		{
@@ -129,7 +142,7 @@ public class PIServer implements Runnable
 				catch (Throwable t)
 				{
 				}
-				con = new JPIConnection(acceptedSocket, m_typeAI);
+				con = new JPIConnection(acceptedSocket, m_type);
 				m_threadPool.addRequest(con);
 			}
 			catch (InterruptedIOException exi)
@@ -154,18 +167,31 @@ public class PIServer implements Runnable
 
 	public String toString()
 	{
-		String s = "PI Server to/from JAP on Interface: ";
-		if (m_typeAI)
+		String s = "PI Server,";
+		switch (m_type)
 		{
-			s = s = "PI Server to/from AI on Interface: ";
+			case PIServer.SERVING_AI:
+				s+="serving AI connection";
+				break;
+			case PIServer.SERVING_JAP:
+				s+="serving JAP connection";
+				break;
+			case PIServer.SERVING_MC:
+				s+="serving MixConfig connection";
+				break;
+			case PIServer.SERVING_MICROPAYMENT:
+				s+="serving micropayments";
+				break;
+			default:
+				s+="type unknown";
 		}
 		if (m_listener == null)
 		{
-			s += "unkown";
+			s += "unkown interface";
 		}
 		else
 		{
-			s += m_listener.getHost()+":"+m_listener.getPort();
+			s += "on interface "+m_listener.getHost()+":"+m_listener.getPort();
 		}
 		return s;
 	}

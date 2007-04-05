@@ -66,6 +66,7 @@ import anon.client.AnonClient;
 import anon.client.ITrustModel;
 import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
+import anon.crypto.XMLSignature;
 import anon.infoservice.AbstractMixCascadeContainer;
 import anon.infoservice.BlacklistedCascadeIDEntry;
 import anon.infoservice.CascadeIDEntry;
@@ -354,9 +355,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 			{
 				mixIDs.addElement(JAPConstants.DEFAULT_ANON_MIX_IDs[i]);
 			}
-			m_currentMixCascade = new MixCascade(JAPConstants.DEFAULT_ANON_NAME,
+			m_currentMixCascade = new MixCascade(JAPMessages.getString(JAPConstants.DEFAULT_ANON_NAME),
 												 JAPConstants.DEFAULT_ANON_MIX_IDs[0], mixIDs, listeners,
-												 System.currentTimeMillis() + Constants.TIMEOUT_MIXCASCADE);
+												 //System.currentTimeMillis() + Constants.TIMEOUT_MIXCASCADE);
+												 System.currentTimeMillis());
 			m_currentMixCascade.setUserDefined(false, null);
 			m_currentMixCascade.showAsTrusted(true);
 			Database.getInstance(CascadeIDEntry.class).update(new CascadeIDEntry(m_currentMixCascade));
@@ -384,7 +386,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 		/* set some default values for infoservice communication */
 		setInfoServiceDisabled(JAPConstants.DEFAULT_INFOSERVICE_DISABLED);
-		InfoServiceHolder.getInstance().setChangeInfoServices(JAPConstants.DEFAULT_INFOSERVICE_CHANGES);
 
 		addDefaultCertificates();
 		SignatureVerifier.getInstance().setCheckSignatures(JAPConstants.DEFAULT_CERT_CHECK_ENABLED);
@@ -1432,7 +1433,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 
 						Element elemAccounts = (Element) XMLUtil.getFirstChildByName(elemPay,
-							JAPConstants.CONFIG_PAY_ACCOUNTS_FILE);
+							PayAccountsFile.XML_ELEMENT_NAME);
 
 						//Load known Payment instances
 						Node nodePIs = XMLUtil.getFirstChildByName(elemPay,
@@ -2391,7 +2392,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 			e.appendChild(JAPModel.getInstance().getRoutingSettings().toXmlElement(doc));
 
 			XMLUtil.formatHumanReadable(doc);
-			return XMLUtil.toString(doc);
+			//return XMLUtil.toString(doc);
+			return new String(XMLSignature.toCanonical(doc));
 			//((XmlDocument)doc).write(f);
 		}
 		catch (Throwable ex)
@@ -3298,7 +3300,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 						JAPDialog.OPTION_TYPE_OK_CANCEL, JAPDialog.MESSAGE_TYPE_INFORMATION, checkBox);
 					if (returnValue == JAPDialog.RETURN_VALUE_OK)
 					{
-						getInstance().getViewWindow().setEnabled(false);
 						JAPModel.getInstance().setNeverRemindGoodbye(checkBox.getState());
 					}
 				}
@@ -3306,6 +3307,37 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					returnValue = JAPDialog.RETURN_VALUE_OK;
 				}
+
+				if (getInstance().getViewWindow() != null && getInstance().m_bAskSavePayment && bDoNotRestart)
+				{
+					// we are in GUI mode
+					Enumeration enumAccounts = PayAccountsFile.getInstance().getAccounts();
+					while (enumAccounts.hasMoreElements())
+					{
+						if (! ( (PayAccount) enumAccounts.nextElement()).isBackupDone())
+						{
+							JAPDialog.LinkedCheckBox checkbox =
+								new JAPDialog.LinkedCheckBox(false, "payment_account")
+							{
+								public boolean isOnTop()
+								{
+									return true;
+								}
+							};
+
+							if (!JAPDialog.showYesNoDialog(getInstance().getViewWindow(),
+								JAPMessages.getString(MSG_ACCOUNT_NOT_SAVED), checkbox))
+							{
+								// skip closing JAP
+								getInstance().setAskSavePayment(!checkbox.getState());
+								return;
+							}
+							getInstance().setAskSavePayment(!checkbox.getState());
+							break;
+						}
+					}
+				}
+
 
 				if (returnValue == JAPDialog.RETURN_VALUE_OK || JAPDialog.isConsoleOnly())
 				{
@@ -3337,39 +3369,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 					if (getInstance().m_finishSplash instanceof JAPSplash)
 					{
 						parent = (JAPSplash) getInstance().m_finishSplash;
-					}
-
-					if (parent != null && getInstance().m_bAskSavePayment && bDoNotRestart)
-					{
-						// we are in GUI mode
-						Enumeration enumAccounts = PayAccountsFile.getInstance().getAccounts();
-						while (enumAccounts.hasMoreElements())
-						{
-							if (! ( (PayAccount) enumAccounts.nextElement()).isBackupDone())
-							{
-								JAPDialog.LinkedCheckBox checkbox =
-									new JAPDialog.LinkedCheckBox(false, "payment_account")
-								{
-									public boolean isOnTop()
-									{
-										return true;
-									}
-								};
-
-								if (!JAPDialog.showYesNoDialog(parent,
-									JAPMessages.getString(MSG_ACCOUNT_NOT_SAVED), checkbox))
-								{
-									// skip closing JAP
-									((JAPSplash)getInstance().m_finishSplash).setVisible(false);
-									getInstance().getViewWindow().setEnabled(true);
-									getInstance().getView().getViewIconified().setEnabled(true);
-									getInstance().setAskSavePayment(!checkbox.getState());
-									return;
-								}
-								getInstance().setAskSavePayment(!checkbox.getState());
-								break;
-							}
-						}
 					}
 
 					Vector exitListeners = (Vector)getInstance().m_programExitListeners.clone();

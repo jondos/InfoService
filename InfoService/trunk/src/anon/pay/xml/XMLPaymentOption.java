@@ -35,6 +35,7 @@ import org.w3c.dom.NodeList;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
 import anon.util.Util;
+import java.util.Enumeration;
 
 /**
  * This class represents a payment option sent by the Payment Instance.
@@ -44,11 +45,16 @@ public class XMLPaymentOption implements IXMLEncodable
 {
 	public static final String OPTION_ACTIVE = "active";
 	public static final String OPTION_PASSIVE = "passive";
+	public static final String OPTION_MIXED = "mixed";
+
 	public static final String EXTRA_TEXT = "text";
 	public static final String EXTRA_LINK = "link";
 	public static final String EXTRA_PHONE = "phone";
 
 	private static final String EXCEPTION_WRONG_XML_STRUCTURE = "XMLPaymentOption wrong XML structure";
+
+	//stores short code Strings for alle languages for which at least one entry has been set
+	private static Vector m_languages = new Vector();
 
 	/** Option name */
 	private String m_name;
@@ -119,24 +125,28 @@ public class XMLPaymentOption implements IXMLEncodable
 	{
 		m_headings.addElement(new String[]
 							  {a_heading, a_language});
+		addLanguage(a_language);
 	}
 
 	public void addDetailedInfo(String a_info, String a_language)
 	{
 		m_detailedInfos.addElement(new String[]
 								   {a_info, a_language});
+		addLanguage(a_language);
 	}
 
 	public void addExtraInfo(String a_info, String a_type, String a_language)
 	{
 		m_extraInfos.addElement(new String[]
 								{a_info, a_type, a_language});
+		addLanguage(a_language);
 	}
 
 	public void addInputField(String a_reference, String a_label, String a_language)
 	{
 		m_inputFields.addElement(new String[]
 								 {a_reference, a_label, a_language});
+		addLanguage(a_language);
 	}
 
 	public void setImageLink(String a_link)
@@ -312,8 +322,15 @@ public class XMLPaymentOption implements IXMLEncodable
 		m_type = a_type;
 	}
 
+	/**
+	 * getHeading
+	 *
+	 * @param a_langShort String
+	 * @return String: heading int the specified language (if not found: returns English heading)
+	 */
 	public String getHeading(String a_langShort)
 	{
+		int debug = m_headings.size();
 		for (int i = 0; i < m_headings.size(); i++)
 		{
 			String[] heading = (String[]) m_headings.elementAt(i);
@@ -351,6 +368,46 @@ public class XMLPaymentOption implements IXMLEncodable
 		return null;
 	}
 
+	/**
+	 * getExtraInfos
+	 *
+	 * @return Vector: all Extrainfos, elements of the Vector are String[3] = { "info", "type", "lang"}
+	 */
+	public Vector getExtraInfos()
+	{
+		return (Vector) m_extraInfos.clone();
+	}
+
+	/**
+	 * getLocalizedExtraInfoText
+	 * like getExtraInfos(), except:
+	 * - only returns "info", without type (so you can get Strings from the Vector directly instead of an Array)
+	 * - only in the given language (so you don't have to iterate over the Vector to get one language's strings)
+	 *
+	 * Warning: extraInfos that do not exist for the given language will not be returned at all
+	 * (ideally, we'd fall back to english, but the data structures used don't allow figuring out which
+	 * extraInfos are equivalents in different languages)
+	 *
+	 * @param language 2-letter code for the expected language
+	 * @return Vector: all Extrainfos for given language as String (empty Vector if nothing set for the given language)
+	 *
+	 */
+	public Vector getLocalizedExtraInfoText(String language)
+	{
+		Vector allInfos = getExtraInfos();
+		Vector localizedInfos = new Vector();
+		for (Enumeration infos = allInfos.elements(); infos.hasMoreElements(); )
+		{
+			String[] info = (String[]) infos.nextElement();
+			//only for the given language
+			if ( info[2].equals(language) )
+			{
+				localizedInfos.addElement(info[0]);
+			}
+		}
+		return localizedInfos;
+	}
+
 	public String getType()
 	{
 		return m_type;
@@ -377,6 +434,11 @@ public class XMLPaymentOption implements IXMLEncodable
 	public Vector getInputFields()
 	{
 		return (Vector) m_inputFields.clone();
+	}
+
+	public Vector getLanguages()
+	{
+		return (Vector) m_languages.clone(); //returning a cloned copy since we don't want any other class to change the contents
 	}
 
 	public boolean isGeneric()
@@ -414,5 +476,14 @@ public class XMLPaymentOption implements IXMLEncodable
 			}
 		}
 		return true;
+	}
+
+	private static void addLanguage(String lang)
+	{
+		//check whether lang already is in m_languages, if not add
+		if (! m_languages.contains(lang) )
+		{
+			m_languages.addElement(lang);
+		}
 	}
 };
