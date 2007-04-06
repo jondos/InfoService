@@ -637,10 +637,12 @@ public final class JAPHelp extends JAPDialog
 			SwingUtilities.invokeLater(new PageLoader(a_url));
 		}
 
+		/**
+		 * This needs to be outside the class for compilation in JDK 1.1.8.
+		 */
+		private static final String MAILTO = "mailto";
 		private final class PageLoader implements Runnable
 		{
-			private static final String MAILTO = "mailto";
-
 			PageLoader(URL u)
 			{
 				url = u;

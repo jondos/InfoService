@@ -120,12 +120,23 @@ public class TinyTLS extends Socket
 	private ProxyConnection m_ProxyConnection;
 
 	/**
+	 * This needs to be an interface for compilation in JDK 1.1.8.
+	 */
+	private interface ITLSConstants
+	{
+		static final int STATE_START = 0;
+		static final int STATE_VERSION = 1;
+		static final int STATE_LENGTH = 2;
+		static final int STATE_PAYLOAD = 3;
+	}
+
+	/**
 	 *
 	 * @author stefan
 	 *
 	 * TLSInputStream
 	 */
-	class TLSInputStream extends InputStream
+	class TLSInputStream extends InputStream implements ITLSConstants
 	{
 
 		//private boolean m_closed;
@@ -134,10 +145,6 @@ public class TinyTLS extends Socket
 		private int m_aktPendLen; // number of bytes we could deliver imedialy
 		private TLSPlaintextRecord m_aktTLSRecord;
 		private int m_ReadRecordState;
-		private final static int STATE_START = 0;
-		private final static int STATE_VERSION = 1;
-		final private static int STATE_LENGTH = 2;
-		final private static int STATE_PAYLOAD = 3;
 
 		/**
 		 * Constructor
