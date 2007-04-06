@@ -695,9 +695,19 @@ public final class GUIUtils
 			m_listener = null;
 		}
 
-		private class InternalListener extends MouseAdapter implements MouseMotionListener, ComponentListener
+		/**
+		 * This needs to be an interface for compilation in JDK 1.1.8.
+		 */
+		private interface IDockInterface
 		{
-			private static final int DOCK_DISTANCE = 10;
+			static final int DOCK_DISTANCE = 10;
+		}
+
+
+		private class InternalListener extends MouseAdapter implements MouseMotionListener, ComponentListener,
+			IDockInterface
+		{
+
 			private boolean m_bIsDragging = false;
 			private Point m_startPoint;
 			private final Object SYNC = new Object();

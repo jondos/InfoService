@@ -2659,7 +2659,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			synchronized (SYNC_UPDATE_SERVER_PANEL)
 			{
 				m_bUpdateServerPanel = ((m_manualPanel == null) || (!m_manualPanel.isVisible()));
-				int index = m_vecCascades.indexOf(cascade);
+				int index = -1;
+				if (cascade != null)
+				{
+					index = m_vecCascades.indexOf(cascade);
+				}
 				if (cascade == null || index < 0)
 				{
 					if (m_tableMixCascade.getRowCount() > 0)
