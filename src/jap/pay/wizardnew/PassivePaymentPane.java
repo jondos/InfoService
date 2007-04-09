@@ -30,6 +30,7 @@ package jap.pay.wizardnew;
 import java.util.Enumeration;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.GregorianCalendar;
 
 import java.awt.Component;
 import java.awt.Container;
@@ -465,8 +466,7 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		m_rootPanel.add(m_cbMonth, m_c);
 
 		m_c.gridx = 2;
-		Date date = new Date();
-		int thisYear = date.getYear() + 1900;
+		int thisYear = new GregorianCalendar().get(GregorianCalendar.YEAR);
 		m_cbYear = new JComboBox();
 		for (int i = 0; i < 21; i++)
 		{

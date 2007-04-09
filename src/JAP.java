@@ -235,6 +235,11 @@ public class JAP
 		{
 			splashText = "Chargement des param\u00e8tres d'internationalisation";
 		}
+		else if (defaultLocale.getLanguage().equals("cs"))
+		{
+			splashText = "Nahr\u00E1v\u00E1m internacionalizaci";
+		}
+
 		else
 		{
 			splashText = "Loading internationalisation";

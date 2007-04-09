@@ -49,6 +49,42 @@
   <property category="sys" name="VersionLabel" value="@version"/>
   <property category="sys" name="WorkingDirectory" value="."/>
   <property category="sys" name="enable.auto.packages" value="false"/>
+  <node name="Jap" type="NavigationDirectory">
+    <property category="directorynode" name="showSubdirectories" value="1"/>
+    <property category="directorynode" name="url" value="."/>
+  </node>
+  <node name="Jap" type="NavigationDirectory">
+    <property category="directorynode" name="showSubdirectories" value="1"/>
+    <property category="directorynode" name="url" value="."/>
+  </node>
+  <node name="Jap" type="NavigationDirectory">
+    <property category="directorynode" name="showSubdirectories" value="1"/>
+    <property category="directorynode" name="url" value="."/>
+  </node>
+  <node name="Jap" type="NavigationDirectory">
+    <property category="directorynode" name="showSubdirectories" value="1"/>
+    <property category="directorynode" name="url" value="."/>
+  </node>
+  <node name="Jap" type="NavigationDirectory">
+    <property category="directorynode" name="showSubdirectories" value="1"/>
+    <property category="directorynode" name="url" value="."/>
+  </node>
+  <node name="Jap" type="NavigationDirectory">
+    <property category="directorynode" name="showSubdirectories" value="1"/>
+    <property category="directorynode" name="url" value="."/>
+  </node>
+  <node name="Jap" type="NavigationDirectory">
+    <property category="directorynode" name="showSubdirectories" value="1"/>
+    <property category="directorynode" name="url" value="."/>
+  </node>
+  <node name="Jap" type="NavigationDirectory">
+    <property category="directorynode" name="showSubdirectories" value="1"/>
+    <property category="directorynode" name="url" value="."/>
+  </node>
+  <node name="Jap" type="NavigationDirectory">
+    <property category="directorynode" name="showSubdirectories" value="1"/>
+    <property category="directorynode" name="url" value="."/>
+  </node>
   <node name="anon" type="Package"/>
   <node name="anon.crypto" type="Package"/>
   <node name="anon.crypto.test" type="Package"/>
@@ -116,5 +152,4 @@
   <node name="update" type="Package"/>
   <file path="src/JAP.java"/>
   <file path="src/JAPMacintosh.java"/>
-  <file path="magicdraw.magicdraw"/>
 </project>
