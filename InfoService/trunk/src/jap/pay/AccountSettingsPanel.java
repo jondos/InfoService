@@ -35,6 +35,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.Observer;
 import java.util.Observable;
+import java.util.GregorianCalendar;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -124,7 +125,6 @@ import java.util.Locale;
 import anon.pay.xml.XMLVolumePlans;
 import jap.pay.wizardnew.VolumePlanSelectionPane;
 import anon.pay.xml.XMLVolumePlan;
-import anon.util.Base64;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -285,15 +285,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private static final String MSG_NEW_CAPTCHA_HINT =
 		AccountSettingsPanel.class.getName() + "_newCaptchaHint";
 
-
-
 	private static final String MSG_FILE_EXISTS = AccountSettingsPanel.class.getName() + "_fileExists";
 
 	private static final Integer[] CONNECT_TIMEOUTS =
-		new Integer[]{new Integer(60), new Integer(80), new Integer(100), new Integer(120), new Integer(160),
+		new Integer[]
+		{
+		new Integer(60), new Integer(80), new Integer(100), new Integer(120), new Integer(160),
 		new Integer(200), new Integer(250), new Integer(300)};
-
-
 
 	private JButton m_btnCreateAccount;
 	private JButton m_btnChargeAccount;
@@ -346,7 +344,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	public void update(Observable a_observable, Object a_arg)
 	{
 		if (a_observable instanceof JAPController &&
-			((JAPControllerMessage)a_arg).getMessageCode() == JAPControllerMessage.ASK_SAVE_PAYMENT_CHANGED)
+			( (JAPControllerMessage) a_arg).getMessageCode() == JAPControllerMessage.ASK_SAVE_PAYMENT_CHANGED)
 		{
 			m_cbxAskIfNotSaved.setSelected(JAPController.getInstance().isAskSavePayment());
 		}
@@ -362,7 +360,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		return JAPMessages.getString("ngPaymentTabTitle");
 	}
 
-/**
+	/**
 	 * recreateRootPanel - recreates all GUI elements
 	 */
 	public void recreateRootPanel()
@@ -379,7 +377,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		//tabPane.setFont(getFontSetting());
 		m_tabBasicSettings = createBasicSettingsTab();
 		m_tabPane.insertTab(JAPMessages.getString("ngPseudonymAccounts"),
-							null, m_tabBasicSettings , null, 0);
+							null, m_tabBasicSettings, null, 0);
 		m_tabAdvancedSettings = createAdvancedSettingsTab();
 		GridBagLayout rootPanelLayout = new GridBagLayout();
 		rootPanel.setLayout(rootPanelLayout);
@@ -537,7 +535,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		m_lblNoBackupMessage.setForeground(Color.red);
 		rootPanel.add(m_lblNoBackupMessage, c);
 
-
 		c.gridy++;
 		c.weightx = 0;
 		c.gridx = 0;
@@ -606,7 +603,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		m_cbxAskIfNotSaved = new JCheckBox(JAPMessages.getString(MSG_ASK_IF_NOT_SAVED));
 		panelAdvanced.add(m_cbxAskIfNotSaved, advancedPanelConstraints);
 
-
 		advancedPanelConstraints.weightx = 0.0;
 		advancedPanelConstraints.gridy++;
 		advancedPanelConstraints.gridx = 0;
@@ -626,7 +622,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		advancedPanelConstraints.gridx = 0;
 		advancedPanelConstraints.gridy++;
 		panelAdvanced.add(new JLabel(), advancedPanelConstraints);
-
 
 		updateValues(false);
 
@@ -707,13 +702,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		m_btnChargeAccount.setEnabled(false);
 		m_btnChargeAccount.addActionListener(a_actionListener);
 		buttonsPanel.add(m_btnChargeAccount, d);
-/*
-		d.gridx++;
-		m_btnBuyFlat = new JButton(JAPMessages.getString(MSG_BUTTON_BUYFLAT));
-		m_btnBuyFlat.setEnabled(false);
-		m_btnBuyFlat.addActionListener(a_actionListener);
-		buttonsPanel.add(m_btnBuyFlat,d);
-*/
+		/*
+		  d.gridx++;
+		  m_btnBuyFlat = new JButton(JAPMessages.getString(MSG_BUTTON_BUYFLAT));
+		  m_btnBuyFlat.setEnabled(false);
+		  m_btnBuyFlat.addActionListener(a_actionListener);
+		  buttonsPanel.add(m_btnBuyFlat,d);
+		 */
 		d.gridx++;
 		m_btnReload = new JButton(JAPMessages.getString(MSG_BUTTONRELOAD));
 		m_btnReload.addActionListener(a_actionListener);
@@ -800,7 +795,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		{
 			boolean enable = (getSelectedAccount() != null && getSelectedAccount().getPrivateKey() != null);
 			m_btnActivate.setEnabled(
-						 getSelectedAccount() != null && getSelectedAccount().getPrivateKey() == null);
+				getSelectedAccount() != null && getSelectedAccount().getPrivateKey() == null);
 			m_btnChargeAccount.setEnabled(enable);
 			//m_btnBuyFlat.setEnabled(enable);
 			m_btnTransactions.setEnabled(enable);
@@ -808,20 +803,21 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			m_btnReload.setEnabled(enable);
 			m_btnSelect.setEnabled(enable);
 			m_btnDeleteAccount.setEnabled(getSelectedAccount() != null);
-		}/*
-		else
-		{
-			m_btnActivate.setEnabled(false);
-			m_btnChargeAccount.setEnabled(false);
-			m_btnTransactions.setEnabled(false);
-			m_btnExportAccount.setEnabled(false);
-			m_btnReload.setEnabled(false);
-			m_btnSelect.setEnabled(false);
-			m_btnDeleteAccount.setEnabled(false);
-		}*/
+		}
+		/*
+		  else
+		  {
+		   m_btnActivate.setEnabled(false);
+		   m_btnChargeAccount.setEnabled(false);
+		   m_btnTransactions.setEnabled(false);
+		   m_btnExportAccount.setEnabled(false);
+		   m_btnReload.setEnabled(false);
+		   m_btnSelect.setEnabled(false);
+		   m_btnDeleteAccount.setEnabled(false);
+		  }*/
 	}
 
-/**
+	/**
 	 * Handler for the Button Clicks
 	 * @author Bastian Voigt
 	 * @version 1.0
@@ -845,12 +841,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					{
 						doChargeAccount(getSelectedAccount());
 					}
-/*
-					else if (source == m_btnBuyFlat)
-					{
-						doBuyFlat(getSelectedAccount());
-					}
-*/
+					/*
+						 else if (source == m_btnBuyFlat)
+						 {
+						  doBuyFlat(getSelectedAccount());
+						 }
+					 */
 					else if (source == m_btnDeleteAccount)
 					{
 						doDeleteAccount(getSelectedAccount());
@@ -881,7 +877,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					}
 					else if (source == m_btnActivate)
 					{
-						doActivateAccount((PayAccount) m_listAccounts.getSelectedValue());
+						doActivateAccount( (PayAccount) m_listAccounts.getSelectedValue());
 					}
 					m_bButtonClicked = false;
 				}
@@ -894,7 +890,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		}
 	}
 
-/**
+	/**
 	 * Asks the user for a new payment password
 	 */
 	private void doChangePassword()
@@ -927,7 +923,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		}
 	}
 
-/**
+	/**
 	 * Shows transaction numbers and if they have been used
 	 * @param a_account PayAccount
 	 */
@@ -992,7 +988,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			m_lblNoBackupMessage.setToolTipText("");
 		}
 
-
 		XMLAccountInfo accountInfo = selectedAccount.getAccountInfo();
 		if (accountInfo != null)
 		{
@@ -1012,15 +1007,14 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			Timestamp now = new Timestamp(System.currentTimeMillis());
 			if (flatEnddate != null && flatEnddate.after(now))
 			{
-				m_labelEnddate.setText(JAPUtil.formatTimestamp(flatEnddate,false,curLang));
-				m_labelVolume.setText(JAPUtil.formatBytesValue(balance.getVolumeBytesLeft()*1000));
+				m_labelEnddate.setText(JAPUtil.formatTimestamp(flatEnddate, false, curLang));
+				m_labelVolume.setText(JAPUtil.formatBytesValue(balance.getVolumeBytesLeft() * 1000));
 			}
 			else
 			{
 				m_labelEnddate.setText(JAPMessages.getString(MSG_ACCOUNT_NOFLAT));
 				m_labelVolume.setText(JAPMessages.getString(MSG_ACCOUNT_NOFLAT));
 			}
-
 
 			m_labelValid.setText(JAPUtil.formatTimestamp(balance.getValidTime(), true,
 				JAPController.getInstance().getLocale().getLanguage()));
@@ -1135,16 +1129,16 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		d.setVisible(true);
 	}
 
-/*
-	private void doBuyFlat(final PayAccount selectedAccount)
-	{
-		if (selectedAccount == null)
-		{
-			return;
-		}
-		FlatrateDialog d = new FlatrateDialog(getRootPanel(), this, JAPMessages.getString(MSG_FLATTITLE), true,selectedAccount);
-	}
-*/
+	/*
+	 private void doBuyFlat(final PayAccount selectedAccount)
+	 {
+	  if (selectedAccount == null)
+	  {
+	   return;
+	  }
+	  FlatrateDialog d = new FlatrateDialog(getRootPanel(), this, JAPMessages.getString(MSG_FLATTITLE), true,selectedAccount);
+	 }
+	 */
 	/**
 	 * Charges the selected account
 	 */
@@ -1182,6 +1176,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					}
 				}
 			}
+
 			public Object getValue()
 			{
 				return m_volumePlans;
@@ -1189,7 +1184,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		};
 
-    	final WorkerContentPane fetchPlansPane = new WorkerContentPane(a_parentDialog,
+		final WorkerContentPane fetchPlansPane = new WorkerContentPane(a_parentDialog,
 			JAPMessages.getString(MSG_FETCHINGPLANS), a_previousContentPane, fetchPlans)
 		{
 			public boolean isMoveForwardAllowed()
@@ -1199,48 +1194,48 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		};
 		fetchPlansPane.setInterruptThreadSafe(false);
 
-
 		// ********* show available volume plans *************//
 
-	    final VolumePlanSelectionPane planSelectionPane =	new VolumePlanSelectionPane(a_parentDialog, fetchPlansPane);
+	   final VolumePlanSelectionPane planSelectionPane = new VolumePlanSelectionPane(a_parentDialog,
+		   fetchPlansPane);
 
 		// ********** fetch payment options *********************//
-		WorkerContentPane.IReturnRunnable fetchOptions = new WorkerContentPane.IReturnRunnable()
-		{
-			private XMLPaymentOptions m_paymentOptions;
-			public void run()
-			{
-				try
-				{
-					BI pi = a_accountCreationThread.getAccount().getBI();
-					BIConnection piConn = new BIConnection(pi);
+	   WorkerContentPane.IReturnRunnable fetchOptions = new WorkerContentPane.IReturnRunnable()
+	   {
+		   private XMLPaymentOptions m_paymentOptions;
+		   public void run()
+		   {
+			   try
+			   {
+				   BI pi = a_accountCreationThread.getAccount().getBI();
+				   BIConnection piConn = new BIConnection(pi);
 
-					piConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
-					piConn.authenticate(a_accountCreationThread.getAccount().getAccountCertificate(),
-										//  PayAccountsFile.getInstance().getActiveAccount().getAccountCertificate(),
-										a_accountCreationThread.getAccount().getPrivateKey());
-										//PayAccountsFile.getInstance().getActiveAccount().getPrivateKey());
-					LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetching payment options");
-					m_paymentOptions = piConn.getPaymentOptions();
-					piConn.disconnect();
-				}
-				catch (Exception e)
-				{
-					if (!Thread.currentThread().isInterrupted())
-					{
-						LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
-									  "Error fetching payment options: " + e.getMessage());
-						showPIerror(a_parentDialog.getContentPane(), e);
-						Thread.currentThread().interrupt();
-					}
-				}
-			}
+				   piConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
+				   piConn.authenticate(a_accountCreationThread.getAccount().getAccountCertificate(),
+									   //  PayAccountsFile.getInstance().getActiveAccount().getAccountCertificate(),
+									   a_accountCreationThread.getAccount().getPrivateKey());
+				   //PayAccountsFile.getInstance().getActiveAccount().getPrivateKey());
+				   LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetching payment options");
+				   m_paymentOptions = piConn.getPaymentOptions();
+				   piConn.disconnect();
+			   }
+			   catch (Exception e)
+			   {
+				   if (!Thread.currentThread().isInterrupted())
+				   {
+					   LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
+									 "Error fetching payment options: " + e.getMessage());
+					   showPIerror(a_parentDialog.getContentPane(), e);
+					   Thread.currentThread().interrupt();
+				   }
+			   }
+		   }
 
-			public Object getValue()
-			{
-				return m_paymentOptions;
-			}
-		};
+		   public Object getValue()
+		   {
+			   return m_paymentOptions;
+		   }
+	   };
 
 		final WorkerContentPane fetchOptionsPane = new WorkerContentPane(a_parentDialog,
 			JAPMessages.getString(MSG_FETCHINGOPTIONS), planSelectionPane, fetchOptions);
@@ -1286,35 +1281,35 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		WorkerContentPane fetchTanPane =
 			new WorkerContentPane(a_parentDialog, JAPMessages.getString(MSG_FETCHINGTAN),
-			methodSelectionPane, fetchTan);
+								  methodSelectionPane, fetchTan);
 		fetchTanPane.setInterruptThreadSafe(false);
 
 		//************* show Payment Info (except for passive payments) **************
-		final PaymentInfoPane paymentInfoPane = new PaymentInfoPane(a_parentDialog, fetchTanPane)
-		{
-			public boolean isSkippedAsNextContentPane()
-			{
-				if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
-					XMLPaymentOption.OPTION_ACTIVE))
-				{
-					return false;
-				}
-				else if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
-					XMLPaymentOption.OPTION_MIXED))
-				{
-					return false;
-				}
-				else
-				{
-					return true;
-				}
-			}
+		 final PaymentInfoPane paymentInfoPane = new PaymentInfoPane(a_parentDialog, fetchTanPane)
+		 {
+			 public boolean isSkippedAsNextContentPane()
+			 {
+				 if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
+					 XMLPaymentOption.OPTION_ACTIVE))
+				 {
+					 return false;
+				 }
+				 else if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
+					 XMLPaymentOption.OPTION_MIXED))
+				 {
+					 return false;
+				 }
+				 else
+				 {
+					 return true;
+				 }
+			 }
 
-			public boolean isSkippedAsPreviousContentPane()
-			{
-				return true;
-			}
-		};
+			 public boolean isSkippedAsPreviousContentPane()
+			 {
+				 return true;
+			 }
+		 };
 		paymentInfoPane.getButtonNo().setVisible(false);
 
 		//************* let user enter passive payment data (for passive only) *************//
@@ -1329,7 +1324,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					return true;
 				}
 				else if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
-				    XMLPaymentOption.OPTION_MIXED))
+					XMLPaymentOption.OPTION_MIXED))
 				{
 					return true;
 				}
@@ -1341,69 +1336,70 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		};
 
 		//********* send passive payment ************
-		WorkerContentPane.IReturnRunnable sendPassive = new WorkerContentPane.IReturnRunnable()
-		{
-			private Boolean m_successful = new Boolean(true);
+		 WorkerContentPane.IReturnRunnable sendPassive = new WorkerContentPane.IReturnRunnable()
+		 {
+			 private Boolean m_successful = new Boolean(true);
 
-			public void run()
-			{
-				/** Post data to payment instance */
-				BIConnection biConn = new BIConnection(a_accountCreationThread.getAccount().getBI());
-				XMLPassivePayment paymentToSend = new XMLPassivePayment();
-				if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
-					XMLPaymentOption.OPTION_PASSIVE))
-				{
-					paymentToSend = passivePaymentPane.getEnteredInfo();
-					//TODO: kind of messy to just mix the plan name into the passive payment,
-					//maybe send a seperate XMLVolumePlanPurchase request?
-					String planName = planSelectionPane.getSelectedVolumePlan().getName();
-					paymentToSend.addData("volumeplan",planName);
-					//just a crutch to avoid having to query the database for the TAN
-					long accNum = a_accountCreationThread.getAccount().getAccountNumber();
-					paymentToSend.addData("accountnumber",new Long(accNum).toString() );
+			 public void run()
+			 {
+				 /** Post data to payment instance */
+				 BIConnection biConn = new BIConnection(a_accountCreationThread.getAccount().getBI());
+				 XMLPassivePayment paymentToSend = new XMLPassivePayment();
+				 if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
+					 XMLPaymentOption.OPTION_PASSIVE))
+				 {
+					 paymentToSend = passivePaymentPane.getEnteredInfo();
+					 //TODO: kind of messy to just mix the plan name into the passive payment,
+					 //maybe send a seperate XMLVolumePlanPurchase request?
+					 String planName = planSelectionPane.getSelectedVolumePlan().getName();
+					 paymentToSend.addData("volumeplan", planName);
+					 //just a crutch to avoid having to query the database for the TAN
+					 long accNum = a_accountCreationThread.getAccount().getAccountNumber();
+					 paymentToSend.addData("accountnumber", new Long(accNum).toString());
 
-				} else if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
-					XMLPaymentOption.OPTION_MIXED))
-				{
-					XMLVolumePlan selectedPlan = planSelectionPane.getSelectedVolumePlan();
-					int planPrice = selectedPlan.getPrice();
-					paymentToSend.setAmount(planPrice);
-					paymentToSend.setCurrency("EUR");
-					String paymentName = methodSelectionPane.getSelectedPaymentOption().getName();
-					paymentToSend.setPaymentName(paymentName);
-					XMLTransCert newTan = paymentInfoPane.getTransCert();
-					paymentToSend.setTransferNumber(newTan.getTransferNumber());
-				}
-				try
-				{
-					biConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
-					biConn.authenticate(a_accountCreationThread.getAccount().getAccountCertificate(),
-										a_accountCreationThread.getAccount().getPrivateKey());
-					if (!biConn.sendPassivePayment(paymentToSend))
-					{
-						m_successful = new Boolean(false);
-					}
-					biConn.disconnect();
-				}
-				catch (Exception e)
-				{
-					m_successful = new Boolean(false);
-					if (!Thread.currentThread().isInterrupted())
-					{
-						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
-									  "Could not send PassivePayment to payment instance: " +
-									  e.getMessage());
-						showPIerror(a_parentDialog.getContentPane(), e);
-						Thread.currentThread().interrupt();
-					}
-				}
-			}
+				 }
+				 else if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
+					 XMLPaymentOption.OPTION_MIXED))
+				 {
+					 XMLVolumePlan selectedPlan = planSelectionPane.getSelectedVolumePlan();
+					 int planPrice = selectedPlan.getPrice();
+					 paymentToSend.setAmount(planPrice);
+					 paymentToSend.setCurrency("EUR");
+					 String paymentName = methodSelectionPane.getSelectedPaymentOption().getName();
+					 paymentToSend.setPaymentName(paymentName);
+					 XMLTransCert newTan = paymentInfoPane.getTransCert();
+					 paymentToSend.setTransferNumber(newTan.getTransferNumber());
+				 }
+				 try
+				 {
+					 biConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
+					 biConn.authenticate(a_accountCreationThread.getAccount().getAccountCertificate(),
+										 a_accountCreationThread.getAccount().getPrivateKey());
+					 if (!biConn.sendPassivePayment(paymentToSend))
+					 {
+						 m_successful = new Boolean(false);
+					 }
+					 biConn.disconnect();
+				 }
+				 catch (Exception e)
+				 {
+					 m_successful = new Boolean(false);
+					 if (!Thread.currentThread().isInterrupted())
+					 {
+						 LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+									   "Could not send PassivePayment to payment instance: " +
+									   e.getMessage());
+						 showPIerror(a_parentDialog.getContentPane(), e);
+						 Thread.currentThread().interrupt();
+					 }
+				 }
+			 }
 
-			public Object getValue()
-			{
-				return m_successful;
-			}
-		};
+			 public Object getValue()
+			 {
+				 return m_successful;
+			 }
+		 };
 
 		final WorkerContentPane sendPassivePane = new WorkerContentPane(a_parentDialog,
 			JAPMessages.getString(MSG_SENDINGPASSIVE), passivePaymentPane, sendPassive)
@@ -1428,7 +1424,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		final SimpleWizardContentPane sentPane = new SimpleWizardContentPane(a_parentDialog,
 			JAPMessages.getString(MSG_SENTPASSIVE), null,
 			new Options(createUpdateAccountPane(
-					 a_accountCreationThread, methodSelectionPane, a_parentDialog, sendPassivePane)))
+				a_accountCreationThread, methodSelectionPane, a_parentDialog, sendPassivePane)))
 		{
 			public boolean isSkippedAsNextContentPane()
 			{
@@ -1447,6 +1443,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					return false;
 				}
 			}
+
 			public CheckError[] checkUpdate()
 			{
 				if ( ( (Boolean) sendPassivePane.getValue()).booleanValue() == false)
@@ -1635,7 +1632,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 							(DSAKeyPair) keyWorkerPane.getValue());
 
 						m_payAccount.fetchAccountInfo(
-											  JAPModel.getInstance().getPaymentProxyInterface(), true);
+							JAPModel.getInstance().getPaymentProxyInterface(), true);
 						break;
 					}
 					catch (IOException a_e)
@@ -1657,12 +1654,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				}
 				m_connectionError = null;
 			}
+
 			public PayAccount getAccount()
 			{
 				Object account = getValue();
 				if (account instanceof PayAccount)
 				{
-					return (PayAccount)account;
+					return (PayAccount) account;
 				}
 				return null;
 			}
@@ -1702,9 +1700,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				}
 			}
 		};
-		Date today = new Date();
-		if ( ( (today.getDate() == 27 && today.getMonth() == 8) ||
-			  (today.getDate() == 4 && today.getMonth() == 10)))
+		GregorianCalendar calendar = new GregorianCalendar();
+		if ( ( (calendar.get(GregorianCalendar.DAY_OF_MONTH) == 27 &&
+				calendar.get(GregorianCalendar.MONTH) == GregorianCalendar.SEPTEMBER) ||
+			  (calendar.get(GregorianCalendar.DAY_OF_MONTH) == 4 &&
+			   calendar.get(GregorianCalendar.MONTH) == GregorianCalendar.NOVEMBER)))
 		{
 			captcha.getButtonNo().setText(JAPMessages.getString(MSG_NEWCAPTCHAEASTEREGG));
 		}
@@ -1770,9 +1770,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			}
 		};
 
-
-	final IReturnBooleanRunnable exportThread = new IReturnBooleanRunnable()
-	{
+		final IReturnBooleanRunnable exportThread = new IReturnBooleanRunnable()
+		{
 			private Boolean m_bAccountSaved = new Boolean(false);
 
 			public void run()
@@ -1817,9 +1816,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				}
 				return m_bAccountSaved;
 			}
+
 			public boolean isTrue()
 			{
-				return ((Boolean)getValue()).booleanValue();
+				return ( (Boolean) getValue()).booleanValue();
 			}
 		};
 
@@ -1850,8 +1850,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		};
 		saveErrorPane.getButtonCancel().setVisible(false);
 
-
-
 		d.addWindowListener(new WindowAdapter()
 		{
 			public void windowClosing(WindowEvent e)
@@ -1876,14 +1874,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					/** Select new account */
 					m_listAccounts.setSelectedValue(doIt.getValue(), true);
 					/*
-					if ( ( (Boolean) exportThread.getValue()).booleanValue())
-					{
-						doChargeAccount(doIt.getAccount());
-					}*/
+						  if ( ( (Boolean) exportThread.getValue()).booleanValue())
+						  {
+					 doChargeAccount(doIt.getAccount());
+						  }*/
 				}
 			}
 		});
-
 
 		m_bDoNotCloseDialog = false;
 		doChargeAccount(doIt, d, saveErrorPane, exportThread);
@@ -1895,7 +1892,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 	}
 
-/**
+	/**
 	 * Shows a window with all known Payment Instances and lets the user select one.
 	 * @return BI
 	 */
@@ -1917,7 +1914,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		return theBI;
 	}
 
-/**
+	/**
 	 * doActivateAccount
 	 *
 	 * @param payAccount PayAccount
@@ -1944,7 +1941,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		catch (Exception ex)
 		{
 			JAPDialog.showErrorDialog(GUIUtils.getParentWindow(this.getRootPanel()),
-				JAPMessages.getString("Could not select account!"), LogType.PAY, ex);
+									  JAPMessages.getString("Could not select account!"), LogType.PAY, ex);
 		}
 		updateAccountList();
 	}
@@ -1960,7 +1957,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				try
 				{
 					a_accountCreationThread.getAccount().fetchAccountInfo(
-									   JAPModel.getInstance().getPaymentProxyInterface(), true);
+						JAPModel.getInstance().getPaymentProxyInterface(), true);
 					updateAccountList();
 				}
 				catch (Exception e)
@@ -1982,7 +1979,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				if (a_methodSelectionPane == null ||
 					a_methodSelectionPane.getSelectedPaymentOption() == null ||
 					a_methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
-									   XMLPaymentOption.OPTION_PASSIVE))
+						XMLPaymentOption.OPTION_PASSIVE))
 				{
 					return false;
 				}
@@ -2041,7 +2038,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		{
 			JAPDialog d = new JAPDialog(GUIUtils.getParentWindow(this.getRootPanel()),
 										JAPMessages.getString(MSG_ACCPASSWORDTITLE), true);
-
 
 			PasswordContentPane p;
 
@@ -2136,10 +2132,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					Element elemAccount = selectedAccount.toXmlElement(doc, strPassword);
 					elemRoot.appendChild(elemAccount);
 					/*
-						 if (strPassword != null && strPassword.length() > 0)
-						 {
+					  if (strPassword != null && strPassword.length() > 0)
+					  {
 					 XMLEncryption.encryptElement(elemAccount, strPassword);
-						 }*/
+					  }*/
 
 					String strOutput = XMLUtil.toString(XMLUtil.formatHumanReadable(doc));
 					FileOutputStream outStream = new FileOutputStream(f);
@@ -2160,7 +2156,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		return false;
 	}
 
-/**
+	/**
 	 * Filefilter for the import function
 	 *
 	 * @author Bastian Voigt
@@ -2189,7 +2185,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		}
 	}
 
-/**
+	/**
 	 * doImportAccount - imports an account from a file
 	 */
 	private void doImportAccount()
@@ -2311,7 +2307,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					{
 						currentAccount = (PayAccount) accounts.nextElement();
 						currentAccount.decryptPrivateKey(
-											  new SingleStringPasswordReader(contentPane.getPassword()));
+							new SingleStringPasswordReader(contentPane.getPassword()));
 					}
 				}
 				catch (Exception a_e)
@@ -2331,7 +2327,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						accounts = PayAccountsFile.getInstance().getAccounts();
 						while (accounts.hasMoreElements())
 						{
-							currentAccount = (PayAccount)accounts.nextElement();
+							currentAccount = (PayAccount) accounts.nextElement();
 							if (currentAccount.getPrivateKey() != null)
 							{
 								PayAccountsFile.getInstance().setActiveAccount(currentAccount);
@@ -2350,7 +2346,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 												JAPMessages.getString(MSG_ACTIVATION_SUCCESSFUL));
 				}
 			}
-			catch(Exception a_e)
+			catch (Exception a_e)
 			{
 				JAPDialog.showErrorDialog(getRootPanel(),
 										  JAPMessages.getString(MSG_ACTIVATION_FAILED), LogType.PAY, a_e);
@@ -2448,7 +2444,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			catch (Exception a_ex)
 			{
 				JAPDialog.showErrorDialog(GUIUtils.getParentWindow(getRootPanel()),
-					JAPMessages.getString(MSG_ERROR_DELETING), LogType.MISC, a_ex);
+										  JAPMessages.getString(MSG_ERROR_DELETING), LogType.MISC, a_ex);
 			}
 		}
 	}
@@ -2466,7 +2462,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		}
 	}
 
-
 	/**
 	 * This method can be overwritten by the children of AbstractJAPConfModule. It is called
 	 * every time the root panel comes to the foreground (is set to visible).
@@ -2475,7 +2470,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	{
 		updateAccountList();
 	}
-
 
 	/**
 	 * This method can be overwritten by the children of AbstractJAPConfModule. It is called
@@ -2488,7 +2482,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		PayAccountsFile.getInstance().setIgnoreAIAccountError(!m_cbxShowAIErrors.isSelected());
 		PayAccountsFile.getInstance().setBalanceAutoUpdateEnabled(m_cbxBalanceAutoUpdateEnabled.isSelected());
 		JAPController.getInstance().setAskSavePayment(m_cbxAskIfNotSaved.isSelected());
-		BIConnection.setConnectionTimeout(((Integer)m_comboTimeout.getSelectedItem()).intValue() * 1000);
+		BIConnection.setConnectionTimeout( ( (Integer) m_comboTimeout.getSelectedItem()).intValue() * 1000);
 		return true;
 	}
 
@@ -2525,18 +2519,18 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	{
 		m_cbxShowPaymentConfirmation.setSelected(!JAPController.getInstance().getDontAskPayment());
 		m_cbxAllowNonAnonymousConnection.setSelected(
-			  JAPModel.getInstance().isPaymentViaDirectConnectionAllowed());
+			JAPModel.getInstance().isPaymentViaDirectConnectionAllowed());
 		m_cbxAskIfNotSaved.setSelected(JAPController.getInstance().isAskSavePayment());
 		m_cbxShowAIErrors.setSelected(!PayAccountsFile.getInstance().isAIAccountErrorIgnored());
 		m_cbxBalanceAutoUpdateEnabled.setSelected(PayAccountsFile.getInstance().isBalanceAutoUpdateEnabled());
 		setConnectionTimeout(BIConnection.getConnectionTimeout());
 		/*
-		PayAccountsFile accounts = PayAccountsFile.getInstance();
-		Enumeration enumAccounts = accounts.getAccounts();
-		while (enumAccounts.hasMoreElements())
-		{
-			PayAccount a = (PayAccount) enumAccounts.nextElement();
-		}*/
+		   PayAccountsFile accounts = PayAccountsFile.getInstance();
+		   Enumeration enumAccounts = accounts.getAccounts();
+		   while (enumAccounts.hasMoreElements())
+		   {
+		 PayAccount a = (PayAccount) enumAccounts.nextElement();
+		   }*/
 	}
 
 	public void valueChanged(ListSelectionEvent e)
@@ -2556,10 +2550,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		if (a_e instanceof XMLErrorMessage)
 		{
 			JAPDialog.showErrorDialog(a_parent,
-									  PaymentMainPanel.translateBIError((XMLErrorMessage)a_e), LogType.PAY);
+									  PaymentMainPanel.translateBIError( (XMLErrorMessage) a_e), LogType.PAY);
 		}
 		else if (!JAPModel.getInstance().isAnonConnected() &&
-			!JAPModel.getInstance().isPaymentViaDirectConnectionAllowed())
+				 !JAPModel.getInstance().isPaymentViaDirectConnectionAllowed())
 		{
 			int answer =
 				JAPDialog.showConfirmDialog(a_parent,
@@ -2651,7 +2645,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		public boolean isTrue();
 	}
 
-
 	private static final class FixedReturnAccountRunnable implements IReturnAccountRunnable
 	{
 		private PayAccount m_account;
@@ -2679,23 +2672,23 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	{
 		int timeout = a_timeoutMS / 1000;
 
-		if (timeout >= ((Integer)m_comboTimeout.getItemAt(m_comboTimeout.getItemCount() - 1)).intValue())
+		if (timeout >= ( (Integer) m_comboTimeout.getItemAt(m_comboTimeout.getItemCount() - 1)).intValue())
 		{
 			m_comboTimeout.setSelectedIndex(m_comboTimeout.getItemCount() - 1);
 			BIConnection.setConnectionTimeout(
-				 ((Integer)m_comboTimeout.getSelectedItem()).intValue() * 1000);
+				( (Integer) m_comboTimeout.getSelectedItem()).intValue() * 1000);
 		}
-		else if (timeout <=((Integer)m_comboTimeout.getItemAt(0)).intValue())
+		else if (timeout <= ( (Integer) m_comboTimeout.getItemAt(0)).intValue())
 		{
 			m_comboTimeout.setSelectedIndex(0);
 			BIConnection.setConnectionTimeout(
-						 ((Integer)m_comboTimeout.getSelectedItem()).intValue() * 1000);
+				( (Integer) m_comboTimeout.getSelectedItem()).intValue() * 1000);
 		}
 		else
 		{
 			for (int i = 1; i < m_comboTimeout.getItemCount(); i++)
 			{
-				if (timeout <= ((Integer)m_comboTimeout.getItemAt(i)).intValue())
+				if (timeout <= ( (Integer) m_comboTimeout.getItemAt(i)).intValue())
 				{
 					m_comboTimeout.setSelectedIndex(i);
 					break;
