@@ -443,7 +443,7 @@ public class AIControlChannel extends XmlControlChannel {
 					curCcHash = (String) priceCertHashesInCc.nextElement();
 					if (!curCascadeHash.equals(curCcHash))
 					{
-						String message = "AI sent CC with illegal price cert hash for mix " + i + "!";
+						String message = "AI sent CC with illegal price cert hash for mix " + (i+1) + "!";
 						LogHolder.log(LogLevel.WARNING, LogType.PAY, message);
 						getServiceContainer().keepCurrentService(false); // reconnect to another cascade if possible
 						PayAccountsFile.getInstance().signalAccountError(
