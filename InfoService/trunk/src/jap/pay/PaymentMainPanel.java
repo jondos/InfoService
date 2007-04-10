@@ -772,7 +772,8 @@ public class PaymentMainPanel extends FlippingPanel
 				{
 					parent = JAPController.getInstance().getViewWindow();
 				}
-				JAPController.getInstance().setAnonMode(false);
+				//JAPController.getInstance().setAnonMode(false);
+				JAPController.getInstance().switchToNextMixCascade();
 				if (msg.getErrorCode() == XMLErrorMessage.ERR_ACCOUNT_EMPTY)
 				{
 					message += "<br><br>" + JAPMessages.getString(MSG_WANNA_CHARGE);
