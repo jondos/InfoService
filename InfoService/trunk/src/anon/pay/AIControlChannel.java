@@ -343,7 +343,7 @@ public class AIControlChannel extends XmlControlChannel {
 
 
 	  // test if this cascade is configured correctly
-	  /** @todo activate
+
 	  if (priceCerts.size() != mixIDs.size())
 	  {
 		  message = "Not all Mixes in cascade " + m_connectedCascade.getId() + " have price certs!";
@@ -369,7 +369,7 @@ public class AIControlChannel extends XmlControlChannel {
 		  PayAccountsFile.getInstance().signalAccountError(
 			  new XMLErrorMessage(XMLErrorMessage.ERR_INVALID_PRICE_CERTS, message));
 		  return false;
-	  }*/
+	  }
 
 
 	  if (!PayAccountsFile.getInstance().signalAccountRequest())
