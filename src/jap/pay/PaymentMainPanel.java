@@ -57,6 +57,9 @@ import anon.pay.xml.XMLBalance;
 import anon.pay.xml.XMLErrorMessage;
 import anon.util.captcha.ICaptchaSender;
 import anon.util.captcha.IImageEncodedCaptcha;
+import anon.infoservice.MixCascade;
+import logging.LogHolder;
+import logging.LogLevel;
 import gui.FlippingPanel;
 import gui.GUIUtils;
 import gui.JAPMessages;
@@ -746,62 +749,76 @@ public class PaymentMainPanel extends FlippingPanel
 		 *
 		 * @param msg XMLErrorMessage
 		 */
-		public void accountError(XMLErrorMessage msg)
+		public void accountError(XMLErrorMessage a_msg)
 		{
-			String error;
-			if (msg.getErrorCode() <= XMLErrorMessage.ERR_OK || msg.getErrorCode() < 0)
+			if (a_msg.getErrorCode() <= XMLErrorMessage.ERR_OK || a_msg.getErrorCode() < 0)
 			{
 				// no error
 				return;
 			}
-			error = translateBIError(msg);
+
+			MixCascade cascade = JAPController.getInstance().getCurrentMixCascade();
+			if (cascade.equals(JAPController.getInstance().switchToNextMixCascade()))
+			{
+				// there are no other cascades to switch to
+				LogHolder.log(LogLevel.WARNING, LogType.NET, "There are no other cascades to choose! " +
+					"Closing connection...");
+				JAPController.getInstance().setAnonMode(false);
+			}
+
 			if (!m_bShowingError)
 			{
 				m_bShowingError = true;
-				String message = error;
-				Component parent = PaymentMainPanel.this;
-				JAPDialog.LinkedInformationAdapter adapter = new JAPDialog.LinkedInformationAdapter()
+				final XMLErrorMessage msg = a_msg;
+				new Thread(new Runnable()
 				{
-					public boolean isOnTop()
+					public void run()
 					{
-						return true;
-					}
-				};
-
-				if (!GUIUtils.getParentWindow(parent).isVisible())
-				{
-					parent = JAPController.getInstance().getViewWindow();
-				}
-				//JAPController.getInstance().setAnonMode(false);
-				JAPController.getInstance().switchToNextMixCascade();
-				if (msg.getErrorCode() == XMLErrorMessage.ERR_ACCOUNT_EMPTY)
-				{
-					message += "<br><br>" + JAPMessages.getString(MSG_WANNA_CHARGE);
-					if (JAPDialog.showYesNoDialog(parent, message, adapter))
-					{
-						new Thread(new Runnable()
+						String message = translateBIError(msg);
+						Component parent = PaymentMainPanel.this;
+						JAPDialog.LinkedInformationAdapter adapter = new JAPDialog.LinkedInformationAdapter()
 						{
-							public void run()
+							public boolean isOnTop()
 							{
-								m_view.showConfigDialog(JAPConf.PAYMENT_TAB,
-									PayAccountsFile.getInstance().getActiveAccount());
+								return true;
 							}
-						}).start();
+						};
+
+						if (!GUIUtils.getParentWindow(parent).isVisible())
+						{
+							parent = JAPController.getInstance().getViewWindow();
+						}
+
+						if (msg.getErrorCode() == XMLErrorMessage.ERR_ACCOUNT_EMPTY)
+						{
+							message += "<br><br>" + JAPMessages.getString(MSG_WANNA_CHARGE);
+							if (JAPDialog.showYesNoDialog(parent, message, adapter))
+							{
+								new Thread(new Runnable()
+								{
+									public void run()
+									{
+										m_view.showConfigDialog(JAPConf.PAYMENT_TAB,
+											PayAccountsFile.getInstance().getActiveAccount());
+									}
+								}).start();
+							}
+						}
+						else if (!JAPModel.getInstance().isCascadeAutoSwitched())
+						{
+							message += "<br><br>" + JAPMessages.getString(MSG_ENABLE_AUTO_SWITCH);
+							if (JAPDialog.showYesNoDialog(parent, message, adapter))
+							{
+								JAPModel.getInstance().setCascadeAutoSwitch(true);
+							}
+						}
+						else
+						{
+							JAPDialog.showErrorDialog(parent, message, LogType.PAY, adapter);
+						}
+						m_bShowingError = false;
 					}
-				}
-				else if (!JAPModel.getInstance().isCascadeAutoSwitched())
-				{
-					message += "<br><br>" + JAPMessages.getString(MSG_ENABLE_AUTO_SWITCH);
-					if (JAPDialog.showYesNoDialog(parent, message, adapter))
-					{
-						JAPModel.getInstance().setCascadeAutoSwitch(true);
-					}
-				}
-				else
-				{
-					JAPDialog.showErrorDialog(parent, message, LogType.PAY, adapter);
-				}
-				m_bShowingError = false;
+				}).start();
 			}
 		}
 
