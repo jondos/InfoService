@@ -682,7 +682,7 @@ public class PaymentMainPanel extends FlippingPanel
 						}
 					};
 				}
-				/*
+
 				else if (accounts.getActiveAccount().getBalance().getCredit() <= 0)
 				{
 					JAPController.getInstance().setAnonMode(false);
@@ -705,7 +705,7 @@ public class PaymentMainPanel extends FlippingPanel
 							}
 						}
 					};
-				}*/
+				}
 				else if (!JAPController.getInstance().getDontAskPayment())
 				{
 					JAPDialog.LinkedCheckBox checkBox = new JAPDialog.LinkedCheckBox(false);
@@ -761,9 +761,8 @@ public class PaymentMainPanel extends FlippingPanel
 			if (cascade.equals(JAPController.getInstance().switchToNextMixCascade()))
 			{
 				// there are no other cascades to switch to
-				LogHolder.log(LogLevel.WARNING, LogType.NET, "There are no other cascades to choose! " +
-					"Closing connection...");
-				JAPController.getInstance().setAnonMode(false);
+				LogHolder.log(LogLevel.WARNING, LogType.NET, "There are no other cascades to choose!");
+				//JAPController.getInstance().setAnonMode(false); // does not work well as of auto-reconnection
 			}
 
 			if (!m_bShowingError)
