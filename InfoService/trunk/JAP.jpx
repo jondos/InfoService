@@ -132,6 +132,7 @@
   <property category="java.sapient" name="UMM" value="true"/>
   <property category="java.sapient" name="URSP" value="true"/>
   <property category="javaFormatting" name="EventMatch" value="0"/>
+  <property category="javaFormatting" name="alwaysClasses" value="1"/>
   <property category="javaFormatting" name="classBraceNextLine" value="1"/>
   <property category="javaFormatting" name="extendsOnNewLine" value="0"/>
   <property category="javaFormatting" name="identCase" value="1"/>
@@ -332,7 +333,7 @@
   <property category="sys" name="ExcludeClassEnabled" value="0"/>
   <property category="sys" name="IncludeTestPath" value="1"/>
   <property category="sys" name="InstanceVisibility" value="0"/>
-  <property category="sys" name="JDK" value="CrE-ME V4.10"/>
+  <property category="sys" name="JDK" value="java version 1.5.0_09-b01"/>
   <property category="sys" name="LastTag" value="192"/>
   <property category="sys" name="Libraries" value="http;mac;Apache XML-RPC;BouncyCastleLightForJAP;JUnit;junitx;Swing;ApacheBzip2;Log4j;ApacheFTPClient;XML-1.0"/>
   <property category="sys" name="MakeStable" value="0"/>
