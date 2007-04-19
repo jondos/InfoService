@@ -27,8 +27,10 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package anon.mixminion;
 
-import jap.JAPController;
-import jap.JAPModel;
+/**@todo Temporary removed - needs to be rewritten.. */
+
+//import jap.JAPController;
+//import jap.JAPModel;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
@@ -55,7 +57,8 @@ public class MixminionPOPChannel extends AbstractChannel {
 
 			try
 			{
-				m_messages = JAPModel.getMixminionMessages();
+				/**@todo Temporary removed - needs to be rewritten.. */
+				//m_messages = JAPModel.getMixminionMessages();
 				m_deleted = new String[m_messages.size()];
 				for (int i = 0; i < m_messages.size(); i++) {
 					m_deleted[i] = (String)m_messages.elementAt(i);
@@ -232,7 +235,8 @@ public class MixminionPOPChannel extends AbstractChannel {
 					if (m_messages.size() == 0) {
 						m_messages = null;
 					}
-					JAPController.setMixminionMessages(m_messages);
+					/**@todo Temporary removed - needs to be rewritten.. */
+					//JAPController.setMixminionMessages(m_messages);
 					toClient("+OK\r\n");
 
 				}

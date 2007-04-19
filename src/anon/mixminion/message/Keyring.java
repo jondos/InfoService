@@ -27,8 +27,9 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package anon.mixminion.message;
 
-import jap.JAPController;
-import jap.JAPModel;
+/**@todo Temporary removed - needs to be rewritten.. */
+//import jap.JAPController;
+//import jap.JAPModel;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.StringReader;
@@ -64,15 +65,13 @@ public class Keyring {
 		int day = cal.get(Calendar.DAY_OF_YEAR);
 		int year = cal.get(Calendar.YEAR);
 		m_today = (((year-1970-1)*365)+day)*24*60*60;
-		 
-		
-		String keyring= JAPModel.getMixminionKeyring();
-			  	
-        //If no Keyring exists, do nothing
-	  	if (keyring == "") {
 
-	  	}
-	  	else {
+	/**@todo Temporary removed - needs to be rewritten.. */
+	//		String keyring= JAPModel.getMixminionKeyring();
+			String keyring= null;//JAPModel.getMixminionKeyring();
+
+        //If no Keyring exists, do nothing
+	  	if (keyring != null)
 	  		try {
 				//decrypt the data
 	  			unpackKeyRing(keyring);
@@ -124,13 +123,13 @@ public class Keyring {
 		//convert all keys in m_mykeys to m_data
 		byte[] itemdata = new byte[0];
 		for(int i = 0; i < m_mykeys.size(); i++ ) {
-			
+
 			byte[] name = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x00};
 			byte[] expires = (byte[]) m_expiring.elementAt(i);
 			//to enable the user to decode messages even when the key is expired,
 			//we save all keys but them which are more than 3 months expired
 			if ((byteToInt(expires,0)+KEY_LIFETIME) > (m_today))
-			{	
+			{
 			byte[] item = ByteArrayUtil.conc(expires, name,(byte[]) m_mykeys.elementAt(i));
 			item = ByteArrayUtil.conc(new byte[1],ByteArrayUtil.inttobyte(item.length,2),item);
 			itemdata = ByteArrayUtil.conc(itemdata, item);
@@ -236,12 +235,12 @@ public class Keyring {
 			if (data[counter] == 0x00) {
 				byte[] expires = ByteArrayUtil.copy(data,counter+3,4);
 				m_expiring.addElement(expires);
-				byte[] actsecret = ByteArrayUtil.copy(data, counter+17,20); 
+				byte[] actsecret = ByteArrayUtil.copy(data, counter+17,20);
 				m_mykeys.addElement(actsecret);
 				counter = counter+37;
 			}
 		}
-		
+
 	}
 
 	/**
@@ -251,7 +250,7 @@ public class Keyring {
 	private byte[] makeNewKey() {
 
 		//build new secret
-		byte[] newsecret = MixMinionCryptoUtil.randomArray(20);			
+		byte[] newsecret = MixMinionCryptoUtil.randomArray(20);
 		byte[] expires = ByteArrayUtil.inttobyte(m_today+KEY_LIFETIME,4);
 		//add it to the keyvectors
 		m_mykeys.addElement(newsecret);
@@ -273,8 +272,8 @@ public class Keyring {
 	 *
 	 */
 	private void saveKeyRing() {
-		
-		JAPController.setMixminionKeyring(packKeyring());
+		/**@todo Temporary removed - needs to be rewritten.. */
+		//	JAPController.setMixminionKeyring(packKeyring());
 
 	}
 
