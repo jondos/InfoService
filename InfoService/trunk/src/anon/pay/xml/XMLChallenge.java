@@ -27,8 +27,6 @@
  */
 package anon.pay.xml;
 
-import java.io.ByteArrayInputStream;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -92,8 +90,7 @@ public class XMLChallenge implements IXMLEncodable
 
 	public byte[] getChallengeForSigning()
 	{
-		String tmp = "<DontPanic>" + Base64.encodeBytes(m_arbChallenge) + "</DontPanic>";
-		return tmp.getBytes();
+		return m_arbChallenge;
 	}
 
 	public Element toXmlElement(Document a_doc)
