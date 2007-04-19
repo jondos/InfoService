@@ -27,15 +27,17 @@
  */
 package anon.pay.xml;
 
-import org.w3c.dom.*;
-import anon.util.*;
-import java.util.Hashtable;
 import java.io.ByteArrayInputStream;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.util.Enumeration;
-import java.util.Date;
 import java.util.Calendar;
-import gui.JAPMessages;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import anon.util.IXMLEncodable;
+import anon.util.XMLUtil;
 
 /**
  * XMl representation of the payment setting (flatrate price, duration etc)
@@ -79,10 +81,9 @@ public class XMLPaymentSettings implements IXMLEncodable
 		setValues(document.getDocumentElement());
 	}
 
-
 	public void addSetting(String name, String value)
 	{
-		m_paymentSettings.put(name,value);
+		m_paymentSettings.put(name, value);
 	}
 
 	/**
@@ -106,39 +107,37 @@ public class XMLPaymentSettings implements IXMLEncodable
 	{
 		Calendar now = Calendar.getInstance();
 		String unit = this.getSettingValue("FlatrateDurationUnit");
-		if (unit.equalsIgnoreCase("day") || unit.equalsIgnoreCase("days") )
+		if (unit.equalsIgnoreCase("day") || unit.equalsIgnoreCase("days"))
 		{
 			int day = now.get(Calendar.DAY_OF_YEAR);
 			int duration = Integer.parseInt(this.getSettingValue("FlatrateDuration"));
-			now.set(Calendar.DAY_OF_YEAR,(day+duration)%now.getMaximum(Calendar.DAY_OF_YEAR));
+			now.set(Calendar.DAY_OF_YEAR, (day + duration) % now.getMaximum(Calendar.DAY_OF_YEAR));
 		}
-		else if (unit.equalsIgnoreCase("week") || unit.equalsIgnoreCase("weeks") )
+		else if (unit.equalsIgnoreCase("week") || unit.equalsIgnoreCase("weeks"))
 		{
 			int week = now.get(Calendar.WEEK_OF_YEAR);
 			int duration = Integer.parseInt(this.getSettingValue("FlatrateDuration"));
-			now.set(Calendar.WEEK_OF_YEAR,(week+duration)%now.getMaximum(Calendar.WEEK_OF_YEAR));
+			now.set(Calendar.WEEK_OF_YEAR, (week + duration) % now.getMaximum(Calendar.WEEK_OF_YEAR));
 		}
-		else if (unit.equalsIgnoreCase("month") || unit.equalsIgnoreCase("months") )
+		else if (unit.equalsIgnoreCase("month") || unit.equalsIgnoreCase("months"))
 		{
 			int month = now.get(Calendar.MONTH);
 			int duration = Integer.parseInt(this.getSettingValue("FlatrateDuration"));
-			now.set(Calendar.MONTH,(month+duration)%now.getMaximum(Calendar.MONTH));
+			now.set(Calendar.MONTH, (month + duration) % now.getMaximum(Calendar.MONTH));
 		}
-		else if (unit.equalsIgnoreCase("year") || unit.equalsIgnoreCase("years") )
+		else if (unit.equalsIgnoreCase("year") || unit.equalsIgnoreCase("years"))
 		{
 			int year = now.get(Calendar.YEAR);
 			int duration = Integer.parseInt(this.getSettingValue("FlatrateDuration"));
-			now.set(Calendar.YEAR,year+duration);
+			now.set(Calendar.YEAR, year + duration);
 		}
 		return now;
 	}
-
 
 	public Enumeration getSettingNames()
 	{
 		return m_paymentSettings.keys();
 	}
-
 
 	private Element internal_toXmlElement(Document a_doc)
 	{
@@ -154,8 +153,8 @@ public class XMLPaymentSettings implements IXMLEncodable
 			name = (String) settingNames.nextElement();
 			value = (String) m_paymentSettings.get(name);
 			elem = a_doc.createElement("Setting");
-			XMLUtil.setAttribute(elem,"name",name);
-			XMLUtil.setValue(elem,value);
+			XMLUtil.setAttribute(elem, "name", name);
+			XMLUtil.setValue(elem, value);
 			elemRoot.appendChild(elem);
 		}
 
@@ -173,29 +172,28 @@ public class XMLPaymentSettings implements IXMLEncodable
 		String value;
 		Element curElem;
 		//get array of Settings elements
-		NodeList settingElements =elemRoot.getElementsByTagName("Setting");
+		NodeList settingElements = elemRoot.getElementsByTagName("Setting");
 
 		//loop
-		for(int i = 0; i<settingElements.getLength() ;i++)
+		for (int i = 0; i < settingElements.getLength(); i++)
 		{
 			curElem = (Element) settingElements.item(i);
 			value = XMLUtil.parseValue(curElem, null);
-			name = XMLUtil.parseAttribute(curElem,"name",null);
-			m_paymentSettings.put(name,value);
+			name = XMLUtil.parseAttribute(curElem, "name", null);
+			m_paymentSettings.put(name, value);
 		}
 	}
 
 	public Element toXmlElement(Document a_doc)
-{
-	try
 	{
-		return (Element) XMLUtil.importNode(a_doc, m_docTheSettings.getDocumentElement(), true);
+		try
+		{
+			return (Element) XMLUtil.importNode(a_doc, m_docTheSettings.getDocumentElement(), true);
+		}
+		catch (Exception e)
+		{
+			return null;
+		}
 	}
-	catch (Exception e)
-	{
-		return null;
-	}
-}
-
 
 }

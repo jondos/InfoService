@@ -78,7 +78,7 @@ public class Keyring {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-	  	}
+
 	}
 
 	/**

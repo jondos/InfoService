@@ -28,7 +28,8 @@
 package anon.mixminion;
 
 
-import jap.JAPModel;
+/**@todo Temporary removed - needs to be rewritten.. */
+//import jap.JAPModel;
 
 import java.net.ConnectException;
 
@@ -124,14 +125,15 @@ public class Mixminion implements AnonService
 		}
 		try
 		{
-			if (JAPModel.getMixminionMessages() != null) {
-				return new MixminionPOPChannel();	
+			/**@todo Temporary removed - needs to be rewritten.. */
+			/*if (JAPModel.getMixminionMessages() != null) {
+				return new MixminionPOPChannel();
 			}
-			else 
-			{
+			else
+			{*/
 				return new MixminionSMTPChannel();
-			}
-				
+			//}
+
 		}
 		catch (Exception e)
 		{
