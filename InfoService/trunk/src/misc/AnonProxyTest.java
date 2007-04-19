@@ -11,7 +11,10 @@ import logging.LogLevel;
 import anon.crypto.SignatureVerifier;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.InfoServiceDBEntry;
-
+import anon.infoservice.ProxyInterface;
+import anon.infoservice.IMutableProxyInterface;
+import anon.infoservice.ImmutableProxyInterface;
+import anon.util.IPasswordReader;
 public class AnonProxyTest
 {
 	public static void main(String[] args)
@@ -26,7 +29,29 @@ public class AnonProxyTest
 			log.setLogLevel(LogLevel.DEBUG);
 			LogHolder.setLogInstance(new SystemErrLog());
 			ServerSocket ss = new ServerSocket(4005);
-			AnonProxy theProxy = new AnonProxy(ss, null, null);
+			IPasswordReader pass=new IPasswordReader()
+			{
+				public String readPassword(ImmutableProxyInterface a_proxyInterface)
+				{
+					return "654321";
+				}
+			};
+			final ProxyInterface p=new ProxyInterface("141.76.45.36",3128,ProxyInterface.PROTOCOL_TYPE_HTTP,"sk13",pass,true,true);
+			IMutableProxyInterface mutableProxyInterface = new IMutableProxyInterface()
+			{
+				public IProxyInterfaceGetter getProxyInterface(boolean a_bAnonInterface)
+				{
+					return new IProxyInterfaceGetter()
+					{
+						public ImmutableProxyInterface getProxyInterface()
+						{
+								return p;
+
+						}
+					};
+				}
+		};
+			AnonProxy theProxy = new AnonProxy(ss, mutableProxyInterface, mutableProxyInterface);
 
 			//we need to disbale certificate checks (better: set valid root certifcates for productive environments!)
 			SignatureVerifier.getInstance().setCheckSignatures(false);

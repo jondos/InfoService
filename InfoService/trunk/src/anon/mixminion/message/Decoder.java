@@ -27,8 +27,9 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package anon.mixminion.message;
 
-import jap.JAPController;
-import jap.JAPModel;
+/**@todo Temporary removed - needs to be rewritten.. */
+//import jap.JAPController;
+//import jap.JAPModel;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
@@ -270,7 +271,9 @@ public class Decoder {
 
 		String erg = null;
 		//fetch vector with fragmentcontainers
-		Vector fragments = JAPModel.getMixminionFragments();
+		/**@todo Temporary removed - needs to be rewritten.. */
+		//Vector fragments = JAPModel.getMixminionFragments();
+		Vector fragments = null;
 		if ( fragments == null)
 		{
 			fragments = new Vector();
@@ -332,7 +335,8 @@ public class Decoder {
 		{
 			fragments.setElementAt(myfc,containerindex);
 		}
-		JAPController.setMixminionFragments(fragments);
+		/**@todo Temporary removed - needs to be rewritten.. */
+		//JAPController.setMixminionFragments(fragments);
 		return erg;
 
 

@@ -27,13 +27,13 @@
  */
 package anon.mixminion;
 
-import gui.GUIUtils;
-
-import gui.dialog.JAPDialog;
-import gui.dialog.PasswordContentPane;
-import jap.AbstractJAPConfModule;
-import jap.JAPController;
-import jap.JAPModel;
+/**@todo Temporary removed - needs to be rewritten.. */
+//import gui.GUIUtils;
+//import gui.dialog.JAPDialog;
+//import gui.dialog.PasswordContentPane;
+//import jap.AbstractJAPConfModule;
+//import jap.JAPController;
+//import jap.JAPModel;
 import anon.mixminion.message.Keyring;
 import anon.mixminion.message.MixMinionCryptoUtil;
 import anon.util.ByteArrayUtil;
@@ -56,7 +56,8 @@ public class PasswordManager
 	 */
 	public String getPassword()
 	{
-
+		/**@todo Temporary removed - needs to be rewritten.. */
+		/*
 		if (JAPModel.getMixMinionPassword() != null)
 		{
 			return JAPModel.getMixMinionPassword();
@@ -73,6 +74,7 @@ public class PasswordManager
 				return setNewPassword();
 			}
 		}
+	  */
 		/*
 		 * if noch ne gesetzt setNewPassword()
 		 * else
@@ -80,12 +82,15 @@ public class PasswordManager
 		 * 	else enterPassword()
 		 *
 		 */
+		return null;
 	}
 
 	/**
 	 * opens a dialog for a new password, saves it and returns it
 	 * @return
 	 */
+	/**@todo Temporary removed - needs to be rewritten.. */
+/*
 	private String setNewPassword()
 	{
 		//GUIUtils.getParentWindow(this.getRootPanel()).show();
@@ -111,11 +116,13 @@ public class PasswordManager
 		return pw;
 
 	}
-
+	*/
 	/**
 	 * opens a dialog for enter the existing pw
 	 * @return
 	 */
+	/**@todo Temporary removed - needs to be rewritten.. */
+/*
 	private String enterPassword()
 	{
 		String pw = null;
@@ -168,11 +175,13 @@ public class PasswordManager
 		return null;
 
 	}
-
+*/
 	/**
 	 * opens a change pw dialog
 	 * @return
 	 */
+	/**@todo Temporary removed - needs to be rewritten.. */
+/*
 	public boolean changePassword()
 	{
 		//GUIUtils.getParentWindow(this.getRootPanel()).show();
@@ -241,5 +250,5 @@ public class PasswordManager
 
 		return false;
 	}
-
+*/
 }

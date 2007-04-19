@@ -52,8 +52,6 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import java.io.DataOutputStream;
-import gui.dialog.JAPDialog;
-import javax.swing.JPanel;
 import java.io.PrintWriter;
 import java.io.FileOutputStream;
 

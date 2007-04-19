@@ -182,5 +182,6 @@
     <property category="archiving" name="usingRules" value="1"/>
   </node>
   <file path="documentation/BezahlInstanz/config.example"/>
+  <file path="magicdraw.magicdraw"/>
   <file path="documentation/BezahlInstanz/README"/>
 </project>

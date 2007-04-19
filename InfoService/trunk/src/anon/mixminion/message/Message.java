@@ -28,9 +28,9 @@
 
 package anon.mixminion.message;
 
-
-import jap.JAPController;
-import jap.JAPModel;
+/*sk13 removed because not allowed in anon.* */
+//import jap.JAPController;
+//import jap.JAPModel;
 
 import java.io.IOException;
 import java.util.Vector;
@@ -115,7 +115,8 @@ public class Message
 				}
 
 			decoded.addElement(plaintext);
-			JAPController.setMixminionMessages(decoded);
+			/**@todo Temporary removed - needs to be rewritten.. */
+			//JAPController.setMixminionMessages(decoded);
 			m_decoded=(String)decoded.elementAt(0);
 			return false;
 		}
@@ -138,7 +139,9 @@ public class Message
 
 		//prepare mmrlist
 		//already fetched?
-		MMRList mmrlist = JAPModel.getMixminionMMRlist();
+		MMRList mmrlist = null;
+			/**@todo Temporary removed - needs to be rewritten.. */
+			///MMRList mmrlist = JAPModel.getMixminionMMRlist();
 		//if no get it
 		if (mmrlist == null)
 		{
@@ -152,7 +155,8 @@ public class Message
 				}
 				System.out.println("Groesse: " +mmrlist.size());
 			}
-			JAPController.setMixminionMMRList(mmrlist);
+			/**@todo Temporary removed - needs to be rewritten.. */
+			//JAPController.setMixminionMMRList(mmrlist);
 		}
 
 
