@@ -93,6 +93,12 @@ public class XMLChallenge implements IXMLEncodable
 		return m_arbChallenge;
 	}
 
+	public byte[] getDeprecatedChallengeForSigning()
+	{
+		String tmp = "<DontPanic>" + Base64.encodeBytes(m_arbChallenge) + "</DontPanic>";
+		return tmp.getBytes();
+	}
+
 	public Element toXmlElement(Document a_doc)
 	{
 		Element elemRoot = a_doc.createElement(XML_ELEMENT_NAME);

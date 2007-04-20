@@ -402,6 +402,18 @@ public class BIConnection implements ICaptchaSender
 				);
 			doc = m_httpClient.readAnswer();
 
+			/** @todo test if a pure XMLChallenge is sent */
+			try
+			{
+				m_captchaSolution = new XMLChallenge(doc.getDocumentElement()).getChallengeForSigning();
+				m_bSendNewCaptcha = false;
+				break;
+			}
+			catch (Exception a_e)
+			{
+				LogHolder.log(LogLevel.NOTICE, LogType.PAY,
+							  "No challenge sent while registering account, trying capchta...");
+			}
 			//Answer document should contain a captcha, let the user solve it and extract the XMLChallenge
 			IImageEncodedCaptcha captcha = new ZipBinaryImageCaptchaClient(doc.getDocumentElement());
 			m_bSendNewCaptcha = false;
@@ -431,7 +443,7 @@ public class BIConnection implements ICaptchaSender
 			// perform challenge-response authentication
 			XMLAccountCertificate xmlCert = null;
 
-			byte[] challenge = xmlchallenge.getChallengeForSigning();
+			byte[] challenge = xmlchallenge.getDeprecatedChallengeForSigning();
 			byte[] response = ByteSignature.sign(challenge, a_privateKey);
 			XMLResponse xmlResponse = new XMLResponse(response);
 			String strResponse = XMLUtil.toString(XMLUtil.toXMLDocument(xmlResponse));
