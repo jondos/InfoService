@@ -181,9 +181,13 @@ public class PasswordManager
 	 * @return
 	 */
 	/**@todo Temporary removed - needs to be rewritten.. */
-/*
 	public boolean changePassword()
 	{
+		if (1==1)
+		{
+			return false;
+		}
+		/*
 		//GUIUtils.getParentWindow(this.getRootPanel()).show();
 		String pwold = null;
 		String pwnew = null;
@@ -248,7 +252,6 @@ public class PasswordManager
 			}
 		}
 
-		return false;
+		return false;*/
 	}
-*/
 }
