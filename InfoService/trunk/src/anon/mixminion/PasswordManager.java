@@ -183,10 +183,7 @@ public class PasswordManager
 	/**@todo Temporary removed - needs to be rewritten.. */
 	public boolean changePassword()
 	{
-		if (1==1)
-		{
-			return false;
-		}
+		return false;
 		/*
 		//GUIUtils.getParentWindow(this.getRootPanel()).show();
 		String pwold = null;
