@@ -89,7 +89,7 @@ public class XMLChallenge implements IXMLEncodable
 	}
 
 	public byte[] getChallengeForSigning()
-	{
+	{   // new challenge
 		return m_arbChallenge;
 	}
 
