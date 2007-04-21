@@ -161,8 +161,8 @@ public class PaymentMainPanel extends FlippingPanel
 
 	private JLabel m_labelValidUntilHeader;
 	private JLabel m_labelValidUntil;
-	private JLabel m_labelBalanceInEurosHeader;
-	private JLabel m_labelBalanceInEuros;
+	//private JLabel m_labelBalanceInEurosHeader;
+	//private JLabel m_labelBalanceInEuros;
 
 	private long m_spentThisSession;
 
@@ -240,6 +240,7 @@ public class PaymentMainPanel extends FlippingPanel
 		fullPanel.add(m_labelValidUntil, c1);
 
 		//row for bytes_left of flatrate
+		/*
 		m_labelBalanceInEurosHeader = new JLabel(JAPMessages.getString(MSG_EURO_BALANCE));
 		c1.insets = new Insets(10, 20, 0, 0);
 		c1.gridx = 0;
@@ -261,6 +262,8 @@ public class PaymentMainPanel extends FlippingPanel
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.weightx = 0;
 		fullPanel.add(m_labelBalanceInEuros, c1);
+	  */
+
 
 
 		//row for bytes spent in this session
@@ -465,14 +468,14 @@ public class PaymentMainPanel extends FlippingPanel
 					m_BalanceText.setText(JAPUtil.formatBytesValue(balance.getCredit()*1000) );
 					m_BalanceTextSmall.setText(JAPUtil.formatBytesValue(balance.getCredit()*1000) );
 					String language = JAPMessages.getLocale().getLanguage();
-					String endDateString = JAPUtil.formatTimestamp(balance.getFlatEnddate(),true,language);
+					String endDateString = JAPUtil.formatTimestamp(balance.getFlatEnddate(),false,language);
 					m_labelValidUntil.setText(endDateString);
-					m_labelBalanceInEuros.setText(JAPUtil.formatEuroCentValue(balance.getBalance()));
+					//m_labelBalanceInEuros.setText(JAPUtil.formatEuroCentValue(balance.getBalance()));
 				}
 				else
 				{
 					m_labelValidUntil.setText(JAPMessages.getString(MSG_NO_FLATRATE));
-					m_labelBalanceInEuros.setText(JAPUtil.formatEuroCentValue(balance.getBalance()));
+					//m_labelBalanceInEuros.setText(JAPUtil.formatEuroCentValue(balance.getBalance()));
 
 					m_BalanceText.setEnabled(true);
 					if (activeAccount.getCertifiedCredit() < 0 )
@@ -683,7 +686,7 @@ public class PaymentMainPanel extends FlippingPanel
 					};
 				}
 
-				/*else if (accounts.getActiveAccount().getBalance().getCredit() <= 0)
+				else if (accounts.getActiveAccount().getBalance().getCredit() <= 0)
 				{
 					JAPController.getInstance().setAnonMode(false);
 					bSuccess = false;
@@ -695,24 +698,26 @@ public class PaymentMainPanel extends FlippingPanel
 							String message = strMessage +
 								JAPMessages.getString(MSG_PAYMENT_ERRORS[XMLErrorMessage.ERR_ACCOUNT_EMPTY]) +
 								" " +
-								JAPMessages.getString(MSG_WANNA_CHARGE);
+								//JAPMessages.getString(MSG_WANNA_CHARGE);
+								JAPMessages.getString("payCreateAccountQuestion");
 							JAPController.getInstance().setAnonMode(false);
 							if (JAPDialog.showYesNoDialog(JAPController.getInstance().getViewWindow(),
 								message, adapter))
 							{
 								m_view.showConfigDialog(JAPConf.PAYMENT_TAB,
-									PayAccountsFile.getInstance().getActiveAccount());
+									//PayAccountsFile.getInstance().getActiveAccount());
+									new Boolean(true));
 							}
 						}
 					};
-				}*/
+				}
 				else if (!JAPController.getInstance().getDontAskPayment())
 				{
 					JAPDialog.LinkedCheckBox checkBox = new JAPDialog.LinkedCheckBox(false);
 
 					int ret = JAPDialog.showConfirmDialog(JAPController.getInstance().getViewWindow(),
-						strMessage + JAPMessages.getString("payUseAccountQuestion") + "<br><br>" +
-						"<Font color=\"red\">" + JAPMessages.getString(MSG_EXPERIMENTAL) + "</Font>",
+						strMessage + JAPMessages.getString("payUseAccountQuestion"), // + "<br><br>" +
+						//"<Font color=\"red\">" + JAPMessages.getString(MSG_EXPERIMENTAL) + "</Font>",
 						JAPDialog.OPTION_TYPE_OK_CANCEL, JAPDialog.MESSAGE_TYPE_INFORMATION,
 						checkBox);
 					JAPController.getInstance().setDontAskPayment(checkBox.getState());
@@ -787,7 +792,8 @@ public class PaymentMainPanel extends FlippingPanel
 				{
 					public void run()
 					{
-						String message = translateBIError(msg);
+						String message = JAPMessages.getString(MSG_FREE_OF_CHARGE) + "<br><br>" +
+							translateBIError(msg);
 						Component parent = PaymentMainPanel.this;
 						JAPDialog.LinkedInformationAdapter adapter = new JAPDialog.LinkedInformationAdapter()
 						{
@@ -804,7 +810,10 @@ public class PaymentMainPanel extends FlippingPanel
 
 						if (msg.getErrorCode() == XMLErrorMessage.ERR_ACCOUNT_EMPTY)
 						{
-							message += "<br><br>" + JAPMessages.getString(MSG_WANNA_CHARGE);
+							message += "<br><br>" +
+								//JAPMessages.getString(MSG_WANNA_CHARGE);
+								JAPMessages.getString("payCreateAccountQuestion");
+
 							if (JAPDialog.showYesNoDialog(parent, message, adapter))
 							{
 								new Thread(new Runnable()
@@ -812,7 +821,8 @@ public class PaymentMainPanel extends FlippingPanel
 									public void run()
 									{
 										m_view.showConfigDialog(JAPConf.PAYMENT_TAB,
-											PayAccountsFile.getInstance().getActiveAccount());
+											//PayAccountsFile.getInstance().getActiveAccount());
+											new Boolean(true));
 									}
 								}).start();
 							}

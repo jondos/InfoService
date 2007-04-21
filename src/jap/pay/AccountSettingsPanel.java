@@ -135,6 +135,9 @@ import anon.pay.xml.XMLVolumePlan;
 public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	ListSelectionListener, Observer
 {
+	public static final String MSG_ACCOUNT_FLAT_VOLUME = AccountSettingsPanel.class.
+		getName() + "_account_flat_volume";
+
 	protected static final String IMG_COINS_DISABLED = AccountSettingsPanel.class.getName() +
 		"_coins-disabled.gif";
 
@@ -143,6 +146,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		getName() + "_button_transactions";
 	private static final String MSG_BUTTON_DELETE = AccountSettingsPanel.class.
 		getName() + "_button_delete";
+	private static final String MSG_BTN_CREATE = AccountSettingsPanel.class.getName() + "_btnCreate";
 	private static final String MSG_BUTTON_EXPORT = AccountSettingsPanel.class.
 		getName() + "_button_export";
 	private static final String MSG_BUTTONRELOAD = AccountSettingsPanel.class.
@@ -157,8 +161,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		getName() + "_account_balance";
 	private static final String MSG_ACCOUNT_FLAT_ENDDATE = AccountSettingsPanel.class.
 		getName() + "_account_flat_enddate";
-	private static final String MSG_ACCOUNT_FLAT_VOLUME = AccountSettingsPanel.class.
-		getName() + "_account_flat_volume";
 	private static final String MSG_ACCOUNT_NOFLAT = AccountSettingsPanel.class.
 		getName() + "_account_noflat";
 	private static final String MSG_ACCOUNT_VALID = AccountSettingsPanel.class.
@@ -314,9 +316,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private JLabel m_labelStatementDate;
 	private JLabel m_labelDeposit;
 	private JLabel m_labelSpent;
-	private JLabel m_labelBalance;
+	//private JLabel m_labelBalance;
 	private JLabel m_labelValid;
-	private JLabel m_labelEnddate;
+	//private JLabel m_labelEnddate;
 	private JLabel m_labelVolume;
 	private JLabel m_lblInactiveMessage, m_lblNoBackupMessage;
 	private JProgressBar m_coinstack;
@@ -436,7 +438,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		c.gridy = 0;
 		c.insets = new Insets(5, 5, 5, 5);
 
-		m_btnCreateAccount = new JButton(JAPMessages.getString("ngCreateAccount"));
+		m_btnCreateAccount = new JButton(JAPMessages.getString(MSG_BTN_CREATE));
 		m_btnCreateAccount.addActionListener(myActionListener);
 		buttonsPanel.add(m_btnCreateAccount, c);
 
@@ -451,16 +453,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		buttonsPanel.add(m_btnImportAccount, c);
 
 		c.gridx++;
+		c.weighty = 1;
 		m_btnSelect = new JButton(JAPMessages.getString(MSG_BUTTON_SELECT));
 		m_btnSelect.addActionListener(myActionListener);
 		buttonsPanel.add(m_btnSelect, c);
-
-		c.gridx++;
-		c.weightx = 1;
-		c.weighty = 1;
-		m_btnActivate = new JButton(JAPMessages.getString(MSG_BUTTON_ACTIVATE));
-		m_btnActivate.addActionListener(myActionListener);
-		buttonsPanel.add(m_btnActivate, c);
 
 		c = new GridBagConstraints();
 		c.fill = c.BOTH;
@@ -660,6 +656,15 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		m_labelDeposit = new JLabel();
 		p.add(m_labelDeposit, c);
 
+		/*
+		c.gridx--;
+		c.gridy++;
+		p.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_BALANCE) + ":"), c);
+		c.gridx++;
+		m_labelBalance = new JLabel();
+		p.add(m_labelBalance, c);*/
+
+
 		c.gridx--;
 		c.gridy++;
 		p.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_SPENT)), c);
@@ -667,19 +672,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		m_labelSpent = new JLabel();
 		p.add(m_labelSpent, c);
 
-		c.gridx--;
-		c.gridy++;
-		p.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_BALANCE) + ":"), c);
-		c.gridx++;
-		m_labelBalance = new JLabel();
-		p.add(m_labelBalance, c);
-
+		/*
 		c.gridx--;
 		c.gridy++;
 		p.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_FLAT_ENDDATE) + ":"), c);
 		c.gridx++;
 		m_labelEnddate = new JLabel();
-		p.add(m_labelEnddate, c);
+		p.add(m_labelEnddate, c);*/
 
 		c.gridx--;
 		c.gridy++;
@@ -687,6 +686,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		c.gridx++;
 		m_labelVolume = new JLabel();
 		p.add(m_labelVolume, c);
+
+		c.gridy++;
+		c.gridy++;
 
 		JPanel buttonsPanel = new JPanel(new GridBagLayout());
 		GridBagConstraints d = new GridBagConstraints();
@@ -699,9 +701,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		d.insets = new Insets(5, 5, 5, 5);
 
 		m_btnChargeAccount = new JButton(JAPMessages.getString(MSG_BUTTON_CHARGE));
+		m_btnChargeAccount.setVisible(false); //do not show this button
 		m_btnChargeAccount.setEnabled(false);
 		m_btnChargeAccount.addActionListener(a_actionListener);
-		buttonsPanel.add(m_btnChargeAccount, d);
+		//buttonsPanel.add(m_btnChargeAccount, d);
+
 		/*
 		  d.gridx++;
 		  m_btnBuyFlat = new JButton(JAPMessages.getString(MSG_BUTTON_BUYFLAT));
@@ -709,7 +713,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		  m_btnBuyFlat.addActionListener(a_actionListener);
 		  buttonsPanel.add(m_btnBuyFlat,d);
 		 */
-		d.gridx++;
+		//d.gridx++;
 		m_btnReload = new JButton(JAPMessages.getString(MSG_BUTTONRELOAD));
 		m_btnReload.addActionListener(a_actionListener);
 		buttonsPanel.add(m_btnReload, d);
@@ -723,6 +727,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		m_btnExportAccount = new JButton(JAPMessages.getString(MSG_BUTTON_EXPORT));
 		m_btnExportAccount.addActionListener(a_actionListener);
 		buttonsPanel.add(m_btnExportAccount, d);
+
+
+		d.gridx++;
+		m_btnActivate = new JButton(JAPMessages.getString(MSG_BUTTON_ACTIVATE));
+		m_btnActivate.addActionListener(a_actionListener);
+		buttonsPanel.add(m_btnActivate, d);
+
 
 		d.gridx++;
 		d.weightx = 1;
@@ -949,8 +960,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			m_labelStatementDate.setText("");
 			m_labelDeposit.setText("");
 			m_labelSpent.setText("");
-			m_labelBalance.setText("");
-			m_labelEnddate.setText("");
+			//m_labelBalance.setText("");
+			//m_labelEnddate.setText("");
 			m_labelVolume.setText("");
 			m_labelValid.setText("");
 			m_lblInactiveMessage.setText("");
@@ -999,23 +1010,26 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				JAPController.getInstance().getLocale().getLanguage()));
 			m_labelDeposit.setText(JAPUtil.formatEuroCentValue(balance.getDeposit()));
 			m_labelSpent.setText(JAPUtil.formatBytesValueWithUnit(balance.getSpent()));
-			m_labelBalance.setText(JAPUtil.formatEuroCentValue(balance.getBalance()));
+			//m_labelBalance.setText(JAPUtil.formatEuroCentValue(balance.getBalance()));
 
 			Locale curLocale = JAPMessages.getLocale();
 			String curLang = curLocale.getLanguage();
 			Timestamp flatEnddate = balance.getFlatEnddate();
 			Timestamp now = new Timestamp(System.currentTimeMillis());
-			if (flatEnddate != null && flatEnddate.after(now))
+
+			if (flatEnddate != null && flatEnddate.after(now) && balance.getCredit() > 0)
 			{
-				m_labelEnddate.setText(JAPUtil.formatTimestamp(flatEnddate, false, curLang));
+				//m_labelEnddate.setText(JAPUtil.formatTimestamp(flatEnddate, false, curLang));
+				m_labelValid.setText(JAPUtil.formatTimestamp(flatEnddate, false, curLang));
 				m_labelVolume.setText(JAPUtil.formatBytesValue(balance.getVolumeBytesLeft() * 1000));
 			}
 			else
 			{
-				m_labelEnddate.setText(JAPMessages.getString(MSG_ACCOUNT_NOFLAT));
+				m_labelValid.setText(JAPMessages.getString(MSG_ACCOUNT_NOFLAT));
 				m_labelVolume.setText(JAPMessages.getString(MSG_ACCOUNT_NOFLAT));
 			}
 
+			/*
 			m_labelValid.setText(JAPUtil.formatTimestamp(balance.getValidTime(), true,
 				JAPController.getInstance().getLocale().getLanguage()));
 			if (balance.getValidTime().before(new Date()))
@@ -1027,7 +1041,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			{
 				m_labelValid.setForeground(new JLabel().getForeground());
 				m_labelValid.setToolTipText("");
-			}
+			}*/
 
 			long dep = selectedAccount.getDeposit();
 			long spe = selectedAccount.getSpent();
@@ -1084,9 +1098,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			m_labelStatementDate.setText("");
 			m_labelDeposit.setText("");
 			m_labelSpent.setText("");
-			m_labelBalance.setText("");
+			//m_labelBalance.setText("");
 			m_labelValid.setText("");
-			m_labelEnddate.setText("");
+			//m_labelEnddate.setText("");
 			m_labelVolume.setText("");
 		}
 	}
