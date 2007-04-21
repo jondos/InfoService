@@ -378,6 +378,8 @@ public class BIConnection implements ICaptchaSender
 	public XMLAccountCertificate register(XMLJapPublicKey pubKey, IMyPrivateKey a_privateKey) throws Exception
 	{
 		Document doc;
+		byte[] challenge = null;
+
 		m_bSendNewCaptcha = true;
 		while (m_bSendNewCaptcha)
 		{
@@ -402,70 +404,62 @@ public class BIConnection implements ICaptchaSender
 				);
 			doc = m_httpClient.readAnswer();
 
-			/** @todo test if a pure XMLChallenge is sent */
 			try
 			{
-				m_captchaSolution = new XMLChallenge(doc.getDocumentElement()).getChallengeForSigning();
+				challenge = new XMLChallenge(doc.getDocumentElement()).getChallengeForSigning();
 				m_bSendNewCaptcha = false;
 				break;
 			}
 			catch (Exception a_e)
 			{
-				LogHolder.log(LogLevel.NOTICE, LogType.PAY,
-							  "No challenge sent while registering account, trying capchta...");
+				LogHolder.log(LogLevel.WARNING, LogType.PAY,
+							  "No challenge sent directly while registering account, trying capchta...");
 			}
 			//Answer document should contain a captcha, let the user solve it and extract the XMLChallenge
 			IImageEncodedCaptcha captcha = new ZipBinaryImageCaptchaClient(doc.getDocumentElement());
 			m_bSendNewCaptcha = false;
 			fireGotCaptcha(captcha);
 		}
-		/** Cut off everything beyond the last ">" to extract only the XML challenge
-		 *  without the cipher padding.
-		 */
+
 		if (m_captchaSolution != null)
 		{
+			/** Cut off everything beyond the last ">" to extract only the XML challenge
+			 *  without the cipher padding.
+			 */
 			String challengeString = new String(m_captchaSolution);
 			int pos = challengeString.lastIndexOf(">");
 			challengeString = challengeString.substring(0, pos + 1);
 			int pos1 = challengeString.indexOf(">") + 1;
 			int pos2 = challengeString.lastIndexOf("<");
 			challengeString = challengeString.substring(pos1, pos2);
-
-			Document challengeDoc = XMLUtil.createDocument();
-			Element elemChallenge = challengeDoc.createElement("Challenge");
-			challengeDoc.appendChild(elemChallenge);
-			Element elem = challengeDoc.createElement("DontPanic");
-			XMLUtil.setValue(elem, challengeString);
-			elemChallenge.appendChild(elem);
-
-			XMLChallenge xmlchallenge = new XMLChallenge(challengeDoc);
-
-			// perform challenge-response authentication
-			XMLAccountCertificate xmlCert = null;
-
-			byte[] challenge = xmlchallenge.getDeprecatedChallengeForSigning();
-			byte[] response = ByteSignature.sign(challenge, a_privateKey);
-			XMLResponse xmlResponse = new XMLResponse(response);
-			String strResponse = XMLUtil.toString(XMLUtil.toXMLDocument(xmlResponse));
-			m_httpClient.writeRequest("POST", "response", strResponse);
-			doc = m_httpClient.readAnswer();
-			// check signature
-			if (!XMLSignature.verifyFast(doc, m_theBI.getCertificate().getPublicKey()))
-			{
-				throw new Exception("AccountCertificate: Wrong signature!");
-			}
-			xmlCert = new XMLAccountCertificate(doc.getDocumentElement());
-			if (!xmlCert.getPublicKey().equals(pubKey.getPublicKey()))
-			{
-				throw new Exception(
-					"The JPI is evil (sent a valid certificate, but with a wrong publickey)");
-			}
-			return xmlCert;
+			challengeString = "<DontPanic>" + challengeString + "</DontPanic>";
+			challenge = challengeString.getBytes();
 		}
 		else
 		{
 			throw new Exception("CAPTCHA");
 		}
+
+		// perform challenge-response authentication
+		XMLAccountCertificate xmlCert = null;
+		byte[] response = ByteSignature.sign(challenge, a_privateKey);
+		XMLResponse xmlResponse = new XMLResponse(response);
+		String strResponse = XMLUtil.toString(XMLUtil.toXMLDocument(xmlResponse));
+		m_httpClient.writeRequest("POST", "response", strResponse);
+		doc = m_httpClient.readAnswer();
+		// check signature
+		if (!XMLSignature.verifyFast(doc, m_theBI.getCertificate().getPublicKey()))
+		{
+			throw new Exception("AccountCertificate: Wrong signature!");
+		}
+		xmlCert = new XMLAccountCertificate(doc.getDocumentElement());
+		if (!xmlCert.getPublicKey().equals(pubKey.getPublicKey()))
+		{
+			throw new Exception(
+				"The JPI is evil (sent a valid certificate, but with a wrong publickey)");
+		}
+		return xmlCert;
+
 	}
 
 	/**
