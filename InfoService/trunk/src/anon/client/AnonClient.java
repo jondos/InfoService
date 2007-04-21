@@ -702,9 +702,8 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 				return ErrorCodes.E_NOT_PARSABLE;
 			}
 			catch (Exception e)
-			{e.printStackTrace();
+			{
 				LogHolder.log(LogLevel.ERR, LogType.NET, e);
-				LogHolder.log(LogLevel.ERR, LogType.PAY, e.getMessage());
 				closeSocketHandler();
 				return ErrorCodes.E_UNKNOWN;
 			}
