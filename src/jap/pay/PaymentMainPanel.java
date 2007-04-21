@@ -683,7 +683,7 @@ public class PaymentMainPanel extends FlippingPanel
 					};
 				}
 
-				else if (accounts.getActiveAccount().getBalance().getCredit() <= 0)
+				/*else if (accounts.getActiveAccount().getBalance().getCredit() <= 0)
 				{
 					JAPController.getInstance().setAnonMode(false);
 					bSuccess = false;
@@ -705,7 +705,7 @@ public class PaymentMainPanel extends FlippingPanel
 							}
 						}
 					};
-				}
+				}*/
 				else if (!JAPController.getInstance().getDontAskPayment())
 				{
 					JAPDialog.LinkedCheckBox checkBox = new JAPDialog.LinkedCheckBox(false);
@@ -762,7 +762,21 @@ public class PaymentMainPanel extends FlippingPanel
 			{
 				// there are no other cascades to switch to
 				LogHolder.log(LogLevel.WARNING, LogType.NET, "There are no other cascades to choose!");
-				//JAPController.getInstance().setAnonMode(false); // does not work well as of auto-reconnection
+				for (int i = 0; i < 5 &&
+					 (JAPController.getInstance().getAnonMode() ||
+					  JAPController.getInstance().isAnonConnected()); i++)
+				{
+					// does not work well as of auto-reconnection
+					JAPController.getInstance().setAnonMode(false);
+					try
+					{
+						Thread.sleep(200);
+					}
+					catch (InterruptedException ex)
+					{
+						break;
+					}
+				}
 			}
 
 			if (!m_bShowingError)
