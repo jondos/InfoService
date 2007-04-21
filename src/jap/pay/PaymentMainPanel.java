@@ -80,8 +80,9 @@ public class PaymentMainPanel extends FlippingPanel
 	private final long WARNING_AMOUNT = 50 * 1024; // 50 MB (db stores in Kbyte!)
 
 	/** Messages */
-	private static final String MSG_TITLE = PaymentMainPanel.class.getName() +
-		"_title";
+	private static final String MSG_TITLE =
+		AccountSettingsPanel.MSG_ACCOUNT_FLAT_VOLUME;
+		//PaymentMainPanel.class.getName() + "_title";
 	private static final String MSG_LASTUPDATE = PaymentMainPanel.class.getName() +
 		"_lastupdate";
 	private static final String MSG_PAYMENTNOTACTIVE = PaymentMainPanel.class.getName() +
@@ -99,7 +100,9 @@ public class PaymentMainPanel extends FlippingPanel
 	private static final String MSG_EXPERIMENTAL = PaymentMainPanel.class.getName() +
 		"_experimental";
 	private static final String MSG_TITLE_FLAT = PaymentMainPanel.class.getName() + "_title_flat";
-	private static final String MSG_VALID_UNTIL = PaymentMainPanel.class.getName() + "_valid_until";
+	private static final String MSG_VALID_UNTIL =
+		//PaymentMainPanel.class.getName() + "_valid_until";
+		AccountSettingsPanel.MSG_ACCOUNT_VALID;
 	private static final String MSG_EURO_BALANCE = PaymentMainPanel.class.getName() + "_euro_balance";
 	private static final String MSG_NO_FLATRATE = PaymentMainPanel.class.getName() + "_no_flatrate";
 	private static final String MSG_WANNA_CHARGE = PaymentMainPanel.class.getName() + "_wannaCharge";
