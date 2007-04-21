@@ -826,6 +826,5 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 				( (IPaymentListener) enumListeners.nextElement()).gotCaptcha(a_source, a_captcha);
 			}
 		}
-
 	}
 }

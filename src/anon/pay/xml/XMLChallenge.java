@@ -90,10 +90,12 @@ public class XMLChallenge implements IXMLEncodable
 
 	public byte[] getChallengeForSigning()
 	{   // new challenge
-		return m_arbChallenge;
+		byte[] challenge = new byte[m_arbChallenge.length];
+		System.arraycopy(m_arbChallenge, 0, challenge, 0, challenge.length);
+		return challenge;
 	}
 
-	public byte[] getDeprecatedChallengeForSigning()
+	public byte[] getChallengeForCaptcha()
 	{
 		String tmp = "<DontPanic>" + Base64.encodeBytes(m_arbChallenge) + "</DontPanic>";
 		return tmp.getBytes();
@@ -107,6 +109,4 @@ public class XMLChallenge implements IXMLEncodable
 		XMLUtil.setValue(elemChallenge, Base64.encodeBytes(m_arbChallenge));
 		return elemRoot;
 	}
-
-
 }
