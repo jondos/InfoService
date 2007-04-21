@@ -416,6 +416,11 @@ public class PayAccount implements IXMLEncodable
 		return 0L;
 	}
 
+	public long getDepositBytes()
+	{
+		return m_accountInfo.getBalance().getDeposit();
+	}
+
 	/**
 	 * Returns the initial amount of the account (i. e. the sum of all incoming
 	 * payment)

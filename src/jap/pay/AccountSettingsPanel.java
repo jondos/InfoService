@@ -1044,8 +1044,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				m_labelValid.setToolTipText("");
 			}*/
 
-			long dep = selectedAccount.getDeposit();
-			long spe = selectedAccount.getSpent();
+			long dep = selectedAccount.getBalance().getVolumeBytesLeft() * 1000 + selectedAccount.getBalance().getSpent();
+			long spe = selectedAccount.getBalance().getSpent();
 			if (dep == 0 || dep - spe == 0)
 			{
 				m_coinstack.setValue(0);
