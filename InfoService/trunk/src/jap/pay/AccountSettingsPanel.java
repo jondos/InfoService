@@ -135,8 +135,11 @@ import anon.pay.xml.XMLVolumePlan;
 public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	ListSelectionListener, Observer
 {
-	public static final String MSG_ACCOUNT_FLAT_VOLUME = AccountSettingsPanel.class.
+	protected static final String MSG_ACCOUNT_FLAT_VOLUME = AccountSettingsPanel.class.
 		getName() + "_account_flat_volume";
+
+	protected static final String MSG_ACCOUNT_VALID = AccountSettingsPanel.class.
+		getName() + "_account_valid";
 
 	protected static final String IMG_COINS_DISABLED = AccountSettingsPanel.class.getName() +
 		"_coins-disabled.gif";
@@ -163,8 +166,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		getName() + "_account_flat_enddate";
 	private static final String MSG_ACCOUNT_NOFLAT = AccountSettingsPanel.class.
 		getName() + "_account_noflat";
-	private static final String MSG_ACCOUNT_VALID = AccountSettingsPanel.class.
-		getName() + "_account_valid";
 	private static final String MSG_ACCOUNT_DETAILS = AccountSettingsPanel.class.
 		getName() + "_account_details";
 	private static final String MSG_ACCOUNT_CREATION_DATE = AccountSettingsPanel.class.
