@@ -210,6 +210,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		getName() + "_oldstatement";
 	private static final String MSG_EXPORTED = AccountSettingsPanel.class.
 		getName() + "_exported";
+	private static final String MSG_ENCRYPT_ACCOUNTS = AccountSettingsPanel.class.getName() +
+		"_encryptAccounts";
 	private static final String MSG_NOTEXPORTED = AccountSettingsPanel.class.
 		getName() + "_notexported";
 	private static final String MSG_CONNECTIONACTIVE = AccountSettingsPanel.class.
@@ -256,6 +258,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		"_allowDirectConnection";
 	private static final String MSG_BI_CONNECTION_LOST = AccountSettingsPanel.class.getName() +
 		"_biConnectionLost";
+	private static final String MSG_BUTTON_UNLOCK = AccountSettingsPanel.class.getName() +
+		"_unlockAccount";
 	private static final String MSG_BUTTON_ACTIVATE = AccountSettingsPanel.class.getName() +
 		"_activateAccount";
 	private static final String MSG_BUTTON_DEACTIVATE = AccountSettingsPanel.class.getName() +
@@ -297,7 +301,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		new Integer(200), new Integer(250), new Integer(300)};
 
 	private JButton m_btnCreateAccount;
-	private JButton m_btnChargeAccount;
+	//private JButton m_btnChargeAccount;
 	private JButton m_btnDeleteAccount;
 	private JButton m_btnExportAccount;
 	private JButton m_btnImportAccount;
@@ -444,20 +448,20 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		buttonsPanel.add(m_btnCreateAccount, c);
 
 		c.gridx++;
+		m_btnTransactions = new JButton(JAPMessages.getString(MSG_BUTTON_TRANSACTIONS));
+		m_btnTransactions.addActionListener(myActionListener);
+		buttonsPanel.add(m_btnTransactions, c);
+
+		c.gridx++;
 		m_btnPassword = new JButton(JAPMessages.getString(MSG_BUTTON_CHANGE_PASSWORD));
 		m_btnPassword.addActionListener(myActionListener);
 		buttonsPanel.add(m_btnPassword, c);
 
 		c.gridx++;
+		c.weighty = 1;
 		m_btnImportAccount = new JButton(JAPMessages.getString("ngImportAccount"));
 		m_btnImportAccount.addActionListener(myActionListener);
 		buttonsPanel.add(m_btnImportAccount, c);
-
-		c.gridx++;
-		c.weighty = 1;
-		m_btnSelect = new JButton(JAPMessages.getString(MSG_BUTTON_SELECT));
-		m_btnSelect.addActionListener(myActionListener);
-		buttonsPanel.add(m_btnSelect, c);
 
 		c = new GridBagConstraints();
 		c.fill = c.BOTH;
@@ -701,11 +705,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		d.gridy = 0;
 		d.insets = new Insets(5, 5, 5, 5);
 
+		/*
 		m_btnChargeAccount = new JButton(JAPMessages.getString(MSG_BUTTON_CHARGE));
-		m_btnChargeAccount.setVisible(false); //do not show this button
 		m_btnChargeAccount.setEnabled(false);
 		m_btnChargeAccount.addActionListener(a_actionListener);
-		//buttonsPanel.add(m_btnChargeAccount, d);
+		buttonsPanel.add(m_btnChargeAccount, d);
+	  */
 
 		/*
 		  d.gridx++;
@@ -714,34 +719,36 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		  m_btnBuyFlat.addActionListener(a_actionListener);
 		  buttonsPanel.add(m_btnBuyFlat,d);
 		 */
-		//d.gridx++;
+
+		m_btnSelect = new JButton(JAPMessages.getString(MSG_BUTTON_ACTIVATE));
+		m_btnSelect.addActionListener(a_actionListener);
+		buttonsPanel.add(m_btnSelect, d);
+
+		d.gridx++;
 		m_btnReload = new JButton(JAPMessages.getString(MSG_BUTTONRELOAD));
 		m_btnReload.addActionListener(a_actionListener);
 		buttonsPanel.add(m_btnReload, d);
 
 		d.gridx++;
-		m_btnTransactions = new JButton(JAPMessages.getString(MSG_BUTTON_TRANSACTIONS));
-		m_btnTransactions.addActionListener(a_actionListener);
-		buttonsPanel.add(m_btnTransactions, d);
-
-		d.gridx++;
-		m_btnExportAccount = new JButton(JAPMessages.getString(MSG_BUTTON_EXPORT));
-		m_btnExportAccount.addActionListener(a_actionListener);
-		buttonsPanel.add(m_btnExportAccount, d);
-
-
-		d.gridx++;
-		m_btnActivate = new JButton(JAPMessages.getString(MSG_BUTTON_ACTIVATE));
+		m_btnActivate = new JButton(JAPMessages.getString(MSG_BUTTON_UNLOCK));
+		m_btnActivate.setVisible(false); //hide button
 		m_btnActivate.addActionListener(a_actionListener);
 		buttonsPanel.add(m_btnActivate, d);
 
 
 		d.gridx++;
-		d.weightx = 1;
-		d.weighty = 1;
 		m_btnDeleteAccount = new JButton(JAPMessages.getString(MSG_BUTTON_DELETE));
 		m_btnDeleteAccount.addActionListener(a_actionListener);
 		buttonsPanel.add(m_btnDeleteAccount, d);
+
+		d.gridx++;
+		d.weightx = 1;
+		d.weighty = 1;
+		m_btnExportAccount = new JButton(JAPMessages.getString(MSG_BUTTON_EXPORT));
+		m_btnExportAccount.addActionListener(a_actionListener);
+		buttonsPanel.add(m_btnExportAccount, d);
+
+
 
 		c.anchor = c.NORTHWEST;
 		c.weightx = 1;
@@ -808,12 +815,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			boolean enable = (getSelectedAccount() != null && getSelectedAccount().getPrivateKey() != null);
 			m_btnActivate.setEnabled(
 				getSelectedAccount() != null && getSelectedAccount().getPrivateKey() == null);
-			m_btnChargeAccount.setEnabled(enable);
+			//m_btnChargeAccount.setEnabled(enable);
 			//m_btnBuyFlat.setEnabled(enable);
 			m_btnTransactions.setEnabled(enable);
 			m_btnExportAccount.setEnabled(enable);
 			m_btnReload.setEnabled(enable);
-			m_btnSelect.setEnabled(enable);
+			m_btnSelect.setEnabled(getSelectedAccount() != null);
 			m_btnDeleteAccount.setEnabled(getSelectedAccount() != null);
 		}
 		/*
@@ -849,10 +856,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					{
 						doCreateAccount();
 					}
+					/*
 					else if (source == m_btnChargeAccount)
 					{
 						doChargeAccount(getSelectedAccount());
-					}
+					}*/
 					/*
 						 else if (source == m_btnBuyFlat)
 						 {
@@ -877,7 +885,14 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					}
 					else if (source == m_btnSelect)
 					{
-						doSelectAccount(getSelectedAccount());
+						if (getSelectedAccount() != null && getSelectedAccount().getPrivateKey() == null)
+						{
+							doActivateAccount(getSelectedAccount());
+						}
+						if (getSelectedAccount() != null && getSelectedAccount().getPrivateKey() != null)
+						{
+							doSelectAccount(getSelectedAccount());
+						}
 					}
 					else if (source == m_btnPassword)
 					{
@@ -885,11 +900,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					}
 					else if (source == m_btnReload)
 					{
-						doGetStatement( (PayAccount) m_listAccounts.getSelectedValue());
+						doGetStatement(getSelectedAccount());
 					}
 					else if (source == m_btnActivate)
 					{
-						doActivateAccount( (PayAccount) m_listAccounts.getSelectedValue());
+						doActivateAccount(getSelectedAccount());
 					}
 					m_bButtonClicked = false;
 				}
@@ -913,7 +928,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		if (JAPController.getInstance().getPaymentPassword() != null)
 		{
-			p = new PasswordContentPane(d, PasswordContentPane.PASSWORD_CHANGE, "")
+			p = new PasswordContentPane(d, PasswordContentPane.PASSWORD_CHANGE,
+										JAPMessages.getString(MSG_ENCRYPT_ACCOUNTS))
 			{
 				public char[] getComparedPassword()
 				{
