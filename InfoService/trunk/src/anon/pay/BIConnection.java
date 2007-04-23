@@ -435,7 +435,7 @@ public class BIConnection implements ICaptchaSender
 			challengeString = "<DontPanic>" + challengeString + "</DontPanic>";
 			challenge = challengeString.getBytes();
 		}
-		else
+		else if (challenge == null)
 		{
 			throw new Exception("CAPTCHA");
 		}
