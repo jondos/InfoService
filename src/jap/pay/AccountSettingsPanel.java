@@ -1672,7 +1672,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					}
 					catch (Exception ex)
 					{
-
 						if (!Thread.currentThread().isInterrupted() && ex.getMessage() != null &&
 							!ex.getMessage().equals("CAPTCHA"))
 						{

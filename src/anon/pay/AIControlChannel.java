@@ -459,7 +459,7 @@ public class AIControlChannel extends XmlControlChannel {
 				currentAccount.addCostConfirmation(a_cc);
 
 				//get Cascade's prepay interval
-				long prepayInterval = m_connectedCascade.getMixInfo(0).getPrepaidInterval() * 1024 - m_prepaidBytes;
+				long prepayInterval = m_connectedCascade.getMixInfo(0).getPrepaidInterval() * 1000 - m_prepaidBytes;
 				if (prepayInterval > 0)
 				{
 					//send CC for up to <last CC + prepay interval> bytes
