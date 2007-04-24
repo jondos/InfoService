@@ -31,8 +31,9 @@ public class XMLErrorMessage extends Exception implements IXMLEncodable
 	public static final int ERR_INSUFFICIENT_BALANCE = 13;
 	public static final int ERR_NO_FLATRATE_OFFERED = 14;
 	public static final int ERR_INVALID_CODE = 15;
-	public static final int ERR_INVALID_CC = 16;
+	public static final int ERR_OUTDATED_CC = 16;
 	public static final int ERR_INVALID_PRICE_CERTS = 17;
+	public static final int ERR_MULTIPLE_LOGIN = 18;
 
 	private int m_iErrorCode;
 	private String m_strErrMsg;
