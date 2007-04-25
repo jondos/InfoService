@@ -758,7 +758,7 @@ public class PaymentMainPanel extends FlippingPanel
 		 *
 		 * @param msg XMLErrorMessage
 		 */
-		public void accountError(XMLErrorMessage a_msg)
+		public void accountError(XMLErrorMessage a_msg, boolean a_bIgnore)
 		{
 			if (a_msg.getErrorCode() <= XMLErrorMessage.ERR_OK || a_msg.getErrorCode() < 0)
 			{
@@ -788,7 +788,7 @@ public class PaymentMainPanel extends FlippingPanel
 				}
 			}
 
-			if (!m_bShowingError)
+			if (!m_bShowingError && !a_bIgnore)
 			{
 				m_bShowingError = true;
 				final XMLErrorMessage msg = a_msg;

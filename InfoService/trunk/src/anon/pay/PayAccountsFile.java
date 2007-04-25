@@ -660,17 +660,13 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	 */
 	public void signalAccountError(XMLErrorMessage msg)
 	{
-		if (m_bIgnoreAIAccountErrorMessages)
-		{
-			return;
-		}
-
 		synchronized (m_paymentListeners)
 		{
 			Enumeration enumListeners = m_paymentListeners.elements();
 			while (enumListeners.hasMoreElements())
 			{
-				( (IPaymentListener) enumListeners.nextElement()).accountError(msg);
+				( (IPaymentListener) enumListeners.nextElement()).accountError(msg,
+					m_bIgnoreAIAccountErrorMessages);
 			}
 		}
 	}

@@ -226,7 +226,7 @@ public class CaptchaContentPane extends DialogContentPane implements
 		return true;
 	}
 
-	public void accountError(XMLErrorMessage msg)
+	public void accountError(XMLErrorMessage msg, boolean a_bIgnore)
 	{
 	}
 
