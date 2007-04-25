@@ -4523,11 +4523,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 		private MixCascade m_initialCascade;
 		private MixCascade m_currentCascade;
 		private boolean m_bKeepCurrentCascade;
-		private boolean bSkipInitialCascade;
+		private boolean m_bSkipInitialCascade;
 
 		public AutoSwitchedMixCascadeContainer(boolean a_bSkipInitialCascade)
 		{
-			bSkipInitialCascade = a_bSkipInitialCascade;
+			m_bSkipInitialCascade = a_bSkipInitialCascade;
 			m_alreadyTriedCascades = new Hashtable();
 			m_random = new Random(System.currentTimeMillis());
 			m_random.nextInt();
@@ -4570,7 +4570,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						m_alreadyTriedCascades.put(m_currentCascade.getId(), m_currentCascade);
 					}
 				}
-				else if (bSkipInitialCascade || m_initialCascade == null ||
+				else if (m_bSkipInitialCascade || m_initialCascade == null ||
 						 m_alreadyTriedCascades.containsKey(m_initialCascade.getId()))
 				{
 					MixCascade currentCascade = null;
@@ -4639,7 +4639,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 					if (currentCascade == null)
 					{
-						bSkipInitialCascade = false; // this is not the first call
+						m_bSkipInitialCascade = false; // this is not the first call
 						m_alreadyTriedCascades.clear();
 						currentCascade = getNextMixCascade();
 						if (currentCascade == null && m_initialCascade != null)
@@ -4657,12 +4657,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_currentCascade = m_initialCascade;
 				}
 
-				if (bSkipInitialCascade)
+				if (m_bSkipInitialCascade)
 				{
 					m_initialCascade = m_currentCascade;
 				}
 				// this only happens for the first call
-				bSkipInitialCascade = false;
+				m_bSkipInitialCascade = false;
 			}
 
 			return m_currentCascade;
@@ -4680,6 +4680,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 		private boolean isSuitableCascade(MixCascade a_cascade)
 		{
 			if (a_cascade == null)
+			{
+				return false;
+			}
+
+			if (m_initialCascade != null && m_bSkipInitialCascade && a_cascade.equals(m_initialCascade))
 			{
 				return false;
 			}

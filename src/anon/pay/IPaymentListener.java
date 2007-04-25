@@ -24,8 +24,9 @@ public interface IPaymentListener extends EventListener
 	/**
 	 * The AI has signaled an error.
 	 * @param acc PayAccount
+	 * @param a_bIgnore do not force a user reaction
 	 */
-	void accountError(XMLErrorMessage msg);
+	void accountError(XMLErrorMessage msg, boolean a_bIgnore);
 
 	/**
 	 * The active account changed.
