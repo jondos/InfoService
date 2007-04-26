@@ -243,7 +243,7 @@ public final class XMLSignature implements IXMLEncodable
 			  LogHolder.log(LogLevel.WARNING, LogType.PAY, "could not create hash value of node");
 			  return null;
 		}
-		return Base64.encode(digestValue, 0, digestValue.length);
+		return Base64.encode(digestValue, false);
 	}
 	/**
 	 * Same method as getHashValueOfElement,
@@ -257,28 +257,7 @@ public final class XMLSignature implements IXMLEncodable
 	 */
 	public static String getEncodedHashValue(Element nodeToHash)
 	{
-		byte[] digestValue = null;
-		try
-		{
-			PrintWriter fileout = new PrintWriter(new FileOutputStream("/home/elmar/railswork/bigui/javalog.txt"),true);
-			fileout.println("THE NODE TO HASH: " + XMLUtil.toString(nodeToHash));
-
-			fileout.println("\nClass of nodToHash:"+nodeToHash.getClass().getName());
-
-			byte[] canonicalBytes = toCanonical(nodeToHash);
-			String canonicalString = new String(canonicalBytes);
-			fileout.println("\n\nafter canonicalisation:"+canonicalString);
-
-			//digestValue = MessageDigest.getInstance("SHA-1").digest(toCanonical(nodeToHash));
-			digestValue = MessageDigest.getInstance("SHA-1").digest(canonicalBytes);
-
-		}
-		catch (Exception ex)
-		{
-			  LogHolder.log(LogLevel.WARNING, LogType.PAY, "could not create hash value of node");
-			  return null;
-		}
-		return new String(Base64.encode(digestValue, false));
+		return getHashValueOfElement(nodeToHash);
 	}
 
 
