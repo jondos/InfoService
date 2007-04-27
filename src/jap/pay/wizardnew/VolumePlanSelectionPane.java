@@ -51,6 +51,7 @@ import java.sql.Timestamp;
 import jap.JAPController;
 import logging.LogType;
 import gui.GUIUtils;
+import javax.swing.JTextField;
 
 
 /**
@@ -79,9 +80,11 @@ public class VolumePlanSelectionPane extends DialogContentPane implements  IWiza
 		getName() + "_volumeplan";
 	private static final String MSG_CHOOSEAPLAN = VolumePlanSelectionPane.class.
 		getName() + "_chooseaplan";
+	private static final String MSG_ENTER_COUPON = VolumePlanSelectionPane.class.getName() + "_entercouponcode";
 
 	private XMLVolumePlans m_allPlans;
 	private XMLVolumePlan m_selectedPlan;
+	private JTextField m_couponCode;
 	private GridBagConstraints m_c = new GridBagConstraints();
 	private Container m_rootPanel;
 	private ButtonGroup m_rbGroup;
@@ -121,6 +124,22 @@ public class VolumePlanSelectionPane extends DialogContentPane implements  IWiza
 	public XMLVolumePlan getSelectedVolumePlan()
 	{
 		return m_selectedPlan;
+	}
+
+	public String getEnteredCouponCode()
+	{
+		return m_couponCode.getText();
+	}
+
+	public boolean isCouponUsed()
+	{
+		if (m_couponCode.getText().equals("") ) //no coupon entered
+		{
+			return false;
+		} else
+		{
+			return true;
+		}
 	}
 
 	/**
@@ -199,10 +218,25 @@ public class VolumePlanSelectionPane extends DialogContentPane implements  IWiza
 		}
 	}
 
+	private void addCouponField()
+	{
+		m_c.gridy++;
+		m_c.insets = new Insets(10, 5, 0, 5);
+		m_c.gridx = 1;
+		m_c.gridwidth = 3;
+		m_rootPanel.add(new JLabel(JAPMessages.getString(MSG_ENTER_COUPON)),m_c);
+		m_c.gridy++;
+		m_c.gridx = 1;
+		m_c.gridwidth = 3;
+		m_couponCode = new JTextField(15);
+		m_rootPanel.add(m_couponCode,m_c);
+
+	}
+
 	public CheckError[] checkYesOK()
 	{
 		CheckError[] errors = super.checkYesOK();
-		if ((errors == null || errors.length == 0) && m_rbGroup.getSelection() == null)
+		if ((errors == null || errors.length == 0) && m_rbGroup.getSelection() == null && !isCouponUsed() )
 		{
 			errors = new CheckError[]{
 				new CheckError(JAPMessages.getString(MSG_ERROR_NO_PLAN_CHOSEN), LogType.GUI)};
@@ -226,7 +260,6 @@ public class VolumePlanSelectionPane extends DialogContentPane implements  IWiza
 		Object value = p.getValue();
 		XMLVolumePlans allPlans = (XMLVolumePlans) value;
 		JLabel label;
-		//System.out.println(XMLUtil.toString(XMLUtil.toXMLDocument(allPlans)));
 		m_allPlans = allPlans;
 
 		m_rootPanel.removeAll();
@@ -259,10 +292,14 @@ public class VolumePlanSelectionPane extends DialogContentPane implements  IWiza
 		{
 			addPlan(m_allPlans.getVolumePlan(i));
 		}
+
+	    //show coupon field
+		addCouponField();
 	}
 
 	public void resetSelection()
 	{
 		m_selectedPlan = null;
+		m_couponCode.setText("");
 	}
 }
