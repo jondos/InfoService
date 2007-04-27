@@ -1245,7 +1245,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				   piConn.authenticate(a_accountCreationThread.getAccount().getAccountCertificate(),
 									   //  PayAccountsFile.getInstance().getActiveAccount().getAccountCertificate(),
 									   a_accountCreationThread.getAccount().getPrivateKey());
-				   //PayAccountsFile.getInstance().getActiveAccount().getPrivateKey());
 				   LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetching payment options");
 				   m_paymentOptions = piConn.getPaymentOptions();
 				   piConn.disconnect();
@@ -1269,12 +1268,42 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	   };
 
 		final WorkerContentPane fetchOptionsPane = new WorkerContentPane(a_parentDialog,
-			JAPMessages.getString(MSG_FETCHINGOPTIONS), planSelectionPane, fetchOptions);
+			JAPMessages.getString(MSG_FETCHINGOPTIONS), planSelectionPane, fetchOptions)
+		{
+			public boolean isSkippedAsNextContentPane()
+			{
+				if ( planSelectionPane.isCouponUsed() )
+				{
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Coupon entered, skipping payment options pane");
+					return true;
+				}
+				else //no coupon used = regular volume plan
+				{
+
+					return false;
+				}
+			}
+
+		};
 		fetchOptionsPane.setInterruptThreadSafe(false);
 
 		// ************ show method selection pane / fetch TAN *****************
-		final MethodSelectionPane methodSelectionPane =
-			new MethodSelectionPane(a_parentDialog, fetchOptionsPane);
+		final MethodSelectionPane methodSelectionPane =	new MethodSelectionPane(a_parentDialog, fetchOptionsPane){
+			public boolean isSkippedAsNextContentPane()
+			{
+				if (planSelectionPane.isCouponUsed())
+				{
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Coupon entered, skipping payment options pane");
+					return true;
+				}
+				else //no coupon used = regular volume plan
+				{
+
+					return false;
+				}
+			}
+
+		};
 
 		WorkerContentPane.IReturnRunnable fetchTan = new WorkerContentPane.IReturnRunnable()
 		{
@@ -1320,6 +1349,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		 {
 			 public boolean isSkippedAsNextContentPane()
 			 {
+				 if (planSelectionPane.isCouponUsed() )
+				 {
+					 return true;
+				 }
 				 if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
 					 XMLPaymentOption.OPTION_ACTIVE))
 				 {
@@ -1349,6 +1382,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 			public boolean isSkippedAsNextContentPane()
 			{
+				if (planSelectionPane.isCouponUsed())
+				{
+					return true;
+				}
 				if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
 					XMLPaymentOption.OPTION_ACTIVE))
 				{
@@ -1376,7 +1413,16 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				 /** Post data to payment instance */
 				 BIConnection biConn = new BIConnection(a_accountCreationThread.getAccount().getBI());
 				 XMLPassivePayment paymentToSend = new XMLPassivePayment();
-				 if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
+				 //if coupon was used, get its code and put it into an XMLPassivePayment
+				 if (planSelectionPane.isCouponUsed() )
+				 {
+					 paymentToSend.addData("code",planSelectionPane.getEnteredCouponCode());
+					 paymentToSend.setPaymentName("Coupon");
+					 long accNum = a_accountCreationThread.getAccount().getAccountNumber();
+					 paymentToSend.addData("accountnumber", new Long(accNum).toString());
+					 //no other data needed, since details about the contents of the coupons were stored in the database when the coupon was created
+
+				 } else if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
 					 XMLPaymentOption.OPTION_PASSIVE))
 				 {
 					 paymentToSend = passivePaymentPane.getEnteredInfo();
@@ -1437,6 +1483,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		{
 			public boolean isSkippedAsNextContentPane()
 			{
+				if (planSelectionPane.isCouponUsed() )
+				{
+					return false;
+				}
 				if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
 					XMLPaymentOption.OPTION_ACTIVE))
 				{
@@ -1449,8 +1499,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			}
 		};
 
-		//TODO: add WorkerContentPane for to send buyPlan to JPI
-
 		//************** show confirmation (passive only) **************//
 		final SimpleWizardContentPane sentPane = new SimpleWizardContentPane(a_parentDialog,
 			JAPMessages.getString(MSG_SENTPASSIVE), null,
@@ -1459,6 +1507,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		{
 			public boolean isSkippedAsNextContentPane()
 			{
+				if (planSelectionPane.isCouponUsed() )	{
+						return false;
+				}
 				if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
 					XMLPaymentOption.OPTION_ACTIVE))
 				{
