@@ -332,7 +332,8 @@ public class AIControlChannel extends XmlControlChannel {
 	  String message = null;
 	  Vector priceCerts = m_connectedCascade.getPriceCertificates();
 	  Vector mixIDs = m_connectedCascade.getMixIds();
-	  String SKI, mixID;
+	  String mixID;
+	  XMLPriceCertificate priceCert;
 
 	/*
 	  Enumeration hashes = m_connectedCascade.getPriceCertificateHashes().elements();
@@ -352,16 +353,24 @@ public class AIControlChannel extends XmlControlChannel {
 	  {
 		  for (int i = 0; i < mixIDs.size(); i++)
 		  {
-			  SKI = ( (XMLPriceCertificate) priceCerts.elementAt(i)).getSubjectKeyIdentifier();
+			  priceCert = ( (XMLPriceCertificate) priceCerts.elementAt(i));
 			  mixID = (String) mixIDs.elementAt(i);
-			  if (!SKI.equals(mixID))
+			  if (!priceCert.verify(PayAccountsFile.getInstance().getActiveAccount().getBI()))
+			  {
+				  message = "Price certificate of cascade " + m_connectedCascade.getId() + " for mix " +
+					  mixID + " cannot be verified!";
+				  break;
+			  }
+
+			  if (!priceCert.getSubjectKeyIdentifier().equals(mixID))
 			  {
 				  message = "SKI in price certificate of cascade " + m_connectedCascade.getId() +
-					  " differs from Mix ID! SKI:" + SKI + " MixID: " + mixID;
+					  " differs from Mix ID! SKI:" + priceCert.getSubjectKeyIdentifier() + " MixID: " + mixID;
 				  break;
 			  }
 		  }
 	  }
+
 	  if (message != null)
 	  {
 		  LogHolder.log(LogLevel.ERR, LogType.PAY, message);

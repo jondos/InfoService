@@ -45,6 +45,7 @@ import logging.LogHolder;
 import java.text.SimpleDateFormat;
 import java.text.NumberFormat;
 import java.util.Locale;
+import anon.pay.BI;
 
 /**
  * Contains the functionality for creating and parsing XML Price Certificates
@@ -236,7 +237,17 @@ public class XMLPriceCertificate implements IXMLEncodable
 		}
 	}
 
-
+	public boolean verify(BI a_bi)
+	{
+		try
+		{
+			return XMLSignature.verify(m_docThePriceCert, a_bi.getCertificate()) != null;
+		}
+		catch (XMLParseException ex)
+		{
+			return false;
+		}
+	}
 
 
 	/**
