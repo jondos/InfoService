@@ -79,7 +79,7 @@ public class BIConnection implements ICaptchaSender
 
 	private static int ms_connectionTimeout = TIMEOUT_DEFAULT;
 
-	private BI m_theBI;
+	private PaymentInstanceDBEntry m_theBI;
 
 	private Socket m_socket;
 	private HttpClient m_httpClient;
@@ -98,7 +98,7 @@ public class BIConnection implements ICaptchaSender
 	 *
 	 * @param BI the BI to which we connect
 	 */
-	public BIConnection(BI theBI)
+	public BIConnection(PaymentInstanceDBEntry theBI)
 	{
 		m_theBI = theBI;
 		m_biConnectionListeners = new Vector();

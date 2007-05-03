@@ -49,6 +49,7 @@ import anon.util.captcha.IImageEncodedCaptcha;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.util.XMLParseException;
 
 /**
  * This class encapsulates a collection of accounts. One of the accounts in the collection
@@ -609,7 +610,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	 * @param a_keyPair RSA should not be used at the moment
 	 *
 	 */
-	public PayAccount createAccount(BI a_bi, IMutableProxyInterface a_proxys,
+	public PayAccount createAccount(PaymentInstanceDBEntry a_bi, IMutableProxyInterface a_proxys,
 									AsymmetricCryptoKeyPair a_keyPair) throws
 		Exception
 	{
@@ -683,13 +684,13 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	/**
 	 * Adds a payment instance to the list of known payment instances
 	 */
-	public void addKnownPI(BI a_bi)
+	public void addKnownPI(PaymentInstanceDBEntry a_bi)
 	{
 		boolean exists = false;
 
 		for (int i = 0; i < m_knownPIs.size(); i++)
 		{
-			if ( ( (BI) m_knownPIs.elementAt(i)).getID().equals(a_bi.getID()))
+			if ( ( (PaymentInstanceDBEntry) m_knownPIs.elementAt(i)).getId().equals(a_bi.getId()))
 			{
 				exists = true;
 			}
@@ -700,83 +701,17 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		}
 	}
 
-	/**
-	 * Adds a payment instance to the list of known payment instances
-	 */
-	public void addKnownPI(Element a_elemPI)
+	public PaymentInstanceDBEntry getBI(String a_piID) throws Exception
 	{
-		Vector listeners = new Vector();
-		ListenerInterface l = null;
-		String biID, biName;
-		JAPCertificate biCert;
-
-		Element elem = (Element) XMLUtil.getFirstChildByName(a_elemPI, "BIID");
-		biID = XMLUtil.parseValue(elem, "-1");
-
-		elem = (Element) XMLUtil.getFirstChildByName(a_elemPI, "BIName");
-		biName = XMLUtil.parseValue(elem, "-1");
-
-		elem = (Element) XMLUtil.getFirstChildByName(a_elemPI, "ListenerInterfaces");
-		if (elem != null)
-		{
-			NodeList listenerNodes = elem.getChildNodes();
-			for (int i = 0; i < listenerNodes.getLength(); i++)
-			{
-				try
-				{
-					l = new ListenerInterface( (Element) listenerNodes.item(i));
-				}
-				catch (Exception e)
-				{
-					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
-								  "Could not create listener interface while adding to known PIs");
-				}
-				if (l != null)
-				{
-					listeners.addElement(l);
-				}
-			}
-		}
-		elem = (Element) XMLUtil.getFirstChildByName(a_elemPI, "TestCertificate");
-		elem = (Element) XMLUtil.getFirstChildByName(elem, JAPCertificate.XML_ELEMENT_NAME);
-
-		biCert = JAPCertificate.getInstance(elem);
-
-		if (listeners.size() > 0)
-		{
-		BI bi = null;
-		try
-		{
-
-				bi = new BI(biID, biName, listeners, biCert);
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "Cannot create PI: " + e.getMessage());
-		}
-
-		addKnownPI(bi);
-		}
-		else
-		{
-			LogHolder.log(LogLevel.ERR, LogType.PAY,
-						  "Cannot create PI without listeners while adding known PIs ");
-		}
-	}
-
-	public BI getBI(String a_piID) throws Exception
-	{
-		BI theBI = null;
-
-
+		PaymentInstanceDBEntry theBI = null;
 
 		//First, try to get the BI from the Infoservice
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Trying to get " + a_piID + " from InfoService");
 
 		try
 		{
-			theBI = new BI(InfoServiceHolder.getInstance().getPaymentInstance(a_piID));
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Got BI " + theBI.getID() + " from InfoService");
+			theBI = InfoServiceHolder.getInstance().getPaymentInstance(a_piID);
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Got BI " + theBI.getId() + " from InfoService");
 			return theBI;
 		}
 		catch (Exception e)
@@ -791,8 +726,8 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 
 		for (int i = 0; i < m_knownPIs.size(); i++)
 		{
-			BI possibleBI = (BI) m_knownPIs.elementAt(i);
-			if (possibleBI.getID().equals(a_piID))
+			PaymentInstanceDBEntry possibleBI = (PaymentInstanceDBEntry) m_knownPIs.elementAt(i);
+			if (possibleBI.getId().equals(a_piID))
 			{
 				theBI = possibleBI;
 				break;

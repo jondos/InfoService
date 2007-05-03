@@ -43,6 +43,7 @@ import anon.infoservice.MixCascade;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.pay.*;
 
 /**
  * This class holds the instances of the InfoService class for the JAP client and is a singleton.

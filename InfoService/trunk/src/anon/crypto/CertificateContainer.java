@@ -42,11 +42,15 @@ import anon.util.XMLUtil;
  */
 public class CertificateContainer implements IXMLEncodable
 {
-
 	/**
 	 * Stores the name of the root node of the XML settings for this class.
 	 */
-	private static final String XML_SETTINGS_ROOT_NODE_NAME = "CertificateContainer";
+	public static final String XML_ELEMENT_NAME = "CertificateContainer";
+
+	private static final String XML_ATTR_REMOVABLE ="removable";
+
+
+
 
 	/**
 	 * Stores the parent certificate (the certificate against which verification of this certificate
@@ -85,7 +89,7 @@ public class CertificateContainer implements IXMLEncodable
 	 */
 	private boolean m_onlyHardRemovable;
 
-	/** Thsi certifcate is NOT removable - used at the moment for some default certs*/
+	/** This certifcate is NOT removable - used at the moment for some default certs*/
 	private boolean m_bNotRemovable = false;
 
 	/**
@@ -93,17 +97,6 @@ public class CertificateContainer implements IXMLEncodable
 	 * certificate cannot be removed automatically from the certificate store.
 	 */
 	private Vector m_lockList;
-
-	/**
-	 * Returns the name of the XML node created by the instances of this class
-	 * ('CertificateContainer').
-	 *
-	 * @return The name of the XML node created by the instances of this class.
-	 */
-	public static String getXmlSettingsRootNodeName()
-	{
-		return XML_SETTINGS_ROOT_NODE_NAME;
-	}
 
 	/**
 	 * Creates a new instance of CertificateContainer. Only instances of CertificateStore should
@@ -145,6 +138,7 @@ public class CertificateContainer implements IXMLEncodable
 		m_enabled = true;
 		m_parentCertificate = null;
 		m_onlyHardRemovable = false;
+		m_bNotRemovable = false;
 		m_lockList = new Vector();
 	}
 
@@ -214,6 +208,9 @@ public class CertificateContainer implements IXMLEncodable
 		m_parentCertificate = null;
 		/* only hard removable certificates can be persistent */
 		m_onlyHardRemovable = true;
+		// should also be true, but for deleting old entries we do this here...
+		m_bNotRemovable = !XMLUtil.parseAttribute(a_certificateContainerNode, XML_ATTR_REMOVABLE, false);
+
 		m_lockList = new Vector();
 	}
 
@@ -345,7 +342,8 @@ public class CertificateContainer implements IXMLEncodable
 	 * certificate (removeCertificateLock() was called for all locks on the certificate). Also the
 	 * certificate will be persistent (included in the XML structure created by the certificate
 	 * store) only, if this value is true (persistence wouldn't make sense for automatically
-	 * removable certificates).
+	 * removable certificates) and if it is removable (otherwise it is expected to be reloaded on hte
+	 * next start).
 	 *
 	 * @return Whether the certificate can only be removed from the certificate store by calling
 	 *         removeCertificate() and also whether the certificate will be persistent.
@@ -405,9 +403,10 @@ public class CertificateContainer implements IXMLEncodable
 	 */
 	public Element toXmlElement(Document a_doc)
 	{
-		Element certificateContainerNode = a_doc.createElement(XML_SETTINGS_ROOT_NODE_NAME);
+		Element certificateContainerNode = a_doc.createElement(XML_ELEMENT_NAME);
 		synchronized (this)
 		{
+			XMLUtil.setAttribute(certificateContainerNode, XML_ATTR_REMOVABLE, !m_bNotRemovable);
 			Element certificateTypeNode = a_doc.createElement("CertificateType");
 			XMLUtil.setValue(certificateTypeNode, m_certificateType);
 			Element certificateNeedsVerificationNode = a_doc.createElement("CertificateNeedsVerification");

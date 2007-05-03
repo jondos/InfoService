@@ -57,6 +57,7 @@ import anon.util.ZLibTools;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.pay.*;
 
 
 /**
@@ -274,16 +275,16 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 			throw new XMLParseException("Network");
 		}
 		Element listenerInterfacesNode =
-			(Element) XMLUtil.getFirstChildByName(networkNode, "ListenerInterfaces");
+			(Element) XMLUtil.getFirstChildByName(networkNode, ListenerInterface.XML_ELEMENT_CONTAINER_NAME);
 		if (networkNode == null)
 		{
-			throw new XMLParseException("ListenerInterfaces");
+			throw new XMLParseException(ListenerInterface.XML_ELEMENT_CONTAINER_NAME);
 		}
 		NodeList listenerInterfaceNodes = listenerInterfacesNode.getElementsByTagName(
-			ListenerInterface.getXMLElementName());
+			ListenerInterface.XML_ELEMENT_NAME);
 		if (listenerInterfaceNodes.getLength() == 0)
 		{
-			throw new XMLParseException(ListenerInterface.getXMLElementName());
+			throw new XMLParseException(ListenerInterface.XML_ELEMENT_NAME);
 		}
 		m_listenerInterfaces = new Vector();
 		for (int i = 0; i < listenerInterfaceNodes.getLength(); i++)
@@ -995,13 +996,19 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 	public Vector getPaymentInstances() throws Exception
 	{
 		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/paymentinstances"));
-		NodeList paymentInstancesNodes = doc.getElementsByTagName("PaymentInstances");
-		if (paymentInstancesNodes.getLength() == 0)
+
+		if (!SignatureVerifier.getInstance().verifyXml(doc, SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE))
 		{
-			throw (new Exception("Error in XML structure."));
+			// signature could not be verified
+			throw new SignatureException("Document could not be verified!");
 		}
-		Element paymentInstancesNode = (Element) (paymentInstancesNodes.item(0));
-		NodeList paymentInstanceNodes = paymentInstancesNode.getElementsByTagName("PaymentInstance");
+
+		PaymentInstanceDBEntry entry;
+		Element paymentInstancesNode = doc.getDocumentElement();
+		XMLUtil.assertNodeName(paymentInstancesNode, PaymentInstanceDBEntry.XML_ELEMENT_CONTAINER_NAME);
+
+		NodeList paymentInstanceNodes =
+			paymentInstancesNode.getElementsByTagName(PaymentInstanceDBEntry.XML_ELEMENT_NAME);
 		Vector paymentInstances = new Vector();
 		for (int i = 0; i < paymentInstanceNodes.getLength(); i++)
 		{
@@ -1009,15 +1016,24 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 
 			try
 			{
-				paymentInstances.addElement(new PaymentInstanceDBEntry(paymentInstanceNode));
+				entry = new PaymentInstanceDBEntry(paymentInstanceNode);
+				if (entry.isVerified())
+				{
+					paymentInstances.addElement(entry);
+				}
+				else
+				{
+					LogHolder.log(LogLevel.ERR, LogType.MISC,
+								  "Cannot verify the signature for " +
+								  ClassUtil.getShortClassName(PaymentInstanceDBEntry.class) + " entry: " +
+								  XMLUtil.toString(paymentInstanceNode));
+				}
 			}
 			catch (Exception e)
 			{
 				/* an error while parsing the node occured -> we don't use this payment instance */
-				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
-							  "Error in PaymentInstance XML node.");
+				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Error in PaymentInstance XML node.", e);
 			}
-
 		}
 		return paymentInstances;
 	}
@@ -1025,14 +1041,15 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 	public PaymentInstanceDBEntry getPaymentInstance(String a_piID) throws Exception
 	{
 		HttpRequestStructure structure = HttpRequestStructure.createGetRequest("/paymentinstance/" + a_piID);
-		//System.out.println(structure.getRequestFileName());
+		PaymentInstanceDBEntry entry =
+			new PaymentInstanceDBEntry(getXmlDocument(structure).getDocumentElement());
 
-		//System.out.println(((ListenerInterface)getListenerInterfaces().elementAt(0)).toString());
-		Document doc = getXmlDocument(structure);
+		if (!entry.isVerified())
+		{
+			throw new SignatureException("Document could not be verified!");
+		}
 
-		//System.out.println(XMLUtil.toString(doc));
-		Element paymentInstance = (Element) XMLUtil.getFirstChildByName(doc, "PaymentInstance");
-		return new PaymentInstanceDBEntry(paymentInstance);
+		return entry;
 	}
 
 	private static class EntryGetter

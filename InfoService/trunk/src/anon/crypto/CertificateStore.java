@@ -167,11 +167,6 @@ public class CertificateStore extends Observable implements IXMLEncodable
 	public int addCertificateWithVerification(CertPath a_certificate, int a_certificateType,
 											  boolean a_onlyHardRemovable)
 	{
-		if (a_certificateType == JAPCertificate.CERTIFICATE_TYPE_ROOT_UPDATE)
-		{
-			new Exception().printStackTrace();
-		}
-
 		int lockId = -1;
 		if ( (a_certificateType == JAPCertificate.CERTIFICATE_TYPE_MIX) ||
 			(a_certificateType == JAPCertificate.CERTIFICATE_TYPE_INFOSERVICE))
@@ -467,7 +462,8 @@ public class CertificateStore extends Observable implements IXMLEncodable
 			{
 				CertificateContainer currentCertificateContainer = (CertificateContainer) (allCertificates.
 					nextElement());
-				if (currentCertificateContainer.isOnlyHardRemovable())
+				if (currentCertificateContainer.isOnlyHardRemovable() &&
+					!currentCertificateContainer.isNotRemovable())
 				{
 					trustedCertificatesNode.appendChild(currentCertificateContainer.toXmlElement(a_doc));
 				}
@@ -484,7 +480,7 @@ public class CertificateStore extends Observable implements IXMLEncodable
 			removeAllCertificates();
 			/* load the settings from the XML description */
 			NodeList certificateContainerNodes = a_trustedCertificatesNode.getElementsByTagName(
-				CertificateContainer.getXmlSettingsRootNodeName());
+				CertificateContainer.XML_ELEMENT_NAME);
 			for (int i = 0; i < certificateContainerNodes.getLength(); i++)
 			{
 				Element certificateContainerNode = (Element) (certificateContainerNodes.item(i));
@@ -501,7 +497,8 @@ public class CertificateStore extends Observable implements IXMLEncodable
 					else
 					{
 						addCertificateWithoutVerification(currentCertificateContainer.getCertPath(),
-							currentCertificateContainer.getCertificateType(), true, false);
+							currentCertificateContainer.getCertificateType(), true,
+							currentCertificateContainer.isNotRemovable());
 					}
 					/* enable or disable the certificate */
 					setEnabled(currentCertificateContainer.getInfoStructure(),

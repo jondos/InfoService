@@ -45,7 +45,7 @@ import logging.LogHolder;
 import java.text.SimpleDateFormat;
 import java.text.NumberFormat;
 import java.util.Locale;
-import anon.pay.BI;
+import anon.pay.PaymentInstanceDBEntry;
 
 /**
  * Contains the functionality for creating and parsing XML Price Certificates
@@ -237,7 +237,7 @@ public class XMLPriceCertificate implements IXMLEncodable
 		}
 	}
 
-	public boolean verify(BI a_bi)
+	public boolean verify(PaymentInstanceDBEntry a_bi)
 	{
 		try
 		{

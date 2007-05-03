@@ -118,7 +118,7 @@ public class PayAccount implements IXMLEncodable
 	 */
 	private long m_mySpent;
 
-	private BI m_theBI;
+	private PaymentInstanceDBEntry m_theBI;
 
 	private String m_strBiID;
 
@@ -136,7 +136,7 @@ public class PayAccount implements IXMLEncodable
 	 * @param privateKey
 	 *          the private key
 	 */
-	public PayAccount(XMLAccountCertificate certificate, IMyPrivateKey privateKey, BI theBI) throws Exception
+	public PayAccount(XMLAccountCertificate certificate, IMyPrivateKey privateKey, PaymentInstanceDBEntry theBI) throws Exception
 	{
 		m_accountCertificate = certificate;
 		m_privateKey = privateKey;
@@ -645,7 +645,7 @@ public class PayAccount implements IXMLEncodable
 		fireChangeEvent();
 	}
 
-	public BI getBI()
+	public PaymentInstanceDBEntry getBI()
 	{
 		if (m_theBI == null)
 		{

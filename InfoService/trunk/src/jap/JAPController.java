@@ -70,9 +70,9 @@ import anon.crypto.XMLSignature;
 import anon.infoservice.AbstractMixCascadeContainer;
 import anon.infoservice.BlacklistedCascadeIDEntry;
 import anon.infoservice.CascadeIDEntry;
-import anon.infoservice.Constants;
 import anon.infoservice.Database;
 import anon.infoservice.DatabaseMessage;
+import anon.infoservice.DeletedMessageIDDBEntry;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.IDistributable;
 import anon.infoservice.IDistributor;
@@ -87,11 +87,11 @@ import anon.infoservice.PreviouslyKnownCascadeIDEntry;
 import anon.infoservice.ProxyInterface;
 import anon.mixminion.MixminionServiceDescription;
 import anon.mixminion.mmrdescription.MMRList;
-import anon.pay.BI;
 import anon.pay.BIConnection;
 import anon.pay.IAIEventListener;
 import anon.pay.PayAccount;
 import anon.pay.PayAccountsFile;
+import anon.pay.PaymentInstanceDBEntry;
 import anon.proxy.AnonProxy;
 import anon.proxy.IProxyListener;
 import anon.tor.TorAnonServerDescription;
@@ -101,6 +101,7 @@ import anon.util.IMiscPasswordReader;
 import anon.util.IPasswordReader;
 import anon.util.JobQueue;
 import anon.util.ResourceLoader;
+import anon.util.XMLParseException;
 import anon.util.XMLUtil;
 import forward.server.ForwardServerManager;
 import gui.GUIUtils;
@@ -119,8 +120,6 @@ import platform.AbstractOS;
 import proxy.DirectProxy;
 import proxy.DirectProxy.AllowUnprotectedConnectionCallback;
 import update.JAPUpdateWizard;
-import anon.infoservice.DeletedMessageIDDBEntry;
-import anon.infoservice.DeletedMessageIDDBEntry;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -1444,7 +1443,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 							Node nodePI = nodePIs.getFirstChild();
 							while (nodePI != null)
 							{
-								PayAccountsFile.getInstance().addKnownPI( (Element) nodePI);
+								try
+								{
+									PayAccountsFile.getInstance().addKnownPI(
+										new PaymentInstanceDBEntry((Element) nodePI));
+								}
+								catch (XMLParseException e)
+								{
+									LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
+								}
 								nodePI = nodePI.getNextSibling();
 							}
 						}
@@ -1598,7 +1605,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 				catch (Exception e)
 				{
-					LogHolder.log(LogLevel.ALERT, LogType.PAY, "Error loading Payment configuration.");
+					LogHolder.log(LogLevel.ALERT, LogType.PAY, "Error loading Payment configuration.", e);
 					if (JAPDialog.isConsoleOnly())
 					{
 						LogHolder.log(LogLevel.ALERT,  LogType.PAY, "Exiting...");
@@ -2111,7 +2118,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					e.appendChild(elemPayment);
 
 					//Save the known PIs
-					Element elemPIs = doc.createElement(JAPConstants.CONFIG_PAYMENT_INSTANCES);
+					Element elemPIs = doc.createElement(PaymentInstanceDBEntry.XML_ELEMENT_CONTAINER_NAME);
 
 
 
@@ -2120,7 +2127,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 					while (pis.hasMoreElements())
 					{
-						elemPIs.appendChild( ( (BI) pis.nextElement()).toXmlElement(doc));
+						elemPIs.appendChild( ( (PaymentInstanceDBEntry) pis.nextElement()).toXmlElement(doc));
 					}
 					elemPayment.appendChild(accounts.toXmlElement(doc, getPaymentPassword()));
 				}
@@ -4207,7 +4214,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 	}
 
-	static public InfoServiceDBEntry[] createDefaultInfoServices() throws Exception
+	public static InfoServiceDBEntry[] createDefaultInfoServices() throws Exception
 	{
 		Vector listeners;
 		InfoServiceDBEntry[] entries = new InfoServiceDBEntry[JAPConstants.DEFAULT_INFOSERVICE_NAMES.length];
@@ -4227,42 +4234,57 @@ public final class JAPController extends Observable implements IProxyListener, O
 		return entries;
 	}
 
-	/** load the default certificates */
-	static public void addDefaultCertificates()
+
+	private static void addDefaultCertificates(String a_certspath, String[] a_singleCerts, int a_type)
 	{
 		JAPCertificate defaultRootCert = null;
-		/* each certificate in the directory for the default mix-certs is loaded */
-	    Enumeration certificates = JAPCertificate.getInstance(JAPConstants.CERTSPATH + JAPConstants.MIX_CERTSPATH, true).elements();
-		while(certificates.hasMoreElements())
+
+		for (int i = 0; i < a_singleCerts.length; i++)
 		{
-			defaultRootCert = (JAPCertificate)certificates.nextElement();
+			defaultRootCert = JAPCertificate.getInstance(ResourceLoader.loadResource(
+					 JAPConstants.CERTSPATH + a_certspath + a_singleCerts[i]));
+			if (defaultRootCert == null)
+			{
+				continue;
+			}
 			SignatureVerifier.getInstance().getVerificationCertificateStore().
-			addCertificateWithoutVerification(defaultRootCert, JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX, true, true);
-		}
-		/* no elements were found */
-		if (defaultRootCert == null)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.MISC,
-						  "Error loading default Mix root certificates.");
+				addCertificateWithoutVerification(defaultRootCert, a_type, true, true);
 		}
 
-	    /* load root infoservice certificates */
-	    certificates = JAPCertificate.getInstance(JAPConstants.CERTSPATH + JAPConstants.INFOSERVICE_CERTSPATH, true).elements();
-		while(certificates.hasMoreElements())
+		// load dynamicError loading Payment configuration
+		Enumeration certificates =
+			JAPCertificate.getInstance(JAPConstants.CERTSPATH + a_certspath, true).elements();
+		while (certificates.hasMoreElements())
 		{
-			defaultRootCert = (JAPCertificate)certificates.nextElement();
+			defaultRootCert = (JAPCertificate) certificates.nextElement();
 			SignatureVerifier.getInstance().getVerificationCertificateStore().
-			addCertificateWithoutVerification(defaultRootCert, JAPCertificate.CERTIFICATE_TYPE_ROOT_INFOSERVICE, true, true);
+				addCertificateWithoutVerification(defaultRootCert, a_type, true, true);
 		}
 		/* no elements were found */
 		if (defaultRootCert == null)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC,
-						  "Error loading default InfoService root certificates.");
+						  "Error loading certificates of type '" + a_type + "'.");
 		}
+	}
+
+
+	/** load the default certificates */
+	public static void addDefaultCertificates()
+	{
+		addDefaultCertificates(JAPConstants.MIX_CERTSPATH, JAPConstants.MIX_ROOT_CERTS,
+							   JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX);
+
+		addDefaultCertificates(JAPConstants.INFOSERVICE_CERTSPATH, JAPConstants.INFOSERVICE_ROOT_CERTS,
+							   JAPCertificate.CERTIFICATE_TYPE_ROOT_INFOSERVICE);
+
+		addDefaultCertificates(JAPConstants.PAYMENT_ROOT_CERTSPATH, JAPConstants.PAYMENT_ROOT_CERTS,
+							   JAPCertificate.CERTIFICATE_TYPE_ROOT_PAYMENT);
+		addDefaultCertificates(JAPConstants.PAYMENT_DEFAULT_CERTSPATH, JAPConstants.PI_CERTS,
+							   JAPCertificate.CERTIFICATE_TYPE_PAYMENT);
 
 		JAPCertificate updateMessagesCert = JAPCertificate.getInstance(ResourceLoader.loadResource(
-			JAPConstants.CERTSPATH + JAPConstants.CERT_JAPINFOSERVICEMESSAGES));
+			  JAPConstants.CERTSPATH + JAPConstants.CERT_JAPINFOSERVICEMESSAGES));
 		if (updateMessagesCert != null)
 		{
 			SignatureVerifier.getInstance().getVerificationCertificateStore().
@@ -4384,26 +4406,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 			{
 				( (AnonServiceEventListener) e.nextElement()).connectionError();
 			}
-		}
-	}
-
-	/**
-	 * Gets the default Payment Instance
-	 * @return BI
-	 */
-	public BI getDefaultPI()
-	{
-		ListenerInterface li = new ListenerInterface(JAPConstants.PI_HOST, JAPConstants.PI_PORT);
-		try
-		{
-			return new BI(JAPConstants.PI_ID, JAPConstants.PI_NAME, li.toVector(),
-						  JAPCertificate.getInstance(ResourceLoader.loadResource(JAPConstants.CERTSPATH +
-				JAPConstants.PI_CERT)));
-		}
-		catch (Exception e)
-		{
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Could not create default PI: " + e.getMessage());
-			return null;
 		}
 	}
 
