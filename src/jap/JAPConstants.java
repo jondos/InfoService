@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.08.025"; //Never change the layout of this line!
+	public static final String aktVersion = "00.08.026"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -197,19 +197,18 @@ public final class JAPConstants
 		"firefox", "iexplore", "explorer", "mozilla", "konqueror", "mozilla-firefox", "firebird", "opera"
 	};
 
-	public final static String PI_ID =  "3ADE1713CAFA6470FADCC3395415F8950C42CD2E"; //"48A168293A85E0F0B5604E319D5E8B8FEA0DBB9D"; // "3ADE1713CAFA6470FADCC3395415F8950C42CD2E";
-	public final static String PI_NAME =  "newbi";  // "JAP Team PI";
-	public final static String PI_HOST =   "87.230.20.188";  // "87.230.9.148";
-	public final static int PI_PORT =  3017; // 443;
-	public final static String PI_CERT =   /*"jpinew.cer"; */ "bi.cer";
+	public final static String PI_CERTS[] =   /*"jpinew.cer"; */ new String[] {"bi.cer"};
 	public final static String CERTSPATH = "certificates/";
 	public final static String INFOSERVICE_CERTSPATH = "acceptedInfoServiceCAs/";
+	public final static String PAYMENT_ROOT_CERTSPATH = "acceptedPaymentCAs/";
+	public final static String PAYMENT_ROOT_CERTS[] = new String[] {};
+	public final static String PAYMENT_DEFAULT_CERTSPATH = "acceptedPIs/";
 	public final static String MIX_CERTSPATH = "acceptedMixCAs/";
+	public final static String MIX_ROOT_CERTS[] = new String[] {"japmixroot.cer"};
+	public final static String INFOSERVICE_ROOT_CERTS[] = new String[] {"japinfoserviceroot.cer"};
 	public final static String CERT_JAPCODESIGNING = "japcodesigning.cer";
 	public final static String CERT_JAPINFOSERVICEMESSAGES = "japupdatemessages.cer";
 	public static final boolean DEFAULT_CERT_CHECK_ENABLED = true;
-
-	public static final long MAX_PREPAY_INTERVAL_KBYTES = 105000; //a little over 100 MB
 
 	public final static int TOR_MAX_CONNECTIONS_PER_ROUTE = Circuit.MAX_STREAMS_OVER_CIRCUIT;
 	public final static int TOR_MAX_ROUTE_LEN = Tor.MAX_ROUTE_LEN;

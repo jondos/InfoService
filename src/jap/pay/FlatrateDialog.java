@@ -45,7 +45,7 @@ import java.sql.Timestamp;
 import anon.pay.PayAccount;
 import logging.LogLevel;
 import logging.LogHolder;
-import anon.pay.BI;
+import anon.pay.PaymentInstanceDBEntry;
 import anon.pay.BIConnection;
 import anon.pay.PayAccountsFile;
 import jap.JAPModel;
@@ -314,7 +314,7 @@ public class FlatrateDialog extends JAPDialog implements ActionListener
 		XMLErrorMessage reply = null;
 		try
 		{
-			BI pi = m_account.getBI();
+			PaymentInstanceDBEntry pi = m_account.getBI();
 			BIConnection piConn = new BIConnection(pi);
 			piConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
 			piConn.authenticate(m_account.getAccountCertificate(),m_account.getPrivateKey());
@@ -362,7 +362,7 @@ public class FlatrateDialog extends JAPDialog implements ActionListener
 		XMLPaymentSettings theSettings = null;
 		try
 		{
-			BI pi = m_account.getBI();
+			PaymentInstanceDBEntry pi = m_account.getBI();
 			BIConnection piConn = new BIConnection(pi);
 			piConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
 			piConn.authenticate(m_account.getAccountCertificate(),m_account.getPrivateKey());

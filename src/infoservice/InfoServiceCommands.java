@@ -27,46 +27,43 @@
  */
 package infoservice;
 
+import java.net.InetAddress;
+import java.util.Date;
+import java.util.Enumeration;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import anon.crypto.SignatureCreator;
+import anon.crypto.SignatureVerifier;
+import anon.crypto.XMLSignature;
+import anon.infoservice.AbstractDatabaseEntry;
+import anon.infoservice.AbstractDistributableDatabaseEntry;
+import anon.infoservice.Constants;
+import anon.infoservice.Database;
+import anon.infoservice.InfoServiceDBEntry;
+import anon.infoservice.InfoServiceIDEntry;
+import anon.infoservice.JAPMinVersion;
+import anon.infoservice.JAPVersionInfo;
+import anon.infoservice.JavaVersionDBEntry;
+import anon.infoservice.MessageDBEntry;
+import anon.infoservice.MixCascade;
+import anon.infoservice.MixInfo;
+import anon.infoservice.StatusInfo;
+import anon.pay.PaymentInstanceDBEntry;
+import anon.util.IXMLEncodable;
+import anon.util.XMLParseException;
+import anon.util.XMLUtil;
+import anon.util.ZLibTools;
 import infoservice.agreement.IInfoServiceAgreementAdapter;
 import infoservice.dynamic.DynamicCommandsExtension;
 import infoservice.dynamic.DynamicConfiguration;
 import infoservice.japforwarding.JapForwardingTools;
 import infoservice.tor.MixminionDirectoryAgent;
 import infoservice.tor.TorDirectoryAgent;
-
-import java.net.InetAddress;
-import java.util.Date;
-import java.util.Enumeration;
-
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
-import anon.crypto.SignatureCreator;
-import anon.crypto.SignatureVerifier;
-import anon.crypto.XMLSignature;
-import anon.infoservice.AbstractDistributableDatabaseEntry;
-import anon.infoservice.Constants;
-import anon.infoservice.Database;
-import anon.infoservice.InfoServiceDBEntry;
-import anon.infoservice.JAPMinVersion;
-import anon.infoservice.JAPVersionInfo;
-import anon.infoservice.JavaVersionDBEntry;
-import anon.infoservice.MixCascade;
-import anon.infoservice.MixInfo;
-import anon.infoservice.AbstractDatabaseEntry;
-import anon.infoservice.PaymentInstanceDBEntry;
-import anon.infoservice.StatusInfo;
-import anon.util.XMLUtil;
-import anon.util.ZLibTools;
-import anon.infoservice.InfoServiceIDEntry;
-import anon.util.IXMLEncodable;
-import anon.infoservice.MessageDBEntry;
-import anon.util.*;
 
 /**
  * This is the implementation of all commands the InfoService supports.
@@ -179,7 +176,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Infoserver received: XML: " + (new String(a_postData)));
 			Element paymentInstanceNode = (Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(
 				a_postData),
-				PaymentInstanceDBEntry.getXmlElementName()));
+				PaymentInstanceDBEntry.XML_ELEMENT_NAME));
 			/* verify the signature --> if requested */
 			// no signature check at the monent...
 			//	if (!Configuration.getInstance().isInfoServiceMessageSignatureCheckEnabled() ||

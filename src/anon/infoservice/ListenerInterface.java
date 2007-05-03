@@ -55,6 +55,10 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	public static final int PORT_MIN_VALUE = 1;
 	public static final int PORT_MAX_VALUE = 65535;
 
+	public static final String XML_ELEMENT_NAME = "ListenerInterface";
+	public static final String XML_ELEMENT_CONTAINER_NAME = "ListenerInterfaces";
+
+
 	/**
 	 * This is the host of this interface (hostname or IP).
 	 */
@@ -149,15 +153,6 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 		setPort(a_port);
 		setProtocol(a_protocol);
 		setUseInterface(true);
-	}
-
-	/**
-	 * Gets the name of the corresponding xml element.
-	 * @return the name of the corresponding xml element
-	 */
-	public static String getXMLElementName()
-	{
-		return "ListenerInterface";
 	}
 
 	/**
@@ -335,7 +330,7 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	 */
 	public Element toXmlElement(Document a_doc)
 	{
-		return toXmlElementInternal(a_doc, getXMLElementName());
+		return toXmlElementInternal(a_doc, XML_ELEMENT_NAME);
 	}
 
 	/**

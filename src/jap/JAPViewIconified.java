@@ -374,6 +374,12 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		{
 			try
 			{
+				if (isVisible())
+				{
+					GUIUtils.setAlwaysOnTop(this, JAPModel.getInstance().isMiniViewOnTop());
+				}
+
+
 				if (m_Controller.isAnonConnected())  //m_Controller.getAnonMode())
 				{
 					//transferedBytes(0, IProxyListener.PROTOCOL_WWW);

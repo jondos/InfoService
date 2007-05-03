@@ -80,7 +80,7 @@ import anon.crypto.DSAKeyPair;
 import anon.crypto.JAPCertificate;
 import anon.crypto.XMLEncryption;
 import anon.infoservice.ListenerInterface;
-import anon.pay.BI;
+import anon.pay.PaymentInstanceDBEntry;
 import anon.pay.BIConnection;
 import anon.pay.PayAccount;
 import anon.pay.PayAccountsFile;
@@ -125,6 +125,8 @@ import java.util.Locale;
 import anon.pay.xml.XMLVolumePlans;
 import jap.pay.wizardnew.VolumePlanSelectionPane;
 import anon.pay.xml.XMLVolumePlan;
+import anon.infoservice.InfoServiceHolder;
+import java.util.Vector;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -1187,7 +1189,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			{
 				try
 				{
-					BI pi = a_accountCreationThread.getAccount().getBI();
+					PaymentInstanceDBEntry pi = a_accountCreationThread.getAccount().getBI();
 					BIConnection piConn = new BIConnection(pi);
 					piConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
 					piConn.authenticate(a_accountCreationThread.getAccount().getAccountCertificate(),
@@ -1238,7 +1240,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		   {
 			   try
 			   {
-				   BI pi = a_accountCreationThread.getAccount().getBI();
+				   PaymentInstanceDBEntry pi = a_accountCreationThread.getAccount().getBI();
 				   BIConnection piConn = new BIConnection(pi);
 
 				   piConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
@@ -1564,47 +1566,26 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		WorkerContentPane.IReturnRunnable fetchBIThread = new WorkerContentPane.IReturnRunnable()
 		{
-			private BI theBI;
+			private PaymentInstanceDBEntry theBI;
 
 			public void run()
 			{
 				Exception biException = null;
 
-				//First try and get the standard PI the preferred way
+				/** @todo let the user of the beta version choose a PI */
 				try
 				{
-					PayAccountsFile temp = PayAccountsFile.getInstance();
-					theBI = temp.getBI(JAPConstants.PI_ID);
+					Vector pis = InfoServiceHolder.getInstance().getPaymentInstances();
+					if (pis.size() > 0)
+					{
+						theBI = (PaymentInstanceDBEntry)pis.elementAt(0);
+					}
+					//theBI = PayAccountsFile.getInstance().getBI(JAPConstants.PI_ID);
 				}
 				catch (Exception e)
 				{
 					biException = e;
 					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
-				}
-
-				//Try and construct a new PI
-				if (theBI == null)
-				{
-					ListenerInterface li = new ListenerInterface(JAPConstants.PI_HOST,
-						JAPConstants.PI_PORT);
-					try
-					{
-						theBI = new BI(JAPConstants.PI_ID, JAPConstants.PI_NAME, li.toVector(),
-									   JAPCertificate.getInstance(ResourceLoader.loadResource(
-										   JAPConstants.
-										   CERTSPATH +
-										   JAPConstants.PI_CERT)));
-					}
-					catch (Exception e)
-					{
-						if (biException == null || e instanceof ForbiddenIOException)
-						{
-							biException = e;
-						}
-						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
-									  "Could not create Test-PI: " + e.getMessage());
-						theBI = getBIforAccountCreation();
-					}
 				}
 
 				if (Thread.currentThread().isInterrupted())
@@ -1644,7 +1625,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				try
 				{
 					//Check if payment instance is reachable
-					BIConnection biconn = new BIConnection( (BI) fetchBiWorker.getValue());
+					BIConnection biconn = new BIConnection( (PaymentInstanceDBEntry) fetchBiWorker.getValue());
 					biconn.connect(JAPModel.getInstance().getPaymentProxyInterface());
 					biconn.disconnect();
 				}
@@ -1709,7 +1690,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					try
 					{
 						m_payAccount = PayAccountsFile.getInstance().createAccount(
-							(BI) fetchBiWorker.getValue(),
+							(PaymentInstanceDBEntry) fetchBiWorker.getValue(),
 							JAPModel.getInstance().getPaymentProxyInterface(),
 							(DSAKeyPair) keyWorkerPane.getValue());
 
@@ -1977,10 +1958,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 * Shows a window with all known Payment Instances and lets the user select one.
 	 * @return BI
 	 */
-	private BI getBIforAccountCreation()
+	private PaymentInstanceDBEntry getBIforAccountCreation()
 	{
 		BISelectionDialog d = new BISelectionDialog(getRootPanel());
-		BI theBI = d.getSelectedBI();
+		PaymentInstanceDBEntry theBI = d.getSelectedBI();
 
 		if (theBI != null)
 		{

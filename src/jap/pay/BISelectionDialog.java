@@ -43,13 +43,13 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import anon.crypto.JAPCertificate;
-import anon.pay.BI;
+import anon.pay.PaymentInstanceDBEntry;
 import gui.JAPMessages;
 import gui.dialog.JAPDialog;
 import java.util.Vector;
 import java.util.Enumeration;
 import anon.infoservice.InfoServiceHolder;
-import anon.infoservice.PaymentInstanceDBEntry;
+import anon.pay.PaymentInstanceDBEntry;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -67,7 +67,7 @@ public class BISelectionDialog extends JAPDialog implements ActionListener, List
 	private JLabel m_biHost;
 	private JLabel m_biPort;
 
-	private BI m_selectedBI;
+	private PaymentInstanceDBEntry m_selectedBI;
 
 	public BISelectionDialog(Component a_owner)
 	{
@@ -162,8 +162,7 @@ public class BISelectionDialog extends JAPDialog implements ActionListener, List
 					Enumeration en = paymentInstances.elements();
 					while (en.hasMoreElements())
 					{
-						PaymentInstanceDBEntry entry=((PaymentInstanceDBEntry) en.nextElement());
-						listModel.addElement( new BI(entry));
+						listModel.addElement(((PaymentInstanceDBEntry) en.nextElement()));
 					}
 				}
 				catch (Exception e)
@@ -180,7 +179,7 @@ public class BISelectionDialog extends JAPDialog implements ActionListener, List
 		t.start();
 	}
 
-	public BI getSelectedBI()
+	public PaymentInstanceDBEntry getSelectedBI()
 	{
 		return m_selectedBI;
 	}
@@ -189,7 +188,7 @@ public class BISelectionDialog extends JAPDialog implements ActionListener, List
 	{
 		if (a_e.getSource() == m_okButton)
 		{
-			m_selectedBI = (BI) m_biList.getSelectedValue();
+			m_selectedBI = (PaymentInstanceDBEntry) m_biList.getSelectedValue();
 			dispose();
 		}
 		else if (a_e.getSource() == m_cancelButton)

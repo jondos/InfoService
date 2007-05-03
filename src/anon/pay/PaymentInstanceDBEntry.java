@@ -26,21 +26,46 @@
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
 
-package anon.infoservice;
+package anon.pay;
 
 import java.util.Enumeration;
 import java.util.Vector;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import anon.crypto.JAPCertificate;
+import anon.infoservice.AbstractDistributableDatabaseEntry;
+import anon.infoservice.Constants;
+import anon.infoservice.ListenerInterface;
+import anon.infoservice.ServiceSoftware;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
+import anon.crypto.X509SubjectKeyIdentifier;
+import anon.crypto.SignatureVerifier;
+import anon.crypto.XMLSignature;
+import anon.infoservice.AbstractDistributableCertifiedDatabaseEntry;
+import java.util.Date;
+import anon.crypto.CertPath;
+import anon.crypto.IVerifyable;
+import logging.LogHolder;
+import logging.LogLevel;
+import anon.crypto.SignatureCreator;
+import logging.LogType;
 
 /** Holds the information of a payment instance for storing in the InfoService.*/
-public class PaymentInstanceDBEntry extends AbstractDistributableDatabaseEntry
+public class PaymentInstanceDBEntry extends AbstractDistributableCertifiedDatabaseEntry
+		implements IVerifyable
 {
+	public static final String XML_ELEMENT_NAME = "PaymentInstance";
+	public static final String XML_ELEMENT_CONTAINER_NAME = "PaymentInstances";
+
+	private static final String XML_ELEM_NAME = "Name";
+	private static final String XML_ELEM_CERT = "Certificate";
+	private static final String XML_ELEM_NET = "Network";
+
+
 	/**
 	 * This is the ID of this payment instance.
 	 */
@@ -51,6 +76,9 @@ public class PaymentInstanceDBEntry extends AbstractDistributableDatabaseEntry
 	 */
 	private Element m_xmlDescription;
 
+	private XMLSignature m_signature;
+	private CertPath m_certPath;
+
 	/**
 	 * Stores the time when this payment instance entry was created by the origin payment instance.
 	 *  This value is used to determine the more recent
@@ -58,114 +86,161 @@ public class PaymentInstanceDBEntry extends AbstractDistributableDatabaseEntry
 	 */
 	private long m_creationTimeStamp;
 
+	private long m_serialNumber;
+
 	private Vector m_listenerInterfaces;
 	private String m_name;
-	/** @todo: Get this from the infoservice */
-	private JAPCertificate m_cert = JAPCertificate.getInstance("certificates/bi.cer");
+
+	private JAPCertificate m_cert; //= JAPCertificate.getInstance("certificates/bi.cer");
 
 	/** Creates a PaymentInstanceDBEntry which represents a payment instance.*/
 	public PaymentInstanceDBEntry(Element elemRoot) throws XMLParseException
 	{
 		super(System.currentTimeMillis() + Constants.TIMEOUT_PAYMENT_INSTANCE);
-		if (elemRoot == null)
-		{
-			throw new XMLParseException(XMLParseException.NODE_NULL_TAG);
-		}
+		XMLUtil.assertNotNull(elemRoot);
+
+		String name;
 
 		/* store the XML representation */
 		m_xmlDescription = elemRoot;
 
+		name = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, XML_ELEM_NAME), null);
+		if (name == null) // || !name.equals(m_name))
+		{
+			throw new XMLParseException(XML_ELEM_NAME);
+		}
+
+		m_signature = SignatureVerifier.getInstance().getVerifiedXml(elemRoot,
+			SignatureVerifier.DOCUMENT_CLASS_PAYMENT);
+		if (m_signature != null)
+		{
+			m_certPath = m_signature.getCertPath();
+			if (m_certPath != null)
+			{
+				m_cert = m_certPath.getFirstCertificate();
+			}
+		}
+
 		/* get the ID */
-		m_strPaymentInstanceId = elemRoot.getAttribute("id");
+		m_strPaymentInstanceId = elemRoot.getAttribute(XML_ATTR_ID);
+		checkId();
+
 
 		/* get the creation timestamp */
-		m_creationTimeStamp = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, "LastUpdate"),
-												 -1L);
+		m_creationTimeStamp = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, XML_LAST_UPDATE), -1L);
 		if (m_creationTimeStamp == -1)
 		{
-			throw new XMLParseException("LastUpdate");
+			throw new XMLParseException(XML_LAST_UPDATE);
 		}
 
-		m_name = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, "Name"), null);
+		m_serialNumber = XMLUtil.parseAttribute(elemRoot, XML_ATTR_SERIAL, m_creationTimeStamp);
 
-		if (m_name == null)
-		{
-			throw new XMLParseException("Name");
 
-		}
 
-		NodeList networkNodes = elemRoot.getElementsByTagName("Network");
-		if (networkNodes.getLength() == 0)
-		{
-			throw (new XMLParseException("Error in XML structure."));
-		}
-		Element networkNode = (Element) (networkNodes.item(0));
-		NodeList listenerInterfacesNodes = networkNode.getElementsByTagName("ListenerInterfaces");
-		if (listenerInterfacesNodes.getLength() == 0)
-		{
-			throw (new XMLParseException("Error in XML structure."));
-		}
-		Element listenerInterfacesNode = (Element) (listenerInterfacesNodes.item(0));
-		NodeList listenerInterfaceNodes = listenerInterfacesNode.getElementsByTagName("ListenerInterface");
+		Node listenerInterfacesNode = XMLUtil.getFirstChildByName(
+			  XMLUtil.getFirstChildByName(elemRoot, XML_ELEM_NET), ListenerInterface.XML_ELEMENT_CONTAINER_NAME);
+		XMLUtil.assertNotNull(listenerInterfacesNode);
+
+
+		NodeList listenerInterfaceNodes =
+			((Element)listenerInterfacesNode).getElementsByTagName(ListenerInterface.XML_ELEMENT_NAME);
 		if (listenerInterfaceNodes.getLength() == 0)
 		{
-			throw (new XMLParseException("Error in XML structure."));
+			throw (new XMLParseException(ListenerInterface.XML_ELEMENT_NAME));
 		}
 		m_listenerInterfaces = new Vector();
 		for (int i = 0; i < listenerInterfaceNodes.getLength(); i++)
 		{
-			Element listenerInterfaceNode = (Element) (listenerInterfaceNodes.item(i));
-			m_listenerInterfaces.addElement(new ListenerInterface(listenerInterfaceNode));
+			m_listenerInterfaces.addElement(new ListenerInterface((Element) (listenerInterfaceNodes.item(i))));
 		}
-
-		Element elemCert = (Element) XMLUtil.getFirstChildByName(elemRoot, "Certificate");
-		if (elemCert != null)
-		{
-			elemCert = (Element) XMLUtil.getFirstChildByName(elemCert, JAPCertificate.XML_ELEMENT_NAME);
-			if (elemCert != null)
-			{
-				JAPCertificate cert = JAPCertificate.getInstance(elemCert);
-				if (cert != null)
-				{
-					m_cert = cert;
-				}
-			}
-		}
-
 	}
 
-	public PaymentInstanceDBEntry(String id, String name, JAPCertificate a_cert, Enumeration a_listeners,
-								  String software_version, long creationTime)
+
+	public PaymentInstanceDBEntry(String a_id, String a_name,
+								  JAPCertificate a_cert, /** @todo remove this when new JAP available */
+								  Enumeration a_listeners,
+								  String software_version, long creationTime, long a_serialNumber)
 	{
 		super(System.currentTimeMillis() + Constants.TIMEOUT_PAYMENT_INSTANCE);
-		m_strPaymentInstanceId = id;
+		m_strPaymentInstanceId = a_id;
 		m_creationTimeStamp = creationTime;
+		m_serialNumber = a_serialNumber;
 		m_cert = a_cert;
+		m_name = a_name;
+
 		Document doc = XMLUtil.createDocument();
-		Element elemRoot = doc.createElement(getXmlElementName());
+		Element elemRoot = doc.createElement(XML_ELEMENT_NAME);
 		doc.appendChild(elemRoot);
-		elemRoot.setAttribute("id", m_strPaymentInstanceId);
-		Element elemName = doc.createElement("Name");
-		XMLUtil.setValue(elemName, name);
+		XMLUtil.setAttribute(elemRoot, XML_ATTR_ID, m_strPaymentInstanceId);
+		XMLUtil.setAttribute(elemRoot, XML_ATTR_SERIAL, m_serialNumber);
+
+		Element elemName = doc.createElement(XML_ELEM_NAME);
+		XMLUtil.setValue(elemName, m_name);
+
 		elemRoot.appendChild(elemName);
 		ServiceSoftware software = new ServiceSoftware(software_version);
 		elemRoot.appendChild(software.toXmlElement(doc));
-		Element elemNet = doc.createElement("Network");
+		Element elemNet = doc.createElement(XML_ELEM_NET);
 		elemRoot.appendChild(elemNet);
-		Element elemListeners = doc.createElement("ListenerInterfaces");
+		Element elemListeners = doc.createElement(ListenerInterface.XML_ELEMENT_CONTAINER_NAME);
 		elemNet.appendChild(elemListeners);
 		while (a_listeners.hasMoreElements())
 		{
 			ListenerInterface li = (ListenerInterface) a_listeners.nextElement();
 			elemListeners.appendChild(li.toXmlElement(doc));
 		}
-		Element elemLastUpdate = doc.createElement("LastUpdate");
+		Element elemLastUpdate = doc.createElement(XML_LAST_UPDATE);
 		XMLUtil.setValue(elemLastUpdate, m_creationTimeStamp);
 		elemRoot.appendChild(elemLastUpdate);
-		Element elemCert = doc.createElement("Certificate");
+		Element elemCert = doc.createElement(XML_ELEM_CERT);
 		elemRoot.appendChild(elemCert);
 		elemCert.appendChild(m_cert.toXmlElement(doc));
+
+		m_signature = SignatureCreator.getInstance().getSignedXml(
+			SignatureVerifier.DOCUMENT_CLASS_PAYMENT, elemRoot);
+		if (m_signature != null)
+		{
+			m_certPath = m_signature.getCertPath();
+		}
+
+		if (m_certPath == null ||m_certPath.getFirstCertificate() == null)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Document could not be signed!");
+		}
+		else
+		{
+			m_cert = m_certPath.getFirstCertificate();
+		}
+
 		m_xmlDescription = elemRoot;
+	}
+
+	public boolean isVerified()
+	{
+		if (m_signature != null)
+		{
+			return m_signature.isVerified();
+		}
+		return false;
+	}
+
+	public boolean isValid()
+	{
+		if (m_certPath != null)
+		{
+			return m_certPath.checkValidity(new Date());
+		}
+		return false;
+	}
+
+	public CertPath getCertPath()
+	{
+		return m_certPath;
+	}
+
+	public String toString()
+	{
+		return getName();
 	}
 
 	public String getId()
@@ -178,9 +253,9 @@ public class PaymentInstanceDBEntry extends AbstractDistributableDatabaseEntry
 		return m_name;
 	}
 
-	public Vector getListenerInterfaces()
+	public Enumeration getListenerInterfaces()
 	{
-		return m_listenerInterfaces;
+		return m_listenerInterfaces.elements();
 	}
 
 	public JAPCertificate getCertificate()
@@ -196,7 +271,7 @@ public class PaymentInstanceDBEntry extends AbstractDistributableDatabaseEntry
 	 */
 	public long getVersionNumber()
 	{
-		return m_creationTimeStamp;
+		return m_serialNumber;
 	}
 
 	public long getLastUpdate()
@@ -216,19 +291,11 @@ public class PaymentInstanceDBEntry extends AbstractDistributableDatabaseEntry
 		return "/paymentinstance";
 	}
 
-	/**
-	 * Returns the name of the XML element constructed by this class.
-	 *
-	 * @return the name of the XML element constructed by this class
-	 */
-	public static String getXmlElementName()
-	{
-		return "PaymentInstance";
-	}
-
 	public Element getXmlStructure()
 	{
 		return m_xmlDescription;
 	}
+
+
 
 }

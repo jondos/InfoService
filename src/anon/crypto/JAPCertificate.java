@@ -100,6 +100,7 @@ public final class JAPCertificate implements IXMLEncodable, Cloneable, ICertific
 	public static final int CERTIFICATE_TYPE_ROOT_MIX = 1;
 	public static final int CERTIFICATE_TYPE_ROOT_INFOSERVICE = 5;
 	public static final int CERTIFICATE_TYPE_ROOT_UPDATE = 6;
+	public static final int CERTIFICATE_TYPE_ROOT_PAYMENT = 8;
 
 	/**
 	 * This is the certificate type constant for mix certificates. Mix certificates are used to
@@ -120,6 +121,9 @@ public final class JAPCertificate implements IXMLEncodable, Cloneable, ICertific
 	 * JAP.
 	 */
 	public static final int CERTIFICATE_TYPE_UPDATE = 4;
+
+	public static final int CERTIFICATE_TYPE_PAYMENT = 7;
+
 
 	public static final String XML_ELEMENT_NAME = "X509Certificate";
 	public static final String XML_ELEMENT_CONTAINER_NAME = "X509Data";
@@ -266,9 +270,16 @@ public final class JAPCertificate implements IXMLEncodable, Cloneable, ICertific
 	 */
 	public static Hashtable getInstance(String a_strResourceSearchPath, boolean a_bRecursive)
 	{
-		return ResourceLoader.loadResources(a_strResourceSearchPath,
-											new X509CertificateInstantiator(),
-											a_bRecursive);
+		try
+		{
+			return ResourceLoader.loadResources(a_strResourceSearchPath,
+												new X509CertificateInstantiator(),
+												a_bRecursive);
+		}
+		catch (Exception a_e)
+		{
+			return new Hashtable();
+		}
 	}
 
 	/** Creates a certificate by using an input stream.
