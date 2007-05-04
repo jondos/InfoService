@@ -53,6 +53,7 @@ import anon.pay.PaymentInstanceDBEntry;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.pay.PayAccountsFile;
 
 /** This dialog fetches all known Payment Instances from the InfoService and lets
  *  the user select one.
@@ -158,7 +159,7 @@ public class BISelectionDialog extends JAPDialog implements ActionListener, List
 
 				try
 				{
-					Vector paymentInstances = InfoServiceHolder.getInstance().getPaymentInstances();
+					Vector paymentInstances = PayAccountsFile.getInstance().getPaymentInstances();
 					Enumeration en = paymentInstances.elements();
 					while (en.hasMoreElements())
 					{

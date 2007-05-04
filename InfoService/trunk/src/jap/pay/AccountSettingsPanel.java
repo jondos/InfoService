@@ -1157,7 +1157,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		final JAPDialog d = new JAPDialog(getRootPanel(), JAPMessages.getString(MSG_CHARGETITLE), true);
 		d.setDefaultCloseOperation(JAPDialog.DISPOSE_ON_CLOSE);
 		d.setResizable(true);
-		doChargeAccount(new FixedReturnAccountRunnable(selectedAccount), d, null, null);
+		doChargeAccount(new FixedReturnAccountRunnable(selectedAccount), d, null, null, new Vector());
 		d.setLocationCenteredOnOwner();
 		d.setVisible(true);
 	}
@@ -1178,7 +1178,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private void doChargeAccount(final IReturnAccountRunnable a_accountCreationThread,
 								 final JAPDialog a_parentDialog,
 								 final DialogContentPane a_previousContentPane,
-								 final IReturnBooleanRunnable a_booleanThread)
+								 final IReturnBooleanRunnable a_booleanThread,
+								 final Vector a_tan)
 	{
 		//*********** fetch volume plans ************************//
 
@@ -1309,7 +1310,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		WorkerContentPane.IReturnRunnable fetchTan = new WorkerContentPane.IReturnRunnable()
 		{
-			public XMLTransCert m_transCert; //public so we can access the TAN later
+			private XMLTransCert m_transCert;
 			public void run()
 			{
 				if (m_transCert == null)
@@ -1320,7 +1321,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 									  "Fetching Transaction Certificate from Payment Instance");
 
 						m_transCert = a_accountCreationThread.getAccount().charge(
-							JAPModel.getInstance().getPaymentProxyInterface());
+											  JAPModel.getInstance().getPaymentProxyInterface());
+						a_tan.addElement(m_transCert);
 					}
 					catch (Exception e)
 					{
@@ -1575,12 +1577,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				/** @todo let the user of the beta version choose a PI */
 				try
 				{
-					Vector pis = InfoServiceHolder.getInstance().getPaymentInstances();
+					Vector pis = PayAccountsFile.getInstance().getPaymentInstances();
 					if (pis.size() > 0)
 					{
 						theBI = (PaymentInstanceDBEntry)pis.elementAt(0);
 					}
-					//theBI = PayAccountsFile.getInstance().getBI(JAPConstants.PI_ID);
 				}
 				catch (Exception e)
 				{
@@ -1912,6 +1913,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		};
 		saveErrorPane.getButtonCancel().setVisible(false);
 
+		final Vector vecTan = new Vector();
 		d.addWindowListener(new WindowAdapter()
 		{
 			public void windowClosing(WindowEvent e)
@@ -1929,9 +1931,17 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 			public void windowClosed(WindowEvent a_event)
 			{
+				// vecTan must be filled if charging was ok
 				PayAccountsFile.getInstance().removePaymentListener(captcha);
+				if (vecTan.size() == 0 && doIt.getValue() != null)
+				{
+					PayAccountsFile.getInstance().deleteAccount(
+									   ((PayAccount)doIt.getValue()).getAccountNumber());
+				}
+
 				updateAccountList();
-				if (doIt.getValue() != null)
+
+				if (vecTan.size() != 0 && doIt.getValue() != null)
 				{
 					/** Select new account */
 					m_listAccounts.setSelectedValue(doIt.getValue(), true);
@@ -1945,35 +1955,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		});
 
 		m_bDoNotCloseDialog = false;
-		doChargeAccount(doIt, d, saveErrorPane, exportThread);
+		doChargeAccount(doIt, d, saveErrorPane, exportThread, vecTan);
 		PITestWorkerPane.updateDialogOptimalSized(fetchBiWorker);
 		captcha.setText(captcha.getText() + " " + JAPMessages.getString(MSG_NEW_CAPTCHA_HINT,
 			JAPMessages.getString(MSG_NEWCAPTCHA)));
 		d.setLocationCenteredOnOwner();
 		d.setVisible(true);
 
-	}
-
-	/**
-	 * Shows a window with all known Payment Instances and lets the user select one.
-	 * @return BI
-	 */
-	private PaymentInstanceDBEntry getBIforAccountCreation()
-	{
-		BISelectionDialog d = new BISelectionDialog(getRootPanel());
-		PaymentInstanceDBEntry theBI = d.getSelectedBI();
-
-		if (theBI != null)
-		{
-			/*LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Selected Payment Instance is: " +
-			  theBI.getHostName() + ":" + theBI.getPortNumber());*/
-		}
-		else
-		{
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Dialog returned no payment instance");
-		}
-
-		return theBI;
 	}
 
 	/**

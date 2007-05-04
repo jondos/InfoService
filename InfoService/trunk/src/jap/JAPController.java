@@ -1084,12 +1084,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					LogHolder.log(LogLevel.ERR, LogType.MISC, e);
 				}
-				/* As some old Versions of JAP have problems with writing the correct values, we include the
-				 * default certs if config version is less than 0.20 */
-				if (strVersion == null || strVersion.compareTo("0.20") < 0)
-				{
-					addDefaultCertificates();
-				}
 
 				/* load trust models */
 				TrustModel.fromXmlElement(
