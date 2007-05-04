@@ -32,12 +32,9 @@ import java.util.Vector;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 import anon.crypto.AsymmetricCryptoKeyPair;
-import anon.crypto.JAPCertificate;
 import anon.infoservice.IMutableProxyInterface;
 import anon.infoservice.InfoServiceHolder;
-import anon.infoservice.ListenerInterface;
 import anon.pay.xml.XMLAccountCertificate;
 import anon.pay.xml.XMLErrorMessage;
 import anon.pay.xml.XMLJapPublicKey;
@@ -49,7 +46,6 @@ import anon.util.captcha.IImageEncodedCaptcha;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.util.XMLParseException;
 
 /**
  * This class encapsulates a collection of accounts. One of the accounts in the collection
@@ -699,6 +695,27 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		{
 			m_knownPIs.addElement(a_bi);
 		}
+	}
+
+	public Vector getPaymentInstances()
+	{
+		Vector vecPIs = InfoServiceHolder.getInstance().getPaymentInstances();
+
+		if (vecPIs.size() > 0)
+		{
+			for (int i = 0; i < vecPIs.size(); i++)
+			{
+				addKnownPI( (PaymentInstanceDBEntry) vecPIs.elementAt(i));
+			}
+		}
+		else
+		{
+			//If no infoservice could give us information about the PI, get it from the list of known PIs
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+						  "Could not get payment instances from InfoService, trying config file");
+		}
+
+		return (Vector)m_knownPIs.clone();
 	}
 
 	public PaymentInstanceDBEntry getBI(String a_piID) throws Exception
