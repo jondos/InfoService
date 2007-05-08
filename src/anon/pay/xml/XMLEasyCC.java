@@ -58,6 +58,8 @@ public class XMLEasyCC implements IXMLEncodable
 	private String m_cascadeID; //stored as its own variable, since Hashtable doesnt guarantee order (so we don't know which mix is the first one)
 	private Document m_docTheEasyCC;
 
+	private String m_priceCertHashesConcatenated;
+
 	/** The Payment Instance ID */
 	private String m_strPIID;
 	//~ Constructors ***********************************************************
@@ -81,10 +83,21 @@ public class XMLEasyCC implements IXMLEncodable
 	public XMLEasyCC(long accountNumber, long transferred, PKCS12 a_certificate, Hashtable a_priceCerts, String a_AiName) throws
 		Exception
 	{
+		Enumeration enumer;
+
 		m_priceCerts = a_priceCerts;
+		m_priceCertHashesConcatenated = "";
+		if (m_priceCerts != null)
+		{
+			enumer = m_priceCerts.elements();
+			while (enumer.hasMoreElements())
+			{
+				m_priceCertHashesConcatenated += enumer.nextElement().toString();
+			}
+		}
+
 		m_lTransferredBytes = transferred;
 		m_lAccountNumber = accountNumber;
-		m_priceCerts = a_priceCerts;
 		m_cascadeID = a_AiName;
 		m_docTheEasyCC = XMLUtil.createDocument();
 		m_docTheEasyCC.appendChild(internal_toXmlElement(m_docTheEasyCC));
@@ -146,6 +159,7 @@ public class XMLEasyCC implements IXMLEncodable
 		if (elemPriceCerts != null)
 		{
 			NodeList allHashes = elemPriceCerts.getElementsByTagName("PriceCertHash");
+			m_priceCertHashesConcatenated = "";
 			for (int i = 0; i < allHashes.getLength(); i++)
 			{
 				elemHash = (Element) allHashes.item(i);
@@ -157,7 +171,8 @@ public class XMLEasyCC implements IXMLEncodable
 				}
 				else
 				{
-					m_priceCerts.put(curId, curHash.trim()); /** @todo trim is important to delete new lines */
+					m_priceCerts.put(curId, curHash);
+					m_priceCertHashesConcatenated += curHash;
 				}
 			}
 		}
@@ -289,6 +304,22 @@ public class XMLEasyCC implements IXMLEncodable
 		return (Hashtable)m_priceCerts.clone();
 	}
 
+	public String getConcatenatedPriceCertHashes()
+	{
+		String priceCertHashesConcatenated = "";
+		Enumeration enumer;
+
+		synchronized (m_priceCerts)
+		{
+			enumer = m_priceCerts.elements();
+			while (enumer.hasMoreElements())
+			{
+				priceCertHashesConcatenated += enumer.nextElement().toString();
+			}
+		}
+		return priceCertHashesConcatenated;
+	}
+
 	public int getNrOfPriceCerts()
 	{
 		return m_priceCerts.size();
@@ -301,7 +332,19 @@ public class XMLEasyCC implements IXMLEncodable
 	 */
 	public void setPriceCerts(Hashtable a_priceCertHashes)
 	{
+		Enumeration enumer;
+
 		m_priceCerts = a_priceCertHashes;
+		m_priceCertHashesConcatenated = "";
+		if (m_priceCerts != null)
+		{
+			enumer = m_priceCerts.elements();
+			while (enumer.hasMoreElements())
+			{
+				m_priceCertHashesConcatenated += enumer.nextElement().toString();
+			}
+		}
+
 		m_docTheEasyCC = XMLUtil.createDocument();
 		m_docTheEasyCC.appendChild(internal_toXmlElement(m_docTheEasyCC));
 	}

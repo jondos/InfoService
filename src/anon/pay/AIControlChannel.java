@@ -68,7 +68,9 @@ import anon.infoservice.MixInfo;
  * @author Bastian Voigt, Tobias Bayer
  * @version 1.0
  */
-public class AIControlChannel extends XmlControlChannel {
+public class AIControlChannel extends XmlControlChannel
+{
+	public static final long MAX_PREPAID_INTERVAL = 5000000; // 5MB
 
   //codes for AI events that can be fired
   private static final int EVENT_UNREAL = 1;
@@ -94,7 +96,7 @@ public class AIControlChannel extends XmlControlChannel {
 
   private long m_lastDiffBytes = 0;
 
-  private int m_prepaidBytes = 0;
+  private long m_prepaidBytes = 0;
 
   private PacketCounter m_packetCounter;
 
@@ -265,38 +267,26 @@ public class AIControlChannel extends XmlControlChannel {
 	  long newBytes = currentAccount.updateCurrentBytes(m_packetCounter);
 	  LogHolder.log(LogLevel.DEBUG, LogType.PAY, "AI requests to sign " + newBytes + " transferred bytes");
 	  m_totalBytes = newBytes;
-	  // calculate number of bytes transferred with other cascades
-	  /*
-	   * long transferredWithOtherCascades = 0; XMLAccountInfo info =
-	   * currentAccount.getAccountInfo(); if(info!=null) { Enumeration
-	   * enu=info.getCCs(); while(enu.hasMoreElements()) {
-	   * transferredWithOtherCascades +=
-	   * ((XMLEasyCC)enu.nextElement()).getTransferredBytes(); } }
-	   */
 
 
-	  /** @todo implement this so that it works!!!
-	  XMLEasyCC myLastCC = currentAccount.getAccountInfo().getCC( (String) cc.getPriceCertHashes().elements().
-		  nextElement());
+	  XMLEasyCC myLastCC = currentAccount.getAccountInfo().getCC(cc.getConcatenatedPriceCertHashes());
 	  long oldSpent = 0;
 	  if (myLastCC != null)
 	  {
 		  oldSpent = myLastCC.getTransferredBytes();
 		  LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Transferred bytes of last CC: " + oldSpent);
 	  }
-	  // check if bytes asked for in CC match bytes transferred
-	  MixInfo firstMixInfo = m_connectedCascade.getMixInfo(0);
-	  long prepayInterval = firstMixInfo.getPrepaidInterval() * 1024;
-	  long expectedBytes = newBytes + oldSpent + prepayInterval;
 
-	  if (expectedBytes < cc.getTransferredBytes())
+	  // check if bytes asked for in CC match bytes transferred
+	  long newPrepaidBytes = (cc.getTransferredBytes() - oldSpent) + m_prepaidBytes - newBytes;
+	  if (newPrepaidBytes > m_connectedCascade.getPrepaidInterval())
 	  {
 		  // If Jap crashed during the last session, CCs may have been lost.
 		  long toSign = oldSpent + newBytes;
 		  m_diff += cc.getTransferredBytes() - oldSpent - newBytes;
 		  double percent = ( (double) m_diff) / ( (double) (toSign - m_lastDiffBytes));
 		  LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Percentage of excessive transferred bytes is: " + percent);
-		  if (percent > DIFFERENCE_THRESHOLD)
+		  //if (percent > DIFFERENCE_THRESHOLD)
 		  {
 			  LogHolder.log(LogLevel.WARNING, LogType.PAY,
 							"Unrealistic number of bytes to be signed. Spent bytes: " + oldSpent +
@@ -307,8 +297,8 @@ public class AIControlChannel extends XmlControlChannel {
 			  m_diff = 0;
 			  m_lastDiffBytes = toSign;
 		  }
-	  }*/
-
+	  } //*/
+	  m_prepaidBytes = newPrepaidBytes;
 
 	  //get pricecerts and check against hashes in CC
 	  //get price certs from connected cascade
@@ -468,14 +458,22 @@ public class AIControlChannel extends XmlControlChannel {
 				currentAccount.addCostConfirmation(a_cc);
 
 				//get Cascade's prepay interval
-				long prepayInterval = m_connectedCascade.getMixInfo(0).getPrepaidInterval() * 1000 - m_prepaidBytes;
-				if (prepayInterval > 0)
+				long currentlyTransferedBytes = currentAccount.updateCurrentBytes(m_packetCounter);
+				long bytesToPay = m_connectedCascade.getPrepaidInterval() + currentlyTransferedBytes
+					- m_prepaidBytes;
+				if (bytesToPay > 0)
 				{
 					//send CC for up to <last CC + prepay interval> bytes
-					a_cc.addTransferredBytes(prepayInterval);
+					a_cc.addTransferredBytes(bytesToPay);
 					a_cc.sign(currentAccount.getPrivateKey());
 					sendXmlMessage(XMLUtil.toXMLDocument(a_cc));
+					m_prepaidBytes = m_connectedCascade.getPrepaidInterval();
 				}
+				else
+				{
+					m_prepaidBytes -= currentlyTransferedBytes;
+				}
+
 				return;
 			}
 			catch (Exception e)

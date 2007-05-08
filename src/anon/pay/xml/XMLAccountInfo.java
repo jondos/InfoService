@@ -28,7 +28,7 @@
 package anon.pay.xml;
 
 import java.util.Enumeration;
-import java.util.Vector;
+import java.util.Hashtable;
 
 
 import org.w3c.dom.Document;
@@ -76,7 +76,7 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 	 * a collection of costconfirmations (one for each mixcascade
 	 * that was used with this account)
 	 */
-	private Vector m_costConfirmations = new Vector();
+	private Hashtable m_costConfirmations = new Hashtable();
 
 	//~ Constructors ***********************************************************
 
@@ -144,23 +144,16 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 	 * @return the difference in the number of bytes between the old and the
 	 * new costconfirmation for the same AI
 	 */
-	public long addCC(XMLEasyCC cc) throws Exception
+	public long addCC(XMLEasyCC a_cc) throws Exception
 	{
 		long oldBytes = 0;
-		Enumeration enumer = m_costConfirmations.elements();
-		XMLEasyCC ccToAdd;
-		while (enumer.hasMoreElements())
+		XMLEasyCC cc;
+		cc = (XMLEasyCC)m_costConfirmations.put(a_cc.getConcatenatedPriceCertHashes(), a_cc);
+		if (cc != null)
 		{
-			ccToAdd = (XMLEasyCC) enumer.nextElement();
-			if (1==1)//TODO: check hashes of price certs in CC vs. price certs of the Mixes used (used to be a check of the AiID)
-			{
-				oldBytes = ccToAdd.getTransferredBytes();
-				m_costConfirmations.removeElement(ccToAdd);
-				break;
-			}
+			oldBytes = cc.getTransferredBytes();
 		}
-		m_costConfirmations.addElement(cc);
-		return cc.getTransferredBytes() - oldBytes;
+		return a_cc.getTransferredBytes() - oldBytes;
 	}
 
 	private void setValues(Element elemRoot) throws Exception
@@ -174,9 +167,11 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 
 		Element elemCCs = (Element) XMLUtil.getFirstChildByName(elemRoot, "CostConfirmations");
 		Element elemCC = (Element) elemCCs.getFirstChild();
+		XMLEasyCC cc;
 		while (elemCC != null)
 		{
-			m_costConfirmations.addElement(new XMLEasyCC(elemCC));
+			cc = new XMLEasyCC(elemCC);
+			m_costConfirmations.put(cc.getConcatenatedPriceCertHashes(), cc);
 			elemCC = (Element) elemCC.getNextSibling();
 		}
 	}
@@ -194,15 +189,7 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 	 */
 	public XMLEasyCC getCC(String priceCertHash)
 	{
-		Enumeration enumer = m_costConfirmations.elements();
-		XMLEasyCC current;
-		while (enumer.hasMoreElements())
-		{
-			current = (XMLEasyCC) enumer.nextElement();
-			//TODO: check hashes of price certs in CC vs. price certs of the Mixes used (used to be a check of the AiID)
-			return current;
-		}
-		return null;
+		return (XMLEasyCC)m_costConfirmations.get(priceCertHash);
 	}
 
 	/**
