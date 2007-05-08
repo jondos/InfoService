@@ -5,7 +5,6 @@ import org.w3c.dom.Element;
 
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
-import com.sun.jdi.Field;
 import java.lang.reflect.Constructor;
 import org.w3c.dom.Node;
 
