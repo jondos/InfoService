@@ -49,6 +49,7 @@ import logging.LogType;
 import anon.crypto.IVerifyable;
 import anon.pay.xml.XMLPriceCertificate;
 import java.util.Hashtable;
+import anon.pay.AIControlChannel;
 
 /**
  * Holds the information for a mixcascade.
@@ -130,6 +131,8 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	 * True, if this MixCascade is a payment cascade.
 	 */
 	private boolean m_isPayment;
+
+	private long m_prepaidInterval = AIControlChannel.MAX_PREPAID_INTERVAL;
 
 	private String m_mixProtocolVersion;
 
@@ -291,7 +294,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		m_isPayment = XMLUtil.parseAttribute(payNode, "required", false);
 		m_paymentProtocolVersion = XMLUtil.parseAttribute(payNode, XML_ATTR_VERSION,
 			SUPPORTED_PAYMENT_PROTOCOL_VERSION);
-
+		m_prepaidInterval = XMLUtil.parseAttribute(payNode, "prepaidInterval", AIControlChannel.MAX_PREPAID_INTERVAL);
 
 		if (!m_bFromCascade)
 		{
@@ -355,6 +358,10 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 				m_mixInfos[i] = new MixInfo((Element) mixNodes.item(i), Long.MAX_VALUE, true);
 				if (m_mixInfos[i].getPriceCertificate() != null)
 				{
+					if (i == 0 && m_prepaidInterval == AIControlChannel.MAX_PREPAID_INTERVAL)
+					{
+						m_prepaidInterval = m_mixInfos[i].getPrepaidInterval();
+					}
 					m_priceCertificates.addElement(m_mixInfos[i].getPriceCertificate());
 					m_priceCertificateHashes.put(m_mixInfos[i].getId(),
 												 m_mixInfos[i].getPriceCertificate().getHashValue());
@@ -404,6 +411,13 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		{
 			m_mixCascadeId = a_mixIDFromCascade;
 		}
+
+		if (m_prepaidInterval < 0)
+		{
+			m_prepaidInterval = 0;
+		}
+		// JAP will not pay more than the predefined maximum!
+		m_prepaidInterval = Math.min(m_prepaidInterval, AIControlChannel.MAX_PREPAID_INTERVAL);
 
 		createMixIDString();
 	}
@@ -548,6 +562,11 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	public String getPaymentProtocolVersion()
 	{
 		return m_paymentProtocolVersion;
+	}
+
+	public long getPrepaidInterval()
+	{
+		return m_prepaidInterval;
 	}
 
 	/**

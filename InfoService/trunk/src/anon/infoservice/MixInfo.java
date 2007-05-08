@@ -44,6 +44,7 @@ import anon.crypto.IVerifyable;
 import java.util.Date;
 import anon.pay.xml.XMLPriceCertificate;
 import java.util.Vector;
+import anon.pay.AIControlChannel;
 
 /**
  * Holds the information of one single mix.
@@ -137,7 +138,7 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
   /**
    * Amount of bytes that the JAP has to prepay with this Cascade
    */
-  private long m_prepaidIntervalKbytes;
+  private long m_prepaidInterval;
 
   /**
    * Stores the signature element for this mix.
@@ -172,6 +173,7 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 	  this(a_mixNode, a_expireTime, false);
   }
 
+
   public MixInfo(String a_mixID, CertPath a_certPath)
   {
 	  super(Long.MAX_VALUE);
@@ -190,10 +192,10 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 	  m_mixLocation = new ServiceLocation(null, m_mixCertificate);
 	  m_mixOperator = new ServiceOperator(null, m_mixCertPath.getSecondCertificate());
 	  m_freeMix = false;
-	  m_prepaidIntervalKbytes = 10240; //default of 10 MB
+	  m_prepaidInterval = AIControlChannel.MAX_PREPAID_INTERVAL;
   }
 
-  public MixInfo(String a_mixID, CertPath a_certPath, XMLPriceCertificate a_priceCert, long a_prepaidIntervalKbytes)
+  public MixInfo(String a_mixID, CertPath a_certPath, XMLPriceCertificate a_priceCert, long a_prepaidInterval)
   {
 	  super(Long.MAX_VALUE);
 	  m_mixId = a_mixID;
@@ -209,7 +211,7 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 	  m_freeMix = false;
 	  //
 	  m_priceCert = a_priceCert;
-	  m_prepaidIntervalKbytes = a_prepaidIntervalKbytes;
+	  m_prepaidInterval = a_prepaidInterval;
   }
 
   /**
@@ -331,8 +333,8 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 		  m_lastUpdate = System.currentTimeMillis() - Constants.TIMEOUT_MIX;
 	  }
 	  //no Exception if the node is null, since it's okay not to set it
-	  //we'll just use 10 MB as a safe default
-	  m_prepaidIntervalKbytes = XMLUtil.parseValue(prepaidIntervalNode,10240);
+	  //we'll just use 5 MB as a safe default
+	  m_prepaidInterval = XMLUtil.parseValue(prepaidIntervalNode, AIControlChannel.MAX_PREPAID_INTERVAL / 1000) * 1000;
 
 	  m_serial = XMLUtil.parseValue(lastUpdateNode, 0L);
 
@@ -467,7 +469,7 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 
   public long getPrepaidInterval()
   {
-	  return m_prepaidIntervalKbytes;
+	  return m_prepaidInterval;
   }
 
   public void setPriceCertificate(XMLPriceCertificate newPriceCert)
