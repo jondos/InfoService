@@ -308,7 +308,7 @@ public class PayAccount implements IXMLEncodable
 			while (en.hasMoreElements())
 			{
 				XMLEasyCC myCC = (XMLEasyCC) en.nextElement();
-				XMLEasyCC newCC = info.getCC( (String) myCC.getPriceCertHashes().elements().nextElement() ); //hash of first price cert
+				XMLEasyCC newCC = info.getCC(myCC.getConcatenatedPriceCertHashes());
 				if ( (newCC != null) && (newCC.getTransferredBytes() > myCC.getTransferredBytes()))
 				{
 					if (newCC.verify(m_accountCertificate.getPublicKey()))
@@ -500,6 +500,11 @@ public class PayAccount implements IXMLEncodable
 			m_currentBytes += tmp;
 			fireChangeEvent();
 		}
+		return tmp;
+	}
+
+	public long getCurrentBytes()
+	{
 		return m_currentBytes;
 	}
 
