@@ -92,7 +92,7 @@ public class AIControlChannel extends XmlControlChannel
 
   private IMutableProxyInterface m_proxys;
 
-  private int m_diff = 0;
+  private long m_diff = 0;
 
   private long m_lastDiffBytes = 0;
 
@@ -282,22 +282,12 @@ public class AIControlChannel extends XmlControlChannel
 	  if (newPrepaidBytes > m_connectedCascade.getPrepaidInterval())
 	  {
 		  // If Jap crashed during the last session, CCs may have been lost.
-		  long toSign = oldSpent + newBytes;
-		  m_diff += cc.getTransferredBytes() - oldSpent - newBytes;
-		  double percent = ( (double) m_diff) / ( (double) (toSign - m_lastDiffBytes));
-		  LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Percentage of excessive transferred bytes is: " + percent);
-		  //if (percent > DIFFERENCE_THRESHOLD)
-		  {
-			  LogHolder.log(LogLevel.WARNING, LogType.PAY,
-							"Unrealistic number of bytes to be signed. Spent bytes: " + oldSpent +
-							" + new bytes we should sign: " + newBytes + " = " + toSign +
-							" < bytes in last CC: " + cc.getTransferredBytes());
-			  ;
-			  this.fireAIEvent(EVENT_UNREAL, m_diff);
-			  m_diff = 0;
-			  m_lastDiffBytes = toSign;
-		  }
-	  } //*/
+		  m_diff = newPrepaidBytes - m_connectedCascade.getPrepaidInterval();
+		  LogHolder.log(LogLevel.WARNING, LogType.PAY,
+						"Illegal number of prepaid bytes for signing. Difference: " + m_diff);
+		  this.fireAIEvent(EVENT_UNREAL, m_diff);
+		  m_diff = 0;
+	  }
 	  m_prepaidBytes = newPrepaidBytes;
 
 	  //get pricecerts and check against hashes in CC
