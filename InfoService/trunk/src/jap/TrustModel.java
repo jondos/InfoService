@@ -52,6 +52,7 @@ import logging.LogType;
 import anon.client.ITrustModel;
 import anon.infoservice.BlacklistedCascadeIDEntry;
 import anon.infoservice.NewCascadeIDEntry;
+import anon.pay.PayAccountsFile;
 
 
 /**
@@ -507,11 +508,22 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 
 	public void checkTrust(MixCascade a_cascade) throws TrustException, SignatureException
 	{
-		if (a_cascade != null && Database.getInstance(BlacklistedCascadeIDEntry.class).getEntryById(
+		if (a_cascade == null)
+		{
+			throw (new TrustException("Cascade is null!"));
+		}
+
+		if (Database.getInstance(BlacklistedCascadeIDEntry.class).getEntryById(
 			  a_cascade.getMixIDsAsString()) != null)
 		{
 			throw (new TrustException("Cascade is in blacklist!"));
 		}
+
+		/*
+		if (a_cascade.isPayment() && PayAccountsFile.getInstance().getBI(a_cascade.getPIID()) == null)
+		{
+			throw (new TrustException("Cascade is in blacklist!"));
+		}*/
 
 		if (m_trustNew == TRUST_EXCLUSIVE)
 		{
@@ -528,7 +540,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 
 		if (m_trustUserDefined == TRUST_EXCLUSIVE)
 		{
-			if (a_cascade != null && a_cascade.isUserDefined())
+			if (a_cascade.isUserDefined())
 			{
 				//if (a_cascade.getCertificate() == null && (a_cascade.getNumberOfMixes() == 0 ||
 				//	a_cascade.getNumberOfMixes() == 1 &&
