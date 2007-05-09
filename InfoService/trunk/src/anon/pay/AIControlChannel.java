@@ -174,6 +174,7 @@ public class AIControlChannel extends XmlControlChannel
   {
 	  byte[] arbChal = chal.getChallengeForSigning();
 	  m_prepaidBytes = chal.getPrepaidBytes();
+
 	  LogHolder.log(LogLevel.NOTICE, LogType.PAY, "Received " + m_prepaidBytes + " prepaid bytes.");
 
 	  PayAccount acc = PayAccountsFile.getInstance().getActiveAccount();
@@ -279,14 +280,22 @@ public class AIControlChannel extends XmlControlChannel
 
 	  // check if bytes asked for in CC match bytes transferred
 	  long newPrepaidBytes = (cc.getTransferredBytes() - oldSpent) + m_prepaidBytes - newBytes;
+
 	  if (newPrepaidBytes > m_connectedCascade.getPrepaidInterval())
 	  {
-		  // If Jap crashed during the last session, CCs may have been lost.
-		  m_diff = newPrepaidBytes - m_connectedCascade.getPrepaidInterval();
+		  long diff = newPrepaidBytes - m_connectedCascade.getPrepaidInterval();
 		  LogHolder.log(LogLevel.WARNING, LogType.PAY,
-						"Illegal number of prepaid bytes for signing. Difference: " + m_diff);
-		  this.fireAIEvent(EVENT_UNREAL, m_diff);
-		  m_diff = 0;
+						"Illegal number of prepaid bytes for signing. Difference: " + diff);
+
+		  if (cc.getTransferredBytes() - diff > oldSpent)
+		  {
+			  newPrepaidBytes -= diff;
+			  cc.setTransferredBytes(cc.getTransferredBytes() - diff);
+		  }
+		  else
+		  {
+			  this.fireAIEvent(EVENT_UNREAL, diff);
+		  }
 	  }
 	  m_prepaidBytes = newPrepaidBytes;
 

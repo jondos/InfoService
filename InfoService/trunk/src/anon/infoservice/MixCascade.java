@@ -294,7 +294,8 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		m_isPayment = XMLUtil.parseAttribute(payNode, "required", false);
 		m_paymentProtocolVersion = XMLUtil.parseAttribute(payNode, XML_ATTR_VERSION,
 			SUPPORTED_PAYMENT_PROTOCOL_VERSION);
-		m_prepaidInterval = XMLUtil.parseAttribute(payNode, "prepaidInterval", AIControlChannel.MAX_PREPAID_INTERVAL);
+
+		m_prepaidInterval = XMLUtil.parseAttribute(payNode, "prepaidInterval", AIControlChannel.MAX_PREPAID_INTERVAL + 1);
 
 		if (!m_bFromCascade)
 		{
@@ -358,7 +359,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 				m_mixInfos[i] = new MixInfo((Element) mixNodes.item(i), Long.MAX_VALUE, true);
 				if (m_mixInfos[i].getPriceCertificate() != null)
 				{
-					if (i == 0 && m_prepaidInterval == AIControlChannel.MAX_PREPAID_INTERVAL)
+					if (i == 0 && m_prepaidInterval > AIControlChannel.MAX_PREPAID_INTERVAL)
 					{
 						m_prepaidInterval = m_mixInfos[i].getPrepaidInterval();
 					}
