@@ -654,13 +654,7 @@ public class PayAccount implements IXMLEncodable
 	{
 		if (m_theBI == null)
 		{
-			try
-			{
-				m_theBI = PayAccountsFile.getInstance().getBI(m_strBiID);
-			}
-			catch (Exception e)
-			{
-			}
+			m_theBI = PayAccountsFile.getInstance().getBI(m_strBiID);
 		}
 
 		return m_theBI;

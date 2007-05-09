@@ -748,7 +748,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		return (Vector)m_knownPIs.clone();
 	}
 
-	public PaymentInstanceDBEntry getBI(String a_piID) throws Exception
+	public PaymentInstanceDBEntry getBI(String a_piID)
 	{
 		PaymentInstanceDBEntry theBI = null;
 
@@ -780,10 +780,11 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 				break;
 			}
 		}
+		/*
 		if (theBI == null)
 		{
 			throw new Exception("Cannot get payment instance neither from InfoService nor from config file");
-		}
+		}*/
 
 		return theBI;
 	}
