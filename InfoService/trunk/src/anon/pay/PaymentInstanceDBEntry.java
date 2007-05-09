@@ -126,6 +126,8 @@ public class PaymentInstanceDBEntry extends AbstractDistributableCertifiedDataba
 		checkId();
 
 
+		m_name = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, XML_ELEM_NAME), "");
+
 		/* get the creation timestamp */
 		m_creationTimeStamp = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, XML_LAST_UPDATE), -1L);
 		if (m_creationTimeStamp == -1)

@@ -46,6 +46,7 @@ import anon.util.captcha.IImageEncodedCaptcha;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.infoservice.MixCascade;
 
 /**
  * This class encapsulates a collection of accounts. One of the accounts in the collection
@@ -281,13 +282,15 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 				elem = a_doc.createElement("Accounts");
 				elemAccountsFile.appendChild(elem);
 
-				for (int i = 0; i < m_Accounts.size(); i++)
+				synchronized (this)
 				{
-					PayAccount account = (PayAccount) m_Accounts.elementAt(i);
-					elemAccount = account.toXmlElement(a_doc, a_password);
-					elem.appendChild(elemAccount);
+					for (int i = 0; i < m_Accounts.size(); i++)
+					{
+						PayAccount account = (PayAccount) m_Accounts.elementAt(i);
+						elemAccount = account.toXmlElement(a_doc, a_password);
+						elem.appendChild(elemAccount);
+					}
 				}
-
 				return elemAccountsFile;
 			}
 			catch (Exception ex)
@@ -360,19 +363,24 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	 * @return {@link PayAccount} oder null, wenn kein Konto unter der angebenen
 	 * Kontonummer vorhanden ist
 	 */
-	public PayAccount getAccount(long accountNumber)
+	public synchronized PayAccount getAccount(long accountNumber)
 	{
-		PayAccount tmp;
+		PayAccount tmp = null;
 		Enumeration enumer = m_Accounts.elements();
 		while (enumer.hasMoreElements())
 		{
 			tmp = (PayAccount) enumer.nextElement();
 			if (tmp.getAccountNumber() == accountNumber)
 			{
-				return tmp;
+				break;
+			}
+			else
+			{
+				tmp = null;
 			}
 		}
-		return null;
+
+		return tmp;
 	}
 
 	/**
@@ -454,16 +462,38 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		return ((Vector)m_Accounts .clone()).elements();
 	}
 
+	public synchronized Vector getAccounts(String a_piid)
+	{
+		Vector vecAccounts = new Vector();
+		Enumeration enumer = m_Accounts.elements();
+		PayAccount currentAccount;
+
+		if (a_piid != null && a_piid.trim().length() > 0)
+		{
+			while (enumer.hasMoreElements())
+			{
+				currentAccount = (PayAccount) enumer.nextElement();
+				if ( (currentAccount).getBI().getId().equals(a_piid))
+				{
+					vecAccounts.addElement(currentAccount);
+				}
+			}
+		}
+
+		return vecAccounts;
+	}
+
 	/**
 	 * Adds a new account
 	 *
 	 * @param account new account
 	 * @throws Exception If the same account was already added
 	 */
-	public void addAccount(PayAccount account) throws Exception
+	public synchronized void addAccount(PayAccount account) throws Exception
 	{
 		PayAccount tmp;
 		boolean activeChanged = false;
+
 		Enumeration enumer = m_Accounts.elements();
 		while (enumer.hasMoreElements())
 		{
@@ -517,7 +547,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	 * @param rowIndex int
 	 * @return PayAccount
 	 */
-	public PayAccount getAccountAt(int rowIndex)
+	public synchronized PayAccount getAccountAt(int rowIndex)
 	{
 		return (PayAccount) m_Accounts.elementAt(rowIndex);
 	}
@@ -633,7 +663,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	/**
 	 * signalAccountRequest
 	 */
-	public boolean signalAccountRequest()
+	public boolean signalAccountRequest(MixCascade a_connectedCascade)
 	{
 		boolean m_bSuccess = true;
 		synchronized (m_paymentListeners)
@@ -641,7 +671,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 			Enumeration enumListeners = m_paymentListeners.elements();
 			while (enumListeners.hasMoreElements())
 			{
-				if (!( (IPaymentListener) enumListeners.nextElement()).accountCertRequested(false))
+				if (!( (IPaymentListener) enumListeners.nextElement()).accountCertRequested(a_connectedCascade))
 				{
 					m_bSuccess = false;
 				}

@@ -5,6 +5,7 @@ import java.util.EventListener;
 import anon.pay.xml.XMLErrorMessage;
 import anon.util.captcha.IImageEncodedCaptcha;
 import anon.util.captcha.ICaptchaSender;
+import anon.infoservice.MixCascade;
 
 
 /**
@@ -19,7 +20,7 @@ public interface IPaymentListener extends EventListener
 	 * The AI has signaled that the current cascade has to be payed for.
 	 * @param acc PayAccount
 	 */
-	boolean accountCertRequested(boolean usingCurrentAccount);
+	boolean accountCertRequested(MixCascade a_connectedCascade);
 
 	/**
 	 * The AI has signaled an error.

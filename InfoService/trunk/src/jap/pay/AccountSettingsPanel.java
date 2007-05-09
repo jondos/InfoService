@@ -31,11 +31,14 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.SecureRandom;
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.Observer;
-import java.util.Observable;
 import java.util.GregorianCalendar;
+import java.util.Locale;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Vector;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -57,6 +60,7 @@ import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
@@ -77,19 +81,20 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import HTTPClient.ForbiddenIOException;
 import anon.crypto.DSAKeyPair;
-import anon.crypto.JAPCertificate;
 import anon.crypto.XMLEncryption;
-import anon.infoservice.ListenerInterface;
-import anon.pay.PaymentInstanceDBEntry;
 import anon.pay.BIConnection;
 import anon.pay.PayAccount;
 import anon.pay.PayAccountsFile;
+import anon.pay.PaymentInstanceDBEntry;
 import anon.pay.xml.XMLAccountInfo;
 import anon.pay.xml.XMLBalance;
+import anon.pay.xml.XMLErrorMessage;
+import anon.pay.xml.XMLPassivePayment;
 import anon.pay.xml.XMLPaymentOption;
 import anon.pay.xml.XMLPaymentOptions;
 import anon.pay.xml.XMLTransCert;
-import anon.util.ResourceLoader;
+import anon.pay.xml.XMLVolumePlan;
+import anon.pay.xml.XMLVolumePlans;
 import anon.util.SingleStringPasswordReader;
 import anon.util.XMLUtil;
 import anon.util.captcha.ICaptchaSender;
@@ -105,28 +110,19 @@ import gui.dialog.PasswordContentPane;
 import gui.dialog.SimpleWizardContentPane;
 import gui.dialog.WorkerContentPane;
 import jap.AbstractJAPConfModule;
+import jap.JAPConfInfoService;
 import jap.JAPConstants;
 import jap.JAPController;
+import jap.JAPControllerMessage;
 import jap.JAPModel;
 import jap.JAPUtil;
-import jap.JAPConfInfoService;
 import jap.pay.wizardnew.MethodSelectionPane;
 import jap.pay.wizardnew.PassivePaymentPane;
 import jap.pay.wizardnew.PaymentInfoPane;
+import jap.pay.wizardnew.VolumePlanSelectionPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import javax.swing.JComboBox;
-import jap.JAPControllerMessage;
-import anon.pay.xml.XMLErrorMessage;
-import anon.pay.xml.XMLPassivePayment;
-import java.sql.Timestamp;
-import java.util.Locale;
-import anon.pay.xml.XMLVolumePlans;
-import jap.pay.wizardnew.VolumePlanSelectionPane;
-import anon.pay.xml.XMLVolumePlan;
-import anon.infoservice.InfoServiceHolder;
-import java.util.Vector;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -142,6 +138,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 	protected static final String MSG_ACCOUNT_VALID = AccountSettingsPanel.class.
 		getName() + "_account_valid";
+	protected static final String MSG_PAYMENT_INSTANCE = AccountSettingsPanel.class.
+		getName() + "_paymentInstance";
 
 	protected static final String IMG_COINS_DISABLED = AccountSettingsPanel.class.getName() +
 		"_coins-disabled.gif";
@@ -319,6 +317,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private JCheckBox m_cbxBalanceAutoUpdateEnabled;
 	private JCheckBox m_cbxAskIfNotSaved;
 
+	private JLabel m_paymentInstance;
 	private JLabel m_labelCreationDate;
 	private JLabel m_labelStatementDate;
 	private JLabel m_labelDeposit;
@@ -472,7 +471,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		c.weighty = 1.0;
 		c.gridx = 0;
 		c.gridy = 0;
-		c.gridheight = 5;
+		c.gridheight = 6;
 		c.insets = new Insets(5, 5, 5, 5);
 		JScrollPane scroller = new JScrollPane(m_listAccounts);
 		scroller.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
@@ -507,6 +506,17 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		c.weightx = 1.0;
 		m_labelValid = new JLabel();
 		rootPanel.add(m_labelValid, c);
+
+
+		c.gridy++;
+		c.gridx--;
+		c.weightx = 0.0;
+		rootPanel.add(new JLabel(JAPMessages.getString(MSG_PAYMENT_INSTANCE) + ":"), c);
+		c.gridx++;
+		c.weightx = 1.0;
+		m_paymentInstance = new JLabel();
+		rootPanel.add(m_paymentInstance, c);
+
 
 		c.gridy++;
 		c.gridx--;
@@ -856,7 +866,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					JButton source = (JButton) e.getSource();
 					if (source == m_btnCreateAccount)
 					{
-						doCreateAccount();
+						doCreateAccount(null);
 					}
 					/*
 					else if (source == m_btnChargeAccount)
@@ -1023,6 +1033,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		{
 			XMLBalance balance = accountInfo.getBalance();
 
+			m_paymentInstance.setText(selectedAccount.getBI().getName());
 			m_labelCreationDate.setText(JAPUtil.formatTimestamp(selectedAccount.getCreationTime(), false,
 				JAPController.getInstance().getLocale().getLanguage()));
 			m_labelStatementDate.setText(JAPUtil.formatTimestamp(balance.getTimestamp(), true,
@@ -1560,7 +1571,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 *
 	 * @return boolean
 	 */
-	public void doCreateAccount()
+	public void doCreateAccount(final String a_biid)
 	{
 		final JAPDialog d = new JAPDialog(getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
 		d.setDefaultCloseOperation(JAPDialog.DO_NOTHING_ON_CLOSE);
@@ -1577,10 +1588,17 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				/** @todo let the user of the beta version choose a PI */
 				try
 				{
-					Vector pis = PayAccountsFile.getInstance().getPaymentInstances();
-					if (pis.size() > 0)
+					if (a_biid == null)
 					{
-						theBI = (PaymentInstanceDBEntry)pis.elementAt(0);
+						Vector pis = PayAccountsFile.getInstance().getPaymentInstances();
+						if (pis.size() > 0)
+						{
+							theBI = (PaymentInstanceDBEntry) pis.elementAt(0);
+						}
+					}
+					else
+					{
+						theBI = PayAccountsFile.getInstance().getBI(a_biid);
 					}
 				}
 				catch (Exception e)

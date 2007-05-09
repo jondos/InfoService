@@ -47,6 +47,7 @@ import anon.util.captcha.IImageEncodedCaptcha;
 import anon.util.captcha.ICaptchaSender;
 import gui.JAPMessages;
 import logging.LogType;
+import anon.infoservice.MixCascade;
 
 /**
  * This class displays a dialog for solving a captcha.
@@ -221,7 +222,7 @@ public class CaptchaContentPane extends DialogContentPane implements
 		return true;
 	}
 
-	public boolean accountCertRequested(boolean usingCurrentAccount)
+	public boolean accountCertRequested(MixCascade a_connectedCascade)
 	{
 		return true;
 	}
