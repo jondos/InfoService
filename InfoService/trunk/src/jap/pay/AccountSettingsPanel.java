@@ -123,6 +123,8 @@ import jap.pay.wizardnew.VolumePlanSelectionPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.pay.IPaymentListener;
+import anon.infoservice.MixCascade;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -131,7 +133,7 @@ import logging.LogType;
  * @version 1.0
  */
 public class AccountSettingsPanel extends AbstractJAPConfModule implements
-	ListSelectionListener, Observer
+	ListSelectionListener, Observer, IPaymentListener
 {
 	protected static final String MSG_ACCOUNT_FLAT_VOLUME = AccountSettingsPanel.class.
 		getName() + "_account_flat_volume";
@@ -340,8 +342,47 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	public AccountSettingsPanel()
 	{
 		super(null);
+		PayAccountsFile.getInstance().addPaymentListener(this);
 		JAPController.getInstance().addObserver(this);
 	}
+
+
+	public boolean accountCertRequested(MixCascade a_connectedCascade)
+	{
+		return true;
+	}
+
+
+		public void accountError(XMLErrorMessage msg, boolean a_bIgnore)
+		{
+		}
+
+		public void accountActivated(PayAccount acc)
+		{
+			updateAccountList();
+		}
+
+		public void accountRemoved(PayAccount acc)
+		{
+		}
+
+		public void accountAdded(PayAccount acc)
+		{
+		}
+
+		/**
+		 * The credit changed for the given account.
+		 * @param acc PayAccount
+		 */
+		public void creditChanged(PayAccount acc)
+		{
+		}
+
+
+		public void gotCaptcha(ICaptchaSender a_source, IImageEncodedCaptcha a_captcha)
+		{
+		}
+
 
 	public void fontSizeChanged(JAPModel.FontResize a_fontSize, JLabel a_dummyLabel)
 	{
@@ -2011,7 +2052,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			JAPDialog.showErrorDialog(GUIUtils.getParentWindow(this.getRootPanel()),
 									  JAPMessages.getString("Could not select account!"), LogType.PAY, ex);
 		}
-		updateAccountList();
 	}
 
 	private DialogContentPane createUpdateAccountPane(final IReturnAccountRunnable a_accountCreationThread,
