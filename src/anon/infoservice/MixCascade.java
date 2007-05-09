@@ -413,14 +413,26 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 			m_mixCascadeId = a_mixIDFromCascade;
 		}
 
-		if (m_prepaidInterval < 0)
-		{
-			m_prepaidInterval = 0;
-		}
-		// JAP will not pay more than the predefined maximum!
-		m_prepaidInterval = Math.min(m_prepaidInterval, AIControlChannel.MAX_PREPAID_INTERVAL);
-
 		createMixIDString();
+
+		// JAP will not pay more than the predefined maximum!
+		if (isPayment())
+		{
+			if (m_prepaidInterval > AIControlChannel.MAX_PREPAID_INTERVAL)
+			{
+				LogHolder.log(LogLevel.WARNING, LogType.PAY, "Prepaid interval of cascade " + getId() +
+					"is too high: " + m_prepaidInterval);
+			}
+			else if (m_prepaidInterval < AIControlChannel.MIN_PREPAID_INTERVAL)
+			{
+				LogHolder.log(LogLevel.WARNING, LogType.PAY, "Prepaid interval of cascade " + getId() +
+					"is too low: " + m_prepaidInterval);
+			}
+		}
+		m_prepaidInterval = Math.min(m_prepaidInterval, AIControlChannel.MAX_PREPAID_INTERVAL);
+		m_prepaidInterval = Math.max(m_prepaidInterval, AIControlChannel.MIN_PREPAID_INTERVAL);
+
+
 	}
 
 	/**
