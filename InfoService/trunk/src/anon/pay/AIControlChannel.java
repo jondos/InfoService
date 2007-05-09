@@ -71,6 +71,7 @@ import anon.infoservice.MixInfo;
 public class AIControlChannel extends XmlControlChannel
 {
 	public static final long MAX_PREPAID_INTERVAL = 5000000; // 5MB
+	public static final long MIN_PREPAID_INTERVAL = 5000; // 500 kb
 
   //codes for AI events that can be fired
   private static final int EVENT_UNREAL = 1;
