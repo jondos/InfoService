@@ -619,7 +619,7 @@ public class PaymentMainPanel extends FlippingPanel
 		 *
 		 * @param usingCurrentAccount boolean
 		 */
-		public boolean accountCertRequested(boolean blubb)
+		public boolean accountCertRequested(MixCascade a_connectedCascade)
 		{
 			PayAccountsFile accounts = PayAccountsFile.getInstance();
 			boolean bSuccess = true;
@@ -654,7 +654,9 @@ public class PaymentMainPanel extends FlippingPanel
 			Runnable run = null;
 			final String strMessage = JAPMessages.getString(MSG_FREE_OF_CHARGE) + "<br><br>";
 
-			if (accounts.getNumAccounts() == 0)
+			if (accounts.getNumAccounts() == 0  ||
+				(accounts.getActiveAccount() != null &&
+				 !accounts.getActiveAccount().getBI().getId().equals(a_connectedCascade.getPIID())))
 			{
 				JAPController.getInstance().setAnonMode(false);
 				bSuccess = false;

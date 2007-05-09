@@ -211,7 +211,10 @@ public class AIControlChannel extends XmlControlChannel
 	//if requested, send account certificate
 	if (request.isAccountRequest())
 	{
-		sendAccountCert();
+		if (!sendAccountCert())
+		{
+			LogHolder.log(LogLevel.ALERT, LogType.PAY, "Could not send account certificate!");
+		}
 	}
 
 	//if sent, process cost confirmation
@@ -318,22 +321,40 @@ public class AIControlChannel extends XmlControlChannel
 
   public boolean sendAccountCert()
   {
-	  PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
+
 	  String message = null;
 	  Vector priceCerts = m_connectedCascade.getPriceCertificates();
 	  Vector mixIDs = m_connectedCascade.getMixIds();
 	  String mixID;
 	  XMLPriceCertificate priceCert;
 
-	/*
-	  Enumeration hashes = m_connectedCascade.getPriceCertificateHashes().elements();
-	  while(hashes.hasMoreElements())
+
+
+
+	  if (PayAccountsFile.getInstance().getActiveAccount() == null ||
+		  !PayAccountsFile.getInstance().getActiveAccount().getBI().getId().equals(
+				  m_connectedCascade.getPIID()))
 	  {
-		  System.out.println((String)hashes.nextElement());
-	  }*/
+		  PayAccount currentAccount = null;
+		  Vector accounts = PayAccountsFile.getInstance().getAccounts(m_connectedCascade.getPIID());
+		  if (accounts.size() > 0)
+		  {
+			  for (int i = 0; i < accounts.size(); i++)
+			  {
+				  currentAccount = (PayAccount) accounts.elementAt(i);
+				  if (currentAccount.getBalance().getCredit() != 0)
+				  {
+					  break;
+				  }
+			  }
+			  PayAccountsFile.getInstance().setActiveAccount(currentAccount);
+		  }
+	  }
 
-
-	  // test if this cascade is configured correctly
+	  if (!PayAccountsFile.getInstance().signalAccountRequest(m_connectedCascade))
+	  {
+		  return false;
+	  }
 
 	  if (priceCerts.size() != mixIDs.size())
 	  {
@@ -370,15 +391,8 @@ public class AIControlChannel extends XmlControlChannel
 		  return false;
 	  }
 
+	  sendXmlMessage(XMLUtil.toXMLDocument(PayAccountsFile.getInstance().getActiveAccount().getAccountCertificate()));
 
-	  if (!PayAccountsFile.getInstance().signalAccountRequest())
-	  {
-		  return false;
-	  }
-	  if (currentAccount != null)
-	  {
-		  sendXmlMessage(XMLUtil.toXMLDocument(currentAccount.getAccountCertificate()));
-	  }
 	  return true;
   }
 

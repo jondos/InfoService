@@ -1165,7 +1165,12 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 							if (a_value instanceof Boolean && ((Boolean)a_value).booleanValue())
 							{
 								// create new account
-								m_accountSettings.doCreateAccount();
+								m_accountSettings.doCreateAccount(null);
+							}
+							else if (a_value instanceof String)
+							{
+								// insert biid
+								m_accountSettings.doCreateAccount((String)a_value);
 							}
 							else if (a_value instanceof PayAccount)
 							{
