@@ -433,11 +433,14 @@ public abstract class AbstractDatabaseUpdater implements Observer
 		}
 
 		// add the entries that have not changed
-		Enumeration enumEntriesKept = hashEntriesKept.keys();
-		while (enumEntriesKept.hasMoreElements())
+		if (newEntries != null)
 		{
-			key = (String)enumEntriesKept.nextElement();
-			newEntries.put(key, hashEntriesKept.get(key));
+			Enumeration enumEntriesKept = hashEntriesKept.keys();
+			while (enumEntriesKept.hasMoreElements())
+			{
+				key = (String) enumEntriesKept.nextElement();
+				newEntries.put(key, hashEntriesKept.get(key));
+			}
 		}
 
 		if (Thread.currentThread().isInterrupted())

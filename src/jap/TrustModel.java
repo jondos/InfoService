@@ -519,11 +519,10 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 			throw (new TrustException("Cascade is in blacklist!"));
 		}
 
-		/*
 		if (a_cascade.isPayment() && PayAccountsFile.getInstance().getBI(a_cascade.getPIID()) == null)
 		{
-			throw (new TrustException("Cascade is in blacklist!"));
-		}*/
+			throw (new TrustException("Payment instance for this cascade is unknown!"));
+		}
 
 		if (m_trustNew == TRUST_EXCLUSIVE)
 		{

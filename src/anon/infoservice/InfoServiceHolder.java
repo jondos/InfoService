@@ -658,9 +658,9 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	 *
 	 * @return The Vector of payment instances.
 	 */
-	public Vector getPaymentInstances()
+	public Hashtable getPaymentInstances()
 	{
-		return (Vector) (fetchInformation(GET_PAYMENT_INSTANCES, null));
+		return (Hashtable) (fetchInformation(GET_PAYMENT_INSTANCES, null));
 	}
 
 	/** Get information for a particular payment instance identified by a_piID

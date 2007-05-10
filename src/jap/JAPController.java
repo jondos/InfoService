@@ -101,7 +101,6 @@ import anon.util.IMiscPasswordReader;
 import anon.util.IPasswordReader;
 import anon.util.JobQueue;
 import anon.util.ResourceLoader;
-import anon.util.XMLParseException;
 import anon.util.XMLUtil;
 import forward.server.ForwardServerManager;
 import gui.GUIUtils;
@@ -228,6 +227,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private AnonProxy m_proxyAnon = null; // service object for anon access
 
 	private InfoServiceUpdater m_InfoServiceUpdater;
+	private PaymentInstanceUpdater m_paymentInstanceUpdater;
 	private MixCascadeUpdater m_MixCascadeUpdater;
 	private MinVersionUpdater m_minVersionUpdater;
 	private JavaVersionUpdater m_javaVersionUpdater;
@@ -282,6 +282,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		// initialise IS update threads
 		m_feedback = new JAPFeedback();
 		m_InfoServiceUpdater = new InfoServiceUpdater();
+		m_paymentInstanceUpdater = new PaymentInstanceUpdater();
 		m_MixCascadeUpdater = new MixCascadeUpdater();
 		m_minVersionUpdater = new MinVersionUpdater();
 		m_javaVersionUpdater = new JavaVersionUpdater();
@@ -476,6 +477,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				if (JAPModel.getInstance().isInfoServiceDisabled())
 				{
 					m_InfoServiceUpdater.start(false);
+					m_paymentInstanceUpdater.start(false);
 					m_MixCascadeUpdater.start(false);
 					m_minVersionUpdater.start(false);
 					m_javaVersionUpdater.start(false);
@@ -486,6 +488,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 					if (!m_InfoServiceUpdater.isFirstUpdateDone())
 					{
 						m_InfoServiceUpdater.update();
+					}
+					if (!m_paymentInstanceUpdater.isFirstUpdateDone())
+					{
+						m_paymentInstanceUpdater.update();
 					}
 					if (!m_MixCascadeUpdater.isFirstUpdateDone())
 					{
@@ -1429,26 +1435,31 @@ public final class JAPController extends Observable implements IProxyListener, O
 							PayAccountsFile.XML_ELEMENT_NAME);
 
 						//Load known Payment instances
-						Node nodePIs = XMLUtil.getFirstChildByName(elemPay,
-							JAPConstants.CONFIG_PAYMENT_INSTANCES);
-
-						if (nodePIs != null)
+						Node nodePaymentInstances = XMLUtil.getFirstChildByName(elemPay,
+							PaymentInstanceDBEntry.XML_ELEMENT_CONTAINER_NAME);
+						PaymentInstanceDBEntry piEntry;
+						if (nodePaymentInstances != null)
 						{
-							Node nodePI = nodePIs.getFirstChild();
+							Node nodePI = nodePaymentInstances.getFirstChild();
 							while (nodePI != null)
 							{
-								try
+								if (nodePI.getNodeName().equals(PaymentInstanceDBEntry.XML_ELEMENT_NAME))
 								{
-									PayAccountsFile.getInstance().addKnownPI(
-										new PaymentInstanceDBEntry((Element) nodePI));
-								}
-								catch (XMLParseException e)
-								{
-									LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
+									try
+									{
+										piEntry = new PaymentInstanceDBEntry( (Element) nodePI, Long.MAX_VALUE);
+										Database.getInstance(PaymentInstanceDBEntry.class).update(piEntry);
+									}
+									catch (Exception a_e)
+									{
+										LogHolder.log(LogLevel.ERR, LogType.MISC, a_e);
+									}
 								}
 								nodePI = nodePI.getNextSibling();
 							}
 						}
+
+
 						/** @todo implement password reader for console */
 						IMiscPasswordReader passwordReader;
 						final Hashtable cachedPasswords = new Hashtable();
@@ -2096,8 +2107,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 								 InfoServiceDBEntry.getConnectionTimeout());
 
 
-
-			/* save payment configuration */
 			try
 			{
 				PayAccountsFile accounts = PayAccountsFile.getInstance();
@@ -2111,18 +2120,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 					XMLUtil.setAttribute(elemPayment, XML_ATTR_ASK_SAVE_PAYMENT, m_bAskSavePayment);
 					e.appendChild(elemPayment);
 
-					//Save the known PIs
-					Element elemPIs = doc.createElement(PaymentInstanceDBEntry.XML_ELEMENT_CONTAINER_NAME);
+					elemPayment.appendChild(Database.getInstance(PaymentInstanceDBEntry.class).toXmlElement(
+									   doc, PaymentInstanceDBEntry.XML_ELEMENT_CONTAINER_NAME));
 
-
-
-					elemPayment.appendChild(elemPIs);
-					Enumeration pis = accounts.getKnownPIs();
-
-					while (pis.hasMoreElements())
-					{
-						elemPIs.appendChild( ( (PaymentInstanceDBEntry) pis.nextElement()).toXmlElement(doc));
-					}
 					elemPayment.appendChild(accounts.toXmlElement(doc, getPaymentPassword()));
 				}
 			}
@@ -3417,6 +3417,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							m_Controller.m_feedback.stop();
 							m_Controller.m_MixCascadeUpdater.stop();
 							m_Controller.m_InfoServiceUpdater.stop();
+							m_Controller.m_paymentInstanceUpdater.stop();
 							m_Controller.m_minVersionUpdater.stop();
 							m_Controller.m_javaVersionUpdater.stop();
 							m_Controller.m_messageUpdater.stop();

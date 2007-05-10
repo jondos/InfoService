@@ -104,6 +104,7 @@ import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
 import anon.infoservice.PreviouslyKnownCascadeIDEntry;
+import anon.pay.PayAccountsFile;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener, Observer
@@ -130,6 +131,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		JAPConfAnon.class.getName() + "_explainNotTrustworthy";
 	private static final String MSG_BLACKLISTED = JAPConfAnon.class.getName() + "_blacklisted";
 	private static final String MSG_EXPLAIN_BLACKLISTED = JAPConfAnon.class.getName() + "_explainBlacklisted";
+	private static final String MSG_PI_UNAVAILABLE = JAPConfAnon.class.getName() + "_piUnavailable";
+	private static final String MSG_EXPLAIN_PI_UNAVAILABLE = JAPConfAnon.class.getName() + "_explainPiUnavailable";
 	private static final String MSG_WHAT_IS_THIS = JAPConfAnon.class.getName() + "_whatIsThis";
 
 
@@ -177,6 +180,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private JLabel m_locationLabel;
 	private JLabel m_payLabel;
 	private boolean m_blacklist;
+	private boolean m_unknownPI;
 	private JLabel m_viewCertLabel;
 	private JLabel m_viewCertLabelValidity;
 
@@ -497,6 +501,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 							JAPDialog.showMessageDialog(m_payLabel,
 								JAPMessages.getString(MSG_EXPLAIN_BLACKLISTED));
 						}
+						else if (m_unknownPI)
+						{
+							JAPDialog.showMessageDialog(m_payLabel,
+								JAPMessages.getString(MSG_EXPLAIN_PI_UNAVAILABLE));
+						}
 						else
 						{
 							JAPDialog.showMessageDialog(m_payLabel,
@@ -571,20 +580,31 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			m_payLabel.setForeground(Color.red);
 			m_payLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 			if (Database.getInstance(BlacklistedCascadeIDEntry.class).getEntryById(
-				cascade.getMixIDsAsString()) == null)
-			{
-				m_payLabel.setText(JAPMessages.getString(MSG_NOT_TRUSTWORTHY));
-				m_payLabel.setToolTipText(JAPMessages.getString(MSG_EXPLAIN_NOT_TRUSTWORTHY,
-					TrustModel.getCurrentTrustModel().getName()));
-				m_blacklist = false;
-			}
-			else
+				cascade.getMixIDsAsString()) != null)
 			{
 				m_payLabel.setText(JAPMessages.getString(MSG_BLACKLISTED));
 				m_payLabel.setToolTipText(JAPMessages.getString(MSG_EXPLAIN_BLACKLISTED,
 					TrustModel.getCurrentTrustModel().getName()));
 				m_blacklist = true;
+				m_unknownPI = false;
 			}
+			else if (cascade.isPayment() && PayAccountsFile.getInstance().getBI(cascade.getPIID()) == null)
+			{
+				m_payLabel.setText(JAPMessages.getString(MSG_PI_UNAVAILABLE));
+				m_payLabel.setToolTipText(JAPMessages.getString(MSG_EXPLAIN_PI_UNAVAILABLE,
+					TrustModel.getCurrentTrustModel().getName()));
+				m_blacklist = false;
+				m_unknownPI = true;
+			}
+			else
+			{
+				m_payLabel.setText(JAPMessages.getString(MSG_NOT_TRUSTWORTHY));
+				m_payLabel.setToolTipText(JAPMessages.getString(MSG_EXPLAIN_NOT_TRUSTWORTHY,
+					TrustModel.getCurrentTrustModel().getName()));
+				m_blacklist = false;
+				m_unknownPI = false;
+			}
+
 		}
 		else if (m_infoService.isPay(cascade.getId()))
 		{

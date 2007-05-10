@@ -993,49 +993,9 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 	 *
 	 * @return The Vector of all payment instances.
 	 */
-	public Vector getPaymentInstances() throws Exception
+	public Hashtable getPaymentInstances() throws Exception
 	{
-		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/paymentinstances"));
-
-		if (!SignatureVerifier.getInstance().verifyXml(doc, SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE))
-		{
-			// signature could not be verified
-			throw new SignatureException("Document could not be verified!");
-		}
-
-		PaymentInstanceDBEntry entry;
-		Element paymentInstancesNode = doc.getDocumentElement();
-		XMLUtil.assertNodeName(paymentInstancesNode, PaymentInstanceDBEntry.XML_ELEMENT_CONTAINER_NAME);
-
-		NodeList paymentInstanceNodes =
-			paymentInstancesNode.getElementsByTagName(PaymentInstanceDBEntry.XML_ELEMENT_NAME);
-		Vector paymentInstances = new Vector();
-		for (int i = 0; i < paymentInstanceNodes.getLength(); i++)
-		{
-			Element paymentInstanceNode = (Element) (paymentInstanceNodes.item(i));
-
-			try
-			{
-				entry = new PaymentInstanceDBEntry(paymentInstanceNode);
-				if (entry.isVerified())
-				{
-					paymentInstances.addElement(entry);
-				}
-				else
-				{
-					LogHolder.log(LogLevel.ERR, LogType.MISC,
-								  "Cannot verify the signature for " +
-								  ClassUtil.getShortClassName(PaymentInstanceDBEntry.class) + " entry: " +
-								  XMLUtil.toString(paymentInstanceNode));
-				}
-			}
-			catch (Exception e)
-			{
-				/* an error while parsing the node occured -> we don't use this payment instance */
-				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Error in PaymentInstance XML node.", e);
-			}
-		}
-		return paymentInstances;
+		return getPaymentInstances(true);
 	}
 
 	public PaymentInstanceDBEntry getPaymentInstance(String a_piID) throws Exception
@@ -1080,52 +1040,63 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		Element infoServicesNode = (Element) (infoServicesNodes.item(0));
 		NodeList infoServiceNodes =
 			infoServicesNode.getElementsByTagName(XMLUtil.getXmlElementName(a_getter.m_dbEntryClass));
-		Hashtable infoServices = new Hashtable();
+		Hashtable entries = new Hashtable();
 		AbstractDistributableCertifiedDatabaseEntry currentEntry;
 
 		for (int i = 0; i < infoServiceNodes.getLength(); i++)
 		{
-			Element infoServiceNode = (Element) (infoServiceNodes.item(i));
+			Element entryNode = (Element) (infoServiceNodes.item(i));
 			try
 			{
 				if (a_getter.m_dbEntryClass == InfoServiceDBEntry.class)
 				{
-					currentEntry = new InfoServiceDBEntry(infoServiceNode, a_getter.m_bJAPContext);
+					currentEntry = new InfoServiceDBEntry(entryNode, a_getter.m_bJAPContext);
 				}
 				else if (a_getter.m_dbEntryClass == MixCascade.class)
 				{
 					if (a_getter.m_bJAPContext)
 					{
-						currentEntry = new MixCascade(infoServiceNode, Long.MAX_VALUE);
+						currentEntry = new MixCascade(entryNode, Long.MAX_VALUE);
 					}
 					else
 					{
-						currentEntry = new MixCascade(infoServiceNode);
+						currentEntry = new MixCascade(entryNode);
+					}
+				}
+				else if (a_getter.m_dbEntryClass == PaymentInstanceDBEntry.class)
+				{
+					if (a_getter.m_bJAPContext)
+					{
+						currentEntry = new PaymentInstanceDBEntry(entryNode, Long.MAX_VALUE);
+					}
+					else
+					{
+						currentEntry = new PaymentInstanceDBEntry(entryNode);
 					}
 				}
 				else
 				{
 					if (a_getter.m_bJAPContext)
 					{
-						currentEntry = new MixInfo(infoServiceNode, Long.MAX_VALUE, false);
+						currentEntry = new MixInfo(entryNode, Long.MAX_VALUE, false);
 					}
 					else
 					{
-						currentEntry = new MixInfo(infoServiceNode);
+						currentEntry = new MixInfo(entryNode);
 					}
 				}
 
 
 				if (currentEntry.isVerified())
 				{
-					infoServices.put(currentEntry.getId(), currentEntry);
+					entries.put(currentEntry.getId(), currentEntry);
 				}
 				else
 				{
 					LogHolder.log(LogLevel.ERR, LogType.MISC,
 								  "Cannot verify the signature for " +
 								  ClassUtil.getShortClassName(a_getter.m_dbEntryClass) + " entry: " +
-								  XMLUtil.toString(infoServiceNode));
+								  XMLUtil.toString(entryNode));
 				}
 			}
 			catch (Exception e)
@@ -1136,7 +1107,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 							  " XML node:" + e.toString());
 			}
 		}
-		return infoServices;
+		return entries;
 	}
 
 	public Hashtable getInfoServices(boolean a_bJAPClientContext) throws Exception
@@ -1156,6 +1127,16 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		getter.m_postFile = "/cascades";
 		return getEntries(getter);
 	}
+
+	public Hashtable getPaymentInstances(boolean a_bJAPClientContext) throws Exception
+	{
+		EntryGetter getter = new EntryGetter();
+		getter.m_bJAPContext = a_bJAPClientContext;
+		getter.m_dbEntryClass = PaymentInstanceDBEntry.class;
+		getter.m_postFile = "/paymentinstances";
+		return getEntries(getter);
+	}
+
 
 	public Hashtable getMixes(boolean a_bJAPClientContext) throws Exception
 	{
