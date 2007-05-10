@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.08.031"; //Never change the layout of this line!
+	public static final String aktVersion = "00.08.032"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -287,7 +287,6 @@ public final class JAPConstants
 	public final static String CONFIG_MIN = "min";
 	public final static String CONFIG_MAX = "max";
 	public final static String CONFIG_PAYMENT = "Payment";
-	public final static String CONFIG_PAYMENT_INSTANCES = "PaymentInstances";
 	public final static String CONFIG_ENCRYPTED_DATA = "EncryptedData";
 	public final static String CONFIG_JAP_FORWARDING_SETTINGS = "JapForwardingSettings";
 

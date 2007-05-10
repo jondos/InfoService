@@ -41,12 +41,14 @@ import anon.pay.xml.XMLJapPublicKey;
 import anon.util.IMiscPasswordReader;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
+import anon.infoservice.Database;
 import anon.util.captcha.ICaptchaSender;
 import anon.util.captcha.IImageEncodedCaptcha;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.infoservice.MixCascade;
+import java.util.Hashtable;
 
 /**
  * This class encapsulates a collection of accounts. One of the accounts in the collection
@@ -103,7 +105,6 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	private static PayAccountsFile ms_AccountsFile = null;
 
 	private Vector m_paymentListeners = new Vector();
-	private Vector m_knownPIs = new Vector();
 
 	private MyAccountListener m_MyAccountListener = new MyAccountListener();
 
@@ -651,9 +652,6 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		XMLAccountCertificate cert = biConn.register(xmlKey, a_keyPair.getPrivate());
 		biConn.disconnect();
 
-		//Add PI to the list of known PIs
-		addKnownPI(a_bi);
-
 		// add the new account to the accountsFile
 		PayAccount newAccount = new PayAccount(cert, a_keyPair.getPrivate(), a_bi);
 		addAccount(newAccount);
@@ -698,63 +696,18 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		}
 	}
 
-	/**
-	 * Gets the list of known Payment Instances
-	 * @return Enumeration
-	 */
-	public Enumeration getKnownPIs()
-	{
-		return m_knownPIs.elements();
-	}
-
-	/**
-	 * Adds a payment instance to the list of known payment instances
-	 */
-	public void addKnownPI(PaymentInstanceDBEntry a_bi)
-	{
-		boolean exists = false;
-
-		for (int i = 0; i < m_knownPIs.size(); i++)
-		{
-			if ( ( (PaymentInstanceDBEntry) m_knownPIs.elementAt(i)).getId().equals(a_bi.getId()))
-			{
-				exists = true;
-			}
-		}
-		if (!exists)
-		{
-			m_knownPIs.addElement(a_bi);
-		}
-	}
 
 	public Vector getPaymentInstances()
 	{
-		Vector vecPIs = InfoServiceHolder.getInstance().getPaymentInstances();
-
-		if (vecPIs.size() > 0)
-		{
-			for (int i = 0; i < vecPIs.size(); i++)
-			{
-				addKnownPI( (PaymentInstanceDBEntry) vecPIs.elementAt(i));
-			}
-		}
-		else
-		{
-			//If no infoservice could give us information about the PI, get it from the list of known PIs
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-						  "Could not get payment instances from InfoService, trying config file");
-		}
-
-		return (Vector)m_knownPIs.clone();
+		return Database.getInstance(PaymentInstanceDBEntry.class).getEntryList();
 	}
 
 	public PaymentInstanceDBEntry getBI(String a_piID)
 	{
-		PaymentInstanceDBEntry theBI = null;
+		PaymentInstanceDBEntry theBI =
+			(PaymentInstanceDBEntry)Database.getInstance(PaymentInstanceDBEntry.class).getEntryById(a_piID);
 
-		//First, try to get the BI from the Infoservice
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Trying to get " + a_piID + " from InfoService");
-
+		/*
 		try
 		{
 			theBI = InfoServiceHolder.getInstance().getPaymentInstance(a_piID);
@@ -764,26 +717,6 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		catch (Exception e)
 		{
 			// ignore
-		}
-
-
-		//If no infoservice could give us information about the PI, get it from the list of known PIs
-		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-					  "Could not get " + a_piID + " from InfoService, trying config file");
-
-		for (int i = 0; i < m_knownPIs.size(); i++)
-		{
-			PaymentInstanceDBEntry possibleBI = (PaymentInstanceDBEntry) m_knownPIs.elementAt(i);
-			if (possibleBI.getId().equals(a_piID))
-			{
-				theBI = possibleBI;
-				break;
-			}
-		}
-		/*
-		if (theBI == null)
-		{
-			throw new Exception("Cannot get payment instance neither from InfoService nor from config file");
 		}*/
 
 		return theBI;

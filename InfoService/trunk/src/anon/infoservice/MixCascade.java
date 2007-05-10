@@ -47,7 +47,6 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.crypto.IVerifyable;
-import anon.pay.xml.XMLPriceCertificate;
 import java.util.Hashtable;
 import anon.pay.AIControlChannel;
 

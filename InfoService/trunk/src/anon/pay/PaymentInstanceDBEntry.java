@@ -93,12 +93,17 @@ public class PaymentInstanceDBEntry extends AbstractDistributableCertifiedDataba
 
 	private JAPCertificate m_cert; //= JAPCertificate.getInstance("certificates/bi.cer");
 
-	/** Creates a PaymentInstanceDBEntry which represents a payment instance.*/
 	public PaymentInstanceDBEntry(Element elemRoot) throws XMLParseException
 	{
-		super(System.currentTimeMillis() + Constants.TIMEOUT_PAYMENT_INSTANCE);
-		XMLUtil.assertNotNull(elemRoot);
+		this(elemRoot, 0);
+	}
 
+	/** Creates a PaymentInstanceDBEntry which represents a payment instance.*/
+	public PaymentInstanceDBEntry(Element elemRoot, long a_expireTime) throws XMLParseException
+	{
+		super(a_expireTime == 0 ?
+			  System.currentTimeMillis() + Constants.TIMEOUT_PAYMENT_INSTANCE : a_expireTime);
+		XMLUtil.assertNotNull(elemRoot);
 		String name;
 
 		/* store the XML representation */
