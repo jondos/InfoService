@@ -619,7 +619,7 @@ public class PaymentMainPanel extends FlippingPanel
 		 *
 		 * @param usingCurrentAccount boolean
 		 */
-		public boolean accountCertRequested(MixCascade a_connectedCascade)
+		public boolean accountCertRequested(final MixCascade a_connectedCascade)
 		{
 			PayAccountsFile accounts = PayAccountsFile.getInstance();
 			boolean bSuccess = true;
@@ -670,7 +670,7 @@ public class PaymentMainPanel extends FlippingPanel
 							strMessage + JAPMessages.getString("payCreateAccountQuestion"), adapter);
 						if (answer)
 						{
-							m_view.showConfigDialog(JAPConf.PAYMENT_TAB, new Boolean(true));
+							m_view.showConfigDialog(JAPConf.PAYMENT_TAB, a_connectedCascade.getPIID());
 						}
 					}
 				};

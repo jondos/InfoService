@@ -59,6 +59,7 @@ import logging.LogLevel;
 import logging.LogType;
 import jap.AbstractJAPMainView;
 import jap.ISplashResponse;
+import jap.forward.JAPRoutingSettings;
 
 /** This is the main class of the JAP project. It starts everything. It can be inherited by another
  *  class that wants to initialize platform dependend features, e.g. see
@@ -109,7 +110,15 @@ public class JAP
 			}
 			for (int i = 0; i < argv.length; i++)
 			{
-				m_arstrCmdnLnArgs.put(argv[i], argv[i]);
+				if (i + 1 < argv.length && !argv[i + 1].startsWith("-"))
+				{
+					// this option has an argument
+					m_arstrCmdnLnArgs.put(argv[i], argv[i + 1]);
+				}
+				else
+				{
+					m_arstrCmdnLnArgs.put(argv[i], "");
+				}
 			}
 		}
 		else
@@ -162,6 +171,7 @@ public class JAP
 			System.out.println("--showDialogFormat       Show and set dialog format options.");
 			System.out.println("--noSplash, -s           Suppress splash screen on startup.");
 			System.out.println("--presenation, -p        Presentation mode (slight GUI changes).");
+			System.out.println("--forwarder, -f {port}   Act as a forwarder on a specified port.");
 			System.out.println("--config, -c {Filename}: Force JAP to use a specific configuration file.");
 			System.exit(0);
 		}
@@ -378,26 +388,19 @@ public class JAP
 				cmdArgs += " " + m_temp[i];
 			}
 			m_controller.setCommandLineArgs(cmdArgs);
-
 		}
+
 		String configFileName = null;
 		/* check, whether there is the -config parameter, which means the we use userdefined config
 		 * file
 		 */
-		if (m_temp != null)
+		if ((configFileName = getArgumentValue("--config")) == null)
 		{
-			for (int i = 0; i < m_temp.length; i++)
-			{
-				if (m_temp[i].equalsIgnoreCase("-config") || m_temp[i].equalsIgnoreCase("--config") ||
-					m_temp[i].equalsIgnoreCase("-c"))
-				{
-					if (i + 1 < m_temp.length)
-					{
-						configFileName = m_temp[i + 1];
-					}
-					break;
-				}
-			}
+			configFileName = getArgumentValue("-c");
+		}
+		if (configFileName != null)
+		{
+			LogHolder.log(LogLevel.NOTICE, LogType.MISC, "Loading config file '" + configFileName +"'.");
 		}
 
 		/* check, whether there is the -forwarding_state parameter, which extends
@@ -413,6 +416,26 @@ public class JAP
 		// load settings from config file
 		splash.setText(JAPMessages.getString(MSG_LOADING_SETTINGS));
 		m_controller.loadConfigFile(configFileName, loadPay, splash);
+		// configure forwarding server
+		String forwardingServerPort;
+		if ((forwardingServerPort = getArgumentValue("--forwarder")) == null)
+		{
+			forwardingServerPort = getArgumentValue("-f");
+		}
+		if (forwardingServerPort != null)
+		{
+			try
+			{
+				JAPModel.getInstance().getRoutingSettings().setServerPort(
+								Integer.parseInt(forwardingServerPort));
+			}
+			catch (NumberFormatException a_e)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
+			}
+		}
+
+
 
 		splash.setText(JAPMessages.getString(MSG_INIT_DLL));
 		JAPDll.init();
@@ -464,6 +487,12 @@ public class JAP
 			viewIconified = new JAPViewIconified((AbstractJAPMainView)view);
 			// Register the views where they are needed
 			view.registerViewIconified(viewIconified);
+		}
+
+		// start forwarding server if requested
+		if (isArgumentSet("--forwarder") || isArgumentSet("-f"))
+		{
+			m_controller.enableForwardingServer(true);
 		}
 
 		//Init Crypto...
@@ -546,6 +575,17 @@ public class JAP
 		{
 			view.setVisible(true);
 		}
+	}
+
+	public String getArgumentValue(String a_argument)
+	{
+		String value = (String)m_arstrCmdnLnArgs.get(a_argument);
+		if (value != null && value.trim().length() == 0)
+		{
+			value = null;
+		}
+
+		return value;
 	}
 
 	public boolean isArgumentSet(String a_argument)

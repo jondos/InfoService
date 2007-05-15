@@ -831,8 +831,7 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 				catch (ClientForwardException e)
 				{
 					/* there was an error while receiving the connection offer */
-					LogHolder.log(LogLevel.ERR, LogType.NET,
-								  "JAPConfRouting: showConfigClientDialogGetOffer: " + e.toString());
+					LogHolder.log(LogLevel.ERR, LogType.NET, e);
 					if (e.getErrorCode() == ClientForwardException.ERROR_CONNECTION_ERROR)
 					{
 						occuredError.addElement(

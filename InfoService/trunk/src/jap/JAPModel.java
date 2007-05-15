@@ -37,6 +37,7 @@ import anon.infoservice.ProxyInterface;
 import anon.util.ResourceLoader;
 import anon.infoservice.ImmutableProxyInterface;
 import gui.JAPDll;
+import gui.dialog.JAPDialog;
 import java.util.Observable;
 import jap.forward.JAPRoutingSettings;
 import anon.infoservice.IMutableProxyInterface;
@@ -825,8 +826,11 @@ public final class JAPModel extends Observable
 			synchronized (this)
 			{
 				FontResize resize = new FontResize(m_fontSize, a_fontSize);
-				GUIUtils.resizeAllFonts(1.0f / (1.0f + 0.1f * resize.getOldSize()));
-				GUIUtils.resizeAllFonts(1.0f + 0.1f * resize.getNewSize());
+				if (!JAPDialog.isConsoleOnly())
+				{
+					GUIUtils.resizeAllFonts(1.0f / (1.0f + 0.1f * resize.getOldSize()));
+					GUIUtils.resizeAllFonts(1.0f + 0.1f * resize.getNewSize());
+				}
 				m_fontSize = a_fontSize;
 				setChanged();
 				notifyObservers(resize);

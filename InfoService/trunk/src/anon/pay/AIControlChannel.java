@@ -328,9 +328,6 @@ public class AIControlChannel extends XmlControlChannel
 	  String mixID;
 	  XMLPriceCertificate priceCert;
 
-
-
-
 	  if (PayAccountsFile.getInstance().getActiveAccount() == null ||
 		  !PayAccountsFile.getInstance().getActiveAccount().getBI().getId().equals(
 				  m_connectedCascade.getPIID()))
@@ -351,7 +348,8 @@ public class AIControlChannel extends XmlControlChannel
 		  }
 	  }
 
-	  if (!PayAccountsFile.getInstance().signalAccountRequest(m_connectedCascade))
+	  if (!PayAccountsFile.getInstance().signalAccountRequest(m_connectedCascade) ||
+		  PayAccountsFile.getInstance().getActiveAccount() == null)
 	  {
 		  return false;
 	  }

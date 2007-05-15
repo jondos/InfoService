@@ -4096,7 +4096,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 * Attention: If there is an active forwarding client running, nothing is done and this method
 	 * returns always false. Run a forwarding server and a client at the same time is not supported.
 	 * This method returns always immedailly and the real job is done in a background thread.
-	 * @param a_activate True, if ther server shall be activated or false, if it shall be disabled.
+	 * @param a_activate True, if there server shall be activated or false, if it shall be disabled.
 	 *
 	 */
 	public synchronized void enableForwardingServer(boolean a_activate)
@@ -4104,9 +4104,16 @@ public final class JAPController extends Observable implements IProxyListener, O
 		if (!m_bForwarderNotExplain && a_activate)
 		{
 			/* show a message box with the explanation of the forwarding stuff */
-			JAPDialog.LinkedCheckBox checkbox = new JAPDialog.LinkedCheckBox(false);
+			JAPDialog.LinkedCheckBox checkbox = new JAPDialog.LinkedCheckBox(false)
+			{
+				public boolean isOnTop()
+				{
+					return true;
+				}
+			};
+
 			JAPDialog.showMessageDialog(getViewWindow(), JAPMessages.getString("forwardingExplainMessage"),
-				JAPMessages.getString("forwardingExplainMessageTitle"), checkbox);
+										JAPMessages.getString("forwardingExplainMessageTitle"), checkbox);
 
 			m_bForwarderNotExplain = checkbox.getState();
 		}
@@ -4133,52 +4140,62 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						public void run()
 						{
-							int msgId = m_View.addStatusMsg(JAPMessages.getString(
-								"controllerStatusMsgRoutingStartServer"), JAPDialog.MESSAGE_TYPE_INFORMATION, false);
-							int registrationStatus = JAPModel.getInstance().getRoutingSettings().
-								startPropaganda(true);
-							m_View.removeStatusMsg(msgId);
-							/* if there occured an error while registration, show a message box */
-							switch (registrationStatus)
+							try
 							{
-								case JAPRoutingSettings.REGISTRATION_NO_INFOSERVICES:
+								int msgId = getView().addStatusMsg(JAPMessages.getString(
+									"controllerStatusMsgRoutingStartServer"),
+									JAPDialog.MESSAGE_TYPE_INFORMATION, false);
+								int registrationStatus = JAPModel.getInstance().getRoutingSettings().
+									startPropaganda(true);
+								getView().removeStatusMsg(msgId);
+								/* if there occured an error while registration, show a message box */
+								switch (registrationStatus)
 								{
-									JAPDialog.showErrorDialog(getViewWindow(),
-										JAPMessages.getString(
-											"settingsRoutingServerRegistrationEmptyListError"),
-										LogType.MISC);
-									break;
+									case JAPRoutingSettings.REGISTRATION_NO_INFOSERVICES:
+									{
+										JAPDialog.showErrorDialog(getViewWindow(),
+											JAPMessages.getString(
+												"settingsRoutingServerRegistrationEmptyListError"),
+											LogType.MISC);
+										break;
+									}
+									case JAPRoutingSettings.REGISTRATION_UNKNOWN_ERRORS:
+									{
+										JAPDialog.showErrorDialog(getViewWindow(),
+											JAPMessages.getString(
+											"settingsRoutingServerRegistrationUnknownError"),
+											LogType.MISC);
+										break;
+									}
+									case JAPRoutingSettings.REGISTRATION_INFOSERVICE_ERRORS:
+									{
+										JAPDialog.showErrorDialog(getViewWindow(),
+											JAPMessages.getString(
+												"settingsRoutingServerRegistrationInfoservicesError"),
+											LogType.MISC);
+										break;
+									}
+									case JAPRoutingSettings.REGISTRATION_VERIFY_ERRORS:
+									{
+										JAPDialog.showErrorDialog(getViewWindow(),
+											JAPMessages.getString(
+												"settingsRoutingServerRegistrationVerificationError"),
+											LogType.MISC);
+										break;
+									}
+									case JAPRoutingSettings.REGISTRATION_SUCCESS:
+									{
+										/* show a success message in the status bar */
+										m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(
+											JAPMessages.getString(
+											"controllerStatusMsgRoutingStartServerSuccess"),
+											JAPDialog.MESSAGE_TYPE_INFORMATION, true);
+									}
 								}
-								case JAPRoutingSettings.REGISTRATION_UNKNOWN_ERRORS:
-								{
-									JAPDialog.showErrorDialog(getViewWindow(),
-										JAPMessages.getString("settingsRoutingServerRegistrationUnknownError"),
-										LogType.MISC);
-									break;
-								}
-								case JAPRoutingSettings.REGISTRATION_INFOSERVICE_ERRORS:
-								{
-									JAPDialog.showErrorDialog(getViewWindow(),
-										JAPMessages.getString(
-											"settingsRoutingServerRegistrationInfoservicesError"),
-										LogType.MISC);
-									break;
-								}
-								case JAPRoutingSettings.REGISTRATION_VERIFY_ERRORS:
-								{
-									JAPDialog.showErrorDialog(getViewWindow(),
-										JAPMessages.getString(
-											"settingsRoutingServerRegistrationVerificationError"),
-										LogType.MISC);
-									break;
-								}
-								case JAPRoutingSettings.REGISTRATION_SUCCESS:
-								{
-									/* show a success message in the status bar */
-									m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(
-										JAPMessages.getString("controllerStatusMsgRoutingStartServerSuccess"),
-										JAPDialog.MESSAGE_TYPE_INFORMATION, true);
-								}
+							}
+							catch (Exception a_e)
+							{
+								LogHolder.log(LogLevel.EXCEPTION, LogType.THREAD, a_e);
 							}
 						}
 					});
@@ -4188,7 +4205,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				else
 				{
 					/* opening the server port was not successful -> show an error message */
-					m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(JAPMessages.getString(
+					m_iStatusPanelMsgIdForwarderServerStatus = getView().addStatusMsg(JAPMessages.getString(
 						"controllerStatusMsgRoutingStartServerError"), JAPDialog.MESSAGE_TYPE_ERROR, true);
 					JAPDialog.showErrorDialog(getViewWindow(),
 											  JAPMessages.getString("settingsRoutingStartServerError"),
@@ -4203,7 +4220,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				 */
 				JAPModel.getInstance().getRoutingSettings().setRoutingMode(JAPRoutingSettings.
 					ROUTING_MODE_DISABLED);
-				m_iStatusPanelMsgIdForwarderServerStatus = m_View.addStatusMsg(JAPMessages.getString(
+				m_iStatusPanelMsgIdForwarderServerStatus = getView().addStatusMsg(JAPMessages.getString(
 					"controllerStatusMsgRoutingServerStopped"), JAPDialog.MESSAGE_TYPE_INFORMATION, true);
 			}
 		}
