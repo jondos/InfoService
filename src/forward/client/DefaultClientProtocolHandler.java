@@ -64,7 +64,7 @@ public class DefaultClientProtocolHandler
 	 * This is the maximum net size of a protocol message in bytes. Bigger messages are not accepted
 	 * and causes an exception.
 	 */
-	private static final int MAXIMUM_PROTOCOLMESSAGE_SIZE = 100000;
+	private static final int MAXIMUM_PROTOCOLMESSAGE_SIZE = 1000000;
 
 	/**
 	 * This is the state after the physical connection to the forwarder is established and the
@@ -491,7 +491,7 @@ public class DefaultClientProtocolHandler
 			{
 				throw (new IOException("Error while reading message length."));
 			}
-			if ( (incomingMessageLength < 0) || (incomingMessageLength > MAXIMUM_PROTOCOLMESSAGE_SIZE))
+			if ( (incomingMessageLength < 0)) // || (incomingMessageLength > MAXIMUM_PROTOCOLMESSAGE_SIZE))
 			{
 				/* something is wrong, this is not a message for us -> throw an exception */
 				throw (new ClientForwardException(ClientForwardException.ERROR_PROTOCOL_ERROR,

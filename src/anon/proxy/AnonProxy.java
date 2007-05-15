@@ -753,14 +753,14 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	public void connectionEstablished(AnonServerDescription a_serverDescription)
 	{
-		LogHolder.log(LogLevel.NOTICE, LogType.NET,
+		LogHolder.log(LogLevel.ALERT, LogType.NET,
 					  "AnonProxy received connectionEstablished to '" + a_serverDescription + "'.");
 		fireConnectionEstablished(a_serverDescription);
 	}
 
 	public void disconnected()
 	{
-		LogHolder.log(LogLevel.NOTICE, LogType.NET, "AnonProxy was disconnected.");
+		LogHolder.log(LogLevel.ALERT, LogType.NET, "AnonProxy was disconnected.");
 		fireDisconnected();
 	}
 
