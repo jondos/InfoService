@@ -71,6 +71,8 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 	public static final int TRUST_DEFAULT = 20;
 	public static final int TRUST_EXCLUSIVE = 30;
 
+	public static final long TRUST_MODEL_ALL = 0;
+
 	private static final String XML_ELEM_PAY = "Payment";
 	private static final String XML_ELEM_EXPIRED = "ExpiredCerts";
 	private static final String XML_ATTR_CURRENT_TRUST_MODEL = "currentTrustModel";
@@ -365,7 +367,6 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 			}
 			ms_currentTrustModel = a_trustModel;
 		}
-
 	}
 
 	public static TrustModel getCurrentTrustModel()
