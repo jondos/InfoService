@@ -79,6 +79,7 @@ import jap.JAPModel;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import jap.TrustModel;
 
 /**
  * This is implementation of the dialog shown when starting a forwarded connection. The dialog is
@@ -110,6 +111,9 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 	public JAPRoutingEstablishForwardedConnectionDialog(Component a_parentComponent)
 	{
 		m_parentComponent = a_parentComponent;
+
+		/** @todo forwarder does not yet support trust models */
+		TrustModel.setCurrentTrustModel(TrustModel.TRUST_MODEL_ALL);
 
 		/* show the whole dialog including all steps */
 		boolean endOfDialogReached = false;
