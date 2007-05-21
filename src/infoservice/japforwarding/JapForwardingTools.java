@@ -131,22 +131,19 @@ public class JapForwardingTools
 				NodeList japForwarderNodes = doc.getElementsByTagName("JapForwarder");
 				if (japForwarderNodes.getLength() == 0)
 				{
-					throw (new Exception(
-						"JapForwardingTools: addForwarder: Error in XML structure (JapForwarder node)."));
+					throw new Exception("Error in XML structure (JapForwarder node).");
 				}
 				Element japForwarderNode = (Element) (japForwarderNodes.item(0));
 				NodeList plainInformationNodes = japForwarderNode.getElementsByTagName("PlainInformation");
 				if (plainInformationNodes.getLength() == 0)
 				{
-					throw (new Exception(
-						"JapForwardingTools: addForwarder: Error in XML structure (PlainInformation node)."));
+					throw new Exception("Error in XML structure (PlainInformation node).");
 				}
 				Element plainInformationNode = (Element) (plainInformationNodes.item(0));
 				NodeList portNodes = plainInformationNode.getElementsByTagName("Port");
 				if (portNodes.getLength() == 0)
 				{
-					throw (new Exception(
-						"JapForwardingTools: addForwarder: Error in XML structure (Port node)."));
+					throw new Exception("Error in XML structure (Port node).");
 				}
 				Element portNode = (Element) (portNodes.item(0));
 				int portNumber = Integer.parseInt(portNode.getFirstChild().getNodeValue());

@@ -827,7 +827,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				"      <!--\n" +
 				"        h1 {color:blue; text-align:center;}\n" +
 				"        b,h3,h4,h5 {font-weight:bold; color:maroon;}\n" +
-				"        body {margin-top:0px; margin-left:0px; margin-width:0px; margin-height:0px; background-color:white; color:black;}\n" +
+				"        body {margin-top:0px; margin-left:5px; margin-width:0px; margin-height:0px; background-color:white; color:black;}\n" +
 				"        h1,h2,h3,h4,h5,p,address,ol,ul,tr,td,th,blockquote,body,.smalltext,.leftcol {font-family:geneva,arial,helvetica,sans-serif;}\n" +
 				"        p,address,ol,ul,tr,td,th,blockquote {font-size:11pt;}\n" +
 				"        .leftcol,.smalltext {font-size: 10px;}\n" +
@@ -852,8 +852,10 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				"  </HEAD>\n" +
 				"  <BODY BGCOLOR=\"#FFFFFF\">\n" +
 				"    <P ALIGN=\"right\">" + (new Date()).toString() + "</P>\n" +
-				"    <H2>JAP - Cascade Status</H2><BR><BR>\n" +
-				"    <TABLE ALIGN=\"center\" BORDER=\"0\">\n" +
+				"    <H2>InfoService Status (" + Configuration.getInstance().getID() + ")</H2>\n" +
+				"    <P>InfoService Name: " + Configuration.getInstance().getOwnName()  + "</P><BR>\n" +
+				//"    <TABLE ALIGN=\"center\" BORDER=\"0\">\n" +
+				"    <TABLE BORDER=\"0\">\n" +
 				"      <COLGROUP>\n" +
 				"        <COL WIDTH=\"20%\">\n" +
 				"        <COL WIDTH=\"15%\">\n" +
