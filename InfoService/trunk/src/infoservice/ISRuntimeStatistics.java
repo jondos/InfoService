@@ -2,6 +2,8 @@ package infoservice;
 
 import anon.util.MyStringBuilder;
 import java.text.NumberFormat;
+import anon.infoservice.Database;
+import infoservice.japforwarding.ForwarderDBEntry;
 
 /**
  * This class collects some statistic information about the IS runtime.*/
@@ -99,6 +101,9 @@ final class ISRuntimeStatistics
 		sb.append(ms_NumberFormat.format(ms_lNrOfGetPaymentRequests));
 		sb.append("</td></tr><tr><td>Unknown Requests: </td><td>");
 		sb.append(ms_NumberFormat.format(ms_lNrOfUnknownRequests));
+		sb.append("</td></tr><tr><td><br></td><td>");
+		sb.append("</td></tr><tr><td>Active forwarders: </td><td>");
+		sb.append(ms_NumberFormat.format(Database.getInstance(ForwarderDBEntry.class).getNumberOfEntries()));
 		sb.append("</td></tr><tr><td><br></td><td>");
 		sb.append("</td></tr><tr><td>Total Memory: </td><td>");
 		sb.append(ms_NumberFormat.format(Runtime.getRuntime().totalMemory()));
