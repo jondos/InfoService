@@ -50,7 +50,10 @@ import logging.LogType;
  */
 public class InfoServiceDistributor implements IDistributor
 {
-	private static final long TIMEOUT_QUEUE = 5000l; // time after that to look for jobs; for debugging only
+	private static final long TIMEOUT_QUEUE = 50000; // time after that to look for jobs; for debugging only
+
+	private static final int CONNECTION_TIMEOUT = 10000;
+	private static final int BLOCKING_FACTOR = 5;
 
   /**
    * Stores the instance of InfoServiceDatabase (Singleton).
@@ -363,12 +366,12 @@ public class InfoServiceDistributor implements IDistributor
            * currentInterface is a direct reference to that stored in the database of all
            * infoservices.
            */
-          //currentInterface.setUseInterface(false);
+          currentInterface.blockInterface(CONNECTION_TIMEOUT * BLOCKING_FACTOR);
           LogHolder.log(LogLevel.ERR, LogType.NET,
                   "Could not reach InfoService " +
                   a_infoservice.getId() + " at " + currentInterface.getHost() + ":" +
-                  Integer.toString(currentInterface.getPort())); // +
-//                  " -> invalidate that interface.");
+                  Integer.toString(currentInterface.getPort())  +
+                 " -> temporarily invalidate that interface.");
         }
       }
     }
@@ -389,6 +392,7 @@ public class InfoServiceDistributor implements IDistributor
     try {
       connection = HTTPConnectionFactory.getInstance().createHTTPConnection(
 			a_listener, a_information.getPostEncoding(), false);
+	  connection.setTimeout(CONNECTION_TIMEOUT);
       /* post the information */
       HTTPResponse response = connection.Post(a_information.getPostFile(), a_information.getPostData());
       /* wait for the response with the status code */

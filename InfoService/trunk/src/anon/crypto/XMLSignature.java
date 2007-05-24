@@ -1270,6 +1270,11 @@ public final class XMLSignature implements IXMLEncodable
 		}
 	}
 
+	public static byte[] toCanonical(Node inputNode) throws XMLParseException
+	{
+		return toCanonical(inputNode, false);
+	}
+
 	/**
 	 * Creates a byte array from an XML node tree.
 	 * @param inputNode The node (incl. the whole tree) which is flattened to a byte array.
@@ -1277,10 +1282,10 @@ public final class XMLSignature implements IXMLEncodable
 	 * @return the node as a byte array (incl. the whole tree).
 	 * @exception XMLParseException if the node could not be properly transformed into bytes
 	 */
-	public static byte[] toCanonical(Node inputNode) throws XMLParseException
+	public static byte[] toCanonical(Node inputNode, boolean a_bKeepSpaces) throws XMLParseException
 	{
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		if (makeCanonical(inputNode, out, false, null) == -1)
+		if (makeCanonical(inputNode, out, false, null, a_bKeepSpaces) == -1)
 		{
 			throw new XMLParseException(inputNode.getNodeName(), "Could not make the node canonical!");
 		}
@@ -1316,6 +1321,12 @@ public final class XMLSignature implements IXMLEncodable
 		}
 	}
 
+	private static int makeCanonical(Node node, OutputStream o, boolean bSiblings, Node excludeNode)
+	{
+		return makeCanonical(node, o, bSiblings, excludeNode, false);
+	}
+
+
 	/**
 	 * @todo find a better way to get the data of the node as a bytestream, for
 	 *       compatibility reasons we use this now; it cannot be verifed that this canonicalization
@@ -1328,7 +1339,7 @@ public final class XMLSignature implements IXMLEncodable
 	 * @see http://www.w3.org/TR/xmldsig-core/#sec-CanonicalizationMethod
 	 * @see http://www.w3.org/TR/xml-c14n
 	 */
-	private static int makeCanonical(Node node, OutputStream o, boolean bSiblings, Node excludeNode)
+	private static int makeCanonical(Node node, OutputStream o, boolean bSiblings, Node excludeNode, boolean a_bKeepSpaces)
 	{
 		try
 		{
@@ -1376,7 +1387,7 @@ public final class XMLSignature implements IXMLEncodable
 				o.write('>');
 				if (elem.hasChildNodes())
 				{
-					if (makeCanonical(elem.getFirstChild(), o, true, excludeNode) == -1)
+					if (makeCanonical(elem.getFirstChild(), o, true, excludeNode, a_bKeepSpaces) == -1)
 					{
 						return -1;
 					}
@@ -1385,15 +1396,22 @@ public final class XMLSignature implements IXMLEncodable
 				o.write('/');
 				o.write(elem.getNodeName().getBytes());
 				o.write('>');
-				if (bSiblings && makeCanonical(elem.getNextSibling(), o, true, excludeNode) == -1)
+				if (bSiblings && makeCanonical(elem.getNextSibling(), o, true, excludeNode, a_bKeepSpaces) == -1)
 				{
 					return -1;
 				}
 			}
 			else if (node.getNodeType() == Node.TEXT_NODE)
 			{
-				o.write(node.getNodeValue().trim().getBytes());
-				if (makeCanonical(node.getNextSibling(), o, true, excludeNode) == -1)
+				if (a_bKeepSpaces)
+				{
+					o.write(node.getNodeValue().getBytes());
+				}
+				else
+				{
+					o.write(node.getNodeValue().trim().getBytes());
+				}
+				if (makeCanonical(node.getNextSibling(), o, true, excludeNode, a_bKeepSpaces) == -1)
 				{
 					return -1;
 				}
@@ -1401,7 +1419,7 @@ public final class XMLSignature implements IXMLEncodable
 			}
 			else if (node.getNodeType() == Node.COMMENT_NODE)
 			{
-				if (makeCanonical(node.getNextSibling(), o, true, excludeNode) == -1)
+				if (makeCanonical(node.getNextSibling(), o, true, excludeNode, a_bKeepSpaces) == -1)
 				{
 					return -1;
 				}
