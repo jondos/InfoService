@@ -1253,6 +1253,11 @@ public class XMLUtil
 		return element;
 	}
 
+	public static final byte[] createDocumentStructure()
+	{
+		return toByteArrayOutputStream(createDocument()).toByteArray();
+	}
+
 	/**
 	 * Writes an XML-Node to a String. If the node is a Document then the <XML> header is included.
 	 * Since writing was not standardized until JAXP 1.1 different Methods are tried
