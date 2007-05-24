@@ -58,6 +58,7 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	public static final String XML_ELEMENT_NAME = "ListenerInterface";
 	public static final String XML_ELEMENT_CONTAINER_NAME = "ListenerInterfaces";
 
+	private long m_endOfBlocking = 0;
 
 	/**
 	 * This is the host of this interface (hostname or IP).
@@ -335,13 +336,28 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 
 	/**
 	 * Sets if this interface is used or not. If it is not used, further connection
-	 * retries are prevented.
+	 * retries are prevented for a predefined amount of time
 	 * @param a_bUseInterface true if this interface is used; false otherwise
 	 */
 	public void setUseInterface(boolean a_bUseInterface)
 	{
 		m_bUseInterface = a_bUseInterface;
+		if (a_bUseInterface)
+		{
+			m_endOfBlocking = 0;
+		}
 	}
+
+	/**
+	 * Blocks this interface for a specified time. This is useful if the service is temporarily not
+	 * reachable.
+	 * @param a_blockingTime long
+	 */
+	public void blockInterface(long a_blockingTime)
+	{
+		m_endOfBlocking = System.currentTimeMillis() + a_blockingTime;
+	}
+
 
 	/**
 	 * Get the validity of this interface. If it is not valid, further connection
@@ -350,7 +366,8 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	 */
 	public boolean isValid()
 	{
-		return isValidPort(getPort()) && isValidHostname(getHost()) && m_bUseInterface;
+		return isValidPort(getPort()) && isValidHostname(getHost()) && m_bUseInterface &&
+			(m_endOfBlocking < System.currentTimeMillis());
 	}
 
 	/**

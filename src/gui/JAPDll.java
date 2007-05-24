@@ -85,10 +85,12 @@ final public class JAPDll {
 	{
 		try
 		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, "JAPDll: Entering init");
 			String strOSName = System.getProperty("os.name", "");
 			if (strOSName == null // may be null in Java Webstart since version 1.6.0
 				|| strOSName.toLowerCase().indexOf("win") > -1)
 			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, "JAPDll: Setting native library");
 				GUIUtils.setNativeGUILibrary(new GUIUtils.NativeGUILibrary()
 				{
 					public boolean setAlwaysOnTop(Window a_window, boolean a_bOnTop)
@@ -100,19 +102,25 @@ final public class JAPDll {
 					{
 						return isWindowOnTop(a_window);
 					}
-
 				});
 
+				LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, "JAPDll: Checking for forced update");
 				boolean bUpdateDone = false;
 				if (JAPModel.getInstance().getDLLupdate())
 				{
+					LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, "JAPDll: Updating...");
 					update();
 					bUpdateDone = true;
 				}
+
+				LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, "JAPDll: Loading library");
 				System.loadLibrary(DLL_LIBRARY_NAME);
-				if (bUpdateDone && (JAPDll.getDllVersion() == null || // == null means there were problems...
-									JAPDll.getDllVersion().compareTo(JAP_DLL_REQUIRED_VERSION) < 0))
+				LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, "JAPDll: Checking for successful update");
+				String version = JAPDll.getDllVersion();
+				if (bUpdateDone && (version == null || // == null means there were problems...
+									version.compareTo(JAP_DLL_REQUIRED_VERSION) < 0))
 				{
+					LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, "JAPDll: Forcing update!");
 					// update was not successful
 					 JAPModel.getInstance().setDLLupdate(true);
 					 JAPController.getInstance().saveConfigFile();

@@ -2017,7 +2017,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		LogHolder.log(LogLevel.INFO, LogType.MISC, "Try saving configuration.");
 		try
 		{
-			String sb = getConfigurationAsXmlString();
+			Document sb = getConfigurationAsXmlString();
 			if (sb == null)
 			{
 				LogHolder.log(LogLevel.ERR, LogType.MISC,
@@ -2028,8 +2028,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 			{
 				/* JAPModel.getModel().getConfigFile() should always point to a valid configuration file */
 				FileOutputStream f = new FileOutputStream(JAPModel.getInstance().getConfigFile());
-				f.write(sb.getBytes());
-				f.flush();
+				//XMLUtil.formatHumanReadable(doc);
+				//return XMLUtil.toString(doc);
+				XMLUtil.write(sb, f);
+				//((XmlDocument)doc).write(f);
+
+				//f.write(sb.getBytes());
+				//f.flush();
 				f.close();
 			}
 		}
@@ -2077,7 +2082,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	}
 
 
-	String getConfigurationAsXmlString()
+	private Document getConfigurationAsXmlString()
 	{
 		// Save config to xml file
 		// Achtung!! Fehler im Sun-XML --> NULL-Attribute koennen hinzugefuegt werden,
@@ -2392,10 +2397,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 			e.appendChild(JAPModel.getInstance().getRoutingSettings().toXmlElement(doc));
 
-			XMLUtil.formatHumanReadable(doc);
-			//return XMLUtil.toString(doc);
-			return new String(XMLSignature.toCanonical(doc));
-			//((XmlDocument)doc).write(f);
+			return doc;
 		}
 		catch (Throwable ex)
 		{

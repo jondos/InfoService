@@ -60,6 +60,7 @@ import org.w3c.dom.Text;
 import org.xml.sax.InputSource;
 
 import anon.util.Util;
+import anon.crypto.XMLSignature;
 import logging.LogHolder;
 import logging.LogLevel;
 import java.util.Vector;
@@ -932,7 +933,8 @@ public class XMLUtil
 
 		try
 		{
-			bytes = toByteArrayOutputStream(a_inputNode).toByteArray();
+			//bytes = toByteArrayOutputStream(a_inputNode).toByteArray();
+			bytes = XMLSignature.toCanonical(a_inputNode, true);
 		}
 		catch (Exception a_e)
 		{
@@ -954,7 +956,8 @@ public class XMLUtil
 		String strXml;
 		try
 		{
-			strXml = toByteArrayOutputStream(a_node).toString("UTF8");
+			//strXml = toByteArrayOutputStream(a_node).toString("UTF8");
+			strXml = new String(toByteArray(a_node), "UTF8");
 		}
 		catch (Exception a_e)
 		{
@@ -1054,8 +1057,6 @@ public class XMLUtil
 				ms_DocumentBuilderFactory = DocumentBuilderFactory.newInstance();
 			}
 			doc = ms_DocumentBuilderFactory.newDocumentBuilder().parse(a_inputSource);
-
-			//removeComments(doc);
 		}
 		catch (IOException a_e)
 		{
@@ -1068,6 +1069,7 @@ public class XMLUtil
 				a_e.getMessage());
 		}
 
+		//removeComments(doc);
 		return doc;
 	}
 
@@ -1126,7 +1128,7 @@ public class XMLUtil
 	public static void write(Document a_doc, OutputStream a_outputStream) throws IOException
 	{
 		XMLUtil.formatHumanReadable(a_doc);
-		a_outputStream.write(XMLUtil.toString(a_doc).getBytes());
+		a_outputStream.write(toString(a_doc).getBytes());
 		a_outputStream.flush();
 	}
 
@@ -1181,8 +1183,7 @@ public class XMLUtil
 		catch (IOException ex)
 		{
 			throw new XMLParseException(
-				XMLParseException.ROOT_TAG, "Could not parse XML document: " +
-				ex.getMessage());
+				XMLParseException.ROOT_TAG, "Could not parse XML document: " + ex.getMessage());
 		}
 	}
 
@@ -1197,9 +1198,10 @@ public class XMLUtil
 	{
 		ByteArrayInputStream in = new ByteArrayInputStream(a_xmlDocument);
 		InputSource is = new InputSource(in);
+		Document doc;
 		try
 		{
-			return readXMLDocument(is);
+			doc = readXMLDocument(is);
 		}
 		catch (XMLParseException ex)
 		{
@@ -1208,9 +1210,10 @@ public class XMLUtil
 		catch (Exception ex)
 		{
 			throw new XMLParseException(
-				XMLParseException.ROOT_TAG, "Could not parse XML document: " +
-				ex.getMessage());
+				XMLParseException.ROOT_TAG, "Could not parse XML document: " + ex.getMessage());
 		}
+		//removeComments(doc);
+		return doc;
 	}
 
 	/**
@@ -1458,6 +1461,12 @@ public class XMLUtil
 			return 0;
 		}
 
+		if (a_element.getNodeType() == Document.ELEMENT_NODE &&
+			XMLUtil.parseAttribute(a_element, "xml:space", "").equals("preserve"))
+		{
+			return 0;
+		}
+
 		// call the function recursive for all child nodes
 		if (a_element.hasChildNodes())
 		{
@@ -1547,6 +1556,12 @@ public class XMLUtil
 	 */
 	private static int removeCommentsInternal(Node a_node, Node a_parentNode)
 	{
+		if (a_node.getNodeType() == Document.ELEMENT_NODE &&
+			XMLUtil.parseAttribute(a_node, "xml:space", "").equals("preserve"))
+		{
+			return 0;
+		}
+
 		if (a_node.getNodeType() == Document.COMMENT_NODE)
 		{
 			a_parentNode.removeChild(a_node);

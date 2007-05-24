@@ -70,6 +70,8 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 
 	public static final int DEFAULT_GET_XML_CONNECTION_TIMEOUT = 20000;
 
+	private static final int BLOCK_FACTOR_IF_UNREACHABLE = 5;
+
 	private static int m_getXmlConnectionTimeout = DEFAULT_GET_XML_CONNECTION_TIMEOUT;
 
 	/**
@@ -737,7 +739,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		ListenerInterface target = (ListenerInterface) (m_listenerInterfaces.elementAt(nextIndex));
 		HTTPConnection connection =
 			HTTPConnectionFactory.getInstance().createHTTPConnection(
-					 target, a_proxy, a_supportedEncodings, true);
+				target, a_proxy, a_supportedEncodings, true);
 		return new HTTPConnectionDescriptor(connection, target);
 	}
 
@@ -749,12 +751,13 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 	private Document getXmlDocument(final HttpRequestStructure a_httpRequest, int a_supportedEncodings)
 		throws Exception
 	{
-		byte[] response=doHttpRequest(a_httpRequest,a_supportedEncodings);
-    return XMLUtil.toXMLDocument(response);
+		byte[] response = doHttpRequest(a_httpRequest, a_supportedEncodings);
+		return XMLUtil.toXMLDocument(response);
 	}
-		private byte[] doHttpRequest(final HttpRequestStructure a_httpRequest, int a_supportedEncodings)
-			throws Exception
-		{
+
+	private byte[] doHttpRequest(final HttpRequestStructure a_httpRequest, int a_supportedEncodings) throws
+		Exception
+	{
 		/* make sure that we are connected */
 		int connectionCounter = 0;
 		HTTPConnectionDescriptor currentConnectionDescriptor = null;
@@ -792,7 +795,12 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 				// get the next connection descriptor by supplying the last one
 				currentConnectionDescriptor = connectToInfoService(currentConnectionDescriptor,
 					proxyInterfaceGetter.getProxyInterface(), a_supportedEncodings);
-
+				if (!currentConnectionDescriptor.getTargetInterface().isValid())
+				{
+					// interface has been made temporarily invalid
+					continue;
+				}
+				final ListenerInterface currentInterface = currentConnectionDescriptor.getTargetInterface();
 				final HTTPConnection currentConnection = currentConnectionDescriptor.getConnection();
 				currentConnection.setTimeout(m_getXmlConnectionTimeout);
 
@@ -843,7 +851,8 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 								}
 								else
 								{
-									throw (new Exception("Invalid HTTP command."));
+									LogHolder.log(LogLevel.ERR, LogType.NET, "Invalid HTTP command.");
+									//throw (new Exception("Invalid HTTP command."));
 								}
 							}
 							if (response != null)
@@ -881,6 +890,9 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 										  currentConnection.getHost() + ":" +
 										  Integer.toString(currentConnection.getPort()) +
 										  a_httpRequest.getRequestFileName(), e);
+							// remove interface temporarily
+							currentInterface.blockInterface(
+								m_getXmlConnectionTimeout * BLOCK_FACTOR_IF_UNREACHABLE);
 						}
 					}
 				});
