@@ -1349,6 +1349,11 @@ public final class XMLSignature implements IXMLEncodable
 			}
 			if (node instanceof Document)
 			{
+				if (a_bKeepSpaces)
+				{
+					o.write(XMLUtil.createDocumentStructure());
+					o.write('\n');
+				}
 				node = ( (Document) node).getDocumentElement();
 			}
 
