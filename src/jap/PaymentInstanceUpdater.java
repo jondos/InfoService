@@ -64,6 +64,13 @@ public class PaymentInstanceUpdater extends AbstractDatabaseUpdater
 		Vector currentPIs = Database.getInstance(PaymentInstanceDBEntry.class).getEntryList();
 		PaymentInstanceDBEntry entry;
 
+		if (pis == null)
+		{
+			// no entries where found
+			pis = new Hashtable();
+		}
+
+
 		// do not delete any payment instances for that we still have an account
 		for (int i = 0; i < currentPIs.size(); i++)
 		{

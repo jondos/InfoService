@@ -57,11 +57,10 @@ final public class JAPDll {
 
 	//required japdll.dll version for this JAP-version
 	private static final String JAP_DLL_REQUIRED_VERSION = "00.03.003";
-	private static final String UPDATE_PATH =
-		ClassUtil.getClassDirectory(JAPDll.class).getParent() + File.separator;
+	private static final String UPDATE_PATH;
 
 	private static final String DLL_LIBRARY_NAME = "japdll";
-	private static final String JAP_DLL     = DLL_LIBRARY_NAME + ".dll";
+	private static final String JAP_DLL = DLL_LIBRARY_NAME + ".dll";
 	private static final String JAP_DLL_NEW  = JAP_DLL + "." + JAP_DLL_REQUIRED_VERSION;
 	private static final String JAP_DLL_OLD = DLL_LIBRARY_NAME + ".old";
 
@@ -81,16 +80,30 @@ final public class JAPDll {
 	private static JWindow ms_popupWindow;
 
 	private static boolean m_sbHasOnTraffic = true;
+
+	static
+	{
+		File japdir = ClassUtil.getClassDirectory(JAPDll.class);
+		if (japdir == null)
+		{
+			// the update method will not work; maybe this is Java Webstart?
+			UPDATE_PATH = null;
+		}
+		else
+		{
+			UPDATE_PATH = japdir.getParent() + File.separator;
+		}
+	}
+
 	public static void init()
 	{
+		String strOSName = System.getProperty("os.name", "");
+
 		try
 		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, "JAPDll: Entering init");
-			String strOSName = System.getProperty("os.name", "");
 			if (strOSName == null // may be null in Java Webstart since version 1.6.0
 				|| strOSName.toLowerCase().indexOf("win") > -1)
 			{
-				LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, "JAPDll: Setting native library");
 				GUIUtils.setNativeGUILibrary(new GUIUtils.NativeGUILibrary()
 				{
 					public boolean setAlwaysOnTop(Window a_window, boolean a_bOnTop)
@@ -104,23 +117,30 @@ final public class JAPDll {
 					}
 				});
 
-				LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, "JAPDll: Checking for forced update");
 				boolean bUpdateDone = false;
-				if (JAPModel.getInstance().getDLLupdate())
+				if (UPDATE_PATH != null)
 				{
-					LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, "JAPDll: Updating...");
-					update();
-					bUpdateDone = true;
+					if (JAPModel.getInstance().getDLLupdate())
+					{
+						update();
+						bUpdateDone = true;
+					}
 				}
 
-				LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, "JAPDll: Loading library");
 				System.loadLibrary(DLL_LIBRARY_NAME);
-				LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, "JAPDll: Checking for successful update");
+
+				if (UPDATE_PATH == null)
+				{
+					// ignore the update methods
+					LogHolder.log(LogLevel.ERR, LogType.GUI,
+								  "Could not get DLL update path. Maybe Java Webstart?");
+					return;
+				}
+
 				String version = JAPDll.getDllVersion();
 				if (bUpdateDone && (version == null || // == null means there were problems...
 									version.compareTo(JAP_DLL_REQUIRED_VERSION) < 0))
 				{
-					LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, "JAPDll: Forcing update!");
 					// update was not successful
 					 JAPModel.getInstance().setDLLupdate(true);
 					 JAPController.getInstance().saveConfigFile();
@@ -141,8 +161,9 @@ final public class JAPDll {
 				});
 			}
 		}
-		catch (Throwable t)
+		catch (Throwable a_t)
 		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, a_t);
 		}
 	}
 
@@ -171,7 +192,8 @@ final public class JAPDll {
 		// checks, if the japdll.dll must (and can) be extracted from jar-file.
 		if (JAPDll.getDllVersion() != null && // != null means that there is a loaded dll
 			JAPDll.getDllVersion().compareTo(JAP_DLL_REQUIRED_VERSION) < 0 &&
-			ResourceLoader.getResourceURL(JAP_DLL_NEW) != null) // null means there is no new dll available
+			ResourceLoader.getResourceURL(JAP_DLL_NEW) != null &&
+			UPDATE_PATH != null) // null means there is no new dll available
 		{
 
 			// check, if NO japdll.dll exists in jar-path
