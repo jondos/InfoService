@@ -26,6 +26,7 @@
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
 
+
 /** Project Web Mixes: JAP
  *
  *  The class JAP can be inherited by another class
