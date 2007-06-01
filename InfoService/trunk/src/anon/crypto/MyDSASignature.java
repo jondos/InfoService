@@ -142,7 +142,7 @@ public final class MyDSASignature implements IMySignature
 
 	synchronized public boolean verify(byte[] a_message, byte[] a_signature)
 	{
-		LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "MyDSASignature:verify() try to verify a message...");
+		//LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "MyDSASignature:verify() try to verify a message...");
 		return verify(a_message, 0, a_message.length, a_signature, 0, a_signature.length);
 	}
 

@@ -123,8 +123,23 @@ import jap.pay.wizardnew.VolumePlanSelectionPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import javax.swing.JComboBox;
+import jap.JAPControllerMessage;
+import anon.pay.xml.XMLErrorMessage;
+import anon.pay.xml.XMLPassivePayment;
+import java.sql.Timestamp;
+import java.util.Locale;
+import anon.pay.xml.XMLVolumePlans;
+import jap.pay.wizardnew.VolumePlanSelectionPane;
+import anon.pay.xml.XMLVolumePlan;
+import java.util.Vector;
+import jap.pay.wizardnew.TermsAndConditionsPane;
+import anon.pay.xml.XMLGenericText;
 import anon.pay.IPaymentListener;
 import anon.infoservice.MixCascade;
+import jap.pay.wizardnew.JpiSelectionPane;
+import jap.pay.wizardnew.CancellationPolicyPane;
+import anon.pay.xml.XMLGenericStrings;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -222,6 +237,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		getName() + "_fetchingoptions";
 	private static final String MSG_FETCHINGPLANS = AccountSettingsPanel.class.
 		getName() + "_fetchingplans";
+	private static final String MSG_FETCHINGTERMS = AccountSettingsPanel.class.
+		getName() + "_fetchingterms";
+	private static final String MSG_FETCHINGPOLICY = AccountSettingsPanel.class.
+		getName() + "_fetchingpolicy";
 	private static final String MSG_FETCHINGTAN = AccountSettingsPanel.class.
 		getName() + "_fetchingtan";
 	private static final String MSG_CHARGEWELCOME = AccountSettingsPanel.class.
@@ -293,7 +312,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		AccountSettingsPanel.class.getName() + "_askIfNotSaved";
 	private static final String MSG_NEW_CAPTCHA_HINT =
 		AccountSettingsPanel.class.getName() + "_newCaptchaHint";
-
+	private static final String MSG_BACKUP_WARNING = AccountSettingsPanel.class.getName() + "_backupwarning";
+	private static final String MSG_ACTIVE_COMPLETE = AccountSettingsPanel.class.getName() + "_activecomplete";
+	private static final String MSG_MIXED_COMPLETE = AccountSettingsPanel.class.getName() + "_mixedcomplete";
+	private static final String MSG_COUPON_SENT = AccountSettingsPanel.class.getName() + "_couponsent";
+	private static final String MSG_COUPON_FAILED = AccountSettingsPanel.class.getName() + "_couponfailed";
+    private static final String MSG_COUPON = AccountSettingsPanel.class.getName() + "_coupon";
 	private static final String MSG_FILE_EXISTS = AccountSettingsPanel.class.getName() + "_fileExists";
 
 	private static final Integer[] CONNECT_TIMEOUTS =
@@ -303,11 +327,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		new Integer(200), new Integer(250), new Integer(300)};
 
 	private JButton m_btnCreateAccount;
-	//private JButton m_btnChargeAccount;
 	private JButton m_btnDeleteAccount;
 	private JButton m_btnExportAccount;
 	private JButton m_btnImportAccount;
-	//private JButton m_btnBuyFlat;
 	private JButton m_btnTransactions;
 	private JButton m_btnSelect;
 	private JButton m_btnPassword;
@@ -324,9 +346,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private JLabel m_labelStatementDate;
 	private JLabel m_labelDeposit;
 	private JLabel m_labelSpent;
-	//private JLabel m_labelBalance;
 	private JLabel m_labelValid;
-	//private JLabel m_labelEnddate;
 	private JLabel m_labelVolume;
 	private JLabel m_lblInactiveMessage, m_lblNoBackupMessage;
 	private JProgressBar m_coinstack;
@@ -909,17 +929,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					{
 						doCreateAccount(null);
 					}
-					/*
-					else if (source == m_btnChargeAccount)
-					{
-						doChargeAccount(getSelectedAccount());
-					}*/
-					/*
-						 else if (source == m_btnBuyFlat)
-						 {
-						  doBuyFlat(getSelectedAccount());
-						 }
-					 */
 					else if (source == m_btnDeleteAccount)
 					{
 						doDeleteAccount(getSelectedAccount());
@@ -934,7 +943,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					}
 					else if (source == m_btnTransactions)
 					{
-						doShowTransactions(getSelectedAccount());
+						doShowTransactions();
 					}
 					else if (source == m_btnSelect)
 					{
@@ -1005,16 +1014,38 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	}
 
 	/**
-	 * Shows transaction numbers and if they have been used
+	 * Shows transaction details for all accounts
+	 * (if several JPIs are in use: for all those accounts from the same JPI as the currently selected account)
 	 * @param a_account PayAccount
 	 */
-	private void doShowTransactions(PayAccount a_account)
+	private void doShowTransactions()
 	{
+		Vector a_accounts = new Vector();
+		PayAccount anAccount;
+	    Enumeration accounts = PayAccountsFile.getInstance().getAccounts();
+
+	    PayAccount activeAccount = PayAccountsFile.getInstance().getActiveAccount();
+		PaymentInstanceDBEntry jpiOfActiveAccount = activeAccount.getBI();
+
+		while (accounts.hasMoreElements() )
+		{
+			anAccount = (PayAccount) accounts.nextElement();
+			/* not necessary, and pops up a progress bar for every single account
 		//update account to be sure to include all transactions
 		//(since BI will only fill in transacton details, but not provide data for new ones not yet contained in the PayAccount)
-		doGetStatement(a_account);
+			doGetStatement(anAccount);
+		    */
+		    PaymentInstanceDBEntry jpiOfThisAccount = anAccount.getBI();
+			//only add account to the list of those to get transaction details for
+			//if the account's JPI matches the JPI of the currently active account
+			if (jpiOfThisAccount.getId().equalsIgnoreCase(jpiOfActiveAccount.getId()))
+			{
+				a_accounts.add(anAccount);
+			}
+		}
+
 		TransactionOverviewDialog d = new TransactionOverviewDialog(this,
-			JAPMessages.getString(MSG_TRANSACTION_OVERVIEW_DIALOG), true, a_account);
+			JAPMessages.getString(MSG_TRANSACTION_OVERVIEW_DIALOG), true, a_accounts);
 
 	}
 
@@ -1209,21 +1240,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		final JAPDialog d = new JAPDialog(getRootPanel(), JAPMessages.getString(MSG_CHARGETITLE), true);
 		d.setDefaultCloseOperation(JAPDialog.DISPOSE_ON_CLOSE);
 		d.setResizable(true);
-		doChargeAccount(new FixedReturnAccountRunnable(selectedAccount), d, null, null, new Vector());
+		doChargeAccount(new FixedReturnAccountRunnable(selectedAccount), d, null, null, new Vector(),true);
 		d.setLocationCenteredOnOwner();
 		d.setVisible(true);
 	}
 
-	/*
-	 private void doBuyFlat(final PayAccount selectedAccount)
-	 {
-	  if (selectedAccount == null)
-	  {
-	   return;
-	  }
-	  FlatrateDialog d = new FlatrateDialog(getRootPanel(), this, JAPMessages.getString(MSG_FLATTITLE), true,selectedAccount);
-	 }
-	 */
+
 	/**
 	 * Charges the selected account
 	 */
@@ -1231,8 +1253,14 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 								 final JAPDialog a_parentDialog,
 								 final DialogContentPane a_previousContentPane,
 								 final IReturnBooleanRunnable a_booleanThread,
-								 final Vector a_tan)
+								 final Vector a_tan,
+								 final boolean isNewAccount)
 	{
+		// JPI does NOT maintain connections state, so we have to connect and authenticate again for every single request,
+		// could be changed to improve performance
+
+
+
 		//*********** fetch volume plans ************************//
 
 		WorkerContentPane.IReturnRunnable fetchPlans = new WorkerContentPane.IReturnRunnable()
@@ -1283,7 +1311,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		// ********* show available volume plans *************//
 
 	   final VolumePlanSelectionPane planSelectionPane = new VolumePlanSelectionPane(a_parentDialog,
-		   fetchPlansPane);
+		   fetchPlansPane, isNewAccount);
 
 		// ********** fetch payment options *********************//
 	   WorkerContentPane.IReturnRunnable fetchOptions = new WorkerContentPane.IReturnRunnable()
@@ -1342,7 +1370,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		};
 		fetchOptionsPane.setInterruptThreadSafe(false);
 
-		// ************ show method selection pane / fetch TAN *****************
+		// ************ show method selection pane *****************
 		final MethodSelectionPane methodSelectionPane =	new MethodSelectionPane(a_parentDialog, fetchOptionsPane){
 			public boolean isSkippedAsNextContentPane()
 			{
@@ -1360,20 +1388,44 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		};
 
+		/******** fetch transaction number ****************/
 		WorkerContentPane.IReturnRunnable fetchTan = new WorkerContentPane.IReturnRunnable()
 		{
 			private XMLTransCert m_transCert;
 			public void run()
 			{
-				if (m_transCert == null)
+				if (m_transCert == null) //Elmar: reason for this if-clause?
 				{
 					try
 					{
 						LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 									  "Fetching Transaction Certificate from Payment Instance");
 
-						m_transCert = a_accountCreationThread.getAccount().charge(
-											  JAPModel.getInstance().getPaymentProxyInterface());
+						String planName;
+						String paymentMethod;
+						String amount;
+						if (planSelectionPane.isCouponUsed() )
+						{
+							String localizedCoupon = JAPMessages.getString(MSG_COUPON);
+							planName = localizedCoupon;
+							paymentMethod = localizedCoupon;
+							amount = "0";
+
+						} else
+						{
+							planName = planSelectionPane.getSelectedVolumePlan().getName();
+							paymentMethod = methodSelectionPane.getSelectedPaymentOption().getName();
+							int intAmount = planSelectionPane.getSelectedVolumePlan().getPrice();
+						    amount = (new Integer(intAmount)).toString();
+						}
+
+						XMLGenericStrings requestData = new XMLGenericStrings();
+						requestData.addEntry("plan",planName);
+						requestData.addEntry("method",paymentMethod);
+						requestData.addEntry("amount",amount);
+
+						PayAccount curAccount = a_accountCreationThread.getAccount();
+						m_transCert = curAccount.charge(JAPModel.getInstance().getPaymentProxyInterface(), requestData);
 						a_tan.addElement(m_transCert);
 					}
 					catch (Exception e)
@@ -1395,7 +1447,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			}
 		};
 
-		WorkerContentPane fetchTanPane =
+		final WorkerContentPane fetchTanPane =
 			new WorkerContentPane(a_parentDialog, JAPMessages.getString(MSG_FETCHINGTAN),
 								  methodSelectionPane, fetchTan);
 		fetchTanPane.setInterruptThreadSafe(false);
@@ -1472,23 +1524,24 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				 //if coupon was used, get its code and put it into an XMLPassivePayment
 				 if (planSelectionPane.isCouponUsed() )
 				 {
-					 paymentToSend.addData("code",planSelectionPane.getEnteredCouponCode());
+					 paymentToSend.addData(XMLPassivePayment.KEY_COUPONCODE,planSelectionPane.getEnteredCouponCode());
 					 paymentToSend.setPaymentName("Coupon");
 					 long accNum = a_accountCreationThread.getAccount().getAccountNumber();
-					 paymentToSend.addData("accountnumber", new Long(accNum).toString());
+					 paymentToSend.addData(XMLPassivePayment.KEY_ACCOUNTNUMBER, new Long(accNum).toString());
+					 XMLTransCert transCert = (XMLTransCert) fetchTanPane.getValue();
+					 long tan = transCert.getTransferNumber();
+					 paymentToSend.addData(XMLPassivePayment.KEY_TRANSFERNUMBER, new Long(tan).toString());
 					 //no other data needed, since details about the contents of the coupons were stored in the database when the coupon was created
 
 				 } else if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
 					 XMLPaymentOption.OPTION_PASSIVE))
 				 {
 					 paymentToSend = passivePaymentPane.getEnteredInfo();
-					 //TODO: kind of messy to just mix the plan name into the passive payment,
-					 //maybe send a seperate XMLVolumePlanPurchase request?
 					 String planName = planSelectionPane.getSelectedVolumePlan().getName();
-					 paymentToSend.addData("volumeplan", planName);
+					 paymentToSend.addData(XMLPassivePayment.KEY_VOLUMEPLAN, planName);
 					 //just a crutch to avoid having to query the database for the TAN
 					 long accNum = a_accountCreationThread.getAccount().getAccountNumber();
-					 paymentToSend.addData("accountnumber", new Long(accNum).toString());
+					 paymentToSend.addData(XMLPassivePayment.KEY_ACCOUNTNUMBER, new Long(accNum).toString());
 
 				 }
 				 else if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
@@ -1555,7 +1608,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			}
 		};
 
-		//************** show confirmation (passive only) **************//
+		//************** show confirmation / result of payment  (dependent on method and outcome) ****************/
 		final SimpleWizardContentPane sentPane = new SimpleWizardContentPane(a_parentDialog,
 			JAPMessages.getString(MSG_SENTPASSIVE), null,
 			new Options(createUpdateAccountPane(
@@ -1563,37 +1616,84 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		{
 			public boolean isSkippedAsNextContentPane()
 			{
-				if (planSelectionPane.isCouponUsed() )	{
-						return false;
+				return false; //show for all methods, so everybody sees the warning to back up the account
 				}
-				if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
-					XMLPaymentOption.OPTION_ACTIVE))
-				{
-					return true;
-				}
-				else if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
-					XMLPaymentOption.OPTION_MIXED))
-				{
-					return true;
-				}
-				else
-				{
-					return false;
-				}
-			}
 
 			public CheckError[] checkUpdate()
-			{
-				if ( ( (Boolean) sendPassivePane.getValue()).booleanValue() == false)
 				{
-					setText("<Font color='red'><b>" +
-							JAPMessages.getString(MSG_NOTSENTPASSIVE) + "</b></Font>");
+				Vector messagesToShow = new Vector();
+				String highlightMarkupStart = "<Font color='red'><b>";
+				String highlightMarkupEnd = "</b></Font>";
+				String backupWarning = highlightMarkupStart + JAPMessages.getString(MSG_BACKUP_WARNING) +
+					highlightMarkupEnd;
+				String passiveError = highlightMarkupStart + JAPMessages.getString(MSG_NOTSENTPASSIVE) +
+					highlightMarkupEnd;
+				String passiveOK = JAPMessages.getString(MSG_SENTPASSIVE);
+				String couponOK = JAPMessages.getString(MSG_COUPON_SENT);
+				String couponFailed = highlightMarkupStart + JAPMessages.getString(MSG_COUPON_FAILED) +
+					highlightMarkupEnd; //shold not happne, since we check validity upon entering the coupon
+				String activeComplete = JAPMessages.getString(MSG_ACTIVE_COMPLETE);
+				String mixedComplete = JAPMessages.getString(MSG_MIXED_COMPLETE);
+
+				String paymentType;
+				if (planSelectionPane.isCouponUsed() )
+				{
+					paymentType = "coupon";
+                } else
+				{
+					paymentType = methodSelectionPane.getSelectedPaymentOption().getType();
+				}
+
+
+			    //set strings to show according to payment type and success/failure
+				if (paymentType.equalsIgnoreCase(XMLPaymentOption.OPTION_ACTIVE))
+				{
+                    messagesToShow.add(activeComplete);
+					messagesToShow.add(backupWarning);
+				}
+				else if (paymentType.equalsIgnoreCase(XMLPaymentOption.OPTION_MIXED))
+				{
+                   messagesToShow.add(mixedComplete);
+				   messagesToShow.add(backupWarning);
+			}
+				else if (paymentType.equals("coupon") )
+				{
+					boolean passivePaymentSucceeded = ((Boolean) sendPassivePane.getValue()).booleanValue();
+
+					if (passivePaymentSucceeded)
+			{
+						messagesToShow.add(couponOK);
+						messagesToShow.add(backupWarning);
+					} else
+				{
+						messagesToShow.add(couponFailed);
+					}
+				}
+				else //non-coupon passive payment, e.g. credit card
+				{
+					boolean passivePaymentSucceeded = ((Boolean) sendPassivePane.getValue()).booleanValue();
+					if (passivePaymentSucceeded)
+					{
+						messagesToShow.add(passiveOK);
+						messagesToShow.add(backupWarning);
 				}
 				else
 				{
-					setText(JAPMessages.getString(MSG_SENTPASSIVE));
+						messagesToShow.add(passiveError);
 				}
 
+				}
+				//combine messages and set text
+				String combinedString = "";
+				String stringToAdd;
+				for (Enumeration messages = messagesToShow.elements(); messages.hasMoreElements(); )
+				{
+					stringToAdd = (String) messages.nextElement();
+					combinedString += "<p>";
+					combinedString += stringToAdd;
+					combinedString += "</p><br>";
+				}
+				setText(combinedString);
 				return null;
 			}
 		};
@@ -1614,70 +1714,82 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 */
 	public void doCreateAccount(final String a_biid)
 	{
-		final JAPDialog d = new JAPDialog(getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
-		d.setDefaultCloseOperation(JAPDialog.DO_NOTHING_ON_CLOSE);
-		d.setResizable(true);
+		final JAPDialog a_parentDialog = new JAPDialog(getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
+		a_parentDialog.setDefaultCloseOperation(JAPDialog.DO_NOTHING_ON_CLOSE);
+		a_parentDialog.setResizable(true);
 
-		WorkerContentPane.IReturnRunnable fetchBIThread = new WorkerContentPane.IReturnRunnable()
+		/******************** get available JPIs   ********************/
+		WorkerContentPane.IReturnRunnable fetchJpisThread = new WorkerContentPane.IReturnRunnable()
 		{
-			private PaymentInstanceDBEntry theBI;
+				private Vector allJpis; //Vector<PaymentInstanceDBEntry>
 
 			public void run()
 			{
-				Exception biException = null;
-
-				/** @todo let the user of the beta version choose a PI */
-				try
-				{
-					if (a_biid == null)
-					{
-						Vector pis = PayAccountsFile.getInstance().getPaymentInstances();
-						if (pis.size() > 0)
+					if (a_biid != null) //specific jpi given (the correct jpi for the currently selected pay-mixcascade)
 						{
-							theBI = (PaymentInstanceDBEntry) pis.elementAt(0);
+						PaymentInstanceDBEntry m_selectedJpi = PayAccountsFile.getInstance().getBI(a_biid);
+						allJpis = new Vector();
+						allJpis.add(m_selectedJpi);
 						}
-					}
-					else
+					else //get jpis for which accounts exist
 					{
-						theBI = PayAccountsFile.getInstance().getBI(a_biid);
+						allJpis = PayAccountsFile.getInstance().getPaymentInstances();
 					}
-				}
-				catch (Exception e)
-				{
-					biException = e;
-					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 				}
 
-				if (Thread.currentThread().isInterrupted())
+	            public Object getValue()
 				{
-					theBI = null;
+					return allJpis;
 				}
 
-				if (theBI == null)
+			};
+			final WorkerContentPane fetchJpisPane = new WorkerContentPane(a_parentDialog,
+				"","" , fetchJpisThread)
 				{
-					// no valid BI could be found
-					if (!Thread.currentThread().isInterrupted())
+				public boolean isMoveForwardAllowed()
+				{
+					return a_parentDialog.isVisible() ;
+				}
+		};
+
+		/******************* show JPI selection pane    *************/
+
+		final JpiSelectionPane jpiPane = new JpiSelectionPane(a_parentDialog, fetchJpisPane,a_biid)
+				{
+			public boolean isSkippedAsNextContentPane()
 					{
-						showPIerror(d.getContentPane(), biException);
-						Thread.currentThread().interrupt();
+				Vector allJpis = (Vector) fetchJpisPane.getValue();
+				if ( (a_biid != null)
+					|| ( allJpis.size() <= 1 ) )//specific bi given: use this one
+				{
+					return true;
 					}
+				else
+				{
+					return false;
 				}
 			}
 
-			public Object getValue()
+	        public boolean isSkippedAsPreviousContentPane()
 			{
-				return theBI;
+				if (a_biid == null) //specific bi given: use this one
+			{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
 			}
 
 		};
-		final WorkerContentPane fetchBiWorker =
-			new WorkerContentPane(d, JAPMessages.getString(MSG_FETCHING_BIS) + "...", fetchBIThread);
 
+		/*********************** test connection to payment instance *****************/
 		Runnable piTestThread = new Runnable()
 		{
 			public void run()
 			{
-				if (fetchBiWorker.getValue() == null)
+				if (jpiPane.getSelectedPaymentInstance() == null)
 				{
 					Thread.currentThread().interrupt();
 					return;
@@ -1685,7 +1797,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				try
 				{
 					//Check if payment instance is reachable
-					BIConnection biconn = new BIConnection( (PaymentInstanceDBEntry) fetchBiWorker.getValue());
+					BIConnection biconn = new BIConnection( jpiPane.getSelectedPaymentInstance() );
 					biconn.connect(JAPModel.getInstance().getPaymentProxyInterface());
 					biconn.disconnect();
 				}
@@ -1693,21 +1805,138 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				{
 					if (!Thread.currentThread().isInterrupted())
 					{
-						showPIerror(d.getContentPane(), e);
+						showPIerror(a_parentDialog.getContentPane(), e);
 						Thread.currentThread().interrupt();
 					}
 				}
 			}
 		};
 
-		WorkerContentPane PITestWorkerPane = new WorkerContentPane(d,
-			JAPMessages.getString(MSG_TEST_PI_CONNECTION) + "...", fetchBiWorker, piTestThread);
+
+		WorkerContentPane PITestWorkerPane = new WorkerContentPane(a_parentDialog,
+			JAPMessages.getString(MSG_TEST_PI_CONNECTION) + "...", jpiPane, piTestThread);
 		PITestWorkerPane.setInterruptThreadSafe(false);
 
-		SimpleWizardContentPane panel1 = new SimpleWizardContentPane(d,
-			JAPMessages.getString("ngCreateKeyPair"), null,
-			new SimpleWizardContentPane.Options(PITestWorkerPane));
 
+		//************ fetch AGBs (terms and conditions) *******//
+		WorkerContentPane.IReturnRunnable fetchTerms = new WorkerContentPane.IReturnRunnable()
+		{
+			private XMLGenericText termsAndConditions;
+			public void run()
+			{
+				try
+				{
+					PaymentInstanceDBEntry pi = jpiPane.getSelectedPaymentInstance();
+					BIConnection piConn = new BIConnection(pi);
+					piConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
+					//authentication is neither necessary nor possible (creating first account -> user does not yet have an account to authenticate with)
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetching terms and conditions");
+
+
+					String lang = JAPMessages.getLocale().getLanguage();
+					termsAndConditions = piConn.getTerms(lang);
+					piConn.disconnect();
+				}
+				catch (Exception e)
+				{
+					if (!Thread.currentThread().isInterrupted())
+					{
+						LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
+									  "Error fetching terms and conditions: ", e);
+						showPIerror(a_parentDialog.getContentPane(), e);
+						Thread.currentThread().interrupt();
+					}
+				}
+			}
+
+			public Object getValue()
+			{
+				return termsAndConditions;
+			}
+
+		};
+		final WorkerContentPane fetchTermsPane = new WorkerContentPane(a_parentDialog,
+			JAPMessages.getString(MSG_FETCHINGTERMS), jpiPane , fetchTerms)
+		{
+			public boolean isMoveForwardAllowed()
+			{
+				return a_parentDialog.isVisible() ;
+			}
+		};
+		fetchTermsPane.setInterruptThreadSafe(false);
+
+
+		//************ show terms and conditions, only moving forward if user confirms  ******//
+		final TermsAndConditionsPane termsPane = new TermsAndConditionsPane(a_parentDialog, fetchTermsPane)
+		{
+			public boolean isSkippedAsPreviousContentPane()
+			{
+				return true;
+			}
+		};
+
+
+	   //****************** fetch cancellation policy **********************//
+	   WorkerContentPane.IReturnRunnable fetchPolicy = new WorkerContentPane.IReturnRunnable()
+	   {
+		   private XMLGenericText cancellationPolicy;
+		   public void run()
+		   {
+			   try
+			   {
+				   PaymentInstanceDBEntry pi = jpiPane.getSelectedPaymentInstance();
+				   BIConnection piConn = new BIConnection(pi);
+				   piConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
+				   //authentication is neither necessary nor possible (creating first account -> user does not yet have an account to authenticate with)
+				   LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetching cancellation policy");
+				   String lang = JAPMessages.getLocale().getLanguage();
+				   cancellationPolicy = piConn.getCancellationPolicy(lang);
+				   piConn.disconnect();
+			   }
+			   catch (Exception e)
+			   {
+				   if (!Thread.currentThread().isInterrupted())
+				   {
+					   LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
+									 "Error fetching cancellation policy: ", e);
+					   showPIerror(a_parentDialog.getContentPane(), e);
+					   Thread.currentThread().interrupt();
+				   }
+			   }
+		   }
+
+		   public Object getValue()
+		   {
+			   return cancellationPolicy;
+		   }
+
+	   };
+	   final WorkerContentPane fetchPolicyPane = new WorkerContentPane(a_parentDialog,
+		   JAPMessages.getString(MSG_FETCHINGPOLICY), termsPane , fetchPolicy)
+	   {
+		   public boolean isMoveForwardAllowed()
+		   {
+			   return a_parentDialog.isVisible() ;
+		   }
+	   };
+		fetchTermsPane.setInterruptThreadSafe(false);
+
+	   //************* show cancellation policy ***************************//
+	   final CancellationPolicyPane policyPane = new CancellationPolicyPane(a_parentDialog, fetchPolicyPane)
+	   {
+		   public boolean isSkippedAsPreviousContentPane()
+		   {
+			   return true;
+		   }
+		};
+
+/*
+
+		SimpleWizardContentPane panel1 = new SimpleWizardContentPane(a_parentDialog,
+			JAPMessages.getString("ngCreateKeyPair"), null,
+			new SimpleWizardContentPane.Options(policyPane));
+*/
+	    /*************** create keypair ****************/
 		final WorkerContentPane.IReturnRunnable keyCreationThread = new WorkerContentPane.IReturnRunnable()
 		{
 			private DSAKeyPair m_keyPair;
@@ -1720,7 +1949,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				if (m_keyPair == null)
 				{
 					JAPDialog.showErrorDialog(
-						d, JAPMessages.getString(MSG_KEY_PAIR_CREATE_ERROR), LogType.PAY);
+						a_parentDialog, JAPMessages.getString(MSG_KEY_PAIR_CREATE_ERROR), LogType.PAY);
 				}
 				m_bDoNotCloseDialog = false;
 			}
@@ -1731,11 +1960,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			}
 		};
 		final WorkerContentPane keyWorkerPane = new WorkerContentPane(
-			d, JAPMessages.getString(MSG_CREATE_KEY_PAIR) + "...", panel1, keyCreationThread);
+			a_parentDialog, JAPMessages.getString(MSG_CREATE_KEY_PAIR) + "...", policyPane, keyCreationThread);
 		keyWorkerPane.getButtonCancel().setEnabled(false);
 
 		m_bReady = true;
 
+		/******************* create account **************/
 		final IReturnAccountRunnable doIt = new IReturnAccountRunnable()
 		{
 			private PayAccount m_payAccount;
@@ -1750,7 +1980,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					try
 					{
 						m_payAccount = PayAccountsFile.getInstance().createAccount(
-							(PaymentInstanceDBEntry) fetchBiWorker.getValue(),
+							jpiPane.getSelectedPaymentInstance(),
 							JAPModel.getInstance().getPaymentProxyInterface(),
 							(DSAKeyPair) keyWorkerPane.getValue());
 
@@ -1768,7 +1998,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 							!ex.getMessage().equals("CAPTCHA"))
 						{
 							//User has not pressed cancel and no io exception occured
-							showPIerror(d.getContentPane(), ex);
+							showPIerror(a_parentDialog.getContentPane(), ex);
 						}
 						Thread.currentThread().interrupt();
 						break;
@@ -1796,22 +2026,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				return m_payAccount;
 			}
 		};
-		WorkerContentPane panel2 = new WorkerContentPane(
-			d, JAPMessages.getString(MSG_ACCOUNTCREATEDESC), keyWorkerPane, doIt)
-		{
-			public boolean isReady()
-			{
-				return m_bReady;
-			}
 
-			public boolean isSkippedAsPreviousContentPane()
-			{
-				return false;
-			}
-		};
-		panel2.setInterruptThreadSafe(false);
 
-		final CaptchaContentPane captcha = new CaptchaContentPane(d, panel2)
+		AccountSettingsPanel.AccountCreationPane accountCreatedPane = this.new AccountCreationPane(a_parentDialog, JAPMessages.getString(MSG_ACCOUNTCREATEDESC), keyWorkerPane, doIt);
+		accountCreatedPane.setInterruptThreadSafe(false);
+
+		final CaptchaContentPane captcha = new CaptchaContentPane(a_parentDialog, accountCreatedPane)
 		{
 			public void gotCaptcha(ICaptchaSender a_source, IImageEncodedCaptcha a_captcha)
 			{
@@ -1856,9 +2076,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			}
 		});
 
-		//First account, ask for password
+		/******** ask for a password if the newly created account is the user's first account ***********/
 		final boolean bFirstPayAccount = PayAccountsFile.getInstance().getNumAccounts() == 0;
-		PasswordContentPane pc = new PasswordContentPane(d, captcha,
+		PasswordContentPane pc = new PasswordContentPane(a_parentDialog, captcha,
 			PasswordContentPane.PASSWORD_NEW,
 			JAPMessages.getString(MSG_ACCPASSWORD))
 		{
@@ -1883,15 +2103,16 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 			public boolean isSkippedAsNextContentPane()
 			{
-				return d.isVisible() && !bFirstPayAccount;
+				return a_parentDialog.isVisible() && !bFirstPayAccount;
 			}
 
 			public boolean isSkippedAsPreviousContentPane()
 			{
-				return d.isVisible() && !bFirstPayAccount;
+				return a_parentDialog.isVisible() && !bFirstPayAccount;
 			}
 		};
 
+		/*********** save account in configuration *********/
 		final IReturnBooleanRunnable exportThread = new IReturnBooleanRunnable()
 		{
 			private Boolean m_bAccountSaved = new Boolean(false);
@@ -1903,12 +2124,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				if (JAPController.getInstance().saveConfigFile())
 				{
 					// an error occured while saving the configuration
-					JAPDialog.showErrorDialog(d, JAPMessages.getString(
+					JAPDialog.showErrorDialog(a_parentDialog, JAPMessages.getString(
 						JAPController.MSG_ERROR_SAVING_CONFIG,
 						JAPModel.getInstance().getConfigFile()), LogType.MISC);
 					try
 					{
-						if (exportAccount(doIt.getAccount(), d.getContentPane(),
+						if (exportAccount(doIt.getAccount(), a_parentDialog.getContentPane(),
 										  JAPController.getInstance().getPaymentPassword()))
 						{
 							m_bAccountSaved = new Boolean(true);
@@ -1932,7 +2153,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 			public Object getValue()
 			{
-				if (!d.isVisible())
+				if (!a_parentDialog.isVisible())
 				{
 					return new Boolean(true);
 				}
@@ -1946,7 +2167,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		};
 
 		WorkerContentPane saveConfig =
-			new WorkerContentPane(d, JAPMessages.getString(MSG_SAVE_CONFIG) + WorkerContentPane.DOTS,
+			new WorkerContentPane(a_parentDialog, JAPMessages.getString(MSG_SAVE_CONFIG) + WorkerContentPane.DOTS,
 								  pc, exportThread)
 		{
 			public boolean isMoveBackAllowed()
@@ -1955,8 +2176,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			}
 		};
 		saveConfig.getButtonCancel().setEnabled(false);
+
+	    //********* show errors if any *********//
 		DialogContentPane saveErrorPane = new SimpleWizardContentPane(
-			d, "<Font color=\"red\">" + JAPMessages.getString(MSG_CREATED_ACCOUNT_NOT_SAVED) + "</Font>",
+			a_parentDialog, "<Font color=\"red\">" + JAPMessages.getString(MSG_CREATED_ACCOUNT_NOT_SAVED) + "</Font>",
 			new DialogContentPane.Layout("", DialogContentPane.MESSAGE_TYPE_ERROR),
 			new DialogContentPane.Options(saveConfig))
 		{
@@ -1973,7 +2196,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		saveErrorPane.getButtonCancel().setVisible(false);
 
 		final Vector vecTan = new Vector();
-		d.addWindowListener(new WindowAdapter()
+		a_parentDialog.addWindowListener(new WindowAdapter()
 		{
 			public void windowClosing(WindowEvent e)
 			{
@@ -1984,7 +2207,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						captcha.setButtonValue(IDialogOptions.RETURN_VALUE_CLOSED);
 						captcha.checkCancel();
 					}
-					d.dispose();
+					a_parentDialog.dispose();
 				}
 			}
 
@@ -2014,12 +2237,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		});
 
 		m_bDoNotCloseDialog = false;
-		doChargeAccount(doIt, d, saveErrorPane, exportThread, vecTan);
-		PITestWorkerPane.updateDialogOptimalSized(fetchBiWorker);
+		//immediately charge account after creating it
+		doChargeAccount(doIt, a_parentDialog, saveErrorPane, exportThread, vecTan,true);
+		DialogContentPane.updateDialogOptimalSized(fetchJpisPane);
 		captcha.setText(captcha.getText() + " " + JAPMessages.getString(MSG_NEW_CAPTCHA_HINT,
 			JAPMessages.getString(MSG_NEWCAPTCHA)));
-		d.setLocationCenteredOnOwner();
-		d.setVisible(true);
+		a_parentDialog.setLocationCenteredOnOwner();
+		a_parentDialog.setVisible(true);
 
 	}
 
@@ -2804,5 +3028,22 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			}
 		}
 	}
+
+	public class AccountCreationPane extends WorkerContentPane {
+		public AccountCreationPane(JAPDialog a_parent, String a_text, WorkerContentPane a_pane, Runnable a_thread)
+		{
+			super(a_parent,a_text,a_pane,a_thread);
+		}
+		public boolean isReady()
+		{
+			return m_bReady;
+		}
+
+		public boolean isSkippedAsPreviousContentPane()
+		{
+			return false;
+		}
+
+	};
 
 }

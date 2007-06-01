@@ -491,17 +491,17 @@ public final class XMLSignature implements IXMLEncodable
 		try
 		{
 			//get the included certificates
-			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "Looking for appended certificates...");
+			//LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "Looking for appended certificates...");
 			certificates = signature.getCertificates().elements();
 			if ( (certificates != null) && (certificates.hasMoreElements()))
 			{
 				//we found at least one certificate
-				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-							  "Found " + signature.countCertificates() + " appended certificates!");
+				//LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+				//			  "Found " + signature.countCertificates() + " appended certificates!");
 				currentCertificate = (JAPCertificate) certificates.nextElement();
 				signature.m_certPath = new CertPath(currentCertificate);
 
-				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "Trying to build certification path...");
+				//LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO, "Trying to build certification path...");
 				while (certificates.hasMoreElements())
 				{
 					//take the next certificate an try to verify the previous
@@ -510,8 +510,8 @@ public final class XMLSignature implements IXMLEncodable
 					if (!currentCertificate.verify(nextCertificate.getPublicKey())
 						|| (a_bCheckValidity && ! (nextCertificate.getValidity().isValid(new Date()))))
 					{
-						LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-									  "Trying to build certification path -stopped!");
+						//LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+						//			  "Trying to build certification path -stopped!");
 						break; //the building of the certPath stops here
 					}
 					//the cert that was used for verification is now verified
@@ -519,20 +519,20 @@ public final class XMLSignature implements IXMLEncodable
 					currentCertificate = nextCertificate;
 					if (!certificates.hasMoreElements()) //we reached the last cert in the path
 					{
-						LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-									  "Trying to build certification path -success!");
+						//LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+						//			  "Trying to build certification path -success!");
 					}
 				}
 				//the certspath was traversed as far as possible or there was only one certificate
 				if (nextCertificate == null)
 				{
 					oneCertAppended = true;
-					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-								  "Trying to build certification path -only one certificate appended!");
+					//LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+					//			  "Trying to build certification path -only one certificate appended!");
 				}
 
-				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-							  "Trying to verify signature against first certifcate...");
+				//LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+				//			  "Trying to verify signature against first certifcate...");
 				currentCertificate = signature.getCertPath().getFirstCertificate();
 				if (currentCertificate != null)
 				{
@@ -545,24 +545,24 @@ public final class XMLSignature implements IXMLEncodable
 						//the verification failed, the found CertPath is set
 						return signature;
 					}
-					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-								  "Trying to verify signature against first certifcate -success!");
+					//LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+					//			  "Trying to verify signature against first certifcate -success!");
 				}
 
 				//the first (=Mix) cert could verify the signature
-				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-							  "Trying to verify last certificate against root certificates...");
+				//LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+				//			  "Trying to verify last certificate against root certificates...");
 				currentCertificate = signature.m_certPath.getLatestAddedCertificate();
 				if (currentCertificate != null && currentCertificate.verify(a_rootCertificates))
 				{
 					signature.m_bVerified = true;
-					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-								  "Trying to verify last certificate against root certificates -success");
+					//LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+					//			  "Trying to verify last certificate against root certificates -success");
 				}
 				else
 				{
-					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-								  "Trying to verify last certificate against root certificates -failed");
+					//LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+					//			  "Trying to verify last certificate against root certificates -failed");
 				}
 			}
 			else
@@ -579,16 +579,16 @@ public final class XMLSignature implements IXMLEncodable
 				 * be verified against the root certificates.
 				 * Try to verify the signature using the direct certificates
 				 */
-				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-							  "Trying to verify signature against direct certificates...");
+				//LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+				//			  "Trying to verify signature against direct certificates...");
 
 				certPathNew = getVerifier(a_node, signature, a_directCertificatePaths, a_bCheckValidity);
 				if (certPathNew != null)
 				{
 					signature.m_certPath = certPathNew;
 					signature.m_bVerified = true;
-					LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-								  "Trying to verify signature against direct certificates -success");
+					//LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+					//			  "Trying to verify signature against direct certificates -success");
 				}
 				else
 				{

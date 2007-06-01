@@ -119,12 +119,6 @@ public class XMLBalance implements IXMLEncodable
 
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "VolumeBytesLeft");
 		str = XMLUtil.parseValue(elem, null);
-		// @todo  downward compatibility; remove after some weeks
-/*		if (str == null)
-		{
-			m_volumeBytesleft = (m_lDeposit - m_lSpent) / 1000;
-		}
-		else*/
 		{
 			m_volumeBytesleft = Long.parseLong(str);
 		}

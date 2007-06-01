@@ -199,6 +199,8 @@ public class PaymentInstanceDBEntry extends AbstractDistributableCertifiedDataba
 		Element elemLastUpdate = doc.createElement(XML_LAST_UPDATE);
 		XMLUtil.setValue(elemLastUpdate, m_creationTimeStamp);
 		elemRoot.appendChild(elemLastUpdate);
+	    if (m_cert != null)
+		{
 		Element elemCert = doc.createElement(XML_ELEM_CERT);
 		elemRoot.appendChild(elemCert);
 		elemCert.appendChild(m_cert.toXmlElement(doc));
@@ -218,7 +220,7 @@ public class PaymentInstanceDBEntry extends AbstractDistributableCertifiedDataba
 		{
 			m_cert = m_certPath.getFirstCertificate();
 		}
-
+		}
 		m_xmlDescription = elemRoot;
 	}
 

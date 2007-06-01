@@ -29,7 +29,6 @@ package jap.pay.wizardnew;
 
 import java.util.Enumeration;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.Hashtable;
 
 import java.awt.Container;
@@ -39,14 +38,11 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.ButtonGroup;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
 import javax.swing.JRadioButton;
 
 import anon.pay.xml.XMLPaymentOption;
 import anon.pay.xml.XMLPaymentOptions;
 import gui.JAPMessages;
-import gui.JAPMultilineLabel;
 import gui.dialog.DialogContentPane;
 import gui.dialog.DialogContentPane.IWizardSuitable;
 import gui.dialog.JAPDialog;
@@ -54,10 +50,17 @@ import gui.dialog.WorkerContentPane;
 import jap.JAPConstants;
 import jap.JAPController;
 import logging.LogType;
-import anon.util.XMLUtil;
+import anon.pay.xml.XMLVolumePlan;
+import jap.JAPUtil;
+import javax.swing.JLabel;
+import gui.JAPHtmlMultiLineLabel;
 
 public class MethodSelectionPane extends DialogContentPane implements IWizardSuitable, ActionListener
 {
+	//if the markup in percent for a certain payment method is greate than this value, it will be shown behind the option to warn the user
+	//(to disable showing markups, set this to any value over 100)
+	private static final int SHOW_MARKUP_IF_ABOVE = 5;
+
 	/** Messages */
 	private static final String MSG_PRICE = MethodSelectionPane.class.
 		getName() + "_price";
@@ -67,13 +70,14 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		getName() + "_errselect";
 	private static final String MSG_NOTSUPPORTED = MethodSelectionPane.class.
 		getName() + "_notsupported";
+	private static final String MSG_SELECTED_PLAN = MethodSelectionPane.class.getName() + "_selectedplan";
+	private static final String MSG_MARKUP = MethodSelectionPane.class.getName() + "_markup";
+	private static final String MSG_MARKUP_CAPTION = MethodSelectionPane.class.getName() + "_markupcaption";
 
 	private ButtonGroup m_rbGroup;
 	private XMLPaymentOptions m_paymentOptions;
 	private GridBagConstraints m_c = new GridBagConstraints();
 	private XMLPaymentOption m_selectedPaymentOption;
-//	private JComboBox m_cbAmount;
-//	private JComboBox m_cbCurrency;
 	private Container m_rootPanel;
 
 	public MethodSelectionPane(JAPDialog a_parentDialog, WorkerContentPane a_previousContentPane)
@@ -100,80 +104,23 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		//Add some dummy options for dialog sizing
 		for (int i = 0; i < 6; i++)
 		{
-			addOption("Dummy");
+			addOption("Dummy","0");
 		}
-		/*
-		Vector dummyVector = new Vector();
-		dummyVector.addElement("EUR");
-		addCurrencies(dummyVector);
-	    */
 	}
 
-	private void addOption(String a_name)
+
+	private void addOption(String a_name, String markup)
 	{
 		m_c.insets = new Insets(0, 5, 0, 5);
 		m_c.gridy++;
-		m_c.gridwidth = 3;
-		//JRadioButton rb = new JRadioButton("<html><body>" + a_name + "</body></html>"); not for JDK 1.1.8..
-		JRadioButton rb = new JRadioButton(new gui.JAPHtmlMultiLineLabel(a_name).getHTMLDocumentText());
+		JRadioButton rb = new JRadioButton(new gui.JAPHtmlMultiLineLabel(a_name).getHTMLDocumentText() + markup);
 		rb.setName(a_name);
 		rb.addActionListener(this);
 		m_rbGroup.add(rb);
 		m_rootPanel.add(rb, m_c);
 	}
 
-/*
-	private void addCurrencies(Vector a_currencies)
-	{
-		m_c.insets = new Insets(5, 5, 5, 5);
-		m_c.gridy++;
-		m_c.gridwidth = 3;
-		JLabel label = new JLabel(JAPMessages.getString(MSG_PRICE));
-		m_rootPanel.add(label, m_c);
-		m_c.gridy++;
-		JAPMultilineLabel label2 = new JAPMultilineLabel(JAPMessages.getString("payAmount"));
-		m_rootPanel.add(label2, m_c);
-		m_c.gridwidth = 1;
-		m_cbAmount = new JComboBox(new String[]
-								   {"1", "2", "3", "4", "5", "10", "15"});
-		/*m_tfAmount = new JAPJIntField(new IntFieldBounds()
-		   {
-		 public boolean isZeroAllowed()
-		 {
-		  return false;
-		 }
 
-		 public int getMaximum()
-		 {
-		  return 15;
-		 }
-
-		   }
-		   );
-		m_c.gridy++;
-		m_rootPanel.add(m_cbAmount, m_c);
-		m_c.gridx++;
-		m_c.weightx = 1;
-		m_c.weighty = 1;
-		m_cbCurrency = new JComboBox(a_currencies);
-		m_rootPanel.add(m_cbCurrency, m_c);
-	}
-*/
-
-/*
-	public String getSelectedCurrency()
-	{
-		return (String) m_cbCurrency.getSelectedItem();
-	}
-*/
-
-/*
-	public String getAmount()
-	{
-		return (String) m_cbAmount.getSelectedItem();
-		//return m_tfAmount.getText();
-	}
-*/
 
 	public void actionPerformed(ActionEvent e)
 	{
@@ -202,8 +149,8 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		m_c.anchor = m_c.NORTHWEST;
 		m_c.fill = m_c.NONE;
 		//Get fetched payment options
-		WorkerContentPane p = (WorkerContentPane) getPreviousContentPane();
-		Object value = p.getValue();
+		WorkerContentPane previousContentPane = (WorkerContentPane) getPreviousContentPane();
+		Object value = previousContentPane.getValue();
 		XMLPaymentOptions options = (XMLPaymentOptions) value;
 
 		m_paymentOptions = options;
@@ -238,13 +185,62 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 			}
 		}
 		Enumeration enumUsedOptions = usedOptions.elements();
+		XMLPaymentOption curOption;
+		String curLang;
+		String curMarkup;
 		while (enumUsedOptions.hasMoreElements())
 		{
-			addOption(((XMLPaymentOption)enumUsedOptions.nextElement()).getHeading(
-						 JAPController.getLocale().getLanguage()));
+			curOption = (XMLPaymentOption)enumUsedOptions.nextElement();
+			curLang = JAPController.getLocale().getLanguage();
+			int markup = curOption.getMarkup();
+			if (markup > SHOW_MARKUP_IF_ABOVE)
+			{
+				/*
+				String markupTerm = JAPMessages.getString(MSG_MARKUP);
+				curMarkup = " ("+markup+"% " + markupTerm + "! )";
+				*/
+			   curMarkup = " *";
+			}
+			else
+			{
+				curMarkup = "";
+			}
+			addOption(curOption.getHeading(curLang),curMarkup );
 		}
 
-//		addCurrencies(options.getCurrencies());
+	    //show explanation about most expensive payment methods
+		String markupText = JAPMessages.getString(MSG_MARKUP_CAPTION);
+		JAPHtmlMultiLineLabel markupLabel = new JAPHtmlMultiLineLabel(markupText);
+		//JLabel markupLabel = new JLabel(markupText);
+		m_c.insets = new Insets(30,5,0,5);
+		m_c.gridy++;
+		m_c.weightx = 1.0;
+		m_c.fill = GridBagConstraints.HORIZONTAL;
+		m_rootPanel.add(markupLabel,m_c);
+
+		//show details of the volume plan selected (so the user is aware of how much he'll have to pay)
+		DialogContentPane curPane = previousContentPane;
+		XMLVolumePlan selectedPlan;
+		while (true) //go back through previous panes until finding the VolumePlanSelectionPane
+		{
+			if (curPane instanceof VolumePlanSelectionPane)
+			{
+				VolumePlanSelectionPane vpsp = (VolumePlanSelectionPane) curPane;
+				selectedPlan = vpsp.getSelectedVolumePlan();
+				break;
+			}
+			curPane = curPane.getPreviousContentPane();
+        }
+	    String planName = selectedPlan.getName();
+		String planPrice = JAPUtil.formatEuroCentValue(selectedPlan.getPrice());
+	    JLabel planHeading = new JLabel(JAPMessages.getString(MSG_SELECTED_PLAN));
+		JLabel planDetails = new JLabel(planName + ", " + planPrice);
+		m_c.insets = new Insets(30, 5, 0, 5);
+    	m_c.gridy++;
+		m_rootPanel.add(planHeading, m_c);
+		m_c.insets = new Insets(5, 5, 0, 5);
+	    m_c.gridy++;
+		m_rootPanel.add(planDetails, m_c);
 	}
 
 	public CheckError[] checkYesOK()

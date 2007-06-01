@@ -70,6 +70,9 @@ import logging.LogType;
 import anon.infoservice.IMutableProxyInterface;
 import anon.pay.xml.XMLPaymentSettings;
 import anon.pay.xml.XMLVolumePlans;
+import anon.util.IXMLEncodable;
+import anon.pay.xml.XMLGenericText;
+import anon.pay.xml.XMLGenericStrings;
 
 public class BIConnection implements ICaptchaSender
 {
@@ -262,16 +265,22 @@ public class BIConnection implements ICaptchaSender
 	 * Fetches a transfer certificate from the BI.
 	 * @return XMLTransCert the transfer certificate
 	 */
-	public XMLTransCert charge() throws Exception
+	public XMLTransCert charge(XMLGenericStrings parameters) throws Exception
 	{
-		m_httpClient.writeRequest("GET", "charge", null);
+		m_httpClient.writeRequest("POST", "charge", XMLUtil.toString(parameters.toXmlElement(XMLUtil.createDocument())));
 		Document doc = m_httpClient.readAnswer();
+
+		XMLTransCert cert = new XMLTransCert(doc);
+		//debug
+		System.out.println(XMLUtil.toString(XMLUtil.toXMLDocument(cert)));
+
+
 		if (!XMLSignature.verifyFast(doc, m_theBI.getCertificate().getPublicKey()))
 		{
 			throw new Exception("The BI's signature under the transfer certificate is invalid");
 		}
 
-		XMLTransCert cert = new XMLTransCert(doc);
+
 		cert.setReceivedDate(new Date());
 		return cert;
 	}
@@ -325,6 +334,38 @@ public class BIConnection implements ICaptchaSender
 		Document doc = m_httpClient.readAnswer();
 		plans = new XMLVolumePlans(doc);
 		return plans;
+	}
+
+	public XMLGenericText getTerms(String lang) throws Exception
+	{
+
+		m_httpClient.writeRequest("POST","terms",lang);
+		Document doc = m_httpClient.readAnswer();
+		XMLGenericText terms;
+		try
+		{
+			terms = new XMLGenericText(doc);
+		} catch (Exception e) // e.g. JPI returned an ErrorMessage instead of GenericText
+		{
+			return null;
+		}
+		return terms;
+	}
+
+	public XMLGenericText getCancellationPolicy(String lang) throws Exception
+	{
+
+		m_httpClient.writeRequest("POST","cancellationpolicy",lang);
+		Document doc = m_httpClient.readAnswer();
+		XMLGenericText policy;
+		try
+		{
+			policy = new XMLGenericText(doc);
+		} catch (Exception e) // e.g. JPI returned an ErrorMessage instead of GenericText
+		{
+			return null;
+		}
+		return policy;
 	}
 
 
@@ -475,16 +516,23 @@ public class BIConnection implements ICaptchaSender
 		return paymentoptions;
 	}
 
-	public XMLPassivePayment fetchPaymentData(String transfernumber) throws Exception
+	public IXMLEncodable fetchPaymentData(String transfernumber) throws Exception
 	{
-		m_httpClient.writeRequest("GET", "paymentdata",transfernumber);
+		IXMLEncodable paymentData;
+		m_httpClient.writeRequest("POST", "paymentdata",transfernumber);
 		Document doc = m_httpClient.readAnswer();
-		if (doc == null) //BI returned null == no matching record in passivepayments
+		if (doc == null) //should never happen, BI return XMLErrorMessage at worst
 		{
 			return null;
 		}
-		XMLPassivePayment paymentdata = new XMLPassivePayment(doc.getDocumentElement());
-		return paymentdata;
+		if (doc.getDocumentElement().getTagName().equalsIgnoreCase(XMLPassivePayment.XML_ELEMENT_NAME) )
+		{
+			paymentData = new XMLPassivePayment(doc.getDocumentElement());
+		} else
+		{
+			paymentData = new XMLErrorMessage(doc.getDocumentElement());
+        }
+		return paymentData;
 	}
 
 	/**
@@ -496,11 +544,22 @@ public class BIConnection implements ICaptchaSender
 	public XMLTransactionOverview fetchTransactionOverview(XMLTransactionOverview a_overview) throws
 		Exception
 	{
-		m_httpClient.writeRequest("POST", "transactionoverview",
-								  XMLUtil.toString(a_overview.toXmlElement(XMLUtil.createDocument())));
+		String theOverview =  XMLUtil.toString(a_overview.toXmlElement(XMLUtil.createDocument()));
+		m_httpClient.writeRequest("POST", "transactionoverview",theOverview);
 		Document doc = m_httpClient.readAnswer();
-		XMLTransactionOverview overview = new XMLTransactionOverview(doc.getDocumentElement());
-		return overview;
+
+	    //check if what came back is actually an XMLTransactionOverview, or rather an XMLErrorMessage
+		Element rootElem = doc.getDocumentElement();
+		if (rootElem.getTagName().equalsIgnoreCase(XMLErrorMessage.XML_ELEMENT_NAME) )
+		{
+			return null;
+		}
+		else
+		{
+			XMLTransactionOverview overview = new XMLTransactionOverview(doc.getDocumentElement());
+			String theReturnedOverview = XMLUtil.toString(overview.toXmlElement(XMLUtil.createDocument()));
+			return overview;
+		}
 	}
 
 	/**
@@ -513,9 +572,8 @@ public class BIConnection implements ICaptchaSender
 	{
 		try
 		{
-			m_httpClient.writeRequest("POST", "passivepayment",
-									  XMLUtil.toString(a_passivePayment.toXmlElement(XMLUtil.createDocument()
-				)));
+			String passivePaymentString = XMLUtil.toString(a_passivePayment.toXmlElement(XMLUtil.createDocument()));
+			m_httpClient.writeRequest("POST", "passivepayment",passivePaymentString);
 			Document doc = m_httpClient.readAnswer();
 			XMLErrorMessage err = new XMLErrorMessage(doc.getDocumentElement());
 			if (err.getErrorCode() == XMLErrorMessage.ERR_OK)
@@ -531,6 +589,30 @@ public class BIConnection implements ICaptchaSender
 		{
 			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
 						  "Could not send PassivePayment to payment instance: " + e);
+			return false;
+		}
+	}
+
+	public boolean checkCouponCode(String couponCode)
+	{
+		try
+		{
+			m_httpClient.writeRequest("POST", "coupon",couponCode);
+			Document doc = m_httpClient.readAnswer();
+			XMLErrorMessage err = new XMLErrorMessage(doc.getDocumentElement());
+			if (err.getErrorCode() == XMLErrorMessage.ERR_OK)
+			{
+				return true;
+			}
+			else
+			{
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "User entered an invalid coupon, reply from jpi was: "+ err.getMessage() );
+				return false;
+			}
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,"BIConnection.checkCouponCode: Could not check coupon validity due to: " + e + " so I'll return false");
 			return false;
 		}
 	}

@@ -56,7 +56,6 @@ import anon.infoservice.IMutableProxyInterface;
 import anon.IServiceContainer;
 import anon.infoservice.MixCascade;
 import java.util.Hashtable;
-import anon.infoservice.MixInfo;
 
 /**
  * This control channel is used for communication with the AI
@@ -309,7 +308,9 @@ public class AIControlChannel extends XmlControlChannel
 	   * We don't even bother to check the hashes in the CC,
 	   * the JAP just fills in the ones he knows from the Cascade
 	   */
-	  cc.setPriceCerts(m_connectedCascade.getPriceCertificateHashes());
+	  Hashtable priceCerts = m_connectedCascade.getPriceCertificateHashes();
+	  cc.setPriceCerts(priceCerts);
+
 	  cc.setPIID(currentAccount.getAccountCertificate().getPIID());
 	  String cascadeId = m_connectedCascade.getId();
 	  cc.setCascadeID(cascadeId);

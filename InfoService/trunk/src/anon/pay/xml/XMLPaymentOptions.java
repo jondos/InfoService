@@ -42,7 +42,7 @@ import org.w3c.dom.Node;
 
 /**
  * This class represents a XMLPaymentOptions structure.
- * @author Tobias Bayer
+ * @author Elmar Schraml
  */
 public class XMLPaymentOptions implements IXMLEncodable
 {

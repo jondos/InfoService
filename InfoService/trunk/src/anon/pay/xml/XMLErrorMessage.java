@@ -37,6 +37,8 @@ public class XMLErrorMessage extends Exception implements IXMLEncodable
 	public static final int ERR_INVALID_PRICE_CERTS = 17;
 	public static final int ERR_MULTIPLE_LOGIN = 18;
 	public static final int ERR_NO_RECORD_FOUND = 19;
+	public static final int ERR_SUCCESS_BUT_WITH_ERRORS = 20;
+
 
 	private int m_iErrorCode;
 	private String m_strErrMsg;
@@ -47,7 +49,7 @@ public class XMLErrorMessage extends Exception implements IXMLEncodable
 	   matches the number of constants defined for error codes !! */
 	private static final String[] m_errStrings =
 		{
-		"Success",
+		"Success", //0
 		"Internal Server Error",
 		"Wrong format",
 		"Wrong Data",
@@ -57,17 +59,21 @@ public class XMLErrorMessage extends Exception implements IXMLEncodable
 		"No account certificate",
 		"No balance",
 		"No cost confirmation",
-		"Account is empty",
+		"Account is empty", //10
 		"Cascade too long",
 		"Database error",
 		"Insufficient balance",
 		"No flatrate offered",
 		"Invalid code",
-		"Invalid CC"
+		"Invalid CC",
+		"Invalid price certs",
+		"multiple login",
+		"no record found" //19
 	};
 
 	private static final String[] m_messageObjectTypes =
 	{
+		"none", //0
 		"none",
 		"none",
 		"none",
@@ -77,14 +83,16 @@ public class XMLErrorMessage extends Exception implements IXMLEncodable
 		"none",
 		"none",
 		"none",
+		"none", //10
 		"none",
 		"none",
 		"none",
 		"none",
 		"none",
+		"XMLEasyCC", //16, belongs to ERR_OUTDATED_CC
 		"none",
 		"none",
-		"XMLEasyCC"
+		"none" //19
 	};
 
 	public static final String XML_ELEMENT_NAME = "ErrorMessage";

@@ -60,6 +60,8 @@ public class XMLVolumePlans implements IXMLEncodable
 
 	public XMLVolumePlans()
 	{
+		//at least create a document, to avoid nullpointerexceptions when calling .toXmlElement on an empty object
+		m_docTheVolumePlans = XMLUtil.createDocument();
 	}
 
 	public XMLVolumePlans(Vector thePlans)

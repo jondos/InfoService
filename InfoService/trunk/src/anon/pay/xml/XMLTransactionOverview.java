@@ -36,6 +36,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
+import java.util.Hashtable;
 
 /**
  * This class is used by JAP to ask the Payment Instance about
@@ -45,29 +46,32 @@ import anon.util.XMLUtil;
  *
  * <TransactionOverview version="1.0">
  *    <TransferNumber used="false">232343455</TransferNumber>
- *    <TransferNumber used="true" date="234358734908" amount="13242424">435675747</TransferNumber>
+ *    <TransferNumber used="true" date="234358734908" amount="13242424" accountnumber="123456789">435675747</TransferNumber>
  * </TransactionOverview>
  *
  *
- * @author Tobias Bayer
+ * @author Tobias Bayer, Elmar Schraml
+ * @todo Elmar: should be refactored to use a Hashtable instead of String[] for its entries
  */
 public class XMLTransactionOverview implements IXMLEncodable
 {
 	public static final Object XML_ELEMENT_NAME = "TransactionOverview";
 
-	/** Contains transfer numbers, their "used" attribute and the used date. The data is
-	 * represented as a String[] with first element: tan, second element: used, third element: date,
-	 * fourth element: amount
-	 **/
-	private Vector m_tans = new Vector();
+	private Vector m_transactions = new Vector(); //Vector<Hashtable> with keys as defined in the string constants below
+	private String m_language; //language of the JAP that requests the Transaction overview (since some data, e.g. payment method name, need to be localized)
 
-	public XMLTransactionOverview()
-	{}
+	//data for a single transaction is stored in a hashtable, define which keys exist here
+	public static final String KEY_ACCOUNTNUMBER = "accountnumber";
+	public static final String KEY_TAN = "tan";
+	public static final String KEY_DATE = "date";
+	public static final String KEY_AMOUNT = "amount";
+	public static final String KEY_VOLUMEPLAN = "volumeplan";
+	public static final String KEY_PAYMENTMETHOD = "paymentmethod";
+	public static final String KEY_USED = "used";
 
-	public XMLTransactionOverview(String xml) throws Exception
+	public XMLTransactionOverview(String a_language)
 	{
-		Document doc = XMLUtil.toXMLDocument(xml);
-		setValues(doc.getDocumentElement());
+		m_language = a_language;
 	}
 
 	public XMLTransactionOverview(byte[] xml) throws Exception
@@ -88,58 +92,100 @@ public class XMLTransactionOverview implements IXMLEncodable
 
 	public int size()
 	{
-		return m_tans.size();
+		return m_transactions.size();
 	}
 
 	private void setValues(Element elemRoot) throws Exception
 	{
-		m_tans = new Vector();
+		m_transactions = new Vector();
 		if (!elemRoot.getTagName().equals(XML_ELEMENT_NAME) ||
 			!elemRoot.getAttribute("version").equals("1.1"))
 		{
 			throw new Exception("TransactionOverview wrong format or wrong version number");
 		}
+
+	    m_language = elemRoot.getAttribute("language");
+
 		NodeList nodesTans = elemRoot.getElementsByTagName("TransferNumber");
+
 		for (int i = 0; i < nodesTans.getLength(); i++)
 		{
-			String tan = nodesTans.item(i).getFirstChild().getNodeValue();
+			Hashtable transactionData = new Hashtable();
+
+			Element curTanElem = (Element) nodesTans.item(i);
+			String tan = curTanElem.getFirstChild().getNodeValue();
+			tan = XMLUtil.parseValue(curTanElem,"");
+
+			String debug = XMLUtil.toString(curTanElem);
+			transactionData.put(KEY_TAN,tan);
+
 			String used;
-			if ( ( (Element) nodesTans.item(i)).getAttribute("used") != null)
+			if (  curTanElem.getAttribute("used") != null)
 			{
-				used = ( (Element) nodesTans.item(i)).getAttribute("used");
+				used = curTanElem.getAttribute("used");
 			}
 			else
 			{
 				used = "false";
 			}
+			transactionData.put(KEY_USED,used);
+
 			String date;
-			if ( ( (Element) nodesTans.item(i)).getAttribute("date") != null)
+			if ( curTanElem.getAttribute("date") != null)
 			{
-				date = ( (Element) nodesTans.item(i)).getAttribute("date");
+				date = curTanElem.getAttribute("date");
 			}
 			else
 			{
 				date = "0";
 			}
+			transactionData.put(KEY_DATE, date);
 
 			String amount;
-			if ( ( (Element) nodesTans.item(i)).getAttribute("amount") != null)
+			if ( curTanElem.getAttribute("amount") != null)
 			{
-				amount = ( (Element) nodesTans.item(i)).getAttribute("amount");
+				amount = curTanElem.getAttribute("amount");
 			}
 			else
 			{
 				amount = "0";
 			}
+			transactionData.put(KEY_AMOUNT,amount);
 
-			String[] line =
+			String accountnumber;
+			if ( curTanElem.getAttribute("accountnumber") != null)
 				{
-				tan,
-				used,
-				date,
-				amount
-			};
-			m_tans.addElement(line);
+					accountnumber = curTanElem.getAttribute("accountnumber");
+				}
+				else
+				{
+					accountnumber = "";
+			}
+			transactionData.put(KEY_ACCOUNTNUMBER, accountnumber);
+
+			String volumeplan;
+			if ( curTanElem.getAttribute("volumeplan") != null)
+			{
+				volumeplan = curTanElem.getAttribute("volumeplan");
+			}
+			else
+			{
+				volumeplan = "";
+			}
+			transactionData.put(KEY_VOLUMEPLAN, volumeplan);
+
+			String paymentmethod;
+			if ( curTanElem.getAttribute("paymentmethod") != null)
+			{
+				paymentmethod = curTanElem.getAttribute("paymentmethod");
+			}
+			else
+			{
+				paymentmethod = "";
+			}
+			transactionData.put(KEY_PAYMENTMETHOD, paymentmethod);
+
+			m_transactions.addElement(transactionData);
 		}
 
 	}
@@ -148,17 +194,42 @@ public class XMLTransactionOverview implements IXMLEncodable
 	{
 		Element elemRoot = a_doc.createElement("TransactionOverview");
 		elemRoot.setAttribute("version", "1.1");
+		elemRoot.setAttribute("language",m_language);
 
 		Element elem;
-		Enumeration tans = m_tans.elements();
+		Enumeration tans = m_transactions.elements();
 		while (tans.hasMoreElements())
 		{
-			String[] line = (String[]) tans.nextElement();
+			Hashtable curTransaction = (Hashtable) tans.nextElement();
 			elem = a_doc.createElement("TransferNumber");
-			elem.setAttribute("used", line[1]);
-			elem.setAttribute("date", line[2]);
-			elem.setAttribute("amount", line[3]);
-			elem.appendChild(a_doc.createTextNode(line[0]));
+
+			String accountNumber = (String) curTransaction.get(KEY_ACCOUNTNUMBER);
+			accountNumber = (accountNumber == null)?"":accountNumber;
+			elem.setAttribute("accountnumber",accountNumber);
+
+			String date = (String) curTransaction.get(KEY_DATE);
+			date = (date == null)?"":date;
+			elem.setAttribute("date", date);
+
+			String amount = (String) curTransaction.get(KEY_AMOUNT);
+			amount = (amount == null)?"": amount;
+			elem.setAttribute("amount", amount);
+
+			String volumePlan = (String) curTransaction.get(KEY_VOLUMEPLAN);
+			volumePlan = (volumePlan == null)?"":volumePlan;
+			elem.setAttribute("volumeplan",volumePlan);
+
+			String paymentMethod = (String) curTransaction.get(KEY_PAYMENTMETHOD);
+			paymentMethod = (paymentMethod==null)?"":paymentMethod;
+			elem.setAttribute("paymentmethod",paymentMethod);
+
+			String used = (String) curTransaction.get(KEY_USED);
+			used = (used == null)?"":used;
+			elem.setAttribute("used", used);
+
+			String transferNumber = (String) curTransaction.get(KEY_TAN);
+			elem.appendChild(a_doc.createTextNode(transferNumber));
+
 			elemRoot.appendChild(elem);
 		}
 		return elemRoot;
@@ -170,7 +241,12 @@ public class XMLTransactionOverview implements IXMLEncodable
 	 */
 	public Vector getTans()
 	{
-		return m_tans;
+		return m_transactions;
+	}
+
+	public String getLanguage()
+	{
+		return m_language;
 	}
 
 	/**
@@ -181,43 +257,89 @@ public class XMLTransactionOverview implements IXMLEncodable
 	public boolean isUsed(long a_tan)
 	{
 		boolean used = false;
-		for (int i = 0; i < m_tans.size(); i++)
+		Hashtable theTransaction  = getDataForTransaction(a_tan);
+        if (theTransaction != null) //nothing to be done if no transaction found,will return false
 		{
-			String[] line = (String[]) m_tans.elementAt(i);
-			if (line[0].equals(String.valueOf(a_tan)))
-			{
-				if (line[1].equalsIgnoreCase("true"))
-				{
-					used = true;
-				}
-			}
+			String usedString = (String) theTransaction.get(KEY_USED);
+			used = Boolean.parseBoolean(usedString);
 		}
 		return used;
 	}
 
 	/**
-	 * Sets a specific tan to used or not used
+	 *
+	 * @param a_transactionNumber long
+	 * @return Hashtable containing all data associated with that transaction, null if no matching tan was found
+	 */
+	public Hashtable getDataForTransaction(long a_transactionNumber)
+	{
+		Hashtable matchingTransaction = null;
+		for (Enumeration allTans = m_transactions.elements(); allTans.hasMoreElements(); )
+		{
+			Hashtable transactionData = (Hashtable) allTans.nextElement();
+			String tan = (String) transactionData.get(KEY_TAN);
+			long curTan = Long.parseLong(tan);
+			if (curTan == a_transactionNumber)
+			{
+				matchingTransaction = transactionData;
+				break;
+			}
+		}
+		return matchingTransaction;
+	}
+
+	/**
+	 * Sets a specific tan to used or not used, and add all the data associated with the TAN
 	 * @param a_tan long
 	 * @param a_used boolean
 	 * @param a_usedDate long
 	 */
-	public void setUsed(long a_tan, boolean a_used, long a_usedDate, long amount)
+	public void setTransactionData(long a_tan, boolean a_used, long a_usedDate, long amount, long accountnumber, String volumePlan, String paymentMethod)
 	{
-		Enumeration e = m_tans.elements();
-
-		while(e.hasMoreElements())
+	    //prevent null values (might very well happen for older accounts that didn't record that data, etc)
+        String strAccountNumber;
+		if (accountnumber == 0)
 		{
-			String[] line = (String[]) e.nextElement();
-			if (line[0].equals(String.valueOf(a_tan)))
-			{
-				String tan = line[0];
-				m_tans.addElement(new String[]
-								  {tan, String.valueOf(a_used), String.valueOf(a_usedDate),
-								  String.valueOf(amount)});
-				m_tans.removeElement(line);
-			}
-
+			strAccountNumber = new String("");
 		}
+		else
+		{
+			strAccountNumber = (new Long(accountnumber)).toString();
+		}
+		String strAmount;
+		if (amount == 0)
+		{
+			strAmount = new String("");
+		}
+		else
+		{
+			strAmount = (new Long(amount)).toString();
+		}
+		String strUsedDate;
+		if (a_usedDate == 0)
+		{
+			strUsedDate = new String("");
+		}
+		else
+		{
+			strUsedDate = (new Long(a_usedDate)).toString();
+		}
+	    if (volumePlan == null)
+		{
+			volumePlan = new String("");
+		}
+		if (paymentMethod == null)
+		{
+			paymentMethod = new String("");
+		}
+
+		Hashtable affectedTransaction = getDataForTransaction(a_tan);
+		affectedTransaction.put(KEY_USED,(new Boolean(a_used)).toString() );
+		affectedTransaction.put(KEY_DATE, strUsedDate );
+		affectedTransaction.put(KEY_ACCOUNTNUMBER, strAccountNumber );
+		affectedTransaction.put(KEY_AMOUNT, strAmount );
+		affectedTransaction.put(KEY_VOLUMEPLAN, volumePlan);
+		affectedTransaction.put(KEY_PAYMENTMETHOD, paymentMethod);
 	}
 
 	/**
@@ -226,8 +348,9 @@ public class XMLTransactionOverview implements IXMLEncodable
 	 */
 	public void addTan(long a_tan)
 	{
-		m_tans.addElement(new String[]
-						  {String.valueOf(a_tan), "false", "0", "0"});
+		Hashtable newTransaction = new Hashtable();
+		newTransaction.put(KEY_TAN, (new Long(a_tan)).toString());
+		m_transactions.add(newTransaction);
 	}
 
 }

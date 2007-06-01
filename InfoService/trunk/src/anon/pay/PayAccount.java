@@ -53,6 +53,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.infoservice.IMutableProxyInterface;
+import anon.pay.xml.XMLGenericStrings;
 
 /**
  * This class encapsulates one account and all additional data associated to one
@@ -626,7 +627,7 @@ public class PayAccount implements IXMLEncodable
 	 * @throws Exception
 	 * @throws java.lang.SecurityException if the account is encrypted an not usable
 	 */
-	public XMLTransCert charge(IMutableProxyInterface a_proxys) throws SecurityException, Exception
+	public XMLTransCert charge(IMutableProxyInterface a_proxys, XMLGenericStrings a_parameters) throws SecurityException, Exception
 	{
 		if (getPrivateKey() == null)
 		{
@@ -636,7 +637,7 @@ public class PayAccount implements IXMLEncodable
 		BIConnection biConn = new BIConnection(m_theBI);
 		biConn.connect(a_proxys);
 		biConn.authenticate(m_accountCertificate, m_privateKey);
-		XMLTransCert transcert = biConn.charge();
+		XMLTransCert transcert = biConn.charge(a_parameters);
 		biConn.disconnect();
 		m_transCerts.addElement(transcert);
 		return transcert;

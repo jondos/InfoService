@@ -293,8 +293,8 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 		  m_priceCert = new XMLPriceCertificate((Element)priceCertNode);
 		  if (!m_priceCert.getSubjectKeyIdentifier().equals(getId()))
 		  {
-			  String message = "SKI in price certificate differs from Mix ID! SKI:"
-				  + m_priceCert.getSubjectKeyIdentifier() + " MixID: " + getId();
+			  String message = "SKI in price certificate differs from Mix ID! SKI: $"
+				  + m_priceCert.getSubjectKeyIdentifier() + "$ MixID: $" + getId() + "$";
 			  LogHolder.log(LogLevel.ERR, LogType.PAY, message);
 		  }
 	  }
@@ -359,8 +359,6 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 	   */
 	  m_freeMix = false;
 	  m_xmlStructure = a_mixNode;
-
-	  //TODO: insert price certificate?
 
 
   }
