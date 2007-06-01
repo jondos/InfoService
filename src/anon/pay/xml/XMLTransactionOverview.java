@@ -27,8 +27,8 @@
  */
 package anon.pay.xml;
 
-import java.io.ByteArrayInputStream;
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Vector;
 
 import org.w3c.dom.Document;
@@ -36,7 +36,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
-import java.util.Hashtable;
 
 /**
  * This class is used by JAP to ask the Payment Instance about
@@ -261,7 +260,7 @@ public class XMLTransactionOverview implements IXMLEncodable
         if (theTransaction != null) //nothing to be done if no transaction found,will return false
 		{
 			String usedString = (String) theTransaction.get(KEY_USED);
-			used = Boolean.parseBoolean(usedString);
+			used = (new Boolean(usedString)).booleanValue();
 		}
 		return used;
 	}
@@ -350,7 +349,7 @@ public class XMLTransactionOverview implements IXMLEncodable
 	{
 		Hashtable newTransaction = new Hashtable();
 		newTransaction.put(KEY_TAN, (new Long(a_tan)).toString());
-		m_transactions.add(newTransaction);
+		m_transactions.addElement(newTransaction);
 	}
 
 }

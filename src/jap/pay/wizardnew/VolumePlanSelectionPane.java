@@ -29,42 +29,42 @@
 
 package jap.pay.wizardnew;
 
-import gui.dialog.DialogContentPane;
-import java.awt.GridBagConstraints;
-import java.awt.Font;
+import java.sql.Timestamp;
+import java.util.Vector;
+
 import java.awt.Container;
-import anon.pay.xml.XMLVolumePlan;
-import anon.pay.xml.XMLVolumePlans;
-import gui.dialog.WorkerContentPane;
-import gui.dialog.JAPDialog;
-import gui.JAPMessages;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import javax.swing.JRadioButton;
-import java.awt.event.ActionEvent;
 import java.awt.Insets;
-import javax.swing.JLabel;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.ButtonGroup;
-import jap.JAPUtil;
-import gui.dialog.DialogContentPane.IWizardSuitable;
-import java.sql.Timestamp;
-import jap.JAPController;
-import logging.LogType;
-import gui.GUIUtils;
-import javax.swing.JTextField;
-import gui.JapCouponField;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
-import anon.pay.PaymentInstanceDBEntry;
-import anon.pay.PayAccount;
-import java.util.Vector;
-import anon.pay.BIConnection;
-import jap.JAPModel;
-import logging.LogHolder;
-import logging.LogLevel;
-import jap.pay.AccountSettingsPanel.AccountCreationPane;
-import javax.swing.JButton;
+import javax.swing.JRadioButton;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+
+import anon.pay.BIConnection;
+import anon.pay.PayAccount;
+import anon.pay.PaymentInstanceDBEntry;
+import anon.pay.xml.XMLVolumePlan;
+import anon.pay.xml.XMLVolumePlans;
+import gui.GUIUtils;
+import gui.JAPMessages;
+import gui.JapCouponField;
+import gui.dialog.DialogContentPane;
+import gui.dialog.DialogContentPane.IWizardSuitable;
+import gui.dialog.JAPDialog;
+import gui.dialog.WorkerContentPane;
+import jap.JAPController;
+import jap.JAPModel;
+import jap.JAPUtil;
+import jap.pay.AccountSettingsPanel.AccountCreationPane;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 
 
@@ -332,19 +332,19 @@ import javax.swing.event.DocumentListener;
 		//can't have both a coupon and a plan selected (should not be possible to happen, but check anyway)
 		if (m_couponButton.isSelected() == false && isCouponUsed() )
 		{
-			allErrors.add(new CheckError(JAPMessages.getString(MSG_PLAN_OR_COUPON), LogType.GUI));
+			allErrors.addElement(new CheckError(JAPMessages.getString(MSG_PLAN_OR_COUPON), LogType.GUI));
 		}
 
 	    //if no coupon was entered, a plan needs to be selected
 		if ( m_rbGroup.getSelection() == null && !isCouponUsed() )
 		{
-			allErrors.add(new CheckError(JAPMessages.getString(MSG_ERROR_NO_PLAN_CHOSEN), LogType.GUI));
+			allErrors.addElement(new CheckError(JAPMessages.getString(MSG_ERROR_NO_PLAN_CHOSEN), LogType.GUI));
 		}
 
 	    //if coupon was entered, check locally (without contacting JPI) if it's even possibly valid
 		if (isCouponUsed() && !isCouponComplete() )
 		{
-			allErrors.add(new CheckError(JAPMessages.getString(MSG_COUPON_INCOMPLETE), LogType.GUI));
+			allErrors.addElement(new CheckError(JAPMessages.getString(MSG_COUPON_INCOMPLETE), LogType.GUI));
 		}
 
 

@@ -1040,7 +1040,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			//if the account's JPI matches the JPI of the currently active account
 			if (jpiOfThisAccount.getId().equalsIgnoreCase(jpiOfActiveAccount.getId()))
 			{
-				a_accounts.add(anAccount);
+				a_accounts.addElement(anAccount);
 			}
 		}
 
@@ -1648,13 +1648,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			    //set strings to show according to payment type and success/failure
 				if (paymentType.equalsIgnoreCase(XMLPaymentOption.OPTION_ACTIVE))
 				{
-                    messagesToShow.add(activeComplete);
-					messagesToShow.add(backupWarning);
+                    messagesToShow.addElement(activeComplete);
+					messagesToShow.addElement(backupWarning);
 				}
 				else if (paymentType.equalsIgnoreCase(XMLPaymentOption.OPTION_MIXED))
 				{
-                   messagesToShow.add(mixedComplete);
-				   messagesToShow.add(backupWarning);
+                   messagesToShow.addElement(mixedComplete);
+				   messagesToShow.addElement(backupWarning);
 			}
 				else if (paymentType.equals("coupon") )
 				{
@@ -1662,11 +1662,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 					if (passivePaymentSucceeded)
 			{
-						messagesToShow.add(couponOK);
-						messagesToShow.add(backupWarning);
+						messagesToShow.addElement(couponOK);
+						messagesToShow.addElement(backupWarning);
 					} else
 				{
-						messagesToShow.add(couponFailed);
+						messagesToShow.addElement(couponFailed);
 					}
 				}
 				else //non-coupon passive payment, e.g. credit card
@@ -1674,12 +1674,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					boolean passivePaymentSucceeded = ((Boolean) sendPassivePane.getValue()).booleanValue();
 					if (passivePaymentSucceeded)
 					{
-						messagesToShow.add(passiveOK);
-						messagesToShow.add(backupWarning);
+						messagesToShow.addElement(passiveOK);
+						messagesToShow.addElement(backupWarning);
 				}
 				else
 				{
-						messagesToShow.add(passiveError);
+						messagesToShow.addElement(passiveError);
 				}
 
 				}
@@ -1729,7 +1729,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						{
 						PaymentInstanceDBEntry m_selectedJpi = PayAccountsFile.getInstance().getBI(a_biid);
 						allJpis = new Vector();
-						allJpis.add(m_selectedJpi);
+						allJpis.addElement(m_selectedJpi);
 						}
 					else //get jpis for which accounts exist
 					{

@@ -208,7 +208,12 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 				for (Enumeration allAccounts = m_accounts.elements(); allAccounts.hasMoreElements(); )
 				{
 					curAccount = (PayAccount) allAccounts.nextElement();
-					transCerts.addAll(curAccount.getTransCerts());
+					Vector transCertsOfAccount = curAccount.getTransCerts();
+					for (Enumeration e = transCertsOfAccount.elements(); e.hasMoreElements(); )
+					{
+						transCerts.addElement(e.nextElement() ); //.addAll would be faster, but is post-JDK 1.1.8
+					}
+
 				}
 				//put TAN for each transCert into an XMLTransacton Overview
 				overview = new XMLTransactionOverview(language);
@@ -221,7 +226,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 
 				try
 				{
-					curAccount = (PayAccount) m_accounts.get(0); //just get the first account to find a BI to connect to
+					curAccount = (PayAccount) m_accounts.elementAt(0); //just get the first account to find a BI to connect to
 					BIConnection biConn = new BIConnection(curAccount.getBI());
 					biConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
 					biConn.authenticate(curAccount.getAccountCertificate(), curAccount.getPrivateKey());
@@ -305,7 +310,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 				isCompleted = true;
 			}
 
-			PayAccount m_account = (PayAccount) m_accounts.get(0); //just to get it to compile
+			PayAccount m_account = (PayAccount) m_accounts.elementAt(0); //just to get it to compile
 			BIConnection biConn = new BIConnection(m_account.getBI());
 			biConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
 			biConn.authenticate(m_account.getAccountCertificate(), m_account.getPrivateKey());
@@ -360,7 +365,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 		Vector optionsToShow = new Vector();
 		try
 		{
-			PayAccount m_account = (PayAccount) m_accounts.get(0); //just to get it to compile
+			PayAccount m_account = (PayAccount) m_accounts.elementAt(0); //just to get it to compile
 			BIConnection biConn = new BIConnection(m_account.getBI());
 			biConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
 			biConn.authenticate(m_account.getAccountCertificate(), m_account.getPrivateKey());
@@ -515,7 +520,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 					try
 					{
 						String used = (String) transactionData.get(XMLTransactionOverview.KEY_USED);
-						boolean isUsed = Boolean.parseBoolean(used);
+						boolean isUsed = (new Boolean(used)).booleanValue();
 						if (isUsed)
 						{
 							return JAPMessages.getString(MSG_USEDSTATUS);

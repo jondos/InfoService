@@ -1,29 +1,25 @@
 package jap.pay;
 
-import gui.dialog.JAPDialog;
-import anon.pay.xml.XMLPassivePayment;
-import java.awt.Component;
-import javax.swing.JDialog;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+import anon.pay.xml.XMLPassivePayment;
+import gui.JAPHtmlMultiLineLabel;
+import gui.JAPMessages;
+import gui.dialog.JAPDialog;
+import jap.JAPUtil;
 import logging.LogHolder;
 import logging.LogLevel;
-import gui.JAPMessages;
-import java.util.Vector;
-import java.awt.event.ActionListener;
-import javax.swing.JButton;
 import logging.LogType;
-import java.awt.event.ActionEvent;
-import java.awt.Insets;
-import java.awt.GridBagLayout;
-import gui.JAPHtmlMultiLineLabel;
-import javax.swing.JPanel;
-import java.awt.Dimension;
-import javax.swing.BoxLayout;
-import javax.swing.Box;
-import anon.util.XMLUtil;
-import javax.swing.JLabel;
-import jap.pay.wizardnew.PassivePaymentPane;
-import jap.JAPUtil;
 
 /**
  * Shows detailed info for a passive payment transaction
