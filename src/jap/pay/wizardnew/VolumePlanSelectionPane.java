@@ -52,6 +52,20 @@ import jap.JAPController;
 import logging.LogType;
 import gui.GUIUtils;
 import javax.swing.JTextField;
+import gui.JapCouponField;
+import javax.swing.JPanel;
+import anon.pay.PaymentInstanceDBEntry;
+import anon.pay.PayAccount;
+import java.util.Vector;
+import anon.pay.BIConnection;
+import jap.JAPModel;
+import logging.LogHolder;
+import logging.LogLevel;
+import jap.pay.AccountSettingsPanel.AccountCreationPane;
+import javax.swing.JButton;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+
 
 
 /**
@@ -61,43 +75,48 @@ import javax.swing.JTextField;
  *
  * @author Elmar Schraml
  */
-public class VolumePlanSelectionPane extends DialogContentPane implements  IWizardSuitable,ActionListener
+ public class VolumePlanSelectionPane extends DialogContentPane implements  IWizardSuitable, ActionListener, DocumentListener
 {
 	/* Messages */
-	private static final String MSG_PRICE = VolumePlanSelectionPane.class.
-		getName() + "_price";
-	private static final String MSG_HEADING = VolumePlanSelectionPane.class.
-		getName() + "_heading";
-	private static final String MSG_VOLUME = VolumePlanSelectionPane.class.
-		getName() + "_volume";
-	private static final String MSG_UNLIMITED = VolumePlanSelectionPane.class.
-		getName() + "_unlimited";
-	private static final String MSG_ERROR_NO_PLAN_CHOSEN = VolumePlanSelectionPane.class.
-		getName() + "_errorNoPlanChosen";
-	private static final String MSG_VALIDUNTIL = VolumePlanSelectionPane.class.
-		getName() + "_validuntil";
-	private static final String MSG_VOLUMEPLAN = VolumePlanSelectionPane.class.
-		getName() + "_volumeplan";
-	private static final String MSG_CHOOSEAPLAN = VolumePlanSelectionPane.class.
-		getName() + "_chooseaplan";
+	private static final String MSG_PRICE = VolumePlanSelectionPane.class.getName() + "_price";
+	private static final String MSG_HEADING = VolumePlanSelectionPane.class.getName() + "_heading";
+	private static final String MSG_VOLUME = VolumePlanSelectionPane.class.getName() + "_volume";
+	private static final String MSG_UNLIMITED = VolumePlanSelectionPane.class.getName() + "_unlimited";
+	private static final String MSG_ERROR_NO_PLAN_CHOSEN = VolumePlanSelectionPane.class.getName() + "_errorNoPlanChosen";
+	private static final String MSG_VALIDUNTIL = VolumePlanSelectionPane.class.getName() + "_validuntil";
+	private static final String MSG_VOLUMEPLAN = VolumePlanSelectionPane.class.getName() + "_volumeplan";
+	private static final String MSG_CHOOSEAPLAN = VolumePlanSelectionPane.class.getName() + "_chooseaplan";
 	private static final String MSG_ENTER_COUPON = VolumePlanSelectionPane.class.getName() + "_entercouponcode";
+	private static final String MSG_PLAN_OR_COUPON = VolumePlanSelectionPane.class.getName() + "_planorcoupon";
+	private static final String MSG_INVALID_COUPON = VolumePlanSelectionPane.class.getName() + "_invalidcoupon";
+	private static final String MSG_COUPON_INCOMPLETE = VolumePlanSelectionPane.class.getName() + "_couponincomplete";
 
 	private XMLVolumePlans m_allPlans;
 	private XMLVolumePlan m_selectedPlan;
-	private JTextField m_couponCode;
+	private JapCouponField m_coupon1;
+	private JapCouponField m_coupon2;
+	private JapCouponField m_coupon3;
+	private JapCouponField m_coupon4;
 	private GridBagConstraints m_c = new GridBagConstraints();
 	private Container m_rootPanel;
 	private ButtonGroup m_rbGroup;
-	private WorkerContentPane m_fetchPlansPane;
+	private JRadioButton m_couponButton;
 
-	public VolumePlanSelectionPane(JAPDialog a_parentDialog, WorkerContentPane a_previousContentPane)
+	private WorkerContentPane m_fetchPlansPane;
+	private boolean m_isNewAccount;
+	private boolean m_isCouponUsed;
+
+	public VolumePlanSelectionPane(JAPDialog a_parentDialog, WorkerContentPane a_previousContentPane, boolean a_newAccount)
 	{
 		super(a_parentDialog, JAPMessages.getString(MSG_CHOOSEAPLAN),
 			  new Layout(JAPMessages.getString(MSG_HEADING), MESSAGE_TYPE_PLAIN),
 			  new Options(OPTION_TYPE_OK_CANCEL, a_previousContentPane));
 		setDefaultButtonOperation(ON_CLICK_DISPOSE_DIALOG | ON_YESOK_SHOW_NEXT_CONTENT |
 								  ON_NO_SHOW_PREVIOUS_CONTENT);
+
 		m_fetchPlansPane = a_previousContentPane;
+		m_isNewAccount = a_newAccount;
+
 		m_rbGroup = new ButtonGroup();
 		m_rootPanel = this.getContentPane();
 		m_c = new GridBagConstraints();
@@ -109,6 +128,8 @@ public class VolumePlanSelectionPane extends DialogContentPane implements  IWiza
 		m_c.insets = new Insets(5, 5, 5, 5);
 		m_c.anchor = m_c.NORTHWEST;
 		m_c.fill = m_c.NONE;
+
+
 
 		//show some dummy plans
 		//(real plans are shown by showVolumePlans(), called by checkUpdate()
@@ -128,18 +149,29 @@ public class VolumePlanSelectionPane extends DialogContentPane implements  IWiza
 
 	public String getEnteredCouponCode()
 	{
-		return m_couponCode.getText();
+		return getCouponString();
 	}
+
+	private void setCouponUsed(boolean curValue)
+	{
+		m_isCouponUsed = curValue;
+    }
 
 	public boolean isCouponUsed()
 	{
-		if (m_couponCode.getText().equals("") ) //no coupon entered
-		{
-			return false;
-		} else
-		{
-			return true;
-		}
+		return m_isCouponUsed;
+	}
+
+	public boolean isCouponComplete()
+	{
+	   String enteredCoupon = getCouponString();
+	   if (enteredCoupon.length() != 16 )
+	   {
+		   return false;
+	   } else
+	   {
+		   return true;
+	   }
 	}
 
 	/**
@@ -174,9 +206,42 @@ public class VolumePlanSelectionPane extends DialogContentPane implements  IWiza
 		{
 			JRadioButton clickedButton = (JRadioButton) e.getSource();
 			String name = clickedButton.getName();
-			m_selectedPlan = m_allPlans.getVolumePlan(name);
+			if (name.equals("coupon") )
+			{
+				m_selectedPlan = null;
+				setCouponUsed(true);
+			}
+			else
+			{
+				m_selectedPlan = m_allPlans.getVolumePlan(name);
+				//clear coupon fields if a regular (non-coupon) plan selected
+				clearCouponFields();
+				setCouponUsed(false);
+			}
 		}
+
+	    //clearing regular plans if a coupon has been entered
+		//is handled by insertUpdate() (method of interface DocumentListener)
 	}
+
+	public void insertUpdate(DocumentEvent e)
+	{
+		m_selectedPlan = null;
+		m_couponButton.setSelected(true);
+		setCouponUsed(true);
+
+	}
+
+	public void removeUpdate(DocumentEvent e)
+	{
+		;//do nothing, we only implement to fullfill DocumentListener
+	}
+
+	public void changedUpdate(DocumentEvent e)
+	{
+       ;//do nothing, we only implement to fullfill DocumentListener
+	}
+
 
 	private void addPlan(XMLVolumePlan aPlan)
 	{
@@ -224,24 +289,127 @@ public class VolumePlanSelectionPane extends DialogContentPane implements  IWiza
 		m_c.insets = new Insets(10, 5, 0, 5);
 		m_c.gridx = 1;
 		m_c.gridwidth = 3;
-		m_rootPanel.add(new JLabel(JAPMessages.getString(MSG_ENTER_COUPON)),m_c);
+
+	    //headline and radio button
+	    JPanel couponHeaderPanel = new JPanel(); //default flow layout
+		m_couponButton = new JRadioButton("");
+		m_couponButton.setName("coupon");
+		m_couponButton.addActionListener(this);
+		m_rbGroup.add(m_couponButton);
+		couponHeaderPanel.add(m_couponButton);
+		couponHeaderPanel.add(new JLabel(JAPMessages.getString(MSG_ENTER_COUPON)) );
+		m_rootPanel.add(couponHeaderPanel,m_c);
 		m_c.gridy++;
 		m_c.gridx = 1;
 		m_c.gridwidth = 3;
-		m_couponCode = new JTextField(15);
-		m_rootPanel.add(m_couponCode,m_c);
+
+	    //text fields
+	    JPanel couponPanel = new JPanel(); //default flow layout
+	    m_coupon1 = new JapCouponField();
+		m_coupon1.getDocument().addDocumentListener(this);
+		couponPanel.add(m_coupon1);
+		couponPanel.add(new JLabel(" - "));
+		m_coupon2 = new JapCouponField();
+		m_coupon2.getDocument().addDocumentListener(this);
+		couponPanel.add(m_coupon2);
+		couponPanel.add(new JLabel(" - "));
+		m_coupon3 = new JapCouponField();
+		m_coupon3.getDocument().addDocumentListener(this);
+		couponPanel.add(m_coupon3);
+		couponPanel.add(new JLabel(" - "));
+		m_coupon4 = new JapCouponField();
+		m_coupon4.getDocument().addDocumentListener(this);
+		couponPanel.add(m_coupon4);
+		m_rootPanel.add(couponPanel,m_c);
 
 	}
 
 	public CheckError[] checkYesOK()
 	{
 		CheckError[] errors = super.checkYesOK();
-		if ((errors == null || errors.length == 0) && m_rbGroup.getSelection() == null && !isCouponUsed() )
+		Vector allErrors = new Vector();
+
+		//can't have both a coupon and a plan selected (should not be possible to happen, but check anyway)
+		if (m_couponButton.isSelected() == false && isCouponUsed() )
 		{
-			errors = new CheckError[]{
-				new CheckError(JAPMessages.getString(MSG_ERROR_NO_PLAN_CHOSEN), LogType.GUI)};
+			allErrors.add(new CheckError(JAPMessages.getString(MSG_PLAN_OR_COUPON), LogType.GUI));
 		}
 
+	    //if no coupon was entered, a plan needs to be selected
+		if ( m_rbGroup.getSelection() == null && !isCouponUsed() )
+		{
+			allErrors.add(new CheckError(JAPMessages.getString(MSG_ERROR_NO_PLAN_CHOSEN), LogType.GUI));
+		}
+
+	    //if coupon was entered, check locally (without contacting JPI) if it's even possibly valid
+		if (isCouponUsed() && !isCouponComplete() )
+		{
+			allErrors.add(new CheckError(JAPMessages.getString(MSG_COUPON_INCOMPLETE), LogType.GUI));
+		}
+
+
+	    //if coupon was entered,check it for validity immediately
+	    if (isCouponUsed() && isCouponComplete() && m_isNewAccount) //validity check for charging old accounts is not implemented, since charging old accounts is disabled
+		{
+			//go back lots of panes to reach the original jpi selection pane to get the jpi
+			DialogContentPane somePreviousPane = m_fetchPlansPane;
+			while ( !(somePreviousPane instanceof JpiSelectionPane) ) {
+				somePreviousPane = somePreviousPane.getPreviousContentPane();
+				//warning: will loop endlessly if no JpiSelectionPane to be found
+			}
+			JpiSelectionPane jpiPane = (JpiSelectionPane) somePreviousPane;
+			PaymentInstanceDBEntry jpi = jpiPane.getSelectedPaymentInstance();
+
+			//go back in the wizard to find the previously created account
+			somePreviousPane = m_fetchPlansPane;
+			while (! (somePreviousPane instanceof AccountCreationPane))
+			{
+				somePreviousPane = somePreviousPane.getPreviousContentPane();
+				//warning: will loop endlessly if no AccountCreationPane to be found
+			}
+			AccountCreationPane accountPane = (AccountCreationPane) somePreviousPane;
+			PayAccount account = (PayAccount) accountPane.getValue();
+
+			boolean isValid = false;
+			try
+			{
+				BIConnection piConn = new BIConnection(jpi);
+				piConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
+				piConn.authenticate(account.getAccountCertificate(),account.getPrivateKey());
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Checking coupon code validity in VolumePlanSelectionPane");
+				isValid = piConn.checkCouponCode(getEnteredCouponCode() );
+				piConn.disconnect();
+			}
+			catch (Exception e)
+			{
+				if (!Thread.currentThread().isInterrupted())
+				{
+					LogHolder.log(LogLevel.EXCEPTION, LogType.NET,"Error while checking coupon validity: ", e);
+					Thread.currentThread().interrupt();
+				}
+			}
+			if (!isValid)
+			{
+				allErrors.add(new CheckError(JAPMessages.getString(MSG_INVALID_COUPON), LogType.GUI) );
+			}
+		}
+
+	    //return errors, if there were any (needs to return null if no errors detected)
+		if (allErrors.size() > 0)
+		{
+			//unfortunately, Vector.toArray() gives us Object[], we need CheckError[], so we have to iterate, then cast and copy single objects
+			int nrOfErrors = allErrors.size();
+			errors = new CheckError[nrOfErrors];
+			for (int i = 0; i < nrOfErrors; i++)
+			{
+				Object curEntry = allErrors.get(i);
+				errors[i] = (CheckError) curEntry;
+			}
+
+		} else //explicitly return null, since <an empty Vector>.toArray will return an empty Array
+		{
+			errors = null;
+		}
 		return errors;
 	}
 
@@ -249,7 +417,7 @@ public class VolumePlanSelectionPane extends DialogContentPane implements  IWiza
 	public CheckError[] checkUpdate()
 	{
 		showVolumePlans();
-		resetSelection();
+		//resetSelection();
 		return null;
 	}
 
@@ -287,6 +455,7 @@ public class VolumePlanSelectionPane extends DialogContentPane implements  IWiza
 		m_rootPanel.add(label, m_c);
 
 		//show plans
+		m_rbGroup = new ButtonGroup();
 		m_c.gridy++;
 		for (int i = 0; i < m_allPlans.getNrOfPlans(); i++)
 		{
@@ -300,6 +469,18 @@ public class VolumePlanSelectionPane extends DialogContentPane implements  IWiza
 	public void resetSelection()
 	{
 		m_selectedPlan = null;
-		m_couponCode.setText("");
+		clearCouponFields();
+	}
+
+	private void clearCouponFields(){
+		m_coupon1.setText("");
+		m_coupon2.setText("");
+		m_coupon3.setText("");
+		m_coupon4.setText("");
+	}
+
+	private String getCouponString()
+	{
+		return m_coupon1.getText() + m_coupon2.getText() + m_coupon3.getText() + m_coupon4.getText();
 	}
 }

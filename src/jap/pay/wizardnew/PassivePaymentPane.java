@@ -81,6 +81,8 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 	public static final String IMG_CREDITCARDSECURITY = PassivePaymentPane.class.
 		getName() + "_creditcardsecurity.gif";
 
+	public static final String[] creditCardDataKeys = { "creditcardtype","number","owner","valid","checknumber" };
+
 	private Container m_rootPanel;
 	private GridBagConstraints m_c;
 	private String m_language;

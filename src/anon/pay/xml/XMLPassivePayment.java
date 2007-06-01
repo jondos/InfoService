@@ -36,7 +36,6 @@ import org.w3c.dom.NodeList;
 import anon.util.IXMLEncodable;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
-import java.util.Vector;
 
 /**
  * This class is used by JAP to send information necessary to process a
@@ -54,13 +53,14 @@ import java.util.Vector;
  * </PassivePayment>
  *
  *
- * @author Tobias Bayer
+ * @author Tobias Bayer, Elmar Schraml
  */
 public class XMLPassivePayment implements IXMLEncodable
 {
 	public static final String XML_ELEMENT_NAME = "PassivePayment";
 	private static final String XML_DOCUMENT_VERSION = "1.0";
 	private static final String VERSION = "version";
+	//keys for element/attribute name
 	private static final String TRANSFER_NUM = "TransferNumber";
 	private static final String AMOUNT = "Amount";
 	private static final String CURRENCY = "Currency";
@@ -75,6 +75,14 @@ public class XMLPassivePayment implements IXMLEncodable
 	private double m_amount;
 	private String m_paymentName;
 	private boolean m_charged;
+
+	//keys for payment data - use these for addData() / getPaymentData()
+	public static final String KEY_COUPONCODE = "code";
+	public static final String KEY_ACCOUNTNUMBER = "accountnumber";
+	public static final String KEY_TRANSFERNUMBER = "transfernumber";
+	public static final String KEY_VOLUMEPLAN = "volumeplan";
+	public static final String KEY_MERCHANT_ID = "merchant_id"; //Paysafecard-specific merchant id
+	public static final String KEY_TRANSACTION_ID = "transaction_id"; //Paysafecard-specific, NOT equal to the AN.ON- transfer number
 
 	/**
 	 * Constructor
@@ -260,7 +268,7 @@ public class XMLPassivePayment implements IXMLEncodable
 	/**
 	 * Gets the value of a <PaymentData> line
 	 * @param a_key String The reference of the input field that should be retrieved
-	 * @return String
+	 * @return String, or null if key was not found
 	 */
 	public String getPaymentData(String a_key)
 	{

@@ -74,13 +74,13 @@ public final class ByteSignature
 
 		//synchronized (a_publicKey.getSignatureAlgorithm())
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-				"Try to verify a message...");
+			//LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+			//	"Try to verify a message...");
 			ISignatureVerificationAlgorithm algorithm = a_publicKey.getSignatureAlgorithm();
 			if (algorithm != null)
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-							  "Try to verify a message - using algorithm: " + algorithm.toString());
+				//LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+				//			  "Try to verify a message - using algorithm: " + algorithm.toString());
 			}
 			else
 			{

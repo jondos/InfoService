@@ -359,11 +359,11 @@ public final class JAPCertificate implements IXMLEncodable, Cloneable, ICertific
 	 * @param a_strFileName Name of File that holds the certificate
 	 * @return Certificate
 	 */
-	public static JAPCertificate getInstance(String a_strFileName)
+	public static JAPCertificate getInstance(String a_certString)
 	{
 		try
 		{
-			return getInstance(new File(a_strFileName));
+			return getInstance(a_certString.getBytes());
 		}
 		catch (Exception e)
 		{

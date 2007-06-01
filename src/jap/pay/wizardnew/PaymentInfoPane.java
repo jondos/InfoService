@@ -61,6 +61,7 @@ import java.awt.event.MouseEvent;
 import java.awt.Cursor;
 import javax.swing.JLabel;
 import javax.swing.JComponent;
+import jap.JAPUtil;
 
 public class PaymentInfoPane extends DialogContentPane implements IWizardSuitable,
 	ActionListener
@@ -162,14 +163,11 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		{
 			m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%t",
 											 String.valueOf(transCert.getTransferNumber()));
-			m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%a",
-											 ( (VolumePlanSelectionPane)
-											 getPreviousContentPane().getPreviousContentPane()
-											 .getPreviousContentPane().getPreviousContentPane()).getAmount());
-			m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%c",
-										   ( (VolumePlanSelectionPane) getPreviousContentPane().
-											getPreviousContentPane().getPreviousContentPane().getPreviousContentPane()).
-										   getCurrency());
+			String amount = ((VolumePlanSelectionPane) getPreviousContentPane().getPreviousContentPane().getPreviousContentPane().getPreviousContentPane()).getAmount();
+			int intAmount = Integer.parseInt(amount);
+			amount = JAPUtil.formatEuroCentValue(intAmount);
+			m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%a",amount );
+			m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%c","");
 
 		    //show customized url if one was given in the constructor
 			//might not be necesary, if we get by with the substitutions above

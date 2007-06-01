@@ -29,12 +29,10 @@ package jap.pay;
 
 import java.util.Date;
 import java.util.Vector;
-
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JButton;
@@ -62,11 +60,16 @@ import anon.pay.xml.XMLPaymentOptions;
 import java.util.Enumeration;
 import anon.pay.xml.XMLPaymentOption;
 import java.util.Hashtable;
-import java.util.Locale;
+import anon.util.IXMLEncodable;
+import anon.pay.xml.XMLErrorMessage;
+import jap.JAPController;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import anon.util.XMLUtil;
 
 /** This dialog shows an overview of transaction numbers for an account
  *
- *  @author Tobias Bayer
+ *  @author Tobias Bayer, Elmar Schraml
  */
 public class TransactionOverviewDialog extends JAPDialog implements ActionListener
 {
@@ -85,30 +88,41 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 		getName() + "_tan";
 	private static final String MSG_AMOUNT = TransactionOverviewDialog.class.
 		getName() + "_amount";
-	private static final String MSG_USED_DATE = TransactionOverviewDialog.class.
-		getName() + "_used_date";
-	private static final String MSG_RECEIVED_DATE = TransactionOverviewDialog.class.
-		getName() + "_received_date";
+	private static final String MSG_STATUS = TransactionOverviewDialog.class.
+		getName() + "_status";
+	private static final String MSG_TRANSACTION_DATE = TransactionOverviewDialog.class.
+		getName() + "_transaction_date";
+	private static final String MSG_DETAILS_FAILED = TransactionOverviewDialog.class.getName() + "_details_failed";
+	private static final String MSG_ACCOUNTNUMBER = TransactionOverviewDialog.class.getName() + "_accountnumber";
+	private static final String MSG_VOLUMEPLAN = TransactionOverviewDialog.class.getName() + "_volumeplan";
+	private static final String MSG_PAYMENTMETHOD = TransactionOverviewDialog.class.getName() + "_paymentmethod";
+	private static final String MSG_USEDSTATUS = TransactionOverviewDialog.class.getName() + "_usedstatus";
+	private static final String MSG_OPENSTATUS = TransactionOverviewDialog.class.getName() + "_openstatus";
+	private static final String MSG_PAYMENT_COMPLETED = TransactionOverviewDialog.class.getName() + "_paymentcompleted";
 
-	private JTable m_tList;
+	private JTable m_transactionsTable;
 	private JButton m_okButton, m_reloadButton, m_detailsButton;
-	private PayAccount m_account;
+
 	private JLabel m_fetchingLabel;
 	private AccountSettingsPanel m_parent;
 
+	private Vector m_accounts; //contains the PayAccount Objects for which transactions are shown (could be only one, if only for the current account)
+
+
 	public TransactionOverviewDialog(AccountSettingsPanel a_parent, String title, boolean modal,
-									 PayAccount a_account)
+									 Vector a_accounts)
 	{
 		super(GUIUtils.getParentWindow(a_parent.getRootPanel()), title, modal);
 		m_parent = a_parent;
 
 		try
 		{
-			m_account = a_account;
+			m_accounts = a_accounts;
 			setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-			jbInit();
+			buildDialog();
 			setModal(true);
-			setSize(450, 400);
+			setSize(700, 300);
+			//pack(); //do not call pack() here, otherwise setSize() has no effect
 			setVisible(true);
 		}
 		catch (Exception e)
@@ -118,21 +132,20 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 		}
 	}
 
-	private void jbInit() throws Exception
+	private void buildDialog() throws Exception
 	{
-		JPanel panel1 = new JPanel(new GridBagLayout());
-		JPanel bttnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		JPanel rootPanel = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		c.anchor = c.NORTHWEST;
 		c.insets = new Insets(5, 5, 5, 5);
 
-		m_tList = new JTable();
+		m_transactionsTable = new JTable();
 
 		c.gridx = 0;
 		c.gridy = 0;
 		c.weighty = 1;
 		c.fill = GridBagConstraints.BOTH;
-		panel1.add(new JScrollPane(m_tList), c);
+		rootPanel.add(new JScrollPane(m_transactionsTable), c);
 		c.weightx = 0;
 		c.weighty = 0;
 		c.fill = c.NONE;
@@ -142,13 +155,28 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 		m_fetchingLabel = new JLabel(JAPMessages.getString(MSG_FETCHING),
 									 GUIUtils.loadImageIcon(JAPConstants.BUSYFN, true), JLabel.LEADING);
 		m_fetchingLabel.setHorizontalTextPosition(JLabel.LEADING);
-		panel1.add(m_fetchingLabel, c);
+		rootPanel.add(m_fetchingLabel, c);
+
+		//Add the button panel
+		c.gridy = 5;
+		c.gridx = 0;
+		c.weightx = 1;
+		c.anchor = c.SOUTHEAST;
+		rootPanel.add(buildButtonPanel(), c);
+
+		getContentPane().add(rootPanel);
+		showTransactions();
+
+	}
+
+	private JPanel buildButtonPanel()
+	{
+		JPanel bttnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
 		//The Details button
 		m_detailsButton = new JButton(JAPMessages.getString(MSG_DETAILSBUTTON));
 		m_detailsButton.addActionListener(this);
 		bttnPanel.add(m_detailsButton);
-
 
 		//The Reload button
 		m_reloadButton = new JButton(JAPMessages.getString(MSG_RELOADBUTTON));
@@ -160,19 +188,10 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 		m_okButton.addActionListener(this);
 		bttnPanel.add(m_okButton);
 
-		//Add the button panel
-		c.gridy = 5;
-		c.gridx = 0;
-		c.weightx = 1;
-		c.anchor = c.SOUTHEAST;
-		panel1.add(bttnPanel, c);
-
-		getContentPane().add(panel1);
-		doFill();
-
+	    return bttnPanel;
 	}
 
-	private void doFill()
+	private void showTransactions()
 	{
 		m_reloadButton.setEnabled(false);
 		m_fetchingLabel.setVisible(true);
@@ -181,24 +200,36 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 		{
 			public void run()
 			{
-
-				Vector transCerts = m_account.getTransCerts();
-				XMLTransactionOverview overview = new XMLTransactionOverview();
+				//get all transactions certs for all accounts
+				Vector transCerts = new Vector();
+				PayAccount curAccount;
+				String language = JAPController.getLocale().getLanguage();
+				XMLTransactionOverview overview = new XMLTransactionOverview(language);
+				for (Enumeration allAccounts = m_accounts.elements(); allAccounts.hasMoreElements(); )
+				{
+					curAccount = (PayAccount) allAccounts.nextElement();
+					transCerts.addAll(curAccount.getTransCerts());
+				}
+				//put TAN for each transCert into an XMLTransacton Overview
+				overview = new XMLTransactionOverview(language);
 				for (int i = 0; i < transCerts.size(); i++)
 				{
 					XMLTransCert cert = (XMLTransCert) transCerts.elementAt(i);
 					overview.addTan(cert.getTransferNumber());
 				}
 
-				BIConnection biConn = new BIConnection(m_account.getBI());
+
 				try
 				{
+					curAccount = (PayAccount) m_accounts.get(0); //just get the first account to find a BI to connect to
+					BIConnection biConn = new BIConnection(curAccount.getBI());
 					biConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
-					biConn.authenticate(m_account.getAccountCertificate(), m_account.getPrivateKey());
+					biConn.authenticate(curAccount.getAccountCertificate(), curAccount.getPrivateKey());
 					overview = biConn.fetchTransactionOverview(overview);
-					MyTableModel tableModel = new MyTableModel(overview);
-					m_tList.setEnabled(true);
-					m_tList.setModel(tableModel);
+					if (overview == null)
+					{
+						throw new Exception("JPI returned error message rather than transaction overview");
+					}
 				}
 				catch (Exception e)
 				{
@@ -206,7 +237,26 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 								  "Cannot connect to Payment Instance: " + e.getMessage());
 					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
 					m_parent.showPIerror(getRootPane(), e);
+					m_fetchingLabel.setVisible(false);
+					setVisible(false);
+					return; //do not bother to try and fill in table
 				}
+
+				MyTableModel tableModel = new MyTableModel(overview);
+				m_transactionsTable.setEnabled(true);
+				m_transactionsTable.setModel(tableModel);
+				m_transactionsTable.addMouseListener(new MouseAdapter()
+				{
+					public void mouseClicked(MouseEvent e)
+					{
+						if (e.getClickCount() == 2)
+						{
+							showTransactionDetailsDialog();
+						}
+					}
+				});
+
+
 
 				m_okButton.setText(JAPMessages.getString(MSG_OK_BUTTON));
 				m_fetchingLabel.setVisible(false);
@@ -228,33 +278,59 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 		}
 		else if (e.getSource() == m_reloadButton)
 		{
-			doFill();
+			showTransactions();
 		}
 		else if (e.getSource() == m_detailsButton)
 		{
-			//get transactionnumber of selected row in table
-			int selectedRow = m_tList.getSelectedRow();
-			String transfernumber = (String) m_tList.getModel().getValueAt(selectedRow,0); //0 for first column = transfernumber
-			showTransactionDetails(transfernumber);
+            showTransactionDetailsDialog();
 		}
 	}
 
-	public void showTransactionDetails(String transfernumber)
+	public void showTransactionDetailsDialog()
 	{
+
+
 		try
 		{
+			//get transactionnumber of selected row in table
+			int selectedRow = m_transactionsTable.getSelectedRow();
+			//this will break if the layout/order of columns of the table is changed, is there a way to get to column by name/id/?
+			String transfernumber = (String) m_transactionsTable.getModel().getValueAt(selectedRow, 1); //1 for second column = transfernumber
+			Object value = m_transactionsTable.getModel().getValueAt(selectedRow, 3);//fourth column
+			String amount = (String) value;
+			String status = (String) m_transactionsTable.getModel().getValueAt(selectedRow,6);
+			boolean isCompleted = false;
+			if (status.equalsIgnoreCase(JAPMessages.getString(MSG_USEDSTATUS)) )
+			{
+				isCompleted = true;
+			}
+
+			PayAccount m_account = (PayAccount) m_accounts.get(0); //just to get it to compile
 			BIConnection biConn = new BIConnection(m_account.getBI());
 			biConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
 			biConn.authenticate(m_account.getAccountCertificate(), m_account.getPrivateKey());
-			XMLPassivePayment passivePaymentData = biConn.fetchPaymentData(transfernumber);
-			//biConn will return null if payment is active (= no matching record in passivepayments)
+			IXMLEncodable xmlReply = biConn.fetchPaymentData(transfernumber);
+			//biConn will return XMLErrorMessage if payment is active (= no matching record in passivepayments)
 			//(the transfers table alone does not associate a payment method or type with a transfernumber)
-			if (passivePaymentData == null)
+			if (xmlReply instanceof XMLErrorMessage)
 			{
-				showActivePaymentDialog();
+				XMLErrorMessage repliedMessage = (XMLErrorMessage) xmlReply;
+				if (repliedMessage.getErrorCode() == XMLErrorMessage.ERR_NO_RECORD_FOUND )
+				{
+					if (isCompleted)
+					{
+					    JAPDialog.showMessageDialog(this,JAPMessages.getString(MSG_PAYMENT_COMPLETED));
+					} else
+					{
+						showActivePaymentDialog(transfernumber, amount);
+					}
+				} else
+				{
+					JAPDialog.showMessageDialog(this,JAPMessages.getString(MSG_DETAILS_FAILED));
+				}
 			} else
 			{
-				showPassivePaymentDialog(passivePaymentData);
+				showPassivePaymentDialog( (XMLPassivePayment) xmlReply, Long.parseLong(transfernumber), m_account.getAccountNumber());
 			}
 
 		} catch (Exception e)
@@ -263,29 +339,12 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 		}
 	}
 
-	private void showActivePaymentDialog()
+	private void showActivePaymentDialog(String transferNumber, String amount)
 	{
-		String language = JAPMessages.getLocale().getCountry();
+		String language = JAPMessages.getLocale().getLanguage();
 		Vector optionsToShow = getLocalizedActivePaymentsData(language);
-		String toShow = "";
-		Hashtable curOption;
-		for (Enumeration options = optionsToShow.elements(); options.hasMoreElements(); )
-		{
-			curOption = (Hashtable) options.nextElement();
-			toShow += curOption.get("name");
-			toShow += "\n\n";
-			toShow += curOption.get("heading");
-			toShow += "\n";
-			toShow += curOption.get("detailedInfo");
-			toShow += "\n";
-			for (Enumeration extraInfos = ( (Vector) curOption.get("extraInfos")).elements(); extraInfos.hasMoreElements(); )
-			{
-				toShow += (String) extraInfos.nextElement();
-				toShow += "\n";
-			}
-		}
-		//maybe replace with something fancier
-		JAPDialog.showMessageDialog(this,toShow);
+
+	    ActivePaymentDetails apd = new ActivePaymentDetails(this,optionsToShow, transferNumber,amount);
 	}
 
 	/**
@@ -301,6 +360,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 		Vector optionsToShow = new Vector();
 		try
 		{
+			PayAccount m_account = (PayAccount) m_accounts.get(0); //just to get it to compile
 			BIConnection biConn = new BIConnection(m_account.getBI());
 			biConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
 			biConn.authenticate(m_account.getAccountCertificate(), m_account.getPrivateKey());
@@ -314,7 +374,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 			for (Enumeration options = allOptions.getAllOptions().elements();options.hasMoreElements(); )
 			{
 				XMLPaymentOption curOption = (XMLPaymentOption) options.nextElement();
-				if (curOption.getType().equals("active"))
+				if (!curOption.getType().equals("active"))
 				{
 					continue; //we only need data for active payment options
 				}
@@ -332,12 +392,9 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 		return optionsToShow;
 	}
 
-	private void showPassivePaymentDialog(XMLPassivePayment pp)
+	private void showPassivePaymentDialog(XMLPassivePayment pp, long transfernumber, long accountnumber)
 	{
-		String type = pp.getPaymentName();
-		String details = pp.getAllPaymentData();
-		//you might want to replace this with a fancier custom dialog
-		JAPDialog.showMessageDialog(this,type+"\n"+details);
+		PassivePaymentDetails ppd = new PassivePaymentDetails(this,pp, transfernumber, accountnumber);
 	}
 
 	/**
@@ -355,7 +412,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 
 		public int getColumnCount()
 		{
-			return 4;
+			return 7;
 		}
 
 		public int getRowCount()
@@ -368,13 +425,19 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 			switch (c)
 			{
 				case 0:
-					return String.class;
+					return String.class; //accountnumber
 				case 1:
-					return Date.class;
+					return String.class; //transaction number
 				case 2:
-					return String.class;
+					return Date.class;   //creation date
 				case 3:
-					return Date.class;
+					return String.class; //amount
+				case 5:
+					return String.class; //volume plan
+				case 6:
+					return String.class; //payment method
+			    case 7:
+					return String.class;   //used
 				default:
 					return Object.class;
 			}
@@ -382,39 +445,89 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 
 		public Object getValueAt(int rowIndex, int columnIndex)
 		{
-			String[] line = (String[]) m_overview.getTans().elementAt(rowIndex);
+			Hashtable transactionData = (Hashtable) m_overview.getTans().elementAt(rowIndex);
 			switch (columnIndex)
 			{
 				case 0:
-					return line[0];
-				case 1:
-					Vector transCerts = m_account.getTransCerts();
-					for (int i = 0; i < transCerts.size(); i++)
+					String accountNumber = (String) transactionData.get(XMLTransactionOverview.KEY_ACCOUNTNUMBER);
+					if (accountNumber == null)
 					{
-						XMLTransCert tc = (XMLTransCert) transCerts.elementAt(i);
-						if (tc.getTransferNumber() == Long.parseLong(line[0]))
+						return new String("");
+					}
+					else
+					{
+						return accountNumber;
+					}
+				case 1:
+					return transactionData.get(XMLTransactionOverview.KEY_TAN);
+				case 2:
+				   try
+				   {
+					   String dateAsString = (String) transactionData.get(XMLTransactionOverview.KEY_DATE);
+					   long dateAsMillis = Long.parseLong(dateAsString);
+					   return new Date(dateAsMillis);
+				   }
+				   catch (Exception e)
+				   {
+					   return null;
+				   }
+				case 3:
+					try
+					{
+						String amountString = (String)transactionData.get(XMLTransactionOverview.KEY_AMOUNT);
+						long amount = Long.parseLong(amountString);
+						String formattedAmount = JAPUtil.formatEuroCentValue(amount);
+						return formattedAmount;
+					}
+					catch (Exception e)
+					{
+						return new String("");
+					}
+				case 4:
+					try
+					{
+						String volumePlan = (String) transactionData.get(XMLTransactionOverview.KEY_VOLUMEPLAN);
+						return volumePlan;
+					}
+					catch (Exception e)
+					{
+						return new String("");
+					}
+				case 5:
+					try
+					{
+						String paymentMethod = (String) transactionData.get(XMLTransactionOverview.KEY_PAYMENTMETHOD);
+						if (paymentMethod.equalsIgnoreCase("null"))
 						{
-							return tc.getReceivedDate();
+							return new String("");
+						}
+						else
+						{
+							return "<html>" + paymentMethod + "</html>";
 						}
 					}
-					return null;
-				case 2:
-					if (new Boolean(line[1]).booleanValue())
+					catch (Exception e)
 					{
-						return JAPUtil.formatBytesValue(Long.parseLong(line[3]));
+						return new String("");
 					}
-					else
+				case 6:
+					//show as open or used, with localized String
+					try
 					{
-						return "";
+						String used = (String) transactionData.get(XMLTransactionOverview.KEY_USED);
+						boolean isUsed = Boolean.parseBoolean(used);
+						if (isUsed)
+						{
+							return JAPMessages.getString(MSG_USEDSTATUS);
+						}
+						else
+						{
+							return JAPMessages.getString(MSG_OPENSTATUS);
+						}
 					}
-				case 3:
-					if (!line[2].equals("0"))
+					catch (Exception e)
 					{
-						return new Date(Long.parseLong(line[2]));
-					}
-					else
-					{
-						return null;
+						return new String("");
 					}
 				default:
 					return JAPMessages.getString("unknown");
@@ -426,14 +539,19 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 			switch (col)
 			{
 				case 0:
-					return JAPMessages.getString(MSG_TAN);
+					return JAPMessages.getString(MSG_ACCOUNTNUMBER);
 				case 1:
-					return JAPMessages.getString(MSG_RECEIVED_DATE);
+					return JAPMessages.getString(MSG_TAN);
 				case 2:
-					return JAPMessages.getString(MSG_AMOUNT);
+					return JAPMessages.getString(MSG_TRANSACTION_DATE);
 				case 3:
-					return JAPMessages.getString(MSG_USED_DATE);
-
+					return JAPMessages.getString(MSG_AMOUNT);
+				case 4:
+					return JAPMessages.getString(MSG_VOLUMEPLAN);
+				case 5:
+					return JAPMessages.getString(MSG_PAYMENTMETHOD);
+			    case 6:
+					return JAPMessages.getString(MSG_STATUS);
 				default:
 					return "---";
 			}

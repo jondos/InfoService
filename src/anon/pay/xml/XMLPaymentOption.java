@@ -36,6 +36,8 @@ import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
 import anon.util.Util;
 import java.util.Enumeration;
+import org.w3c.dom.Node;
+
 
 /**
  * This class represents a payment option sent by the Payment Instance.
@@ -61,6 +63,9 @@ public class XMLPaymentOption implements IXMLEncodable
 
 	/** Option type (active|passive)*/
 	private String m_type;
+
+    /** percentage of a user's payment that we have to pay to the payment option's provider*/
+	private int m_markup;
 
 	/** Generic option? Non-generic options are handled by JAP and do not need
 	 * input fields for passive payment*/
@@ -114,6 +119,16 @@ public class XMLPaymentOption implements IXMLEncodable
 		m_minJapVersion = a_japVersion;
 	}
 
+	public XMLPaymentOption(String a_name, String a_type, boolean a_generic, String a_japVersion, int a_markup)
+	{
+		m_name = a_name;
+		m_type = a_type;
+		m_generic = a_generic;
+		m_minJapVersion = a_japVersion;
+		m_markup = a_markup;
+	}
+
+
 	public XMLPaymentOption(String a_name, String a_type)
 	{
 		m_name = a_name;
@@ -166,13 +181,16 @@ public class XMLPaymentOption implements IXMLEncodable
 
 	public Element toXmlElement(Document a_doc)
 	{
+		Element elem;
 		Element elemRoot = a_doc.createElement("PaymentOption");
 		elemRoot.setAttribute("name", m_name);
 		elemRoot.setAttribute("type", m_type);
 		elemRoot.setAttribute("generic", String.valueOf(m_generic));
 		elemRoot.setAttribute("japversion", m_minJapVersion);
 
-		Element elem;
+		elem = a_doc.createElement("Markup");
+		XMLUtil.setValue(elem,m_markup);
+		elemRoot.appendChild(elem);
 
 		//Add headings
 		for (int i = 0; i < m_headings.size(); i++)
@@ -245,6 +263,9 @@ public class XMLPaymentOption implements IXMLEncodable
 		m_name = elemRoot.getAttribute("name");
 		m_generic = XMLUtil.parseAttribute(elemRoot, "generic", true);
 		m_minJapVersion = XMLUtil.parseAttribute(elemRoot, "japversion", Util.VERSION_FORMAT);
+
+		Node markupElem = XMLUtil.getFirstChildByName(elemRoot,"Markup");
+		m_markup = XMLUtil.parseValue(markupElem,0);
 
 		NodeList nodesHeadings = elemRoot.getElementsByTagName("Heading");
 		for (int i = 0; i < nodesHeadings.getLength(); i++)
@@ -444,6 +465,11 @@ public class XMLPaymentOption implements IXMLEncodable
 	public boolean isGeneric()
 	{
 		return m_generic;
+	}
+
+	public int getMarkup()
+	{
+		return m_markup;
 	}
 
 	public String getMinJapVersion()

@@ -77,7 +77,7 @@ import java.awt.Cursor;
 
 public class PaymentMainPanel extends FlippingPanel
 {
-	private final long WARNING_AMOUNT = 50 * 1024; // 50 MB (db stores in Kbyte!)
+	private final long WARNING_AMOUNT = 25 * 1000; // 25 MB (db stores in Kbyte!)
 
 	/** Messages */
 	private static final String MSG_TITLE =
