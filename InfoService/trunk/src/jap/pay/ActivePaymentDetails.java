@@ -89,7 +89,7 @@ public class ActivePaymentDetails extends JAPDialog implements ActionListener
 			curOption = (Hashtable) options.nextElement();
 			m_c.gridy++;
 			JPanel curOptionPanel = buildOptionPanel(curOption, transferNumber,amount);
-			optionPanels.add(curOptionPanel);
+			optionPanels.addElement(curOptionPanel);
 			getContentPane().add(curOptionPanel,m_c);
 			m_c.gridy++;
 		}

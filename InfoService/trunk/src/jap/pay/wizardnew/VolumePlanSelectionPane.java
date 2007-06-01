@@ -402,7 +402,7 @@ import logging.LogType;
 			errors = new CheckError[nrOfErrors];
 			for (int i = 0; i < nrOfErrors; i++)
 			{
-				Object curEntry = allErrors.get(i);
+				Object curEntry = allErrors.elementAt(i);
 				errors[i] = (CheckError) curEntry;
 			}
 
