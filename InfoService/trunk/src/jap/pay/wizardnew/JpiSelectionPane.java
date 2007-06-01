@@ -216,7 +216,7 @@ public class JpiSelectionPane extends DialogContentPane implements ActionListene
 		}
 		else if (m_allJpis.size() == 1)
 		{
-			m_selectedJpi = (PaymentInstanceDBEntry) m_allJpis.get(0);
+			m_selectedJpi = (PaymentInstanceDBEntry) m_allJpis.elementAt(0);
 		}
 		return m_selectedJpi;
 	}
