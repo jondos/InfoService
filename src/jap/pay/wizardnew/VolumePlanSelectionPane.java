@@ -390,7 +390,7 @@ import logging.LogType;
 			}
 			if (!isValid)
 			{
-				allErrors.add(new CheckError(JAPMessages.getString(MSG_INVALID_COUPON), LogType.GUI) );
+				allErrors.addElement(new CheckError(JAPMessages.getString(MSG_INVALID_COUPON), LogType.GUI) );
 			}
 		}
 
