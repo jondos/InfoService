@@ -47,7 +47,6 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import anon.infoservice.ListenerInterface;
 import java.awt.event.ActionListener;
-import anon.pay.PayAccountsFile;
 import gui.dialog.DialogContentPane.IWizardSuitable;
 
 /**
@@ -59,6 +58,7 @@ import gui.dialog.DialogContentPane.IWizardSuitable;
 public class JpiSelectionPane extends DialogContentPane implements ActionListener, IWizardSuitable
 {
 	private static final String MSG_CHOOSEAJPI = JpiSelectionPane.class.getName() + "_chooseajpi";
+	private static final String MSG_CHOOSEAJPI_TITLE = JpiSelectionPane.class.getName() + "_titleChooseajpi";
 	private static final String MSG_JPIS_FOUND = JpiSelectionPane.class.getName() + "_jpis_found";
 	private static final String MSG_NAME = JpiSelectionPane.class.getName() + "_name";
 	private static final String MSG_ADDRESS = JpiSelectionPane.class.getName() + "_address";
@@ -75,11 +75,10 @@ public class JpiSelectionPane extends DialogContentPane implements ActionListene
 	public JpiSelectionPane(JAPDialog a_parentDialog, WorkerContentPane a_previousContentPane, String a_jpiId)
 	{
 		super(a_parentDialog, JAPMessages.getString(MSG_CHOOSEAJPI),
-		  new Layout(JAPMessages.getString(MSG_CHOOSEAJPI), MESSAGE_TYPE_PLAIN),
+		  new Layout(JAPMessages.getString(MSG_CHOOSEAJPI_TITLE), MESSAGE_TYPE_PLAIN),
 		  new Options(OPTION_TYPE_OK_CANCEL, a_previousContentPane));
       	setDefaultButtonOperation(ON_CLICK_DISPOSE_DIALOG | ON_YESOK_SHOW_NEXT_CONTENT |
 							  ON_NO_SHOW_PREVIOUS_CONTENT);
-
 
 	    m_fetchJPIPane = a_previousContentPane;
 		 // size > 1: we have several JPIs -> Pane will ask user to select one, so don't set a selectedJpi yet here

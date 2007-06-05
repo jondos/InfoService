@@ -54,11 +54,23 @@ import logging.LogLevel;
 import logging.LogType;
 import anon.infoservice.IMutableProxyInterface;
 import anon.pay.xml.XMLGenericStrings;
+import anon.pay.xml.XMLGenericText;
+import java.util.Calendar;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import anon.util.ZLibTools;
+import anon.util.Base64;
+import java.text.ParseException;
 
 /**
  * This class encapsulates one account and all additional data associated to one
  * account. This includes the key pair, the account number, the transfer certificates
  * for charging the account, cost confirmations and a balance certificate.
+ * - XMLAccountcertificate (public key + additional info (creation date etc))
+ * - Key Pair
+ * - XMLTransCert (one per charge)
+ * - XMLAccountInfo (XMLBalance + cost confirmations)
+ * - XMLGenericText : contains the terms and conditions (as current at the time of account creation)
 
  *
  * For storing the account data in a file the {@link toXmlElement()}
@@ -75,6 +87,7 @@ import anon.pay.xml.XMLGenericStrings;
  * 			....
  * 		</TransferCertifcates>
  * 		<AccountInfo>...</AccountInfo> // see anon.pay.xml.XMLAccountInfo
+ *      <GenericText>Zipped Text!!</GenericText> //cf. anon.pay.xml.XMLGenericText
  *  </Account>
  *	@author Andreas Mueller, Grischan Gl&auml;nzel, Bastian Voigt, Tobias Bayer
  */
@@ -95,6 +108,9 @@ public class PayAccount implements IXMLEncodable
 	/** contains the current account info (balance and cost confirmations) */
 	private XMLAccountInfo m_accountInfo;
 
+	/** contains the terms and conditions as gotten from the JPI when the account was created */
+	private XMLGenericText m_terms;
+
 	/** contains the private key associated with this account */
 	private IMyPrivateKey m_privateKey;
 
@@ -106,6 +122,8 @@ public class PayAccount implements IXMLEncodable
 	private Vector m_accountListeners = new Vector();
 
 	private boolean m_bBackupDone = false;
+
+	private Calendar m_termsDate;
 
 	//if the user already has a flatrate, we don't let him buy another one
 	//this sets what counts as "empty" in terms of included volume
@@ -137,12 +155,13 @@ public class PayAccount implements IXMLEncodable
 	 * @param privateKey
 	 *          the private key
 	 */
-	public PayAccount(XMLAccountCertificate certificate, IMyPrivateKey privateKey, PaymentInstanceDBEntry theBI) throws Exception
+	public PayAccount(XMLAccountCertificate certificate, IMyPrivateKey privateKey, PaymentInstanceDBEntry theBI, XMLGenericText terms) throws Exception
 	{
 		m_accountCertificate = certificate;
 		m_privateKey = privateKey;
 		m_transCerts = new Vector();
 		m_theBI = theBI;
+		setTerms(terms);
 	}
 
 	/**
@@ -180,6 +199,25 @@ public class PayAccount implements IXMLEncodable
 		if (elemAccInfo != null)
 		{
 			m_accountInfo = new XMLAccountInfo(elemAccInfo);
+		}
+
+	    //set terms
+		Element elemTerms = (Element) XMLUtil.getFirstChildByName(elemRoot,XMLGenericText.XML_ELEMENT_NAME);
+		if (elemTerms != null)
+		{
+
+			//unzip if necessary
+			XMLGenericText text = new XMLGenericText(elemTerms);
+			try
+			{
+				byte[] zippedText = Base64.decode(text.getText());
+				text = new XMLGenericText(new String(ZLibTools.decompress(zippedText)));
+			}
+			catch (Exception e)
+			{
+				//do nothing - Text was not zipped, so decompressing failed before replacing the text, everything OK
+			}
+			setTerms(text);
 		}
 
 		/** @todo get BI by supplying a bi-id */
@@ -261,6 +299,15 @@ public class PayAccount implements IXMLEncodable
 			if (m_accountInfo != null)
 			{
 				elemTmp = m_accountInfo.toXmlElement(a_doc);
+				elemRoot.appendChild(elemTmp);
+			}
+
+			if (m_terms != null)
+			{
+				String termsString = m_terms.getText();
+				String encodedTerms = Base64.encode(ZLibTools.compress(termsString.getBytes()),true);
+				XMLGenericText zippedTerms = new XMLGenericText(encodedTerms);
+				elemTmp = zippedTerms.toXmlElement(a_doc);
 				elemRoot.appendChild(elemTmp);
 			}
 
@@ -467,6 +514,67 @@ public class PayAccount implements IXMLEncodable
 	public XMLAccountInfo getAccountInfo()
 	{
 		return m_accountInfo;
+	}
+
+	public XMLGenericText getTerms()
+	{
+		return m_terms;
+	}
+
+	public void setTerms(XMLGenericText xmlTerms)
+	{
+		m_termsDate = null;
+
+		if (xmlTerms == null)
+		{
+			m_terms = null;
+
+		}
+
+		String termsHtml = xmlTerms.getText();
+		if (termsHtml == null || termsHtml.trim().equals(""))
+		{
+			// no valid terms and conditions available; maybe an old account?
+			m_terms = null;
+		}
+		else
+		{
+			m_terms = xmlTerms;
+
+			try
+			{
+				Document termsDoc = XMLUtil.toXMLDocument(termsHtml);
+				Element docElem = termsDoc.getDocumentElement();
+				Node headNode = XMLUtil.getFirstChildByName(docElem, "head");
+				Node dateNode = XMLUtil.getFirstChildByName(headNode, "title");
+				String dateString = XMLUtil.parseValue(dateNode, null);
+				if (dateString != null)
+				{
+					Calendar termsDate = Calendar.getInstance();
+					termsDate.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(dateString));
+					m_termsDate = termsDate;
+				}
+				else
+				{
+					m_terms = null;
+				}
+			}
+			catch (XMLParseException a_e)
+			{
+				LogHolder.log(LogLevel.WARNING, LogType.PAY, a_e);
+				m_terms = null;
+			}
+			catch (ParseException e)
+			{
+				LogHolder.log(LogLevel.WARNING, LogType.PAY, e);
+				m_terms = null;
+			}
+		}
+	}
+
+	public Calendar getTermsDate()
+	{
+		return m_termsDate;
 	}
 
 	/**

@@ -416,7 +416,7 @@ public class BIConnection implements ICaptchaSender
 	 * @return XMLAccountCertificate the certificate issued by the BI
 	 * @throws Exception if an error occurs or the signature or public key is wrong
 	 */
-	public XMLAccountCertificate register(XMLJapPublicKey pubKey, IMyPrivateKey a_privateKey) throws Exception
+	public XMLAccountCertificate registerNewAccount(XMLJapPublicKey pubKey, IMyPrivateKey a_privateKey) throws Exception
 	{
 		Document doc;
 		byte[] challenge = null;
