@@ -320,6 +320,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		AccountSettingsPanel.class.getName() + "_termsAndConditionsDescription";
 	private static final String MSG_TERMS_AND_COND =
 		AccountSettingsPanel.class.getName() + "_termsAndConditions";
+	private static final String MSG_TERMS_AND_COND_HINT =
+		AccountSettingsPanel.class.getName() + "_termsAndConditionsHint";
+
 
 	private static final String MSG_BACKUP_WARNING = AccountSettingsPanel.class.getName() + "_backupwarning";
 	private static final String MSG_ACTIVE_COMPLETE = AccountSettingsPanel.class.getName() + "_activecomplete";
@@ -599,6 +602,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		//rootPanel.add(new JLabel(JAPMessages.getString(MSG_TERMS_AND_COND_DESC) + ":"), c);
 		//c.gridy++;
 		m_labelTermsAndConditions = new JLabel();
+		m_labelTermsAndConditions.setToolTipText(JAPMessages.getString(MSG_TERMS_AND_COND_HINT));
+
 		m_labelTermsAndConditions.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		m_labelTermsAndConditions.setForeground(Color.BLUE);
 		m_labelTermsAndConditions.addMouseListener(new MouseAdapter()
