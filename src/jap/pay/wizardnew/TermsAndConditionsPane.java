@@ -60,8 +60,8 @@ import platform.AbstractOS;
  */
 public class TermsAndConditionsPane extends DialogContentPane implements IWizardSuitable, HyperlinkListener
 {
+	public static final String MSG_HEADING = TermsAndConditionsPane.class.getName() + "_heading";
 	private static final String MSG_TERMS = TermsAndConditionsPane.class.getName() + "_terms";
-	private static final String MSG_HEADING = TermsAndConditionsPane.class.getName() + "_heading";
     private static final String MSG_ERROR_HAVE_TO_ACCEPT = TermsAndConditionsPane.class.getName() + "_havetoaccept";
 	private static final String MSG_NO_TERMS_FOUND = TermsAndConditionsPane.class.getName() + "_notermsfound";
 	private static final String MSG_I_ACCEPT = TermsAndConditionsPane.class.getName() + "_iaccept";
@@ -72,15 +72,19 @@ public class TermsAndConditionsPane extends DialogContentPane implements IWizard
 	private JCheckBox m_accepted;
 	private JEditorPane m_termsPane;
 	private JScrollPane m_scrollingTerms;
+	private boolean m_bCheckAccept;
 	//private JapHtmlPane m_termsPane;
 
-	public TermsAndConditionsPane(JAPDialog a_parentDialog, WorkerContentPane a_previousContentPane)
+	public TermsAndConditionsPane(JAPDialog a_parentDialog, WorkerContentPane a_previousContentPane,
+		boolean a_bCheckAccept)
 	{
-		super(a_parentDialog, JAPMessages.getString(MSG_TERMS),
+		super(a_parentDialog,
 			  new Layout(JAPMessages.getString(MSG_HEADING), MESSAGE_TYPE_PLAIN),
 			  new Options(OPTION_TYPE_OK_CANCEL, a_previousContentPane));
 		setDefaultButtonOperation(ON_CLICK_DISPOSE_DIALOG | ON_YESOK_SHOW_NEXT_CONTENT |
 								  ON_NO_SHOW_PREVIOUS_CONTENT);
+
+		m_bCheckAccept = a_bCheckAccept;
 		m_fetchTermsPane = a_previousContentPane;
 		m_rootPanel = this.getContentPane();
 		m_c = new GridBagConstraints();
@@ -99,7 +103,7 @@ public class TermsAndConditionsPane extends DialogContentPane implements IWizard
 		m_termsPane.addHyperlinkListener(this);
 		m_scrollingTerms = new JScrollPane(m_termsPane);
 		/**@todo make this dynamic */
-		m_scrollingTerms.setPreferredSize(new Dimension(200,200));
+		m_scrollingTerms.setPreferredSize(new Dimension(400,200));
 		m_rootPanel.add(m_scrollingTerms, m_c);
 
 		String acceptTerms = JAPMessages.getString(MSG_I_ACCEPT);
@@ -108,8 +112,11 @@ public class TermsAndConditionsPane extends DialogContentPane implements IWizard
 		m_c.weighty = 0.0;
 		m_c.gridy++;
 		m_c.fill = m_c.BOTH;
-		m_rootPanel.add(m_accepted, m_c);
-
+		if (m_bCheckAccept)
+		{
+			m_rootPanel.add(m_accepted, m_c);
+		}
+		getButtonCancel().setVisible(false);
 	}
 
 	public boolean isTermsAccepted()
@@ -139,12 +146,15 @@ public class TermsAndConditionsPane extends DialogContentPane implements IWizard
 	public CheckError[] checkYesOK()
 	{
 		CheckError[] errors = super.checkYesOK();
-		if ((errors == null || errors.length == 0) && !isTermsAccepted() )
+		if (m_bCheckAccept)
 		{
-			errors = new CheckError[]{
-				new CheckError(JAPMessages.getString(MSG_ERROR_HAVE_TO_ACCEPT), LogType.GUI)};
+			if ( (errors == null || errors.length == 0) && !isTermsAccepted())
+			{
+				errors = new CheckError[]
+					{
+					new CheckError(JAPMessages.getString(MSG_ERROR_HAVE_TO_ACCEPT), LogType.GUI)};
+			}
 		}
-
 		return errors;
 
 	}
@@ -169,7 +179,7 @@ public class TermsAndConditionsPane extends DialogContentPane implements IWizard
 			{
 				AbstractOS.getInstance().openEMail(urlToOpen.toString());
 			}
-			else if (urlToOpen.getProtocol().startsWith("http") )
+			else
 			{
 				AbstractOS.getInstance().openURL(urlToOpen);
 			}

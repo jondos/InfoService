@@ -39,6 +39,10 @@ import gui.JAPDll;
 import gui.JAPMessages;
 import gui.dialog.DialogContentPane;
 import gui.dialog.JAPDialog;
+import javax.swing.event.HyperlinkEvent;
+import java.net.URL;
+import platform.AbstractOS;
+import javax.swing.event.HyperlinkListener;
 
 
 /**
@@ -46,7 +50,7 @@ import gui.dialog.JAPDialog;
  *
  * @author Rolf Wendolsky
  */
-public class JAPAboutNew extends JAPDialog
+public class JAPAboutNew extends JAPDialog implements HyperlinkListener
 {
 	private static final String MSG_VERSION = JAPAboutNew.class.getName() + "_version";
 	private static final String MSG_DLL_VERSION = JAPAboutNew.class.getName() + "_dllVersion";
@@ -68,6 +72,7 @@ public class JAPAboutNew extends JAPDialog
 
 		textArea = new JEditorPane();
 		textArea.setEditable(false);
+		textArea.addHyperlinkListener(this);
 		textArea.setDoubleBuffered(false);
 		setResizable(false);
 		textArea.setContentType("text/html");
@@ -88,4 +93,21 @@ public class JAPAboutNew extends JAPDialog
 		contentPane.updateDialog();
 		pack();
 	}
+
+	public void hyperlinkUpdate(HyperlinkEvent e)
+{
+	if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED )
+	{
+		URL urlToOpen = e.getURL();
+		if (urlToOpen.getProtocol().startsWith("mailto") )
+		{
+			AbstractOS.getInstance().openEMail(urlToOpen.toString());
+		}
+		else
+		{
+			AbstractOS.getInstance().openURL(urlToOpen);
+		}
+	}
+}
+
 }

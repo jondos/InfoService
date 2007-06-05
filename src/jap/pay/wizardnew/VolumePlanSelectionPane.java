@@ -405,7 +405,6 @@ import logging.LogType;
 				Object curEntry = allErrors.elementAt(i);
 				errors[i] = (CheckError) curEntry;
 			}
-
 		} else //explicitly return null, since <an empty Vector>.toArray will return an empty Array
 		{
 			errors = null;

@@ -52,6 +52,7 @@ import anon.crypto.JAPCertificate;
 import java.io.File;
 import anon.infoservice.MixCascade;
 import java.util.Hashtable;
+import anon.pay.xml.XMLGenericText;
 
 /**
  * This class encapsulates a collection of accounts. One of the accounts in the collection
@@ -641,7 +642,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	 *
 	 */
 	public PayAccount createAccount(PaymentInstanceDBEntry a_bi, IMutableProxyInterface a_proxys,
-									AsymmetricCryptoKeyPair a_keyPair) throws
+									AsymmetricCryptoKeyPair a_keyPair, XMLGenericText a_terms) throws
 		Exception
 	{
 		XMLJapPublicKey xmlKey = new XMLJapPublicKey(a_keyPair.getPublic());
@@ -652,11 +653,11 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 		BIConnection biConn = new BIConnection(a_bi);
 		biConn.addConnectionListener(this);
 		biConn.connect(a_proxys);
-		XMLAccountCertificate cert = biConn.register(xmlKey, a_keyPair.getPrivate());
+		XMLAccountCertificate cert = biConn.registerNewAccount(xmlKey, a_keyPair.getPrivate());
 		biConn.disconnect();
 
 		// add the new account to the accountsFile
-		PayAccount newAccount = new PayAccount(cert, a_keyPair.getPrivate(), a_bi);
+		PayAccount newAccount = new PayAccount(cert, a_keyPair.getPrivate(), a_bi, a_terms);
 		addAccount(newAccount);
 		return newAccount;
 	}

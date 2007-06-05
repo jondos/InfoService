@@ -39,7 +39,7 @@ public class XMLGenericText implements IXMLEncodable
 
 	private String m_text;
 	private Document m_docTheText;
-	public static String ms_strElemName = "GenericText";
+	public static final String XML_ELEMENT_NAME = "GenericText";
 
 	public XMLGenericText()
 	{
@@ -97,7 +97,7 @@ public class XMLGenericText implements IXMLEncodable
 
 	private Element internal_toXmlElement(Document a_doc)
 	{
-		Element elemRoot = a_doc.createElement(this.ms_strElemName);
+		Element elemRoot = a_doc.createElement(XML_ELEMENT_NAME);
 		XMLUtil.setValue(elemRoot, m_text);
 		return elemRoot;
 	}
@@ -107,7 +107,7 @@ public class XMLGenericText implements IXMLEncodable
 	private void setValues(Element xml) throws Exception
 	{
 		String rootTagName = xml.getTagName();
-		if (!rootTagName.equals("GenericText"))
+		if (!rootTagName.equals(XML_ELEMENT_NAME))
 		{
 			throw new Exception("XMLGenericText: cannot parse, wrong xml format!");
 		}

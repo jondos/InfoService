@@ -3318,7 +3318,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 					returnValue = JAPDialog.RETURN_VALUE_OK;
 				}
 
-				if (getInstance().getViewWindow() != null && getInstance().m_bAskSavePayment && bDoNotRestart)
+				if (returnValue == JAPDialog.RETURN_VALUE_OK &&
+					getInstance().getViewWindow() != null && getInstance().m_bAskSavePayment && bDoNotRestart)
 				{
 					// we are in GUI mode
 					Enumeration enumAccounts = PayAccountsFile.getInstance().getAccounts();
