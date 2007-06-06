@@ -637,11 +637,11 @@ public class PaymentMainPanel extends FlippingPanel
 					{
 						if (JAPMessages.getLocale().getLanguage().equals("de"))
 						{
-							return new URL("http://anon.inf.tu-dresden.de/kosten.html");
+							return new URL("http://www.jondos.de/de/payment");
 						}
 						else
 						{
-							return new URL("http://anon.inf.tu-dresden.de/kosten_en.html");
+							return new URL("http://www.jondos.de/en/payment");
 						}
 					}
 					catch (Exception a_e)
@@ -652,7 +652,7 @@ public class PaymentMainPanel extends FlippingPanel
 				}
 			};
 			Runnable run = null;
-			final String strMessage = JAPMessages.getString(MSG_FREE_OF_CHARGE) + "<br><br>";
+			final String strMessage = ""; //JAPMessages.getString(MSG_FREE_OF_CHARGE) + "<br><br>";
 
 			if (accounts.getNumAccounts() == 0  ||
 				(accounts.getActiveAccount() != null &&
@@ -692,7 +692,10 @@ public class PaymentMainPanel extends FlippingPanel
 					};
 				}
 
-				else if (accounts.getActiveAccount().getBalance().getCredit() <= 0)
+				else if (accounts.getActiveAccount().getBalance().getCredit() <= 0 ||
+						 (accounts.getActiveAccount().getBalance().getFlatEnddate() != null &&
+						  accounts.getActiveAccount().getBalance().getFlatEnddate().before(
+												new Timestamp(System.currentTimeMillis()))))
 				{
 					JAPController.getInstance().setAnonMode(false);
 					bSuccess = false;
@@ -798,7 +801,7 @@ public class PaymentMainPanel extends FlippingPanel
 				{
 					public void run()
 					{
-						String message = JAPMessages.getString(MSG_FREE_OF_CHARGE) + "<br><br>" +
+						String message = //JAPMessages.getString(MSG_FREE_OF_CHARGE) + "<br><br>" +
 							translateBIError(msg);
 						Component parent = PaymentMainPanel.this;
 						JAPDialog.LinkedInformationAdapter adapter = new JAPDialog.LinkedInformationAdapter()

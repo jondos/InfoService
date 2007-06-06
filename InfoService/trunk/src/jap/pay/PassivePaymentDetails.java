@@ -62,9 +62,9 @@ public class PassivePaymentDetails extends JAPDialog implements ActionListener
 		{
 			setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 			buildDialog(paymentToShow, transfernumber, accountnumber);
-			setModal(false);
-			setVisible(true);
+			setResizable(false);
 			pack();
+			setVisible(true);
 		}
 		catch (Exception e)
 		{
