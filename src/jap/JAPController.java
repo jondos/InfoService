@@ -542,11 +542,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 			});
 
+			setAnonMode(false);
 			m_View.disableSetAnonMode();
 			notifyJAPObservers();
 		}
 		else if (!SignatureVerifier.getInstance().isCheckSignatures())
 		{
+			setAnonMode(false);
 			JAPDialog.showWarningDialog(
 				getViewWindow(),
 				JAPMessages.getString(JAPConfCert.MSG_NO_CHECK_WARNING),

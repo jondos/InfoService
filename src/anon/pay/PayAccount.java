@@ -540,35 +540,30 @@ public class PayAccount implements IXMLEncodable
 		else
 		{
 			m_terms = xmlTerms;
-
-			try
+			int titleStart = termsHtml.indexOf("<title>");
+			int titleEnd = termsHtml.indexOf("</title>");
+			if (titleStart >= 0 && titleEnd >= 0)
 			{
-				Document termsDoc = XMLUtil.toXMLDocument(termsHtml);
-				Element docElem = termsDoc.getDocumentElement();
-				Node headNode = XMLUtil.getFirstChildByName(docElem, "head");
-				Node dateNode = XMLUtil.getFirstChildByName(headNode, "title");
-				String dateString = XMLUtil.parseValue(dateNode, null);
-				if (dateString != null)
+				try
 				{
+					String dateString = termsHtml.substring(titleStart + "<title>".length(), titleEnd);
 					Calendar termsDate = Calendar.getInstance();
 					termsDate.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(dateString));
 					m_termsDate = termsDate;
 				}
-				else
+				catch (ParseException e)
 				{
+					LogHolder.log(LogLevel.WARNING, LogType.PAY, e);
 					m_terms = null;
 				}
 			}
-			catch (XMLParseException a_e)
+			else
 			{
-				LogHolder.log(LogLevel.WARNING, LogType.PAY, a_e);
+				LogHolder.log(LogLevel.WARNING, LogType.PAY, "No valid title tag was found!");
 				m_terms = null;
 			}
-			catch (ParseException e)
-			{
-				LogHolder.log(LogLevel.WARNING, LogType.PAY, e);
-				m_terms = null;
-			}
+
+
 		}
 	}
 

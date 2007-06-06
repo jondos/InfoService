@@ -54,9 +54,9 @@ public class ActivePaymentDetails extends JAPDialog implements ActionListener
 				setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 				buildDialog(activeOptions, a_transferNumber, a_amount);
 				//setSize(400,400);
-				setModal(false);
-				setVisible(true);
+				setResizable(false);
 				pack();
+				setVisible(true);
 			}
 			catch (Exception e)
 			{
@@ -120,6 +120,7 @@ public class ActivePaymentDetails extends JAPDialog implements ActionListener
 
         String curDetailedInfo = (String) optionToShow.get("detailedInfo");
 		JAPHtmlMultiLineLabel detailsLabel = new JAPHtmlMultiLineLabel(curDetailedInfo);
+		detailsLabel.setPreferredWidth(300);
 		optionPanel.add(detailsLabel);
 		optionPanel.add(Box.createRigidArea(new Dimension(0,10)));
 
@@ -131,6 +132,7 @@ public class ActivePaymentDetails extends JAPDialog implements ActionListener
 				extraInfoString = Util.replaceAll(extraInfoString,"%c",""); //currency is not used, so get rid of the placeholder
 
 				JAPHtmlMultiLineLabel extraInfoLabel = new JAPHtmlMultiLineLabel(extraInfoString);
+				//extraInfoLabel.setPreferredWidth(300);
 				optionPanel.add(extraInfoLabel);
 				optionPanel.add(Box.createRigidArea(new Dimension(0,5)));
 			}

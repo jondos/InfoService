@@ -27,8 +27,6 @@
  */
 package anon.pay;
 
-import java.sql.Timestamp;
-
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -56,6 +54,7 @@ import anon.infoservice.IMutableProxyInterface;
 import anon.IServiceContainer;
 import anon.infoservice.MixCascade;
 import java.util.Hashtable;
+import java.sql.Timestamp;
 
 /**
  * This control channel is used for communication with the AI
@@ -337,10 +336,13 @@ public class AIControlChannel extends XmlControlChannel
 		  Vector accounts = PayAccountsFile.getInstance().getAccounts(m_connectedCascade.getPIID());
 		  if (accounts.size() > 0)
 		  {
+			  Timestamp now = new Timestamp(System.currentTimeMillis());
 			  for (int i = 0; i < accounts.size(); i++)
 			  {
 				  currentAccount = (PayAccount) accounts.elementAt(i);
-				  if (currentAccount.getBalance().getCredit() != 0)
+				  if (currentAccount.getBalance().getCredit() != 0 &&
+					  (currentAccount.getBalance().getFlatEnddate() == null ||
+					   currentAccount.getBalance().getFlatEnddate().after(now)))
 				  {
 					  break;
 				  }

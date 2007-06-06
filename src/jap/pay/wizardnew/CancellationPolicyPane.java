@@ -76,7 +76,7 @@ public class CancellationPolicyPane extends DialogContentPane implements IWizard
 
 	public CancellationPolicyPane(JAPDialog a_parentDialog, WorkerContentPane a_previousContentPane)
 	{
-		super(a_parentDialog, JAPMessages.getString(MSG_HEADING),
+		super(a_parentDialog,
 			  new Layout(JAPMessages.getString(MSG_HEADING), MESSAGE_TYPE_PLAIN),
 			  new Options(OPTION_TYPE_OK_CANCEL, a_previousContentPane));
 		setDefaultButtonOperation(ON_CLICK_DISPOSE_DIALOG | ON_YESOK_SHOW_NEXT_CONTENT |
