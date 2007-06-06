@@ -605,7 +605,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		m_labelTermsAndConditions.setToolTipText(JAPMessages.getString(MSG_TERMS_AND_COND_HINT));
 
 		m_labelTermsAndConditions.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-		m_labelTermsAndConditions.setForeground(Color.BLUE);
+		m_labelTermsAndConditions.setForeground(Color.blue);
 		m_labelTermsAndConditions.addMouseListener(new MouseAdapter()
 		{
 			public void mouseClicked(MouseEvent a_event)
