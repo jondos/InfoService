@@ -562,8 +562,6 @@ public class PayAccount implements IXMLEncodable
 				LogHolder.log(LogLevel.WARNING, LogType.PAY, "No valid title tag was found!");
 				m_terms = null;
 			}
-
-
 		}
 	}
 

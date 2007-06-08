@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.08.038"; //Never change the layout of this line!
+	public static final String aktVersion = "00.08.039"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -197,15 +197,16 @@ public final class JAPConstants
 		"firefox", "iexplore", "explorer", "mozilla", "konqueror", "mozilla-firefox", "firebird", "opera"
 	};
 
-	public final static String PI_CERTS[] =   /*"jpinew.cer"; */ new String[] {"bi.cer"};
+	public final static String PI_CERTS[] = new String[] {"bi.cer", "Payment_Instance.cer"};
 	public final static String CERTSPATH = "certificates/";
 	public final static String INFOSERVICE_CERTSPATH = "acceptedInfoServiceCAs/";
 	public final static String PAYMENT_ROOT_CERTSPATH = "acceptedPaymentCAs/";
 	public final static String PAYMENT_ROOT_CERTS[] = new String[] {};
 	public final static String PAYMENT_DEFAULT_CERTSPATH = "acceptedPIs/";
 	public final static String MIX_CERTSPATH = "acceptedMixCAs/";
-	public final static String MIX_ROOT_CERTS[] = new String[] {"japmixroot.cer"};
-	public final static String INFOSERVICE_ROOT_CERTS[] = new String[] {"japinfoserviceroot.cer"};
+	public final static String MIX_ROOT_CERTS[] = new String[] {"japmixroot.cer", "Operator_CA.cer"};
+	public final static String INFOSERVICE_ROOT_CERTS[] =
+		new String[] {"japinfoserviceroot.cer", "InfoService_CA.cer"};
 	public final static String CERT_JAPCODESIGNING = "japcodesigning.cer";
 	public final static String CERT_JAPINFOSERVICEMESSAGES = "japupdatemessages.cer";
 	public static final boolean DEFAULT_CERT_CHECK_ENABLED = true;

@@ -2828,8 +2828,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		if (selectedAccount.hasAccountInfo())
 		{
 			XMLAccountInfo accInfo = selectedAccount.getAccountInfo();
-			if (accInfo.getBalance().getTimestamp().getTime() <
-				(System.currentTimeMillis() - 1000 * 60 * 60 * 24))
+			if (accInfo.getBalance().getFlatEnddate().after(new Timestamp(System.currentTimeMillis())) &&
+				accInfo.getBalance().getTimestamp().getTime() <
+				(System.currentTimeMillis() - 1000 * 60 * 60 * 24) &&
+				accInfo.getBalance().getCredit() <= 0)
 			{
 				boolean yes = JAPDialog.showYesNoDialog(GUIUtils.getParentWindow(this.getRootPanel()),
 					JAPMessages.getString(MSG_OLDSTATEMENT));
