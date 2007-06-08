@@ -450,6 +450,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 						{
 							public void run()
 							{
+								LogHolder.log(LogLevel.INFO, LogType.NET, (IOException)a_argument);
 								while (eventListenersList.hasMoreElements())
 								{
 									( (AnonServiceEventListener) (eventListenersList.nextElement())).

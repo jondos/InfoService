@@ -73,6 +73,7 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		getName() + "_buttoncopy";
 	private static final String MSG_BUTTONOPEN = PaymentInfoPane.class.
 		getName() + "_buttonopen";
+	private static final String MSG_PAYPAL_ITEM_NAME = PaymentInfoPane.class.getName() + "_paypalitemname";
 
 	private Container m_rootPanel;
 	private GridBagConstraints m_c;
@@ -161,13 +162,64 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		boolean isURL = false;
 		if (m_strExtraInfo != null)
 		{
-			m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%t",
-											 String.valueOf(transCert.getTransferNumber()));
-			String amount = ((VolumePlanSelectionPane) getPreviousContentPane().getPreviousContentPane().getPreviousContentPane().getPreviousContentPane()).getAmount();
-			int intAmount = Integer.parseInt(amount);
-			amount = JAPUtil.formatEuroCentValue(intAmount);
-			m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%a",amount );
-			m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%c","");
+			DialogContentPane somePreviousPane = getPreviousContentPane();
+			while (! (somePreviousPane instanceof VolumePlanSelectionPane))
+			{
+				somePreviousPane = somePreviousPane.getPreviousContentPane();
+				//warning: will loop endlessly if no VolumePlanSelectionPane to be found
+			}
+			VolumePlanSelectionPane planPane = (VolumePlanSelectionPane) somePreviousPane;
+			String amountString = planPane.getAmount();
+			String planName = planPane.getSelectedVolumePlan().getName();
+			int intAmount = Integer.parseInt(amountString);
+			String tan = String.valueOf(transCert.getTransferNumber());
+
+			//take special care of paypal links
+			if (m_strExtraInfo.indexOf("paypal") != -1 )
+			{
+				String paypalCurrency = "EUR";
+
+	            //amountString: eurocent, e.g. "500", transform it into a format suitable for paypal
+                String amountWhole;
+				String amountFractions;
+				amountString.trim();
+				if (amountString.length() == 1)
+				{
+					amountWhole = "0";
+					amountFractions = "0" + amountString;
+				}
+	            else if (amountString.length() < 3)
+				{
+					amountWhole = "0";
+					amountFractions = amountString;
+				}
+				else
+				{
+					amountWhole = amountString.substring(0, amountString.length() - 2);
+					amountFractions = amountString.substring(amountString.length() - 2,amountString.length());
+				}
+				String paypalAmount = amountWhole + "%2e" + amountFractions;
+
+				String localeLang = JAPMessages.getLocale().getLanguage();
+				String paypalLang = localeLang.toUpperCase();
+				String paypalItem = JAPMessages.getString(MSG_PAYPAL_ITEM_NAME) + " - " + planName;
+
+   				m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%t",tan);
+	    	    m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%item%",paypalItem);
+			    m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%amount%",paypalAmount);
+    			m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%currency%",paypalCurrency);
+				m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%lang%",paypalLang);
+            }
+			else
+			{
+				//regualar extra infos, e.g. instructions for wire transfer
+				m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%t",tan);
+				String amount = JAPUtil.formatEuroCentValue(intAmount);
+				m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%a",amount );
+				m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%c","");
+			}
+
+
 
 		    //show customized url if one was given in the constructor
 			//might not be necesary, if we get by with the substitutions above
