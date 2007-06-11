@@ -55,6 +55,7 @@ import java.util.Hashtable;
 
 import anon.client.AnonClient;
 import anon.infoservice.BlacklistedCascadeIDEntry;
+import anon.client.DummyTrafficControlChannel;
 
 final class JAPConfAnonGeneral extends AbstractJAPConfModule
 {
@@ -97,8 +98,9 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	private static final String IMG_ARROW_RIGHT = JAPConfAnonGeneral.class.getName() + "_arrowRight.gif";
 	private static final String IMG_ARROW_LEFT = JAPConfAnonGeneral.class.getName() + "_arrowLeft.gif";
 
-	private static final int DT_INTERVAL_STEPLENGTH = 5;
-	private static final int DT_INTERVAL_STEPS = 12;
+	private static final int DT_INTERVAL_STEPLENGTH = 2;
+	private static final int DT_INTERVAL_STEPS =
+		DummyTrafficControlChannel.DT_MAX_INTERVAL_MS / DT_INTERVAL_STEPLENGTH / 1000;
 	private static final int DT_INTERVAL_DEFAULT = 2;
 	public static final int DEFAULT_DUMMY_TRAFFIC_INTERVAL_SECONDS =
 		DT_INTERVAL_STEPLENGTH * DT_INTERVAL_DEFAULT * 1000;
@@ -108,7 +110,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		new Integer(30), new Integer(40), new Integer(50), new Integer(60)};
 
 	private JCheckBox m_cbDenyNonAnonymousSurfing;
-	private JCheckBox m_cbDummyTraffic;
+	//private JCheckBox m_cbDummyTraffic;
 	private JCheckBox m_cbAutoConnect;
 	private JCheckBox m_cbAutoReConnect;
 	private JCheckBox m_cbAutoBlacklist;
@@ -155,7 +157,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	protected void onUpdateValues()
 	{
 		int iTmp = JAPModel.getDummyTraffic();
-		m_cbDummyTraffic.setSelected(iTmp > -1);
+		//m_cbDummyTraffic.setSelected(iTmp > -1);
 		if (iTmp > -1)
 		{
 			int seconds = iTmp / 1000;
@@ -192,15 +194,15 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	protected boolean onOkPressed()
 	{
 		int dummyTraffic;
-		if (m_cbDummyTraffic.isSelected())
+		//if (m_cbDummyTraffic.isSelected())
 		{
 			dummyTraffic = m_sliderDummyTrafficIntervall.getValue() * 1000;
-		}
+		}/*
 		else
 		{
 			dummyTraffic = - 1;
 			// Listener settings
-		}
+		}*/
 		/*
 		 * Set DT asynchronous; otherwise, the Event Thread is locked while the AnonClient connects
 		 */
@@ -237,7 +239,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		m_cbAutoBlacklist = new JCheckBox(JAPMessages.getString(MSG_LBL_WHITELIST));
 
 
-		m_cbDummyTraffic = new JCheckBox(JAPMessages.getString("ngConfAnonGeneralSendDummy"));
+		//m_cbDummyTraffic = new JCheckBox(JAPMessages.getString("ngConfAnonGeneralSendDummy"));
 
 		/** @todo implement this panel... */
 		JPanel panelServices = new JPanel(new GridBagLayout());
@@ -320,7 +322,8 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		c.gridy++;
 		c.weightx = 0.0;
 		c.gridwidth = 2;
-		panelRoot.add(m_cbDummyTraffic, c);
+		//panelRoot.add(m_cbDummyTraffic, c);
+		panelRoot.add(new JLabel(JAPMessages.getString("ngConfAnonGeneralSendDummy")), c);
 
 
 		m_sliderDummyTrafficIntervall = new JSlider(SwingConstants.HORIZONTAL,
@@ -362,7 +365,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 		c.fill = GridBagConstraints.BOTH;
 		panelRoot.add(new JLabel(), c);
 
-
+		/*
 		m_cbDummyTraffic.addItemListener(new ItemListener()
 		{
 			public void itemStateChanged(ItemEvent e)
@@ -375,7 +378,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 						ItemEvent.SELECTED);
 				}
 			}
-		});
+		});*/
 		updateValues(false);
 	}
 
@@ -383,7 +386,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	public void onResetToDefaultsPressed()
 	{
 		m_cbDenyNonAnonymousSurfing.setSelected(false);
-		m_cbDummyTraffic.setSelected(true);
+		//m_cbDummyTraffic.setSelected(true);
 		m_cbAutoBlacklist.setSelected(BlacklistedCascadeIDEntry.DEFAULT_AUTO_BLACKLIST);
 		m_sliderDummyTrafficIntervall.setEnabled(true);
 		m_sliderDummyTrafficIntervall.setValue(DT_INTERVAL_DEFAULT);

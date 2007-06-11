@@ -42,7 +42,10 @@ import anon.IServiceContainer;
 /**
  * This is the implementation for the dummy traffic interval timeout.
  */
-public class DummyTrafficControlChannel extends AbstractControlChannel implements Runnable, Observer {
+public class DummyTrafficControlChannel extends AbstractControlChannel implements Runnable, Observer
+{
+	public static final int DT_MIN_INTERVAL_MS = 500;
+	public static final int DT_MAX_INTERVAL_MS = 30000;
 
   /**
    * Stores whether the internal thread shall work (true) or come to the end
@@ -145,6 +148,17 @@ public class DummyTrafficControlChannel extends AbstractControlChannel implement
     boolean sendDummy = false;
     synchronized (m_internalSynchronization) {
       stop();
+
+	  // force the use of dummy traffic < DT_MAX_INTERVAL_MS, so that the connection to the first Mix is held
+	  if (a_interval < DT_MIN_INTERVAL_MS)
+	  {
+		  a_interval = DT_MIN_INTERVAL_MS;
+	  }
+	  else if  (a_interval > DT_MAX_INTERVAL_MS)
+	  {
+		  a_interval = DT_MAX_INTERVAL_MS;
+	  }
+
       m_interval = (long)a_interval;
       if (a_interval > -1) {
         start();
