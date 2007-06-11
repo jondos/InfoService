@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.08.039"; //Never change the layout of this line!
+	public static final String aktVersion = "00.08.040"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -84,11 +84,11 @@ public final class JAPConstants
 	 */
 	public static final String DEFAULT_INFOSERVICE_NAMES[] =
 		new String[]{"880D9306B90EC8309178376B43AC26652CE52B74",
-		"4EAD8F831010B39FB3B014CFE433C2D8EB50D311",
+		"8FF9236BD03A12391D939219310597C830F3943A",
 		"6DA81C905C5818E2D95F45B6D6323EFB79F08137"};
 	//new String[]{"1AF4734DD3AA5BD1A8A4A2EDACAD825C711E1770"};
 	public static final String DEFAULT_INFOSERVICE_HOSTNAMES[] =
-		new String[]{"infoservice.inf.tu-dresden.de", "88.84.135.6", "85.31.187.19"};
+		new String[]{"infoservice.inf.tu-dresden.de", "	87.230.56.74", "85.31.187.19"};
 	//new String[]{"87.230.20.187"};
 
 	public static final int DEFAULT_INFOSERVICE_PORT_NUMBERS[][] =
@@ -204,7 +204,8 @@ public final class JAPConstants
 	public final static String PAYMENT_ROOT_CERTS[] = new String[] {};
 	public final static String PAYMENT_DEFAULT_CERTSPATH = "acceptedPIs/";
 	public final static String MIX_CERTSPATH = "acceptedMixCAs/";
-	public final static String MIX_ROOT_CERTS[] = new String[] {"japmixroot.cer", "Operator_CA.cer"};
+	public final static String MIX_ROOT_CERTS[] =
+		new String[] {"japmixroot.cer", "Operator_CA.cer", "Test_CA.cer"};
 	public final static String INFOSERVICE_ROOT_CERTS[] =
 		new String[] {"japinfoserviceroot.cer", "InfoService_CA.cer"};
 	public final static String CERT_JAPCODESIGNING = "japcodesigning.cer";
