@@ -88,7 +88,7 @@ public final class JAPConstants
 		"6DA81C905C5818E2D95F45B6D6323EFB79F08137"};
 	//new String[]{"1AF4734DD3AA5BD1A8A4A2EDACAD825C711E1770"};
 	public static final String DEFAULT_INFOSERVICE_HOSTNAMES[] =
-		new String[]{"infoservice.inf.tu-dresden.de", "	87.230.56.74", "85.31.187.19"};
+		new String[]{"infoservice.inf.tu-dresden.de", "87.230.56.74", "85.31.187.19"};
 	//new String[]{"87.230.20.187"};
 
 	public static final int DEFAULT_INFOSERVICE_PORT_NUMBERS[][] =

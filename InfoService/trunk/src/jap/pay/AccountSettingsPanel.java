@@ -2828,7 +2828,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		if (selectedAccount.hasAccountInfo())
 		{
 			XMLAccountInfo accInfo = selectedAccount.getAccountInfo();
-			if (accInfo.getBalance().getFlatEnddate().after(new Timestamp(System.currentTimeMillis())) &&
+			if (//accInfo.getBalance().getFlatEnddate().after(new Timestamp(System.currentTimeMillis())) &&
 				accInfo.getBalance().getTimestamp().getTime() <
 				(System.currentTimeMillis() - 1000 * 60 * 60 * 24) &&
 				accInfo.getBalance().getCredit() <= 0)
