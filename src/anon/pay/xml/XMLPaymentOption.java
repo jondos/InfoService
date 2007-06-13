@@ -415,6 +415,8 @@ public class XMLPaymentOption implements IXMLEncodable
 	 */
 	public Vector getLocalizedExtraInfoText(String language)
 	{
+		String fallbackLanguage = "en"; //the language to use if nothing found for the given one
+		String fallbackResult = "";
 		Vector allInfos = getExtraInfos();
 		Vector localizedInfos = new Vector();
 		for (Enumeration infos = allInfos.elements(); infos.hasMoreElements(); )
@@ -425,6 +427,14 @@ public class XMLPaymentOption implements IXMLEncodable
 			{
 				localizedInfos.addElement(info[0]);
 			}
+			if (info[2].equals(fallbackLanguage) )
+			{
+				fallbackResult = info[0];
+			}
+		}
+		if (localizedInfos.size() ==  0) //nothing found for the given language
+		{
+			localizedInfos.add(fallbackResult);
 		}
 		return localizedInfos;
 	}

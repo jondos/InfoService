@@ -1988,6 +1988,26 @@ public final class GUIUtils
 	  }
   }
 
+	/**
+     * Takes a Vector of components, and sets the width of all components to the width of the Dimension
+	 * passsed as parameter
+	 * Just like @see setSizes(), except it only affects the width, and leaves height unchanged
+	 *
+	 * @param aComponents Vector
+	 * @param aDimension Dimension
+	 */
+	public static void setEqualWidths(Vector aComponents, Dimension aDimension)
+	{
+		JComponent curComp;
+		for (Enumeration components = aComponents.elements(); components.hasMoreElements(); )
+		{
+			curComp = (JComponent) components.nextElement();
+			double oldHeight = curComp.getPreferredSize().getHeight();
+			curComp.setPreferredSize( new Dimension(aDimension.width, (int) oldHeight));
+			curComp.setMaximumSize(new Dimension(aDimension.width, (int) oldHeight));
+	    }
+	}
+
 
 	/** * Diese Klasse dient dazu aus einem vorhandenen Icon ein neues Icon
 	 * herzustellen. Dazu werden neben dem vorhanden Icon die Skalierungsfaktoren angegeben.

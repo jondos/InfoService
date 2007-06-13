@@ -1061,7 +1061,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		PayAccount anAccount;
 	    Enumeration accounts = PayAccountsFile.getInstance().getAccounts();
 
-	    PayAccount activeAccount = PayAccountsFile.getInstance().getActiveAccount();
+	    PayAccount activeAccount = getSelectedAccount();
 		PaymentInstanceDBEntry jpiOfActiveAccount = activeAccount.getBI();
 
 		while (accounts.hasMoreElements() )

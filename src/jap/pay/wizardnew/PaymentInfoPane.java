@@ -31,6 +31,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import java.awt.Container;
+import java.awt.Cursor;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -40,7 +41,11 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
 
 import anon.pay.xml.XMLPaymentOption;
 import anon.pay.xml.XMLTransCert;
@@ -51,17 +56,11 @@ import gui.dialog.DialogContentPane.IWizardSuitable;
 import gui.dialog.JAPDialog;
 import gui.dialog.WorkerContentPane;
 import jap.JAPController;
+import jap.JAPUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.Cursor;
-import javax.swing.JLabel;
-import javax.swing.JComponent;
-import jap.JAPUtil;
 
 public class PaymentInfoPane extends DialogContentPane implements IWizardSuitable,
 	ActionListener
@@ -136,6 +135,45 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		m_url = a_url;
 	}
 
+	public static String createPaypalLink(String baseLink, long amount, String planName, String transferNumber)
+	{
+		String paypalCurrency = "EUR";
+
+		//amountString: eurocent, e.g. "500", transform it into a format suitable for paypal
+		String amountString = new Long(amount).toString();
+		String amountWhole;
+		String amountFractions;
+		amountString.trim();
+		if (amountString.length() == 1)
+		{
+			amountWhole = "0";
+			amountFractions = "0" + amountString;
+		}
+		else if (amountString.length() < 3)
+		{
+			amountWhole = "0";
+			amountFractions = amountString;
+		}
+		else
+		{
+			amountWhole = amountString.substring(0, amountString.length() - 2);
+			amountFractions = amountString.substring(amountString.length() - 2, amountString.length());
+		}
+		String paypalAmount = amountWhole + "%2e" + amountFractions;
+
+		String localeLang = JAPMessages.getLocale().getLanguage();
+		String paypalLang = localeLang.toUpperCase();
+		String paypalItem = JAPMessages.getString(MSG_PAYPAL_ITEM_NAME) + "%20-%20" + planName; //URL-encode Spaces etc!!
+
+		baseLink = Util.replaceAll(baseLink, "%t", transferNumber);
+		baseLink = Util.replaceAll(baseLink, "%item%", paypalItem);
+		baseLink = Util.replaceAll(baseLink, "%amount%", paypalAmount);
+		baseLink = Util.replaceAll(baseLink, "%currency%", paypalCurrency);
+		baseLink = Util.replaceAll(baseLink, "%lang%", paypalLang);
+
+		return baseLink;
+	}
+
 	public void showInfo()
 	{
 		XMLPaymentOption selectedOption = ( (MethodSelectionPane) getPreviousContentPane().
@@ -177,38 +215,7 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 			//take special care of paypal links
 			if (m_strExtraInfo.indexOf("paypal") != -1 )
 			{
-				String paypalCurrency = "EUR";
-
-	            //amountString: eurocent, e.g. "500", transform it into a format suitable for paypal
-                String amountWhole;
-				String amountFractions;
-				amountString.trim();
-				if (amountString.length() == 1)
-				{
-					amountWhole = "0";
-					amountFractions = "0" + amountString;
-				}
-	            else if (amountString.length() < 3)
-				{
-					amountWhole = "0";
-					amountFractions = amountString;
-				}
-				else
-				{
-					amountWhole = amountString.substring(0, amountString.length() - 2);
-					amountFractions = amountString.substring(amountString.length() - 2,amountString.length());
-				}
-				String paypalAmount = amountWhole + "%2e" + amountFractions;
-
-				String localeLang = JAPMessages.getLocale().getLanguage();
-				String paypalLang = localeLang.toUpperCase();
-				String paypalItem = JAPMessages.getString(MSG_PAYPAL_ITEM_NAME) + " - " + planName;
-
-   				m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%t",tan);
-	    	    m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%item%",paypalItem);
-			    m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%amount%",paypalAmount);
-    			m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%currency%",paypalCurrency);
-				m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%lang%",paypalLang);
+	            m_strExtraInfo = createPaypalLink(m_strExtraInfo,intAmount,planName,tan);
             }
 			else
 			{
@@ -248,7 +255,7 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 			}
 		}
 
-		setText(selectedOption.getDetailedInfo(m_language) + htmlExtraInfo);
+		setText(selectedOption.getDetailedInfo(m_language));// + htmlExtraInfo); //links should never be shown, only confuse the user
 		if (isURL) setMouseListener(new LinkMouseListener());
 
 	}
@@ -277,6 +284,8 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		}
 		link = Util.replaceAll(link, "<html>", " ");
 		link = Util.replaceAll(link, "</html>", " ");
+		link = Util.replaceAll(link, "&nbsp;", "%20");
+		link = Util.replaceAll(link, " ", "%20");
 		link = Util.replaceAll(link, "<font color=blue><u>", "");
 		link = Util.replaceAll(link, "</u></font>", "");
 		link = link.trim();
@@ -293,6 +302,8 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		link = Util.replaceAll(link, "<p>", "");
 		link = Util.replaceAll(link, "<html>", " ");
 		link = Util.replaceAll(link, "</html>", " ");
+		link = Util.replaceAll(link, "&nbsp;", "%20");
+		link = Util.replaceAll(link, " ", "%20");
 		link = Util.replaceAll(link, "<font color=blue><u>", "");
 		link = Util.replaceAll(link, "</u></font>", "");
 		link = link.trim();
@@ -300,7 +311,8 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Opening " + link + " in browser.");
 		try
 		{
-			os.openURL(new URL(link));
+			URL urlToOpen = new URL(link);
+			os.openURL(urlToOpen);
 		}
 		catch (MalformedURLException me)
 		{
