@@ -66,6 +66,7 @@ import jap.JAPController;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import anon.util.XMLUtil;
+import anon.pay.PaymentInstanceDBEntry;
 
 /** This dialog shows an overview of transaction numbers for an account
  *
@@ -293,8 +294,6 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 
 	public void showTransactionDetailsDialog()
 	{
-
-
 		try
 		{
 			//get transactionnumber of selected row in table
@@ -302,8 +301,9 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 			//this will break if the layout/order of columns of the table is changed, is there a way to get to column by name/id/?
 			String transfernumber = (String) m_transactionsTable.getModel().getValueAt(selectedRow, 1); //1 for second column = transfernumber
 			Object value = m_transactionsTable.getModel().getValueAt(selectedRow, 3);//fourth column
-			String amount = (String) value;
+			long amount = ((TablecellAmount) value).getLongValue();
 			String status = (String) m_transactionsTable.getModel().getValueAt(selectedRow,6);
+			String planName = (String) m_transactionsTable.getModel().getValueAt(selectedRow,4);
 			boolean isCompleted = false;
 			if (status.equalsIgnoreCase(JAPMessages.getString(MSG_USEDSTATUS)) )
 			{
@@ -327,7 +327,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 					    JAPDialog.showMessageDialog(this,JAPMessages.getString(MSG_PAYMENT_COMPLETED));
 					} else
 					{
-						showActivePaymentDialog(transfernumber, amount);
+						showActivePaymentDialog(transfernumber, amount, m_account, planName);
 					}
 				} else
 				{
@@ -344,12 +344,12 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 		}
 	}
 
-	private void showActivePaymentDialog(String transferNumber, String amount)
+	private void showActivePaymentDialog(String transferNumber, long amount, PayAccount a_account, String planName)
 	{
 		String language = JAPMessages.getLocale().getLanguage();
-		Vector optionsToShow = getLocalizedActivePaymentsData(language);
+		Vector optionsToShow = getLocalizedActivePaymentsData(language, a_account);
 
-	    ActivePaymentDetails apd = new ActivePaymentDetails(this,optionsToShow, transferNumber,amount);
+	    ActivePaymentDetails apd = new ActivePaymentDetails(this,optionsToShow, transferNumber,amount, planName);
 	}
 
 	/**
@@ -360,15 +360,15 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 	 *         entries in Hashtable: Strings for keys "name","heading","detailedInfo",
 	 *                               Vector of Strings for key "extraInfos"
 	 */
-	private Vector getLocalizedActivePaymentsData(String lang)
+	private Vector getLocalizedActivePaymentsData(String lang, PayAccount a_account)
 	{
 		Vector optionsToShow = new Vector();
 		try
 		{
-			PayAccount m_account = (PayAccount) m_accounts.elementAt(0); //just to get it to compile
-			BIConnection biConn = new BIConnection(m_account.getBI());
+			PaymentInstanceDBEntry theJPI = a_account.getBI();
+			BIConnection biConn = new BIConnection(theJPI);
 			biConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
-			biConn.authenticate(m_account.getAccountCertificate(), m_account.getPrivateKey());
+			biConn.authenticate(a_account.getAccountCertificate(), a_account.getPrivateKey());
 			XMLPaymentOptions allOptions = biConn.fetchPaymentOptions();
 			//optionsToShow: Vector of Hashtables, one per active option, containing strings in current language
 			//in case of error, use english
@@ -436,7 +436,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 				case 2:
 					return Date.class;   //creation date
 				case 3:
-					return String.class; //amount
+					return TablecellAmount.class; //amount
 				case 5:
 					return String.class; //volume plan
 				case 6:
@@ -481,8 +481,8 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 					{
 						String amountString = (String)transactionData.get(XMLTransactionOverview.KEY_AMOUNT);
 						long amount = Long.parseLong(amountString);
-						String formattedAmount = JAPUtil.formatEuroCentValue(amount);
-						return formattedAmount;
+						TablecellAmount theAmount = new TablecellAmount(amount);
+						return theAmount;
 					}
 					catch (Exception e)
 					{
@@ -566,5 +566,25 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 		{
 			return false;
 		}
+	}
+
+	protected class TablecellAmount {
+
+		long m_theAmount;
+		public TablecellAmount(long amount)
+		{
+			m_theAmount = amount;
+		}
+
+		public String toString()
+		{
+			return JAPUtil.formatEuroCentValue(m_theAmount);
+		}
+
+		public long getLongValue()
+		{
+			return m_theAmount;
+		}
+
 	}
 }
