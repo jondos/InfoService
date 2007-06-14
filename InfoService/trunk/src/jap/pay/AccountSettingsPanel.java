@@ -2184,7 +2184,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		});
 
 		/******** ask for a password if the newly created account is the user's first account ***********/
-		final boolean bFirstPayAccount = PayAccountsFile.getInstance().getNumAccounts() == 0;
+		//final boolean bFirstPayAccount = PayAccountsFile.getInstance().getNumAccounts() == 0;
+		final boolean bFirstPayAccount = false;
 		PasswordContentPane pc = new PasswordContentPane(a_parentDialog, captcha,
 			PasswordContentPane.PASSWORD_NEW,
 			JAPMessages.getString(MSG_ACCPASSWORD))

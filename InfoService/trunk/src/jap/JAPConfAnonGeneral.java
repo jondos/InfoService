@@ -101,7 +101,9 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	private static final int DT_INTERVAL_STEPLENGTH = 2;
 	private static final int DT_INTERVAL_STEPS =
 		DummyTrafficControlChannel.DT_MAX_INTERVAL_MS / DT_INTERVAL_STEPLENGTH / 1000;
-	private static final int DT_INTERVAL_DEFAULT = 2;
+	private static final int DT_INTERVAL_DEFAULT = 10;
+	private static final int DT_INTERVAL_MIN_STEP = 6;
+
 	public static final int DEFAULT_DUMMY_TRAFFIC_INTERVAL_SECONDS =
 		DT_INTERVAL_STEPLENGTH * DT_INTERVAL_DEFAULT * 1000;
 
@@ -327,7 +329,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 
 
 		m_sliderDummyTrafficIntervall = new JSlider(SwingConstants.HORIZONTAL,
-													DT_INTERVAL_STEPLENGTH,
+													DT_INTERVAL_MIN_STEP,
 													DT_INTERVAL_STEPS * DT_INTERVAL_STEPLENGTH,
 													DT_INTERVAL_DEFAULT * DT_INTERVAL_STEPLENGTH);
 		Hashtable ht = new Hashtable(DT_INTERVAL_STEPS);
