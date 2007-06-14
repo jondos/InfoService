@@ -434,7 +434,7 @@ public class XMLPaymentOption implements IXMLEncodable
 		}
 		if (localizedInfos.size() ==  0) //nothing found for the given language
 		{
-			localizedInfos.add(fallbackResult);
+			localizedInfos.addElement(fallbackResult);
 		}
 		return localizedInfos;
 	}

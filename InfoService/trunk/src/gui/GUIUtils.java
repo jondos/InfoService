@@ -2002,7 +2002,7 @@ public final class GUIUtils
 		for (Enumeration components = aComponents.elements(); components.hasMoreElements(); )
 		{
 			curComp = (JComponent) components.nextElement();
-			double oldHeight = curComp.getPreferredSize().getHeight();
+			double oldHeight = curComp.getPreferredSize().height;
 			curComp.setPreferredSize( new Dimension(aDimension.width, (int) oldHeight));
 			curComp.setMaximumSize(new Dimension(aDimension.width, (int) oldHeight));
 	    }
