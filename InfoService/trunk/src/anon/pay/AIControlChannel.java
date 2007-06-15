@@ -271,7 +271,7 @@ public class AIControlChannel extends XmlControlChannel
 	  LogHolder.log(LogLevel.DEBUG, LogType.PAY, "AI requests to sign " + newBytes + " transferred bytes");
 	  m_totalBytes = newBytes;
 
-
+	//System.out.println("PC Hash looked: " + cc.getConcatenatedPriceCertHashes());
 	  XMLEasyCC myLastCC = currentAccount.getAccountInfo().getCC(cc.getConcatenatedPriceCertHashes());
 	  long oldSpent = 0;
 	  if (myLastCC != null)
@@ -299,6 +299,8 @@ public class AIControlChannel extends XmlControlChannel
 			  this.fireAIEvent(EVENT_UNREAL, diff);
 		  }
 	  }
+
+	  //System.out.println("CC transfered bytes: " + cc.getTransferredBytes() + " Old transfered: " + oldSpent + " Prepaid: " + m_prepaidBytes + " new bytes:" + newBytes);
 	  m_prepaidBytes = newPrepaidBytes;
 
 	  //get pricecerts and check against hashes in CC
@@ -470,12 +472,16 @@ public class AIControlChannel extends XmlControlChannel
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 							  "AI has sent a valid last cost confirmation. Adding it to account.");
 				//no need to verify the price certificates of the last CC, since they might have changed since then
+				//System.out.println("PC Hash stored: " + a_cc.getConcatenatedPriceCertHashes());
 				currentAccount.addCostConfirmation(a_cc);
 
 				//get Cascade's prepay interval
 				long currentlyTransferedBytes = currentAccount.updateCurrentBytes(m_packetCounter);
 				long bytesToPay = m_connectedCascade.getPrepaidInterval() + currentlyTransferedBytes
 					- m_prepaidBytes;
+
+				//System.out.println("Initial CC transfered bytes: " + bytesToPay + " Old transfered: " + currentlyTransferedBytes + " Prepaid: " + m_prepaidBytes);
+
 				if (bytesToPay > 0)
 				{
 					//send CC for up to <last CC + prepay interval> bytes
