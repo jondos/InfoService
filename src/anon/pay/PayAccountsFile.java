@@ -649,7 +649,7 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 
 		LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 					  "Attempting to create account at PI " + a_bi.getName());
-
+		//System.out.println(a_bi.getId());
 		BIConnection biConn = new BIConnection(a_bi);
 		biConn.addConnectionListener(this);
 		biConn.connect(a_proxys);
