@@ -2989,6 +2989,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 	public void showPIerror(Component a_parent, Exception a_e)
 	{
+		LogHolder.log(LogLevel.ERR, LogType.PAY, a_e);
+
 		if (a_e instanceof XMLErrorMessage)
 		{
 			JAPDialog.showErrorDialog(a_parent,

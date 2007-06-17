@@ -272,7 +272,7 @@ public class BIConnection implements ICaptchaSender
 
 		XMLTransCert cert = new XMLTransCert(doc);
 		//debug
-		System.out.println(XMLUtil.toString(XMLUtil.toXMLDocument(cert)));
+		//System.out.println(XMLUtil.toString(XMLUtil.toXMLDocument(cert)));
 
 
 		if (!XMLSignature.verifyFast(doc, m_theBI.getCertificate().getPublicKey()))
