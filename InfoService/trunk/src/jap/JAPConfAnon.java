@@ -517,8 +517,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					}
 					else
 					{
+						/*
 						JAPDialog.showMessageDialog(m_payLabel,
-							JAPMessages.getString(JAPNewView.MSG_NO_REAL_PAYMENT));
+							JAPMessages.getString(JAPNewView.MSG_NO_REAL_PAYMENT));*/
 					}
 				}
 			}
@@ -609,9 +610,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		else if (m_infoService.isPay(cascade.getId()))
 		{
 			m_payLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-			m_payLabel.setForeground(Color.blue);
+			m_payLabel.setForeground(m_numOfUsersLabel.getForeground());
 			m_payLabel.setText(JAPMessages.getString(MSG_PAYCASCADE));
-			m_payLabel.setToolTipText(JAPMessages.getString(JAPNewView.MSG_NO_REAL_PAYMENT));
+			//m_payLabel.setToolTipText(JAPMessages.getString(JAPNewView.MSG_NO_REAL_PAYMENT));
+			m_payLabel.setToolTipText(null);
 		}
 		else
 		{
