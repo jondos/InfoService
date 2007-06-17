@@ -29,7 +29,9 @@
   <property category="debug.17" name="RemoteDebug" value="1"/>
   <property category="debug.17" name="RemoteDebugLaunch" value="0"/>
   <property category="debug.17" name="RemoteHost" value="141.76.46.66"/>
-  <property category="debug.6" name="SmartStepRedefineClasses" value="0"/>
+  <property category="debug.5" name="SmartStepRedefineClasses" value="0"/>
+  <property category="debug.5" name="SmartStepSkipStaticInitializers" value="0"/>
+  <property category="debug.5" name="SmartStepSkipSynthetics" value="0"/>
   <property category="generalFormatting" name="baseCodeStyle" value="java/JAP.codestyle"/>
   <property category="generalFormatting" name="blockIndent" value="4"/>
   <property category="generalFormatting" name="tabSize" value="4"/>
@@ -39,6 +41,7 @@
   <property category="generalFormatting2" name="tabSize" value="4"/>
   <property category="generalFormatting2" name="useTabChar" value="1"/>
   <property category="idl" name="ProcessIDL" value="false"/>
+  <property category="java" name="compiler" value="projectjavac"/>
   <property category="java.sapient" name="ACE" value="true"/>
   <property category="java.sapient" name="AFLV" value="true"/>
   <property category="java.sapient" name="AFP" value="true"/>
@@ -144,7 +147,7 @@
   <property category="javadoc" name="custom.tags.1" value="todo;a;To Do:"/>
   <property category="optimize.0" name="OptimizableType" value="intuitive.ide.borland.jb10.ProfilerBootstrap"/>
   <property category="optimize.0" name="oicc.FilterFile" value="G:\projects\Jap\JAP.oif"/>
-  <property category="optimize.0" name="oipr.FilterFile" value="G:\projects\Jap\JAP.oif"/>
+  <property category="optimize.0" name="oipr.FilterFile" value="E:\Eigene Dateien\rolf\Coding\Jap\JAP.oif"/>
   <property category="optimize.0" name="oira.FilterFile" value="G:\projects\Jap\JAP.oif"/>
   <property category="optimize.1" name="OptimizableType" value="intuitive.ide.borland.jb10.ProfilerBootstrap"/>
   <property category="optimize.1" name="oicc.FilterFile" value="G:\projects\Jap\JAP.oif"/>
@@ -152,6 +155,10 @@
   <property category="optimize.1" name="oira.FilterFile" value="G:\projects\Jap\JAP.oif"/>
   <property category="optimize.11" name="OptimizableType" value="com.borland.jbuilder.optimize.IntroOptimizeitProfiler"/>
   <property category="optimize.15" name="OptimizableType" value="com.borland.jbuilder.optimize.IntroOptimizeitProfiler"/>
+  <property category="optimize.5" name="OptimizableType" value="intuitive.ide.borland.jb10.ProfilerBootstrap"/>
+  <property category="optimize.5" name="oicc.FilterFile" value="G:\projects\Jap\JAP.oif"/>
+  <property category="optimize.5" name="oipr.FilterFile" value="E:\Eigene Dateien\rolf\Coding\Jap\JAP.oif"/>
+  <property category="optimize.5" name="oira.FilterFile" value="G:\projects\Jap\JAP.oif"/>
   <property category="optimize.7" name="OptimizableType" value="com.borland.jbuilder.optimize.IntroOptimizeitProfiler"/>
   <property category="path" name="DefaultDiagram" value="diagrams"/>
   <property category="path" name="Diagram" value="diagrams"/>
@@ -161,6 +168,7 @@
   <property category="runtime.0" name="ConfigurationName" value="JAP"/>
   <property category="runtime.0" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
   <property category="runtime.0" name="application.class" value="JAP"/>
+  <property category="runtime.0" name="application.parameters" value="-s"/>
   <property category="runtime.0" name="custom.init_required" value="0"/>
   <property category="runtime.0" name="custom.required.1" value="http"/>
   <property category="runtime.0" name="custom.required.2" value="mac"/>
@@ -278,15 +286,31 @@
   <property category="runtime.4" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
   <property category="runtime.4" name="application.class" value="anon.crypto.tinytls.test.tlsclienttest"/>
   <property category="runtime.5" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
-  <property category="runtime.5" name="ConfigurationName" value="JAPiPAQ"/>
+  <property category="runtime.5" name="ConfigurationName" value="Kopie von JAP"/>
   <property category="runtime.5" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
-  <property category="runtime.5" name="application.class" value="jap.JAPiPAQ"/>
-  <property category="runtime.6" name="BuildTargetOnRun" value="&lt;None&gt;"/>
-  <property category="runtime.6" name="ConfigurationName" value="JAP mit JView"/>
-  <property category="runtime.6" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
-  <property category="runtime.6" name="application.class" value="JAP"/>
-  <property category="runtime.6" name="custom.jdk" value="java version 1_1_8_009"/>
-  <property category="runtime.6" name="custom.override_jdk" value="1"/>
+  <property category="runtime.5" name="application.class" value="JAP"/>
+  <property category="runtime.5" name="application.parameters" value="-s"/>
+  <property category="runtime.5" name="custom.init_required" value="0"/>
+  <property category="runtime.5" name="custom.required.1" value="http"/>
+  <property category="runtime.5" name="custom.required.2" value="mac"/>
+  <property category="runtime.5" name="custom.required.3" value="XML-1.1"/>
+  <property category="runtime.5" name="custom.required.4" value="Apache XML-RPC"/>
+  <property category="runtime.5" name="custom.required.5" value="Swing"/>
+  <property category="runtime.5" name="custom.required.6" value="BouncyCastleLightForJAP"/>
+  <property category="runtime.5" name="custom.required.7" value="JUnit"/>
+  <property category="runtime.5" name="custom.required.8" value="junitx"/>
+  <property category="runtime.5" name="custom.required.9" value="ApacheFTPClient"/>
+  <property category="runtime.5" name="enable.tcpmonitor" value="0"/>
+  <property category="runtime.5" name="enable.wsimonitor" value="0"/>
+  <property category="runtime.5" name="jsprunner.launchuri" value="/"/>
+  <property category="runtime.5" name="tcpmonitor.listenport" value=""/>
+  <property category="runtime.5" name="tcpmonitor.targethost" value=""/>
+  <property category="runtime.5" name="tcpmonitor.targetport" value=""/>
+  <property category="runtime.5" name="test.harness" value="junit.textui.TestRunner"/>
+  <property category="runtime.5" name="wsimonitor.listenport" value=""/>
+  <property category="runtime.5" name="wsimonitor.logfile" value=""/>
+  <property category="runtime.5" name="wsimonitor.targethost" value=""/>
+  <property category="runtime.5" name="wsimonitor.targetport" value=""/>
   <property category="runtime.7" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
   <property category="runtime.7" name="ConfigurationName" value="Mobile"/>
   <property category="runtime.7" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
@@ -333,7 +357,7 @@
   <property category="sys" name="ExcludeClassEnabled" value="0"/>
   <property category="sys" name="IncludeTestPath" value="1"/>
   <property category="sys" name="InstanceVisibility" value="0"/>
-  <property category="sys" name="JDK" value="java version 1.5.0_09-b01"/>
+  <property category="sys" name="JDK" value="java version 1.5.0_10-b03"/>
   <property category="sys" name="LastTag" value="192"/>
   <property category="sys" name="Libraries" value="http;mac;Apache XML-RPC;BouncyCastleLightForJAP;JUnit;junitx;Swing;ApacheBzip2;Log4j;ApacheFTPClient;XML-1.0"/>
   <property category="sys" name="MakeStable" value="0"/>
@@ -352,6 +376,9 @@
   <property category="team" name="ignorePath.10" value="public.cer"/>
   <property category="team" name="ignorePath.11" value="InfoService.jpx"/>
   <property category="team" name="ignorePath.12" value="BezahlInstanz.jpx"/>
+  <property category="team" name="ignorePath.13" value="JAP.oif"/>
+  <property category="team" name="ignorePath.14" value="classes_bi"/>
+  <property category="team" name="ignorePath.16" value="classes_bi"/>
   <property category="team" name="ignorePath.2" value="classes_all"/>
   <property category="team" name="ignorePath.3" value="classes_infoservice"/>
   <property category="team" name="ignorePath.4" value="JAP.jar"/>
@@ -451,7 +478,6 @@
   <node name="anon.proxy" type="Package"/>
   <node name="anon.shared" type="Package"/>
   <node name="anon.tor" type="Package"/>
-  <node name="anon.tor.ordescription" type="Package"/>
   <node name="anon.util" type="Package"/>
   <node name="forward" type="Package"/>
   <node name="forward.client" type="Package"/>
@@ -913,8 +939,20 @@
     <property category="archiving" name="contentRules.476" value="F:help/firefox3_en.gif;help/firefox3_en.gif"/>
     <property category="archiving" name="contentRules.477" value="F:help/supportedPrograms_de.html;help/supportedPrograms_de.html"/>
     <property category="archiving" name="contentRules.478" value="F:help/supportedPrograms_en.html;help/supportedPrograms_en.html"/>
+    <property category="archiving" name="contentRules.479" value="F:help/functionality_de.html;help/functionality_de.html"/>
     <property category="archiving" name="contentRules.48" value="F:help/xeng.gif;help/xeng.gif"/>
+    <property category="archiving" name="contentRules.480" value="F:help/functionality_en.html;help/functionality_en.html"/>
+    <property category="archiving" name="contentRules.481" value="F:help/jap.SystrayPopupMenu_de.html;help/jap.SystrayPopupMenu_de.html"/>
+    <property category="archiving" name="contentRules.482" value="F:help/jap.SystrayPopupMenu_en.html;help/jap.SystrayPopupMenu_en.html"/>
+    <property category="archiving" name="contentRules.483" value="F:src/JAPMessages_cs.properties;JAPMessages_cs.properties"/>
+    <property category="archiving" name="contentRules.484" value="F:src/JAPMessages_es.properties;JAPMessages_es.properties"/>
+    <property category="archiving" name="contentRules.485" value="F:src/JAPMessages_ar.properties;JAPMessages_ar.properties"/>
+    <property category="archiving" name="contentRules.486" value="F:certificates/acceptedPIs/bi.cer;certificates/acceptedPIs/bi.cer"/>
+    <property category="archiving" name="contentRules.487" value="F:certificates/acceptedPIs/Payment_Instance.cer;certificates/acceptedPIs/Payment_Instance.cer"/>
+    <property category="archiving" name="contentRules.488" value="F:certificates/acceptedMixCAs/Operator_CA.cer;certificates/acceptedMixCAs/Operator_CA.cer"/>
+    <property category="archiving" name="contentRules.489" value="F:certificates/acceptedMixCAs/Test_CA.cer;certificates/acceptedMixCAs/Test_CA.cer"/>
     <property category="archiving" name="contentRules.49" value="F:help/xhelpfrms.css;help/xhelpfrms.css"/>
+    <property category="archiving" name="contentRules.490" value="F:certificates/acceptedInfoServiceCAs/InfoService_CA.cer;certificates/acceptedInfoServiceCAs/InfoService_CA.cer"/>
     <property category="archiving" name="contentRules.5" value="F:help/back.gif;help/back.gif"/>
     <property category="archiving" name="contentRules.50" value="I:JAP.class"/>
     <property category="archiving" name="contentRules.51" value="I:JAPMacintosh.class"/>
@@ -1125,10 +1163,10 @@
   <file path="JAP.doxy"/>
   <file path="src/JAP.java"/>
   <file path="src/JAPMacintosh.java"/>
+  <file path="src/JAPMessages_cs.properties"/>
   <file path="src/JAPMessages_de.properties"/>
   <file path="src/JAPMessages_en.properties"/>
   <file path="src/JAPMessages_fr.properties"/>
   <file path="src/JAPMessages_pt.properties"/>
-  <file path="magicdraw.magicdraw"/>
   <file path="MANIFEST.MF"/>
 </project>
