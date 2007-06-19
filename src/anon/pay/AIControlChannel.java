@@ -428,12 +428,6 @@ public class AIControlChannel extends XmlControlChannel
 		{
 			try
 			{
-				/**
-				 * Check if the CC contains the correct price certs
-				 */
-				//get hashes from CC
-				Enumeration priceCertHashesInCc = a_cc.getPriceCertHashes().elements();
-
 				//compare number
 				if (a_cc.getNrOfPriceCerts() != m_connectedCascade.getNrOfPriceCerts())
 				{
@@ -448,16 +442,24 @@ public class AIControlChannel extends XmlControlChannel
 					return;
 				}
 
-				//compare hashes
-				Enumeration inCascade = m_connectedCascade.getPriceCertificateHashes().elements();
+				/**
+				 * Check if the CC contains the correct price certs
+				 */
+				//get hashes from CC
+				Hashtable hashPriceCertHashesInCC = a_cc.getPriceCertHashes();
+				Enumeration priceCertHashesInCascade = m_connectedCascade.getPriceCertificateHashes().keys();
+				Hashtable inCascade = m_connectedCascade.getPriceCertificateHashes();
 				String curCascadeHash;
 				String curCcHash;
+				String ski;
 				int i = 0;
-				while (inCascade.hasMoreElements()) //enough to use one enum in condition, since we already checked for equal size
+				while (priceCertHashesInCascade.hasMoreElements()) //enough to use one enum in condition, since we already checked for equal size
 				{
-					curCascadeHash = ((String) inCascade.nextElement());
-					curCcHash = (String) priceCertHashesInCc.nextElement();
-					if (!curCascadeHash.equals(curCcHash))
+					ski = ((String) priceCertHashesInCascade.nextElement());
+					curCascadeHash = (String)inCascade.get(ski);
+					curCcHash = (String)hashPriceCertHashesInCC.get(ski);
+
+					if (curCcHash == null | !curCascadeHash.equals(curCcHash))
 					{
 						String message = "AI sent CC with illegal price cert hash for mix " + (i+1) + "!";
 						LogHolder.log(LogLevel.WARNING, LogType.PAY, message);
