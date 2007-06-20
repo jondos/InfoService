@@ -254,8 +254,14 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 				htmlExtraInfo = "<br> <b>" + m_strExtraInfo + "</b>";
 			}
 		}
-
+        if (isURL)
+		{
 		setText(selectedOption.getDetailedInfo(m_language));// + htmlExtraInfo); //links should never be shown, only confuse the user
+		}
+		else
+		{
+			setText(selectedOption.getDetailedInfo(m_language) + htmlExtraInfo);
+		}
 		if (isURL) setMouseListener(new LinkMouseListener());
 
 	}
@@ -272,20 +278,21 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 	{
 		Clipboard sysClip = Toolkit.getDefaultToolkit().getSystemClipboard();
 		String link = m_strExtraInfo;
-		if (m_selectedOption.getExtraInfoType(m_language).equals(XMLPaymentOption.EXTRA_TEXT))
+		if (m_selectedOption.getExtraInfoType(m_language).equalsIgnoreCase(XMLPaymentOption.EXTRA_TEXT))
 		{
 			link = Util.replaceAll(link, "<br>", "\n");
 			link = Util.replaceAll(link, "<p>", "\n\n");
+			link = Util.replaceAll(link, "&nbsp;", " ");
 		}
 		else
 		{
 			link = Util.replaceAll(link, "<br>", "");
 			link = Util.replaceAll(link, "<p>", "");
+			link = Util.replaceAll(link, "&nbsp;", "%20");
+			link = Util.replaceAll(link, " ", "%20");
 		}
 		link = Util.replaceAll(link, "<html>", " ");
 		link = Util.replaceAll(link, "</html>", " ");
-		link = Util.replaceAll(link, "&nbsp;", "%20");
-		link = Util.replaceAll(link, " ", "%20");
 		link = Util.replaceAll(link, "<font color=blue><u>", "");
 		link = Util.replaceAll(link, "</u></font>", "");
 		link = link.trim();
