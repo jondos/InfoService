@@ -68,6 +68,7 @@ import logging.LogType;
 import java.util.Calendar;
 import anon.util.Util;
 import jap.pay.wizardnew.PaymentInfoPane;
+import java.util.Locale;
 
 /**
  * This class contains static utility functions for Jap
@@ -149,12 +150,12 @@ public final class JAPUtil
 		else if (c < 1000000000)
 		{
 			d /= 1000000.0;
-			df.applyPattern("#,##0.00");
+			df.applyPattern("#,##0.0");
 		}
 		else
 		{
 			d /= 1000000000.0;
-			df.applyPattern("#,##0.000");
+			df.applyPattern("#,##0.0");
 		}
 		return df.format(d);
 	}
@@ -475,7 +476,20 @@ public final class JAPUtil
 	public static String formatTimestamp(Timestamp date, boolean withTime, String a_language)
 	{
 		SimpleDateFormat sdf;
-		if (a_language.equalsIgnoreCase("en"))
+		String country = JAPController.getLocale().getCountry();
+		if (a_language.equalsIgnoreCase("en") && country.equals(Locale.US) )
+		{
+			if (withTime)
+			{
+				sdf = new SimpleDateFormat("MM/dd/yy - HH:mm");
+			}
+			else
+			{
+				sdf = new SimpleDateFormat("MM/dd/yy");
+			}
+			return sdf.format(date);
+		}
+		else if (a_language.equalsIgnoreCase("en")) //any other english-speaking country
 		{
 			if (withTime)
 			{
@@ -487,18 +501,29 @@ public final class JAPUtil
 			}
 			return sdf.format(date);
 		}
-		else
+		else if (a_language.equalsIgnoreCase("de"))
 		{
-		if (withTime)
-		{
-			sdf = new SimpleDateFormat("dd.MM.yyyy - HH:mm");
+			if (withTime)
+			{
+				sdf = new SimpleDateFormat("dd.MM.yyyy - HH:mm");
+			}
+			else
+			{
+				sdf = new SimpleDateFormat("dd.MM.yyyy");
+			}
 		}
-		else
+		else  //ISO standard
 		{
-			sdf = new SimpleDateFormat("dd.MM.yyyy");
+		    if (withTime)
+			{
+				sdf = new SimpleDateFormat("yyyy-MM-dd  HH:mm");
+			}
+			else
+			{
+				sdf = new SimpleDateFormat("yyyy-MM-dd");
+			}
 		}
 		return sdf.format(date);
-		}
 	}
 
 	/**
@@ -527,5 +552,4 @@ public final class JAPUtil
 		}
 		return new Timestamp(now.getTime().getTime());
 	}
-
 }
