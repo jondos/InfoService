@@ -1102,6 +1102,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			//m_labelEnddate.setText("");
 			m_labelVolume.setText("");
 			m_labelValid.setText("");
+			m_paymentInstance.setText("");
 			m_lblInactiveMessage.setText("");
 			m_lblNoBackupMessage.setText("");
 			return;
@@ -1142,7 +1143,15 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		{
 			XMLBalance balance = accountInfo.getBalance();
 
-			m_paymentInstance.setText(selectedAccount.getBI().getName());
+			PaymentInstanceDBEntry pi = selectedAccount.getBI();
+			if (pi == null)
+			{
+				m_paymentInstance.setText("");
+			}
+			else
+			{
+				m_paymentInstance.setText(pi.getName());
+			}
 
 			Calendar termsDate = selectedAccount.getTermsDate();
 			String strDate = "";
@@ -1154,88 +1163,100 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 			m_labelCreationDate.setText(JAPUtil.formatTimestamp(selectedAccount.getCreationTime(), false,
 				JAPController.getInstance().getLocale().getLanguage()));
-			m_labelStatementDate.setText(JAPUtil.formatTimestamp(balance.getTimestamp(), true,
-				JAPController.getInstance().getLocale().getLanguage()));
-			m_labelDeposit.setText(JAPUtil.formatEuroCentValue(balance.getDeposit()));
-			m_labelSpent.setText(JAPUtil.formatBytesValueWithUnit(balance.getSpent()));
-			//m_labelBalance.setText(JAPUtil.formatEuroCentValue(balance.getBalance()));
-
-			Locale curLocale = JAPMessages.getLocale();
-			String curLang = curLocale.getLanguage();
-			Timestamp flatEnddate = balance.getFlatEnddate();
-			Timestamp now = new Timestamp(System.currentTimeMillis());
-
-			if (flatEnddate != null && flatEnddate.after(now) && balance.getCredit() > 0)
+			if (balance == null)
 			{
-				//m_labelEnddate.setText(JAPUtil.formatTimestamp(flatEnddate, false, curLang));
-				m_labelValid.setText(JAPUtil.formatTimestamp(flatEnddate, false, curLang));
-				m_labelVolume.setText(JAPUtil.formatBytesValue(balance.getVolumeBytesLeft() * 1000));
-			}
-			else
-			{
-				m_labelValid.setText(JAPMessages.getString(MSG_ACCOUNT_NOFLAT));
-				m_labelVolume.setText(JAPMessages.getString(MSG_ACCOUNT_NOFLAT));
-			}
-
-			/*
-			m_labelValid.setText(JAPUtil.formatTimestamp(balance.getValidTime(), true,
-				JAPController.getInstance().getLocale().getLanguage()));
-			if (balance.getValidTime().before(new Date()))
-			{
-				m_labelValid.setForeground(Color.red);
-				m_labelValid.setToolTipText(JAPMessages.getString(MSG_TOOL_TIP_EXPIRED));
-			}
-			else
-			{
-				m_labelValid.setForeground(new JLabel().getForeground());
-				m_labelValid.setToolTipText("");
-			}*/
-
-			long dep = selectedAccount.getBalance().getVolumeBytesLeft() * 1000 + selectedAccount.getBalance().getSpent();
-			long spe = selectedAccount.getBalance().getSpent();
-			if (dep == 0 || dep - spe == 0)
-			{
+				m_labelStatementDate.setText("");
+				m_labelDeposit.setText("");
+				m_labelSpent.setText("");
 				m_coinstack.setValue(0);
+				m_labelVolume.setText("");
+				m_labelValid.setText("");
 			}
 			else
 			{
-				double onePercent = 100.0 / (double) dep;
-				long percent = (long) (onePercent * spe);
-				if (percent < 12)
+				m_labelStatementDate.setText(JAPUtil.formatTimestamp(balance.getTimestamp(), true,
+					JAPController.getInstance().getLocale().getLanguage()));
+				m_labelDeposit.setText(JAPUtil.formatEuroCentValue(balance.getDeposit()));
+				m_labelSpent.setText(JAPUtil.formatBytesValueWithUnit(balance.getSpent()));
+				//m_labelBalance.setText(JAPUtil.formatEuroCentValue(balance.getBalance()));
+
+				Locale curLocale = JAPMessages.getLocale();
+				String curLang = curLocale.getLanguage();
+				Timestamp flatEnddate = balance.getFlatEnddate();
+				Timestamp now = new Timestamp(System.currentTimeMillis());
+
+				if (flatEnddate != null && flatEnddate.after(now) && balance.getCredit() > 0)
 				{
-					m_coinstack.setValue(8);
-				}
-				else if (percent >= 12 && percent < 25)
-				{
-					m_coinstack.setValue(7);
-				}
-				else if (percent >= 25 && percent < 37)
-				{
-					m_coinstack.setValue(6);
-				}
-				else if (percent >= 37 && percent < 50)
-				{
-					m_coinstack.setValue(5);
-				}
-				else if (percent >= 50 && percent < 62)
-				{
-					m_coinstack.setValue(4);
-				}
-				else if (percent >= 62 && percent < 75)
-				{
-					m_coinstack.setValue(3);
-				}
-				else if (percent >= 75 && percent < 87)
-				{
-					m_coinstack.setValue(2);
-				}
-				else if (percent >= 87 && percent < 99)
-				{
-					m_coinstack.setValue(1);
+					//m_labelEnddate.setText(JAPUtil.formatTimestamp(flatEnddate, false, curLang));
+					m_labelValid.setText(JAPUtil.formatTimestamp(flatEnddate, false, curLang));
+					m_labelVolume.setText(JAPUtil.formatBytesValue(balance.getVolumeBytesLeft() * 1000));
 				}
 				else
 				{
+					m_labelValid.setText(JAPMessages.getString(MSG_ACCOUNT_NOFLAT));
+					m_labelVolume.setText(JAPMessages.getString(MSG_ACCOUNT_NOFLAT));
+				}
+
+				/*
+				   m_labelValid.setText(JAPUtil.formatTimestamp(balance.getValidTime(), true,
+					JAPController.getInstance().getLocale().getLanguage()));
+				   if (balance.getValidTime().before(new Date()))
+				   {
+					m_labelValid.setForeground(Color.red);
+					m_labelValid.setToolTipText(JAPMessages.getString(MSG_TOOL_TIP_EXPIRED));
+				   }
+				   else
+				   {
+					m_labelValid.setForeground(new JLabel().getForeground());
+					m_labelValid.setToolTipText("");
+				   }*/
+
+				long dep = balance.getVolumeBytesLeft()*1000 + selectedAccount.getBalance().getSpent();
+				long spe = balance.getSpent();
+				if (dep == 0 || dep - spe == 0)
+				{
 					m_coinstack.setValue(0);
+				}
+				else
+				{
+					double onePercent = 100.0 / (double) dep;
+					long percent = (long) (onePercent * spe);
+					if (percent < 12)
+					{
+						m_coinstack.setValue(8);
+					}
+					else if (percent >= 12 && percent < 25)
+					{
+						m_coinstack.setValue(7);
+					}
+					else if (percent >= 25 && percent < 37)
+					{
+						m_coinstack.setValue(6);
+					}
+					else if (percent >= 37 && percent < 50)
+					{
+						m_coinstack.setValue(5);
+					}
+					else if (percent >= 50 && percent < 62)
+					{
+						m_coinstack.setValue(4);
+					}
+					else if (percent >= 62 && percent < 75)
+					{
+						m_coinstack.setValue(3);
+					}
+					else if (percent >= 75 && percent < 87)
+					{
+						m_coinstack.setValue(2);
+					}
+					else if (percent >= 87 && percent < 99)
+					{
+						m_coinstack.setValue(1);
+					}
+					else
+					{
+						m_coinstack.setValue(0);
+					}
 				}
 			}
 		}

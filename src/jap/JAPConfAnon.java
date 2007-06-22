@@ -71,6 +71,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.JComboBox;
 
 import anon.crypto.AbstractX509AlternativeName;
 import anon.crypto.CertPath;
@@ -105,6 +106,8 @@ import logging.LogType;
 import platform.AbstractOS;
 import anon.infoservice.PreviouslyKnownCascadeIDEntry;
 import anon.pay.PayAccountsFile;
+import javax.swing.ComboBoxModel;
+import javax.swing.DefaultComboBoxModel;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener, Observer
@@ -134,6 +137,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private static final String MSG_PI_UNAVAILABLE = JAPConfAnon.class.getName() + "_piUnavailable";
 	private static final String MSG_EXPLAIN_PI_UNAVAILABLE = JAPConfAnon.class.getName() + "_explainPiUnavailable";
 	private static final String MSG_WHAT_IS_THIS = JAPConfAnon.class.getName() + "_whatIsThis";
+	private static final String MSG_FILTER = JAPConfAnon.class.getName() + "_filter";
 
 
 
@@ -144,6 +148,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private boolean m_bUpdateServerPanel = true;
 
 	private InfoServiceTempLayer m_infoService;
+
+	JComboBox m_cmbCascadeFilter;
 
 	private JList m_listMixCascade;
 	private JTable m_tableMixCascade;
@@ -328,17 +334,32 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		m_cascadesPanel.setLayout(layout);
 
+
 		JLabel l;
-		if (JAPModel.getDefaultView() != JAPConstants.VIEW_SIMPLIFIED)
+		/*
+		l = new JLabel(JAPMessages.getString(MSG_FILTER));
+		c.gridx = 0;
+		c.gridy = 0;
+		c.gridwidth = 1;
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.insets = new Insets(0, 5, 5, 5);
+		m_cascadesPanel.add(l, c);*/
+
+		c.gridx = 0;
+		c.gridy = 0;
+		c.gridwidth = 1;
+		c.anchor = GridBagConstraints.NORTHWEST;
+		m_cmbCascadeFilter = new JComboBox(TrustModel.getTrustModels());
+		m_cmbCascadeFilter.setSelectedItem(TrustModel.getCurrentTrustModel());
+		m_cmbCascadeFilter.addActionListener(new ActionListener()
 		{
-			l = new JLabel(JAPMessages.getString("availableCascades"));
-			c.gridx = 0;
-			c.gridy = 0;
-			c.gridwidth = 2;
-			c.anchor = GridBagConstraints.NORTHWEST;
-			c.insets = new Insets(0, 5, 5, 5);
-			m_cascadesPanel.add(l, c);
-		}
+			public void actionPerformed(ActionEvent a_event)
+			{
+				TrustModel.setCurrentTrustModel((TrustModel)m_cmbCascadeFilter.getSelectedItem());
+				updateValues(false);
+			}
+		});
+		m_cascadesPanel.add(m_cmbCascadeFilter, c);
 
 		m_listMixCascade = new JList();
 		m_tableMixCascade = new JTable();
@@ -1243,6 +1264,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				Database.getInstance(MixCascade.class).addObserver(this);
 				Database.getInstance(StatusInfo.class).addObserver(this);
 				Database.getInstance(MixInfo.class).addObserver(this);
+				TrustModel.addModelObserver(this);
 				m_observablesRegistered = true;
 			}
 		}
@@ -1596,6 +1618,17 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			}
 			else if (a_notifier == SignatureVerifier.getInstance().getVerificationCertificateStore())
 			{
+				bDatabaseChanged = true;
+			}
+			else if (a_notifier == TrustModel.getObservable())
+			{
+				if (a_message == TrustModel.NOTIFY_TRUST_MODEL_ADDED ||
+						 a_message == TrustModel.NOTIFY_TRUST_MODEL_REMOVED)
+				{
+					DefaultComboBoxModel model = new DefaultComboBoxModel(TrustModel.getTrustModels());
+					m_cmbCascadeFilter.setModel(model);
+				}
+				m_cmbCascadeFilter.setSelectedItem(TrustModel.getCurrentTrustModel());
 				bDatabaseChanged = true;
 			}
 
