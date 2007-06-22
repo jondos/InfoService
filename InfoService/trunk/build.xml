@@ -4,6 +4,8 @@
   <!-- set global properties for this build -->
   <property name="javac1.3.exe" value="/opt/java/jdk1.3/bin/javac" />
   <property name="src" location="src"/>
+  <property name="certificates" location="certificates"/>
+  
   <property name="excludesSrcJap" value="jpi/** infoservice/** misc/**"/>
   <property name="build" location="build"/>
   <property name="build.libs" location="build/libs"/>
@@ -134,7 +136,7 @@
     </javac>
 
   </target>
-  <target name="dist" depends="clean,dist-pre-compile,compile,make-only-jap-jar" description="generate the distribution">  </target>
+  <target name="dist" depends="dist-pre-compile,compile,make-only-jap-jar" description="generate the distribution">  </target>
   <target name="make-only-jap-jar" depends="getcurrentjapdllversion">
     <!-- Create the distribution directory -->
     <mkdir dir="${dist}"/>
@@ -161,11 +163,11 @@
   <target name="signJAP.jar" description="sings JAP.jar">
   <input message="Enter passwd for JAP signing key:" addproperty="japkeypass">
   </input>
-  <signjar jar="${dist}/JAP.jar" alias="jap" storepass="${japkeypass}" keypass="${japkeypass}"
-  sigfile="JAP-TEAM" keystore="${japkeystore}">
+  <signjar jar="${dist}/JAP.jar" verbose="true" alias="jap" storepass="useruser" keypass="useruser"
+ sigfile="JAP-TEAM" keystore="/home/compile/.keystore">
   </signjar>
   </target>
-  <target name="dist-release" depends="release-pre-compile,dist,signJAP.jar" description="Generates a release version of JAP.jar(this mainly means that the JAP internal release flag is set to 'release'">  </target>
+  <target name="dist-release" depends="clean,release-pre-compile,dist,signJAP.jar" description="Generates a release version of JAP.jar(this mainly means that the JAP internal release flag is set to 'release'">  </target>
   <target name="getcurrentversion" description="Sets the property 'currentVersion', 'releaseDate' to the value provided in JAPConstants.java">
     <loadfile srcfile="${src}/jap/JAPConstants.java" property="currentVersion">
       <filterchain>
@@ -237,5 +239,9 @@
     <!-- Delete the ${build} and ${dist} directory trees -->
     <delete dir="${build}"/>
     <delete dir="${dist}"/>
+    <!-- Delte unwante certifcates from source... -->
+    <delete file="${certificates}/acceptedPIs/bi.cer" />
+    <delete file="${certificates}/acceptedMixCAs/Test_CA.cer" />
+    
   </target>
 </project>
