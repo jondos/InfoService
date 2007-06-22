@@ -14,7 +14,7 @@ InfoService.jar: ./src/*.java ./src/*/*.java
 	rm -f MixISTest.java
 	rm -r -f ./src/test/
 	$(JAVAC) $(JAVACOPTS) ./src/infoservice/*.java ./src/anon/infoservice/*.java
-	$(JAR) -cf InfoService.jar -C src . certificates/*.cer
+	$(JAR) -cf InfoService.jar -C src . certificates/*.cer certificates/*/*.cer
 	$(JAR) -i InfoService.jar
 
 clean:
