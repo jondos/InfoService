@@ -1761,6 +1761,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						{
 							public void actionPerformed(ActionEvent a_event)
 							{
+								AbstractOS.getInstance().openURL(entry.getURL(JAPMessages.getLocale()));
+
+								/*
 								int ret = JAPDialog.showConfirmDialog(JAPNewView.this,
 									entry.getText(JAPMessages.getLocale()),
 									JAPMessages.getString(JAPDialog.MSG_TITLE_INFO),
@@ -1799,7 +1802,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 										Database.getInstance(DeletedMessageIDDBEntry.class).update(
 											new DeletedMessageIDDBEntry(entry));
 									}
-								}
+								}*/
 							}
 						});
 						entry.setExternalIdentifier(id);
