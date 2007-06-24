@@ -145,9 +145,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String MSG_DELETE_MESSAGE = JAPNewView.class.getName() + "_deleteMessage";
 	private static final String MSG_VIEW_MESSAGE = JAPNewView.class.getName() + "_viewMessage";
 
+	private static final String MSG_OBSERVABLE_EXPLAIN = JAPNewView.class.getName() + "_observableExplain";
+	private static final String MSG_OBSERVABLE_TITLE = JAPNewView.class.getName() + "_observableTitle";
 
 	private static final String IMG_ICONIFY = JAPNewView.class.getName() + "_iconify.gif";
 	private static final String IMG_ABOUT = JAPNewView.class.getName() + "_about.gif";
+
+
 
 	private JobQueue m_transferedBytesJobs;
 
@@ -256,6 +260,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private boolean m_bIsSimpleView;
 
+	private int m_msgIDInsecure;
+
 	public JAPNewView(String s, JAPController a_controller)
 	{
 		super(s, a_controller);
@@ -276,7 +282,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		setTitle(Double.toString(Math.random())); //ensure that we have an uinque title
 		JAPDll.setWindowIcon(getTitle());
 		setTitle(m_Title);
-		LogHolder.log(LogLevel.INFO,LogType.GUI,"View initialized!");
+		LogHolder.log(LogLevel.INFO, LogType.GUI, "View initialized!");
 	}
 
 	private void init()
@@ -287,16 +293,17 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			public void onShowMainWindow()
 			{
 			}
+
 			public void onShowSettings(String card, Object a_value)
 			{
 				showConfigDialog(card, a_value);
 			}
+
 			public void onShowHelp()
 			{
 
 			}
 		});
-
 
 		this.addMouseListener(new MouseAdapter()
 		{
@@ -310,16 +317,18 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				{
 
 					final SystrayPopupMenu popup = new SystrayPopupMenu(
-									   new SystrayPopupMenu.MainWindowListener()
+						new SystrayPopupMenu.MainWindowListener()
 					{
 						public void onShowMainWindow()
 						{
 							// do nothing
 						}
+
 						public void onShowSettings(String card, Object a_value)
 						{
 							showConfigDialog(card, a_value);
 						}
+
 						public void onShowHelp()
 						{
 
@@ -334,7 +343,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					});
 					popup.show(JAPNewView.this,
 							   new Point(a_event.getX() + getLocation().x,
-										 a_event.getY()  + getLocation().y));
+										 a_event.getY() + getLocation().y));
 
 				}
 				else if (a_event.getClickCount() == 2)
@@ -352,14 +361,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				Vector vecVersions = new Vector();
 				JAPVersionInfo viTemp;
 
-				viTemp = (JAPVersionInfo)Database.getInstance(JAPVersionInfo.class).getEntryById(
-								JAPVersionInfo.ID_RELEASE);
+				viTemp = (JAPVersionInfo) Database.getInstance(JAPVersionInfo.class).getEntryById(
+					JAPVersionInfo.ID_RELEASE);
 				if (viTemp != null)
 				{
 					vecVersions.addElement(viTemp);
 				}
-				viTemp = (JAPVersionInfo)Database.getInstance(JAPVersionInfo.class).getEntryById(
-								JAPVersionInfo.ID_DEVELOPMENT);
+				viTemp = (JAPVersionInfo) Database.getInstance(JAPVersionInfo.class).getEntryById(
+					JAPVersionInfo.ID_DEVELOPMENT);
 				if (viTemp != null)
 				{
 					vecVersions.addElement(viTemp);
@@ -378,15 +387,16 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						{
 							continue;
 						}
-						JAPUpdateWizard wz = new JAPUpdateWizard(vi, JAPController.getInstance().getViewWindow());
+						JAPUpdateWizard wz = new JAPUpdateWizard(vi,
+							JAPController.getInstance().getViewWindow());
 						/* we got the JAPVersionInfo from the infoservice */
 						if (wz.getStatus() == JAPUpdateWizard.UPDATESTATUS_ERROR)
 						{
 							/* Download failed -> alert, and reset anon mode to false */
 							LogHolder.log(LogLevel.ERR, LogType.MISC, "Some update problem.");
 							JAPDialog.showErrorDialog(JAPController.getInstance().getViewWindow(),
-													  JAPMessages.getString("downloadFailed") +
-													  JAPMessages.getString("infoURL"), LogType.MISC);
+								JAPMessages.getString("downloadFailed") +
+								JAPMessages.getString("infoURL"), LogType.MISC);
 						}
 						else if (wz.getStatus() == JAPUpdateWizard.UPDATESTATUS_SUCCESS)
 						{
@@ -411,10 +421,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				if (JAPModel.getInstance().isInfoServiceDisabled())
 				{
 					if (JAPDialog.showConfirmDialog(JAPNewView.this,
-													JAPMessages.getString(MSG_IS_DISABLED_EXPLAIN),
-													JAPDialog.OPTION_TYPE_YES_NO,
-													JAPDialog.MESSAGE_TYPE_WARNING,
-													GUIUtils.loadImageIcon(METERFNARRAY[2], true, true))
+						JAPMessages.getString(MSG_IS_DISABLED_EXPLAIN),
+						JAPDialog.OPTION_TYPE_YES_NO,
+						JAPDialog.MESSAGE_TYPE_WARNING,
+						GUIUtils.loadImageIcon(METERFNARRAY[2], true, true))
 						== JAPDialog.RETURN_VALUE_YES)
 					{
 						JAPModel.getInstance().setInfoServiceDisabled(false);
@@ -426,8 +436,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				{
 					if (JAPDialog.showConfirmDialog(JAPNewView.this, JAPMessages.getString(
 						JAPController.MSG_IS_NOT_ALLOWED),
-													JAPDialog.OPTION_TYPE_YES_NO,
-													JAPDialog.MESSAGE_TYPE_WARNING)
+						JAPDialog.OPTION_TYPE_YES_NO,
+						JAPDialog.MESSAGE_TYPE_WARNING)
 						== JAPDialog.RETURN_VALUE_YES)
 					{
 						JAPModel.getInstance().allowInfoServiceViaDirectConnection(true);
@@ -436,14 +446,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			}
 		};
 
-
 		m_listenerNewServices = new ActionListener()
 		{
 			public void actionPerformed(ActionEvent a_event)
 			{
 				JAPDialog.showMessageDialog(JAPNewView.this,
 											JAPMessages.getString(MSG_NEW_SERVICES_FOUND_EXPLAIN,
-											JAPMessages.getString(MSG_SERVICE_NAME)));
+					JAPMessages.getString(MSG_SERVICE_NAME)));
 				m_comboAnonServices.showPopup();
 			}
 		};
@@ -473,14 +482,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.gridheight = 2;
 		northPanel.add(northLabel, c);
 
-
 		c.anchor = GridBagConstraints.EAST;
 		c.gridx++;
 		c.gridx++;
 		c.gridheight = 1;
 		c.gridy = 0;
-
-
 
 		m_pnlVersion = new JPanel(new GridBagLayout());
 		GridBagConstraints constrVersion = new GridBagConstraints();
@@ -488,7 +494,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		constrVersion.insets = new Insets(0, 0, 0, 10);
 		constrVersion.gridx = 0;
 		constrVersion.gridy = 0;
-
 
 		c.gridy = 1;
 		c.anchor = GridBagConstraints.SOUTHEAST;
@@ -833,7 +838,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			}
 			else
 			{
-			northPanel.add(m_flippingPanelPayment, c);
+				northPanel.add(m_flippingPanelPayment, c);
 			}
 //-----------------------------------------------------------
 			// Separator
@@ -1082,7 +1087,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.gridy++;
 		northPanel.add(buttonPanel, c);
 
-
 		getContentPane().setBackground(buttonPanel.getBackground());
 		getContentPane().add(northPanel, BorderLayout.CENTER);
 
@@ -1139,7 +1143,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		GUIUtils.centerOnScreen(this);
 		GUIUtils.restoreLocation(this, JAPModel.getInstance().getMainWindowLocation());
 
-
 		Database.getInstance(StatusInfo.class).addObserver(this);
 		Database.getInstance(JAPVersionInfo.class).addObserver(this);
 		Database.getInstance(JavaVersionDBEntry.class).addObserver(this);
@@ -1148,7 +1151,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		Database.getInstance(CascadeIDEntry.class).addObserver(this);
 		Database.getInstance(BlacklistedCascadeIDEntry.class).addObserver(this);
 		Database.getInstance(MessageDBEntry.class).addObserver(this);
-
 
 		JAPModel.getInstance().addObserver(this);
 
@@ -1163,7 +1165,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_configMovedAdapter = new ComponentMovedAdapter();
 		addComponentListener(m_mainMovedAdapter);
 		JAPHelp.getInstance().addComponentListener(m_helpMovedAdapter);
-
 
 		//new GUIUtils.WindowDocker(this);
 
@@ -1183,7 +1184,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			}
 		}).start();
 	}
-
 
 	private FlippingPanel buildForwarderPanel()
 	{
@@ -1399,39 +1399,38 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_rbAnonOff.setEnabled(false);
 	}
 
-
-/*
-	private void loadMeterIcons()
-	{
-		// Load Images for "Anonymity Meter"
-		meterIcons = new Icon[METERFNARRAY.length];
+	/*
+	 private void loadMeterIcons()
+	 {
+	  // Load Images for "Anonymity Meter"
+	  meterIcons = new Icon[METERFNARRAY.length];
 //		LogHolder.log(LogLevel.DEBUG,LogType.MISC,"JAPView:METERFNARRAY.length="+JAPConstants.METERFNARRAY.length);
-		if (!JAPModel.isSmallDisplay())
-		{
-			for (int i = 0; i < METERFNARRAY.length; i++)
-			{
-				meterIcons[i] = GUIUtils.loadImageIcon(METERFNARRAY[i], true, false);
-			}
-		}
-		else
-		{
-			MediaTracker m = new MediaTracker(this);
-			for (int i = 0; i < METERFNARRAY.length; i++)
-			{
-				Image tmp = GUIUtils.loadImageIcon(METERFNARRAY[i], true).getImage();
-				int w = tmp.getWidth(null);
-				tmp = tmp.getScaledInstance( (int) (w * 0.75), -1, Image.SCALE_SMOOTH);
-				m.addImage(tmp, i);
-				meterIcons[i] = new ImageIcon(tmp);
-			}
-			try
-			{
-				m.waitForAll();
-			}
-			catch (Exception e)
-			{}
-		}
-	}*/
+	  if (!JAPModel.isSmallDisplay())
+	  {
+	   for (int i = 0; i < METERFNARRAY.length; i++)
+	   {
+		meterIcons[i] = GUIUtils.loadImageIcon(METERFNARRAY[i], true, false);
+	   }
+	  }
+	  else
+	  {
+	   MediaTracker m = new MediaTracker(this);
+	   for (int i = 0; i < METERFNARRAY.length; i++)
+	   {
+		Image tmp = GUIUtils.loadImageIcon(METERFNARRAY[i], true).getImage();
+		int w = tmp.getWidth(null);
+		tmp = tmp.getScaledInstance( (int) (w * 0.75), -1, Image.SCALE_SMOOTH);
+		m.addImage(tmp, i);
+		meterIcons[i] = new ImageIcon(tmp);
+	   }
+	   try
+	   {
+		m.waitForAll();
+	   }
+	   catch (Exception e)
+	   {}
+	  }
+	 }*/
 
 	/**Anon Level is >=0 amd <=5. If -1 no measure is available*/
 	private Icon getMeterImage(int iAnonLevel)
@@ -1449,7 +1448,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			}
 			else
 			{
-				return  GUIUtils.loadImageIcon(METERFNARRAY[2], true, true); //No measure available
+				return GUIUtils.loadImageIcon(METERFNARRAY[2], true, true); //No measure available
 			}
 		}
 		else if (bAnonMode && !bConnected && bConnectionErrorShown)
@@ -1460,7 +1459,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		else
 		{
 			//System.out.println("AnonMode:" + bAnonMode + " " + "Connected:" + bConnected + " " +
-				//			   "ShowError:" + bConnectionErrorShown);
+			//			   "ShowError:" + bConnectionErrorShown);
 			//System.out.println("deactivated");
 			return GUIUtils.loadImageIcon(METERFNARRAY[0], true, true); // Anon deactivated
 		}
@@ -1473,9 +1472,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 		if (a_observable == Database.getInstance(StatusInfo.class))
 		{
-			Object data =  ((DatabaseMessage)a_message).getMessageData();
-			if (data instanceof StatusInfo && ((StatusInfo)data).getId().equals(
-								JAPController.getInstance().getCurrentMixCascade().getId()))
+			Object data = ( (DatabaseMessage) a_message).getMessageData();
+			if (data instanceof StatusInfo && ( (StatusInfo) data).getId().equals(
+				JAPController.getInstance().getCurrentMixCascade().getId()))
 			{
 				updateValues(false);
 			}
@@ -1486,7 +1485,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 		else if (a_observable == Database.getInstance(BlacklistedCascadeIDEntry.class))
 		{
-			DatabaseMessage message =  ((DatabaseMessage)a_message);
+			DatabaseMessage message = ( (DatabaseMessage) a_message);
 			if (message == null)
 			{
 				return;
@@ -1499,15 +1498,15 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 		else if (a_observable == Database.getInstance(MixCascade.class))
 		{
-			DatabaseMessage message =  ((DatabaseMessage)a_message);
+			DatabaseMessage message = ( (DatabaseMessage) a_message);
 			MixCascade cascade;
 
-			if (message.getMessageData() == null || !(message.getMessageData() instanceof MixCascade))
+			if (message.getMessageData() == null || ! (message.getMessageData() instanceof MixCascade))
 			{
 				return;
 			}
 
-			cascade = (MixCascade)message.getMessageData();
+			cascade = (MixCascade) message.getMessageData();
 
 			if (message.getMessageCode() != DatabaseMessage.ENTRY_RENEWED &&
 				message.getMessageCode() != DatabaseMessage.INITIAL_OBSERVER_MESSAGE &&
@@ -1536,7 +1535,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				 * again.
 				 */
 				if (Database.getInstance(NewCascadeIDEntry.class).getEntryById(
-								cascade.getMixIDsAsString()) != null)
+					cascade.getMixIDsAsString()) != null)
 				{
 					m_bTrustChanged = true;
 					synchronized (SYNC_NEW_SERVICES)
@@ -1550,7 +1549,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					}
 				}
 			}
-			else if (message.getMessageCode() == DatabaseMessage.ENTRY_REMOVED||
+			else if (message.getMessageCode() == DatabaseMessage.ENTRY_REMOVED ||
 					 message.getMessageCode() == DatabaseMessage.ALL_ENTRIES_REMOVED)
 			{
 				if (Database.getInstance(NewCascadeIDEntry.class).getEntryById(cascade.getMixIDsAsString()) != null)
@@ -1569,7 +1568,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					{
 						currentEntry = (NewCascadeIDEntry) newEntries.nextElement();
 						if (Database.getInstance(MixCascade.class).getEntryById(
-											  currentEntry.getCascadeId()) != null &&
+							currentEntry.getCascadeId()) != null &&
 							!currentEntry.getCascadeId().equals(cascade.getId()))
 						{
 							bHide = false;
@@ -1594,7 +1593,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 		else if (a_observable == Database.getInstance(CascadeIDEntry.class))
 		{
-			DatabaseMessage message = ((DatabaseMessage)a_message);
+			DatabaseMessage message = ( (DatabaseMessage) a_message);
 			if (message.getMessageData() == null)
 			{
 				return;
@@ -1603,12 +1602,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			if (message.getMessageCode() == DatabaseMessage.ENTRY_ADDED)
 			{
 				Database.getInstance(NewCascadeIDEntry.class).update(
-								new NewCascadeIDEntry((CascadeIDEntry)message.getMessageData()));
+					new NewCascadeIDEntry( (CascadeIDEntry) message.getMessageData()));
 			}
 		}
 		else if (a_observable == Database.getInstance(NewCascadeIDEntry.class))
 		{
-			DatabaseMessage message = ((DatabaseMessage)a_message);
+			DatabaseMessage message = ( (DatabaseMessage) a_message);
 			if (message.getMessageData() == null)
 			{
 				return;
@@ -1622,8 +1621,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					if (m_newServicesID < 0)
 					{
 						m_newServicesID = m_StatusPanel.addStatusMsg(
-											  JAPMessages.getString(MSG_LBL_NEW_SERVICES_FOUND),
-											  JOptionPane.INFORMATION_MESSAGE, false, m_listenerNewServices);
+							JAPMessages.getString(MSG_LBL_NEW_SERVICES_FOUND),
+							JOptionPane.INFORMATION_MESSAGE, false, m_listenerNewServices);
 					}
 				}
 			}
@@ -1635,7 +1634,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				while (newCascades.hasMoreElements())
 				{
 					if (Database.getInstance(MixCascade.class).getEntryById(
-									   ((NewCascadeIDEntry)newCascades.nextElement()).getCascadeId()) != null)
+						( (NewCascadeIDEntry) newCascades.nextElement()).getCascadeId()) != null)
 					{
 						bHide = false;
 						break;
@@ -1653,8 +1652,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				{
 					if (m_newServicesID >= 0)
 					{
-						 m_StatusPanel.removeStatusMsg(m_newServicesID);
-						 m_newServicesID = -1;
+						m_StatusPanel.removeStatusMsg(m_newServicesID);
+						m_newServicesID = -1;
 					}
 				}
 			}
@@ -1684,16 +1683,16 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			updateValues(false);
 		}
 		else if (a_message != null && (a_message.equals(JAPModel.CHANGED_INFOSERVICE_AUTO_UPDATE) ||
-				 a_message.equals(JAPModel.CHANGED_ALLOW_INFOSERVICE_DIRECT_CONNECTION)))
+									   a_message.equals(JAPModel.CHANGED_ALLOW_INFOSERVICE_DIRECT_CONNECTION)))
 		{
 			run = new Runnable()
 			{
 				public void run()
 				{
-					if(!JAPController.getInstance().isShuttingDown()
+					if (!JAPController.getInstance().isShuttingDown()
 						&& (JAPModel.getInstance().isInfoServiceDisabled() ||
 							(!JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed() &&
-							!JAPController.getInstance().isAnonConnected())))
+							 !JAPController.getInstance().isAnonConnected())))
 					{
 						synchronized (SYNC_STATUS_ENABLE_IS)
 						{
@@ -1719,7 +1718,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 			};
 		}
-		else if (a_observable ==  Database.getInstance(MessageDBEntry.class))
+		else if (a_observable == Database.getInstance(MessageDBEntry.class))
 		{
 			DatabaseMessage message = ( (DatabaseMessage) a_message);
 			if (message.getMessageData() == null)
@@ -1741,7 +1740,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				{
 					if (entry.isDummy())
 					{
-						MessageDBEntry temp = (MessageDBEntry)m_messageIDs.remove(entry.getId());
+						MessageDBEntry temp = (MessageDBEntry) m_messageIDs.remove(entry.getId());
 						if (temp != null)
 						{
 							m_StatusPanel.removeStatusMsg(temp.getExternalIdentifier());
@@ -1750,8 +1749,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					}
 
 					DeletedMessageIDDBEntry deletedEntry = (DeletedMessageIDDBEntry)
-					Database.getInstance(DeletedMessageIDDBEntry.class).getEntryById(entry.getId());
-					if ((deletedEntry == null || deletedEntry.getVersionNumber() < entry.getVersionNumber()) &&
+						Database.getInstance(DeletedMessageIDDBEntry.class).getEntryById(entry.getId());
+					if ( (deletedEntry == null || deletedEntry.getVersionNumber() < entry.getVersionNumber()) &&
 						m_messageIDs.get(entry.getId()) == null && !entry.isDummy())
 					{
 						// this message has not been shown yet and is allowed to be shown
@@ -1764,45 +1763,45 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 								AbstractOS.getInstance().openURL(entry.getURL(JAPMessages.getLocale()));
 
 								/*
-								int ret = JAPDialog.showConfirmDialog(JAPNewView.this,
-									entry.getText(JAPMessages.getLocale()),
-									JAPMessages.getString(JAPDialog.MSG_TITLE_INFO),
-									new JAPDialog.Options(JAPDialog.OPTION_TYPE_OK_CANCEL)
-								{
-									public String getCancelText()
-									{
-										return JAPMessages.getString(DialogContentPane.MSG_OK);
-									}
+										 int ret = JAPDialog.showConfirmDialog(JAPNewView.this,
+								 entry.getText(JAPMessages.getLocale()),
+								 JAPMessages.getString(JAPDialog.MSG_TITLE_INFO),
+								 new JAPDialog.Options(JAPDialog.OPTION_TYPE_OK_CANCEL)
+										 {
+								 public String getCancelText()
+								 {
+								  return JAPMessages.getString(DialogContentPane.MSG_OK);
+								 }
 
-									public String getYesOKText()
-									{
-										return JAPMessages.getString(MSG_DELETE_MESSAGE);
-									}
+								 public String getYesOKText()
+								 {
+								  return JAPMessages.getString(MSG_DELETE_MESSAGE);
+								 }
 
-								},
-									JAPDialog.MESSAGE_TYPE_INFORMATION,
-									new JAPDialog.AbstractLinkedURLAdapter()
-								{
-									public URL getUrl()
-									{
-										return entry.getURL(JAPMessages.getLocale());
-									}
+										 },
+								 JAPDialog.MESSAGE_TYPE_INFORMATION,
+								 new JAPDialog.AbstractLinkedURLAdapter()
+										 {
+								 public URL getUrl()
+								 {
+								  return entry.getURL(JAPMessages.getLocale());
+								 }
 
-									public String getMessage()
-									{
-										return JAPMessages.getString(MSG_VIEW_MESSAGE);
-									}
-								});
-								if (ret == JAPDialog.RETURN_VALUE_OK)
-								{
-									synchronized (m_messageIDs)
-									{
-										m_StatusPanel.removeStatusMsg(entry.getExternalIdentifier());
-										m_messageIDs.remove(entry.getId());
-										Database.getInstance(DeletedMessageIDDBEntry.class).update(
-											new DeletedMessageIDDBEntry(entry));
-									}
-								}*/
+								 public String getMessage()
+								 {
+								  return JAPMessages.getString(MSG_VIEW_MESSAGE);
+								 }
+										 });
+										 if (ret == JAPDialog.RETURN_VALUE_OK)
+										 {
+								 synchronized (m_messageIDs)
+								 {
+								  m_StatusPanel.removeStatusMsg(entry.getExternalIdentifier());
+								  m_messageIDs.remove(entry.getId());
+								  Database.getInstance(DeletedMessageIDDBEntry.class).update(
+								   new DeletedMessageIDDBEntry(entry));
+								 }
+										 }*/
 							}
 						});
 						entry.setExternalIdentifier(id);
@@ -1811,7 +1810,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 				else if (entry != null && message.getMessageCode() == DatabaseMessage.ENTRY_REMOVED)
 				{
-					MessageDBEntry temp = (MessageDBEntry)m_messageIDs.remove(entry.getId());
+					MessageDBEntry temp = (MessageDBEntry) m_messageIDs.remove(entry.getId());
 					if (temp != null)
 					{
 						m_StatusPanel.removeStatusMsg(temp.getExternalIdentifier());
@@ -1917,11 +1916,29 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	public void connectionEstablished(AnonServerDescription a_serverDescription)
 	{
+		removeStatusMsg(m_msgIDInsecure);
+
 		if (a_serverDescription != null && a_serverDescription instanceof MixCascade)
 		{
 			Database.getInstance(NewCascadeIDEntry.class).remove(
-						 ((MixCascade)a_serverDescription).getMixIDsAsString());
+						 ( (MixCascade) a_serverDescription).getMixIDsAsString());
+			if (((MixCascade)a_serverDescription).getNumberOfOperators() <= 1)
+			{
+				m_msgIDInsecure = m_StatusPanel.addStatusMsg(JAPMessages.getString(MSG_OBSERVABLE_TITLE),
+					JAPDialog.MESSAGE_TYPE_WARNING, false, new ActionListener()
+				{
+					public void actionPerformed(ActionEvent a_event)
+					{
+						JAPDialog.showMessageDialog(JAPNewView.this, JAPMessages.getString(MSG_OBSERVABLE_EXPLAIN));
+						doClickOnCascadeChooser();
+					}
+				});
+			}
 		}
+
+
+
+
 		new Thread(new Runnable()
 		{
 			public void run()
@@ -1947,6 +1964,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	public void disconnected()
 	{
+		removeStatusMsg(m_msgIDInsecure);
 		new Thread(new Runnable()
 		{
 			public void run()
@@ -1961,11 +1979,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	public void connecting(AnonServerDescription a_serverDescription)
 	{
+		removeStatusMsg(m_msgIDInsecure);
 		showConnecting(false);
 	}
 
 	public void connectionError()
 	{
+		removeStatusMsg(m_msgIDInsecure);
 		showConnecting(true);
 	}
 
@@ -2224,7 +2244,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				setCursor(c);
 			}
 
-
 			m_dlgConfig.selectCard(card, a_value);
 			m_dlgConfig.setVisible(true);
 		}
@@ -2251,7 +2270,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	{
 		m_comboAnonServices.showPopup();
 	}
-
 
 	public void onUpdateValues()
 	{
@@ -2284,7 +2302,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 		if ( (vi != null && vi.getJapVersion() != null &&
 			  vi.getJapVersion().compareTo(JAPConstants.aktVersion) > 0) ||
-			 JavaVersionDBEntry.getNewJavaVersion() != null)
+			JavaVersionDBEntry.getNewJavaVersion() != null)
 		{
 			synchronized (SYNC_STATUS_UPDATE_AVAILABLE)
 			{
@@ -2308,33 +2326,32 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			}
 		}
 
-	   if( !JAPController.getInstance().isShuttingDown()
-		   && (JAPModel.getInstance().isInfoServiceDisabled() ||
-			   (!JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed() &&
-				!JAPController.getInstance().isAnonConnected())))
-	   {
-		   synchronized (SYNC_STATUS_ENABLE_IS)
-		   {
-			   if (m_enableInfoServiceID < 0)
-			   {
-				   m_enableInfoServiceID = m_StatusPanel.addStatusMsg(
-								   JAPMessages.getString(MSG_IS_DEACTIVATED),
-								   JAPDialog.MESSAGE_TYPE_WARNING, false, m_listenerEnableIS);
-			   }
-		   }
-	   }
-	   else
-	   {
-		   synchronized (SYNC_STATUS_ENABLE_IS)
-		   {
-			   if (m_enableInfoServiceID >= 0)
-			   {
-				   m_StatusPanel.removeStatusMsg(m_enableInfoServiceID);
-				   m_enableInfoServiceID = -1;
-			   }
-		   }
-	   }
-
+		if (!JAPController.getInstance().isShuttingDown()
+			&& (JAPModel.getInstance().isInfoServiceDisabled() ||
+				(!JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed() &&
+				 !JAPController.getInstance().isAnonConnected())))
+		{
+			synchronized (SYNC_STATUS_ENABLE_IS)
+			{
+				if (m_enableInfoServiceID < 0)
+				{
+					m_enableInfoServiceID = m_StatusPanel.addStatusMsg(
+						JAPMessages.getString(MSG_IS_DEACTIVATED),
+						JAPDialog.MESSAGE_TYPE_WARNING, false, m_listenerEnableIS);
+				}
+			}
+		}
+		else
+		{
+			synchronized (SYNC_STATUS_ENABLE_IS)
+			{
+				if (m_enableInfoServiceID >= 0)
+				{
+					m_StatusPanel.removeStatusMsg(m_enableInfoServiceID);
+					m_enableInfoServiceID = -1;
+				}
+			}
+		}
 
 		MixCascade currentMixCascade = m_Controller.getCurrentMixCascade();
 		//String strCascadeName = currentMixCascade.getName();
@@ -2415,7 +2432,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					//}
 					m_labelAnonymityUser.setText(Integer.toString(currentStatus.getNrOfActiveUsers()));
 					//strSystrayTooltip += "\n" + JAPMessages.getString("ngNrOfUsers") + ": " +
-						//currentStatus.getNrOfActiveUsers();
+					//currentStatus.getNrOfActiveUsers();
 					if (anonLevel >= StatusInfo.ANON_LEVEL_MIN)
 					{
 						strSystrayTooltip += "\n" + JAPMessages.getString(JAPViewIconified.MSG_ANON) + ": ";
@@ -2490,9 +2507,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			}
 
 			JAPDll.setSystrayTooltip(strSystrayTooltip);
-
-
-
 
 			LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Finished updateValues");
 			boolean bForwaringServerOn = JAPModel.getInstance().getRoutingSettings().getRoutingMode() ==
@@ -2697,7 +2711,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 									JAPMessages.getString(MSG_OLD_JAVA, args),
 									JAPMessages.getString(MSG_TITLE_OLD_JAVA),
 									AbstractOS.getInstance().createURLLink(
-			a_entry.getDownloadURL(), null, "updateJava"));
+										a_entry.getDownloadURL(), null, "updateJava"));
 	}
 
 	private synchronized void fetchMixCascadesAsync(final boolean bShowError)
@@ -2732,9 +2746,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelVersion.setFont(new Font(labelFont.getName(), labelFont.getStyle(),
 										( (int) (labelFont.getSize() * 0.8))));
 		/*
-		m_labelUpdate.setFont(new Font(labelFont.getName(), labelFont.getStyle(),
-									   ( (int) (labelFont.getSize() * 0.8))));
-							  */
+		   m_labelUpdate.setFont(new Font(labelFont.getName(), labelFont.getStyle(),
+				  ( (int) (labelFont.getSize() * 0.8))));
+		 */
 		m_bttnIconify.setIcon(GUIUtils.loadImageIcon(IMG_ICONIFY, true));
 		//m_bttnHelp.setIcon(GUIUtils.loadImageIcon(JAPHelp.IMG_HELP, true));
 		m_btnAbout.setIcon(GUIUtils.loadImageIcon(IMG_ABOUT, true));
@@ -2742,15 +2756,16 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private static boolean equals(MixCascade a_one, MixCascade a_two)
 	{
-		if ((a_one == null && a_two != null) || (a_one != null && a_two == null) ||
+		if ( (a_one == null && a_two != null) || (a_one != null && a_two == null) ||
 			(a_one != null && (!a_one.equals(a_two) || a_one.isPayment() != a_two.isPayment() ||
-			 !a_one.getName().equals(a_two.getName()))))
+							   !a_one.getName().equals(a_two.getName()))))
 		{
 			return false;
 		}
 
 		return true;
 	}
+
 	private final class ComponentMovedAdapter extends ComponentAdapter
 	{
 		private boolean m_bMoved = false;
