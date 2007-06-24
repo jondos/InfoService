@@ -263,9 +263,13 @@ import logging.LogType;
 		m_c.gridx++;
 		if (aPlan.isDurationLimited() )
 		{
-			Timestamp endDate = JAPUtil.getEnddate(aPlan.getDuration(),aPlan.getDurationUnit() );
-			String lang = JAPController.getLocale().getLanguage();
-			m_rootPanel.add(new JLabel(JAPUtil.formatTimestamp(endDate,false,lang)), m_c);
+			/*
+				Timestamp endDate = JAPUtil.getEnddate(aPlan.getDuration(),aPlan.getDurationUnit() );
+				String lang = JAPController.getLocale().getLanguage();
+				m_rootPanel.add(new JLabel(JAPUtil.formatTimestamp(endDate,false,lang)), m_c);
+			*/
+			 m_rootPanel.add(new JLabel(JAPUtil.getDuration(aPlan.getDuration(), aPlan.getDurationUnit())),
+							 m_c);
 		}
 		else
 		{
@@ -287,8 +291,8 @@ import logging.LogType;
 	{
 		m_c.gridy++;
 		m_c.insets = new Insets(10, 5, 0, 5);
-		m_c.gridx = 1;
-		m_c.gridwidth = 3;
+		m_c.gridx = 0;
+		m_c.gridwidth = 4;
 
 	    //headline and radio button
 	    JPanel couponHeaderPanel = new JPanel(); //default flow layout
@@ -300,8 +304,8 @@ import logging.LogType;
 		couponHeaderPanel.add(new JLabel(JAPMessages.getString(MSG_ENTER_COUPON)) );
 		m_rootPanel.add(couponHeaderPanel,m_c);
 		m_c.gridy++;
-		m_c.gridx = 1;
-		m_c.gridwidth = 3;
+		m_c.gridx = 0;
+		m_c.gridwidth = 4;
 
 	    //text fields
 	    JPanel couponPanel = new JPanel(); //default flow layout
@@ -310,14 +314,17 @@ import logging.LogType;
 		couponPanel.add(m_coupon1);
 		couponPanel.add(new JLabel(" - "));
 		m_coupon2 = new JapCouponField();
+		m_coupon1.setNextCouponField(m_coupon2);
 		m_coupon2.getDocument().addDocumentListener(this);
 		couponPanel.add(m_coupon2);
 		couponPanel.add(new JLabel(" - "));
 		m_coupon3 = new JapCouponField();
+		m_coupon2.setNextCouponField(m_coupon3);
 		m_coupon3.getDocument().addDocumentListener(this);
 		couponPanel.add(m_coupon3);
 		couponPanel.add(new JLabel(" - "));
 		m_coupon4 = new JapCouponField();
+		m_coupon3.setNextCouponField(m_coupon4);
 		m_coupon4.getDocument().addDocumentListener(this);
 		couponPanel.add(m_coupon4);
 		m_rootPanel.add(couponPanel,m_c);

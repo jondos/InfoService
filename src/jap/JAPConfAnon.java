@@ -108,6 +108,7 @@ import anon.infoservice.PreviouslyKnownCascadeIDEntry;
 import anon.pay.PayAccountsFile;
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.ListCellRenderer;
 
 class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, ActionListener,
 	ListSelectionListener, ItemListener, KeyListener, Observer
@@ -350,6 +351,46 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.gridwidth = 1;
 		c.anchor = GridBagConstraints.NORTHWEST;
 		m_cmbCascadeFilter = new JComboBox(TrustModel.getTrustModels());
+		final JLabel renderLabel = new JLabel();
+		renderLabel.setOpaque(true);
+		m_cmbCascadeFilter.setRenderer(new ListCellRenderer()
+		{
+			public Component getListCellRendererComponent(final JList list, Object value, int index,
+				boolean isSelected, boolean cellHasFocus)
+			{
+				if (isSelected)
+				{
+					renderLabel.setBackground(list.getSelectionBackground());
+					renderLabel.setForeground(list.getSelectionForeground());
+				}
+				else
+				{
+					renderLabel.setBackground(list.getBackground());
+					renderLabel.setForeground(list.getForeground());
+				}
+
+
+				if (TrustModel.getCurrentTrustModel() == (TrustModel) value)
+				{
+					renderLabel.setFont(new Font(list.getFont().getName(), Font.BOLD, list.getFont().getSize()));
+				}
+				else
+				{
+					renderLabel.setFont(new Font(list.getFont().getName(), Font.PLAIN, list.getFont().getSize()));
+				}
+
+				if (value == null)
+				{
+					renderLabel.setText("");
+				}
+				else
+				{
+					renderLabel.setText(value.toString());
+				}
+
+				return renderLabel;
+			}
+		});
 		m_cmbCascadeFilter.setSelectedItem(TrustModel.getCurrentTrustModel());
 		m_cmbCascadeFilter.addActionListener(new ActionListener()
 		{
@@ -1363,7 +1404,16 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					}
 					else
 					{
-						drawServerPanel(cascade.getNumberOfMixes(), cascade.getName(), true, selectedMix);
+						if (!cascade.isUserDefined() && cascade.getNumberOfOperators() <= 1)
+						{
+							// this cascade is run by only one operator!
+							drawServerPanel(1, cascade.getName(), true, selectedMix);
+						}
+						else
+						{
+							drawServerPanel(cascade.getNumberOfMixes(), cascade.getName(), true, selectedMix);
+						}
+
 					}
 					m_numOfUsersLabel.setText(m_infoService.getNumOfUsers(cascadeId));
 					//System.out.println(m_numOfUsersLabel.getText());

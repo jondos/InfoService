@@ -230,7 +230,7 @@ public class CertificateStore extends Observable implements IXMLEncodable
 			if (bChanged)
 			{
 				setChanged();
-				notifyObservers(null);
+				notifyObservers(new Integer(a_certificateType));
 			}
 		}
 		return lockId;
@@ -303,7 +303,7 @@ public class CertificateStore extends Observable implements IXMLEncodable
 		if (bChanged)
 		{
 			setChanged();
-			notifyObservers(null);
+			notifyObservers(new Integer(a_certificateType));
 		}
 		return lockId;
 	}
@@ -379,7 +379,7 @@ public class CertificateStore extends Observable implements IXMLEncodable
 		{
 			/* we have removed one certificate -> notify the observers */
 			setChanged();
-			notifyObservers(null);
+			notifyObservers(new Integer(certificateToRemove.getCertificateType()));
 		}
 	}
 

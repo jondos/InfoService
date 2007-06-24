@@ -92,7 +92,7 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 		/* tricky: initialize the components by calling the observer */
 		update(SignatureVerifier.getInstance().getVerificationCertificateStore(), null);
 		/* set the selected index of the list to the first item to avoid exceptions */
-	    m_listCert.setSelectedIndex(0);
+	    //m_listCert.setSelectedIndex(0);
 	}
 
 	/**
@@ -428,7 +428,9 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 
 		synchronized (this)
 		{
-			if (a_notifier == SignatureVerifier.getInstance().getVerificationCertificateStore())
+			if (a_notifier == SignatureVerifier.getInstance().getVerificationCertificateStore() &&
+				(a_message == null || (a_message instanceof Integer &&
+									   ((Integer)a_message).intValue() == JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX)))
 			{
 				/* the message is from the SignatureVerifier trusted certificates store */
 				int lastIndex = m_listCert.getSelectedIndex();
@@ -443,10 +445,9 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 						m_listmodelCertList.addElement(j);
 					}
 				}
-				/* select the item again that was selected */
-				//lastIndex = Math.min(m_listCert.getComponentCount() - 1, lastIndex);
-				//if (lastIndex >= 0)
-				if (m_listmodelCertList.getSize() > 0 && lastIndex >= 0)
+				/* select the item again that was selected before */
+				if (m_listmodelCertList.getSize() > 0 && lastIndex >= 0 &&
+					lastIndex < m_listmodelCertList.getSize())
 				{
 					m_listCert.setSelectedIndex(lastIndex);
 				}
@@ -464,7 +465,10 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 
 	protected void onUpdateValues()
 	{
-		m_cbCertCheckEnabled.setSelected(SignatureVerifier.getInstance().isCheckSignatures());
+		if (m_cbCertCheckEnabled.isSelected() != SignatureVerifier.getInstance().isCheckSignatures())
+		{
+			m_cbCertCheckEnabled.setSelected(SignatureVerifier.getInstance().isCheckSignatures());
+		}
 	}
 
 	protected boolean onOkPressed()

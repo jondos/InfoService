@@ -96,6 +96,12 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 		TrustModel.class.getName() + "_cascadesUserDefined";
 	private static final String MSG_CASCADES_NEW =
 		TrustModel.class.getName() + "_cascadesNew";
+	private static final String MSG_SINGLE_MIXES =
+		TrustModel.class.getName() + "_singleMixes";
+	private static final String MSG_ALL_CASCADES =
+		TrustModel.class.getName() + "_allCascades";
+	private static final String MSG_INTERNATIONAL_CASCADES =
+		TrustModel.class.getName() + "_internationalCascades";
 
 
 	private static Vector ms_defaultTrustModels;
@@ -115,6 +121,8 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 	private int m_trustExpiredCerts = TRUST_DEFAULT;
 	private int m_trustUserDefined = TRUST_DEFAULT;
 	private int m_trustNew = TRUST_DEFAULT;
+	private int m_trustSingleMixes = TRUST_DEFAULT;
+	private int m_trustInternational = TRUST_DEFAULT;
 
 	private String m_strName;
 	private long m_id;
@@ -129,13 +137,28 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 		{
 			public String getName()
 			{
-				return JAPMessages.getString(MSG_CERTIFIED_CASCADES);
+				return JAPMessages.getString(MSG_ALL_CASCADES);
 			}
 		};
 		model.m_id = 0;
 		model.setTrustExpiredCerts(TRUST_LITTLE);
+		model.setTrustSingleMixes(TRUST_NONE);
 		model.setTrustPay(TRUST_DEFAULT);
 		ms_defaultTrustModels.addElement(model);
+
+		model = new TrustModel()
+		{
+			public String getName()
+			{
+				return JAPMessages.getString(MSG_INTERNATIONAL_CASCADES);
+			}
+		};
+		model.m_id = 1;
+		model.setTrustExpiredCerts(TRUST_LITTLE);
+		model.setTrustInternational(TRUST_EXCLUSIVE);
+		model.setTrustSingleMixes(TRUST_NONE);
+		ms_defaultTrustModels.addElement(model);
+
 
 		model = new TrustModel()
 		{
@@ -144,8 +167,10 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 				return JAPMessages.getString(MSG_CASCADES_WITH_COSTS);
 			}
 		};
-		model.m_id = 1;
+		model.m_id = 2;
+		model.setTrustExpiredCerts(TRUST_LITTLE);
 		model.setTrustPay(TRUST_EXCLUSIVE);
+		model.setTrustSingleMixes(TRUST_NONE);
 		ms_defaultTrustModels.addElement(model);
 
 		model = new TrustModel()
@@ -155,9 +180,25 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 				return JAPMessages.getString(MSG_CASCADES_WITHOUT_COSTS);
 			}
 		};
-		model.m_id = 2;
+		model.m_id = 3;
+		model.setTrustExpiredCerts(TRUST_LITTLE);
 		model.setTrustPay(TRUST_NONE);
+		model.setTrustSingleMixes(TRUST_NONE);
 		ms_defaultTrustModels.addElement(model);
+
+		model = new TrustModel()
+		{
+			public String getName()
+			{
+				return JAPMessages.getString(MSG_SINGLE_MIXES);
+			}
+		};
+		model.m_id = 4;
+		model.setTrustExpiredCerts(TRUST_LITTLE);
+		model.setTrustSingleMixes(TRUST_EXCLUSIVE);
+		ms_defaultTrustModels.addElement(model);
+
+
 
 		model = new TrustModel()
 		{
@@ -179,7 +220,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 				return JAPMessages.getString(MSG_CASCADES_USER_DEFINED);
 			}
 		};
-		model.m_id = 3;
+		model.m_id = 5;
 		model.m_trustUserDefined = TRUST_EXCLUSIVE;
 		ms_defaultTrustModels.addElement(model);
 
@@ -203,7 +244,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 				return JAPMessages.getString(MSG_CASCADES_NEW);
 			}
 		};
-		model.m_id = 4;
+		model.m_id = 6;
 		model.m_trustNew = TRUST_EXCLUSIVE;
 		//ms_defaultTrustModels.addElement(model);
 
@@ -508,6 +549,34 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 		return elemTrustModel;
 	}
 
+	public void setTrustSingleMixes(int a_trust)
+	{
+		synchronized (this)
+		{
+			if (m_trustSingleMixes != a_trust)
+			{
+				setChanged();
+				m_trustSingleMixes = a_trust;
+			}
+			notifyObservers();
+		}
+	}
+
+	public void setTrustInternational(int a_trust)
+	{
+		synchronized (this)
+		{
+			if (m_trustInternational != a_trust)
+			{
+				setChanged();
+				m_trustInternational = a_trust;
+			}
+			notifyObservers();
+		}
+	}
+
+
+
 	public void setTrustExpiredCerts(int a_trust)
 	{
 		synchronized (this)
@@ -567,6 +636,24 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 			throw (new TrustException("Payment instance for this cascade is unknown!"));
 		}
 
+		if (m_trustSingleMixes == TRUST_EXCLUSIVE && a_cascade.getNumberOfOperators() > 1)
+		{
+			throw (new TrustException("This cascade has more than one operator!"));
+		}
+		else if (m_trustSingleMixes == TRUST_NONE && a_cascade.getNumberOfOperators() <= 1)
+		{
+			throw (new TrustException("This is a single-Mix cascade!"));
+		}
+
+		if (m_trustInternational == TRUST_EXCLUSIVE && a_cascade.getNumberOfCountries() <= 1)
+		{
+			throw (new TrustException("This cascade does not count as international!"));
+		}
+		else if (m_trustInternational == TRUST_NONE && a_cascade.getNumberOfCountries() > 1)
+		{
+			throw (new TrustException("This cascade does count as international!"));
+		}
+
 		if (m_trustNew == TRUST_EXCLUSIVE)
 		{
 			if (Database.getInstance(NewCascadeIDEntry.class).getEntryById(
@@ -579,6 +666,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 				throw (new TrustException("Only new cascades are accepted!"));
 			}
 		}
+
 
 		if (m_trustUserDefined == TRUST_EXCLUSIVE)
 		{

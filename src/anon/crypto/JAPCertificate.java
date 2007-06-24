@@ -186,7 +186,7 @@ public final class JAPCertificate implements IXMLEncodable, Cloneable, ICertific
 		m_subject = new X509DistinguishedName(m_bcCertificate.getSubject());
 		m_issuer = new X509DistinguishedName(m_bcCertificate.getIssuer());
 		m_extensions = new X509Extensions(m_bcCertificate.getTBSCertificate().getExtensions());
-		m_id = m_sha1Fingerprint + m_issuer + m_validity.getValidFrom() + m_validity.getValidTo();
+		m_id = m_sha1Fingerprint + m_validity.getValidFrom() + m_validity.getValidTo();
 	}
 
 	/**
