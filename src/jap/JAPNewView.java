@@ -1929,7 +1929,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				{
 					public void actionPerformed(ActionEvent a_event)
 					{
-						JAPDialog.showMessageDialog(JAPNewView.this, JAPMessages.getString(MSG_OBSERVABLE_EXPLAIN));
+						JAPDialog.showWarningDialog(JAPNewView.this, JAPMessages.getString(MSG_OBSERVABLE_EXPLAIN));
 						doClickOnCascadeChooser();
 					}
 				});
