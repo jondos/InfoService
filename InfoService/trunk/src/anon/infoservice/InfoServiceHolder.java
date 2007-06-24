@@ -451,8 +451,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 				}
 				else if (functionNumber == GET_STATUSINFO)
 				{
-					result = currentInfoService.getStatusInfo( (String) (arguments.elementAt(0)),
-						( (Integer) (arguments.elementAt(1))).intValue());
+					result = currentInfoService.getStatusInfo((MixCascade)arguments.elementAt(0));
 				}
 				else if (functionNumber == GET_MIXCASCADE_SERIALS)
 				{
@@ -720,12 +719,9 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	 *
 	 * @return The current StatusInfo for the mixcascade with the given ID.
 	 */
-	public StatusInfo getStatusInfo(String cascadeId, int cascadeLength)
+	public StatusInfo getStatusInfo(MixCascade a_cascade)
 	{
-		Vector arguments = new Vector();
-		arguments.addElement(cascadeId);
-		arguments.addElement(new Integer(cascadeLength));
-		return (StatusInfo) (fetchInformation(GET_STATUSINFO, arguments));
+		return (StatusInfo) (fetchInformation(GET_STATUSINFO, Util.toVector(a_cascade)));
 	}
 
 	/**

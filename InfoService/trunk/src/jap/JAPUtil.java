@@ -75,6 +75,8 @@ import java.util.Locale;
  */
 public final class JAPUtil
 {
+	private static final String MSG_DATE_UNIT = JAPUtil.class.getName() + "_";
+
 
 	public static JAPDialog.ILinkedInformation createDialogBrowserLink(String a_strUrl)
 	{
@@ -552,4 +554,60 @@ public final class JAPUtil
 		}
 		return new Timestamp(now.getTime().getTime());
 	}
+
+	public static String getDuration(int duration, String durationUnit)
+	{
+		String message;
+
+		if (durationUnit.equals("days") || durationUnit.equals("day") )
+		{
+			if (duration == 1)
+			{
+				message = "day";
+			}
+			else
+			{
+				message = "days";
+			}
+		} else if (durationUnit.equalsIgnoreCase("weeks") || durationUnit.equalsIgnoreCase("week")  )
+		{
+			if (duration == 1)
+			{
+				message = "week";
+			}
+			else
+			{
+				message = "weeks";
+			}
+		} else if (durationUnit.equalsIgnoreCase("months") || durationUnit.equalsIgnoreCase("month")  )
+		{
+			if (duration == 1)
+			{
+				message = "month";
+			}
+			else
+			{
+				message = "months";
+			}
+		}
+		else if (durationUnit.equalsIgnoreCase("years") || durationUnit.equalsIgnoreCase("year") )
+		{
+			if (duration == 1)
+			{
+				message = "year";
+			}
+			else
+			{
+				message = "years";
+			}
+
+		}
+		else
+		{
+			return duration + "";
+		}
+
+		return duration + " " + JAPMessages.getString(MSG_DATE_UNIT + message);
+	}
+
 }

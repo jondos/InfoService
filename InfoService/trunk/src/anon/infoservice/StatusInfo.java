@@ -30,6 +30,8 @@ package anon.infoservice;
 import java.text.NumberFormat;
 import java.util.Date;
 import java.security.SignatureException;
+import java.util.Vector;
+import java.util.Hashtable;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -52,6 +54,7 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 	public static final String XML_ELEMENT_NAME = "MixCascadeStatus";
 
 	public static final int ANON_LEVEL_MIN = 0;
+	public static final int ANON_LEVEL_LOW = 1;
 	public static final int ANON_LEVEL_FAIR = 3;
 	public static final int ANON_LEVEL_HIGH = 8;
 	public static final int ANON_LEVEL_MAX = 10;
@@ -144,7 +147,7 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 	 */
 	public StatusInfo(Element a_statusNode) throws Exception
 	{
-		this(a_statusNode, -1);
+		this(a_statusNode, null);
 	}
 
 	/**
@@ -156,7 +159,7 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 	 *                           no anonymity level is calculated and getAnonLevel() will return
 	 *                           -1.
 	 */
-	public StatusInfo(Element a_statusNode, int a_mixCascadeLength) throws Exception
+	public StatusInfo(Element a_statusNode, MixCascade a_cascade) throws Exception
 	{
 		/* use always the timeout for the infoservice context, because the JAP client currently does
 		 * not have a database of status entries -> no timeout for the JAP client necessary
@@ -219,13 +222,29 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 		m_lastUpdate = Long.parseLong(a_statusNode.getAttribute("LastUpdate"));
 		/* calculate then anonymity level */
 		m_anonLevel = -1;
-		if ( (a_mixCascadeLength >= 0) && (getNrOfActiveUsers() >= 0) && (getTrafficSituation() >= 0))
+		if (a_cascade != null && a_cascade.getNumberOfMixes() > 0 &&
+			getNrOfActiveUsers() >= 0 && getTrafficSituation() >= 0)
 		{
 			double userFactor = Math.min( ( (double) getNrOfActiveUsers()) / 500.0, 1.0);
 			double trafficFactor = Math.min( ( (double) getTrafficSituation()) / 100.0, 1.0);
-			double mixFactor = 1.0 - Math.pow(0.5, a_mixCascadeLength);
+
+			//double mixFactor = 1.0 - Math.pow(0.5, a_mixCascadeLength);
 			/* get the integer part of the product -> 0 <= anonLevel <= 10 because mixFactor is always < 1.0 */
-			m_anonLevel = (int) (userFactor * trafficFactor * mixFactor * (double) (ANON_LEVEL_MAX + 1));
+			m_anonLevel = (int) (userFactor * trafficFactor * (double) (ANON_LEVEL_MAX + 1));
+
+			// add a bonus for different operators an countries
+			if (a_cascade.getNumberOfOperators() <= 1)
+			{
+				// cascades with only one operator are not secure!
+				m_anonLevel = Math.min(m_anonLevel, ANON_LEVEL_LOW);
+			}
+			else if (a_cascade.getNumberOfOperators() >= 3)
+			{
+				m_anonLevel += 1;
+			}
+			// count no more than three countries, and do not subtract anon level for one country
+			int countryBonus = Math.max(Math.min(a_cascade.getNumberOfCountries(), 3) - 1, 0);
+			m_anonLevel += countryBonus;
 		}
 		m_statusXmlData = XMLUtil.toString(a_statusNode);
 		m_statusXmlDataBytes=m_statusXmlData.getBytes();

@@ -47,11 +47,17 @@ public class JapCouponField extends JTextField
 {
 	private static final int NR_OF_CHARACTERS = 4;
 	private static final char[] ACCEPTED_CHARS = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'}; //assumes text has already been made uppercase
+	private JapCouponField m_nextCouponField;
 
 
 	public JapCouponField()
 	{
 		super(NR_OF_CHARACTERS);
+	}
+
+	public void setNextCouponField(JapCouponField a_nextCouponField)
+	{
+		m_nextCouponField = a_nextCouponField;
 	}
 
 	protected final Document createDefaultModel()
@@ -84,20 +90,38 @@ public class JapCouponField extends JTextField
 			string = new String(modifiedString,0,nrOfOkayChars);
 
 			//prevent more than NR_OF_CHARACTERS to be entered
-		/* throws exception, needs debugging
-
-			if (getLength()+string.length() > NR_OF_CHARACTERS)
+			/* throws exception, needs debugging
+			 if (getLength()+string.length() > NR_OF_CHARACTERS)
+			 {
+				 String shortenedString = string.substring(0,NR_OF_CHARACTERS);
+			  string = new String(shortenedString);
+					  }
+			 */
+			if (string.length() + getLength() > NR_OF_CHARACTERS)
 			{
-			    String shortenedString = string.substring(0,NR_OF_CHARACTERS);
-				string = new String(shortenedString);
-            }
-        */
-			//modifications done, set the string
-			super.insertString(offset, string, attributeSet);
+				// copy and paste error...
+				if (m_nextCouponField != null)
+				{
+					m_nextCouponField.setText(string.substring(NR_OF_CHARACTERS, string.length()));
+				}
+				string = string.substring(0, NR_OF_CHARACTERS);
+				super.insertString(0, string, attributeSet);
+			}
+			else
+			{
+				//modifications done, set the string
+				super.insertString(offset, string, attributeSet);
+			}
+
+
 
 			//move on after 4 characters have been entered
 			if (getLength() >= NR_OF_CHARACTERS)
 			{
+				if (getLength() > NR_OF_CHARACTERS)
+				{
+					super.remove(NR_OF_CHARACTERS, getLength() - NR_OF_CHARACTERS);
+				}
 				transferFocus();
 			}
 		}

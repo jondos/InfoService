@@ -1241,16 +1241,17 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 	 *
 	 * @return The current StatusInfo for the mixcascade with the given ID.
 	 */
-	public StatusInfo getStatusInfo(String cascadeId, int cascadeLength) throws Exception
+	public StatusInfo getStatusInfo(MixCascade a_cascade) throws Exception
 	{
-		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/mixcascadestatus/" + cascadeId));
+		Document doc =
+			getXmlDocument(HttpRequestStructure.createGetRequest("/mixcascadestatus/" + a_cascade.getId()));
 		NodeList mixCascadeStatusNodes = doc.getElementsByTagName("MixCascadeStatus");
 		if (mixCascadeStatusNodes.getLength() == 0)
 		{
-			throw (new Exception("Error in XML structure for cascade with ID" + cascadeId));
+			throw (new Exception("Error in XML structure for cascade with ID" + a_cascade.getId()));
 		}
 		Element mixCascadeStatusNode = (Element) (mixCascadeStatusNodes.item(0));
-		StatusInfo info = new StatusInfo(mixCascadeStatusNode, cascadeLength);
+		StatusInfo info = new StatusInfo(mixCascadeStatusNode, a_cascade);
 		/* check the signature */
 		if (!info.isVerified())
 		{

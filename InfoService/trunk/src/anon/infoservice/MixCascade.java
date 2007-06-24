@@ -121,6 +121,9 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	private XMLSignature m_signature;
 	private CertPath m_certPath;
 
+	private int m_nrCountries = 0;
+	private int m_nrOperators = 0;
+
 	/**
 	 * True, if this MixCascade is user defined, false if the Information comes from the
 	 * InfoService. This value is only meaningful within the context of the JAP client.
@@ -419,6 +422,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		}
 
 		createMixIDString();
+		calculateAnonymityBonus();
 
 		// JAP will not pay more than the predefined maximum!
 		if (isPayment())
@@ -538,6 +542,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		m_xmlStructure = generateXmlRepresentation();
 		m_compressedXmlStructure = ZLibTools.compress(XMLSignature.toCanonical(m_xmlStructure));
 		createMixIDString();
+		calculateAnonymityBonus();
 	}
 
 	/**
@@ -830,6 +835,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		}
 		m_xmlStructure = generateXmlRepresentation();
 		m_compressedXmlStructure = ZLibTools.compress(XMLSignature.toCanonical(m_xmlStructure));
+		calculateAnonymityBonus();
 	}
 
 	/**
@@ -854,7 +860,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 				// the cascade id should be the same as the the id of the first mix, but ok...
 				id = getId();
 			}
-			StatusInfo statusInfo = InfoServiceHolder.getInstance().getStatusInfo(id, getNumberOfMixes());
+			StatusInfo statusInfo = InfoServiceHolder.getInstance().getStatusInfo(this);
 			if (certificateLock != -1)
 			{
 				/* remove the lock on the certificate */
@@ -978,6 +984,69 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 			return m_certPath.checkValidity(new Date());
 		}
 		return false;
+	}
+
+	/**
+	 * Returns the number of really independent operators in this cascade.
+	 * @return the number of really independent operators in this cascade
+	 */
+	public int getNumberOfOperators()
+	{
+		return m_nrOperators;
+	}
+
+	/**
+	 * Returns the number of Mixes in the cascade that differ from others in the cascade in their
+	 * location and in the location of their operator.
+	 * @return int
+	 */
+	public int getNumberOfCountries()
+	{
+		return m_nrCountries;
+	}
+
+	private void calculateAnonymityBonus()
+	{
+		// check the certificates of the Mixes
+		Hashtable operatorCertificates = new Hashtable();
+		Hashtable operatorCountries = new Hashtable();
+		Hashtable mixCountries = new Hashtable();
+		Hashtable operatorIDs = new Hashtable();
+		JAPCertificate currentCertificate;
+		m_nrOperators = 0;
+		m_nrCountries = 0;
+		String mixCountryCode, operatorCountryCode;
+		for (int i = 0; i < getNumberOfMixes(); i++)
+		{
+			if (getMixInfo(i) == null || getMixInfo(i).getCertPath() == null)
+			{
+				continue;
+			}
+			currentCertificate = getMixInfo(i).getOperatorCertificate();
+			if (currentCertificate != null && !operatorCertificates.contains(currentCertificate) &&
+				!operatorIDs.contains(getMixInfo(i).getId()))
+			{
+				// this Mix seems to be operated by an organisation independent from others in the cascade
+
+				// country bonus
+				operatorCountryCode = currentCertificate.getSubject().getCountryCode();
+				mixCountryCode = getMixInfo(i).getCertificate().getSubject().getCountryCode();
+				if (operatorCountryCode != null && operatorCountryCode != null &&
+					!operatorCountries.containsKey(operatorCountryCode) &&
+					!mixCountries.containsKey(mixCountryCode))
+				{
+					// operator and Mix are located in different countries than the others in the cascade
+					m_nrCountries++;
+				}
+				operatorCountries.put(operatorCountryCode, operatorCountryCode);
+				mixCountries.put(mixCountryCode, mixCountryCode);
+
+				// operator bonus
+				operatorCertificates.put(currentCertificate.getId(), currentCertificate);
+				operatorIDs.put(getMixInfo(i).getId(), getMixInfo(i).getId());
+				m_nrOperators++;
+			}
+		}
 	}
 
 	/**

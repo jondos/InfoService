@@ -124,6 +124,8 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
    */
   private JAPCertificate m_mixCertificate;
 
+  private JAPCertificate m_operatorCertificate;
+
   /**
    * Stores the certPath for this mix.
    * The CertPath is not set (null) if the MixInfo-Object is in the InfoService
@@ -187,6 +189,7 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 	  m_bFromCascade = true;
 	  m_mixCertPath = a_certPath;
 	  m_mixCertificate = a_certPath.getFirstCertificate();
+	  m_operatorCertificate = a_certPath.getSecondCertificate();
 	  m_lastUpdate = 0;
 	  m_serial = 0;
 	  m_mixLocation = new ServiceLocation(null, m_mixCertificate);
@@ -204,6 +207,7 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 	  m_bFromCascade = true;
 	  m_mixCertPath = a_certPath;
 	  m_mixCertificate = a_certPath.getFirstCertificate();
+	  m_operatorCertificate = a_certPath.getSecondCertificate();
 	  m_lastUpdate = 0;
 	  m_serial = 0;
 	  m_mixLocation = new ServiceLocation(null, m_mixCertificate);
@@ -250,6 +254,7 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 			  if (m_mixCertPath != null && m_mixCertPath.getFirstCertificate() != null)
 			  {
 				  m_mixCertificate = m_mixCertPath.getFirstCertificate();
+				  m_operatorCertificate = m_mixCertPath.getSecondCertificate();
 			  }
 			  else
 			  {
@@ -458,6 +463,11 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
   public JAPCertificate getCertificate()
   {
 	  return m_mixCertificate;
+  }
+
+  public JAPCertificate getOperatorCertificate()
+  {
+	  return m_operatorCertificate;
   }
 
   public XMLPriceCertificate getPriceCertificate()
