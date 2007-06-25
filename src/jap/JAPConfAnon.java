@@ -889,6 +889,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 				//getRootPanel().setCursor(c);
 
+				/*
 				if (Database.getInstance(MixCascade.class).getNumberOfEntries() == 0)
 				{
 					if (!JAPModel.isSmallDisplay() && false)
@@ -904,7 +905,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				{
 					// show a window containing all available cascades
 					//m_listMixCascade.setEnabled(true);
-				}
+				}*/
 
 
 				LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Enabling reload button");
@@ -1313,7 +1314,15 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		if (!m_infoService.isFilled())
 		{
-			fetchCascades(false, false, true);
+			new Thread(new Runnable()
+			{
+				public void run()
+				{
+					m_infoService.fill(true);
+					updateValues(false);
+				}
+			}).start();
+			//fetchCascades(false, false, true);
 		}
 
 
