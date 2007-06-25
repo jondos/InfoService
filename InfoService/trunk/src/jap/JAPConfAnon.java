@@ -139,7 +139,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private static final String MSG_EXPLAIN_PI_UNAVAILABLE = JAPConfAnon.class.getName() + "_explainPiUnavailable";
 	private static final String MSG_WHAT_IS_THIS = JAPConfAnon.class.getName() + "_whatIsThis";
 	private static final String MSG_FILTER = JAPConfAnon.class.getName() + "_filter";
-
+	private static final String MSG_ANON_LEVEL = JAPConfAnon.class.getName() + "_anonLevel";
 
 
 	private static final String DEFAULT_MIX_NAME = "AN.ON Mix";
@@ -495,7 +495,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		c.insets = new Insets(5, 20, 0, 5);
 
-		l = new JLabel(JAPMessages.getString("numOfUsersOnCascade") + ":");
+		//l = new JLabel(JAPMessages.getString("numOfUsersOnCascade") + ":");
+		l = new JLabel(JAPMessages.getString(MSG_ANON_LEVEL) + ":");
 		c.gridx = 2;
 		c.gridy = 1;
 		c.weightx = 0;
@@ -1415,7 +1416,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 						}
 
 					}
-					m_numOfUsersLabel.setText(m_infoService.getNumOfUsers(cascadeId));
+
+					m_numOfUsersLabel.setText(m_infoService.getAnonLevel(cascadeId));
 					//System.out.println(m_numOfUsersLabel.getText());
 					//m_reachableLabel.setFont(m_numOfUsersLabel.getFont());
 					//m_lblHosts.setFont(m_numOfUsersLabel.getFont());
@@ -1887,6 +1889,19 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			}
 			return true;
 		}
+
+
+		public String getAnonLevel(String a_cascadeId)
+		{
+			StatusInfo statusInfo = getStatusInfo(a_cascadeId);
+			if (statusInfo != null)
+			{
+				return "" + statusInfo.getAnonLevel() + " / " + StatusInfo.ANON_LEVEL_MAX;
+			}
+			return "N/A";
+		}
+
+
 
 		/**
 		 * Get the number of users in a cascade as a String.
