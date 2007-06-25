@@ -838,11 +838,16 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		calculateAnonymityBonus();
 	}
 
+	public StatusInfo fetchCurrentStatus()
+	{
+		return fetchCurrentStatus(-1);
+	}
+
 	/**
 	 * Fetches the current status of the mixcascade from the InfoService. The StatusInfo is
 	 * available by calling getCurrentStatus().
 	 */
-	public StatusInfo fetchCurrentStatus()
+	public StatusInfo fetchCurrentStatus(long a_timeout)
 	{
 		synchronized (this)
 		{
@@ -860,7 +865,15 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 				// the cascade id should be the same as the the id of the first mix, but ok...
 				id = getId();
 			}
-			StatusInfo statusInfo = InfoServiceHolder.getInstance().getStatusInfo(this);
+			StatusInfo statusInfo;
+			if (a_timeout <= 0)
+			{
+				statusInfo = InfoServiceHolder.getInstance().getStatusInfo(this);
+			}
+			else
+			{
+				statusInfo = InfoServiceHolder.getInstance().getStatusInfo(this, a_timeout);
+			}
 			if (certificateLock != -1)
 			{
 				/* remove the lock on the certificate */

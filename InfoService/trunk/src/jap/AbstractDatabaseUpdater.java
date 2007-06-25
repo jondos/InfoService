@@ -53,7 +53,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	 * each entry read into the JAP database is kept for at least 15 minutes before it is deleted (if
 	 * the database does not delete it before).
 	 */
-	private static final long KEEP_ENTRY_FACTOR = 3l;
+	public static final long KEEP_ENTRY_FACTOR = 3l;
 
 	private static final long MIN_WAITING_TIME_MS = 20000;
 

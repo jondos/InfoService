@@ -150,6 +150,11 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 		this(a_statusNode, null);
 	}
 
+	public StatusInfo(Element a_statusNode, MixCascade a_cascade) throws Exception
+	{
+		this(a_statusNode, a_cascade, -1);
+	}
+
 	/**
 	 * Creates a new StatusInfo from XML description (MixCascadeStatus node).
 	 *
@@ -159,12 +164,12 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 	 *                           no anonymity level is calculated and getAnonLevel() will return
 	 *                           -1.
 	 */
-	public StatusInfo(Element a_statusNode, MixCascade a_cascade) throws Exception
+	public StatusInfo(Element a_statusNode, MixCascade a_cascade, long a_timeout) throws Exception
 	{
 		/* use always the timeout for the infoservice context, because the JAP client currently does
 		 * not have a database of status entries -> no timeout for the JAP client necessary
 		 */
-		super(System.currentTimeMillis() + Constants.TIMEOUT_STATUS);
+		super(System.currentTimeMillis() + (a_timeout <= 0 ? Constants.TIMEOUT_STATUS : a_timeout));
 
 		if (a_statusNode == null)
 		{
