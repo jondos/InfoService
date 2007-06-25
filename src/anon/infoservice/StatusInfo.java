@@ -54,7 +54,7 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 	public static final String XML_ELEMENT_NAME = "MixCascadeStatus";
 
 	public static final int ANON_LEVEL_MIN = 0;
-	public static final int ANON_LEVEL_LOW = 1;
+	public static final int ANON_LEVEL_LOW = 2;
 	public static final int ANON_LEVEL_FAIR = 3;
 	public static final int ANON_LEVEL_HIGH = 8;
 	public static final int ANON_LEVEL_MAX = 10;
@@ -229,8 +229,12 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 			double trafficFactor = Math.min( ( (double) getTrafficSituation()) / 100.0, 1.0);
 
 			//double mixFactor = 1.0 - Math.pow(0.5, a_mixCascadeLength);
-			/* get the integer part of the product -> 0 <= anonLevel <= 10 because mixFactor is always < 1.0 */
-			m_anonLevel = (int) (userFactor * trafficFactor * (double) (ANON_LEVEL_MAX + 1));
+			/* get the integer part of the product -> 0 <= anonLevel <= 10 */
+			m_anonLevel = (int) (userFactor * trafficFactor * (double) (ANON_LEVEL_MAX));
+
+			// count no more than three countries, and do not subtract anon level for one country
+			int countryBonus = Math.max(Math.min(a_cascade.getNumberOfCountries(), 3) - 1, 0);
+			m_anonLevel += countryBonus;
 
 			// add a bonus for different operators an countries
 			if (a_cascade.getNumberOfOperators() <= 1)
@@ -242,9 +246,10 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 			{
 				m_anonLevel += 1;
 			}
-			// count no more than three countries, and do not subtract anon level for one country
-			int countryBonus = Math.max(Math.min(a_cascade.getNumberOfCountries(), 3) - 1, 0);
-			m_anonLevel += countryBonus;
+
+			// do not supersede the maximum anonymity level
+			m_anonLevel = Math.min(m_anonLevel, ANON_LEVEL_MAX);
+
 		}
 		m_statusXmlData = XMLUtil.toString(a_statusNode);
 		m_statusXmlDataBytes=m_statusXmlData.getBytes();
