@@ -126,6 +126,8 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	private static final int GET_LATEST_JAVA_SERIALS = 17;
 	private static final int GET_MESSAGE_SERIALS = 18;
 
+	private static final int GET_STATUSINFO_TIMEOUT = 19;
+
 	/**
 	 * This defines, whether there is an automatic change of infoservice after failure as default.
 	 */
@@ -384,7 +386,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 			}
 		}
 
-		if (functionNumber == GET_STATUSINFO)
+		if (functionNumber == GET_STATUSINFO || functionNumber == GET_STATUSINFO_TIMEOUT)
 		{
 			/*
 			 * For performance reasons the requests must be distributed equally over all InfoServices.
@@ -452,6 +454,11 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 				else if (functionNumber == GET_STATUSINFO)
 				{
 					result = currentInfoService.getStatusInfo((MixCascade)arguments.elementAt(0));
+				}
+				else if (functionNumber == GET_STATUSINFO_TIMEOUT)
+				{
+					result = currentInfoService.getStatusInfo((MixCascade)arguments.elementAt(0),
+						((Long)arguments.elementAt(1)).longValue());
 				}
 				else if (functionNumber == GET_MIXCASCADE_SERIALS)
 				{
@@ -723,6 +730,16 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	{
 		return (StatusInfo) (fetchInformation(GET_STATUSINFO, Util.toVector(a_cascade)));
 	}
+
+	public StatusInfo getStatusInfo(MixCascade a_cascade, long a_timeout)
+	{
+		Vector args = new Vector();
+		args.addElement(a_cascade);
+		args.addElement(new Long(a_timeout));
+
+		return (StatusInfo) (fetchInformation(GET_STATUSINFO_TIMEOUT, args));
+	}
+
 
 	/**
 	 * Get the version String of the current JAP version from the infoservice. This function is

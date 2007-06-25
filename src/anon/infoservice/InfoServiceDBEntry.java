@@ -1243,6 +1243,22 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 	 */
 	public StatusInfo getStatusInfo(MixCascade a_cascade) throws Exception
 	{
+		return getStatusInfo(a_cascade, -1);
+	}
+
+
+	/**
+	 * Get the StatusInfo for the cascade with the given ID. If we can't get a connection with the
+	 * infoservice, an Exception is thrown.
+	 *
+	 * @param cascadeId The ID of the mixcascade to get the StatusInfo for.
+	 * @param cascadeLength The length of the mixcascade (number of mixes). We need this for
+	 *                      calculating the AnonLevel in the StatusInfo.
+	 *
+	 * @return The current StatusInfo for the mixcascade with the given ID.
+	 */
+	public StatusInfo getStatusInfo(MixCascade a_cascade, long a_timeout) throws Exception
+	{
 		Document doc =
 			getXmlDocument(HttpRequestStructure.createGetRequest("/mixcascadestatus/" + a_cascade.getId()));
 		NodeList mixCascadeStatusNodes = doc.getElementsByTagName("MixCascadeStatus");
@@ -1251,7 +1267,15 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 			throw (new Exception("Error in XML structure for cascade with ID" + a_cascade.getId()));
 		}
 		Element mixCascadeStatusNode = (Element) (mixCascadeStatusNodes.item(0));
-		StatusInfo info = new StatusInfo(mixCascadeStatusNode, a_cascade);
+		StatusInfo info;
+		if (a_timeout > 0)
+		{
+			info = new StatusInfo(mixCascadeStatusNode, a_cascade, a_timeout);
+		}
+		else
+		{
+			info = new StatusInfo(mixCascadeStatusNode, a_cascade);
+		}
 		/* check the signature */
 		if (!info.isVerified())
 		{

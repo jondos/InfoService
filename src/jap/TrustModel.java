@@ -102,6 +102,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 		TrustModel.class.getName() + "_allCascades";
 	private static final String MSG_INTERNATIONAL_CASCADES =
 		TrustModel.class.getName() + "_internationalCascades";
+	private static final String MSG_ALL_SERVICES = TrustModel.class.getName() + "_allServices";
 
 
 	private static Vector ms_defaultTrustModels;
@@ -146,6 +147,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 		model.setTrustPay(TRUST_DEFAULT);
 		ms_defaultTrustModels.addElement(model);
 
+		/*
 		model = new TrustModel()
 		{
 			public String getName()
@@ -158,7 +160,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 		model.setTrustInternational(TRUST_EXCLUSIVE);
 		model.setTrustSingleMixes(TRUST_NONE);
 		ms_defaultTrustModels.addElement(model);
-
+	  */
 
 		model = new TrustModel()
 		{
@@ -202,6 +204,19 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 
 		model = new TrustModel()
 		{
+			public String getName()
+			{
+				return JAPMessages.getString(MSG_ALL_SERVICES);
+			}
+		};
+		model.m_id = 5;
+		model.setTrustExpiredCerts(TRUST_LITTLE);
+		ms_defaultTrustModels.addElement(model);
+
+
+
+		model = new TrustModel()
+		{
 			public boolean isAdded()
 			{
 				Enumeration enties = Database.getInstance(MixCascade.class).getEntrySnapshotAsEnumeration();
@@ -220,7 +235,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 				return JAPMessages.getString(MSG_CASCADES_USER_DEFINED);
 			}
 		};
-		model.m_id = 5;
+		model.m_id = 6;
 		model.m_trustUserDefined = TRUST_EXCLUSIVE;
 		ms_defaultTrustModels.addElement(model);
 
@@ -244,7 +259,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 				return JAPMessages.getString(MSG_CASCADES_NEW);
 			}
 		};
-		model.m_id = 6;
+		model.m_id = 7;
 		model.m_trustNew = TRUST_EXCLUSIVE;
 		//ms_defaultTrustModels.addElement(model);
 

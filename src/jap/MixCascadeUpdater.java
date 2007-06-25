@@ -39,6 +39,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import java.util.Enumeration;
+import anon.infoservice.StatusInfo;
 
 /**
  * Updates the list of available MixCascades.
@@ -122,6 +123,24 @@ public class MixCascadeUpdater extends AbstractDatabaseUpdater
 	}
 
 	protected Hashtable getUpdatedEntries(Hashtable a_entriesToUpdate)
+	{
+		Hashtable updated = Database.getInstance(MixCascade.class).getEntryHash();
+		Enumeration enumCascades = updated.elements();
+		MixCascade currentCascade;
+		while (enumCascades.hasMoreElements())
+		{
+			currentCascade = (MixCascade)enumCascades.nextElement();
+			if (!currentCascade.isUserDefined())
+			{
+				Database.getInstance(StatusInfo.class).update(
+								currentCascade.fetchCurrentStatus(UPDATE_INTERVAL_MS * KEEP_ENTRY_FACTOR));
+			}
+		}
+
+		return getUpdatedEntries_internal(a_entriesToUpdate);
+	}
+
+	private Hashtable getUpdatedEntries_internal(Hashtable a_entriesToUpdate)
 	{
 		if (a_entriesToUpdate == null)
 		{
