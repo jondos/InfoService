@@ -31,6 +31,7 @@ import org.w3c.dom.Element;
 
 import anon.util.XMLUtil;
 import anon.util.XMLParseException;
+import java.io.File;
 
 /**
  * Holds the information about the currently minimum required JAP version to access the
@@ -73,6 +74,16 @@ public class JAPMinVersion extends AbstractDistributableDatabaseEntry
 	public static String getXmlElementName()
 	{
 		return "Jap";
+	}
+
+	/**
+	 * Creates a new JAPMinVersion from XML description load from local filesystem.
+	 *
+	 * @param a_fileJapMinVersion The XML file containing the root node of the XML structure of this JAPMinVersion ('Jap' node).
+	 */
+	public JAPMinVersion(File a_fileRootNode) throws Exception
+	{
+		this(XMLUtil.readXMLDocument(a_fileRootNode).getDocumentElement());
 	}
 
 	/**
