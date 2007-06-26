@@ -64,6 +64,8 @@ import anon.infoservice.MessageDBEntry;
 import anon.infoservice.InfoServiceDBEntry;
 import infoservice.dynamic.DynamicConfiguration;
 import anon.infoservice.JAPMinVersion;
+import org.w3c.dom.Document;
+import anon.util.XMLUtil;
 
 final public class Configuration
 {
@@ -538,18 +540,6 @@ final public class Configuration
 				{
 					m_strJapMinVersionFile.trim();
 				}
-				String strJapMinVersionOldFile = a_properties.getProperty("japMinVersionFileNameOld");
-				if (strJapMinVersionOldFile != null)
-				{
-					try{
-					File fileJapMinVersionOld=new File(strJapMinVersionOldFile.trim());
-					m_japMinVersionOld=new JAPMinVersion(fileJapMinVersionOld);
-					}
-					catch(Throwable t)
-					{
-						m_japMinVersionOld=null;
-					}
-				}
 				try
 				{
 					m_dJapUpdatePropability=Math.min(1.0,
@@ -621,6 +611,21 @@ final public class Configuration
 				{
 					LogHolder.log(LogLevel.WARNING, LogType.MISC,
 								  "No private key for signing the update messages specified. Unsigned messages will be sent.");
+				}
+				//load and sign the old JAP version update information if they are given...
+				String strJapMinVersionOldFile = a_properties.getProperty("japMinVersionFileNameOld");
+				if (strJapMinVersionOldFile != null)
+				{
+					try{
+						File fileJapMinVersionOld=new File(strJapMinVersionOldFile.trim());
+						Document docMinVersion=XMLUtil.readXMLDocument(fileJapMinVersionOld);
+						SignatureCreator.getInstance().signXml(SignatureVerifier.DOCUMENT_CLASS_UPDATE,docMinVersion);
+						m_japMinVersionOld=new JAPMinVersion(docMinVersion.getDocumentElement());
+					}
+					catch(Throwable t)
+					{
+						m_japMinVersionOld=null;
+					}
 				}
 			}
 			else
