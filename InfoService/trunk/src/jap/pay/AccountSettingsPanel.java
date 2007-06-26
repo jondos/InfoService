@@ -1303,7 +1303,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			new FetchTermsRunnable(d, a_account.getBI(), a_account.getTerms()));
 		fetchTermsPane.setInterruptThreadSafe(false);
 
-		new TermsAndConditionsPane(d, fetchTermsPane, false)
+		TermsAndConditionsPane pane = new TermsAndConditionsPane(d, fetchTermsPane, false)
 		{
 			public CheckError[] checkUpdate()
 			{
@@ -1314,6 +1314,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				return super.checkUpdate();
 			}
 		};
+		pane.getButtonCancel().setVisible(false);
 		DialogContentPane.updateDialogOptimalSized(fetchTermsPane);
 		d.addWindowListener(new WindowAdapter()
 		{

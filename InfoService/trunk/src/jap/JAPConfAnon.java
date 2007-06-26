@@ -1535,6 +1535,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		try
 		{
 			boolean bDatabaseChanged = false;
+			MixCascade currentCascade =
+				(MixCascade) m_tableMixCascade.getValueAt(m_tableMixCascade.getSelectedRow(), 1);
+			int selectedMix = m_serverList.getSelectedIndex();
+
 			if (a_notifier == JAPModel.getInstance().getRoutingSettings())
 			{
 				if ( ( (JAPRoutingMessage) (a_message)).getMessageCode() ==
@@ -1564,8 +1568,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					}
 					else if (message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED)
 					{
-						MixCascade currentCascade =
-							(MixCascade) m_tableMixCascade.getValueAt(m_tableMixCascade.getSelectedRow(), 1);
 						if (currentCascade != null &&
 							currentCascade.equals((MixCascade)message.getMessageData()))
 						{
@@ -1642,8 +1644,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				}
 				else if (message.getMessageData() instanceof StatusInfo)
 				{
-					MixCascade currentCascade =
-						(MixCascade) m_tableMixCascade.getValueAt(m_tableMixCascade.getSelectedRow(), 1);
 					if (currentCascade != null)
 					{
 						if (m_tableMixCascade.getSelectedRow() >= 0 &&
@@ -1656,12 +1656,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				}
 				else if (message.getMessageData() instanceof MixInfo)
 				{
-					MixCascade currentCascade =
-						(MixCascade) m_tableMixCascade.getValueAt(m_tableMixCascade.getSelectedRow(), 1);
 					if (currentCascade != null)
 					{
-						if (m_tableMixCascade.getSelectedRow() >= 0 &&
-							currentCascade.getMixIds().contains(
+						if (m_tableMixCascade.getSelectedRow() >= 0 && selectedMix >= 0 &&
+							currentCascade.getMixIds().size() > 0 &&
+							currentCascade.getMixIds().elementAt(selectedMix).equals(
 							((MixInfo) message.getMessageData()).getId()))
 						{
 							bDatabaseChanged = true;
@@ -1679,7 +1678,12 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			}
 			else if (a_notifier == SignatureVerifier.getInstance().getVerificationCertificateStore())
 			{
-				bDatabaseChanged = true;
+				if (a_message == null ||
+					(a_message instanceof Integer &&
+					 (((Integer)a_message).intValue() == JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX)))
+				{
+					bDatabaseChanged = true;
+				}
 			}
 			else if (a_notifier == TrustModel.getObservable())
 			{
@@ -1884,14 +1888,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				for (int j = 0; j < c.size(); j++)
 				{
 					MixCascade cascade = (MixCascade) c.elementAt(j);
-					//Get mixes in cascade
-					/*if (cascade.isUserDefined())
-						  {
-					 continue;
-						  }*/
 					// update MixInfo for each mix in cascade
+					/** @todo really needed?
 					update(Database.getInstance(MixCascade.class),
 						   new DatabaseMessage(DatabaseMessage.ENTRY_ADDED, cascade));
+					*/
 				}
 
 				m_isFilled = true;

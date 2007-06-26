@@ -116,7 +116,7 @@ public class TermsAndConditionsPane extends DialogContentPane implements IWizard
 		{
 			m_rootPanel.add(m_accepted, m_c);
 		}
-		getButtonCancel().setVisible(false);
+		//getButtonCancel().setVisible(false);
 	}
 
 	public boolean isTermsAccepted()

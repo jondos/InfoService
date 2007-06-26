@@ -134,18 +134,33 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 	    ms_defaultTrustModels = new Vector();
 
 		// initialise basic trust models
-		TrustModel model = new TrustModel()
+		TrustModel model;
+
+
+		model = new TrustModel()
+		{
+			public String getName()
+			{
+				return JAPMessages.getString(MSG_ALL_SERVICES);
+			}
+		};
+		model.m_id = 0;
+		model.setTrustExpiredCerts(TRUST_LITTLE);
+		ms_defaultTrustModels.addElement(model);
+
+		/*
+		model = new TrustModel()
 		{
 			public String getName()
 			{
 				return JAPMessages.getString(MSG_ALL_CASCADES);
 			}
 		};
-		model.m_id = 0;
+		model.m_id = 1;
 		model.setTrustExpiredCerts(TRUST_LITTLE);
 		model.setTrustSingleMixes(TRUST_NONE);
 		model.setTrustPay(TRUST_DEFAULT);
-		ms_defaultTrustModels.addElement(model);
+		ms_defaultTrustModels.addElement(model);*/
 
 		/*
 		model = new TrustModel()
@@ -188,6 +203,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 		model.setTrustSingleMixes(TRUST_NONE);
 		ms_defaultTrustModels.addElement(model);
 
+
 		model = new TrustModel()
 		{
 			public String getName()
@@ -199,20 +215,6 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 		model.setTrustExpiredCerts(TRUST_LITTLE);
 		model.setTrustSingleMixes(TRUST_EXCLUSIVE);
 		ms_defaultTrustModels.addElement(model);
-
-
-
-		model = new TrustModel()
-		{
-			public String getName()
-			{
-				return JAPMessages.getString(MSG_ALL_SERVICES);
-			}
-		};
-		model.m_id = 5;
-		model.setTrustExpiredCerts(TRUST_LITTLE);
-		ms_defaultTrustModels.addElement(model);
-
 
 
 		model = new TrustModel()
