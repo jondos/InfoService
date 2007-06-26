@@ -1286,7 +1286,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		HttpResponseStructure httpResponse = null;
 		JAPMinVersion oldMinVersion = Configuration.getInstance().getJapMinVersionOld();
 		double updatePropability = Configuration.getInstance().getJapUpdatePropability();
-		if (oldMinVersion != null && updatePropability < 1.0 && m_Random.nextDouble() < updatePropability)
+		if (oldMinVersion != null && updatePropability < 1.0 && m_Random.nextDouble() >= updatePropability)
 		{
 			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,
 				HttpResponseStructure.HTTP_ENCODING_PLAIN, oldMinVersion.getPostData());
