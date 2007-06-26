@@ -64,6 +64,7 @@ import infoservice.tor.TorDirectoryAgent;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.util.Random;
 
 /**
  * This is the implementation of all commands the InfoService supports.
@@ -99,9 +100,9 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 	};
 
+	private IInfoServiceAgreementAdapter m_agreementAdapter = DynamicConfiguration.getInstance().
+		getAgreementHandler();
 
-
-    private IInfoServiceAgreementAdapter m_agreementAdapter = DynamicConfiguration.getInstance().getAgreementHandler();
 	private DynamicCommandsExtension m_dynamicExtension = new DynamicCommandsExtension();
 
 	// Ok the cache the StatusInfo DB here for performance reasonses (the
@@ -109,9 +110,13 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	// the Is -so
 	//no problem so far
 	private Database m_statusinfoDB;
+
+	/** Stores an object which can generated some randomness...*/
+	private Random m_Random;
 	public InfoServiceCommands()
 	{
 		m_statusinfoDB = Database.getInstance(StatusInfo.class);
+		m_Random = new Random();
 	}
 
 	/**
@@ -136,7 +141,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			/* verify the signature --> if requested */
 
 			AbstractDatabaseEntry idEntry = Database.getInstance(InfoServiceIDEntry.class).getEntryById(
-						 newEntry.getId());
+				newEntry.getId());
 
 			if (newEntry.isVerified() && !newEntry.getId().equals(Configuration.getInstance().getID()) &&
 				newEntry.isNewerThan(idEntry))
@@ -308,7 +313,6 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				throw new Exception("Unsupported post encoding:" + a_encoding);
 			}
 
-
 			Database.getInstance(MixCascade.class).update(mixCascadeEntry);
 		}
 		catch (Exception e)
@@ -318,7 +322,6 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		return httpResponse;
 	}
-
 
 	private HttpResponseStructure messagePost(byte[] a_postData, int a_encoding)
 	{
@@ -351,7 +354,6 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		return httpResponse;
 	}
 
-
 	private abstract class HTTPResponseGetter
 	{
 		private static final long CACHE_SERIALS_MS = 10000;
@@ -370,6 +372,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		public HTTPResponseGetter()
 		{
 		}
+
 		public abstract Class getDatabaseClass();
 
 		protected HttpResponseStructure fetchResponse(int a_supportedEncodings)
@@ -435,7 +438,6 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			}
 			return httpResponse;
 		}
-
 
 		protected HttpResponseStructure fetchSerialsResponse(int a_supportedEncodings)
 		{
@@ -742,28 +744,28 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		return httpResponse;
 	}
 
-    /*
-	private HttpResponseStructure getLatestJavaVersions()
-	{
+	/*
+	  private HttpResponseStructure getLatestJavaVersions()
+	  {
 
-		HttpResponseStructure httpResponse;
-		Document doc = XMLUtil.createDocument();
-		try
+	   HttpResponseStructure httpResponse;
+	   Document doc = XMLUtil.createDocument();
+	   try
+	   {
+		Element entries = Database.getInstance(JavaVersionDBEntry.class).toXmlElement(doc);
+		if (entries != null)
 		{
-			Element entries = Database.getInstance(JavaVersionDBEntry.class).toXmlElement(doc);
-			if (entries != null)
-			{
-				doc.appendChild(entries);
-			}
-			httpResponse = new HttpResponseStructure(doc);
+		 doc.appendChild(entries);
 		}
-		catch (Exception e)
-		{
-			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
-			LogHolder.log(LogLevel.ERR, LogType.NET, e);
-		}
-		return httpResponse;
-	}*/
+		httpResponse = new HttpResponseStructure(doc);
+	   }
+	   catch (Exception e)
+	   {
+		httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
+		LogHolder.log(LogLevel.ERR, LogType.NET, e);
+	   }
+	   return httpResponse;
+	  }*/
 
 	/**
 	 * This method is called, when we receive data from another infoservice with the lastest java version
@@ -806,7 +808,6 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		return httpResponse;
 	}
-
 
 	/**
 	 * Sends a generated HTML file with all status entrys to the client. This function is not used
@@ -853,7 +854,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				"  <BODY BGCOLOR=\"#FFFFFF\">\n" +
 				"    <P ALIGN=\"right\">" + (new Date()).toString() + "</P>\n" +
 				"    <H2>InfoService Status (" + Configuration.getInstance().getID() + ")</H2>\n" +
-				"    <P>InfoService Name: " + Configuration.getInstance().getOwnName()  + "</P><BR>\n" +
+				"    <P>InfoService Name: " + Configuration.getInstance().getOwnName() + "</P><BR>\n" +
 				//"    <TABLE ALIGN=\"center\" BORDER=\"0\">\n" +
 				"    <TABLE BORDER=\"0\">\n" +
 				"      <COLGROUP>\n" +
@@ -1274,6 +1275,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	/**
 	 * Sends the version number of the current minimum required JAP client software as an XML
 	 * structure.
+	 * Note: This respects the update propability as specifed in the configuration file.
 	 *
 	 * @return The HTTP response for the client.
 	 */
@@ -1282,17 +1284,27 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		ISRuntimeStatistics.ms_lNrOfGetMinJapVersion++;
 		/* this is only the default, if we don't know the current JAP version */
 		HttpResponseStructure httpResponse = null;
-		JAPMinVersion minVersionEntry = (JAPMinVersion) (Database.getInstance(JAPMinVersion.class).
-			getEntryById("JAPMinVersion"));
-		if (minVersionEntry != null)
+		JAPMinVersion oldMinVersion = Configuration.getInstance().getJapMinVersionOld();
+		double updatePropability = Configuration.getInstance().getJapUpdatePropability();
+		if (oldMinVersion != null && updatePropability < 1.0 && m_Random.nextDouble() < updatePropability)
 		{
 			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,
-				HttpResponseStructure.HTTP_ENCODING_PLAIN, minVersionEntry.getPostData());
+				HttpResponseStructure.HTTP_ENCODING_PLAIN, oldMinVersion.getPostData());
 		}
 		else
 		{
-			httpResponse = new HttpResponseStructure(HttpResponseStructure.
-				HTTP_RETURN_NOT_FOUND);
+			JAPMinVersion minVersionEntry = (JAPMinVersion) (Database.getInstance(JAPMinVersion.class).
+				getEntryById("JAPMinVersion"));
+			if (minVersionEntry != null)
+			{
+				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,
+					HttpResponseStructure.HTTP_ENCODING_PLAIN, minVersionEntry.getPostData());
+			}
+			else
+			{
+				httpResponse = new HttpResponseStructure(HttpResponseStructure.
+					HTTP_RETURN_NOT_FOUND);
+			}
 		}
 		return httpResponse;
 	}
@@ -1430,8 +1442,6 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		return httpResponse;
 	}
 
-
-
 	/**
 	 * This is the handler for processing the InfoService commands.
 	 *
@@ -1510,7 +1520,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 * includes information about the cascade, or from other IS
 			 */
 //			httpResponse = cascadePostHelo(postData, a_supportedEncodings);
-            httpResponse = m_dynamicExtension.cascadePostHelo(postData, a_supportedEncodings);
+			httpResponse = m_dynamicExtension.cascadePostHelo(postData, a_supportedEncodings);
 		}
 		else if ( (command.equals("/cascadeserials")) && (method == Constants.REQUEST_METHOD_GET))
 		{
@@ -1569,18 +1579,18 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			httpResponse = fetchAvailableMixes();
 		}
 		else if ( (command.equals(MessageDBEntry.HTTP_REQUEST_STRING)) &&
-				  (method == Constants.REQUEST_METHOD_GET))
+				 (method == Constants.REQUEST_METHOD_GET))
 		{
 			httpResponse = m_messageResponseGetter.fetchResponse(a_supportedEncodings, false);
 		}
 		else if ( (command.equals(MessageDBEntry.HTTP_SERIALS_REQUEST_STRING)) &&
-				  (method == Constants.REQUEST_METHOD_GET))
+				 (method == Constants.REQUEST_METHOD_GET))
 		{
 			httpResponse = m_messageResponseGetter.fetchResponse(a_supportedEncodings, true);
 		}
 		else if ( (command.equals(MessageDBEntry.POST_FILE)) && (method == Constants.REQUEST_METHOD_POST))
 		{
-			httpResponse =messagePost(postData, a_supportedEncodings);
+			httpResponse = messagePost(postData, a_supportedEncodings);
 		}
 		else if ( (command.startsWith("/cascadeinfo/")) && (method == Constants.REQUEST_METHOD_GET))
 		{
@@ -1624,7 +1634,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		{
 			if (method == Constants.REQUEST_METHOD_GET)
 			{
-				httpResponse = 	m_javaVersionResponseGetter.fetchResponse(a_supportedEncodings, false);
+				httpResponse = m_javaVersionResponseGetter.fetchResponse(a_supportedEncodings, false);
 				//httpResponse = getLatestJavaVersions();
 			}
 			else if (method == Constants.REQUEST_METHOD_POST)
@@ -1634,7 +1644,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		else if (command.equals(JavaVersionDBEntry.HTTP_SERIALS_REQUEST_STRING))
 		{
-			httpResponse = 	m_javaVersionResponseGetter.fetchResponse(a_supportedEncodings, true);
+			httpResponse = m_javaVersionResponseGetter.fetchResponse(a_supportedEncodings, true);
 		}
 		else if ( (command.equals("/currentjapversion")) && (method == Constants.REQUEST_METHOD_POST))
 		{

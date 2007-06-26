@@ -63,6 +63,7 @@ import anon.infoservice.JavaVersionDBEntry;
 import anon.infoservice.MessageDBEntry;
 import anon.infoservice.InfoServiceDBEntry;
 import infoservice.dynamic.DynamicConfiguration;
+import anon.infoservice.JAPMinVersion;
 
 final public class Configuration
 {
@@ -166,6 +167,16 @@ final public class Configuration
 	 * Stores where the japMinVersion.xml is located in the local file system (path + filename).
 	 */
 	private String m_strJapMinVersionFile;
+
+	/**
+	 * Stores where the old JAP min version.
+	 */
+	private JAPMinVersion m_japMinVersionOld;
+
+	/**
+	 * Stores the propability with which the japMinVersion is returned instead of japMinVersionOld (e.g. a forced updated is done).
+	 */
+	private double m_dJapUpdatePropability;
 
 	/**
 	 * Stores the startup time of the infoservice (time when the configuration instance was
@@ -526,6 +537,28 @@ final public class Configuration
 				if (m_strJapMinVersionFile != null)
 				{
 					m_strJapMinVersionFile.trim();
+				}
+				String strJapMinVersionOldFile = a_properties.getProperty("japMinVersionFileNameOld");
+				if (strJapMinVersionOldFile != null)
+				{
+					try{
+					File fileJapMinVersionOld=new File(strJapMinVersionOldFile.trim());
+					m_japMinVersionOld=new JAPMinVersion(fileJapMinVersionOld);
+					}
+					catch(Throwable t)
+					{
+						m_japMinVersionOld=null;
+					}
+				}
+				try
+				{
+					m_dJapUpdatePropability=Math.min(1.0,
+						Double.parseDouble(a_properties.getProperty("japUpdatePropability").trim()));
+					m_dJapUpdatePropability=Math.max(0.0,m_dJapUpdatePropability);
+				}
+				catch(Throwable t)
+				{
+					m_dJapUpdatePropability=1.0;
 				}
 				try
 				{
@@ -975,6 +1008,25 @@ final public class Configuration
 	public String getJapMinVersionFile()
 	{
 		return m_strJapMinVersionFile;
+	}
+
+	/**
+	 * Returns where the JAP old minimal version number. This might be usefull in case of forced JAP updates.
+	 *
+	 * @return The old minimal version of JAP.
+	 */
+	public JAPMinVersion getJapMinVersionOld()
+	{
+		return m_japMinVersionOld;
+	}
+
+	/**
+	 * Returns the update propability as specified in the configuration file.
+	 * @return update propability
+	 */
+	public double getJapUpdatePropability()
+	{
+		return m_dJapUpdatePropability;
 	}
 
 	/**
