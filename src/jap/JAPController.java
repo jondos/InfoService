@@ -1450,7 +1450,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 									try
 									{
 										piEntry = new PaymentInstanceDBEntry( (Element) nodePI, Long.MAX_VALUE);
-										Database.getInstance(PaymentInstanceDBEntry.class).update(piEntry);
+										if (piEntry.isValid() && piEntry.isVerified())
+										{
+											Database.getInstance(PaymentInstanceDBEntry.class).update(piEntry);
+										}
 									}
 									catch (Exception a_e)
 									{
