@@ -55,6 +55,7 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 	private int m_Height;
 	private final Object SYNC_MSG = new Object();
 	private Random m_Random;
+	private final Object SYNC_ADD_MSG = new Object();
 
 	private final static int ICON_HEIGHT = 15;
 	private final static int ICON_WIDTH = 16;
@@ -74,7 +75,6 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 	}
 
 	private MsgQueueEntry m_Msgs;
-	private MsgQueueEntry m_lastMsg;
 	private volatile boolean m_bRun;
 	private volatile int m_aktY;
 	private Thread m_Thread;
@@ -129,7 +129,6 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 		//setBackground(Color.red);
 		//setSize(m_dimensionPreferredSize);
 		m_Msgs = null;
-		m_lastMsg = null;
 		m_Thread = new Thread(this, "StatusPanel");
 		m_Thread.setDaemon(true);
 		m_bRun = true;
@@ -189,23 +188,21 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 			{
 				entry.m_Icon = m_imageError;
 			}
-			if (m_lastMsg == null)
+
+			if (m_Msgs == null)
 			{
 				m_Msgs = entry;
-				m_lastMsg = entry;
 				entry.m_Next = entry;
 				m_aktY = 0;
 			}
 			else
 			{
-				entry.m_Next = m_lastMsg.m_Next;
-				m_lastMsg.m_Next = entry;
-				m_Msgs = m_lastMsg;
-				m_lastMsg = entry;
+				entry.m_Next = m_Msgs.m_Next;
+				m_Msgs.m_Next = entry;
 			}
+			m_Thread.interrupt(); //display next message
 		}
-		//displayLastMessage....
-		m_Thread.interrupt();
+
 		return entry.m_Id;
 
 	}
@@ -225,7 +222,6 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 			if (m_Msgs.m_Id == id && m_Msgs.m_Next == m_Msgs) //one element
 			{
 				m_Msgs = null;
-				m_lastMsg = null;
 				m_aktY = 0;
 			}
 			else
@@ -251,16 +247,13 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 				{
 					m_Msgs = entry.m_Next;
 					m_aktY = 0;
+					m_Thread.interrupt(); //display changes
 				}
 				prev.m_Next = entry.m_Next; //remove entry from list
-				if (m_lastMsg == entry) //adjust last
-				{
-					m_lastMsg = prev;
-				}
 			}
 		}
 
-		m_Thread.interrupt(); //display changes
+
 	}
 
 	public void paint(Graphics g)
@@ -311,15 +304,12 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 	{
 		try
 		{
-			boolean bInterrupted = false;
+			//boolean bInterrupted = false;
 			while (m_bRun)
 			{
 				try
 				{
-					if (!bInterrupted)
-					{
-						Thread.sleep(10000);
-					}
+					Thread.sleep(10000);
 				}
 				catch (InterruptedException e)
 				{
@@ -328,7 +318,7 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 						return;
 					}
 				}
-				bInterrupted = false;
+
 				synchronized (SYNC_MSG)
 				{
 					if (m_Msgs != null && m_Msgs.m_DisplayCount == 0)
@@ -354,7 +344,7 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 					}
 					else if (m_Msgs.m_Next == m_Msgs && m_Msgs.listener != null && m_aktY == (ICON_HEIGHT + 1))
 					{
-						// there are no other status messages leave this one on top
+						// there are no other status messages; leave this one on top
 						repaint();
 						continue;
 					}
@@ -365,22 +355,29 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 					}
 				}
 
+
 				for (int i = 0; i < ICON_HEIGHT + 1 && m_bRun; i++)
 				{
-					repaint();
 					try
 					{
-						if (!bInterrupted)
-						{
-							Thread.sleep(100);
-						}
+						repaint();
+						Thread.sleep(100);
+						m_aktY++;
 					}
 					catch (InterruptedException e)
 					{
-						bInterrupted = true;
+						synchronized (SYNC_MSG)
+						{
+							if (m_Msgs != null)
+							{
+								m_aktY = 0;
+								i = -1;
+								m_Msgs = m_Msgs.m_Next;
+							}
+						}
 					}
-					m_aktY++;
 				}
+
 			}
 		}
 		catch (Exception e)
