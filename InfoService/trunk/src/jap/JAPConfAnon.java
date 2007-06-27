@@ -1535,8 +1535,20 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		try
 		{
 			boolean bDatabaseChanged = false;
-			MixCascade currentCascade =
-				(MixCascade) m_tableMixCascade.getValueAt(m_tableMixCascade.getSelectedRow(), 1);
+			MixCascade currentCascade = null;
+			int selectedRow = m_tableMixCascade.getSelectedRow();
+			if (selectedRow >= 0)
+			{
+				try
+				{
+					currentCascade =
+						(MixCascade) m_tableMixCascade.getValueAt(m_tableMixCascade.getSelectedRow(), 1);
+				}
+				catch (Exception a_e)
+				{
+					// no cascade is currently chosen; do nothing
+				}
+			}
 			int selectedMix = m_serverList.getSelectedIndex();
 
 			if (a_notifier == JAPModel.getInstance().getRoutingSettings())
@@ -1644,22 +1656,17 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				}
 				else if (message.getMessageData() instanceof StatusInfo)
 				{
-					if (currentCascade != null)
+					if (currentCascade != null &&
+						currentCascade.getId().equals(( (StatusInfo) message.getMessageData()).getId()))
 					{
-						if (m_tableMixCascade.getSelectedRow() >= 0 &&
-							currentCascade.getId().equals(
-								( (StatusInfo) message.getMessageData()).getId()))
-						{
-							bDatabaseChanged = true;
-						}
+						bDatabaseChanged = true;
 					}
 				}
 				else if (message.getMessageData() instanceof MixInfo)
 				{
-					if (currentCascade != null)
+					if (currentCascade != null && selectedMix >= 0)
 					{
-						if (m_tableMixCascade.getSelectedRow() >= 0 && selectedMix >= 0 &&
-							currentCascade.getMixIds().size() > 0 &&
+						if (currentCascade.getMixIds().size() > 0 &&
 							currentCascade.getMixIds().elementAt(selectedMix).equals(
 							((MixInfo) message.getMessageData()).getId()))
 						{
