@@ -27,17 +27,18 @@
  */
 package anon.tor.ordescription;
 
-import java.io.InputStream;
 
 import HTTPClient.HTTPConnection;
 import HTTPClient.HTTPResponse;
+import anon.infoservice.HTTPConnectionFactory;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.infoservice.ListenerInterface;
 
 /**
  * get descriptor and status documents from
- * a directory server via HTTP 
+ * a directory server via HTTP
  * @author dhoske
  *
  */
@@ -63,29 +64,29 @@ final public class PlainORListFetcher implements ORListFetcher
 	{
 		return getDocument("/tor/status/authority.z");
 	}
-	
+
 	public byte[] getDescriptor(String digest)
 	{
 		return getDocument("/tor/server/d/" + digest + ".z");
 	}
-	
+
 	public byte[] getDescriptorByFingerprint(String fingerprint)
 	{
 		return getDocument("/tor/server/fp/" + fingerprint + ".z");
 	}
-	
+
 	public byte[] getAllDescriptors()
 	{
 		return getDocument("/tor/");
 	}
-	
+
 	public byte[] getStatus(String fingerprint)
 	{
 		return getDocument("/tor/status/fp/" + fingerprint + ".z");
 	}
-	
+
 	/**
-	 * fetch document from directory server 
+	 * fetch document from directory server
 	 * @param path path to document
 	 * @return
 	 * the document
@@ -95,17 +96,18 @@ final public class PlainORListFetcher implements ORListFetcher
 		try
 		{
 			LogHolder.log(LogLevel.DEBUG,LogType.TOR,"fetching " + path + " from directory server");
-			HTTPConnection http = new HTTPConnection(m_ORListServer,m_ORListPort);
-			http.addModule(Class.forName("HTTPClient.ContentEncodingModule"), -1);
+			HTTPConnection http = HTTPConnectionFactory.getInstance().createHTTPConnection(
+				new ListenerInterface(m_ORListServer,m_ORListPort),
+				HTTPConnectionFactory.HTTP_ENCODING_ZLIB,true);
 			HTTPResponse resp = http.Get(path);
-			
+
 			if (resp.getStatusCode() != 200)
 			{
 				return null;
 			}
-			
+
 			byte[] doc = resp.getData();
-			
+
 			if (doc.length <= 0)
 				return null;
 			return doc;
