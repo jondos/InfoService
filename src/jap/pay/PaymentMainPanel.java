@@ -74,6 +74,9 @@ import jap.JAPModel;
 import logging.LogType;
 import java.util.Date;
 import java.awt.Cursor;
+import anon.pay.xml.XMLTransactionOverview;
+import java.util.Vector;
+import anon.pay.xml.XMLTransCert;
 
 public class PaymentMainPanel extends FlippingPanel
 {
@@ -108,6 +111,8 @@ public class PaymentMainPanel extends FlippingPanel
 	private static final String MSG_WANNA_CHARGE = PaymentMainPanel.class.getName() + "_wannaCharge";
 	private static final String MSG_TT_CREATE_ACCOUNT = PaymentMainPanel.class.getName() + "_ttCreateAccount";
 	private static final String MSG_FREE_OF_CHARGE = PaymentMainPanel.class.getName() + "_freeOfCharge";
+	private static final String MSG_OPEN_TRANSACTION = PaymentMainPanel.class.getName() + "_openTransaction";
+
 
 
 
@@ -621,7 +626,7 @@ public class PaymentMainPanel extends FlippingPanel
 		 */
 		public boolean accountCertRequested(final MixCascade a_connectedCascade)
 		{
-			PayAccountsFile accounts = PayAccountsFile.getInstance();
+			final PayAccountsFile accounts = PayAccountsFile.getInstance();
 			boolean bSuccess = true;
 
 			final JAPDialog.LinkedInformationAdapter adapter =
@@ -692,10 +697,7 @@ public class PaymentMainPanel extends FlippingPanel
 					};
 				}
 
-				else if (accounts.getActiveAccount().getBalance().getCredit() <= 0 ||
-						 (accounts.getActiveAccount().getBalance().getFlatEnddate() != null &&
-						  accounts.getActiveAccount().getBalance().getFlatEnddate().before(
-												new Timestamp(System.currentTimeMillis()))))
+				else if (!accounts.getActiveAccount().isCharged(new Timestamp(System.currentTimeMillis())))
 				{
 					JAPController.getInstance().setAnonMode(false);
 					bSuccess = false;
@@ -706,9 +708,17 @@ public class PaymentMainPanel extends FlippingPanel
 						{
 							String message = strMessage +
 								JAPMessages.getString(MSG_PAYMENT_ERRORS[XMLErrorMessage.ERR_ACCOUNT_EMPTY]) +
-								" " +
-								//JAPMessages.getString(MSG_WANNA_CHARGE);
-								JAPMessages.getString("payCreateAccountQuestion");
+								" ";
+
+							if (accounts.getActiveAccount().getBalance().getSpent() <= 0)
+							{
+								message += JAPMessages.getString(MSG_OPEN_TRANSACTION);
+							}
+							else
+							{
+								message += //JAPMessages.getString(MSG_WANNA_CHARGE);
+									JAPMessages.getString("payCreateAccountQuestion");
+							}
 							JAPController.getInstance().setAnonMode(false);
 							if (JAPDialog.showYesNoDialog(JAPController.getInstance().getViewWindow(),
 								message, adapter))

@@ -329,27 +329,43 @@ public class AIControlChannel extends XmlControlChannel
 	  Vector mixIDs = m_connectedCascade.getMixIds();
 	  String mixID;
 	  XMLPriceCertificate priceCert;
+	  Timestamp now = new Timestamp(System.currentTimeMillis());
+	  PayAccount activeAccount = PayAccountsFile.getInstance().getActiveAccount();
 
-	  if (PayAccountsFile.getInstance().getActiveAccount() == null ||
-		  !PayAccountsFile.getInstance().getActiveAccount().getBI().getId().equals(
-				  m_connectedCascade.getPIID()))
+	  if (activeAccount == null || !activeAccount.isCharged(now) ||
+		  !activeAccount.getBI().getId().equals(m_connectedCascade.getPIID()))
 	  {
 		  PayAccount currentAccount = null;
+		  PayAccount openTransactionAccount = null;
+		  if (activeAccount != null && activeAccount.getSpent() == 0)
+		  {
+			  openTransactionAccount = PayAccountsFile.getInstance().getActiveAccount();
+		  }
+
 		  Vector accounts = PayAccountsFile.getInstance().getAccounts(m_connectedCascade.getPIID());
 		  if (accounts.size() > 0)
 		  {
-			  Timestamp now = new Timestamp(System.currentTimeMillis());
 			  for (int i = 0; i < accounts.size(); i++)
 			  {
 				  currentAccount = (PayAccount) accounts.elementAt(i);
-				  if (currentAccount.getBalance().getCredit() != 0 &&
-					  (currentAccount.getBalance().getFlatEnddate() == null ||
-					   currentAccount.getBalance().getFlatEnddate().after(now)))
+				  if (currentAccount.isCharged(now))
 				  {
 					  break;
 				  }
+				  else if (openTransactionAccount == null && currentAccount.getSpent() == 0)
+				  {
+					  openTransactionAccount = currentAccount;
+				  }
+				  currentAccount = null;
 			  }
-			  PayAccountsFile.getInstance().setActiveAccount(currentAccount);
+			  if (currentAccount != null)
+			  {
+				  PayAccountsFile.getInstance().setActiveAccount(currentAccount);
+			  }
+			  else if (openTransactionAccount != null)
+			  {
+				  PayAccountsFile.getInstance().setActiveAccount(openTransactionAccount);
+			  }
 		  }
 	  }
 
