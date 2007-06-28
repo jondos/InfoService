@@ -205,7 +205,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 				Vector transCerts = new Vector();
 				PayAccount curAccount;
 				String language = JAPController.getLocale().getLanguage();
-				XMLTransactionOverview overview = new XMLTransactionOverview(language);
+				XMLTransactionOverview overview;
 				for (Enumeration allAccounts = m_accounts.elements(); allAccounts.hasMoreElements(); )
 				{
 					curAccount = (PayAccount) allAccounts.nextElement();

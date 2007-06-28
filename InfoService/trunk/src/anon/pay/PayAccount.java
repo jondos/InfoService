@@ -387,6 +387,18 @@ public class PayAccount implements IXMLEncodable
 		return m_accountCertificate.getAccountNumber();
 	}
 
+	/**
+	 * Returns true if this account currently has a positive and usable balance.
+	 * @return boolean
+	 */
+	public boolean isCharged(Timestamp a_time)
+	{
+		XMLBalance balance = getBalance();
+
+		return balance.getCredit() > 0 && balance.getFlatEnddate() != null &&
+			balance.getFlatEnddate().after(a_time);
+	}
+
 	public boolean isBackupDone()
 	{
 		return m_bBackupDone;
