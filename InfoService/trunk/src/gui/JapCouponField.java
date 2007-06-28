@@ -32,6 +32,15 @@ import javax.swing.text.Document;
 import javax.swing.text.PlainDocument;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
+import javax.swing.JMenuItem;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.ActionEvent;
+import javax.swing.JPopupMenu;
+import java.awt.event.ActionListener;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.Transferable;
 
 /**
  * specialized version of a JTextField, similar to JAPJIntField
@@ -49,10 +58,50 @@ public class JapCouponField extends JTextField
 	private static final char[] ACCEPTED_CHARS = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'}; //assumes text has already been made uppercase
 	private JapCouponField m_nextCouponField;
 
+	private static final String MSG_INSERT_FROM_CLIP = JapCouponField.class.getName() + "_insertFromClip";
+
 
 	public JapCouponField()
 	{
 		super(NR_OF_CHARACTERS);
+
+		final JPopupMenu m_popup = new JPopupMenu();
+		JMenuItem itemInsertCoupon = new JMenuItem(JAPMessages.getString(MSG_INSERT_FROM_CLIP));
+
+		MouseAdapter popupListener = new MouseAdapter()
+		{
+			public void mouseClicked(MouseEvent a_event)
+			{
+				if (GUIUtils.isMouseButton(a_event, MouseEvent.BUTTON2_MASK) ||
+					GUIUtils.isMouseButton(a_event, MouseEvent.BUTTON3_MASK))
+				{
+					m_popup.show(JapCouponField.this, a_event.getX(), a_event.getY());
+				}
+			}
+		};
+		addMouseListener(popupListener);
+
+
+		itemInsertCoupon.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent a_event)
+			{
+				Clipboard clip = GUIUtils.getSystemClipboard();
+				Transferable data = clip.getContents(this);
+				if (data != null && data.isDataFlavorSupported(DataFlavor.stringFlavor))
+				{
+					try
+					{
+						setText( (String) data.getTransferData(DataFlavor.stringFlavor));
+					}
+					catch (Exception a_e)
+					{
+						// ignore it
+					}
+				}
+			}
+		});
+		m_popup.add(itemInsertCoupon);
 	}
 
 	public void setNextCouponField(JapCouponField a_nextCouponField)

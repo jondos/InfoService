@@ -29,7 +29,6 @@
 
 package jap.pay.wizardnew;
 
-import java.sql.Timestamp;
 import java.util.Vector;
 
 import java.awt.Container;
@@ -58,7 +57,6 @@ import gui.dialog.DialogContentPane;
 import gui.dialog.DialogContentPane.IWizardSuitable;
 import gui.dialog.JAPDialog;
 import gui.dialog.WorkerContentPane;
-import jap.JAPController;
 import jap.JAPModel;
 import jap.JAPUtil;
 import jap.pay.AccountSettingsPanel.AccountCreationPane;
