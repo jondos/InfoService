@@ -6,7 +6,6 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -130,6 +129,7 @@ public class ActivePaymentDetails extends JAPDialog implements ActionListener
 
         String curDetailedInfo = (String) optionToShow.get("detailedInfo");
 		JAPHtmlMultiLineLabel detailsLabel = new JAPHtmlMultiLineLabel(curDetailedInfo);
+		detailsLabel.setPreferredWidth(600);
 		detailsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		optionPanel.add(detailsLabel);
 		optionPanel.add(Box.createRigidArea(new Dimension(0,10)));
