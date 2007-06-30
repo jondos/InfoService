@@ -256,8 +256,9 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 				m_anonLevel = Math.max(m_anonLevel, ANON_LEVEL_LOW);
 			}
 
-			// do not supersede the maximum anonymity level
+			// do not supersede the maximum or minimum anonymity level
 			m_anonLevel = Math.min(m_anonLevel, ANON_LEVEL_MAX);
+			m_anonLevel = Math.max(m_anonLevel, ANON_LEVEL_MIN);
 
 		}
 		m_statusXmlData = XMLUtil.toString(a_statusNode);
