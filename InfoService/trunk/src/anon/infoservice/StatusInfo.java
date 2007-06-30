@@ -242,14 +242,16 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 			m_anonLevel += countryBonus;
 
 			// add a bonus for different operators an countries
+			m_anonLevel -= 1; //subtract one point; this is a penalty for only one operator
 			if (a_cascade.getNumberOfOperators() <= 1)
 			{
 				// cascades with only one operator are not secure!
 				m_anonLevel = Math.min(m_anonLevel, ANON_LEVEL_LOW);
 			}
-			else if (a_cascade.getNumberOfOperators() >= 3)
+			else
 			{
-				m_anonLevel += 1;
+				// do not add more than 3 points
+				m_anonLevel += Math.min(a_cascade.getNumberOfOperators(), 3);
 			}
 
 			// do not supersede the maximum anonymity level
