@@ -250,7 +250,7 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 			}
 			else
 			{
-				// do not add more than 3 points
+				// do not add more than 2 points
 				m_anonLevel += Math.min(a_cascade.getNumberOfOperators(), 3);
 				// make sure anonymity is at least as good as of single Mixes
 				m_anonLevel = Math.max(m_anonLevel, ANON_LEVEL_LOW);
