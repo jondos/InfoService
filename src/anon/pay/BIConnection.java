@@ -214,19 +214,18 @@ public class BIConnection implements ICaptchaSender
 				{
 					bForbidden = true;
 				}
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Exception while trying to connect to BI");
-				LogHolder.log(LogLevel.DEBUG, LogType.PAY, e);
+
 				if (listeners.hasMoreElements())
 				{
-					LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+					LogHolder.log(LogLevel.ERR, LogType.PAY,
 								  "Could not connect to Payment Instance at " + li.getHost() + ":" +
-								  li.getPort() + ". Trying next interface...");
+								  li.getPort() + ". Trying next interface...", e);
 				}
 				else
 				{
 					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
 								  "Could not connect to Payment Instance at " + li.getHost() + ":" +
-								  li.getPort() + ". No more interfaces left.");
+								  li.getPort() + ". No more interfaces left.", e);
 				}
 			}
 		}
