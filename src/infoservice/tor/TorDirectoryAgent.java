@@ -30,13 +30,15 @@ package infoservice.tor;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import anon.tor.ordescription.ORDescription;
 import anon.tor.ordescription.ORList;
 import anon.infoservice.Database;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.util.ZLibTools;
+import java.io.FileInputStream;
+import java.io.File;
+import anon.tor.ordescription.ORDescriptor;
 
 /**
  * This class is responsible for fetching the information about the active tor nodes. This class
@@ -48,7 +50,7 @@ public class TorDirectoryAgent implements Runnable
 	/**
 	 * The filename where we can find the TOR nodes file on a TOR directory server.
 	 */
-	private static final String DEFAULT_DIRECTORY_FILE = "/dir.z";
+	private static final String DEFAULT_DIRECTORY_FILE = "/tor/server/all.z";
 
 	/**
 	 * Stores the instance of TorDirectoryAgent (singleton).
@@ -216,7 +218,7 @@ public class TorDirectoryAgent implements Runnable
 				while ( (torNodesList == null) && (torServers.size() > 0))
 				{
 					TorDirectoryServer currentDirectoryServer = (TorDirectoryServer) (torServers.firstElement());
-					byte[] torNodesCommpressedListInformation = currentDirectoryServer.downloadCompressedTorNodesInformation();
+					byte[] torNodesCommpressedListInformation =currentDirectoryServer.downloadCompressedTorNodesInformation();
 					byte[] torNodesListInformation	=null;
 					torServers.removeElementAt(0);
 					if (torNodesCommpressedListInformation != null)
@@ -238,7 +240,7 @@ public class TorDirectoryAgent implements Runnable
 							Enumeration runningTorNodes = torNodes.getList().elements();
 							while (runningTorNodes.hasMoreElements())
 							{
-								ORDescription currentTorNode = (ORDescription) (runningTorNodes.nextElement());
+								ORDescriptor currentTorNode = (ORDescriptor) (runningTorNodes.nextElement());
 								if (currentTorNode.getDirPort() > 0)
 								{
 									/* that is a TOR directory server, add it to the database with a timeout of
