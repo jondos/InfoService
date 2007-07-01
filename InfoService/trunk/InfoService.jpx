@@ -18,9 +18,6 @@
   <property category="debug.5" name="RemoteHost" value="planet1.inf.tu-dresden.de"/>
   <property category="debug.5" name="RemoteLaunchTransport" value="dt_socket"/>
   <property category="debug.5" name="RemoteTransportAddress" value="58730"/>
-  <property category="debug.6" name="SmartStepRedefineClasses" value="0"/>
-  <property category="debug.6" name="SmartStepSkipStaticInitializers" value="0"/>
-  <property category="debug.6" name="SmartStepSkipSynthetics" value="0"/>
   <property category="generalFormatting" name="baseCodeStyle" value="java/JAP.codestyle"/>
   <property category="generalFormatting" name="blockIndent" value="4"/>
   <property category="generalFormatting" name="tabSize" value="4"/>
@@ -62,10 +59,7 @@
   <property category="optimize.5" name="oitd.AttachProcess" value="1"/>
   <property category="optimize.5" name="oitd.HostAttach" value="infoservice.inf.tu-dresden.de"/>
   <property category="optimize.5" name="oitd.PortAttach" value="4060"/>
-  <property category="optimize.6" name="OptimizableType" value="intuitive.ide.borland.jb10.ProfilerBootstrap"/>
-  <property category="optimize.6" name="oipr.EnableUnitTest" value="0"/>
-  <property category="optimize.6" name="oipr.FilterFile" value="G:\projects\Jap\InfoService.oif"/>
-  <property category="runtime" name="ConfigurationCount" value="6"/>
+  <property category="runtime" name="ConfigurationCount" value="5"/>
   <property category="runtime.0" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
   <property category="runtime.0" name="ConfigurationName" value="InfoService"/>
   <property category="runtime.0" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
@@ -128,11 +122,6 @@
   <property category="runtime.5" name="wsimonitor.logfile" value=""/>
   <property category="runtime.5" name="wsimonitor.targethost" value=""/>
   <property category="runtime.5" name="wsimonitor.targetport" value=""/>
-  <property category="runtime.6" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
-  <property category="runtime.6" name="ConfigurationName" value="InfoService update"/>
-  <property category="runtime.6" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
-  <property category="runtime.6" name="application.class" value="infoservice.InfoService"/>
-  <property category="runtime.6" name="application.parameters" value="documentation/SampleConfiguration/InfoService_update.properties"/>
   <property category="serverservices" name="disabled.services" value=""/>
   <property category="sys" name="AuthorLabel" value="@author"/>
   <property category="sys" name="BackupPath" value="bak"/>
@@ -147,10 +136,10 @@
   <property category="sys" name="DocPath" value="doc/javadoc;doc"/>
   <property category="sys" name="ExcludeClassEnabled" value="0"/>
   <property category="sys" name="IncludeTestPath" value="1"/>
-  <property category="sys" name="JDK" value="java version 1.6.0-dp-b88-34"/>
+  <property category="sys" name="JDK" value="java version 1.5.0_02-56"/>
   <property category="sys" name="JvmVersion" value="1.4"/>
   <property category="sys" name="LastTag" value="42"/>
-  <property category="sys" name="Libraries" value="Log4j;XML-1.1;BouncyCastleLightForJAP;junitx;JUnit;http;JavaMail;Jama;Log4j"/>
+  <property category="sys" name="Libraries" value="Log4j;XML-1.1;BouncyCastleLightForJAP;junitx;JUnit;http;JavaMail;Jama"/>
   <property category="sys" name="MakeStable" value="0"/>
   <property category="sys" name="OutPath" value="classes_infoservice"/>
   <property category="sys" name="SourcePath" value="src;test"/>
