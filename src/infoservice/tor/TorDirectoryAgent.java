@@ -314,8 +314,8 @@ public class TorDirectoryAgent implements Runnable
 			}
 			catch (Throwable t)
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.NET,"TorDirectoryAgent: run: Exception!");
-				LogHolder.log(LogLevel.DEBUG, LogType.NET, t);
+				LogHolder.log(LogLevel.ERR, LogType.NET,"TorDirectoryAgent: run: Exception!");
+				LogHolder.log(LogLevel.ERR, LogType.NET, t);
 			}
 			try
 			{
