@@ -79,8 +79,8 @@ public class DummyORListFetcher implements ORListFetcher {
 
   public byte[] getAllDescriptors()
   {
-	  return null;
-  }
+	  return m_torNodesListStructure;
+ }
 
   public byte[] getStatus(String fingerprint)
   {

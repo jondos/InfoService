@@ -464,6 +464,10 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			{
 				return m_Tor.createChannel(AnonChannel.SOCKS);
 			}
+			else
+			{
+				return m_Anon.createChannel(AnonChannel.SOCKS);
+			}
 		}
 		else if (type == AnonChannel.HTTP)
 		{
