@@ -364,7 +364,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 			|| functionNumber == GET_INFOSERVICE_SERIALS || functionNumber == GET_MIXCASCADE_SERIALS ||
 			functionNumber == GET_CASCADEINFO || functionNumber == GET_LATEST_JAVA_SERIALS ||
 			functionNumber == GET_LATEST_JAVA || functionNumber == GET_MESSAGES ||
-			functionNumber == GET_MESSAGE_SERIALS)
+			functionNumber == GET_MESSAGE_SERIALS || functionNumber == GET_PAYMENT_INSTANCES)
 		{
 			result = new Hashtable();
 			//if (functionNumber == GET_CASCADEINFO)
@@ -491,7 +491,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 				}
 				else if (functionNumber == GET_PAYMENT_INSTANCES)
 				{
-					result = currentInfoService.getPaymentInstances();
+					tempHashtable = currentInfoService.getPaymentInstances();
 				}
 				else if (functionNumber == GET_PAYMENT_INSTANCE)
 				{
