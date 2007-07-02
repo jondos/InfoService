@@ -43,7 +43,6 @@ import logging.LogType;
 import anon.crypto.IVerifyable;
 import java.util.Date;
 import anon.pay.xml.XMLPriceCertificate;
-import java.util.Vector;
 import anon.pay.AIControlChannel;
 
 /**
@@ -73,6 +72,8 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
      * Indicates if this mix is available for dynamic cascades
      */
     private boolean m_dynamic = false;
+
+	private boolean m_bSocks = false;
 
   /**
    * This is the ID of the mix.
@@ -395,6 +396,11 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
    */
   public String getId() {
     return m_mixId;
+  }
+
+  public boolean isSocksSupported()
+  {
+	  return m_bSocks;
   }
 
   /**
