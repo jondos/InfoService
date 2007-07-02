@@ -53,7 +53,6 @@ import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
 
 import anon.tor.ordescription.InfoServiceORListFetcher;
-import anon.tor.ordescription.ORDescription;
 import anon.tor.ordescription.ORList;
 import gui.GUIUtils;
 import gui.JAPHelp;
@@ -61,6 +60,7 @@ import gui.JAPMessages;
 import gui.dialog.JAPDialog;
 import logging.LogType;
 import java.util.Dictionary;
+import anon.tor.ordescription.ORDescriptor;
 
 final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 {
@@ -410,7 +410,7 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 				m.setNumRows(ors.size());
 				for (int i = 0; i < ors.size(); i++)
 				{
-					ORDescription ord = (ORDescription) ors.elementAt(i);
+					ORDescriptor ord = (ORDescriptor) ors.elementAt(i);
 					m_tableRouters.setValueAt(ord.getName(), i, 0);
 					m_tableRouters.setValueAt(ord.getAddress(), i, 1);
 					m_tableRouters.setValueAt(new Integer(ord.getPort()), i, 2);
