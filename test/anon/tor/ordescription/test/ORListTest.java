@@ -4,7 +4,6 @@ import junitx.framework.PrivateTestCase;
 
 import anon.tor.ordescription.ORList;
 import anon.tor.ordescription.PlainORListFetcher;
-import anon.tor.ordescription.ORDescription;
 import anon.tor.ordescription.ORDescriptor;
 
 /**
