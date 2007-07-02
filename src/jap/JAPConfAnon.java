@@ -2845,7 +2845,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			MixCascade cascade;
 
-			// do this to get round the need to synchronize this method
+			// remove this to get round the need to synchronize this method
 			/*
 				if (rowIndex < 0 || rowIndex >= m_vecCascades.size())
 				{

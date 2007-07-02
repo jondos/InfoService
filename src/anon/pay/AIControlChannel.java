@@ -68,7 +68,7 @@ import java.sql.Timestamp;
  */
 public class AIControlChannel extends XmlControlChannel
 {
-	public static final long MAX_PREPAID_INTERVAL = 5000000; // 5MB
+	public static final long MAX_PREPAID_INTERVAL = 3000000; // 3MB
 	public static final long MIN_PREPAID_INTERVAL = 5000; // 500 kb
 
   //codes for AI events that can be fired
@@ -287,7 +287,8 @@ public class AIControlChannel extends XmlControlChannel
 	  {
 		  long diff = newPrepaidBytes - m_connectedCascade.getPrepaidInterval();
 		  LogHolder.log(LogLevel.WARNING, LogType.PAY,
-						"Illegal number of prepaid bytes for signing. Difference: " + diff);
+						"Illegal number of prepaid bytes for signing. Difference/Spent/CC/PrevCC: " +
+						diff + "/" + newBytes + "/" + cc.getTransferredBytes() + "/" + oldSpent);
 
 		  if (cc.getTransferredBytes() - diff > oldSpent)
 		  {
