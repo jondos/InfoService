@@ -242,6 +242,10 @@
     <!-- Delte unwante certifcates from source... -->
     <delete file="${certificates}/acceptedPIs/bi.cer" />
     <delete file="${certificates}/acceptedMixCAs/Test_CA.cer" />
+    <!-- Delete unwanted source files (aka tests etc.) -->
+    <delete dir="${src}/anon/tor/test"/>
+    <delete dir="${src}/anon/crypto/tinytls/test"/>
+    <delete dir="${src}/misc"/>
     
   </target>
 </project>
