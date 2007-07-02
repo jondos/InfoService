@@ -2841,13 +2841,30 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			}
 		}
 
-		public synchronized Object getValueAt(int rowIndex, int columnIndex)
+		public Object getValueAt(int rowIndex, int columnIndex)
 		{
-			if (rowIndex < 0 || rowIndex >= m_vecCascades.size())
+			MixCascade cascade;
+
+			// do this to get round the need to synchronize this method
+			/*
+				if (rowIndex < 0 || rowIndex >= m_vecCascades.size())
+				{
+			 return null;
+				}
+			 */
+			try
+			{
+				cascade = (MixCascade) m_vecCascades.elementAt(rowIndex);
+			}
+			catch (ArrayIndexOutOfBoundsException a_e)
 			{
 				return null;
 			}
-			MixCascade cascade = (MixCascade)m_vecCascades.elementAt(rowIndex);
+			if (cascade == null)
+			{
+				return null;
+			}
+
 			if (columnIndex == 0)
 			{
 				if (Database.getInstance(BlacklistedCascadeIDEntry.class).getEntryById(

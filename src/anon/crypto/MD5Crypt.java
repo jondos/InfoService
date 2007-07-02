@@ -17,6 +17,7 @@
 package anon.crypto;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
+import anon.util.Base64;
 
 /**
  * Class containing static methods for encrypting passwords
@@ -42,6 +43,27 @@ public class MD5Crypt implements ICrypt {
 
 		return (output.toString());
     }
+
+	/**
+	 * Takes an arbitrary String as input, and returns its MD5 hash value
+	 * Note: NOT cryptographically secure, do not use this method to store passwords etc!!!
+	 *
+	 * @param inputString String: any String
+	 * @return String: the Base64-encoded md5 hash, or empty string on error
+	 */
+	public static String simpleHash(String inputString)
+	{
+		try
+		{
+			MessageDigest md5 = MessageDigest.getInstance("MD5");
+			md5.update(inputString.getBytes());
+			byte[] result = md5.digest();
+			return Base64.encodeBytes(result);
+		} catch (Exception e)
+		{
+			return new String("");
+		}
+	}
 
 	/**
 	 * Encrypts a password using FreeBSD-style md5-based encryption
