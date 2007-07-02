@@ -76,7 +76,7 @@ import anon.pay.xml.XMLGenericStrings;
 
 public class BIConnection implements ICaptchaSender
 {
-	public static final int TIMEOUT_DEFAULT = 120000;
+	public static final int TIMEOUT_DEFAULT = 60000;
 
 	public static final String XML_ATTR_CONNECTION_TIMEOUT = "timeout";
 
@@ -195,7 +195,7 @@ public class BIConnection implements ICaptchaSender
 				}
 				else
 				{
-					LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Using proxy at " + a_proxy.getHost() +
+					LogHolder.log(LogLevel.INFO, LogType.PAY, "Using proxy at " + a_proxy.getHost() +
 								  ":" + a_proxy.getPort());
 					tls = new TinyTLS(li.getHost(), li.getPort(), a_proxy);
 				}

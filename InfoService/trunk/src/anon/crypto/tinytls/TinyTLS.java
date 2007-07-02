@@ -182,7 +182,7 @@ public class TinyTLS extends Socket
 
 				if (contenttype < 20 || contenttype > 23)
 				{
-					throw new TLSException("SSL Content typeProtocoll not supportet" + contenttype);
+					throw new TLSException("SSL Content typeProtocoll not supported: " + contenttype);
 				}
 				m_aktTLSRecord.setType(contenttype);
 				m_ReadRecordState = STATE_VERSION;
@@ -201,7 +201,7 @@ public class TinyTLS extends Socket
 				}
 				if (version != PROTOCOLVERSION_SHORT)
 				{
-					throw new TLSException("Protocollversion not supportet" + version);
+					throw new TLSException("Protocol version not supported: " + version);
 				}
 				m_ReadRecordState = STATE_LENGTH;
 			}
