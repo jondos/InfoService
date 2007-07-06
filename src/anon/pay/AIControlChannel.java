@@ -267,32 +267,31 @@ public class AIControlChannel extends XmlControlChannel
 		throw new Exception("Received CC with wrong accountnumber");
 	  }
 
-	  long newBytes = currentAccount.updateCurrentBytes(m_packetCounter);
-	  LogHolder.log(LogLevel.DEBUG, LogType.PAY, "AI requests to sign " + newBytes + " transferred bytes");
-	  m_totalBytes = newBytes;
+	  long transferedBytes = currentAccount.updateCurrentBytes(m_packetCounter);
+	  LogHolder.log(LogLevel.DEBUG, LogType.PAY, "AI requests to sign " + transferedBytes + " transferred bytes");
+	  m_totalBytes = transferedBytes;
 
 	//System.out.println("PC Hash looked: " + cc.getConcatenatedPriceCertHashes());
 	  XMLEasyCC myLastCC = currentAccount.getAccountInfo().getCC(cc.getConcatenatedPriceCertHashes());
-	  long oldSpent = 0;
+	  long confirmedBytes = 0;
 	  if (myLastCC != null)
 	  {
-		  oldSpent = myLastCC.getTransferredBytes();
-		  LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Transferred bytes of last CC: " + oldSpent);
+		  confirmedBytes = myLastCC.getTransferredBytes();
+		  LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Transferred bytes of last CC: " + confirmedBytes);
 	  }
 
 	  // check if bytes asked for in CC match bytes transferred
-	  long newPrepaidBytes = (cc.getTransferredBytes() - oldSpent) + m_prepaidBytes - newBytes;
+	  long newPrepaidBytes = (cc.getTransferredBytes() - confirmedBytes) + m_prepaidBytes - transferedBytes;
 
 	  if (newPrepaidBytes > m_connectedCascade.getPrepaidInterval())
 	  {
 		  long diff = newPrepaidBytes - m_connectedCascade.getPrepaidInterval();
 		  LogHolder.log(LogLevel.WARNING, LogType.PAY,
 						"Illegal number of prepaid bytes for signing. Difference/Spent/CC/PrevCC: " +
-						diff + "/" + newBytes + "/" + cc.getTransferredBytes() + "/" + oldSpent);
+						diff + "/" + transferedBytes + "/" + cc.getTransferredBytes() + "/" + confirmedBytes);
 
-		  if (cc.getTransferredBytes() - diff > oldSpent)
+		  if (cc.getTransferredBytes() - diff > confirmedBytes)
 		  {
-			  newPrepaidBytes -= diff;
 			  cc.setTransferredBytes(cc.getTransferredBytes() - diff);
 		  }
 		  else
@@ -302,7 +301,6 @@ public class AIControlChannel extends XmlControlChannel
 	  }
 
 	  //System.out.println("CC transfered bytes: " + cc.getTransferredBytes() + " Old transfered: " + oldSpent + " Prepaid: " + m_prepaidBytes + " new bytes:" + newBytes);
-	  m_prepaidBytes = newPrepaidBytes;
 
 	  //get pricecerts and check against hashes in CC
 	  //get price certs from connected cascade
@@ -310,16 +308,18 @@ public class AIControlChannel extends XmlControlChannel
 	   * We don't even bother to check the hashes in the CC,
 	   * the JAP just fills in the ones he knows from the Cascade
 	   */
-	  Hashtable priceCerts = m_connectedCascade.getPriceCertificateHashes();
-	  cc.setPriceCerts(priceCerts);
-
-	  cc.setPIID(currentAccount.getAccountCertificate().getPIID());
-	  String cascadeId = m_connectedCascade.getId();
-	  cc.setCascadeID(cascadeId);
-	  cc.sign(currentAccount.getPrivateKey());
-	  currentAccount.addCostConfirmation(cc);
-	  //System.out.println("cc to be sent: "+XMLUtil.toString(XMLUtil.toXMLDocument(cc)));
-	this.sendXmlMessage(XMLUtil.toXMLDocument(cc));
+	  if (cc.getTransferredBytes() > confirmedBytes)
+	  {
+		  Hashtable priceCerts = m_connectedCascade.getPriceCertificateHashes();
+		  cc.setPriceCerts(priceCerts);
+		  cc.setPIID(currentAccount.getAccountCertificate().getPIID());
+		  String cascadeId = m_connectedCascade.getId();
+		  cc.setCascadeID(cascadeId);
+		  cc.sign(currentAccount.getPrivateKey());
+		  currentAccount.addCostConfirmation(cc);
+		  //System.out.println("cc to be sent: "+XMLUtil.toString(XMLUtil.toXMLDocument(cc)));
+		  this.sendXmlMessage(XMLUtil.toXMLDocument(cc));
+	  }
   }
 
   public boolean sendAccountCert()
@@ -496,8 +496,8 @@ public class AIControlChannel extends XmlControlChannel
 
 				//get Cascade's prepay interval
 				long currentlyTransferedBytes = currentAccount.updateCurrentBytes(m_packetCounter);
-				long bytesToPay = m_connectedCascade.getPrepaidInterval() + currentlyTransferedBytes
-					- m_prepaidBytes;
+				long bytesToPay =
+					m_connectedCascade.getPrepaidInterval() + currentlyTransferedBytes - m_prepaidBytes;
 
 				//System.out.println("Initial CC transfered bytes: " + bytesToPay + " Old transfered: " + currentlyTransferedBytes + " Prepaid: " + m_prepaidBytes);
 
@@ -506,12 +506,9 @@ public class AIControlChannel extends XmlControlChannel
 					//send CC for up to <last CC + prepay interval> bytes
 					a_cc.addTransferredBytes(bytesToPay);
 					a_cc.sign(currentAccount.getPrivateKey());
+					currentAccount.addCostConfirmation(a_cc);
+					//System.out.println(a_cc.getTransferredBytes() + ":" +  currentAccount.getAccountInfo().getCC(a_cc.getConcatenatedPriceCertHashes()).getTransferredBytes() + ":" + a_cc.getConcatenatedPriceCertHashes());
 					sendXmlMessage(XMLUtil.toXMLDocument(a_cc));
-					m_prepaidBytes = m_connectedCascade.getPrepaidInterval();
-				}
-				else
-				{
-					m_prepaidBytes -= currentlyTransferedBytes;
 				}
 
 				return;

@@ -2708,7 +2708,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		args[4] = a_entry.getVendor();
 		// Uninstall old Java!! http://sunsolve.sun.com/search/document.do?assetkey=1-26-102557-1
 		JAPDialog.showMessageDialog(JAPController.getInstance().getViewWindow(),
-									JAPMessages.getString(MSG_OLD_JAVA, args),
+									JAPMessages.getString(MSG_OLD_JAVA, args) +
+									(a_entry.getJREVersionName() == null ? "" : "<br>" + a_entry.getJREVersionName()),
 									JAPMessages.getString(MSG_TITLE_OLD_JAVA),
 									AbstractOS.getInstance().createURLLink(
 										a_entry.getDownloadURL(), null, "updateJava"));

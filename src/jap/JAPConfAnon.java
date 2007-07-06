@@ -140,6 +140,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private static final String MSG_WHAT_IS_THIS = JAPConfAnon.class.getName() + "_whatIsThis";
 	private static final String MSG_FILTER = JAPConfAnon.class.getName() + "_filter";
 	private static final String MSG_ANON_LEVEL = JAPConfAnon.class.getName() + "_anonLevel";
+	private static final String MSG_SUPPORTS_SOCKS = JAPConfAnon.class.getName() + "_supportsSocks";
 
 
 	private static final String DEFAULT_MIX_NAME = "AN.ON Mix";
@@ -169,6 +170,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private JLabel m_lblPorts;
 	private JAPMultilineLabel m_reachableLabel;
 	private JLabel m_portsLabel;
+	private JLabel m_lblSocks;
 
 	private GridBagLayout m_rootPanelLayout;
 	private GridBagConstraints m_rootPanelConstraints;
@@ -421,7 +423,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_listMixCascade.setFixedCellWidth(30);
 		c.gridx = 0;
 		c.gridy = 1;
-		c.gridheight = 4;
+		c.gridheight = 6;
 		c.gridwidth = 1;
 		c.weightx = 1.0;
 		c.weighty = 1.0;
@@ -482,7 +484,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 
 		c.gridx = 0;
-		c.gridy = 5;
+		c.gridy = 7;
 		c.gridheight = 1;
 		c.gridwidth = 4;
 		c.weightx = 1.0;
@@ -589,11 +591,21 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		});
 		m_cascadesPanel.add(m_payLabel, c);
 
+		c.insets = new Insets(5, 20, 0, 5);
+		c.gridy = 5;
+		c.gridx = 2;
+		c.gridwidth = 2;
+		m_lblSocks = new JLabel(MSG_SUPPORTS_SOCKS);
+		m_lblSocks.setIcon(GUIUtils.loadImageIcon("socks_icon.gif", true));
+		m_cascadesPanel.add(m_lblSocks, c);
+
+
+
 		c.insets = new Insets(5, 5, 0, 5);
 		c.gridwidth = 1;
 		c.gridx = 3;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridy = 5;
+		c.gridy = 6;
 		m_cascadesPanel.add(new JLabel("                                               "), c);
 
 		m_rootPanelConstraints.gridx = 0;
@@ -1439,6 +1451,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					m_cascadesPanel.remove(m_lblPorts);
 					m_cascadesPanel.add(m_lblPorts, m_constrPorts);
 					setPayLabel(cascade);
+					m_lblSocks.setVisible(cascade.isSocks5Supported());
 				}
 				drawServerInfoPanel();
 
@@ -2736,6 +2749,12 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 						icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_INTERNET_NOT_TRUSTED, true);
 					}
 				}
+
+				if (cascade.isSocks5Supported())
+				{
+					icon = GUIUtils.combine(icon, GUIUtils.loadImageIcon("socks_icon.gif", true));
+				}
+
 				setIcon(icon);
 				if (cascade.equals(JAPController.getInstance().getCurrentMixCascade()))
 				{
@@ -2913,6 +2932,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 								cascade.getMixIDsAsString());
 			}
 			setPayLabel(cascade);
+			m_lblSocks.setVisible(cascade.isSocks5Supported());
 			fireTableCellUpdated(rowIndex, 1);
 		}
 	}

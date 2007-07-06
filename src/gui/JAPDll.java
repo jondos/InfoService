@@ -51,6 +51,7 @@ import jap.SystrayPopupMenu;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import javax.swing.JDialog;
 
 
 final public class JAPDll {
@@ -77,7 +78,7 @@ final public class JAPDll {
 
 	private static final Object SYNC_POPUP = new Object();
 	private static SystrayPopupMenu ms_popupMenu;
-	private static JWindow ms_popupWindow;
+	private static Window ms_popupWindow;
 
 	private static boolean m_sbHasOnTraffic = true;
 
@@ -648,9 +649,13 @@ final public class JAPDll {
 		{
 			if (ms_popupWindow == null)
 			{
-				ms_popupWindow = new JWindow(new Frame(STR_HIDDEN_WINDOW));
+				//ms_popupWindow = new JWindow(new Frame(STR_HIDDEN_WINDOW));
+				// needed for JDK > 1.6.0_02 ... (J)Window is no more compatible with PopupMenus!
+				ms_popupWindow = new JDialog(new Frame(STR_HIDDEN_WINDOW), false);
+
 				ms_popupWindow.setName(STR_HIDDEN_WINDOW);
 				ms_popupWindow.pack();
+				ms_popupWindow.setLocation(20000, 20000); // needed for JDK > 1.6.0_02 to hide dialog
 			}
 
 			Point mousePoint = new Point( (int) a_x, (int) a_y);
@@ -677,8 +682,7 @@ final public class JAPDll {
 					}).start();
 				}
 			});
-			ms_popupWindow.setLocation(mousePoint);
-
+			//ms_popupWindow.setLocation(mousePoint);
 
 			GUIUtils.setAlwaysOnTop(ms_popupWindow, true);
 			ms_popupWindow.setVisible(true);

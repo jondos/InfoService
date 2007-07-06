@@ -116,7 +116,7 @@ public class PayAccount implements IXMLEncodable
 
 	private Document m_encryptedPrivateKey;
 
-	/** the number of bytes which have been used bot not confirmed yet */
+	/** the number of bytes which have been used but not confirmed yet */
 	private long m_currentBytes;
 
 	private Vector m_accountListeners = new Vector();

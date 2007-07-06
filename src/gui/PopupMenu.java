@@ -55,6 +55,7 @@ import java.awt.event.ComponentEvent;
 import javax.swing.JMenuItem;
 import javax.swing.JMenu;
 import anon.infoservice.JavaVersionDBEntry;
+import java.awt.event.MouseMotionAdapter;
 
 /**
  *
@@ -135,6 +136,10 @@ public class PopupMenu
 				public void popupMenuCanceled(PopupMenuEvent a_event)
 				{
 				}
+			});
+			((JPopupMenu)m_popup).addMouseMotionListener(new MouseMotionAdapter()
+			{
+
 			});
 		}
 
@@ -316,6 +321,11 @@ public class PopupMenu
 
 	public final synchronized void show(Component a_parent, Point a_pointOnScreen)
 	{
+		show(a_parent, null, a_pointOnScreen);
+}
+
+	public final synchronized void show(Component a_parent, Window a_hiddenParent, Point a_pointOnScreen)
+	{
 		Point location = calculateLocationOnScreen(a_parent, a_pointOnScreen);
 		Window parentWindow = GUIUtils.getParentWindow(a_parent);
 
@@ -326,17 +336,29 @@ public class PopupMenu
 		pack();
 		m_parent = null;
 		m_bParentOnTop = false;
-		if (GUIUtils.isAlwaysOnTop(parentWindow))
+
+		if (GUIUtils.isAlwaysOnTop(a_hiddenParent))
 		{
 			m_bParentOnTop = true;
+			m_parent = a_hiddenParent;
 		}
-			//GUIUtils.setAlwaysOnTop(parentWindow, false);
+		else if (GUIUtils.isAlwaysOnTop(parentWindow))
+		{
+			m_bParentOnTop = true;
 			m_parent = parentWindow;
-			/** @todo Find a better way to distinguish JDK version compatibility!  */
-			if (!m_bCompatibilityMode && JavaVersionDBEntry.CURRENT_JAVA_VERSION.compareTo("1.6") < 0)
-			{
-				( (JPopupMenu) m_popup).setInvoker(m_parent);
-			}
+		}
+
+		//GUIUtils.setAlwaysOnTop(parentWindow, false);
+
+
+		/** @todo Find a better way to distinguish JDK version compatibility!  */
+		if (!m_bCompatibilityMode &&
+			(JavaVersionDBEntry.CURRENT_JAVA_VENDOR.toLowerCase().indexOf("sun") >= 0 &&
+			 (JavaVersionDBEntry.CURRENT_JAVA_VERSION.compareTo("1.6") < 0 ||
+			(JavaVersionDBEntry.CURRENT_JAVA_VERSION.compareTo("1.6.0_02") >= 0))))
+		{
+			( (JPopupMenu) m_popup).setInvoker(parentWindow);
+		}
 
 
 		if (m_bCompatibilityMode)
@@ -352,7 +374,7 @@ public class PopupMenu
 		}
 
 		setVisible(true);
-		if (m_parent != null && m_bParentOnTop)
+		if (parentWindow != null && m_bParentOnTop)
 		{
 			GUIUtils.setAlwaysOnTop(m_popup, true);
 		}
@@ -426,11 +448,14 @@ public class PopupMenu
 		{
 			GUIUtils.setAlwaysOnTop(m_popup, false);
 			Window parent = m_parent;
-			if (parent != null && m_bParentOnTop)
+			if (parent != null)
 			{
-				GUIUtils.setAlwaysOnTop(parent, false);
-				parent.setVisible(true);
-				GUIUtils.setAlwaysOnTop(parent, true);
+				if (m_bParentOnTop)
+				{
+					GUIUtils.setAlwaysOnTop(parent, false);
+					parent.setVisible(true);
+					GUIUtils.setAlwaysOnTop(parent, true);
+				}
 			}
 			m_parent = null;
 			m_bParentOnTop = false;

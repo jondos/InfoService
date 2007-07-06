@@ -464,9 +464,14 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			{
 				return m_Tor.createChannel(AnonChannel.SOCKS);
 			}
-			else
+			else if (getMixCascade().isSocks5Supported())
 			{
 				return m_Anon.createChannel(AnonChannel.SOCKS);
+			}
+			else
+			{
+				LogHolder.log(LogLevel.ERR, LogType.NET,
+							  "Received SOCKS request, but no SOCKS server is available.");
 			}
 		}
 		else if (type == AnonChannel.HTTP)

@@ -287,6 +287,9 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 
 	  m_name = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_mixNode, "Name"), DEFAULT_NAME);
 
+	  m_bSocks = XMLUtil.parseAttribute(
+		   XMLUtil.getFirstChildByName(a_mixNode, "Proxies"), "socks5Support", false);
+
 	  Node operatorNode = XMLUtil.getFirstChildByName(a_mixNode, "Operator");
 	  Node locationNode = XMLUtil.getFirstChildByName(a_mixNode, "Location");
 	  Node lastUpdateNode = XMLUtil.getFirstChildByName(a_mixNode, "LastUpdate");
@@ -398,7 +401,7 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
     return m_mixId;
   }
 
-  public boolean isSocksSupported()
+  public boolean isSocks5Supported()
   {
 	  return m_bSocks;
   }

@@ -42,6 +42,7 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.MediaTracker;
 import java.awt.Point;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.Window;
@@ -89,7 +90,10 @@ import java.awt.EventQueue;
 import java.awt.MenuComponent;
 import java.applet.Applet;
 import java.awt.Container;
+import java.awt.Color;
 import java.awt.image.ColorModel;
+import java.lang.reflect.Field;
+import java.lang.reflect.Constructor;
 
 /**
  * This class contains helper methods for the GUI.
@@ -453,6 +457,54 @@ public final class GUIUtils
 		}
 	}
 
+	/**
+	 * Combines two images vertically to one image.
+	 * @param a_one an ImageIcon
+	 * @param a_two another ImageIcon
+	 * @return ImageIcon the combination of both ImageIcons or a_one
+	 * if this method is not supported by the current JRE
+	 */
+	public static ImageIcon combine(ImageIcon a_one, ImageIcon a_two)
+	{
+		int totalWidth = a_one.getIconWidth() + a_two.getIconWidth();
+		int totalHeight = Math.max(a_one.getIconHeight(), a_two.getIconHeight());
+
+		try
+		{
+			Class classBufferedImage = Class.forName("java.awt.image.BufferedImage");
+			Field fieldTYPE_INT_ARGB = classBufferedImage.getField("TYPE_INT_ARGB");
+			Image objectBufferedImage;
+
+			Constructor constructorBufferedImage =
+				classBufferedImage.getConstructor(new Class[]{int.class, int.class, int.class});
+			objectBufferedImage = (Image)
+				constructorBufferedImage.newInstance(new Object[]{
+				new Integer(totalWidth), new Integer(totalHeight),
+				new Integer(fieldTYPE_INT_ARGB.getInt(classBufferedImage))});
+
+			Graphics objectGraphics2D = (Graphics)
+				classBufferedImage.getMethod("createGraphics", null).invoke(objectBufferedImage, null);
+			objectGraphics2D.drawImage(a_one.getImage(), 0, 0, null);
+			objectGraphics2D.drawImage(a_two.getImage(), a_one.getIconWidth(), 0, null);
+			objectGraphics2D.dispose();
+			return new ImageIcon(objectBufferedImage);
+
+
+			/*
+			BufferedImage totalImage =
+				new BufferedImage(totalWidth, totalHeight, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+			Graphics2D g = totalImage.createGraphics();
+			g.drawImage(a_one.getImage(), 0, 0, null);
+			g.drawImage(a_two.getImage(), a_one.getIconWidth(), 0, null);
+			g.dispose();
+			return new ImageIcon(totalImage);*/
+		}
+		catch (Exception a_e)
+		{
+			return a_one;
+		}
+	}
+
 	public static void setLocationRelativeTo(Component a_component, Window a_movedWindow)
 	{
 		if (a_component == null && a_movedWindow == null)
@@ -611,6 +663,11 @@ public final class GUIUtils
 	 */
 	public static boolean isAlwaysOnTop(Window a_Window)
 	{
+		if (a_Window == null)
+		{
+			return false;
+		}
+
 		try
 		{
 			Method m = Window.class.getMethod("isAlwaysOnTop", new Class[0]);
@@ -635,6 +692,21 @@ public final class GUIUtils
 	public static boolean setAlwaysOnTop(Component a_component, boolean a_bOnTop)
 	{
 		return setAlwaysOnTop(getParentWindow(a_component), a_bOnTop);
+	}
+
+	public static boolean hasJavaOnTop()
+	{
+		try
+		{
+			Class[] c = new Class[1];
+			c[0] = boolean.class;
+			Window.class.getMethod("setAlwaysOnTop", c);
+		}
+		catch (NoSuchMethodException a_e)
+		{
+			return false;
+		}
+		return true;
 	}
 
 	/**

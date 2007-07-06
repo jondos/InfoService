@@ -36,6 +36,7 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Frame;
+import java.awt.Window;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -49,6 +50,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JWindow;
+import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
 
@@ -56,11 +58,14 @@ import anon.infoservice.MixCascade;
 import anon.infoservice.StatusInfo;
 import anon.proxy.IProxyListener;
 import gui.GUIUtils;
+import gui.dialog.JAPDialog;
 import gui.JAPMessages;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import gui.PopupMenu;
+import javax.swing.JDialog;
+import anon.infoservice.JavaVersionDBEntry;
 
 final public class JAPViewIconified extends JWindow implements ActionListener
 {
@@ -77,12 +82,13 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 	private static final int MAX_CASCADE_NAME_LENGTH = 30;
 
 	private static final String STR_HIDDEN_WINDOW = Double.toString(Math.random());
-	private static Frame m_frameParent;
+	private static JFrame m_frameParent;
 
 	private JAPController m_Controller;
 	private AbstractJAPMainView m_mainView;
 	private JLabel m_labelBytes, m_labelUsers, m_labelTraffic, m_labelAnon;
 	private JLabel m_lblJAPIcon;
+	private JAPDialog ms_popupWindow;
 	private JLabel m_lblBytes;
 	private Font m_fontDlg;
 	private NumberFormat m_NumberFormat;
@@ -91,11 +97,11 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 
 	private GUIUtils.WindowDocker m_docker;
 
-	private static Frame getParentFrame()
+	private static JFrame getParentFrame()
 	{
 		if (m_frameParent == null)
 		{
-			m_frameParent = new Frame(STR_HIDDEN_WINDOW);
+			m_frameParent = new JFrame(STR_HIDDEN_WINDOW);
 		}
 		return m_frameParent;
 	}
@@ -107,10 +113,13 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 	public JAPViewIconified(AbstractJAPMainView a_mainView)
 	{
 		super(getParentFrame());
-		 m_fontDlg = new Font("Sans", Font.BOLD, 11);
+		m_fontDlg = new Font("Sans", Font.BOLD, 11);
 		setName(STR_HIDDEN_WINDOW);
 		m_mainView = a_mainView;
-		m_frameParent.setIconImage(m_mainView.getIconImage());
+		if (m_frameParent != null)
+		{
+			m_frameParent.setIconImage(m_mainView.getIconImage());
+		}
 		LogHolder.log(LogLevel.INFO, LogType.MISC, "Initializing...");
 		m_Controller = JAPController.getInstance();
 		m_NumberFormat = NumberFormat.getInstance();
@@ -280,17 +289,44 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 						}
 					});
 					/*
-					popup.registerExitHandler(new PopupMenu.ExitHandler()
-					{
-						public void exited()
-						{
-							popup.dispose();
-						}
-					});*/
+						  popup.registerExitHandler(new PopupMenu.ExitHandler()
+						  {
+					 public void exited()
+					 {
+					  popup.dispose();
+					 }
+						  });*/
 
-					popup.show(JAPViewIconified.this,
-							   new Point(a_event.getX() + JAPViewIconified.this.getLocation().x,
-										 a_event.getY()  + JAPViewIconified.this.getLocation().y));
+					 /** @todo Find a better way to distinguish JDK version compatibility!  */
+					if (JavaVersionDBEntry.CURRENT_JAVA_VENDOR.toLowerCase().indexOf("sun") >= 0 &&
+						 (JavaVersionDBEntry.CURRENT_JAVA_VERSION.compareTo("1.6.0_02") >= 0))
+					{
+						if (ms_popupWindow == null)
+						{
+							//ms_popupWindow = new JWindow(new Frame(STR_HIDDEN_WINDOW));
+							// needed for JDK > 1.6.0_02 ... (J)Window is no more compatible with PopupMenus!
+							ms_popupWindow = new JAPDialog(JAPViewIconified.this, STR_HIDDEN_WINDOW, false);
+							ms_popupWindow.setName(STR_HIDDEN_WINDOW);
+							ms_popupWindow.pack();
+							ms_popupWindow.setLocation(20000, 20000); // needed for JDK > 1.6.0_02 to hide dialog
+						}
+
+						ms_popupWindow.setVisible(true);
+
+						popup.show(ms_popupWindow.getContentPane(), JAPViewIconified.this,
+								   new Point(a_event.getX() + JAPViewIconified.this.getLocation().x,
+											 a_event.getY() + JAPViewIconified.this.getLocation().y));
+
+					}
+					else
+					{
+						popup.show(JAPViewIconified.this,
+								   new Point(a_event.getX() + JAPViewIconified.this.getLocation().x,
+											 a_event.getY() + JAPViewIconified.this.getLocation().y));
+					}
+
+
+
 				}
 				else
 				{
@@ -374,10 +410,11 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		{
 			try
 			{
+				/*
 				if (isVisible())
 				{
 					GUIUtils.setAlwaysOnTop(this, JAPModel.getInstance().isMiniViewOnTop());
-				}
+				}*/
 
 
 				if (m_Controller.isAnonConnected())  //m_Controller.getAnonMode())
