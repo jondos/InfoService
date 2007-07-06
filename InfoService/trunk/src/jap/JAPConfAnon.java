@@ -140,7 +140,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private static final String MSG_WHAT_IS_THIS = JAPConfAnon.class.getName() + "_whatIsThis";
 	private static final String MSG_FILTER = JAPConfAnon.class.getName() + "_filter";
 	private static final String MSG_ANON_LEVEL = JAPConfAnon.class.getName() + "_anonLevel";
-	private static final String MSG_SUPPORTS_SOCKS = JAPConfAnon.class.getName() + "_supportsSocks";
+	private static final String MSG_SUPPORTS_SOCKS = JAPConfAnon.class.getName() + "_socksSupported";
 
 
 	private static final String DEFAULT_MIX_NAME = "AN.ON Mix";
