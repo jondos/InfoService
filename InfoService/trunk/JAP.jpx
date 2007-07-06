@@ -147,8 +147,7 @@
   <property category="javadoc" name="custom.tags.1" value="todo;a;To Do:"/>
   <property category="optimize.0" name="OptimizableType" value="intuitive.ide.borland.jb10.ProfilerBootstrap"/>
   <property category="optimize.0" name="oicc.FilterFile" value="G:\projects\Jap\JAP.oif"/>
-  <property category="optimize.0" name="oipr.EnableUnitTest" value="0"/>
-  <property category="optimize.0" name="oipr.FilterFile" value="G:\projects\Jap\JAP.oif"/>
+  <property category="optimize.0" name="oipr.FilterFile" value="E:\Eigene Dateien\rolf\Coding\Jap\JAP.oif"/>
   <property category="optimize.0" name="oira.FilterFile" value="G:\projects\Jap\JAP.oif"/>
   <property category="optimize.1" name="OptimizableType" value="intuitive.ide.borland.jb10.ProfilerBootstrap"/>
   <property category="optimize.1" name="oicc.FilterFile" value="G:\projects\Jap\JAP.oif"/>
@@ -169,6 +168,7 @@
   <property category="runtime.0" name="ConfigurationName" value="JAP"/>
   <property category="runtime.0" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
   <property category="runtime.0" name="application.class" value="JAP"/>
+  <property category="runtime.0" name="application.parameters" value="-s"/>
   <property category="runtime.0" name="custom.init_required" value="0"/>
   <property category="runtime.0" name="custom.required.1" value="http"/>
   <property category="runtime.0" name="custom.required.2" value="mac"/>
@@ -357,7 +357,7 @@
   <property category="sys" name="ExcludeClassEnabled" value="0"/>
   <property category="sys" name="IncludeTestPath" value="1"/>
   <property category="sys" name="InstanceVisibility" value="0"/>
-  <property category="sys" name="JDK" value="java version 1.6.0_01-b06"/>
+  <property category="sys" name="JDK" value="java version 1.5.0_10-b03"/>
   <property category="sys" name="LastTag" value="192"/>
   <property category="sys" name="Libraries" value="http;mac;Apache XML-RPC;BouncyCastleLightForJAP;JUnit;junitx;Swing;ApacheBzip2;Log4j;ApacheFTPClient;XML-1.0"/>
   <property category="sys" name="MakeStable" value="0"/>
@@ -953,6 +953,8 @@
     <property category="archiving" name="contentRules.489" value="F:certificates/acceptedMixCAs/Test_CA.cer;certificates/acceptedMixCAs/Test_CA.cer"/>
     <property category="archiving" name="contentRules.49" value="F:help/xhelpfrms.css;help/xhelpfrms.css"/>
     <property category="archiving" name="contentRules.490" value="F:certificates/acceptedInfoServiceCAs/InfoService_CA.cer;certificates/acceptedInfoServiceCAs/InfoService_CA.cer"/>
+    <property category="archiving" name="contentRules.491" value="F:images/socks_icon_bigger.png;images/socks_icon_bigger.png"/>
+    <property category="archiving" name="contentRules.492" value="F:images/socks_icon.gif;images/socks_icon.gif"/>
     <property category="archiving" name="contentRules.5" value="F:help/back.gif;help/back.gif"/>
     <property category="archiving" name="contentRules.50" value="I:JAP.class"/>
     <property category="archiving" name="contentRules.51" value="I:JAPMacintosh.class"/>
@@ -1168,6 +1170,5 @@
   <file path="src/JAPMessages_en.properties"/>
   <file path="src/JAPMessages_fr.properties"/>
   <file path="src/JAPMessages_pt.properties"/>
-  <file path="magicdraw.magicdraw"/>
   <file path="MANIFEST.MF"/>
 </project>
