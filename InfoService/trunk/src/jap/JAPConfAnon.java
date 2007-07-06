@@ -595,7 +595,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		c.gridy = 5;
 		c.gridx = 2;
 		c.gridwidth = 2;
-		m_lblSocks = new JLabel(MSG_SUPPORTS_SOCKS);
+		m_lblSocks = new JLabel(JAPMessages.getString(MSG_SUPPORTS_SOCKS));
 		m_lblSocks.setIcon(GUIUtils.loadImageIcon("socks_icon.gif", true));
 		m_cascadesPanel.add(m_lblSocks, c);
 
