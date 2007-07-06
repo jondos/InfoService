@@ -117,7 +117,6 @@ public class CascadePopupMenu extends PopupMenu
 		{
 			MixCascade cascade;
 			JMenuItem menuItem;
-
 			ImageIcon icon;
 			Vector userDefined = new Vector();
 
@@ -157,8 +156,13 @@ public class CascadePopupMenu extends PopupMenu
 				{
 					icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_INTERNET);
 				}
-				menuItem = new JMenuItem(
-								GUIUtils.trim(cascade.toString(), MAX_CASCADE_NAME_LENGTH), icon);
+
+				if (cascade.isSocks5Supported())
+				{
+					icon = GUIUtils.combine(icon, GUIUtils.loadImageIcon("socks_icon.gif", true));
+				}
+
+				menuItem = new JMenuItem(GUIUtils.trim(cascade.toString(), MAX_CASCADE_NAME_LENGTH), icon);
 				if (isNewCascade(cascade))
 				{
 					menuItem.setBackground(m_newCascadeColor);

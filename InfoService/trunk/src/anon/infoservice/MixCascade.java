@@ -69,6 +69,8 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 
 	private boolean m_bImplicitTrust = false;
 
+	private boolean m_bSock5Support = false;
+
 	/**
 	 * This is the ID of the mixcascade.
 	 */
@@ -361,6 +363,10 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 			try
 			{
 				m_mixInfos[i] = new MixInfo((Element) mixNodes.item(i), Long.MAX_VALUE, true);
+				if (i + 1 == mixNodes.getLength())
+				{
+					m_bSock5Support = m_mixInfos[i].isSocks5Supported();
+				}
 				if (m_mixInfos[i].getPriceCertificate() != null)
 				{
 					if (i == 0)
@@ -422,7 +428,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		}
 
 		createMixIDString();
-		calculateAnonymityBonus();
+		calculateOperatorsAndCountries();
 
 		// JAP will not pay more than the predefined maximum!
 		if (isPayment())
@@ -542,7 +548,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		m_xmlStructure = generateXmlRepresentation();
 		m_compressedXmlStructure = ZLibTools.compress(XMLSignature.toCanonical(m_xmlStructure));
 		createMixIDString();
-		calculateAnonymityBonus();
+		calculateOperatorsAndCountries();
 	}
 
 	/**
@@ -808,6 +814,11 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		return m_userDefined;
 	}
 
+	public boolean isSocks5Supported()
+	{
+		return m_bSock5Support;
+	}
+
 	/**
 	 * May be set by this application to show this service as trusted. TrustModel.isTrusted will then
 	 * return true, but TrustModel.checkTrust will still check the correct trust.
@@ -835,7 +846,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		}
 		m_xmlStructure = generateXmlRepresentation();
 		m_compressedXmlStructure = ZLibTools.compress(XMLSignature.toCanonical(m_xmlStructure));
-		calculateAnonymityBonus();
+		calculateOperatorsAndCountries();
 	}
 
 	public StatusInfo fetchCurrentStatus()
@@ -1018,7 +1029,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		return m_nrCountries;
 	}
 
-	private void calculateAnonymityBonus()
+	private void calculateOperatorsAndCountries()
 	{
 		// check the certificates of the Mixes
 		Hashtable operatorCertificates = new Hashtable();

@@ -28,7 +28,6 @@
 package anon.infoservice;
 
 import java.net.URL;
-import java.util.Hashtable;
 import java.util.Enumeration;
 
 import org.w3c.dom.Document;
@@ -64,6 +63,7 @@ public class JavaVersionDBEntry  extends AbstractDistributableDatabaseEntry
 	private static final String XML_ATTR_VENDOR = "vendor";
 	private static final String XML_ATTR_OPERATING_SYSTEM = "os";
 	private static final String XML_ELEM_VERSION = "LatestVersion";
+	private static final String XML_ATTR_VERSION_NAME = "name";
 	private static final String XML_ELEM_DOWNLOAD_URL = "DownloadURL";
 	private static final String XML_ELEM_VENDOR_LONG = "VendorLongName";
 	private static final String XML_ELEM_LAST_UPDATE = "LastUpdate";
@@ -81,14 +81,15 @@ public class JavaVersionDBEntry  extends AbstractDistributableDatabaseEntry
 	private String m_vendor;
 	private URL m_downloadURL;
 	private String m_vendorLongName;
+	private String m_versionName;
 
 	/**
 	 * Stores the XML representation of this DBEntry.
 	 */
 	private Element m_xmlDescription;
 
-
-	public JavaVersionDBEntry(String a_vendorId, String a_latestVersion, URL a_downloadURL,
+/*
+	public JavaVersionDBEntry(String a_vendorId, String a_latestVersion, String a_latestVersionName, URL a_downloadURL,
 							  String a_vendorLongName) throws IllegalArgumentException
 	{
 		super(System.currentTimeMillis() + TIMEOUT);
@@ -111,6 +112,7 @@ public class JavaVersionDBEntry  extends AbstractDistributableDatabaseEntry
 		}
 
 		m_latestVersion = a_latestVersion;
+		m_versionName = a_latestVersionName;
 		m_vendor = a_vendorId;
 		m_downloadURL = a_downloadURL;
 		m_vendorLongName = a_vendorLongName;
@@ -137,7 +139,7 @@ public class JavaVersionDBEntry  extends AbstractDistributableDatabaseEntry
 		XMLUtil.setValue(elemTemp, m_lastUpdate);
 		m_xmlDescription.appendChild(elemTemp);
 	}
-
+*/
 	public JavaVersionDBEntry(Element a_xmlElement) throws XMLParseException
 	{
 		super(System.currentTimeMillis() + TIMEOUT);
@@ -164,6 +166,7 @@ public class JavaVersionDBEntry  extends AbstractDistributableDatabaseEntry
 				try
 				{
 					m_latestVersion = XMLUtil.parseValue(nodes.item(i), null);
+					m_versionName = XMLUtil.parseAttribute(nodes.item(i), XML_ATTR_VERSION_NAME, null);
 				}
 				catch (Exception a_e)
 				{
@@ -274,6 +277,15 @@ public class JavaVersionDBEntry  extends AbstractDistributableDatabaseEntry
 	public String getJREVersion()
 	{
 		return m_latestVersion;
+	}
+
+	/**
+	 * Returns the public human readable name for this JRE version.
+	 * @return the public human readable name for this JRE version
+	 */
+	public String getJREVersionName()
+	{
+		return m_versionName;
 	}
 
 	/**

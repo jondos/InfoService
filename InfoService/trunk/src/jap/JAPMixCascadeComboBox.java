@@ -54,6 +54,7 @@ import anon.infoservice.MixCascade;
 import anon.infoservice.NewCascadeIDEntry;
 import gui.GUIUtils;
 import gui.JAPMessages;
+import javax.swing.ImageIcon;
 
 public class JAPMixCascadeComboBox extends JComboBox
 {
@@ -180,12 +181,7 @@ public class JAPMixCascadeComboBox extends JComboBox
 		private JLabel m_componentNoServer;
 		private JLabel m_componentAvailableServer;
 		private JLabel m_componentUserServer;
-		private JLabel m_componentUserDefinedCascade;
 		private JLabel m_componentAvailableCascade;
-		private JLabel m_componentNotCertifiedCascade;
-		private JLabel m_componentPaymentCascade;
-		private JLabel m_componentNotTrustedManualCascade;
-		private JLabel m_componentNotTrustedPaymentCascade;
 
 		private JLabel m_lblCascadePopupMenu;
 		private JLabel m_lblMenuArrow;
@@ -208,40 +204,12 @@ public class JAPMixCascadeComboBox extends JComboBox
 			m_componentUserServer.setBorder(new EmptyBorder(1, 3, 1, 3));
 			m_componentUserServer.setHorizontalAlignment(SwingConstants.LEFT);
 			m_componentUserServer.setOpaque(true);
-			m_componentUserDefinedCascade = new JLabel(GUIUtils.loadImageIcon(JAPConstants.
-				IMAGE_CASCADE_MANUELL, true));
-			m_componentUserDefinedCascade.setOpaque(true);
-			m_componentUserDefinedCascade.setHorizontalAlignment(SwingConstants.LEFT);
-			m_componentUserDefinedCascade.setBorder(new EmptyBorder(1, 3, 1, 3));
-			m_componentAvailableCascade = new JLabel(GUIUtils.loadImageIcon(JAPConstants.
-				IMAGE_CASCADE_INTERNET, true));
+
+			m_componentAvailableCascade = new JLabel();
 			m_componentAvailableCascade.setHorizontalAlignment(SwingConstants.LEFT);
 			m_componentAvailableCascade.setOpaque(true);
 			m_componentAvailableCascade.setBorder(new EmptyBorder(1, 3, 1, 3));
 
-			m_componentNotCertifiedCascade = new JLabel(GUIUtils.loadImageIcon(
-				JAPConstants.IMAGE_CASCADE_INTERNET_NOT_TRUSTED, true));
-			m_componentNotCertifiedCascade.setHorizontalAlignment(SwingConstants.LEFT);
-			m_componentNotCertifiedCascade.setOpaque(true);
-			m_componentNotCertifiedCascade.setBorder(new EmptyBorder(1, 3, 1, 3));
-
-			m_componentNotTrustedManualCascade = new JLabel(GUIUtils.loadImageIcon(
-				JAPConstants.IMAGE_CASCADE_MANUAL_NOT_TRUSTED, true));
-			m_componentNotTrustedManualCascade.setHorizontalAlignment(SwingConstants.LEFT);
-			m_componentNotTrustedManualCascade.setOpaque(true);
-			m_componentNotTrustedManualCascade.setBorder(new EmptyBorder(1, 3, 1, 3));
-
-			m_componentNotTrustedPaymentCascade = new JLabel(GUIUtils.loadImageIcon(
-				JAPConstants.IMAGE_CASCADE_PAYMENT_NOT_TRUSTED, true));
-			m_componentNotTrustedPaymentCascade.setHorizontalAlignment(SwingConstants.LEFT);
-			m_componentNotTrustedPaymentCascade.setOpaque(true);
-			m_componentNotTrustedPaymentCascade.setBorder(new EmptyBorder(1, 3, 1, 3));
-
-			m_componentPaymentCascade = new JLabel(GUIUtils.loadImageIcon(JAPConstants.
-				IMAGE_CASCADE_PAYMENT, true));
-			m_componentPaymentCascade.setHorizontalAlignment(SwingConstants.LEFT);
-			m_componentPaymentCascade.setOpaque(true);
-			m_componentPaymentCascade.setBorder(new EmptyBorder(1, 3, 1, 3));
 
 			m_lblCascadePopupMenu = new JLabel();
 			m_lblCascadePopupMenu.setOpaque(true);
@@ -417,40 +385,47 @@ public class JAPMixCascadeComboBox extends JComboBox
 
 			MixCascade cascade = (MixCascade) value;
 			JLabel l;
+			ImageIcon icon;
+
 			if (cascade.isUserDefined())
 			{
 				if (TrustModel.getCurrentTrustModel().isTrusted(cascade))
 				{
-					l = m_componentUserDefinedCascade;
+					icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_MANUELL, true);
 				}
 				else
 				{
-					l = m_componentNotTrustedManualCascade;
+					icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_MANUAL_NOT_TRUSTED, true);
 				}
 			}
 			else if (cascade.isPayment())
 			{
 				if (TrustModel.getCurrentTrustModel().isTrusted(cascade))
 				{
-					l = m_componentPaymentCascade;
+					icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_PAYMENT, true);
 				}
 				else
 				{
-					l = m_componentNotTrustedPaymentCascade;
+					icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_PAYMENT_NOT_TRUSTED, true);
 				}
 			}
 			else
 			{
 				if (TrustModel.getCurrentTrustModel().isTrusted(cascade))
 				{
-					l = m_componentAvailableCascade;
+					icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_INTERNET, true);
 				}
 				else
 				{
-					l = m_componentNotCertifiedCascade;
+					icon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_CASCADE_INTERNET_NOT_TRUSTED, true);
 				}
 			}
-
+			if (cascade.isSocks5Supported())
+			{
+				icon = GUIUtils.combine(icon, GUIUtils.loadImageIcon("socks_icon.gif", true));
+			}
+			l = m_componentAvailableCascade;
+			l.setIcon(icon);
 			l.setText(GUIUtils.trim(cascade.getName()));
 			if (isSelected)
 			{
@@ -459,10 +434,10 @@ public class JAPMixCascadeComboBox extends JComboBox
 			}
 			else
 			{
-				if ( (Database.getInstance(NewCascadeIDEntry.class).getNumberOfEntries() * 2 <
-					  Database.getInstance(MixCascade.class).getNumberOfEntries()) &&
-					Database.getInstance(NewCascadeIDEntry.class).getEntryById(
-						cascade.getMixIDsAsString()) != null)
+				if ((Database.getInstance(NewCascadeIDEntry.class).getNumberOfEntries() * 2 <
+					 Database.getInstance(MixCascade.class).getNumberOfEntries()) &&
+					 Database.getInstance(NewCascadeIDEntry.class).getEntryById(
+									   cascade.getMixIDsAsString()) != null)
 				{
 					l.setBackground(m_newCascadeColor);
 				}
@@ -472,6 +447,7 @@ public class JAPMixCascadeComboBox extends JComboBox
 				}
 				l.setForeground(list.getForeground());
 			}
+
 			return l;
 		}
 	}
