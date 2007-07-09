@@ -593,7 +593,7 @@ public class TinyTLS extends Socket
 					}
 					default:
 					{
-						throw new TLSException("Unexpected Handshake type" + type);
+						throw new TLSException("Unexpected Handshake type: " + type);
 					}
 				}
 			}
