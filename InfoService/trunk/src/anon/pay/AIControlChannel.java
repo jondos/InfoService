@@ -318,8 +318,14 @@ public class AIControlChannel extends XmlControlChannel
 		  cc.sign(currentAccount.getPrivateKey());
 		  currentAccount.addCostConfirmation(cc);
 		  //System.out.println("cc to be sent: "+XMLUtil.toString(XMLUtil.toXMLDocument(cc)));
-		  this.sendXmlMessage(XMLUtil.toXMLDocument(cc));
 	  }
+	  else
+	  {
+		  // resend the last valid CC
+		  cc = myLastCC;
+	  }
+
+	  sendXmlMessage(XMLUtil.toXMLDocument(cc));
   }
 
   public boolean sendAccountCert()
@@ -508,8 +514,11 @@ public class AIControlChannel extends XmlControlChannel
 					a_cc.sign(currentAccount.getPrivateKey());
 					currentAccount.addCostConfirmation(a_cc);
 					//System.out.println(a_cc.getTransferredBytes() + ":" +  currentAccount.getAccountInfo().getCC(a_cc.getConcatenatedPriceCertHashes()).getTransferredBytes() + ":" + a_cc.getConcatenatedPriceCertHashes());
-					sendXmlMessage(XMLUtil.toXMLDocument(a_cc));
+
 				}
+
+				// always send the message to tell the Mix the CC was received
+				sendXmlMessage(XMLUtil.toXMLDocument(a_cc));
 
 				return;
 			}
