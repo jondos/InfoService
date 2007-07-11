@@ -1,9 +1,10 @@
 package anon.pay.xml;
 
-import java.io.ByteArrayInputStream;
+import java.sql.Timestamp;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
 
 import anon.util.XMLUtil;
 import anon.util.IXMLEncodable;
@@ -22,6 +23,8 @@ import logging.LogType;
  */
 public class XMLBalance implements IXMLEncodable
 {
+	private static final String DEFAULT_RATE_ENDDATE = "3000-01-01 00:00:00.00000000";
+
 	private long m_lAccountNumber;
 	private java.sql.Timestamp m_Timestamp;
 	private java.sql.Timestamp m_ValidTime;
@@ -35,21 +38,33 @@ public class XMLBalance implements IXMLEncodable
 
 	public XMLBalance(long accountNumber,
 					  long deposit, long spent,
-					  java.sql.Timestamp timestamp,
-					  java.sql.Timestamp validTime,
+					  Timestamp timestamp,
+					  Timestamp validTime,
 					  int balance,
 					  long volumeBytesleft,
-					  java.sql.Timestamp flatEnddate,
+					  Timestamp flatEnddate,
 					  IMyPrivateKey signKey)
 	{
 		m_lDeposit = deposit;
 		m_lSpent = spent;
 		m_Timestamp = timestamp;
+		if (m_Timestamp == null)
+		{
+			m_Timestamp = new Timestamp(System.currentTimeMillis());
+		}
 		m_ValidTime = validTime;
+		if (m_ValidTime == null)
+		{
+			m_ValidTime = Timestamp.valueOf(DEFAULT_RATE_ENDDATE);
+		}
 		m_lAccountNumber = accountNumber;
 		m_balance = balance;
 		m_volumeBytesleft = volumeBytesleft;
 		m_flatEnddate = flatEnddate;
+		if (m_flatEnddate == null)
+		{
+			m_flatEnddate = Timestamp.valueOf(DEFAULT_RATE_ENDDATE);
+		}
 		m_docTheBalance = XMLUtil.createDocument();
 		m_docTheBalance.appendChild(internal_toXmlElement(m_docTheBalance));
 		if (signKey != null) //might very well be null, when created by Database (which doesnt have access to the private key)
@@ -114,20 +129,24 @@ public class XMLBalance implements IXMLEncodable
 		m_balance = Math.max(0, Integer.parseInt(str));
 
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "FlatrateEnddate");
-		str = XMLUtil.parseValue(elem, "3000-01-01 00:00:00.00000000");
+		str = XMLUtil.parseValue(elem, DEFAULT_RATE_ENDDATE);
 		m_flatEnddate = java.sql.Timestamp.valueOf(str);
 
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "VolumeBytesLeft");
-		str = XMLUtil.parseValue(elem, null);
-		{
-			m_volumeBytesleft = Long.parseLong(str);
-		}
+		m_volumeBytesleft = XMLUtil.parseValue(elem, 0);
+
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Timestamp");
 		str = XMLUtil.parseValue(elem, null);
-		m_Timestamp = java.sql.Timestamp.valueOf(str);
-
+		if (m_Timestamp != null)
+		{
+			m_Timestamp = java.sql.Timestamp.valueOf(str);
+		}
+		else
+		{
+			m_Timestamp = new Timestamp(System.currentTimeMillis());
+		}
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Validtime");
-		str = XMLUtil.parseValue(elem, null);
+		str = XMLUtil.parseValue(elem, DEFAULT_RATE_ENDDATE);
 		m_ValidTime = java.sql.Timestamp.valueOf(str);
 	}
 
@@ -137,13 +156,13 @@ public class XMLBalance implements IXMLEncodable
 		elemRoot.setAttribute("version", "1.0");
 
 		Element elem = a_doc.createElement("AccountNumber");
-		XMLUtil.setValue(elem, Long.toString(m_lAccountNumber)); //Elmar: why cast to String, XMLUtil supports primitives?
+		XMLUtil.setValue(elem, m_lAccountNumber);
 		elemRoot.appendChild(elem);
 		elem = a_doc.createElement("Deposit");
-		XMLUtil.setValue(elem, Long.toString(m_lDeposit));
+		XMLUtil.setValue(elem, m_lDeposit);
 		elemRoot.appendChild(elem);
 		elem = a_doc.createElement("Spent");
-		XMLUtil.setValue(elem, Long.toString(m_lSpent));
+		XMLUtil.setValue(elem, m_lSpent);
 		elemRoot.appendChild(elem);
 		elem = a_doc.createElement("BalanceInCent");
 		XMLUtil.setValue(elem,m_balance);

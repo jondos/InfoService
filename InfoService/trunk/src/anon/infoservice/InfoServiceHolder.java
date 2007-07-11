@@ -28,22 +28,22 @@
 package anon.infoservice;
 
 import java.util.Enumeration;
-import java.util.Observable;
-import java.util.Vector;
 import java.util.Hashtable;
+import java.util.Observable;
 import java.util.Random;
+import java.util.Vector;
+import anon.util.ThreadPool;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import anon.util.XMLUtil;
-import anon.util.Util;
+import anon.pay.PaymentInstanceDBEntry;
 import anon.util.IXMLEncodable;
+import anon.util.Util;
 import anon.util.XMLParseException;
-import anon.infoservice.MixCascade;
+import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.pay.*;
 
 /**
  * This class holds the instances of the InfoService class for the JAP client and is a singleton.
@@ -139,6 +139,11 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	 * Stores the instance of InfoServiceHolder (Singleton).
 	 */
 	private static InfoServiceHolder ms_infoServiceHolderInstance = null;
+
+	/**
+	 * Allows only 3 concurrent update operations.
+	 */
+	private ThreadPool m_poolFetchInformation = new ThreadPool("Fetch Information Thread Pool", 4);
 
 	/**
 	 * Stores the preferred InfoService. This InfoService is asked first for every information.
@@ -321,6 +326,325 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 		return primaryInfoServices;
 	}
 
+	private class InformationFetcher implements Runnable
+	{
+		private int functionNumber;
+		private Vector arguments;
+		private Object m_result;
+
+		public InformationFetcher(int a_functionNumber, Vector a_arguments)
+		{
+			functionNumber = a_functionNumber;
+			arguments = a_arguments;
+		}
+
+		public Object getResult()
+		{
+			return m_result;
+		}
+
+		public void run()
+		{
+			InfoServiceDBEntry currentInfoService = null;
+			Random random = new Random(System.currentTimeMillis());
+			int askInfoServices = 1;
+			currentInfoService = getPreferredInfoService();
+			Vector infoServiceList = null;
+			if (m_changeInfoServices)
+			{
+				/* get the whole infoservice list */
+				infoServiceList = Database.getInstance(InfoServiceDBEntry.class).getEntryList();
+			}
+			else
+			{
+				/* use an empty list -> only preferred infoservice is used */
+				infoServiceList = new Vector();
+				if (currentInfoService != null)
+				{
+					infoServiceList.addElement(currentInfoService);
+				}
+			}
+
+			Object result = null;
+			/**
+			 * @todo This is a first hack for the fact that not only one IS should be asked but
+			 * a lot of IS...
+			 */
+			if (functionNumber == GET_INFOSERVICES || functionNumber == GET_MIXCASCADES
+				|| functionNumber == GET_INFOSERVICE_SERIALS || functionNumber == GET_MIXCASCADE_SERIALS ||
+				functionNumber == GET_CASCADEINFO || functionNumber == GET_LATEST_JAVA_SERIALS ||
+				functionNumber == GET_LATEST_JAVA || functionNumber == GET_MESSAGES ||
+				functionNumber == GET_MESSAGE_SERIALS || functionNumber == GET_PAYMENT_INSTANCES)
+			{
+				result = new Hashtable();
+				//if (functionNumber == GET_CASCADEINFO)
+				{
+					// example: enter number of asked IS here, or keep default of 1
+				}
+				//else
+				{
+					// try up to a certain maximum of InfoServices
+					if (MAXIMUM_OF_ASKED_INFO_SERVICES == m_nrAskedInfoServices)
+					{
+						// ask all InfoServices
+						askInfoServices = infoServiceList.size() + 1;
+					}
+					else
+					{
+						askInfoServices = m_nrAskedInfoServices;
+					}
+				}
+			}
+
+			if (functionNumber == GET_STATUSINFO || functionNumber == GET_STATUSINFO_TIMEOUT)
+			{
+				/*
+				 * For performance reasons the requests must be distributed equally over all InfoServices.
+				 * Therefore the default InfoService is ignored.
+				 */
+				currentInfoService = null;
+			}
+
+			while ( ( (infoServiceList.size() > 0) || (currentInfoService != null)) &&
+				   !Thread.currentThread().isInterrupted())
+			{
+				if (currentInfoService == null)
+				{
+					/* randomly take a new one from the list */
+					currentInfoService = (InfoServiceDBEntry) (infoServiceList.elementAt(
+						Math.abs(random.nextInt()) % infoServiceList.size()));
+				}
+
+				if (currentInfoService.getCertPath() != null && !currentInfoService.getCertPath().verify())
+				{
+					LogHolder.log(LogLevel.NOTICE, LogType.NET,
+								  "Skipped non-verifyable InfoService: " + currentInfoService.getName(), true);
+					infoServiceList.removeElement(currentInfoService);
+					currentInfoService = null;
+					continue;
+				}
+				//if (functionNumber == GET_LATEST_JAVA_SERIALS)
+				{
+					LogHolder.log(LogLevel.NOTICE, LogType.NET,
+								  "Trying InfoService: " + currentInfoService.getName(), true);
+				}
+				try
+				{
+					Hashtable tempHashtable = null;
+
+					/* try to get the information from currentInfoService */
+					if (functionNumber == GET_MIXCASCADES)
+					{
+						tempHashtable = currentInfoService.getMixCascades();
+					}
+					else if (functionNumber == GET_INFOSERVICES)
+					{
+						tempHashtable = currentInfoService.getInfoServices();
+					}
+					else if (functionNumber == GET_MIXINFO)
+					{
+						result = currentInfoService.getMixInfo( (String) (arguments.elementAt(0)));
+					}
+					else if (functionNumber == GET_LATEST_JAVA)
+					{
+						tempHashtable = currentInfoService.getLatestJava();
+					}
+					else if (functionNumber == GET_LATEST_JAVA_SERIALS)
+					{
+						tempHashtable = currentInfoService.getLatestJavaSerials();
+					}
+					else if (functionNumber == GET_MESSAGES)
+					{
+						tempHashtable = currentInfoService.getMessages();
+					}
+					else if (functionNumber == GET_MESSAGE_SERIALS)
+					{
+						tempHashtable = currentInfoService.getMessageSerials();
+					}
+					else if (functionNumber == GET_STATUSINFO)
+					{
+						result = currentInfoService.getStatusInfo( (MixCascade) arguments.elementAt(0));
+					}
+					else if (functionNumber == GET_STATUSINFO_TIMEOUT)
+					{
+						result = currentInfoService.getStatusInfo( (MixCascade) arguments.elementAt(0),
+							( (Long) arguments.elementAt(1)).longValue());
+					}
+					else if (functionNumber == GET_MIXCASCADE_SERIALS)
+					{
+						tempHashtable = currentInfoService.getMixCascadeSerials();
+					}
+					else if (functionNumber == GET_INFOSERVICE_SERIALS)
+					{
+						tempHashtable = currentInfoService.getInfoServiceSerials();
+					}
+					else if (functionNumber == GET_NEWVERSIONNUMBER)
+					{
+						result = currentInfoService.getNewVersionNumber();
+					}
+					else if (functionNumber == GET_JAPVERSIONINFO)
+					{
+						result = currentInfoService.getJAPVersionInfo( ( (Integer) (arguments.elementAt(0))).
+							intValue());
+					}
+					else if (functionNumber == GET_TORNODESLIST)
+					{
+						result = currentInfoService.getTorNodesList();
+					}
+					else if (functionNumber == GET_MIXMINIONNODESLIST)
+					{
+						result = currentInfoService.getMixminionNodesList();
+					}
+					else if (functionNumber == GET_FORWARDER)
+					{
+						result = currentInfoService.getForwarder();
+					}
+					else if (functionNumber == GET_PAYMENT_INSTANCES)
+					{
+						tempHashtable = currentInfoService.getPaymentInstances();
+					}
+					else if (functionNumber == GET_PAYMENT_INSTANCE)
+					{
+						result = currentInfoService.getPaymentInstance( (String) arguments.firstElement());
+					}
+					else if (functionNumber == GET_CASCADEINFO)
+					{
+						AbstractDatabaseEntry dbEntry =
+							currentInfoService.getMixCascadeInfo( (String) arguments.firstElement());
+						tempHashtable = new Hashtable();
+						if (dbEntry != null)
+						{
+							tempHashtable.put(dbEntry.getId(), dbEntry);
+						}
+					}
+
+					if ( (tempHashtable == null && result == null) ||
+						(tempHashtable != null && tempHashtable.size() == 0))
+					{
+						LogHolder.log(LogLevel.INFO, LogType.NET,
+									  "IS " + currentInfoService.getName() + " did not have the requested info!");
+						infoServiceList.removeElement(currentInfoService);
+						currentInfoService = null;
+						continue;
+					}
+					else if (tempHashtable != null)
+					{
+						Enumeration newEntries = ( (Hashtable) tempHashtable).elements();
+						AbstractDatabaseEntry currentEntry;
+						AbstractDatabaseEntry hashedEntry;
+						AbstractDistributableDatabaseEntry.SerialDBEntry currentSerialEntry, hashedSerialEntry;
+						while (newEntries.hasMoreElements())
+						{
+							currentEntry = (AbstractDatabaseEntry) newEntries.nextElement();
+							if ( ( (Hashtable) result).containsKey(currentEntry.getId()))
+							{
+								hashedEntry =
+									(AbstractDatabaseEntry) ( (Hashtable) result).get(currentEntry.getId());
+
+								if (currentEntry instanceof AbstractDistributableDatabaseEntry.SerialDBEntry &&
+									hashedEntry instanceof AbstractDistributableDatabaseEntry.SerialDBEntry)
+								{
+									currentSerialEntry =
+										(AbstractDistributableDatabaseEntry.SerialDBEntry) currentEntry;
+									hashedSerialEntry =
+										(AbstractDistributableDatabaseEntry.SerialDBEntry) hashedEntry;
+									if (currentSerialEntry.getVersionNumber() !=
+										hashedSerialEntry.getVersionNumber())
+									{
+										LogHolder.log(LogLevel.WARNING, LogType.NET,
+													  "InfoServices report different serial numbers for " +
+													  currentSerialEntry.getId() + "!");
+										/**
+										 * Alert: Two or more InfoServices report different version numbers.
+										 * This could be a try to keep the caller from updating this entry.
+										 * Mark this serial entry, so that the caller knows he must update this
+										 * entry.
+										 */
+										currentSerialEntry = new AbstractDistributableDatabaseEntry.SerialDBEntry(
+											currentSerialEntry.getId(), 0, Long.MAX_VALUE, // force update of hash
+											currentSerialEntry.isVerified(), currentSerialEntry.isValid());
+									}
+
+									if (currentSerialEntry.isVerified() != hashedSerialEntry.isVerified())
+									{
+										LogHolder.log(LogLevel.WARNING, LogType.NET,
+													  "InfoServices report different verification status for " +
+													  currentSerialEntry.getId() + "!");
+										/**
+										 * This may only be used for filtring if allInfoServices think this entry
+										 * is unverified.
+										 * If at least one IS reports it as verified, it must not be filtered.
+										 */
+										currentSerialEntry = new AbstractDistributableDatabaseEntry.SerialDBEntry(
+											currentSerialEntry.getId(), currentSerialEntry.getVersionNumber(),
+											Long.MAX_VALUE, true, currentSerialEntry.isValid());
+									}
+
+									if (currentSerialEntry.isValid() != hashedSerialEntry.isValid())
+									{
+										LogHolder.log(LogLevel.WARNING, LogType.NET,
+													  "InfoServices report different validity status for " +
+													  currentSerialEntry.getId() + "!");
+										/**
+										 * This may only be used for filtring if allInfoServices think this entry
+										 * is invalid.
+										 * If at least one IS reports it as valid, it must not be filtered.
+										 */
+										currentSerialEntry = new AbstractDistributableDatabaseEntry.SerialDBEntry(
+											currentSerialEntry.getId(), currentSerialEntry.getVersionNumber(),
+											Long.MAX_VALUE, currentSerialEntry.isVerified(), true);
+									}
+									currentEntry = currentSerialEntry;
+								}
+
+								if (hashedEntry.getLastUpdate() > currentEntry.getLastUpdate())
+								{
+									continue;
+								}
+							}
+							( (Hashtable) result).put(currentEntry.getId(), currentEntry);
+						}
+
+						askInfoServices--;
+						if (askInfoServices == 0)
+						{
+							break;
+						}
+						infoServiceList.removeElement(currentInfoService);
+						currentInfoService = null;
+						continue;
+					}
+
+					break;
+				}
+				catch (Exception e)
+				{
+					LogHolder.log(LogLevel.INFO, LogType.NET,
+								  "Contacting IS " + currentInfoService.getName() + " produced an error!", e);
+					/* if there was an error, remove currentInfoService from the list and try another
+					 * infoservice
+					 */
+					infoServiceList.removeElement(currentInfoService);
+					currentInfoService = null;
+				}
+			}
+
+			if (result != null && (! (result instanceof Hashtable) || ( (Hashtable) result).size() > 0))
+			{
+				if (functionNumber == GET_CASCADEINFO)
+				{
+					result = ( (Hashtable) result).elements().nextElement();
+				}
+				m_result = result;
+				return;
+			}
+
+			LogHolder.log(LogLevel.ERR, LogType.NET, "No InfoService with the needed information available.",
+						  true);
+			m_result = null;
+		}
+	}
+
 	/**
 	 * Fetches every information from the infoservices. If we can't get the information from the
 	 * preferred infoservice, all other known infoservices are asked automatically until an
@@ -335,304 +659,16 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	 */
 	private Object fetchInformation(int functionNumber, Vector arguments)
 	{
-		InfoServiceDBEntry currentInfoService = null;
-		Random random = new Random(System.currentTimeMillis());
-		int askInfoServices = 1;
-		currentInfoService = getPreferredInfoService();
-		Vector infoServiceList = null;
-		if (m_changeInfoServices)
+		InformationFetcher fetcher = new InformationFetcher(functionNumber, arguments);
+		try
 		{
-			/* get the whole infoservice list */
-			infoServiceList = Database.getInstance(InfoServiceDBEntry.class).getEntryList();
+			m_poolFetchInformation.addRequestAndWait(fetcher);
 		}
-		else
+		catch (InterruptedException ex)
 		{
-			/* use an empty list -> only preferred infoservice is used */
-			infoServiceList = new Vector();
-			if (currentInfoService != null)
-			{
-				infoServiceList.addElement(currentInfoService);
-			}
+			LogHolder.log(LogLevel.ERR, LogType.THREAD, ex);
 		}
-
-		Object result = null;
-		/**
-		 * @todo This is a first hack for the fact that not only one IS should be asked but
-		 * a lot of IS...
-		 */
-		if (functionNumber == GET_INFOSERVICES || functionNumber == GET_MIXCASCADES
-			|| functionNumber == GET_INFOSERVICE_SERIALS || functionNumber == GET_MIXCASCADE_SERIALS ||
-			functionNumber == GET_CASCADEINFO || functionNumber == GET_LATEST_JAVA_SERIALS ||
-			functionNumber == GET_LATEST_JAVA || functionNumber == GET_MESSAGES ||
-			functionNumber == GET_MESSAGE_SERIALS || functionNumber == GET_PAYMENT_INSTANCES)
-		{
-			result = new Hashtable();
-			//if (functionNumber == GET_CASCADEINFO)
-			{
-				// example: enter number of asked IS here, or keep default of 1
-			}
-			//else
-			{
-				// try up to a certain maximum of InfoServices
-				if (MAXIMUM_OF_ASKED_INFO_SERVICES == m_nrAskedInfoServices)
-				{
-					// ask all InfoServices
-					askInfoServices = infoServiceList.size() + 1;
-				}
-				else
-				{
-					askInfoServices = m_nrAskedInfoServices;
-				}
-			}
-		}
-
-		if (functionNumber == GET_STATUSINFO || functionNumber == GET_STATUSINFO_TIMEOUT)
-		{
-			/*
-			 * For performance reasons the requests must be distributed equally over all InfoServices.
-			 * Therefore the default InfoService is ignored.
-			 */
-			currentInfoService = null;
-		}
-
-		while ( ( (infoServiceList.size() > 0) || (currentInfoService != null)) &&
-				!Thread.currentThread().isInterrupted())
-		{
-			if (currentInfoService == null)
-			{
-				/* randomly take a new one from the list */
-				currentInfoService = (InfoServiceDBEntry) (infoServiceList.elementAt(
-					Math.abs(random.nextInt()) % infoServiceList.size()));
-			}
-
-			if (currentInfoService.getCertPath() != null && !currentInfoService.getCertPath().verify())
-			{
-				LogHolder.log(LogLevel.NOTICE, LogType.NET,
-							  "Skipped non-verifyable InfoService: " + currentInfoService.getName(), true);
-				infoServiceList.removeElement(currentInfoService);
-				currentInfoService = null;
-				continue;
-			}
-			//if (functionNumber == GET_LATEST_JAVA_SERIALS)
-			{
-				LogHolder.log(LogLevel.NOTICE, LogType.NET,
-							  "Trying InfoService: " + currentInfoService.getName(), true);
-			}
-			try
-			{
-				Hashtable tempHashtable = null;
-
-				/* try to get the information from currentInfoService */
-				if (functionNumber == GET_MIXCASCADES)
-				{
-					tempHashtable = currentInfoService.getMixCascades();
-				}
-				else if (functionNumber == GET_INFOSERVICES)
-				{
-					tempHashtable = currentInfoService.getInfoServices();
-				}
-				else if (functionNumber == GET_MIXINFO)
-				{
-					result = currentInfoService.getMixInfo( (String) (arguments.elementAt(0)));
-				}
-				else if (functionNumber == GET_LATEST_JAVA)
-				{
-					tempHashtable = currentInfoService.getLatestJava();
-				}
-				else if (functionNumber == GET_LATEST_JAVA_SERIALS)
-				{
-					tempHashtable = currentInfoService.getLatestJavaSerials();
-				}
-				else if (functionNumber == GET_MESSAGES)
-				{
-					tempHashtable = currentInfoService.getMessages();
-				}
-				else if (functionNumber == GET_MESSAGE_SERIALS)
-				{
-					tempHashtable = currentInfoService.getMessageSerials();
-				}
-				else if (functionNumber == GET_STATUSINFO)
-				{
-					result = currentInfoService.getStatusInfo((MixCascade)arguments.elementAt(0));
-				}
-				else if (functionNumber == GET_STATUSINFO_TIMEOUT)
-				{
-					result = currentInfoService.getStatusInfo((MixCascade)arguments.elementAt(0),
-						((Long)arguments.elementAt(1)).longValue());
-				}
-				else if (functionNumber == GET_MIXCASCADE_SERIALS)
-				{
-					tempHashtable = currentInfoService.getMixCascadeSerials();
-				}
-				else if (functionNumber == GET_INFOSERVICE_SERIALS)
-				{
-					tempHashtable = currentInfoService.getInfoServiceSerials();
-				}
-				else if (functionNumber == GET_NEWVERSIONNUMBER)
-				{
-					result = currentInfoService.getNewVersionNumber();
-				}
-				else if (functionNumber == GET_JAPVERSIONINFO)
-				{
-					result = currentInfoService.getJAPVersionInfo( ( (Integer) (arguments.elementAt(0))).
-						intValue());
-				}
-				else if (functionNumber == GET_TORNODESLIST)
-				{
-					result = currentInfoService.getTorNodesList();
-				}
-				else if (functionNumber == GET_MIXMINIONNODESLIST)
-				{
-					result = currentInfoService.getMixminionNodesList();
-				}
-				else if (functionNumber == GET_FORWARDER)
-				{
-					result = currentInfoService.getForwarder();
-				}
-				else if (functionNumber == GET_PAYMENT_INSTANCES)
-				{
-					tempHashtable = currentInfoService.getPaymentInstances();
-				}
-				else if (functionNumber == GET_PAYMENT_INSTANCE)
-				{
-					result = currentInfoService.getPaymentInstance( (String) arguments.firstElement());
-				}
-				else if (functionNumber == GET_CASCADEINFO)
-				{
-					AbstractDatabaseEntry dbEntry =
-						currentInfoService.getMixCascadeInfo((String) arguments.firstElement());
-					tempHashtable = new Hashtable();
-					if (dbEntry != null)
-					{
-						tempHashtable.put(dbEntry.getId(), dbEntry);
-					}
-				}
-
-				if ((tempHashtable == null && result == null) ||
-					(tempHashtable != null && tempHashtable.size() == 0))
-				{
-					LogHolder.log(LogLevel.INFO, LogType.NET,
-							  "IS " + currentInfoService.getName() + " did not have the requested info!");
-					infoServiceList.removeElement(currentInfoService);
-					currentInfoService = null;
-					continue;
-				}
-				else if (tempHashtable != null)
-				{
-					Enumeration newEntries = ((Hashtable)tempHashtable).elements();
-					AbstractDatabaseEntry currentEntry;
-					AbstractDatabaseEntry hashedEntry;
-					AbstractDistributableDatabaseEntry.SerialDBEntry currentSerialEntry, hashedSerialEntry;
-					while (newEntries.hasMoreElements())
-					{
-						currentEntry = (AbstractDatabaseEntry)newEntries.nextElement();
-						if (((Hashtable)result).containsKey(currentEntry.getId()))
-						{
-							hashedEntry =
-								(AbstractDatabaseEntry)((Hashtable)result).get(currentEntry.getId());
-
-							if (currentEntry instanceof AbstractDistributableDatabaseEntry.SerialDBEntry &&
-								hashedEntry instanceof AbstractDistributableDatabaseEntry.SerialDBEntry)
-							{
-								currentSerialEntry =
-									(AbstractDistributableDatabaseEntry.SerialDBEntry)currentEntry;
-								hashedSerialEntry =
-									(AbstractDistributableDatabaseEntry.SerialDBEntry)hashedEntry;
-								if (currentSerialEntry.getVersionNumber() !=
-									hashedSerialEntry.getVersionNumber())
-								{
-									LogHolder.log(LogLevel.WARNING, LogType.NET,
-												  "InfoServices report different serial numbers for " +
-												  currentSerialEntry.getId() + "!");
-									/**
-									 * Alert: Two or more InfoServices report different version numbers.
-									 * This could be a try to keep the caller from updating this entry.
-									 * Mark this serial entry, so that the caller knows he must update this
-									 * entry.
-									 */
-									currentSerialEntry = new AbstractDistributableDatabaseEntry.SerialDBEntry(
-										currentSerialEntry.getId(), 0, Long.MAX_VALUE, // force update of hash
-										currentSerialEntry.isVerified(), currentSerialEntry.isValid());
-								}
-
-								if (currentSerialEntry.isVerified() != hashedSerialEntry.isVerified())
-								{
-									LogHolder.log(LogLevel.WARNING, LogType.NET,
-												  "InfoServices report different verification status for " +
-												  currentSerialEntry.getId() + "!");
-									/**
-									 * This may only be used for filtring if allInfoServices think this entry
-									 * is unverified.
-									 * If at least one IS reports it as verified, it must not be filtered.
-									 */
-									currentSerialEntry = new AbstractDistributableDatabaseEntry.SerialDBEntry(
-										currentSerialEntry.getId(), currentSerialEntry.getVersionNumber(),
-										Long.MAX_VALUE, true, currentSerialEntry.isValid());
-								}
-
-								if (currentSerialEntry.isValid() != hashedSerialEntry.isValid())
-								{
-									LogHolder.log(LogLevel.WARNING, LogType.NET,
-												  "InfoServices report different validity status for " +
-												  currentSerialEntry.getId() + "!");
-									/**
-									 * This may only be used for filtring if allInfoServices think this entry
-									 * is invalid.
-									 * If at least one IS reports it as valid, it must not be filtered.
-									 */
-									currentSerialEntry = new AbstractDistributableDatabaseEntry.SerialDBEntry(
-										currentSerialEntry.getId(), currentSerialEntry.getVersionNumber(),
-										Long.MAX_VALUE, currentSerialEntry.isVerified(), true);
-								}
-								currentEntry = currentSerialEntry;
-							}
-
-
-							if (hashedEntry.getLastUpdate() > currentEntry.getLastUpdate())
-							{
-								continue;
-							}
-						}
-						((Hashtable)result).put(currentEntry.getId(), currentEntry);
-					}
-
-					askInfoServices--;
-					if (askInfoServices == 0)
-					{
-						break;
-					}
-					infoServiceList.removeElement(currentInfoService);
-					currentInfoService = null;
-					continue;
-				}
-
-				break;
-			}
-			catch (Exception e)
-			{
-				LogHolder.log(LogLevel.INFO, LogType.NET,
-							  "Contacting IS " + currentInfoService.getName() + " produced an error!", e);
-				/* if there was an error, remove currentInfoService from the list and try another
-				 * infoservice
-				 */
-				infoServiceList.removeElement(currentInfoService);
-				currentInfoService = null;
-			}
-		}
-
-		if (result != null && (!(result instanceof Hashtable) || ((Hashtable)result).size() > 0) )
-		{
-			if (functionNumber == GET_CASCADEINFO)
-			{
-				result = ((Hashtable) result).elements().nextElement();
-			}
-
-			return result;
-		}
-
-		LogHolder.log(LogLevel.ERR, LogType.NET,  "No InfoService with the needed information available.",
-					  true);
-		return null;
+		return fetcher.getResult();
 	}
 
 	/**
