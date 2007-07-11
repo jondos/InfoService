@@ -4261,19 +4261,23 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 		for (int i = 0; i < a_singleCerts.length; i++)
 		{
-			defaultRootCert = JAPCertificate.getInstance(ResourceLoader.loadResource(
-					 JAPConstants.CERTSPATH + a_certspath + a_singleCerts[i]));
-			if (defaultRootCert == null)
+			if (a_singleCerts[i] != null &&
+				(!JAPConstants.m_bReleasedVersion ||
+				 !a_singleCerts[i].endsWith(".dev")))
 			{
-				continue;
+				defaultRootCert = JAPCertificate.getInstance(ResourceLoader.loadResource(
+					JAPConstants.CERTSPATH + a_certspath + a_singleCerts[i]));
+				if (defaultRootCert == null)
+				{
+					continue;
+				}
+				SignatureVerifier.getInstance().getVerificationCertificateStore().
+					addCertificateWithoutVerification(defaultRootCert, a_type, true, true);
 			}
-			SignatureVerifier.getInstance().getVerificationCertificateStore().
-				addCertificateWithoutVerification(defaultRootCert, a_type, true, true);
 		}
 
-		// load dynamicError loading Payment configuration
 		Enumeration certificates =
-			JAPCertificate.getInstance(JAPConstants.CERTSPATH + a_certspath, true).elements();
+			JAPCertificate.getInstance(JAPConstants.CERTSPATH + a_certspath, true, ".dev").elements();
 		while (certificates.hasMoreElements())
 		{
 			defaultRootCert = (JAPCertificate) certificates.nextElement();

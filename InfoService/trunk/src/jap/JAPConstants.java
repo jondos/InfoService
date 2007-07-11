@@ -197,7 +197,7 @@ public final class JAPConstants
 		"firefox", "iexplore", "explorer", "mozilla", "konqueror", "mozilla-firefox", "firebird", "opera"
 	};
 
-	public final static String PI_CERTS[] = new String[] {"bi.cer", "Payment_Instance.cer"};
+	public final static String PI_CERTS[] = new String[] {"bi.cer.dev", "Payment_Instance.cer"};
 	public final static String CERTSPATH = "certificates/";
 	public final static String INFOSERVICE_CERTSPATH = "acceptedInfoServiceCAs/";
 	public final static String PAYMENT_ROOT_CERTSPATH = "acceptedPaymentCAs/";
@@ -205,7 +205,7 @@ public final class JAPConstants
 	public final static String PAYMENT_DEFAULT_CERTSPATH = "acceptedPIs/";
 	public final static String MIX_CERTSPATH = "acceptedMixCAs/";
 	public final static String MIX_ROOT_CERTS[] =
-		new String[] {"japmixroot.cer", "Operator_CA.cer", "Test_CA.cer"};
+		new String[] {"japmixroot.cer", "Operator_CA.cer", "Test_CA.cer.dev"};
 	public final static String INFOSERVICE_ROOT_CERTS[] =
 		new String[] {"japinfoserviceroot.cer", "InfoService_CA.cer"};
 	public final static String CERT_JAPCODESIGNING = "japcodesigning.cer";

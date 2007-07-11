@@ -90,7 +90,6 @@ import logging.LogType;
  */
 public final class JAPCertificate implements IXMLEncodable, Cloneable, ICertificate
 {
-
 	/**
 	 * This are the certificate type constant for root certificates. Root certificates are used to
 	 * verify other certificates (at the moment only one indirection is supported, so root
@@ -262,6 +261,21 @@ public final class JAPCertificate implements IXMLEncodable, Cloneable, ICertific
 		}
 	}
 
+	public static Hashtable getInstance(String a_strResourceSearchPath, boolean a_bRecursive,
+										String a_strIgnoreCertMark)
+	{
+		try
+		{
+			return ResourceLoader.loadResources(a_strResourceSearchPath,
+												new X509CertificateInstantiator(a_strIgnoreCertMark),
+												a_bRecursive);
+		}
+		catch (Exception a_e)
+		{
+			return new Hashtable();
+		}
+	}
+
 	/**
 	 * Instantiates all certificates found in the specified relative resource path.
 	 * @param a_strResourceSearchPath a relative path to a resource
@@ -270,16 +284,7 @@ public final class JAPCertificate implements IXMLEncodable, Cloneable, ICertific
 	 */
 	public static Hashtable getInstance(String a_strResourceSearchPath, boolean a_bRecursive)
 	{
-		try
-		{
-			return ResourceLoader.loadResources(a_strResourceSearchPath,
-												new X509CertificateInstantiator(),
-												a_bRecursive);
-		}
-		catch (Exception a_e)
-		{
-			return new Hashtable();
-		}
+		return getInstance(a_strResourceSearchPath, a_bRecursive, null);
 	}
 
 	/** Creates a certificate by using an input stream.
@@ -1177,13 +1182,29 @@ public final class JAPCertificate implements IXMLEncodable, Cloneable, ICertific
 
 	private static final class X509CertificateInstantiator implements IResourceInstantiator
 	{
+		private String m_strIgnoreCertMark;
+
+		public X509CertificateInstantiator(String a_strIgnoreCertMark)
+		{
+			m_strIgnoreCertMark = a_strIgnoreCertMark;
+		}
+
 		public Object getInstance(File a_file, File a_topDirectory) throws Exception
 		{
+			if (a_file == null || (m_strIgnoreCertMark != null && a_file.getName().endsWith(m_strIgnoreCertMark)))
+			{
+				return null;
+			}
 			return JAPCertificate.getInstance(new FileInputStream(a_file));
 		}
 
 		public Object getInstance(ZipEntry a_entry, ZipFile a_file) throws Exception
 		{
+			if (a_file == null || (m_strIgnoreCertMark != null && a_file.getName().endsWith(m_strIgnoreCertMark)))
+			{
+				return null;
+			}
+
 			return JAPCertificate.getInstance(a_file.getInputStream(a_entry));
 		}
 	}
