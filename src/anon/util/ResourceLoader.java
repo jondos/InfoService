@@ -40,6 +40,10 @@ import java.util.StringTokenizer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
 /**
  * This class loads resources from the file system. It allows to specify resource paths
  * like "dir1/dir2/resource" or "dir1/dir2/" relative to the classpath or the current directory.
@@ -237,7 +241,7 @@ public final class ResourceLoader
 	 */
 	public static InputStream loadResourceAsStream(String a_strRelativeResourcePath)
 	{
-		InputStream in;
+		InputStream in = null;
 
 		if ( (a_strRelativeResourcePath = formatResourcePath(a_strRelativeResourcePath)) == null ||
 			a_strRelativeResourcePath.endsWith("/"))
@@ -246,7 +250,14 @@ public final class ResourceLoader
 		}
 
 		// load images from the local classpath
-		in = ResourceLoader.class.getResourceAsStream("/" + a_strRelativeResourcePath);
+		try
+		{
+			in = ResourceLoader.class.getResourceAsStream("/" + a_strRelativeResourcePath);
+		}
+		catch (Throwable a_e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.MISC, a_e);
+		}
 
 		try
 		{

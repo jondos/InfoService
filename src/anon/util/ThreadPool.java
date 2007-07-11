@@ -135,9 +135,9 @@ public final class ThreadPool
 	private ThreadPoolThread poolThreads[];
 	private boolean terminated = false;
 
-	public ThreadPool(String name, int n)
+	public ThreadPool(String name, int m_maxConcurrentThreads)
 	{
-		this(name,n,Thread.NORM_PRIORITY);
+		this(name,m_maxConcurrentThreads,Thread.NORM_PRIORITY);
 	}
 
 	public ThreadPool(String name, int n,int priority)
