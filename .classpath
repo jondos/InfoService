@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry path="test" kind="src"/>
-	<classpathentry excluding="infoservice/|jpi/" including="JAP.java|JAPMacintosh.java|JAPMessages.properties|JAPMessages_de.properties|JAPMessages_en.properties|JAPMessages_fr.properties|anon/|forward/|gui/|jap/|jarify/|logging/|platform/|proxy/|update/" path="src" kind="src"/>
-	<classpathentry path="org.eclipse.jdt.USER_LIBRARY/JAPLibraries" kind="con"/>
-	<classpathentry path="org.eclipse.jdt.launching.JRE_CONTAINER" kind="con"/>
-	<classpathentry path="build" kind="output"/>
+	<classpathentry excluding="infoservice/" kind="src" path="test"/>
+	<classpathentry excluding="infoservice/|jpi/" including="JAP.java|JAPMacintosh.java|JAPMessages.properties|JAPMessages_de.properties|JAPMessages_en.properties|JAPMessages_fr.properties|anon/|forward/|gui/|jap/|jarify/|logging/|platform/|proxy/|update/" kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/HTTPClient"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/BouncyCastleForJAP"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/MRJ"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Log4j"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/ApacheFTPClient"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/XMLRPC"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JUnit"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3.8.1"/>
+	<classpathentry kind="output" path="build"/>
 </classpath>
