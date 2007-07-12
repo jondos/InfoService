@@ -240,8 +240,9 @@
     <delete dir="${build}"/>
     <delete dir="${dist}"/>
     <!-- Delte unwante certifcates from source... -->
-    <delete file="${certificates}/acceptedPIs/bi.cer" />
-    <delete file="${certificates}/acceptedMixCAs/Test_CA.cer" />
+    <delete>
+    <fileset dir="${certificates}" includes="**/*.cer.dev"/>
+    </delete>    
     <!-- Delete unwanted source files (aka tests etc.) -->
     <delete dir="${src}/anon/tor/test"/>
     <delete dir="${src}/anon/crypto/tinytls/test"/>
