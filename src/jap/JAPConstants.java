@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.08.068"; //Never change the layout of this line!
+	public static final String aktVersion = "00.08.070"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -65,8 +65,8 @@ public final class JAPConstants
 		}
 	}
 
-	static final int DEFAULT_PORT_NUMBER = 4001;
-	static final boolean DEFAULT_LISTENER_IS_LOCAL = true;
+	public static final int DEFAULT_PORT_NUMBER = 4001;
+	public static final boolean DEFAULT_LISTENER_IS_LOCAL = true;
 	static final String DEFAULT_ANON_NAME = "noCascadesAvail";
 	//static final String[] DEFAULT_ANON_MIX_IDs = new String[]{"BA6F90FB9120E0998ACFCC3A601F1B406A4655A1",
 		//"75ACF4F101510607BA3E9E348821D8697BE8FC58"};

@@ -54,6 +54,7 @@ import anon.AnonServerDescription;
 import anon.pay.IAIEventListener;
 import anon.infoservice.IMutableProxyInterface;
 import anon.client.ITrustModel;
+import anon.util.Queue;
 import java.security.SignatureException;
 
 /**
@@ -67,6 +68,9 @@ import java.security.SignatureException;
 
 final public class AnonProxy implements Runnable, AnonServiceEventListener
 {
+	public static final int UNLIMITED_REQUESTS = Integer.MAX_VALUE;
+	public static final int MIN_REQUESTS = 5;
+
 	public static final int E_BIND = -2;
 
 	public final static int E_MIX_PROTOCOL_NOT_SUPPORTED = ErrorCodes.E_PROTOCOL_NOT_SUPPORTED;
@@ -76,6 +80,8 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	public final static int E_SIGNATURE_CHECK_OTHERMIX_FAILED = ErrorCodes.E_SIGNATURE_CHECK_OTHERMIX_FAILED;
 
 	private static final int RECONNECT_INTERVAL = 5000;
+
+	private int m_maxRequests = UNLIMITED_REQUESTS;
 
 	private AnonService m_Anon;
 
@@ -291,6 +297,19 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		return m_currentMixminionParams;
 	}
 
+	public void setMaxConcurrentRequests(int a_maxRequests)
+	{
+		if (a_maxRequests > MIN_REQUESTS)
+		{
+			m_maxRequests = a_maxRequests;
+		}
+	}
+
+	public int getMaxConcurrentRequests()
+	{
+		return m_maxRequests;
+	}
+
 	/**
 	 * Changes the dummy traffic interval on the connection to the server. This
 	 * method respects dummy traffic restrictions on a forwarded connection. If
@@ -387,8 +406,86 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	}
 
+	private class OpenSocketRequester implements Runnable
+	{
+		private Queue m_socketQueue = new Queue();
+		private AnonProxy m_proxy;
+		private Object m_syncObject;
+		private boolean m_bIsClosed = false;
+
+		public OpenSocketRequester(AnonProxy a_proxy, Object a_syncObject)
+		{
+			m_proxy = a_proxy;
+			m_syncObject = a_syncObject;
+		}
+
+
+
+		public void pushSocket(Socket clientSocket)
+		{
+			synchronized (m_socketQueue)
+			{
+				m_socketQueue.push(clientSocket);
+				m_socketQueue.notify();
+			}
+		}
+		public void close()
+		{
+			m_bIsClosed = true;
+			synchronized (m_socketQueue)
+			{
+				m_socketQueue.notify();
+			}
+
+
+		}
+
+		public void run()
+		{
+			while (!Thread.currentThread().isInterrupted() && !m_bIsClosed)
+			{
+				if (m_socketQueue.getSize() > 0 && AnonProxyRequest.getNrOfRequests() < m_maxRequests)
+				{
+					try
+					{
+						new AnonProxyRequest(m_proxy, (Socket)m_socketQueue.pop(), m_syncObject);
+					}
+					catch (Exception e)
+					{
+						LogHolder.log(LogLevel.ERR, LogType.NET, e);
+					}
+				}
+				else
+				{
+					try
+					{
+						synchronized (m_socketQueue)
+						{
+							if (AnonProxyRequest.getNrOfRequests() >= m_maxRequests)
+							{
+								m_socketQueue.wait(100);
+							}
+							else
+							{
+								m_socketQueue.wait();
+							}
+						}
+					}
+					catch (InterruptedException ex)
+					{
+						break;
+					}
+				}
+			}
+			LogHolder.log(LogLevel.INFO, LogType.NET, "Open socket thread stopped.");
+		}
+	}
+
+
 	public void run()
 	{
+		Thread socketThread;
+		OpenSocketRequester requester;
 		int oldTimeOut = 0;
 		LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProxy is running as Thread");
 
@@ -407,6 +504,10 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Could not set accept time out!", e1);
 		}
+		requester = new OpenSocketRequester(this, THREAD_SYNC);
+		socketThread = new Thread(requester);
+		socketThread.start();
+
 		try
 		{
 			while (!Thread.currentThread().isInterrupted())
@@ -423,6 +524,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				try
 				{
 					socket.setSoTimeout(0); // ensure that socket is blocking!
+					requester.pushSocket(socket);
 				}
 				catch (SocketException soex)
 				{
@@ -431,15 +533,8 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 								  "Could not set non-Blocking mode for Channel-Socket!", soex);
 					continue;
 				}
-				// 2001-04-04(HF)
-				try
-				{
-					new AnonProxyRequest(this, socket, THREAD_SYNC);
-				}
-				catch (Exception e)
-				{
-					LogHolder.log(LogLevel.ERR, LogType.NET, e);
-				}
+
+
 			}
 		}
 		catch (Exception e)
@@ -453,6 +548,17 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		catch (Exception e4)
 		{
 		}
+		socketThread.interrupt();
+		requester.close();
+
+		try
+		{
+			socketThread.join();
+		}
+		catch (InterruptedException ex)
+		{
+		}
+
 		LogHolder.log(LogLevel.INFO, LogType.NET, "JAPAnonProxyServer stopped.");
 	}
 

@@ -25,15 +25,15 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap.forward;
+package jap;
 
-import jap.*;
+
 
 /**
  * This is the implementation for the forwarding client savepoint. It is needed for restoring an
  * old or the default configuration, if the user presses "Cancel" or "Reset to defaults".
  */
-public class JAPConfForwardingClientSavePoint implements IJAPConfSavePoint
+public class JAPConfNetworkSavePoint implements IJAPConfSavePoint
 {
 
 	/**

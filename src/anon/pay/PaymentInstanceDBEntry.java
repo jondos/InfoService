@@ -30,6 +30,7 @@ package anon.pay;
 
 import java.util.Enumeration;
 import java.util.Vector;
+import java.util.Random;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -262,9 +263,24 @@ public class PaymentInstanceDBEntry extends AbstractDistributableCertifiedDataba
 		return m_name;
 	}
 
+	/**
+	 * Returns the listener interfaces of this PI in a random order.
+	 * @return the listener interfaces of this PI in a random order
+	 */
 	public Enumeration getListenerInterfaces()
 	{
-		return m_listenerInterfaces.elements();
+		Random random = new Random();
+		int currentIndex;
+		Vector interfaces = (Vector)m_listenerInterfaces.clone();
+		Vector interfacesReturned = new Vector();
+		while (interfaces.size() > 0)
+		{
+			currentIndex = Math.abs(random.nextInt() % interfaces.size());
+			interfacesReturned.addElement(interfaces.elementAt(currentIndex));
+			interfaces.removeElementAt(currentIndex);
+		}
+
+		return interfacesReturned.elements();
 	}
 
 	public JAPCertificate getCertificate()

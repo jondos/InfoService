@@ -402,6 +402,11 @@ public class SignatureVerifier implements IXMLEncodable
 			return signatureVerificationNode;
         }
 
+		public void loadSettingsFromXml(Element a_signatureVerificationNode) throws Exception
+		{
+			loadSettingsFromXml(a_signatureVerificationNode, null);
+		}
+
         /**
          * Restores the settings of this instance of SignatureVerifier with the settings stored in the
          * specified XML node.
@@ -410,7 +415,8 @@ public class SignatureVerifier implements IXMLEncodable
          *                                    the needed XML node can be obtained by calling
          *                                    getXmlSettingsRootNodeName().
          */
-        public void loadSettingsFromXml(Element a_signatureVerificationNode) throws Exception
+        public void loadSettingsFromXml(Element a_signatureVerificationNode,
+										Hashtable a_ignoredDocClasses) throws Exception
         {
 			synchronized (m_trustedCertificates)
 			{
@@ -428,7 +434,8 @@ public class SignatureVerifier implements IXMLEncodable
 				for (int i = 0; i < listCheckSignatures.getLength(); i++)
 				{
 					documentClass = XMLUtil.parseAttribute(listCheckSignatures.item(i), XML_ATTR_CLASS, -1);
-					if (documentClass >= 0)
+					if (documentClass >= 0 && (a_ignoredDocClasses == null ||
+											   !a_ignoredDocClasses.containsKey(new Integer(documentClass))))
 					{
 						m_hashSignatureChecks.put(new Integer(documentClass),
 												  new Boolean(XMLUtil.parseAttribute(
