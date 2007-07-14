@@ -212,9 +212,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	private JobQueue m_anonJobQueue;
 
-	private int m_nrOfJAPStarts;
-	private boolean m_bChangedCascade;
-
 
 	/**
 	 * Stores the active MixCascade.
@@ -463,7 +460,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	}
 
 	//---------------------------------------------------------------------
-	public void initialRun()
+	public void initialRun(String a_listenerHost, int a_listenerPort)
 	{
 		LogHolder.log(LogLevel.INFO, LogType.MISC, "Initial run of JAP...");
 
@@ -521,11 +518,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 		 {
 		   startSOCKSListener();
 		 }*/
-		if (!startHTTPListener())
+		if (!startHTTPListener(a_listenerHost, a_listenerPort))
 		{ // start was not sucessful
 			Object[] args =
 				{
-				new Integer(JAPModel.getHttpListenerPortNumber())};
+				new Integer(a_listenerPort <= 0 ? JAPModel.getHttpListenerPortNumber() : a_listenerPort)};
 			// output error message
 			JAPDialog.showErrorDialog(
 				getViewWindow(), JAPMessages.getString("errorListenerPort", args) +
@@ -1074,6 +1071,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 				//Database.getInstance(MixCascade.class).update(getCurrentMixCascade());
 
+
 				/* load the signature verification settings */
 				try
 				{
@@ -1081,7 +1079,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 						SignatureVerifier.getXmlSettingsRootNodeName()));
 					if (signatureVerificationNode != null)
 					{
-						SignatureVerifier.getInstance().loadSettingsFromXml(signatureVerificationNode);
+						Hashtable blockedCerts = new Hashtable();
+						blockedCerts.put(new Integer(JAPCertificate.CERTIFICATE_TYPE_PAYMENT),
+										 new Integer(JAPCertificate.CERTIFICATE_TYPE_PAYMENT));
+						SignatureVerifier.getInstance().loadSettingsFromXml(signatureVerificationNode,
+							blockedCerts);
 					}
 					else
 					{
@@ -3172,7 +3174,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 
 	//---------------------------------------------------------------------
-	private ServerSocket intern_startListener(int port, boolean bLocal)
+	private ServerSocket intern_startListener(int port, String host)
 	{
 		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "JAPModel:startListener on port: " + port);
 		ServerSocket s = null;
@@ -3180,20 +3182,22 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			try
 			{
-				if (bLocal)
+				if (host == null && JAPModel.isHttpListenerLocal())
+				{
+					host = "127.0.0.1";
+				}
+				if (host != null)
 				{
 					//InetAddress[] a=InetAddress.getAllByName("localhost");
-					InetAddress[] a = InetAddress.getAllByName("127.0.0.1");
-					LogHolder.log(LogLevel.DEBUG, LogType.NET,
-								  "Try binding Listener on localhost: " + a[0]);
-					s = new ServerSocket(port, 50,
-										 a[0]);
+					InetAddress[] a = InetAddress.getAllByName(host);
+					LogHolder.log(LogLevel.NOTICE, LogType.NET, "Try binding Listener on host: " + a[0]);
+					s = new ServerSocket(port, 50, a[0]);
 				}
 				else
 				{
 					s = new ServerSocket(port);
 				}
-				LogHolder.log(LogLevel.INFO, LogType.NET, "Started listener on port " + port + ".");
+				LogHolder.log(LogLevel.NOTICE, LogType.NET, "Started listener on port " + port + ".");
 				/*
 				try
 				{
@@ -3209,20 +3213,21 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 			catch (Exception e)
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.NET, "Exception: " + e.getMessage());
+				LogHolder.log(LogLevel.NOTICE, LogType.NET, e);
 				s = null;
 			}
 		}
 		return s;
 	}
 
-	public boolean startHTTPListener()
+	public boolean startHTTPListener(String a_listenerHost, int a_listenerPort)
 	{
 		if (!isRunningHTTPListener)
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.NET, "Start HTTP Listener");
-			m_socketHTTPListener = intern_startListener(JAPModel.getHttpListenerPortNumber(),
-				JAPModel.isHttpListenerLocal());
+			m_socketHTTPListener = intern_startListener(
+						 a_listenerPort <= 0 ? JAPModel.getHttpListenerPortNumber() : a_listenerPort,
+						 a_listenerHost);
 			isRunningHTTPListener = true;
 		}
 		return m_socketHTTPListener != null;
@@ -4275,9 +4280,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 					addCertificateWithoutVerification(defaultRootCert, a_type, true, true);
 			}
 		}
-
+		String strBlockCert = null;
+		if (JAPConstants.m_bReleasedVersion)
+		{
+			strBlockCert = ".dev";
+		}
 		Enumeration certificates =
-			JAPCertificate.getInstance(JAPConstants.CERTSPATH + a_certspath, true, ".dev").elements();
+			JAPCertificate.getInstance(JAPConstants.CERTSPATH + a_certspath, true, strBlockCert).elements();
 		while (certificates.hasMoreElements())
 		{
 			defaultRootCert = (JAPCertificate) certificates.nextElement();
@@ -4447,7 +4456,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		boolean choice = JAPDialog.showYesNoDialog(
 			getViewWindow(),
 			JAPMessages.getString("unrealBytesDesc") + "<p>" +
-			JAPMessages.getString("unrealBytesDifference") + " " + a_bytes,
+			JAPMessages.getString("unrealBytesDifference") + " " + JAPUtil.formatBytesValue(a_bytes),
 			JAPMessages.getString("unrealBytesTitle"),adapter
 			);
 

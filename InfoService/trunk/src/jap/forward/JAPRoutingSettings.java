@@ -667,7 +667,8 @@ final public class JAPRoutingSettings extends Observable implements IXMLEncodabl
 	 */
 	public boolean getForwardInfoService()
 	{
-		return m_forwardInfoService;
+		//return m_forwardInfoService;
+		return false; // this is done automatically if no info is received
 	}
 
 	/**

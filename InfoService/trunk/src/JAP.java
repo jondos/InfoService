@@ -38,6 +38,7 @@ import java.security.SecureRandom;
 import java.awt.Frame;
 import java.util.Hashtable;
 import java.util.Locale;
+import java.util.StringTokenizer;
 
 import anon.client.crypto.KeyPool;
 import gui.JAPAWTMsgBox;
@@ -140,6 +141,8 @@ public class JAP
 		String mrjVersion = System.getProperty("mrj.version");
 		boolean bConsoleOnly = false;
 		boolean loadPay = true;
+		String listenHost = null;
+		int listenPort = 0;
 
 		if (isArgumentSet("--version") || isArgumentSet("-v"))
 		{
@@ -165,15 +168,16 @@ public class JAP
 		if (isArgumentSet("--help") || isArgumentSet("-h"))
 		{
 			System.out.println("Usage:");
-			System.out.println("--help, -h:              Show this text.");
-			System.out.println("--console:               Start JAP in console-only mode.");
-			System.out.println("--minimized, -m:         Minimize JAP on startup.");
-			System.out.println("--version, -v:           Print version information.");
-			System.out.println("--showDialogFormat       Show and set dialog format options.");
-			System.out.println("--noSplash, -s           Suppress splash screen on startup.");
-			System.out.println("--presenation, -p        Presentation mode (slight GUI changes).");
-			System.out.println("--forwarder, -f {port}   Act as a forwarder on a specified port.");
-			System.out.println("--config, -c {Filename}: Force JAP to use a specific configuration file.");
+			System.out.println("--help, -h:                  Show this text.");
+			System.out.println("--console:                   Start JAP in console-only mode.");
+			System.out.println("--minimized, -m:             Minimize JAP on startup.");
+			System.out.println("--version, -v:               Print version information.");
+			System.out.println("--showDialogFormat           Show and set dialog format options.");
+			System.out.println("--noSplash, -s               Suppress splash screen on startup.");
+			System.out.println("--presenation, -p            Presentation mode (slight GUI changes).");
+			System.out.println("--forwarder, -f {port}       Act as a forwarder on a specified port.");
+			System.out.println("--listen, -l {[host][:port]} Listen on the specified interface.");
+			System.out.println("--config, -c {Filename}:     Force JAP to use a specific configuration file.");
 			System.exit(0);
 		}
 
@@ -373,6 +377,44 @@ public class JAP
 		  }
 		 */
 
+		// parse any given listener
+		if (isArgumentSet("--listen") || isArgumentSet("-l"))
+		{
+			if ( (listenHost = getArgumentValue("--listen")) == null)
+			{
+				listenHost = getArgumentValue("-l");
+			}
+			if (listenHost != null)
+			{
+				int delimiter = listenHost.indexOf(":");
+				if (delimiter >= 0)
+				{
+					try
+					{
+						listenPort =
+							Integer.parseInt(listenHost.substring(delimiter + 1, listenHost.length()));
+						listenPort = Math.min(listenPort, 65535);
+					}
+					catch (Exception a_e)
+					{
+						LogHolder.log(LogLevel.WARNING, LogType.MISC, "Could not parse listener port: ", a_e);
+					}
+				}
+
+				if (delimiter == 0)
+				{
+					// only the port ist given
+					listenHost = null;
+
+				}
+				else if (delimiter > 0)
+				{
+					// host and port are given
+					listenHost = listenHost.substring(0, delimiter);
+				}
+			}
+		}
+
 
 		// Create the controller object
 		splash.setText(JAPMessages.getString(MSG_STARTING_CONTROLLER));
@@ -519,7 +561,7 @@ public class JAP
 		}
 
 		splash.setText(JAPMessages.getString(MSG_START_LISTENER));
-		if (!m_controller.startHTTPListener())
+		if (!m_controller.startHTTPListener(listenHost, listenPort))
 		{
 			view.disableSetAnonMode();
 		}
@@ -569,7 +611,7 @@ public class JAP
 		JAPDll.checkDllVersion(true);
 
 		// initially start services
-		m_controller.initialRun();
+		m_controller.initialRun(listenHost, listenPort);
 
 		// show alternative view (console, http server,...);
 		if (bConsoleOnly)

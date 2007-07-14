@@ -72,7 +72,7 @@ final public class JAPiPAQ
 		// Register the views where they are needed
 		m_controller.setView(view, false);
 		// initially start services
-		m_controller.initialRun();
+		m_controller.initialRun(null, 0);
 
 		view.setSize(240, 300);
 		view.setLocation(0, 0);

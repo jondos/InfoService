@@ -42,6 +42,8 @@ import logging.LogType;
 
 public final class AnonProxyRequest implements Runnable
 {
+	private static int ms_nrOfRequests = 0;
+
 	private static final long TIMEOUT_RECONNECT = 60000;
 
 	private InputStream m_InChannel;
@@ -82,8 +84,14 @@ public final class AnonProxyRequest implements Runnable
 			m_threadRequest.start();
 	}
 
+	public static int getNrOfRequests()
+	{
+		return ms_nrOfRequests;
+	}
+
 	public void run()
 	{
+		ms_nrOfRequests++;
 		m_bRequestIsAlive = true;
 		AnonChannel newChannel = null;
 		// Check for type
@@ -294,9 +302,13 @@ public final class AnonProxyRequest implements Runnable
 		m_Proxy.decNumChannels();
 	}
 
-	private void closeRequest()
+	private synchronized void closeRequest()
 	{
-		m_bRequestIsAlive = false;
+		if (m_bRequestIsAlive)
+		{
+			ms_nrOfRequests--;
+			m_bRequestIsAlive = false;
+		}
 		try
 		{
 			if (m_Channel != null)

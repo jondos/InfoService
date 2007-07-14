@@ -72,7 +72,7 @@ import gui.JAPJIntField;
 import gui.JAPMessages;
 import gui.JAPMultilineLabel;
 import gui.dialog.JAPDialog;
-import jap.forward.JAPConfForwardingClient;
+
 import jap.forward.JAPConfForwardingServer;
 import jap.forward.JAPConfForwardingState;
 import jap.pay.AccountSettingsPanel;
@@ -92,10 +92,9 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 	private static final String MSG_BTN_SAVE = JAPConf.class.getName() + "_btnSave";
 	private static final String MSG_ASK_RESET_DEFAULTS = JAPConf.class.getName() + "_askResetDefaults";
 	private static final String MSG_NEED_RESTART = JAPConf.class.getName() + "_needRestart";
-	private static final String MSG_LISTENER_CHANGED = JAPConf.class.getName() + "_listenerChanged";
-	private static final String MSG_ACCESS_TO_JAP = JAPConf.class.getName() + "_accessToJAP";
 
-	final static public String PORT_TAB = "PORT_TAB";
+	//final static public String PORT_TAB = "PORT_TAB";
+	final static public String NETWORK_TAB = "NETWORK_TAB";
 	final static public String UI_TAB = "UI_TAB";
 	final static public String UPDATE_TAB = "UPDATE_TAB";
 	final static public String PROXY_TAB = "PROXY_TAB";
@@ -127,19 +126,6 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 
 	private JAPController m_Controller;
 
-	private JAPJIntField m_tfListenerPortNumber;
-	private JCheckBox m_cbListenerIsLocal;
-	private JLabel m_labelPortnumber1, m_labelPortnumber2;
-
-	private TitledBorder m_borderSettingsListener;
-
-	private JCheckBox m_cbProxy;
-	private JAPJIntField m_tfProxyPortNumber;
-	private JTextField m_tfProxyHost;
-	private JComboBox m_comboProxyType;
-	private JCheckBox m_cbProxyAuthentication;
-	private JTextField m_tfProxyAuthenticationUserID;
-	private JLabel m_labelProxyHost, m_labelProxyPort, m_labelProxyType, m_labelProxyAuthUserID;
 
 	private JCheckBox[] m_cbLogTypes;
 	private JCheckBox m_cbShowDebugConsole, m_cbDebugToFile;
@@ -150,7 +136,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 	private JSlider m_sliderDebugLevel;
 	private JSlider m_sliderDebugDetailLevel;
 
-	private JPanel m_pPort, m_pFirewall, m_pMisc;
+	private JPanel m_pMisc;
 	private JButton m_bttnDefaultConfig, m_bttnCancel, m_bttnHelp;
 
 	//private Font m_fontControls;
@@ -182,8 +168,8 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		JPanel pContainer = new JPanel();
 		GridBagLayout gbl = new GridBagLayout();
 		pContainer.setLayout(gbl);
-		m_pPort = buildPortPanel();
-		m_pFirewall = buildProxyPanel();
+
+		//m_pFirewall = buildProxyPanel();
 		m_pMisc = buildMiscPanel();
 
 		m_moduleSystem = new JAPConfModuleSystem();
@@ -200,12 +186,11 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 			m_moduleSystem.addConfigurationModule(rootNode, new JAPConfUpdate(), UPDATE_TAB);
 		}
 
-		DefaultMutableTreeNode nodeNet = m_moduleSystem.addComponent(rootNode, null, "ngTreeNetwork", null,
-			null);
-		m_moduleSystem.addComponent(nodeNet, m_pPort, "confListenerTab", PORT_TAB, "portlistener");
-		m_moduleSystem.addComponent(nodeNet, m_pFirewall, "confProxyTab", PROXY_TAB, "proxy");
-		m_moduleSystem.addConfigurationModule(nodeNet, new JAPConfForwardingClient() ,
-											  FORWARDING_CLIENT_TAB);
+		//DefaultMutableTreeNode nodeNet = m_moduleSystem.addComponent(rootNode, null, "ngTreeNetwork", null,
+			//null);
+		//m_moduleSystem.addComponent(rootNode, m_pPort, "ngTreeNetwork", NETWORK_TAB, "network");
+		//m_moduleSystem.addComponent(nodeNet, m_pFirewall, "confProxyTab", PROXY_TAB, "proxy");
+		m_moduleSystem.addConfigurationModule(rootNode, new JAPConfNetwork(), NETWORK_TAB);
 
 
 		m_confServices = new JAPConfServices();
@@ -234,11 +219,13 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		}
 		m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeAnon.getPath()));
 
-		m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeNet.getPath()));
+		//m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeNet.getPath()));
 
 		m_moduleSystem.getConfigurationTree().setSelectionRow(0);
 		/* after finishing building the tree, it is important to update the tree size */
 		m_moduleSystem.getConfigurationTree().setMinimumSize(m_moduleSystem.getConfigurationTree().
+			getPreferredSize());
+		System.out.println(m_moduleSystem.getConfigurationTree().
 			getPreferredSize());
 
 		JPanel buttonPanel = new JPanel();
@@ -411,244 +398,6 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 			JAPHelp.getInstance().getContextObj().setContext(m_moduleSystem);
 			JAPHelp.getInstance().loadCurrentContext();
 		}
-		else if (e.getSource() == m_cbProxyAuthentication)
-		{
-			if (m_cbProxyAuthentication.isSelected())
-			{
-				JAPModel.getInstance().setUseProxyAuthentication(true);
-			}
-			else
-			{
-				JAPModel.getInstance().setUseProxyAuthentication(false);
-			}
-		}
-	}
-
-	JPanel buildPortPanel()
-	{
-		m_labelPortnumber1 = new JLabel(JAPMessages.getString("settingsPort1"));
-		//m_labelPortnumber1.setFont(m_fontControls);
-		m_labelPortnumber2 = new JLabel(JAPMessages.getString("settingsPort2"));
-		//m_labelPortnumber2.setFont(m_fontControls);
-		m_tfListenerPortNumber = new JAPJIntField(ListenerInterface.PORT_MAX_VALUE);
-		//m_tfListenerPortNumber.setFont(m_fontControls);
-		m_tfListenerPortNumber.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				okPressed(false);
-			}
-		});
-		m_cbListenerIsLocal = new JCheckBox(JAPMessages.getString("settingsListenerCheckBox"));
-		//m_cbListenerIsLocal.setFont(m_fontControls);
-		// set Font in listenerCheckBox in same color as in portnumberLabel1
-		m_cbListenerIsLocal.setForeground(m_labelPortnumber1.getForeground());
-
-		//m_tfListenerPortNumberSocks.setEnabled(false);
-		//}
-		//m_tfListenerPortNumberSocks = new JAPJIntField();
-		//m_tfListenerPortNumberSocks.setFont(m_fontControls);
-
-		JPanel p = new JPanel();
-		p.setLayout(new BorderLayout());
-		m_borderSettingsListener = new TitledBorder(JAPMessages.getString("settingsListenerBorder"));
-		//m_borderSettingsListener.setTitleFont(m_fontControls);
-		p.setBorder(m_borderSettingsListener);
-		JPanel p1 = new JPanel();
-		GridBagLayout g = new GridBagLayout();
-		p1.setLayout(g);
-		p1.setBorder(new EmptyBorder(5, 10, 10, 10));
-		GridBagConstraints c = new GridBagConstraints();
-		c.anchor = GridBagConstraints.NORTHWEST;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 1;
-		c.gridx = 0;
-		c.gridy = 0;
-		c.weightx = 1;
-		c.weighty = 0;
-		Insets normInsets = new Insets(0, 0, 3, 0);
-		c.insets = normInsets;
-		g.setConstraints(m_labelPortnumber1, c);
-		p1.add(m_labelPortnumber1);
-		c.gridy = 1;
-		g.setConstraints(m_labelPortnumber2, c);
-		p1.add(m_labelPortnumber2);
-		c.gridy = 2;
-		c.fill = c.NONE;
-		g.setConstraints(m_tfListenerPortNumber, c);
-		p1.add(m_tfListenerPortNumber);
-		c.fill = c.HORIZONTAL;
-		JSeparator seperator = new JSeparator();
-		c.gridy = 3;
-		c.insets = new Insets(10, 0, 0, 0);
-		g.setConstraints(seperator, c);
-		p1.add(seperator);
-		c.insets = normInsets;
-		c.gridy = 4;
-		c.insets = new Insets(10, 0, 0, 0);
-
-		c.gridy = 7;
-		c.insets = new Insets(10, 0, 0, 0);
-		g.setConstraints(m_cbListenerIsLocal, c);
-		p1.add(m_cbListenerIsLocal);
-		p.add(p1, BorderLayout.NORTH);
-
-		return p;
-	}
-
-	JPanel buildProxyPanel()
-	{
-		m_cbProxy = new JCheckBox(JAPMessages.getString("settingsProxyCheckBox"));
-		//m_cbProxy.setFont(m_fontControls);
-		m_comboProxyType = new JComboBox();
-		//m_comboProxyType.setFont(m_fontControls);
-		m_comboProxyType.addItem(JAPMessages.getString("settingsProxyTypeHTTP"));
-		m_comboProxyType.addItem(JAPMessages.getString("settingsProxyTypeSOCKS"));
-		m_tfProxyHost = new JTextField(20);
-		//m_tfProxyHost.setFont(m_fontControls);
-		m_tfProxyPortNumber = new JAPJIntField(ListenerInterface.PORT_MAX_VALUE);
-		//m_tfProxyPortNumber.setFont(m_fontControls);
-		ProxyInterface proxyInterface = JAPModel.getInstance().getProxyInterface();
-		boolean bUseProxy = (proxyInterface != null && proxyInterface.isValid());
-		m_tfProxyHost.setEnabled(bUseProxy);
-		m_tfProxyPortNumber.setEnabled(bUseProxy);
-		m_cbProxy.addItemListener(new ItemListener()
-		{
-			public void itemStateChanged(ItemEvent e)
-			{
-				boolean b = m_cbProxy.isSelected();
-				m_comboProxyType.setEnabled(b);
-				m_tfProxyHost.setEnabled(b);
-				m_tfProxyPortNumber.setEnabled(b);
-				m_cbProxyAuthentication.setEnabled(b);
-				m_labelProxyHost.setEnabled(b);
-				m_labelProxyPort.setEnabled(b);
-				m_labelProxyType.setEnabled(b);
-				m_labelProxyAuthUserID.setEnabled(m_cbProxyAuthentication.isSelected() & b);
-				m_tfProxyAuthenticationUserID.setEnabled(m_cbProxyAuthentication.isSelected() & b);
-			}
-
-		});
-		m_tfProxyHost.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				okPressed(false);
-			}
-		});
-		m_tfProxyPortNumber.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				okPressed(false);
-			}
-		});
-		m_cbProxyAuthentication = new JCheckBox(JAPMessages.getString("settingsProxyAuthenticationCheckBox"));
-		//m_cbProxyAuthentication.setFont(m_fontControls);
-		m_tfProxyAuthenticationUserID = new JTextField(10);
-		//m_tfProxyAuthenticationUserID.setFont(m_fontControls);
-		m_cbProxyAuthentication.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				m_tfProxyAuthenticationUserID.setEnabled(m_cbProxyAuthentication.isSelected());
-				m_labelProxyAuthUserID.setEnabled(m_cbProxyAuthentication.isSelected());
-			}
-		});
-		m_labelProxyHost = new JLabel(JAPMessages.getString("settingsProxyHost"));
-		//m_labelProxyHost.setFont(m_fontControls);
-		m_labelProxyPort = new JLabel(JAPMessages.getString("settingsProxyPort"));
-		//m_labelProxyPort.setFont(m_fontControls);
-		m_labelProxyType = new JLabel(JAPMessages.getString("settingsProxyType"));
-		//m_labelProxyType.setFont(m_fontControls);
-		m_labelProxyAuthUserID = new JLabel(JAPMessages.getString("settingsProxyAuthUserID"));
-		//m_labelProxyAuthUserID.setFont(m_fontControls);
-		// set Font in m_cbProxy in same color as in proxyPortLabel
-		m_cbProxy.setForeground(m_labelProxyPort.getForeground());
-		m_cbProxyAuthentication.setForeground(m_labelProxyPort.getForeground());
-
-		JPanel p = new JPanel();
-		p.setLayout(new BorderLayout());
-		TitledBorder border = new TitledBorder(JAPMessages.getString("settingsProxyBorder"));
-		//border.setTitleFont(m_fontControls);
-		p.setBorder(border);
-		JPanel p1 = new JPanel();
-		GridBagLayout g = new GridBagLayout();
-		p1.setLayout(g);
-		if (JAPModel.isSmallDisplay())
-		{
-			p1.setBorder(new EmptyBorder(1, 10, 1, 10));
-		}
-		else
-		{
-			p1.setBorder(new EmptyBorder(5, 10, 10, 10));
-		}
-		GridBagConstraints c = new GridBagConstraints();
-		c.anchor = GridBagConstraints.NORTHWEST;
-		c.fill = GridBagConstraints.NONE;
-		c.gridwidth = 1;
-		c.gridx = 0;
-		c.gridy = 0;
-		c.weightx = 1;
-		c.weighty = 0;
-		Insets normInsets;
-		if (JAPModel.isSmallDisplay())
-		{
-			normInsets = new Insets(0, 0, 1, 0);
-		}
-		else
-		{
-			normInsets = new Insets(0, 0, 3, 0);
-		}
-		c.insets = normInsets;
-		g.setConstraints(m_cbProxy, c);
-		p1.add(m_cbProxy);
-		c.gridy = 1;
-		g.setConstraints(m_labelProxyType, c);
-		c.gridy = 2;
-		p1.add(m_labelProxyType);
-		g.setConstraints(m_comboProxyType, c);
-		c.gridy = 3;
-		p1.add(m_comboProxyType);
-		g.setConstraints(m_labelProxyHost, c);
-		p1.add(m_labelProxyHost);
-		c.gridy = 4;
-		g.setConstraints(m_tfProxyHost, c);
-		p1.add(m_tfProxyHost);
-		c.gridy = 5;
-		g.setConstraints(m_labelProxyPort, c);
-		p1.add(m_labelProxyPort);
-		c.gridy = 6;
-		g.setConstraints(m_tfProxyPortNumber, c);
-		p1.add(m_tfProxyPortNumber);
-		JSeparator seperator = new JSeparator();
-		c.gridy = 7;
-		if (JAPModel.isSmallDisplay())
-		{
-			c.insets = new Insets(5, 0, 1, 0);
-		}
-		else
-		{
-			c.insets = new Insets(10, 0, 3, 0);
-		}
-		g.setConstraints(seperator, c);
-		p1.add(seperator);
-		c.insets = normInsets;
-		c.gridy = 8;
-		//c.insets=new Insets(10,0,0,0);
-		g.setConstraints(m_cbProxyAuthentication, c);
-		p1.add(m_cbProxyAuthentication);
-		c.gridy = 9;
-		g.setConstraints(m_labelProxyAuthUserID, c);
-		p1.add(m_labelProxyAuthUserID);
-		c.gridy = 10;
-		g.setConstraints(m_tfProxyAuthenticationUserID, c);
-		p1.add(m_tfProxyAuthenticationUserID);
-		c.gridy = 11;
-		p.add(p1, BorderLayout.NORTH);
-
-
-		return p;
 	}
 
 	JPanel buildMiscPanel()
@@ -864,67 +613,6 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 	 */
 	private boolean checkValues()
 	{
-		String s = null;
-		int i;
-
-		//--------------
-		//checking Listener Port Number
-		try
-		{
-			i = Integer.parseInt(m_tfListenerPortNumber.getText().trim());
-		}
-		catch (Exception e)
-		{
-			i = -1;
-		}
-		if (!ProxyInterface.isValidPort(i))
-		{
-			JAPDialog.showErrorDialog(ms_JapConfInstance, JAPMessages.getString("errorListenerPortWrong"),
-									  LogType.MISC);
-			return false;
-		}
-
-		//Checking Firewall Settings (Host + Port)
-		if (m_cbProxy.isSelected())
-		{
-			s = m_tfProxyHost.getText().trim();
-			if (s == null || s.equals(""))
-			{
-				JAPDialog.showErrorDialog(ms_JapConfInstance,
-										  JAPMessages.getString("errorFirewallHostNotNull"), LogType.MISC);
-				this.selectCard(PROXY_TAB, null);
-				return false;
-			}
-			try
-			{
-				i = Integer.parseInt(m_tfProxyPortNumber.getText().trim());
-			}
-			catch (Exception e)
-			{
-				i = -1;
-			}
-			if (!ProxyInterface.isValidPort(i))
-			{
-				JAPDialog.showErrorDialog(ms_JapConfInstance,
-										  JAPMessages.getString("errorFirewallServicePortWrong"),
-										  LogType.MISC);
-				this.selectCard(PROXY_TAB, null);
-				return false;
-			}
-			if (m_cbProxyAuthentication.isSelected())
-			{
-				s = m_tfProxyAuthenticationUserID.getText().trim();
-				if (s == null || s.equals(""))
-				{
-					JAPDialog.showErrorDialog(ms_JapConfInstance,
-											  JAPMessages.getString("errorFirewallAuthUserIDNotNull"),
-											  LogType.MISC);
-					this.selectCard(PROXY_TAB, null);
-					return false;
-				}
-			}
-		}
-
 		return true;
 	}
 
@@ -933,10 +621,6 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 	{
 		m_vecConfigChangesNeedRestart.removeAllElements();
 		m_moduleSystem.processResetToDefaultsPressedEvent();
-		m_tfListenerPortNumber.setInt(JAPConstants.DEFAULT_PORT_NUMBER);
-		m_cbListenerIsLocal.setSelected(JAPConstants.DEFAULT_LISTENER_IS_LOCAL);
-
-		m_cbProxy.setSelected(false);
 		m_cbShowDebugConsole.setSelected(false);
 		m_sliderDebugLevel.setValue(LogLevel.WARNING);
 		for (int i = 0; i < m_cbLogTypes.length; i++)
@@ -965,67 +649,6 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 			strFilename = null;
 		}
 		JAPDebug.setLogToFile(strFilename);
-
-		if (JAPModel.getHttpListenerPortNumber() != m_tfListenerPortNumber.getInt())
-		{
-			addNeedRestart(new AbstractRestartNeedingConfigChange()
-			{
-				public String getName()
-				{
-					return JAPMessages.getString("Portlistener");
-				}
-
-				public String getMessage()
-				{
-					return JAPMessages.getString(MSG_LISTENER_CHANGED);
-				}
-
-				public void doChange()
-				{
-					JAPModel.getInstance().setHttpListenerPortNumber(m_tfListenerPortNumber.getInt());
-				}
-			});
-		}
-		if (JAPModel.isHttpListenerLocal() != m_cbListenerIsLocal.isSelected())
-		{
-			addNeedRestart(new AbstractRestartNeedingConfigChange()
-			{
-				public String getName()
-				{
-					return JAPMessages.getString(JAPMessages.getString(MSG_ACCESS_TO_JAP));
-				}
-
-				public void doChange()
-				{
-					JAPModel.getInstance().setHttpListenerIsLocal(m_cbListenerIsLocal.isSelected());
-				}
-			});
-		}
-
-		//m_Controller.setSocksPortNumber(m_tfListenerPortNumberSocks.getInt());
-		// Firewall settings
-		int port = -1;
-		try
-		{
-			port = Integer.parseInt(m_tfProxyPortNumber.getText().trim());
-		}
-		catch (Exception e)
-		{}
-		;
-		int firewallType = ImmutableListenerInterface.PROTOCOL_TYPE_HTTP;
-		if (m_comboProxyType.getSelectedIndex() == 1)
-		{
-			firewallType = ImmutableListenerInterface.PROTOCOL_TYPE_SOCKS;
-		}
-		m_Controller.changeProxyInterface(
-			new ProxyInterface(m_tfProxyHost.getText().trim(),
-							   port,
-							   firewallType,
-							   m_tfProxyAuthenticationUserID.getText().trim(),
-							   m_Controller.getPasswordReader(),
-							   m_cbProxyAuthentication.isSelected(),
-							   m_cbProxy.isSelected()),
-			m_cbProxyAuthentication.isSelected(), getContentPane());
 	}
 
 	private void okPressed(final boolean a_bCloseConfiguration)
@@ -1215,53 +838,6 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		if (b)
 		{
 			m_tfDebugFileName.setText(JAPDebug.getLogFilename());
-		}
-		// listener tab
-		m_tfListenerPortNumber.setInt(JAPModel.getHttpListenerPortNumber());
-		m_cbListenerIsLocal.setSelected(JAPModel.isHttpListenerLocal());
-		//m_tfListenerPortNumberSocks.setInt(JAPModel.getSocksListenerPortNumber());
-		//boolean bSocksVisible = JAPModel.isTorEnabled();
-		//m_tfListenerPortNumberSocks.setVisible(bSocksVisible);
-		//m_labelSocksPortNumber.setVisible(bSocksVisible);
-		//m_cbListenerSocks.setSelected(m_Controller.getUseSocksPort());
-		// firewall tab
-		ProxyInterface proxyInterface = JAPModel.getInstance().getProxyInterface();
-		boolean bEnableProxy = proxyInterface != null &&
-			proxyInterface.isValid();
-		m_cbProxy.setSelected(bEnableProxy);
-		m_tfProxyHost.setEnabled(bEnableProxy);
-		m_tfProxyPortNumber.setEnabled(bEnableProxy);
-		m_comboProxyType.setEnabled(bEnableProxy);
-		m_tfProxyAuthenticationUserID.setEnabled(bEnableProxy);
-		m_labelProxyHost.setEnabled(bEnableProxy);
-		m_labelProxyPort.setEnabled(bEnableProxy);
-		m_labelProxyType.setEnabled(bEnableProxy);
-		if (proxyInterface == null ||
-			proxyInterface.getProtocol() ==
-			ImmutableListenerInterface.PROTOCOL_TYPE_HTTP)
-		{
-			m_comboProxyType.setSelectedIndex(0);
-		}
-		else
-		{
-			m_comboProxyType.setSelectedIndex(1);
-		}
-		m_cbProxyAuthentication.setEnabled(bEnableProxy);
-		if (proxyInterface != null)
-		{
-			m_tfProxyHost.setText(proxyInterface.getHost());
-			m_tfProxyPortNumber.setText(String.valueOf(
-				proxyInterface.getPort()));
-			m_tfProxyAuthenticationUserID.setText(
-				proxyInterface.getAuthenticationUserID());
-			m_cbProxyAuthentication.setSelected(
-				proxyInterface.isAuthenticationUsed());
-		}
-		m_labelProxyAuthUserID.setEnabled(m_cbProxyAuthentication.isSelected() & bEnableProxy);
-		m_tfProxyAuthenticationUserID.setEnabled(m_cbProxyAuthentication.isSelected() & bEnableProxy);
-		if (m_tfProxyPortNumber.getText().trim().equalsIgnoreCase("-1"))
-		{
-			m_tfProxyPortNumber.setText("");
 		}
 		validate();
 	}

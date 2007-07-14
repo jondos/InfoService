@@ -410,6 +410,7 @@ public class KeyExchangeManager {
 		  m_multiplexerOutputStreamCipher = new SymCipher();
 		  /* ensure that keypool is started */
 		  KeyPool.start();
+		  LogHolder.log(LogLevel.DEBUG, LogType.NET, "Starting key exchange...");
 		  if (m_firstMixSymmetricCipher == null)
 		  {
 			  /*

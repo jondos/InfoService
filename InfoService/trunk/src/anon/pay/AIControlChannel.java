@@ -137,8 +137,42 @@ public class AIControlChannel extends XmlControlChannel
 		  }
 		  else if (tagName.equals(XMLErrorMessage.XML_ELEMENT_NAME))
 		  {
-			  getServiceContainer().keepCurrentService(false); // reconnect to another cascade if possible
-			  processErrorMessage(new XMLErrorMessage(elemRoot));
+			  XMLErrorMessage error = new XMLErrorMessage(elemRoot);
+			  if (error.getErrorCode() ==  XMLErrorMessage.ERR_ACCOUNT_EMPTY)
+			  {
+				  // find an account that is not empty - if possible...
+				  Vector accounts = PayAccountsFile.getInstance().getAccounts(m_connectedCascade.getPIID());
+				  Timestamp now = new Timestamp(System.currentTimeMillis());
+				  PayAccount activeAccount = PayAccountsFile.getInstance().getActiveAccount();
+				  PayAccount currentAccount = null;
+				  if (accounts.size() > 0)
+				  {
+					  for (int i = 0; i < accounts.size(); i++)
+					  {
+						  currentAccount = (PayAccount) accounts.elementAt(i);
+						  if (activeAccount != currentAccount && currentAccount.isCharged(now))
+						  {
+							  break;
+						  }
+						  currentAccount = null;
+					  }
+					  if (currentAccount != null)
+					  {
+						  PayAccountsFile.getInstance().setActiveAccount(currentAccount);
+					  }
+					  else
+					  {
+						  getServiceContainer().keepCurrentService(false); // reconnect to another cascade if possible
+						  processErrorMessage(new XMLErrorMessage(elemRoot));
+					  }
+				  }
+			  }
+			  else
+			  {
+				  getServiceContainer().keepCurrentService(false); // reconnect to another cascade if possible
+				  processErrorMessage(new XMLErrorMessage(elemRoot));
+			  }
+
 		  }
 		  else if (tagName.equals(XMLChallenge.XML_ELEMENT_NAME))
 		  {
@@ -193,7 +227,7 @@ public class AIControlChannel extends XmlControlChannel
    *          XMLErrorMessage
    */
   private void processErrorMessage(XMLErrorMessage msg) {
-    PayAccountsFile.getInstance().signalAccountError(msg);
+	  PayAccountsFile.getInstance().signalAccountError(msg);
   }
 
   /**
@@ -344,7 +378,7 @@ public class AIControlChannel extends XmlControlChannel
 	  {
 		  PayAccount currentAccount = null;
 		  PayAccount openTransactionAccount = null;
-		  if (activeAccount != null && activeAccount.getSpent() == 0)
+		  if (activeAccount != null && activeAccount.getSpent() == 0) // spent means account has been used
 		  {
 			  openTransactionAccount = PayAccountsFile.getInstance().getActiveAccount();
 		  }
