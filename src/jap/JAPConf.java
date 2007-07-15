@@ -225,8 +225,6 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		/* after finishing building the tree, it is important to update the tree size */
 		m_moduleSystem.getConfigurationTree().setMinimumSize(m_moduleSystem.getConfigurationTree().
 			getPreferredSize());
-		System.out.println(m_moduleSystem.getConfigurationTree().
-			getPreferredSize());
 
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
