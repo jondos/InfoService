@@ -74,7 +74,8 @@ public class AIControlChannel extends XmlControlChannel
   private static final int EVENT_UNREAL = 1;
 
   /** How many milliseconds to wait before requesting a new account statement */
-  private static final long ACCOUNT_UPDATE_INTERVAL = 90000;
+  private static final long ACCOUNT_UPDATE_INTERVAL_MS = 90000;
+  private static final long ACCOUNT_UPDATE_INTERVAL_BYTES = 2000000;
 
   private static long m_totalBytes = 0;
 
@@ -82,7 +83,8 @@ public class AIControlChannel extends XmlControlChannel
 
   private long m_initialTransferedBytes = 0;
 
-  private long m_lastBalanceUpdate = 0;
+  private long m_lastBalanceUpdateMS = 0;
+  private long m_lastBalanceUpdateBytes = 0;
 
   private Vector m_aiListeners = new Vector();
 
@@ -292,25 +294,30 @@ public class AIControlChannel extends XmlControlChannel
 	 */
 	private synchronized void processCcToSign(XMLEasyCC cc) throws Exception
 	{
-	  if (System.currentTimeMillis() - ACCOUNT_UPDATE_INTERVAL > m_lastBalanceUpdate)
-	  {
-		  // fetch new balance asynchronously
-		  // Elmar: so we probably still work with the old PayAccount info this time?
-		  updateBalance(PayAccountsFile.getInstance().getActiveAccount());
-		  m_lastBalanceUpdate = System.currentTimeMillis();
-	  }
+		PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
+		//check CC for proper account number
+		if ( (currentAccount == null) || (currentAccount.getAccountNumber() != cc.getAccountNumber()))
+		{
+			throw new Exception("Received CC with wrong accountnumber");
+		}
 
-	  if (!m_bInitialCCSent)
-	  {
-		  LogHolder.log(LogLevel.WARNING, LogType.PAY, "CC requested before inital CC was sent!");
-	  }
+		if (System.currentTimeMillis() - ACCOUNT_UPDATE_INTERVAL_MS > m_lastBalanceUpdateMS ||
+			currentAccount.getCurrentBytes() - m_connectedCascade.getPrepaidInterval() > m_lastBalanceUpdateBytes)
+		{
+			// fetch new balance asynchronously
+			// Elmar: so we probably still work with the old PayAccount info this time?
+			updateBalance(currentAccount);
+			m_lastBalanceUpdateMS = System.currentTimeMillis();
+			m_lastBalanceUpdateBytes = currentAccount.getCurrentBytes();
+		}
+
+		if (!m_bInitialCCSent)
+		{
+			LogHolder.log(LogLevel.WARNING, LogType.PAY, "CC requested before inital CC was sent!");
+		}
 
 
-	  PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
-	  //check CC for proper account number
-	  if ((currentAccount == null) || (currentAccount.getAccountNumber() != cc.getAccountNumber())) {
-		throw new Exception("Received CC with wrong accountnumber");
-	  }
+
 
 	  long transferedBytes = currentAccount.updateCurrentBytes(m_packetCounter);
 	  LogHolder.log(LogLevel.DEBUG, LogType.PAY, "AI requests to sign " + transferedBytes + " transferred bytes");
