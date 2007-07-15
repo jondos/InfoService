@@ -494,7 +494,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 			{
 				if (1 == 1)
 				{
-					// This method does not work properly!! Errors happen with fast downloads + browsing
+					/** @todo This method does not work properly!! Errors happen with fast downloads + browsing */
 					return;
 				}
 

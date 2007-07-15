@@ -97,6 +97,8 @@ public class PayAccount implements IXMLEncodable
 	private static final String XML_ATTR_ACTIVE = "active";
 	private static final String XML_BACKUP_DONE = "backupDone";
 
+	private final Object SYNC_BYTES = new Object();
+
 	private static final String VERSION = "1.1";
 
 	/** contains zero or more xml transfer certificates as XMLTransCert */
@@ -602,19 +604,37 @@ public class PayAccount implements IXMLEncodable
 	 */
 	public long updateCurrentBytes(PacketCounter a_packetCounter) throws Exception
 	{
+		long tmp;
+
 		// am I the active account?
 		if (PayAccountsFile.getInstance().getActiveAccount() != this)
 		{
 			throw new Exception("Error: Inactive account called to count used bytes!");
 		}
 
-		long tmp = a_packetCounter.getAndResetBytesForPayment();
+		synchronized (SYNC_BYTES)
+		{
+			tmp = a_packetCounter.getAndResetBytesForPayment();
+			if (tmp > 0)
+			{
+				m_currentBytes += tmp;
+			}
+		}
+
 		if (tmp > 0)
 		{
-			m_currentBytes += tmp;
 			fireChangeEvent();
 		}
+		else if (tmp < 0)
+		{
+			throw new Exception("Negative payment bytes added! Bytes: " + tmp);
+		}
+
 		return tmp;
+	}
+	public void resetCurrentBytes()
+	{
+		m_currentBytes = 0;
 	}
 
 	public long getCurrentBytes()
@@ -625,14 +645,23 @@ public class PayAccount implements IXMLEncodable
 	/**
 	 * addCostConfirmation
 	 */
-	public void addCostConfirmation(XMLEasyCC cc) throws Exception
+	public long addCostConfirmation(XMLEasyCC cc) throws Exception
 	{
-		if (m_accountInfo == null)
+		long added;
+		synchronized (SYNC_BYTES)
 		{
-			m_accountInfo = new XMLAccountInfo();
+			if (m_accountInfo == null)
+			{
+				m_accountInfo = new XMLAccountInfo();
+			}
+			added = m_accountInfo.addCC(cc);
+			if (added > 0)
+			{
+				m_mySpent += added;
+			}
 		}
-		m_mySpent += m_accountInfo.addCC(cc);
 		fireChangeEvent();
+		return added;
 	}
 
 	public void addAccountListener(IAccountListener listener)

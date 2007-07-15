@@ -40,7 +40,6 @@ import anon.client.ChannelTable;
 import anon.client.Multiplexer;
 import anon.client.PacketCounter;
 import anon.client.XmlControlChannel;
-import anon.crypto.XMLSignature;
 import anon.pay.xml.XMLChallenge;
 import anon.pay.xml.XMLEasyCC;
 import anon.pay.xml.XMLErrorMessage;
@@ -63,7 +62,7 @@ import java.sql.Timestamp;
  * thread waits for incoming requests and sends the requested confirmations to
  * the AI.
  *
- * @author Bastian Voigt, Tobias Bayer
+ * @author Bastian Voigt, Tobias Bayer, Rolf Wendolsky
  * @version 1.0
  */
 public class AIControlChannel extends XmlControlChannel
@@ -77,23 +76,17 @@ public class AIControlChannel extends XmlControlChannel
   /** How many milliseconds to wait before requesting a new account statement */
   private static final long ACCOUNT_UPDATE_INTERVAL = 90000;
 
-  /**
-   * Threshold for warning the user of too large number of transferred bytes in
-   * cc (0-1)
-   */
-  private static final double DIFFERENCE_THRESHOLD = 0.0;
-
   private static long m_totalBytes = 0;
+
+  private boolean m_bInitialCCSent = false;
+
+  private long m_initialTransferedBytes = 0;
 
   private long m_lastBalanceUpdate = 0;
 
   private Vector m_aiListeners = new Vector();
 
   private IMutableProxyInterface m_proxys;
-
-  private long m_diff = 0;
-
-  private long m_lastDiffBytes = 0;
 
   private long m_prepaidBytes = 0;
 
@@ -145,6 +138,7 @@ public class AIControlChannel extends XmlControlChannel
 				  Timestamp now = new Timestamp(System.currentTimeMillis());
 				  PayAccount activeAccount = PayAccountsFile.getInstance().getActiveAccount();
 				  PayAccount currentAccount = null;
+				  updateBalance(activeAccount); // show that account is empty
 				  if (accounts.size() > 0)
 				  {
 					  for (int i = 0; i < accounts.size(); i++)
@@ -264,37 +258,54 @@ public class AIControlChannel extends XmlControlChannel
     }
   }
 
+  private void updateBalance(final PayAccount currentAccount)
+  {
+	  if (currentAccount == null)
+	  {
+		  return;
+	  }
+
+	  LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetching new Balance from BI asynchronously");
+	  Thread t = new Thread(new Runnable()
+	  {
+		  public void run()
+		  {
+			  try
+			  {
+				  currentAccount.fetchAccountInfo(m_proxys, true);
+			  }
+			  catch (Exception ex)
+			  {
+				  LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
+			  }
+		  }
+	  });
+	  t.setDaemon(true);
+	  t.start();
+  }
+
 	/**
 	 * processCcToSign: to be called by processPayRequest
 	 * (only the initial, old CC is sent as a naked XMLEasyCC,
 	 * new CCs to sign are sent inside a XMLPayRequest)
 	 *
 	 */
-	private void processCcToSign(XMLEasyCC cc) throws Exception
+	private synchronized void processCcToSign(XMLEasyCC cc) throws Exception
 	{
-	  if (System.currentTimeMillis() - ACCOUNT_UPDATE_INTERVAL > m_lastBalanceUpdate) {
+	  if (System.currentTimeMillis() - ACCOUNT_UPDATE_INTERVAL > m_lastBalanceUpdate)
+	  {
 		  // fetch new balance asynchronously
 		  // Elmar: so we probably still work with the old PayAccount info this time?
-		  LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetching new Balance from BI asynchronously");
-		  Thread t = new Thread(new Runnable()
-		  {
-			  public void run()
-			  {
-				  PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
-				  try
-				  {
-					  currentAccount.fetchAccountInfo(m_proxys, true);
-				  }
-				  catch (Exception ex)
-				  {
-					  LogHolder.log(LogLevel.DEBUG, LogType.PAY, ex);
-				  }
-			  }
-		  });
-		  t.setDaemon(true);
-		  t.start();
+		  updateBalance(PayAccountsFile.getInstance().getActiveAccount());
 		  m_lastBalanceUpdate = System.currentTimeMillis();
 	  }
+
+	  if (!m_bInitialCCSent)
+	  {
+		  LogHolder.log(LogLevel.WARNING, LogType.PAY, "CC requested before inital CC was sent!");
+	  }
+
+
 	  PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
 	  //check CC for proper account number
 	  if ((currentAccount == null) || (currentAccount.getAccountNumber() != cc.getAccountNumber())) {
@@ -307,6 +318,7 @@ public class AIControlChannel extends XmlControlChannel
 
 	//System.out.println("PC Hash looked: " + cc.getConcatenatedPriceCertHashes());
 	  XMLEasyCC myLastCC = currentAccount.getAccountInfo().getCC(cc.getConcatenatedPriceCertHashes());
+	  //System.out.println("toSign: " + cc.getConcatenatedPriceCertHashes());
 	  long confirmedBytes = 0;
 	  if (myLastCC != null)
 	  {
@@ -314,11 +326,15 @@ public class AIControlChannel extends XmlControlChannel
 		  LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Transferred bytes of last CC: " + confirmedBytes);
 	  }
 
+	  //System.out.println("Confirmed: " + confirmedBytes);
+	  //System.out.println("To confirm: " + cc.getTransferredBytes() + " Transferred: " + currentAccount.getCurrentBytes());
+
 	  // check if bytes asked for in CC match bytes transferred
 	  long newPrepaidBytes = (cc.getTransferredBytes() - confirmedBytes) + m_prepaidBytes - transferedBytes;
 
 	  if (newPrepaidBytes > m_connectedCascade.getPrepaidInterval())
 	  {
+		  // this may happen with fast downloads; the bytes are counted in the Mix before JAP receives them
 		  long diff = newPrepaidBytes - m_connectedCascade.getPrepaidInterval();
 		  LogHolder.log(LogLevel.WARNING, LogType.PAY,
 						"Illegal number of prepaid bytes for signing. Difference/Spent/CC/PrevCC: " +
@@ -330,11 +346,10 @@ public class AIControlChannel extends XmlControlChannel
 		  }
 		  else
 		  {
-			  this.fireAIEvent(EVENT_UNREAL, diff);
+			  cc.setTransferredBytes(confirmedBytes); // resend the last confirmed amount
+			  //this.fireAIEvent(EVENT_UNREAL, diff); // do not show this problem to the user...
 		  }
 	  }
-
-	  //System.out.println("CC transfered bytes: " + cc.getTransferredBytes() + " Old transfered: " + oldSpent + " Prepaid: " + m_prepaidBytes + " new bytes:" + newBytes);
 
 	  //get pricecerts and check against hashes in CC
 	  //get price certs from connected cascade
@@ -350,8 +365,10 @@ public class AIControlChannel extends XmlControlChannel
 		  String cascadeId = m_connectedCascade.getId();
 		  cc.setCascadeID(cascadeId);
 		  cc.sign(currentAccount.getPrivateKey());
-		  currentAccount.addCostConfirmation(cc);
-		  //System.out.println("cc to be sent: "+XMLUtil.toString(XMLUtil.toXMLDocument(cc)));
+		  if (currentAccount.addCostConfirmation(cc) <= 0)
+		  {
+			  LogHolder.log(LogLevel.WARNING, LogType.PAY, "Tried to add old cost confirmation!");
+		  }
 	  }
 	  else
 	  {
@@ -451,6 +468,7 @@ public class AIControlChannel extends XmlControlChannel
 		  return false;
 	  }
 
+	  PayAccountsFile.getInstance().getActiveAccount().resetCurrentBytes();
 	  sendXmlMessage(XMLUtil.toXMLDocument(PayAccountsFile.getInstance().getActiveAccount().getAccountCertificate()));
 
 	  return true;
@@ -478,9 +496,10 @@ public class AIControlChannel extends XmlControlChannel
 	 *
 	 * @param a_cc XMLEasyCC: the last CC that the JAP sent to this Cascade, as returned from the AI
 	 */
-	private void processInitialCC(XMLEasyCC a_cc) {
+	private synchronized void processInitialCC(XMLEasyCC a_cc) {
 		PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
 		String msg = "AI has sent a INVALID last cost confirmation.";
+
 		if (a_cc.verify(currentAccount.getPublicKey()))
 		{
 			try
@@ -532,8 +551,14 @@ public class AIControlChannel extends XmlControlChannel
 							  "AI has sent a valid last cost confirmation. Adding it to account.");
 				//no need to verify the price certificates of the last CC, since they might have changed since then
 				//System.out.println("PC Hash stored: " + a_cc.getConcatenatedPriceCertHashes());
-				currentAccount.addCostConfirmation(a_cc);
-
+				if (currentAccount.addCostConfirmation(a_cc) < 0)
+				{
+					/*
+					a_cc.setTransferredBytes(currentAccount.getAccountInfo().getCC(
+									   a_cc.getConcatenatedPriceCertHashes()).getTransferredBytes());*/
+					LogHolder.log(LogLevel.WARNING, LogType.PAY, "Received old cost confirmation!");
+				}
+				//System.out.println("Initial: " + a_cc.getTransferredBytes() + ":" + a_cc.getConcatenatedPriceCertHashes());
 				//get Cascade's prepay interval
 				long currentlyTransferedBytes = currentAccount.updateCurrentBytes(m_packetCounter);
 				long bytesToPay =
@@ -543,16 +568,24 @@ public class AIControlChannel extends XmlControlChannel
 
 				if (bytesToPay > 0)
 				{
+					long oldBytes = a_cc.getTransferredBytes();
+					XMLEasyCC newCC = new XMLEasyCC(a_cc);
 					//send CC for up to <last CC + prepay interval> bytes
-					a_cc.addTransferredBytes(bytesToPay);
-					a_cc.sign(currentAccount.getPrivateKey());
-					currentAccount.addCostConfirmation(a_cc);
-					//System.out.println(a_cc.getTransferredBytes() + ":" +  currentAccount.getAccountInfo().getCC(a_cc.getConcatenatedPriceCertHashes()).getTransferredBytes() + ":" + a_cc.getConcatenatedPriceCertHashes());
-
+					newCC.addTransferredBytes(bytesToPay);
+					newCC.sign(currentAccount.getPrivateKey());
+					if (currentAccount.addCostConfirmation(newCC) <= 0)
+					{
+						LogHolder.log(LogLevel.WARNING, LogType.PAY, "Sending old cost confirmation! "+
+							"Diff (ShoulBe)/Old/New:" + bytesToPay + "/" + oldBytes + "/" + newCC.getTransferredBytes());
+					}
+					a_cc = newCC;
 				}
+				//System.out.println("Sent: " + a_cc.getTransferredBytes() + ":" + a_cc.getConcatenatedPriceCertHashes());
 
 				// always send the message to tell the Mix the CC was received
 				sendXmlMessage(XMLUtil.toXMLDocument(a_cc));
+
+				m_bInitialCCSent = true;
 
 				return;
 			}

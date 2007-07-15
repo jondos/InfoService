@@ -39,6 +39,8 @@ import anon.crypto.IMyPublicKey;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import org.w3c.dom.NodeList;
+import anon.util.XMLParseException;
+import anon.util.Util;
 
 /**
  * XML structure for a easy cost confirmation (without mircopayment function) which is sent to the AI by the Jap
@@ -69,7 +71,6 @@ public class XMLEasyCC implements IXMLEncodable
 		return ms_strElemName;
 	}
 
-
 	/**
 	 * XMLEasyCC
 	 *  construct a CC including a Vector of price certificates (one per mix of the cascade)
@@ -80,6 +81,7 @@ public class XMLEasyCC implements IXMLEncodable
 	 * @param a_priceCerts Vector
 	 * @throws Exception
 	 */
+	/*
 	public XMLEasyCC(long accountNumber, long transferred, PKCS12 a_certificate, Hashtable a_priceCerts, String a_AiName) throws
 		Exception
 	{
@@ -96,7 +98,7 @@ public class XMLEasyCC implements IXMLEncodable
 		{
 			XMLSignature.sign(m_docTheEasyCC, a_certificate);
 		}
-	}
+	}*/
 
 
 	public XMLEasyCC(byte[] data) throws Exception
@@ -120,6 +122,22 @@ public class XMLEasyCC implements IXMLEncodable
 		m_docTheEasyCC = XMLUtil.createDocument();
 		m_docTheEasyCC.appendChild(XMLUtil.importNode(m_docTheEasyCC, xml, true));
 	}
+
+	public XMLEasyCC(XMLEasyCC a_copiedCc) throws XMLParseException
+	{
+		 m_lTransferredBytes = a_copiedCc.m_lTransferredBytes;
+		 m_lAccountNumber = a_copiedCc.m_lAccountNumber;
+		 m_id = a_copiedCc.m_id = 0;
+		 m_priceCerts = (Hashtable)a_copiedCc.m_priceCerts.clone();
+		 m_cascadeID =  a_copiedCc.m_cascadeID;
+		 m_docTheEasyCC = XMLUtil.createDocument();
+		 m_docTheEasyCC.appendChild(XMLUtil.importNode(m_docTheEasyCC,
+													   a_copiedCc.m_docTheEasyCC.getDocumentElement(), true));
+		 m_priceCertHashesConcatenated = a_copiedCc.m_priceCertHashesConcatenated;
+		 m_strPIID = a_copiedCc.m_strPIID;
+	 }
+
+
 
 	private void setValues(Element element) throws Exception
 	{
@@ -301,17 +319,30 @@ public class XMLEasyCC implements IXMLEncodable
 
 	private void createConcatenatedPriceCertHashes()
 	{
+		// sort hashes alphabetically
+
+		String[] ids, hashes;
 		Enumeration enumer;
 
 		if (m_priceCerts != null)
 		{
 			synchronized (m_priceCerts)
 			{
-				m_priceCertHashesConcatenated = "";
-				enumer = m_priceCerts.elements();
-				while (enumer.hasMoreElements())
+				ids = new String[m_priceCerts.size()];
+				hashes = new String[m_priceCerts.size()];
+
+
+				enumer = m_priceCerts.keys();
+				for (int i = 0; i < m_priceCerts.size(); i++)
 				{
-					m_priceCertHashesConcatenated += enumer.nextElement().toString();
+					ids[i] =  enumer.nextElement().toString();
+					hashes[i] = m_priceCerts.get(ids[i]).toString();
+				}
+				Util.sort(ids, hashes);
+				m_priceCertHashesConcatenated = "";
+				for (int i = 0; i < hashes.length; i++)
+				{
+					m_priceCertHashesConcatenated += hashes[i];
 				}
 			}
 		}
