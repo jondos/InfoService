@@ -492,6 +492,12 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		{
 			synchronized (CONN_ERR_SYNC)
 			{
+				if (1 == 1)
+				{
+					// This method does not work properly!! Errors happen with fast downloads + browsing
+					return;
+				}
+
 				if (m_connectionErrorTime <= (System.currentTimeMillis() - CONNECTION_ERROR_WAIT_TIME))
 				{
 					// error signal of last period is too old; remove the whole error history

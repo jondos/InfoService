@@ -123,22 +123,25 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 		// add CCs
 		Element elemCCs = a_doc.createElement("CostConfirmations");
 		elemRoot.appendChild(elemCCs);
-		Enumeration enumer = m_costConfirmations.elements();
-		XMLEasyCC cc;
-		while (enumer.hasMoreElements())
+		synchronized (m_costConfirmations)
 		{
-			cc = (XMLEasyCC) enumer.nextElement();
-			elem = cc.toXmlElement(a_doc);
-			elemCCs.appendChild(elem);
+			Enumeration enumer = m_costConfirmations.elements();
+			XMLEasyCC cc;
+			while (enumer.hasMoreElements())
+			{
+				cc = (XMLEasyCC) enumer.nextElement();
+				elem = cc.toXmlElement(a_doc);
+				elemCCs.appendChild(elem);
+			}
 		}
-
 		return elemRoot;
 	}
 
 	/**
 	 * Adds a cost confirmation xml structure to the accountinfo.
 	 * Note: If a cost confirmation for the same AI is already present
-	 * it will be overwritten.
+	 * it will be overwritten. Only adds the CC if it has the same amount or
+	 * more bytes than the previous one.
 	 *
 	 * @param xmlCC XMLEasyCC
 	 * @return the difference in the number of bytes between the old and the
@@ -148,10 +151,19 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 	{
 		long oldBytes = 0;
 		XMLEasyCC cc;
-		cc = (XMLEasyCC)m_costConfirmations.put(a_cc.getConcatenatedPriceCertHashes(), a_cc);
-		if (cc != null)
+		synchronized (m_costConfirmations)
 		{
-			oldBytes = cc.getTransferredBytes();
+			cc = (XMLEasyCC)m_costConfirmations.get(a_cc.getConcatenatedPriceCertHashes());
+			m_costConfirmations.put(a_cc.getConcatenatedPriceCertHashes(), a_cc);
+			if (cc != null)
+			{
+				oldBytes = cc.getTransferredBytes();
+				if (oldBytes > a_cc.getTransferredBytes())
+				{
+					// This is an old CC! Restore the previous one...
+					m_costConfirmations.put(cc.getConcatenatedPriceCertHashes(), cc);
+				}
+			}
 		}
 		return a_cc.getTransferredBytes() - oldBytes;
 	}
@@ -199,7 +211,7 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 	 */
 	public Enumeration getCCs()
 	{
-		return m_costConfirmations.elements();
+		return ((Hashtable)m_costConfirmations.clone()).elements();
 	}
 
 	/**
