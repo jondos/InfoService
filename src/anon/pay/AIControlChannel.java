@@ -305,18 +305,16 @@ public class AIControlChannel extends XmlControlChannel
 			currentAccount.getCurrentBytes() - m_connectedCascade.getPrepaidInterval() > m_lastBalanceUpdateBytes)
 		{
 			// fetch new balance asynchronously
-			// Elmar: so we probably still work with the old PayAccount info this time?
 			updateBalance(currentAccount);
 			m_lastBalanceUpdateMS = System.currentTimeMillis();
 			m_lastBalanceUpdateBytes = currentAccount.getCurrentBytes();
 		}
 
+		/*
 		if (!m_bInitialCCSent)
 		{
 			LogHolder.log(LogLevel.WARNING, LogType.PAY, "CC requested before inital CC was sent!");
-		}
-
-
+		}*/
 
 
 	  long transferedBytes = currentAccount.updateCurrentBytes(m_packetCounter);

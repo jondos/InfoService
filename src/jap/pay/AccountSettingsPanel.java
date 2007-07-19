@@ -877,27 +877,48 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		{
 			public void run()
 			{
-				PayAccount account;
-				DefaultListModel listModel = new DefaultListModel();
-				Enumeration accounts = PayAccountsFile.getInstance().getAccounts();
-				int selectedItem = m_listAccounts.getSelectedIndex();
-
-				while (accounts.hasMoreElements())
+				synchronized (m_listAccounts)
 				{
-					account = (PayAccount) accounts.nextElement();
-					listModel.addElement(account);
-				}
+					PayAccount account;
+					int activeAccountIndex = -1;
+					DefaultListModel listModel = new DefaultListModel();
+					Enumeration accounts = PayAccountsFile.getInstance().getAccounts();
+					int selectedItem = m_listAccounts.getSelectedIndex();
 
-				m_listAccounts.setModel(listModel);
-				m_listAccounts.revalidate();
+					for (int i = 0; accounts.hasMoreElements(); i++)
+					{
+						account = (PayAccount) accounts.nextElement();
+						if (PayAccountsFile.getInstance().getActiveAccount() == account)
+						{
+							activeAccountIndex = i;
+						}
+						listModel.addElement(account);
+					}
 
-				if (selectedItem != -1)
-				{
-					m_listAccounts.setSelectedIndex(selectedItem);
-				}
-				else
-				{
-					m_listAccounts.setSelectedIndex(0);
+					m_listAccounts.setModel(listModel);
+					m_listAccounts.revalidate();
+
+					if (m_listAccounts.getModel().getSize() > 0)
+					{
+						if (selectedItem < 0)
+						{
+							if (activeAccountIndex >= 0)
+							{
+								selectedItem = activeAccountIndex;
+							}
+							else
+							{
+								selectedItem = 0;
+							}
+						}
+						else if (selectedItem >= m_listAccounts.getModel().getSize())
+						{
+							selectedItem = m_listAccounts.getModel().getSize() - 1;
+						}
+						m_listAccounts.setSelectedIndex(selectedItem);
+						m_listAccounts.scrollRectToVisible(m_listAccounts.getCellBounds(selectedItem,
+							selectedItem));
+					}
 				}
 			}
 		};
@@ -930,7 +951,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			m_btnTransactions.setEnabled(enable);
 			m_btnExportAccount.setEnabled(enable);
 			m_btnReload.setEnabled(enable);
-			m_btnSelect.setEnabled(getSelectedAccount() != null);
+			m_btnSelect.setEnabled(getSelectedAccount() != null &&
+								   getSelectedAccount() != PayAccountsFile.getInstance().getActiveAccount());
 			m_btnDeleteAccount.setEnabled(getSelectedAccount() != null);
 		}
 		/*
@@ -2900,8 +2922,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		{
 			try
 			{
-				accounts.deleteAccount(selectedAccount.getAccountNumber());
 				m_listAccounts.clearSelection();
+				accounts.deleteAccount(selectedAccount.getAccountNumber());
 				updateAccountList();
 				doShowDetails(getSelectedAccount());
 			}

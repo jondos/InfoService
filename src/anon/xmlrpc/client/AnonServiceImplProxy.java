@@ -70,7 +70,7 @@ public class AnonServiceImplProxy implements AnonService
 		return ErrorCodes.E_UNKNOWN;
 	}
 
-	public void shutdown()
+	public void shutdown(boolean a_bResetTransferredBytes)
 	{
 	}
 

@@ -368,8 +368,9 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 
 		GUIUtils.moveToUpRightCorner(this);
 		GUIUtils.restoreLocation(this, JAPModel.getInstance().getIconifiedWindowLocation());
-		m_labelBytes.setText(JAPMessages.getString("iconifiedViewZero"));
-		m_lblBytes.setText(JAPMessages.getString("iconifiedviewBytes") + ": ");
+		//m_labelBytes.setText(JAPMessages.getString("iconifiedViewZero"));
+		m_labelBytes.setText(JAPUtil.formatBytesValueWithoutUnit(0));
+		m_lblBytes.setText(JAPUtil.formatBytesValueOnlyUnit(0) + ": ");
 		m_labelUsers.setText(JAPMessages.getString("iconifiedViewNA"));
 		m_labelTraffic.setText(JAPMessages.getString("iconifiedViewNA"));
 		m_labelAnon.setText(JAPMessages.getString("iconifiedViewNA"));
@@ -483,8 +484,8 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 				else
 				{
 					/* not in anonymity mode */
-					m_lblBytes.setText(JAPMessages.getString("iconifiedviewBytes") + ": ");
-					m_labelBytes.setText(JAPMessages.getString("iconifiedViewNA"));
+					//m_lblBytes.setText(JAPMessages.getString("iconifiedviewBytes") + ": ");
+					//m_labelBytes.setText(JAPMessages.getString("iconifiedViewNA"));
 					m_labelUsers.setText(JAPMessages.getString("iconifiedViewNA"));
 					m_labelTraffic.setText(JAPMessages.getString("iconifiedViewNA"));
 					m_labelAnon.setText(JAPMessages.getString("iconifiedViewNA"));
@@ -543,6 +544,37 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 	}
 
 
+	public void packetMixed(final long a_totalBytes)
+	{
+		Runnable updateThread = new Runnable()
+		{
+			public void run()
+			{
+				//if (JAPController.getInstance().isAnonConnected())
+				{
+					m_lblBytes.setText(JAPUtil.formatBytesValueOnlyUnit(a_totalBytes) + ":");
+					m_labelBytes.setText(JAPUtil.formatBytesValueWithoutUnit(a_totalBytes));
+				}
+				/*else
+				{
+					m_lblBytes.setText(JAPMessages.getString("iconifiedviewBytes") + ": ");
+					m_labelBytes.setText(JAPMessages.getString("iconifiedViewNA"));
+				}*/
+			}
+		};
+
+		if (SwingUtilities.isEventDispatchThread())
+		{
+			updateThread.run();
+		}
+		else
+		{
+			SwingUtilities.invokeLater(updateThread);
+		}
+
+	}
+
+	/*
 	public void transferedBytes(final long b, final int protocolType)
 	{
 		if (protocolType == IProxyListener.PROTOCOL_WWW)
@@ -583,7 +615,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		}
 
 		blink();
-	}
+	}*/
 
 	private void setButtonBorder()
 	{
@@ -600,7 +632,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 	/**
 	 * Shows a blinking JAP icon.
 	 */
-	private void blink()
+	public void blink()
 	{
 		Thread blinkThread = new Thread(new Runnable()
 		{

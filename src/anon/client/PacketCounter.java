@@ -35,7 +35,7 @@ import java.util.Observable;
 import java.util.Observer;
 
 
-/** 
+/**
  * @author Stefan Lieske
  */
 public class PacketCounter extends Observable implements Observer {
@@ -43,54 +43,67 @@ public class PacketCounter extends Observable implements Observer {
   /**
    * This counts the data-packets for the observers of this class.
    */
-  private long m_processedDataPackets;
-  
+  private volatile long m_processedDataPackets;
+
   /**
    * This counts the packets which have to be paid.
    */
-  private long m_payPacketCounter;
-  
+  private volatile long m_payPacketCounter;
+
   private Object m_internalSynchronization;
-  
-  
-  public PacketCounter() {
-    m_processedDataPackets = 0;
-    m_payPacketCounter = 0;
-    m_internalSynchronization = new Object();
+
+  public PacketCounter(long a_processedPackets) {
+	  if(a_processedPackets > 0)
+	  {
+		  m_processedDataPackets = a_processedPackets;
+	  }
+	  else
+	  {
+		  m_processedDataPackets = 0;
+	  }
+	  m_payPacketCounter = 0;
+	  m_internalSynchronization = new Object();
+
   }
-  
-  
-  public void update(Observable a_object, Object a_argument) {
-    if (a_argument instanceof PacketProcessedEvent) {
-      int code = ((PacketProcessedEvent)a_argument).getCode();
-      synchronized (m_internalSynchronization) {
-        switch (code) {
-          case PacketProcessedEvent.CODE_DATA_PACKET_SENT: {
-            m_processedDataPackets++;
-            m_payPacketCounter++;
-            setChanged();
-            break;
-          }
-          case PacketProcessedEvent.CODE_DATA_PACKET_RECEIVED: {
-            m_processedDataPackets++;
-            m_payPacketCounter++;
-            setChanged();
-            break;
-          }
-          case PacketProcessedEvent.CODE_DATA_PACKET_DISCARDED: {
-            /* packet have to be paid, but has no further use */
-            m_payPacketCounter++;
-            break;
-          }
-        }
-        /* oberservers will get only a notification if setChanged() was
-         * called
-         */
-        notifyObservers(new Long(m_processedDataPackets * (long)(MixPacket.getPacketSize())));
-      }
-    }
+  public PacketCounter()
+  {
+	  this(0);
   }
-  
+
+  public void update(Observable a_object, Object a_argument)
+  {
+	  if (a_argument instanceof PacketProcessedEvent)
+	  {
+		  int code = ( (PacketProcessedEvent) a_argument).getCode();
+		  synchronized (m_internalSynchronization)
+		  {
+			  switch (code)
+			  {
+				  case PacketProcessedEvent.CODE_DATA_PACKET_SENT:
+				  case PacketProcessedEvent.CODE_DATA_PACKET_RECEIVED:
+				  case PacketProcessedEvent.CODE_DATA_PACKET_DISCARDED:
+				  {
+					  m_processedDataPackets++;
+					  m_payPacketCounter++;
+					  setChanged();
+					  break;
+				  }
+				  default:
+					  break;
+			  }
+			  /* oberservers will get only a notification if setChanged() was
+			   * called
+			   */
+			  notifyObservers();
+		  }
+	  }
+  }
+
+  public long getProcessedPackets()
+  {
+	  return m_processedDataPackets;
+  }
+
   public long getAndResetBytesForPayment() {
     long paymentBytes = 0;
     synchronized (m_internalSynchronization) {
@@ -100,5 +113,5 @@ public class PacketCounter extends Observable implements Observer {
     return paymentBytes;
   }
 
-  
+
 }

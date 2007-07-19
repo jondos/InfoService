@@ -62,6 +62,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import java.net.SocketException;
+import java.net.InetAddress;
 
 /**
  * @author stefan
@@ -84,10 +85,22 @@ public class TinyTLSServerSocket extends Socket
 	private Vector m_supportedciphersuites;
 	private CipherSuite m_selectedciphersuite = null;
 
+	private Thread m_threadCloseGuard = null;
+	private Object SYNC_CLOSE = new Object();
+
+
 //This is REALLY strange (so called WRONG)
 // TinyTLSServerSoket does extends soket - but in fact the following
 //member is the acutal socket used!
 	private Socket m_Socket;
+
+	public InetAddress getInetAddress()
+	{
+		return m_Socket.getInetAddress();
+	}
+
+
+
 	private TLSInputStream m_istream;
 	private TLSOutputStream m_ostream;
 
@@ -136,6 +149,7 @@ public class TinyTLSServerSocket extends Socket
 			this.m_aktPendLen = 0;
 			m_ReadRecordState = STATE_START;
 		}
+
 
 		/**
 		 * Reads one record if we need more data...
@@ -419,7 +433,7 @@ public class TinyTLSServerSocket extends Socket
 								{
 									m_handshakemessages = ByteArrayUtil.conc(m_handshakemessages,
 										dataBuff, m_aktTLSRecord.getLength());
-									LogHolder.log(LogLevel.DEBUG, LogType.TOR, "[CLIENT HELLO RECIEVED]");
+									//LogHolder.log(LogLevel.DEBUG, LogType.TOR, "[CLIENT HELLO RECIEVED]");
 									return;
 								}
 								complength--;
@@ -461,7 +475,7 @@ public class TinyTLSServerSocket extends Socket
 					m_selectedciphersuite.processClientKeyExchange(dh_y);
 					m_handshakemessages = ByteArrayUtil.conc(m_handshakemessages, dataBuff,
 						m_aktTLSRecord.getLength());
-					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_KEY_EXCHANGE]");
+					//LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_KEY_EXCHANGE]");
 					return;
 				}
 			}
@@ -484,7 +498,7 @@ public class TinyTLSServerSocket extends Socket
 			byte[] dataBuff = m_aktTLSRecord.getData();
 			if (m_aktTLSRecord.getType() == 20 && m_aktTLSRecord.getLength() == 1 && dataBuff[0] == 1)
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_CHANGE_CIPHER_SPEC]");
+				//LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_CHANGE_CIPHER_SPEC]");
 			}
 			else
 			{
@@ -502,7 +516,7 @@ public class TinyTLSServerSocket extends Socket
 						m_handshakemessages);
 					m_handshakemessages = ByteArrayUtil.conc(m_handshakemessages, dataBuff,
 						m_aktTLSRecord.getLength());
-					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_FINISHED]");
+					//LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CLIENT_FINISHED]");
 					return;
 				}
 			}
@@ -621,7 +635,7 @@ public class TinyTLSServerSocket extends Socket
 												compression);
 
 			sendHandshake(2, message);
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_HELLO]");
+			//LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_HELLO]");
 		}
 
 		/**
@@ -636,7 +650,7 @@ public class TinyTLSServerSocket extends Socket
 			length = ByteArrayUtil.inttobyte(message.length, 3);
 			message = ByteArrayUtil.conc(length, message);
 			sendHandshake(11, message);
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_CERTIFICATE]");
+			//LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_CERTIFICATE]");
 		}
 
 		/**
@@ -649,7 +663,7 @@ public class TinyTLSServerSocket extends Socket
 						  m_selectedciphersuite.getKeyExchangeAlgorithm().generateServerKeyExchange(
 				m_privatekey,
 				m_clientrandom, m_serverrandom));
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_KEY_EXCHANGE]");
+			//LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_KEY_EXCHANGE]");
 		}
 
 		/**
@@ -660,7 +674,7 @@ public class TinyTLSServerSocket extends Socket
 		{
 			sendHandshake(14, new byte[]
 						  {});
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_HELLO_DONE]");
+			//LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_HELLO_DONE]");
 		}
 
 		/**
@@ -686,7 +700,7 @@ public class TinyTLSServerSocket extends Socket
 			send(20, new byte[]
 				 {1}, 0, 1);
 			m_encrypt = true;
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_CHANGE_CIPHER_SPEC]");
+			//LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_CHANGE_CIPHER_SPEC]");
 		}
 
 		/**
@@ -698,8 +712,13 @@ public class TinyTLSServerSocket extends Socket
 			sendHandshake(20,
 						  m_selectedciphersuite.getKeyExchangeAlgorithm().calculateServerFinished(
 				m_handshakemessages));
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_FINISHED]");
+			//LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[SERVER_FINISHED]");
 		}
+	}
+
+	public TinyTLSServerSocket(Socket socket) throws IOException
+	{
+		this (socket, 0);
 	}
 
 	/**
@@ -711,9 +730,50 @@ public class TinyTLSServerSocket extends Socket
 	 * @param port
 	 * Server's TLS Port
 	 */
-	public TinyTLSServerSocket(Socket socket) throws IOException
+	public TinyTLSServerSocket(Socket socket, final long a_forceCloseAfterMS) throws IOException
 	{
 		m_Socket = socket;
+
+		if (a_forceCloseAfterMS > 0)
+		{
+			Runnable run = new Runnable()
+			{
+				public void run()
+				{
+					synchronized(SYNC_CLOSE)
+					{
+						if (m_threadCloseGuard != null)
+						{
+							try
+							{
+								SYNC_CLOSE.wait(a_forceCloseAfterMS);
+							}
+							catch (InterruptedException ex)
+							{
+							}
+							if (m_Socket != null && !m_Socket.isClosed())
+							{
+								LogHolder.log(LogLevel.ALERT, LogType.NET,
+											  "CloseGuard: Closing TLS socket after " + a_forceCloseAfterMS +
+											  " milliseconds!");
+
+								try
+								{
+									close();
+								}
+								catch (IOException ex1)
+								{
+									LogHolder.log(LogLevel.ALERT, LogType.NET, ex1);
+								}
+							}
+						}
+					}
+				}
+			};
+			m_threadCloseGuard = new Thread(run);
+			m_threadCloseGuard.start();
+		}
+
 		this.m_handshakecompleted = false;
 		this.m_encrypt = false;
 		this.m_supportedciphersuites = new Vector();
@@ -739,7 +799,7 @@ public class TinyTLSServerSocket extends Socket
 				 m_RSACertificate != null))
 			{
 				this.m_supportedciphersuites.addElement(cs);
-				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CIPHERSUITE ADDED] : " + cs.toString());
+				//LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[CIPHERSUITE ADDED] : " + cs.toString());
 			}
 			else
 			{
@@ -759,17 +819,17 @@ public class TinyTLSServerSocket extends Socket
 	{
 		if (m_supportedciphersuites.isEmpty())
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[NO_CIPHERSUITE_DEFINED] : using predefined");
+			//LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[NO_CIPHERSUITE_DEFINED] : using predefined");
 			if (m_DSSKey != null && m_DSSCertificate != null)
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[DSS FOUND] : using DSS Ciphersuites");
+				//LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[DSS FOUND] : using DSS Ciphersuites");
 				this.addCipherSuite(new DHE_DSS_WITH_3DES_CBC_SHA());
 				this.addCipherSuite(new DHE_DSS_WITH_AES_128_CBC_SHA());
 				this.addCipherSuite(new DHE_DSS_WITH_DES_CBC_SHA());
 			}
 			if (m_RSAKey != null && m_RSACertificate != null)
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[RSA FOUND] : using RSA Ciphersuites");
+				//LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[RSA FOUND] : using RSA Ciphersuites");
 				this.addCipherSuite(new DHE_RSA_WITH_3DES_CBC_SHA());
 				this.addCipherSuite(new DHE_RSA_WITH_AES_128_CBC_SHA());
 				this.addCipherSuite(new DHE_RSA_WITH_DES_CBC_SHA());
@@ -836,11 +896,66 @@ public class TinyTLSServerSocket extends Socket
 
 	public void close() throws IOException
 	{
-		m_ostream.send(21, new byte[]
-					   {1, 0}, 0, 2);
+		IOException ex = null;
+
+		try
+		{
+			if (m_ostream != null)
+			{
+				m_ostream.send(21, new byte[]
+							   {1, 0}, 0, 2);
+			}
+		}
+		catch (IOException a_e)
+		{
+			ex = a_e;
+		}
+		try
+		{
+			if (m_ostream != null)
+			{
+				m_ostream.close();
+			}
+		}
+		catch (IOException a_e)
+		{
+			if (ex == null)
+			{
+				ex = a_e;
+			}
+		}
+
+		try
+		{
+			if (m_istream != null)
+			{
+				m_istream.close();
+			}
+		}
+		catch (IOException a_e)
+		{
+			if (ex == null)
+			{
+				ex = a_e;
+			}
+		}
+
 		if (m_Socket != null)
 		{
 			m_Socket.close();
+		}
+		if (m_threadCloseGuard != null)
+		{
+			synchronized(SYNC_CLOSE)
+			{
+				SYNC_CLOSE.notify();
+				m_threadCloseGuard = null;
+			}
+		}
+
+		if (ex != null)
+		{
+			throw ex;
 		}
 	}
 

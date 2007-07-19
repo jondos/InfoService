@@ -318,7 +318,7 @@ final public class DirectProxy implements Runnable, AnonService
 
 	}
 
-	public synchronized void shutdown()
+	public synchronized void shutdown(boolean a_bResetTransferredBytes)
 	{
 		synchronized (THREAD_SYNC)
 		{

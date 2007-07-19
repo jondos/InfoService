@@ -195,9 +195,6 @@ public final class JAPModel extends Observable
 	 */
 	private String m_paymentPassword;
 
-	/** Stores the number of total mixed bytes in this session*/
-	private long m_mixedBytes;
-
 	/** Boolen value which describes if a dll update is necessary */
 	private boolean m_bUpdateDll = false;
 
@@ -1192,15 +1189,6 @@ public final class JAPModel extends Observable
 		return m_paymentPassword;
 	}
 
-	public void setMixedBytes(long a_mixedBytes)
-	{
-		m_mixedBytes = a_mixedBytes;
-	}
-
-	public long getMixedBytes()
-	{
-		return m_mixedBytes;
-	}
 
 	public void setDLLupdate(boolean a_update) {
 		m_bUpdateDll = a_update;

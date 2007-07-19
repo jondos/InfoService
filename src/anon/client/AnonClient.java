@@ -43,6 +43,7 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
 
+import anon.util.JobQueue;
 import HTTPClient.ThreadInterruptedIOException;
 
 import anon.AnonChannel;
@@ -86,9 +87,13 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 
 	private Multiplexer m_multiplexer;
 
+	private JobQueue m_queuePacketCount;
+
 	private IMutableProxyInterface m_proxyInterface;
 
 	private Object m_internalSynchronization;
+
+	private IServiceContainer m_serviceContainer;
 
 	private Thread m_threadInitialise;
 	private Object SYNC_SHUTDOWN = new Object();
@@ -139,6 +144,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		m_eventListeners = new Vector();
 		m_connected = false;
 		m_proxyInterface = new IMutableProxyInterface.DummyMutableProxyInterface();
+		m_queuePacketCount = new JobQueue("AnonClient Packet count updater");
 	}
 
 	public AnonClient(Socket a_connectedSocket)
@@ -160,6 +166,8 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 			return ErrorCodes.E_INVALID_SERVICE;
 		}
 		final MixCascade mixCascade = (MixCascade) a_mixCascade;
+
+		m_serviceContainer = a_serviceContainer;
 
 		StatusThread run = new StatusThread()
 		{
@@ -310,7 +318,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		return ErrorCodes.E_SUCCESS;
 	}
 
-	public void shutdown()
+	public void shutdown(boolean a_bResetTransferredBytes)
 	{
 		synchronized (m_internalSynchronizationForSocket)
 		{
@@ -343,7 +351,10 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 			if (m_packetCounter != null)
 			{
 				m_packetCounter.deleteObserver(this);
-				m_packetCounter = null;
+				if (a_bResetTransferredBytes)
+				{
+					m_packetCounter = null;
+				}
 			}
 			if (m_keyExchangeManager != null)
 			{
@@ -354,7 +365,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 			{
 				m_paymentInstance = null;
 			}
-
+			/*
 			synchronized (m_eventListeners)
 			{
 				final Enumeration eventListenersList = m_eventListeners.elements();
@@ -370,7 +381,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 				}, "AnonClient: Zero PacketMixed notification (after shutdown)");
 				notificationThread.setDaemon(true);
 				notificationThread.start();
-			}
+			}*/
 		}
 	}
 
@@ -442,7 +453,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 				/** @todo We use a thread to avoid deadlocks - is this really the best solution? */
 				public void run()
 				{
-					shutdown();
+					shutdown(!m_serviceContainer.isReconnectedAutomatically());
 					synchronized (m_eventListeners)
 					{
 						final Enumeration eventListenersList = m_eventListeners.elements();
@@ -464,25 +475,25 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 				}
 			}).start();
 		}
-		else if ( (a_object == m_packetCounter) && (a_argument instanceof Long))
+		else if (a_object == m_packetCounter)
 		{
-			synchronized (m_eventListeners)
+			final Enumeration eventListenersList = m_eventListeners.elements();
+			JobQueue.Job notificationThread = new JobQueue.Job(true)
 			{
-				final Enumeration eventListenersList = m_eventListeners.elements();
-				Thread notificationThread = new Thread(new Runnable()
+				public void runJob()
 				{
-					public void run()
+					synchronized (m_eventListeners)
 					{
 						while (eventListenersList.hasMoreElements())
 						{
-							( (AnonServiceEventListener) (eventListenersList.nextElement())).packetMixed( ( (
-								Long) a_argument).longValue());
+							( (AnonServiceEventListener) (eventListenersList.nextElement())).packetMixed(
+								m_packetCounter.getProcessedPackets() * (long) (MixPacket.getPacketSize()));
 						}
+
 					}
-				}, "AnonClient: PacketMixed notification");
-				notificationThread.setDaemon(true);
-				notificationThread.start();
-			}
+				}
+			};
+			m_queuePacketCount.addJob(notificationThread);
 		}
 	}
 
@@ -729,7 +740,16 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 											m_socketHandler.getOutputStream(),
 											m_keyExchangeManager, new SecureRandom());
 			m_socketHandler.addObserver(this);
-			m_packetCounter = new PacketCounter();
+			if (m_packetCounter != null)
+			{
+				// there has been a previous connection
+				m_packetCounter = new PacketCounter(m_packetCounter.getProcessedPackets());
+			}
+			else
+			{
+				m_packetCounter = new PacketCounter();
+			}
+
 			m_multiplexer.addObserver(m_packetCounter);
 			m_packetCounter.addObserver(this);
 			synchronized (m_internalSynchronizationForDummyTraffic)
@@ -744,7 +764,8 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 												 m_keyExchangeManager.getConnectedCascade() );
 			if (errorCode != ErrorCodes.E_SUCCESS)
 			{
-				shutdown();
+
+				shutdown(!a_serviceContainer.isReconnectedAutomatically());
 				return errorCode;
 			}
 

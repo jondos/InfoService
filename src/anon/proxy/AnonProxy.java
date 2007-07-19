@@ -56,6 +56,7 @@ import anon.infoservice.IMutableProxyInterface;
 import anon.client.ITrustModel;
 import anon.util.Queue;
 import java.security.SignatureException;
+import jap.JAPModel;
 
 /**
  * This calls implements a proxy one can use for convienient access to the
@@ -105,6 +106,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	private boolean m_bReconnecting = false;
 	private final Object THREAD_SYNC = new Object();
 	private final Object SHUTDOWN_SYNC = new Object();
+	private boolean bShuttingDown = false;
 
 	/**
 	 * Stores the MixCascade we are connected to.
@@ -365,14 +367,17 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				disconnected();
 				return;
 			}
-			m_Anon.shutdown();
+
+			bShuttingDown = true;
+
+			m_Anon.shutdown(true);
 			if (m_Tor != null)
 			{
-				m_Tor.shutdown();
+				m_Tor.shutdown(true);
 			}
 			if (m_Mixminion != null)
 			{
-				m_Mixminion.shutdown();
+				m_Mixminion.shutdown(true);
 			}
 
 			int i = 0;
@@ -396,8 +401,33 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			m_Tor = null;
 			m_Mixminion = null;
 			threadRun = null;
+
+			packetMixed(0);
+			/*
+			synchronized (m_eventListeners)
+				{
+					final Enumeration eventListenersList = m_eventListeners.elements();
+					Thread notificationThread = new Thread(new Runnable()
+					{
+						public void run()
+						{
+							while (eventListenersList.hasMoreElements())
+							{
+								( (AnonServiceEventListener) (eventListenersList.nextElement())).packetMixed(0);
+							}
+						}
+					}, "AnonClient: Zero PacketMixed notification (after shutdown)");
+					notificationThread.setDaemon(true);
+					notificationThread.start();
+			}*/
+
+
 			disconnected();
+
+			bShuttingDown = false;
 		}
+
+
 		/*
 		 synchronized (THREAD_SYNC)
 		 {
@@ -599,14 +629,11 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	{
 		synchronized (THREAD_SYNC)
 		{
-			if (m_Anon.isConnected())
+			if (m_Anon.isConnected() || bShuttingDown || Thread.currentThread().isInterrupted())
 			{
 				return;
 			}
-			if (Thread.currentThread().isInterrupted())
-			{
-				return;
-			}
+
 			if (!m_currentMixCascade.isReconnectedAutomatically())
 			{
 				stop();
@@ -680,7 +707,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 				THREAD_SYNC.notifyAll();
 				synchronized (SHUTDOWN_SYNC)
 				{
-					m_Anon.shutdown();
+					m_Anon.shutdown(false);
 
 					int i = 0;
 					while (threadRun.isAlive())
@@ -701,6 +728,11 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 					}
 				}
 			}
+			else if (threadRun == null)
+			{
+				m_Anon.shutdown(true); // reset transferred bytes
+			}
+
 			m_currentMixCascade = newMixCascade;
 
 			/*
@@ -940,10 +972,16 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 
 	public void packetMixed(long a_totalBytes)
 	{
-		Enumeration e = m_anonServiceListener.elements();
-		while (e.hasMoreElements())
+		if (isConnected() || a_totalBytes == 0)
 		{
-			( (AnonServiceEventListener) e.nextElement()).packetMixed(a_totalBytes);
+			synchronized (m_anonServiceListener)
+			{
+				Enumeration e = m_anonServiceListener.elements();
+				while (e.hasMoreElements())
+				{
+					( (AnonServiceEventListener) e.nextElement()).packetMixed(a_totalBytes);
+				}
+			}
 		}
 	}
 
@@ -951,7 +989,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 	{
 		LogHolder.log(LogLevel.ERR, LogType.NET, "Proxy has been nuked");
 		m_currentMixCascade.keepCurrentService(false);
-		m_Anon.shutdown();
+		m_Anon.shutdown(false);
 		synchronized (m_anonServiceListener)
 		{
 			Enumeration e = m_anonServiceListener.elements();
