@@ -148,12 +148,20 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String MSG_OBSERVABLE_EXPLAIN = JAPNewView.class.getName() + "_observableExplain";
 	private static final String MSG_OBSERVABLE_TITLE = JAPNewView.class.getName() + "_observableTitle";
 
+	private static final String MSG_LBL_ENCRYPTED_DATA =
+		JAPNewView.class.getName() + "_lblEncryptedData";
+	private static final String MSG_LBL_HTTP_DATA =
+		JAPNewView.class.getName() + "_lblHTTPData";
+	private static final String MSG_LBL_OTHER_DATA =
+		JAPNewView.class.getName() + "_lblOtherData";
+
 	private static final String IMG_ICONIFY = JAPNewView.class.getName() + "_iconify.gif";
 	private static final String IMG_ABOUT = JAPNewView.class.getName() + "_about.gif";
 
 
 
 	private JobQueue m_transferedBytesJobs;
+	private JobQueue m_packetMixedJobs;
 
 	private static final String HLP_ANONYMETER = JAPNewView.class.getName() + "_anonymometer";
 
@@ -246,7 +254,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private ActionListener m_listenerEnableIS;
 	private ActionListener m_listenerNewServices;
 
-	private long m_lTrafficWWW, m_lTrafficOther;
+	private volatile long m_lTrafficWWW, m_lTrafficOther;
 
 	private Object SYNC_ACTION = new Object();
 	private boolean m_bActionPerformed = false;
@@ -270,6 +278,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_dlgConfig = null; //new JAPConf(this);
 		m_bIsIconified = false;
 		m_transferedBytesJobs = new JobQueue("Transfered bytes update job queue");
+		m_packetMixedJobs = new JobQueue("packet mixed update job queue");
 		m_lTrafficWWW = 0;
 		m_lTrafficOther = 0;
 	}
@@ -857,7 +866,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		gbl1 = new GridBagLayout();
 		c1 = new GridBagConstraints();
 		p = new JPanel(gbl1);
-		m_labelOwnTraffic = new JLabel(JAPMessages.getString("ngOwnTraffic"));
+		m_labelOwnTraffic = new JLabel(JAPMessages.getString(MSG_LBL_ENCRYPTED_DATA) + ":");
 		c1.insets = new Insets(0, 5, 0, 0);
 		c1.anchor = GridBagConstraints.WEST;
 		c1.weightx = 0;
@@ -897,7 +906,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1.fill = GridBagConstraints.NONE;
 		c1.insets = new Insets(0, 5, 0, 0);
 		p.add(m_progressOwnTrafficActivity, c1);
-		m_labelOwnTrafficWWW = new JLabel(JAPMessages.getString("ngOwnTrafficWWW"));
+		m_labelOwnTrafficWWW = new JLabel(JAPMessages.getString(MSG_LBL_HTTP_DATA) + ":");
 		c1.insets = new Insets(10, 20, 0, 0);
 		c1.gridx = 0;
 		c1.gridy = 1;
@@ -921,7 +930,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelOwnTrafficUnitWWW = new JLabel(JAPMessages.getString("Byte"));
 		c1.gridx = 3;
 		p.add(m_labelOwnTrafficUnitWWW, c1);
-		m_labelOwnTrafficOther = new JLabel(JAPMessages.getString("ngOwnTrafficOther"));
+		m_labelOwnTrafficOther = new JLabel(JAPMessages.getString(MSG_LBL_OTHER_DATA) + ":");
 		c1.insets = new Insets(7, 20, 0, 0);
 		c1.gridx = 0;
 		c1.gridy = 2;
@@ -949,7 +958,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		gbl1 = new GridBagLayout();
 		c1 = new GridBagConstraints();
 		p = new JPanel(gbl1);
-		m_labelOwnTrafficSmall = new JLabel(JAPMessages.getString("ngOwnTraffic"));
+		m_labelOwnTrafficSmall = new JLabel(JAPMessages.getString(MSG_LBL_ENCRYPTED_DATA) + ":");
 		c1.insets = new Insets(0, 5, 0, 0);
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
@@ -1959,6 +1968,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	public void dispose()
 	{
 		m_transferedBytesJobs.stop();
+		m_packetMixedJobs.stop();
 		super.dispose();
 	}
 
@@ -2610,9 +2620,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 //			ownTrafficChannelsProgressBar.setString(String.valueOf(c));
 	}
 
-	public void transferedBytes(final long c, final int protocolType)
+	public void packetMixed(final long a_totalBytes)
 	{
-		m_transferedBytesJobs.addJob(new JobQueue.Job()
+		m_packetMixedJobs.addJob(new JobQueue.Job()
 		{
 			public void runJob()
 			{
@@ -2620,24 +2630,70 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				{
 					if (m_ViewIconified != null)
 					{
-						m_ViewIconified.transferedBytes(c, protocolType);
+						m_ViewIconified.packetMixed(a_totalBytes);
 					}
 				}
 				Runnable transferedBytesThread = new Runnable()
 				{
 					public void run()
 					{
-						// Nr of Bytes transmitted anonymously
-						if (protocolType == IProxyListener.PROTOCOL_WWW)
-						{
-							//m_lTrafficWWW = JAPModel.getInstance().getMixedBytes();
-							m_lTrafficWWW = c;
-						}
-						else if (protocolType == IProxyListener.PROTOCOL_OTHER)
-						{
-							m_lTrafficOther = c;
-						}
+						String unit;
+						String s;
 
+						unit = JAPUtil.formatBytesValueOnlyUnit(a_totalBytes);
+						m_labelOwnTrafficUnit.setText(unit);
+						m_labelOwnTrafficUnit.revalidate();
+						m_labelOwnTrafficUnitSmall.setText(unit);
+						m_labelOwnTrafficUnitSmall.revalidate();
+						s = JAPUtil.formatBytesValueWithoutUnit(a_totalBytes);
+						m_labelOwnTrafficBytes.setText(s);
+						m_labelOwnTrafficBytes.revalidate();
+						m_labelOwnTrafficBytesSmall.setText(s);
+						m_labelOwnTrafficBytesSmall.revalidate();
+					}
+				};
+
+				try
+				{
+					SwingUtilities.invokeAndWait(transferedBytesThread);
+				}
+				catch (InvocationTargetException ex)
+				{
+				}
+				catch (InterruptedException ex)
+				{
+				}
+				transferedBytesThread = null;
+			}
+		});
+	}
+
+	public void transferedBytes(final long c, final int protocolType)
+	{
+		// Nr of Bytes transmitted anonymously
+		if (protocolType == IProxyListener.PROTOCOL_WWW)
+		{
+			//m_lTrafficWWW = JAPModel.getInstance().getMixedBytes();
+			m_lTrafficWWW = c;
+		}
+		else if (protocolType == IProxyListener.PROTOCOL_OTHER)
+		{
+			m_lTrafficOther = c;
+		}
+
+		m_transferedBytesJobs.addJob(new JobQueue.Job()
+		{
+			public void runJob()
+			{
+				if (c > 0 && m_ViewIconified != null)
+				{
+					m_ViewIconified.blink();
+				}
+
+				Runnable transferedBytesThread = new Runnable()
+				{
+					public void run()
+					{
 						String unit = JAPUtil.formatBytesValueOnlyUnit(m_lTrafficWWW);
 						m_labelOwnTrafficUnitWWW.setText(unit);
 						m_labelOwnTrafficUnitWWW.revalidate();
@@ -2650,19 +2706,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						s = JAPUtil.formatBytesValueWithoutUnit(m_lTrafficOther);
 						m_labelOwnTrafficBytesOther.setText(s);
 						m_labelOwnTrafficBytesOther.revalidate();
-						long sum = m_lTrafficWWW + m_lTrafficOther;
-						unit = JAPUtil.formatBytesValueOnlyUnit(sum);
-						m_labelOwnTrafficUnit.setText(unit);
-						m_labelOwnTrafficUnit.revalidate();
-						m_labelOwnTrafficUnitSmall.setText(unit);
-						m_labelOwnTrafficUnitSmall.revalidate();
-						s = JAPUtil.formatBytesValueWithoutUnit(sum);
-						m_labelOwnTrafficBytes.setText(s);
-						m_labelOwnTrafficBytes.revalidate();
-						m_labelOwnTrafficBytesSmall.setText(s);
-						m_labelOwnTrafficBytesSmall.revalidate();
 						JAPDll.onTraffic();
-
 					}
 				};
 

@@ -254,6 +254,43 @@ public class SignatureVerifier implements IXMLEncodable
 			}
         }
 
+		private class SignatureHolder
+		{
+			XMLSignature m_signature;
+			public void setSignature(XMLSignature a_signature)
+			{
+				m_signature = a_signature;
+			}
+			public XMLSignature getSignature()
+			{
+				return m_signature;
+			}
+		}
+
+		public XMLSignature getVerifiedXml(final Element a_rootNode, final int a_documentClass)
+		{
+			final SignatureHolder sigholder = new SignatureHolder();
+			Runnable run = new Runnable()
+			{
+				public void run()
+				{
+					sigholder.setSignature(getVerifiedXml_internal(a_rootNode, a_documentClass));
+				}
+			};
+			Thread doit = new Thread(run);
+			doit.setPriority(Thread.MIN_PRIORITY + 1);
+			doit.start();
+			try
+			{
+				doit.join();
+			}
+			catch (InterruptedException ex)
+			{
+			}
+
+			return sigholder.getSignature();
+		}
+
 		/**
 		* Verifies the signature of an XML document against the store of trusted certificates.
 		*
@@ -268,7 +305,7 @@ public class SignatureVerifier implements IXMLEncodable
 		* @todo The ID within the document should be compared to the ID stored in the certificate.
 		* @todo the return value should be the certificate that successfully verified the signature
 		*/
-	    public XMLSignature getVerifiedXml(Element a_rootNode, int a_documentClass)
+	    public XMLSignature getVerifiedXml_internal(Element a_rootNode, int a_documentClass)
 		{
 			XMLSignature signature = null;
 			synchronized (m_trustedCertificates)

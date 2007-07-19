@@ -816,7 +816,7 @@ public class Tor implements Runnable, AnonService
 	/**
 	 * shutdown tor
 	 */
-	public void shutdown()
+	public void shutdown (boolean a_bResetTransferredBytes)
 	{
 		try
 		{

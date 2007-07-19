@@ -74,6 +74,11 @@ public abstract class AbstractControlChannel extends AbstractChannel
 				{
 					return false;
 				}
+
+				public  boolean isReconnectedAutomatically()
+				{
+					return false;
+				}
 			};
 		}
 		/* register the channel */

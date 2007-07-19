@@ -143,7 +143,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	/**
 	 * Allows only 3 concurrent update operations.
 	 */
-	private ThreadPool m_poolFetchInformation = new ThreadPool("Fetch Information Thread Pool", 4);
+	private ThreadPool m_poolFetchInformation = new ThreadPool("Fetch Information Thread Pool", 10, Thread.MIN_PRIORITY);
 
 	/**
 	 * Stores the preferred InfoService. This InfoService is asked first for every information.

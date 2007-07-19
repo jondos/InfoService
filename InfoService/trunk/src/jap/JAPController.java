@@ -2709,7 +2709,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						/* we use a forwarded connection */
 						bForwardedConnection = true;
 						m_proxyAnon = JAPModel.getInstance().getRoutingSettings().getAnonProxyInstance(
-							m_socketHTTPListener);
+											  m_socketHTTPListener);
 					}
 					else
 					{
@@ -2762,7 +2762,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						// -> we can try to start anonymity
 						if (m_proxyDirect != null)
 						{
-							m_proxyDirect.shutdown();
+							m_proxyDirect.shutdown(true);
 						}
 						m_proxyDirect = null;
 
@@ -3517,7 +3517,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						DirectProxy proxy = m_Controller.m_proxyDirect;
 						if (proxy != null)
 						{
-							proxy.shutdown();
+							proxy.shutdown(true);
 						}
 						LogHolder.log(LogLevel.NOTICE, LogType.THREAD, "Shutting down direct proxy - Done!");
 					}
@@ -4518,7 +4518,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	public void packetMixed(long a_totalBytes)
 	{
-		JAPModel.getInstance().setMixedBytes(a_totalBytes);
 		synchronized (m_anonServiceListener)
 		{
 			Enumeration e = m_anonServiceListener.elements();
@@ -4527,11 +4526,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 				( (AnonServiceEventListener) e.nextElement()).packetMixed(a_totalBytes);
 			}
 		}
-	}
-
-	public long getMixedBytes()
-	{
-		return JAPModel.getInstance().getMixedBytes();
 	}
 
 	public boolean getDontAskPayment()

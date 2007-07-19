@@ -49,4 +49,6 @@ public interface IServiceContainer extends ITrustModel
 
 	public boolean isServiceAutoSwitched();
 
+	public boolean isReconnectedAutomatically();
+
 }

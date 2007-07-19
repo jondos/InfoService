@@ -1138,11 +1138,25 @@ public class TinyTLS extends Socket
 	{
 		try
 		{
-			m_ostream.close();
+			if (m_ostream != null)
+			{
+				m_ostream.close();
+			}
 		}
 		catch (IOException ex)
 		{
 		}
+		try
+		{
+			if (m_istream != null)
+			{
+				m_istream.close();
+			}
+		}
+		catch (IOException ex)
+		{
+		}
+
 		m_ProxyConnection.close();
 	}
 

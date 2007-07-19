@@ -248,7 +248,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private void drawServerPanel(int a_numberOfMixes, String a_strCascadeName, boolean a_enabled,
 								 int a_selectedIndex)
 	{
-		if (m_manualPanel != null)
+		if (m_manualPanel != null && m_manualPanel.isVisible())
 		{
 			m_manualPanel.setVisible(false);
 		}
@@ -264,7 +264,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			m_rootPanelConstraints.fill = GridBagConstraints.BOTH;
 			pRoot.add(m_serverPanel, m_rootPanelConstraints);
 		}
-		else
+		else if (!m_serverPanel.isVisible())
 		{
 			m_serverPanel.setVisible(true);
 		}
@@ -286,7 +286,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			m_rootPanelConstraints.fill = GridBagConstraints.BOTH;
 			pRoot.add(m_serverInfoPanel, m_rootPanelConstraints);
 		}
-		else
+		else if (!m_serverInfoPanel.isVisible())
 		{
 			//m_serverInfoPanel.removeAll();
 			m_serverInfoPanel.setVisible(true);
@@ -700,6 +700,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	public synchronized void itemStateChanged(ItemEvent e)
 	{
+		//System.out.println("\nbegin item state");
 		int server = m_serverList.getSelectedIndex();
 		MixCascade cascade = (MixCascade)m_tableMixCascade.getValueAt(m_tableMixCascade.getSelectedRow(), 1);
 		String selectedMixId = null;
@@ -815,21 +816,18 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_serverInfo = m_infoService.getMixInfo(cascade, selectedMixId);
 		m_serverCert = m_infoService.getMixCertPath(cascade, selectedMixId);
 
-		/*if (m_serverCert == null && cascade != null && server == 0)
-		{
-			// get the certificate for the first mix
-			m_serverCert = cascade.getMixCascadeCertificate();
-		}*/
 		if (m_serverCert != null && m_serverInfo != null)
 		{
-			m_viewCertLabel.setText((isServerCertVerified() ? JAPMessages.getString(CertDetailsDialog.MSG_CERT_VERIFIED) + "," :
+			boolean bVerified = isServerCertVerified();
+			boolean bValid = m_serverCert.checkValidity(new Date());
+
+			m_viewCertLabel.setText((bVerified ? JAPMessages.getString(CertDetailsDialog.MSG_CERT_VERIFIED) + "," :
 				JAPMessages.getString(CertDetailsDialog.MSG_CERT_NOT_VERIFIED) + ","));
-			m_viewCertLabel.setForeground(isServerCertVerified() ? Color.blue : Color.red);
-			m_viewCertLabelValidity.setText((m_serverCert.checkValidity(new Date()) ? " " +
+			m_viewCertLabel.setForeground(bVerified ? Color.blue : Color.red);
+			m_viewCertLabelValidity.setText((bValid ? " " +
 				 JAPMessages.getString(CertDetailsDialog.MSG_CERTVALID) : " " +
 				 JAPMessages.getString(JAPMessages.getString(CertDetailsDialog.MSG_CERTNOTVALID))));
-			m_viewCertLabelValidity.setForeground(
-						 m_serverCert.checkValidity(new Date()) ? Color.blue : Color.red);
+			m_viewCertLabelValidity.setForeground(bValid ? Color.blue : Color.red);
 			m_viewCertLabel.setToolTipText(
 						 m_viewCertLabel.getText() + m_viewCertLabelValidity.getText());
 			m_viewCertLabelValidity.setToolTipText(
@@ -843,7 +841,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			m_viewCertLabel.setForeground(m_nrLabel.getForeground());
 		}
 
+
 		pRoot.validate();
+		//System.out.println("final item state");
 	}
 
 	/**
@@ -871,11 +871,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	protected void onUpdateValues()
 	{
-		MyTableModel model = (MyTableModel) m_tableMixCascade.getModel();
-		synchronized (model)
-		{
-			model.update();
-		}
+		((MyTableModel) m_tableMixCascade.getModel()).update();
 	}
 
 	private void fetchCascades(final boolean bErr, final boolean a_bForceCascadeUpdate,
@@ -2820,17 +2816,19 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				{
 					index = m_vecCascades.indexOf(cascade);
 				}
+
 				if (cascade == null || index < 0)
 				{
 					if (m_tableMixCascade.getRowCount() > 0)
 					{
-						m_tableMixCascade.setRowSelectionInterval(0, 0);
+						index = 0;
 					}
 				}
-				else
+				if (m_tableMixCascade.getSelectedRow() != index)
 				{
 					m_tableMixCascade.setRowSelectionInterval(index, index);
 				}
+
 				m_bUpdateServerPanel = true;
 			}
 		}

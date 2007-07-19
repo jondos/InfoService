@@ -61,7 +61,7 @@ public interface AnonService
 	int setProxy(IMutableProxyInterface a_Proxy);
 
 	/** Disconnects form the server.*/
-	void shutdown();
+	void shutdown(boolean a_bResetTransferredBytes);
 
 	/** Returns true if this Anon Service is connected, e.g. initialized and useable*/
 	boolean isConnected();

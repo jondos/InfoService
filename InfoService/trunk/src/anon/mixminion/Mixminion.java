@@ -100,7 +100,7 @@ public class Mixminion implements AnonService
 		return m_proxyInterface;
 	}
 
-	public void shutdown()
+	public void shutdown(boolean a_bResetTransferredBytes)
 	{
 	}
 

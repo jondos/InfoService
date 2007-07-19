@@ -199,16 +199,40 @@ public class BIConnection implements ICaptchaSender
 								  ":" + a_proxy.getPort());
 					tls = new TinyTLS(li.getHost(), li.getPort(), a_proxy);
 				}
+				m_socket = tls;
 				tls.setSoTimeout(ms_connectionTimeout);
 				tls.setRootKey(m_theBI.getCertificate().getPublicKey());
 				tls.startHandshake();
-				m_socket = tls;
+
 				m_httpClient = new HttpClient(m_socket);
 				connected = true;
 				break;
 			}
 			catch (Exception e)
 			{
+				if (m_httpClient != null)
+				{
+					try
+					{
+						m_httpClient.close();
+					}
+					catch (Exception ex)
+					{
+						LogHolder.log(LogLevel.ERR, LogType.NET, ex);
+					}
+				}
+				else if (m_socket != null)
+				{
+					try
+					{
+						m_socket.close();
+					}
+					catch (IOException a_e)
+					{
+						LogHolder.log(LogLevel.ERR, LogType.NET, a_e);
+					}
+				}
+
 				// try to recognize if the provider forbids the connection
 				if (e instanceof ForbiddenIOException)
 				{

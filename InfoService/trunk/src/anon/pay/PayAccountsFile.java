@@ -398,43 +398,45 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	 */
 	public void deleteAccount(long accountNumber)
 	{
-		PayAccount tmp = getAccount(accountNumber);
-		if (tmp != null)
+		PayAccount tmp = null;
+		synchronized (this)
 		{
-			for (int i = 0; i < m_Accounts.size(); i++)
+			tmp = getAccount(accountNumber);
+
+			if (tmp != null)
 			{
-				tmp = (PayAccount) m_Accounts.elementAt(i);
-				if (tmp.getAccountNumber() == accountNumber)
+				for (int i = 0; i < m_Accounts.size(); i++)
 				{
-					m_Accounts.removeElementAt(i);
-					if (m_ActiveAccount == tmp)
+					tmp = (PayAccount) m_Accounts.elementAt(i);
+					if (tmp.getAccountNumber() == accountNumber)
 					{
-						m_ActiveAccount = null;
-						if (m_Accounts.size() > 0)
-						{
-							for (int j = 0; j < m_Accounts.size(); j++)
-							{
-								if (((PayAccount)m_Accounts.elementAt(j)).getPrivateKey() != null)
-								{
-									setActiveAccount((PayAccount)m_Accounts.elementAt(j));
-								}
-							}
-						}
-						else
-						{
-							setActiveAccount(null);
-						}
+						m_Accounts.removeElementAt(i);
+						break;
 					}
-					break;
+				}
+				if (getActiveAccount() == tmp)
+				{
+					if (m_Accounts.size() > 0)
+					{
+						setActiveAccount((PayAccount)m_Accounts.elementAt(0));
+					}
+					else
+					{
+						setActiveAccount(null);
+					}
 				}
 			}
 		}
-		synchronized (m_paymentListeners)
+
+		if (tmp != null)
 		{
-			Enumeration enumListeners = m_paymentListeners.elements();
-			while (enumListeners.hasMoreElements())
+			synchronized (m_paymentListeners)
 			{
-				( (IPaymentListener) enumListeners.nextElement()).accountRemoved(m_ActiveAccount);
+				Enumeration enumListeners = m_paymentListeners.elements();
+				while (enumListeners.hasMoreElements())
+				{
+					( (IPaymentListener) enumListeners.nextElement()).accountRemoved(tmp);
+				}
 			}
 		}
 	}

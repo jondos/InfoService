@@ -74,9 +74,6 @@ import jap.JAPModel;
 import logging.LogType;
 import java.util.Date;
 import java.awt.Cursor;
-import anon.pay.xml.XMLTransactionOverview;
-import java.util.Vector;
-import anon.pay.xml.XMLTransCert;
 
 public class PaymentMainPanel extends FlippingPanel
 {

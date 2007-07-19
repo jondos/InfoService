@@ -75,9 +75,14 @@ public class TinyTLSServer extends ServerSocket
 
 	public Socket accept() throws IOException
 	{
+		return accept(0);
+	}
+
+	public Socket accept(long a_forceCloseAfterMS) throws IOException
+	{
 		Socket s = super.accept();
 
-		tls = new TinyTLSServerSocket(s);
+		tls = new TinyTLSServerSocket(s, a_forceCloseAfterMS);
 		tls.setDSSParameters(m_DSSCertificate, m_DSSKey);
 		tls.setRSAParameters(m_RSACertificate, m_RSAKey);
 		return tls;
