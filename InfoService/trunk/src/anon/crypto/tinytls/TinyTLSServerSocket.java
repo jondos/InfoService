@@ -63,6 +63,7 @@ import logging.LogLevel;
 import logging.LogType;
 import java.net.SocketException;
 import java.net.InetAddress;
+import java.lang.reflect.*;
 
 /**
  * @author stefan
@@ -751,7 +752,7 @@ public class TinyTLSServerSocket extends Socket
 							catch (InterruptedException ex)
 							{
 							}
-							if (m_Socket != null && !m_Socket.isClosed())
+							if (!isClosed(m_Socket))
 							{
 								LogHolder.log(LogLevel.ALERT, LogType.NET,
 											  "CloseGuard: Closing TLS socket after " + a_forceCloseAfterMS +
@@ -959,14 +960,31 @@ public class TinyTLSServerSocket extends Socket
 		}
 	}
 
-	public boolean isClosed()
+	private static boolean isClosed(Socket a_socket)
 	{
-		Socket socket = m_Socket;
+		Socket socket = a_socket;
 		if (socket != null)
 		{
-			return socket.isClosed();
+			try
+			{
+				return ( (Boolean) Socket.class.getMethod("isClosed", new Class[]
+					{}).invoke(
+						socket, new Object[]
+						{})).booleanValue();
+			}
+			catch (Exception ex)
+			{
+				return false;
+			}
+			//return socket.isClosed();
 		}
 		return true;
+
+}
+
+	public boolean isClosed()
+	{
+		return isClosed(m_Socket);
 	}
 
 	public void setSoTimeout(int ms) throws SocketException
