@@ -89,6 +89,8 @@ public class PaymentMainPanel extends FlippingPanel
 		"_paymentnotactive";
 	private static final String MSG_NEARLYEMPTY = PaymentMainPanel.class.getName() +
 		"_nearlyempty";
+	private static final String MSG_NEARLYEMPTY_CREATE_ACCOUNT = PaymentMainPanel.class.getName() +
+		"_nearlyEmptyCreateAccount";
 	private static final String MSG_SESSIONSPENT = PaymentMainPanel.class.getName() +
 		"_sessionspent";
 	private static final String MSG_TOTALSPENT = PaymentMainPanel.class.getName() +
@@ -118,7 +120,7 @@ public class PaymentMainPanel extends FlippingPanel
 	"_xmlErrorBadRequest", "_xmlErrorNoAccountCert", "_xmlErrorNoBalance", "_xmlErrorNoConfirmation",
 	"_accountempty", "_xmlErrorCascadeLength", "_xmlErrorDatabase", "_xmlErrorInsufficientBalance",
 	"_xmlErrorNoFlatrateOffered", "_xmlErrorInvalidCode", "_xmlErrorInvalidCC", "_xmlErrorInvalidPriceCerts",
-	"_xmlErrorMultipleLogin"};
+	"_xmlErrorMultipleLogin", "_xmlErrorNoRecordFound", "_xmlErrorPartialSuccess", "_xmlErrorBlocked"};
 
 	static
 	{
@@ -531,16 +533,6 @@ public class PaymentMainPanel extends FlippingPanel
 					}
 					m_BalanceProgressBar.setEnabled(true);
 					m_BalanceSmallProgressBar.setEnabled(true);
-
-					if (activeAccount.getCertifiedCredit() <= (10) && !m_notifiedEmpty &&
-						activeAccount.getCertifiedCredit() != 0)
-					{
-						JAPDialog.showMessageDialog(JAPController.getInstance().getViewWindow(),
-													JAPMessages.getString(MSG_NEARLYEMPTY));
-						m_notifiedEmpty = true;
-					}
-
-
 				}
 				//set rest of the panel
 				m_spentThisSession = AIControlChannel.getBytes();
@@ -554,11 +546,17 @@ public class PaymentMainPanel extends FlippingPanel
 
 				if (a_bWarnIfNearlyEmpty && //a_bWarnIfNearlyEmpty means warnings are not to be suppressed
 					activeAccount.getCertifiedCredit() <= WARNING_AMOUNT && !m_notifiedEmpty &&
-					activeAccount.getCertifiedCredit() != 0)
+					activeAccount.getCertifiedCredit() != 0 &&
+					PayAccountsFile.getInstance().getAlternativeNonEmptyAccount(
+									   JAPController.getInstance().getCurrentMixCascade().getPIID()) == null)
 				{
 					m_notifiedEmpty = true;
-					JAPDialog.showMessageDialog(JAPController.getInstance().getViewWindow(),
-												JAPMessages.getString(MSG_NEARLYEMPTY));
+					if (JAPDialog.showYesNoDialog(JAPController.getInstance().getViewWindow(),
+												  JAPMessages.getString(MSG_NEARLYEMPTY_CREATE_ACCOUNT)))
+					{
+						m_view.showConfigDialog(JAPConf.PAYMENT_TAB,
+												JAPController.getInstance().getCurrentMixCascade().getPIID());
+					}
 				}
 
 			}

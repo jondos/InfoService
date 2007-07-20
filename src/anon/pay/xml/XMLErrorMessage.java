@@ -8,6 +8,10 @@ import anon.util.XMLUtil;
 import java.lang.reflect.Constructor;
 import org.w3c.dom.Node;
 
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
 /**
  * This class encapsulates an error or success message.
  * In order to be indipendent from the HTTP protocol on the higher layer,
@@ -38,6 +42,7 @@ public class XMLErrorMessage extends Exception implements IXMLEncodable
 	public static final int ERR_MULTIPLE_LOGIN = 18;
 	public static final int ERR_NO_RECORD_FOUND = 19;
 	public static final int ERR_SUCCESS_BUT_WITH_ERRORS = 20;
+	public static final int ERR_BLOCKED = 21;
 
 
 	private int m_iErrorCode;
@@ -49,7 +54,7 @@ public class XMLErrorMessage extends Exception implements IXMLEncodable
 	   matches the number of constants defined for error codes !! */
 	private static final String[] m_errStrings =
 		{
-		"Success", //0
+		"Success",
 		"Internal Server Error",
 		"Wrong format",
 		"Wrong Data",
@@ -59,21 +64,22 @@ public class XMLErrorMessage extends Exception implements IXMLEncodable
 		"No account certificate",
 		"No balance",
 		"No cost confirmation",
-		"Account is empty", //10
+		"Account is empty",
 		"Cascade too long",
 		"Database error",
 		"Insufficient balance",
 		"No flatrate offered",
 		"Invalid code",
-		"Invalid CC",
-		"Invalid price certs",
-		"multiple login",
-		"no record found" //19
+		"outdated CC",
+		"Invalid price certificates",
+		"multiple login is not allowed",
+		"no record found",
+		"operation succeeded, but there were errors",
+		"this account is blocked" //21
 	};
 
 	private static final String[] m_messageObjectTypes =
 	{
-		"none", //0
 		"none",
 		"none",
 		"none",
@@ -83,16 +89,19 @@ public class XMLErrorMessage extends Exception implements IXMLEncodable
 		"none",
 		"none",
 		"none",
-		"none", //10
+		"none",
+		"XMLGenericText", //Account_empty
 		"none",
 		"none",
 		"none",
 		"none",
 		"none",
-		"XMLEasyCC", //16, belongs to ERR_OUTDATED_CC
+		"XMLEasyCC", //outdated_cc
 		"none",
 		"none",
-		"none" //19
+		"none",
+		"none",
+		"none"
 	};
 
 	public static final String XML_ELEMENT_NAME = "ErrorMessage";
@@ -225,18 +234,31 @@ public class XMLErrorMessage extends Exception implements IXMLEncodable
 		String objectType = m_messageObjectTypes[m_iErrorCode];
 		if (! objectType.equals("none") )
 		{
-			//get the class's element name
-			Class messageObjectClass = Class.forName(objectType);
-			String messageObjectElementName = (String) messageObjectClass.getField("ms_strElemName").get(null);
-			//extract xml string
-			Node objectRoot = XMLUtil.getFirstChildByName(elemRoot,"MessageObject");
-			String objectXml = XMLUtil.toString(XMLUtil.getFirstChildByName(objectRoot,messageObjectElementName));
-			//build object
-			Class[] constructorArgTypes = { String.class };
-			Constructor xmlstringConstructor = messageObjectClass.getConstructor(constructorArgTypes);
-			Object[] constructorArgs = { objectXml };
-			Object messageObject = xmlstringConstructor.newInstance(constructorArgs);
-			m_oMessageObject = (IXMLEncodable) messageObject;
+			try
+			{
+				//get the class's element name
+				Class messageObjectClass = Class.forName(getClass().getPackage().getName() + "." + objectType);
+
+				String messageObjectElementName = XMLUtil.getXmlElementName(messageObjectClass);
+				//extract xml string
+				Node objectRoot = XMLUtil.getFirstChildByName(elemRoot, "MessageObject");
+				String objectXml = XMLUtil.toString(XMLUtil.getFirstChildByName(objectRoot,
+					messageObjectElementName));
+				//build object
+				Class[] constructorArgTypes =
+					{
+					String.class};
+				Constructor xmlstringConstructor = messageObjectClass.getConstructor(constructorArgTypes);
+				Object[] constructorArgs =
+					{
+					objectXml};
+				Object messageObject = xmlstringConstructor.newInstance(constructorArgs);
+				m_oMessageObject = (IXMLEncodable) messageObject;
+			}
+			catch (Exception a_e)
+			{
+				// ignore, not needed
+			}
 		}
 	}
 }

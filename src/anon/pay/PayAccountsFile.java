@@ -53,6 +53,7 @@ import java.io.File;
 import anon.infoservice.MixCascade;
 import java.util.Hashtable;
 import anon.pay.xml.XMLGenericText;
+import java.sql.Timestamp;
 
 /**
  * This class encapsulates a collection of accounts. One of the accounts in the collection
@@ -468,6 +469,29 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 	{
 		return ((Vector)m_Accounts .clone()).elements();
 	}
+
+	public synchronized PayAccount getAlternativeNonEmptyAccount(String a_piid)
+	{
+		Vector accounts = PayAccountsFile.getInstance().getAccounts(a_piid);
+		Timestamp now = new Timestamp(System.currentTimeMillis());
+		PayAccount activeAccount = getActiveAccount();
+		PayAccount currentAccount = null;
+
+		if (accounts.size() > 0)
+		{
+			for (int i = 0; i < accounts.size(); i++)
+			{
+				currentAccount = (PayAccount) accounts.elementAt(i);
+				if (activeAccount != currentAccount && currentAccount.isCharged(now))
+				{
+					break;
+				}
+				currentAccount = null;
+			}
+		}
+		return currentAccount;
+	}
+
 
 	public synchronized Vector getAccounts(String a_piid)
 	{

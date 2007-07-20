@@ -143,6 +143,8 @@ import jap.pay.wizardnew.CancellationPolicyPane;
 import anon.pay.xml.XMLGenericStrings;
 import anon.infoservice.IMutableProxyInterface;
 import java.util.Calendar;
+import anon.pay.xml.XMLTransactionOverview;
+import anon.util.IXMLEncodable;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -316,12 +318,23 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private static final String MSG_NEW_CAPTCHA_HINT =
 		AccountSettingsPanel.class.getName() + "_newCaptchaHint";
 
+
+	private static final String MSG_SHOW_TRANSACTION_DETAILS =
+		AccountSettingsPanel.class.getName() + "_showTransactionDetails";
+	private static final String MSG_NO_TRANSACTION =
+		AccountSettingsPanel.class.getName() + "_noTransaction";
+	private static final String MSG_EXPIRED =
+		AccountSettingsPanel.class.getName() + "_expired";
+	private static final String MSG_NO_CREDIT =
+		AccountSettingsPanel.class.getName() + "_noCredit";
 	private static final String MSG_TERMS_AND_COND_DESC =
 		AccountSettingsPanel.class.getName() + "_termsAndConditionsDescription";
 	private static final String MSG_TERMS_AND_COND =
 		AccountSettingsPanel.class.getName() + "_termsAndConditions";
 	private static final String MSG_TERMS_AND_COND_HINT =
 		AccountSettingsPanel.class.getName() + "_termsAndConditionsHint";
+
+
 
 
 	private static final String MSG_BACKUP_WARNING = AccountSettingsPanel.class.getName() + "_backupwarning";
@@ -370,6 +383,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private JPanel m_tabBasicSettings, m_tabAdvancedSettings;
 	private boolean m_bReady = true;
 	private boolean m_bDoNotCloseDialog = false;
+
+	private MyActionListener myActionListener;
 
 	/**The TabbedPane Component*/
 	private JTabbedPane m_tabPane;
@@ -456,6 +471,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		{
 			rootPanel.setBorder(new TitledBorder(JAPMessages.getString("ngPayment")));
 		}
+		myActionListener = new MyActionListener();
+
 		/* insert all components in the root panel */
 		m_tabPane = new JTabbedPane();
 		//tabPane.setFont(getFontSetting());
@@ -507,8 +524,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			}
 		}
 		);
-
-		ActionListener myActionListener = new MyActionListener();
 
 		JPanel buttonsPanel = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
@@ -606,13 +621,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		m_labelTermsAndConditions.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		m_labelTermsAndConditions.setForeground(Color.blue);
-		m_labelTermsAndConditions.addMouseListener(new MouseAdapter()
-		{
-			public void mouseClicked(MouseEvent a_event)
-			{
-				showTermsAndConditions(getSelectedAccount());
-			}
-		});
+		m_labelTermsAndConditions.addMouseListener(myActionListener);
 		rootPanel.add(m_labelTermsAndConditions, c);
 		c.gridwidth = 1;
 
@@ -800,6 +809,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		p.add(new JLabel(JAPMessages.getString(MSG_ACCOUNT_FLAT_VOLUME) + ":"), c);
 		c.gridx++;
 		m_labelVolume = new JLabel();
+		m_labelVolume.addMouseListener(myActionListener);
 		p.add(m_labelVolume, c);
 
 		c.gridy++;
@@ -973,17 +983,27 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 * @author Bastian Voigt
 	 * @version 1.0
 	 */
-	private class MyActionListener implements ActionListener
+	private class MyActionListener extends MouseAdapter implements ActionListener
 	{
 		private boolean m_bButtonClicked = false;
 
+		public void mouseClicked(MouseEvent a_event)
+		{
+			doAction(a_event.getSource());
+		}
+
 		public void actionPerformed(final ActionEvent e)
+		{
+			doAction(e.getSource());
+		}
+
+		public void doAction(final Object source)
 		{
 			Thread clickThread = new Thread(new Runnable()
 			{
 				public void run()
 				{
-					JButton source = (JButton) e.getSource();
+					//Object source =  e.getSource();
 					if (source == m_btnCreateAccount)
 					{
 						doCreateAccount(null);
@@ -1026,6 +1046,66 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					else if (source == m_btnActivate)
 					{
 						doActivateAccount(getSelectedAccount());
+					}
+					else if (source == m_labelVolume)
+					{
+						if (m_labelVolume.getForeground() == Color.blue)
+						{
+							/*
+							PayAccount selectedAccount = getSelectedAccount();
+							Vector transCerts = selectedAccount.getTransCerts();
+							if (selectedAccount != null && transCerts.size() > 0)
+							{
+								try
+								{
+									BIConnection biConn = new BIConnection(selectedAccount.getBI());
+									biConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
+									biConn.authenticate(selectedAccount.getAccountCertificate(),
+										selectedAccount.getPrivateKey());
+									long transferNumber =
+										((XMLTransCert)transCerts.elementAt(0)).getTransferNumber();
+									IXMLEncodable xmlReply = biConn.fetchPaymentData(
+										new Long(transferNumber).toString());
+									//biConn will return XMLErrorMessage if payment is active (= no matching record in passivepayments)
+									//(the transfers table alone does not associate a payment method or type with a transfernumber)
+									if (xmlReply instanceof XMLErrorMessage)
+									{
+										XMLErrorMessage repliedMessage = (XMLErrorMessage) xmlReply;
+										if (repliedMessage.getErrorCode() ==
+											XMLErrorMessage.ERR_NO_RECORD_FOUND)
+										{
+											TransactionOverviewDialog.showActivePaymentDialog(
+												jap.JAPConf.getInstance(), transferNumber, amount,
+												selectedAccount, planName);
+
+										}
+										else
+										{
+											JAPDialog.showMessageDialog(this,
+												JAPMessages.getString(MSG_DETAILS_FAILED));
+										}
+									}
+									else
+									{
+										TransactionOverviewDialog.showPassivePaymentDialog(jap.JAPConf.getInstance(),
+											(XMLPassivePayment) xmlReply,
+											transferNumber, selectedAccount.getAccountNumber());
+									}
+
+								}
+								catch (Exception e)
+								{
+									LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+												  "Cannot connect to Payment Instance: " + e.getMessage());
+									LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
+									showPIerror(jap.JAPConf.getInstance().getContentPane(), e);
+								}
+							}*/
+						}
+					}
+					else if (source == m_labelTermsAndConditions)
+					{
+						showTermsAndConditions(getSelectedAccount());
 					}
 					m_bButtonClicked = false;
 				}
@@ -1207,18 +1287,57 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				Timestamp flatEnddate = balance.getFlatEnddate();
 				Timestamp now = new Timestamp(System.currentTimeMillis());
 
-				if (flatEnddate != null && flatEnddate.after(now) && balance.getCredit() > 0)
+				boolean expired = false;
+				if (balance.getCredit() == 0)
 				{
-					//m_labelEnddate.setText(JAPUtil.formatTimestamp(flatEnddate, false, curLang));
+					m_labelValid.setText("");
+				}
+				else if (flatEnddate != null && flatEnddate.after(now))
+				{
 					m_labelValid.setText(JAPUtil.formatTimestamp(flatEnddate, false, curLang));
-					m_labelVolume.setText(JAPUtil.formatBytesValue(balance.getVolumeBytesLeft() * 1000));
 				}
 				else
 				{
-					m_labelValid.setText(JAPMessages.getString(MSG_ACCOUNT_NOFLAT));
-					m_labelVolume.setText(JAPMessages.getString(MSG_ACCOUNT_NOFLAT));
+					expired = true;
+					m_labelValid.setText(JAPUtil.formatTimestamp(flatEnddate, false, curLang) +
+										 " (" + JAPMessages.getString(MSG_EXPIRED) + ")");
 				}
 
+
+				//m_labelEnddate.setText(JAPUtil.formatTimestamp(flatEnddate, false, curLang));
+				if (balance.getCredit() > 0)
+				{
+					m_labelVolume.setText(((expired ? "(" : "") +
+										   JAPUtil.formatBytesValue(balance.getVolumeBytesLeft() * 1000) +
+										   (expired ? ")" : "")));
+					m_labelVolume.setForeground(m_labelValid.getForeground());
+					m_labelVolume.setToolTipText(null);
+					m_labelVolume.setCursor(Cursor.getDefaultCursor());
+				}
+				else if (balance.getSpent() == 0 && !expired)
+				{
+					m_labelVolume.setText(JAPMessages.getString(MSG_NO_TRANSACTION));
+					/** @todo activate if transaction may be fetched and shown */
+					/*if (selectedAccount.getTransCerts().size() > 0)
+					{
+						m_labelVolume.setToolTipText(JAPMessages.getString(MSG_SHOW_TRANSACTION_DETAILS));
+						m_labelVolume.setForeground(Color.blue);
+						m_labelVolume.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+					}
+					else*/
+					{
+						m_labelVolume.setToolTipText(null);
+						m_labelVolume.setForeground(m_labelValid.getForeground());
+						m_labelVolume.setCursor(Cursor.getDefaultCursor());
+					}
+				}
+				else
+				{
+					m_labelVolume.setText(JAPMessages.getString(MSG_NO_CREDIT));
+					m_labelVolume.setToolTipText(null);
+					m_labelVolume.setForeground(m_labelValid.getForeground());
+					m_labelVolume.setCursor(Cursor.getDefaultCursor());
+				}
 				/*
 				   m_labelValid.setText(JAPUtil.formatTimestamp(balance.getValidTime(), true,
 					JAPController.getInstance().getLocale().getLanguage()));

@@ -173,6 +173,7 @@ public final class JAPModel extends Observable
 	private Dimension m_configSize;
 	private Dimension m_helpSize;
 	private boolean m_bSaveHelpSize;
+	private boolean m_bSaveConfigSize;
 
 	/**
 	 * Stores the instance with the routing settings.
@@ -808,7 +809,7 @@ public final class JAPModel extends Observable
 		return m_fontSize;
 	}
 
-	public void setFontSize(int a_fontSize)
+	public boolean setFontSize(int a_fontSize)
 	{
 		if (a_fontSize < 0)
 		{
@@ -832,7 +833,9 @@ public final class JAPModel extends Observable
 				setChanged();
 				notifyObservers(resize);
 			}
+			return true; // font size changed
 		}
+		return false;
 	}
 
 	public String toString()
@@ -999,6 +1002,18 @@ public final class JAPModel extends Observable
 	{
 		m_bSaveHelpSize = a_bSave;
 	}
+
+	public void setSaveConfigWindowSize(boolean a_bSave)
+	{
+		m_bSaveConfigSize = a_bSave;
+	}
+
+	public boolean isConfigWindowSizeSaved()
+	{
+		return m_bSaveConfigSize;
+	}
+
+
 
 	public void setConfigSize(Dimension a_size)
 	{

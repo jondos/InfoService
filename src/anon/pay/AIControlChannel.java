@@ -74,14 +74,11 @@ public class AIControlChannel extends XmlControlChannel
   private static final int EVENT_UNREAL = 1;
 
   /** How many milliseconds to wait before requesting a new account statement */
-  private static final long ACCOUNT_UPDATE_INTERVAL_MS = 90000;
-  private static final long ACCOUNT_UPDATE_INTERVAL_BYTES = 2000000;
+  private static final long ACCOUNT_UPDATE_INTERVAL_MS = 60000;
 
   private static long m_totalBytes = 0;
 
   private boolean m_bInitialCCSent = false;
-
-  private long m_initialTransferedBytes = 0;
 
   private long m_lastBalanceUpdateMS = 0;
   private long m_lastBalanceUpdateBytes = 0;
@@ -136,31 +133,19 @@ public class AIControlChannel extends XmlControlChannel
 			  if (error.getErrorCode() ==  XMLErrorMessage.ERR_ACCOUNT_EMPTY)
 			  {
 				  // find an account that is not empty - if possible...
-				  Vector accounts = PayAccountsFile.getInstance().getAccounts(m_connectedCascade.getPIID());
-				  Timestamp now = new Timestamp(System.currentTimeMillis());
-				  PayAccount activeAccount = PayAccountsFile.getInstance().getActiveAccount();
-				  PayAccount currentAccount = null;
-				  updateBalance(activeAccount); // show that account is empty
-				  if (accounts.size() > 0)
+
+				  updateBalance(PayAccountsFile.getInstance().getActiveAccount()); // show that account is empty
+				  PayAccount currentAccount = PayAccountsFile.getInstance().getAlternativeNonEmptyAccount(
+								  m_connectedCascade.getPIID());
+
+				  if (currentAccount != null)
 				  {
-					  for (int i = 0; i < accounts.size(); i++)
-					  {
-						  currentAccount = (PayAccount) accounts.elementAt(i);
-						  if (activeAccount != currentAccount && currentAccount.isCharged(now))
-						  {
-							  break;
-						  }
-						  currentAccount = null;
-					  }
-					  if (currentAccount != null)
-					  {
-						  PayAccountsFile.getInstance().setActiveAccount(currentAccount);
-					  }
-					  else
-					  {
-						  getServiceContainer().keepCurrentService(false); // reconnect to another cascade if possible
-						  processErrorMessage(new XMLErrorMessage(elemRoot));
-					  }
+					  PayAccountsFile.getInstance().setActiveAccount(currentAccount);
+				  }
+				  else
+				  {
+					  getServiceContainer().keepCurrentService(false); // reconnect to another cascade if possible
+					  processErrorMessage(new XMLErrorMessage(elemRoot));
 				  }
 			  }
 			  else

@@ -317,48 +317,61 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		}
 		else
 		{
-			for (int i = 0; i < 2; i++)
+			if (JAPModel.getInstance().isConfigWindowSizeSaved() &&
+				JAPModel.getInstance().getConfigSize() != null)
 			{
-				pack();
-				if (i != 1 && getSize().width < getSize().height)
-				{
-					LogHolder.log(LogLevel.ERR, LogType.GUI,
-								  "Could not pack config properly. Width is smaller than height! " +
-								  "Width:" + getSize().width + " Height:" + getSize().height);
-					Thread.yield();
-					continue;
-				}
-
-				else if (getSize().width > getScreenBounds().width ||
-						 getSize().height > getScreenBounds().height)
-				{
-					LogHolder.log(LogLevel.ERR, LogType.GUI, "Packed config view with illegal size! " +
-								  "Width:" + getSize().width + " Height:" + getSize().height +
-								  "\nSetting defaults...");
-
-					if (JAPModel.getInstance().getConfigSize() != null &&
-						JAPModel.getInstance().getConfigSize().width > 0 &&
-						JAPModel.getInstance().getConfigSize().height > 0)
-					{
-						setSize(JAPModel.getInstance().getConfigSize());
-					}
-					else
-					{
-						// default size for MacOS
-						setSize(new Dimension(786, 545));
-					}
-				}
-				else
-				{
-					JAPModel.getInstance().setConfigSize(getSize());
-				}
-				break;
+				setSize(JAPModel.getInstance().getConfigSize());
+			}
+			else
+			{
+				doPack();
 			}
 		}
 		confUI.afterPack();
 		restoreLocation(JAPModel.getInstance().getConfigWindowLocation());
 		//setDockable(true);
 		JAPModel.getInstance().addObserver(this);
+	}
+
+	protected void doPack()
+	{
+		for (int i = 0; i < 2; i++)
+		{
+			pack();
+			if (i != 1 && getSize().width < getSize().height)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.GUI,
+							  "Could not pack config properly. Width is smaller than height! " +
+							  "Width:" + getSize().width + " Height:" + getSize().height);
+				Thread.yield();
+				continue;
+			}
+
+			else if (getSize().width > getScreenBounds().width ||
+					 getSize().height > getScreenBounds().height)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.GUI, "Packed config view with illegal size! " +
+							  "Width:" + getSize().width + " Height:" + getSize().height +
+							  "\nSetting defaults...");
+
+				if (JAPModel.getInstance().getConfigSize() != null &&
+					JAPModel.getInstance().getConfigSize().width > 0 &&
+					JAPModel.getInstance().getConfigSize().height > 0)
+				{
+					setSize(JAPModel.getInstance().getConfigSize());
+				}
+				else
+				{
+					// default size for MacOS
+					setSize(new Dimension(786, 545));
+				}
+			}
+			else
+			{
+				JAPModel.getInstance().setConfigSize(getSize());
+			}
+			break;
+		}
 	}
 
 	public static abstract class AbstractRestartNeedingConfigChange
@@ -734,7 +747,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 				{
 					// font changed
 					SwingUtilities.updateComponentTreeUI(getContentPane());
-					m_bttnHelp.setIcon(GUIUtils.loadImageIcon(JAPHelp.IMG_HELP, true));
+					//m_bttnHelp.setIcon(GUIUtils.loadImageIcon(JAPHelp.IMG_HELP, true));
 				}
 			};
 			if (SwingUtilities.isEventDispatchThread())
