@@ -959,6 +959,16 @@ public class TinyTLSServerSocket extends Socket
 		}
 	}
 
+	public boolean isClosed()
+	{
+		Socket socket = m_Socket;
+		if (socket != null)
+		{
+			return socket.isClosed();
+		}
+		return true;
+	}
+
 	public void setSoTimeout(int ms) throws SocketException
 		{
 		if (m_Socket != null)
