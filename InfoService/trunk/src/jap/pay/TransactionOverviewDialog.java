@@ -327,15 +327,16 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 					    JAPDialog.showMessageDialog(this,JAPMessages.getString(MSG_PAYMENT_COMPLETED));
 					} else
 					{
-						showActivePaymentDialog(transfernumber, amount, m_account, planName);
+						showActivePaymentDialog(this, transfernumber, amount, m_account, planName);
 					}
-				} else
+				}
+				else
 				{
 					JAPDialog.showMessageDialog(this,JAPMessages.getString(MSG_DETAILS_FAILED));
 				}
 			} else
 			{
-				showPassivePaymentDialog( (XMLPassivePayment) xmlReply, Long.parseLong(transfernumber), m_account.getAccountNumber());
+				showPassivePaymentDialog(this, (XMLPassivePayment) xmlReply, Long.parseLong(transfernumber), m_account.getAccountNumber());
 			}
 
 		} catch (Exception e)
@@ -344,12 +345,12 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 		}
 	}
 
-	private void showActivePaymentDialog(String transferNumber, long amount, PayAccount a_account, String planName)
+	public static void showActivePaymentDialog(JAPDialog a_parent, String transferNumber, long amount, PayAccount a_account, String planName)
 	{
 		String language = JAPMessages.getLocale().getLanguage();
 		Vector optionsToShow = getLocalizedActivePaymentsData(language, a_account);
 
-	    ActivePaymentDetails apd = new ActivePaymentDetails(this,optionsToShow, transferNumber,amount, planName);
+	    ActivePaymentDetails apd = new ActivePaymentDetails(a_parent, optionsToShow, transferNumber,amount, planName);
 	}
 
 	/**
@@ -360,7 +361,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 	 *         entries in Hashtable: Strings for keys "name","heading","detailedInfo",
 	 *                               Vector of Strings for key "extraInfos"
 	 */
-	private Vector getLocalizedActivePaymentsData(String lang, PayAccount a_account)
+	private static Vector getLocalizedActivePaymentsData(String lang, PayAccount a_account)
 	{
 		Vector optionsToShow = new Vector();
 		try
@@ -397,9 +398,9 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 		return optionsToShow;
 	}
 
-	private void showPassivePaymentDialog(XMLPassivePayment pp, long transfernumber, long accountnumber)
+	public static void showPassivePaymentDialog(JAPDialog a_parent, XMLPassivePayment pp, long transfernumber, long accountnumber)
 	{
-		PassivePaymentDetails ppd = new PassivePaymentDetails(this,pp, transfernumber, accountnumber);
+		PassivePaymentDetails ppd = new PassivePaymentDetails(a_parent,pp, transfernumber, accountnumber);
 	}
 
 	/**

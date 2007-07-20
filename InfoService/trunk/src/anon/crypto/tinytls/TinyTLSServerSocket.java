@@ -979,8 +979,7 @@ public class TinyTLSServerSocket extends Socket
 			//return socket.isClosed();
 		}
 		return true;
-
-}
+	}
 
 	public boolean isClosed()
 	{

@@ -684,7 +684,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		else if (m_infoService.isPay(cascade.getId()))
 		{
-			m_payLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+			m_payLabel.setCursor(Cursor.getDefaultCursor());
 			m_payLabel.setForeground(m_numOfUsersLabel.getForeground());
 			m_payLabel.setText(JAPMessages.getString(MSG_PAYCASCADE));
 			//m_payLabel.setToolTipText(JAPMessages.getString(JAPNewView.MSG_NO_REAL_PAYMENT));

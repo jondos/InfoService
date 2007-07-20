@@ -1682,6 +1682,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					SwingUtilities.updateComponentTreeUI(DEFAULT_LABEL);
 					updateFonts();
 					onUpdateValues();
+
 					setOptimalSize();
 				}
 			};
@@ -2728,7 +2729,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	public Dimension getPreferredSize()
 	{
 		Dimension d = super.getPreferredSize();
-		d.width = m_iPreferredWidth;
+		/** todo why was this needed? */
+		//d.width = m_iPreferredWidth;
 		return d;
 	}
 

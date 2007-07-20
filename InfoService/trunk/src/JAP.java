@@ -287,19 +287,6 @@ public class JAP
 			JAPMessages.init(JAPConstants.MESSAGESFN);
 		}
 
-		splash.setText(JAPMessages.getString(MSG_INIT_RANDOM));
-		// initialise secure random generators
-		Thread secureRandomThread = new Thread(new Runnable()
-		{
-			public void run()
-			{
-				KeyPool.start();
-				new SecureRandom().nextInt();
-			}
-		});
-		secureRandomThread.setPriority(Thread.MIN_PRIORITY);
-		secureRandomThread.start();
-
 
 		if (!bConsoleOnly)
 		{
@@ -325,6 +312,30 @@ public class JAP
 		LogHolder.setLogInstance(JAPDebug.getInstance());
 		JAPDebug.getInstance().setLogType(LogType.ALL);
 		JAPDebug.getInstance().setLogLevel(LogLevel.WARNING);
+
+
+		splash.setText(JAPMessages.getString(MSG_INIT_RANDOM));
+		// initialise secure random generators
+		Thread secureRandomThread = new Thread(new Runnable()
+		{
+			public void run()
+			{
+				KeyPool.start();
+				new SecureRandom().nextInt();
+			}
+		});
+		secureRandomThread.setPriority(Thread.MIN_PRIORITY);
+		secureRandomThread.start();
+
+		//splash.setText(JAPMessages.getString(MSG_FINISH_RANDOM));
+		try
+		{
+			secureRandomThread.join();
+		}
+		catch (InterruptedException a_e)
+		{
+			LogHolder.log(LogLevel.NOTICE, LogType.CRYPTO, a_e);
+		}
 
 		// Set the default Look-And-Feel
 		if (!bConsoleOnly && !os.regionMatches(true, 0, "mac", 0, 3))
@@ -550,6 +561,7 @@ public class JAP
 			bSystray = true;
 		}
 
+		/*
 		splash.setText(JAPMessages.getString(MSG_FINISH_RANDOM));
 		try
 		{
@@ -558,7 +570,7 @@ public class JAP
 		catch (InterruptedException a_e)
 		{
 			LogHolder.log(LogLevel.NOTICE, LogType.CRYPTO, a_e);
-		}
+		}*/
 
 		splash.setText(JAPMessages.getString(MSG_START_LISTENER));
 		if (!m_controller.startHTTPListener(listenHost, listenPort))

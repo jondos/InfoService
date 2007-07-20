@@ -55,7 +55,6 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 	private int m_Height;
 	private final Object SYNC_MSG = new Object();
 	private Random m_Random;
-	private final Object SYNC_ADD_MSG = new Object();
 
 	private final static int ICON_HEIGHT = 15;
 	private final static int ICON_WIDTH = 16;
