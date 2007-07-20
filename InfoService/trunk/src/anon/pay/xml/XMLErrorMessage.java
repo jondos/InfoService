@@ -232,6 +232,7 @@ public class XMLErrorMessage extends Exception implements IXMLEncodable
 
 		//type and existence of a messageObject depend on error code
 		String objectType = m_messageObjectTypes[m_iErrorCode];
+		/*
 		if (! objectType.equals("none") )
 		{
 			try
@@ -259,6 +260,6 @@ public class XMLErrorMessage extends Exception implements IXMLEncodable
 			{
 				// ignore, not needed
 			}
-		}
+		}*/
 	}
 }
