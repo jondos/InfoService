@@ -323,7 +323,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		AccountSettingsPanel.class.getName() + "_showTransactionDetails";
 	private static final String MSG_NO_TRANSACTION =
 		AccountSettingsPanel.class.getName() + "_noTransaction";
-	private static final String MSG_EXPIRED =
+	public static final String MSG_EXPIRED =
 		AccountSettingsPanel.class.getName() + "_expired";
 	private static final String MSG_NO_CREDIT =
 		AccountSettingsPanel.class.getName() + "_noCredit";
@@ -1352,7 +1352,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					m_labelValid.setToolTipText("");
 				   }*/
 
-				long dep = balance.getVolumeBytesLeft()*1000 + selectedAccount.getBalance().getSpent();
+				long dep = balance.getVolumeBytesLeft()*1000 + balance.getSpent();
 				long spe = balance.getSpent();
 				if (dep == 0 || dep - spe == 0)
 				{

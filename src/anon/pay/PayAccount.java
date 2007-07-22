@@ -637,6 +637,15 @@ public class PayAccount implements IXMLEncodable
 		m_currentBytes = 0;
 	}
 
+	public void updateCurrentBytes(long a_additionalBytes)
+	{
+		synchronized (SYNC_BYTES)
+		{
+			m_currentBytes += a_additionalBytes;
+		}
+	}
+
+
 	public long getCurrentBytes()
 	{
 		return m_currentBytes;
