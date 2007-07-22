@@ -63,7 +63,6 @@ import logging.LogLevel;
 import logging.LogType;
 import java.net.SocketException;
 import java.net.InetAddress;
-import java.lang.reflect.*;
 
 /**
  * @author stefan

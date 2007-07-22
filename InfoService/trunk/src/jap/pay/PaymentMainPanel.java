@@ -276,6 +276,7 @@ public class PaymentMainPanel extends FlippingPanel
 
 		//row for bytes spent in this session
 		m_labelSessionSpentHeader = new JLabel(JAPMessages.getString(MSG_SESSIONSPENT));
+		m_labelSessionSpentHeader.setVisible(false);
 		c1.insets = new Insets(10, 20, 0, 0);
 		c1.gridx = 0;
 		c1.gridy = 3;
@@ -290,6 +291,7 @@ public class PaymentMainPanel extends FlippingPanel
 		c1.fill = GridBagConstraints.NONE;
 		fullPanel.add(spacer, c1);
 		m_labelSessionSpent = new JLabel(" ");
+		m_labelSessionSpent.setVisible(false);
 		m_labelSessionSpent.setHorizontalAlignment(JLabel.RIGHT);
 		c1.insets = new Insets(10, 5, 0, 0);
 		c1.gridx = 2;
@@ -322,6 +324,7 @@ public class PaymentMainPanel extends FlippingPanel
 
 		//row for date of last update
 		m_dateLabel = new JLabel(JAPMessages.getString(MSG_LASTUPDATE));
+		m_dateLabel.setVisible(false);
 		c1.insets = new Insets(10, 20, 0, 0);
 		c1.gridx = 0;
 		c1.gridy = 5;
@@ -336,6 +339,7 @@ public class PaymentMainPanel extends FlippingPanel
 		c1.fill = GridBagConstraints.NONE;
 		fullPanel.add(spacer, c1);
 		m_lastUpdateLabel = new JLabel(" ");
+		m_lastUpdateLabel.setVisible(false);
 		m_lastUpdateLabel.setHorizontalAlignment(JLabel.RIGHT);
 		c1.insets = new Insets(10, 5, 0, 0);
 		c1.gridx = 2;
@@ -479,28 +483,10 @@ public class PaymentMainPanel extends FlippingPanel
 					String endDateString = JAPUtil.formatTimestamp(balance.getFlatEnddate(),false,language);
 					m_labelValidUntil.setText(endDateString);
 					//m_labelBalanceInEuros.setText(JAPUtil.formatEuroCentValue(balance.getBalance()));
-				}
-				else
-				{
-					m_labelValidUntil.setText(JAPMessages.getString(MSG_NO_FLATRATE));
-					//m_labelBalanceInEuros.setText(JAPUtil.formatEuroCentValue(balance.getBalance()));
 
-					m_BalanceText.setEnabled(true);
-					if (activeAccount.getCertifiedCredit() < 0 )
-					{
-						m_BalanceText.setText(JAPUtil.formatBytesValue(0));
-						m_BalanceTextSmall.setText(JAPUtil.formatBytesValue(0));
-					}
-					else
-					{
-					m_BalanceText.setText(JAPUtil.formatBytesValue(activeAccount.getCertifiedCredit()*1000));
-					m_BalanceTextSmall.setText(JAPUtil.formatBytesValue(activeAccount.getCertifiedCredit()*1000));
-					}
-					m_BalanceTextSmall.setEnabled(true);
-
-					double deposit = (double) activeAccount.getDeposit();
-					double credit = (double) activeAccount.getCertifiedCredit();
-					double percent = credit / deposit;
+					long deposit = balance.getVolumeBytesLeft() * 1000 + balance.getSpent();
+					long credit = activeAccount.getCertifiedCredit() * 1000;
+					double percent = (double) credit / (double) deposit;
 					if (percent > 0.83)
 					{
 						m_BalanceProgressBar.setValue(5);
@@ -534,6 +520,16 @@ public class PaymentMainPanel extends FlippingPanel
 					m_BalanceProgressBar.setEnabled(true);
 					m_BalanceSmallProgressBar.setEnabled(true);
 				}
+				else
+				{
+					m_labelValidUntil.setText(JAPMessages.getString(AccountSettingsPanel.MSG_EXPIRED));
+					//m_labelBalanceInEuros.setText(JAPUtil.formatEuroCentValue(balance.getBalance()));
+					m_BalanceProgressBar.setValue(0);
+					m_BalanceSmallProgressBar.setValue(0);
+
+					m_BalanceText.setText(JAPUtil.formatBytesValue(0));
+					m_BalanceTextSmall.setText(JAPUtil.formatBytesValue(0));
+				}
 				//set rest of the panel
 				m_spentThisSession = AIControlChannel.getBytes();
 				Timestamp t = balance.getTimestamp();
@@ -551,12 +547,19 @@ public class PaymentMainPanel extends FlippingPanel
 									   JAPController.getInstance().getCurrentMixCascade().getPIID()) == null)
 				{
 					m_notifiedEmpty = true;
-					if (JAPDialog.showYesNoDialog(JAPController.getInstance().getViewWindow(),
-												  JAPMessages.getString(MSG_NEARLYEMPTY_CREATE_ACCOUNT)))
+					// start a new thread to prevent freezing of GUI update
+					new Thread(new Runnable()
 					{
-						m_view.showConfigDialog(JAPConf.PAYMENT_TAB,
-												JAPController.getInstance().getCurrentMixCascade().getPIID());
-					}
+						public void run()
+						{
+							if (JAPDialog.showYesNoDialog(JAPController.getInstance().getViewWindow(),
+								JAPMessages.getString(MSG_NEARLYEMPTY_CREATE_ACCOUNT)))
+							{
+								m_view.showConfigDialog(JAPConf.PAYMENT_TAB,
+									JAPController.getInstance().getCurrentMixCascade().getPIID());
+							}
+						}
+					}).start();
 				}
 
 			}
@@ -579,11 +582,6 @@ public class PaymentMainPanel extends FlippingPanel
 		public void accountActivated(PayAccount acc)
 		{
 			updateDisplay(acc, true);
-		}
-
-		public void flatrateBought(PayAccount acc)
-		{
-			updateDisplay(acc,true);
 		}
 
 		/**
