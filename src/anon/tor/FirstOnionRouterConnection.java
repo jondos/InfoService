@@ -187,7 +187,7 @@ public class FirstOnionRouterConnection implements Runnable
 		ImmutableProxyInterface proxy = null;
 		if (pi != null)
 			proxy = pi.getProxyInterface(false).getProxyInterface();
-		
+
 		FirstOnionRouterConnectionThread forct =
 			new FirstOnionRouterConnectionThread(m_description.getAddress(),
 												 m_description.getPort(),
@@ -227,7 +227,7 @@ public class FirstOnionRouterConnection implements Runnable
 		}
 
 		//#######################
-
+		m_tinyTLS.setSoTimeout(30000);
 		m_tinyTLS.startHandshake();
 		m_istream = m_tinyTLS.getInputStream();
 		m_ostream = m_tinyTLS.getOutputStream();

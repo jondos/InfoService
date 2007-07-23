@@ -77,8 +77,8 @@ public class FirstOnionRouterConnectionThread implements Runnable
 	public TinyTLS getConnection() throws IOException
 	{
 		m_thread = new Thread(this, "FirstOnionRouterConnectionThread");
-	m_thread.setDaemon(true);
-	m_thread.start();
+		m_thread.setDaemon(true);
+		m_thread.start();
 		synchronized (m_oNotifySync)
 		{
 			try

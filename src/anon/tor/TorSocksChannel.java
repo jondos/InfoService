@@ -33,6 +33,10 @@ package anon.tor;
 import java.io.IOException;
 
 import anon.util.ByteArrayUtil;
+import anon.ErrorCodes;
+import logging.LogHolder;
+import logging.LogType;
+import logging.LogLevel;
 
 /**
  * @author stefan
@@ -58,6 +62,7 @@ public class TorSocksChannel extends TorChannel
 		m_state = SOCKS_WAIT_FOR_VERSION;
 		m_data = null;
 		m_Tor = tor;
+		LogHolder.log(LogLevel.DEBUG,LogType.TOR,"new TorSocksChannel() - object created.");
 	}
 
 	/** Called if some bytes should be send over this Sock channel
@@ -270,12 +275,14 @@ public class TorSocksChannel extends TorChannel
 						this.closedByPeer();
 						return;
 					}
-					circ.connectChannel(this, addr, port);
+					if (circ.connectChannel(this, addr, port) != ErrorCodes.E_SUCCESS)
+					{
+						connected = false;
+					}
 				}
 				catch (IOException ex)
 				{
 					connected = false;
-					//circuit seems to be shutdown
 				}
 			}
 
@@ -358,10 +365,25 @@ public class TorSocksChannel extends TorChannel
 
 			if (addr != null) //we found an address
 			{
-				Circuit circ;
-				circ = m_Tor.getCircuitForDestination(addr, port);
-				if (circ == null) //connection error
+				boolean bChannelCreated = false;
+				for (int tries = 0; tries < 3; tries++)//try 3 times to esatblish a channel trough the tor network
 				{
+					Circuit circ;
+					circ = m_Tor.getCircuitForDestination(addr, port);
+					if (circ == null) //circuit creation error --> because the circuit establishment
+						//proceudre itselves tries 5 times we can give up here directly...
+					{
+						break;
+					}
+					//	connect
+					if (circ.connectChannel(this, addr, port) == ErrorCodes.E_SUCCESS)
+					{
+						bChannelCreated = true;
+						break;
+					}
+				}
+				if (!bChannelCreated)
+				{//ew were not able to establish a channel - give up and tell the peer
 					socksAnswer = ByteArrayUtil.conc(new byte[]
 						{0x05, 0x01, 0x00}
 						, ByteArrayUtil.copy(m_data, 3, consumedBytes - 3));
@@ -369,8 +391,6 @@ public class TorSocksChannel extends TorChannel
 					this.closedByPeer();
 					return;
 				}
-				//	connect
-				circ.connectChannel(this, addr, port);
 				socksAnswer = ByteArrayUtil.conc(new byte[]
 												 {0x05, 0x00, 0x00}
 												 , ByteArrayUtil.copy(m_data, 3, consumedBytes - 3));

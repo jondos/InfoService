@@ -63,6 +63,10 @@ final class CellQueue
 	 */
 	public synchronized void addElement(Cell c)
 	{
+		if(c==null)
+		{
+			int l=43;
+		}
 		CellQueueEntry entry = new CellQueueEntry(c);
 		if (m_lastEntry == null)
 		{

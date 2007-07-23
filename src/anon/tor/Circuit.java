@@ -31,7 +31,6 @@
 package anon.tor;
 
 import java.io.IOException;
-import java.net.ConnectException;
 import java.security.SecureRandom;
 import java.util.Date;
 import java.util.Enumeration;
@@ -49,12 +48,13 @@ import anon.util.ByteArrayUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.ErrorCodes;
 
 /**
  * @author stefan
  *
  */
-public class Circuit
+public final class Circuit implements Runnable
 {
 
 	//max number of streams over a circuit
@@ -65,7 +65,6 @@ public class Circuit
 	private FirstOnionRouterConnection m_FirstORConnection;
 	private Vector m_onionRouters;
 
-	//private TinyTLS m_tlssocket;
 	private int m_circID;
 	private Hashtable m_streams;
 
@@ -81,20 +80,21 @@ public class Circuit
 	private int m_streamCounter;
 	private int m_circuitLength;
 	private int m_MaxStreamsPerCircuit;
-	private int m_recvCellCounter;
-	private int m_sendCellCounter;
+	private volatile int m_recvCellCounter;
+	private volatile int m_sendCellCounter;
 	private boolean m_destroyed;
-
-	private CellQueue m_cellQueue;
 
 	private byte[] m_resolvedData;
 	private Object m_oResolveSync;
-	private Object m_oDeliverSync;
+	private Object m_oSendCellCounterSync;
 	private Object m_oSendSync;
 	private Object m_oDestroyedByPeerSync;
 	private volatile boolean m_bReceivedCreatedOrExtendedCell;
 	private Object m_oNotifySync;
 	private MyRandom m_rand;
+
+	private Thread m_threadSendCellLoop; //this thread takes cells from the cell queue and sends them
+	private CellQueue m_cellqueueSend;
 
 	//earliest time when the circuit will be destroy
 	private Date m_destroyTime;
@@ -115,13 +115,13 @@ public class Circuit
 		IOException
 	{
 		m_oResolveSync = new Object();
-		m_oDeliverSync = new Object();
+		m_oSendCellCounterSync = new Object();
 		m_oSendSync = new Object();
 		m_oDestroyedByPeerSync = new Object();
 		m_oNotifySync = new Object();
-		this.m_FirstORConnection = onionProxy;
-		this.m_circID = circID;
-		this.m_streams = new Hashtable();
+		m_FirstORConnection = onionProxy;
+		m_circID = circID;
+		m_streams = new Hashtable();
 		m_streamCounter = 0;
 		m_MaxStreamsPerCircuit = MAX_STREAMS_OVER_CIRCUIT;
 		m_onionRouters = (Vector) orList.clone();
@@ -133,10 +133,21 @@ public class Circuit
 		}
 		this.m_recvCellCounter = 1000;
 		this.m_sendCellCounter = 1000;
-		m_cellQueue = new CellQueue();
 		this.m_rand = new MyRandom(new SecureRandom());
 		m_State = STATE_CREATING;
 		m_destroyed = false;
+		m_cellqueueSend = new CellQueue();
+		m_threadSendCellLoop = new Thread(this, "Tor - Circuit - SendCellLoop");
+		m_threadSendCellLoop.setDaemon(true);
+		m_threadSendCellLoop.start();
+	}
+
+	private void addToSendCellCounter(int value)
+	{
+		synchronized (m_oSendCellCounterSync)
+		{
+			m_sendCellCounter += value;
+		}
 	}
 
 	/**
@@ -262,8 +273,16 @@ public class Circuit
 		}
 		catch (Exception e)
 		{}
-		m_FirstORConnection.notifyCircuitClosed(this);
+		///todo flush cell send queue!
 		m_State = STATE_CLOSED;
+		try
+		{
+			m_threadSendCellLoop.join(2000);
+		}
+		catch (InterruptedException ex)
+		{
+		}
+		m_FirstORConnection.notifyCircuitClosed(this);
 	}
 
 	/**
@@ -371,8 +390,7 @@ public class Circuit
 						{
 							case RelayCell.RELAY_SENDME:
 							{
-								m_sendCellCounter += 100;
-								deliverCells();
+								addToSendCellCounter(100);
 								break;
 							}
 							default:
@@ -449,7 +467,6 @@ public class Circuit
 		}
 		catch (Exception ex)
 		{
-			ex.printStackTrace();
 			destroyedByPeer();
 			throw new IOException("Unable to dispatch the cell \n" + ex.getLocalizedMessage());
 		}
@@ -463,7 +480,6 @@ public class Circuit
 	 */
 	public void send(Cell cell) throws IOException, Exception
 	{
-//		if (cell instanceof RelayCell)
 		if (m_State == STATE_CLOSED)
 		{
 			throw new IOException("circuit alread closed");
@@ -472,37 +488,9 @@ public class Circuit
 		{
 			if (cell instanceof RelayCell)
 			{
-				Cell c = m_FirstOR.encryptCell( (RelayCell) cell);
-				m_cellQueue.addElement(c);
+				cell = m_FirstOR.encryptCell( (RelayCell) cell);
 			}
-			else if (cell instanceof DestroyCell)
-			{
-				m_cellQueue.addElement(cell);
-			} //ignoring other cell types
-		}
-		deliverCells();
-
-	}
-
-	/**
-	 * delivers the cells if the FOR accept more cells
-	 * @throws Exception
-	 */
-	private void deliverCells() throws IOException
-	{
-		synchronized (m_oDeliverSync)
-		{
-			if (m_State == STATE_CLOSED)
-			{
-				throw new IOException("circuit alread closed");
-			}
-			if (m_sendCellCounter > 0 && !m_cellQueue.isEmpty())
-			{
-				Cell c = m_cellQueue.removeElement();
-				m_FirstORConnection.send(c);
-				m_sendCellCounter--;
-				deliverCells();
-			}
+			m_cellqueueSend.addElement(cell);
 		}
 	}
 
@@ -624,7 +612,11 @@ public class Circuit
 	public synchronized TorChannel createChannel(String addr, int port) throws IOException
 	{
 		TorChannel channel = new TorChannel();
-		connectChannel(channel, addr, port);
+		int ret = connectChannel(channel, addr, port);
+		if (ret != ErrorCodes.E_SUCCESS)
+		{
+			throw new IOException("Circuit:createChannel(addr,port) failed! Reason:" + Integer.toString(ret));
+		}
 		return channel;
 	}
 
@@ -635,17 +627,21 @@ public class Circuit
 	 * @param port
 	 * port
 	 * @return
-	 * a channel
-	 * @throws IOException
+	 * ErrorCode.E_SUCCESS if channel could be established
+	 * @return ErrorCodes.E_NOT_CONNECTED if the circuit is not connected or shutdown
+	 * @return ErrorCodes.E_CONNECT if the channel could not be established
+	 * @return ErrorCode.E_UNKNOWN otherwise
 	 */
-	protected synchronized void connectChannel(TorChannel channel, String addr, int port) throws IOException
+	protected synchronized int connectChannel(TorChannel channel, String addr, int port)
 	{
-		if (isShutdown())
+		try
 		{
-			throw new ConnectException("Circuit Closed - cannot connect");
-		}
-		else
-		{
+			if (isShutdown())
+			{
+				LogHolder.log(LogLevel.DEBUG, LogType.TOR,
+							  "Circuit:connectChannel() - Circuit Closed - cannot connect");
+				return ErrorCodes.E_NOT_CONNECTED;
+			}
 			m_streamCounter++;
 			Integer streamID;
 			synchronized (m_streams)
@@ -664,8 +660,9 @@ public class Circuit
 			if (!channel.connect(addr, port))
 			{
 				m_streams.remove(streamID);
-				//m_streamCounter--;
-				throw new ConnectException("Channel could not be created");
+				LogHolder.log(LogLevel.DEBUG, LogType.TOR,
+							  "Circuit:connectChannel() - Channel could not be created");
+				return ErrorCodes.E_CONNECT;
 			}
 
 			if (m_streamCounter >= m_MaxStreamsPerCircuit)
@@ -675,6 +672,12 @@ public class Circuit
 					shutdown();
 				}
 			}
+			return ErrorCodes.E_SUCCESS;
+		}
+		catch (Throwable t)
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.TOR, "Circuit:connectChannel() - Unkown Error", t);
+			return ErrorCodes.E_UNKNOWN;
 		}
 	}
 
@@ -706,6 +709,57 @@ public class Circuit
 		if (m_streamCounter >= MAX_STREAMS_OVER_CIRCUIT)
 		{
 			shutdown();
+		}
+	}
+
+	public void run()
+	{
+		try
+		{
+			while (m_State != STATE_CLOSED)
+			{
+				///@todo remove this busy waiting - make a more intelligent CellQueue!
+				while (m_cellqueueSend.isEmpty())
+				{
+					try
+					{
+						if (m_State == STATE_CLOSED)
+						{
+							return;
+						}
+						Thread.sleep(100);
+					}
+					catch (Exception e)
+					{
+					}
+				}
+				Cell c = m_cellqueueSend.removeElement();
+				while (m_sendCellCounter <= 0 && (m_State != STATE_CLOSED))
+				{
+					try
+					{
+						Thread.sleep(100);
+					}
+					catch (Exception e)
+					{
+					}
+				}
+				if (! (c instanceof RelayCell))
+				{
+					LogHolder.log(LogLevel.DEBUG, LogType.TOR,
+								  "Tor-Circuit-sendCellLoop: sending no releay cell.");
+				}
+				else
+				{
+					addToSendCellCounter( -1);
+				}
+
+				m_FirstORConnection.send(c);
+			}
+		}
+		catch (Throwable t)
+		{
+			destroyedByPeer();
 		}
 	}
 

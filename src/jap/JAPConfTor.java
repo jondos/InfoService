@@ -55,7 +55,6 @@ import javax.swing.table.DefaultTableModel;
 import anon.tor.ordescription.InfoServiceORListFetcher;
 import anon.tor.ordescription.ORList;
 import gui.GUIUtils;
-import gui.JAPHelp;
 import gui.JAPMessages;
 import gui.dialog.JAPDialog;
 import logging.LogType;
@@ -79,7 +78,6 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 	private JScrollPane m_scrollPane;
 	private JPanel m_panelSlider;
 	private TitledBorder m_border;
-	private long m_lastUpdate;
 	private DateFormat ms_dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM,
 					DateFormat.SHORT);
 	private class MyJTable extends JTable
@@ -306,8 +304,6 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		c.weighty = 0;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		panelRoot.add(p, c);
-
-		m_lastUpdate = 0;
 	}
 
 	public String getTabTitle()
@@ -404,7 +400,6 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 					m_bttnFetchRouters.setEnabled(true);
 					return;
 				}
-				m_lastUpdate = System.currentTimeMillis();
 				DefaultTableModel m = (DefaultTableModel) m_tableRouters.getModel();
 				Vector ors = ol.getList();
 				m.setNumRows(ors.size());
@@ -421,7 +416,7 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 				String strPublished = JAPMessages.getString("unknown");
 				if (published != null)
 				{
-					strPublished = ms_dateFormat.format(ol.getPublished());
+					strPublished = ms_dateFormat.format(published);
 				}
 				m_labelAvailableRouters.setText(JAPMessages.getString("torBorderAvailableRouters") + " (" +
 												strPublished + "):");

@@ -88,7 +88,7 @@ final public class ORList
 
 	public synchronized int active()
 	{
-		return size()-m_countHibernate;
+		return size() - m_countHibernate;
 	}
 
 	public synchronized void setFetcher(ORListFetcher fetcher)
@@ -103,13 +103,15 @@ final public class ORList
 	{
 		try
 		{
-			if (size() == 0)
+			byte[] buff=null;
+			if (size() == 0||(buff=m_orlistFetcher.getRouterStatus())==null)//either first time list retrival or
+				//getting information for differential update failed
 			{
 				return parseFirstDocument(m_orlistFetcher.getAllDescriptors());
 			}
 			else
 			{
-				return parseStatus(m_orlistFetcher.getRouterStatus(),true);
+				return parseStatus(buff, true);
 			}
 		}
 		catch (Throwable t)
@@ -161,10 +163,12 @@ final public class ORList
 	{
 		ORDescriptor ord = getByName(name);
 		if (ord == null)
+		{
 			return;
+		}
 
 		m_onionrouters.removeElement(ord);
-		if(ord.isExitNode())
+		if (ord.isExitNode())
 		{
 			m_exitnodes.removeElement(ord);
 		}
@@ -182,7 +186,7 @@ final public class ORList
 	 */
 	public synchronized void add(ORDescriptor ord)
 	{
-		if(ord.isExitNode())
+		if (ord.isExitNode())
 		{
 			m_exitnodes.addElement(ord);
 		}
@@ -209,9 +213,9 @@ final public class ORList
 		}
 
 		ORDescriptor ord;
-		while(true)
+		while (true)
 		{
-		String orName = (String) allowedNames.elementAt( (m_rand.nextInt(allowedNames.size())));
+			String orName = (String) allowedNames.elementAt( (m_rand.nextInt(allowedNames.size())));
 			ord = getByName(orName);
 			if (ord == null)
 			{
@@ -239,7 +243,7 @@ final public class ORList
 		ORDescriptor ord;
 		while (true)
 		{
-			ord = (ORDescriptor) this.m_onionrouters.elementAt(m_rand.nextInt(m_onionrouters.size()));
+			ord = (ORDescriptor)this.m_onionrouters.elementAt(m_rand.nextInt(m_onionrouters.size()));
 			if (ord.getHibernate() == false)
 			{
 				break;
@@ -268,30 +272,30 @@ final public class ORList
 		//p(x) ... probability for exit nodes    p(x') ... new probability for exit nodes
 		//p(x) = exit_nodes/number_of_routers
 		int number_of_routers = m_onionrouters.size();
-		int numerator = length*m_exitnodes.size() - number_of_routers;
-		int denominator = (length-1)*number_of_routers;
+		int numerator = length * m_exitnodes.size() - number_of_routers;
+		int denominator = (length - 1) * number_of_routers;
 
 		//TODO: line can be removed if tor balance exit nodes and middlerouters in the right way
 		//we double the probability of middlerouters, because original tor doesn't use them so often
-		denominator *=2;
+		denominator *= 2;
 
 		ORDescriptor ord;
 		while (true)
 		{
-		if(m_rand.nextInt(denominator)>numerator)
-		{
+			if (m_rand.nextInt(denominator) > numerator)
+			{
 				ord = (ORDescriptor)this.m_middlenodes.elementAt(m_rand.nextInt(m_middlenodes.size()));
 			}
 			else
-		{
+			{
 				ord = (ORDescriptor)this.m_exitnodes.elementAt(m_rand.nextInt(m_exitnodes.size()));
 			}
 
 			if (ord.getHibernate() == false)
 			{
 				break;
+			}
 		}
-	}
 
 		return ord;
 	}
@@ -317,15 +321,18 @@ final public class ORList
 	 */
 	private boolean parseStatus(byte[] document, boolean change) throws Exception
 	{
-		LineNumberReader reader = new LineNumberReader(new InputStreamReader(new ByteArrayInputStream(document)));
+		LineNumberReader reader = new LineNumberReader(new InputStreamReader(new ByteArrayInputStream(
+			document)));
 		Date published = null;
 		String curLine = reader.readLine();
 		StringTokenizer st;
 		byte[] b;
 		boolean hibernate = false;
 
-		if(curLine == null || ! curLine.startsWith("network-status-version"))
+		if (curLine == null || !curLine.startsWith("network-status-version"))
+		{
 			return false;
+		}
 
 		while (true)
 		{
@@ -359,20 +366,19 @@ final public class ORList
 				Vector options = new Vector();
 				int port = Integer.parseInt(st.nextToken());
 
-
 				reader.mark(200);
 				curLine = reader.readLine();
-				if (! curLine.startsWith("s "))
+				if (!curLine.startsWith("s "))
 				{
 					reader.reset();
-			}
+				}
 				else
-			{
+				{
 					st = new StringTokenizer(curLine);
 					st.nextToken();
 
-				while (st.hasMoreTokens())
-				{
+					while (st.hasMoreTokens())
+					{
 						options.addElement(st.nextToken());
 					}
 				}
@@ -381,54 +387,54 @@ final public class ORList
 
 				curLine = reader.readLine();
 				if (curLine.startsWith("v "))
-					{
+				{
 					version = curLine.substring(2);
 				}
 				else if (curLine.startsWith("opt v "))
-						{
+				{
 					version = curLine.substring(6);
-						}
+				}
 				else
 				{
 					reader.reset();
-					}
+				}
 
 				/** @todo handle version of OR */
 
 				ORDescriptor ord = getORDescriptor(nick);
 				/*if (ord != null && ! hashDescriptor.equals(ord.getHash()))
-				{
-					if (! change)
-					{
-						ord.setHash(hashDescriptor);
-				}
-					else
-					{
-							b = m_orlistFetcher.getDescriptorByFingerprint(ord.getFingerprint());
+				  {
+				 if (! change)
+				 {
+				  ord.setHash(hashDescriptor);
+				  }
+				 else
+				 {
+				   b = m_orlistFetcher.getDescriptorByFingerprint(ord.getFingerprint());
 
-							if (b != null)
-							{
-								if (ord != null && ord.getHibernate())
-								{
-									hibernate = true;
-			}
-								remove(nick);
-								LineNumberReader l = new LineNumberReader(new InputStreamReader(new ByteArrayInputStream(b)));
-								ord = ORDescriptor.parse(l);
+				   if (b != null)
+				   {
+				 if (ord != null && ord.getHibernate())
+				 {
+				  hibernate = true;
+				 }
+				 remove(nick);
+				 LineNumberReader l = new LineNumberReader(new InputStreamReader(new ByteArrayInputStream(b)));
+				 ord = ORDescriptor.parse(l);
 
-								// does not hibernate anymore, decrease number
-								if (hibernate && ! ord.getHibernate())
-			{
-									m_countHibernate--;
-								}
-								add(ord);
-							}
-					}
-				}*/
+				 // does not hibernate anymore, decrease number
+				 if (hibernate && ! ord.getHibernate())
+				 {
+				  m_countHibernate--;
+				 }
+				 add(ord);
+				   }
+				 }
+				  }*/
 
-				String digest = Base16.encode((Base64.decode(hashDescriptor)));
-				if (   (ord == null)
-					|| ((ord.getHash() == null) || (! digest.equals(ord.getHash()))))
+				String digest = Base16.encode( (Base64.decode(hashDescriptor)));
+				if ( (ord == null)
+					|| ( (ord.getHash() == null) || (!digest.equals(ord.getHash()))))
 				{
 					b = m_orlistFetcher.getDescriptor(digest);
 					if (b != null)
@@ -438,20 +444,21 @@ final public class ORList
 							hibernate = true;
 						}
 						remove(nick);
-						LineNumberReader l = new LineNumberReader(new InputStreamReader(new ByteArrayInputStream(b)));
+						LineNumberReader l = new LineNumberReader(new InputStreamReader(new
+							ByteArrayInputStream(b)));
 						ord = ORDescriptor.parse(l);
 						ord.setHash(digest);
 
 						// does not hibernate anymore, decrease number
-						if (hibernate && ! ord.getHibernate())
+						if (hibernate && !ord.getHibernate())
 						{
 							m_countHibernate--;
 						}
 						add(ord);
-						}
 					}
 				}
 			}
+		}
 
 		return true;
 	}
@@ -463,24 +470,20 @@ final public class ORList
 	 * @return false if document is not a valid directory, true otherwise
 	 */
 	private boolean parseFirstDocument(byte[] document) throws Exception
-			{
-		LineNumberReader reader = new LineNumberReader(new InputStreamReader(new ByteArrayInputStream(document)));
-		Date published = null;
+	{
+		LineNumberReader reader = new LineNumberReader(new InputStreamReader(new ByteArrayInputStream(
+			document)));
+		Date published = new Date();//workaround for a while until we are able to get the real published date of the tor list
+		reader.mark(200);
 		String curLine = reader.readLine();
 
-		if(curLine == null)
-			return false;
-
-		for (;;)
+		if (curLine == null)
 		{
-			reader.mark(200);
+			return false;
+		}
 
-			curLine = reader.readLine();
-			if (curLine == null)
-			{
-				break;
-			}
-
+		for (; ; )
+		{
 			if (curLine.startsWith("router "))
 			{
 				reader.reset();
@@ -492,11 +495,22 @@ final public class ORList
 						m_countHibernate++;
 					}
 					add(ord);
+				}
+			}
+			reader.mark(200);
+			curLine = reader.readLine();
+			if (curLine == null)
+			{
+				break;
+			}
+			if (curLine == null)
+			{
+				break;
 			}
 		}
-		}
 
-		LogHolder.log(LogLevel.DEBUG, LogType.TOR, "Exit Nodes : "+ m_exitnodes.size()+" Non-Exit Nodes : " + m_middlenodes.size());
+		LogHolder.log(LogLevel.DEBUG, LogType.TOR,
+					  "Exit Nodes : " + m_exitnodes.size() + " Non-Exit Nodes : " + m_middlenodes.size());
 		m_datePublished = published;
 
 		return true;
