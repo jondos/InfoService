@@ -48,16 +48,27 @@ public class TorChannel extends AbstractChannel
 	private final static int MAX_CELL_DATA = 498;
 
 	protected Circuit m_circuit;
-	private int m_recvcellcounter;
-	private int m_sendcellcounter;
+	private volatile int m_recvcellcounter;
+	private volatile int m_sendcellcounter;
+	private volatile boolean m_bChannelCreated;
 	private Object m_oWaitForOpen;
+	private Object m_oSyncSendCellCounter;
+	private Object m_oSyncSend;
 
 	public TorChannel()
 	{
 		super();
-		m_recvcellcounter = 500;
-		m_sendcellcounter = 500;
 		m_oWaitForOpen = new Object();
+		m_oSyncSendCellCounter = new Object();
+		m_oSyncSend = new Object();
+	}
+
+	private void addToSendCellCounter(int value)
+	{
+		synchronized (m_oSyncSendCellCounter)
+		{
+			m_sendcellcounter += value;
+		}
 	}
 
 	protected void setStreamID(int id)
@@ -75,47 +86,65 @@ public class TorChannel extends AbstractChannel
 		return MAX_CELL_DATA;
 	}
 
-	protected synchronized void send(byte[] arg0, int len) throws IOException
+	protected void send(byte[] arg0, int len) throws IOException
 	{
-		if (m_bIsClosed)
+		if (m_bIsClosed || m_bIsClosedByPeer)
 		{
 			throw new IOException("Tor channel is closed");
 		}
-		byte[] b = arg0;
-		RelayCell cell;
-		while (len != 0)
+		synchronized (m_oSyncSend)
 		{
-			if (len > MAX_CELL_DATA)
+			byte[] b = arg0;
+			RelayCell cell;
+			while (len != 0 && !m_bIsClosed)
 			{
-				cell = new RelayCell(m_circuit.getCircID(), RelayCell.RELAY_DATA, m_id,
-									 ByteArrayUtil.copy(b, 0, MAX_CELL_DATA));
-				b = ByteArrayUtil.copy(b, MAX_CELL_DATA, len - MAX_CELL_DATA);
-				len -= MAX_CELL_DATA;
+				if (len > MAX_CELL_DATA)
+				{
+					cell = new RelayCell(m_circuit.getCircID(), RelayCell.RELAY_DATA, m_id,
+										 ByteArrayUtil.copy(b, 0, MAX_CELL_DATA));
+					b = ByteArrayUtil.copy(b, MAX_CELL_DATA, len - MAX_CELL_DATA);
+					len -= MAX_CELL_DATA;
+				}
+				else
+				{
+					cell = new RelayCell(m_circuit.getCircID(), RelayCell.RELAY_DATA, m_id,
+										 ByteArrayUtil.copy(b, 0, len));
+					len = 0;
+				}
+				try
+				{
+					if (m_sendcellcounter > 0)
+					{
+						m_circuit.send(cell);
+					}
+					else
+					{
+						LogHolder.log(LogLevel.DEBUG, LogType.TOR, "TorChannel:send() - m_sendcellcounter<=0");
+						while (m_sendcellcounter <= 0 && ! (m_bIsClosed || m_bIsClosedByPeer))
+						{
+							try
+							{
+								Thread.sleep(100);
+							}
+							catch (Exception e)
+							{
+							}
+						}
+						LogHolder.log(LogLevel.DEBUG, LogType.TOR,
+									  "TorChannel:send() - m_sendcellcounter now again >0");
+						m_circuit.send(cell);
+					}
+				}
+				catch (Throwable t)
+				{
+					throw new IOException("TorChannel send - error in sending a cell!");
+				}
+				addToSendCellCounter( -1);
 			}
-			else
-			{
-				cell = new RelayCell(m_circuit.getCircID(), RelayCell.RELAY_DATA, m_id,
-									 ByteArrayUtil.copy(b, 0, len));
-				len = 0;
-			}
-			try
-			{
-				m_circuit.send(cell);
-			}
-			catch (Throwable t)
-			{
-				throw new IOException("TorChannel send - error in sending a cell!");
-			}
-			m_sendcellcounter--;
-			if (m_sendcellcounter < 10)
-			{
-				throw new IOException("Should never be here: channel sendme <10");
-			}
-
 		}
 	}
 
-	public synchronized void close()
+	public void close()
 	{
 		super.close();
 		synchronized (m_oWaitForOpen)
@@ -165,15 +194,18 @@ public class TorChannel extends AbstractChannel
 			{
 				return false;
 			}
+			m_recvcellcounter = 500;
+			m_sendcellcounter = 500;
 			byte[] data = (addr + ":" + Integer.toString(port)).getBytes();
 			data = ByteArrayUtil.conc(data, new byte[1]);
 			RelayCell cell = new RelayCell(m_circuit.getCircID(), RelayCell.RELAY_BEGIN, m_id, data);
+			m_bChannelCreated=false;
 			m_circuit.send(cell);
 			synchronized (m_oWaitForOpen)
 			{
 				m_oWaitForOpen.wait(30000);
 			}
-			if (m_bIsClosed || m_bIsClosedByPeer)
+			if (m_bIsClosed || m_bIsClosedByPeer||!m_bChannelCreated)
 			{
 				return false;
 			}
@@ -196,6 +228,7 @@ public class TorChannel extends AbstractChannel
 		{
 			case RelayCell.RELAY_CONNECTED:
 			{
+				m_bChannelCreated=true;
 				synchronized (m_oWaitForOpen)
 				{
 					m_oWaitForOpen.notify();
@@ -204,7 +237,7 @@ public class TorChannel extends AbstractChannel
 			}
 			case RelayCell.RELAY_SENDME:
 			{
-				m_sendcellcounter += 50;
+				addToSendCellCounter(50);
 				break;
 			}
 			case RelayCell.RELAY_DATA:

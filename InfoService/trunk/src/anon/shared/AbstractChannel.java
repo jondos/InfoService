@@ -35,8 +35,8 @@ import anon.AnonChannel;
 
 abstract public class AbstractChannel implements AnonChannel
 {
-	protected boolean m_bIsClosedByPeer = false;
-	protected boolean m_bIsClosed = false;
+	protected volatile boolean m_bIsClosedByPeer = false;
+	protected volatile boolean m_bIsClosed = false;
 	protected int m_id;
 
 	private ChannelInputStream m_inputStream;
