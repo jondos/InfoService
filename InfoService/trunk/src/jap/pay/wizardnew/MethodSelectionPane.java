@@ -193,15 +193,15 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 			curOption = (XMLPaymentOption)enumUsedOptions.nextElement();
 			curLang = JAPController.getLocale().getLanguage();
 			int markup = curOption.getMarkup();
-			if (markup > SHOW_MARKUP_IF_ABOVE)
-			{
+			//if (markup > SHOW_MARKUP_IF_ABOVE)
+			//{
 				/*
 				String markupTerm = JAPMessages.getString(MSG_MARKUP);
 				curMarkup = " ("+markup+"% " + markupTerm + "! )";
 				*/
-			   curMarkup = " *";
+			  /* curMarkup = " *";
 			}
-			else
+			else*/
 			{
 				curMarkup = "";
 			}
@@ -209,6 +209,7 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		}
 
 	    //show explanation about most expensive payment methods
+		/*
 		String markupText = JAPMessages.getString(MSG_MARKUP_CAPTION);
 		JAPHtmlMultiLineLabel markupLabel = new JAPHtmlMultiLineLabel(markupText);
 		//JLabel markupLabel = new JLabel(markupText);
@@ -216,7 +217,7 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		m_c.gridy++;
 		m_c.weightx = 1.0;
 		m_c.fill = GridBagConstraints.HORIZONTAL;
-		m_rootPanel.add(markupLabel,m_c);
+		m_rootPanel.add(markupLabel,m_c);*/
 
 		//show details of the volume plan selected (so the user is aware of how much he'll have to pay)
 		DialogContentPane curPane = previousContentPane;

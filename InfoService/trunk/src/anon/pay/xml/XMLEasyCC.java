@@ -41,6 +41,7 @@ import java.util.Hashtable;
 import org.w3c.dom.NodeList;
 import anon.util.XMLParseException;
 import anon.util.Util;
+import anon.infoservice.MixCascade;
 
 /**
  * XML structure for a easy cost confirmation (without mircopayment function) which is sent to the AI by the Jap
@@ -61,6 +62,7 @@ public class XMLEasyCC implements IXMLEncodable
 	private Document m_docTheEasyCC;
 
 	private String m_priceCertHashesConcatenated;
+	private boolean m_bOldHashFormat = false;
 
 	/** The Payment Instance ID */
 	private String m_strPIID;
@@ -137,7 +139,10 @@ public class XMLEasyCC implements IXMLEncodable
 		 m_strPIID = a_copiedCc.m_strPIID;
 	 }
 
-
+	 public boolean hasOldHashFormat()
+	 {
+		 return m_bOldHashFormat;
+	 }
 
 	private void setValues(Element element) throws Exception
 	{
@@ -155,7 +160,7 @@ public class XMLEasyCC implements IXMLEncodable
 		elem = (Element) XMLUtil.getFirstChildByName(element, "AccountNumber");
 		m_lAccountNumber = XMLUtil.parseValue(elem, 0l);
 		elem = (Element) XMLUtil.getFirstChildByName(element, "TransferredBytes");
-		m_lTransferredBytes = XMLUtil.parseValue(elem, 0l);
+		m_lTransferredBytes = XMLUtil.parseValue(elem, -1l);
 		elem = (Element) XMLUtil.getFirstChildByName(element, "PIID");
 		m_strPIID = XMLUtil.parseValue(elem, null);
 		elem = (Element) XMLUtil.getFirstChildByName(element, "Cascade");
@@ -165,6 +170,7 @@ public class XMLEasyCC implements IXMLEncodable
 		Element elemHash; // = (Element) elemPriceCerts.getFirstChild();
 		String curHash;
 		String curId;
+		int position;
 		if (elemPriceCerts != null)
 		{
 			NodeList allHashes = elemPriceCerts.getElementsByTagName("PriceCertHash");
@@ -179,7 +185,12 @@ public class XMLEasyCC implements IXMLEncodable
 				}
 				else
 				{
-					m_priceCerts.put(curId, curHash);
+					position = XMLUtil.parseAttribute(elemHash, "position", -1);
+					if (position < 0)
+					{
+						m_bOldHashFormat = true;
+					}
+					m_priceCerts.put(new MixCascade.MixPosition(position, curId), curHash);
 				}
 			}
 		}
@@ -194,7 +205,14 @@ public class XMLEasyCC implements IXMLEncodable
 		Element elem;
 
 		elem = a_doc.createElement("TransferredBytes");
-		XMLUtil.setValue(elem, Long.toString(m_lTransferredBytes));
+	/*	if (m_lTransferredBytes < 0)
+		{
+			XMLUtil.setValue(elem, "18399999999999999999");
+		}
+		else */
+		{
+			XMLUtil.setValue(elem, Long.toString(m_lTransferredBytes));
+		}
 		elemRoot.appendChild(elem);
 
 		elem = a_doc.createElement("AccountNumber");
@@ -219,15 +237,19 @@ public class XMLEasyCC implements IXMLEncodable
 		elemRoot.appendChild(elemPriceCerts);
 		Enumeration certs = m_priceCerts.keys();
 		String curHash;
-		String curId;
+		MixCascade.MixPosition curId;
 		Element curElem;
 		while(certs.hasMoreElements() )
 		{
-			curId = (String) certs.nextElement();
+			curId = (MixCascade.MixPosition) certs.nextElement();
 			curHash = (String) m_priceCerts.get(curId);
 			curElem = a_doc.createElement("PriceCertHash");
 			XMLUtil.setValue(curElem,curHash);
-			XMLUtil.setAttribute(curElem,"id",curId);
+			XMLUtil.setAttribute(curElem,"id",curId.getId());
+			if (!m_bOldHashFormat)
+			{
+				XMLUtil.setAttribute(curElem, "position", curId.getPosition());
+			}
 			elemPriceCerts.appendChild(curElem);
 		}
 
@@ -319,10 +341,11 @@ public class XMLEasyCC implements IXMLEncodable
 
 	private void createConcatenatedPriceCertHashes()
 	{
-		// sort hashes alphabetically
+		// sort hashes after their position in cascade
 
 		String[] ids, hashes;
 		Enumeration enumer;
+		Object currentKey;
 
 		if (m_priceCerts != null)
 		{
@@ -331,14 +354,30 @@ public class XMLEasyCC implements IXMLEncodable
 				ids = new String[m_priceCerts.size()];
 				hashes = new String[m_priceCerts.size()];
 
-
 				enumer = m_priceCerts.keys();
 				for (int i = 0; i < m_priceCerts.size(); i++)
 				{
-					ids[i] =  enumer.nextElement().toString();
-					hashes[i] = m_priceCerts.get(ids[i]).toString();
+					currentKey = enumer.nextElement();
+					if (m_bOldHashFormat)
+					{
+						// the position does not tell anything about the real position...
+						ids[i] = ( (MixCascade.MixPosition) currentKey).getId();
+					}
+					else
+					{
+						ids[i] = Integer.toString( ( (MixCascade.MixPosition) currentKey).getPosition());
+					}
+					hashes[i] = m_priceCerts.get(currentKey).toString();
 				}
-				Util.sort(ids, hashes);
+				if (m_bOldHashFormat)
+				{
+					Util.sort(ids, hashes);
+				}
+				else
+				{
+					Util.sort(hashes, ids);
+				}
+
 				m_priceCertHashesConcatenated = "";
 				for (int i = 0; i < hashes.length; i++)
 				{
@@ -360,6 +399,7 @@ public class XMLEasyCC implements IXMLEncodable
 	 */
 	public void setPriceCerts(Hashtable a_priceCertHashes)
 	{
+		m_bOldHashFormat = false;
 		m_priceCerts = a_priceCertHashes;
 		createConcatenatedPriceCertHashes();
 

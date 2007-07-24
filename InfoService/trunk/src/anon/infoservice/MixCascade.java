@@ -152,6 +152,61 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	private boolean m_bFromCascade;
 
 	/**
+	 * Maps the position of a Mix in a cascade to a concrete Mix ID.
+	 * <p>Überschrift: </p>
+	 *
+	 * <p>Beschreibung: </p>
+	 *
+	 * <p>Copyright: Copyright (c) 2001</p>
+	 *
+	 * <p>Organisation: </p>
+	 *
+	 * @author unbekannt
+	 * @version 1.0
+	 */
+	public static class MixPosition
+	{
+		private int m_position;
+		private String m_MixId;
+
+		public MixPosition(int a_position, String a_MixId)
+		{
+			m_position = a_position;
+			m_MixId = a_MixId;
+		}
+		public int getPosition()
+		{
+			return m_position;
+		}
+
+		public String getId()
+		{
+			return m_MixId;
+		}
+		public String toString()
+		{
+			return m_MixId;
+		}
+		public boolean equals(Object a_mixPosition)
+		{
+			if (a_mixPosition == null || !(a_mixPosition instanceof MixPosition))
+			{
+				return false;
+			}
+			if (this == a_mixPosition || this.getId().equals(((MixPosition)a_mixPosition).getId()))
+			{
+				return true;
+			}
+
+			return false;
+		}
+		public int hashCode()
+		{
+			return m_MixId.hashCode();
+		}
+	}
+
+	/**
 	 * Creates a new MixCascade from XML description (MixCascade node).
 	 *
 	 * @param a_bCompressedMixCascadeNode The MixCascade node from a compressed XML document.
@@ -377,8 +432,9 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 					{
 						m_prepaidInterval = m_mixInfos[i].getPrepaidInterval();
 					}
+
 					m_priceCertificates.addElement(m_mixInfos[i].getPriceCertificate());
-					m_priceCertificateHashes.put(m_mixInfos[i].getId(),
+					m_priceCertificateHashes.put(new MixPosition(i, m_mixInfos[i].getId()), // position in cascade
 												 m_mixInfos[i].getPriceCertificate().getHashValue());
 					m_nrPriceCerts++;
 				}
@@ -550,6 +606,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		createMixIDString();
 		calculateOperatorsAndCountries();
 	}
+
 
 	/**
 	 * Returns whether a given cascade has another number of mixes or mixes with other IDs than this one.
