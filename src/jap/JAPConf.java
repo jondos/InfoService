@@ -850,7 +850,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		{
 			m_tfDebugFileName.setText(JAPDebug.getLogFilename());
 		}
-		validate();
+		//validate(); //lead to deadlock on startup...
 	}
 
 	protected void addNeedRestart(AbstractRestartNeedingConfigChange a_change)

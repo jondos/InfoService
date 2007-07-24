@@ -161,7 +161,7 @@ public class XMLAccountInfo implements IXMLEncodable //extends XMLDocument
 				if (oldBytes > a_cc.getTransferredBytes())
 				{
 					// This is an old CC! Restore the previous one...
-					m_costConfirmations.put(cc.getConcatenatedPriceCertHashes(), cc);
+					//m_costConfirmations.put(cc.getConcatenatedPriceCertHashes(), cc);
 				}
 			}
 		}

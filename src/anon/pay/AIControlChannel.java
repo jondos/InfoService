@@ -78,7 +78,7 @@ public class AIControlChannel extends XmlControlChannel
 
   private static long m_totalBytes = 0;
 
-  private boolean m_bInitialCCSent = false;
+  private boolean m_bPrepaidReceived = false;
 
   private long m_lastBalanceUpdateMS = 0;
   private long m_lastBalanceUpdateBytes = 0;
@@ -90,6 +90,8 @@ public class AIControlChannel extends XmlControlChannel
   private PacketCounter m_packetCounter;
 
   private MixCascade m_connectedCascade;
+
+  private XMLEasyCC m_initialCC;
 
 
   public AIControlChannel(Multiplexer a_multiplexer, IMutableProxyInterface a_proxy,
@@ -176,16 +178,16 @@ public class AIControlChannel extends XmlControlChannel
 								  ex.getClass().getName() + ": " + ex.getMessage()));
 	  }
   }
+
   /**
    * processChallenge
    *
    * @param xMLChallenge
    *          XMLChallenge
    */
-  private void processChallenge(XMLChallenge chal) throws Exception
+  private synchronized void processChallenge(XMLChallenge chal) throws Exception
   {
 	  byte[] arbChal = chal.getChallengeForSigning();
-
 
 	  LogHolder.log(LogLevel.NOTICE, LogType.PAY, "Received " + chal.getPrepaidBytes() + " prepaid bytes.");
 
@@ -194,8 +196,9 @@ public class AIControlChannel extends XmlControlChannel
 	  {
 		  throw new Exception("Received Challenge from AI but ActiveAccount not set!");
 	  }
-	  if (chal.getPrepaidBytes() > 0)
+	  if (!m_bPrepaidReceived && chal.getPrepaidBytes() > 0)
 	  {
+		   m_bPrepaidReceived = true;
 		  // ignore prepaid bytes smaller than zero
 		  acc.updateCurrentBytes(chal.getPrepaidBytes() * ( -1)); // remove transferred bytes
 	  }
@@ -222,7 +225,7 @@ public class AIControlChannel extends XmlControlChannel
    * @param request
    *          XMLPayRequest
    */
-  private void processPayRequest(XMLPayRequest request) {
+  private synchronized void processPayRequest(XMLPayRequest request) {
 
 
 	//if requested, send account certificate
@@ -275,8 +278,6 @@ public class AIControlChannel extends XmlControlChannel
 	  t.start();
   }
 
-  long timeout = 0;
-
 	/**
 	 * processCcToSign: to be called by processPayRequest
 	 * (only the initial, old CC is sent as a naked XMLEasyCC,
@@ -320,18 +321,28 @@ public class AIControlChannel extends XmlControlChannel
 	  long confirmedBytes = 0;
 	  if (myLastCC != null)
 	  {
-		  confirmedBytes = myLastCC.getTransferredBytes();
-		  LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Transferred bytes of last CC: " + confirmedBytes);
+		  if (m_initialCC == null)
+		  {
+			  // this seems to be the first connection to the cascade
+			  LogHolder.log(LogLevel.WARNING, LogType.PAY,
+							"No initial CC available! The Mix might have lost its CC.");
+		  }
+		  else
+		  {
+			  confirmedBytes = myLastCC.getTransferredBytes();
+			  LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Transferred bytes of last CC: " + confirmedBytes);
+		  }
 	  }
 
-	  //System.out.println("Confirmed: " + confirmedBytes);
-	  //System.out.println("To confirm: " + cc.getTransferredBytes() + " Transferred: " + currentAccount.getCurrentBytes());
+	  //System.out.println("To confirm1: " + cc.getTransferredBytes() + " Transferred1: " + transferedBytes);
 
 	  // check if bytes asked for in CC match bytes transferred
 	  long newPrepaidBytes = //(cc.getTransferredBytes() - confirmedBytes) + m_prepaidBytes - transferedBytes;
 		  cc.getTransferredBytes() - transferedBytes;
 
 	  long diff = newPrepaidBytes - m_connectedCascade.getPrepaidInterval();
+	  cc.setTransferredBytes(cc.getTransferredBytes() - diff);
+
 	  if (diff > 0)
 	  {
 		  // this may happen with fast downloads; the bytes are counted in the Mix before JAP receives them
@@ -339,21 +350,23 @@ public class AIControlChannel extends XmlControlChannel
 						"Illegal number of prepaid bytes for signing. Difference/Spent/CC/PrevCC: " +
 						diff + "/" + transferedBytes + "/" + cc.getTransferredBytes() + "/" + confirmedBytes);
 
-		  if (cc.getTransferredBytes() - diff > confirmedBytes)
+		  if (transferedBytes < 0)
 		  {
-			  cc.setTransferredBytes(cc.getTransferredBytes() - diff);
+			  LogHolder.log(LogLevel.WARNING, LogType.PAY, "The mix might have lost a CC. " +
+							"Resetting transferred bytes to zero for now...");
+			  currentAccount.updateCurrentBytes(transferedBytes * (-1));
+			  transferedBytes = currentAccount.getCurrentBytes();
+			  cc.setTransferredBytes(m_connectedCascade.getPrepaidInterval());
 		  }
-		  else
+
+		  if (cc.getTransferredBytes() < confirmedBytes)
 		  {
-			  LogHolder.log(LogLevel.WARNING, LogType.PAY, "Resent old cost confirmation!");
+			  LogHolder.log(LogLevel.WARNING, LogType.PAY, "Resend old cost confirmation!");
 			  cc.setTransferredBytes(confirmedBytes); // resend the last confirmed amount
 			  //this.fireAIEvent(EVENT_UNREAL, diff); // do not show this problem to the user...
 		  }
 	  }
-	  else
-	  {
-		  cc.setTransferredBytes(cc.getTransferredBytes() - diff);
-	  }
+
 
 	  //get pricecerts and check against hashes in CC
 	  //get price certs from connected cascade
@@ -363,21 +376,43 @@ public class AIControlChannel extends XmlControlChannel
 	   */
 	  if (cc.getTransferredBytes() > confirmedBytes)
 	  {
-		  Hashtable priceCerts = m_connectedCascade.getPriceCertificateHashes();
-		  cc.setPriceCerts(priceCerts);
+		 // cc.setTransferredBytes(-1l);
+
+		  cc.setPriceCerts(m_connectedCascade.getPriceCertificateHashes());
 		  cc.setPIID(currentAccount.getAccountCertificate().getPIID());
-		  String cascadeId = m_connectedCascade.getId();
-		  cc.setCascadeID(cascadeId);
+		  cc.setCascadeID( m_connectedCascade.getId());
 		  cc.sign(currentAccount.getPrivateKey());
 		  if (currentAccount.addCostConfirmation(cc) <= 0)
 		  {
-			  LogHolder.log(LogLevel.WARNING, LogType.PAY, "Tried to add old cost confirmation!");
+			  LogHolder.log(LogLevel.WARNING, LogType.PAY, "Added old cost confirmation!");
 		  }
+	  }
+	  else if (myLastCC != null && m_initialCC != null)
+	  {
+		  // resend the last valid CC
+		 // System.out.println("old CC: " + cc.getConcatenatedPriceCertHashes());
+		  cc = myLastCC;
 	  }
 	  else
 	  {
-		  // resend the last valid CC
-		  cc = myLastCC;
+		   LogHolder.log(LogLevel.EMERG, LogType.PAY, "Creating zero CC!!");
+		  // send a zero CC
+		  cc.setTransferredBytes(0);
+		  cc.setPriceCerts(m_connectedCascade.getPriceCertificateHashes());
+		  cc.setPIID(currentAccount.getAccountCertificate().getPIID());
+		  cc.setCascadeID( m_connectedCascade.getId());
+		  cc.sign(currentAccount.getPrivateKey());
+		  currentAccount.addCostConfirmation(cc);
+	  }
+	  //System.out.println("Processed: " + cc.getTransferredBytes());
+
+	  //System.out.println("To confirm2: " + cc.getTransferredBytes() + " Transferred2: " + transferedBytes);
+
+	  if (m_initialCC == null)
+	  {
+		  // this seems to be the first connection to the cascade
+		  LogHolder.log(LogLevel.WARNING, LogType.PAY, "Setting initial CC to current CC...");
+		  m_initialCC = cc;
 	  }
 
 	  sendXmlMessage(XMLUtil.toXMLDocument(cc));
@@ -531,32 +566,48 @@ public class AIControlChannel extends XmlControlChannel
 				Hashtable inCascade = m_connectedCascade.getPriceCertificateHashes();
 				String curCascadeHash;
 				String curCcHash;
-				String ski;
+				MixCascade.MixPosition ski;
 				int i = 0;
 				while (priceCertHashesInCascade.hasMoreElements()) //enough to use one enum in condition, since we already checked for equal size
 				{
-					ski = ((String) priceCertHashesInCascade.nextElement());
+					ski = ((MixCascade.MixPosition)priceCertHashesInCascade.nextElement());
 					curCascadeHash = (String)inCascade.get(ski);
 					curCcHash = (String)hashPriceCertHashesInCC.get(ski);
 
-					if (curCcHash == null | !curCascadeHash.equals(curCcHash))
+					if (curCcHash == null || !curCascadeHash.equals(curCcHash))
 					{
-						String message = "AI sent CC with illegal price cert hash for mix " + (i+1) + "!";
+						String message = "AI sent CC with illegal price cert hash for mix " +
+							(ski.getPosition() + 1) + " (" + (i + 1) + ")" +  "!";
 						LogHolder.log(LogLevel.WARNING, LogType.PAY, message);
 						getServiceContainer().keepCurrentService(false); // reconnect to another cascade if possible
 						PayAccountsFile.getInstance().signalAccountError(
 							new XMLErrorMessage(XMLErrorMessage.ERR_INVALID_PRICE_CERTS, message));
 						return;
 					}
+					hashPriceCertHashesInCC.remove(ski); // do not count duplicate price certs
 					i++;
 				}
+				//System.out.println("Inital1 CC: " + a_cc.getConcatenatedPriceCertHashes());
 
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 							  "AI has sent a valid last cost confirmation. Adding it to account.");
 				//no need to verify the price certificates of the last CC, since they might have changed since then
 				//System.out.println("PC Hash stored: " + a_cc.getConcatenatedPriceCertHashes());
-				currentAccount.updateCurrentBytes(a_cc.getTransferredBytes());
+
+				if (m_initialCC == null)
+				{
+					currentAccount.updateCurrentBytes(a_cc.getTransferredBytes());
+					m_initialCC = a_cc;
+				}
+				else
+				{
+					long diff = a_cc.getTransferredBytes() - m_initialCC.getTransferredBytes();
+					LogHolder.log(LogLevel.WARNING, LogType.PAY,
+								  "Updated initial CostConfirmation! Difference: " + diff);
+					currentAccount.updateCurrentBytes(diff);
+				}
 				long confirmedbytes = a_cc.getTransferredBytes();
+
 				if (currentAccount.addCostConfirmation(a_cc) < 0)
 				{
 					/*
@@ -567,40 +618,40 @@ public class AIControlChannel extends XmlControlChannel
 
 				//System.out.println("Initial: " + a_cc.getTransferredBytes() + ":" + a_cc.getConcatenatedPriceCertHashes());
 				//get Cascade's prepay interval
+
 				long currentlyTransferedBytes = currentAccount.getCurrentBytes(); //currentAccount.updateCurrentBytes(m_packetCounter);
 				long bytesToPay =
 					m_connectedCascade.getPrepaidInterval() - (confirmedbytes - currentlyTransferedBytes);
 
 				//System.out.println("Initial CC transfered bytes: " + bytesToPay + " Old transfered: " + currentlyTransferedBytes + " Prepaid: " + m_prepaidBytes);
 
-				//if (bytesToPay > 0)
+
+				long oldBytes = a_cc.getTransferredBytes();
+				XMLEasyCC newCC = new XMLEasyCC(a_cc);
+				//send CC for up to <last CC + prepay interval> bytes
+				if (bytesToPay > 0)
 				{
-					long oldBytes = a_cc.getTransferredBytes();
-					XMLEasyCC newCC = new XMLEasyCC(a_cc);
-					//send CC for up to <last CC + prepay interval> bytes
-					if (bytesToPay > 0)
-					{
-						newCC.setTransferredBytes(confirmedbytes + bytesToPay);
-					}
-					else
-					{
-						newCC.setTransferredBytes(confirmedbytes);
-					}
-					//newCC.setTransferredBytes(1000000000l);
-					newCC.sign(currentAccount.getPrivateKey());
-					if (bytesToPay > 0 && currentAccount.addCostConfirmation(newCC) <= 0)
-					{
-						LogHolder.log(LogLevel.WARNING, LogType.PAY, "Sending old cost confirmation! "+
-							"Diff (ShoulBe)/Old/New:" + bytesToPay + "/" + oldBytes + "/" + newCC.getTransferredBytes());
-					}
-					a_cc = newCC;
+
+					newCC.setTransferredBytes(confirmedbytes + bytesToPay);
 				}
+				else
+				{
+					newCC.setTransferredBytes(confirmedbytes);
+				}
+				//newCC.setTransferredBytes(1000000000l);
+				newCC.sign(currentAccount.getPrivateKey());
+				if (bytesToPay > 0 && currentAccount.addCostConfirmation(newCC) <= 0)
+				{
+					LogHolder.log(LogLevel.WARNING, LogType.PAY, "Sending old cost confirmation! " +
+								  "Diff (ShoulBe)/Old/New:" + bytesToPay + "/" + oldBytes + "/" +
+								  newCC.getTransferredBytes());
+				}
+
+				//System.out.println("Inital2 CC: " + a_cc.getConcatenatedPriceCertHashes());
 				//System.out.println("Sent: " + a_cc.getTransferredBytes() + ":" + a_cc.getConcatenatedPriceCertHashes());
 
 				// always send the message to tell the Mix the CC was received
-				sendXmlMessage(XMLUtil.toXMLDocument(a_cc));
-
-				m_bInitialCCSent = true;
+				sendXmlMessage(XMLUtil.toXMLDocument(newCC));
 
 				return;
 			}

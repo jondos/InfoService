@@ -76,7 +76,7 @@ public final class AnonProxyRequest implements Runnable
 			m_clientSocket = clientSocket;
 			m_syncObject = a_syncObject;
 			m_clientSocket.setSoTimeout(0); // just to ensure that threads will
-			// stop
+			// stop - really no timeout ? We had 1000...
 			m_InSocket = clientSocket.getInputStream();
 			m_OutSocket = clientSocket.getOutputStream();
 			m_threadRequest = new Thread(this, "JAP - AnonProxy Request");

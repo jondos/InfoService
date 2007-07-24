@@ -477,19 +477,24 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		}
 		else if (a_object == m_packetCounter)
 		{
-			final Enumeration eventListenersList = m_eventListeners.elements();
 			JobQueue.Job notificationThread = new JobQueue.Job(true)
 			{
 				public void runJob()
 				{
-					synchronized (m_eventListeners)
+					Vector eventListeners = m_eventListeners;
+					PacketCounter packetCounter = m_packetCounter;
+					if (eventListeners != null && packetCounter != null)
 					{
-						while (eventListenersList.hasMoreElements())
+						synchronized (eventListeners)
 						{
-							( (AnonServiceEventListener) (eventListenersList.nextElement())).packetMixed(
-								m_packetCounter.getProcessedPackets() * (long) (MixPacket.getPacketSize()));
-						}
+							Enumeration eventListenersList = eventListeners.elements();
+							while (eventListenersList.hasMoreElements())
+							{
+								( (AnonServiceEventListener) (eventListenersList.nextElement())).packetMixed(
+									packetCounter.getProcessedPackets() * (long) (MixPacket.getPacketSize()));
+							}
 
+						}
 					}
 				}
 			};

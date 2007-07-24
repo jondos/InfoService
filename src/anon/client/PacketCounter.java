@@ -85,6 +85,7 @@ public class PacketCounter extends Observable implements Observer {
 				  {
 					  m_processedDataPackets++;
 					  m_payPacketCounter++;
+					  //System.out.println(m_processedDataPackets * MixPacket.getPacketSize());
 					  setChanged();
 					  break;
 				  }
