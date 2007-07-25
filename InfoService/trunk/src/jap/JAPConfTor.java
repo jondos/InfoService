@@ -366,6 +366,7 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		JAPController.setTorMaxConnectionsPerRoute(ar[i - 1]);
 		JAPController.setTorRouteLen(m_sliderMinPathLen.getValue(), m_sliderMaxPathLen.getValue());
 		JAPController.setPreCreateAnonRoutes(m_cbPreCreateRoutes.isSelected());
+		JAPController.setTorUseNoneDefaultDirServer(m_cbNoDefaultTorServer.isSelected());
 		return true;
 	}
 
@@ -407,6 +408,7 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		m_sliderMinPathLen.setValue(JAPModel.getTorMinRouteLen());
 		m_cbPreCreateRoutes.setSelected(JAPModel.isPreCreateAnonRoutesEnabled());
 		m_cbxActive.setSelected(JAPModel.getInstance().isTorActivated());
+		m_cbNoDefaultTorServer.setSelected(JAPModel.isTorNoneDefaultDirServerEnabled());
 	}
 
 	private void fetchRoutersAsync(final boolean bShowError)
@@ -471,5 +473,6 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		m_sliderMinPathLen.setValue(JAPConstants.DEFAULT_TOR_MIN_ROUTE_LEN);
 		m_sliderConnectionsPerPath.setValue(JAPConstants.DEFAULT_TOR_MAX_CONNECTIONS_PER_ROUTE);
 		m_cbxActive.setSelected(!JAPConstants.m_bReleasedVersion);
+		m_cbNoDefaultTorServer.setSelected(JAPConstants.DEFAULT_TOR_USE_NONE_DEFAULT_DIR_SERVER);
 	}
 }

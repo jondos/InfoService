@@ -57,6 +57,7 @@ import anon.infoservice.ImmutableProxyInterface;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.crypto.MyRSAPublicKey;
 
 /**
  *
@@ -78,6 +79,7 @@ public class FirstOnionRouterConnection implements Runnable
 	private Object m_oSendSync;
 	private long m_inittimeout;
 	private Tor m_Tor;
+	private RSAKeyPair m_keypairIdentityKey;
 
 	/**
 	 * constructor
@@ -130,7 +132,7 @@ public class FirstOnionRouterConnection implements Runnable
 	{
 		synchronized (m_oSendSync)
 		{
-			for (;;)
+			for (; ; )
 			{
 				try
 				{
@@ -172,7 +174,6 @@ public class FirstOnionRouterConnection implements Runnable
 		}
 		catch (Exception ex)
 		{
-			ex.printStackTrace();
 			return false;
 		}
 	}
@@ -186,7 +187,9 @@ public class FirstOnionRouterConnection implements Runnable
 		IMutableProxyInterface pi = m_Tor.getProxy();
 		ImmutableProxyInterface proxy = null;
 		if (pi != null)
+		{
 			proxy = pi.getProxyInterface(false).getProxyInterface();
+		}
 
 		FirstOnionRouterConnectionThread forct =
 			new FirstOnionRouterConnectionThread(m_description.getAddress(),
@@ -204,21 +207,22 @@ public class FirstOnionRouterConnection implements Runnable
 				{1, 0, 1}), new SecureRandom(), 1024, 100);
 
 			JAPCertificate cert = JAPCertificate.getInstance(
-				 new X509DistinguishedName(X509DistinguishedName.LABEL_COMMON_NAME + "=" + OP_NAME),
-				 kp, new Validity(Calendar.getInstance(), 1));
+				new X509DistinguishedName(X509DistinguishedName.LABEL_COMMON_NAME + "=" + OP_NAME),
+				kp, new Validity(Calendar.getInstance(), 1));
 
-			AsymmetricCryptoKeyPair kp2 = RSAKeyPair.getInstance(new BigInteger(new byte[]
+			m_keypairIdentityKey = RSAKeyPair.getInstance(new BigInteger(new byte[]
 				{1, 0, 1}), new SecureRandom(), 1024, 100);
 			PKCS12 pkcs12cert = new PKCS12(
-				 new X509DistinguishedName(X509DistinguishedName.LABEL_COMMON_NAME + "=" + OP_NAME + " <identity>"),
-				 kp2, new Validity(Calendar.getInstance(), 1));
+				new X509DistinguishedName(X509DistinguishedName.LABEL_COMMON_NAME + "=" + OP_NAME +
+										  " <identity>"),
+				m_keypairIdentityKey, new Validity(Calendar.getInstance(), 1));
 
 			// sign cert with pkcs12cert
 			JAPCertificate cert1 = cert.sign(pkcs12cert);
 			JAPCertificate cert2 = JAPCertificate.getInstance(pkcs12cert.getX509Certificate());
 
 			m_tinyTLS.setClientCertificate(new JAPCertificate[]
-                        {cert1, cert2}, kp.getPrivate());
+										   {cert1, cert2}, kp.getPrivate());
 		}
 		catch (Exception ex)
 		{
@@ -250,9 +254,25 @@ public class FirstOnionRouterConnection implements Runnable
 		int circid = 0;
 		try
 		{
+			/** From Tor spec:  The CircID for a CREATE cell is an arbitrarily chosen 2-byte integer,
+			  selected by the node (OP or OR) that sends the CREATE cell.  To prevent
+			  CircID collisions, when one OR sends a CREATE cell to another OR, it chooses
+			  from only one half of the possible values based on the ORs' public
+			  identity keys: if the sending OR has a lower key, it chooses a CircID with
+			  an MSB of 0; otherwise, it chooses a CircID with an MSB of 1.
+
+			  Public keys are compared numerically by modulus.
+			 ***/
+			int iMSB = 0x8000;
+			if (m_description.getSigningKey().getModulus().compareTo( ( (MyRSAPublicKey)this.
+				m_keypairIdentityKey.getPublic()).getModulus()) > 0)
+			{
+				iMSB = 0;
+			}
 			do
 			{
-				circid = m_rand.nextInt(65535);
+				circid = m_rand.nextInt(0x7FFF);
+				circid |= iMSB;
 			}
 			while (m_Circuits.containsKey(new Integer(circid)) && (circid != 0));
 			Circuit circ = new Circuit(circid, this, onionRouters);

@@ -426,14 +426,14 @@ public final class Circuit implements Runnable
 			{
 				if (!m_FirstOR.checkCreatedCell(cell))
 				{
-					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+					LogHolder.log(LogLevel.DEBUG, LogType.TOR,
 								  "[TOR] Should never be here - 'created' cell was wrong");
 					m_State = STATE_CLOSED;
 					destroyedByPeer();
 				}
 				else
 				{
-					LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[TOR] Connected to the first OR");
+					LogHolder.log(LogLevel.DEBUG, LogType.TOR, "[TOR] Connected to the first OR");
 					synchronized (m_oNotifySync)
 					{
 						m_bReceivedCreatedOrExtendedCell = true;
@@ -447,7 +447,8 @@ public final class Circuit implements Runnable
 			}
 			else if (cell instanceof DestroyCell)
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "[TOR] recieved destroycell - circuit destroyed");
+				int reason=cell.getPayload()[0];
+				LogHolder.log(LogLevel.DEBUG, LogType.TOR, "[TOR] recieved destroycell - circuit destroyed - reason: "+Integer.toString(reason));
 				m_destroyed = true;
 				destroyedByPeer();
 			}

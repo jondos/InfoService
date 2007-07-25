@@ -77,7 +77,7 @@ final public class PlainORListFetcher implements ORListFetcher
 
 	public byte[] getAllDescriptors()
 	{
-		return getDocument("/tor/");
+		return getDocument("/tor/server/all.z");
 	}
 
 	public byte[] getStatus(String fingerprint)

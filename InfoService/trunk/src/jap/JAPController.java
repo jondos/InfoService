@@ -2756,7 +2756,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 						if (JAPModel.getInstance().isTorActivated() && !bForwardedConnection &&
 							!JAPConstants.m_bReleasedVersion)
 						{
-							TorAnonServerDescription td = new TorAnonServerDescription(JAPModel.isTorNoneDefaultDirServerEnabled(),
+							TorAnonServerDescription td = new TorAnonServerDescription(!JAPModel.isTorNoneDefaultDirServerEnabled(),
 								JAPModel.isPreCreateAnonRoutesEnabled());
 							td.setTorDirServer("141.76.45.45",9030);
 							td.setMaxRouteLen(JAPModel.getTorMaxRouteLen());
