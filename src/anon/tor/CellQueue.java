@@ -44,6 +44,7 @@ final class CellQueue
 
 	private CellQueueEntry m_firstEntry;
 	private CellQueueEntry m_lastEntry;
+	private int m_iSize;
 
 	/**
 	 * Constructor for the cellqueue
@@ -53,6 +54,7 @@ final class CellQueue
 	{
 		m_firstEntry = null;
 		m_lastEntry = null;
+		m_iSize=0;
 	}
 
 	/**
@@ -63,10 +65,6 @@ final class CellQueue
 	 */
 	public synchronized void addElement(Cell c)
 	{
-		if(c==null)
-		{
-			int l=43;
-		}
 		CellQueueEntry entry = new CellQueueEntry(c);
 		if (m_lastEntry == null)
 		{
@@ -77,6 +75,7 @@ final class CellQueue
 			m_lastEntry.m_next = entry;
 			m_lastEntry = entry;
 		}
+		m_iSize++;
 	}
 
 	/**
@@ -97,7 +96,17 @@ final class CellQueue
 		{
 			m_lastEntry = null;
 		}
+		m_iSize--;
 		return c;
+	}
+
+	/** Returns the number of Cells stored in the queue at the moment.
+	 *
+	 */
+
+	public synchronized int size()
+	{
+		return m_iSize;
 	}
 
 	/**

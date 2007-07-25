@@ -46,6 +46,8 @@ public final class AnonProxyRequest implements Runnable
 
 	private static final long TIMEOUT_RECONNECT = 60000;
 
+	private static int ms_currentRequest;
+
 	private InputStream m_InChannel;
 
 	private OutputStream m_OutChannel;
@@ -79,7 +81,8 @@ public final class AnonProxyRequest implements Runnable
 			// stop - really no timeout ? We had 1000...
 			m_InSocket = clientSocket.getInputStream();
 			m_OutSocket = clientSocket.getOutputStream();
-			m_threadRequest = new Thread(this, "JAP - AnonProxy Request");
+			m_threadRequest = new Thread(this, "JAP - AnonProxy Request "+Integer.toString(ms_currentRequest));
+			ms_currentRequest++;
 			m_threadRequest.setDaemon(true);
 			m_threadRequest.start();
 	}

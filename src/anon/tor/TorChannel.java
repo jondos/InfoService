@@ -113,27 +113,20 @@ public class TorChannel extends AbstractChannel
 				}
 				try
 				{
-					if (m_sendcellcounter > 0)
-					{
-						m_circuit.send(cell);
-					}
-					else
-					{
-						LogHolder.log(LogLevel.DEBUG, LogType.TOR, "TorChannel:send() - m_sendcellcounter<=0");
-						while (m_sendcellcounter <= 0 && ! (m_bIsClosed || m_bIsClosedByPeer))
+					while ( (m_sendcellcounter <= 0 || !m_circuit.canSendData())
+						   && ! (m_bIsClosed || m_bIsClosedByPeer))
+
+					{//@todo remove this busy waiting
+						try
 						{
-							try
-							{
-								Thread.sleep(100);
-							}
-							catch (Exception e)
-							{
-							}
+							Thread.sleep(100);
 						}
-						LogHolder.log(LogLevel.DEBUG, LogType.TOR,
-									  "TorChannel:send() - m_sendcellcounter now again >0");
-						m_circuit.send(cell);
+						catch (Exception e)
+						{
+						}
 					}
+					m_circuit.send(cell);
+
 				}
 				catch (Throwable t)
 				{
@@ -199,13 +192,13 @@ public class TorChannel extends AbstractChannel
 			byte[] data = (addr + ":" + Integer.toString(port)).getBytes();
 			data = ByteArrayUtil.conc(data, new byte[1]);
 			RelayCell cell = new RelayCell(m_circuit.getCircID(), RelayCell.RELAY_BEGIN, m_id, data);
-			m_bChannelCreated=false;
-			m_circuit.send(cell);
+			m_bChannelCreated = false;
+			m_circuit.sendUrgent(cell);
 			synchronized (m_oWaitForOpen)
 			{
-				m_oWaitForOpen.wait(30000);
+				m_oWaitForOpen.wait(60000);
 			}
-			if (m_bIsClosed || m_bIsClosedByPeer||!m_bChannelCreated)
+			if (m_bIsClosed || m_bIsClosedByPeer || !m_bChannelCreated)
 			{
 				return false;
 			}
@@ -228,7 +221,7 @@ public class TorChannel extends AbstractChannel
 		{
 			case RelayCell.RELAY_CONNECTED:
 			{
-				m_bChannelCreated=true;
+				m_bChannelCreated = true;
 				synchronized (m_oWaitForOpen)
 				{
 					m_oWaitForOpen.notify();

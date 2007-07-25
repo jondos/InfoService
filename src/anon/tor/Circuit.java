@@ -96,11 +96,6 @@ public final class Circuit implements Runnable
 	private Thread m_threadSendCellLoop; //this thread takes cells from the cell queue and sends them
 	private CellQueue m_cellqueueSend;
 
-	//earliest time when the circuit will be destroy
-	private Date m_destroyTime;
-	//minimum lifetime of a circuit (5 minutes=5*60*1000)
-	private static long m_minCircuitLifetime = 300000;
-
 	/**
 	 * constructor
 	 * @param circID
@@ -193,10 +188,6 @@ public final class Circuit implements Runnable
 			LogHolder.log(LogLevel.DEBUG, LogType.MISC,
 						  "[TOR] Circuit '" + this.m_circID + "' ready!!! - Length of this Circuit : " +
 						  this.m_circuitLength + " Onionrouters");
-
-			Date createTime = new Date();
-			//calculate when the circuit will be destroyed
-			m_destroyTime = new Date(createTime.getTime() + m_minCircuitLifetime);
 		}
 		catch (Exception ex)
 		{
@@ -472,8 +463,17 @@ public final class Circuit implements Runnable
 		}
 	}
 
+	/** Checks whether is is 'allowed' to sent data on this circuit or not. 'Allowed' at the moment just
+	 * means, that there are not to many packets waiting for delivery.
+	 */
+
+	public boolean canSendData()
+	{
+		return m_cellqueueSend.size() < 100;
+	}
+
 	/**
-	 * sends a cell through the circuit
+	 * sends a cell through the circuit - the cells are placed in a queue for sending
 	 * @param cell
 	 * cell to send
 	 * @throws IOException
@@ -484,13 +484,30 @@ public final class Circuit implements Runnable
 		{
 			throw new IOException("circuit alread closed");
 		}
+		m_cellqueueSend.addElement(cell);
+	}
+
+	/**
+	 * urgently sends a cell through the circuit (send it directly without placing it in the send queue)
+	 * @param cell
+	 * cell to send
+	 * @throws IOException
+	 */
+	public void sendUrgent(Cell cell) throws IOException, Exception
+	{
+		if (m_State == STATE_CLOSED)
+		{
+			throw new IOException("circuit alread closed");
+		}
 		synchronized (m_oSendSync)
 		{
 			if (cell instanceof RelayCell)
 			{
 				cell = m_FirstOR.encryptCell( (RelayCell) cell);
+				addToSendCellCounter( -1);
+
 			}
-			m_cellqueueSend.addElement(cell);
+			m_FirstORConnection.send(cell);
 		}
 	}
 
@@ -582,10 +599,9 @@ public final class Circuit implements Runnable
 			m_streams.remove(key);
 			RelayCell cell = new RelayCell(m_circID, RelayCell.RELAY_END, streamID, reason);
 			send(cell);
-			if (m_State == STATE_SHUTDOWN)
-			{
-				//check if we can destroy this circuit
-				shutdown();
+			if (m_State == STATE_SHUTDOWN && m_streams.isEmpty())
+			{ //close this circuit after the last stream was closed
+				close();
 			}
 		}
 	}
@@ -667,10 +683,7 @@ public final class Circuit implements Runnable
 
 			if (m_streamCounter >= m_MaxStreamsPerCircuit)
 			{
-				if ( (new Date()).after(m_destroyTime))
-				{
-					shutdown();
-				}
+				shutdown();
 			}
 			return ErrorCodes.E_SUCCESS;
 		}
@@ -744,17 +757,20 @@ public final class Circuit implements Runnable
 					{
 					}
 				}
-				if (! (c instanceof RelayCell))
+				synchronized (m_oSendSync)
 				{
-					LogHolder.log(LogLevel.DEBUG, LogType.TOR,
-								  "Tor-Circuit-sendCellLoop: sending no releay cell.");
+					if (! (c instanceof RelayCell))
+					{
+						LogHolder.log(LogLevel.DEBUG, LogType.TOR,
+									  "Tor-Circuit-sendCellLoop: sending no releay cell.");
+					}
+					else
+					{
+						c = m_FirstOR.encryptCell( (RelayCell) c);
+						addToSendCellCounter( -1);
+					}
+					m_FirstORConnection.send(c);
 				}
-				else
-				{
-					addToSendCellCounter( -1);
-				}
-
-				m_FirstORConnection.send(c);
 			}
 		}
 		catch (Throwable t)
