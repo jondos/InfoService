@@ -59,7 +59,6 @@ import logging.LogLevel;
 import logging.LogType;
 import anon.pay.*;
 
-
 /**
  * Holds the information for an infoservice.
  */
@@ -196,8 +195,8 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		this(a_infoServiceNode,
 			 (a_japClientContext ? (System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE_JAP) :
 			  (System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE)));
-			  //XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_infoServiceNode, "LastUpdate"), -1L) +
-			  //Constants.TIMEOUT_INFOSERVICE));
+		//XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_infoServiceNode, "LastUpdate"), -1L) +
+		//Constants.TIMEOUT_INFOSERVICE));
 	}
 
 	/**
@@ -249,14 +248,14 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 			m_userDefined = true;
 		}
 
-
 		/* get the ID */
 		m_strInfoServiceId = a_infoServiceNode.getAttribute(XML_ATTR_ID);
 
 		/* test the ID */
 		if (!checkId())
 		{
-			throw new XMLParseException(XMLParseException.ROOT_TAG, "Malformed InfoService ID: " + m_strInfoServiceId);
+			throw new XMLParseException(XMLParseException.ROOT_TAG,
+										"Malformed InfoService ID: " + m_strInfoServiceId);
 		}
 
 		/* get the name */
@@ -356,9 +355,8 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 	 * @exception IllegalArgumentException if invalid listener interfaces are given
 	 */
 	public InfoServiceDBEntry(String a_strName, String a_id, Vector a_listeners,
-							   boolean a_primaryForwarderList, boolean a_japClientContext,
-							   long a_creationTime, long a_serialNumber)
-	throws IllegalArgumentException
+							  boolean a_primaryForwarderList, boolean a_japClientContext,
+							  long a_creationTime, long a_serialNumber) throws IllegalArgumentException
 	{
 		super(a_japClientContext ? System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE_JAP :
 			  System.currentTimeMillis() + Constants.TIMEOUT_INFOSERVICE);
@@ -401,7 +399,6 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 
 		m_bPrimaryForwarderList = a_primaryForwarderList;
 		m_infoserviceSoftware = new ServiceSoftware(Constants.INFOSERVICE_VERSION);
-
 
 		m_preferedListenerInterface = 0;
 		m_creationTimeStamp = a_creationTime;
@@ -488,7 +485,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		try
 		{
 			m_signature = SignatureCreator.getInstance().getSignedXml(
-				 SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE, infoServiceNode);
+				SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE, infoServiceNode);
 			if (m_signature != null)
 			{
 				m_certPath = m_signature.getCertPath();
@@ -748,8 +745,8 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		return getXmlDocument(a_httpRequest, HTTPConnectionFactory.HTTP_ENCODING_PLAIN);
 	}
 
-	private Document getXmlDocument(final HttpRequestStructure a_httpRequest, int a_supportedEncodings)
-		throws Exception
+	private Document getXmlDocument(final HttpRequestStructure a_httpRequest, int a_supportedEncodings) throws
+		Exception
 	{
 		byte[] response = doHttpRequest(a_httpRequest, a_supportedEncodings);
 		return XMLUtil.toXMLDocument(response);
@@ -886,7 +883,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 						catch (Exception e)
 						{
 							LogHolder.log(LogLevel.ERR, LogType.NET,
-								"Connection to infoservice interface failed: " +
+										  "Connection to infoservice interface failed: " +
 										  currentConnection.getHost() + ":" +
 										  Integer.toString(currentConnection.getPort()) +
 										  a_httpRequest.getRequestFileName(), e);
@@ -902,13 +899,13 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 				try
 				{
 					/*
-					communicationThread.join(10 * 60 * 1000);
-					currentConnection.stop();
-					if (communicationThread.isAlive())
-					{
-						LogHolder.log(LogLevel.ERR, LogType.NET,
-									  "InfoService request timed out on thread join after 10 minutes!");
-						communicationThread.interrupt();
+						  communicationThread.join(10 * 60 * 1000);
+						  currentConnection.stop();
+						  if (communicationThread.isAlive())
+						  {
+					 LogHolder.log(LogLevel.ERR, LogType.NET,
+						  "InfoService request timed out on thread join after 10 minutes!");
+					 communicationThread.interrupt();
 					 }*/
 					communicationThread.join();
 					try
@@ -919,7 +916,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 							if (headerContentEncoding.size() > 0 &&
 								headerContentEncoding.firstElement() != null &&
 								headerContentEncoding.firstElement().equals(
-								HTTPConnectionFactory.HTTP_ENCODING_ZLIB_STRING))
+									HTTPConnectionFactory.HTTP_ENCODING_ZLIB_STRING))
 							{
 								/*
 								 * Normally java does this automatically, but perhaps there are old JREs that
@@ -1098,7 +1095,6 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 					}
 				}
 
-
 				if (currentEntry.isVerified())
 				{
 					entries.put(currentEntry.getId(), currentEntry);
@@ -1149,7 +1145,6 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		return getEntries(getter);
 	}
 
-
 	public Hashtable getMixes(boolean a_bJAPClientContext) throws Exception
 	{
 		EntryGetter getter = new EntryGetter();
@@ -1170,7 +1165,6 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		return getInfoServices(true);
 	}
 
-
 	public Hashtable getMixCascadeSerials() throws Exception
 	{
 		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/cascadeserials"),
@@ -1183,7 +1177,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		}
 
 		return new AbstractDistributableDatabaseEntry.Serials(MixCascade.class).parse(
-			  doc.getDocumentElement());
+			doc.getDocumentElement());
 	}
 
 	public Hashtable getInfoServiceSerials() throws Exception
@@ -1198,10 +1192,8 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		}
 
 		return new AbstractDistributableDatabaseEntry.Serials(InfoServiceDBEntry.class).parse(
-			  doc.getDocumentElement());
+			doc.getDocumentElement());
 	}
-
-
 
 	/**
 	 * Get the MixInfo for the mix with the given ID. If we can't get a connection with the
@@ -1220,7 +1212,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 			throw (new Exception("Error in XML structure for mix with ID " + mixId));
 		}
 		Element mixNode = (Element) (mixNodes.item(0));
-		MixInfo info =  new MixInfo(mixNode, Long.MAX_VALUE, false);
+		MixInfo info = new MixInfo(mixNode, Long.MAX_VALUE, false);
 		/* check the signature */
 		if (!info.isVerified())
 		{
@@ -1245,7 +1237,6 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 	{
 		return getStatusInfo(a_cascade, -1);
 	}
-
 
 	/**
 	 * Get the StatusInfo for the cascade with the given ID. If we can't get a connection with the
@@ -1311,7 +1302,6 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		return new JAPMinVersion(japNode);
 	}
 
-
 	private Hashtable getUpdateEntries(Class a_distributable, boolean a_bSerials) throws Exception
 	{
 		Document doc;
@@ -1327,7 +1317,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		}
 
 		/** @todo check signatures for java versions, too! */
-		if (!(a_distributable.equals(JavaVersionDBEntry.class) && !a_bSerials) &&
+		if (! (a_distributable.equals(JavaVersionDBEntry.class) && !a_bSerials) &&
 			!SignatureVerifier.getInstance().verifyXml(doc.getDocumentElement(),
 			SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE))
 		{
@@ -1340,7 +1330,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		if (a_bSerials)
 		{
 			return new AbstractDistributableDatabaseEntry.Serials(a_distributable).parse(
-					 doc.getDocumentElement());
+				doc.getDocumentElement());
 		}
 		else
 		{
@@ -1417,8 +1407,6 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		return getUpdateEntries(JavaVersionDBEntry.class, true);
 	}
 
-
-
 	/**
 	 * Returns the JAPVersionInfo for the specified type. The JAPVersionInfo is generated from
 	 * the JNLP files received from the infoservice. If we can't get a connection with the
@@ -1469,10 +1457,24 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		byte[] list = null;
 		try
 		{
-			list=doHttpRequest(HttpRequestStructure.createGetRequest("/tornodes"),HTTPConnectionFactory.HTTP_ENCODING_ZLIB);
+			list = doHttpRequest(HttpRequestStructure.createGetRequest("/tornodes"),
+								 HTTPConnectionFactory.HTTP_ENCODING_ZLIB);
 		}
 		catch (Exception e)
 		{
+
+		}
+		if (list == null)
+		{
+			try
+			{
+				list = doHttpRequest(HttpRequestStructure.createGetRequest("/tornodes"),
+									 HTTPConnectionFactory.HTTP_ENCODING_PLAIN);
+			}
+			catch (Exception e)
+			{
+
+			}
 		}
 		if (list == null)
 		{
@@ -1494,8 +1496,8 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		byte[] list = null;
 		try
 		{ //Compressed first
-			list=doHttpRequest(HttpRequestStructure.createGetRequest("/mixminionnodes"),
-									   HTTPConnectionFactory.HTTP_ENCODING_ZLIB);
+			list = doHttpRequest(HttpRequestStructure.createGetRequest("/mixminionnodes"),
+								 HTTPConnectionFactory.HTTP_ENCODING_ZLIB);
 		}
 		catch (Exception e)
 		{
