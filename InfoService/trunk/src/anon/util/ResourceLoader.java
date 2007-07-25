@@ -73,6 +73,8 @@ public final class ResourceLoader
 	private static Vector ms_classpathResourceTypes;
 	/// stores the parent directory of the jar file that holds this class for caching purposes
 	private static File ms_parentResourceFile;
+	private static boolean ms_bTriedToLoadParentResourceFile = false;
+	private static final Object SYNC_RESOURCE = new Object();
 	private static String ms_parentResourceFileResourceURL;
 	private static String ms_parentResourceFileResourceType;
 	/// the class path at the last state it was read
@@ -192,8 +194,8 @@ public final class ResourceLoader
 			}
 		}
 
-		if (resourceURL == null && ms_parentResourceFile != null &&
-			!readFilesFromClasspath(false).contains(ms_parentResourceFile))
+		if (resourceURL == null && getParentResourceFile() != null &&
+			!readFilesFromClasspath(false).contains(getParentResourceFile()))
 		{
 			/**
 			 * The parent resource file is not contained in the class path.
@@ -202,7 +204,7 @@ public final class ResourceLoader
 			parentResourceFile = new Vector();
 			parentResourceFileURL = new Vector();
 			parentResourceFileType = new Vector();
-			parentResourceFile.addElement(ms_parentResourceFile);
+			parentResourceFile.addElement(getParentResourceFile());
 			parentResourceFileURL.addElement(ms_parentResourceFileResourceURL);
 			parentResourceFileType.addElement(ms_parentResourceFileResourceType);
 
@@ -241,6 +243,11 @@ public final class ResourceLoader
 	 */
 	public static InputStream loadResourceAsStream(String a_strRelativeResourcePath)
 	{
+		return loadResourceAsStream(a_strRelativeResourcePath, false);
+	}
+
+	public static InputStream loadResourceAsStream(String a_strRelativeResourcePath, boolean a_bFileFirst)
+	{
 		InputStream in = null;
 
 		if ( (a_strRelativeResourcePath = formatResourcePath(a_strRelativeResourcePath)) == null ||
@@ -249,10 +256,31 @@ public final class ResourceLoader
 			return null;
 		}
 
-		// load images from the local classpath
+		if (a_bFileFirst && getParentResourceFile() != null)
+		{
+			try
+			{
+				File directory = getParentResourceFile();
+				if (directory.isFile())
+				{
+					directory = directory.getParentFile();
+				}
+				in = new FileInputStream(
+					new File(directory,
+							 replaceFileSeparatorsSystemSpecific(a_strRelativeResourcePath)));
+			}
+			catch (IOException a_e)
+			{
+			}
+		}
+
+		// load resource from the local classpath
 		try
 		{
-			in = ResourceLoader.class.getResourceAsStream("/" + a_strRelativeResourcePath);
+			if (in == null)
+			{
+				in = ResourceLoader.class.getResourceAsStream("/" + a_strRelativeResourcePath);
+			}
 		}
 		catch (Throwable a_e)
 		{
@@ -261,15 +289,20 @@ public final class ResourceLoader
 
 		try
 		{
-			if (in == null && ms_parentResourceFile != null
-				&& !readFilesFromClasspath(false).contains(ms_parentResourceFile))
+			if (in == null && !a_bFileFirst && getParentResourceFile() != null
+				&& !readFilesFromClasspath(false).contains(getParentResourceFile()))
 			{
 				/**
 				 * The parent resource file is not contained in the class path. Try to load the
 				 * resource directly from the parent resource file.
 				 */
+				File directory = getParentResourceFile();
+				if (directory.isFile())
+				{
+					directory = directory.getParentFile();
+				}
 				in = new FileInputStream(
-					new File(ms_parentResourceFile,
+					new File(directory,
 							 replaceFileSeparatorsSystemSpecific(a_strRelativeResourcePath)));
 			}
 		}
@@ -920,6 +953,30 @@ public final class ResourceLoader
 		}
 
 		return strCurrentFile;
+	}
+
+	private static File getParentResourceFile()
+	{
+		if (ms_parentResourceFile == null && !ms_bTriedToLoadParentResourceFile)
+		{
+			synchronized (SYNC_RESOURCE)
+			{
+				if (!ms_bTriedToLoadParentResourceFile)
+				{
+					ms_bTriedToLoadParentResourceFile = true;
+					try
+					{
+						ms_parentResourceFile =
+							new File(ClassUtil.getClassDirectory(ResourceLoader.class).getAbsolutePath());
+					}
+					catch (Throwable a_e)
+					{
+						a_e.printStackTrace();
+					}
+				}
+			}
+		}
+		return ms_parentResourceFile;
 	}
 
 	/**

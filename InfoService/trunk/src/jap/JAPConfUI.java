@@ -497,6 +497,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		m_comboLanguage.addItem(new LanguageMapper("cs", new Locale("cs", "")));
 		m_comboLanguage.addItem(new LanguageMapper("fr", new Locale("fr", "")));
 		m_comboLanguage.addItem(new LanguageMapper("pt", new Locale("pt", "")));
+		m_comboLanguage.addItem(new LanguageMapper("nl", new Locale("nl", "")));
 
 		c.gridx = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
