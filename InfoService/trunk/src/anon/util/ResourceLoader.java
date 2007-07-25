@@ -263,7 +263,11 @@ public final class ResourceLoader
 				File directory = getParentResourceFile();
 				if (directory.isFile())
 				{
-					directory = directory.getParentFile();
+					String parent = directory.getParent();
+					if (parent != null)
+					{
+						directory = new File(parent);
+					}
 				}
 				in = new FileInputStream(
 					new File(directory,
@@ -299,7 +303,11 @@ public final class ResourceLoader
 				File directory = getParentResourceFile();
 				if (directory.isFile())
 				{
-					directory = directory.getParentFile();
+					String parent = directory.getParent();
+					if (parent != null)
+					{
+						directory = new File(parent);
+					}
 				}
 				in = new FileInputStream(
 					new File(directory,
