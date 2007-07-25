@@ -220,6 +220,7 @@ public final class JAPConstants
 	public final static int DEFAULT_TOR_MIN_ROUTE_LEN = Tor.MIN_ROUTE_LEN;
 	public final static int DEFAULT_TOR_MAX_ROUTE_LEN = Tor.MIN_ROUTE_LEN + 1;
 	public final static int DEFAULT_TOR_MAX_CONNECTIONS_PER_ROUTE = Circuit.MAX_STREAMS_OVER_CIRCUIT;
+	public final static boolean DEFAULT_TOR_USE_NONE_DEFAULT_DIR_SERVER=false;
 	public final static int DEFAULT_MIXMINION_ROUTE_LEN = Mixminion.MIN_ROUTE_LEN;
 	public final static String DEFAULT_MIXMINION_EMAIL = "";
 	/**
@@ -278,6 +279,9 @@ public final class JAPConstants
 	public final static String CONFIG_CONSOLE = "Console";
 	public final static String CONFIG_FILE = "File";
 	public final static String CONFIG_TOR = "TOR";
+	public static final String CONFIG_TOR_DIR_SERVER="DirectoryServer";
+	public static final String CONFIG_XML_ATTR_TOR_NONE_DEFAULT_DIR_SERVER="useNoneDefault";
+
 	public final static String CONFIG_Mixminion = "MixMinion";
 	public final static String CONFIG_MAX_CONNECTIONS_PER_ROUTE = "MaxConnectionsPerRoute";
 	public final static String CONFIG_TOR_PRECREATE_ANON_ROUTES = "PreCreateAnonRoutes";

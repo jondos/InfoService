@@ -1170,5 +1170,6 @@
   <file path="src/JAPMessages_en.properties"/>
   <file path="src/JAPMessages_fr.properties"/>
   <file path="src/JAPMessages_pt.properties"/>
+  <file path="magicdraw.magicdraw"/>
   <file path="MANIFEST.MF"/>
 </project>

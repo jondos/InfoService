@@ -156,6 +156,8 @@ public final class JAPModel extends Observable
 	private int m_TorMaxConnectionsPerRoute = JAPConstants.DEFAULT_TOR_MAX_CONNECTIONS_PER_ROUTE;
 	private int m_TorMaxRouteLen = JAPConstants.DEFAULT_TOR_MAX_ROUTE_LEN;
 	private int m_TorMinRouteLen = JAPConstants.DEFAULT_TOR_MIN_ROUTE_LEN;
+	private boolean m_bTorUseNoneDefaultDirServer=JAPConstants.DEFAULT_TOR_USE_NONE_DEFAULT_DIR_SERVER;
+
 	private int m_mixminionRouteLen = JAPConstants.DEFAULT_MIXMINION_ROUTE_LEN;
 	private String m_mixminionMyEMail = JAPConstants.DEFAULT_MIXMINION_EMAIL;
 	//fixme sr
@@ -1098,6 +1100,16 @@ public final class JAPModel extends Observable
 	protected void setTorMinRouteLen(int i)
 	{
 		m_TorMinRouteLen = i;
+	}
+
+	public static boolean isTorNoneDefaultDirServerEnabled()
+	{
+		return ms_TheModel.m_bTorUseNoneDefaultDirServer;
+	}
+
+	protected void setTorUseNoneDefaultDirServer(boolean b)
+	{
+		m_bTorUseNoneDefaultDirServer=b;
 	}
 
 	protected void setMixminionRouteLen(int i)

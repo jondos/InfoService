@@ -639,7 +639,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 *
 	 * The configuration is a XML-File with the following structure:
 	 *  <JAP
-	 *    version="0.24"                     // version of the xml struct (DTD) used for saving the configuration
+	 *    version="0.25"                     // version of the xml struct (DTD) used for saving the configuration
 	 *    portNumber=""                     // Listener-Portnumber
 	 *    portNumberSocks=""                // Listener-Portnumber for SOCKS
 	 *    supportSocks=""                   // Will we support SOCKS ?
@@ -728,6 +728,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 * 	 <MaxConnectionsPerRoute>...</MaxConnectionsPerRoute>(since Vresion 0.8) //How many connections are allowed before a new circuit is created
 	 * 	 <RouteLen min=" " max=" "/>(since Vresion 0.9) //How long should a route be
 	 *   <PreCreateAnonRoutes>True/False</PreCreateAnonRoutes> //Should the routes be created in advance?
+	 *   <DirectoryServer useNoneDefault="true|false" Hostname="..." Port="..." /> //since 0.25 Use none default Tor directory server
 	 * </Tor>
 	 * <Mixminion>    //  Mixminion related seetings (since Version 0.22)
 	 * 	 <RouteLen>...</RouteLen> //How long should a route be
@@ -1673,7 +1674,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 					elem = (Element) XMLUtil.getFirstChildByName(elemTor,
 						JAPConstants.CONFIG_TOR_PRECREATE_ANON_ROUTES);
 					setPreCreateAnonRoutes(XMLUtil.parseValue(elem, JAPModel.isPreCreateAnonRoutesEnabled()));
-
+					elem = (Element) XMLUtil.getFirstChildByName(elemTor,
+						JAPConstants.CONFIG_TOR_DIR_SERVER);
+					setTorUseNoneDefaultDirServer(XMLUtil.parseAttribute(elem,JAPConstants.CONFIG_XML_ATTR_TOR_NONE_DEFAULT_DIR_SERVER,
+						JAPModel.isTorNoneDefaultDirServerEnabled()));
 				}
 				catch (Exception ex)
 				{
@@ -2381,6 +2385,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 			elem = doc.createElement(JAPConstants.CONFIG_TOR_PRECREATE_ANON_ROUTES);
 			XMLUtil.setValue(elem, JAPModel.isPreCreateAnonRoutesEnabled());
 			elemTor.appendChild(elem);
+			elem = doc.createElement(JAPConstants.CONFIG_TOR_DIR_SERVER);
+			XMLUtil.setAttribute(elem,JAPConstants.CONFIG_XML_ATTR_TOR_NONE_DEFAULT_DIR_SERVER, JAPModel.isTorNoneDefaultDirServerEnabled());
+			elemTor.appendChild(elem);
+
 			e.appendChild(elemTor);
 
 			/** add mixminion*/
@@ -2603,6 +2611,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 		m_Model.setPreCreateAnonRoutes(b);
 	}
 
+	public static void setTorUseNoneDefaultDirServer(boolean b)
+	{
+		m_Model.setTorUseNoneDefaultDirServer(b);
+	}
+
 	//---------------------------------------------------------------------
 
 	/* public void setSocksPortNumber(int p)
@@ -2743,8 +2756,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 						if (JAPModel.getInstance().isTorActivated() && !bForwardedConnection &&
 							!JAPConstants.m_bReleasedVersion)
 						{
-							TorAnonServerDescription td = new TorAnonServerDescription(true,
+							TorAnonServerDescription td = new TorAnonServerDescription(JAPModel.isTorNoneDefaultDirServerEnabled(),
 								JAPModel.isPreCreateAnonRoutesEnabled());
+							td.setTorDirServer("141.76.45.45",9030);
 							td.setMaxRouteLen(JAPModel.getTorMaxRouteLen());
 							td.setMinRouteLen(JAPModel.getTorMinRouteLen());
 							td.setMaxConnectionsPerRoute(JAPModel.getTorMaxConnectionsPerRoute());
