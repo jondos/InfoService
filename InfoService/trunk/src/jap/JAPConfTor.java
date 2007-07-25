@@ -56,10 +56,13 @@ import anon.tor.ordescription.InfoServiceORListFetcher;
 import anon.tor.ordescription.ORList;
 import gui.GUIUtils;
 import gui.JAPMessages;
+import gui.JAPJIntField;
 import gui.dialog.JAPDialog;
 import logging.LogType;
 import java.util.Dictionary;
 import anon.tor.ordescription.ORDescriptor;
+import javax.swing.JTextField;
+import anon.tor.ordescription.PlainORListFetcher;
 
 final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 {
@@ -74,24 +77,27 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 	private JButton m_bttnFetchRouters;
 	private JLabel m_labelAvailableRouters;
 	private JCheckBox m_cbPreCreateRoutes;
+	private JCheckBox m_cbNoDefaultTorServer;
+	private JTextField m_tfTorDirServerHostName;
+	private JAPJIntField m_jintfieldTorDirServerPort;
 	private JLabel m_lblMaxPathLen, m_lblMinPathLen, m_lblPathSwitchTime;
 	private JScrollPane m_scrollPane;
 	private JPanel m_panelSlider;
 	private TitledBorder m_border;
 	private DateFormat ms_dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM,
-					DateFormat.SHORT);
+		DateFormat.SHORT);
 	private class MyJTable extends JTable
+	{
+		public MyJTable(DefaultTableModel m)
 		{
-			public MyJTable(DefaultTableModel m)
-			{
-				super(m);
-			}
+			super(m);
+		}
 
-			public boolean isCellEditable(int i, int j)
-			{
-				return false;
-			}
-		};
+		public boolean isCellEditable(int i, int j)
+		{
+			return false;
+		}
+	};
 
 	public JAPConfTor()
 	{
@@ -140,7 +146,7 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 				{
 					m_border.setTitleColor(Color.gray);
 					m_bttnFetchRouters.setDisabledIcon(
-									   GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true, false));
+						GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_ROLLOVER, true, false));
 				}
 				m_panelSlider.setBorder(m_border);
 
@@ -212,6 +218,27 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		c2.anchor = GridBagConstraints.EAST;
 		c2.insets = new Insets(5, 5, 5, 0);
 		p.add(m_bttnFetchRouters, c2);
+		panelRoot.add(p, c);
+
+		p = new JPanel(new GridBagLayout());
+		p.setBorder(new TitledBorder(JAPMessages.getString("torBorderTorDirServer")));
+		GridBagConstraints c4 = new GridBagConstraints();
+		m_cbNoDefaultTorServer = new JCheckBox(JAPMessages.getString("torCheckBoxNoDefaultDirServer"));
+		p.add(m_cbNoDefaultTorServer, c4);
+		c4.gridx = 1;
+		p.add(new JLabel(JAPMessages.getString("torDirServerHostName")), c4);
+		m_tfTorDirServerHostName = new JTextField();
+		c4.gridx = 2;
+		p.add(m_tfTorDirServerHostName, c4);
+		m_jintfieldTorDirServerPort = new JAPJIntField(0x00FFFF);
+		c4.gridx = 3;
+		p.add(m_jintfieldTorDirServerPort, c4);
+		c4.gridx = 4;
+		p.add(new JLabel(JAPMessages.getString("torDirServerPort")), c4);
+
+		c.gridy = 3;
+		c.weighty = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
 		panelRoot.add(p, c);
 
 		p = new JPanel(new GridBagLayout());
@@ -300,7 +327,7 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		p.setBorder(m_border);
 		m_panelSlider = p;
 
-		c.gridy = 3;
+		c.gridy = 4;
 		c.weighty = 0;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		panelRoot.add(p, c);
@@ -389,7 +416,15 @@ final class JAPConfTor extends AbstractJAPConfModule implements ActionListener
 		{
 			public void run()
 			{
-				ORList ol = new ORList(new InfoServiceORListFetcher());
+				ORList ol = null;
+				if (JAPModel.isTorNoneDefaultDirServerEnabled())
+				{
+					ol = new ORList(new PlainORListFetcher("141.76.45.45", 9030));
+				}
+				else
+				{
+					ol = new ORList(new InfoServiceORListFetcher());
+				}
 				if (!ol.updateList())
 				{
 					if (bShowError)

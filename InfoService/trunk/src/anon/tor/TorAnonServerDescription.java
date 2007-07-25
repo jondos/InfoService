@@ -31,8 +31,8 @@ import anon.AnonServerDescription;
 
 public class TorAnonServerDescription implements AnonServerDescription
 {
-	private final int m_iTorDirServerPort;
-	private final String m_strTorDirServerAddr;
+	private int m_iTorDirServerPort;
+	private String m_strTorDirServerAddr;
 	private final boolean m_bUseInfoService;
 	private final boolean m_bStartCircuitsAtStartup;
 	private int m_iMaxRouteLen=Tor.MAX_ROUTE_LEN;
@@ -100,6 +100,12 @@ public class TorAnonServerDescription implements AnonServerDescription
 		m_iTorDirServerPort = torDirServerPort;
 		m_bUseInfoService = false;
 		m_bStartCircuitsAtStartup = bStartCircuitsAtStartup;
+	}
+
+	public void setTorDirServer(String hostname,int port)
+	{
+		m_strTorDirServerAddr=hostname;
+		m_iTorDirServerPort=port;
 	}
 
 	/**
