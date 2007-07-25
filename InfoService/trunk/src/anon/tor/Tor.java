@@ -326,13 +326,13 @@ public class Tor implements Runnable, AnonService
 	 */
 	private Circuit createNewCircuit(String addr, int port)
 	{
+		if (!m_bIsStarted)
+		{
+			return null;
+		}
 		synchronized (m_oStartStopSync)
 		{
-			if (!m_bIsStarted)
-			{
-				return null;
-			}
-			m_bIsCreatingCircuit = true;
+				m_bIsCreatingCircuit = true;
 		}
 
 		try
@@ -479,10 +479,9 @@ public class Tor implements Runnable, AnonService
 	 */
 	public void run()
 	{
-		int errTry = 0;
 		boolean foundemptyslot = false;
 
-		while (!m_bCloseCreator && errTry < 10)
+		while (!m_bCloseCreator)
 		{
 			if (m_bCloseCreator)
 			{
@@ -509,10 +508,9 @@ public class Tor implements Runnable, AnonService
 					foundemptyslot = true;
 
 					//just create a new circuit, that can connect to this address and port
-					Circuit circ = createNewCircuit("141.76.46.90", 80);
+					Circuit circ = createNewCircuit("141.76.46.1", 80);
 					if (circ == null)
 					{
-						errTry++;
 						continue;
 					}
 					m_activeCircuits[index] = circ;
@@ -542,7 +540,6 @@ public class Tor implements Runnable, AnonService
 				{
 				}
 			}
-			errTry = 0;
 		}
 
 		m_circuitCreator = null;

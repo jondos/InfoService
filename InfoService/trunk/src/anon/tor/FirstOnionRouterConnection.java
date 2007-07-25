@@ -136,7 +136,7 @@ public class FirstOnionRouterConnection implements Runnable
 				{
 					m_ostream.write(cell.getCellData());
 					m_ostream.flush();
-					LogHolder.log(LogLevel.DEBUG, LogType.MISC,
+					LogHolder.log(LogLevel.DEBUG, LogType.TOR,
 								  "OnionConnection " + m_description.getName() + " Send a cell");
 					break;
 				}
