@@ -37,6 +37,7 @@ import java.text.MessageFormat;
 import java.awt.Frame;
 
 import anon.util.Util;
+import anon.util.ResourceLoader;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -72,6 +73,32 @@ public final class JAPMessages
 		init(null, a_resourceBundleFilename);
 	}
 
+	private static String getBundleLocalisedFilename(String a_resourceBundleFilename, Locale a_locale)
+	{
+		String strLocale = "_";
+
+		if (a_resourceBundleFilename == null)
+		{
+			return null;
+		}
+		if (a_locale == null)
+		{
+			a_locale = Locale.getDefault();
+		}
+
+		if (a_locale.getLanguage().trim().length() == 0)
+		{
+			strLocale += "en";
+		}
+		else
+		{
+			strLocale += a_locale.getLanguage();
+		}
+		strLocale += ".properties";
+
+		return a_resourceBundleFilename + strLocale;
+	}
+
 	/**
 	 * Initialises the resource bundle with the specified Locale. The initialisation may be repeated
 	 * with a new Locale.
@@ -98,28 +125,38 @@ public final class JAPMessages
 
 		try
 		{
-			ms_resourceBundle = PropertyResourceBundle.getBundle(a_resourceBundleFilename, locale);
+			//ms_resourceBundle = PropertyResourceBundle.getBundle(a_resourceBundleFilename, locale);
+			ms_resourceBundle = new PropertyResourceBundle(
+				 ResourceLoader.loadResourceAsStream(
+						 getBundleLocalisedFilename(a_resourceBundleFilename, locale), true));
 		}
 		catch (Exception a_e)
 		{
 			try
 			{
-				if (locale == null || !locale.equals(Locale.getDefault()))
-				{
-					locale = Locale.getDefault();
-					ms_resourceBundle = PropertyResourceBundle.getBundle(a_resourceBundleFilename, locale);
-				}
-				else
-				{
-					throw a_e;
-				}
+				ms_resourceBundle = PropertyResourceBundle.getBundle(a_resourceBundleFilename, locale);
 			}
-			catch (Exception e)
+			catch (Exception a_e2)
 			{
-				ms_resourceBundle = null;
+				try
+				{
+					if (locale == null || !locale.equals(Locale.getDefault()))
+					{
+						locale = Locale.getDefault();
+						ms_resourceBundle = PropertyResourceBundle.getBundle(a_resourceBundleFilename, locale);
+					}
+					else
+					{
+						throw a_e;
+					}
+				}
+				catch (Exception e)
+				{
+					ms_resourceBundle = null;
+				}
 			}
 		}
-		if (ms_resourceBundle == null || locale.getLanguage().equals(Locale.ENGLISH))
+		if (ms_resourceBundle == null)
 		{
 			locale = Locale.ENGLISH;
 			ms_resourceBundle = ms_defaultResourceBundle;

@@ -1128,6 +1128,11 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 				m_nrOperators++;
 			}
 		}
+		if (m_nrCountries == 0)
+		{
+			// no Mix seems to have information both about operator and Mix country; assume 1 country
+			m_nrCountries = 1;
+		}
 	}
 
 	/**

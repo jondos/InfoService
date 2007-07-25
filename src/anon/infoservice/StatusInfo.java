@@ -30,8 +30,6 @@ package anon.infoservice;
 import java.text.NumberFormat;
 import java.util.Date;
 import java.security.SignatureException;
-import java.util.Vector;
-import java.util.Hashtable;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -233,28 +231,17 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 			double userFactor = Math.min( ( (double) getNrOfActiveUsers()) / 500.0, 1.0);
 			double trafficFactor = Math.min( ( (double) getTrafficSituation()) / 100.0, 1.0);
 
-			//double mixFactor = 1.0 - Math.pow(0.5, a_mixCascadeLength);
+
+			double countryFactor = Math.max(Math.min((double)a_cascade.getNumberOfCountries(), 3.0), 1.0);
+			double operatorFactor = Math.max(Math.min((double)a_cascade.getNumberOfOperators(), 3.0), 1.0);
+
+
+
 			/* get the integer part of the product -> 0 <= anonLevel <= 10 */
-			m_anonLevel = (int) (userFactor * trafficFactor * (double) (ANON_LEVEL_MAX));
+			m_anonLevel = (int) (userFactor * (countryFactor + operatorFactor) +
+								  // "good" cascades always get a 40% minimum
+								(countryFactor - 1.0 + operatorFactor - 1.0));
 
-			// count no more than three countries, and do not subtract anon level for one country
-			int countryBonus = Math.max(Math.min(a_cascade.getNumberOfCountries(), 3) - 1, 0);
-			m_anonLevel += countryBonus;
-
-			// add a bonus for different operators an countries
-			m_anonLevel -= 1; //subtract one point; this is a penalty for only one operator
-			if (a_cascade.getNumberOfOperators() <= 1)
-			{
-				// cascades with only one operator are not secure!
-				m_anonLevel = Math.min(m_anonLevel, ANON_LEVEL_LOW);
-			}
-			else
-			{
-				// do not add more than 2 points
-				m_anonLevel += Math.min(a_cascade.getNumberOfOperators(), 3);
-				// make sure anonymity is at least as good as of single Mixes
-				m_anonLevel = Math.max(m_anonLevel, ANON_LEVEL_LOW);
-			}
 
 			// do not supersede the maximum or minimum anonymity level
 			m_anonLevel = Math.min(m_anonLevel, ANON_LEVEL_MAX);
