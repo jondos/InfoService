@@ -381,6 +381,7 @@ public class TorSocksChannel extends TorChannel
 						bChannelCreated = true;
 						break;
 					}
+					init();
 				}
 				if (!bChannelCreated)
 				{//ew were not able to establish a channel - give up and tell the peer
@@ -388,7 +389,7 @@ public class TorSocksChannel extends TorChannel
 						{0x05, 0x01, 0x00}
 						, ByteArrayUtil.copy(m_data, 3, consumedBytes - 3));
 					super.recv(socksAnswer, 0, socksAnswer.length);
-					this.closedByPeer();
+					closedByPeer();
 					return;
 				}
 				socksAnswer = ByteArrayUtil.conc(new byte[]

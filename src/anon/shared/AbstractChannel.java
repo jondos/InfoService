@@ -50,8 +50,32 @@ abstract public class AbstractChannel implements AnonChannel
 
 	public AbstractChannel()
 	{
+		init();
+	}
+
+	/** Initialises / resets the channel to a state as it were if the channel has not sent/received any data.
+	 * This call is basically used to re-initialse this channel if something goes wrong during cahnnel connect()
+	 */
+	protected void init()
+	{
 		m_bIsClosedByPeer = false;
 		m_bIsClosed = false;
+		if(m_inputStream!=null)
+			try
+			{
+				m_inputStream.close();
+			}
+			catch (Exception ex)
+			{
+			}
+		if(m_outputStream!=null)
+			try
+			{
+				m_outputStream.close();
+			}
+			catch (Exception ex)
+			{
+			}
 		m_inputStream = new ChannelInputStream(this);
 		m_outputStream = new ChannelOutputStream(this);
 	}
@@ -122,6 +146,3 @@ abstract public class AbstractChannel implements AnonChannel
 	}
 
 }
-
-
-
