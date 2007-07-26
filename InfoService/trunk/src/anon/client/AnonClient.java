@@ -850,16 +850,6 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		m_paymentInstance = new Pay(aiControlChannel);
 		if (a_keyExchangeManager.isPaymentRequired())
 		{
-			try
-			{
-				/* try to set infinite timeout as we might wait for user input */
-				a_connectedSocket.setSoTimeout(0);
-			}
-			catch (SocketException e)
-			{
-				/* ignore it */
-			}
-
 			if (!aiControlChannel.sendAccountCert())
 			{
 				return ErrorCodes.E_INTERRUPTED;
