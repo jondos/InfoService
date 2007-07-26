@@ -42,6 +42,7 @@ import org.w3c.dom.NodeList;
 import anon.util.XMLParseException;
 import anon.util.Util;
 import anon.infoservice.MixCascade;
+import anon.infoservice.MixCascade.MixPosition;
 
 /**
  * XML structure for a easy cost confirmation (without mircopayment function) which is sent to the AI by the Jap
@@ -311,7 +312,19 @@ public class XMLEasyCC implements IXMLEncodable
 
 	public Enumeration getMixIds()
 	{
-		return m_priceCerts.keys();
+		//formerly: return m_priceCerts.keys();
+		//caller will expect a list of SKIs, NOT the MixPosition objects in the hashtable, so we transform beforehand
+		Enumeration mixPositions = m_priceCerts.keys();
+		Hashtable keysOnly = new Hashtable();
+		MixPosition curPos;
+		String curId;
+		while (mixPositions.hasMoreElements() )
+		{
+			curPos = (MixPosition) mixPositions.nextElement();
+			curId = curPos.getId();
+			keysOnly.put(curId,m_priceCerts.get(curPos)); //we dont need the value, but it may not be null
+		}
+		return keysOnly.keys();
 	}
 
 	/**
@@ -326,7 +339,7 @@ public class XMLEasyCC implements IXMLEncodable
 	/**
 	 * getPriceCertElements
 	 *
-	 * @return Hashtable ( key: subjectkeyidentifier of mix (in xml: id attribute)
+	 * @return Hashtable ( key: MixCascade.MixPosition (contains subjectkeyidentifier of mix and position of mix in cascade)
 	 *                     value: hash of price certificate )
 	 */
 	public Hashtable getPriceCertHashes()
