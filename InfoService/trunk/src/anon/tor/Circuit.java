@@ -447,8 +447,10 @@ public final class Circuit implements Runnable
 			}
 			else if (cell instanceof DestroyCell)
 			{
-				int reason=cell.getPayload()[0];
-				LogHolder.log(LogLevel.DEBUG, LogType.TOR, "[TOR] recieved destroycell - circuit destroyed - reason: "+Integer.toString(reason));
+				int reason = cell.getPayload()[0];
+				LogHolder.log(LogLevel.DEBUG, LogType.TOR,
+							  "[TOR] recieved destroycell - circuit destroyed - reason: " +
+							  Integer.toString(reason));
 				m_destroyed = true;
 				destroyedByPeer();
 			}
@@ -649,7 +651,7 @@ public final class Circuit implements Runnable
 	 * @return ErrorCodes.E_CONNECT if the channel could not be established
 	 * @return ErrorCode.E_UNKNOWN otherwise
 	 */
-	protected synchronized int connectChannel(TorChannel channel, String addr, int port)
+	protected int connectChannel(TorChannel channel, String addr, int port)
 	{
 		try
 		{
@@ -659,24 +661,30 @@ public final class Circuit implements Runnable
 							  "Circuit:connectChannel() - Circuit Closed - cannot connect");
 				return ErrorCodes.E_NOT_CONNECTED;
 			}
-			m_streamCounter++;
 			Integer streamID;
-			synchronized (m_streams)
+			synchronized (this)
 			{
-				do
-				//nearly dead code (29/06/2004)
-				//	LJ OKI918
+				m_streamCounter++;
+				synchronized (m_streams)
 				{
-					streamID = new Integer(m_rand.nextInt(0xFFFF));
+					do
+					//nearly dead code (29/06/2004)
+					//	LJ OKI918
+					{
+						streamID = new Integer(m_rand.nextInt(0xFFFF));
+					}
+					while (m_streams.contains(streamID));
+					channel.setStreamID(streamID.intValue());
+					channel.setCircuit(this);
+					m_streams.put(streamID, channel);
 				}
-				while (m_streams.contains(streamID));
-				channel.setStreamID(streamID.intValue());
-				channel.setCircuit(this);
-				m_streams.put(streamID, channel);
 			}
 			if (!channel.connect(addr, port))
 			{
-				m_streams.remove(streamID);
+				synchronized (this)
+				{
+					m_streams.remove(streamID);
+				}
 				LogHolder.log(LogLevel.DEBUG, LogType.TOR,
 							  "Circuit:connectChannel() - Channel could not be created");
 				return ErrorCodes.E_CONNECT;
