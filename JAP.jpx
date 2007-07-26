@@ -163,7 +163,7 @@
   <property category="path" name="DefaultDiagram" value="diagrams"/>
   <property category="path" name="Diagram" value="diagrams"/>
   <property category="personality" name="personality" value="com.borland.jbuilder.personality.JBuilderUMLPersonality "/>
-  <property category="runtime" name="ConfigurationCount" value="5"/>
+  <property category="runtime" name="ConfigurationCount" value="6"/>
   <property category="runtime.0" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
   <property category="runtime.0" name="ConfigurationName" value="JAP"/>
   <property category="runtime.0" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
@@ -311,6 +311,10 @@
   <property category="runtime.5" name="wsimonitor.logfile" value=""/>
   <property category="runtime.5" name="wsimonitor.targethost" value=""/>
   <property category="runtime.5" name="wsimonitor.targetport" value=""/>
+  <property category="runtime.6" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
+  <property category="runtime.6" name="ConfigurationName" value="SOCKSTest"/>
+  <property category="runtime.6" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
+  <property category="runtime.6" name="application.class" value="misc.SOCKSTest"/>
   <property category="runtime.7" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
   <property category="runtime.7" name="ConfigurationName" value="Mobile"/>
   <property category="runtime.7" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
