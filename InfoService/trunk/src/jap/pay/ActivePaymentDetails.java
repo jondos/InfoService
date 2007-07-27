@@ -117,7 +117,7 @@ public class ActivePaymentDetails extends JAPDialog implements ActionListener
 		scrollingOptions.setViewportView(allOptions);
 		scrollingOptions.setBorder(BorderFactory.createEmptyBorder());
 		//get maximum size for scrollpane
-		int scrollPaneWidth = new Double(largestPanel.getWidth()).intValue() + 70; //takes border into account
+		int scrollPaneWidth = new Double(largestPanel.width).intValue() + 70; //takes border into account
 		int idealHeight = GUIUtils.getTotalSize(optionPanels).height;
 		Window parentWindow = GUIUtils.getParentWindow(getContentPane());
 		int screenHeight = (int) Math.round(GUIUtils.getCurrentScreen(parentWindow).getHeight() * 0.8) - 100;  //100 px to allow for chrome, 20% for the rest of the dialog
