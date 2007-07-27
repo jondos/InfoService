@@ -251,12 +251,12 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 			else
 			{
 				m_bttnOpen.setVisible(false);
-				htmlExtraInfo = "<br> <b>" + m_strExtraInfo + "</b>";
+				htmlExtraInfo = "<p> <b>" + m_strExtraInfo + "</b> </p>";
 			}
 		}
         if (isURL)
 		{
-		setText(selectedOption.getDetailedInfo(m_language));// + htmlExtraInfo); //links should never be shown, only confuse the user
+			setText(selectedOption.getDetailedInfo(m_language));// + htmlExtraInfo); //links should never be shown, only confuse the user
 		}
 		else
 		{

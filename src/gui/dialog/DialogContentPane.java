@@ -2127,9 +2127,34 @@ public class DialogContentPane implements JAPHelpContext.IHelpContext, IDialogOp
 			// add dummy label to set optimal width
 			m_lblSeeFullText = new JAPHtmlMultiLineLabel();
 			m_lblSeeFullText.setPreferredSize(new Dimension(getContentPane().getSize().width, 0));
+			////m_lblSeeFullText.setPreferredWidth(getContentPane().getSize().width);
 			m_titlePane.add(m_lblSeeFullText, contraints);
 			updateDialog(false);
 			m_titlePane.remove(m_lblSeeFullText);
+			if (dialog.getContentPane().getSize().height < dialog.getContentPane().getPreferredSize().height)
+			{
+				int height = dialog.getSize().height;
+				int width = dialog.getSize().width;
+				dialog.pack();
+				if (dialog.getSize().height > dialogSize.height * 1.2 ||
+					dialog.getSize().width > dialogSize.width * 1.2 )
+				{
+					dialog.setSize(width, height);
+				}
+				else
+				{
+					if (ownerDialog instanceof JDialog)
+					{
+						( (JDialog) ownerDialog).setSize(dialog.getSize());
+					}
+					else
+					{
+						( (JAPDialog) ownerDialog).setSize(dialog.getSize());
+					}
+				}
+			}
+
+
 			if (dialog.getContentPane().getSize().height < dialog.getContentPane().getPreferredSize().height)
 			{
 				// OK, text height is too big to display

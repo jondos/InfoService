@@ -200,6 +200,8 @@ public class ConfigAssistant extends JAPDialog
 		final JComboBox comboLang = new JComboBox();
 		comboLang.addItem(new LanguageMapper("en", new Locale("en", "")));
 		comboLang.addItem(new LanguageMapper("de", new Locale("de", "")));
+		comboLang.addItem(new LanguageMapper("cs", new Locale("cs", "")));
+		comboLang.addItem(new LanguageMapper("nl", new Locale("nl", "")));
 		comboLang.addItem(new LanguageMapper("fr", new Locale("fr", "")));
 		comboLang.addItem(new LanguageMapper("pt", new Locale("pt", "")));
 		comboLang.setSelectedItem(new LanguageMapper(JAPController.getLocale().getLanguage()));

@@ -34,6 +34,8 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
+import javax.swing.JScrollPane;
+import java.awt.Window;
 
 
 /**
@@ -74,7 +76,7 @@ public class ActivePaymentDetails extends JAPDialog implements ActionListener
 							  "Could not create ActivePaymentDetails: ", e);
 		}
 
-    }
+	}
 
 	private void buildDialog(Vector optionsToShow, String transferNumber, long amount, String planName)
 	{
@@ -93,6 +95,8 @@ public class ActivePaymentDetails extends JAPDialog implements ActionListener
 
 		m_c.weightx = 0;
 		Hashtable curOption;
+		JPanel allOptions = new JPanel(); //this will hold all panels for a single option, and be put inside a scollpane
+		allOptions.setLayout(new GridBagLayout() ); //we "recycle" the constraints of the main panel
 		Vector optionPanels = new Vector(); //will store all the options, so we can set them to an equal size
 		for (Enumeration options = optionsToShow.elements(); options.hasMoreElements(); )
 		{
@@ -100,13 +104,28 @@ public class ActivePaymentDetails extends JAPDialog implements ActionListener
 			m_c.gridy++;
 			JPanel curOptionPanel = buildOptionPanel(curOption, transferNumber,amount, planName);
 			optionPanels.addElement(curOptionPanel);
-			getContentPane().add(curOptionPanel,m_c);
+			allOptions.add(curOptionPanel,m_c);
 		}
 
-	    //the various option panels' widths depends on the longest String on the panel,
+		//the various option panels' widths depends on the longest String on the panel,
 		//so we make them all the same (widest) size
 		Dimension largestPanel = GUIUtils.getMaxSize(optionPanels);
 		GUIUtils.setEqualWidths(optionPanels,largestPanel);
+
+    	//add allOptions panel to the main panel, inside a scrollpand
+		JScrollPane scrollingOptions = new JScrollPane();
+		scrollingOptions.setViewportView(allOptions);
+		scrollingOptions.setBorder(BorderFactory.createEmptyBorder());
+		//get maximum size for scrollpane
+		int scrollPaneWidth = new Double(largestPanel.getWidth()).intValue() + 70; //takes border into account
+		int idealHeight = GUIUtils.getTotalSize(optionPanels).height;
+		Window parentWindow = GUIUtils.getParentWindow(getContentPane());
+		int screenHeight = (int) Math.round(GUIUtils.getCurrentScreen(parentWindow).getHeight() * 0.8) - 100;  //100 px to allow for chrome, 20% for the rest of the dialog
+		int scrollPaneHeight = Math.max(idealHeight,screenHeight);
+		scrollingOptions.setPreferredSize(new Dimension(scrollPaneWidth,scrollPaneHeight));
+		getContentPane().add(scrollingOptions,m_c);
+		scrollingOptions.revalidate();
+
 
 		m_closeButton = new JButton(JAPMessages.getString(MSG_CLOSEBUTTON));
 		m_closeButton.addActionListener(this);
@@ -127,7 +146,7 @@ public class ActivePaymentDetails extends JAPDialog implements ActionListener
 		optionPanel.add(Box.createRigidArea(new Dimension(0,10)));
 
 
-        String curDetailedInfo = (String) optionToShow.get("detailedInfo");
+		String curDetailedInfo = (String) optionToShow.get("detailedInfo");
 		JAPHtmlMultiLineLabel detailsLabel = new JAPHtmlMultiLineLabel(curDetailedInfo);
 		detailsLabel.setPreferredWidth(600);
 		detailsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -138,7 +157,7 @@ public class ActivePaymentDetails extends JAPDialog implements ActionListener
 			{
 				String extraInfoString =  (String) extraInfos.nextElement();
 				boolean isALink = true;
-	            //check if it's a link or text
+				//check if it's a link or text
 				try
 				{
 					URL urlToOpen = new URL(extraInfoString);
@@ -200,7 +219,7 @@ public class ActivePaymentDetails extends JAPDialog implements ActionListener
 			}
 
 			}
-        optionPanel.setBorder(BorderFactory.createRaisedBevelBorder());
+		optionPanel.setBorder(BorderFactory.createRaisedBevelBorder());
 		return optionPanel;
 	}
 
@@ -232,7 +251,7 @@ public class ActivePaymentDetails extends JAPDialog implements ActionListener
 	private void copyToClipboard(String link)
 	{
 		Clipboard sysClip = Toolkit.getDefaultToolkit().getSystemClipboard();
-        link = cleanupLink(link);
+		link = cleanupLink(link);
 
 
 		Transferable transfer = new StringSelection(link);
