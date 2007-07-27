@@ -2043,6 +2043,30 @@ public final class GUIUtils
 		return targetSize;
   }
 
+  /**
+   * getTotalSize: takes a Vector of JComponents and returns a Dimension with width and height
+   * equivalent to the cumulative width and height of all  the Components of the Vector
+   *
+   * Typically, you'll only use either height or width (e.g. find out how high a parent component
+   * has to be to contain all the components of the Vector)
+   *
+   * @param aComponents Vector
+   * @return Dimension
+   */
+  public static Dimension getTotalSize(Vector aComponents) {
+	  int totalWidth = 0;
+	  int totalHeight = 0;
+	  //find max width and height
+	  for (Enumeration widgets = aComponents.elements(); widgets.hasMoreElements(); )
+	  {
+		JComponent curWidget = (JComponent) widgets.nextElement();
+		totalWidth += curWidget.getPreferredSize().width;
+		totalHeight += curWidget.getPreferredSize().height;
+	  }
+	  return new Dimension(totalWidth,totalHeight);
+}
+
+
 	/**
 	 * setSizes: takes a Vector of JCoponents and sets them all to the Dimension passed as parameter
 	 * (sets preferredSize as well as maximumSize)
@@ -2058,7 +2082,7 @@ public final class GUIUtils
 		  curComp.setPreferredSize( new Dimension(aDimension.width, aDimension.height));
 		  curComp.setMaximumSize(new Dimension(aDimension.width, aDimension.height));
 	  }
-  }
+    }
 
 	/**
      * Takes a Vector of components, and sets the width of all components to the width of the Dimension

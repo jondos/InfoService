@@ -35,8 +35,6 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Frame;
-import java.awt.Window;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -56,15 +54,12 @@ import javax.swing.border.LineBorder;
 
 import anon.infoservice.MixCascade;
 import anon.infoservice.StatusInfo;
-import anon.proxy.IProxyListener;
 import gui.GUIUtils;
 import gui.dialog.JAPDialog;
 import gui.JAPMessages;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import gui.PopupMenu;
-import javax.swing.JDialog;
 import anon.infoservice.JavaVersionDBEntry;
 
 final public class JAPViewIconified extends JWindow implements ActionListener
@@ -78,8 +73,6 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 	private static final String MSG_TT_SWITCH_ANONYMITY =
 		JAPViewIconified.class.getName() + "_ttSwitchAnonymity";
 
-
-	private static final int MAX_CASCADE_NAME_LENGTH = 30;
 
 	private static final String STR_HIDDEN_WINDOW = Double.toString(Math.random());
 	private static JFrame m_frameParent;
@@ -411,6 +404,8 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		{
 			try
 			{
+
+				//System.out.println(getLocationOnScreen());
 				/*
 				if (isVisible())
 				{

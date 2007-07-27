@@ -1486,7 +1486,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		final JAPDialog d = new JAPDialog(getRootPanel(), JAPMessages.getString(MSG_CHARGETITLE), true);
 		d.setDefaultCloseOperation(JAPDialog.DISPOSE_ON_CLOSE);
-		d.setResizable(true);
+		d.setResizable(false);
 		doChargeAccount(new FixedReturnAccountRunnable(selectedAccount), d, null, null, new Vector(),true);
 		d.setLocationCenteredOnOwner();
 		d.setVisible(true);
@@ -2030,7 +2030,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	{
 		final JAPDialog a_parentDialog = new JAPDialog(getRootPanel(), JAPMessages.getString(MSG_ACCOUNTCREATE), true);
 		a_parentDialog.setDefaultCloseOperation(JAPDialog.DO_NOTHING_ON_CLOSE);
-		a_parentDialog.setResizable(true);
+		a_parentDialog.setResizable(false);
 
 		/******************** get available JPIs   ********************/
 		WorkerContentPane.IReturnRunnable fetchJpisThread = new WorkerContentPane.IReturnRunnable()
