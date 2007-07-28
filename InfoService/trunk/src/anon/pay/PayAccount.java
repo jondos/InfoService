@@ -766,6 +766,7 @@ public class PayAccount implements IXMLEncodable
 
 		// save in the account object
 		setAccountInfo(info); // do not access field directly here!!
+		fireChangeEvent();
 		return info;
 	}
 

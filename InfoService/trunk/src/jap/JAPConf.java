@@ -809,7 +809,10 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 							else if (a_value instanceof PayAccount)
 							{
 								// charge existing account
-								m_accountSettings.doChargeAccount((PayAccount)a_value);
+								//m_accountSettings.doChargeAccount((PayAccount)a_value);
+
+								//show transaction for existing account
+								m_accountSettings.showOpenTransaction((PayAccount)a_value);
 							}
 						}
 					}).start();

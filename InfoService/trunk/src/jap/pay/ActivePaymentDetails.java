@@ -36,6 +36,7 @@ import logging.LogType;
 import platform.AbstractOS;
 import javax.swing.JScrollPane;
 import java.awt.Window;
+import jap.JAPController;
 
 
 /**
@@ -234,6 +235,16 @@ public class ActivePaymentDetails extends JAPDialog implements ActionListener
 
 	public void openURL(String link)
 	{
+		if (!JAPController.getInstance().isAnonConnected() && JAPController.getInstance().getAnonMode())
+		{
+			/*
+			 * JAP still tries to connect but fails... Switch of the anonymous connection so that
+			 * the site may be opened in the browser window.
+			 */
+			JAPController.getInstance().stopAnonModeWait();
+		}
+
+
 		AbstractOS os = AbstractOS.getInstance();
 		link = cleanupLink(link);
 		try

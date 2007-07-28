@@ -3099,6 +3099,25 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	}
 
+	public void stopAnonModeWait()
+	{
+		synchronized (m_Controller.m_finishSync)
+		{
+			while (m_Controller.getAnonMode() || m_Controller.isAnonConnected())
+			{
+				m_Controller.setAnonMode(false);
+				LogHolder.log(LogLevel.NOTICE, LogType.THREAD, "Waiting for finish of AN.ON connection...");
+				try
+				{
+					m_Controller.m_finishSync.wait(500);
+				}
+				catch (InterruptedException a_e)
+				{
+				}
+			}
+		}
+}
+
 	public void setAnonMode(final boolean a_anonModeSelected)
 	{
 		if (!m_bShutdown || !a_anonModeSelected)
@@ -3474,22 +3493,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 									JAPMessages.getString(MSG_FINISHING_ANON));
 								m_Controller.setAnonMode(false);
 								// Wait until anon mode is disabled");
-								synchronized (m_Controller.m_finishSync)
-								{
-									while (m_Controller.getAnonMode() || m_Controller.isAnonConnected())
-									{
-										m_Controller.setAnonMode(false);
-										LogHolder.log(LogLevel.NOTICE, LogType.THREAD,
-													  "Waiting for finish of AN.ON connection...");
-										try
-										{
-											m_Controller.m_finishSync.wait(500);
-										}
-										catch (InterruptedException a_e)
-										{
-										}
-									}
-								}
+								m_Controller.stopAnonModeWait();
 
 								//Wait until all Jobs are finished....
 								LogHolder.log(LogLevel.NOTICE, LogType.THREAD, "Finishing all AN.ON jobs...");

@@ -303,6 +303,15 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 
 	public void openURL()
 	{
+		if (!JAPController.getInstance().isAnonConnected() && JAPController.getInstance().getAnonMode())
+		{
+			/*
+			 * JAP still tries to connect but fails... Switch of the anonymous connection so that
+			 * the site may be opened in the browser window.
+			 */
+			JAPController.getInstance().stopAnonModeWait();
+		}
+
 		AbstractOS os = AbstractOS.getInstance();
 		String link = m_strExtraInfo;
 		link = Util.replaceAll(link, "<br>", "");
