@@ -67,6 +67,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import anon.util.XMLUtil;
 import anon.pay.PaymentInstanceDBEntry;
+import gui.dialog.WorkerContentPane;
 
 /** This dialog shows an overview of transaction numbers for an account
  *
@@ -93,7 +94,8 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 		getName() + "_status";
 	private static final String MSG_TRANSACTION_DATE = TransactionOverviewDialog.class.
 		getName() + "_transaction_date";
-	private static final String MSG_DETAILS_FAILED = TransactionOverviewDialog.class.getName() + "_details_failed";
+	public static final String MSG_DETAILS_FAILED = TransactionOverviewDialog.class.getName() + "_details_failed";
+	public static final String MSG_FETCHING_TAN = TransactionOverviewDialog.class.getName() + "_fetchingTAN";
 	private static final String MSG_ACCOUNTNUMBER = TransactionOverviewDialog.class.getName() + "_accountnumber";
 	private static final String MSG_VOLUMEPLAN = TransactionOverviewDialog.class.getName() + "_volumeplan";
 	private static final String MSG_PAYMENTMETHOD = TransactionOverviewDialog.class.getName() + "_paymentmethod";
@@ -204,7 +206,6 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 				//get all transactions certs for all accounts
 				Vector transCerts = new Vector();
 				PayAccount curAccount;
-				String language = JAPController.getLocale().getLanguage();
 				XMLTransactionOverview overview;
 				for (Enumeration allAccounts = m_accounts.elements(); allAccounts.hasMoreElements(); )
 				{
@@ -217,7 +218,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 
 				}
 				//put TAN for each transCert into an XMLTransacton Overview
-				overview = new XMLTransactionOverview(language);
+				overview = new XMLTransactionOverview(JAPMessages.getLocale().getLanguage());
 				for (int i = 0; i < transCerts.size(); i++)
 				{
 					XMLTransCert cert = (XMLTransCert) transCerts.elementAt(i);
@@ -232,6 +233,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 					biConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
 					biConn.authenticate(curAccount.getAccountCertificate(), curAccount.getPrivateKey());
 					overview = biConn.fetchTransactionOverview(overview);
+					biConn.disconnect();
 					if (overview == null)
 					{
 						throw new Exception("JPI returned error message rather than transaction overview");
@@ -299,7 +301,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 			//get transactionnumber of selected row in table
 			int selectedRow = m_transactionsTable.getSelectedRow();
 			//this will break if the layout/order of columns of the table is changed, is there a way to get to column by name/id/?
-			String transfernumber = (String) m_transactionsTable.getModel().getValueAt(selectedRow, 1); //1 for second column = transfernumber
+			final String transferNumber = (String) m_transactionsTable.getModel().getValueAt(selectedRow, 1); //1 for second column = transfernumber
 			Object value = m_transactionsTable.getModel().getValueAt(selectedRow, 3);//fourth column
 			long amount = ((TablecellAmount) value).getLongValue();
 			String status = (String) m_transactionsTable.getModel().getValueAt(selectedRow,6);
@@ -309,12 +311,70 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 			{
 				isCompleted = true;
 			}
+			final PayAccount m_account = (PayAccount) m_accounts.elementAt(0); //just to get it to compile
 
-			PayAccount m_account = (PayAccount) m_accounts.elementAt(0); //just to get it to compile
-			BIConnection biConn = new BIConnection(m_account.getBI());
-			biConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
-			biConn.authenticate(m_account.getAccountCertificate(), m_account.getPrivateKey());
-			IXMLEncodable xmlReply = biConn.fetchPaymentData(transfernumber);
+			JAPDialog dialog =
+				new JAPDialog(this, JAPMessages.getString(TransactionOverviewDialog.MSG_FETCHING_TAN));
+			WorkerContentPane.IReturnRunnable run2 =
+				new WorkerContentPane.IReturnRunnable()
+			{
+				Object xmlReply;
+				public void run()
+				{
+					try
+					{
+						BIConnection biConn = new BIConnection(m_account.getBI());
+						biConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
+						biConn.authenticate(m_account.getAccountCertificate(), m_account.getPrivateKey());
+
+						biConn.connect(JAPModel.getInstance().
+									   getPaymentProxyInterface());
+						biConn.authenticate(m_account.getAccountCertificate(),
+											m_account.getPrivateKey());
+
+						xmlReply = biConn.fetchPaymentData(
+							new Long(transferNumber).toString());
+					}
+					catch (Exception a_e)
+					{
+						xmlReply = a_e;
+					}
+				}
+
+				public Object getValue()
+				{
+					return xmlReply;
+				}
+			};
+
+			WorkerContentPane pane2 =
+				new WorkerContentPane(dialog,
+									  JAPMessages.getString(TransactionOverviewDialog.MSG_FETCHING_TAN), run2);
+
+			pane2.updateDialog();
+			dialog.pack();
+			dialog.setVisible(true);
+
+
+			if (run2.getValue() == null)
+			{
+				// interrupted
+				return;
+			}
+			else if (run2.getValue() instanceof Exception &&
+					 ! (run2.getValue() instanceof XMLErrorMessage))
+			{
+				throw (Exception) run2.getValue();
+			}
+			else if (! (run2.getValue() instanceof IXMLEncodable))
+			{
+				throw new Exception("Illegal return value!");
+			}
+
+
+			IXMLEncodable xmlReply = (IXMLEncodable)run2.getValue();
+
+
 			//biConn will return XMLErrorMessage if payment is active (= no matching record in passivepayments)
 			//(the transfers table alone does not associate a payment method or type with a transfernumber)
 			if (xmlReply instanceof XMLErrorMessage)
@@ -327,7 +387,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 					    JAPDialog.showMessageDialog(this,JAPMessages.getString(MSG_PAYMENT_COMPLETED));
 					} else
 					{
-						showActivePaymentDialog(this, transfernumber, amount, m_account, planName);
+						showActivePaymentDialog(this, transferNumber, amount, m_account, planName);
 					}
 				}
 				else
@@ -336,7 +396,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 				}
 			} else
 			{
-				showPassivePaymentDialog(this, (XMLPassivePayment) xmlReply, Long.parseLong(transfernumber), m_account.getAccountNumber());
+				showPassivePaymentDialog(this, (XMLPassivePayment) xmlReply, Long.parseLong(transferNumber), m_account.getAccountNumber());
 			}
 
 		} catch (Exception e)

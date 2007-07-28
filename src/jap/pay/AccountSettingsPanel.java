@@ -145,6 +145,7 @@ import anon.infoservice.IMutableProxyInterface;
 import java.util.Calendar;
 import anon.pay.xml.XMLTransactionOverview;
 import anon.util.IXMLEncodable;
+import java.util.Hashtable;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -319,13 +320,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		AccountSettingsPanel.class.getName() + "_newCaptchaHint";
 
 
-	private static final String MSG_SHOW_TRANSACTION_DETAILS =
+	public static final String MSG_SHOW_TRANSACTION_DETAILS =
 		AccountSettingsPanel.class.getName() + "_showTransactionDetails";
-	private static final String MSG_NO_TRANSACTION =
+	public static final String MSG_NO_TRANSACTION =
 		AccountSettingsPanel.class.getName() + "_noTransaction";
 	public static final String MSG_EXPIRED =
 		AccountSettingsPanel.class.getName() + "_expired";
-	private static final String MSG_NO_CREDIT =
+	public static final String MSG_NO_CREDIT =
 		AccountSettingsPanel.class.getName() + "_noCredit";
 	private static final String MSG_TERMS_AND_COND_DESC =
 		AccountSettingsPanel.class.getName() + "_termsAndConditionsDescription";
@@ -1051,56 +1052,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					{
 						if (m_labelVolume.getForeground() == Color.blue)
 						{
-							/*
-							PayAccount selectedAccount = getSelectedAccount();
-							Vector transCerts = selectedAccount.getTransCerts();
-							if (selectedAccount != null && transCerts.size() > 0)
-							{
-								try
-								{
-									BIConnection biConn = new BIConnection(selectedAccount.getBI());
-									biConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
-									biConn.authenticate(selectedAccount.getAccountCertificate(),
-										selectedAccount.getPrivateKey());
-									long transferNumber =
-										((XMLTransCert)transCerts.elementAt(0)).getTransferNumber();
-									IXMLEncodable xmlReply = biConn.fetchPaymentData(
-										new Long(transferNumber).toString());
-									//biConn will return XMLErrorMessage if payment is active (= no matching record in passivepayments)
-									//(the transfers table alone does not associate a payment method or type with a transfernumber)
-									if (xmlReply instanceof XMLErrorMessage)
-									{
-										XMLErrorMessage repliedMessage = (XMLErrorMessage) xmlReply;
-										if (repliedMessage.getErrorCode() ==
-											XMLErrorMessage.ERR_NO_RECORD_FOUND)
-										{
-											TransactionOverviewDialog.showActivePaymentDialog(
-												jap.JAPConf.getInstance(), transferNumber, amount,
-												selectedAccount, planName);
-
-										}
-										else
-										{
-											JAPDialog.showMessageDialog(this,
-												JAPMessages.getString(MSG_DETAILS_FAILED));
-										}
-									}
-									else
-									{
-										TransactionOverviewDialog.showPassivePaymentDialog(jap.JAPConf.getInstance(),
-											(XMLPassivePayment) xmlReply,
-											transferNumber, selectedAccount.getAccountNumber());
-									}
-
-								}
-								catch (Exception e)
-								{
-									LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
-												  "Cannot connect to Payment Instance: " + e.getMessage());
-									LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, e);
-									showPIerror(jap.JAPConf.getInstance().getContentPane(), e);
-								}
-							}*/
+							showOpenTransaction(getSelectedAccount());
 						}
 					}
 					else if (source == m_labelTermsAndConditions)
@@ -1317,14 +1269,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				else if (balance.getSpent() == 0 && !expired)
 				{
 					m_labelVolume.setText(JAPMessages.getString(MSG_NO_TRANSACTION));
-					/** @todo activate if transaction may be fetched and shown */
-					/*if (selectedAccount.getTransCerts().size() > 0)
+					if (selectedAccount.getTransCerts().size() > 0)
 					{
 						m_labelVolume.setToolTipText(JAPMessages.getString(MSG_SHOW_TRANSACTION_DETAILS));
 						m_labelVolume.setForeground(Color.blue);
 						m_labelVolume.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 					}
-					else*/
+					else
 					{
 						m_labelVolume.setToolTipText(null);
 						m_labelVolume.setForeground(m_labelValid.getForeground());
@@ -2021,6 +1972,174 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 	};
 
+	public void showOpenTransaction(PayAccount a_account)
+	{
+		/** @todo Must be refactored completely!!!! Really ugly mad code... */
+		final PayAccount selectedAccount = a_account;
+		final Vector transCerts = selectedAccount.getTransCerts();
+		if (selectedAccount != null && transCerts.size() > 0)
+		{
+			try
+			{
+				final long transferNumber =
+					( (XMLTransCert) transCerts.elementAt(0)).getTransferNumber();
+				final BIConnection biConn = new BIConnection(selectedAccount.getBI());
+
+				JAPDialog dialog =
+					new JAPDialog(AccountSettingsPanel.this.getRootPanel(),
+								  JAPMessages.getString(TransactionOverviewDialog.MSG_FETCHING_TAN), true);
+				WorkerContentPane.IReturnRunnable run =
+					new WorkerContentPane.IReturnRunnable()
+				{
+					Object data;
+					public void run()
+					{
+						try
+						{
+							XMLTransactionOverview overview;
+
+							biConn.connect(JAPModel.getInstance().
+										   getPaymentProxyInterface());
+							biConn.authenticate(selectedAccount.getAccountCertificate(),
+												selectedAccount.getPrivateKey());
+							overview =
+								new XMLTransactionOverview(JAPMessages.getLocale().
+								getLanguage());
+							overview.addTan(transferNumber);
+							overview = biConn.fetchTransactionOverview(overview);
+							biConn.disconnect();
+							if (overview == null)
+							{
+								throw new Exception(
+									"JPI returned error message rather than transaction overview");
+							}
+							data = overview.getDataForTransaction(transferNumber);
+
+						}
+						catch (Exception a_e)
+						{
+							data = a_e;
+						}
+					}
+
+					public Object getValue()
+					{
+						return data;
+					}
+				};
+				WorkerContentPane pane =
+					new WorkerContentPane(dialog,
+										  JAPMessages.getString(TransactionOverviewDialog.MSG_FETCHING_TAN), run);
+
+				WorkerContentPane.IReturnRunnable run2 =
+					new WorkerContentPane.IReturnRunnable()
+				{
+					Object xmlReply;
+					public void run()
+					{
+						try
+						{
+							biConn.connect(JAPModel.getInstance().
+										   getPaymentProxyInterface());
+							biConn.authenticate(selectedAccount.getAccountCertificate(),
+												selectedAccount.getPrivateKey());
+
+							xmlReply = biConn.fetchPaymentData(
+								new Long(transferNumber).toString());
+						}
+						catch (Exception a_e)
+						{
+							xmlReply = a_e;
+						}
+					}
+
+					public Object getValue()
+					{
+						return xmlReply;
+					}
+				};
+
+				WorkerContentPane pane2 =
+					new WorkerContentPane(dialog,
+										  JAPMessages.getString(TransactionOverviewDialog.MSG_FETCHING_TAN), pane, run2);
+
+				pane.updateDialog();
+				dialog.pack();
+				dialog.setVisible(true);
+
+				if (run.getValue() == null)
+				{
+					// interrupted
+					return;
+				}
+				else if (run.getValue() instanceof Exception)
+				{
+					throw (Exception) run.getValue();
+				}
+				else if (! (run.getValue() instanceof Hashtable))
+				{
+					throw new Exception("Illegal return value!");
+				}
+
+				if (run2.getValue() == null)
+				{
+					// interrupted
+					return;
+				}
+				if (run2.getValue() instanceof Exception &&
+					! (run2.getValue() instanceof XMLErrorMessage))
+				{
+					throw (Exception) run2.getValue();
+				}
+				else if (! (run2.getValue() instanceof IXMLEncodable))
+				{
+					throw new Exception("Illegal return value!");
+				}
+
+				IXMLEncodable xmlReply = (IXMLEncodable) run2.getValue();
+
+				long amount =
+					Long.parseLong( (String) ( (Hashtable) run.getValue()).get(XMLTransactionOverview.
+					KEY_AMOUNT));
+				String planName = (String) ( (Hashtable) run.getValue()).get(XMLTransactionOverview.
+					KEY_VOLUMEPLAN);
+
+				//biConn will return XMLErrorMessage if payment is active (= no matching record in passivepayments)
+				//(the transfers table alone does not associate a payment method or type with a transfernumber)
+				if (xmlReply instanceof XMLErrorMessage)
+				{
+					XMLErrorMessage repliedMessage = (XMLErrorMessage) xmlReply;
+					if (repliedMessage.getErrorCode() ==
+						XMLErrorMessage.ERR_NO_RECORD_FOUND)
+					{
+						TransactionOverviewDialog.showActivePaymentDialog(
+							jap.JAPConf.getInstance(), new Long(transferNumber).toString(),
+							amount, selectedAccount, planName);
+					}
+					else
+					{
+						JAPDialog.showMessageDialog(
+							AccountSettingsPanel.this.getRootPanel(),
+							//JAPMessages.getString(MSG_DETAILS_FAILED));
+							JAPMessages.getString(TransactionOverviewDialog.MSG_DETAILS_FAILED));
+					}
+				}
+				else
+				{
+					TransactionOverviewDialog.showPassivePaymentDialog(jap.JAPConf.getInstance(),
+						(XMLPassivePayment) xmlReply,
+						transferNumber, selectedAccount.getAccountNumber());
+				}
+
+			}
+			catch (Exception e)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+							  "Cannot connect to Payment Instance!", e);
+				showPIerror(jap.JAPConf.getInstance().getContentPane(), e);
+			}
+		}
+	}
 
 	/**
 	 *
@@ -2243,7 +2362,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			public void run()
 			{
 				m_bReady = false;
-
 				while (!Thread.currentThread().isInterrupted())
 				{
 					try
@@ -2270,6 +2388,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 							//User has not pressed cancel and no io exception occured
 							showPIerror(a_parentDialog.getContentPane(), ex);
 						}
+						else
+						{
+							LogHolder.log(LogLevel.WARNING, LogType.GUI, ex);
+						}
+
 						Thread.currentThread().interrupt();
 						break;
 					}
@@ -2498,6 +2621,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				{
 					/** Select new account */
 					m_listAccounts.setSelectedValue(doIt.getValue(), true);
+					PayAccount account = getSelectedAccount();
+					if (account != null)
+					{
+						account.updated();
+					}
 					/*
 						  if ( ( (Boolean) exportThread.getValue()).booleanValue())
 						  {
