@@ -69,6 +69,8 @@ public final class Circuit implements Runnable
 	private Hashtable m_streams;
 
 	private volatile int m_State;
+	//Workaround if to many relay cells signals error -> just shutdown the circuit...
+	private volatile int m_iRelayErrors;
 
 	///Is this circuit destroyed?
 	private final static int STATE_CLOSED = 0;
@@ -131,6 +133,7 @@ public final class Circuit implements Runnable
 		this.m_rand = new MyRandom(new SecureRandom());
 		m_State = STATE_CREATING;
 		m_destroyed = false;
+		m_iRelayErrors=0;
 		m_cellqueueSend = new CellQueue();
 		m_threadSendCellLoop = new Thread(this, "Tor - Circuit - SendCellLoop");
 		m_threadSendCellLoop.setDaemon(true);
@@ -144,6 +147,8 @@ public final class Circuit implements Runnable
 			m_sendCellCounter += value;
 		}
 	}
+
+
 
 	/**
 	 * creates a circuit and connects to all onionrouters
@@ -407,7 +412,12 @@ public final class Circuit implements Runnable
 							TorChannel channel = (TorChannel) m_streams.get(streamID);
 							if (channel != null)
 							{
-								channel.dispatchCell(c);
+								if(channel.dispatchCell(c)!=ErrorCodes.E_SUCCESS)
+								{
+									m_iRelayErrors++;
+									if(m_iRelayErrors>10)
+										shutdown();
+								}
 							}
 							else
 							{
@@ -662,6 +672,7 @@ public final class Circuit implements Runnable
 				return ErrorCodes.E_NOT_CONNECTED;
 			}
 			Integer streamID;
+			int ret=ErrorCodes.E_SUCCESS;
 			synchronized (this)
 			{
 				m_streamCounter++;
@@ -687,14 +698,14 @@ public final class Circuit implements Runnable
 				}
 				LogHolder.log(LogLevel.DEBUG, LogType.TOR,
 							  "Circuit:connectChannel() - Channel could not be created");
-				return ErrorCodes.E_CONNECT;
+				ret=ErrorCodes.E_CONNECT;
 			}
 
 			if (m_streamCounter >= m_MaxStreamsPerCircuit)
 			{
 				shutdown();
 			}
-			return ErrorCodes.E_SUCCESS;
+			return ret;
 		}
 		catch (Throwable t)
 		{

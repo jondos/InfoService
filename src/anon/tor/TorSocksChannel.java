@@ -37,6 +37,7 @@ import anon.ErrorCodes;
 import logging.LogHolder;
 import logging.LogType;
 import logging.LogLevel;
+import java.util.Hashtable;
 
 /**
  * @author stefan
@@ -62,7 +63,7 @@ public class TorSocksChannel extends TorChannel
 		m_state = SOCKS_WAIT_FOR_VERSION;
 		m_data = null;
 		m_Tor = tor;
-		LogHolder.log(LogLevel.DEBUG,LogType.TOR,"new TorSocksChannel() - object created.");
+		LogHolder.log(LogLevel.DEBUG, LogType.TOR, "new TorSocksChannel() - object created.");
 	}
 
 	/** Called if some bytes should be send over this Sock channel
@@ -258,14 +259,17 @@ public class TorSocksChannel extends TorChannel
 				addr = sb.toString();
 			}
 			boolean connected = false;
+			setDoNotCloseChannelOnErrorDuringConnect(true);
 			//	connect
-			while (!connected)
+			int tries = 0;
+			Hashtable excludeCircuits=new Hashtable();
+			while (!connected && tries < 3)
 			{
 				connected = true;
+				Circuit circ=null;
 				try
 				{
-					Circuit circ;
-					circ = m_Tor.getCircuitForDestination(addr, port);
+					circ = m_Tor.getCircuitForDestination(addr, port,excludeCircuits);
 					if (circ == null) //connection error
 					{
 						socksAnswer = new byte[]
@@ -278,12 +282,26 @@ public class TorSocksChannel extends TorChannel
 					if (circ.connectChannel(this, addr, port) != ErrorCodes.E_SUCCESS)
 					{
 						connected = false;
+						excludeCircuits.put(circ,circ);
 					}
 				}
 				catch (IOException ex)
 				{
+					if(circ!=null)
+						excludeCircuits.put(circ,circ);
 					connected = false;
 				}
+				//init();
+				tries++;
+			}
+			if (!connected)
+			{
+				socksAnswer = new byte[]
+						{
+						0x00, 91, 0x00, 0, 0, 0, 0, 0};
+					super.recv(socksAnswer, 0, socksAnswer.length);
+				closedByPeer();
+				return;
 			}
 
 			socksAnswer = new byte[]
@@ -365,13 +383,15 @@ public class TorSocksChannel extends TorChannel
 
 			if (addr != null) //we found an address
 			{
+				Hashtable excludeCircuits=new Hashtable();
 				boolean bChannelCreated = false;
-				for (int tries = 0; tries < 3; tries++)//try 3 times to esatblish a channel trough the tor network
+				setDoNotCloseChannelOnErrorDuringConnect(true);
+				for (int tries = 0; tries < 3; tries++) //try 3 times to esatblish a channel trough the tor network
 				{
 					Circuit circ;
-					circ = m_Tor.getCircuitForDestination(addr, port);
+					circ = m_Tor.getCircuitForDestination(addr, port,excludeCircuits);
 					if (circ == null) //circuit creation error --> because the circuit establishment
-						//proceudre itselves tries 5 times we can give up here directly...
+					//proceudre itselves tries 5 times we can give up here directly...
 					{
 						break;
 					}
@@ -381,10 +401,11 @@ public class TorSocksChannel extends TorChannel
 						bChannelCreated = true;
 						break;
 					}
-					init();
+					excludeCircuits.put(circ,circ);
+					//init();
 				}
 				if (!bChannelCreated)
-				{//ew were not able to establish a channel - give up and tell the peer
+				{ //ew were not able to establish a channel - give up and tell the peer
 					socksAnswer = ByteArrayUtil.conc(new byte[]
 						{0x05, 0x01, 0x00}
 						, ByteArrayUtil.copy(m_data, 3, consumedBytes - 3));

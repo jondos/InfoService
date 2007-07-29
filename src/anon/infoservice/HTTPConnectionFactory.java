@@ -81,6 +81,9 @@ public class HTTPConnectionFactory
 	 */
 	private boolean m_bUseAuth = false;
 
+	private Class m_classHTTPCLient_ContentEncodingeModule; //cache the class of the
+	//HTTPClient.ContentEncodingModule for performance reasons
+
 
 	/**
 	 * This creates a new instance of HTTPConnectionFactory. This is only used for setting some
@@ -91,6 +94,13 @@ public class HTTPConnectionFactory
 		/* default is to use no proxy for all new HTTPConnection instances */
 		setNewProxySettings(null, false);
 		m_timeout = 10;
+		try
+		{
+			m_classHTTPCLient_ContentEncodingeModule = Class.forName("HTTPClient.ContentEncodingModule");
+		}
+		catch (ClassNotFoundException ex)
+		{
+		}
 	}
 
 	/**
@@ -277,7 +287,7 @@ public class HTTPConnectionFactory
 		{
 			if ((a_encoding & HTTP_ENCODING_ZLIB) > 0)
 			{
-				if (a_bGet)
+/*				if (a_bGet)
 				{
 					replaceHeader(newConnection, new NVPair("Accept-Encoding", HTTP_ENCODING_ZLIB_STRING));
 				}
@@ -285,9 +295,14 @@ public class HTTPConnectionFactory
 				{
 					replaceHeader(newConnection, new NVPair("Content-Encoding", HTTP_ENCODING_ZLIB_STRING));
 				}
-			}
+*/
+			newConnection.addModule(m_classHTTPCLient_ContentEncodingeModule,-1);
 		}
-
+		}
+		else
+		{
+			newConnection.removeModule( m_classHTTPCLient_ContentEncodingeModule);
+		}
 		newConnection.setAllowUserInteraction(false);
 		/* set the timeout for all network operations */
 		newConnection.setTimeout(getTimeout() * 1000);
