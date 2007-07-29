@@ -287,7 +287,7 @@ public class HTTPConnectionFactory
 		{
 			if ((a_encoding & HTTP_ENCODING_ZLIB) > 0)
 			{
-/*				if (a_bGet)
+				if (a_bGet)
 				{
 					replaceHeader(newConnection, new NVPair("Accept-Encoding", HTTP_ENCODING_ZLIB_STRING));
 				}
@@ -295,14 +295,14 @@ public class HTTPConnectionFactory
 				{
 					replaceHeader(newConnection, new NVPair("Content-Encoding", HTTP_ENCODING_ZLIB_STRING));
 				}
-*/
-			newConnection.addModule(m_classHTTPCLient_ContentEncodingeModule,-1);
+
+//			newConnection.addModule(m_classHTTPCLient_ContentEncodingeModule,-1);
+			}
 		}
-		}
-		else
+/*		else
 		{
 			newConnection.removeModule( m_classHTTPCLient_ContentEncodingeModule);
-		}
+		}*/
 		newConnection.setAllowUserInteraction(false);
 		/* set the timeout for all network operations */
 		newConnection.setTimeout(getTimeout() * 1000);
