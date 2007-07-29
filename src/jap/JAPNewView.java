@@ -835,10 +835,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.weightx = 1;
 		northPanel.add(new JSeparator(), c);
 
+		m_labelOwnActivity = new JLabel(JAPMessages.getString("ngActivity"), SwingConstants.RIGHT);
 //------------------ Payment Panel
 		if (m_bWithPayment)
 		{
-			m_flippingPanelPayment = new PaymentMainPanel(this);
+			m_flippingPanelPayment = new PaymentMainPanel(this, m_labelOwnActivity);
 			c.fill = GridBagConstraints.HORIZONTAL;
 			c.weightx = 1;
 			c.anchor = GridBagConstraints.NORTHWEST;
@@ -894,7 +895,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelOwnTrafficUnit = new JLabel(JAPMessages.getString("Byte"));
 		c1.gridx = 3;
 		p.add(m_labelOwnTrafficUnit, c1);
-		m_labelOwnActivity = new JLabel(JAPMessages.getString("ngActivity"), SwingConstants.RIGHT);
+		//m_labelOwnActivity = new JLabel(JAPMessages.getString("ngActivity"), SwingConstants.RIGHT);
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.gridx = 4;
@@ -2300,8 +2301,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			if (!JAPModel.isSmallDisplay()) //only do this on "real" Displays
 			{
 				pack(); // optimize size
-				setResizable( /*true*/true /*false*/); //2001-11-12(HF):Changed due to a Mac OS X problem during redraw of the progress bars
-				//setResizable(false);
+				//setResizable( /*true*/true /*false*/); //2001-11-12(HF):Changed due to a Mac OS X problem during redraw of the progress bars
+				setResizable(false);
 			}
 		}
 		catch (Exception e)

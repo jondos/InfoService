@@ -172,7 +172,7 @@ public class PaymentMainPanel extends FlippingPanel
 
 	private long m_spentThisSession;
 
-	public PaymentMainPanel(final JAPNewView view)
+	public PaymentMainPanel(final JAPNewView view, final JLabel a_alignLabel)
 	{
 		super(view);
 		m_view = view;
@@ -203,13 +203,18 @@ public class PaymentMainPanel extends FlippingPanel
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.gridx = 2;
 		fullPanel.add(m_BalanceText, c1);
-		JLabel label = new JLabel(JAPMessages.getString("ngActivity"), SwingConstants.RIGHT);
-		label.setVisible(false);
+		JLabel label = new JLabel("", SwingConstants.RIGHT)
+		{
+			public Dimension getPreferredSize()
+			{
+				return a_alignLabel.getPreferredSize();
+			}
+		};
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.gridx = 3;
 		c1.insets = new Insets(0, 10, 0, 0);
-		//fullPanel.add(label, c1);
+		fullPanel.add(label, c1);
 		m_BalanceProgressBar = new JAPProgressBar();
 		m_BalanceProgressBar.setMinimum(0);
 		m_BalanceProgressBar.setMaximum(5);
@@ -218,7 +223,7 @@ public class PaymentMainPanel extends FlippingPanel
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
 
-		c1.insets = new Insets(0, 5 + (int)label.getPreferredSize().getWidth() + 10, 0, 0);
+		c1.insets = new Insets(0, 5, 0, 0);
 		fullPanel.add(m_BalanceProgressBar, c1);
 
 		//Elmar: suggestion for improvement:
@@ -365,18 +370,23 @@ public class PaymentMainPanel extends FlippingPanel
 		m_BalanceTextSmall = new JLabel(" ");
 		m_BalanceTextSmall.setHorizontalAlignment(JLabel.RIGHT);
 		smallPanel.add(m_BalanceTextSmall, c1);
-		label = new JLabel(JAPMessages.getString("ngActivity"), SwingConstants.RIGHT);
-		label.setVisible(false);
+		label = new JLabel("", SwingConstants.RIGHT)
+		{
+			public Dimension getPreferredSize()
+			{
+				return a_alignLabel.getPreferredSize();
+			}
+		};
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.gridx = 3;
 		c1.insets = new Insets(0, 10, 0, 0);
-		//smallPanel.add(label, c1);
+		smallPanel.add(label, c1);
 
 		c1.gridx = 4;
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
-		c1.insets = new Insets(0, 5 + (int)label.getPreferredSize().getWidth() + 10, 0, 0);
+		c1.insets = new Insets(0, 5, 0, 0);
 		m_BalanceSmallProgressBar = new JAPProgressBar();
 		m_BalanceSmallProgressBar.setMinimum(0);
 		m_BalanceSmallProgressBar.setMaximum(5);

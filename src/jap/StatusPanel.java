@@ -45,14 +45,12 @@ import javax.swing.JPanel;
 import gui.GUIUtils;
 import gui.IStatusLine;
 import gui.JAPMessages;
-import javax.swing.JButton;
 
 /** A panel which display some status messages, one after each other*/
 public class StatusPanel extends JPanel implements Runnable, IStatusLine
 {
 	private static final String MSG_CLICK_HERE = StatusPanel.class.getName() + "_clickHere";
 
-	private int m_Height;
 	private final Object SYNC_MSG = new Object();
 	private Random m_Random;
 	private JLabel m_button;
@@ -80,7 +78,6 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 	private volatile boolean m_bRun;
 	private volatile int m_aktY;
 	private Thread m_Thread;
-	private int m_idyFont;
 
 	public StatusPanel(JLabel a_button)
 	{
@@ -156,11 +153,7 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 		});
 
 		m_Random = new Random();
-		Font font = new JLabel("Status").getFont();
-		m_Height = (int) (font.getSize() * 0.7);
-		m_Height = Math.min(m_Height, ICON_HEIGHT);
-		font = new Font(font.getName(), Font.PLAIN, m_Height);
-		m_idyFont = (ICON_HEIGHT - font.getSize()) / 2;
+
 		setLayout(null);
 		//setFont(font);
 		//setBackground(Color.red);
@@ -237,7 +230,7 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 			{
 				m_Msgs = entry;
 				entry.m_Next = entry;
-				m_aktY = 0;
+				m_aktY = ICON_HEIGHT;
 			}
 			else
 			{
@@ -260,13 +253,13 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 		{
 			if (m_Msgs == null) //zero elements
 			{
-				m_aktY = 0;
+				m_aktY = ICON_HEIGHT;
 				return;
 			}
 			if (m_Msgs.m_Id == id && m_Msgs.m_Next == m_Msgs) //one element
 			{
 				m_Msgs = null;
-				m_aktY = 0;
+				m_aktY = ICON_HEIGHT;
 			}
 			else
 			{
@@ -290,7 +283,7 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 				if (entry == m_Msgs) //remove curent entry
 				{
 					m_Msgs = entry.m_Next;
-					m_aktY = 0;
+					m_aktY = ICON_HEIGHT;
 					m_Thread.interrupt(); //display changes
 				}
 				prev.m_Next = entry.m_Next; //remove entry from list
@@ -334,10 +327,13 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 					setToolTipText(null);
 					setCursor(Cursor.getDefaultCursor());
 				}
-				g.drawString(msg, ICON_WIDTH + 2, m_aktY - m_idyFont);
+
+				//baseline drawing
+				g.drawString(msg, ICON_WIDTH + 2, g.getFont().getSize() - m_aktY);
 				if (m_Msgs.m_Icon != null)
 				{
-					g.drawImage(m_Msgs.m_Icon, 0, m_aktY - ICON_HEIGHT, this);
+					// top-left drawing
+					g.drawImage(m_Msgs.m_Icon, 0, ((getSize().height  - m_Msgs.m_Icon.getHeight(this)) / 2) - m_aktY, this);
 				}
 			}
 		}
@@ -398,11 +394,11 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 
 					if (m_Msgs == null)
 					{
-						m_aktY = 0;
+						m_aktY = ICON_HEIGHT;
 						repaint();
 						continue;
 					}
-					else if (m_Msgs.m_Next == m_Msgs && m_Msgs.listener != null && m_aktY == (ICON_HEIGHT + 1))
+					else if (m_Msgs.m_Next == m_Msgs && m_Msgs.listener != null && m_aktY == 0)
 					{
 						// there are no other status messages; leave this one on top
 						repaint();
@@ -411,18 +407,18 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 					else
 					{
 						m_Msgs = m_Msgs.m_Next;
-						m_aktY = 0;
+						m_aktY = ICON_HEIGHT;
 					}
 				}
 
 
-				for (int i = 0; i < ICON_HEIGHT + 1 && m_bRun; i++)
+				for (int i = 0; i < ICON_HEIGHT && m_bRun; i++)
 				{
 					try
 					{
-						repaint();
 						Thread.sleep(100);
-						m_aktY++;
+						m_aktY--;
+						repaint();
 					}
 					catch (InterruptedException e)
 					{
@@ -430,14 +426,13 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 						{
 							if (m_Msgs != null)
 							{
-								m_aktY = 0;
+								m_aktY = ICON_HEIGHT;
 								i = -1;
 								m_Msgs = m_Msgs.m_Next;
 							}
 						}
 					}
 				}
-
 			}
 		}
 		catch (Exception e)
