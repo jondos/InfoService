@@ -278,7 +278,7 @@ public class FlatrateDialog extends JAPDialog implements ActionListener
 
 		if (paymentSettings.getSettingValue("VolumeLimited").equals("true") )
 		{
-			m_lVolume = new JLabel(JAPUtil.formatBytesValue(Long.parseLong(paymentSettings.getSettingValue("VolumeAmount"))*1000));
+			m_lVolume = new JLabel(JAPUtil.formatBytesValueWithUnit(Long.parseLong(paymentSettings.getSettingValue("VolumeAmount"))*1000));
 		}
 		else {
 			m_lVolume = new JLabel(getString(MSG_UNLIMITED));
