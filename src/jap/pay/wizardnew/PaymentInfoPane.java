@@ -303,6 +303,8 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 
 	public void openURL()
 	{
+		String link = m_strExtraInfo;
+
 		if (!JAPController.getInstance().isAnonConnected() && JAPController.getInstance().getAnonMode())
 		{
 			/*
@@ -312,8 +314,17 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 			JAPController.getInstance().stopAnonModeWait();
 		}
 
+		if (!JAPController.getInstance().getAnonMode())
+		{
+			// convert https to http, so that JAP may show an error message
+			if (link.startsWith("https"))
+			{
+				link = "http" + link.substring(5, link.length());
+			}
+		}
+
+
 		AbstractOS os = AbstractOS.getInstance();
-		String link = m_strExtraInfo;
 		link = Util.replaceAll(link, "<br>", "");
 		link = Util.replaceAll(link, "<p>", "");
 		link = Util.replaceAll(link, "<html>", " ");
