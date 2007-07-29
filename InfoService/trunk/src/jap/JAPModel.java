@@ -71,7 +71,7 @@ public final class JAPModel extends Observable
 	public static final String AUTO_CHANGE_RESTRICT_TO_PAY = "pay";
 	public static final String AUTO_CHANGE_RESTRICT = "restrict";
 
-	public static final int MAX_FONT_SIZE = 4;
+	public static final int MAX_FONT_SIZE = 3;
 
 	// observer messages
 	public static final Integer CHANGED_INFOSERVICE_AUTO_UPDATE = new Integer(0);
