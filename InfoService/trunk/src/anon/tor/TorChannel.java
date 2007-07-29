@@ -38,6 +38,7 @@ import anon.util.ByteArrayUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.ErrorCodes;
 
 /**
  * @author stefan
@@ -51,9 +52,14 @@ public class TorChannel extends AbstractChannel
 	private volatile int m_recvcellcounter;
 	private volatile int m_sendcellcounter;
 	private volatile boolean m_bChannelCreated;
+	private volatile boolean m_bCreateError;
 	private Object m_oWaitForOpen;
 	private Object m_oSyncSendCellCounter;
 	private Object m_oSyncSend;
+	//Flag which signals if we should ignore any "close" actvity.
+	//This is basically necessary in case of error during channel establishment,
+	//so that we have a chance to retry without closing the whole channel.
+	private volatile boolean m_bDoNotCloseChannelOnError;
 
 	public TorChannel()
 	{
@@ -61,6 +67,7 @@ public class TorChannel extends AbstractChannel
 		m_oWaitForOpen = new Object();
 		m_oSyncSendCellCounter = new Object();
 		m_oSyncSend = new Object();
+		m_bDoNotCloseChannelOnError = false;
 	}
 
 	private void addToSendCellCounter(int value)
@@ -116,7 +123,7 @@ public class TorChannel extends AbstractChannel
 					while ( (m_sendcellcounter <= 0 || !m_circuit.canSendData())
 						   && ! (m_bIsClosed || m_bIsClosedByPeer))
 
-					{//@todo remove this busy waiting
+					{ //@todo remove this busy waiting
 						try
 						{
 							Thread.sleep(100);
@@ -137,8 +144,37 @@ public class TorChannel extends AbstractChannel
 		}
 	}
 
+/** Close this channel (called from inside the class) but respecting the doNotCloseOnError flag!*/
+	private void internalClose()
+	{
+		m_bCreateError = true;
+		if (!m_bDoNotCloseChannelOnError)
+		{
+			close();
+		}
+		else
+		{ //just send the close cell
+			final byte[] reason = new byte[]
+				{
+				6};
+			RelayCell cell = new RelayCell(m_circuit.getCircID(), RelayCell.RELAY_END, m_id, reason);
+			try
+			{
+				m_circuit.send(cell);
+			}
+			catch (Exception ex)
+			{
+			}
+		}
+	}
+
+	// Note: This close method always closed the channel - it will not respect
+	// the doNotCloseOnError flags - mostly because this method
+	//is called from "outside" e.g. if the socket belonging to
+	//the channel is closed.
 	public void close()
 	{
+		m_bCreateError = true;
 		super.close();
 		synchronized (m_oWaitForOpen)
 		{
@@ -149,7 +185,11 @@ public class TorChannel extends AbstractChannel
 
 	public void closedByPeer()
 	{
-		super.closedByPeer();
+		m_bCreateError = true;
+		if (!m_bDoNotCloseChannelOnError)
+		{
+			super.closedByPeer();
+		}
 		synchronized (m_oWaitForOpen)
 		{
 			m_oWaitForOpen.notify();
@@ -171,6 +211,18 @@ public class TorChannel extends AbstractChannel
 		}
 	}
 
+	/* Sets if the channel should be left open even after connection error for easy re-try.
+
+	* @param b if true, close the channel if the connection
+	* could not be established
+	* otherwise let the channel 'open' so that we can re-try to connect to the destination address
+	* using maybe another circuit
+	*/
+	protected void setDoNotCloseChannelOnErrorDuringConnect(boolean b)
+	{
+		m_bDoNotCloseChannelOnError = b;
+	}
+
 	/**
 	 * connects to a host over the Tor network
 	 * @param addr
@@ -179,7 +231,7 @@ public class TorChannel extends AbstractChannel
 	 * port
 	 * @throws ConnectException
 	 */
-	public boolean connect(String addr, int port)
+	protected boolean connect(String addr, int port)
 	{
 		try
 		{
@@ -193,20 +245,58 @@ public class TorChannel extends AbstractChannel
 			data = ByteArrayUtil.conc(data, new byte[1]);
 			RelayCell cell = new RelayCell(m_circuit.getCircID(), RelayCell.RELAY_BEGIN, m_id, data);
 			m_bChannelCreated = false;
+			m_bCreateError = false;
 			m_circuit.sendUrgent(cell);
 			synchronized (m_oWaitForOpen)
 			{
-				m_oWaitForOpen.wait(60000);
+				//I got many InterruptedExceptions here - I do not no why at the moment...
+				//Therefore the following "workaorund" to ensure, that we
+				//wait the expected time
+				long currTime = System.currentTimeMillis();
+				int waitTime = 60000;
+				while (waitTime > 0)
+				{
+					try
+					{
+						m_oWaitForOpen.wait(waitTime);
+					}
+					catch (InterruptedException e)
+					{
+						LogHolder.log(LogLevel.DEBUG, LogType.TOR,
+									  "InterruptedException in TorChannel:connect()");
+					}
+					if (m_bCreateError)
+					{
+						LogHolder.log(LogLevel.DEBUG, LogType.TOR,
+							"TorChannel - connect() - establishing channel over circuit NOT successful. Channel was closed before!");
+						return false;
+					}
+					else if (m_bChannelCreated)
+					{
+						m_bDoNotCloseChannelOnError = false;
+						LogHolder.log(LogLevel.DEBUG, LogType.TOR,
+							"TorChannel - connect() - establishing channel over circuit successful. Time needed [ms]: " +
+									  Long.toString(System.currentTimeMillis() - currTime));
+						return true;
+					}
+					long diffTime = System.currentTimeMillis() - currTime;
+					if (diffTime < 0) //the system clock was changed in a bad way...
+					{
+						return false;
+					}
+					waitTime -= diffTime;
+				}
 			}
-			if (m_bIsClosed || m_bIsClosedByPeer || !m_bChannelCreated)
-			{
-				return false;
-			}
-			return true;
+			LogHolder.log(LogLevel.DEBUG, LogType.TOR,
+				"TorChannel - connect() - establishing channel over circuit NOT successful. Timed out!");
+			internalClose();
+			return false;
 		}
 		catch (Throwable t)
 		{
-			return false;
+			LogHolder.log(LogLevel.DEBUG, LogType.TOR, "Exception in TorChannel:connect()");
+			internalClose();
+				return false;
 		}
 	}
 
@@ -215,13 +305,15 @@ public class TorChannel extends AbstractChannel
 	 * @param cell
 	 * cell
 	 */
-	public void dispatchCell(RelayCell cell)
+	public int dispatchCell(RelayCell cell)
 	{
+		int ret = ErrorCodes.E_SUCCESS;
 		switch (cell.getRelayCommand())
 		{
 			case RelayCell.RELAY_CONNECTED:
 			{
 				m_bChannelCreated = true;
+				m_bDoNotCloseChannelOnError = false;
 				synchronized (m_oWaitForOpen)
 				{
 					m_oWaitForOpen.notify();
@@ -246,7 +338,7 @@ public class TorChannel extends AbstractChannel
 					catch (Throwable t)
 					{
 						closedByPeer();
-						return;
+						return ret;
 					}
 					m_recvcellcounter += 50;
 				}
@@ -258,14 +350,19 @@ public class TorChannel extends AbstractChannel
 				catch (Exception ex)
 				{
 					closedByPeer();
-					return;
+					return ret;
 				}
 				break ;
 			}
 			case RelayCell.RELAY_END:
 			{
+				int reason = cell.getPayload()[0];
 				LogHolder.log(LogLevel.DEBUG, LogType.TOR,
-							  "RELAY_END: Relay stream closed with reason: " + cell.getRelayPayload()[0]);
+							  "RELAY_END: Relay stream closed with reason: " + reason);
+				if (reason == 1)
+				{ //unknown reason
+					ret = ErrorCodes.E_UNKNOWN;
+				}
 				closedByPeer();
 				break;
 			}
@@ -274,6 +371,7 @@ public class TorChannel extends AbstractChannel
 				closedByPeer();
 			}
 		}
+		return ret;
 	}
 
 	/**

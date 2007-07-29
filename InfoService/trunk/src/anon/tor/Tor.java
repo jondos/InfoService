@@ -80,13 +80,13 @@ public class Tor implements Runnable, AnonService
 	//list of all onion routers
 	private ORList m_orList;
 
-	//list of allowed OR's
+	//list of allowed OR's - not used at the moment
 	private Vector m_allowedORNames;
 
-	//list of allowed FirstOnionRouters
+	//list of allowed FirstOnionRouters - not used at the moment
 	private Vector m_allowedFirstORNames;
 
-	//list of allowed exitnodes
+	//list of allowed exitnodes - not used at the moment
 	private Vector m_allowedExitNodeNames;
 
 	//list of circuits
@@ -143,11 +143,11 @@ public class Tor implements Runnable, AnonService
 		//m_createNewCircuitIntervall = 60000 * 5;
 
 		m_firstORFactory = new FirstOnionRouterConnectionFactory(this);
-		m_allowedORNames = null;
+		//m_allowedORNames = null;
 
-		m_allowedFirstORNames = null;
+		//m_allowedFirstORNames = null;
 
-		m_allowedExitNodeNames = null;
+		//m_allowedExitNodeNames = null;
 
 		m_circuitLengthMin = MIN_ROUTE_LEN;
 		m_circuitLengthMax = MAX_ROUTE_LEN;
@@ -155,7 +155,7 @@ public class Tor implements Runnable, AnonService
 		m_rand = new MyRandom(new SecureRandom());
 		m_bIsStarted = false;
 		m_bIsCreatingCircuit = false;
-		m_MaxNrOfActiveCircuits = 3;
+		m_MaxNrOfActiveCircuits = 5;
 		m_activeCircuits = new Circuit[m_MaxNrOfActiveCircuits];
 		m_useDNSCache = true;
 		m_DNSCache = Database.getInstance(DNSCacheEntry.class);
@@ -170,7 +170,7 @@ public class Tor implements Runnable, AnonService
 	 * updates the ORList
 	 *
 	 */
-	private synchronized void updateORList()
+	private void updateORList()
 	{
 		synchronized (m_orList)
 		{
@@ -184,10 +184,13 @@ public class Tor implements Runnable, AnonService
 	 * host address
 	 * @param port
 	 * host port
+	 * @param exludeCircuits Contains circuits, which should not be considered
+	 * when finding an appropirated circuit for the given destination. Can be NULL or empty
 	 * @return
 	 * a circuit that can connect to the destination
 	 */
-	protected synchronized Circuit getCircuitForDestination(String addr, int port)
+	protected synchronized Circuit getCircuitForDestination(String addr, int port,
+		Hashtable exludeCircuits)
 	{
 		if (! m_bIsStarted)
 		{
@@ -215,7 +218,8 @@ public class Tor implements Runnable, AnonService
 		{
 			int circnr = ( (Integer) m_CircuitForDestination.get(key)).intValue();
 			c = m_activeCircuits[circnr];
-			if (c != null && ! c.isShutdown() && c.isAllowed(addr, port))
+			if (c != null && ! c.isShutdown() && c.isAllowed(addr, port)&&
+				(exludeCircuits==null||!exludeCircuits.containsKey(c)))
 			{
 				return c;
 			}
@@ -225,7 +229,8 @@ public class Tor implements Runnable, AnonService
 		for (int nr = 0; nr < m_MaxNrOfActiveCircuits; nr++)
 		{
 			c = m_activeCircuits[nr];
-			if (c != null && ! c.isShutdown() && c.isAllowed(addr, port))
+			if (c != null && ! c.isShutdown() && c.isAllowed(addr, port)&&
+				(exludeCircuits==null||!exludeCircuits.containsKey(c)))
 			{
 				m_CircuitForDestination.put(key, new Integer(nr));
 				if (m_KeysForCircuit[nr] == null)
@@ -622,30 +627,30 @@ public class Tor implements Runnable, AnonService
 	 * @param listOfORNames
 	 * allowed names of middle onionrouters (null = all)
 	 */
-	public void setOnionRouterList(Vector listOfORNames)
+	/*public void setOnionRouterList(Vector listOfORNames)
 	{
 		m_allowedORNames = listOfORNames;
-	}
+	}*/
 
 	/**
 	 * sets a list of allowed first onionrouters
 	 * @param listOfORNames
 	 * allowed names of the first onionrouters (null = all)
 	 */
-	public void setFirstOnionRouterList(Vector listOfORNames)
+	/*public void setFirstOnionRouterList(Vector listOfORNames)
 	{
 		m_allowedFirstORNames = listOfORNames;
-	}
+	}*/
 
 	/**
 	 * sets a list of allowed exitnodes
 	 * @param listOfORNames
 	 * allowed names of the exitnodes
 	 */
-	public void setExitNodes(Vector listOfORNames)
+	/*public void setExitNodes(Vector listOfORNames)
 	{
 		m_allowedExitNodeNames = listOfORNames;
-	}
+	}*/
 
 	/**
 	 * sets a circuit length
@@ -707,21 +712,21 @@ public class Tor implements Runnable, AnonService
 	 * @return
 	 * returns descriptions of all onionrouters
 	 */
-	public Vector getOnionRouterList()
+	/*public Vector getOnionRouterList()
 	{
 		updateORList();
 		return m_orList.getList();
-	}
+	}*/
 
 	/**
 	 * returns a list of all onion routers allowed first onion routers
 	 * @return
 	 * list of first onionrouters
 	 */
-	public Vector getFirstOnionRouterList()
+	/*public Vector getFirstOnionRouterList()
 	{
 		return this.m_allowedFirstORNames;
-	}
+	}*/
 
 	/**
 	 * creates a channel through the tor network
@@ -761,7 +766,7 @@ public class Tor implements Runnable, AnonService
 	{
 		try
 		{
-			Circuit c = getCircuitForDestination(addr, port);
+			Circuit c = getCircuitForDestination(addr, port,null);
 			return c.createChannel(addr, port);
 		}
 		catch (Exception e)

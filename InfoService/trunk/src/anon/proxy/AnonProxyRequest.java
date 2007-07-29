@@ -299,6 +299,7 @@ public final class AnonProxyRequest implements Runnable
 		}
 		catch (Exception e)
 		{
+			LogHolder.log(LogLevel.DEBUG,LogType.NET,"Exception in AnonProxyRequest - upstream loop." );
 			LogHolder.log(LogLevel.INFO, LogType.NET, e);
 		}
 		closeRequest();

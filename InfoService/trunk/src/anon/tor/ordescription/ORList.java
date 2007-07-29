@@ -107,7 +107,10 @@ final public class ORList
 			if (size() == 0||(buff=m_orlistFetcher.getRouterStatus())==null)//either first time list retrival or
 				//getting information for differential update failed
 			{
-				return parseFirstDocument(m_orlistFetcher.getAllDescriptors());
+				buff=m_orlistFetcher.getAllDescriptors();
+				if(buff==null)
+					return false;
+				return parseFirstDocument(buff);
 			}
 			else
 			{
@@ -469,7 +472,7 @@ final public class ORList
 	 * @throws Exception
 	 * @return false if document is not a valid directory, true otherwise
 	 */
-	private boolean parseFirstDocument(byte[] document) throws Exception
+	private synchronized boolean parseFirstDocument(byte[] document) throws Exception
 	{
 		LineNumberReader reader = new LineNumberReader(new InputStreamReader(new ByteArrayInputStream(
 			document)));
@@ -481,6 +484,11 @@ final public class ORList
 		{
 			return false;
 		}
+		m_countHibernate=0;
+		m_onionrouters = new Vector();
+		m_exitnodes = new Vector();
+		m_middlenodes = new Vector();
+		m_onionroutersWithNames = new Hashtable();
 
 		for (; ; )
 		{
