@@ -385,14 +385,14 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 			catch (Exception e1)
 			{}
 			m_textareaConsole.append("TotalMemory: " +
-									 JAPUtil.formatBytesValue(Runtime.getRuntime().totalMemory()) + "\n");
+									 JAPUtil.formatBytesValueWithUnit(Runtime.getRuntime().totalMemory()) + "\n");
 			try
 			{
 				Long result = (Long)
 					Runtime.class.getMethod("maxMemory", new Class[0]).invoke(
 									   Runtime.getRuntime(), new Object[0]);
 				m_textareaConsole.append("MaxMemory: " +
-										 JAPUtil.formatBytesValue(result.longValue()) + "\n");
+										 JAPUtil.formatBytesValueWithUnit(result.longValue()) + "\n");
 			}
 			catch (Exception a_e)
 			{
@@ -400,7 +400,7 @@ final public class JAPDebug extends WindowAdapter implements ActionListener, Log
 			}
 
 			m_textareaConsole.append("FreeMemory: " +
-									 JAPUtil.formatBytesValue(Runtime.getRuntime().freeMemory()) + "\n");
+									 JAPUtil.formatBytesValueWithUnit(Runtime.getRuntime().freeMemory()) + "\n");
 			m_textareaConsole.append("\n");
 			m_textareaConsole.append(JAPModel.getInstance().toString());
 		}

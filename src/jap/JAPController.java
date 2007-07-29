@@ -212,6 +212,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	private JobQueue m_anonJobQueue;
 
+	private JobQueue queueFetchAccountInfo;
+	private long m_lastBalanceUpdateMS = 0;
+	private long m_lastBalanceUpdateBytes = 0;
+	/** How many milliseconds to wait before requesting a new account statement */
+	private static final long ACCOUNT_UPDATE_INTERVAL_MS = 60000;
+
+
 
 	/**
 	 * Stores the active MixCascade.
@@ -289,6 +296,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 		m_Model = JAPModel.getInstance();
 		m_Model.setAnonConnectionChecker(new AnonConnectionChecker());
 		InfoServiceDBEntry.setMutableProxyInterface(m_Model.getInfoServiceProxyInterface());
+
+		queueFetchAccountInfo = new JobQueue("FetchAccountInfoJobQueue");
 
 		// Create observer object
 		observerVector = new Vector();
@@ -3498,6 +3507,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 								//Wait until all Jobs are finished....
 								LogHolder.log(LogLevel.NOTICE, LogType.THREAD, "Finishing all AN.ON jobs...");
 								m_Controller.m_anonJobQueue.stop();
+								m_Controller.queueFetchAccountInfo.stop();
 							}
 							catch (Throwable a_e)
 							{
@@ -4482,7 +4492,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		boolean choice = JAPDialog.showYesNoDialog(
 			getViewWindow(),
 			JAPMessages.getString("unrealBytesDesc") + "<p>" +
-			JAPMessages.getString("unrealBytesDifference") + " " + JAPUtil.formatBytesValue(a_bytes),
+			JAPMessages.getString("unrealBytesDifference") + " " + JAPUtil.formatBytesValueWithUnit(a_bytes),
 			JAPMessages.getString("unrealBytesTitle"),adapter
 			);
 
@@ -4542,8 +4552,44 @@ public final class JAPController extends Observable implements IProxyListener, O
 		doIt.start();
 	}
 
-	public void packetMixed(long a_totalBytes)
+
+
+	public void packetMixed(final long a_totalBytes)
 	{
+		JobQueue.Job job = new JobQueue.Job(true)
+		{
+			public void runJob()
+			{
+				PayAccount currentAccount = PayAccountsFile.getInstance().getActiveAccount();
+				MixCascade cascade = JAPController.this.getCurrentMixCascade();
+				if (currentAccount == null || !cascade.isPayment())
+				{
+					return;
+				}
+
+				if (System.currentTimeMillis() - ACCOUNT_UPDATE_INTERVAL_MS > m_lastBalanceUpdateMS ||
+					a_totalBytes  - (cascade.getPrepaidInterval() / 2) >
+					m_lastBalanceUpdateBytes)
+				{
+					// fetch new balance
+					try
+					{
+						currentAccount.fetchAccountInfo(JAPModel.getInstance().getPaymentProxyInterface(), true);
+					}
+					catch (Exception ex)
+					{
+						LogHolder.log(LogLevel.WARNING, LogType.PAY, ex);
+					}
+
+					m_lastBalanceUpdateMS = System.currentTimeMillis();
+					m_lastBalanceUpdateBytes = a_totalBytes;
+				}
+			}
+		};
+		queueFetchAccountInfo.addJob(job);
+
+
+
 		synchronized (m_anonServiceListener)
 		{
 			Enumeration e = m_anonServiceListener.elements();

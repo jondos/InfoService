@@ -181,7 +181,7 @@ public class PaymentMainPanel extends FlippingPanel
 		JPanel fullPanel = new JPanel();
 		fullPanel.setLayout(new GridBagLayout());
 		GridBagConstraints c1 = new GridBagConstraints();
-		m_labelTitle = new JLabel(JAPMessages.getString(MSG_TITLE));
+		m_labelTitle = new JLabel(JAPMessages.getString(MSG_TITLE) + ":");
 		c1.insets = new Insets(0, 5, 0, 0);
 		c1.anchor = GridBagConstraints.WEST;
 		c1.weightx = 0;
@@ -203,12 +203,13 @@ public class PaymentMainPanel extends FlippingPanel
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.gridx = 2;
 		fullPanel.add(m_BalanceText, c1);
-		JLabel label = new JLabel(" ", SwingConstants.RIGHT);
+		JLabel label = new JLabel(JAPMessages.getString("ngActivity"), SwingConstants.RIGHT);
+		label.setVisible(false);
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.gridx = 3;
 		c1.insets = new Insets(0, 10, 0, 0);
-		fullPanel.add(label, c1);
+		//fullPanel.add(label, c1);
 		m_BalanceProgressBar = new JAPProgressBar();
 		m_BalanceProgressBar.setMinimum(0);
 		m_BalanceProgressBar.setMaximum(5);
@@ -216,7 +217,8 @@ public class PaymentMainPanel extends FlippingPanel
 		c1.gridx = 4;
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
-		c1.insets = new Insets(0, 5, 0, 0);
+
+		c1.insets = new Insets(0, 5 + (int)label.getPreferredSize().getWidth() + 10, 0, 0);
 		fullPanel.add(m_BalanceProgressBar, c1);
 
 		//Elmar: suggestion for improvement:
@@ -342,7 +344,7 @@ public class PaymentMainPanel extends FlippingPanel
 		JPanel smallPanel = new JPanel();
 		smallPanel.setLayout(new GridBagLayout());
 		c1 = new GridBagConstraints();
-		m_labelTitleSmall = new JLabel(JAPMessages.getString(MSG_TITLE));
+		m_labelTitleSmall = new JLabel(JAPMessages.getString(MSG_TITLE) + ":");
 		c1.insets = new Insets(0, 5, 0, 0);
 		c1.anchor = GridBagConstraints.WEST;
 		c1.weightx = 0;
@@ -363,17 +365,18 @@ public class PaymentMainPanel extends FlippingPanel
 		m_BalanceTextSmall = new JLabel(" ");
 		m_BalanceTextSmall.setHorizontalAlignment(JLabel.RIGHT);
 		smallPanel.add(m_BalanceTextSmall, c1);
-		label = new JLabel(" ", SwingConstants.RIGHT);
+		label = new JLabel(JAPMessages.getString("ngActivity"), SwingConstants.RIGHT);
+		label.setVisible(false);
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.gridx = 3;
 		c1.insets = new Insets(0, 10, 0, 0);
-		smallPanel.add(label, c1);
+		//smallPanel.add(label, c1);
 
 		c1.gridx = 4;
 		c1.weightx = 0;
 		c1.fill = GridBagConstraints.NONE;
-		c1.insets = new Insets(0, 5, 0, 0);
+		c1.insets = new Insets(0, 5 + (int)label.getPreferredSize().getWidth() + 10, 0, 0);
 		m_BalanceSmallProgressBar = new JAPProgressBar();
 		m_BalanceSmallProgressBar.setMinimum(0);
 		m_BalanceSmallProgressBar.setMaximum(5);
@@ -454,7 +457,7 @@ public class PaymentMainPanel extends FlippingPanel
 			if (balance != null && activeAccount.isCharged(now))
 			{
 				m_BalanceProgressBar.setEnabled(false);
-				m_BalanceText.setText(JAPUtil.formatBytesValue(balance.getCredit() * 1000));
+				m_BalanceText.setText(JAPUtil.formatBytesValueWithUnit(balance.getCredit() * 1000, JAPUtil.MAX_FORMAT_KBYTES));
 				m_BalanceText.setForeground(m_labelValidUntil.getForeground());
 				m_labelValidUntil.setText(JAPUtil.formatTimestamp(balance.getFlatEnddate(), false,
 					JAPMessages.getLocale().getLanguage()));
@@ -497,7 +500,7 @@ public class PaymentMainPanel extends FlippingPanel
 				if (balance == null)
 				{
 					m_labelValidUntil.setText("");
-					m_BalanceText.setText(JAPUtil.formatBytesValue(0));
+					m_BalanceText.setText(JAPUtil.formatBytesValueWithUnit(0));
 					m_BalanceText.setForeground(m_labelValidUntil.getForeground());
 				}
 				else

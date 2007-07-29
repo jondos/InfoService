@@ -45,16 +45,17 @@ import javax.swing.JPanel;
 import gui.GUIUtils;
 import gui.IStatusLine;
 import gui.JAPMessages;
+import javax.swing.JButton;
 
 /** A panel which display some status messages, one after each other*/
 public class StatusPanel extends JPanel implements Runnable, IStatusLine
 {
 	private static final String MSG_CLICK_HERE = StatusPanel.class.getName() + "_clickHere";
 
-	private Dimension m_dimensionPreferredSize;
 	private int m_Height;
 	private final Object SYNC_MSG = new Object();
 	private Random m_Random;
+	private JLabel m_button;
 
 	private final static int ICON_HEIGHT = 15;
 	private final static int ICON_WIDTH = 16;
@@ -66,11 +67,13 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 	private final class MsgQueueEntry
 	{
 		ActionListener listener;
+		ActionListener buttonAction;
 		String m_Msg;
 		Image m_Icon;
 		int m_Id;
 		MsgQueueEntry m_Next;
 		int m_DisplayCount = -1;
+
 	}
 
 	private MsgQueueEntry m_Msgs;
@@ -79,11 +82,46 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 	private Thread m_Thread;
 	private int m_idyFont;
 
-	public StatusPanel()
+	public StatusPanel(JLabel a_button)
 	{
 		m_imageInformation = GUIUtils.loadImageIcon(JAPConstants.IMAGE_INFORMATION, true, false).getImage();
 		m_imageError = GUIUtils.loadImageIcon(JAPConstants.IMAGE_ERROR, true, false).getImage();
 		m_imageWarning = GUIUtils.loadImageIcon(JAPConstants.IMAGE_WARNING, true, false).getImage();
+		m_button = a_button;
+		if (m_button != null)
+		{
+			m_button.addMouseListener(new MouseAdapter()
+			{
+				public void mouseClicked(MouseEvent a_event)
+				{
+					boolean m_bClicked = false;
+
+					ActionListener listener = null;
+						if (m_bClicked)
+						{
+							return;
+						}
+						m_bClicked = true;
+
+						synchronized (SYNC_MSG)
+						{
+							MsgQueueEntry entry = m_Msgs;
+							if (entry != null && entry.buttonAction != null)
+							{
+								listener = entry.buttonAction;
+							}
+						}
+						if (listener != null)
+						{
+							listener.actionPerformed(new ActionEvent(StatusPanel.this, a_event.getID(),
+								"mouseClicked"));
+							StatusPanel.this.repaint();
+						}
+
+				m_bClicked = false;
+				}
+			});
+		}
 
 		addMouseListener(new MouseAdapter()
 		{
@@ -100,9 +138,10 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 
 				synchronized (SYNC_MSG)
 				{
-					if (m_Msgs != null)
+					MsgQueueEntry entry = m_Msgs;
+					if (entry != null)
 					{
-						listener = m_Msgs.listener;
+						listener = entry.listener;
 					}
 				}
 				if (listener != null)
@@ -121,7 +160,6 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 		m_Height = (int) (font.getSize() * 0.7);
 		m_Height = Math.min(m_Height, ICON_HEIGHT);
 		font = new Font(font.getName(), Font.PLAIN, m_Height);
-		m_dimensionPreferredSize = new Dimension(100, (int) (ICON_HEIGHT * 1.2));
 		m_idyFont = (ICON_HEIGHT - font.getSize()) / 2;
 		setLayout(null);
 		//setFont(font);
@@ -154,7 +192,12 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 	 */
 	public int addStatusMsg(String msg, int type, boolean bAutoRemove)
 	{
-		return addStatusMsg(msg, type, bAutoRemove, null);
+		return addStatusMsg(msg, type, bAutoRemove, null, null);
+	}
+
+	public int addStatusMsg(String msg, int type, boolean bAutoRemove, ActionListener a_listener)
+	{
+		return addStatusMsg(msg, type, bAutoRemove, a_listener, null);
 	}
 
 	/** Adds a message to be displayed in the status panel.
@@ -162,13 +205,15 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 	 * @param msg the message to be displayed
 	 * @return an id >= 0 useful for removing this message from the status panel
 	 */
-	public int addStatusMsg(String msg, int type, boolean bAutoRemove, ActionListener a_listener)
+	public int addStatusMsg(String msg, int type, boolean bAutoRemove, ActionListener a_listener,
+		ActionListener m_ButtonListener)
 	{
 		MsgQueueEntry entry = null;
 		synchronized (SYNC_MSG)
 		{
 			entry = new MsgQueueEntry();
 			entry.listener = a_listener;
+			entry.buttonAction = m_ButtonListener;
 			entry.m_Msg = msg;
 			entry.m_Id = Math.abs(m_Random.nextInt());
 			if (bAutoRemove)
@@ -267,6 +312,15 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 			if (m_Msgs != null)
 			{
 				String msg = m_Msgs.m_Msg;
+				if (m_Msgs.buttonAction != null && !m_button.isVisible())
+				{
+					m_button.setVisible(true);
+				}
+				else if (m_Msgs.buttonAction == null && m_button.isVisible())
+				{
+					m_button.setVisible(false);
+				}
+
 				if (m_Msgs.listener != null)
 				{
 					setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -291,12 +345,19 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 
 	public Dimension getPreferredSize()
 	{
-		return m_dimensionPreferredSize;
+		if (m_button != null)
+		{
+			return new Dimension(100, Math.max((int) (ICON_HEIGHT * 1.2), m_button.getSize().height));
+		}
+		else
+		{
+			return new Dimension(100, (int) (ICON_HEIGHT * 1.2));
+		}
 	}
 
 	public Dimension getMinimumSize()
 	{
-		return m_dimensionPreferredSize;
+		return getPreferredSize();
 	}
 
 	public void run()

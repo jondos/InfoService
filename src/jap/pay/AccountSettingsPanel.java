@@ -1260,7 +1260,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				if (balance.getCredit() > 0)
 				{
 					m_labelVolume.setText(((expired ? "(" : "") +
-										   JAPUtil.formatBytesValue(balance.getVolumeBytesLeft() * 1000) +
+										   JAPUtil.formatBytesValueWithUnit(balance.getVolumeBytesLeft() * 1000) +
 										   (expired ? ")" : "")));
 					m_labelVolume.setForeground(m_labelValid.getForeground());
 					m_labelVolume.setToolTipText(null);

@@ -143,6 +143,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String MSG_CONNECTED = JAPNewView.class.getName() + "_connected";
 
 	private static final String MSG_DELETE_MESSAGE = JAPNewView.class.getName() + "_deleteMessage";
+	private static final String MSG_DELETE_MESSAGE_SHORT = JAPNewView.class.getName() + "_deleteMessageShort";
 	private static final String MSG_VIEW_MESSAGE = JAPNewView.class.getName() + "_viewMessage";
 
 	private static final String MSG_OBSERVABLE_EXPLAIN = JAPNewView.class.getName() + "_observableExplain";
@@ -190,6 +191,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JLabel m_labelVersion;
 	private JPanel m_pnlVersion;
 	private JButton m_bttnHelp, m_bttnQuit, m_bttnIconify, m_bttnConf, m_btnAssistant, m_btnAbout;
+
+	JLabel m_buttonDeleteMessage;
 
 	//private Icon[] meterIcons;
 	private JAPConf m_dlgConfig;
@@ -1031,8 +1034,24 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 //Status
 		c.gridy++;
-		m_StatusPanel = new StatusPanel();
-		northPanel.add(m_StatusPanel, c);
+		JPanel panelTmp = new JPanel(new GridBagLayout());
+		m_buttonDeleteMessage = new JLabel(JAPMessages.getString(MSG_DELETE_MESSAGE_SHORT));
+		m_buttonDeleteMessage.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		m_buttonDeleteMessage.setToolTipText(JAPMessages.getString(MSG_DELETE_MESSAGE));
+		m_StatusPanel = new StatusPanel(m_buttonDeleteMessage);
+		GridBagConstraints constraints = new GridBagConstraints();
+		constraints.gridx = 0;
+		constraints.gridy = 0;
+		constraints.weightx = 1.0;
+		constraints.fill =  GridBagConstraints.HORIZONTAL;
+		panelTmp.add(m_StatusPanel, constraints);
+		constraints.weightx = 0.0;
+		constraints.gridx = 1;
+		constraints.anchor = GridBagConstraints.EAST;
+		panelTmp.add(m_buttonDeleteMessage, constraints);
+		northPanel.add(panelTmp, c);
+		//northPanel.add(m_buttonDeleteMessage, c);
+
 
 //-----------------------------------------------------------
 //		c.gridwidth = 2;
@@ -1773,11 +1792,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 								AbstractOS.getInstance().openURL(entry.getURL(JAPMessages.getLocale()));
 
 								/*
-										 int ret = JAPDialog.showConfirmDialog(JAPNewView.this,
+								   int ret = JAPDialog.showConfirmDialog(JAPNewView.this,
 								 entry.getText(JAPMessages.getLocale()),
 								 JAPMessages.getString(JAPDialog.MSG_TITLE_INFO),
 								 new JAPDialog.Options(JAPDialog.OPTION_TYPE_OK_CANCEL)
-										 {
+								   {
 								 public String getCancelText()
 								 {
 								  return JAPMessages.getString(DialogContentPane.MSG_OK);
@@ -1788,10 +1807,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 								  return JAPMessages.getString(MSG_DELETE_MESSAGE);
 								 }
 
-										 },
+								   },
 								 JAPDialog.MESSAGE_TYPE_INFORMATION,
 								 new JAPDialog.AbstractLinkedURLAdapter()
-										 {
+								   {
 								 public URL getUrl()
 								 {
 								  return entry.getURL(JAPMessages.getLocale());
@@ -1801,9 +1820,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 								 {
 								  return JAPMessages.getString(MSG_VIEW_MESSAGE);
 								 }
-										 });
-										 if (ret == JAPDialog.RETURN_VALUE_OK)
-										 {
+								   });
+								   if (ret == JAPDialog.RETURN_VALUE_OK)
+								   {
 								 synchronized (m_messageIDs)
 								 {
 								  m_StatusPanel.removeStatusMsg(entry.getExternalIdentifier());
@@ -1811,7 +1830,21 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 								  Database.getInstance(DeletedMessageIDDBEntry.class).update(
 								   new DeletedMessageIDDBEntry(entry));
 								 }
-										 }*/
+								   }*/
+							}
+						},
+							new ActionListener()
+						{
+							public void actionPerformed(ActionEvent a_event)
+							{
+								synchronized (m_messageIDs)
+								{
+									m_StatusPanel.removeStatusMsg(entry.getExternalIdentifier());
+									m_messageIDs.remove(entry.getId());
+									Database.getInstance(DeletedMessageIDDBEntry.class).update(
+										new DeletedMessageIDDBEntry(entry));
+								}
+
 							}
 						});
 						entry.setExternalIdentifier(id);
@@ -2623,7 +2656,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	public void packetMixed(final long a_totalBytes)
 	{
-		m_packetMixedJobs.addJob(new JobQueue.Job()
+		m_packetMixedJobs.addJob(new JobQueue.Job(true)
 		{
 			public void runJob()
 			{
@@ -2641,12 +2674,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						String unit;
 						String s;
 
-						unit = JAPUtil.formatBytesValueOnlyUnit(a_totalBytes);
+						unit = JAPUtil.formatBytesValueOnlyUnit(a_totalBytes, JAPUtil.MAX_FORMAT_KBYTES);
 						m_labelOwnTrafficUnit.setText(unit);
 						m_labelOwnTrafficUnit.revalidate();
 						m_labelOwnTrafficUnitSmall.setText(unit);
 						m_labelOwnTrafficUnitSmall.revalidate();
-						s = JAPUtil.formatBytesValueWithoutUnit(a_totalBytes);
+						s = JAPUtil.formatBytesValueWithoutUnit(a_totalBytes, JAPUtil.MAX_FORMAT_KBYTES);
 						m_labelOwnTrafficBytes.setText(s);
 						m_labelOwnTrafficBytes.revalidate();
 						m_labelOwnTrafficBytesSmall.setText(s);

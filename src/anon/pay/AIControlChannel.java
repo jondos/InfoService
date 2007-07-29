@@ -73,16 +73,12 @@ public class AIControlChannel extends XmlControlChannel
   //codes for AI events that can be fired
   private static final int EVENT_UNREAL = 1;
 
-  /** How many milliseconds to wait before requesting a new account statement */
-  private static final long ACCOUNT_UPDATE_INTERVAL_MS = 60000;
+
 
   private static long m_totalBytes = 0;
 
   private boolean m_bPrepaidReceived = false;
   private long m_prepaidBytes = 0;
-
-  private long m_lastBalanceUpdateMS = 0;
-  private long m_lastBalanceUpdateBytes = 0;
 
   private Vector m_aiListeners = new Vector();
 
@@ -296,15 +292,6 @@ public class AIControlChannel extends XmlControlChannel
 		if ( (currentAccount == null) || (currentAccount.getAccountNumber() != cc.getAccountNumber()))
 		{
 			throw new Exception("Received CC with wrong accountnumber");
-		}
-
-		if (System.currentTimeMillis() - ACCOUNT_UPDATE_INTERVAL_MS > m_lastBalanceUpdateMS ||
-			currentAccount.getCurrentBytes() - m_connectedCascade.getPrepaidInterval() > m_lastBalanceUpdateBytes)
-		{
-			// fetch new balance asynchronously
-			updateBalance(currentAccount);
-			m_lastBalanceUpdateMS = System.currentTimeMillis();
-			m_lastBalanceUpdateBytes = currentAccount.getCurrentBytes();
 		}
 
 		/*

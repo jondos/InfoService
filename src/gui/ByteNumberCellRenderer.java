@@ -71,7 +71,7 @@ public class ByteNumberCellRenderer extends DefaultTableCellRenderer
 			return this;
 		}
 
-		setText(JAPUtil.formatBytesValue( ( ( (Long) value).longValue())));
+		setText(JAPUtil.formatBytesValueWithUnit( ( ( (Long) value).longValue())));
 		return this;
 	}
 }

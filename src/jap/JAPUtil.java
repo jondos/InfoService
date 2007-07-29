@@ -77,6 +77,13 @@ public final class JAPUtil
 {
 	private static final String MSG_DATE_UNIT = JAPUtil.class.getName() + "_";
 
+	public static final int MAX_FORMAT_BYTES = 0;
+	public static final int MAX_FORMAT_KBYTES = 1;
+	public static final int MAX_FORMAT_MBYTES = 2;
+	public static final int MAX_FORMAT_GBYTES = 3;
+	public static final int MAX_FORMAT_ALL = 4;
+
+
 
 	public static JAPDialog.ILinkedInformation createDialogBrowserLink(String a_strUrl)
 	{
@@ -113,43 +120,57 @@ public final class JAPUtil
 	/** Returns the desired unit for this amount of Bytes (Bytes, kBytes, MBytes,GBytes)*/
 	public static String formatBytesValueWithUnit(long c)
 	{
-		return formatBytesValueWithoutUnit(c) + " " + formatBytesValueOnlyUnit(c);
+		return formatBytesValueWithUnit(c, MAX_FORMAT_ALL);
 	}
+
+	public static String formatBytesValueWithUnit(long c, int a_maxFormat)
+	{
+		return formatBytesValueWithoutUnit(c, a_maxFormat) + " " + formatBytesValueOnlyUnit(c, a_maxFormat);
+	}
+
 
 	public static String formatBytesValueOnlyUnit(long c)
 	{
-		if (c < 1000)
+		return formatBytesValueOnlyUnit(c, MAX_FORMAT_ALL);
+	}
+
+	public static String formatBytesValueOnlyUnit(long c, int a_maxFormat)
+	{
+		if (c < 1000 || a_maxFormat < MAX_FORMAT_KBYTES)
 		{
 			return JAPMessages.getString("Byte");
 		}
-		else if (c < 1000000)
+		else if (c < 1000000 || a_maxFormat < MAX_FORMAT_MBYTES)
 		{
 			return JAPMessages.getString("kByte");
 		}
-		else if (c < 1000000000)
+		else if (c < 1000000000 || a_maxFormat < MAX_FORMAT_GBYTES)
 		{
 			return JAPMessages.getString("MByte");
 		}
 		return JAPMessages.getString("GByte");
 	}
 
-
+	public static String formatBytesValueWithoutUnit(long c)
+	{
+		return formatBytesValueWithoutUnit(c, MAX_FORMAT_ALL);
+}
 
 	/** Returns a formated number which respects different units (Bytes, kBytes, MBytes, GBytes)*/
-	public static String formatBytesValueWithoutUnit(long c)
+	public static String formatBytesValueWithoutUnit(long c, int a_maxFormat)
 	{
 		DecimalFormat df = (DecimalFormat) DecimalFormat.getInstance(JAPController.getLocale());
 		double d = c;
-		if (c < 1000)
+		if (c < 1000 || a_maxFormat < MAX_FORMAT_KBYTES)
 		{
 			df.applyPattern("#,####");
 		}
-		else if (c < 1000000)
+		else if (c < 1000000 || a_maxFormat < MAX_FORMAT_MBYTES)
 		{
 			d /= 1000.0;
 			df.applyPattern("#,##0.0");
 		}
-		else if (c < 1000000000)
+		else if (c < 1000000000 || a_maxFormat < MAX_FORMAT_GBYTES)
 		{
 			d /= 1000000.0;
 			df.applyPattern("#,##0.0");
@@ -162,17 +183,6 @@ public final class JAPUtil
 		return df.format(d);
 	}
 
-	/**
-	 * Formats a number of bytes in human-readable kB/MB/GB format
-	 * with 2 decimal places
-	 *
-	 * @param bytes long number of bytes
-	 * @return String the formatted string
-	 */
-	public static String formatBytesValue(long bytes)
-	{
-		return formatBytesValueWithUnit(bytes);
-	}
 
 	/**
 	 * deprecated, since balances are not stored as
