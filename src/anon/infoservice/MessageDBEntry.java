@@ -39,6 +39,7 @@ import anon.util.Base64;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
 import anon.crypto.SignatureVerifier;
+import logging.*;
 
 /**
  * Used to send messages to JAP.
@@ -147,11 +148,23 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry implement
 			return null;
 		}
 
-		URL url = (URL)m_hashUrl.get(a_locale.getLanguage());
-
+		URL url = null;
+		Object hashedURL = m_hashUrl.get(a_locale.getLanguage());
+		if (hashedURL != null && hashedURL instanceof URL)
+		{
+			url = (URL) hashedURL;
+		}
+		else
+		{
+			hashedURL = m_hashUrl.get("en");
+			if (hashedURL != null && hashedURL instanceof URL)
+			{
+				url = (URL)hashedURL;
+			}
+		}
 		if (url == null)
 		{
-			url = (URL)m_hashText.get("en");
+			LogHolder.log(LogLevel.WARNING, LogType.MISC, "Could not get URL for message: " + getText(a_locale));
 		}
 
 		return url;

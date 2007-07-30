@@ -143,6 +143,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String MSG_CONNECTED = JAPNewView.class.getName() + "_connected";
 
 	private static final String MSG_DELETE_MESSAGE = JAPNewView.class.getName() + "_deleteMessage";
+	private static final String MSG_DELETE_MESSAGE_EXPLAIN = JAPNewView.class.getName() + "_deleteMessageExplain";
 	private static final String MSG_DELETE_MESSAGE_SHORT = JAPNewView.class.getName() + "_deleteMessageShort";
 	private static final String MSG_VIEW_MESSAGE = JAPNewView.class.getName() + "_viewMessage";
 
@@ -1791,61 +1792,52 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 							public void actionPerformed(ActionEvent a_event)
 							{
 								AbstractOS.getInstance().openURL(entry.getURL(JAPMessages.getLocale()));
-
-								/*
-								   int ret = JAPDialog.showConfirmDialog(JAPNewView.this,
-								 entry.getText(JAPMessages.getLocale()),
-								 JAPMessages.getString(JAPDialog.MSG_TITLE_INFO),
-								 new JAPDialog.Options(JAPDialog.OPTION_TYPE_OK_CANCEL)
-								   {
-								 public String getCancelText()
-								 {
-								  return JAPMessages.getString(DialogContentPane.MSG_OK);
-								 }
-
-								 public String getYesOKText()
-								 {
-								  return JAPMessages.getString(MSG_DELETE_MESSAGE);
-								 }
-
-								   },
-								 JAPDialog.MESSAGE_TYPE_INFORMATION,
-								 new JAPDialog.AbstractLinkedURLAdapter()
-								   {
-								 public URL getUrl()
-								 {
-								  return entry.getURL(JAPMessages.getLocale());
-								 }
-
-								 public String getMessage()
-								 {
-								  return JAPMessages.getString(MSG_VIEW_MESSAGE);
-								 }
-								   });
-								   if (ret == JAPDialog.RETURN_VALUE_OK)
-								   {
-								 synchronized (m_messageIDs)
-								 {
-								  m_StatusPanel.removeStatusMsg(entry.getExternalIdentifier());
-								  m_messageIDs.remove(entry.getId());
-								  Database.getInstance(DeletedMessageIDDBEntry.class).update(
-								   new DeletedMessageIDDBEntry(entry));
-								 }
-								   }*/
 							}
 						},
 							new ActionListener()
 						{
 							public void actionPerformed(ActionEvent a_event)
 							{
-								synchronized (m_messageIDs)
+								int ret = JAPDialog.showConfirmDialog(JAPNewView.this,
+									JAPMessages.getString(MSG_DELETE_MESSAGE_EXPLAIN),
+									JAPMessages.getString(JAPDialog.MSG_TITLE_INFO),
+									new JAPDialog.Options(JAPDialog.OPTION_TYPE_OK_CANCEL)
 								{
-									m_StatusPanel.removeStatusMsg(entry.getExternalIdentifier());
-									m_messageIDs.remove(entry.getId());
-									Database.getInstance(DeletedMessageIDDBEntry.class).update(
-										new DeletedMessageIDDBEntry(entry));
-								}
+									public String getCancelText()
+									{
+										return JAPMessages.getString(DialogContentPane.MSG_OK);
+									}
 
+									public String getYesOKText()
+									{
+										return JAPMessages.getString(MSG_DELETE_MESSAGE);
+									}
+
+								},
+									JAPDialog.MESSAGE_TYPE_INFORMATION,
+									new JAPDialog.AbstractLinkedURLAdapter()
+								{
+									public URL getUrl()
+									{
+										return entry.getURL(JAPMessages.getLocale());
+									}
+
+									public String getMessage()
+									{
+										return JAPMessages.getString(MSG_VIEW_MESSAGE);
+									}
+								});
+								if (ret == JAPDialog.RETURN_VALUE_OK)
+								{
+									synchronized (m_messageIDs)
+									{
+										m_StatusPanel.removeStatusMsg(entry.getExternalIdentifier());
+										m_messageIDs.remove(entry.getId());
+										Database.getInstance(DeletedMessageIDDBEntry.class).update(
+											new DeletedMessageIDDBEntry(entry));
+									}
+
+								}
 							}
 						});
 						entry.setExternalIdentifier(id);

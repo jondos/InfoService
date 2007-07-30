@@ -416,7 +416,7 @@ public class ConfigAssistant extends JAPDialog
 			  this, JAPMessages.getString(MSG_EXPLAIN_NO_DIRECT_CONNECTION) + "<br><br>" +
 			  JAPMessages.getString(JAPConf.MSG_READ_PANEL_HELP, new Object[]{
 									JAPMessages.getString("confButton"),
-									JAPMessages.getString("confProxyBorder")}), layout,
+									JAPMessages.getString("ngTreeNetwork")}), layout,
 			  new DialogContentPane.Options(paneExplainWarningInBrowser))
 		{
 
