@@ -32,6 +32,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.URL;
 import java.security.SignatureException;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -282,6 +283,21 @@ public final class JAPController extends Observable implements IProxyListener, O
 			{
 			}
 		});
+
+		AbstractOS.getInstance().init(new AbstractOS.IURLErrorNotifier()
+		{
+			boolean m_bReset = false;
+			public void checkNotify(URL a_url)
+			{
+				if (a_url != null && !getAnonMode() && JAPModel.getInstance().isNonAnonymousSurfingDenied() &&
+					a_url.toString().startsWith("https"))
+				{
+					m_bReset = true;
+					JAPModel.getInstance().denyNonAnonymousSurfing(false);
+				}
+			}
+		});
+
 
 		// initialise IS update threads
 		m_feedback = new JAPFeedback();

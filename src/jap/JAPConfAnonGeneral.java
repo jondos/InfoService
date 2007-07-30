@@ -56,8 +56,9 @@ import java.util.Hashtable;
 import anon.client.AnonClient;
 import anon.infoservice.BlacklistedCascadeIDEntry;
 import anon.client.DummyTrafficControlChannel;
+import java.util.Observer;
 
-final class JAPConfAnonGeneral extends AbstractJAPConfModule
+final class JAPConfAnonGeneral extends AbstractJAPConfModule implements Observer
 {
 	public static final String MSG_CONNECTION_TIMEOUT =
 		JAPConfAnonGeneral.class.getName() + "_loginTimeout";
@@ -128,6 +129,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 	protected JAPConfAnonGeneral(IJAPConfSavePoint savePoint)
 	{
 		super(null);
+		JAPModel.getInstance().addObserver(this);
 		m_Controller = JAPController.getInstance();
 	}
 
@@ -152,6 +154,10 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule
 			else if (a_message.equals(JAPModel.CHANGED_AUTO_CONNECT))
 			{
 				m_cbAutoConnect.setSelected(JAPModel.getInstance().isAutoConnect());
+			}
+			else if (a_message.equals(JAPModel.CHANGED_DENY_NON_ANONYMOUS))
+			{
+				m_cbDenyNonAnonymousSurfing.setSelected(JAPModel.getInstance().isNonAnonymousSurfingDenied());
 			}
 		}
 	}

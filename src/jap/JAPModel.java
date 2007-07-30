@@ -82,6 +82,7 @@ public final class JAPModel extends Observable
 	public static final Integer CHANGED_AUTO_CONNECT = new Integer(5);
 	public static final Integer CHANGED_AUTO_RECONNECT = new Integer(6);
 	public static final Integer CHANGED_CASCADE_AUTO_CHANGE = new Integer(7);
+	public static final Integer CHANGED_DENY_NON_ANONYMOUS = new Integer(8);
 
 	private static final int DIRECT_CONNECTION_INFOSERVICE = 0;
 	private static final int DIRECT_CONNECTION_PAYMENT = 1;
@@ -632,7 +633,15 @@ public final class JAPModel extends Observable
 
 	public void denyNonAnonymousSurfing(boolean a_bDenyNonAnonymousSurfing)
 	{
-		m_bDenyNonAnonymousSurfing = a_bDenyNonAnonymousSurfing;
+		synchronized (this)
+		{
+			if (m_bDenyNonAnonymousSurfing != a_bDenyNonAnonymousSurfing)
+			{
+				m_bDenyNonAnonymousSurfing = a_bDenyNonAnonymousSurfing;
+				setChanged();
+			}
+			notifyObservers(CHANGED_DENY_NON_ANONYMOUS);
+		}
 	}
 
 	public boolean isPaymentViaDirectConnectionAllowed()
