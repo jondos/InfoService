@@ -2004,6 +2004,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	{
 		m_transferedBytesJobs.stop();
 		m_packetMixedJobs.stop();
+		m_flippingPanelPayment.stopUpdateQueue();
 		super.dispose();
 	}
 

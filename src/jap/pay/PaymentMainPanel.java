@@ -57,6 +57,7 @@ import anon.pay.xml.XMLBalance;
 import anon.pay.xml.XMLErrorMessage;
 import anon.util.captcha.ICaptchaSender;
 import anon.util.captcha.IImageEncodedCaptcha;
+import anon.util.JobQueue;
 import anon.infoservice.MixCascade;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -142,7 +143,8 @@ public class PaymentMainPanel extends FlippingPanel
 
 	/** shows the current balance as text */
 	private JLabel m_BalanceText, m_BalanceTextSmall;
-	;
+
+	private JobQueue m_queueUpdate;
 
 	/** show the date of the last balance update */
 	private JLabel m_dateLabel;
@@ -176,6 +178,7 @@ public class PaymentMainPanel extends FlippingPanel
 	{
 		super(view);
 		m_view = view;
+		m_queueUpdate = new JobQueue("Payment Panel Update");
 
 		loadIcons();
 		JPanel fullPanel = new JPanel();
@@ -437,169 +440,189 @@ public class PaymentMainPanel extends FlippingPanel
 		return error;
 	}
 
+	public void stopUpdateQueue()
+	{
+		m_queueUpdate.stop();
+	}
+
 	/**
 	 * This should be called by the changelistener whenever the state of the
 	 * active account changes.
 	 *
 	 * @param activeAccount PayAccount
 	 */
-	private void updateDisplay(PayAccount activeAccount, boolean a_bWarnIfNearlyEmpty)
+	private void updateDisplay(final PayAccount activeAccount, final boolean a_bWarnIfNearlyEmpty)
 	{
-		// payment disabled
-		if (activeAccount == null)
+		if (activeAccount == null || PayAccountsFile.getInstance().getActiveAccount() != activeAccount)
 		{
-			m_BalanceText.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-			m_BalanceText.setToolTipText(JAPMessages.getString(MSG_TT_CREATE_ACCOUNT));
-			m_BalanceText.setText(JAPMessages.getString(MSG_PAYMENTNOTACTIVE));
-			m_BalanceText.setForeground(m_labelValidUntil.getForeground());
-			m_BalanceProgressBar.setValue(0);
-			m_BalanceProgressBar.setEnabled(false);
+			return;
 		}
-		// we got everything under control, situation normal
-		else
+
+		JobQueue.Job job = new JobQueue.Job(true)
 		{
-			m_BalanceText.setCursor(Cursor.getDefaultCursor());
-			m_BalanceText.setToolTipText(null);
-
-			XMLBalance balance = activeAccount.getBalance();
-			Timestamp now = new Timestamp(System.currentTimeMillis());
-
-			if (balance != null && activeAccount.isCharged(now))
+			public void runJob()
 			{
-				m_BalanceProgressBar.setEnabled(false);
-				m_BalanceText.setText(JAPUtil.formatBytesValueWithUnit(balance.getCredit() * 1000, JAPUtil.MAX_FORMAT_KBYTES));
-				m_BalanceText.setForeground(m_labelValidUntil.getForeground());
-				m_labelValidUntil.setText(JAPUtil.formatTimestamp(balance.getFlatEnddate(), false,
-					JAPMessages.getLocale().getLanguage()));
-				//m_labelBalanceInEuros.setText(JAPUtil.formatEuroCentValue(balance.getBalance()));
-
-				long deposit = balance.getVolumeBytesLeft() * 1000 + balance.getSpent();
-				long credit = activeAccount.getCertifiedCredit() * 1000;
-				double percent = (double) credit / (double) deposit;
-				if (percent > 0.83)
+				// payment disabled
+				if (activeAccount == null)
 				{
-					m_BalanceProgressBar.setValue(5);
-				}
-				else if (percent > 0.66)
-				{
-					m_BalanceProgressBar.setValue(4);
-				}
-				else if (percent > 0.49)
-				{
-					m_BalanceProgressBar.setValue(3);
-				}
-				else if (percent > 0.32)
-				{
-					m_BalanceProgressBar.setValue(2);
-				}
-				else if (credit > 0.15)
-				{
-					m_BalanceProgressBar.setValue(1);
-				}
-				else
-				{
-					m_BalanceProgressBar.setValue(0);
-				}
-				m_BalanceProgressBar.setEnabled(true);
-			}
-			else
-			{
-				m_BalanceProgressBar.setValue(0);
-				m_BalanceProgressBar.setEnabled(false);
-
-				if (balance == null)
-				{
-					m_labelValidUntil.setText("");
-					m_BalanceText.setText(JAPUtil.formatBytesValueWithUnit(0));
-					m_BalanceText.setForeground(m_labelValidUntil.getForeground());
-				}
-				else
-				{
-					Timestamp enddate = balance.getFlatEnddate();
-					String endDateString = JAPUtil.formatTimestamp(enddate, false,
-						JAPMessages.getLocale().getLanguage());
-					boolean expired = false;
-
 					m_BalanceText.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 					m_BalanceText.setToolTipText(JAPMessages.getString(MSG_TT_CREATE_ACCOUNT));
+					m_BalanceText.setText(JAPMessages.getString(MSG_PAYMENTNOTACTIVE));
+					m_BalanceText.setForeground(m_labelValidUntil.getForeground());
+					m_BalanceProgressBar.setValue(0);
+					m_BalanceProgressBar.setEnabled(false);
+				}
+				// we got everything under control, situation normal
+				else
+				{
+					m_BalanceText.setCursor(Cursor.getDefaultCursor());
+					m_BalanceText.setToolTipText(null);
 
-					if (balance.getCredit() == 0)
-					{
-						m_labelValidUntil.setText("");
-					}
-					else if (enddate != null && enddate.after(now))
-					{
-						m_labelValidUntil.setText(endDateString);
-					}
-					else
-					{
-						expired = true;
-						m_labelValidUntil.setText(JAPMessages.getString(AccountSettingsPanel.MSG_EXPIRED));
-					}
+					XMLBalance balance = activeAccount.getBalance();
+					Timestamp now = new Timestamp(System.currentTimeMillis());
 
-					if (balance.getCredit() > 0 && expired)
+					if (balance != null && activeAccount.isCharged(now))
 					{
-						m_BalanceText.setText(JAPMessages.getString(AccountSettingsPanel.MSG_EXPIRED));
+						m_BalanceProgressBar.setEnabled(false);
+						m_BalanceText.setText(JAPUtil.formatBytesValueWithUnit(balance.getCredit() * 1000,
+							JAPUtil.MAX_FORMAT_KBYTES));
 						m_BalanceText.setForeground(m_labelValidUntil.getForeground());
-					}
-					else if (balance.getCredit() <= 0 && balance.getSpent() == 0 && !expired)
-					{
-						m_BalanceText.setText(JAPMessages.getString(AccountSettingsPanel.MSG_NO_TRANSACTION));
-						if (activeAccount.getTransCerts().size() > 0)
+						m_labelValidUntil.setText(JAPUtil.formatTimestamp(balance.getFlatEnddate(), false,
+							JAPMessages.getLocale().getLanguage()));
+						//m_labelBalanceInEuros.setText(JAPUtil.formatEuroCentValue(balance.getBalance()));
+
+						long deposit = balance.getVolumeBytesLeft() * 1000 + balance.getSpent();
+						long credit = activeAccount.getCertifiedCredit() * 1000;
+						double percent = (double) credit / (double) deposit;
+						if (percent > 0.83)
 						{
-							m_BalanceText.setToolTipText(JAPMessages.getString(AccountSettingsPanel.MSG_SHOW_TRANSACTION_DETAILS));
-							m_BalanceText.setForeground(Color.blue);
+							m_BalanceProgressBar.setValue(5);
+						}
+						else if (percent > 0.66)
+						{
+							m_BalanceProgressBar.setValue(4);
+						}
+						else if (percent > 0.49)
+						{
+							m_BalanceProgressBar.setValue(3);
+						}
+						else if (percent > 0.32)
+						{
+							m_BalanceProgressBar.setValue(2);
+						}
+						else if (credit > 0.15)
+						{
+							m_BalanceProgressBar.setValue(1);
 						}
 						else
 						{
-							m_BalanceText.setForeground(m_labelValidUntil.getForeground());
+							m_BalanceProgressBar.setValue(0);
 						}
+						m_BalanceProgressBar.setEnabled(true);
 					}
 					else
 					{
-						m_BalanceText.setText(JAPMessages.getString(AccountSettingsPanel.MSG_NO_CREDIT));
-						m_BalanceText.setForeground(m_labelValidUntil.getForeground());
-					}
-				}
-			}
-			//set rest of the panel
-			m_spentThisSession = AIControlChannel.getBytes();
+						m_BalanceProgressBar.setValue(0);
+						m_BalanceProgressBar.setEnabled(false);
 
-			m_labelSessionSpent.setText(JAPUtil.formatBytesValueWithUnit(m_spentThisSession));
-
-			m_labelTotalSpent.setText(JAPUtil.formatBytesValueWithUnit(activeAccount.getSpent()));
-			// account is nearly empty
-
-			if (a_bWarnIfNearlyEmpty && //a_bWarnIfNearlyEmpty means warnings are not to be suppressed
-				activeAccount.getCertifiedCredit() <= WARNING_AMOUNT && !m_notifiedEmpty &&
-				activeAccount.getCertifiedCredit() != 0 &&
-				PayAccountsFile.getInstance().getAlternativeNonEmptyAccount(
-					JAPController.getInstance().getCurrentMixCascade().getPIID()) == null)
-			{
-				m_notifiedEmpty = true;
-				// start a new thread to prevent freezing of GUI update
-				new Thread(new Runnable()
-				{
-					public void run()
-					{
-						if (JAPDialog.showYesNoDialog(JAPController.getInstance().getViewWindow(),
-							JAPMessages.getString(MSG_NEARLYEMPTY_CREATE_ACCOUNT)))
+						if (balance == null)
 						{
-							m_view.showConfigDialog(JAPConf.PAYMENT_TAB,
-								JAPController.getInstance().getCurrentMixCascade().getPIID());
+							m_labelValidUntil.setText("");
+							m_BalanceText.setText(JAPUtil.formatBytesValueWithUnit(0));
+							m_BalanceText.setForeground(m_labelValidUntil.getForeground());
+						}
+						else
+						{
+							Timestamp enddate = balance.getFlatEnddate();
+							String endDateString = JAPUtil.formatTimestamp(enddate, false,
+								JAPMessages.getLocale().getLanguage());
+							boolean expired = false;
+
+							m_BalanceText.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+							m_BalanceText.setToolTipText(JAPMessages.getString(MSG_TT_CREATE_ACCOUNT));
+
+							if (balance.getCredit() == 0)
+							{
+								m_labelValidUntil.setText("");
+							}
+							else if (enddate != null && enddate.after(now))
+							{
+								m_labelValidUntil.setText(endDateString);
+							}
+							else
+							{
+								expired = true;
+								m_labelValidUntil.setText(JAPMessages.getString(AccountSettingsPanel.MSG_EXPIRED));
+							}
+
+							if (balance.getCredit() > 0 && expired)
+							{
+								m_BalanceText.setText(JAPMessages.getString(AccountSettingsPanel.MSG_EXPIRED));
+								m_BalanceText.setForeground(m_labelValidUntil.getForeground());
+							}
+							else if (balance.getCredit() <= 0 && balance.getSpent() == 0 && !expired)
+							{
+								m_BalanceText.setText(JAPMessages.getString(AccountSettingsPanel.
+									MSG_NO_TRANSACTION));
+								if (activeAccount.getTransCerts().size() > 0)
+								{
+									m_BalanceText.setToolTipText(JAPMessages.getString(AccountSettingsPanel.
+										MSG_SHOW_TRANSACTION_DETAILS));
+									m_BalanceText.setForeground(Color.blue);
+								}
+								else
+								{
+									m_BalanceText.setForeground(m_labelValidUntil.getForeground());
+								}
+							}
+							else
+							{
+								m_BalanceText.setText(JAPMessages.getString(AccountSettingsPanel.MSG_NO_CREDIT));
+								m_BalanceText.setForeground(m_labelValidUntil.getForeground());
+							}
 						}
 					}
-				}).start();
+					//set rest of the panel
+					m_spentThisSession = AIControlChannel.getBytes();
+
+					m_labelSessionSpent.setText(JAPUtil.formatBytesValueWithUnit(m_spentThisSession));
+
+					m_labelTotalSpent.setText(JAPUtil.formatBytesValueWithUnit(activeAccount.getSpent()));
+					// account is nearly empty
+
+					if (a_bWarnIfNearlyEmpty && //a_bWarnIfNearlyEmpty means warnings are not to be suppressed
+						activeAccount.getCertifiedCredit() <= WARNING_AMOUNT && !m_notifiedEmpty &&
+						activeAccount.getCertifiedCredit() != 0 &&
+						PayAccountsFile.getInstance().getAlternativeNonEmptyAccount(
+							JAPController.getInstance().getCurrentMixCascade().getPIID()) == null)
+					{
+						m_notifiedEmpty = true;
+						// start a new thread to prevent freezing of GUI update
+						new Thread(new Runnable()
+						{
+							public void run()
+							{
+								if (JAPDialog.showYesNoDialog(JAPController.getInstance().getViewWindow(),
+									JAPMessages.getString(MSG_NEARLYEMPTY_CREATE_ACCOUNT)))
+								{
+									m_view.showConfigDialog(JAPConf.PAYMENT_TAB,
+										JAPController.getInstance().getCurrentMixCascade().getPIID());
+								}
+							}
+						}).start();
+					}
+				}
+
+				m_BalanceTextSmall.setText(m_BalanceText.getText());
+				m_BalanceTextSmall.setForeground(m_BalanceText.getForeground());
+				m_BalanceTextSmall.setToolTipText(m_BalanceText.getToolTipText());
+				m_BalanceTextSmall.setCursor(m_BalanceText.getCursor());
+				m_BalanceSmallProgressBar.setValue(m_BalanceProgressBar.getValue());
+				m_BalanceSmallProgressBar.setEnabled(m_BalanceProgressBar.isEnabled());
 			}
-		}
+		};
 
-		m_BalanceTextSmall.setText(m_BalanceText.getText());
-		m_BalanceTextSmall.setForeground(m_BalanceText.getForeground());
-		m_BalanceTextSmall.setToolTipText(m_BalanceText.getToolTipText());
-		m_BalanceTextSmall.setCursor(m_BalanceText.getCursor());
-		m_BalanceSmallProgressBar.setValue(m_BalanceProgressBar.getValue());
-		m_BalanceSmallProgressBar.setEnabled(m_BalanceProgressBar.isEnabled());
-
+		m_queueUpdate.addJob(job);
 	}
 
 	/**
