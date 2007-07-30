@@ -176,6 +176,10 @@ public class ActivePaymentDetails extends JAPDialog implements ActionListener
 					{
 						extraInfoString = PaymentInfoPane.createPaypalLink(extraInfoString,amount,planName,transferNumber);
 					}
+					else if (extraInfoString.indexOf("e-gold") != -1)
+					{
+						extraInfoString = PaymentInfoPane.createEgoldLink(extraInfoString,amount,planName, transferNumber);
+					}
 					else
 					{
 						extraInfoString = Util.replaceAll(extraInfoString,"%t", transferNumber);

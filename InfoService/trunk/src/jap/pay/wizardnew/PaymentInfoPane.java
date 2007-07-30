@@ -72,7 +72,8 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		getName() + "_buttoncopy";
 	private static final String MSG_BUTTONOPEN = PaymentInfoPane.class.
 		getName() + "_buttonopen";
-	private static final String MSG_PAYPAL_ITEM_NAME = PaymentInfoPane.class.getName() + "_paypalitemname";
+	public static final String MSG_PAYPAL_ITEM_NAME = PaymentInfoPane.class.getName() + "_paypalitemname";
+
 
 	private Container m_rootPanel;
 	private GridBagConstraints m_c;
@@ -139,6 +140,31 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 	{
 		String paypalCurrency = "EUR";
 
+
+        String paypalAmount = amountAsString(amount);
+		String localeLang = JAPMessages.getLocale().getLanguage();
+		String paypalLang = localeLang.toUpperCase();
+		String paypalItem = JAPMessages.getString(MSG_PAYPAL_ITEM_NAME) + "%20-%20" + planName; //URL-encode Spaces etc!!
+
+		baseLink = Util.replaceAll(baseLink, "%t", transferNumber);
+		baseLink = Util.replaceAll(baseLink, "%item%", paypalItem);
+		baseLink = Util.replaceAll(baseLink, "%amount%", paypalAmount);
+		baseLink = Util.replaceAll(baseLink, "%currency%", paypalCurrency);
+		baseLink = Util.replaceAll(baseLink, "%lang%", paypalLang);
+
+		return baseLink;
+	}
+
+	public static String createEgoldLink(String baseLink, long amount, String planName, String transferNumber)
+	{
+		//currently the same treatment as for paypal works, but uses a different method name
+		//to make the dependency clear
+		return createPaypalLink(baseLink,amount,planName,transferNumber);
+	}
+
+	private static String amountAsString(long amount)
+	{
+
 		//amountString: eurocent, e.g. "500", transform it into a format suitable for paypal
 		String amountString = new Long(amount).toString();
 		String amountWhole;
@@ -159,19 +185,8 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 			amountWhole = amountString.substring(0, amountString.length() - 2);
 			amountFractions = amountString.substring(amountString.length() - 2, amountString.length());
 		}
-		String paypalAmount = amountWhole + "%2e" + amountFractions;
-
-		String localeLang = JAPMessages.getLocale().getLanguage();
-		String paypalLang = localeLang.toUpperCase();
-		String paypalItem = JAPMessages.getString(MSG_PAYPAL_ITEM_NAME) + "%20-%20" + planName; //URL-encode Spaces etc!!
-
-		baseLink = Util.replaceAll(baseLink, "%t", transferNumber);
-		baseLink = Util.replaceAll(baseLink, "%item%", paypalItem);
-		baseLink = Util.replaceAll(baseLink, "%amount%", paypalAmount);
-		baseLink = Util.replaceAll(baseLink, "%currency%", paypalCurrency);
-		baseLink = Util.replaceAll(baseLink, "%lang%", paypalLang);
-
-		return baseLink;
+		String result = amountWhole + "%2e" + amountFractions;
+		return result;
 	}
 
 	public void showInfo()
@@ -193,13 +208,12 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		m_c.anchor = GridBagConstraints.NORTHWEST;
 		m_c.fill = GridBagConstraints.NONE;
 
-		//setText(selectedOption.getDetailedInfo(m_language));
-
 
 		m_strExtraInfo = selectedOption.getExtraInfo(m_language);
 		boolean isURL = false;
 		if (m_strExtraInfo != null)
 		{
+
 			DialogContentPane somePreviousPane = getPreviousContentPane();
 			while (! (somePreviousPane instanceof VolumePlanSelectionPane))
 			{
@@ -217,6 +231,10 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 			{
 	            m_strExtraInfo = createPaypalLink(m_strExtraInfo,intAmount,planName,tan);
             }
+			else if (m_strExtraInfo.indexOf("e-gold") != -1)
+			{
+				m_strExtraInfo = createEgoldLink(m_strExtraInfo,intAmount,planName,tan);
+			}
 			else
 			{
 				//regualar extra infos, e.g. instructions for wire transfer
@@ -226,10 +244,6 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 				m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%c","");
 			}
 
-
-
-		    //show customized url if one was given in the constructor
-			//might not be necesary, if we get by with the substitutions above
 
 			m_c.gridy++;
 			m_bttnCopy = new JButton(JAPMessages.getString(MSG_BUTTONCOPY));
@@ -313,6 +327,7 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 			 */
 			JAPController.getInstance().stopAnonModeWait();
 		}
+
 
 		AbstractOS os = AbstractOS.getInstance();
 		link = Util.replaceAll(link, "<br>", "");
