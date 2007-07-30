@@ -650,9 +650,13 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 				 */
 				enumListeners = ((Vector)m_paymentListeners.clone()).elements();
 			}
-			while (enumListeners.hasMoreElements())
+
+			if (acc != null)
 			{
-				( (IPaymentListener) enumListeners.nextElement()).creditChanged(m_ActiveAccount);
+				while (enumListeners.hasMoreElements())
+				{
+					( (IPaymentListener) enumListeners.nextElement()).creditChanged(acc);
+				}
 			}
 		}
 	}
