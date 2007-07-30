@@ -64,6 +64,13 @@ public abstract class AbstractOS implements IExternalURLCaller, IExternalEMailCa
 	 */
 	private static AbstractOS ms_operatingSystem;
 
+	private IURLErrorNotifier m_notifier;
+
+	public static interface IURLErrorNotifier
+	{
+		void checkNotify(URL a_url);
+	}
+
 	/**
 	 * Instantiates an OS-specific class. If no specific class is found, the default OS
 	 * (which is a dummy implementation) is instanciated.
@@ -84,9 +91,27 @@ public abstract class AbstractOS implements IExternalURLCaller, IExternalEMailCa
 							  "Cannot instantiate class " + REGISTERED_PLATFORM_CLASSES[i] +
 							  ". Trying to instanciate another platform class.");
 			}
+			if (ms_operatingSystem != null)
+			{
+				ms_operatingSystem.m_notifier = new IURLErrorNotifier()
+				{
+					public void checkNotify(URL a_url)
+					{
+						// do nothing
+					}
+				};
+			}
 		}
 
 		return ms_operatingSystem;
+	}
+
+	public void init(IURLErrorNotifier a_notifier)
+	{
+		if (a_notifier != null)
+		{
+			m_notifier = a_notifier;
+		}
 	}
 
 	public JAPDialog.ILinkedInformation createURLLink(final URL a_url, final String a_optionalText)
@@ -154,6 +179,9 @@ public abstract class AbstractOS implements IExternalURLCaller, IExternalEMailCa
 
 		String[] browser = BROWSERLIST;
 		String url = getAsString(a_url);
+
+		m_notifier.checkNotify(a_url);
+
 		success = openLink(url);
 		if (!success)
 		{
@@ -170,6 +198,7 @@ public abstract class AbstractOS implements IExternalURLCaller, IExternalEMailCa
 				}
 			}
 		}
+
 		if (!success)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot open URL in browser");

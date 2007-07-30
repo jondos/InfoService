@@ -314,16 +314,6 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 			JAPController.getInstance().stopAnonModeWait();
 		}
 
-		if (!JAPController.getInstance().getAnonMode())
-		{
-			// convert https to http, so that JAP may show an error message
-			if (link.startsWith("https"))
-			{
-				link = "http" + link.substring(5, link.length());
-			}
-		}
-
-
 		AbstractOS os = AbstractOS.getInstance();
 		link = Util.replaceAll(link, "<br>", "");
 		link = Util.replaceAll(link, "<p>", "");

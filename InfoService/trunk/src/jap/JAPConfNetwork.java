@@ -831,7 +831,7 @@ public class JAPConfNetwork extends AbstractJAPConfModule
 
 	public String getHelpContext()
 	{
-		return "network";
+		return "net";
 	}
 
 }

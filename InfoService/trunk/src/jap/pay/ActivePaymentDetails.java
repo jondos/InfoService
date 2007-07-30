@@ -37,6 +37,7 @@ import platform.AbstractOS;
 import javax.swing.JScrollPane;
 import java.awt.Window;
 import jap.JAPController;
+import jap.JAPModel;
 
 
 /**
@@ -243,15 +244,6 @@ public class ActivePaymentDetails extends JAPDialog implements ActionListener
 			 */
 			JAPController.getInstance().stopAnonModeWait();
 
-		}
-
-		if (!JAPController.getInstance().getAnonMode())
-		{
-			// convert https to http, so that JAP may show an error message
-			if (link.startsWith("https"))
-			{
-				link = "http" + link.substring(5, link.length());
-			}
 		}
 
 		AbstractOS os = AbstractOS.getInstance();
