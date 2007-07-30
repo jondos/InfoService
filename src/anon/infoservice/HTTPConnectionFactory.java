@@ -299,10 +299,10 @@ public class HTTPConnectionFactory
 //			newConnection.addModule(m_classHTTPCLient_ContentEncodingeModule,-1);
 			}
 		}
-/*		else
+		else
 		{
 			newConnection.removeModule( m_classHTTPCLient_ContentEncodingeModule);
-		}*/
+		}
 		newConnection.setAllowUserInteraction(false);
 		/* set the timeout for all network operations */
 		newConnection.setTimeout(getTimeout() * 1000);
