@@ -29,13 +29,12 @@ package jap;
 
 import java.util.Enumeration;
 import java.util.Observable;
-import java.util.Observer;
 import java.util.Hashtable;
 
+import anon.util.Updater;
 import anon.infoservice.AbstractDatabaseEntry;
 import anon.infoservice.Database;
 import anon.infoservice.MixCascade;
-import anon.util.ClassUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -45,7 +44,7 @@ import logging.LogType;
  * by method call. The automatic update is only done if this is allowed by the model.
  * @author Rolf Wendolsky
  */
-public abstract class AbstractDatabaseUpdater implements Observer
+public abstract class AbstractDatabaseUpdater extends Updater
 {
 	/**
 	 * Keep all entries KEEP_ENTRY_FACTOR times of the update interval, even if the InfoService
@@ -55,308 +54,26 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	 */
 	public static final long KEEP_ENTRY_FACTOR = 3l;
 
-	private static final long MIN_WAITING_TIME_MS = 20000;
-
-	private IUpdateInterval m_updateInterval;
-	private Thread m_updateThread;
 	private boolean m_successfulUpdate = false;
-	private boolean m_bAutoUpdateChanged = false;
-	private boolean m_bInitialRun = true;
 	private boolean m_bFirstUpdateDone = false;
-	// patch for JDK 1.1.8 and JView
-	private boolean m_interrupted = false;
-	private boolean m_bUpdating = false;
-	private Object UPDATE_SYNC = new Object();
+
 
 	/**
 	 * Initialises and starts the database update thread.
 	 */
 	public AbstractDatabaseUpdater(IUpdateInterval a_updateInterval)
 	{
-		if (a_updateInterval == null)
+		super(a_updateInterval, new ObservableInfo(JAPModel.getInstance())
 		{
-			throw new IllegalArgumentException("No update interval specified!");
-		}
-		/*if (a_updateInterval.getUpdateInterval() <= 1000)
-		{
-			throw new IllegalArgumentException(
-						 "Database update interval of " + a_updateInterval + " is too short!");
-		}*/
-
-		m_updateInterval = a_updateInterval;
-		init();
-	}
-
-	protected static class DynamicUpdateInterval implements IUpdateInterval
-	{
-		private long m_updateInterval;
-
-		public DynamicUpdateInterval(long a_updateInterval)
-		{
-			setUpdateInterval(a_updateInterval);
-		}
-
-		public void setUpdateInterval(long a_updateInterval)
-		{
-			m_updateInterval = a_updateInterval;
-		}
-
-		public long getUpdateInterval()
-		{
-			return m_updateInterval;
-		}
-	}
-
-	/**
-	 * May be used to re-initialise the thread after stopping it.
-	 */
-	private final void init()
-	{
-		//stop();
-		JAPModel.getInstance().addObserver(this);
-		m_updateThread = new Thread(new Runnable()
-		{
-			public void run()
+			public Integer getUpdateChanged()
 			{
-				long lastUpdate = System.currentTimeMillis();
-				long waitingTime;
-				LogHolder.log(LogLevel.INFO, LogType.THREAD,
-							  getUpdatedClassName() + "update thread started.");
-				while (!Thread.currentThread().isInterrupted() && !m_interrupted)
-				{
-					synchronized (Thread.currentThread())
-					{
-						m_bAutoUpdateChanged = true; // this is important to switch waiting times
-						while (m_bAutoUpdateChanged)
-						{
-							m_bAutoUpdateChanged = false; // normally, this should be false after first call
-							try
-							{
-								Thread.currentThread().notify();
-								if (JAPModel.getInstance().isInfoServiceDisabled() || m_bInitialRun)
-								{
-									Thread.currentThread().wait();
-								}
-								else
-								{
-									waitingTime = Math.max(m_updateInterval.getUpdateInterval() -
-										(System.currentTimeMillis() - lastUpdate), MIN_WAITING_TIME_MS);
-									LogHolder.log(LogLevel.NOTICE, LogType.THREAD,
-										"Update waiting time for " + getUpdatedClass().getName() +
-										": " + waitingTime);
-									Thread.currentThread().wait(waitingTime);
-								}
-							}
-							catch (InterruptedException a_e)
-							{
-								Thread.currentThread().notifyAll();
-								break;
-							}
-							if (Thread.currentThread().isInterrupted())
-							{
-								Thread.currentThread().notifyAll();
-								break;
-							}
-							// patch for JDK 1.1.8 and JView
-							if (m_interrupted)
-							{
-								break;
-							}
-						}
-					}
-
-					if (!Thread.currentThread().isInterrupted() && !m_interrupted && !isUpdatePaused())
-					{
-						LogHolder.log(LogLevel.INFO, LogType.THREAD,
-									  "Updating " + getUpdatedClassName() + "list.");
-						lastUpdate = System.currentTimeMillis();
-						updateInternal();
-					}
-				}
-				LogHolder.log(LogLevel.INFO, LogType.THREAD,
-							  getUpdatedClassName() + "update thread stopped.");
+				return JAPModel.CHANGED_INFOSERVICE_AUTO_UPDATE;
 			}
-		}, getUpdatedClassName() + "Update Thread");
-		m_updateThread.setPriority(Thread.MIN_PRIORITY);
-		m_updateThread.setDaemon(true);
-		m_updateThread.start();
-	}
-
-	public void update(Observable a_observable, Object a_argument)
-	{
-		if (!(a_argument instanceof Integer) ||
-			!((Integer)a_argument).equals(JAPModel.CHANGED_INFOSERVICE_AUTO_UPDATE))
-		{
-			return;
-		}
-		final AbstractDatabaseUpdater updater = this;
-		new Thread(new Runnable()
-		{
-			public void run()
+			public boolean isUpdateDisabled()
 			{
-				updater.start(false);
-			}
-		}).start();
-	}
-
-	/**
-	 * Starts the thread if it has not already started or has been stopped before.
-	 */
-	public final void start(boolean a_bSynchronized)
-	{
-		synchronized (UPDATE_SYNC)
-		{
-			if (m_bUpdating)
-			{
-				return;
-			}
-			m_bUpdating = true;
-		}
-
-		synchronized (this)
-		{
-			synchronized (m_updateThread)
-			{
-				m_bAutoUpdateChanged = true;
-				m_bInitialRun = false;
-				m_updateThread.notifyAll();
-				if (a_bSynchronized)
-				{
-					try
-					{
-						m_updateThread.wait();
-					}
-					catch (InterruptedException ex)
-					{
-					}
-				}
-			}
-		}
-		synchronized (UPDATE_SYNC)
-		{
-			m_bUpdating = false;
-		}
-	}
-
-	/**
-	 * Force a synchronized update of the known database entries.
-	 * @return true if the update was successful, false otherwise
-	 */
-	public final boolean update()
-	{
-		return update(true);
-	}
-
-	/**
-	 * Force an update of the known database entries. The current thread does not wait until it is done.
-	 * @return true if the update was successful, false otherwise
-	 */
-	public final void updateAsync()
-	{
-		Thread run = new Thread(new Runnable()
-		{
-			public void run()
-			{
-				update(false);
+				return JAPModel.getInstance().isInfoServiceDisabled();
 			}
 		});
-		run.setDaemon(true);
-		run.start();
-	}
-
-	/**
-	 * Force an update of the known database entries.
-	 * @param a_bSynchronized true if the current thread should wait until the update is done; false otherwise
-	 * @return true if the update was successful, false otherwise
-	 */
-	private final boolean update(boolean a_bSynchronized)
-	{
-		if (m_bInitialRun)
-		{
-			start(true);
-		}
-
-		synchronized (this)
-		{
-			synchronized (m_updateThread)
-			{
-				m_bAutoUpdateChanged = false;
-				m_updateThread.notifyAll();
-				if (a_bSynchronized)
-				{
-					try
-					{
-						m_updateThread.wait();
-					}
-					catch (InterruptedException a_e)
-					{
-						return false;
-					}
-					return m_successfulUpdate;
-				}
-				return true;
-			}
-		}
-	}
-
-	/**
-	 * Stops the update thread. No further updates are possible.
-	 */
-	public final void stop()
-	{
-		JAPModel.getInstance().deleteObserver(this);
-		if (m_updateThread == null)
-		{
-			// no initialising has been done until now
-			return;
-		}
-
-		while (m_updateThread.isAlive())
-		{
-			m_updateThread.interrupt();
-			synchronized (m_updateThread)
-			{
-				m_bAutoUpdateChanged = false;
-				m_bInitialRun = false;
-				m_interrupted = true;
-				m_updateThread.notifyAll();
-				m_updateThread.interrupt();
-			}
-			try
-			{
-				m_updateThread.join(500);
-			}
-			catch (InterruptedException a_e)
-			{
-				// ignore
-			}
-		}
-	}
-
-	public final IUpdateInterval getUpdateInterval()
-	{
-		return m_updateInterval;
-	}
-
-	public abstract Class getUpdatedClass();
-
-	protected static class ConstantUpdateInterval implements IUpdateInterval
-	{
-		private long m_updateInterval;
-		public ConstantUpdateInterval(long a_updateInterval)
-		{
-			m_updateInterval = a_updateInterval;
-		}
-
-		public long getUpdateInterval()
-		{
-			return m_updateInterval;
-		}
-	}
-
-	protected static interface IUpdateInterval
-	{
-		long getUpdateInterval();
 	}
 
 	/**
@@ -495,10 +212,11 @@ public abstract class AbstractDatabaseUpdater implements Observer
 		}
 	}
 
-	private long toMinutes(long a_time)
+	protected boolean wasUpdateSuccessful()
 	{
-		return a_time / 1000l / 60l;
+		return m_successfulUpdate;
 	}
+
 
 	/**
 	 * Does some cleaup operations of the database. All old entries that were not updated by
@@ -519,7 +237,7 @@ public abstract class AbstractDatabaseUpdater implements Observer
 		{
 			AbstractDatabaseEntry currentEntry = (AbstractDatabaseEntry) (knownDBEntries.nextElement());
 			if (!currentEntry.isUserDefined() && !a_newEntries.contains(currentEntry) &&
-				(currentEntry.getCreationTime() +  KEEP_ENTRY_FACTOR * m_updateInterval.getUpdateInterval()) <
+				(currentEntry.getCreationTime() +  KEEP_ENTRY_FACTOR * getUpdateInterval().getUpdateInterval()) <
 				System.currentTimeMillis())
 			{
 				/* the db entry was fetched from the Internet earlier, but it is not
@@ -541,15 +259,6 @@ public abstract class AbstractDatabaseUpdater implements Observer
 		return m_bFirstUpdateDone;
 	}
 
-	/**
-	 * May be overwritten if an update is currently no wanted.
-	 * @return boolean
-	 */
-	protected boolean isUpdatePaused()
-	{
-		return false;
-	}
-
 	protected  AbstractDatabaseEntry getPreferredEntry()
 	{
 		return null;
@@ -561,9 +270,4 @@ public abstract class AbstractDatabaseUpdater implements Observer
 	protected abstract Hashtable getEntrySerials();
 
 	protected abstract Hashtable getUpdatedEntries(Hashtable a_entriesToUpdate);
-
-	private String getUpdatedClassName()
-	{
-		return ClassUtil.getShortClassName(getUpdatedClass()) + " ";
-	}
 }
