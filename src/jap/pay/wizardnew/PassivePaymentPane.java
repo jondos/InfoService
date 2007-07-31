@@ -222,7 +222,7 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 		XMLPassivePayment pp = new XMLPassivePayment();
 		pp.setTransferNumber(transCert.getTransferNumber());
 
-		pp.setAmount(Util.parseFloat(amount)/100); //because pp expects whole euros as double, but we deal with eurocents
+		pp.setAmount(Util.parseFloat(amount)); //because pp expects whole euros as double, but we deal with eurocents
 
 		pp.setCurrency(currency);
 		pp.setPaymentName(m_selectedOption.getName());
