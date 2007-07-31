@@ -128,7 +128,7 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		{
 			String selectedHeading = ( (JRadioButton) e.getSource()).getName();
 			m_selectedPaymentOption = m_paymentOptions.getOption(selectedHeading,
-				JAPController.getLocale().getLanguage());
+				JAPMessages.getLocale().getLanguage());
 		}
 	}
 
@@ -154,7 +154,7 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		XMLPaymentOptions options = (XMLPaymentOptions) value;
 
 		m_paymentOptions = options;
-		String language = JAPController.getLocale().getLanguage();
+		String language = JAPMessages.getLocale().getLanguage();
 		Enumeration headings = options.getOptionHeadings(language);
 		Hashtable usedOptions = new Hashtable(); // holds type and option
 		/*
@@ -167,7 +167,7 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		{
 			String heading = (String) headings.nextElement();
 
-			currentOption = m_paymentOptions.getOption(heading, JAPController.getLocale().getLanguage());
+			currentOption = m_paymentOptions.getOption(heading, JAPMessages.getLocale().getLanguage());
 			if (currentOption.worksWithJapVersion(JAPConstants.aktVersion))
 			{
 				optionName = currentOption.getName();
@@ -191,7 +191,7 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		while (enumUsedOptions.hasMoreElements())
 		{
 			curOption = (XMLPaymentOption)enumUsedOptions.nextElement();
-			curLang = JAPController.getLocale().getLanguage();
+			curLang = JAPMessages.getLocale().getLanguage();
 			int markup = curOption.getMarkup();
 			//if (markup > SHOW_MARKUP_IF_ABOVE)
 			//{
