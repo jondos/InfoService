@@ -48,9 +48,20 @@ import javax.swing.JTextField;
 import gui.GUIUtils;
 import anon.util.ClassUtil;
 import anon.infoservice.JAPVersionInfo;
+import java.awt.Cursor;
+import java.awt.Color;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import platform.AbstractOS;
+import java.net.URL;
+import java.net.*;
 
 public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListener
 {
+	private static final String MSG_CHANGELOG_URL = JAPWelcomeWizardPage.class.getName() + "_changelogURL";
+	private static final String MSG_CHANGELOG = JAPWelcomeWizardPage.class.getName() + "_changelog";
+	private static final String MSG_CHANGELOG_TT = JAPWelcomeWizardPage.class.getName() + "_changelogTT";
+
 	private JTextField m_tfJapPath = null;
 	private JLabel m_labelClickNext;
 
@@ -79,8 +90,8 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 		GridBagConstraints m_panelConstraints = new GridBagConstraints();
 
 		m_panelComponents.setLayout(m_panelComponentsLayout);
+		JAPMultilineLabel label;
 
-		JAPMultilineLabel label = new JAPMultilineLabel(JAPMessages.getString("updateIntroductionMessage"));
 
 		m_panelConstraints.anchor = GridBagConstraints.NORTHWEST;
 		m_panelConstraints.fill = GridBagConstraints.HORIZONTAL;
@@ -89,13 +100,35 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 		m_panelConstraints.gridx = 0;
 		m_panelConstraints.gridy = 0;
 		m_panelConstraints.gridwidth = 2;
-		m_panelComponentsLayout.setConstraints(label, m_panelConstraints);
-		m_panelComponents.add(label);
+		try
+		{
+			final URL urlChangelog = new URL(JAPMessages.getString(MSG_CHANGELOG_URL));
+			JLabel tmpLabel = new JLabel(JAPMessages.getString(MSG_CHANGELOG));
+			tmpLabel.setToolTipText(JAPMessages.getString(MSG_CHANGELOG_TT));
+			tmpLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+			tmpLabel.setForeground(Color.blue);
+			tmpLabel.addMouseListener(new MouseAdapter()
+			{
+				public void mouseClicked(MouseEvent a_event)
+				{
+					AbstractOS.getInstance().openURL(urlChangelog);
+				}
+			});
+			m_panelConstraints.insets = new Insets(10, 0, 10, 0);
+			m_panelComponents.add(tmpLabel, m_panelConstraints);
+		}
+		catch (MalformedURLException ex)
+		{
+		}
+
+		m_panelConstraints.gridy = 1;
+		label = new JAPMultilineLabel(JAPMessages.getString("updateIntroductionMessage"));
+		m_panelComponents.add(label, m_panelConstraints);
 
 		m_tfJapPath = new JTextField(20);
 		m_panelConstraints.anchor = GridBagConstraints.WEST;
 		m_panelConstraints.gridx = 0;
-		m_panelConstraints.gridy = 1;
+		m_panelConstraints.gridy = 2;
 		m_panelConstraints.gridwidth = 1;
 		m_panelConstraints.weighty = 0;
 		m_panelConstraints.weightx = 1.0;
@@ -109,7 +142,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 		m_bttnChooseJapFile = new JButton(JAPMessages.getString("updateM_chooseFolder_bttn"));
 		m_panelConstraints.anchor = GridBagConstraints.EAST;
 		m_panelConstraints.gridx = 1;
-		m_panelConstraints.gridy = 1;
+		m_panelConstraints.gridy = 2;
 		m_panelConstraints.weightx = 0;
 		m_panelConstraints.insets = new Insets(10, 0, 0, 0);
 		m_panelConstraints.fill = GridBagConstraints.NONE;
@@ -125,7 +158,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 		m_panelConstraints.insets = new Insets(0, 10, 10, 0);
 		m_panelConstraints.anchor = GridBagConstraints.WEST;
 		m_panelConstraints.gridx = 0;
-		m_panelConstraints.gridy = 2;
+		m_panelConstraints.gridy = 3;
 		m_panelConstraints.weightx = 1.0;
 		m_panelConstraints.weighty = 0;
 		m_panelConstraints.fill = GridBagConstraints.HORIZONTAL;
@@ -137,7 +170,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 		m_panelConstraints.insets = new Insets(0, 0, 0, 0);
 		m_panelConstraints.anchor = GridBagConstraints.WEST;
 		m_panelConstraints.gridx = 0;
-		m_panelConstraints.gridy = 3;
+		m_panelConstraints.gridy = 4;
 		m_panelConstraints.weightx = 1.0;
 		m_panelConstraints.weighty = 0;
 		m_panelConstraints.fill = GridBagConstraints.HORIZONTAL;
@@ -147,7 +180,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 
 		JLabel l = new JLabel("");
 		m_panelConstraints.gridx = 0;
-		m_panelConstraints.gridy = 4;
+		m_panelConstraints.gridy = 5;
 		m_panelConstraints.weighty = 1.0;
 		m_panelConstraints.fill = GridBagConstraints.VERTICAL;
 		m_panelComponentsLayout.setConstraints(l, m_panelConstraints);
