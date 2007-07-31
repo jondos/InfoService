@@ -1471,6 +1471,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					PaymentInstanceDBEntry pi = a_accountCreationThread.getAccount().getBI();
 					BIConnection piConn = new BIConnection(pi);
 					piConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
+
 					piConn.authenticate(a_accountCreationThread.getAccount().getAccountCertificate(),
 										a_accountCreationThread.getAccount().getPrivateKey());
 					LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetching volume plans");
@@ -1834,6 +1835,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				String mixedComplete = JAPMessages.getString(MSG_MIXED_COMPLETE);
 
 				String paymentType;
+				//determine type of payment option used, so we can later show apropriate info
 				if (planSelectionPane.isCouponUsed() )
 				{
 					paymentType = "coupon";
@@ -1841,19 +1843,25 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				{
 					paymentType = methodSelectionPane.getSelectedPaymentOption().getType();
 				}
+				//get info about the delay until paymen is credited
+				String language = JAPController.getLocale().getLanguage();
+				XMLPaymentOption chosenOption = methodSelectionPane.getSelectedPaymentOption();
+				String paymentDelay = chosenOption.getPaymentDelay(language);
 
 
 			    //set strings to show according to payment type and success/failure
 				if (paymentType.equalsIgnoreCase(XMLPaymentOption.OPTION_ACTIVE))
 				{
                     messagesToShow.addElement(activeComplete);
+					messagesToShow.addElement(paymentDelay);
 					messagesToShow.addElement(backupWarning);
 				}
 				else if (paymentType.equalsIgnoreCase(XMLPaymentOption.OPTION_MIXED))
 				{
                    messagesToShow.addElement(mixedComplete);
+				   messagesToShow.addElement(paymentDelay);
 				   messagesToShow.addElement(backupWarning);
-			}
+			    }
 				else if (paymentType.equals("coupon") )
 				{
 					boolean passivePaymentSucceeded = ((Boolean) sendPassivePane.getValue()).booleanValue();
@@ -1861,6 +1869,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					if (passivePaymentSucceeded)
 					{
 						messagesToShow.addElement(couponOK);
+						//no paymentDelay message here, since coupons are credited immediately
 						messagesToShow.addElement(backupWarning);
 					}
 					else
@@ -1874,7 +1883,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					if (passivePaymentSucceeded)
 					{
 						messagesToShow.addElement(passiveOK);
+						messagesToShow.addElement(paymentDelay);
 						messagesToShow.addElement(backupWarning);
+					}
+					else
+					{
+						messagesToShow.addElement(passiveError);
 					}
 
 				}
@@ -1884,9 +1898,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				for (Enumeration messages = messagesToShow.elements(); messages.hasMoreElements(); )
 				{
 					stringToAdd = (String) messages.nextElement();
-					combinedString += "<p>";
-					combinedString += stringToAdd;
-					combinedString += "</p><br>";
+					if (stringToAdd != null) //possible if e.g. no payment delay message set
+					{
+						combinedString += "<p>";
+						combinedString += stringToAdd;
+						combinedString += "</p><br>";
+					}
 				}
 				setText(combinedString);
 				return null;
@@ -2281,6 +2298,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				   PaymentInstanceDBEntry pi = jpiPane.getSelectedPaymentInstance();
 				   BIConnection piConn = new BIConnection(pi);
 				   piConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
+
 				   //authentication is neither necessary nor possible (creating first account -> user does not yet have an account to authenticate with)
 				   LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetching cancellation policy");
 				   String lang = JAPMessages.getLocale().getLanguage();
@@ -3120,10 +3138,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		if (selectedAccount.hasAccountInfo())
 		{
 			XMLAccountInfo accInfo = selectedAccount.getAccountInfo();
-			if (//accInfo.getBalance().getFlatEnddate().after(new Timestamp(System.currentTimeMillis())) &&
-				accInfo.getBalance().getTimestamp().getTime() <
-				(System.currentTimeMillis() - 1000 * 60 * 60 * 24) &&
-				accInfo.getBalance().getCredit() <= 0)
+			if (accInfo.getBalance().getTimestamp().getTime() <
+				(System.currentTimeMillis() - 1000 * 60 * 60 * 24))
 			{
 				boolean yes = JAPDialog.showYesNoDialog(GUIUtils.getParentWindow(this.getRootPanel()),
 					JAPMessages.getString(MSG_OLDSTATEMENT));
