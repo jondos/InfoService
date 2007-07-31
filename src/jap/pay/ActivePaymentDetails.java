@@ -12,6 +12,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Toolkit;
+import java.awt.Window;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
@@ -22,22 +23,20 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 import anon.util.Util;
 import gui.GUIUtils;
 import gui.JAPHtmlMultiLineLabel;
 import gui.JAPMessages;
 import gui.dialog.JAPDialog;
+import jap.JAPController;
 import jap.JAPUtil;
 import jap.pay.wizardnew.PaymentInfoPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
-import javax.swing.JScrollPane;
-import java.awt.Window;
-import jap.JAPController;
-import jap.JAPModel;
 
 
 /**
@@ -119,11 +118,11 @@ public class ActivePaymentDetails extends JAPDialog implements ActionListener
 		scrollingOptions.setViewportView(allOptions);
 		scrollingOptions.setBorder(BorderFactory.createEmptyBorder());
 		//get maximum size for scrollpane
-		int scrollPaneWidth = new Double(largestPanel.width).intValue() + 70; //takes border into account
-		int idealHeight = GUIUtils.getTotalSize(optionPanels).height;
+		int scrollPaneWidth = new Double(largestPanel.width).intValue() + 80; //takes border into account
+		int idealHeight = GUIUtils.getTotalSize(optionPanels).height + 80;
 		Window parentWindow = GUIUtils.getParentWindow(getContentPane());
 		int screenHeight = (int) Math.round(GUIUtils.getCurrentScreen(parentWindow).getHeight() * 0.8) - 100;  //100 px to allow for chrome, 20% for the rest of the dialog
-		int scrollPaneHeight = Math.max(idealHeight,screenHeight);
+		int scrollPaneHeight = Math.min(idealHeight,screenHeight);
 		scrollingOptions.setPreferredSize(new Dimension(scrollPaneWidth,scrollPaneHeight));
 		getContentPane().add(scrollingOptions,m_c);
 		scrollingOptions.revalidate();
