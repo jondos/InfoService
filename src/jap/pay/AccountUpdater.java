@@ -85,9 +85,17 @@ public class AccountUpdater extends Updater
 	{
 		m_successfulUpdate = false;
 
+		if (Thread.currentThread().isInterrupted())
+		{
+			// this thread is being stopped; ignore this error
+			m_successfulUpdate = true;
+			return;
+		}
+
+
 		Enumeration accounts = PayAccountsFile.getInstance().getAccounts();
 
-		while (accounts.hasMoreElements())
+		while (accounts.hasMoreElements() && !Thread.currentThread().isInterrupted())
 		{
 			PayAccount account = (PayAccount) accounts.nextElement();
 			try
@@ -106,6 +114,12 @@ public class AccountUpdater extends Updater
 			}
 		}
 
+		if (Thread.currentThread().isInterrupted())
+		{
+			// this thread is being stopped; ignore this error
+			m_successfulUpdate = true;
+			return;
+		}
 	}
 
 	/**
