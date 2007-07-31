@@ -27,16 +27,16 @@
  */
 package anon.pay.xml;
 
-import java.io.ByteArrayInputStream;
+import java.util.Enumeration;
 import java.util.Vector;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import anon.util.IXMLEncodable;
-import anon.util.XMLUtil;
 import anon.util.Util;
-import java.util.Enumeration;
-import org.w3c.dom.Node;
+import anon.util.XMLUtil;
 
 
 /**
@@ -67,8 +67,7 @@ public class XMLPaymentOption implements IXMLEncodable
     /** percentage of a user's payment that we have to pay to the payment option's provider*/
 	private int m_markup;
 
-	/** Generic option? Non-generic options are handled by JAP and do not need
-	 * input fields for passive payment*/
+	/** Generic option? should be true, unless you plan to have JAP provide a special input form for this option*/
 	private boolean m_generic;
 
 	/** This vector takes String[2] arrays while the first element is the heading
@@ -78,6 +77,11 @@ public class XMLPaymentOption implements IXMLEncodable
 
 	/** Same explanation as m_headings*/
 	private Vector m_detailedInfos = new Vector();
+
+	/** Content: String[2], [0] is a message telling the user about the delay until his account is credited after payment,
+	 * [1] the language identifier, e.g. {"2-3 business days", "en"}
+	 */
+	private Vector m_paymentDelays = new Vector();
 
 	/** This vector takes String[3] arrays. First element: Extra payment info like account number.
 	 * Second element: type. Third element: Language.*/
@@ -150,6 +154,12 @@ public class XMLPaymentOption implements IXMLEncodable
 		addLanguage(a_language);
 	}
 
+	public void addPaymentDelay(String a_delayString, String a_language)
+	{
+		m_paymentDelays.addElement(new String[] {a_delayString, a_language} );
+		addLanguage(a_language);
+	}
+
 	public void addExtraInfo(String a_info, String a_type, String a_language)
 	{
 		m_extraInfos.addElement(new String[]
@@ -192,6 +202,7 @@ public class XMLPaymentOption implements IXMLEncodable
 		XMLUtil.setValue(elem,m_markup);
 		elemRoot.appendChild(elem);
 
+
 		//Add headings
 		for (int i = 0; i < m_headings.size(); i++)
 		{
@@ -210,6 +221,16 @@ public class XMLPaymentOption implements IXMLEncodable
 			elem.appendChild(a_doc.createTextNode(detailed[0]));
 			elemRoot.appendChild(elem);
 		}
+		//Add payment delay Infos
+		for (int i = 0; i < m_paymentDelays.size(); i++)
+		{
+			String[] delay = (String[]) m_paymentDelays.elementAt(i);
+			elem = a_doc.createElement("PaymentDelay");
+			elem.setAttribute("lang", delay[1]);
+			elem.appendChild(a_doc.createTextNode(delay[0]));
+			elemRoot.appendChild(elem);
+		}
+
 
 		//Add extra information
 		for (int i = 0; i < m_extraInfos.size(); i++)
@@ -266,7 +287,7 @@ public class XMLPaymentOption implements IXMLEncodable
 
 		Node markupElem = XMLUtil.getFirstChildByName(elemRoot,"Markup");
 		m_markup = XMLUtil.parseValue(markupElem,0);
-
+        //parse headings
 		NodeList nodesHeadings = elemRoot.getElementsByTagName("Heading");
 		for (int i = 0; i < nodesHeadings.getLength(); i++)
 		{
@@ -279,7 +300,7 @@ public class XMLPaymentOption implements IXMLEncodable
 			m_headings.addElement(new String[]
 								  {heading, language});
 		}
-
+        //parse detailed info
 		NodeList nodesDetailed = elemRoot.getElementsByTagName("DetailedInfo");
 		for (int i = 0; i < nodesDetailed.getLength(); i++)
 		{
@@ -293,7 +314,22 @@ public class XMLPaymentOption implements IXMLEncodable
 			m_detailedInfos.addElement(new String[]
 									   {info, language});
 		}
+		//parse payment delays
+		NodeList nodesDelay = elemRoot.getElementsByTagName("PaymentDelay");
+		for (int i = 0; i < nodesDelay.getLength(); i++)
+		{
+			String delay = XMLUtil.parseValue(nodesDelay.item(i), null);
+			String language = ( (Element) nodesDelay.item(i)).getAttribute("lang");
+			if (language == null || delay == null)
+			{
+				throw new Exception(EXCEPTION_WRONG_XML_STRUCTURE);
+			}
 
+			m_paymentDelays.addElement(new String[]
+									   {delay, language});
+		}
+
+		//parse extra infos
 		NodeList nodesExtra = elemRoot.getElementsByTagName("ExtraInfo");
 		for (int i = 0; i < nodesExtra.getLength(); i++)
 		{
@@ -376,6 +412,28 @@ public class XMLPaymentOption implements IXMLEncodable
 		return getDetailedInfo("en");
 	}
 
+	public String getPaymentDelay(String a_langShort)
+	{
+		for (int i = 0; i < m_paymentDelays.size(); i++)
+		{
+			String[] paymentDelay = (String[]) m_paymentDelays.elementAt(i);
+			if (paymentDelay[1].equalsIgnoreCase(a_langShort))
+			{
+				return paymentDelay[0];
+			}
+		}
+		//nothing found? check if exists for english
+		if (! a_langShort.equalsIgnoreCase("en") )
+		{
+			return getPaymentDelay("en");
+		}
+		else
+		{
+			return null; //already was looking for english -> stop a potentially endless loop
+		}
+	}
+
+
 	public String getExtraInfo(String a_langShort)
 	{
 		for (int i = 0; i < m_extraInfos.size(); i++)
@@ -415,8 +473,6 @@ public class XMLPaymentOption implements IXMLEncodable
 	 */
 	public Vector getLocalizedExtraInfoText(String language)
 	{
-		String fallbackLanguage = "en"; //the language to use if nothing found for the given one
-		String fallbackResult = "";
 		Vector allInfos = getExtraInfos();
 		Vector localizedInfos = new Vector();
 		for (Enumeration infos = allInfos.elements(); infos.hasMoreElements(); )
@@ -427,14 +483,6 @@ public class XMLPaymentOption implements IXMLEncodable
 			{
 				localizedInfos.addElement(info[0]);
 			}
-			if (info[2].equals(fallbackLanguage) )
-			{
-				fallbackResult = info[0];
-			}
-		}
-		if (localizedInfos.size() ==  0) //nothing found for the given language
-		{
-			localizedInfos.addElement(fallbackResult);
 		}
 		return localizedInfos;
 	}
