@@ -243,7 +243,7 @@ public class ConfigAssistant extends JAPDialog
 			public void componentShown(ComponentEvent a_event)
 			{
 				// reset locale now after the finish button has been updated
-				JAPMessages.init(JAPMessages.getLocale(), JAPConstants.MESSAGESFN);
+				JAPMessages.init(locale, JAPConstants.MESSAGESFN);
 			}
 		});
 
