@@ -93,7 +93,7 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		setDefaultButtonOperation(ON_CLICK_DISPOSE_DIALOG | ON_YESOK_SHOW_NEXT_CONTENT |
 								  ON_NO_SHOW_PREVIOUS_CONTENT);
 
-		m_language = JAPController.getLocale().getLanguage();
+		m_language = JAPMessages.getLocale().getLanguage();
 		m_rootPanel = this.getContentPane();
 		m_rootPanel.setLayout(new GridBagLayout());
 		m_c = new GridBagConstraints();
