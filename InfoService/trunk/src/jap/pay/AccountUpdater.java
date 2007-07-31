@@ -71,7 +71,6 @@ public class AccountUpdater extends Updater
 	 * getUpdatedClass
 	 *
 	 * @return Class
-	 * @todo Diese anon.util.Updater-Methode implementieren
 	 */
 	public Class getUpdatedClass()
 	{
@@ -81,7 +80,6 @@ public class AccountUpdater extends Updater
 	/**
 	 * Does the update and should tell if it was successful or not.
 	 *
-	 * @todo Diese anon.util.Updater-Methode implementieren
 	 */
 	protected void updateInternal()
 	{
@@ -114,7 +112,6 @@ public class AccountUpdater extends Updater
 	 * wasUpdateSuccessful
 	 *
 	 * @return boolean
-	 * @todo Diese anon.util.Updater-Methode implementieren
 	 */
 	protected boolean wasUpdateSuccessful()
 	{
