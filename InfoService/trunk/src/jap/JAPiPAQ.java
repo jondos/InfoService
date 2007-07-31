@@ -82,7 +82,7 @@ final public class JAPiPAQ
 
 	public void setLocale(Locale l)
 	{
-		JAPController.setLocale(l);
+		JAPMessages.setLocale(l);
 	}
 
 	public static void main(String[] argv)

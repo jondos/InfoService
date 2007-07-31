@@ -172,10 +172,14 @@ public class JAPConfModuleSystem implements JAPHelpContext.IHelpContext
 				{
 					String symbolicName =
 						(String)(m_treeNodesToSymbolicNames.get(a_event.getPath().getLastPathComponent()));
-					m_currentHelpContext =
-						(JAPHelpContext.IHelpContext)m_symbolicNamesToHelpContext.get(symbolicName);
-					( (CardLayout) (m_configurationCardsPanel.getLayout())).show(m_configurationCardsPanel,
-						symbolicName);
+					if (symbolicName != null)
+					{
+						m_currentHelpContext =
+							(JAPHelpContext.IHelpContext) m_symbolicNamesToHelpContext.get(symbolicName);
+						( (CardLayout) (m_configurationCardsPanel.getLayout())).show(
+							m_configurationCardsPanel,
+							symbolicName);
+					}
 				}
 			}
 		});

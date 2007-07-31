@@ -264,7 +264,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private static JAPController m_Controller = null;
 	private static JAPModel m_Model = null;
 	private static JAPFeedback m_feedback = null;
-	private Locale m_Locale = null;
 	private Vector observerVector = null;
 	private Vector m_anonServiceListener;
 	private IPasswordReader m_passwordReader;
@@ -420,7 +419,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 		m_proxyDirect = null;
 		m_proxyAnon = null;
 		//m_proxySocks = null;
-		m_Locale = Locale.getDefault();
 
 		m_passwordReader = new JAPFirewallPasswdDlg();
 
@@ -891,6 +889,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 				Element root = doc.getDocumentElement();
 				XMLUtil.removeComments(root);
 
+				//Load Locale-Settings
+				String strLocale =
+					XMLUtil.parseAttribute(root, JAPConstants.CONFIG_LOCALE, JAPMessages.getLocale().getLanguage());
+				JAPMessages.init(new Locale(strLocale, ""), JAPConstants.MESSAGESFN);
+
 				//
 				setDefaultView(JAPConstants.VIEW_NORMAL);
 
@@ -1224,12 +1227,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 								(Element) XMLUtil.getFirstChildByName(root,
 					DeletedMessageIDDBEntry.XML_ELEMENT_CONTAINER_NAME));
 
-
-				//Load Locale-Settings
-				String strLocale =
-					XMLUtil.parseAttribute(root, JAPConstants.CONFIG_LOCALE,	m_Locale.getLanguage());
-				Locale locale = new Locale(strLocale, "");
-				setLocale(locale);
 
 				if (!JAPModel.isSmallDisplay() && !JAPDialog.isConsoleOnly())
 				{
@@ -2227,7 +2224,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_DO_NOT_ABUSE_REMINDER, mbDoNotAbuseReminder);
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_NEVER_REMIND_GOODBYE,
 								 JAPModel.getInstance().isNeverRemindGoodbye());
-			XMLUtil.setAttribute(e, JAPConstants.CONFIG_LOCALE, m_Locale.getLanguage());
+
+			XMLUtil.setAttribute(e, JAPConstants.CONFIG_LOCALE, JAPMessages.getLocale().getLanguage());
 			Element elemLookAndFeels = doc.createElement(XML_ELEM_LOOK_AND_FEELS);
 			XMLUtil.setAttribute(elemLookAndFeels, XML_ATTR_LOOK_AND_FEEL,
 								 JAPModel.getInstance().getLookAndFeel());
@@ -2456,26 +2454,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 		return null;
 	}
 
-	//---------------------------------------------------------------------
-	public static Locale getLocale()
-	{
-		return m_Controller.m_Locale;
-	}
-
-	public static void setLocale(Locale l)
-	{
-		if (l == null)
-		{
-			return;
-		}
-		if (m_Controller.m_Locale != null && m_Controller.m_Locale.equals(l))
-		{
-			return;
-		}
-		JAPMessages.init(l, JAPConstants.MESSAGESFN);
-		m_Controller.m_Locale = l;
-		Locale.setDefault(l);
-	}
 
 	//---------------------------------------------------------------------
 	public void setMinimizeOnStartup(boolean b)

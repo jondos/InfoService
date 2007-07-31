@@ -1216,7 +1216,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			m_labelTermsAndConditions.setText(JAPMessages.getString(MSG_TERMS_AND_COND, strDate));
 
 			m_labelCreationDate.setText(JAPUtil.formatTimestamp(selectedAccount.getCreationTime(), false,
-				JAPController.getInstance().getLocale().getLanguage()));
+				JAPMessages.getLocale().getLanguage()));
 			if (balance == null)
 			{
 				m_labelStatementDate.setText("");
@@ -1229,7 +1229,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			else
 			{
 				m_labelStatementDate.setText(JAPUtil.formatTimestamp(balance.getTimestamp(), true,
-					JAPController.getInstance().getLocale().getLanguage()));
+					JAPMessages.getLocale().getLanguage()));
 				m_labelDeposit.setText(JAPUtil.formatEuroCentValue(balance.getDeposit()));
 				m_labelSpent.setText(JAPUtil.formatBytesValueWithUnit(balance.getSpent()));
 				//m_labelBalance.setText(JAPUtil.formatEuroCentValue(balance.getBalance()));
@@ -1844,7 +1844,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					paymentType = methodSelectionPane.getSelectedPaymentOption().getType();
 				}
 				//get info about the delay until paymen is credited
-				String language = JAPController.getLocale().getLanguage();
+				String language = JAPMessages.getLocale().getLanguage();
 				XMLPaymentOption chosenOption = methodSelectionPane.getSelectedPaymentOption();
 				String paymentDelay = chosenOption.getPaymentDelay(language);
 

@@ -420,7 +420,7 @@ public class JAPConfInfoService extends AbstractJAPConfModule implements Observe
 				{
 					CertDetailsDialog dialog = new CertDetailsDialog(getRootPanel().getParent(),
 					m_selectedISCert.getX509Certificate(), true, //isServerCertVerified(),
-					JAPController.getInstance().getLocale(), m_selectedISCertPath);
+					JAPMessages.getLocale(), m_selectedISCertPath);
 					dialog.pack();
 					dialog.setVisible(true);
 
