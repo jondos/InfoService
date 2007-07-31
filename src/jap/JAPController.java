@@ -120,6 +120,7 @@ import platform.AbstractOS;
 import proxy.DirectProxy;
 import proxy.DirectProxy.AllowUnprotectedConnectionCallback;
 import update.JAPUpdateWizard;
+import jap.pay.AccountUpdater;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -231,6 +232,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private DirectProxy m_proxyDirect = null; // service object for direct access (bypass anon service)
 	private AnonProxy m_proxyAnon = null; // service object for anon access
 
+	private AccountUpdater m_AccountUpdater;
 	private InfoServiceUpdater m_InfoServiceUpdater;
 	private PaymentInstanceUpdater m_paymentInstanceUpdater;
 	private MixCascadeUpdater m_MixCascadeUpdater;
@@ -301,6 +303,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 		// initialise IS update threads
 		m_feedback = new JAPFeedback();
+		m_AccountUpdater = new AccountUpdater();
 		m_InfoServiceUpdater = new InfoServiceUpdater();
 		m_paymentInstanceUpdater = new PaymentInstanceUpdater();
 		m_MixCascadeUpdater = new MixCascadeUpdater();
@@ -532,6 +535,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 						m_messageUpdater.update();
 					}
 				}
+
+				m_AccountUpdater.start(false);
 			}
 		});
 		run.setDaemon(true);
@@ -622,9 +627,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 			{
 				setAnonMode(JAPModel.isAutoConnect());
 			}
-
-			//Update account balance
-			updateAccountStatements();
 		}
 	}
 
@@ -3494,6 +3496,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							getInstance().m_finishSplash.setText(
 								JAPMessages.getString(MSG_FINISHING_IS_UPDATES));
 							m_Controller.m_feedback.stop();
+							m_Controller.m_AccountUpdater.stop();
 							m_Controller.m_MixCascadeUpdater.stop();
 							m_Controller.m_InfoServiceUpdater.stop();
 							m_Controller.m_paymentInstanceUpdater.stop();
@@ -4536,40 +4539,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 		JAPModel.getInstance().setPaymentPassword(a_password);
 	}
 
-	/**
-	 * Fetches new statements for all accounts from the payment instance
-	 */
-	private void updateAccountStatements()
-	{
-		Thread doIt = new Thread(new Runnable()
-		{
-			public void run()
-			{
-				Enumeration accounts = PayAccountsFile.getInstance().getAccounts();
-
-				while (accounts.hasMoreElements())
-				{
-					PayAccount account = (PayAccount) accounts.nextElement();
-					try
-					{
-						LogHolder.log(LogLevel.DEBUG, LogType.PAY,
-									  "Fetching statement for account: " + account.getAccountNumber());
-						account.fetchAccountInfo(JAPModel.getInstance().getPaymentProxyInterface(), false);
-					}
-					catch (Exception e)
-					{
-						LogHolder.log(LogLevel.ERR, LogType.PAY,
-									  "Could not fetch statement for account: " + account.getAccountNumber());
-					}
-				}
-			}
-		});
-		doIt.setDaemon(true);
-		doIt.start();
-	}
-
-
-
 	public void packetMixed(final long a_totalBytes)
 	{
 		JobQueue.Job job = new JobQueue.Job(true)
@@ -4590,7 +4559,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					// fetch new balance
 					try
 					{
-						currentAccount.fetchAccountInfo(JAPModel.getInstance().getPaymentProxyInterface(), true);
+						currentAccount.fetchAccountInfo(JAPModel.getInstance().getPaymentProxyInterface(), false);
 					}
 					catch (Exception ex)
 					{

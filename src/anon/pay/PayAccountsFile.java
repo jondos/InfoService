@@ -29,6 +29,7 @@ package anon.pay;
 
 import java.util.Enumeration;
 import java.util.Vector;
+import java.util.Observable;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -88,9 +89,11 @@ import java.sql.Timestamp;
  * @author Bastian Voigt, Tobias Bayer
  * @version 1.0
  */
-public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
+public class PayAccountsFile extends Observable implements IXMLEncodable, IBIConnectionListener
 {
 	public static final String XML_ELEMENT_NAME = "PayAccounts";
+
+	public static final Integer CHANGED_AUTO_UPDATE = new Integer(0);
 
 	private static final String XML_ATTR_IGNORE_AI_ERRORS = "ignoreAIErrorMessages";
 	private static final String XML_ATTR_ENABLE_BALANCE_AUTO_UPDATE = "autoUpdateBalance";
@@ -167,7 +170,15 @@ public class PayAccountsFile implements IXMLEncodable, IBIConnectionListener
 
 	public void setBalanceAutoUpdateEnabled(boolean a_bEnable)
 	{
-		m_bEnableBalanceAutoUpdate = a_bEnable;
+		synchronized (this)
+		{
+			if (m_bEnableBalanceAutoUpdate != a_bEnable)
+			{
+				m_bEnableBalanceAutoUpdate = a_bEnable;
+				setChanged();
+			}
+			notifyObservers(CHANGED_AUTO_UPDATE);
+		}
 	}
 
 	/**
