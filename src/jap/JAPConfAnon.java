@@ -1234,7 +1234,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			{
 				CertDetailsDialog dialog = new CertDetailsDialog(getRootPanel().getParent(),
 					m_serverCert.getFirstCertificate(), isServerCertVerified(),
-					JAPController.getInstance().getLocale(), m_serverInfo.getCertPath());
+					JAPMessages.getLocale(), m_serverInfo.getCertPath());
 				dialog.pack();
 				dialog.setVisible(true);
 			}
@@ -2140,7 +2140,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					try
 					{
 						strLocation += new CountryMapper(
-							location.getCountry(), JAPController.getInstance().getLocale()).toString();
+							location.getCountry(), JAPMessages.getLocale()).toString();
 					}
 					catch (IllegalArgumentException a_e)
 					{

@@ -70,7 +70,7 @@ public final class JAPMessages
 	public static void init(String a_resourceBundleFilename)
 	{
 		// Load Texts for Messages and Windows
-		init(null, a_resourceBundleFilename);
+		init(Locale.getDefault(), a_resourceBundleFilename);
 	}
 
 	private static String getBundleLocalisedFilename(String a_resourceBundleFilename, Locale a_locale)
@@ -81,12 +81,13 @@ public final class JAPMessages
 		{
 			return null;
 		}
+
 		if (a_locale == null)
 		{
 			a_locale = Locale.getDefault();
 		}
 
-		if (a_locale.getLanguage().trim().length() == 0)
+		if (a_locale == null || a_locale.getLanguage().trim().length() == 0)
 		{
 			strLocale += "en";
 		}
@@ -106,12 +107,21 @@ public final class JAPMessages
 	 * @param a_resourceBundleFilename a file name for the resource bundle; the language code for the
 	 * locale will be added programmatically (e.g. _en, _de, ...).
 	 */
-	public static void init(Locale locale, String a_resourceBundleFilename)
+	public static synchronized void init(Locale locale, String a_resourceBundleFilename)
 	{
+		if (ms_locale != null)
+		{
+			// the first bundle has been loaded; set Englisch as safe default
+			Locale.setDefault(Locale.ENGLISH);
+		}
+
 		try
 		{
-			ms_defaultResourceBundle = PropertyResourceBundle.getBundle(a_resourceBundleFilename,
-				Locale.ENGLISH);
+			if (ms_defaultResourceBundle == null)
+			{
+				ms_defaultResourceBundle = PropertyResourceBundle.getBundle(a_resourceBundleFilename,
+					Locale.ENGLISH);
+			}
 		}
 		catch (Exception a_e)
 		{
@@ -122,6 +132,7 @@ public final class JAPMessages
 								"Error");
 			System.exit(1);
 		}
+		ms_resourceBundle = ms_defaultResourceBundle;
 
 		try
 		{
@@ -152,15 +163,10 @@ public final class JAPMessages
 				}
 				catch (Exception e)
 				{
-					ms_resourceBundle = null;
 				}
 			}
 		}
-		if (ms_resourceBundle == null)
-		{
-			locale = Locale.ENGLISH;
-			ms_resourceBundle = ms_defaultResourceBundle;
-		}
+
 
 		ms_cachedMessages = new Hashtable();
 		ms_locale = locale;
@@ -178,6 +184,14 @@ public final class JAPMessages
 	public static Locale getLocale()
 	{
 		return ms_locale;
+	}
+
+	public static void setLocale(Locale a_locale)
+	{
+		if (a_locale != null)
+		{
+			ms_locale = a_locale;
+		}
 	}
 
 	/**

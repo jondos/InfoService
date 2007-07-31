@@ -159,7 +159,7 @@ public final class JAPUtil
 	/** Returns a formated number which respects different units (Bytes, kBytes, MBytes, GBytes)*/
 	public static String formatBytesValueWithoutUnit(long c, int a_maxFormat)
 	{
-		DecimalFormat df = (DecimalFormat) DecimalFormat.getInstance(JAPController.getLocale());
+		DecimalFormat df = (DecimalFormat) DecimalFormat.getInstance(JAPMessages.getLocale());
 		double d = c;
 		if (c < 1000 || a_maxFormat < MAX_FORMAT_KBYTES)
 		{
@@ -488,7 +488,7 @@ public final class JAPUtil
 	public static String formatTimestamp(Timestamp date, boolean withTime, String a_language)
 	{
 		SimpleDateFormat sdf;
-		String country = JAPController.getLocale().getCountry();
+		String country = JAPMessages.getLocale().getCountry();
 		if (a_language.equalsIgnoreCase("en") && country.equals(Locale.US) )
 		{
 			if (withTime)

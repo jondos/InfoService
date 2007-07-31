@@ -381,7 +381,7 @@ final class JAPConfCert extends AbstractJAPConfModule implements Observer
 			{
 				CertDetailsDialog dialog = new CertDetailsDialog(getRootPanel().getParent(),
 					((CertificateInfoStructure)m_listCert.getSelectedValue()).getCertificate().getX509Certificate(),
-					true, JAPController.getInstance().getLocale());
+					true, JAPMessages.getLocale());
 					dialog.pack();
 					dialog.setVisible(true);
 			}

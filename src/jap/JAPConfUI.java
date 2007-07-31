@@ -791,9 +791,9 @@ final class JAPConfUI extends AbstractJAPConfModule
 		}
 		else
 		{
-			newLocale = JAPController.getLocale();
+			newLocale = JAPMessages.getLocale();
 		}
-		if (!JAPController.getLocale().equals(newLocale))
+		if (!JAPMessages.getLocale().equals(newLocale))
 		{
 			final Locale localeRestart = newLocale;
 			JAPConf.getInstance().addNeedRestart(
@@ -806,7 +806,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 
 				public void doChange()
 				{
-					JAPController.setLocale(localeRestart);
+					JAPMessages.setLocale(localeRestart);
 				}
 			});
 		}
@@ -892,7 +892,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 		updateUICombo();
 
 		m_slidFontSize.setValue(JAPModel.getInstance().getFontSize());
-		setLanguageComboIndex(JAPController.getLocale());
+		setLanguageComboIndex(JAPMessages.getLocale());
 		m_cbSaveWindowLocationMain.setSelected(JAPModel.isMainWindowLocationSaved());
 		m_cbSaveWindowLocationConfig.setSelected(JAPModel.getInstance().isConfigWindowLocationSaved());
 		m_cbSaveWindowLocationIcon.setSelected(JAPModel.getInstance().isIconifiedWindowLocationSaved());

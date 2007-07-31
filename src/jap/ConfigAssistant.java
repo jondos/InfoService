@@ -165,6 +165,7 @@ public class ConfigAssistant extends JAPDialog
 
 	private void init()
 	{
+		final Locale locale = JAPMessages.getLocale();
 		final JAPDialog thisDialog = this;
 		JLabel tempLabel;
 		Insets insets = new Insets(0, 0, 0, 5);
@@ -204,7 +205,7 @@ public class ConfigAssistant extends JAPDialog
 		comboLang.addItem(new LanguageMapper("nl", new Locale("nl", "")));
 		comboLang.addItem(new LanguageMapper("fr", new Locale("fr", "")));
 		comboLang.addItem(new LanguageMapper("pt", new Locale("pt", "")));
-		comboLang.setSelectedItem(new LanguageMapper(JAPController.getLocale().getLanguage()));
+		comboLang.setSelectedItem(new LanguageMapper(JAPMessages.getLocale().getLanguage()));
 		constraints.gridx++;
 		constraints.insets = new Insets(0, 10, 0, 0);
 		contentPane.add(comboLang, constraints);
@@ -229,8 +230,7 @@ public class ConfigAssistant extends JAPDialog
 
 			public boolean isSkippedAsNextContentPane()
 			{
-				return ((LanguageMapper)comboLang.getSelectedItem()).getLocale().equals(
-						JAPController.getLocale());
+				return ((LanguageMapper)comboLang.getSelectedItem()).getLocale().equals(locale);
 			}
 
 			public boolean isSkippedAsPreviousContentPane()
@@ -243,7 +243,7 @@ public class ConfigAssistant extends JAPDialog
 			public void componentShown(ComponentEvent a_event)
 			{
 				// reset locale now after the finish button has been updated
-				JAPMessages.init(JAPController.getLocale(), JAPConstants.MESSAGESFN);
+				JAPMessages.init(JAPMessages.getLocale(), JAPConstants.MESSAGESFN);
 			}
 		});
 
@@ -710,7 +710,7 @@ public class ConfigAssistant extends JAPDialog
 			{
 				if (paneSetLang.getButtonValue() == DialogContentPane.RETURN_VALUE_OK)
 				{
-					JAPController.setLocale(((LanguageMapper)comboLang.getSelectedItem()).getLocale());
+					JAPMessages.setLocale(((LanguageMapper)comboLang.getSelectedItem()).getLocale());
 					JAPController.getInstance().goodBye(false);
 				}
 				else
