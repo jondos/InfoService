@@ -53,7 +53,7 @@ public class RelayCell extends Cell
 	public final static byte RELAY_RESOLVED = 12;
 
 	private byte m_relayCommand;
-	private int m_streamID;
+	private Integer m_streamID;
 	private boolean m_digestGenerated;
 
 	/**
@@ -62,6 +62,7 @@ public class RelayCell extends Cell
 	public RelayCell()
 	{
 		super(3);
+		m_streamID=new Integer(0);
 	}
 
 	/**
@@ -73,6 +74,7 @@ public class RelayCell extends Cell
 	public RelayCell(int circID)
 	{
 		super(3, circID);
+		m_streamID=new Integer(0);
 		this.m_digestGenerated = false;
 	}
 
@@ -90,7 +92,7 @@ public class RelayCell extends Cell
 	{
 		super(3, circID, payload, offset);
 		m_relayCommand = payload[0];
-		m_streamID = ( (payload[3] & 0xFF) << 8) | (payload[4] & 0xFF);
+		m_streamID =new Integer(( (payload[3] & 0xFF) << 8) | (payload[4] & 0xFF));
 		m_digestGenerated = false;
 	}
 
@@ -109,7 +111,7 @@ public class RelayCell extends Cell
 	{
 		super(3, circID, createPayload(relaycommand, streamid, data));
 		this.m_relayCommand = relaycommand;
-		this.m_streamID = streamid;
+		this.m_streamID = new Integer(streamid);
 		this.m_digestGenerated = false;
 	}
 
@@ -128,9 +130,9 @@ public class RelayCell extends Cell
 	 * @return
 	 * streamID
 	 */
-	public int getStreamID()
+	public Integer getStreamID()
 	{
-		return this.m_streamID;
+		return m_streamID;
 	}
 
 	/**
@@ -190,7 +192,7 @@ public class RelayCell extends Cell
 		engine.processBytesCTR(m_payload, 0, data, 0, CELL_PAYLOAD_SIZE);
 		m_payload = data;
 		m_relayCommand = m_payload[0];
-		m_streamID = ( (m_payload[3] & 0xFF) << 8) | (m_payload[4] & 0xFF);
+		m_streamID = new Integer(( (m_payload[3] & 0xFF) << 8) | (m_payload[4] & 0xFF));
 	}
 
 	private static byte[] createPayload(byte relaycommand, int streamid, byte[] data)
