@@ -49,13 +49,19 @@ public class TorChannel extends AbstractChannel
 	private final static int MAX_CELL_DATA = 498;
 
 	protected Circuit m_circuit;
+	///Send (receive) cell windows used by the Tor flow control protocol
 	private volatile int m_recvcellcounter;
 	private volatile int m_sendcellcounter;
+
+	///Number of relay cells waiting in the circuit send queue for delivery
+	private volatile int m_iSendRelayCellsWaitingForDelivery;
+
 	private volatile boolean m_bChannelCreated;
 	private volatile boolean m_bCreateError;
 	private Object m_oWaitForOpen;
 	private Object m_oSyncSendCellCounter;
 	private Object m_oSyncSend;
+	private Object m_oSyncSendRelayCellsWaitingForDelivery;
 	//Flag which signals if we should ignore any "close" actvity.
 	//This is basically necessary in case of error during channel establishment,
 	//so that we have a chance to retry without closing the whole channel.
@@ -67,7 +73,9 @@ public class TorChannel extends AbstractChannel
 		m_oWaitForOpen = new Object();
 		m_oSyncSendCellCounter = new Object();
 		m_oSyncSend = new Object();
+		m_oSyncSendRelayCellsWaitingForDelivery = new Object();
 		m_bDoNotCloseChannelOnError = false;
+		m_iSendRelayCellsWaitingForDelivery = 0;
 	}
 
 	private void addToSendCellCounter(int value)
@@ -75,6 +83,14 @@ public class TorChannel extends AbstractChannel
 		synchronized (m_oSyncSendCellCounter)
 		{
 			m_sendcellcounter += value;
+		}
+	}
+
+	protected void decreaseSendRelayCellsWaitingForDelivery()
+	{
+		synchronized (m_oSyncSendRelayCellsWaitingForDelivery)
+		{
+			m_iSendRelayCellsWaitingForDelivery--;
 		}
 	}
 
@@ -120,7 +136,7 @@ public class TorChannel extends AbstractChannel
 				}
 				try
 				{
-					while ( (m_sendcellcounter <= 0 || !m_circuit.canSendData())
+					while ( (m_sendcellcounter <= 0 || m_iSendRelayCellsWaitingForDelivery > 10)
 						   && ! (m_bIsClosed || m_bIsClosedByPeer))
 
 					{ //@todo remove this busy waiting
@@ -131,6 +147,10 @@ public class TorChannel extends AbstractChannel
 						catch (Exception e)
 						{
 						}
+					}
+					synchronized (m_oSyncSendRelayCellsWaitingForDelivery)
+					{
+						m_iSendRelayCellsWaitingForDelivery++;
 					}
 					m_circuit.send(cell);
 
@@ -144,7 +164,7 @@ public class TorChannel extends AbstractChannel
 		}
 	}
 
-/** Close this channel (called from inside the class) but respecting the doNotCloseOnError flag!*/
+	/** Close this channel (called from inside the class) but respecting the doNotCloseOnError flag!*/
 	private void internalClose()
 	{
 		m_bCreateError = true;
@@ -160,7 +180,7 @@ public class TorChannel extends AbstractChannel
 			RelayCell cell = new RelayCell(m_circuit.getCircID(), RelayCell.RELAY_END, m_id, reason);
 			try
 			{
-				m_circuit.send(cell);
+				m_circuit.sendUrgent(cell);
 			}
 			catch (Exception ex)
 			{
@@ -212,12 +232,11 @@ public class TorChannel extends AbstractChannel
 	}
 
 	/* Sets if the channel should be left open even after connection error for easy re-try.
-
-	* @param b if true, close the channel if the connection
-	* could not be established
-	* otherwise let the channel 'open' so that we can re-try to connect to the destination address
-	* using maybe another circuit
-	*/
+	 * @param b if true, close the channel if the connection
+	 * could not be established
+	 * otherwise let the channel 'open' so that we can re-try to connect to the destination address
+	 * using maybe another circuit
+	 */
 	protected void setDoNotCloseChannelOnErrorDuringConnect(boolean b)
 	{
 		m_bDoNotCloseChannelOnError = b;
@@ -268,14 +287,14 @@ public class TorChannel extends AbstractChannel
 					if (m_bCreateError)
 					{
 						LogHolder.log(LogLevel.DEBUG, LogType.TOR,
-							"TorChannel - connect() - establishing channel over circuit NOT successful. Channel was closed before!");
+									  "TorChannel - connect() - establishing channel over circuit NOT successful. Channel was closed before!");
 						return false;
 					}
 					else if (m_bChannelCreated)
 					{
 						m_bDoNotCloseChannelOnError = false;
 						LogHolder.log(LogLevel.DEBUG, LogType.TOR,
-							"TorChannel - connect() - establishing channel over circuit successful. Time needed [ms]: " +
+									  "TorChannel - connect() - establishing channel over circuit successful. Time needed [ms]: " +
 									  Long.toString(System.currentTimeMillis() - currTime));
 						return true;
 					}
@@ -288,7 +307,7 @@ public class TorChannel extends AbstractChannel
 				}
 			}
 			LogHolder.log(LogLevel.DEBUG, LogType.TOR,
-				"TorChannel - connect() - establishing channel over circuit NOT successful. Timed out!");
+						  "TorChannel - connect() - establishing channel over circuit NOT successful. Timed out!");
 			internalClose();
 			return false;
 		}
@@ -296,7 +315,7 @@ public class TorChannel extends AbstractChannel
 		{
 			LogHolder.log(LogLevel.DEBUG, LogType.TOR, "Exception in TorChannel:connect()");
 			internalClose();
-				return false;
+			return false;
 		}
 	}
 
@@ -333,7 +352,7 @@ public class TorChannel extends AbstractChannel
 					RelayCell rc = new RelayCell(m_circuit.getCircID(), RelayCell.RELAY_SENDME, m_id, null);
 					try
 					{
-						m_circuit.send(rc);
+						m_circuit.sendUrgent(rc);
 					}
 					catch (Throwable t)
 					{

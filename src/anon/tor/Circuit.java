@@ -133,7 +133,7 @@ public final class Circuit implements Runnable
 		this.m_rand = new MyRandom(new SecureRandom());
 		m_State = STATE_CREATING;
 		m_destroyed = false;
-		m_iRelayErrors=0;
+		m_iRelayErrors = 0;
 		m_cellqueueSend = new CellQueue();
 		m_threadSendCellLoop = new Thread(this, "Tor - Circuit - SendCellLoop");
 		m_threadSendCellLoop.setDaemon(true);
@@ -147,8 +147,6 @@ public final class Circuit implements Runnable
 			m_sendCellCounter += value;
 		}
 	}
-
-
 
 	/**
 	 * creates a circuit and connects to all onionrouters
@@ -379,8 +377,8 @@ public final class Circuit implements Runnable
 					}
 
 					RelayCell c = m_FirstOR.decryptCell( (RelayCell) cell);
-					Integer streamID = new Integer(c.getStreamID());
-					if (c.getStreamID() == 0) // Relay cells that belong to the circuit
+					Integer streamID = c.getStreamID();
+					if (c.getStreamID().intValue() == 0) // Relay cells that belong to the circuit
 					{
 						switch (c.getRelayCommand())
 						{
@@ -412,11 +410,13 @@ public final class Circuit implements Runnable
 							TorChannel channel = (TorChannel) m_streams.get(streamID);
 							if (channel != null)
 							{
-								if(channel.dispatchCell(c)!=ErrorCodes.E_SUCCESS)
+								if (channel.dispatchCell(c) != ErrorCodes.E_SUCCESS)
 								{
 									m_iRelayErrors++;
-									if(m_iRelayErrors>10)
+									if (m_iRelayErrors > 10)
+									{
 										shutdown();
+									}
 								}
 							}
 							else
@@ -474,15 +474,6 @@ public final class Circuit implements Runnable
 			destroyedByPeer();
 			throw new IOException("Unable to dispatch the cell \n" + ex.getLocalizedMessage());
 		}
-	}
-
-	/** Checks whether is is 'allowed' to sent data on this circuit or not. 'Allowed' at the moment just
-	 * means, that there are not to many packets waiting for delivery.
-	 */
-
-	public boolean canSendData()
-	{
-		return m_cellqueueSend.size() < 100;
 	}
 
 	/**
@@ -672,7 +663,7 @@ public final class Circuit implements Runnable
 				return ErrorCodes.E_NOT_CONNECTED;
 			}
 			Integer streamID;
-			int ret=ErrorCodes.E_SUCCESS;
+			int ret = ErrorCodes.E_SUCCESS;
 			synchronized (this)
 			{
 				m_streamCounter++;
@@ -698,7 +689,7 @@ public final class Circuit implements Runnable
 				}
 				LogHolder.log(LogLevel.DEBUG, LogType.TOR,
 							  "Circuit:connectChannel() - Channel could not be created");
-				ret=ErrorCodes.E_CONNECT;
+				ret = ErrorCodes.E_CONNECT;
 			}
 
 			if (m_streamCounter >= m_MaxStreamsPerCircuit)
@@ -786,8 +777,13 @@ public final class Circuit implements Runnable
 					}
 					else
 					{
+						TorChannel channel = (TorChannel) m_streams.get( ( (RelayCell) c).getStreamID());
 						c = m_FirstOR.encryptCell( (RelayCell) c);
 						addToSendCellCounter( -1);
+						if (channel != null)
+						{
+							channel.decreaseSendRelayCellsWaitingForDelivery();
+						}
 					}
 					m_FirstORConnection.send(c);
 				}
