@@ -63,6 +63,8 @@ import jap.pay.AccountSettingsPanel.AccountCreationPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import javax.swing.BorderFactory;
+import java.awt.Color;
 
 
 
@@ -103,6 +105,7 @@ import logging.LogType;
 	private WorkerContentPane m_fetchPlansPane;
 	private boolean m_isNewAccount;
 	private boolean m_isCouponUsed;
+	private boolean m_hasBeenShown = false;
 
 	public VolumePlanSelectionPane(JAPDialog a_parentDialog, WorkerContentPane a_previousContentPane, boolean a_newAccount)
 	{
@@ -245,7 +248,6 @@ import logging.LogType;
 	{
 		m_c.insets = new Insets(0, 5, 0, 5);
 		m_c.gridy++;
-		//m_c.gridwidth = 3;
 
 		String a_name = aPlan.getName();
 		// @todo show user's currency
@@ -256,9 +258,16 @@ import logging.LogType;
 		rb.addActionListener(this);
 		m_rbGroup.add(rb);
 		m_rootPanel.add(rb, m_c);
+
+	    //all entries in the row after the radio button need a border of 6 pixels, otherwise the radio button will be too low (swing strangeness...)
+
 		m_c.gridx++;
-		m_rootPanel.add(new JLabel(JAPUtil.formatEuroCentValue(aPlan.getPrice())), m_c);
+		JLabel priceLbl = new JLabel(JAPUtil.formatEuroCentValue(aPlan.getPrice()));
+		priceLbl.setBorder(BorderFactory.createEmptyBorder(4,0,2,0));
+		m_rootPanel.add(priceLbl, m_c);
+
 		m_c.gridx++;
+		JLabel planDurationLbl;
 		if (aPlan.isDurationLimited() )
 		{
 			/*
@@ -266,23 +275,27 @@ import logging.LogType;
 				String lang = JAPController.getLocale().getLanguage();
 				m_rootPanel.add(new JLabel(JAPUtil.formatTimestamp(endDate,false,lang)), m_c);
 			*/
-			 m_rootPanel.add(new JLabel(JAPUtil.getDuration(aPlan.getDuration(), aPlan.getDurationUnit())),
-							 m_c);
+			 planDurationLbl = new JLabel(JAPUtil.getDuration(aPlan.getDuration(), aPlan.getDurationUnit()));
 		}
 		else
 		{
-			m_rootPanel.add(new JLabel(JAPMessages.getString(MSG_UNLIMITED)), m_c);
+			planDurationLbl = new JLabel(JAPMessages.getString(MSG_UNLIMITED));
 		}
+		planDurationLbl.setBorder(BorderFactory.createEmptyBorder(4,0,2,0));
+		m_rootPanel.add(planDurationLbl, m_c);
 
 		m_c.gridx++;
+		JLabel planVolumeLbl;
 		if (aPlan.isVolumeLimited() )
 		{
-			m_rootPanel.add(new JLabel(JAPUtil.formatBytesValueWithUnit(aPlan.getVolumeKbytes()*1000)), m_c);
+			planVolumeLbl = new JLabel(JAPUtil.formatBytesValueWithUnit(aPlan.getVolumeKbytes()*1000));
 		}
 		else
 		{
-			m_rootPanel.add(new JLabel(JAPMessages.getString(MSG_UNLIMITED)), m_c);
+			planVolumeLbl = new JLabel(JAPMessages.getString(MSG_UNLIMITED));
 		}
+		planVolumeLbl.setBorder(BorderFactory.createEmptyBorder(4,0,2,0));
+		m_rootPanel.add(planVolumeLbl,m_c);
 	}
 
 	private void addCouponField()
@@ -420,7 +433,11 @@ import logging.LogType;
 
 	public CheckError[] checkUpdate()
 	{
-		showVolumePlans();
+		if (!m_hasBeenShown)
+		{
+			m_hasBeenShown = true;
+			showVolumePlans();
+		}
 		//resetSelection();
 		return null;
 	}

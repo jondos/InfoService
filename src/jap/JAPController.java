@@ -4410,6 +4410,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 								a_serverDescription);
 			}
 		}
+		m_lastBalanceUpdateBytes = 0;
 		transferedBytes(0, IProxyListener.PROTOCOL_WWW);
 		transferedBytes(0, IProxyListener.PROTOCOL_OTHER);
 	}
@@ -4541,7 +4542,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 					catch (Exception ex)
 					{
-						LogHolder.log(LogLevel.WARNING, LogType.PAY, ex);
+						if (!isShuttingDown())
+						{
+							LogHolder.log(LogLevel.WARNING, LogType.PAY, ex);
+						}
 					}
 
 					m_lastBalanceUpdateMS = System.currentTimeMillis();
