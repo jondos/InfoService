@@ -2697,26 +2697,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			return;
 		}
 
-		if (JAPController.getInstance().getAnonMode())
+		if (JAPController.getInstance().getAnonMode() && !hasDisconnected())
 		{
-			if (JAPDialog.RETURN_VALUE_OK ==
-				JAPDialog.showConfirmDialog(GUIUtils.getParentWindow(getRootPanel()),
-											JAPMessages.getString(MSG_CONNECTIONACTIVE_QUESTION),
-											JAPMessages.getString(JAPDialog.MSG_TITLE_WARNING),
-											new JAPDialog.Options(JAPDialog.OPTION_TYPE_OK_CANCEL)
-			{
-				public String getYesOKText()
-				{
-					return JAPMessages.getString(JAPDialog.MSG_PROCEED);
-				}
-			},JAPDialog.MESSAGE_TYPE_WARNING, null))
-			{
-				JAPController.getInstance().stopAnonModeWait();
-			}
-			else
-			{
-				return;
-			}
+			return;
 		}
 
 		PayAccountsFile accounts = PayAccountsFile.getInstance();
@@ -3140,6 +3123,43 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		}
 	}
 
+	private boolean hasDisconnected()
+	{
+		if (JAPDialog.RETURN_VALUE_OK ==
+			JAPDialog.showConfirmDialog(GUIUtils.getParentWindow(getRootPanel()),
+										JAPMessages.getString(MSG_CONNECTIONACTIVE_QUESTION),
+										JAPMessages.getString(JAPDialog.MSG_TITLE_WARNING),
+										new JAPDialog.Options(JAPDialog.OPTION_TYPE_OK_CANCEL)
+		{
+			public String getYesOKText()
+			{
+				return JAPMessages.getString(JAPDialog.MSG_PROCEED);
+			}
+		}, JAPDialog.MESSAGE_TYPE_WARNING, null))
+		{
+			JAPDialog dialog = new JAPDialog(getRootPanel(),
+											 JAPMessages.getString(WorkerContentPane.MSG_PLEASE_WAIT));
+			WorkerContentPane pane = new WorkerContentPane(dialog,
+				JAPMessages.getString(WorkerContentPane.MSG_PLEASE_WAIT),
+				new Runnable()
+			{
+				public void run()
+				{
+					JAPController.getInstance().stopAnonModeWait();
+				}
+			});
+			pane.updateDialog();
+			dialog.pack();
+			dialog.setResizable(false);
+			dialog.setVisible(true);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
 	/**
 	 * doDeleteAccount
 	 *
@@ -3154,26 +3174,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		PayAccountsFile accounts = PayAccountsFile.getInstance();
 		boolean reallyDelete = false;
 
-		if (accounts.getActiveAccount() == selectedAccount && JAPController.getInstance().getAnonMode())
+		if (accounts.getActiveAccount() == selectedAccount && JAPController.getInstance().getAnonMode() &&
+			!hasDisconnected())
 		{
-			if (JAPDialog.RETURN_VALUE_OK ==
-				JAPDialog.showConfirmDialog(GUIUtils.getParentWindow(getRootPanel()),
-											JAPMessages.getString(MSG_CONNECTIONACTIVE_QUESTION),
-											JAPMessages.getString(JAPDialog.MSG_TITLE_WARNING),
-											new JAPDialog.Options(JAPDialog.OPTION_TYPE_OK_CANCEL)
-			{
-				public String getYesOKText()
-				{
-					return JAPMessages.getString(JAPDialog.MSG_PROCEED);
-				}
-			}, JAPDialog.MESSAGE_TYPE_WARNING, null))
-			{
-				JAPController.getInstance().stopAnonModeWait();
-			}
-			else
-			{
 				return;
-			}
 		}
 
 		if (!selectedAccount.hasAccountInfo())
