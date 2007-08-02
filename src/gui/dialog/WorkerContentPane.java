@@ -54,6 +54,8 @@ public class WorkerContentPane extends DialogContentPane implements
 	/** @todo rename the image according to coding standards */
 	public static final String IMG_BUSY = "busy.gif";
 
+	public static final String MSG_PLEASE_WAIT = WorkerContentPane.class.getName() + "_pleaseWait";
+
 	public static final String DOTS = "...";
 
 	private Thread m_workerThread;

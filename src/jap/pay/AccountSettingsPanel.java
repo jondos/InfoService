@@ -3137,7 +3137,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			}
 		}, JAPDialog.MESSAGE_TYPE_WARNING, null))
 		{
-			JAPDialog dialog = new JAPDialog(getRootPanel(),
+			JAPDialog dialog = new JAPDialog(GUIUtils.getParentWindow(getRootPanel()),
 											 JAPMessages.getString(WorkerContentPane.MSG_PLEASE_WAIT));
 			WorkerContentPane pane = new WorkerContentPane(dialog,
 				JAPMessages.getString(WorkerContentPane.MSG_PLEASE_WAIT),
