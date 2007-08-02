@@ -239,6 +239,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		getName() + "_notexported";
 	private static final String MSG_CONNECTIONACTIVE = AccountSettingsPanel.class.
 		getName() + "_connectionactive";
+	private static final String MSG_CONNECTIONACTIVE_QUESTION = AccountSettingsPanel.class.
+		getName() + "_connectionActiveQuestion";
 	private static final String MSG_FETCHINGOPTIONS = AccountSettingsPanel.class.
 		getName() + "_fetchingoptions";
 	private static final String MSG_FETCHINGPLANS = AccountSettingsPanel.class.
@@ -2697,9 +2699,24 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		if (JAPController.getInstance().getAnonMode())
 		{
-			JAPDialog.showMessageDialog(GUIUtils.getParentWindow(this.getRootPanel()),
-										JAPMessages.getString(MSG_CONNECTIONACTIVE));
-			return;
+			if (JAPDialog.RETURN_VALUE_OK ==
+				JAPDialog.showConfirmDialog(GUIUtils.getParentWindow(getRootPanel()),
+											JAPMessages.getString(MSG_CONNECTIONACTIVE_QUESTION),
+											JAPMessages.getString(JAPDialog.MSG_TITLE_WARNING),
+											new JAPDialog.Options(JAPDialog.OPTION_TYPE_OK_CANCEL)
+			{
+				public String getYesOKText()
+				{
+					return JAPMessages.getString(JAPDialog.MSG_PROCEED);
+				}
+			},JAPDialog.MESSAGE_TYPE_WARNING, null))
+			{
+				JAPController.getInstance().stopAnonModeWait();
+			}
+			else
+			{
+				return;
+			}
 		}
 
 		PayAccountsFile accounts = PayAccountsFile.getInstance();
@@ -3139,9 +3156,24 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		if (accounts.getActiveAccount() == selectedAccount && JAPController.getInstance().getAnonMode())
 		{
-			JAPDialog.showMessageDialog(GUIUtils.getParentWindow(this.getRootPanel()),
-										JAPMessages.getString(MSG_CONNECTIONACTIVE));
-			return;
+			if (JAPDialog.RETURN_VALUE_OK ==
+				JAPDialog.showConfirmDialog(GUIUtils.getParentWindow(getRootPanel()),
+											JAPMessages.getString(MSG_CONNECTIONACTIVE_QUESTION),
+											JAPMessages.getString(JAPDialog.MSG_TITLE_WARNING),
+											new JAPDialog.Options(JAPDialog.OPTION_TYPE_OK_CANCEL)
+			{
+				public String getYesOKText()
+				{
+					return JAPMessages.getString(JAPDialog.MSG_PROCEED);
+				}
+			}, JAPDialog.MESSAGE_TYPE_WARNING, null))
+			{
+				JAPController.getInstance().stopAnonModeWait();
+			}
+			else
+			{
+				return;
+			}
 		}
 
 		if (!selectedAccount.hasAccountInfo())
