@@ -1588,7 +1588,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		};
 
 		/******** fetch transaction number ****************/
-		WorkerContentPane.IReturnRunnable fetchTan = new WorkerContentPane.IReturnRunnable()
+		final WorkerContentPane.IReturnRunnable fetchTan = new WorkerContentPane.IReturnRunnable()
 		{
 			private XMLTransCert m_transCert;
 			public void run()
@@ -1625,7 +1625,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 						PayAccount curAccount = a_accountCreationThread.getAccount();
 						m_transCert = curAccount.charge(JAPModel.getInstance().getPaymentProxyInterface(), requestData);
-						a_tan.addElement(m_transCert);
+						if (m_transCert != null)
+						{
+							a_tan.addElement(m_transCert);
+						}
+						// there is no way back to choose another rate
+						methodSelectionPane.getButtonNo().setVisible(false);
 					}
 					catch (Exception e)
 					{
@@ -1648,7 +1653,17 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		final WorkerContentPane fetchTanPane =
 			new WorkerContentPane(a_parentDialog, JAPMessages.getString(MSG_FETCHINGTAN),
-								  methodSelectionPane, fetchTan);
+								  methodSelectionPane, fetchTan)
+		{
+			public boolean isSkippedAsNextContentPane()
+			{
+				if (fetchTan.getValue() == null)
+				{
+					return false;
+				}
+				return true;
+			}
+		};
 		fetchTanPane.setInterruptThreadSafe(false);
 
 		//************* show Payment Info (except for passive payments) **************
@@ -1681,7 +1696,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				 return true;
 			 }
 		 };
-		paymentInfoPane.getButtonNo().setVisible(false);
+		//paymentInfoPane.getButtonNo().setVisible(false);
 
 		//************* let user enter passive payment data (for passive only) *************//
 		final PassivePaymentPane passivePaymentPane = new PassivePaymentPane(a_parentDialog, paymentInfoPane)
@@ -2047,7 +2062,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				WorkerContentPane pane =
 					new WorkerContentPane(dialog,
 										  JAPMessages.getString(TransactionOverviewDialog.MSG_FETCHING_TAN), run);
-
+/*
 				WorkerContentPane.IReturnRunnable run2 =
 					new WorkerContentPane.IReturnRunnable()
 				{
@@ -2079,7 +2094,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				WorkerContentPane pane2 =
 					new WorkerContentPane(dialog,
 										  JAPMessages.getString(TransactionOverviewDialog.MSG_FETCHING_TAN), pane, run2);
-
+*/
 				pane.updateDialog();
 				dialog.pack();
 				dialog.setVisible(true);
@@ -2097,7 +2112,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				{
 					throw new Exception("Illegal return value!");
 				}
-
+/*
 				if (run2.getValue() == null)
 				{
 					// interrupted
@@ -2113,14 +2128,14 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					throw new Exception("Illegal return value!");
 				}
 
-				IXMLEncodable xmlReply = (IXMLEncodable) run2.getValue();
+				IXMLEncodable xmlReply = (IXMLEncodable) run2.getValue();*/
 
 				long amount =
 					Long.parseLong( (String) ( (Hashtable) run.getValue()).get(XMLTransactionOverview.
 					KEY_AMOUNT));
 				String planName = (String) ( (Hashtable) run.getValue()).get(XMLTransactionOverview.
 					KEY_VOLUMEPLAN);
-
+/*
 				//biConn will return XMLErrorMessage if payment is active (= no matching record in passivepayments)
 				//(the transfers table alone does not associate a payment method or type with a transfernumber)
 				if (xmlReply instanceof XMLErrorMessage)
@@ -2146,7 +2161,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					TransactionOverviewDialog.showPassivePaymentDialog(jap.JAPConf.getInstance(),
 						(XMLPassivePayment) xmlReply,
 						transferNumber, selectedAccount.getAccountNumber());
-				}
+				}*/
+
+				TransactionOverviewDialog.showActivePaymentDialog(
+								jap.JAPConf.getInstance(), new Long(transferNumber).toString(),
+								amount, selectedAccount, planName);
 
 			}
 			catch (Exception e)

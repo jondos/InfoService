@@ -79,6 +79,7 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 	private GridBagConstraints m_c = new GridBagConstraints();
 	private XMLPaymentOption m_selectedPaymentOption;
 	private Container m_rootPanel;
+	XMLPaymentOptions m_options;
 
 	public MethodSelectionPane(JAPDialog a_parentDialog, WorkerContentPane a_previousContentPane)
 	{
@@ -139,6 +140,19 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 
 	public void showPaymentOptions()
 	{
+		//Get fetched payment options
+		WorkerContentPane previousContentPane = (WorkerContentPane) getPreviousContentPane();
+		Object value = previousContentPane.getValue();
+		XMLPaymentOptions options = (XMLPaymentOptions) value;
+		if (m_options != null && m_selectedPaymentOption != null && m_options == options)
+		{
+			// nothing has changed, do not update
+			return;
+		}
+		m_selectedPaymentOption = null;
+		m_options = options;
+
+
 		m_rootPanel.removeAll();
 		m_c = new GridBagConstraints();
 		m_c.gridx = 0;
@@ -148,10 +162,7 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		m_c.insets = new Insets(5, 5, 5, 5);
 		m_c.anchor = m_c.NORTHWEST;
 		m_c.fill = m_c.NONE;
-		//Get fetched payment options
-		WorkerContentPane previousContentPane = (WorkerContentPane) getPreviousContentPane();
-		Object value = previousContentPane.getValue();
-		XMLPaymentOptions options = (XMLPaymentOptions) value;
+
 
 		m_paymentOptions = options;
 		String language = JAPMessages.getLocale().getLanguage();
@@ -235,7 +246,7 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 	    String planName = selectedPlan.getName();
 		String planPrice = JAPUtil.formatEuroCentValue(selectedPlan.getPrice());
 	    JLabel planHeading = new JLabel(JAPMessages.getString(MSG_SELECTED_PLAN));
-		JLabel planDetails = new JLabel(planName + ", " + planPrice);
+		JLabel planDetails = new JLabel(planName + " (" + planPrice + ")");
 		m_c.insets = new Insets(30, 5, 0, 5);
     	m_c.gridy++;
 		m_rootPanel.add(planHeading, m_c);
@@ -275,15 +286,9 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		return null;
 	}
 
-	public void resetSelection()
-	{
-		m_selectedPaymentOption = null;
-	}
-
 	public CheckError[] checkUpdate()
 	{
 		showPaymentOptions();
-		resetSelection();
 		return null;
 	}
 
