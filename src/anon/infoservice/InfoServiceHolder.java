@@ -639,7 +639,8 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 				return;
 			}
 
-			LogHolder.log(LogLevel.ERR, LogType.NET, "No InfoService with the needed information available.",
+			LogHolder.log(LogLevel.ERR, LogType.NET,
+						  "No InfoService with the needed information (" + functionNumber + ") available.",
 						  true);
 			m_result = null;
 		}

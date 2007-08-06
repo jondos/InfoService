@@ -157,9 +157,25 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 
 	public static String createEgoldLink(String baseLink, long amount, String planName, String transferNumber)
 	{
-		//currently the same treatment as for paypal works, but uses a different method name
-		//to make the dependency clear
-		return createPaypalLink(baseLink,amount,planName,transferNumber);
+		String amountString = amountAsString(amount);
+		String localeLang = JAPMessages.getLocale().getLanguage();
+		String landingPageLang = localeLang.toLowerCase();
+		//pages of jondos.de to which the user is sent after the e-gold payment only exist in German and English, so send to English pages if running Jap in another language
+		if (!landingPageLang.equals("en") && !landingPageLang.equals("de") )
+		{
+			landingPageLang = "en";
+		}
+		String itemStrg = JAPMessages.getString(MSG_PAYPAL_ITEM_NAME) + "%20-%20" + planName; //URL-encode Spaces etc!!
+
+		baseLink = Util.replaceAll(baseLink, "%t", transferNumber);
+		baseLink = Util.replaceAll(baseLink, "%item%", itemStrg);
+		baseLink = Util.replaceAll(baseLink, "%amount%", amountString);
+		baseLink = Util.replaceAll(baseLink, "%currency%", "EUR");
+		//JAP version 00.08.086 just uses createPaypalLink, i.e. replaces %lang% for all languages, not just the supported "en" and "de",
+		//so we keep the hardcoded "en" in the link, and replace the url-encoded "/en/" part of the link
+		baseLink = Util.replaceAll(baseLink, "%2fen%2f", "%2f" + landingPageLang + "%2f");
+
+		return baseLink;
 	}
 
 	private static String amountAsString(long amount)
