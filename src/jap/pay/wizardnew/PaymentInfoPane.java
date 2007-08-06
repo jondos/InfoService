@@ -114,7 +114,7 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 			m_c.gridy++;
 		}*/
 
-		getButtonCancel().setVisible(false);
+		//getButtonCancel().setVisible(false);
 	}
 
 	/**

@@ -39,12 +39,14 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import org.w3c.dom.Node;
+import java.util.Comparator;
+import java.util.Collections;
 
 /**
  * This class represents a XMLPaymentOptions structure.
- * @author Elmar Schraml
+ * @author Tobias Bayer, Elmar Schraml
  */
-public class XMLPaymentOptions implements IXMLEncodable
+public class XMLPaymentOptions implements IXMLEncodable, Comparator
 {
 	private Vector m_currencies = new Vector();
 	private Vector m_paymentOptions = new Vector(); //holds XMLPaymentOption objects
@@ -144,12 +146,15 @@ public class XMLPaymentOptions implements IXMLEncodable
 	public Enumeration getOptionHeadings(String a_language)
 	{
 		Vector optionHeadings = new Vector();
+		Vector options = (Vector) m_paymentOptions.clone();
+		this.setSortingLanguage(a_language);
+		Collections.sort(options, this);
 
-		for (int i = 0; i < m_paymentOptions.size(); i++)
+		for (int i = 0; i < options.size(); i++)
 		{
 			try
 			{
-				XMLPaymentOption option = (XMLPaymentOption) m_paymentOptions.elementAt(i);
+				XMLPaymentOption option = (XMLPaymentOption) options.elementAt(i);
 				optionHeadings.addElement(option.getHeading(a_language));
 			}
 			catch (Exception e)
@@ -163,7 +168,16 @@ public class XMLPaymentOptions implements IXMLEncodable
 
 
 	public Vector getAllOptions(){
-		   return m_paymentOptions;
+		   return getAllOptionsSortedByRank("en");
+	}
+
+	public Vector getAllOptionsSortedByRank(String a_lang)
+	{
+		//set this as Comparator -> uses XMLPaymentOptions.compare() -> enables us to use a paramater to set which language's ranks to sort by
+		this.setSortingLanguage(a_lang);
+		Vector sortedOptions = (Vector) m_paymentOptions.clone(); //so the member Vector remains unchanged the Getter
+		Collections.sort(sortedOptions,this);
+		return sortedOptions;
 	}
 
 	/**
@@ -210,5 +224,64 @@ public class XMLPaymentOptions implements IXMLEncodable
 	public String getAcceptedCreditCards()
 	{
 		return m_acceptedCreditCards;
+	}
+	/**
+	 * used to compare 2 XMLPaymentOptions by rank
+	 * will return -1 (i.e. smaller than) if option1's rank is lower than option2's rank,
+	 * thereby placing option1 earlier in a sorted collection
+	 *
+	 * Ranks come from the JPI's database table paymentoptionranks,
+	 * and can be set per language.
+	 *
+	 * By default, the ranks for English will be returned; to sort by the ranks for another language,
+	 * setSortingLanguage(<2-letter-language code>) before using an XMLPaymentOptions object as a Comparator.
+	 * If ranks have not been set for both options in the given language, the comparison will again fall back to comparison by the english ranks.
+	 *
+	 * @param o1 Object, @param o2 Object:
+	 * both have to be XMLPaymentOptions, otherwise a ClassCastException will be thrown
+	 * @return int
+	 */
+	public int compare(Object object1, Object object2)
+	{
+		XMLPaymentOption optionOne;
+		XMLPaymentOption optionTwo;
+		//see if casting to XMLPaymentOption works
+		try
+		{
+			if (object1 == null || object2 == null)
+			{
+				throw new Exception("can not compare null objects");
+			}
+			optionOne = (XMLPaymentOption) object1;
+			optionTwo = (XMLPaymentOption) object2;
+		} catch (Exception e)
+		{
+			throw new ClassCastException("could not compare payment options, incompatible objects?" + e);
+		}
+		//get sortingLanguage, if it has been set, and both options support it, otherwise fall back to english
+		String sortingLang = m_sortingLanguage;
+		if (sortingLang == null || optionOne.getRank(sortingLang) == null || optionTwo.getRank(sortingLang) == null)
+		{
+			sortingLang = "en";
+		}
+	    //get ranks for sorting Language, and compare by ranks
+		Integer rankOne = optionOne.getRank(sortingLang);
+		Integer rankTwo = optionTwo.getRank(sortingLang);
+		if (rankOne == null || rankTwo == null)
+		{
+			//should not be possible to happen, but no big deal, we'll just rank them equal
+			return 0;
+		}
+		else
+		{
+			return rankOne.compareTo(rankTwo);
+		}
+
+	}
+
+	private String m_sortingLanguage = null;
+	public void setSortingLanguage(String a_lang)
+	{
+		m_sortingLanguage = a_lang;
 	}
 }
