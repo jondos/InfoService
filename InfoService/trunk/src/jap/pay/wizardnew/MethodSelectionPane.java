@@ -28,6 +28,7 @@
 package jap.pay.wizardnew;
 
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.StringTokenizer;
 import java.util.Hashtable;
 
@@ -38,10 +39,13 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.ButtonGroup;
+
 import javax.swing.JRadioButton;
 
 import anon.pay.xml.XMLPaymentOption;
 import anon.pay.xml.XMLPaymentOptions;
+import anon.pay.xml.XMLVolumePlan;
+import gui.JAPHtmlMultiLineLabel;
 import gui.JAPMessages;
 import gui.dialog.DialogContentPane;
 import gui.dialog.DialogContentPane.IWizardSuitable;
@@ -49,11 +53,13 @@ import gui.dialog.JAPDialog;
 import gui.dialog.WorkerContentPane;
 import jap.JAPConstants;
 import jap.JAPController;
+import jap.JAPUtil;
 import logging.LogType;
 import anon.pay.xml.XMLVolumePlan;
 import jap.JAPUtil;
 import javax.swing.JLabel;
 import gui.JAPHtmlMultiLineLabel;
+import java.util.Vector;
 
 public class MethodSelectionPane extends DialogContentPane implements IWizardSuitable, ActionListener
 {
@@ -163,45 +169,21 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 		m_c.anchor = m_c.NORTHWEST;
 		m_c.fill = m_c.NONE;
 
-
 		m_paymentOptions = options;
 		String language = JAPMessages.getLocale().getLanguage();
-		Enumeration headings = options.getOptionHeadings(language);
-		Hashtable usedOptions = new Hashtable(); // holds type and option
-		/*
-		 * Add non-genric options that work with this JAP version and all generic options that have not
-		 * been replaced by non-generic options.
-		 */
-		XMLPaymentOption currentOption;
-		String optionName;
-		while (headings.hasMoreElements())
-		{
-			String heading = (String) headings.nextElement();
+		Vector allOptionsRanked = m_paymentOptions.getAllOptionsSortedByRank(language);
+		Enumeration allOptions = allOptionsRanked.elements();
 
-			currentOption = m_paymentOptions.getOption(heading, JAPMessages.getLocale().getLanguage());
-			if (currentOption.worksWithJapVersion(JAPConstants.aktVersion))
-			{
-				optionName = currentOption.getName();
-				/** @todo Change the name of this option to CreditCard in BI!!!! */
-				if (optionName.equals("CreditCardOld"))
-				{
-					optionName = "CreditCard";
-				}
-				if (usedOptions.containsKey(optionName) &&
-					!currentOption.isNewer((XMLPaymentOption)usedOptions.get(optionName)))
-				{
-					continue;
-				}
-				usedOptions.put(optionName, currentOption);
-			}
-		}
-		Enumeration enumUsedOptions = usedOptions.elements();
 		XMLPaymentOption curOption;
 		String curLang;
 		String curMarkup;
-		while (enumUsedOptions.hasMoreElements())
+		while (allOptions.hasMoreElements())
 		{
-			curOption = (XMLPaymentOption)enumUsedOptions.nextElement();
+			curOption = (XMLPaymentOption)allOptions.nextElement();
+			if (!curOption.worksWithJapVersion(JAPConstants.aktVersion) )
+			{
+				continue; //do not show options that this JAP can't handle
+			}
 			curLang = JAPMessages.getLocale().getLanguage();
 			int markup = curOption.getMarkup();
 			//if (markup > SHOW_MARKUP_IF_ABOVE)
@@ -216,6 +198,7 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 			{
 				curMarkup = "";
 			}
+			//show the current option on the panel
 			addOption(curOption.getHeading(curLang),curMarkup );
 		}
 

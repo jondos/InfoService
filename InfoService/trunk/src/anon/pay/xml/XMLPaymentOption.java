@@ -37,11 +37,12 @@ import org.w3c.dom.NodeList;
 import anon.util.IXMLEncodable;
 import anon.util.Util;
 import anon.util.XMLUtil;
+import java.util.Hashtable;
 
 
 /**
  * This class represents a payment option sent by the Payment Instance.
- * @author Tobias Bayer
+ * @author Tobias Bayer, Elmar Schraml
  */
 public class XMLPaymentOption implements IXMLEncodable
 {
@@ -77,6 +78,11 @@ public class XMLPaymentOption implements IXMLEncodable
 
 	/** Same explanation as m_headings*/
 	private Vector m_detailedInfos = new Vector();
+
+	/**
+	 * key: language, value: rank as Integer > 0, lower number for rank means higher priority
+	 */
+	private Hashtable m_ranks = new Hashtable();
 
 	/** Content: String[2], [0] is a message telling the user about the delay until his account is credited after payment,
 	 * [1] the language identifier, e.g. {"2-3 business days", "en"}
@@ -154,6 +160,12 @@ public class XMLPaymentOption implements IXMLEncodable
 		addLanguage(a_language);
 	}
 
+	public void addRank(int a_rank, String a_language)
+	{
+		m_ranks.put(a_language, new Integer(a_rank));
+		//NO addLanguage here, since a rank is not necesary for localization in a language, can always default to the rank for english, or none at all
+	}
+
 	public void addPaymentDelay(String a_delayString, String a_language)
 	{
 		m_paymentDelays.addElement(new String[] {a_delayString, a_language} );
@@ -221,6 +233,18 @@ public class XMLPaymentOption implements IXMLEncodable
 			elem.appendChild(a_doc.createTextNode(detailed[0]));
 			elemRoot.appendChild(elem);
 		}
+		//Add ranks
+		Enumeration allRankLanguages = m_ranks.keys();
+		while (allRankLanguages.hasMoreElements() )
+		{
+			String curLang = (String) allRankLanguages.nextElement();
+			Integer curRank = (Integer) m_ranks.get(curLang);
+			elem = a_doc.createElement("Rank");
+			elem.setAttribute("lang",curLang);
+			elem.appendChild(a_doc.createTextNode(curRank.toString() ) );
+			elemRoot.appendChild(elem);
+		}
+
 		//Add payment delay Infos
 		for (int i = 0; i < m_paymentDelays.size(); i++)
 		{
@@ -314,6 +338,15 @@ public class XMLPaymentOption implements IXMLEncodable
 			m_detailedInfos.addElement(new String[]
 									   {info, language});
 		}
+		//parse ranks
+		NodeList rankNodes = elemRoot.getElementsByTagName("Rank");
+		for (int i = 0; i < rankNodes.getLength(); i++ )
+		{
+			String language = ( (Element) rankNodes.item(i)).getAttribute("lang");
+			int rank = XMLUtil.parseValue(rankNodes.item(i),Integer.MAX_VALUE); //if no rank given, send to end of list
+			m_ranks.put(language,new Integer(rank));
+		}
+
 		//parse payment delays
 		NodeList nodesDelay = elemRoot.getElementsByTagName("PaymentDelay");
 		for (int i = 0; i < nodesDelay.getLength(); i++)
@@ -411,6 +444,23 @@ public class XMLPaymentOption implements IXMLEncodable
 		}
 		return getDetailedInfo("en");
 	}
+	/**
+	 *
+	 * @param a_langShort String
+	 * @return int: the option's rank for the given language, or NULL if not set
+	 * (does NOT fall back to the rank for english, or default values - if no rank is set for this language, we want the comparator to notice,
+		so it won't compare one option's proper rank to the second's option rank for English)
+	 * special case: no rank set for english -> will return Integer.MAX_VALUE
+	 */
+	public Integer getRank(String a_langShort)
+	{
+		Integer rank = (Integer) m_ranks.get(a_langShort);
+		if (rank == null && a_langShort.equalsIgnoreCase("en") )
+		{
+			rank = new Integer(Integer.MAX_VALUE);
+		}
+		return rank;
+	}
 
 	public String getPaymentDelay(String a_langShort)
 	{
@@ -422,7 +472,6 @@ public class XMLPaymentOption implements IXMLEncodable
 				return paymentDelay[0];
 			}
 		}
-		//nothing found? check if exists for english
 		if (! a_langShort.equalsIgnoreCase("en") )
 		{
 			return getPaymentDelay("en");
