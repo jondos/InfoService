@@ -484,14 +484,15 @@ public class PaymentMainPanel extends FlippingPanel
 					if (balance != null && activeAccount.isCharged(now))
 					{
 						m_BalanceProgressBar.setEnabled(false);
-						m_BalanceText.setText(JAPUtil.formatBytesValueWithUnit(balance.getCredit() * 1000,
-							JAPUtil.MAX_FORMAT_KBYTES));
+						m_BalanceText.setText(JAPUtil.formatBytesValueWithUnit(balance.getCredit() * 1000));
+//							JAPUtil.MAX_FORMAT_KBYTES));
 						m_BalanceText.setForeground(m_labelValidUntil.getForeground());
 						m_labelValidUntil.setText(JAPUtil.formatTimestamp(balance.getFlatEnddate(), false,
 							JAPMessages.getLocale().getLanguage()));
 						//m_labelBalanceInEuros.setText(JAPUtil.formatEuroCentValue(balance.getBalance()));
 
-						long deposit = balance.getVolumeBytesLeft() * 1000 + balance.getSpent();
+						//long deposit = balance.getVolumeBytesLeft() * 1000 + balance.getSpent();
+						long deposit = WARNING_AMOUNT * 1000 * 2;
 						long credit = activeAccount.getCertifiedCredit() * 1000;
 						double percent = (double) credit / (double) deposit;
 						if (percent > 0.83)
