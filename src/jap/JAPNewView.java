@@ -2719,12 +2719,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						String unit;
 						String s;
 
-						unit = JAPUtil.formatBytesValueOnlyUnit(a_totalBytes, JAPUtil.MAX_FORMAT_KBYTES);
+						//unit = JAPUtil.formatBytesValueOnlyUnit(a_totalBytes, JAPUtil.MAX_FORMAT_KBYTES);
+						unit = JAPUtil.formatBytesValueOnlyUnit(a_totalBytes);
 						m_labelOwnTrafficUnit.setText(unit);
 						m_labelOwnTrafficUnit.revalidate();
 						m_labelOwnTrafficUnitSmall.setText(unit);
 						m_labelOwnTrafficUnitSmall.revalidate();
-						s = JAPUtil.formatBytesValueWithoutUnit(a_totalBytes, JAPUtil.MAX_FORMAT_KBYTES);
+						//s = JAPUtil.formatBytesValueWithoutUnit(a_totalBytes, JAPUtil.MAX_FORMAT_KBYTES);
+						s = JAPUtil.formatBytesValueWithoutUnit(a_totalBytes);
 						m_labelOwnTrafficBytes.setText(s);
 						m_labelOwnTrafficBytes.revalidate();
 						m_labelOwnTrafficBytesSmall.setText(s);
