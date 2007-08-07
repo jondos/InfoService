@@ -27,7 +27,6 @@
  */
 package anon.pay.xml;
 
-import java.io.ByteArrayInputStream;
 import java.util.Vector;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -39,14 +38,12 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import org.w3c.dom.Node;
-import java.util.Comparator;
-import java.util.Collections;
 
 /**
  * This class represents a XMLPaymentOptions structure.
  * @author Tobias Bayer, Elmar Schraml
  */
-public class XMLPaymentOptions implements IXMLEncodable, Comparator
+public class XMLPaymentOptions implements IXMLEncodable
 {
 	private Vector m_currencies = new Vector();
 	private Vector m_paymentOptions = new Vector(); //holds XMLPaymentOption objects
@@ -146,10 +143,10 @@ public class XMLPaymentOptions implements IXMLEncodable, Comparator
 	public Enumeration getOptionHeadings(String a_language)
 	{
 		Vector optionHeadings = new Vector();
-		Vector options = (Vector) m_paymentOptions.clone();
 		this.setSortingLanguage(a_language);
-		Collections.sort(options, this);
-
+		//Collections.sort(options, this); //Java 1.2 only, unfortunately
+        sortVector();
+		Vector options = (Vector) m_paymentOptions.clone();
 		for (int i = 0; i < options.size(); i++)
 		{
 			try
@@ -175,8 +172,9 @@ public class XMLPaymentOptions implements IXMLEncodable, Comparator
 	{
 		//set this as Comparator -> uses XMLPaymentOptions.compare() -> enables us to use a paramater to set which language's ranks to sort by
 		this.setSortingLanguage(a_lang);
+		//Collections.sort(sortedOptions,this); //Java 1.2 only, unfortunately
+		sortVector();
 		Vector sortedOptions = (Vector) m_paymentOptions.clone(); //so the member Vector remains unchanged the Getter
-		Collections.sort(sortedOptions,this);
 		return sortedOptions;
 	}
 
@@ -226,6 +224,8 @@ public class XMLPaymentOptions implements IXMLEncodable, Comparator
 		return m_acceptedCreditCards;
 	}
 	/**
+	 *  --- not usable directly vie implementing Comparator due to Comparator being Java version 1.2+ only ---
+	 *
 	 * used to compare 2 XMLPaymentOptions by rank
 	 * will return -1 (i.e. smaller than) if option1's rank is lower than option2's rank,
 	 * thereby placing option1 earlier in a sorted collection
@@ -283,5 +283,38 @@ public class XMLPaymentOptions implements IXMLEncodable, Comparator
 	public void setSortingLanguage(String a_lang)
 	{
 		m_sortingLanguage = a_lang;
+	}
+
+	/**
+	 * replacement for calling Collections.sort() on the Vector
+	 * not the world's most efficient sort, but for a bunch of options it'll do
+	 */
+	private void sortVector()
+	{
+		Vector optionsToSort = (Vector) m_paymentOptions.clone();
+		Vector sortedOptions = new Vector();
+		for (Enumeration allOptions = optionsToSort.elements(); allOptions.hasMoreElements(); )
+		{
+			XMLPaymentOption newOption = (XMLPaymentOption) allOptions.nextElement();
+
+			//put it in new Vector, at the index of the first element with a higher rank
+			boolean wasInserted = false;
+			for (int i = 0; i < sortedOptions.size(); i++)
+			{
+				XMLPaymentOption curOption = (XMLPaymentOption) sortedOptions.elementAt(i);
+				if ( compare(newOption,curOption) < 0) //new option's rank is smaller, i.e. we've gone past all options with a smaller rank
+				{
+					sortedOptions.insertElementAt(newOption,i); //curOption will be pushed towards the end of the Vector
+					wasInserted = true;
+					break;
+				}
+			}
+			//no object with higher rank in Vector yet? insert at the end
+			if (!wasInserted)
+			{
+				sortedOptions.addElement(newOption);
+			}
+		}
+		m_paymentOptions = sortedOptions;
 	}
 }

@@ -1495,6 +1495,51 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 	}
 
+/**
+	 * Shows a blinking JAP icon.
+	 */
+	public void blink()
+	{
+		Thread blinkThread = new Thread(new Runnable()
+		{
+			public void run()
+			{
+				synchronized (m_progressOwnTrafficActivity)
+				{
+					if (m_currentChannels == 0)
+					{
+						return;
+					}
+
+					if (m_Controller.isAnonConnected())
+					{
+						m_progressOwnTrafficActivity.setValue(m_currentChannels - 1);
+						m_progressOwnTrafficActivitySmall.setValue(m_currentChannels - 1);
+						try
+						{
+							m_progressOwnTrafficActivity.wait(500);
+						}
+						catch (InterruptedException a_e)
+						{
+							// ignore
+						}
+					}
+					if (!m_Controller.isAnonConnected())
+					{
+						m_currentChannels = 0;
+					}
+					m_progressOwnTrafficActivity.setValue(m_currentChannels);
+					m_progressOwnTrafficActivitySmall.setValue(m_currentChannels);
+				}
+			}
+		});
+		blinkThread.setDaemon(true);
+		blinkThread.start();
+	}
+
+
+
+
 	public void update(Observable a_observable, final Object a_message)
 	{
 		Runnable run = null;
@@ -2638,13 +2683,19 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 	}
 
+	private int m_currentChannels = 0;
+
 	public void channelsChanged(int c)
 	{
 		// Nr of Channels
 		//int c=controller.getNrOfChannels();
-		c = Math.min(c, m_progressOwnTrafficActivity.getMaximum());
-		m_progressOwnTrafficActivity.setValue(c);
-		m_progressOwnTrafficActivitySmall.setValue(c);
+		synchronized (m_progressOwnTrafficActivity)
+		{
+			m_currentChannels = c;
+			c = Math.min(c, m_progressOwnTrafficActivity.getMaximum());
+			m_progressOwnTrafficActivity.setValue(c);
+			m_progressOwnTrafficActivitySmall.setValue(c);
+		}
 //			ownTrafficChannelsProgressBar.setString(String.valueOf(c));
 	}
 
@@ -2717,6 +2768,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				{
 					m_ViewIconified.blink();
 				}
+				blink();
 
 				Runnable transferedBytesThread = new Runnable()
 				{
