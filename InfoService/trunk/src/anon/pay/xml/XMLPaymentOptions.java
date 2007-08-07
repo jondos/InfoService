@@ -274,7 +274,16 @@ public class XMLPaymentOptions implements IXMLEncodable
 		}
 		else
 		{
-			return rankOne.compareTo(rankTwo);
+			if (rankOne.intValue() < rankTwo.intValue())
+			{
+				return -1;
+			}
+			else if (rankOne.intValue() > rankTwo.intValue())
+			{
+				return 1;
+			}
+			return 0;
+			//return rankOne.compareTo(rankTwo);
 		}
 
 	}
