@@ -79,7 +79,8 @@ import java.awt.Color;
 
 public class PaymentMainPanel extends FlippingPanel
 {
-	private final long WARNING_AMOUNT = 25 * 1000; // 25 MB (db stores in Kbyte!)
+	public static final long WARNING_AMOUNT = 25 * 1000; // 25 MB (db stores in Kbyte!)
+	public static final long FULL_AMOUNT = WARNING_AMOUNT * 4; // 25 MB (db stores in Kbyte!)
 
 	/** Messages */
 	private static final String MSG_TITLE =
@@ -492,7 +493,7 @@ public class PaymentMainPanel extends FlippingPanel
 						//m_labelBalanceInEuros.setText(JAPUtil.formatEuroCentValue(balance.getBalance()));
 
 						//long deposit = balance.getVolumeBytesLeft() * 1000 + balance.getSpent();
-						long deposit = WARNING_AMOUNT * 1000 * 2;
+						long deposit = FULL_AMOUNT * 1000;
 						long credit = activeAccount.getCertifiedCredit() * 1000;
 						double percent = (double) credit / (double) deposit;
 						if (percent > 0.83)

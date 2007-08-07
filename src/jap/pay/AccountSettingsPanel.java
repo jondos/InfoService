@@ -1305,45 +1305,46 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					m_labelValid.setToolTipText("");
 				   }*/
 
-				long dep = balance.getVolumeBytesLeft()*1000 + balance.getSpent();
-				long spe = balance.getSpent();
-				if (dep == 0 || dep - spe == 0)
+				if (expired)
 				{
 					m_coinstack.setValue(0);
 				}
 				else
 				{
-					double onePercent = 100.0 / (double) dep;
-					long percent = (long) (onePercent * spe);
-					if (percent < 12)
+					//long dep = balance.getVolumeBytesLeft()*1000 + balance.getSpent();
+					long deposit = PaymentMainPanel.FULL_AMOUNT * 1000;
+					long credit = balance.getCredit() * 1000;
+					double percent = (double) credit / (double) deposit;
+
+					if (percent > 0.87)
 					{
 						m_coinstack.setValue(8);
 					}
-					else if (percent >= 12 && percent < 25)
+					else if (percent > 0.75)
 					{
 						m_coinstack.setValue(7);
 					}
-					else if (percent >= 25 && percent < 37)
+					else if (percent > 0.63)
 					{
 						m_coinstack.setValue(6);
 					}
-					else if (percent >= 37 && percent < 50)
+					else if (percent > 0.50)
 					{
 						m_coinstack.setValue(5);
 					}
-					else if (percent >= 50 && percent < 62)
+					else if (percent > 0.38)
 					{
 						m_coinstack.setValue(4);
 					}
-					else if (percent >= 62 && percent < 75)
+					else if (percent > 0.25)
 					{
 						m_coinstack.setValue(3);
 					}
-					else if (percent >= 75 && percent < 87)
+					else if (percent > 0.13)
 					{
 						m_coinstack.setValue(2);
 					}
-					else if (percent >= 87 && percent < 99)
+					else if (percent > 0.01)
 					{
 						m_coinstack.setValue(1);
 					}
