@@ -1495,46 +1495,49 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 	}
 
-/**
+	/**
 	 * Shows a blinking JAP icon.
 	 */
 	public void blink()
 	{
-		Thread blinkThread = new Thread(new Runnable()
+		if (isVisible())
 		{
-			public void run()
+			Thread blinkThread = new Thread(new Runnable()
 			{
-				synchronized (m_progressOwnTrafficActivity)
+				public void run()
 				{
-					if (m_currentChannels == 0)
+					synchronized (m_progressOwnTrafficActivity)
 					{
-						return;
-					}
+						if (m_currentChannels == 0)
+						{
+							return;
+						}
 
-					if (m_Controller.isAnonConnected())
-					{
-						m_progressOwnTrafficActivity.setValue(m_currentChannels - 1);
-						m_progressOwnTrafficActivitySmall.setValue(m_currentChannels - 1);
-						try
+						if (m_Controller.isAnonConnected())
 						{
-							m_progressOwnTrafficActivity.wait(500);
+							m_progressOwnTrafficActivity.setValue(m_currentChannels - 1);
+							m_progressOwnTrafficActivitySmall.setValue(m_currentChannels - 1);
+							try
+							{
+								m_progressOwnTrafficActivity.wait(500);
+							}
+							catch (InterruptedException a_e)
+							{
+								// ignore
+							}
 						}
-						catch (InterruptedException a_e)
+						if (!m_Controller.isAnonConnected())
 						{
-							// ignore
+							m_currentChannels = 0;
 						}
+						m_progressOwnTrafficActivity.setValue(m_currentChannels);
+						m_progressOwnTrafficActivitySmall.setValue(m_currentChannels);
 					}
-					if (!m_Controller.isAnonConnected())
-					{
-						m_currentChannels = 0;
-					}
-					m_progressOwnTrafficActivity.setValue(m_currentChannels);
-					m_progressOwnTrafficActivitySmall.setValue(m_currentChannels);
 				}
-			}
-		});
-		blinkThread.setDaemon(true);
-		blinkThread.start();
+			});
+			blinkThread.setDaemon(true);
+			blinkThread.start();
+		}
 	}
 
 
