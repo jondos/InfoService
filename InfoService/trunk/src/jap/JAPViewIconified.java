@@ -629,37 +629,41 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 	 */
 	public void blink()
 	{
-		Thread blinkThread = new Thread(new Runnable()
+		if (isVisible())
 		{
-			public void run()
+			Thread blinkThread = new Thread(new Runnable()
 			{
-				synchronized(m_lblJAPIcon)
+				public void run()
 				{
-					if (m_Controller.isAnonConnected())
+					synchronized (m_lblJAPIcon)
 					{
-						m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon(JAPViewIconified.class.getName() +
-							"_icon16red.gif", true, false));
-						try
+						if (m_Controller.isAnonConnected())
 						{
-							m_lblJAPIcon.wait(1000);
+							m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon(JAPViewIconified.class.getName() +
+								"_icon16red.gif", true, false));
+							try
+							{
+								m_lblJAPIcon.wait(1000);
+							}
+							catch (InterruptedException a_e)
+							{
+								// ignore
+							}
 						}
-						catch (InterruptedException a_e)
+						if (m_Controller.isAnonConnected())
 						{
-							// ignore
+							m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon(JAPConstants.IICON16FN, true, false));
 						}
-					}
-					if (m_Controller.isAnonConnected())
-					{
-						m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon(JAPConstants.IICON16FN, true, false));
-					}
-					else
-					{
-						m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon(JAPViewIconified.class.getName() + "_icon16discon.gif", true, false));
+						else
+						{
+							m_lblJAPIcon.setIcon(GUIUtils.loadImageIcon(JAPViewIconified.class.getName() +
+								"_icon16discon.gif", true, false));
+						}
 					}
 				}
-			}
-		});
-		blinkThread.setDaemon(true);
-		blinkThread.start();
+			});
+			blinkThread.setDaemon(true);
+			blinkThread.start();
+		}
 	}
 }
