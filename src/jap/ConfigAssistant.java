@@ -490,7 +490,7 @@ public class ConfigAssistant extends JAPDialog
 										  JAPMessages.getString(JAPConfAnonGeneral.MSG_CONNECTION_TIMEOUT),
 										  JAPMessages.getString("ngSettingsViewNormal"),
 										  JAPMessages.getString("confButton"),
-										  JAPMessages.getString("confTreeForwardingClientLeaf")}),
+										  JAPMessages.getString("ngTreeNetwork")}),
 			  layout, new DialogContentPane.Options(paneAnonTest))
 		{
 			public boolean isSkippedAsNextContentPane()
