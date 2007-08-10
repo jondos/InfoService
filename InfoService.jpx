@@ -206,5 +206,6 @@
     <property category="archiving" name="targetPath" value="InfoService.jar"/>
     <property category="archiving" name="usingRules" value="1"/>
   </node>
+  <file path="documentation/InfoService/InfoserviceCommands.txt"/>
   <file path="magicdraw.magicdraw"/>
 </project>

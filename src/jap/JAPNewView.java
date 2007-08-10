@@ -2343,7 +2343,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				pack(); // optimize size
 				//setResizable( /*true*/true /*false*/); //2001-11-12(HF):Changed due to a Mac OS X problem during redraw of the progress bars
-				setResizable(false);
+				//Let the main window be resizable - as you can not foresee the interest of users, their devices and preferences
+				//I see virtually no reason why we should take away this freedom from the user! sk13
+				setResizable(true);
 			}
 		}
 		catch (Exception e)
