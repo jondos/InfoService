@@ -1,4 +1,3 @@
-
 /*
  Copyright (c) 2000, The JAP-Team
  All rights reserved.
@@ -62,6 +61,8 @@ import logging.LogType;
 import jap.AbstractJAPMainView;
 import jap.ISplashResponse;
 import jap.forward.JAPRoutingSettings;
+import anon.infoservice.ListenerInterface;
+import anon.infoservice.MixCascade;
 
 /** This is the main class of the JAP project. It starts everything. It can be inherited by another
  *  class that wants to initialize platform dependend features, e.g. see
@@ -71,19 +72,19 @@ import jap.forward.JAPRoutingSettings;
 public class JAP
 {
 	private static final String MSG_ERROR_NEED_NEWER_JAVA = "errorNeedNewerJava";
-	private static final String MSG_GNU_NOT_COMPATIBLE = JAP.class.getName() +  "_gnuNotCompatible";
+	private static final String MSG_GNU_NOT_COMPATIBLE = JAP.class.getName() + "_gnuNotCompatible";
 	private static final String MSG_LOADING_INTERNATIONALISATION = JAP.class.getName() +
 		"_loadingInternationalisation";
 	private static final String MSG_LOADING_SETTINGS = JAP.class.getName() +
 		"_loadingSettings";
 	private static final String MSG_STARTING_CONTROLLER = JAP.class.getName() +
 		"_startingController";
-	private static final String MSG_INIT_DLL = JAP.class.getName() +  "_initLibrary";
-	private static final String MSG_INIT_VIEW = JAP.class.getName() +  "_initView";
-	private static final String MSG_INIT_ICON_VIEW = JAP.class.getName() +  "_initIconView";
-	private static final String MSG_INIT_RANDOM = JAP.class.getName() +  "_initRandom";
-	private static final String MSG_FINISH_RANDOM = JAP.class.getName() +  "_finishRandom";
-	private static final String MSG_START_LISTENER = JAP.class.getName() +  "_startListener";
+	private static final String MSG_INIT_DLL = JAP.class.getName() + "_initLibrary";
+	private static final String MSG_INIT_VIEW = JAP.class.getName() + "_initView";
+	private static final String MSG_INIT_ICON_VIEW = JAP.class.getName() + "_initIconView";
+	private static final String MSG_INIT_RANDOM = JAP.class.getName() + "_initRandom";
+	private static final String MSG_FINISH_RANDOM = JAP.class.getName() + "_finishRandom";
+	private static final String MSG_START_LISTENER = JAP.class.getName() + "_startListener";
 
 	private JAPController m_controller;
 
@@ -143,19 +144,21 @@ public class JAP
 		boolean loadPay = true;
 		String listenHost = null;
 		int listenPort = 0;
+		ListenerInterface listenerCascade = null;
 
 		if (isArgumentSet("--version") || isArgumentSet("-v"))
 		{
 			System.out.println("JAP version: " + JAPConstants.aktVersion + "\n" +
 							   "Java Vendor: " + vendor + "\n" +
-							   "Java Version: " + javaVersion +"\n");
+							   "Java Version: " + javaVersion + "\n");
 			System.exit(0);
 		}
 
 		if (!JAPConstants.m_bReleasedVersion)
 		{
-			System.out.println("Starting up JAP version " + JAPConstants.aktVersion +". (" + javaVersion + "/" + vendor + "/" + os +
-							   (mrjVersion != null ? "/" + mrjVersion : "")  + ")");
+			System.out.println("Starting up JAP version " + JAPConstants.aktVersion + ". (" + javaVersion +
+							   "/" + vendor + "/" + os +
+							   (mrjVersion != null ? "/" + mrjVersion : "") + ")");
 		}
 		//Macintosh Runtime for Java (MRJ) on Mac OS
 		// Test (part 1) for right JVM
@@ -177,6 +180,7 @@ public class JAP
 			System.out.println("--presenation, -p            Presentation mode (slight GUI changes).");
 			System.out.println("--forwarder, -f {port}       Act as a forwarder on a specified port.");
 			System.out.println("--listen, -l {[host][:port]} Listen on the specified interface.");
+			System.out.println("--cascade {[host][:port]}    Connects to the specified Mix-Cascade.");
 			System.out.println("--config, -c {Filename}:     Force JAP to use a specific configuration file.");
 			System.exit(0);
 		}
@@ -276,9 +280,9 @@ public class JAP
 		{
 			Frame hidden = new Frame();
 			splash = new JAPSplash(hidden, splashText);
-			((JAPSplash)splash).centerOnScreen();
-			((JAPSplash)splash).setVisible(true);
-			GUIUtils.setAlwaysOnTop(((JAPSplash)splash), true);
+			( (JAPSplash) splash).centerOnScreen();
+			( (JAPSplash) splash).setVisible(true);
+			GUIUtils.setAlwaysOnTop( ( (JAPSplash) splash), true);
 		}
 
 		// Init Messages....
@@ -286,7 +290,6 @@ public class JAP
 		{
 			JAPMessages.init(JAPConstants.MESSAGESFN);
 		}
-
 
 		if (!bConsoleOnly)
 		{
@@ -312,7 +315,6 @@ public class JAP
 		LogHolder.setLogInstance(JAPDebug.getInstance());
 		JAPDebug.getInstance().setLogType(LogType.ALL);
 		JAPDebug.getInstance().setLogLevel(LogLevel.WARNING);
-
 
 		splash.setText(JAPMessages.getString(MSG_INIT_RANDOM));
 		// initialise secure random generators
@@ -397,35 +399,30 @@ public class JAP
 			}
 			if (listenHost != null)
 			{
-				int delimiter = listenHost.indexOf(":");
-				if (delimiter >= 0)
+				try
 				{
-					try
-					{
-						listenPort =
-							Integer.parseInt(listenHost.substring(delimiter + 1, listenHost.length()));
-						listenPort = Math.min(listenPort, 65535);
-					}
-					catch (Exception a_e)
-					{
-						LogHolder.log(LogLevel.WARNING, LogType.MISC, "Could not parse listener port: ", a_e);
-					}
+					ListenerInterface l = new ListenerInterface(listenHost);
+					listenHost = l.getHost();
+					listenPort = l.getPort();
 				}
-
-				if (delimiter == 0)
+				catch (Throwable t)
 				{
-					// only the port ist given
-					listenHost = null;
-
-				}
-				else if (delimiter > 0)
-				{
-					// host and port are given
-					listenHost = listenHost.substring(0, delimiter);
 				}
 			}
 		}
 
+		// parse any given Mix-Cascade
+		if (isArgumentSet("--cascade"))
+		{
+			String tmpStr = getArgumentValue("--cascade");
+			try
+			{
+				listenerCascade = new ListenerInterface(tmpStr);
+			}
+			catch (Throwable t)
+			{
+			}
+		}
 
 		// Create the controller object
 		splash.setText(JAPMessages.getString(MSG_STARTING_CONTROLLER));
@@ -448,13 +445,13 @@ public class JAP
 		/* check, whether there is the -config parameter, which means the we use userdefined config
 		 * file
 		 */
-		if ((configFileName = getArgumentValue("--config")) == null)
+		if ( (configFileName = getArgumentValue("--config")) == null)
 		{
 			configFileName = getArgumentValue("-c");
 		}
 		if (configFileName != null)
 		{
-			LogHolder.log(LogLevel.NOTICE, LogType.MISC, "Loading config file '" + configFileName +"'.");
+			LogHolder.log(LogLevel.NOTICE, LogType.MISC, "Loading config file '" + configFileName + "'.");
 		}
 
 		/* check, whether there is the -forwarding_state parameter, which extends
@@ -472,7 +469,7 @@ public class JAP
 		m_controller.loadConfigFile(configFileName, loadPay, splash);
 		// configure forwarding server
 		String forwardingServerPort;
-		if ((forwardingServerPort = getArgumentValue("--forwarder")) == null)
+		if ( (forwardingServerPort = getArgumentValue("--forwarder")) == null)
 		{
 			forwardingServerPort = getArgumentValue("-f");
 		}
@@ -481,7 +478,7 @@ public class JAP
 			try
 			{
 				JAPModel.getInstance().getRoutingSettings().setServerPort(
-								Integer.parseInt(forwardingServerPort));
+					Integer.parseInt(forwardingServerPort));
 			}
 			catch (NumberFormatException a_e)
 			{
@@ -489,22 +486,20 @@ public class JAP
 			}
 		}
 
-
-
 		splash.setText(JAPMessages.getString(MSG_INIT_DLL));
 		JAPDll.init();
 		/*
-		if (splash instanceof JAPSplash)
-		{
-			hidden.setName(Double.toString(Math.random()));
-			hidden.setTitle(hidden.getName());
-			( (JAPSplash) splash).setName(hidden.getName());
+		   if (splash instanceof JAPSplash)
+		   {
+		 hidden.setName(Double.toString(Math.random()));
+		 hidden.setTitle(hidden.getName());
+		 ( (JAPSplash) splash).setName(hidden.getName());
 
-			GUIUtils.setAlwaysOnTop( ( (JAPSplash) splash), true);
-		}*/
+		 GUIUtils.setAlwaysOnTop( ( (JAPSplash) splash), true);
+		   }*/
 		// Output some information about the system
 		LogHolder.log(LogLevel.INFO, LogType.MISC,
-			"Welcome! This is version " + JAPConstants.aktVersion + " of JAP.");
+					  "Welcome! This is version " + JAPConstants.aktVersion + " of JAP.");
 		LogHolder.log(LogLevel.INFO, LogType.MISC, "Java " + javaVersion + " running on " + os + ".");
 		if (mrjVersion != null)
 		{
@@ -521,7 +516,7 @@ public class JAP
 			view.create(loadPay);
 			//view.setWindowIcon();
 			// Switch Debug Console Parent to MainView
-			JAPDebug.setConsoleParent((JAPNewView)view);
+			JAPDebug.setConsoleParent( (JAPNewView) view);
 		}
 		else
 		{
@@ -538,7 +533,7 @@ public class JAP
 		{
 			splash.setText(JAPMessages.getString(MSG_INIT_ICON_VIEW));
 			JAPViewIconified viewIconified;
-			viewIconified = new JAPViewIconified((AbstractJAPMainView)view);
+			viewIconified = new JAPViewIconified( (AbstractJAPMainView) view);
 			// Register the views where they are needed
 			view.registerViewIconified(viewIconified);
 		}
@@ -562,15 +557,15 @@ public class JAP
 		}
 
 		/*
-		splash.setText(JAPMessages.getString(MSG_FINISH_RANDOM));
-		try
-		{
-			secureRandomThread.join();
-		}
-		catch (InterruptedException a_e)
-		{
-			LogHolder.log(LogLevel.NOTICE, LogType.CRYPTO, a_e);
-		}*/
+		   splash.setText(JAPMessages.getString(MSG_FINISH_RANDOM));
+		   try
+		   {
+		 secureRandomThread.join();
+		   }
+		   catch (InterruptedException a_e)
+		   {
+		 LogHolder.log(LogLevel.NOTICE, LogType.CRYPTO, a_e);
+		   }*/
 
 		splash.setText(JAPMessages.getString(MSG_START_LISTENER));
 		if (!m_controller.startHTTPListener(listenHost, listenPort))
@@ -580,7 +575,7 @@ public class JAP
 
 		if (!bConsoleOnly)
 		{
-			AbstractJAPMainView frameView = (AbstractJAPMainView)view;
+			AbstractJAPMainView frameView = (AbstractJAPMainView) view;
 			if (bSystray)
 			{
 				/* The old JAPDll does return false even if hideWindowInTaskbar() succeeded - so we have to do
@@ -625,6 +620,22 @@ public class JAP
 		// initially start services
 		m_controller.initialRun(listenHost, listenPort);
 
+		//set cascade if given on command line
+		if (listenerCascade != null)
+		{
+			try
+			{
+				m_controller.setCurrentMixCascade(new MixCascade("Commandline Cascade", null,
+					listenerCascade.toVector()));
+				m_controller.setAnonMode(true);
+			}
+			catch (Throwable t)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,
+					"Could not set Cascade specified on the Command line! Ignoring information given and continue...");
+			}
+		}
+
 		// show alternative view (console, http server,...);
 		if (bConsoleOnly)
 		{
@@ -634,7 +645,7 @@ public class JAP
 
 	public String getArgumentValue(String a_argument)
 	{
-		String value = (String)m_arstrCmdnLnArgs.get(a_argument);
+		String value = (String) m_arstrCmdnLnArgs.get(a_argument);
 		if (value != null && value.trim().length() == 0)
 		{
 			value = null;

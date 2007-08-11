@@ -61,12 +61,15 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	private long m_endOfBlocking = 0;
 
 	/**
-	 * This is the host of this interface (hostname or IP).
+	 * This is the host of this interface (hostname or IP). It can be NULL indicating,
+	 * that the hostname is unspecified. The user has to decide how to handle this (e.g.
+	 * if this means 'any' IP of any interface or if whis means 'only localhost' etc.
 	 */
 	private String m_strHostname;
 
 	/**
-	 * This is the representation of the port of the ListenerInterface.
+	 * This is the representation of the port of the ListenerInterface. Might be -1 to
+	 * indicate that the port is unspecified.
 	 */
 	private int m_iInetPort;
 
@@ -137,6 +140,44 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	public ListenerInterface(String a_hostname, int a_port) throws IllegalArgumentException
 	{
 		this(a_hostname, a_port, PROTOCOL_TYPE_HTTP);
+	}
+
+	/**
+	 * Creates a new ListenerInterface from a String which is of the form
+	 * hostname:port. (The hostname can also be omitted) The
+	 * protocol is set to HTTP/TCP.
+	 *
+	 * @param a_strValue The string containing hostname and port.
+	 * @exception IllegalArgumentException if an illegal host name or port was given
+	 */
+	public ListenerInterface(String a_strValue) throws IllegalArgumentException
+	{
+		if (a_strValue == null)
+		{
+			throw new IllegalArgumentException("Argument given to ListenInterface constructor is NULL!");
+		}
+		int delimiter = a_strValue.indexOf(":");
+		int listenPort = -1;
+		String listenHost = null;
+			try
+			{
+				listenPort =
+					Integer.parseInt(a_strValue.substring(delimiter + 1, a_strValue.length()));
+			}
+			catch (Exception a_e)
+			{
+				LogHolder.log(LogLevel.WARNING, LogType.MISC, "Could not parse listener port: ", a_e);
+			}
+
+		if (delimiter > 0)
+		{
+			// host and port are given
+			listenHost = a_strValue.substring(0, delimiter);
+		}
+		setHostname(listenHost);
+		setPort(listenPort);
+		setProtocol(ListenerInterface.PROTOCOL_TYPE_HTTP);
+		setUseInterface(true);
 	}
 
 	/**
@@ -358,7 +399,6 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 		m_endOfBlocking = System.currentTimeMillis() + a_blockingTime;
 	}
 
-
 	/**
 	 * Get the validity of this interface. If it is not valid, further connection
 	 * retries are prevented.
@@ -390,8 +430,8 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 	   String hostName = interfaceAddress.getHostName();
 	   if ( (!hostName.equals(m_strHostname)) && (isValidHostname(hostName)))
 	   {
-		// we got the hostname via DNS, add it
-		hostAndIp = hostAndIp + " (" + hostName + ")";
+	 // we got the hostname via DNS, add it
+	 hostAndIp = hostAndIp + " (" + hostName + ")";
 	   }
 	  }
 	  else
@@ -509,9 +549,11 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 		if (!isValidPort(a_port))
 		{
 			m_iInetPort = -1;
-			//throw (new IllegalArgumentException("ListenerInterface: Port is invalid."));
 		}
-		m_iInetPort = a_port;
+		else
+		{
+			m_iInetPort = a_port;
+		}
 	}
 
 	/**
@@ -524,8 +566,12 @@ public class ListenerInterface implements ImmutableListenerInterface, IXMLEncoda
 		if (!isValidHostname(a_strHostname))
 		{
 			//throw (new IllegalArgumentException("ListenerInterface: Host is invalid."));
-			LogHolder.log(LogLevel.NOTICE, LogType.NET, "Invalid host name: '" + a_strHostname + "'");
-			m_strHostname = "";
+			String s=a_strHostname;
+			if (a_strHostname == null)
+			{
+				s = "NULL";
+			}
+			LogHolder.log(LogLevel.NOTICE, LogType.NET, "Invalid host name: '" + s + "'");
 		}
 		m_strHostname = a_strHostname;
 	}
