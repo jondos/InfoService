@@ -224,19 +224,12 @@ final public class Configuration
 			m_hardwareListenerList = new Vector();
 			while (stHardware.hasMoreTokens())
 			{
-				StringTokenizer stCurrentInterface = new StringTokenizer(stHardware.nextToken(), ":");
-				String inetHost = stCurrentInterface.nextToken().trim();
-				int inetPort = Integer.parseInt(stCurrentInterface.nextToken().trim());
-				m_hardwareListenerList.addElement(new ListenerInterface(inetHost, inetPort));
+				m_hardwareListenerList.addElement(new ListenerInterface(stHardware.nextToken()));
 			}
 			m_virtualListenerList = new Vector();
 			while (stVirtual.hasMoreTokens())
 			{
-				StringTokenizer stCurrentInterface = new StringTokenizer(stVirtual.nextToken(), ":");
-				String inetHost = stCurrentInterface.nextToken().trim();
-				int inetPort = Integer.parseInt(stCurrentInterface.nextToken().trim());
-				m_virtualListenerList.addElement(new ListenerInterface(
-					inetHost, inetPort, ListenerInterface.PROTOCOL_TYPE_HTTP));
+				m_virtualListenerList.addElement(new ListenerInterface(stVirtual.nextToken()));
 			}
 
 			/* only for compatibility */
