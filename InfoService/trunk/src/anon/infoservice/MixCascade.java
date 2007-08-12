@@ -98,6 +98,8 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	 */
 	private Vector m_mixIds;
 
+	private boolean m_bAutoStore = true;
+
 	private String m_strMixIds;
 	private String m_piid = "";
 
@@ -335,6 +337,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 			throw new XMLParseException(XMLParseException.ROOT_TAG, "Malformed Mix-Cascade ID: " + m_mixCascadeId);
 		}
 
+		m_bAutoStore = XMLUtil.parseAttribute(a_mixCascadeNode, "autoStore", true);
 
 		/* get the name */
 		m_strName = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_mixCascadeNode, "Name"), null);
@@ -542,6 +545,13 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 			 new ListenerInterface(a_hostName, a_port, ListenerInterface.PROTOCOL_TYPE_RAW_TCP).toVector());
 	}
 
+	public MixCascade(String a_name, String a_id, Vector a_listenerInterfaces, boolean a_bAutoStore)
+		throws Exception
+	{
+		this(a_name, a_id, null, a_listenerInterfaces, Long.MAX_VALUE, a_bAutoStore);
+	}
+
+
 	public MixCascade(String a_name, String a_id, Vector a_listenerInterfaces) throws Exception
 	{
 		this(a_name, a_id, null, a_listenerInterfaces);
@@ -554,6 +564,12 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 
 	public MixCascade(String a_name, String a_id, Vector a_mixIDs, Vector a_listenerInterfaces,
 					  long a_timeout) throws Exception
+	{
+		this (a_name, a_id, a_mixIDs, a_listenerInterfaces, a_timeout, true);
+	}
+
+	public MixCascade(String a_name, String a_id, Vector a_mixIDs, Vector a_listenerInterfaces,
+					  long a_timeout, boolean a_bAutoStore) throws Exception
 	{
 		super(a_timeout);
 		ListenerInterface listener = (ListenerInterface) a_listenerInterfaces.elementAt(0);
@@ -568,6 +584,8 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		{
 			m_mixCascadeId = a_id;
 		}
+		m_bAutoStore = a_bAutoStore;
+
 		/* set a name */
 		if (a_name != null)
 		{
@@ -891,6 +909,11 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		return m_bImplicitTrust;
 	}
 
+	public boolean isAutoStored()
+	{
+		return m_bAutoStore;
+	}
+
 	public void setUserDefined(boolean a_bUserDefined, MixCascade a_oldMixCascade) throws XMLParseException
 	{
 		m_userDefined = a_bUserDefined;
@@ -1145,6 +1168,10 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		Document doc = XMLUtil.createDocument();
 		Element mixCascadeNode = doc.createElement(XML_ELEMENT_NAME);
 		XMLUtil.setAttribute(mixCascadeNode, "id", getId());
+		if (!m_bAutoStore)
+		{
+			XMLUtil.setAttribute(mixCascadeNode, "autoStore", m_bAutoStore);
+		}
 		/* Create the child nodes of MixCascade (Name, Network, Mixes, LastUpdate) */
 		if (m_isPayment)
 		{

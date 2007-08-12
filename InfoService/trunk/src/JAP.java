@@ -625,8 +625,9 @@ public class JAP
 		{
 			try
 			{
-				m_controller.setCurrentMixCascade(new MixCascade("Commandline Cascade", null,
-					listenerCascade.toVector()));
+				MixCascade cascade = new MixCascade("Commandline Cascade", null, listenerCascade.toVector(), false);
+
+				m_controller.setCurrentMixCascade(cascade);
 				m_controller.setAnonMode(true);
 			}
 			catch (Throwable t)
