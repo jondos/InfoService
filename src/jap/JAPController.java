@@ -2246,14 +2246,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 			Element elemCascades = doc.createElement(MixCascade.XML_ELEMENT_CONTAINER_NAME);
 			e.appendChild(elemCascades);
 			Enumeration enumer = Database.getInstance(MixCascade.class).getEntrySnapshotAsEnumeration();
-			MixCascade tempCascade;
 			while (enumer.hasMoreElements())
 			{
-				tempCascade = (MixCascade) enumer.nextElement();
-				if (tempCascade.isAutoStored())
-				{
-					elemCascades.appendChild(tempCascade.toXmlElement(doc));
-				}
+				elemCascades.appendChild(((MixCascade) enumer.nextElement()).toXmlElement(doc));
 			}
 
 			/* stores known cascades */
