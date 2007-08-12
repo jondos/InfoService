@@ -143,6 +143,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String MSG_CONNECTED = JAPNewView.class.getName() + "_connected";
 
 	private static final String MSG_DELETE_MESSAGE = JAPNewView.class.getName() + "_deleteMessage";
+	private static final String MSG_HIDE_MESSAGE_SHORT = JAPNewView.class.getName() + "_hideMessageShort";
 	private static final String MSG_DELETE_MESSAGE_EXPLAIN = JAPNewView.class.getName() + "_deleteMessageExplain";
 	private static final String MSG_DELETE_MESSAGE_SHORT = JAPNewView.class.getName() + "_deleteMessageShort";
 	private static final String MSG_VIEW_MESSAGE = JAPNewView.class.getName() + "_viewMessage";
@@ -1037,7 +1038,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 //Status
 		c.gridy++;
 		JPanel panelTmp = new JPanel(new GridBagLayout());
-		m_buttonDeleteMessage = new JLabel(JAPMessages.getString(MSG_DELETE_MESSAGE_SHORT));
+		m_buttonDeleteMessage = new JLabel(JAPMessages.getString(MSG_HIDE_MESSAGE_SHORT));
 		m_buttonDeleteMessage.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		m_buttonDeleteMessage.setToolTipText(JAPMessages.getString(MSG_DELETE_MESSAGE));
 		m_StatusPanel = new StatusPanel(m_buttonDeleteMessage);

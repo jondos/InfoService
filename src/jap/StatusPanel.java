@@ -260,6 +260,10 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 			{
 				m_Msgs = null;
 				m_aktY = ICON_HEIGHT;
+
+				setToolTipText(null);
+				setCursor(Cursor.getDefaultCursor());
+				m_button.setVisible(false);
 			}
 			else
 			{

@@ -3033,6 +3033,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					accounts.addAccount(importedAccount);
 					doActivateAccount(importedAccount);
 					updateAccountList();
+					doGetStatement(importedAccount);
 				}
 			}
 			catch (Exception ex)
