@@ -501,7 +501,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		// preload meter icons
 
 		// "NORTH": Image
-		ImageIcon northImage = GUIUtils.loadImageIcon(JAPMessages.getString("northPath"), true, false);
+		ImageIcon northImage = GUIUtils.loadImageIcon("JonDo.png", true, false);
 		JLabel northLabel = new JLabel(northImage);
 		JPanel northPanel = new JPanel();
 		GridBagLayout gbl = new GridBagLayout();
@@ -509,6 +509,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		northPanel.setLayout(gbl);
 		c.anchor = GridBagConstraints.NORTHWEST;
 		c.fill = GridBagConstraints.NONE;
+		c.insets = new Insets(5, 5, 0, 0);
 		c.weighty = 1;
 		c.gridheight = 2;
 		northPanel.add(northLabel, c);
@@ -547,7 +548,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 		if (m_firepath != null && !m_firepath.equals(""))
 		{
-			m_firefox = new JButton("Webbrowser");
+			m_firefox = new JButton(GUIUtils.loadImageIcon("firefox.png", true, false));
+			m_firefox.setOpaque(false);
 			m_firefox.setToolTipText(m_firepath);
 			m_firefox.setMnemonic('W');
 
@@ -645,6 +647,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		LookAndFeel laf = UIManager.getLookAndFeel();
 		if (laf != null && UIManager.getCrossPlatformLookAndFeelClassName().equals(laf.getClass().getName())) //stupid but is necessary for JDK 1.5 and Metal L&F on Windows XP (and maybe others)
 		{
+			if (m_firefox != null)
+			{
+				m_firefox.setBackground(Color.gray);
+			}
 			m_bttnReload.setBackground(Color.gray);
 		}
 		m_bttnReload.addActionListener(new ActionListener()
