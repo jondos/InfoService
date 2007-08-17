@@ -35,17 +35,17 @@ import anon.util.XMLParseException;
  *
  * @author Rolf Wendolsky
  */
-public class DeletedMessageIDDBEntry extends AbstractMarkedMessageIDDBEntry
+public class ClickedMessageIDDBEntry extends AbstractMarkedMessageIDDBEntry
 {
-	public static final String XML_ELEMENT_NAME = "DeletedMessageIDEntry";
-	public static final String XML_ELEMENT_CONTAINER_NAME = "DeletedMessageIDEntries";
+	public static final String XML_ELEMENT_NAME = "ClickedMessageIDDBEntry";
+	public static final String XML_ELEMENT_CONTAINER_NAME = "ClickedMessageIDDBEntries";
 
-	public DeletedMessageIDDBEntry(MessageDBEntry a_messageEntry)
+	public ClickedMessageIDDBEntry(MessageDBEntry a_messageEntry)
 	{
 		super(a_messageEntry);
 	}
 
-	public DeletedMessageIDDBEntry(Element a_messageEntryElement) throws XMLParseException
+	public ClickedMessageIDDBEntry(Element a_messageEntryElement) throws XMLParseException
 	{
 		super(a_messageEntryElement);
 	}

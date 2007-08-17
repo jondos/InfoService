@@ -67,7 +67,6 @@ import anon.client.AnonClient;
 import anon.client.ITrustModel;
 import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
-import anon.crypto.XMLSignature;
 import anon.infoservice.AbstractMixCascadeContainer;
 import anon.infoservice.BlacklistedCascadeIDEntry;
 import anon.infoservice.CascadeIDEntry;
@@ -121,6 +120,7 @@ import proxy.DirectProxy;
 import proxy.DirectProxy.AllowUnprotectedConnectionCallback;
 import update.JAPUpdateWizard;
 import jap.pay.AccountUpdater;
+import anon.infoservice.ClickedMessageIDDBEntry;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -327,7 +327,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			m_proxyCallback = new DirectProxy.AllowUnprotectedConnectionCallback()
 			{
-				public DirectProxy.AllowUnprotectedConnectionCallback.Answer callback()
+				public DirectProxy.AllowUnprotectedConnectionCallback.Answer callback(
+								DirectProxy.RequestInfo a_requestInfo
+					)
 				{
 					if (JAPModel.getInstance().isNonAnonymousSurfingDenied() ||
 						JAPController.getInstance().getView() == null)
@@ -347,7 +349,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 					};
 					bShowHtmlWarning = ! (JAPDialog.showYesNoDialog(
 									   JAPController.getInstance().getViewWindow(),
-									   JAPMessages.getString(MSG_ALLOWUNPROTECTED), cb));
+									   JAPMessages.getString(MSG_ALLOWUNPROTECTED), a_requestInfo.getURI()
+									   + (a_requestInfo.getPort() != 80 ? ":" + a_requestInfo.getPort() : ""), cb));
 					if (bShowHtmlWarning && cb.getState())
 					{
 						// user has chosen to never allow non anonymous websurfing
@@ -1226,6 +1229,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 				Database.getInstance(DeletedMessageIDDBEntry.class).loadFromXml(
 								(Element) XMLUtil.getFirstChildByName(root,
 					DeletedMessageIDDBEntry.XML_ELEMENT_CONTAINER_NAME));
+
+				// load clicked messages
+				Database.getInstance(ClickedMessageIDDBEntry.class).loadFromXml(
+					(Element) XMLUtil.getFirstChildByName(root,
+					ClickedMessageIDDBEntry.XML_ELEMENT_CONTAINER_NAME));
+
 
 
 				if (!JAPModel.isSmallDisplay() && !JAPDialog.isConsoleOnly())
@@ -2288,6 +2297,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 			// store deleted messages
 			e.appendChild(Database.getInstance(DeletedMessageIDDBEntry.class).toXmlElement(doc));
 
+			// store clicked messages
+			e.appendChild(Database.getInstance(ClickedMessageIDDBEntry.class).toXmlElement(doc));
 
 			// adding GUI-Element
 			Element elemGUI = doc.createElement(JAPConstants.CONFIG_GUI);

@@ -25,33 +25,17 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package anon.infoservice;
-
-import org.w3c.dom.Element;
-import anon.util.XMLParseException;
+package anon.util;
 
 /**
- * Stored all message db entries deleted by the user.
+ * implemented by classes that are capable of diplaying or otherwise handling messages corresponding to accounts
+ * (Typical case: account lost money due to an error at Jondos -> set message "please contact us to get your money back")
  *
- * @author Rolf Wendolsky
+ * @author Elmar Schraml
  */
-public class DeletedMessageIDDBEntry extends AbstractMarkedMessageIDDBEntry
+public interface IMessageListener
 {
-	public static final String XML_ELEMENT_NAME = "DeletedMessageIDEntry";
-	public static final String XML_ELEMENT_CONTAINER_NAME = "DeletedMessageIDEntries";
+	void messageReceived(String message, String messageText, String messageLink);
+	void messageRemoved(String message);
 
-	public DeletedMessageIDDBEntry(MessageDBEntry a_messageEntry)
-	{
-		super(a_messageEntry);
-	}
-
-	public DeletedMessageIDDBEntry(Element a_messageEntryElement) throws XMLParseException
-	{
-		super(a_messageEntryElement);
-	}
-
-	public String getXmlElementName()
-	{
-		return XML_ELEMENT_NAME;
-	}
 }

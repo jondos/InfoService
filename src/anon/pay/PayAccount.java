@@ -61,6 +61,7 @@ import java.util.Date;
 import anon.util.ZLibTools;
 import anon.util.Base64;
 import java.text.ParseException;
+import anon.util.IMessageListener;
 
 /**
  * This class encapsulates one account and all additional data associated to one
@@ -122,6 +123,8 @@ public class PayAccount implements IXMLEncodable
 	private long m_currentBytes;
 
 	private Vector m_accountListeners = new Vector();
+
+	private Vector m_messageListeners = new Vector();
 
 	private boolean m_bBackupDone = false;
 
@@ -330,6 +333,7 @@ public class PayAccount implements IXMLEncodable
 	/**
 	 * This is not just a setter method. If an accountInfo is already present,
 	 * only older information is overwritten with newer information.
+	 * (i.e. does NOT replace the old saved balance, only those parts you eplicitly set)
 	 *
 	 * @param info
 	 *          XMLAccountInfo
@@ -345,13 +349,37 @@ public class PayAccount implements IXMLEncodable
 		else
 		{
 			// compare balance timestamps, use the newer one
-			XMLBalance b1 = info.getBalance();
-			XMLBalance b2 = m_accountInfo.getBalance();
-			if (b1.getTimestamp().after(b2.getTimestamp()))
+			XMLBalance retrievedBalance = info.getBalance();
+			XMLBalance savedBalance = m_accountInfo.getBalance();
+
+			//get saved message (so we can check the new balance for changes)
+			String oldMessage = savedBalance.getMessage();
+			String newMessage = retrievedBalance.getMessage();
+			String newMessageText = retrievedBalance.getMessageText();
+			String newMessageLink = retrievedBalance.getMessageLink();
+
+			if (retrievedBalance.getTimestamp().after(savedBalance.getTimestamp()))
 			{
-				m_accountInfo.setBalance(b1);
+				m_accountInfo.setBalance(retrievedBalance);
 				fire = true;
+
+				//if we have a message, add it, and remove an old message for this account if we had one
+				if (newMessage != null && !newMessage.equals("") && !oldMessage.equals(newMessage) )
+				{
+					fireMessageReceived(newMessage, newMessageText, newMessageLink);
+					if (oldMessage != null && !oldMessage.equals("") && !oldMessage.equals(newMessage) )
+					{
+						fireMessageRemoved(oldMessage);
+					}
+				}
+				//remove old message if balance does no longer contain a message
+				if ((oldMessage != null || !oldMessage.equals("") ) && (newMessage == null || newMessage.equals("")) )
+				{
+					fireMessageRemoved(oldMessage);
+				}
 			}
+
+			savedBalance.setMessage(newMessage, newMessageText, newMessageLink);
 
 			// compare CCs
 			Enumeration en = m_accountInfo.getCCs();
@@ -684,6 +712,27 @@ public class PayAccount implements IXMLEncodable
 		}
 	}
 
+	public void addMessageListener(IMessageListener listener)
+	{
+		synchronized (m_messageListeners)
+		{
+			if (listener != null)
+			{
+				m_messageListeners.addElement(listener);
+			}
+		}
+	}
+
+	public void removeMessageListener(IMessageListener listener)
+	{
+		synchronized (m_messageListeners)
+		{
+			m_messageListeners.removeElement(listener);
+			//we don't really care if the element was contained in the Vector or not,
+			//if it was, it's gone now for sure
+		}
+	}
+
 	private void fireChangeEvent()
 	{
 		Enumeration enumListeners;
@@ -701,6 +750,25 @@ public class PayAccount implements IXMLEncodable
 		{
 			( (IAccountListener) enumListeners.nextElement()).accountChanged(this);
 		}
+	}
+
+	private void fireMessageReceived(String message, String messageText, String messageLink)
+	{
+		Enumeration enumListeners = ( (Vector) m_messageListeners.clone()).elements();
+		while (enumListeners.hasMoreElements() )
+		{
+			( (IMessageListener) enumListeners.nextElement() ).messageReceived(message,messageText, messageLink);
+		}
+	}
+
+	private void fireMessageRemoved(String message)
+	{
+		Enumeration enumListeners = ( (Vector) m_messageListeners.clone()).elements();
+		while (enumListeners.hasMoreElements() )
+		{
+			( (IMessageListener) enumListeners.nextElement() ).messageRemoved(message);
+		}
+
 	}
 
 	/**

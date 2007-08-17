@@ -62,16 +62,23 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 	private Image m_imageInformation;
 	private Image m_imageWarning;
 
+	public static abstract class ButtonListener implements ActionListener
+	{
+		public boolean isButtonShown()
+		{
+			return true;
+		}
+	}
+
 	private final class MsgQueueEntry
 	{
 		ActionListener listener;
-		ActionListener buttonAction;
+		ButtonListener buttonAction;
 		String m_Msg;
 		Image m_Icon;
 		int m_Id;
 		MsgQueueEntry m_Next;
 		int m_DisplayCount = -1;
-
 	}
 
 	private MsgQueueEntry m_Msgs;
@@ -199,14 +206,14 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 	 * @return an id >= 0 useful for removing this message from the status panel
 	 */
 	public int addStatusMsg(String msg, int type, boolean bAutoRemove, ActionListener a_listener,
-		ActionListener m_ButtonListener)
+		ButtonListener a_ButtonListener)
 	{
 		MsgQueueEntry entry = null;
 		synchronized (SYNC_MSG)
 		{
 			entry = new MsgQueueEntry();
 			entry.listener = a_listener;
-			entry.buttonAction = m_ButtonListener;
+			entry.buttonAction = a_ButtonListener;
 			entry.m_Msg = msg;
 			entry.m_Id = Math.abs(m_Random.nextInt());
 			if (bAutoRemove)
@@ -311,7 +318,7 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 				String msg = m_Msgs.m_Msg;
 				if (m_Msgs.buttonAction != null && !m_button.isVisible())
 				{
-					m_button.setVisible(true);
+					m_button.setVisible(m_Msgs.buttonAction.isButtonShown());
 				}
 				else if (m_Msgs.buttonAction == null && m_button.isVisible())
 				{
