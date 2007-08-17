@@ -1097,6 +1097,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		//northPanel.add(m_buttonDeleteMessage, c);
 
     	//register as MessageListener with all existing accounts
+		/*
 		Enumeration allAccounts = PayAccountsFile.getInstance().getAccounts();
 		while (allAccounts.hasMoreElements())
 		{
@@ -1111,7 +1112,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				this.messageReceived(existingMessage, existingMessageText, existingMessageLink);
 			}
-		}
+		}*/
 		//make sure to be noticed of new or deleted accounts
 	    //PayAccountsFile.getInstance().addPaymentListener(this);
 
