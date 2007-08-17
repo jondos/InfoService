@@ -41,6 +41,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.Hashtable;
 
 import anon.infoservice.ProxyInterface;
 import anon.AnonService;
@@ -87,6 +88,36 @@ final public class DirectProxy implements Runnable, AnonService
 		ms_callback = a_callback;
 	}
 
+	public static class RequestInfo
+	{
+		private String m_strURI;
+		private String m_strMethod;
+		private int m_port;
+
+		protected RequestInfo(String a_strURI, String a_strMethod, int a_port)
+		{
+			m_strURI = a_strURI;
+			m_strMethod = a_strMethod;
+			m_port = a_port;
+		}
+
+		public String getURI()
+		{
+			return m_strURI;
+		}
+
+		public String getMethod()
+		{
+			return m_strMethod;
+		}
+
+		public int getPort()
+		{
+			return m_port;
+		}
+	}
+
+
 	public static abstract class AllowUnprotectedConnectionCallback
 	{
 		public static class Answer
@@ -111,7 +142,7 @@ final public class DirectProxy implements Runnable, AnonService
 			}
 		}
 
-		public abstract Answer callback();
+		public abstract Answer callback(RequestInfo a_requestInfo);
 	}
 
 	public AnonChannel createChannel(int a_type) throws ConnectException
@@ -203,9 +234,10 @@ final public class DirectProxy implements Runnable, AnonService
 	public void run()
 	{
 		int remember = REMEMBER_NOTHING;
+		Hashtable rememberedDomains = new Hashtable();
 		boolean bShowHtmlWarning = true;
 		Runnable doIt;
-		long rememberTime = 0;
+		RequestInfo requestInfo;
 
 		try
 		{
@@ -255,43 +287,52 @@ final public class DirectProxy implements Runnable, AnonService
 
 			try
 			{
-				clientInputStream = new PushbackInputStream(socket.getInputStream());
+				clientInputStream = new PushbackInputStream(socket.getInputStream(), 200);
 			}
 			catch (IOException ex)
 			{
 			}
 
-			if (remember == REMEMBER_NOTHING && rememberTime < System.currentTimeMillis())
+			if (remember == REMEMBER_NOTHING)
 			{
-
-				AllowUnprotectedConnectionCallback.Answer answer;
-				AllowUnprotectedConnectionCallback callback = ms_callback;
-				if (callback != null)
+				requestInfo = DirectProxyConnection.getURI(clientInputStream, 200);
+				if (rememberedDomains.containsKey(requestInfo.getURI()))
 				{
-					answer = callback.callback();
+					bShowHtmlWarning = false;
 				}
 				else
 				{
-					answer = new AllowUnprotectedConnectionCallback.Answer(false, false);
-				}
-				bShowHtmlWarning = !answer.isAllowed();
-
-				if (answer.isRemembered())
-				{
-					if (bShowHtmlWarning)
+					AllowUnprotectedConnectionCallback.Answer answer;
+					AllowUnprotectedConnectionCallback callback = ms_callback;
+					if (callback != null)
 					{
-						remember = REMEMBER_WARNING;
+						answer = callback.callback(requestInfo);
 					}
 					else
 					{
-						remember = REMEMBER_NO_WARNING;
+						answer = new AllowUnprotectedConnectionCallback.Answer(false, false);
+					}
+					bShowHtmlWarning = !answer.isAllowed();
+
+					if (answer.isRemembered())
+					{
+						if (bShowHtmlWarning)
+						{
+							remember = REMEMBER_WARNING;
+						}
+						else
+						{
+							remember = REMEMBER_NO_WARNING;
+						}
+						rememberedDomains.clear();
+					}
+					else if (answer.isAllowed())
+					{
+						rememberedDomains.put(requestInfo.getURI(), requestInfo);
 					}
 				}
-				else
-				{
-					rememberTime = System.currentTimeMillis() + TEMPORARY_REMEMBER_TIME;
-				}
 			}
+
 
 			if (!bShowHtmlWarning && !JAPModel.isSmallDisplay())
 			{
@@ -474,7 +515,7 @@ final public class DirectProxy implements Runnable, AnonService
 				if (getProxyInterface().isAuthenticationUsed())
 				{ //we need to insert an authorization line...
 					//read first line and after this insert the authorization
-					String str = JAPUtil.readLine(inputStream);
+					String str = DirectProxyConnection.readLine(inputStream);
 					str += "\r\n";
 					outputStream.write(str.getBytes());
 					str = getProxyInterface().getProxyAuthorizationHeaderAsString();

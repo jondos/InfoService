@@ -1853,19 +1853,20 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				String mixedComplete = JAPMessages.getString(MSG_MIXED_COMPLETE);
 
 				String paymentType;
+				//get info about the delay until paymen is credited
+				String language = JAPMessages.getLocale().getLanguage();
+				String paymentDelay = null;
+
 				//determine type of payment option used, so we can later show apropriate info
 				if (planSelectionPane.isCouponUsed() )
 				{
 					paymentType = "coupon";
-                } else
+                }
+				else
 				{
 					paymentType = methodSelectionPane.getSelectedPaymentOption().getType();
+					paymentDelay = methodSelectionPane.getSelectedPaymentOption().getPaymentDelay(language);
 				}
-				//get info about the delay until paymen is credited
-				String language = JAPMessages.getLocale().getLanguage();
-				XMLPaymentOption chosenOption = methodSelectionPane.getSelectedPaymentOption();
-				String paymentDelay = chosenOption.getPaymentDelay(language);
-
 
 			    //set strings to show according to payment type and success/failure
 				if (paymentType.equalsIgnoreCase(XMLPaymentOption.OPTION_ACTIVE))

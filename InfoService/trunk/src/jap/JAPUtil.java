@@ -410,28 +410,6 @@ public final class JAPUtil
 		table.setPreferredScrollableViewportSize(new Dimension(perfectWidth, perfectHeight));
 	}
 
-	public static String readLine(InputStream inputStream) throws Exception
-	{
-		String returnString = "";
-		try
-		{
-			int byteRead = inputStream.read();
-			while (byteRead != 10 && byteRead != -1)
-			{
-				if (byteRead != 13)
-				{
-					returnString += (char) byteRead;
-				}
-				byteRead = inputStream.read();
-			}
-		}
-		catch (Exception e)
-		{
-			throw e;
-		}
-		return returnString;
-	}
-
 	public static JFileChooser showFileDialog(Window jf)
 	{
 		SimpleFileFilter active = null;

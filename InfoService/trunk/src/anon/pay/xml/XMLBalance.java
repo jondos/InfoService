@@ -14,6 +14,7 @@ import anon.util.XMLParseException;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.net.URL;
 
 /**
  * This class holds a balance certificate. Can be converted to and from
@@ -33,6 +34,9 @@ public class XMLBalance implements IXMLEncodable
 	private java.sql.Timestamp m_flatEnddate;
 	private long m_volumeBytesleft;
 	private int m_balance;
+	private String m_message;
+	private String m_messageText;
+	private String m_messageLink;
 
 	private Document m_docTheBalance = null;
 
@@ -83,6 +87,26 @@ public class XMLBalance implements IXMLEncodable
 			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Could not sign XMLBalance");
 		}
 	}
+
+	/**
+	 *
+	 * @param a_message String: short message that will be shown in the status panel of the jap
+	 * @param a_messageText String: extended Text, too long to be shown in the status panel, will be shown in a dialog box when the user clicks on the short message
+	 *                              can very well be null
+	 * @param a_link String: a link (web or email, should be a valid URL, XMLBalance does NOT check for validity) that is opened when the user clicks on the status message (short message) or on a button in the dialog box (message with longer text)
+	 *                    can very well be null
+	 */
+	public void setMessage(String a_message, String a_messageText, String a_link)
+	{
+		m_message = a_message;
+		m_messageLink = a_link;
+		m_messageText = a_messageText;
+		//need to recreate the internal do to include the message
+		m_docTheBalance = XMLUtil.createDocument();
+		m_docTheBalance.appendChild(internal_toXmlElement(m_docTheBalance));
+	}
+
+
 
 	public XMLBalance(Document doc) throws Exception
 	{
@@ -148,6 +172,38 @@ public class XMLBalance implements IXMLEncodable
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Validtime");
 		str = XMLUtil.parseValue(elem, DEFAULT_RATE_ENDDATE);
 		m_ValidTime = java.sql.Timestamp.valueOf(str);
+
+	    elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Message");
+		if (elem == null)
+		{
+			; // no message existsx for this account, that's OK
+		}
+		else
+		{
+			str = XMLUtil.parseValue(elem,"");
+			m_message = str;
+		}
+		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "MessageLink");
+		if (elem == null)
+		{
+			; // no message link exists for this account, that's OK
+		}
+		else
+		{
+			str = XMLUtil.parseValue(elem,"");
+			m_messageLink = str;
+		}
+		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "MessageText");
+		if (elem == null)
+		{
+			; // no message link exists for this account, that's OK
+		}
+		else
+		{
+			str = XMLUtil.parseValue(elem,"");
+			m_messageText = str;
+		}
+
 	}
 
 	private Element internal_toXmlElement(Document a_doc)
@@ -179,6 +235,18 @@ public class XMLBalance implements IXMLEncodable
 		elem = a_doc.createElement("Validtime");
 		XMLUtil.setValue(elem, m_ValidTime.toString());
 		elemRoot.appendChild(elem);
+		elem = a_doc.createElement("Message");
+		XMLUtil.setValue(elem, m_message);
+		elemRoot.appendChild(elem);
+		elem = a_doc.createElement("MessageText");
+		XMLUtil.setValue(elem, m_messageText);
+		elemRoot.appendChild(elem);
+		elem = a_doc.createElement("MessageLink");
+		XMLUtil.setValue(elem, m_messageLink);
+		elemRoot.appendChild(elem);
+
+
+
 		return elemRoot;
 	}
 
@@ -235,6 +303,22 @@ public class XMLBalance implements IXMLEncodable
 	{
 		return m_ValidTime;
 	}
+
+	public String getMessage()
+	{
+		return m_message;
+	}
+
+	public String getMessageText()
+	{
+		return m_messageText;
+	}
+
+	public String getMessageLink()
+	{
+		return m_messageLink;
+	}
+
 
 	public Element toXmlElement(Document a_doc)
 	{

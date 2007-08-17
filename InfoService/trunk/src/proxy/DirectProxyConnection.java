@@ -31,6 +31,8 @@ import jap.JAPUtil;
 
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
 import java.io.OutputStream;
@@ -55,6 +57,7 @@ import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.ProxyInterface;
 import anon.shared.ProxyConnection;
+import java.io.*;
 
 final class DirectProxyConnection implements Runnable
 {
@@ -86,32 +89,159 @@ final class DirectProxyConnection implements Runnable
 		m_socketInputStream = a_socketInputStream;
 	}
 
-	public static String getURI(PushbackInputStream a_inputStream)
+	private static String readLine(InputStream inputStream, byte[] r_bytesRead, int[] len) throws Exception
 	{
-	//	if (a_inputStream == null)
+		String returnString = "";
+		len[0] = 0;
+
+		try
+		{
+			int byteRead = inputStream.read();
+			if (r_bytesRead.length > len[0])
+			{
+				r_bytesRead[len[0]] = (byte) byteRead;
+				len[0]++;
+			}
+
+			while (byteRead != 10 && byteRead != -1)
+			{
+				if (byteRead != 13)
+				{
+					returnString += (char) byteRead;
+				}
+				byteRead = inputStream.read();
+				if (r_bytesRead.length > len[0])
+				{
+					r_bytesRead[len[0]] = (byte) byteRead;
+					len[0]++;
+				}
+			}
+		}
+		catch (Exception e)
+		{
+			throw e;
+		}
+		return returnString;
+	}
+
+	public static String readLine(InputStream inputStream) throws Exception
+	{
+		String returnString = "";
+
+		try
+		{
+			int byteRead = inputStream.read();
+
+			while (byteRead != 10 && byteRead != -1)
+			{
+				if (byteRead != 13)
+				{
+					returnString += (char) byteRead;
+				}
+				byteRead = inputStream.read();
+			}
+		}
+		catch (Exception e)
+		{
+			throw e;
+		}
+		return returnString;
+	}
+
+
+	public static DirectProxy.RequestInfo getURI(PushbackInputStream a_inputStream, int a_buffer)
+	{
+		if (a_inputStream == null)
 		{
 			return null;
 		}
-	/*
-		// open stream from client
-		if (m_socketInputStream != null)
+		DirectProxy.RequestInfo info = null;
+		DataInputStream inputStream = new DataInputStream(a_inputStream);
+		byte[] buffer = new byte[a_buffer];
+		int[] len = new int[]{0};
+		try
 		{
-			m_inputStream = new DataInputStream(m_socketInputStream);
+
+			String requestLine = readLine(inputStream, buffer, len);
+			// Examples:
+			//  CONNECT 192.168.1.2:443 HTTP/1.0
+			//  GET http://192.168.1.2/incl/button.css HTTP/1.0
+			StringTokenizer st = new StringTokenizer(requestLine);
+			String strMethod = st.nextToken(); //Must be always there
+			String strURI = st.nextToken(); // Must be always there
+			int port = 80;
+			if (strURI != null && strURI.length() > 0)
+			{
+				int index = strURI.indexOf("//");
+				if (index > 0 && strURI.length() > 2)
+				{
+					strURI = strURI.substring(index + 2, strURI.length());
+				}
+				index = strURI.indexOf("/");
+				if (index > 0)
+				{
+					strURI = strURI.substring(0, index);
+				}
+				// strip port
+				index = strURI.lastIndexOf(":");
+				if (index > 0 && strURI.length() > index + 1)
+				{
+					try
+					{
+						port = Integer.parseInt(strURI.substring(index + 1, strURI.length()));
+					}
+					catch (NumberFormatException a_e)
+					{
+						LogHolder.log(LogLevel.ERR, LogType.NET, "Could not parse port!", a_e);
+					}
+					strURI = strURI.substring(0, index);
+				}
+
+				// test for IP
+				index = strURI.lastIndexOf(".");
+				if (index > 0 && strURI.length() > index + 1)
+				{
+					try
+					{
+						Integer.parseInt(strURI.substring(index + 1, strURI.length()));
+						// this is an IP
+					}
+					catch (NumberFormatException a_e)
+					{
+						// this is a domain
+						StringTokenizer tokenizer = new StringTokenizer(strURI, ".");
+						while (tokenizer.countTokens() > 2)
+						{
+							tokenizer.nextToken();
+						}
+						strURI = tokenizer.nextToken() + "." + tokenizer.nextToken();
+					}
+				}
+			}
+			info = new DirectProxy.RequestInfo(strURI, strMethod, port);
 		}
-		else
+		catch (Exception ex)
 		{
-			m_inputStream = new DataInputStream(m_clientSocket.getInputStream());
+			LogHolder.log(LogLevel.ERR, LogType.NET, ex);
 		}
-		// read first line of request
-		m_requestLine = JAPUtil.readLine(m_inputStream);
-		LogHolder.log(LogLevel.DEBUG, LogType.NET,
-					  "C(" + m_threadNumber + ") - RequestLine: >" + m_requestLine + "<");
-		// Examples:
-		//  CONNECT 192.168.1.2:443 HTTP/1.0
-		//  GET http://192.168.1.2/incl/button.css HTTP/1.0
-		StringTokenizer st = new StringTokenizer(m_requestLine);
-		m_strMethod = st.nextToken(); //Must be always there
-		m_strURI = st.nextToken(); // Must be always there*/
+
+		if (len[0] > 0)
+		{
+			try
+			{
+				// unread bytes
+				ByteArrayOutputStream outBytes = new ByteArrayOutputStream();
+				DataOutputStream dataOut = new DataOutputStream(outBytes);
+				dataOut.write(buffer, 0, len[0]);
+				dataOut.flush();
+				a_inputStream.unread(outBytes.toByteArray());
+			}
+			catch (Exception ex1)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.NET, "Could not unread request line!", ex1);
+			}
+		}
+		return info;
 	}
 
 	public void run()
@@ -131,7 +261,7 @@ final class DirectProxyConnection implements Runnable
 				m_inputStream = new DataInputStream(m_clientSocket.getInputStream());
 			}
 			// read first line of request
-			m_requestLine = JAPUtil.readLine(m_inputStream);
+			m_requestLine = readLine(m_inputStream);
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
 						  "C(" + m_threadNumber + ") - RequestLine: >" + m_requestLine + "<");
 			// Examples:
@@ -271,6 +401,7 @@ final class DirectProxyConnection implements Runnable
 
 	private void badRequest()
 	{
+		new Exception().printStackTrace();
 		responseTemplate("400 Bad Request", "Bad request: " + m_requestLine);
 	}
 
@@ -281,12 +412,12 @@ final class DirectProxyConnection implements Runnable
 			// create Socket to Server
 			Socket serverSocket = new Socket(m_strHost, m_iPort);
 			// next Header lines
-			String nextLine = JAPUtil.readLine(m_inputStream);
+			String nextLine = readLine(m_inputStream);
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
 						  "C(" + m_threadNumber + ") - Header: >" + nextLine + "<");
 			while (nextLine.length() != 0)
 			{
-				nextLine = JAPUtil.readLine(m_inputStream);
+				nextLine = readLine(m_inputStream);
 				LogHolder.log(LogLevel.DEBUG, LogType.NET,
 							  "C(" + m_threadNumber + ") - Header: >" + nextLine + "<");
 			}
@@ -361,7 +492,7 @@ final class DirectProxyConnection implements Runnable
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
 						  "C(" + m_threadNumber + ") - ProtocolString: >" + protocolString + "<");
 			outputStream.write( (protocolString + "\r\n").getBytes());
-			String nextLine = JAPUtil.readLine(m_inputStream);
+			String nextLine = readLine(m_inputStream);
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
@@ -378,7 +509,7 @@ final class DirectProxyConnection implements Runnable
 					LogHolder.log(LogLevel.DEBUG, LogType.NET,
 								  "C(" + m_threadNumber + ") - Header " + nextLine + " filtered");
 				}
-				nextLine = JAPUtil.readLine(m_inputStream);
+				nextLine = readLine(m_inputStream);
 				LogHolder.log(LogLevel.DEBUG, LogType.NET,
 							  "C(" + m_threadNumber + ") - Header: >" + nextLine + "<");
 			}

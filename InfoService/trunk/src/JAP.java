@@ -424,6 +424,13 @@ public class JAP
 			}
 		}
 
+		// Set path to Firefox for portable JAP
+		String m_firepath="";
+		if (isArgumentSet("--portable"))
+		{
+			m_firepath = getArgumentValue("--portable");
+		}
+
 		// Create the controller object
 		splash.setText(JAPMessages.getString(MSG_STARTING_CONTROLLER));
 		m_controller = JAPController.getInstance();
@@ -510,7 +517,7 @@ public class JAP
 		IJAPMainView view;
 		if (!bConsoleOnly)
 		{
-			view = new JAPNewView(JAPConstants.TITLE, m_controller);
+			view = new JAPNewView(JAPConstants.TITLE, m_controller, m_firepath);
 
 			// Create the main frame
 			view.create(loadPay);

@@ -27,7 +27,10 @@
  */
 package jap;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Observable;
@@ -42,6 +45,7 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -71,24 +75,40 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
 import anon.AnonServerDescription;
+import anon.infoservice.BlacklistedCascadeIDEntry;
 import anon.infoservice.CascadeIDEntry;
+import anon.infoservice.ClickedMessageIDDBEntry;
 import anon.infoservice.Database;
 import anon.infoservice.DatabaseMessage;
+import anon.infoservice.DeletedMessageIDDBEntry;
 import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.JavaVersionDBEntry;
+import anon.infoservice.MessageDBEntry;
 import anon.infoservice.MixCascade;
 import anon.infoservice.NewCascadeIDEntry;
 import anon.infoservice.StatusInfo;
+import anon.pay.IPaymentListener;
+import anon.pay.PayAccount;
+import anon.pay.PayAccountsFile;
+import anon.pay.xml.XMLBalance;
+import anon.pay.xml.XMLErrorMessage;
 import anon.proxy.IProxyListener;
+import anon.util.IMessageListener;
 import anon.util.JobQueue;
+import anon.util.Util;
+import anon.util.captcha.ICaptchaSender;
+import anon.util.captcha.IImageEncodedCaptcha;
 import gui.FlippingPanel;
 import gui.GUIUtils;
 import gui.JAPDll;
 import gui.JAPHelp;
-import gui.PopupMenu;
 import gui.JAPMessages;
 import gui.JAPProgressBar;
+import gui.PopupMenu;
+import gui.dialog.DialogContentPane;
 import gui.dialog.JAPDialog;
+import gui.dialog.JAPDialog.LinkedInformationAdapter;
+import gui.dialog.JAPDialog.Options;
 import jap.forward.JAPRoutingRegistrationStatusObserver;
 import jap.forward.JAPRoutingServerStatisticsListener;
 import jap.forward.JAPRoutingSettings;
@@ -98,16 +118,9 @@ import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
 import update.JAPUpdateWizard;
-import javax.swing.JComboBox;
-import anon.infoservice.BlacklistedCascadeIDEntry;
-import java.awt.Point;
-import anon.infoservice.MessageDBEntry;
-import anon.infoservice.DeletedMessageIDDBEntry;
-import java.net.URL;
-import gui.dialog.DialogContentPane;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
-	JAPObserver, Observer
+	JAPObserver, Observer, IMessageListener, IPaymentListener
 {
 	public static final String MSG_UPDATE = JAPNewView.class.getName() + "_update";
 	public static final String MSG_NO_REAL_PAYMENT = JAPNewView.class.getName() + "_noRealPayment";
@@ -232,6 +245,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JAPProgressBar m_progressOwnTrafficActivity, m_progressOwnTrafficActivitySmall,
 		m_progressAnonLevel;
 	private JButton m_bttnAnonDetails, m_bttnReload;
+	private JButton m_firefox;
 	private JCheckBox m_cbAnonymityOn;
 	private JRadioButton m_rbAnonOff, m_rbAnonOn;
 	private JCheckBox m_cbForwarding, m_cbForwardingSmall;
@@ -275,7 +289,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private int m_msgIDInsecure;
 
-	public JAPNewView(String s, JAPController a_controller)
+	private String m_firepath; //firefox-path for portable JAP
+
+	public JAPNewView(String s, JAPController a_controller, String fpath)
 	{
 		super(s, a_controller);
 		m_bIsSimpleView = (JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED);
@@ -286,6 +302,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_packetMixedJobs = new JobQueue("packet mixed update job queue");
 		m_lTrafficWWW = 0;
 		m_lTrafficOther = 0;
+		m_firepath = fpath;
 	}
 
 	public void create(boolean loadPay)
@@ -527,6 +544,30 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		constrVersion.gridx++;
 		constrVersion.insets = new Insets(0, 0, 0, 0);
 		m_pnlVersion.add(m_labelVersion, constrVersion);
+
+		if (m_firepath != null && !m_firepath.equals(""))
+		{
+			m_firefox = new JButton("Webbrowser");
+			m_firefox.setToolTipText(m_firepath);
+			m_firefox.setMnemonic('W');
+
+			m_firefox.addActionListener(new ActionListener()
+			{
+				public void actionPerformed(ActionEvent e)
+				{
+					try
+					{
+						Runtime.getRuntime().exec(m_firepath);
+					}
+					catch (IOException ex)
+					{
+					}
+				}
+			});
+
+			northPanel.add(m_firefox, c);
+		}
+
 		//northPanel.add(m_pnlVersion, c);
 
 
@@ -1054,6 +1095,25 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		panelTmp.add(m_buttonDeleteMessage, constraints);
 		northPanel.add(panelTmp, c);
 		//northPanel.add(m_buttonDeleteMessage, c);
+
+    	//register as MessageListener with all existing accounts
+		Enumeration allAccounts = PayAccountsFile.getInstance().getAccounts();
+		while (allAccounts.hasMoreElements())
+		{
+			PayAccount curAccount = (PayAccount) allAccounts.nextElement();
+			curAccount.addMessageListener(this);
+			//load messages from the balances we already have (new messages are only displayed if different from existing ones)
+			XMLBalance existingBalance = curAccount.getAccountInfo().getBalance();
+			String existingMessage = existingBalance.getMessage();
+			String existingMessageText = existingBalance.getMessageText();
+			String existingMessageLink = existingBalance.getMessageLink();
+			if (existingMessage != null && !existingMessage.equals(""))
+			{
+				this.messageReceived(existingMessage, existingMessageText, existingMessageLink);
+			}
+		}
+		//make sure to be noticed of new or deleted accounts
+	    //PayAccountsFile.getInstance().addPaymentListener(this);
 
 
 //-----------------------------------------------------------
@@ -1840,10 +1900,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						{
 							public void actionPerformed(ActionEvent a_event)
 							{
+								Database.getInstance(ClickedMessageIDDBEntry.class).update(
+									new ClickedMessageIDDBEntry(entry));
 								AbstractOS.getInstance().openURL(entry.getURL(JAPMessages.getLocale()));
 							}
 						},
-							new ActionListener()
+							new StatusPanel.ButtonListener()
 						{
 							public void actionPerformed(ActionEvent a_event)
 							{
@@ -1861,7 +1923,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 									{
 										return JAPMessages.getString(MSG_DELETE_MESSAGE);
 									}
-
 								},
 									JAPDialog.MESSAGE_TYPE_INFORMATION,
 									new JAPDialog.AbstractLinkedURLAdapter()
@@ -1887,6 +1948,20 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 									}
 
 								}
+							}
+
+							public boolean isButtonShown()
+							{
+								ClickedMessageIDDBEntry clickedEntry = (ClickedMessageIDDBEntry)
+									Database.getInstance(ClickedMessageIDDBEntry.class).getEntryById(entry.
+									getId());
+								if (clickedEntry != null &&
+									clickedEntry.getVersionNumber() >= entry.getVersionNumber())
+								{
+									// this message already has been clicked
+									return true;
+								}
+								return false;
 							}
 						});
 						entry.setExternalIdentifier(id);
@@ -2898,6 +2973,210 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 
 		return true;
+	}
+
+	/**
+	 * does nothing, just a stub to fulfill the complete interface IPaymentListener
+	 */
+	public boolean accountCertRequested(MixCascade a_connectedCascade)
+	{
+		return false;
+	}
+
+	/**
+	 * does nothing, just a stub to fulfill the complete interface IPaymentListener
+	 */
+	public void accountError(XMLErrorMessage msg, boolean a_bIgnore)
+	{
+	}
+
+	/**
+	 * does nothing, just a stub to fulfill the complete interface IPaymentListener
+	 */
+	public void accountActivated(PayAccount acc)
+	{
+	}
+
+	public void accountRemoved(PayAccount acc)
+	{
+		acc.removeMessageListener(this);
+	}
+
+	public void accountAdded(PayAccount acc)
+	{
+		acc.addMessageListener(this);
+	}
+
+	/**
+	 * does nothing, just a stub to fulfill the complete interface IPaymentListener
+	 */
+	public void creditChanged(PayAccount acc)
+	{
+	}
+
+	/**
+	 * does nothing, just a stub to fulfill the complete interface IPaymentListener
+	 */
+	public void gotCaptcha(ICaptchaSender a_source, IImageEncodedCaptcha a_captcha)
+	{
+	}
+
+	//stores the id's of messages, key: String message, value: Integer id
+	//this might seem backwards, but the String is what we get as message to remove, and the id is what the statuspanel needs to remove the message
+	private Hashtable m_messagesShown = new Hashtable();
+
+	public void messageReceived(String message, String messageText, String messageLink)
+	{
+
+		int messageId = 0; //so store the return value, so we can find the message again to remove it
+
+	    //check if a valid link was given
+		URL workingURL = null;
+		try
+		{
+			workingURL = new URL(messageLink);
+		}
+		catch (MalformedURLException ex)
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, messageLink + " is not a valid URL, will show message without link");
+		}
+		boolean gotLink = workingURL != null ? true : false;
+		boolean gotText = (messageText != null && !messageText.equals("") ) ? true : false;
+		ActionListener messageClicked;
+
+	    //neither link nor longer text -> just show the message, with nothing happening when the user clicks on it
+	    if (!gotLink && !gotText )
+		{
+			messageClicked = null;
+	    }
+		// link given, but no text -> open link immediately on click
+		else if (gotLink && !gotText )
+		{
+			final String linkString = messageLink;
+			messageClicked = new ActionListener()
+			{
+				public void actionPerformed(ActionEvent e)
+				{
+
+					URL urlToOpen = null; //need to declare another URL so we can access it in inner class
+					try
+					{
+						urlToOpen = new URL(linkString);
+						AbstractOS.getInstance().openURL(urlToOpen);
+					}
+					catch (MalformedURLException ex)
+					{
+						//can't really happen, since we tried building the link before
+						LogHolder.log(LogLevel.DEBUG, LogType.PAY, "could not build URL from String " + linkString);
+					}
+				}
+			};
+
+		}
+		//text given -> open dialog box on click
+		else
+		{
+			final String messageString = message;
+			final String messageTextString = messageText;
+			final JAPNewView parentWindow = this;
+			final String messageLinkString = messageLink;
+
+			if (gotLink) //also got link -> show dialog with button opening the link
+			{
+				final JAPDialog.LinkedInformationAdapter infoLink = new LinkedInformationAdapter()
+				{
+					public void clicked (boolean state)
+					{
+						URL urlToOpen = null;
+						try
+						{
+							urlToOpen = new URL(messageLinkString);
+						}
+						catch (MalformedURLException ex)
+						{
+						}
+						AbstractOS.getInstance().openURL(urlToOpen);
+					}
+
+					public String getMessage()
+					{
+						String displayedLink = messageLinkString;
+						displayedLink = Util.replaceAll(messageLinkString,"mailto:","Email:");
+						displayedLink = Util.replaceAll(messageLinkString,"http://","Link:");
+						return displayedLink;
+					}
+
+					public int getType()
+					{
+						return JAPDialog.ILinkedInformation.TYPE_SELECTABLE_LINK;
+					}
+				};
+				final JAPDialog.Options dialogOptions = new Options(JAPDialog.OPTION_TYPE_OK_CANCEL)
+				{
+					public String getYesOKText()
+					{
+						return JAPMessages.getString("bttnOk");
+					}
+					public String getCancelText()
+					{
+						return JAPMessages.getString("bttnCancel");
+					}
+				};
+
+	            messageClicked = new ActionListener()
+				{
+					public void actionPerformed(ActionEvent e)
+					{
+						int buttonClicked = JAPDialog.showConfirmDialog(parentWindow,messageTextString,messageString,dialogOptions,JOptionPane.INFORMATION_MESSAGE,infoLink);
+						//react to oK buton clicked with opening the link
+						if (buttonClicked == JOptionPane.OK_OPTION)
+						{
+							try
+							{
+								URL urlToOpen = new URL(messageLinkString);
+								AbstractOS.getInstance().openURL(urlToOpen);
+							}
+							catch (MalformedURLException ex1)
+							{
+								LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Could not create url from string: " + messageLinkString);
+							}
+						}
+
+					}
+				};
+
+
+			}
+			else //just long text -> simple message dialog
+			{
+				messageClicked = new ActionListener()
+				{
+					public void actionPerformed(ActionEvent e)
+					{
+						JAPDialog.showMessageDialog(parentWindow,messageTextString,messageString);
+					}
+				};
+
+			}
+		}
+
+		messageId = m_StatusPanel.addStatusMsg(message, JOptionPane.INFORMATION_MESSAGE,false,messageClicked);
+		m_messagesShown.put(message, new Integer(messageId));
+	}
+
+	public void messageRemoved(String message)
+	{
+		Object messageIDObject;
+		if (message == null || message.trim().length() == 0 ||
+			(messageIDObject =  m_messagesShown.get(message)) == null)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.PAY, "Empty payment message should be removed!");
+
+			return;
+		}
+		int messageId = ((Integer) messageIDObject).intValue();
+		m_StatusPanel.removeStatusMsg(messageId);
+
 	}
 
 	private final class ComponentMovedAdapter extends ComponentAdapter
