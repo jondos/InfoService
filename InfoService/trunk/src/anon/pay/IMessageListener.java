@@ -25,17 +25,25 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package anon.util;
+package anon.pay;
+
+
 
 /**
  * implemented by classes that are capable of diplaying or otherwise handling messages corresponding to accounts
  * (Typical case: account lost money due to an error at Jondos -> set message "please contact us to get your money back")
  *
+ * Every implementing class is responsible for
+ * - making sure that a message is shown as often is appropriate
+ *   (the same message might very well be received more than once)
+ * - making sure that it can delete the message when necessary
+ *   (there is no way provided to get a list of existing messages)
+ *
  * @author Elmar Schraml
  */
 public interface IMessageListener
 {
-	void messageReceived(String message, String messageText, String messageLink);
-	void messageRemoved(String message);
+	void messageReceived(PayMessage message);
+	void messageRemoved(PayMessage message);
 
 }

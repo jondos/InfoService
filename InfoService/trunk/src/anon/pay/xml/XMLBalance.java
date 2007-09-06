@@ -15,6 +15,9 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import java.net.URL;
+import anon.util.Base64;
+import anon.pay.PayMessage;
+import java.net.MalformedURLException;
 
 /**
  * This class holds a balance certificate. Can be converted to and from
@@ -36,7 +39,7 @@ public class XMLBalance implements IXMLEncodable
 	private int m_balance;
 	private String m_message;
 	private String m_messageText;
-	private String m_messageLink;
+	private URL m_messageLink;
 
 	private Document m_docTheBalance = null;
 
@@ -88,19 +91,20 @@ public class XMLBalance implements IXMLEncodable
 		}
 	}
 
-	/**
-	 *
-	 * @param a_message String: short message that will be shown in the status panel of the jap
-	 * @param a_messageText String: extended Text, too long to be shown in the status panel, will be shown in a dialog box when the user clicks on the short message
-	 *                              can very well be null
-	 * @param a_link String: a link (web or email, should be a valid URL, XMLBalance does NOT check for validity) that is opened when the user clicks on the status message (short message) or on a button in the dialog box (message with longer text)
-	 *                    can very well be null
-	 */
-	public void setMessage(String a_message, String a_messageText, String a_link)
+	public void setMessage(PayMessage a_message)
 	{
-		m_message = a_message;
-		m_messageLink = a_link;
-		m_messageText = a_messageText;
+		if (a_message == null)
+		{
+			m_message = null;
+			m_messageLink = null;
+			m_messageText = null;
+		}
+		else
+		{
+			m_message = a_message.getShortMessage();
+			m_messageLink = a_message.getMessageLink();
+			m_messageText = a_message.getMessageText();
+		}
 		//need to recreate the internal do to include the message
 		m_docTheBalance = XMLUtil.createDocument();
 		m_docTheBalance.appendChild(internal_toXmlElement(m_docTheBalance));
@@ -180,8 +184,32 @@ public class XMLBalance implements IXMLEncodable
 		}
 		else
 		{
-			str = XMLUtil.parseValue(elem,"");
-			m_message = str;
+			boolean isBase64 = XMLUtil.parseAttribute(elem, "encoded",false);
+			if (isBase64)
+			{
+				try
+				{
+					str = XMLUtil.parseValue(elem, "");
+					if (!str.equals("") )
+					{
+						m_message = Base64.decodeToString(str);
+					}
+					else
+					{
+						m_message = "";
+					}
+				}
+				catch (Exception e)
+				{
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+								  "Error while reading message: " + e + ", message (Base64) was" + str +
+								  "decoded message was" + m_message);
+				}
+			}
+			else
+			{
+				m_message = XMLUtil.parseValue(elem,"");
+			}
 		}
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "MessageLink");
 		if (elem == null)
@@ -191,17 +219,49 @@ public class XMLBalance implements IXMLEncodable
 		else
 		{
 			str = XMLUtil.parseValue(elem,"");
-			m_messageLink = str;
+			if (!str.equals(""))
+			{
+				try
+				{
+					m_messageLink = new URL(str);
+				} catch (MalformedURLException mue)
+				{
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Could not get URL from messagelink string: " + str + ", reason: " + mue);
+				}
+			}
 		}
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "MessageText");
 		if (elem == null)
 		{
-			; // no message link exists for this account, that's OK
+			; // no message text exists for this account, that's OK
 		}
 		else
 		{
-			str = XMLUtil.parseValue(elem,"");
-			m_messageText = str;
+			boolean isBase64 = XMLUtil.parseAttribute(elem, "encoded",false);
+			if (isBase64)
+			{
+				try
+				{
+					str = XMLUtil.parseValue(elem, "");
+					if (!str.equals(""))
+					{
+						m_messageText = Base64.decodeToString(str);
+					} else
+					{
+						m_messageText = "";
+					}
+				}
+				catch (Exception e)
+				{
+					LogHolder.log(LogLevel.DEBUG, LogType.PAY,
+								  "Error while reading message: " + e + ", message (Base64) was" + str +
+								  "decoded message was" + m_message);
+				}
+			}
+			else
+			{
+				m_messageText = XMLUtil.parseValue(elem,"");
+			}
 		}
 
 	}
@@ -235,14 +295,30 @@ public class XMLBalance implements IXMLEncodable
 		elem = a_doc.createElement("Validtime");
 		XMLUtil.setValue(elem, m_ValidTime.toString());
 		elemRoot.appendChild(elem);
+
 		elem = a_doc.createElement("Message");
-		XMLUtil.setValue(elem, m_message);
+		if (m_message != null)
+		{
+			String encodedMessage = Base64.encodeString(m_message);
+			XMLUtil.setValue(elem, encodedMessage);
+			XMLUtil.setAttribute(elem, "encoded",true);
+		}
 		elemRoot.appendChild(elem);
+
 		elem = a_doc.createElement("MessageText");
-		XMLUtil.setValue(elem, m_messageText);
+		if (m_messageText != null)
+		{
+			String encodedMessageText = Base64.encodeString(m_messageText);
+			XMLUtil.setAttribute(elem, "encoded", true);
+			XMLUtil.setValue(elem, encodedMessageText);
+		}
 		elemRoot.appendChild(elem);
+
 		elem = a_doc.createElement("MessageLink");
-		XMLUtil.setValue(elem, m_messageLink);
+		if (m_messageLink != null)
+		{
+			XMLUtil.setValue(elem, m_messageLink.toString());
+		}
 		elemRoot.appendChild(elem);
 
 
@@ -304,20 +380,24 @@ public class XMLBalance implements IXMLEncodable
 		return m_ValidTime;
 	}
 
-	public String getMessage()
+	/**
+	 *
+	 * @return PayMessage: a PayMessage object if this Balance has a message associated with it
+	 *  If the short message text is null or an empty String, getMessage() will return null
+	 *   (even if a link or long text exists)
+	 */
+	public PayMessage getMessage()
 	{
-		return m_message;
+		if (m_message == null || m_message.equals("") )
+		{
+			return null;
+		}
+	    else
+		{
+			return new PayMessage(m_message, m_messageText, m_messageLink);
+		}
 	}
 
-	public String getMessageText()
-	{
-		return m_messageText;
-	}
-
-	public String getMessageLink()
-	{
-		return m_messageLink;
-	}
 
 
 	public Element toXmlElement(Document a_doc)

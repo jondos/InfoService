@@ -172,8 +172,8 @@ public class JAP
 		{
 			System.out.println("Usage:");
 			System.out.println("--help, -h:                  Show this text.");
-			System.out.println("--console:                   Start JAP in console-only mode.");
-			System.out.println("--minimized, -m:             Minimize JAP on startup.");
+			System.out.println("--console:                   Start JonDo in console-only mode.");
+			System.out.println("--minimized, -m:             Minimize JonDo on startup.");
 			System.out.println("--version, -v:               Print version information.");
 			System.out.println("--showDialogFormat           Show and set dialog format options.");
 			System.out.println("--noSplash, -s               Suppress splash screen on startup.");
@@ -181,7 +181,8 @@ public class JAP
 			System.out.println("--forwarder, -f {port}       Act as a forwarder on a specified port.");
 			System.out.println("--listen, -l {[host][:port]} Listen on the specified interface.");
 			System.out.println("--cascade {[host][:port]}    Connects to the specified Mix-Cascade.");
-			System.out.println("--config, -c {Filename}:     Force JAP to use a specific configuration file.");
+			System.out.println("--portable-browser {path}    Tell JonDo that it runs in a portable environment.");
+			System.out.println("--config, -c {Filename}:     Force JonDo to use a specific configuration file.");
 			System.exit(0);
 		}
 
@@ -426,9 +427,9 @@ public class JAP
 
 		// Set path to Firefox for portable JAP
 		String m_firepath="";
-		if (isArgumentSet("--portable"))
+		if (isArgumentSet("--portable-browser"))
 		{
-			m_firepath = getArgumentValue("--portable");
+			m_firepath = getArgumentValue("--portable-browser");
 		}
 
 		// Create the controller object

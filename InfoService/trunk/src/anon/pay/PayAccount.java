@@ -61,7 +61,7 @@ import java.util.Date;
 import anon.util.ZLibTools;
 import anon.util.Base64;
 import java.text.ParseException;
-import anon.util.IMessageListener;
+
 
 /**
  * This class encapsulates one account and all additional data associated to one
@@ -348,38 +348,54 @@ public class PayAccount implements IXMLEncodable
 		}
 		else
 		{
+
 			// compare balance timestamps, use the newer one
 			XMLBalance retrievedBalance = info.getBalance();
+
 			XMLBalance savedBalance = m_accountInfo.getBalance();
 
 			//get saved message (so we can check the new balance for changes)
-			String oldMessage = savedBalance.getMessage();
-			String newMessage = retrievedBalance.getMessage();
-			String newMessageText = retrievedBalance.getMessageText();
-			String newMessageLink = retrievedBalance.getMessageLink();
+			PayMessage oldMessage = savedBalance.getMessage();
+			PayMessage newMessage = retrievedBalance.getMessage();
 
 			if (retrievedBalance.getTimestamp().after(savedBalance.getTimestamp()))
 			{
 				m_accountInfo.setBalance(retrievedBalance);
 				fire = true;
 
-				//if we have a message, add it, and remove an old message for this account if we had one
-				if (newMessage != null && !newMessage.equals("") && !oldMessage.equals(newMessage) )
+				//do we have a message?
+				if (newMessage != null && !newMessage.getShortMessage().equals("")  )
 				{
-					fireMessageReceived(newMessage, newMessageText, newMessageLink);
-					if (oldMessage != null && !oldMessage.equals("") && !oldMessage.equals(newMessage) )
+					//none before? just show this one
+					if (oldMessage == null)
+					{
+						fireMessageReceived(newMessage);
+					}
+					else //there already was a message before
+					{
+						if (newMessage.equals(oldMessage) )
+						{
+							; //same message? just leave it
+						}
+						else
+						{
+							//different message? replace old with new message
+							fireMessageRemoved(oldMessage);
+							fireMessageReceived(newMessage);
+						}
+					}
+				}
+				else //no message received
+				{
+					//remove old message if present
+					if ( (oldMessage != null && !oldMessage.getShortMessage().equals("")))
 					{
 						fireMessageRemoved(oldMessage);
 					}
 				}
-				//remove old message if balance does no longer contain a message
-				if ((oldMessage != null || !oldMessage.equals("") ) && (newMessage == null || newMessage.equals("")) )
-				{
-					fireMessageRemoved(oldMessage);
-				}
 			}
 
-			savedBalance.setMessage(newMessage, newMessageText, newMessageLink);
+			savedBalance.setMessage(newMessage);
 
 			// compare CCs
 			Enumeration en = m_accountInfo.getCCs();
@@ -604,6 +620,8 @@ public class PayAccount implements IXMLEncodable
 				LogHolder.log(LogLevel.WARNING, LogType.PAY, "No valid title tag was found!");
 				m_terms = null;
 			}
+
+
 		}
 	}
 
@@ -752,16 +770,16 @@ public class PayAccount implements IXMLEncodable
 		}
 	}
 
-	private void fireMessageReceived(String message, String messageText, String messageLink)
+	private void fireMessageReceived(PayMessage message)
 	{
 		Enumeration enumListeners = ( (Vector) m_messageListeners.clone()).elements();
 		while (enumListeners.hasMoreElements() )
 		{
-			( (IMessageListener) enumListeners.nextElement() ).messageReceived(message,messageText, messageLink);
+			( (IMessageListener) enumListeners.nextElement() ).messageReceived(message);
 		}
 	}
 
-	private void fireMessageRemoved(String message)
+	private void fireMessageRemoved(PayMessage message)
 	{
 		Enumeration enumListeners = ( (Vector) m_messageListeners.clone()).elements();
 		while (enumListeners.hasMoreElements() )
