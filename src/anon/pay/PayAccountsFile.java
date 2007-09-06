@@ -27,34 +27,31 @@
  */
 package anon.pay;
 
+import java.sql.Timestamp;
 import java.util.Enumeration;
-import java.util.Vector;
 import java.util.Observable;
+import java.util.Vector;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import anon.crypto.AsymmetricCryptoKeyPair;
+import anon.infoservice.Database;
 import anon.infoservice.IMutableProxyInterface;
-import anon.infoservice.InfoServiceHolder;
+import anon.infoservice.MixCascade;
 import anon.pay.xml.XMLAccountCertificate;
+import anon.pay.xml.XMLBalance;
 import anon.pay.xml.XMLErrorMessage;
+import anon.pay.xml.XMLGenericText;
 import anon.pay.xml.XMLJapPublicKey;
 import anon.util.IMiscPasswordReader;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
-import anon.infoservice.Database;
 import anon.util.captcha.ICaptchaSender;
 import anon.util.captcha.IImageEncodedCaptcha;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.infoservice.ListenerInterface;
-import anon.crypto.JAPCertificate;
-import java.io.File;
-import anon.infoservice.MixCascade;
-import java.util.Hashtable;
-import anon.pay.xml.XMLGenericText;
-import java.sql.Timestamp;
+
 
 /**
  * This class encapsulates a collection of accounts. One of the accounts in the collection
@@ -89,7 +86,7 @@ import java.sql.Timestamp;
  * @author Bastian Voigt, Tobias Bayer
  * @version 1.0
  */
-public class PayAccountsFile extends Observable implements IXMLEncodable, IBIConnectionListener
+public class PayAccountsFile extends Observable implements IXMLEncodable, IBIConnectionListener, IMessageListener
 {
 	public static final String XML_ELEMENT_NAME = "PayAccounts";
 
@@ -113,6 +110,8 @@ public class PayAccountsFile extends Observable implements IXMLEncodable, IBICon
 	private static PayAccountsFile ms_AccountsFile = null;
 
 	private Vector m_paymentListeners = new Vector();
+
+	private Vector m_messageListeners = new Vector();
 
 	private MyAccountListener m_MyAccountListener = new MyAccountListener();
 
@@ -227,7 +226,20 @@ public class PayAccountsFile extends Observable implements IXMLEncodable, IBICon
 				try
 				{
 					PayAccount theAccount = new PayAccount(elemAccount, a_passwordReader);
+
 					ms_AccountsFile.addAccount(theAccount);
+					//do NOT explicitly add PayAccountsFile as MessageListener - addAccount() already includes that, would duplicate all messages to have two Listeners
+					//theAccount.addMessageListener(PayAccountsFile.getInstance());
+
+
+					//load messages from the balances we already have (new messages are only displayed if different from existing ones)
+					XMLBalance existingBalance = theAccount.getAccountInfo().getBalance();
+					PayMessage existingMessage = existingBalance.getMessage();
+					if (existingMessage != null && !existingMessage.getShortMessage().equals(""))
+					{
+						ms_AccountsFile.messageReceived(existingMessage);
+					}
+
 					elemAccount = (Element) elemAccount.getNextSibling();
 				}
 				catch (Exception e)
@@ -410,23 +422,32 @@ public class PayAccountsFile extends Observable implements IXMLEncodable, IBICon
 	 */
 	public void deleteAccount(long accountNumber)
 	{
-		PayAccount tmp = null;
+		PayAccount accountToDelete = null;
 		synchronized (this)
 		{
-			tmp = getAccount(accountNumber);
+			accountToDelete = getAccount(accountNumber);
 
-			if (tmp != null)
+			if (accountToDelete != null)
 			{
 				for (int i = 0; i < m_Accounts.size(); i++)
 				{
-					tmp = (PayAccount) m_Accounts.elementAt(i);
-					if (tmp.getAccountNumber() == accountNumber)
+					accountToDelete = (PayAccount) m_Accounts.elementAt(i);
+					if (accountToDelete.getAccountNumber() == accountNumber)
 					{
 						m_Accounts.removeElementAt(i);
 						break;
 					}
 				}
-				if (getActiveAccount() == tmp)
+				//if deleted account had a message, remove it
+				//because a deleted account will not be update any more -> JapNewView would not realize the message is gone
+				PayMessage oldMessage = accountToDelete.getBalance().getMessage();
+				if (oldMessage != null && !oldMessage.getShortMessage().equals("") )
+				{
+					fireMessageRemoved(oldMessage);
+				}
+
+	            //get a new active account, if possible
+				if (getActiveAccount() == accountToDelete)
 				{
 					if (m_Accounts.size() > 0)
 					{
@@ -440,14 +461,14 @@ public class PayAccountsFile extends Observable implements IXMLEncodable, IBICon
 			}
 		}
 
-		if (tmp != null)
+		if (accountToDelete != null)
 		{
 			synchronized (m_paymentListeners)
 			{
 				Enumeration enumListeners = m_paymentListeners.elements();
 				while (enumListeners.hasMoreElements())
 				{
-					( (IPaymentListener) enumListeners.nextElement()).accountRemoved(tmp);
+					( (IPaymentListener) enumListeners.nextElement()).accountRemoved(accountToDelete);
 				}
 			}
 		}
@@ -479,6 +500,27 @@ public class PayAccountsFile extends Observable implements IXMLEncodable, IBICon
 	public Enumeration getAccounts()
 	{
 		return ((Vector)m_Accounts .clone()).elements();
+	}
+
+	/**
+	* iterates over all accounts, and whenever there is a message it is sent to all MessageListeners
+	* reason for existence: JapNewView needs to load all messages at start-up
+	* (PayAccountsFile does already fire all message when it loads the accounts from the file, but that possibly happens before a MessageListener is
+	* initialized and added as a listener to PayAccountsFile)
+	*/
+	public static void fireKnownMessages()
+	{
+		Enumeration allAccounts = getInstance().getAccounts();
+		while (allAccounts.hasMoreElements() )
+		{
+			PayAccount theAccount = (PayAccount) allAccounts.nextElement();
+			XMLBalance existingBalance = theAccount.getAccountInfo().getBalance();
+			PayMessage existingMessage = existingBalance.getMessage();
+			if (existingMessage != null && !existingMessage.getShortMessage().equals(""))
+			{
+				ms_AccountsFile.fireMessageReceived(existingMessage);
+			}
+		}
 	}
 
 	public synchronized PayAccount getAlternativeNonEmptyAccount(String a_piid)
@@ -531,7 +573,7 @@ public class PayAccountsFile extends Observable implements IXMLEncodable, IBICon
 	 * @param account new account
 	 * @throws Exception If the same account was already added
 	 */
-	public synchronized void addAccount(PayAccount account) throws Exception
+	public synchronized void addAccount(PayAccount newAccount) throws Exception
 	{
 		PayAccount tmp;
 		boolean activeChanged = false;
@@ -540,21 +582,24 @@ public class PayAccountsFile extends Observable implements IXMLEncodable, IBICon
 		while (enumer.hasMoreElements())
 		{
 			tmp = (PayAccount) enumer.nextElement();
-			if (tmp.getAccountNumber() == account.getAccountNumber())
+			if (tmp.getAccountNumber() == newAccount.getAccountNumber())
 			{
 				throw new AccountAlreadyExisting();
 			}
 		}
-		account.addAccountListener(m_MyAccountListener);
-		m_Accounts.addElement(account);
+		newAccount.addAccountListener(m_MyAccountListener);
+		newAccount.addMessageListener(this);
+		m_Accounts.addElement(newAccount);
 
-		if (m_ActiveAccount == null && account.getPrivateKey() != null)
+		if (m_ActiveAccount == null && newAccount.getPrivateKey() != null)
 		{
-			m_ActiveAccount = account;
+			m_ActiveAccount = newAccount;
 			activeChanged = true;
 		}
 
-		// fire event
+
+
+		// notify paymen listeners
 		synchronized (m_paymentListeners)
 		{
 			Enumeration enumListeners = m_paymentListeners.elements();
@@ -562,10 +607,10 @@ public class PayAccountsFile extends Observable implements IXMLEncodable, IBICon
 			while (enumListeners.hasMoreElements())
 			{
 				pl = (IPaymentListener) enumListeners.nextElement();
-				pl.accountAdded(account);
+				pl.accountAdded(newAccount);
 				if (activeChanged == true)
 				{
-					pl.accountActivated(account);
+					pl.accountActivated(newAccount);
 				}
 			}
 			enumListeners = null;
@@ -625,6 +670,37 @@ public class PayAccountsFile extends Observable implements IXMLEncodable, IBICon
 			}
 		}
 	}
+
+	public void addMessageListener(IMessageListener listener)
+	{
+		synchronized (m_messageListeners)
+		{
+			if (listener != null)
+			{
+				m_messageListeners.addElement(listener);
+			}
+		}
+	}
+
+	private void fireMessageReceived(PayMessage message)
+	{
+		Enumeration enumListeners = ( (Vector) m_messageListeners.clone()).elements();
+		while (enumListeners.hasMoreElements())
+		{
+			( (IMessageListener) enumListeners.nextElement()).messageReceived(message);
+		}
+	}
+
+	private void fireMessageRemoved(PayMessage message)
+	{
+		Enumeration enumListeners = ( (Vector) m_messageListeners.clone()).elements();
+		while (enumListeners.hasMoreElements())
+		{
+			( (IMessageListener) enumListeners.nextElement()).messageRemoved(message);
+		}
+
+	}
+
 
 	/**
 	 * getBI
@@ -742,6 +818,7 @@ public class PayAccountsFile extends Observable implements IXMLEncodable, IBICon
 	}
 
 
+
 	public Vector getPaymentInstances()
 	{
 		return Database.getInstance(PaymentInstanceDBEntry.class).getEntryList();
@@ -783,5 +860,18 @@ public class PayAccountsFile extends Observable implements IXMLEncodable, IBICon
 				( (IPaymentListener) enumListeners.nextElement()).gotCaptcha(a_source, a_captcha);
 			}
 		}
+	}
+
+	/**
+	 * just passes through a received message to the PayAccountsFile's MessageListeners
+	 */
+	public void messageReceived(PayMessage message)
+	{
+		fireMessageReceived(message);
+	}
+
+	public void messageRemoved(PayMessage message)
+	{
+		fireMessageRemoved(message);
 	}
 }

@@ -41,6 +41,7 @@
   <property category="generalFormatting2" name="tabSize" value="4"/>
   <property category="generalFormatting2" name="useTabChar" value="1"/>
   <property category="idl" name="ProcessIDL" value="false"/>
+  <property category="java" name="compiler" value="projectjavac"/>
   <property category="java.sapient" name="ACE" value="true"/>
   <property category="java.sapient" name="AFLV" value="true"/>
   <property category="java.sapient" name="AFP" value="true"/>
@@ -356,7 +357,7 @@
   <property category="sys" name="ExcludeClassEnabled" value="0"/>
   <property category="sys" name="IncludeTestPath" value="1"/>
   <property category="sys" name="InstanceVisibility" value="0"/>
-  <property category="sys" name="JDK" value="java version 1.5.0_10-b03"/>
+  <property category="sys" name="JDK" value="java version 1.4.2_04-b05"/>
   <property category="sys" name="LastTag" value="192"/>
   <property category="sys" name="Libraries" value="http;mac;Apache XML-RPC;BouncyCastleLightForJAP;JUnit;junitx;Swing;ApacheBzip2;Log4j;ApacheFTPClient;XML-1.0"/>
   <property category="sys" name="MakeStable" value="0"/>

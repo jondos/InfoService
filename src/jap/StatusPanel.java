@@ -31,7 +31,6 @@ import java.util.Random;
 
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
@@ -45,6 +44,9 @@ import javax.swing.JPanel;
 import gui.GUIUtils;
 import gui.IStatusLine;
 import gui.JAPMessages;
+import logging.LogType;
+import logging.LogLevel;
+import logging.LogHolder;
 
 /** A panel which display some status messages, one after each other*/
 public class StatusPanel extends JPanel implements Runnable, IStatusLine
@@ -70,18 +72,18 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 		}
 	}
 
-	private final class MsgQueueEntry
+	private final class MessagesListNode
 	{
 		ActionListener listener;
 		ButtonListener buttonAction;
 		String m_Msg;
 		Image m_Icon;
 		int m_Id;
-		MsgQueueEntry m_Next;
+		MessagesListNode m_Next;
 		int m_DisplayCount = -1;
 	}
 
-	private MsgQueueEntry m_Msgs;
+	private MessagesListNode m_firstMessage;
 	private volatile boolean m_bRun;
 	private volatile int m_aktY;
 	private Thread m_Thread;
@@ -109,7 +111,7 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 
 						synchronized (SYNC_MSG)
 						{
-							MsgQueueEntry entry = m_Msgs;
+							MessagesListNode entry = m_firstMessage;
 							if (entry != null && entry.buttonAction != null)
 							{
 								listener = entry.buttonAction;
@@ -142,7 +144,7 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 
 				synchronized (SYNC_MSG)
 				{
-					MsgQueueEntry entry = m_Msgs;
+					MessagesListNode entry = m_firstMessage;
 					if (entry != null)
 					{
 						listener = entry.listener;
@@ -165,7 +167,7 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 		//setFont(font);
 		//setBackground(Color.red);
 		//setSize(m_dimensionPreferredSize);
-		m_Msgs = null;
+		m_firstMessage = null;
 		m_Thread = new Thread(this, "StatusPanel");
 		m_Thread.setDaemon(true);
 		m_bRun = true;
@@ -208,10 +210,10 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 	public int addStatusMsg(String msg, int type, boolean bAutoRemove, ActionListener a_listener,
 		ButtonListener a_ButtonListener)
 	{
-		MsgQueueEntry entry = null;
+		MessagesListNode entry = null;
 		synchronized (SYNC_MSG)
 		{
-			entry = new MsgQueueEntry();
+			entry = new MessagesListNode();
 			entry.listener = a_listener;
 			entry.buttonAction = a_ButtonListener;
 			entry.m_Msg = msg;
@@ -233,16 +235,16 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 				entry.m_Icon = m_imageError;
 			}
 
-			if (m_Msgs == null)
+			if (m_firstMessage == null)
 			{
-				m_Msgs = entry;
+				m_firstMessage = entry;
 				entry.m_Next = entry;
 				m_aktY = ICON_HEIGHT;
 			}
 			else
 			{
-				entry.m_Next = m_Msgs.m_Next;
-				m_Msgs.m_Next = entry;
+				entry.m_Next = m_firstMessage.m_Next;
+				m_firstMessage.m_Next = entry;
 			}
 			m_Thread.interrupt(); //display next message
 		}
@@ -258,14 +260,16 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 	{
 		synchronized (SYNC_MSG)
 		{
-			if (m_Msgs == null) //zero elements
+			//messgaes are stored as a linked list, with the last entry pointing to the first, and m_Msgs being one node
+			if (m_firstMessage == null) //we don't have any messages
 			{
+				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Could not remove message with id of " + id + " since there are no messages at all");
 				m_aktY = ICON_HEIGHT;
 				return;
 			}
-			if (m_Msgs.m_Id == id && m_Msgs.m_Next == m_Msgs) //one element
+			if (m_firstMessage.m_Id == id && m_firstMessage.m_Next == m_firstMessage) //one element
 			{
-				m_Msgs = null;
+				m_firstMessage = null;
 				m_aktY = ICON_HEIGHT;
 
 				setToolTipText(null);
@@ -275,29 +279,29 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 			else
 			{
 				//more than one
-				MsgQueueEntry entry = m_Msgs;
-				MsgQueueEntry prev = null;
-				while (entry != null)
+				MessagesListNode curEntry = m_firstMessage;
+				MessagesListNode prevEntry = null;
+				while (curEntry != null)
 				{
-					if (entry.m_Next.m_Id == id)
+					if (curEntry.m_Next.m_Id == id)
 					{
-						prev = entry;
-						entry = entry.m_Next;
+						prevEntry = curEntry;
+						curEntry = curEntry.m_Next;
 						break;
 					}
-					entry = entry.m_Next;
-					if (entry == m_Msgs)
+					curEntry = curEntry.m_Next;
+					if (curEntry == m_firstMessage) //back to the starting entry
 					{
 						return; //not found
 					}
 				}
-				if (entry == m_Msgs) //remove curent entry
+				if (curEntry == m_firstMessage) //remove curent entry
 				{
-					m_Msgs = entry.m_Next;
+					m_firstMessage = curEntry.m_Next;
 					m_aktY = ICON_HEIGHT;
 					m_Thread.interrupt(); //display changes
 				}
-				prev.m_Next = entry.m_Next; //remove entry from list
+				prevEntry.m_Next = curEntry.m_Next; //remove entry from list
 			}
 		}
 
@@ -313,19 +317,19 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 		super.paint(g);
 		synchronized (SYNC_MSG)
 		{
-			if (m_Msgs != null)
+			if (m_firstMessage != null)
 			{
-				String msg = m_Msgs.m_Msg;
-				if (m_Msgs.buttonAction != null && !m_button.isVisible())
+				String msg = m_firstMessage.m_Msg;
+				if (m_firstMessage.buttonAction != null && !m_button.isVisible())
 				{
-					m_button.setVisible(m_Msgs.buttonAction.isButtonShown());
+					m_button.setVisible(m_firstMessage.buttonAction.isButtonShown());
 				}
-				else if (m_Msgs.buttonAction == null && m_button.isVisible())
+				else if (m_firstMessage.buttonAction == null && m_button.isVisible())
 				{
 					m_button.setVisible(false);
 				}
 
-				if (m_Msgs.listener != null)
+				if (m_firstMessage.listener != null)
 				{
 					setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 					msg += " (" + JAPMessages.getString(MSG_CLICK_HERE) + ")";
@@ -341,10 +345,10 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 
 				//baseline drawing
 				g.drawString(msg, ICON_WIDTH + 2, g.getFont().getSize() - m_aktY);
-				if (m_Msgs.m_Icon != null)
+				if (m_firstMessage.m_Icon != null)
 				{
 					// top-left drawing
-					g.drawImage(m_Msgs.m_Icon, 0, ((getSize().height  - m_Msgs.m_Icon.getHeight(this)) / 2) - m_aktY, this);
+					g.drawImage(m_firstMessage.m_Icon, 0, ((getSize().height  - m_firstMessage.m_Icon.getHeight(this)) / 2) - m_aktY, this);
 				}
 			}
 		}
@@ -388,28 +392,28 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 
 				synchronized (SYNC_MSG)
 				{
-					if (m_Msgs != null && m_Msgs.m_DisplayCount == 0)
+					if (m_firstMessage != null && m_firstMessage.m_DisplayCount == 0)
 					{
-						removeStatusMsg(m_Msgs.m_Id);
+						removeStatusMsg(m_firstMessage.m_Id);
 					}
 
-					if (m_Msgs == null)
+					if (m_firstMessage == null)
 					{
 						repaint();
 						continue;
 					}
-					if (m_Msgs.m_DisplayCount > 0)
+					if (m_firstMessage.m_DisplayCount > 0)
 					{
-						m_Msgs.m_DisplayCount--;
+						m_firstMessage.m_DisplayCount--;
 					}
 
-					if (m_Msgs == null)
+					if (m_firstMessage == null)
 					{
 						m_aktY = ICON_HEIGHT;
 						repaint();
 						continue;
 					}
-					else if (m_Msgs.m_Next == m_Msgs && m_Msgs.listener != null && m_aktY == 0)
+					else if (m_firstMessage.m_Next == m_firstMessage && m_firstMessage.listener != null && m_aktY == 0)
 					{
 						// there are no other status messages; leave this one on top
 						repaint();
@@ -417,7 +421,7 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 					}
 					else
 					{
-						m_Msgs = m_Msgs.m_Next;
+						m_firstMessage = m_firstMessage.m_Next;
 						m_aktY = ICON_HEIGHT;
 					}
 				}
@@ -435,11 +439,11 @@ public class StatusPanel extends JPanel implements Runnable, IStatusLine
 					{
 						synchronized (SYNC_MSG)
 						{
-							if (m_Msgs != null)
+							if (m_firstMessage != null)
 							{
 								m_aktY = ICON_HEIGHT;
 								i = -1;
-								m_Msgs = m_Msgs.m_Next;
+								m_firstMessage = m_firstMessage.m_Next;
 							}
 						}
 					}

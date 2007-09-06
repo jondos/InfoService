@@ -87,17 +87,10 @@ import anon.infoservice.MessageDBEntry;
 import anon.infoservice.MixCascade;
 import anon.infoservice.NewCascadeIDEntry;
 import anon.infoservice.StatusInfo;
-import anon.pay.IPaymentListener;
-import anon.pay.PayAccount;
 import anon.pay.PayAccountsFile;
-import anon.pay.xml.XMLBalance;
-import anon.pay.xml.XMLErrorMessage;
 import anon.proxy.IProxyListener;
-import anon.util.IMessageListener;
 import anon.util.JobQueue;
 import anon.util.Util;
-import anon.util.captcha.ICaptchaSender;
-import anon.util.captcha.IImageEncodedCaptcha;
 import gui.FlippingPanel;
 import gui.GUIUtils;
 import gui.JAPDll;
@@ -118,9 +111,11 @@ import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
 import update.JAPUpdateWizard;
+import anon.pay.IMessageListener;
+import anon.pay.PayMessage;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
-	JAPObserver, Observer, IMessageListener, IPaymentListener
+	JAPObserver, Observer, IMessageListener
 {
 	public static final String MSG_UPDATE = JAPNewView.class.getName() + "_update";
 	public static final String MSG_NO_REAL_PAYMENT = JAPNewView.class.getName() + "_noRealPayment";
@@ -647,10 +642,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		LookAndFeel laf = UIManager.getLookAndFeel();
 		if (laf != null && UIManager.getCrossPlatformLookAndFeelClassName().equals(laf.getClass().getName())) //stupid but is necessary for JDK 1.5 and Metal L&F on Windows XP (and maybe others)
 		{
+			/*
 			if (m_firefox != null)
 			{
 				m_firefox.setBackground(Color.gray);
-			}
+			}*/
 			m_bttnReload.setBackground(Color.gray);
 		}
 		m_bttnReload.addActionListener(new ActionListener()
@@ -1083,6 +1079,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			northPanel.add(new JSeparator(), c);
 		}
 //Status
+
 		c.gridy++;
 		JPanel panelTmp = new JPanel(new GridBagLayout());
 		m_buttonDeleteMessage = new JLabel(JAPMessages.getString(MSG_HIDE_MESSAGE_SHORT));
@@ -1121,6 +1118,18 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}*/
 		//make sure to be noticed of new or deleted accounts
 	    //PayAccountsFile.getInstance().addPaymentListener(this);
+
+
+
+		/*
+		* Do not use - for some strange reason this line would prevent Jap from connecting to any pay cascade
+		  //make sure to be noticed of new or deleted accounts
+	      //PayAccountsFile.getInstance().addPaymentListener(this);
+	    */
+
+	    PayAccountsFile.getInstance().addMessageListener(this);
+		PayAccountsFile.fireKnownMessages();
+
 
 
 //-----------------------------------------------------------
@@ -2982,72 +2991,21 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		return true;
 	}
 
-	/**
-	 * does nothing, just a stub to fulfill the complete interface IPaymentListener
-	 */
-	public boolean accountCertRequested(MixCascade a_connectedCascade)
-	{
-		return false;
-	}
-
-	/**
-	 * does nothing, just a stub to fulfill the complete interface IPaymentListener
-	 */
-	public void accountError(XMLErrorMessage msg, boolean a_bIgnore)
-	{
-	}
-
-	/**
-	 * does nothing, just a stub to fulfill the complete interface IPaymentListener
-	 */
-	public void accountActivated(PayAccount acc)
-	{
-	}
-
-	public void accountRemoved(PayAccount acc)
-	{
-		acc.removeMessageListener(this);
-	}
-
-	public void accountAdded(PayAccount acc)
-	{
-		acc.addMessageListener(this);
-	}
-
-	/**
-	 * does nothing, just a stub to fulfill the complete interface IPaymentListener
-	 */
-	public void creditChanged(PayAccount acc)
-	{
-	}
-
-	/**
-	 * does nothing, just a stub to fulfill the complete interface IPaymentListener
-	 */
-	public void gotCaptcha(ICaptchaSender a_source, IImageEncodedCaptcha a_captcha)
-	{
-	}
-
 	//stores the id's of messages, key: String message, value: Integer id
 	//this might seem backwards, but the String is what we get as message to remove, and the id is what the statuspanel needs to remove the message
 	private Hashtable m_messagesShown = new Hashtable();
 
-	public void messageReceived(String message, String messageText, String messageLink)
+	public void messageReceived(PayMessage completeMessage)
 	{
-
+		final URL messageLink = completeMessage.getMessageLink();
+		String messageText = completeMessage.getMessageText();
+		String message = completeMessage.getShortMessage();
 		int messageId = 0; //so store the return value, so we can find the message again to remove it
 
 	    //check if a valid link was given
-		URL workingURL = null;
-		try
-		{
-			workingURL = new URL(messageLink);
-		}
-		catch (MalformedURLException ex)
-		{
-			LogHolder.log(LogLevel.DEBUG, LogType.PAY, messageLink + " is not a valid URL, will show message without link");
-		}
-		boolean gotLink = workingURL != null ? true : false;
+
+		boolean gotLink = messageLink != null ? true : false;
+
 		boolean gotText = (messageText != null && !messageText.equals("") ) ? true : false;
 		ActionListener messageClicked;
 
@@ -3059,23 +3017,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		// link given, but no text -> open link immediately on click
 		else if (gotLink && !gotText )
 		{
-			final String linkString = messageLink;
 			messageClicked = new ActionListener()
 			{
 				public void actionPerformed(ActionEvent e)
 				{
-
-					URL urlToOpen = null; //need to declare another URL so we can access it in inner class
-					try
-					{
-						urlToOpen = new URL(linkString);
-						AbstractOS.getInstance().openURL(urlToOpen);
-					}
-					catch (MalformedURLException ex)
-					{
-						//can't really happen, since we tried building the link before
-						LogHolder.log(LogLevel.DEBUG, LogType.PAY, "could not build URL from String " + linkString);
-					}
+					AbstractOS.getInstance().openURL(messageLink);
 				}
 			};
 
@@ -3086,7 +3032,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			final String messageString = message;
 			final String messageTextString = messageText;
 			final JAPNewView parentWindow = this;
-			final String messageLinkString = messageLink;
 
 			if (gotLink) //also got link -> show dialog with button opening the link
 			{
@@ -3094,22 +3039,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				{
 					public void clicked (boolean state)
 					{
-						URL urlToOpen = null;
-						try
-						{
-							urlToOpen = new URL(messageLinkString);
-						}
-						catch (MalformedURLException ex)
-						{
-						}
-						AbstractOS.getInstance().openURL(urlToOpen);
+						AbstractOS.getInstance().openURL(messageLink);
 					}
 
 					public String getMessage()
 					{
-						String displayedLink = messageLinkString;
-						displayedLink = Util.replaceAll(messageLinkString,"mailto:","Email:");
-						displayedLink = Util.replaceAll(messageLinkString,"http://","Link:");
+						String displayedLink = messageLink.toString();
+						displayedLink = Util.replaceAll(displayedLink,"mailto:","Email:");
+						displayedLink = Util.replaceAll(displayedLink,"http://","Link:");
 						return displayedLink;
 					}
 
@@ -3138,15 +3075,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						//react to oK buton clicked with opening the link
 						if (buttonClicked == JOptionPane.OK_OPTION)
 						{
-							try
-							{
-								URL urlToOpen = new URL(messageLinkString);
-								AbstractOS.getInstance().openURL(urlToOpen);
-							}
-							catch (MalformedURLException ex1)
-							{
-								LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Could not create url from string: " + messageLinkString);
-							}
+							AbstractOS.getInstance().openURL(messageLink);
 						}
 
 					}
@@ -3171,19 +3100,19 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_messagesShown.put(message, new Integer(messageId));
 	}
 
-	public void messageRemoved(String message)
+	public void messageRemoved(PayMessage message)
 	{
-		Object messageIDObject;
-		if (message == null || message.trim().length() == 0 ||
-			(messageIDObject =  m_messagesShown.get(message)) == null)
+		String messageString = message.getShortMessage();
+		Integer messageId = (Integer) m_messagesShown.get(messageString);
+		if (messageId == null)
 		{
-			LogHolder.log(LogLevel.ERR, LogType.PAY, "Empty payment message should be removed!");
-
-			return;
+			//should not happen, we can't remove a message without an id
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Tried to remove a message, but failed, since no id exists, message is: " + message);
 		}
-		int messageId = ((Integer) messageIDObject).intValue();
-		m_StatusPanel.removeStatusMsg(messageId);
-
+		else
+		{
+			m_StatusPanel.removeStatusMsg(messageId.intValue());
+		}
 	}
 
 	private final class ComponentMovedAdapter extends ComponentAdapter
