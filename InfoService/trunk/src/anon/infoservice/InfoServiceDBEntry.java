@@ -890,7 +890,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 							// remove interface temporarily
 							// TODO better handling for real error situation - as catching all exceptions and removing
 							// the interface because of any exceptions is by far to much
-							// probably the interface should only be blocked if connection ot that interface fails...
+							// probably the interface should only be blocked if connection to that interface fails...
 							//currentInterface.blockInterface(
 							//	m_getXmlConnectionTimeout * BLOCK_FACTOR_IF_UNREACHABLE);
 						}
