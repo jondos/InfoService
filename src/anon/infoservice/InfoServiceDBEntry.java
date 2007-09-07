@@ -888,8 +888,11 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 										  Integer.toString(currentConnection.getPort()) +
 										  a_httpRequest.getRequestFileName(), e);
 							// remove interface temporarily
-							currentInterface.blockInterface(
-								m_getXmlConnectionTimeout * BLOCK_FACTOR_IF_UNREACHABLE);
+							// TODO better handling for real error situation - as catching all exceptions and removing
+							// the interface because of any exceptions is by far to much
+							// probably the interface should only be blocked if connection ot that interface fails...
+							//currentInterface.blockInterface(
+							//	m_getXmlConnectionTimeout * BLOCK_FACTOR_IF_UNREACHABLE);
 						}
 					}
 				});
@@ -913,21 +916,22 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 						if (responseStorage.size() > 0)
 						{
 							byte[] response;
-							if (headerContentEncoding.size() > 0 &&
+							//ZLib encoding will ALWAYS be handeled by our own HTTPClient library!!!
+							/*if (headerContentEncoding.size() > 0 &&
 								headerContentEncoding.firstElement() != null &&
 								headerContentEncoding.firstElement().equals(
 									HTTPConnectionFactory.HTTP_ENCODING_ZLIB_STRING))
-							{
-								/*
-								 * Normally java does this automatically, but perhaps there are old JREs that
-								 * do not...
-								 */
-								response = ZLibTools.decompress( (byte[]) (responseStorage.firstElement()));
-							}
-							else
-							{
+							{*/
+								//*
+								// * Normally java does this automatically, but perhaps there are old JREs that
+								// * do not...
+								// */
+								//response = ZLibTools.decompress( (byte[]) (responseStorage.firstElement()));
+							//}
+							//else
+							//{
 								response = (byte[]) (responseStorage.firstElement());
-							}
+							//}
 							// fetching the document was successful, leave this method //
 							return response;
 						}
@@ -940,8 +944,8 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 				catch (InterruptedException e)
 				{
 
-					// * operation was interupted from the outside -> set the intterrupted
-					// * flag for the Thread again, so the caller of the methode can
+					// * operation was interrupted from the outside -> set the interrupted
+					// * flag for the Thread again, so the caller of the method can
 					// * evaluate it, also interrupt the communication thread, but don't
 					// * wait for the end of that thread
 
