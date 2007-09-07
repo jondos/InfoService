@@ -401,7 +401,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 
 				Enumeration entries = vecVersions.elements();
-				JavaVersionDBEntry versionEntry = JavaVersionDBEntry.getNewJavaVersion();
+				JavaVersionDBEntry versionEntry = null;
+				if (!JAPController.getInstance().hasPortableJava())
+				{
+					versionEntry = JavaVersionDBEntry.getNewJavaVersion();
+				}
 
 				while (entries.hasMoreElements())
 				{
@@ -2007,6 +2011,12 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 		else if (a_observable == Database.getInstance(JavaVersionDBEntry.class))
 		{
+			if (JAPController.getInstance().hasPortableJava())
+			{
+				// ignore Java update messages, if Java is portable
+				return;
+			}
+
 			DatabaseMessage message = ( (DatabaseMessage) a_message);
 
 			if (message.getMessageData() == null)
@@ -2482,7 +2492,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 		if ( (vi != null && vi.getJapVersion() != null &&
 			  vi.getJapVersion().compareTo(JAPConstants.aktVersion) > 0) ||
-			JavaVersionDBEntry.getNewJavaVersion() != null)
+			 ( !JAPController.getInstance().hasPortableJava() &&
+			   JavaVersionDBEntry.getNewJavaVersion() != null))
 		{
 			synchronized (SYNC_STATUS_UPDATE_AVAILABLE)
 			{

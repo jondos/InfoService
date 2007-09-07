@@ -63,6 +63,8 @@ import jap.ISplashResponse;
 import jap.forward.JAPRoutingSettings;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
+import anon.util.ClassUtil;
+import java.io.File;
 
 /** This is the main class of the JAP project. It starts everything. It can be inherited by another
  *  class that wants to initialize platform dependend features, e.g. see
@@ -142,6 +144,7 @@ public class JAP
 		String mrjVersion = System.getProperty("mrj.version");
 		boolean bConsoleOnly = false;
 		boolean loadPay = true;
+		boolean m_bPortable = false;
 		String listenHost = null;
 		int listenPort = 0;
 		ListenerInterface listenerCascade = null;
@@ -181,7 +184,8 @@ public class JAP
 			System.out.println("--forwarder, -f {port}       Act as a forwarder on a specified port.");
 			System.out.println("--listen, -l {[host][:port]} Listen on the specified interface.");
 			System.out.println("--cascade {[host][:port]}    Connects to the specified Mix-Cascade.");
-			System.out.println("--portable-browser {path}    Tell JonDo that it runs in a portable environment.");
+			System.out.println("--portable [path_to_browser] Tell JonDo that it runs in a portable environment.");
+			System.out.println("--portable-jre               Tell JonDo that it runs with a portable JRE.");
 			System.out.println("--config, -c {Filename}:     Force JonDo to use a specific configuration file.");
 			System.exit(0);
 		}
@@ -195,7 +199,8 @@ public class JAP
 		if (vendor.startsWith("Transvirtual"))
 		{ // Kaffe
 
-			if (javaVersion.compareTo("1.0.5") <= 0)
+			//if (javaVersion.compareTo("1.0.5") <= 0)
+			if (javaVersion.compareTo("1.3") <= 0)
 			{
 				JAPMessages.init(JAPConstants.MESSAGESFN);
 				if (bConsoleOnly)
@@ -427,9 +432,10 @@ public class JAP
 
 		// Set path to Firefox for portable JAP
 		String m_firepath="";
-		if (isArgumentSet("--portable-browser"))
+		if (isArgumentSet("--portable"))
 		{
-			m_firepath = getArgumentValue("--portable-browser");
+			m_firepath = getArgumentValue("--portable");
+			m_bPortable = true;
 		}
 
 		// Create the controller object
@@ -449,6 +455,12 @@ public class JAP
 			m_controller.setCommandLineArgs(cmdArgs);
 		}
 
+		if (isArgumentSet("--portable-jre"))
+		{
+			m_controller.setPortableJava(true);
+		}
+
+
 		String configFileName = null;
 		/* check, whether there is the -config parameter, which means the we use userdefined config
 		 * file
@@ -457,6 +469,18 @@ public class JAP
 		{
 			configFileName = getArgumentValue("-c");
 		}
+		if (configFileName == null && m_bPortable)
+		{
+			// load and create the config file in the current directory by default
+			File tempDir = ClassUtil.getClassDirectory(JAP.class);
+			if (tempDir != null)
+			{
+				configFileName =
+					ClassUtil.getClassDirectory(JAP.class).getParent() +
+					File.separator + JAPConstants.XMLCONFFN;
+			}
+		}
+
 		if (configFileName != null)
 		{
 			LogHolder.log(LogLevel.NOTICE, LogType.MISC, "Loading config file '" + configFileName + "'.");
