@@ -289,15 +289,14 @@ public class HTTPConnectionFactory
 			{
 				if (a_bGet)
 				{
-					replaceHeader(newConnection, new NVPair("Accept-Encoding", HTTP_ENCODING_ZLIB_STRING));
-				}
+					//replaceHeader(newConnection, new NVPair("Accept-Encoding", HTTP_ENCODING_ZLIB_STRING));
+					newConnection.addModule(m_classHTTPCLient_ContentEncodingeModule,-1);
+				}				}
 				else
 				{
 					replaceHeader(newConnection, new NVPair("Content-Encoding", HTTP_ENCODING_ZLIB_STRING));
 				}
 
-//			newConnection.addModule(m_classHTTPCLient_ContentEncodingeModule,-1);
-			}
 		}
 		else
 		{
