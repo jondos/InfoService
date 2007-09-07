@@ -254,6 +254,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	private boolean m_bAskSavePayment;
 	private boolean m_bPresentationMode = false;
+	private boolean m_bPortableJava = false;
 
 	private long m_nrOfBytesWWW = 0;
 	private long m_nrOfBytesOther = 0;
@@ -469,6 +470,16 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public void setPresentationMode(boolean a_bPresentationMode)
 	{
 		m_bPresentationMode = a_bPresentationMode;
+	}
+
+	public void setPortableJava(boolean a_bPortable)
+	{
+		m_bPortableJava = a_bPortable;
+	}
+
+	public boolean hasPortableJava()
+	{
+		return m_bPortableJava;
 	}
 
 	public void setCommandLineArgs(String a_cmdArgs)

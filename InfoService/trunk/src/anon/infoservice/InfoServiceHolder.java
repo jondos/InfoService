@@ -667,6 +667,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 		}
 		catch (InterruptedException ex)
 		{
+			Thread.currentThread().interrupt();
 			LogHolder.log(LogLevel.ERR, LogType.THREAD, ex);
 		}
 		return fetcher.getResult();

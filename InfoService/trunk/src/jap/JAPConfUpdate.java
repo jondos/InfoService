@@ -316,9 +316,11 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 
 		cFrame.gridy++;
 		m_cbxRemindJavaUpdate = new JCheckBox(JAPMessages.getString(MSG_REMIND_JAVA_UPDATE));
+		if (JAPController.getInstance().hasPortableJava())
+		{
+			m_cbxRemindJavaUpdate.setEnabled(false);
+		}
 		panelRoot.add(m_cbxRemindJavaUpdate, cFrame);
-
-
 
 		cFrame.gridy++;
 		cFrame.anchor = GridBagConstraints.CENTER;

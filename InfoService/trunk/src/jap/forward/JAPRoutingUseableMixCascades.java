@@ -443,7 +443,7 @@ final public class JAPRoutingUseableMixCascades extends Observable implements Ob
 	public void run()
 	{
 		boolean stopThread = false;
-		while (stopThread == false)
+		while (stopThread == false && !Thread.currentThread().isInterrupted())
 		{
 			/* get all running mixcascades */
 			Hashtable runningMixCascadesList = InfoServiceHolder.getInstance().getMixCascades();
