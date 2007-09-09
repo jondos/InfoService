@@ -65,6 +65,8 @@ import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
 import anon.util.ClassUtil;
 import java.io.File;
+import java.net.URL;
+import platform.AbstractOS;
 
 /** This is the main class of the JAP project. It starts everything. It can be inherited by another
  *  class that wants to initialize platform dependend features, e.g. see
@@ -459,6 +461,42 @@ public class JAP
 		{
 			m_controller.setPortableJava(true);
 		}
+
+		final String firepath = m_firepath;
+		AbstractOS.getInstance().init(new AbstractOS.IURLErrorNotifier()
+		{
+			boolean m_bReset = false;
+			public void checkNotify(URL a_url)
+			{
+				if (a_url != null && !m_controller.getAnonMode() &&
+					JAPModel.getInstance().isNonAnonymousSurfingDenied() &&
+					a_url.toString().startsWith("https"))
+				{
+					m_bReset = true;
+					JAPModel.getInstance().denyNonAnonymousSurfing(false);
+				}
+			}
+		},new AbstractOS.IURLOpener()
+		{
+			public boolean openURL(URL a_url)
+			{
+				if (firepath == null || a_url == null)
+				{
+					// no path to portable browser was given; use default
+					return false;
+				}
+				try
+				{
+					Runtime.getRuntime().exec(new String[]
+											  {firepath, a_url.toString()});
+					return true;
+				}
+				catch (Exception ex)
+				{
+				}
+				return false;
+			}
+			});
 
 
 		String configFileName = null;
