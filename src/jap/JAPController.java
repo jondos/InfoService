@@ -286,21 +286,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 		});
 
-		AbstractOS.getInstance().init(new AbstractOS.IURLErrorNotifier()
-		{
-			boolean m_bReset = false;
-			public void checkNotify(URL a_url)
-			{
-				if (a_url != null && !getAnonMode() && JAPModel.getInstance().isNonAnonymousSurfingDenied() &&
-					a_url.toString().startsWith("https"))
-				{
-					m_bReset = true;
-					JAPModel.getInstance().denyNonAnonymousSurfing(false);
-				}
-			}
-		});
-
-
 		// initialise IS update threads
 		m_feedback = new JAPFeedback();
 		m_AccountUpdater = new AccountUpdater();

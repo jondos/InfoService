@@ -65,6 +65,12 @@ public abstract class AbstractOS implements IExternalURLCaller, IExternalEMailCa
 	private static AbstractOS ms_operatingSystem;
 
 	private IURLErrorNotifier m_notifier;
+	private IURLOpener m_URLOpener;
+
+	public static interface IURLOpener
+	{
+		boolean openURL(URL a_url);
+	}
 
 	public static interface IURLErrorNotifier
 	{
@@ -106,11 +112,15 @@ public abstract class AbstractOS implements IExternalURLCaller, IExternalEMailCa
 		return ms_operatingSystem;
 	}
 
-	public void init(IURLErrorNotifier a_notifier)
+	public void init(IURLErrorNotifier a_notifier, IURLOpener a_URLOpener)
 	{
 		if (a_notifier != null)
 		{
 			m_notifier = a_notifier;
+		}
+		if (a_URLOpener != null)
+		{
+			m_URLOpener = a_URLOpener;
 		}
 	}
 
@@ -182,7 +192,14 @@ public abstract class AbstractOS implements IExternalURLCaller, IExternalEMailCa
 
 		m_notifier.checkNotify(a_url);
 
-		success = openLink(url);
+		if (m_URLOpener != null)
+		{
+			success = m_URLOpener.openURL(a_url);
+		}
+		if (!success)
+		{
+			success = openLink(url);
+		}
 		if (!success)
 		{
 			for (int i = 0; i < browser.length; i++)
