@@ -255,6 +255,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private boolean m_bAskSavePayment;
 	private boolean m_bPresentationMode = false;
 	private boolean m_bPortableJava = false;
+	private boolean m_bPortable = false;
 
 	private long m_nrOfBytesWWW = 0;
 	private long m_nrOfBytesOther = 0;
@@ -467,6 +468,16 @@ public final class JAPController extends Observable implements IProxyListener, O
 		return m_bPortableJava;
 	}
 
+	public void setPortableMode(boolean a_bPortable)
+	{
+		m_bPortable = a_bPortable;
+	}
+
+	public boolean isPortableMode()
+	{
+		return m_bPortable;
+	}
+
 	public void setCommandLineArgs(String a_cmdArgs)
 	{
 		if (a_cmdArgs != null)
@@ -591,7 +602,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 				public void run()
 				{
 					if (JAPController.getInstance().isConfigAssistantShown() &&
-						!(JAPDialog.isConsoleOnly()||JAPModel.isSmallDisplay()))
+						!(JAPDialog.isConsoleOnly()||JAPModel.isSmallDisplay()) &&
+						!isPortableMode())
 					{
 						showInstallationAssistant();
 					}
@@ -3358,7 +3370,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 			{
 				int returnValue;
 				JAPDialog.LinkedCheckBox checkBox;
-				if (!JAPModel.getInstance().isNeverRemindGoodbye() && bDoNotRestart)
+				if (!JAPModel.getInstance().isNeverRemindGoodbye() && bDoNotRestart &&
+					!getInstance().isPortableMode())
 				{
 					// show a Reminder message that active contents should be disabled
 					checkBox = new JAPDialog.LinkedCheckBox(false)
