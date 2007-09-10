@@ -146,7 +146,6 @@ public class JAP
 		String mrjVersion = System.getProperty("mrj.version");
 		boolean bConsoleOnly = false;
 		boolean loadPay = true;
-		boolean m_bPortable = false;
 		String listenHost = null;
 		int listenPort = 0;
 		ListenerInterface listenerCascade = null;
@@ -432,13 +431,6 @@ public class JAP
 			}
 		}
 
-		// Set path to Firefox for portable JAP
-		String m_firepath="";
-		if (isArgumentSet("--portable"))
-		{
-			m_firepath = getArgumentValue("--portable");
-			m_bPortable = true;
-		}
 
 		// Create the controller object
 		splash.setText(JAPMessages.getString(MSG_STARTING_CONTROLLER));
@@ -455,6 +447,14 @@ public class JAP
 				cmdArgs += " " + m_temp[i];
 			}
 			m_controller.setCommandLineArgs(cmdArgs);
+		}
+
+		// Set path to Firefox for portable JAP
+		String m_firepath = "";
+		if (isArgumentSet("--portable"))
+		{
+			m_firepath = getArgumentValue("--portable");
+			m_controller.setPortableMode(true);
 		}
 
 		if (isArgumentSet("--portable-jre"))
@@ -507,7 +507,7 @@ public class JAP
 		{
 			configFileName = getArgumentValue("-c");
 		}
-		if (configFileName == null && m_bPortable)
+		if (configFileName == null && m_controller.isPortableMode())
 		{
 			// load and create the config file in the current directory by default
 			File tempDir = ClassUtil.getClassDirectory(JAP.class);
