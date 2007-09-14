@@ -30,46 +30,39 @@ package jap;
 import java.util.Observable;
 import java.util.Observer;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JPanel;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JSeparator;
+import javax.swing.JTextField;
 import javax.swing.WindowConstants;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
-import gui.JAPHelp;
+import anon.infoservice.ImmutableListenerInterface;
+import anon.infoservice.ListenerInterface;
+import anon.infoservice.ProxyInterface;
 import gui.JAPHtmlMultiLineLabel;
+import gui.JAPJIntField;
 import gui.JAPMessages;
 import gui.dialog.JAPDialog;
-
-
-
+import jap.JAPConf.AbstractRestartNeedingConfigChange;
+import jap.forward.JAPRoutingMessage;
+import jap.forward.JAPRoutingSettings;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.infoservice.ProxyInterface;
-import java.awt.BorderLayout;
-import javax.swing.JComboBox;
-import anon.infoservice.ListenerInterface;
-import javax.swing.JTextField;
-import java.awt.event.ItemListener;
-import gui.JAPJIntField;
-import javax.swing.border.EmptyBorder;
-import java.awt.event.ItemEvent;
-import anon.infoservice.ImmutableListenerInterface;
-
-
-import jap.JAPConf.AbstractRestartNeedingConfigChange;
-
-import jap.forward.*;
 
 /**
  * This is the configuration GUI for the JAP forwarding client component.
@@ -78,6 +71,8 @@ public class JAPConfNetwork extends AbstractJAPConfModule
 {
 	private static final String MSG_LISTENER_CHANGED = JAPConfNetwork.class.getName() + "_listenerChanged";
 	private static final String MSG_ACCESS_TO_JAP = JAPConfNetwork.class.getName() + "_accessToJAP";
+	public static final String MSG_SLOW_ANTI_CENSORSHIP = JAPConfNetwork.class.getName() + "_slowAntiCensorship";
+	private static final String MSG_SLOW_ANTI_CENSORSHIP_Q = JAPConfNetwork.class.getName() + "_slowAntiCensorshipQuestion";
 
 	//private JAPHtmlMultiLineLabel m_descLabel;
 
@@ -212,24 +207,37 @@ public class JAPConfNetwork extends AbstractJAPConfModule
 			{
 				if (settingsForwardingClientConfigNeedForwarderBox.isSelected())
 				{
-					/* we shall enabled the connect-via-forwarder feature */
-					if (JAPModel.getInstance().getRoutingSettings().getRoutingMode() ==
-						JAPRoutingSettings.ROUTING_MODE_SERVER)
+					if (JAPDialog.showYesNoDialog(JAPConfNetwork.this.getRootPanel(),
+												  JAPMessages.getString(MSG_SLOW_ANTI_CENSORSHIP) +
+												  "<br><br>" +
+												  JAPMessages.getString(MSG_SLOW_ANTI_CENSORSHIP_Q)))
 					{
-						/* we have to shutdown the server first -> user has to confirm this */
-						showForwardingClientConfirmServerShutdownDialog(clientPanel);
-						/* maybe the user has canceled the shutdown -> update the selection state of the
-						 * checkbox
-						 */
-						settingsForwardingClientConfigNeedForwarderBox.setSelected(JAPModel.getInstance().
-							getRoutingSettings().isConnectViaForwarder());
+
+						/* we shall enable the connect-via-forwarder feature */
+						if (JAPModel.getInstance().getRoutingSettings().getRoutingMode() ==
+							JAPRoutingSettings.ROUTING_MODE_SERVER)
+						{
+							/* we have to shutdown the server first -> user has to confirm this */
+							showForwardingClientConfirmServerShutdownDialog(clientPanel);
+							/* maybe the user has canceled the shutdown -> update the selection state of the
+							 * checkbox
+							 */
+							if (!JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder())
+							{
+								settingsForwardingClientConfigNeedForwarderBox.setSelected(false);
+							}
+						}
+						else
+						{
+							/* we can directly enable the connect-via-forwarder setting, because the forwarding
+							 * server isn't running
+							 */
+							JAPModel.getInstance().getRoutingSettings().setConnectViaForwarder(true);
+						}
 					}
 					else
 					{
-						/* we can directly enable the connect-via-forwarder setting, because the forwarding
-						 * server isn't running
-						 */
-						JAPModel.getInstance().getRoutingSettings().setConnectViaForwarder(true);
+						settingsForwardingClientConfigNeedForwarderBox.setSelected(false);
 					}
 				}
 				else
@@ -239,7 +247,6 @@ public class JAPConfNetwork extends AbstractJAPConfModule
 				}
 			}
 		});
-
 
 		TitledBorder settingsForwardingClientConfigBorder = new TitledBorder(
 			  JAPMessages.getString("settingsForwardingClientConfigBorder"));

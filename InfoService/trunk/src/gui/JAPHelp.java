@@ -63,6 +63,7 @@ import gui.dialog.JAPDialog;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import java.io.File;
 
 /**
  * Help window for the JAP. This is a singleton meaning that there exists only one help window all the time.
@@ -501,7 +502,10 @@ public final class JAPHelp extends JAPDialog
 		public boolean loadContext(String a_strHelpPath, String a_strContext, LanguageMapper a_language)
 		{
 			URL url = ResourceLoader.getResourceURL(
-				a_strHelpPath + a_strContext + "_" + a_language.getISOCode() + ".html");
+				//a_strHelpPath + a_strContext + "_" + a_language.getISOCode() + ".html");
+				a_strHelpPath + a_language.getISOCode() + "/" + a_strHelpPath +
+				a_strContext + ".html");
+
 			boolean bLoaded = false;
 
 			if (url != null)
@@ -512,8 +516,9 @@ public final class JAPHelp extends JAPDialog
 			else
 			{
 				LogHolder.log(LogLevel.WARNING, LogType.GUI,
-							  "Could not load help context '" + a_strContext +
-							  "_" + a_language.getISOCode() + "'");
+							  "Could not load help context '" +
+							  a_language.getISOCode() + "/" + a_strHelpPath +
+							  a_strContext + "'");
 
 				if (a_strContext != null)
 				{
