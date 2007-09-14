@@ -133,7 +133,7 @@ public class JAPMixCascadeComboBox extends JComboBox
 		setModel(new JAPMixCascadeComboBoxModel());
 		Vector trustModels = TrustModel.getTrustModels();
 		TrustModel model;
-		super.addItem(ITEM_AVAILABLE_SERVERS);
+		//super.addItem(ITEM_AVAILABLE_SERVERS); // this is not needed any more
 		for (int i = 0; i < trustModels.size(); i++)
 		{
 			model = (TrustModel)trustModels.elementAt(i);

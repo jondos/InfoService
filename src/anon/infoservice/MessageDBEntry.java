@@ -60,6 +60,7 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry implement
 	private static final String XML_TEXT = "MessageText";
 	private static final String XML_URL = "MessageURL";
 	private static final String XML_ATTR_LANG = "lang";
+	private static final String  XML_ATTR_POPUP = "popup";
 
 	private static final long TIMEOUT = 7 * 24 * 60 * 60 * 1000L; // one week
 
@@ -67,6 +68,7 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry implement
 	private long m_serial;
 	private long m_lastUpdate;
 	private boolean m_bIsDummy;
+	private boolean m_bShowPopup;
 	private String m_id;
 	private Element m_xmlDescription;
 
@@ -85,6 +87,8 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry implement
 
 		m_serial = XMLUtil.parseAttribute(a_xmlElement, XML_ATTR_SERIAL, Long.MIN_VALUE);
 		m_id = XMLUtil.parseAttribute(a_xmlElement, XML_ATTR_ID, null);
+		m_bShowPopup = XMLUtil.parseAttribute(a_xmlElement, XML_ATTR_POPUP, false);
+
 		if (m_id == null)
 		{
 			throw new XMLParseException("No id given!");
@@ -192,6 +196,11 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry implement
 	public void setExternalIdentifier(int a_identifier)
 	{
 		m_externalIdentifier = a_identifier;
+	}
+
+	public boolean isPopupShown()
+	{
+		return m_bShowPopup;
 	}
 
 	public boolean isDummy()

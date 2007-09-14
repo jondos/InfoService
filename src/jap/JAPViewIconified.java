@@ -99,8 +99,6 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		return m_frameParent;
 	}
 
-	private long m_lTrafficWWW, m_lTrafficOther;
-
 	private Runnable m_runnableValueUpdate;
 
 	public JAPViewIconified(AbstractJAPMainView a_mainView)
@@ -143,7 +141,6 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		la.setConstraints(m_lblBytes, c);
 		pTop.add(m_lblBytes);
 		c.weightx = 1;
-		m_lTrafficOther = m_lTrafficWWW = 0;
 		m_labelBytes = new JLabel("000000,0", JLabel.LEFT);
 		//m_labelBytes.setForeground(Color.red);
 		m_labelBytes.setFont(m_fontDlg);
@@ -217,7 +214,7 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 		JPanel p = new JPanel(new BorderLayout());
 		p.setBorder(new LineBorder(Color.black, 1));
 		p.add(pTop, BorderLayout.CENTER);
-		JPanel p2 = new JPanel();
+		JPanel p2 = new JPanel(new BorderLayout());
 		//p2.setBackground(new Color(204, 204, 204));
 		m_lblJAPIcon = new JLabel(GUIUtils.loadImageIcon(JAPViewIconified.class.getName() + "_icon16discon.gif", true, false));
 		//m_lblJAPIcon.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -254,9 +251,9 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 				}
 			}
 		});
-		p2.add(m_lblJAPIcon);
-		p2.add(bttn);
-		p.add(p2, BorderLayout.SOUTH);
+		p2.add(m_lblJAPIcon, BorderLayout.SOUTH);
+		p2.add(bttn, BorderLayout.NORTH);
+		p.add(p2, BorderLayout.EAST);
 
 		p.addMouseListener(new MouseAdapter()
 		{

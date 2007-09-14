@@ -113,6 +113,7 @@ import platform.AbstractOS;
 import update.JAPUpdateWizard;
 import anon.pay.IMessageListener;
 import anon.pay.PayMessage;
+import jap.forward.JAPRoutingMessage;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver, Observer, IMessageListener
@@ -155,6 +156,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String MSG_DELETE_MESSAGE_EXPLAIN = JAPNewView.class.getName() + "_deleteMessageExplain";
 	private static final String MSG_DELETE_MESSAGE_SHORT = JAPNewView.class.getName() + "_deleteMessageShort";
 	private static final String MSG_VIEW_MESSAGE = JAPNewView.class.getName() + "_viewMessage";
+	private static final String MSG_ANTI_CENSORSHIP = JAPNewView.class.getName() + "_antiCensorship";
 
 	private static final String MSG_OBSERVABLE_EXPLAIN = JAPNewView.class.getName() + "_observableExplain";
 	private static final String MSG_OBSERVABLE_TITLE = JAPNewView.class.getName() + "_observableTitle";
@@ -257,6 +259,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JAPProgressBar m_progForwarderActivity;
 	private JAPProgressBar m_progForwarderActivitySmall;
 
+	private int m_ForwardingID = -1;
 	private int m_updateAvailableID = -1;
 	private Hashtable m_messageIDs = new Hashtable();
 	private int m_enableInfoServiceID = -1;
@@ -1264,6 +1267,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		Database.getInstance(MessageDBEntry.class).addObserver(this);
 
 		JAPModel.getInstance().addObserver(this);
+		JAPModel.getInstance().getRoutingSettings().addObserver(this);
 
 		JAPHelp.init(this, AbstractOS.getInstance(), AbstractOS.getInstance());
 		JAPHelp.getInstance().setLocationCenteredOnOwner();
@@ -1893,7 +1897,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			final MessageDBEntry entry = (MessageDBEntry) message.getMessageData();
 			synchronized (m_messageIDs)
 			{
-
 				if (entry != null &&
 					(message.getMessageCode() == DatabaseMessage.ENTRY_ADDED ||
 					 message.getMessageCode() == DatabaseMessage.ENTRY_RENEWED))
@@ -1907,6 +1910,72 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						}
 						return;
 					}
+					final StatusPanel.ButtonListener buttonListener =
+						new StatusPanel.ButtonListener()
+					{
+						public void actionPerformed(final ActionEvent a_event)
+						{
+							int ret = JAPDialog.showConfirmDialog(JAPNewView.this,
+								(a_event != null ? JAPMessages.getString(MSG_DELETE_MESSAGE_EXPLAIN) :
+								 entry.getText(JAPMessages.getLocale())),
+								 JAPMessages.getString(JAPDialog.MSG_TITLE_INFO),
+								 new JAPDialog.Options(JAPDialog.OPTION_TYPE_OK_CANCEL)
+							{
+								public String getCancelText()
+								{
+									return JAPMessages.getString(DialogContentPane.MSG_OK);
+								}
+
+								public String getYesOKText()
+								{
+									return JAPMessages.getString(MSG_DELETE_MESSAGE);
+								}
+							},
+								JAPDialog.MESSAGE_TYPE_INFORMATION,
+								new JAPDialog.AbstractLinkedURLAdapter()
+							{
+								public boolean isOnTop()
+								{
+									return true;
+								}
+
+								public URL getUrl()
+								{
+									return entry.getURL(JAPMessages.getLocale());
+								}
+
+								public String getMessage()
+								{
+									return JAPMessages.getString(MSG_VIEW_MESSAGE);
+								}
+							});
+							if (ret == JAPDialog.RETURN_VALUE_OK)
+							{
+								synchronized (m_messageIDs)
+								{
+									m_StatusPanel.removeStatusMsg(entry.getExternalIdentifier());
+									m_messageIDs.remove(entry.getId());
+									Database.getInstance(DeletedMessageIDDBEntry.class).update(
+										new DeletedMessageIDDBEntry(entry));
+								}
+
+							}
+						}
+
+						public boolean isButtonShown()
+						{
+							ClickedMessageIDDBEntry clickedEntry = (ClickedMessageIDDBEntry)
+								Database.getInstance(ClickedMessageIDDBEntry.class).getEntryById(entry.
+								getId());
+							if (clickedEntry != null &&
+								clickedEntry.getVersionNumber() >= entry.getVersionNumber())
+							{
+								// this message already has been clicked
+								return true;
+							}
+							return false;
+						}
+					};
 
 					DeletedMessageIDDBEntry deletedEntry = (DeletedMessageIDDBEntry)
 						Database.getInstance(DeletedMessageIDDBEntry.class).getEntryById(entry.getId());
@@ -1925,67 +1994,27 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 								AbstractOS.getInstance().openURL(entry.getURL(JAPMessages.getLocale()));
 							}
 						},
-							new StatusPanel.ButtonListener()
-						{
-							public void actionPerformed(ActionEvent a_event)
-							{
-								int ret = JAPDialog.showConfirmDialog(JAPNewView.this,
-									JAPMessages.getString(MSG_DELETE_MESSAGE_EXPLAIN),
-									JAPMessages.getString(JAPDialog.MSG_TITLE_INFO),
-									new JAPDialog.Options(JAPDialog.OPTION_TYPE_OK_CANCEL)
-								{
-									public String getCancelText()
-									{
-										return JAPMessages.getString(DialogContentPane.MSG_OK);
-									}
-
-									public String getYesOKText()
-									{
-										return JAPMessages.getString(MSG_DELETE_MESSAGE);
-									}
-								},
-									JAPDialog.MESSAGE_TYPE_INFORMATION,
-									new JAPDialog.AbstractLinkedURLAdapter()
-								{
-									public URL getUrl()
-									{
-										return entry.getURL(JAPMessages.getLocale());
-									}
-
-									public String getMessage()
-									{
-										return JAPMessages.getString(MSG_VIEW_MESSAGE);
-									}
-								});
-								if (ret == JAPDialog.RETURN_VALUE_OK)
-								{
-									synchronized (m_messageIDs)
-									{
-										m_StatusPanel.removeStatusMsg(entry.getExternalIdentifier());
-										m_messageIDs.remove(entry.getId());
-										Database.getInstance(DeletedMessageIDDBEntry.class).update(
-											new DeletedMessageIDDBEntry(entry));
-									}
-
-								}
-							}
-
-							public boolean isButtonShown()
-							{
-								ClickedMessageIDDBEntry clickedEntry = (ClickedMessageIDDBEntry)
-									Database.getInstance(ClickedMessageIDDBEntry.class).getEntryById(entry.
-									getId());
-								if (clickedEntry != null &&
-									clickedEntry.getVersionNumber() >= entry.getVersionNumber())
-								{
-									// this message already has been clicked
-									return true;
-								}
-								return false;
-							}
-						});
+							buttonListener);
 						entry.setExternalIdentifier(id);
 						m_messageIDs.put(entry.getId(), entry);
+					}
+
+					if (entry.isPopupShown() &&
+						!JAPController.getInstance().getCurrentMixCascade().isPayment() &&
+						!buttonListener.isButtonShown())
+					{
+						new Thread(new Runnable()
+						{
+							public void run()
+							{
+
+								// show popup messages for non-payment only
+								Database.getInstance(ClickedMessageIDDBEntry.class).update(
+									new ClickedMessageIDDBEntry(entry));
+								buttonListener.actionPerformed(null);
+							}
+						}
+						).start();
 					}
 				}
 				else if (entry != null && message.getMessageCode() == DatabaseMessage.ENTRY_REMOVED)
@@ -2063,6 +2092,40 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 								}
 							}
 						}.run();
+					}
+				}
+			}
+		}
+		else if (a_observable == JAPModel.getInstance().getRoutingSettings())
+		{
+
+			JAPRoutingMessage message = (JAPRoutingMessage)a_message;
+			synchronized (JAPModel.getInstance().getRoutingSettings())
+			{
+				if (message != null &&
+					message.getMessageCode() == JAPRoutingMessage.CLIENT_SETTINGS_CHANGED)
+				{
+					if (JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder() &&
+						m_ForwardingID < 0)
+					{
+						m_ForwardingID = m_StatusPanel.addStatusMsg(
+							JAPMessages.getString(MSG_ANTI_CENSORSHIP),
+							JAPDialog.MESSAGE_TYPE_WARNING,
+							false, new ActionListener()
+						{
+							public void actionPerformed(ActionEvent a_event)
+							{
+								JAPDialog.showMessageDialog(JAPNewView.this,
+									JAPMessages.getString(JAPConfNetwork.MSG_SLOW_ANTI_CENSORSHIP),
+									new JAPDialog.LinkedHelpContext("forwarding_client"));
+							}
+						});
+					}
+					else if (!JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder() &&
+							 m_ForwardingID >= 0)
+					{
+						m_StatusPanel.removeStatusMsg(m_ForwardingID);
+						m_ForwardingID = -1;
 					}
 				}
 			}
