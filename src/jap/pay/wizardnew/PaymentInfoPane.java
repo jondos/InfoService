@@ -61,6 +61,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
+import javax.swing.JCheckBox;
 
 public class PaymentInfoPane extends DialogContentPane implements IWizardSuitable,
 	ActionListener
@@ -73,6 +74,9 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 	private static final String MSG_BUTTONOPEN = PaymentInfoPane.class.
 		getName() + "_buttonopen";
 	public static final String MSG_PAYPAL_ITEM_NAME = PaymentInfoPane.class.getName() + "_paypalitemname";
+	private static final String MSG_COULD_OPEN = PaymentInfoPane.class.getName() + "_reminderLink";
+	private static final String MSG_EXPLAIN_COULD_OPEN =
+		PaymentInfoPane.class.getName() + "_reminderLinkExplain";
 
 
 	private Container m_rootPanel;
@@ -82,6 +86,7 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 	private XMLPaymentOption m_selectedOption;
 	private String m_strExtraInfo;
 	private XMLTransCert transCert;
+	private JCheckBox m_linkOpenedInBrowser;
 
 	private String m_url;
 
@@ -104,6 +109,9 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		m_c.insets = new Insets(5, 5, 5, 5);
 		m_c.anchor = GridBagConstraints.NORTHWEST;
 		m_c.fill = GridBagConstraints.NONE;
+
+		m_linkOpenedInBrowser = new JCheckBox(JAPMessages.getString(MSG_COULD_OPEN));
+		m_rootPanel.add(m_linkOpenedInBrowser, m_c);
 
 		//Add some dummy labels for dialog sizing
 		/*
@@ -260,6 +268,9 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 				m_strExtraInfo = Util.replaceAll(m_strExtraInfo, "%c","");
 			}
 
+			m_c.gridy++;
+			m_rootPanel.add(new JLabel(" "), m_c);
+
 
 			m_c.gridy++;
 			m_bttnCopy = new JButton(JAPMessages.getString(MSG_BUTTONCOPY));
@@ -284,15 +295,26 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 				htmlExtraInfo = "<p> <b>" + m_strExtraInfo + "</b> </p>";
 			}
 		}
+		m_c.gridx = 0;
+		m_c.gridy++;
+		m_rootPanel.add(new JLabel(" "), m_c);
+
         if (isURL)
 		{
 			setText(selectedOption.getDetailedInfo(m_language));// + htmlExtraInfo); //links should never be shown, only confuse the user
+			m_c.gridy++;
+			m_c.anchor = GridBagConstraints.SOUTH;
+			m_c.gridwidth = 2;
+			m_rootPanel.add(m_linkOpenedInBrowser, m_c);
+
 		}
 		else
 		{
 			setText(selectedOption.getDetailedInfo(m_language) + htmlExtraInfo);
 		}
 		if (isURL) setMouseListener(new LinkMouseListener());
+
+
 
 	}
 
@@ -383,10 +405,20 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 
 	public CheckError[] checkUpdate()
 	{
+		m_linkOpenedInBrowser.setSelected(false);
 		showInfo();
 		return null;
 	}
 
+	public CheckError[] checkYesOK()
+	{
+		if (!m_linkOpenedInBrowser.isSelected())
+		{
+			return new CheckError[]{new CheckError(
+		 JAPMessages.getString(MSG_EXPLAIN_COULD_OPEN), LogType.PAY)};
+		}
+		return null;
+	}
 
 }
 
