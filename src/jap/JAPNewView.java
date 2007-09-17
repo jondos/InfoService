@@ -171,6 +171,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String IMG_ICONIFY = JAPNewView.class.getName() + "_iconify.gif";
 	private static final String IMG_ABOUT = JAPNewView.class.getName() + "_about.gif";
 
+	private static final String MSG_OPEN_FIREFOX = JAPMessages.getString(JAPNewView.class.getName() + "_openFirefox");
+
 
 
 	private JobQueue m_transferedBytesJobs;
@@ -287,9 +289,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private int m_msgIDInsecure;
 
-	private String m_firepath; //firefox-path for portable JAP
+	private String m_firefoxCommand; //the CLI command for re-opening firefox, usually just the path to the executable
 
-	public JAPNewView(String s, JAPController a_controller, String fpath)
+	public JAPNewView(String s, JAPController a_controller, String a_firefoxCommand)
 	{
 		super(s, a_controller);
 		m_bIsSimpleView = (JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED);
@@ -300,7 +302,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_packetMixedJobs = new JobQueue("packet mixed update job queue");
 		m_lTrafficWWW = 0;
 		m_lTrafficOther = 0;
-		m_firepath = fpath;
+		m_firefoxCommand = a_firefoxCommand;
 	}
 
 	public void create(boolean loadPay)
@@ -548,11 +550,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		constrVersion.insets = new Insets(0, 0, 0, 0);
 		m_pnlVersion.add(m_labelVersion, constrVersion);
 
-		if (m_firepath != null && !m_firepath.equals(""))
+		if (m_firefoxCommand != null && !m_firefoxCommand.equals(""))
 		{
 			m_firefox = new JButton(GUIUtils.loadImageIcon("firefox.png", true, false));
 			m_firefox.setOpaque(false);
-			m_firefox.setToolTipText(m_firepath);
+			m_firefox.setToolTipText(MSG_OPEN_FIREFOX);
 			m_firefox.setMnemonic('W');
 
 			m_firefox.addActionListener(new ActionListener()
@@ -561,7 +563,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				{
 					try
 					{
-						Runtime.getRuntime().exec(m_firepath);
+							Runtime.getRuntime().exec(m_firefoxCommand);
 					}
 					catch (IOException ex)
 					{
@@ -1895,6 +1897,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				return;
 			}
 			final MessageDBEntry entry = (MessageDBEntry) message.getMessageData();
+
+			if (entry.isForFreeCascadesOnly() &&
+				JAPController.getInstance().getCurrentMixCascade().isPayment())
+			{
+				return;
+			}
+
 			synchronized (m_messageIDs)
 			{
 				if (entry != null &&
@@ -1917,7 +1926,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						{
 							int ret = JAPDialog.showConfirmDialog(JAPNewView.this,
 								(a_event != null ? JAPMessages.getString(MSG_DELETE_MESSAGE_EXPLAIN) :
-								 entry.getText(JAPMessages.getLocale())),
+								 ((entry.getPopupText(JAPMessages.getLocale()) != null) ?
+								  entry.getPopupText(JAPMessages.getLocale()) :
+								  entry.getText(JAPMessages.getLocale()))),
 								 JAPMessages.getString(JAPDialog.MSG_TITLE_INFO),
 								 new JAPDialog.Options(JAPDialog.OPTION_TYPE_OK_CANCEL)
 							{
@@ -1999,9 +2010,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						m_messageIDs.put(entry.getId(), entry);
 					}
 
-					if (entry.isPopupShown() &&
-						!JAPController.getInstance().getCurrentMixCascade().isPayment() &&
-						!buttonListener.isButtonShown())
+					if (entry.isPopupShown() &&	!buttonListener.isButtonShown())
 					{
 						new Thread(new Runnable()
 						{
@@ -2313,7 +2322,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 							{
 								m_Controller.setAnonMode(false);
 							}
-
 						}
 					};
 

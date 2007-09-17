@@ -35,11 +35,14 @@ import java.util.Locale;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import anon.crypto.SignatureVerifier;
 import anon.util.Base64;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
-import anon.crypto.SignatureVerifier;
-import logging.*;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+import anon.util.URLDecoder;
 
 /**
  * Used to send messages to JAP.
@@ -60,7 +63,12 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry implement
 	private static final String XML_TEXT = "MessageText";
 	private static final String XML_URL = "MessageURL";
 	private static final String XML_ATTR_LANG = "lang";
-	private static final String  XML_ATTR_POPUP = "popup";
+	private static final String XML_ATTR_POPUP = "popup";
+	private static final String XML_ATTR_ENCODING = "encoding";
+	private static final String XML_ATTR_FREE = "free"; // show on free cascades only
+	private static final String XML_ELEM_POPUP_TEXT = "MessagePopupText";
+	private static final String ENCODING_URL = "url";
+	private static final String ENCODING_BASE64 = "base64"; //default
 
 	private static final long TIMEOUT = 7 * 24 * 60 * 60 * 1000L; // one week
 
@@ -68,11 +76,13 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry implement
 	private long m_serial;
 	private long m_lastUpdate;
 	private boolean m_bIsDummy;
+	private boolean m_bFree;
 	private boolean m_bShowPopup;
 	private String m_id;
 	private Element m_xmlDescription;
 
 	private Hashtable m_hashText = new Hashtable();
+	private Hashtable m_hashPopupText = new Hashtable();
 	private Hashtable m_hashUrl = new Hashtable();
 
 	public MessageDBEntry(Element a_xmlElement) throws XMLParseException, SignatureException
@@ -88,34 +98,18 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry implement
 		m_serial = XMLUtil.parseAttribute(a_xmlElement, XML_ATTR_SERIAL, Long.MIN_VALUE);
 		m_id = XMLUtil.parseAttribute(a_xmlElement, XML_ATTR_ID, null);
 		m_bShowPopup = XMLUtil.parseAttribute(a_xmlElement, XML_ATTR_POPUP, false);
+		m_bFree = XMLUtil.parseAttribute(a_xmlElement, XML_ATTR_FREE, false);
 
 		if (m_id == null)
 		{
 			throw new XMLParseException("No id given!");
 		}
-		NodeList textNodes = a_xmlElement.getElementsByTagName(XML_TEXT);
-		String content, lang;
 
-		for (int i = 0; i < textNodes.getLength(); i++)
+		m_bIsDummy = parseTextNodes(a_xmlElement.getElementsByTagName(XML_TEXT), m_hashText);
+		if (!m_bIsDummy)
 		{
-			content = XMLUtil.parseValue(textNodes.item(i), null);
-			lang = XMLUtil.parseAttribute(textNodes.item(i), XML_ATTR_LANG, "en");
-			if (content != null)
-			{
-				content = Base64.decodeToString(content);
-				m_hashText.put(lang, content);
-			}
-		}
-		if (m_hashText.size() == 0 || m_hashText.get("en") == null)
-		{
-			// if there is not text (or no english text), this in interpreted as dummy message
-			m_bIsDummy = true;
-		}
-		else
-		{
-			m_bIsDummy = false;
-
-			textNodes = a_xmlElement.getElementsByTagName(XML_URL);
+			String content, lang;
+			NodeList textNodes = a_xmlElement.getElementsByTagName(XML_URL);
 			for (int i = 0; i < textNodes.getLength(); i++)
 			{
 				content = XMLUtil.parseValue(textNodes.item(i), null);
@@ -133,6 +127,7 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry implement
 					}
 				}
 			}
+			parseTextNodes(a_xmlElement.getElementsByTagName(XML_ELEM_POPUP_TEXT), m_hashPopupText);
 		}
 
 		m_lastUpdate = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_xmlElement, XML_LAST_UPDATE), -1L);
@@ -176,16 +171,12 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry implement
 
 	public String getText(Locale a_locale)
 	{
-		if (a_locale == null)
-		{
-			return null;
-		}
-		String text = (String)m_hashText.get(a_locale.getLanguage());
-		if (text == null)
-		{
-			text = (String)m_hashText.get("en");
-		}
-		return text;
+		return getText(a_locale, m_hashText);
+	}
+
+	public String getPopupText(Locale a_locale)
+	{
+		return getText(a_locale, m_hashPopupText);
 	}
 
 	public int getExternalIdentifier()
@@ -201,6 +192,11 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry implement
 	public boolean isPopupShown()
 	{
 		return m_bShowPopup;
+	}
+
+	public boolean isForFreeCascadesOnly()
+	{
+		return m_bFree;
 	}
 
 	public boolean isDummy()
@@ -231,5 +227,65 @@ public class MessageDBEntry extends AbstractDistributableDatabaseEntry implement
 	public Element getXmlStructure()
 	{
 		return m_xmlDescription;
+	}
+
+	private String getText(Locale a_locale, Hashtable a_textHash)
+	{
+		if (a_locale == null)
+		{
+			return null;
+		}
+		String text = (String)a_textHash.get(a_locale.getLanguage());
+		if (text == null)
+		{
+			text = (String)a_textHash.get("en");
+		}
+		return text;
+	}
+
+	private boolean parseTextNodes(NodeList a_textNodes, Hashtable a_nodeTable)
+	{
+		String content, lang, encoding;
+		boolean bFoundText;
+
+		for (int i = 0; i < a_textNodes.getLength(); i++)
+		{
+			content = XMLUtil.parseValue(a_textNodes.item(i), null);
+			lang = XMLUtil.parseAttribute(a_textNodes.item(i), XML_ATTR_LANG, "en");
+			encoding = XMLUtil.parseAttribute(
+				a_textNodes.item(i), XML_ATTR_ENCODING, ENCODING_BASE64);
+			if (content != null)
+			{
+				if (encoding.equals(ENCODING_URL))
+				{
+					content = URLDecoder.decode(content);
+				}
+				else if (encoding.equals(ENCODING_BASE64))
+				{
+					content = Base64.decodeToString(content);
+				}
+				else
+				{
+					// encoding not supported
+					content = null;
+				}
+				if (content != null)
+				{
+					a_nodeTable.put(lang, content);
+				}
+			}
+		}
+
+		if (a_nodeTable.size() == 0 || a_nodeTable.get("en") == null)
+		{
+			// if there is not text (or no english text), this in interpreted as dummy message
+			bFoundText = true;
+		}
+		else
+		{
+			bFoundText = false;
+		}
+
+		return bFoundText;
 	}
 }
