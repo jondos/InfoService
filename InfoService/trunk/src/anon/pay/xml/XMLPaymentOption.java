@@ -511,6 +511,7 @@ public class XMLPaymentOption implements IXMLEncodable
 	 * like getExtraInfos(), except:
 	 * - only returns "info", without type (so you can get Strings from the Vector directly instead of an Array)
 	 * - only in the given language (so you don't have to iterate over the Vector to get one language's strings)
+	 * (after Jap version 0.08.101, will fall back to english if no extra infos at all were found for the given language)
 	 *
 	 * Warning: extraInfos that do not exist for the given language will not be returned at all
 	 * (ideally, we'd fall back to english, but the data structures used don't allow figuring out which
@@ -524,14 +525,19 @@ public class XMLPaymentOption implements IXMLEncodable
 	{
 		Vector allInfos = getExtraInfos();
 		Vector localizedInfos = new Vector();
+		//get Strings for the given language
 		for (Enumeration infos = allInfos.elements(); infos.hasMoreElements(); )
 		{
 			String[] info = (String[]) infos.nextElement();
-			//only for the given language
 			if ( info[2].equals(language) )
 			{
 				localizedInfos.addElement(info[0]);
 			}
+		}
+		// if not even a single String found for the given language, fall back to English
+		if (localizedInfos.size() < 1)
+		{
+			localizedInfos = getLocalizedExtraInfoText("en");
 		}
 		return localizedInfos;
 	}

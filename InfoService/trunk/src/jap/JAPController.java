@@ -3399,9 +3399,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					// we are in GUI mode
 					Enumeration enumAccounts = PayAccountsFile.getInstance().getAccounts();
+					PayAccount account;
 					while (enumAccounts.hasMoreElements())
 					{
-						if (! ( (PayAccount) enumAccounts.nextElement()).isBackupDone())
+						account = (PayAccount) enumAccounts.nextElement();
+						if (!account.isBackupDone())
 						{
 							JAPDialog.LinkedCheckBox checkbox =
 								new JAPDialog.LinkedCheckBox(false, "payment_account")
@@ -3417,6 +3419,16 @@ public final class JAPController extends Observable implements IProxyListener, O
 							{
 								// skip closing JAP
 								getInstance().setAskSavePayment(!checkbox.getState());
+								final PayAccount tempAcount = account;
+								new Thread(new Runnable()
+								{
+									public void run()
+									{
+										getInstance().getView().showConfigDialog(
+											JAPConf.PAYMENT_TAB, new Long(tempAcount.getAccountNumber()));
+									}
+								}).start();
+
 								return;
 							}
 							getInstance().setAskSavePayment(!checkbox.getState());

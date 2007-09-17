@@ -33,39 +33,38 @@
  *  on a Macintosh to register the MRJ Handler.
  *
  */
+import java.io.File;
+import java.net.URL;
 import java.security.SecureRandom;
-import java.awt.Frame;
 import java.util.Hashtable;
 import java.util.Locale;
-import java.util.StringTokenizer;
+
+import java.awt.Frame;
 
 import anon.client.crypto.KeyPool;
+import anon.infoservice.ListenerInterface;
+import anon.infoservice.MixCascade;
+import anon.util.ClassUtil;
+import gui.GUIUtils;
 import gui.JAPAWTMsgBox;
 import gui.JAPDll;
 import gui.JAPMessages;
 import gui.dialog.JAPDialog;
-import gui.GUIUtils;
+import jap.AbstractJAPMainView;
+import jap.ConsoleJAPMainView;
+import jap.ConsoleSplash;
+import jap.IJAPMainView;
+import jap.ISplashResponse;
 import jap.JAPConstants;
 import jap.JAPController;
 import jap.JAPDebug;
 import jap.JAPModel;
 import jap.JAPNewView;
 import jap.JAPSplash;
-import jap.ConsoleSplash;
-import jap.IJAPMainView;
-import jap.ConsoleJAPMainView;
 import jap.JAPViewIconified;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import jap.AbstractJAPMainView;
-import jap.ISplashResponse;
-import jap.forward.JAPRoutingSettings;
-import anon.infoservice.ListenerInterface;
-import anon.infoservice.MixCascade;
-import anon.util.ClassUtil;
-import java.io.File;
-import java.net.URL;
 import platform.AbstractOS;
 
 /** This is the main class of the JAP project. It starts everything. It can be inherited by another
@@ -94,6 +93,7 @@ public class JAP
 
 	Hashtable m_arstrCmdnLnArgs = null;
 	String[] m_temp = null;
+	String m_firefoxCommand; //holds command to re-open firefox, to be parsed from args and passed to JAPNewView
 
 	public JAP()
 	{
@@ -432,6 +432,7 @@ public class JAP
 		}
 
 
+
 		// Create the controller object
 		splash.setText(JAPMessages.getString(MSG_STARTING_CONTROLLER));
 		m_controller = JAPController.getInstance();
@@ -450,11 +451,21 @@ public class JAP
 		}
 
 		// Set path to Firefox for portable JAP
-		String m_firepath = "";
-		if (isArgumentSet("--portable"))
+		String firepath="";
+		String profilepath = "";
+		if (isArgumentSet("--portable") )
 		{
-			m_firepath = getArgumentValue("--portable");
 			m_controller.setPortableMode(true);
+			firepath = getArgumentValue("--portable");
+			if (isArgumentSet("--portable-browserprofile"))
+			{
+				profilepath = getArgumentValue("--portable-browserprofile");
+				m_firefoxCommand = firepath + " -profile " + profilepath;
+			}
+			else
+			{
+				m_firefoxCommand = firepath;
+			}
 		}
 
 		if (isArgumentSet("--portable-jre"))
@@ -462,7 +473,7 @@ public class JAP
 			m_controller.setPortableJava(true);
 		}
 
-		final String firepath = m_firepath;
+
 		AbstractOS.getInstance().init(new AbstractOS.IURLErrorNotifier()
 		{
 			boolean m_bReset = false;
@@ -480,7 +491,7 @@ public class JAP
 		{
 			public boolean openURL(URL a_url)
 			{
-				if (firepath == null || a_url == null)
+				if (m_firefoxCommand == null || a_url == null)
 				{
 					// no path to portable browser was given; use default
 					return false;
@@ -488,7 +499,7 @@ public class JAP
 				try
 				{
 					Runtime.getRuntime().exec(new String[]
-											  {firepath, a_url.toString()});
+											  {m_firefoxCommand, a_url.toString()});
 					return true;
 				}
 				catch (Exception ex)
@@ -580,7 +591,7 @@ public class JAP
 		IJAPMainView view;
 		if (!bConsoleOnly)
 		{
-			view = new JAPNewView(JAPConstants.TITLE, m_controller, m_firepath);
+			view = new JAPNewView(JAPConstants.TITLE, m_controller, m_firefoxCommand);
 
 			// Create the main frame
 			view.create(loadPay);
