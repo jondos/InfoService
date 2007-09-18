@@ -429,7 +429,14 @@ public class XMLPaymentOption implements IXMLEncodable
 				return heading[0];
 			}
 		}
-		return getHeading("en");
+		if (a_langShort.equals("en") )
+		{
+			return null;
+		}
+		else
+		{
+			return getHeading("en");
+		}
 	}
 
 	public String getDetailedInfo(String a_langShort)
@@ -442,7 +449,14 @@ public class XMLPaymentOption implements IXMLEncodable
 				return detailedInfo[0];
 			}
 		}
-		return getDetailedInfo("en");
+		if (a_langShort.equals("en") )
+		{
+			return null;
+		}
+		else
+		{
+			return getDetailedInfo("en");
+		}
 	}
 	/**
 	 *
@@ -493,7 +507,15 @@ public class XMLPaymentOption implements IXMLEncodable
 				return extraInfo[0];
 			}
 		}
-		return null;
+		//still there? try to fall back to English (NOT recursively, otherwise we'd have endless recursion if English info is missing, too)
+		if (a_langShort.equals("en") )
+		{
+			return null; //no more languages to fall back to
+		}
+		else
+		{
+			return getExtraInfo("en");
+		}
 	}
 
 	/**

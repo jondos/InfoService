@@ -585,6 +585,10 @@ public class AIControlChannel extends XmlControlChannel
 					{
 						String message = "AI sent CC with illegal price cert hash for mix " +
 							(ski.getPosition() + 1) + " (" + (i + 1) + ")" +  "!";
+						if (curCcHash == null)
+						{
+							message += " Price certificate for this Mix was not found in CC!";
+						}
 						LogHolder.log(LogLevel.WARNING, LogType.PAY, message);
 						getServiceContainer().keepCurrentService(false); // reconnect to another cascade if possible
 						PayAccountsFile.getInstance().signalAccountError(
