@@ -310,6 +310,7 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		}
 		else
 		{
+			m_linkOpenedInBrowser.setSelected(true);
 			setText(selectedOption.getDetailedInfo(m_language) + htmlExtraInfo);
 		}
 		if (isURL) setMouseListener(new LinkMouseListener());
