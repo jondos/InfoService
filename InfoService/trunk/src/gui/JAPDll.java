@@ -30,6 +30,7 @@ package gui;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.IOException;
 import java.util.Hashtable;
 
 import java.awt.Frame;
@@ -666,6 +667,21 @@ final public class JAPDll {
 				{
 					showWindowFromTaskbar();
 				}
+				public boolean isBrowserAvailable()
+				{
+					return JAPController.getInstance().getView().getBrowserCommand() != null;
+				}
+				public void onOpenBrowser()
+				{
+					try
+					{
+						Runtime.getRuntime().exec(JAPController.getInstance().getView().getBrowserCommand());
+					}
+					catch (IOException ex)
+					{
+					}
+				}
+
 				public void onShowHelp()
 				{
 

@@ -321,6 +321,22 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		// important to initialise for TinyL&F!!!
 		new SystrayPopupMenu(new SystrayPopupMenu.MainWindowListener()
 		{
+			public void onOpenBrowser()
+			{
+				try
+				{
+					Runtime.getRuntime().exec(m_firefoxCommand);
+				}
+				catch (IOException ex)
+				{
+				}
+			}
+
+			public boolean isBrowserAvailable()
+			{
+				return (getBrowserCommand() != null);
+			}
+
 			public void onShowMainWindow()
 			{
 			}
@@ -350,6 +366,22 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					final SystrayPopupMenu popup = new SystrayPopupMenu(
 						new SystrayPopupMenu.MainWindowListener()
 					{
+						public void onOpenBrowser()
+						{
+							try
+							{
+								Runtime.getRuntime().exec(m_firefoxCommand);
+							}
+							catch (IOException ex)
+							{
+							}
+						}
+
+						public boolean isBrowserAvailable()
+						{
+							return (getBrowserCommand() != null);
+						}
+
 						public void onShowMainWindow()
 						{
 							// do nothing
@@ -550,7 +582,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		constrVersion.insets = new Insets(0, 0, 0, 0);
 		m_pnlVersion.add(m_labelVersion, constrVersion);
 
-		if (m_firefoxCommand != null && !m_firefoxCommand.equals(""))
+		if (getBrowserCommand() != null)
 		{
 			m_firefox = new JButton(GUIUtils.loadImageIcon("firefox.png", true, false));
 			m_firefox.setOpaque(false);
@@ -2530,6 +2562,15 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	public void doClickOnCascadeChooser()
 	{
 		m_comboAnonServices.showPopup();
+	}
+
+	public String getBrowserCommand()
+	{
+		if (m_firefoxCommand != null && !m_firefoxCommand.trim().equals(""))
+		{
+			return m_firefoxCommand;
+		}
+		return null;
 	}
 
 	public void onUpdateValues()

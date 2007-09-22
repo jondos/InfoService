@@ -42,6 +42,8 @@ public interface IJAPMainView extends JAPObserver, IStatusLine, AnonServiceEvent
 
 	public void showConfigDialog(String card, Object a_value);
 
+	public String getBrowserCommand();
+
 	public void doClickOnCascadeChooser();
 
 	public void disableSetAnonMode();
