@@ -61,6 +61,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.infoservice.JavaVersionDBEntry;
+import java.io.IOException;
 
 final public class JAPViewIconified extends JWindow implements ActionListener
 {
@@ -267,6 +268,23 @@ final public class JAPViewIconified extends JWindow implements ActionListener
 						public void onShowMainWindow()
 						{
 							switchBackToMainView();
+						}
+
+						public boolean isBrowserAvailable()
+						{
+							return m_mainView.getBrowserCommand() != null;
+						}
+
+						public void onOpenBrowser()
+						{
+							try
+							{
+								Runtime.getRuntime().exec(
+									m_mainView.getBrowserCommand());
+							}
+							catch (IOException ex)
+							{
+							}
 						}
 
 						public void onShowSettings(String card, Object a_value)
