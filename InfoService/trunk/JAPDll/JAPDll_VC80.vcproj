@@ -140,6 +140,7 @@
 				WarningLevel="4"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="0"
+				CompileAs="1"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -152,16 +153,20 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				IgnoreImportLibrary="true"
+				AdditionalDependencies="$(NOINHERIT) kernel32.lib shell32.lib gdi32.lib user32.lib"
 				OutputFile="$(OutDir)/japdll.dll"
-				Version="00.03.003"
+				Version=""
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(DevEnvDir)\..\..\VC\lib\PlatformSDK\lib"
-				IgnoreAllDefaultLibraries="false"
+				GenerateManifest="false"
+				IgnoreAllDefaultLibraries="true"
 				GenerateDebugInformation="false"
-				SubSystem="0"
+				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				OptimizeForWindows98="1"
+				EntryPointSymbol="DllMain"
 				ImportLibrary="$(OutDir)/JAPDll.lib"
 				TargetMachine="1"
 			/>
@@ -282,47 +287,7 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
 			>
 			<File
-				RelativePath=".\gs_report.c"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;$(DevEnvDir)\..\..\VC\crt\src&quot;;&quot;$(DevEnvDir)\VC\lib\PlatformSDK\Include&quot;"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_JDK1.4|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;$(DevEnvDir)\..\..\VC\crt\src&quot;"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\invarg.c"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;$(DevEnvDir)\..\..\VC\crt\src&quot;;&quot;$(DevEnvDir)\VC\lib\PlatformSDK\Include&quot;"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_JDK1.4|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;$(DevEnvDir)\..\..\VC\crt\src&quot;"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="japdll.cpp"
+				RelativePath=".\japdll.c"
 				>
 			</File>
 		</Filter>
@@ -330,6 +295,10 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc"
 			>
+			<File
+				RelativePath=".\dllversion.h"
+				>
+			</File>
 			<File
 				RelativePath="japdll_jni.h"
 				>
