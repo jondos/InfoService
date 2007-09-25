@@ -138,7 +138,7 @@
 				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
 				WarningLevel="4"
-				Detect64BitPortabilityProblems="true"
+				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="0"
 				CompileAs="1"
 			/>
@@ -170,7 +170,7 @@
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				OptimizeForWindows98="1"
+				OptimizeForWindows98="0"
 				EntryPointSymbol="DllMain"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -199,13 +199,15 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				Description="Patch JAPPdll.dll for Win95"
+				CommandLine="$(ProjectDir)\buildtools\patchexe $(TargetPath)"
 				ExecutionBucket="14"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				Description="Patch JAPPdll.dll for Win95"
-				CommandLine="$(ProjectDir)\buildtools\patchexe $(TargetPath)"
-				Outputs="$(TargetPath)"
+				Description=""
+				CommandLine=""
+				Outputs=""
 				ExecutionBucket="15"
 			/>
 			<Tool
