@@ -204,7 +204,7 @@ public class ConfigAssistant extends JAPDialog
 		comboLang.addItem(new LanguageMapper("cs", new Locale("cs", "")));
 		comboLang.addItem(new LanguageMapper("nl", new Locale("nl", "")));
 		comboLang.addItem(new LanguageMapper("fr", new Locale("fr", "")));
-		comboLang.addItem(new LanguageMapper("pt", new Locale("pt", "")));
+		//comboLang.addItem(new LanguageMapper("pt", new Locale("pt", "")));
 		comboLang.setSelectedItem(new LanguageMapper(JAPMessages.getLocale().getLanguage()));
 		constraints.gridx++;
 		constraints.insets = new Insets(0, 10, 0, 0);
