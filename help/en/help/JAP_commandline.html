@@ -19,12 +19,35 @@ Shows a help message.
 JonDo will only be running on console. This means that no graphical user interface will be shown.<br>
 In order to quit JonDo, type "exit" and press <i>Enter</i>.<br>
 In order to save configuration, type "save" and press <i>Enter</i>.
+
+
+<LI><B>--cascade {[host][:port]}</B>
+	<p>
+		Connects to the specified Mix-Cascade.
+</p>  	
+</li>
+
 <LI><B>--minimized, -m </B>
   <P>
 JonDo minimizes it's window during startup.
 <LI><B>--noSplash, -s</B>
   <P> Suppresses the splash screen at JonDo startup. Starting JonDo will then seem to take a little bit longer, as it takes some time until the JonDo main window is initialised. The spash screen's function is to bridge this time gap.
-  
+<LI><B>--portable [path_to_browser]</B>
+	<p>
+ Tells JonDo that it runs in a portable environment. If a path to a portable browser is given, 
+ it may be launched directly from JonDo. URLs in JonDo are opened with this browser,
+ instead of with the system default browser.
+</p>
+
+<LI><B>--portable-browserprofile [profile]</B>
+	<p>
+ Path to the portable browser profile if not detected automatically.
+</p>
+
+  	
+ <LI> <B>--portable-jre</B>
+ <p> Should be set if JonDo runs with a portable JRE. Suppresses update messages for Java. </p>  
+ 
 <LI><B>--version, -v</B>
   <P>
 JonDo will print version information for JonDo und Java onto the console window.

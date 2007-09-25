@@ -19,12 +19,39 @@ Zeigt die Hilfe an.
 JonDo l&auml;uft nur in der Konsole, hat also keine Benutzeroberfl&auml;che.<br>
 Zum Beenden von JonDo tippen Sie "exit" und best&auml;tigen Sie mit <i>Enter</i>.<br>
 Zum Speichern der Konfiguration tippen Sie "save" und best&auml;tigen Sie mit <i>Enter</i>.
+
+<LI><B>--cascade {[host][:port]}</B>
+	<p>
+		Stelle eine Verbindung zur angegebenen Mixkaskade her.
+</p>  	
+</li>
+
+
 <LI><B>--minimized, -m </B>
   <P>
 JonDo minimiert sein Fenster direkt beim Start.
+</li>
 <LI><B>--noSplash, -s</B>
   <P> Unterdr&uuml;ckt das Wartefenster (Splash-Screen) beim Start von JonDo. Der Start wird dadurch etwas l&auml;nger erscheinen, da es einige Zeit dauert, bis das Hauptfenster von JonDo initialisiert ist. Der Spash-Screen ist  dazu da, diese Zeit zu &uuml;berbr&uuml;cken.
-  
+  	
+<LI><B>--portable [Pfad_zum_Browser]</B>
+	<p>
+		Teilt JonDo mit, dass es in einer portablen Umgebung l&auml;uft.
+		Wenn ein Pfad zu einem portablen Browser angegeben ist, kann er
+		direkt von JonDo aus gestartet werden. URLs in JonDo werden in diesem
+		Browser ge&ouml;ffnet statt mit dem Standardbrowser des Systems.
+</p>  	
+</li>
+  	
+<LI><B>--portable-browserprofile [Profil]</B>
+	<p>
+ Pfad zum Profil des portablen Browsers, wenn er nicht automtisch erkannt wird.
+</p>  	
+</li>
+  	
+ <LI> <B>--portable-jre</B>
+ <p> Sollte gesetzt werden, wenn JonDo mit einem portablen JRE l&auml;uft. Unterdr&uuml;ckt Updatenachrichten f&uuml;r Java. </p>
+</LI>
 <LI><B>--version, -v </B>
   <P>
 Auf der Konsole werden Versionsinformationen zu JonDo und Java ausgegeben.

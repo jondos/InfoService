@@ -186,6 +186,8 @@ public class JAP
 			System.out.println("--listen, -l {[host][:port]} Listen on the specified interface.");
 			System.out.println("--cascade {[host][:port]}    Connects to the specified Mix-Cascade.");
 			System.out.println("--portable [path_to_browser] Tell JonDo that it runs in a portable environment.");
+			System.out.println("--portable-browserprofile [profile] Path to the portable browser profile,");
+			System.out.println("                             if not detected automatically.");
 			System.out.println("--portable-jre               Tell JonDo that it runs with a portable JRE.");
 			System.out.println("--config, -c {Filename}:     Force JonDo to use a specific configuration file.");
 			System.exit(0);
