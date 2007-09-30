@@ -80,6 +80,7 @@ import java.awt.Color;
 public class PaymentMainPanel extends FlippingPanel
 {
 	public static final long WARNING_AMOUNT = 25 * 1000; // 25 MB (db stores in Kbyte!)
+	public static final long WARNING_TIME = 1000 * 60 * 60 * 24 * 4; // four days
 	public static final long FULL_AMOUNT = WARNING_AMOUNT * 4; // 25 MB (db stores in Kbyte!)
 
 	/** Messages */
@@ -90,8 +91,6 @@ public class PaymentMainPanel extends FlippingPanel
 		"_lastupdate";
 	private static final String MSG_PAYMENTNOTACTIVE = PaymentMainPanel.class.getName() +
 		"_paymentnotactive";
-	private static final String MSG_NEARLYEMPTY = PaymentMainPanel.class.getName() +
-		"_nearlyempty";
 	private static final String MSG_NEARLYEMPTY_CREATE_ACCOUNT = PaymentMainPanel.class.getName() +
 		"_nearlyEmptyCreateAccount";
 	private static final String MSG_SESSIONSPENT = PaymentMainPanel.class.getName() +
@@ -613,6 +612,28 @@ public class PaymentMainPanel extends FlippingPanel
 							}
 						}).start();
 					}
+					Timestamp warningTime = new Timestamp(System.currentTimeMillis() + WARNING_TIME);
+					if (a_bWarnIfNearlyEmpty && //a_bWarnIfNearlyEmpty means warnings are not to be suppressed
+						!m_notifiedEmpty && !activeAccount.isCharged(warningTime) &&
+						PayAccountsFile.getInstance().getAlternativeNonEmptyAccount(
+							JAPController.getInstance().getCurrentMixCascade().getPIID()) == null)
+					{
+						m_notifiedEmpty = true;
+						// start a new thread to prevent freezing of GUI update
+						new Thread(new Runnable()
+						{
+							public void run()
+							{
+								if (JAPDialog.showYesNoDialog(JAPController.getInstance().getViewWindow(),
+									JAPMessages.getString(MSG_NEARLYEMPTY_CREATE_ACCOUNT)))
+								{
+									m_view.showConfigDialog(JAPConf.PAYMENT_TAB,
+										JAPController.getInstance().getCurrentMixCascade().getPIID());
+								}
+							}
+						}).start();
+					}
+
 				}
 
 				m_BalanceTextSmall.setText(m_BalanceText.getText());
