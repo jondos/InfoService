@@ -54,7 +54,8 @@ public class XMLVolumePlan implements IXMLEncodable
 	public static final String XML_ELEMENT_NAME = "VolumePlan";
 
 	private Document m_docTheVolumePlan;
-	private String m_name;
+	private String m_name; //the internal, unique name of the plan, e.g. "Small_jan07" - prior to JAP 00.08.107 (before the introduction of displayname, also the one to be displayed
+	private String m_displayName; //the name to be shown to the customer, e.g. "Small"
 	private int m_price;
 	private boolean m_volumeLimited;
 	private boolean m_durationLimited;
@@ -90,10 +91,11 @@ public class XMLVolumePlan implements IXMLEncodable
 	/**
 	 * duration and volume will both be unlimited
 	 */
-	public XMLVolumePlan(String a_name, int a_price)
+	public XMLVolumePlan(String a_name, String a_displayName, int a_price)
 	{
 		m_name = a_name;
 		m_price = a_price;
+		m_displayName = a_displayName;
 		m_docTheVolumePlan = XMLUtil.createDocument();
 		m_docTheVolumePlan.appendChild(internal_toXmlElement(m_docTheVolumePlan));
 	}
@@ -101,9 +103,10 @@ public class XMLVolumePlan implements IXMLEncodable
 	/**
 	 * duration will be unlimited, volumeLimited is automatically set to true
 	 */
-	public XMLVolumePlan(String a_name, int a_price, long a_volumeLimit)
+	public XMLVolumePlan(String a_name, String a_displayName, int a_price, long a_volumeLimit)
 	{
 		m_name = a_name;
+		m_displayName = a_displayName;
 		m_price = a_price;
 		m_volumeKbytes = a_volumeLimit;
 		m_volumeLimited = true;
@@ -115,9 +118,10 @@ public class XMLVolumePlan implements IXMLEncodable
 	/**
 	 * volume will be unlimited, durationLimited is automatically set to true
 	 */
-	public XMLVolumePlan(String a_name, int a_price, int a_duration, String a_durationUnit)
+	public XMLVolumePlan(String a_name, String a_displayName, int a_price, int a_duration, String a_durationUnit)
 	{
 		m_name = a_name;
+		m_displayName = a_displayName;
 		m_price = a_price;
 		m_volumeLimited = false;
 		m_durationLimited = true;
@@ -130,7 +134,7 @@ public class XMLVolumePlan implements IXMLEncodable
 	/**
 	 * regular volume plan: both volume and duration are limited
 	 */
-	public XMLVolumePlan(String a_name, int a_price, int a_duration, String a_durationUnit, long a_volumeLimit)
+	public XMLVolumePlan(String a_name, String a_displayName, int a_price, int a_duration, String a_durationUnit, long a_volumeLimit)
 	{
 		m_name = a_name;
 		m_price = a_price;
@@ -146,7 +150,7 @@ public class XMLVolumePlan implements IXMLEncodable
 	/**
 	 * full set of parameters, as stored in database
 	 */
-	public XMLVolumePlan(String a_name, int a_price,boolean a_durationLimited, boolean a_volumeLimited, int a_duration, String a_durationUnit,
+	public XMLVolumePlan(String a_name, String a_displayname, int a_price,boolean a_durationLimited, boolean a_volumeLimited, int a_duration, String a_durationUnit,
 						 long a_volumeLimit)
 	{
 		m_name = a_name;
@@ -165,6 +169,11 @@ public class XMLVolumePlan implements IXMLEncodable
 	{
 		return m_name ;
     }
+
+	public String getDisplayName()
+	{
+		return m_displayName;
+	}
 
 	public int getPrice()
 	{
@@ -236,6 +245,9 @@ public class XMLVolumePlan implements IXMLEncodable
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Name");
 		m_name = XMLUtil.parseValue(elem, null);
 
+		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "DisplayName");
+		m_displayName = XMLUtil.parseValue(elem, null);
+
 		elem = (Element) XMLUtil.getFirstChildByName(elemRoot, "Price");
 		str = XMLUtil.parseValue(elem, null);
 		m_price = Integer.parseInt(str);
@@ -264,6 +276,10 @@ public class XMLVolumePlan implements IXMLEncodable
 
 		elem = a_doc.createElement("Name");
 		XMLUtil.setValue(elem, m_name);
+		elemRoot.appendChild(elem);
+
+		elem = a_doc.createElement("DisplayName");
+		XMLUtil.setValue(elem, m_displayName);
 		elemRoot.appendChild(elem);
 
 		elem = a_doc.createElement("Price");
