@@ -188,6 +188,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private static final String XML_ALLOW_NON_ANONYMOUS_CONNECTION = "AllowDirectConnection";
 	private static final String XML_ALLOW_NON_ANONYMOUS_UPDATE = "AllowDirectUpdate";
 	private static final String XML_ATTR_AUTO_CHOOSE_CASCADES = "AutoSwitchCascades";
+	private static final String XML_ATTR_AUTO_CHOOSE_CASCADES_ON_STARTUP = "autoSwitchCascadesOnStartup";
 	private static final String XML_ATTR_SHOW_CONFIG_ASSISTANT = "showConfigAssistant";
 	private static final String XML_ATTR_LOGIN_TIMEOUT = "loginTimeout";
 	private static final String XML_ATTR_INFOSERVICE_CONNECT_TIMEOUT = "isConnectionTimeout";
@@ -992,6 +993,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 				JAPModel.getInstance().setCascadeAutoSwitch(
 								XMLUtil.parseAttribute(root, XML_ATTR_AUTO_CHOOSE_CASCADES, true));
+				JAPModel.getInstance().setAutoChooseCascadeOnStartup(
+								XMLUtil.parseAttribute(root, XML_ATTR_AUTO_CHOOSE_CASCADES_ON_STARTUP, true));
 				JAPModel.getInstance().denyNonAnonymousSurfing(
 								XMLUtil.parseAttribute(root, JAPModel.XML_DENY_NON_ANONYMOUS_SURFING, false));
 
@@ -1785,7 +1788,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 
 
-				if (JAPModel.getInstance().isCascadeAutoSwitched())
+				if (JAPModel.getInstance().isCascadeAutoSwitched() &&
+					JAPModel.getInstance().isCascadeAutoChosenOnStartup())
 				{
 					// choose a random initial cascade
 					AutoSwitchedMixCascadeContainer cascadeSwitcher =
@@ -2169,6 +2173,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 								 JAPModel.getInstance().isReminderForJavaUpdateActivated());
 			XMLUtil.setAttribute(e, XML_ATTR_AUTO_CHOOSE_CASCADES,
 								 JAPModel.getInstance().isCascadeAutoSwitched());
+			XMLUtil.setAttribute(e, XML_ATTR_AUTO_CHOOSE_CASCADES_ON_STARTUP,
+								 JAPModel.getInstance().isCascadeAutoChosenOnStartup());
 			XMLUtil.setAttribute(e, JAPModel.XML_DENY_NON_ANONYMOUS_SURFING,
 								 JAPModel.getInstance().isNonAnonymousSurfingDenied());
 			XMLUtil.setAttribute(e, XML_ATTR_SHOW_CONFIG_ASSISTANT, m_bShowConfigAssistant);

@@ -390,7 +390,7 @@ public class ConfigAssistant extends JAPDialog
 			this, JAPMessages.getString(MSG_EXPLAIN_WARNING_IN_BROWSER, new Object[]
 										{
 										JAPMessages.getString("ngBttnAnonDetails"),
-										JAPMessages.getString("ngAnonGeneralPanelTitle"),
+										JAPMessages.getString("settingsInfoServiceConfigAdvancedSettingsTabTitle"),
 										JAPMessages.getString(
 		  JAPConfAnonGeneral.MSG_DENY_NON_ANONYMOUS_SURFING)}), layout,
 			new DialogContentPane.Options(paneBrowserTestNoWarning))

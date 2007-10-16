@@ -94,6 +94,8 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule implements Observer
 		"_tooltipServiceDeactivated";
 	private static final String MSG_EVERY_SECONDS = JAPConfAnonGeneral.class.getName() + "_everySeconds";
 	private static final String MSG_LBL_WHITELIST = JAPConfAnonGeneral.class.getName() + "_autoBlacklist";
+	private static final String MSG_AUTO_CHOOSE_ON_STARTUP =
+		JAPConfAnonGeneral.class.getName() + "_autoChooseOnStartup";
 
 
 	private static final String IMG_ARROW_RIGHT = JAPConfAnonGeneral.class.getName() + "_arrowRight.gif";
@@ -118,6 +120,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule implements Observer
 	private JCheckBox m_cbAutoReConnect;
 	private JCheckBox m_cbAutoBlacklist;
 	private JCheckBox m_cbAutoChooseCascades;
+	private JCheckBox m_cbAutoChooseCascadesOnStartup;
 	private JSlider m_sliderDummyTrafficIntervall;
 	private JAPController m_Controller;
 	private JComboBox[] m_comboServices;
@@ -135,7 +138,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule implements Observer
 
 	public String getTabTitle()
 	{
-		return JAPMessages.getString("ngAnonGeneralPanelTitle");
+		return JAPMessages.getString("settingsInfoServiceConfigAdvancedSettingsTabTitle");
 	}
 
 	public void update(Observable a_notifier, Object a_message)
@@ -191,6 +194,8 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule implements Observer
 		m_cbAutoReConnect.setSelected(JAPModel.isAutomaticallyReconnected());
 		m_cbAutoBlacklist.setSelected(BlacklistedCascadeIDEntry.areNewCascadesInBlacklist());
 		m_cbAutoChooseCascades.setSelected(JAPModel.getInstance().isCascadeAutoSwitched());
+		m_cbAutoChooseCascadesOnStartup.setSelected(JAPModel.getInstance().isCascadeAutoChosenOnStartup());
+		m_cbAutoChooseCascadesOnStartup.setEnabled(m_cbAutoChooseCascades.isSelected());
 
 		m_comboServices[2].setEnabled(JAPModel.getInstance().isMixMinionActivated());
 		m_comboServices[3].setEnabled(JAPModel.getInstance().isTorActivated());
@@ -229,6 +234,8 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule implements Observer
 		JAPModel.getInstance().setAutoConnect(m_cbAutoConnect.isSelected());
 		JAPModel.getInstance().setAutoReConnect(m_cbAutoReConnect.isSelected());
 		JAPModel.getInstance().setCascadeAutoSwitch(m_cbAutoChooseCascades.isSelected());
+		JAPModel.getInstance().setAutoChooseCascadeOnStartup(m_cbAutoChooseCascadesOnStartup.isSelected());
+
 
 		AnonClient.setLoginTimeout(((Integer)m_comboTimeout.getSelectedItem()).intValue() * 1000);
 
@@ -244,7 +251,16 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule implements Observer
 		m_cbAutoConnect = new JCheckBox(JAPMessages.getString("settingsautoConnectCheckBox"));
 		m_cbAutoReConnect = new JCheckBox(JAPMessages.getString("settingsautoReConnectCheckBox"));
 		m_cbAutoChooseCascades = new JCheckBox(JAPMessages.getString(MSG_AUTO_CHOOSE_CASCADES));
+		m_cbAutoChooseCascadesOnStartup = new JCheckBox(JAPMessages.getString(MSG_AUTO_CHOOSE_ON_STARTUP));
 		m_cbAutoBlacklist = new JCheckBox(JAPMessages.getString(MSG_LBL_WHITELIST));
+
+		m_cbAutoChooseCascades.addItemListener(new ItemListener()
+		{
+			public void itemStateChanged(ItemEvent e)
+			{
+				m_cbAutoChooseCascadesOnStartup.setEnabled(e.getStateChange() == ItemEvent.SELECTED);
+			}
+		});
 
 
 		//m_cbDummyTraffic = new JCheckBox(JAPMessages.getString("ngConfAnonGeneralSendDummy"));
@@ -304,7 +320,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule implements Observer
 		c.gridx = 0;
 		c.gridy = 0;
 		c.gridheight = 1;
-		c.gridwidth = 3;
+		c.gridwidth = 4;
 		c.insets = new Insets(10, 10, 0, 10);
 		c.anchor = GridBagConstraints.NORTHWEST;
 		c.fill = GridBagConstraints.BOTH;
@@ -325,9 +341,25 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule implements Observer
 		panelRoot.add(m_cbAutoReConnect, c);
 		c.gridy++;
 
+		c.gridwidth = 3;
 		//c.insets = new Insets(insets.top, insets.left + 20, insets.bottom, insets.right);
+		c.weightx = 0.0;
+		c.insets = new Insets(10, 10, 0, 0);
 		panelRoot.add(m_cbAutoChooseCascades, c);
+
+		c.gridx++;
+		c.gridx++;
+		c.gridx++;
+		c.weightx = 1;
+		c.gridwidth = 1;
+		c.insets = new Insets(10, 0, 0, 0);
+		panelRoot.add(m_cbAutoChooseCascadesOnStartup, c);
+		c.insets = new Insets(10, 10, 0, 10);
+
+
+
 		c.gridy++;
+		c.gridx = 0;
 		c.weightx = 0.0;
 		c.gridwidth = 2;
 		//panelRoot.add(m_cbDummyTraffic, c);
@@ -352,7 +384,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule implements Observer
 		m_sliderDummyTrafficIntervall.setSnapToTicks(true);
 		c.gridx++;
 		c.gridx++;
-		c.gridwidth = 1;
+		c.gridwidth = 2;
 		panelRoot.add(m_sliderDummyTrafficIntervall, c);
 
 		c.gridy++;
@@ -369,7 +401,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule implements Observer
 		c.gridx = 0;
 		c.weighty = 1.0;
 		c.weightx = 1.0;
-		c.gridwidth = 3;
+		c.gridwidth = 4;
 		c.fill = GridBagConstraints.BOTH;
 		panelRoot.add(new JLabel(), c);
 
@@ -401,6 +433,7 @@ final class JAPConfAnonGeneral extends AbstractJAPConfModule implements Observer
 		m_cbAutoConnect.setSelected(true);
 		m_cbAutoReConnect.setSelected(true);
 		m_cbAutoChooseCascades.setSelected(true);
+		m_cbAutoChooseCascadesOnStartup.setSelected(true);
 		setLoginTimeout(AnonClient.DEFAULT_LOGIN_TIMEOUT);
 	}
 
