@@ -129,6 +129,7 @@ public final class JAPModel extends Observable
 	private boolean m_bMixMinionActivated;
 
 	private boolean m_bChooseCascasdeConnectionAutomatically;
+	private boolean m_bChooseCascasdeAutomaticallyOnStartup;
 
 	private boolean m_bMiniViewOnTop;
 	private String m_strLookAndFeel;
@@ -619,6 +620,16 @@ public final class JAPModel extends Observable
 	public boolean isCascadeAutoSwitched()
 	{
 		return m_bChooseCascasdeConnectionAutomatically;
+	}
+
+	public void setAutoChooseCascadeOnStartup(boolean a_bChooseCascasdeAutomaticallyOnStartup)
+	{
+		m_bChooseCascasdeAutomaticallyOnStartup = a_bChooseCascasdeAutomaticallyOnStartup;
+	}
+
+	public boolean isCascadeAutoChosenOnStartup()
+	{
+		return m_bChooseCascasdeAutomaticallyOnStartup;
 	}
 
 	public boolean isAnonConnected()

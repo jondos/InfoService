@@ -565,7 +565,7 @@ public class PayAccountsFile extends Observable implements IXMLEncodable, IBICon
 					LogHolder.log(LogLevel.ERR, LogType.PAY,
 								  "Payment instance for account nr. " +
 								  currentAccount.getAccountNumber() +
-								  "not found!");
+								  " not found!");
 					continue;
 				}
 				if (pi.getId().equals(a_piid))
