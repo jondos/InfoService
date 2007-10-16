@@ -93,6 +93,8 @@ public class PaymentMainPanel extends FlippingPanel
 		"_paymentnotactive";
 	private static final String MSG_NEARLYEMPTY_CREATE_ACCOUNT = PaymentMainPanel.class.getName() +
 		"_nearlyEmptyCreateAccount";
+	private static final String MSG_NEARLYEXPIRED_CREATE_ACCOUNT = PaymentMainPanel.class.getName() +
+		"_nearlyExpiredCreateAccount";
 	private static final String MSG_SESSIONSPENT = PaymentMainPanel.class.getName() +
 		"_sessionspent";
 	private static final String MSG_TOTALSPENT = PaymentMainPanel.class.getName() +
@@ -625,7 +627,7 @@ public class PaymentMainPanel extends FlippingPanel
 							public void run()
 							{
 								if (JAPDialog.showYesNoDialog(JAPController.getInstance().getViewWindow(),
-									JAPMessages.getString(MSG_NEARLYEMPTY_CREATE_ACCOUNT)))
+									JAPMessages.getString(MSG_NEARLYEXPIRED_CREATE_ACCOUNT)))
 								{
 									m_view.showConfigDialog(JAPConf.PAYMENT_TAB,
 										JAPController.getInstance().getCurrentMixCascade().getPIID());

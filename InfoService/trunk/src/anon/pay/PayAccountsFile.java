@@ -551,13 +551,24 @@ public class PayAccountsFile extends Observable implements IXMLEncodable, IBICon
 		Vector vecAccounts = new Vector();
 		Enumeration enumer = m_Accounts.elements();
 		PayAccount currentAccount;
+		PaymentInstanceDBEntry pi;
 
 		if (a_piid != null && a_piid.trim().length() > 0)
 		{
 			while (enumer.hasMoreElements())
 			{
 				currentAccount = (PayAccount) enumer.nextElement();
-				if ( (currentAccount).getBI().getId().equals(a_piid))
+				pi = currentAccount.getBI();
+				if (pi == null)
+				{
+					// this may happen sometimes... but it should not!
+					LogHolder.log(LogLevel.ERR, LogType.PAY,
+								  "Payment instance for account nr. " +
+								  currentAccount.getAccountNumber() +
+								  "not found!");
+					continue;
+				}
+				if (pi.getId().equals(a_piid))
 				{
 					vecAccounts.addElement(currentAccount);
 				}

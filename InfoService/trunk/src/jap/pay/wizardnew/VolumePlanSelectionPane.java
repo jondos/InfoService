@@ -138,7 +138,8 @@ import java.awt.Color;
 
 		for (int i = 0; i < 10; i++)
 		{
-			XMLVolumePlan dummyPlan = new XMLVolumePlan("Dummy        for sizing",100,2,"months",2000000);
+			XMLVolumePlan dummyPlan =
+				new XMLVolumePlan("dummy", "Dummy        for sizing",100,2,"months",2000000);
 			addPlan(dummyPlan);
 		}
 	}
