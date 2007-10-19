@@ -58,6 +58,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.pay.*;
+import java.net.SocketTimeoutException;
 
 /**
  * Holds the information for an infoservice.
@@ -880,13 +881,24 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 								throw (new InterruptedIOException("Communication was interrupted."));
 							}
 						}
-						catch (Exception e)
+						catch (SocketTimeoutException a_e)
+						{
+							LogHolder.log(LogLevel.ERR, LogType.NET,
+										  "Infoservice is temporary unavailable: " +
+										  currentConnection.getHost() + ":" +
+										  Integer.toString(currentConnection.getPort()) +
+										  a_httpRequest.getRequestFileName(), a_e);
+							// remove interface temporarily
+							currentInterface.blockInterface(
+								m_getXmlConnectionTimeout * BLOCK_FACTOR_IF_UNREACHABLE);
+						}
+						catch (Exception a_e)
 						{
 							LogHolder.log(LogLevel.ERR, LogType.NET,
 										  "Connection to infoservice interface failed: " +
 										  currentConnection.getHost() + ":" +
 										  Integer.toString(currentConnection.getPort()) +
-										  a_httpRequest.getRequestFileName(), e);
+										  a_httpRequest.getRequestFileName(), a_e);
 							// remove interface temporarily
 							// TODO better handling for real error situation - as catching all exceptions and removing
 							// the interface because of any exceptions is by far to much
