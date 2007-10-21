@@ -46,6 +46,7 @@ import anon.mixminion.mmrdescription.MMRList;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import gui.GUIUtils;
+import platform.AbstractOS;
 
 /* This is the Model of All. It's a Singelton!*/
 public final class JAPModel extends Observable
@@ -877,6 +878,16 @@ public final class JAPModel extends Observable
 		if(s!=null)
 		{
 			buff.append("Using JAPDll File: ");
+			buff.append(s);
+			buff.append("\n");
+		}
+		buff.append("Config path: ");
+		buff.append(getConfigFile());
+		buff.append("\n");
+		s = JAPController.getInstance().getView().getBrowserCommand();
+		if (s != null)
+		{
+			buff.append("Portable browser: ");
 			buff.append(s);
 			buff.append("\n");
 		}
