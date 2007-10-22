@@ -193,6 +193,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				Description="Patching and Signing japdll.dll"
+				CommandLine="$(ProjectDir)\buildtools\doPatchAndSign.bat $(ProjectDir) $(TargetPath)"
 			/>
 		</Configuration>
 		<Configuration
