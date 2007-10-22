@@ -58,7 +58,6 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.pay.*;
-import java.net.SocketTimeoutException;
 
 /**
  * Holds the information for an infoservice.
@@ -880,7 +879,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 								// thread was interrupted
 								throw (new InterruptedIOException("Communication was interrupted."));
 							}
-						}
+						}/*
 						catch (SocketTimeoutException a_e)
 						{
 							LogHolder.log(LogLevel.ERR, LogType.NET,
@@ -891,7 +890,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 							// remove interface temporarily
 							currentInterface.blockInterface(
 								m_getXmlConnectionTimeout * BLOCK_FACTOR_IF_UNREACHABLE);
-						}
+						}*/
 						catch (Exception a_e)
 						{
 							LogHolder.log(LogLevel.ERR, LogType.NET,
@@ -899,12 +898,24 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 										  currentConnection.getHost() + ":" +
 										  Integer.toString(currentConnection.getPort()) +
 										  a_httpRequest.getRequestFileName(), a_e);
-							// remove interface temporarily
-							// TODO better handling for real error situation - as catching all exceptions and removing
-							// the interface because of any exceptions is by far to much
-							// probably the interface should only be blocked if connection to that interface fails...
-							//currentInterface.blockInterface(
-							//	m_getXmlConnectionTimeout * BLOCK_FACTOR_IF_UNREACHABLE);
+							try
+							{
+								Class classSocketTimeoutException =
+									Class.forName("java.net.SocketTimeoutException");
+								if (classSocketTimeoutException.isAssignableFrom(a_e.getClass()))
+								{
+									// remove interface temporarily
+									currentInterface.blockInterface(
+										m_getXmlConnectionTimeout * BLOCK_FACTOR_IF_UNREACHABLE);
+
+								}
+							}
+							catch (ClassNotFoundException a_eClass)
+							{
+								// java too old
+
+								/** @todo handling for other error situations */
+							}
 						}
 					}
 				});
