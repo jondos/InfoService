@@ -45,11 +45,36 @@ import java.awt.Window;
 import java.awt.Frame;
 import java.awt.image.ColorModel;
 
+/**
+ * Shows the splash screen on startup
+ *
+ * Dimensions and other attributes of the image used can not be dynamically determined (old java version),
+ * change the private static final variables at the beginning of the class if you replace the image used
+ *
+ */
 final public class JAPSplash extends Window implements ISplashResponse
 {
 	private static final String IMGPATHHICOLOR = "images/";
 	private static final String IMGPATHLOWCOLOR = "images/lowcolor/";
-	private static final String SPLASHFN = "splash.jpg";
+	private static final String SPLASH_FILE = "splash.jpg";
+	private static final String BUSY_FILE = JAPConstants.BUSYFN;
+
+	private static final int SPLASH_WIDTH = 501;
+	private static final int SPLASH_HEIGHT = 330;
+	private static final int SPLASH_FILESIZE = 150000;//image file is read into buffer array, increase its size here if necessary
+	private static final int BUSY_FILESIZE = 7000;
+
+	//positioning the version string on the image (pixels from lower-right corner)
+	private static final int VERSION_OFFSET_X = 10;
+	private static final int VERSION_OFFSET_Y = 15;
+
+	//position the progress bar (pixels from upper-right corner)
+	private static final int BUSY_POSITION_X = 15;
+	private static final int BUSY_POSITION_Y = 312;
+
+	//position the "loading..."-string (pixels from upper-right corner)
+	private static final int MESSAGE_POSITION_X = 17;
+	private static final int MESSAGE_POSITION_Y = 302;
 
 	private Image m_imgSplash;
 	private Image m_imgBusy;
@@ -70,124 +95,10 @@ final public class JAPSplash extends Window implements ISplashResponse
 		super(frmParent);
 		setLayout(null);
 		m_iXVersion = m_iYVersion = 100;
-		Toolkit t = Toolkit.getDefaultToolkit();
-		MediaTracker ma = new MediaTracker(this);
-		InputStream in = null;
-		Class c = null;
-		boolean bLowColorDisplay=false;
-		try
-		{
-			c = Class.forName("JAP");
-		}
-		catch (Exception e)
-		{
-		}
-		ColorModel colorModel=null;
-		try{//Do not remove the try-catch block as some faulty JRE throw a null pointer excpetion in getColorModel()
-			colorModel = t.getColorModel();
-		}catch(Throwable t1)
-		{
+		Toolkit defaultToolkit = Toolkit.getDefaultToolkit();
+		MediaTracker imageTracker = new MediaTracker(this);
 
-		}
-
-		if (colorModel==null||colorModel.getPixelSize() <= 16)
-		{
-			bLowColorDisplay=true;
-			in = c.getResourceAsStream(IMGPATHLOWCOLOR + SPLASHFN);
-			if (in == null)
-			{
-				try
-				{
-					in = new FileInputStream(IMGPATHLOWCOLOR + SPLASHFN);
-				}
-				catch (FileNotFoundException ex)
-				{
-				}
-			}
-		}
-		if (in == null)
-		{
-			in = c.getResourceAsStream(IMGPATHHICOLOR + SPLASHFN);
-		}
-		if (in == null)
-		{
-			try
-			{
-				in = new FileInputStream(IMGPATHHICOLOR + SPLASHFN);
-			}
-			catch (FileNotFoundException ex)
-			{
-			}
-		}
-		int len;
-		int aktIndex;
-		if (in != null)
-		{
-			byte[] buff = new byte[27000];
-			len = 0;
-			aktIndex = 0;
-			try
-			{
-				while ( (len = in.read(buff, aktIndex, 27000 - aktIndex)) > 0)
-				{
-					aktIndex += len;
-				}
-				m_imgSplash = t.createImage(buff, 0, aktIndex);
-				ma.addImage(m_imgSplash, 1);
-				ma.checkID(1, true);
-			}
-			catch (Exception e)
-			{
-			}
-		}
-		in = null;
-		if (bLowColorDisplay)
-		{
-			in = c.getResourceAsStream(IMGPATHLOWCOLOR + JAPConstants.BUSYFN);
-			if (in == null)
-			{
-				try
-				{
-					in = new FileInputStream(IMGPATHLOWCOLOR + JAPConstants.BUSYFN);
-				}
-				catch (FileNotFoundException ex)
-				{
-				}
-			}
-		}
-		if (in == null)
-		{
-			in = c.getResourceAsStream(IMGPATHHICOLOR + JAPConstants.BUSYFN);
-		}
-		if (in == null)
-		{
-			try
-			{
-				in = new FileInputStream(IMGPATHHICOLOR + JAPConstants.BUSYFN);
-			}
-			catch (FileNotFoundException ex)
-			{
-			}
-		}
-		if (in != null)
-		{
-			byte[] buff1 = new byte[7000];
-			len = 0;
-			aktIndex = 0;
-			try
-			{
-				while ( (len = in.read(buff1, aktIndex, 7000 - aktIndex)) > 0)
-				{
-					aktIndex += len;
-				}
-				m_imgBusy = t.createImage(buff1, 0, aktIndex);
-				ma.addImage(m_imgBusy, 2);
-				ma.checkID(2, true);
-			}
-			catch (Exception e)
-			{
-			}
-		}
+		loadImages(imageTracker);
 
 		if (a_message == null || a_message.trim().length() == 0)
 		{
@@ -200,22 +111,111 @@ final public class JAPSplash extends Window implements ISplashResponse
 
 		m_strVersion = "Version: " + JAPConstants.aktVersion;
 		m_fntFont = new Font("Sans", Font.PLAIN, 9);
-		FontMetrics fontmetrics = t.getFontMetrics(m_fntFont);
-		m_iXVersion = 457 - 10 - fontmetrics.stringWidth(m_strVersion);
-		m_iYVersion = 178 - 15;
-		//setLocation( -350, -173);
-		//setSize(350, 173);
-		setSize(457, 178);
-	 try
+		FontMetrics fontmetrics = defaultToolkit.getFontMetrics(m_fntFont);
+		m_iXVersion = SPLASH_WIDTH - VERSION_OFFSET_X - fontmetrics.stringWidth(m_strVersion);
+		m_iYVersion = SPLASH_HEIGHT - VERSION_OFFSET_Y;
+		setSize(SPLASH_WIDTH, SPLASH_HEIGHT);
+	    try
 		{
-			ma.waitForAll();
+			imageTracker.waitForAll();
 		}
 		catch (Exception e)
 		{}
 		;
 		toFront();
 
-}
+	}
+
+	private Image loadImage(String pathToFile,int filesize, MediaTracker imageTracker)
+	{
+		InputStream in = null;
+		Class JapClass = null;
+		try
+		{
+			JapClass = Class.forName("JAP");
+		}
+		catch (Exception e)
+		{
+		}
+
+		in = JapClass.getResourceAsStream(pathToFile);
+		if (in == null)
+		{
+			try
+			{
+				in = new FileInputStream(pathToFile);
+			}
+			catch (FileNotFoundException ex)
+			{
+				;
+			}
+		}
+		int len;
+		int aktIndex;
+		Image imageResult = null;
+		if (in != null)
+		{
+			Toolkit defaultToolkit = Toolkit.getDefaultToolkit();
+			byte[] buff = new byte[filesize];
+			len = 0;
+			aktIndex = 0;
+			try
+			{
+				while ( (len = in.read(buff, aktIndex, buff.length - aktIndex)) > 0)
+				{
+					aktIndex += len;
+				}
+				imageResult = defaultToolkit.createImage(buff, 0, aktIndex);
+				imageTracker.addImage(m_imgSplash, 1);
+				imageTracker.checkID(1, true);
+			}
+			catch (Exception e)
+			{
+			}
+		}
+		return imageResult;
+	}
+
+
+	private boolean isHighColor()
+	{
+		ColorModel colorModel=null;
+		Toolkit defaultToolkit = Toolkit.getDefaultToolkit();
+		try{//Do not remove the try-catch block as some faulty JRE throw a null pointer excpetion in getColorModel()
+			colorModel = defaultToolkit.getColorModel();
+		}catch(Throwable t1)
+		{
+
+		}
+		if (colorModel == null)
+		{
+			return false; //if we can't be sure, safer to default to low color
+		}
+		if (colorModel.getPixelSize() > 16 )
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+
+    }
+
+	private void loadImages(MediaTracker imageTracker)
+	{
+
+		if (isHighColor())
+		{
+			m_imgSplash = loadImage(IMGPATHHICOLOR + SPLASH_FILE, SPLASH_FILESIZE, imageTracker);
+			m_imgBusy = loadImage(IMGPATHHICOLOR + BUSY_FILE, BUSY_FILESIZE, imageTracker);
+		}
+		else
+		{
+			m_imgSplash = loadImage(IMGPATHLOWCOLOR + SPLASH_FILE, SPLASH_FILESIZE, imageTracker);
+			m_imgBusy = loadImage(IMGPATHLOWCOLOR + BUSY_FILE, BUSY_FILESIZE, imageTracker);
+		}
+	}
 
 	public void setText(String a_text)
 	{
@@ -234,23 +234,23 @@ final public class JAPSplash extends Window implements ISplashResponse
 	{
 		if (m_imgOffScreen == null)
 		{
-			m_imgOffScreen = createImage(457, 178);
+			m_imgOffScreen = createImage(SPLASH_WIDTH, SPLASH_HEIGHT);
 		}
-		Graphics goff = m_imgOffScreen.getGraphics();
+		Graphics offscreenGraphics = m_imgOffScreen.getGraphics();
 		if (m_imgSplash != null)
 		{
-			goff.drawImage(m_imgSplash, 0, 0, this);
+			offscreenGraphics.drawImage(m_imgSplash, 0, 0, this);
 		}
 		if (m_imgBusy != null)
 		{
-			goff.drawImage(m_imgBusy, 15, 150, this);
+			offscreenGraphics.drawImage(m_imgBusy, BUSY_POSITION_X, BUSY_POSITION_Y, this);
 		}
-		goff.setColor(Color.gray);
-		goff.drawRect(0, 0, 456, 177);
-		goff.setFont(m_fntFont);
-		goff.setColor(Color.black);
-		goff.drawString(m_strLoading, 17, 140);
-		goff.drawString(m_strVersion, m_iXVersion, m_iYVersion);
+		offscreenGraphics.setColor(Color.gray);
+		offscreenGraphics.drawRect(0, 0, SPLASH_WIDTH -1 , SPLASH_HEIGHT - 1);
+		offscreenGraphics.setFont(m_fntFont);
+		offscreenGraphics.setColor(Color.black);
+		offscreenGraphics.drawString(m_strLoading, MESSAGE_POSITION_X, MESSAGE_POSITION_Y);
+		offscreenGraphics.drawString(m_strVersion, m_iXVersion, m_iYVersion);
 		g.drawImage(m_imgOffScreen, 0, 0, this);
 	}
 
