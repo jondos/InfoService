@@ -34,6 +34,8 @@ import anon.infoservice.Database;
 import anon.infoservice.InfoServiceHolder;
 import anon.pay.PaymentInstanceDBEntry;
 import anon.pay.PayAccountsFile;
+import logging.LogHolder;
+import logging.*;
 
 /**
  * Updates the list of available MixCascades.
@@ -75,6 +77,15 @@ public class PaymentInstanceUpdater extends AbstractDatabaseUpdater
 		for (int i = 0; i < currentPIs.size(); i++)
 		{
 			entry = (PaymentInstanceDBEntry)currentPIs.elementAt(i);
+			if (!entry.isValid())
+			{
+				LogHolder.log(LogLevel.ERR, LogType.PAY,
+							  "Certificate of payment instance " +
+							  entry.getId() + " (" +
+							  entry.getName() + ") has expired!");
+				continue;
+			}
+
 			if (!pis.containsKey(entry.getId()) &&
 				PayAccountsFile.getInstance().getAccounts(entry.getId()).size() > 0)
 			{

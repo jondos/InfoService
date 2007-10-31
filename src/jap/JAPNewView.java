@@ -29,7 +29,6 @@ package jap;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -87,7 +86,9 @@ import anon.infoservice.MessageDBEntry;
 import anon.infoservice.MixCascade;
 import anon.infoservice.NewCascadeIDEntry;
 import anon.infoservice.StatusInfo;
+import anon.pay.IMessageListener;
 import anon.pay.PayAccountsFile;
+import anon.pay.PayMessage;
 import anon.proxy.IProxyListener;
 import anon.util.JobQueue;
 import anon.util.Util;
@@ -102,6 +103,7 @@ import gui.dialog.DialogContentPane;
 import gui.dialog.JAPDialog;
 import gui.dialog.JAPDialog.LinkedInformationAdapter;
 import gui.dialog.JAPDialog.Options;
+import jap.forward.JAPRoutingMessage;
 import jap.forward.JAPRoutingRegistrationStatusObserver;
 import jap.forward.JAPRoutingServerStatisticsListener;
 import jap.forward.JAPRoutingSettings;
@@ -111,9 +113,7 @@ import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
 import update.JAPUpdateWizard;
-import anon.pay.IMessageListener;
-import anon.pay.PayMessage;
-import jap.forward.JAPRoutingMessage;
+import javax.swing.BorderFactory;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver, Observer, IMessageListener
@@ -537,18 +537,20 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		// preload meter icons
 
 		// "NORTH": Image
-		ImageIcon northImage = GUIUtils.loadImageIcon("JonDo.png", true, false);
-		JLabel northLabel = new JLabel(northImage);
-		JPanel northPanel = new JPanel();
+		ImageIcon headerImage = GUIUtils.loadImageIcon("JonDo.png", true, false);
+		JLabel headerLabel = new JLabel(headerImage);
+		headerLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		JPanel mainPanel = new JPanel();
 		GridBagLayout gbl = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
-		northPanel.setLayout(gbl);
-		c.anchor = GridBagConstraints.NORTHWEST;
+		mainPanel.setLayout(gbl);
+		c.anchor = GridBagConstraints.NORTH;
 		c.fill = GridBagConstraints.NONE;
 		c.insets = new Insets(5, 5, 0, 0);
 		c.weighty = 1;
 		c.gridheight = 2;
-		northPanel.add(northLabel, c);
+		c.gridwidth = 2; //header label should be centered, so fill the whole row with the panel
+		mainPanel.add(headerLabel, c);
 
 		c.anchor = GridBagConstraints.EAST;
 		c.gridx++;
@@ -603,7 +605,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 			});
 
-			northPanel.add(m_firefox, c);
+			mainPanel.add(m_firefox, c);
 		}
 
 		//northPanel.add(m_pnlVersion, c);
@@ -615,7 +617,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
 		c.insets = new Insets(5, 10, 5, 10);
-		northPanel.add(new JSeparator(), c);
+		mainPanel.add(new JSeparator(), c);
 
 		GridBagLayout gbl1 = new GridBagLayout();
 		GridBagConstraints c1 = new GridBagConstraints();
@@ -764,7 +766,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.gridy++;
 		c.gridx = 0;
 		c.anchor = GridBagConstraints.WEST;
-		northPanel.add(m_panelAnonService, c);
+		mainPanel.add(m_panelAnonService, c);
 
 //------------------------------------------------------
 		c.gridwidth = 2;
@@ -772,7 +774,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.gridy++;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
-		northPanel.add(new JSeparator(), c);
+		mainPanel.add(new JSeparator(), c);
 
 //------------------ Anon Panel
 		m_flippingpanelAnon = new FlippingPanel(this);
@@ -906,11 +908,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_flippingpanelAnon.setFlipped(true);
 		if (m_bIsSimpleView)
 		{
-			northPanel.add(m_flippingpanelAnon.getFullPanel(), c);
+			mainPanel.add(m_flippingpanelAnon.getFullPanel(), c);
 		}
 		else
 		{
-			northPanel.add(m_flippingpanelAnon, c);
+			mainPanel.add(m_flippingpanelAnon, c);
 		}
 
 //-----------------------------------------------------------
@@ -919,7 +921,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.gridy++;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
-		northPanel.add(new JSeparator(), c);
+		mainPanel.add(new JSeparator(), c);
 
 		m_labelOwnActivity = new JLabel(JAPMessages.getString("ngActivity"), SwingConstants.RIGHT);
 //------------------ Payment Panel
@@ -933,11 +935,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			m_flippingPanelPayment.setFlipped(false);
 			if (m_bIsSimpleView)
 			{
-				northPanel.add(m_flippingPanelPayment.getSmallPanel(), c);
+				mainPanel.add(m_flippingPanelPayment.getSmallPanel(), c);
 			}
 			else
 			{
-				northPanel.add(m_flippingPanelPayment, c);
+				mainPanel.add(m_flippingPanelPayment, c);
 			}
 //-----------------------------------------------------------
 			// Separator
@@ -946,7 +948,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			c.gridy++;
 			c.fill = GridBagConstraints.HORIZONTAL;
 			c.weightx = 1;
-			northPanel.add(new JSeparator(), c);
+			mainPanel.add(new JSeparator(), c);
 		}
 //-----------------------------------------------------------
 
@@ -1086,11 +1088,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.gridy++;
 		if (m_bIsSimpleView)
 		{
-			northPanel.add(m_flippingpanelOwnTraffic.getSmallPanel(), c);
+			mainPanel.add(m_flippingpanelOwnTraffic.getSmallPanel(), c);
 		}
 		else
 		{
-			northPanel.add(m_flippingpanelOwnTraffic, c);
+			mainPanel.add(m_flippingpanelOwnTraffic, c);
 		}
 
 //-----------------------------------------------------------
@@ -1099,7 +1101,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.gridy++;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
-		northPanel.add(new JSeparator(), c);
+		mainPanel.add(new JSeparator(), c);
 
 // Forwarder Panel
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -1109,7 +1111,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_flippingpanelForward = buildForwarderPanel();
 		if (!m_bIsSimpleView)
 		{
-			northPanel.add(m_flippingpanelForward, c);
+			mainPanel.add(m_flippingpanelForward, c);
 
 //-----------------------------------------------------------
 			c.gridwidth = 2;
@@ -1117,7 +1119,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			c.gridy++;
 			c.fill = GridBagConstraints.HORIZONTAL;
 			c.weightx = 1;
-			northPanel.add(new JSeparator(), c);
+			mainPanel.add(new JSeparator(), c);
 		}
 //Status
 
@@ -1137,7 +1139,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		constraints.gridx = 1;
 		constraints.anchor = GridBagConstraints.EAST;
 		panelTmp.add(m_buttonDeleteMessage, constraints);
-		northPanel.add(panelTmp, c);
+		mainPanel.add(panelTmp, c);
 		//northPanel.add(m_buttonDeleteMessage, c);
 
     	//register as MessageListener with all existing accounts
@@ -1233,10 +1235,10 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JAPUtil.setMnemonic(m_btnAssistant, JAPMessages.getString(MSG_MN_ASSISTANT));
 
 		c.gridy++;
-		northPanel.add(buttonPanel, c);
+		mainPanel.add(buttonPanel, c);
 
 		getContentPane().setBackground(buttonPanel.getBackground());
-		getContentPane().add(northPanel, BorderLayout.CENTER);
+		getContentPane().add(mainPanel, BorderLayout.CENTER);
 
 		/*if (!JAPModel.isSmallDisplay())
 		 {
