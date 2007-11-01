@@ -567,7 +567,9 @@ public class PaymentMainPanel extends FlippingPanel
 							{
 								m_BalanceText.setText(JAPMessages.getString(AccountSettingsPanel.
 									MSG_NO_TRANSACTION));
-								if (activeAccount.getTransCerts().size() > 0)
+								if (activeAccount.getTransCerts().size() > 0 &&
+									!now.after(new Timestamp(activeAccount.getCreationTime().getTime() +
+									AccountSettingsPanel.TRANSACTION_EXPIRATION)))
 								{
 									m_BalanceText.setToolTipText(JAPMessages.getString(AccountSettingsPanel.
 										MSG_SHOW_TRANSACTION_DETAILS));
