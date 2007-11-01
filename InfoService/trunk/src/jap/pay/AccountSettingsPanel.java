@@ -156,6 +156,8 @@ import java.util.Hashtable;
 public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	ListSelectionListener, Observer, IPaymentListener
 {
+	public static final long TRANSACTION_EXPIRATION = 1000 * 60 * 60 * 24 * 14; // two weeks
+
 	protected static final String MSG_ACCOUNT_FLAT_VOLUME = AccountSettingsPanel.class.
 		getName() + "_account_flat_volume";
 
@@ -1271,7 +1273,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				else if (balance.getSpent() == 0 && !expired)
 				{
 					m_labelVolume.setText(JAPMessages.getString(MSG_NO_TRANSACTION));
-					if (selectedAccount.getTransCerts().size() > 0)
+					if (selectedAccount.getTransCerts().size() > 0 &&
+						!now.after(new Timestamp(selectedAccount.getCreationTime().getTime() +
+												 TRANSACTION_EXPIRATION)))
 					{
 						m_labelVolume.setToolTipText(JAPMessages.getString(MSG_SHOW_TRANSACTION_DETAILS));
 						m_labelVolume.setForeground(Color.blue);
