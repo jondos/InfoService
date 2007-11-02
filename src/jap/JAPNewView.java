@@ -539,7 +539,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		// "NORTH": Image
 		ImageIcon headerImage = GUIUtils.loadImageIcon("JonDo.png", true, false);
 		JLabel headerLabel = new JLabel(headerImage);
-		headerLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		//headerLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		JPanel mainPanel = new JPanel();
 		GridBagLayout gbl = new GridBagLayout();
 		GridBagConstraints c = new GridBagConstraints();
@@ -549,7 +549,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c.insets = new Insets(5, 5, 0, 0);
 		c.weighty = 1;
 		c.gridheight = 2;
-		c.gridwidth = 2; //header label should be centered, so fill the whole row with the panel
+		//c.gridwidth = 2; //header label should be centered, so fill the whole row with the panel
 		mainPanel.add(headerLabel, c);
 
 		c.anchor = GridBagConstraints.EAST;

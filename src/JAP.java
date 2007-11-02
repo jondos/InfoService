@@ -460,7 +460,7 @@ public class JAP
 		{
 			m_controller.setPortableMode(true);
 			firepath = getArgumentValue("--portable");
-			if (isArgumentSet("--portable-browserprofile"))
+			if (isArgumentSet("--portable-browserprofile") && firepath != null)
 			{
 				profilepath = getArgumentValue("--portable-browserprofile");
 				m_firefoxCommand = firepath + " -profile " + profilepath;
@@ -469,7 +469,7 @@ public class JAP
 			{
 				m_firefoxCommand = firepath;
 			}
-			if (isArgumentSet("--portable-help-path"))
+			if (isArgumentSet("--portable-help-path") && m_firefoxCommand != null)
 			{
 				m_firefoxCommand += " " + getArgumentValue("--portable-help-path");
 			}
