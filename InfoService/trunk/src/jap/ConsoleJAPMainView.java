@@ -61,6 +61,10 @@ public class ConsoleJAPMainView implements IJAPMainView
 	{
 	}
 
+	public void showConfigDialog()
+	{
+	}
+	
 	public void showConfigDialog(String card, Object a_value)
 	{
 	}

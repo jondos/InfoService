@@ -26,6 +26,10 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISI
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 */
 import jap.JAPController;
+import com.apple.eawt.Application;
+import com.apple.eawt.ApplicationAdapter;
+import com.apple.eawt.ApplicationEvent;
+
 public class JAPMacintosh extends JAP {
 
 	JAPMacintosh(String[] argv) {
@@ -33,12 +37,42 @@ public class JAPMacintosh extends JAP {
 	}
 
 	protected void registerMRJHandlers() {
+		try
+		{
+			Application app=Application.getApplication();
+			app.addApplicationListener(new AppListener());
+			app.addPreferencesMenuItem();
+			app.setEnabledAboutMenu(true);
+			app.setEnabledPreferencesMenu(true);
+		}
+		catch(Exception e)
+		{
 		//Register MRJ handlers for about and quit.
 		MRJI IMRJI = new MRJI();
 		com.apple.mrj.MRJApplicationUtils.registerQuitHandler(IMRJI);
 		com.apple.mrj.MRJApplicationUtils.registerAboutHandler(IMRJI);
+		}
 	}
 
+	class AppListener extends ApplicationAdapter
+	{
+		public void handleAbout(ApplicationEvent event)
+		{
+			JAPController.aboutJAP();
+			event.setHandled(true);
+		}
+
+		public void handleQuit(ApplicationEvent event)
+		{
+			event.setHandled(true);
+			JAPController.goodBye(true);
+		}
+		public void handlePreferences(ApplicationEvent event)
+		{
+			event.setHandled(true);
+			JAPController.getInstance().getView().showConfigDialog();
+		}		
+}
 	// Inner class defining the MRJ Interface
 	class MRJI implements com.apple.mrj.MRJQuitHandler, com.apple.mrj.MRJAboutHandler
 	{
