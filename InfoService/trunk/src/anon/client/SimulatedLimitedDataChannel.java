@@ -37,35 +37,35 @@ import logging.LogLevel;
 import logging.LogType;
 
 
-/** 
+/**
  * @author Stefan Lieske
  */
 public class SimulatedLimitedDataChannel extends AbstractDataChannel implements Runnable {
 
   private static final short FLAG_CHANNEL_DATA  = 0x0000;
-  
+
   private static final short FLAG_CHANNEL_CLOSE = 0x0001;
 
   private static final short FLAG_CHANNEL_OPEN  = 0x0008;
 
-  
+
   private Object m_internalSynchronization;
-  
+
   private boolean m_channelOpened;
-  
+
   private int m_downstreamPackets;
-  
+
   private long m_channelTimeout;
-  
+
   private int m_receivedPackets;
-  
+
   Thread m_timeoutSupervisionThread;
-  
+
   Object m_timeoutSynchronization;
-  
+
   private volatile boolean m_channelClosed;
-  
-  
+
+
   public SimulatedLimitedDataChannel(int a_channelId, Multiplexer a_parentMultiplexer, AbstractDataChain a_parentDataChain, MixCipherChain a_mixCipherChain, int a_downstreamPackets, long a_channelTimeout) {
     super(a_channelId, a_parentMultiplexer, a_parentDataChain, a_mixCipherChain);
     m_internalSynchronization = new Object();
@@ -77,8 +77,8 @@ public class SimulatedLimitedDataChannel extends AbstractDataChannel implements 
     m_timeoutSynchronization = new Object();
     m_channelClosed = false;
   }
-  
-  
+
+
   public void organizeChannelClose() {
     synchronized (m_internalSynchronization) {
       if (!m_channelOpened) {
@@ -90,9 +90,9 @@ public class SimulatedLimitedDataChannel extends AbstractDataChannel implements 
         /* send a close-channel message via the message-queue */
         getChannelMessageQueue().addChannelMessage(new InternalChannelMessage(InternalChannelMessage.CODE_CHANNEL_CLOSED, null));
       }
-    }   
+    }
   }
- 
+
   public boolean processSendOrder(DataChainSendOrderStructure a_order) {
     synchronized (m_internalSynchronization) {
       if (!m_channelOpened) {
@@ -118,14 +118,14 @@ public class SimulatedLimitedDataChannel extends AbstractDataChannel implements 
     synchronized (m_timeoutSynchronization) {
       if (!m_channelClosed) {
         LogHolder.log(LogLevel.ERR, LogType.NET, "SimulatedLimitedDataChannel: multiplexerClosed(): Multiplexer closed before channel has received all packets.");
-        getChannelMessageQueue().addChannelMessage(new InternalChannelMessage(InternalChannelMessage.CODE_CHANNEL_EXCEPTION, null));        
+        getChannelMessageQueue().addChannelMessage(new InternalChannelMessage(InternalChannelMessage.CODE_CHANNEL_EXCEPTION, null));
         m_channelClosed = true;
         m_timeoutSynchronization.notify();
       }
     }
   }
-  
-  
+
+
   protected void handleReceivedPacket(MixPacket a_mixPacket) {
     m_receivedPackets++;
     synchronized (m_timeoutSynchronization) {
@@ -137,7 +137,7 @@ public class SimulatedLimitedDataChannel extends AbstractDataChannel implements 
              * message-queue
              */
             LogHolder.log(LogLevel.ALERT, LogType.NET, "SimulatedLimitedDataChannel: handleReceivedPacket(): Some packets are missing on channel.");
-            getChannelMessageQueue().addChannelMessage(new InternalChannelMessage(InternalChannelMessage.CODE_CHANNEL_EXCEPTION, null));      
+            getChannelMessageQueue().addChannelMessage(new InternalChannelMessage(InternalChannelMessage.CODE_CHANNEL_EXCEPTION, null));
           }
           /* if close bit is set -> close the channel via the timeout-thread */
           m_channelClosed = true;
@@ -150,7 +150,7 @@ public class SimulatedLimitedDataChannel extends AbstractDataChannel implements 
              * the message queue
              */
             LogHolder.log(LogLevel.ALERT, LogType.NET, "SimulatedLimitedDataChannel: handleReceivedPacket(): More packets on channel received than allowed.");
-            getChannelMessageQueue().addChannelMessage(new InternalChannelMessage(InternalChannelMessage.CODE_CHANNEL_EXCEPTION, null));      
+            getChannelMessageQueue().addChannelMessage(new InternalChannelMessage(InternalChannelMessage.CODE_CHANNEL_EXCEPTION, null));
             /* close the channel via the timeout-thread */
             m_channelClosed = true;
             m_timeoutSynchronization.notify();
@@ -173,12 +173,12 @@ public class SimulatedLimitedDataChannel extends AbstractDataChannel implements 
       if (!m_channelClosed) {
         /* timeout occured -> send an exception */
         LogHolder.log(LogLevel.ALERT, LogType.NET, "SimulatedLimitedDataChannel: run(): Channel-timeout occured.");
-        getChannelMessageQueue().addChannelMessage(new InternalChannelMessage(InternalChannelMessage.CODE_CHANNEL_EXCEPTION, null));              
+        getChannelMessageQueue().addChannelMessage(new InternalChannelMessage(InternalChannelMessage.CODE_CHANNEL_EXCEPTION, null));
       }
       /* in every case send a close-message and delete the channel from the channel-table */
       getChannelMessageQueue().addChannelMessage(new InternalChannelMessage(InternalChannelMessage.CODE_CHANNEL_CLOSED, null));
     }
     deleteChannel();
   }
-  
+
 }

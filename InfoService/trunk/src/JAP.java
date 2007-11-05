@@ -139,7 +139,7 @@ public class JAP
 	public void startJAP()
 	{
 		final String msg =
-			"JAP must run with a 1.1.3 or higher version Java!\nYou will find more information at the JAP webpage!\nYour Java Version: ";
+			"JAP/JonDo must run with a 1.1.3 or higher version Java!\nYou will find more information at the JAP webpage!\nYour Java Version: ";
 		String javaVersion = System.getProperty("java.version");
 		String vendor = System.getProperty("java.vendor");
 		String os = System.getProperty("os.name");
@@ -152,7 +152,7 @@ public class JAP
 
 		if (isArgumentSet("--version") || isArgumentSet("-v"))
 		{
-			System.out.println("JAP version: " + JAPConstants.aktVersion + "\n" +
+			System.out.println("JAP/JonDo version: " + JAPConstants.aktVersion + "\n" +
 							   "Java Vendor: " + vendor + "\n" +
 							   "Java Version: " + javaVersion + "\n");
 			System.exit(0);
@@ -160,7 +160,7 @@ public class JAP
 
 		if (!JAPConstants.m_bReleasedVersion)
 		{
-			System.out.println("Starting up JAP version " + JAPConstants.aktVersion + ". (" + javaVersion +
+			System.out.println("Starting up JAP/JonDo version " + JAPConstants.aktVersion + ". (" + javaVersion +
 							   "/" + vendor + "/" + os +
 							   (mrjVersion != null ? "/" + mrjVersion : "") + ")");
 		}
@@ -176,8 +176,8 @@ public class JAP
 		{
 			System.out.println("Usage:");
 			System.out.println("--help, -h:                  Show this text.");
-			System.out.println("--console:                   Start JonDo in console-only mode.");
-			System.out.println("--minimized, -m:             Minimize JonDo on startup.");
+			System.out.println("--console:                   Start JAP/JonDo in console-only mode.");
+			System.out.println("--minimized, -m:             Minimize JAP/JonDo on startup.");
 			System.out.println("--version, -v:               Print version information.");
 			System.out.println("--showDialogFormat           Show and set dialog format options.");
 			System.out.println("--noSplash, -s               Suppress splash screen on startup.");
