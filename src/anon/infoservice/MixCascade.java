@@ -153,16 +153,6 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 
 	/**
 	 * Maps the position of a Mix in a cascade to a concrete Mix ID.
-	 * <p>Überschrift: </p>
-	 *
-	 * <p>Beschreibung: </p>
-	 *
-	 * <p>Copyright: Copyright (c) 2001</p>
-	 *
-	 * <p>Organisation: </p>
-	 *
-	 * @author unbekannt
-	 * @version 1.0
 	 */
 	public static class MixPosition
 	{
