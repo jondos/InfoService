@@ -56,7 +56,7 @@ import anon.infoservice.IMutableProxyInterface;
 import anon.client.ITrustModel;
 import anon.util.Queue;
 import java.security.SignatureException;
-import jap.JAPModel;
+
 
 /**
  * This calls implements a proxy one can use for convienient access to the
