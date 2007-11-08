@@ -25,6 +25,7 @@
   <path id="classpath_xml-rpc" location="${classpath_xmlrpc_file_name}"/>
   <path id="classpath_java_mail" location="${build.libs}/mail.jar"/>
   <path id="classpath_mrj" location="${build.libs}/MRJClasses.zip"/>
+  <path id="classpath_aje" location="${build.libs}/AppleJavaExtensions.jar"/>
   <path id="classpath_jama" location="${build.libs}/jama.jar"/>
   <path id="classpath_swing" location="${build.libs}/swingall.jar"/>
   <path id="classpath_log4j" location="${classpath_log4j_file_name}"/>
@@ -38,6 +39,7 @@
     <path refid="classpath_jama"/>
     <path refid="classpath_log4j"/>
     <path refid="classpath_mrj"/>
+    <path refid="classpath_aje"/>
     <path refid="classpath_bouncycastle_jap"/>
   </path>
   <path id="java_1_1_boot_classes" location="${build.libs}/java_1_1_classes.zip"/>
@@ -60,6 +62,7 @@
     <get src="http://anon.inf.tu-dresden.de/develop/Jama.jar" verbose="true" dest="${build.libs}/jama.jar">    </get>
     <get src="http://anon.inf.tu-dresden.de/develop/log4j.jar" verbose="true" dest="${classpath_log4j_file_name}">    </get>
     <get src="http://anon.inf.tu-dresden.de/develop/MRJClasses.zip" verbose="true" dest="${build.libs}/MRJClasses.zip">    </get>
+    <get src="http://anon.inf.tu-dresden.de/develop/AppleJavaExtensions.jar" verbose="true" dest="${build.libs}/AppleJavaExtensions.jar">    </get>
     <get src="http://anon.inf.tu-dresden.de/develop/japdll.dll" verbose="true" dest="${build.libs}/japdll.dll">
     </get>
     <get src="http://anon.inf.tu-dresden.de/develop/japdllversion.txt" verbose="true" dest="${build.libs}/japdllversion.txt">
