@@ -1,47 +1,21 @@
 <html>
 <head>
 <link rel="stylesheet" type="text/css" href="../../xhelpfrms.css">
+<style type="text/css">
+<!--
+.Stil2 {color: #FF0000}
+.Stil3 {color: #FF6600}
+-->
+</style>
 </head>
 <body>
 <!--#include virtual="/header.html"-->
 <H2>Einstellungen des Browsers / Filters testen</H2>
-Im folgenden verwenden wir Testseiten, die uns erkennen lassen, ob der Browser (und, soweit vorhanden, der Filterproxy) richtig konfiguriert wurde.
-<br>Sie k&ouml;nnen beide Testseiten anschauen oder sich f&uuml;r eine entscheiden.<P>
-<B>Seite 1</B><br>
-<A href="http://www.leader.ru/secure/who.html">Diese Seite (leader.ru)</A> gibt einen schnellen &Uuml;berblick &uuml;ber abgefangene HEADER-Informationen Ihres Browsers. Unter der &Uuml;berschrift <i>Collected Information</i> k&ouml;nnen Sie diese Informationen einsehen.
-Um erkennen zu k&ouml;nnen, welche Wirkung die Einstellungen haben, beachten Sie bitte folgendes Vorgehen:
-<OL>
-	<LI>Besuchen Sie die Seite zuerst ohne bzw. mit ausgeschaltetem JonDo  und <A href="noactive_general.html">Filterproxy</A> bzw. den <A href="noactive.html">korrekten Datenschutzeinstellungen f&uuml;r den Browser</A>. Schreiben Sie die Werte der folgenden Eigenschaften auf (oder merken Sie sie sich):
-	<br>
-	<br>
-	<OL type=I>
-		<LI><i>Reported remote address</i> (zeigt jetzt Ihre externe IP an)
-		<LI><i>Browser</i> (Die genaue Bezeichnung des Browsers samt Versionsnummer)
-		<LI><i>OS</i> (Ihr Betriebssystem)
-		<LI><i>Referer</i> (Die Seite, von der aus Sie auf diese Seite gekommen sind; wird m&ouml;glicherweise nicht angezeigt)
-	</OL>
-	Beachten Sie auch, wie viel Information &uuml;ber Ihr System unter dem Punkt <i>Additional Information</i> gesammelt wurde.
-	<P>
-  <LI>Besuchen Sie die Seite nun mit aktiviertem JonDo (und Filterproxy).
-	<OL type=I>
-		<LI>Sollte nicht die gleiche IP sein wie vorher
-		<LI>Die Daten sollten verf&auml;lscht (Firefox -> Opera) oder zumindest deutlich weniger detailliert sein.
-		<LI>Auch hier sollten falsche oder weniger detaillierte Informationen stehen.
-		<LI>Der Referer sollte entweder fehlen oder die aktuelle Seite anzeigen, nicht jedoch die Seite, die sie vorher besucht haben.
-	</OL>
-	Die zus&auml;tzlichen Informationen unter <i>Additional Information</i> sollten fast g&auml;nzlich verschwunden sein.
-</OL>
-<B>Seite 2</B><br>
-<A href="http://www.gurusheaven.de/index_sicherheit.html">Diese Seite (gurushaven.de)</A> f&uuml;hrt ebenfalls Tests durch und gibt dazu Erkl&auml;rungen ab.
-Klicken Sie links im Men&uuml; auf <i>Anonymit&auml;ts-Test</i> und dann auf den Unterpunkt <i>Zum Anonymit&auml;ts-Test</i>. Auch diese Seite sollte man einmal mit  JonDo und <A href="noactive_general.html">Filterproxy</A> bzw. den <A href="noactive.html">korrekten Datenschutzeinstellungen im Browser</A> betrachten und einmal ohne, um den Unterschied sehen zu k&ouml;nnen.
-<br>
-Besonders bei den folgenden Punkten sollten Unterschiede zu sehen sein:
-<UL>
-	<LI><b>Detaillierte Anzeige Deiner Bildschirmeinstellungen:</b> Hier sollten die angezeigten Werte falsch sein.
-	<LI><b>Anzeige Deiner (&ouml;ffentlichen) IP-Adresse:</b> Diese Adresse sollte nicht die eigene externe IP-Adresse sein.
-	<LI><b>Anzeige Deiner "echten", privaten IP Adresse trotz NAT an der Firewall:</b> Dieses Java-Applet sollte deaktiviert worden sein. Bei Verwendung von Proxomitron wird ein Hinweis dazu angezeigt.
-	<LI><b>Anzeige des Referers (Referrer):</b> Der Referer sollte, wie dort beschrieben, "http://www.gurusheaven.de/security/anonymitaets_test.shtml" sein. Auch ein nicht vorhandener Referer ist besser als ein "echter", kann aber in seltenen F&auml;llen Probleme bereiten.
-</UL>
+<p>Im folgenden verwenden wir Testseiten, die uns erkennen lassen, ob der Browser (und, soweit vorhanden, der Filterproxy) richtig konfiguriert wurde.
+  JonDos empfiehlt den bereits fertig konfigurierten, portablen <a href="http://www.jondos.de/de/jondofox">JonDoFox</a> zum sicheren, anonymen Websurfen. Er ist als vollst&auml;ndiger Browser (Windows) oder als Firefox-Profil f&uuml;r alle Betriebssysteme verf&uuml;gbar und besteht alle Tests.</p>
+<p align="center"><a href="http://www.jondos.de/de/anontest">JonDos-Anonymit&auml;tstest</a><br>
+</p>
+<p align="left">Die Seite gibt einen schnellen &Uuml;berblick &uuml;ber alle IP-, Header- und sonstigen Informationen, die Ihr Browser an Webseiten sendet. Alle Felder sollten gr&uuml;n gef&auml;rbt oder farblos sein, <span class="Stil3">Orange</span> w&auml;re tolerierbar, <span class="Stil2">Rot</span> k&ouml;nnte verheerend f&uuml;r Ihre Anonymit&auml;t sein. Wenn Sie <span class="Stil3">Orange</span> oder<span class="Stil2"> Rote</span> Farben sehen, <strong>bewegen Sie den Mauszeiger</strong> &uuml;ber die jeweiligen Felder. Sie werden dann Hinweise und Erkl&auml;rungen als Popups erhalten.</p>
 <P>
 Sollten die Testergebnisse nicht den beschriebenen Anforderungen entsprechen, so kann das u.a. folgende Ursachen haben:
 <UL>
@@ -55,6 +29,8 @@ Sollten die Testergebnisse nicht den beschriebenen Anforderungen entsprechen, so
 
 Weitere Testseiten:
 <UL>
+<LI> <A href="http://www.leader.ru/secure/who.html">Leader.ru</A> &Uuml;berblick &uuml;ber verschiedene Header 
+<LI><A href="http://www.gurusheaven.de/index_sicherheit.html">Gurushaven.de</A> Sehr ausf&uuml;hrliche Beschreibungen von verschiedenen Tests 
 <LI><B><A href="http://www.whatismyip.com/">WhatIsMyIP</A></B> Zeigt die externe IP Adresse an.
 <LI><B><A href="https://www.astalavista.net/?cmd=net">Astalavista</A></B> Zeigt Verbindungsinformationen an (HTTPS)
 <LI><B><A href="http://proxyjudge.org/">Proxyjudge</A></B> Versucht, eine Aussage &uuml;ber das Anonymit&auml;tslevel zu machen (irrelevantes Bewertungsschema)
