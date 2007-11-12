@@ -354,7 +354,8 @@ public class SignatureVerifier implements IXMLEncodable
 				Vector rootCertificates = new Vector();
 				if ( (a_documentClass == DOCUMENT_CLASS_MIX) ||
 					(a_documentClass == DOCUMENT_CLASS_INFOSERVICE) ||
-				   (a_documentClass == DOCUMENT_CLASS_UPDATE))
+				   (a_documentClass == DOCUMENT_CLASS_UPDATE) ||
+				   (a_documentClass == DOCUMENT_CLASS_PAYMENT))
 				{
 					int rootType = JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX;
 					if (a_documentClass == DOCUMENT_CLASS_INFOSERVICE)
