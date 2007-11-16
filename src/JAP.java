@@ -454,24 +454,16 @@ public class JAP
 		}
 
 		// Set path to Firefox for portable JAP
-		String firepath="";
+		//String firepath="";
 		String profilepath = "";
 		if (isArgumentSet("--portable") )
 		{
 			m_controller.setPortableMode(true);
-			firepath = getArgumentValue("--portable");
-			if (isArgumentSet("--portable-browserprofile") && firepath != null)
+			m_firefoxCommand = getArgumentValue("--portable");
+			if (isArgumentSet("--portable-browserprofile") && m_firefoxCommand != null)
 			{
 				profilepath = getArgumentValue("--portable-browserprofile");
-				m_firefoxCommand = firepath + " -profile " + profilepath;
-			}
-			else
-			{
-				m_firefoxCommand = firepath;
-			}
-			if (isArgumentSet("--portable-help-path") && m_firefoxCommand != null)
-			{
-				m_firefoxCommand += " " + getArgumentValue("--portable-help-path");
+				m_firefoxCommand += " -profile " + profilepath;
 			}
 		}
 
@@ -480,7 +472,8 @@ public class JAP
 			m_controller.setPortableJava(true);
 		}
 
-
+		// keep this string unchangeable from "outside"
+		final String firefoxCommand = m_firefoxCommand;
 		AbstractOS.getInstance().init(new AbstractOS.IURLErrorNotifier()
 		{
 			boolean m_bReset = false;
@@ -498,15 +491,16 @@ public class JAP
 		{
 			public boolean openURL(URL a_url)
 			{
-				if (m_firefoxCommand == null || a_url == null)
+				if (firefoxCommand == null || a_url == null)
 				{
 					// no path to portable browser was given; use default
 					return false;
 				}
 				try
 				{
+					LogHolder.log(LogLevel.NOTICE, LogType.GUI, firefoxCommand + " " + a_url.toString());
 					Runtime.getRuntime().exec(new String[]
-											  {m_firefoxCommand, a_url.toString()});
+											  {firefoxCommand, a_url.toString()});
 					return true;
 				}
 				catch (Exception ex)
@@ -514,7 +508,15 @@ public class JAP
 				}
 				return false;
 			}
-			});
+		});
+
+		if (m_firefoxCommand != null)
+		{
+			if (isArgumentSet("--portable-help-path") && m_firefoxCommand != null)
+			{
+				m_firefoxCommand += " " + getArgumentValue("--portable-help-path");
+			}
+		}
 
 
 		String configFileName = null;
