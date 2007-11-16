@@ -69,7 +69,15 @@ public class WindowsOS extends AbstractOS
 
 	protected String getAsString(URL a_url)
 	{
-		return "\"" + super.getAsString(a_url) +"\"";
+		String strURL = super.getAsString(a_url);
+		if (new StringTokenizer(strURL).countTokens() > 1)
+		{
+			return "\"" + strURL +"\"";
+		}
+		else
+		{
+			return strURL;
+		}
 	}
 
 	public String getConfigPath()

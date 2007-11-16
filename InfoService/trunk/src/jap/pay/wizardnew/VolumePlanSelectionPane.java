@@ -250,12 +250,16 @@ import java.awt.Color;
 		m_c.insets = new Insets(0, 5, 0, 5);
 		m_c.gridy++;
 
-		String a_name = aPlan.getName();
-		// @todo show user's currency
+		String displayName = aPlan.getDisplayName();
+		if (displayName == null || displayName.equals("") )
+		{
+			displayName = aPlan.getName();
+		}
+		String internalName = aPlan.getName();
 
 		m_c.gridx = 0;
-		JRadioButton rb = new JRadioButton(a_name);
-		rb.setName(a_name);
+		JRadioButton rb = new JRadioButton(displayName);
+		rb.setName(internalName); //we need the unique INTERNAL name to later get the selected plan out of XMLVolumePlans
 		rb.addActionListener(this);
 		m_rbGroup.add(rb);
 		m_rootPanel.add(rb, m_c);
