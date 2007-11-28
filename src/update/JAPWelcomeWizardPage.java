@@ -59,6 +59,7 @@ import java.net.*;
 public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListener
 {
 	private static final String MSG_CHANGELOG_URL = JAPWelcomeWizardPage.class.getName() + "_changelogURL";
+	private static final String MSG_CHANGELOG_URL_BETA = JAPWelcomeWizardPage.class.getName() + "_changelogBetaURL";
 	private static final String MSG_CHANGELOG = JAPWelcomeWizardPage.class.getName() + "_changelog";
 	private static final String MSG_CHANGELOG_TT = JAPWelcomeWizardPage.class.getName() + "_changelogTT";
 
@@ -102,7 +103,16 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 		m_panelConstraints.gridwidth = 2;
 		try
 		{
-			final URL urlChangelog = new URL(JAPMessages.getString(MSG_CHANGELOG_URL));
+			URL tempURL;
+			if (a_versionInfo.getId().equals(JAPVersionInfo.ID_RELEASE))
+			{
+				tempURL = new URL(JAPMessages.getString(MSG_CHANGELOG_URL));
+			}
+			else
+			{
+				tempURL = new URL(JAPMessages.getString(MSG_CHANGELOG_URL_BETA));
+			}
+			final URL urlChangelog = tempURL;
 			JLabel tmpLabel = new JLabel(JAPMessages.getString(MSG_CHANGELOG));
 			tmpLabel.setToolTipText(JAPMessages.getString(MSG_CHANGELOG_TT));
 			tmpLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
