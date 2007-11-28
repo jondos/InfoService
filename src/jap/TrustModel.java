@@ -630,6 +630,15 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 		return m_trustPay;
 	}
 
+	public boolean isPaymentForced()
+	{
+		if (m_trustPay == TRUST_EXCLUSIVE)
+		{
+			return true;
+		}
+		return false;
+	}
+
 	public boolean isAdded()
 	{
 		return true;
