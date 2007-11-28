@@ -55,11 +55,12 @@ import java.awt.event.MouseEvent;
 import platform.AbstractOS;
 import java.net.URL;
 import java.net.*;
+import logging.*;
 
 public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListener
 {
 	private static final String MSG_CHANGELOG_URL = JAPWelcomeWizardPage.class.getName() + "_changelogURL";
-	private static final String MSG_CHANGELOG_URL_BETA = JAPWelcomeWizardPage.class.getName() + "_changelogBetaURL";
+	private static final String MSG_CHANGELOG_URL_BETA = JAPWelcomeWizardPage.class.getName() + "_changelogURLBeta";
 	private static final String MSG_CHANGELOG = JAPWelcomeWizardPage.class.getName() + "_changelog";
 	private static final String MSG_CHANGELOG_TT = JAPWelcomeWizardPage.class.getName() + "_changelogTT";
 
@@ -129,6 +130,7 @@ public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListe
 		}
 		catch (MalformedURLException ex)
 		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.GUI, ex);
 		}
 
 		m_panelConstraints.gridy = 1;
