@@ -28,6 +28,8 @@
 package jap.pay;
 
 import java.util.Date;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Vector;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -35,6 +37,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -44,30 +48,24 @@ import javax.swing.table.AbstractTableModel;
 
 import anon.pay.BIConnection;
 import anon.pay.PayAccount;
+import anon.pay.PaymentInstanceDBEntry;
+import anon.pay.xml.XMLErrorMessage;
+import anon.pay.xml.XMLPassivePayment;
+import anon.pay.xml.XMLPaymentOption;
+import anon.pay.xml.XMLPaymentOptions;
 import anon.pay.xml.XMLTransCert;
 import anon.pay.xml.XMLTransactionOverview;
+import anon.util.IXMLEncodable;
 import gui.GUIUtils;
 import gui.JAPMessages;
 import gui.dialog.JAPDialog;
+import gui.dialog.WorkerContentPane;
 import jap.JAPConstants;
+import jap.JAPModel;
+import jap.JAPUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import jap.JAPUtil;
-import jap.JAPModel;
-import anon.pay.xml.XMLPassivePayment;
-import anon.pay.xml.XMLPaymentOptions;
-import java.util.Enumeration;
-import anon.pay.xml.XMLPaymentOption;
-import java.util.Hashtable;
-import anon.util.IXMLEncodable;
-import anon.pay.xml.XMLErrorMessage;
-import jap.JAPController;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import anon.util.XMLUtil;
-import anon.pay.PaymentInstanceDBEntry;
-import gui.dialog.WorkerContentPane;
 
 /** This dialog shows an overview of transaction numbers for an account
  *
@@ -101,7 +99,10 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 	private static final String MSG_PAYMENTMETHOD = TransactionOverviewDialog.class.getName() + "_paymentmethod";
 	private static final String MSG_USEDSTATUS = TransactionOverviewDialog.class.getName() + "_usedstatus";
 	private static final String MSG_OPENSTATUS = TransactionOverviewDialog.class.getName() + "_openstatus";
+	private static final String MSG_EXPIREDSTATUS = TransactionOverviewDialog.class.getName() + "_expiredstatus";
 	private static final String MSG_PAYMENT_COMPLETED = TransactionOverviewDialog.class.getName() + "_paymentcompleted";
+	private static final String MSG_PAYMENT_EXPIRED = TransactionOverviewDialog.class.getName() + "_paymentexpired";
+	private static final String MSG_NO_OPEN_TRANSFERS = TransactionOverviewDialog.class.getName() + "_noopentransfers";
 
 	private JTable m_transactionsTable;
 	private JButton m_okButton, m_reloadButton, m_detailsButton;
@@ -118,20 +119,28 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 		super(GUIUtils.getParentWindow(a_parent.getRootPanel()), title, modal);
 		m_parent = a_parent;
 
-		try
+
+		if (a_accounts.size() == 0) //no accounts/transactions to show -> no sense showing an empty dialog, quit with a message
 		{
-			m_accounts = a_accounts;
-			setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-			buildDialog();
-			setModal(true);
-			setSize(700, 300);
-			//pack(); //do not call pack() here, otherwise setSize() has no effect
-			setVisible(true);
+			JAPDialog.showMessageDialog(this,JAPMessages.getString(MSG_NO_OPEN_TRANSFERS));
 		}
-		catch (Exception e)
+		else
 		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
-						  "Could not create TransactionOverviewDialog: " + e.getMessage());
+			try
+			{
+				m_accounts = a_accounts;
+				setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+				buildDialog();
+				setModal(true);
+				setSize(700, 300);
+				//pack(); //do not call pack() here, otherwise setSize() has no effect
+				setVisible(true);
+			}
+			catch (Exception e)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY,
+							  "Could not create TransactionOverviewDialog: " + e.getMessage());
+			}
 		}
 	}
 
@@ -307,9 +316,14 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 			String status = (String) m_transactionsTable.getModel().getValueAt(selectedRow,6);
 			String planName = (String) m_transactionsTable.getModel().getValueAt(selectedRow,4);
 			boolean isCompleted = false;
+			boolean isExpired = false;
 			if (status.equalsIgnoreCase(JAPMessages.getString(MSG_USEDSTATUS)) )
 			{
 				isCompleted = true;
+			}
+			else if (status.equalsIgnoreCase(JAPMessages.getString(MSG_EXPIREDSTATUS)) )
+			{
+				isExpired = true;
 			}
 			final PayAccount m_account = (PayAccount) m_accounts.elementAt(0); //just to get it to compile
 
@@ -385,7 +399,12 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 					if (isCompleted)
 					{
 					    JAPDialog.showMessageDialog(this,JAPMessages.getString(MSG_PAYMENT_COMPLETED));
-					} else
+					}
+					else if (isExpired)
+					{
+						JAPDialog.showMessageDialog(this,JAPMessages.getString(MSG_PAYMENT_EXPIRED));
+					}
+					else
 					{
 						showActivePaymentDialog(this, transferNumber, amount, m_account, planName);
 					}
@@ -440,9 +459,9 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 			for (Enumeration options = allOptions.getAllOptions().elements();options.hasMoreElements(); )
 			{
 				XMLPaymentOption curOption = (XMLPaymentOption) options.nextElement();
-				if (!curOption.getType().equals("active"))
+				if (curOption.getType().equals("passive") )
 				{
-					continue; //we only need data for active payment options
+					continue; //we only need data for active and mixed payment options
 				}
 				Hashtable curOptionData = new Hashtable();
 				curOptionData.put("name",curOption.getName());
@@ -580,16 +599,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 					//show as open or used, with localized String
 					try
 					{
-						String used = (String) transactionData.get(XMLTransactionOverview.KEY_USED);
-						boolean isUsed = (new Boolean(used)).booleanValue();
-						if (isUsed)
-						{
-							return JAPMessages.getString(MSG_USEDSTATUS);
-						}
-						else
-						{
-							return JAPMessages.getString(MSG_OPENSTATUS);
-						}
+						return transactionStatus(transactionData);
 					}
 					catch (Exception e)
 					{
@@ -597,6 +607,32 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 					}
 				default:
 					return JAPMessages.getString("unknown");
+			}
+		}
+
+	    private String transactionStatus(Hashtable a_transactionData)
+		{
+			String used = (String) a_transactionData.get(XMLTransactionOverview.KEY_USED);
+			boolean isUsed = (new Boolean(used)).booleanValue();
+			if (isUsed)
+			{
+				return JAPMessages.getString(MSG_USEDSTATUS);
+			}
+			else
+			{
+				//do not show exired paysafecard payments as open
+				String paymentMethod = (String) a_transactionData.get(XMLTransactionOverview.KEY_PAYMENTMETHOD);
+				if (paymentMethod.toUpperCase().indexOf("PAYSAFECARD") != -1)
+				{
+					String creationDateAsString = (String) a_transactionData.get(XMLTransactionOverview.KEY_CREATIONDATE);
+					long dateAsMillis = Long.parseLong(creationDateAsString);
+					int timeoutInMinutes = JAPConstants.PAYSAFECARD_TIMEOUT;
+					if (dateAsMillis + (timeoutInMinutes * 60 * 1000)  < System.currentTimeMillis() )
+					{
+						return JAPMessages.getString(MSG_EXPIREDSTATUS);
+					}
+				}
+				return JAPMessages.getString(MSG_OPENSTATUS);
 			}
 		}
 

@@ -51,6 +51,7 @@ import anon.util.captcha.IImageEncodedCaptcha;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import anon.pay.xml.XMLAccountInfo;
 
 
 /**
@@ -514,11 +515,15 @@ public class PayAccountsFile extends Observable implements IXMLEncodable, IBICon
 		while (allAccounts.hasMoreElements() )
 		{
 			PayAccount theAccount = (PayAccount) allAccounts.nextElement();
-			XMLBalance existingBalance = theAccount.getAccountInfo().getBalance();
-			PayMessage existingMessage = existingBalance.getMessage();
-			if (existingMessage != null && !existingMessage.getShortMessage().equals(""))
+			XMLAccountInfo info = theAccount.getAccountInfo();
+			if (info != null)
 			{
-				ms_AccountsFile.fireMessageReceived(existingMessage);
+				XMLBalance existingBalance = theAccount.getAccountInfo().getBalance();
+				PayMessage existingMessage = existingBalance.getMessage();
+				if (existingMessage != null && !existingMessage.getShortMessage().equals(""))
+				{
+					ms_AccountsFile.fireMessageReceived(existingMessage);
+				}
 			}
 		}
 	}

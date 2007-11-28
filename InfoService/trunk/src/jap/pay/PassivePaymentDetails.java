@@ -107,7 +107,7 @@ public class PassivePaymentDetails extends JAPDialog implements ActionListener
 
 	}
 
-	private JPanel buildTransactionDetailsPanel(long accountnumber, long transfernumber, double amount)
+	private JPanel buildTransactionDetailsPanel(long accountnumber, long transfernumber, long amount)
 	{
 		JPanel transactionPanel = new JPanel();
 		BoxLayout verticalBoxLayout = new BoxLayout(transactionPanel,BoxLayout.Y_AXIS);
@@ -125,8 +125,7 @@ public class PassivePaymentDetails extends JAPDialog implements ActionListener
 		transactionPanel.add(tanLabel,m_c);
 
 
-		long amountInCents = Math.round(amount * 100);
-		String amountString = JAPUtil.formatEuroCentValue(amountInCents);
+		String amountString = JAPUtil.formatEuroCentValue(amount);
 		String amountDesignation = JAPMessages.getString(MSG_AMOUNT);
 		JLabel amountLabel = new JLabel(amountDesignation + ": " + amountString);
 		transactionPanel.add(amountLabel, m_c);

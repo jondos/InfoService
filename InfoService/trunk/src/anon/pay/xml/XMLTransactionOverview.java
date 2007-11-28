@@ -27,15 +27,20 @@
  */
 package anon.pay.xml;
 
+import java.io.ByteArrayInputStream;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
+import java.sql.Timestamp;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 /**
  * This class is used by JAP to ask the Payment Instance about
@@ -63,6 +68,7 @@ public class XMLTransactionOverview implements IXMLEncodable
 	public static final String KEY_ACCOUNTNUMBER = "accountnumber";
 	public static final String KEY_TAN = "tan";
 	public static final String KEY_DATE = "date";
+	public static final String KEY_CREATIONDATE = "created_on";
 	public static final String KEY_AMOUNT = "amount";
 	public static final String KEY_VOLUMEPLAN = "volumeplan";
 	public static final String KEY_PAYMENTMETHOD = "paymentmethod";
@@ -115,7 +121,6 @@ public class XMLTransactionOverview implements IXMLEncodable
 			String tan = curTanElem.getFirstChild().getNodeValue();
 			tan = XMLUtil.parseValue(curTanElem,"");
 
-			String debug = XMLUtil.toString(curTanElem);
 			transactionData.put(KEY_TAN,tan);
 
 			String used;
@@ -128,6 +133,17 @@ public class XMLTransactionOverview implements IXMLEncodable
 				used = "false";
 			}
 			transactionData.put(KEY_USED,used);
+
+			String creationDate;
+			if ( curTanElem.getAttribute(KEY_CREATIONDATE) != null)
+			{
+				creationDate = curTanElem.getAttribute(KEY_CREATIONDATE);
+			}
+			else
+			{
+				creationDate = "0";
+			}
+			transactionData.put(KEY_CREATIONDATE, creationDate);
 
 			String date;
 			if ( curTanElem.getAttribute("date") != null)
@@ -202,6 +218,10 @@ public class XMLTransactionOverview implements IXMLEncodable
 			Hashtable curTransaction = (Hashtable) tans.nextElement();
 			elem = a_doc.createElement("TransferNumber");
 
+			String creationDate = (String) curTransaction.get(KEY_CREATIONDATE);
+			creationDate = (creationDate == null)?"":creationDate;
+			elem.setAttribute(KEY_CREATIONDATE, creationDate);
+
 			String accountNumber = (String) curTransaction.get(KEY_ACCOUNTNUMBER);
 			accountNumber = (accountNumber == null)?"":accountNumber;
 			elem.setAttribute("accountnumber",accountNumber);
@@ -260,7 +280,7 @@ public class XMLTransactionOverview implements IXMLEncodable
         if (theTransaction != null) //nothing to be done if no transaction found,will return false
 		{
 			String usedString = (String) theTransaction.get(KEY_USED);
-			used = (new Boolean(usedString)).booleanValue();
+			used = Boolean.valueOf(usedString).booleanValue();
 		}
 		return used;
 	}
@@ -277,11 +297,18 @@ public class XMLTransactionOverview implements IXMLEncodable
 		{
 			Hashtable transactionData = (Hashtable) allTans.nextElement();
 			String tan = (String) transactionData.get(KEY_TAN);
-			long curTan = Long.parseLong(tan);
-			if (curTan == a_transactionNumber)
+			try
 			{
-				matchingTransaction = transactionData;
-				break;
+				long curTan = Long.parseLong(tan);
+				if (curTan == a_transactionNumber)
+				{
+					matchingTransaction = transactionData;
+					break;
+				}
+			}
+			catch (NumberFormatException a_e)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.PAY, a_e);
 			}
 		}
 		return matchingTransaction;
@@ -293,7 +320,7 @@ public class XMLTransactionOverview implements IXMLEncodable
 	 * @param a_used boolean
 	 * @param a_usedDate long
 	 */
-	public void setTransactionData(long a_tan, boolean a_used, long a_usedDate, long amount, long accountnumber, String volumePlan, String paymentMethod)
+	public void setTransactionData(long a_tan, long a_creationDate, boolean a_used, long a_usedDate, long amount, long accountnumber, String volumePlan, String paymentMethod)
 	{
 	    //prevent null values (might very well happen for older accounts that didn't record that data, etc)
         String strAccountNumber;
@@ -314,6 +341,17 @@ public class XMLTransactionOverview implements IXMLEncodable
 		{
 			strAmount = (new Long(amount)).toString();
 		}
+
+	    String strCreationDate;
+		if (a_creationDate == 0)
+		{
+			strCreationDate = new String("");
+		}
+		else
+		{
+			strCreationDate = (new Long(a_creationDate)).toString();
+		}
+
 		String strUsedDate;
 		if (a_usedDate == 0)
 		{
@@ -335,6 +373,7 @@ public class XMLTransactionOverview implements IXMLEncodable
 		Hashtable affectedTransaction = getDataForTransaction(a_tan);
 		affectedTransaction.put(KEY_USED,(new Boolean(a_used)).toString() );
 		affectedTransaction.put(KEY_DATE, strUsedDate );
+		affectedTransaction.put(KEY_CREATIONDATE, strCreationDate);
 		affectedTransaction.put(KEY_ACCOUNTNUMBER, strAccountNumber );
 		affectedTransaction.put(KEY_AMOUNT, strAmount );
 		affectedTransaction.put(KEY_VOLUMEPLAN, volumePlan);

@@ -76,7 +76,8 @@ import anon.pay.xml.XMLGenericStrings;
 
 public class BIConnection implements ICaptchaSender
 {
-	public static final int TIMEOUT_DEFAULT = 60000;
+	public static final int TIMEOUT_DEFAULT = 30000;
+	public static final int TIMEOUT_MAX = 100000;
 
 	public static final String XML_ATTR_CONNECTION_TIMEOUT = "timeout";
 
@@ -111,7 +112,14 @@ public class BIConnection implements ICaptchaSender
 	{
 		if (a_timeout >= 0)
 		{
-			ms_connectionTimeout = a_timeout;
+			if (a_timeout > TIMEOUT_MAX)
+			{
+				ms_connectionTimeout = TIMEOUT_MAX;
+			}
+			else
+			{
+				ms_connectionTimeout = a_timeout;
+			}
 		}
 		else
 		{

@@ -1702,8 +1702,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 				try
 				{
 					Element elemTor = (Element) XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_TOR);
-					JAPModel.getInstance().setTorActivated(
-						XMLUtil.parseAttribute(elemTor, JAPModel.XML_ATTR_ACTIVATED, false));
+					if (JAPConstants.m_bReleasedVersion)
+					{
+						JAPModel.getInstance().setTorActivated(false);
+					}
+					else
+					{
+						JAPModel.getInstance().setTorActivated(
+							XMLUtil.parseAttribute(elemTor, JAPModel.XML_ATTR_ACTIVATED, false));
+					}
 					Element elem = (Element) XMLUtil.getFirstChildByName(elemTor,
 						JAPConstants.CONFIG_MAX_CONNECTIONS_PER_ROUTE);
 					setTorMaxConnectionsPerRoute(XMLUtil.parseValue(elem,
@@ -1725,8 +1732,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 				catch (Exception ex)
 				{
-					LogHolder.log(LogLevel.INFO, LogType.MISC,
-								  "JAPController: loadConfigFile: Error loading Tor configuration.");
+					LogHolder.log(LogLevel.ERR, LogType.MISC,
+								  "Error loading Tor configuration.", ex);
 				}
 
 				/*loading Mixminion settings*/
@@ -1734,8 +1741,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					Element elemMixminion = (Element) XMLUtil.getFirstChildByName(root,
 						JAPConstants.CONFIG_Mixminion);
-					JAPModel.getInstance().setMixMinionActivated(
-						XMLUtil.parseAttribute(elemMixminion, JAPModel.XML_ATTR_ACTIVATED, false));
+					if (JAPConstants.m_bReleasedVersion)
+					{
+						JAPModel.getInstance().setMixMinionActivated(false);
+					}
+					else
+					{
+						JAPModel.getInstance().setMixMinionActivated(
+											  XMLUtil.parseAttribute(elemMixminion, JAPModel.XML_ATTR_ACTIVATED, false));
+					}
 					Element elemMM = (Element) XMLUtil.getFirstChildByName(elemMixminion,
 						JAPConstants.CONFIG_ROUTE_LEN);
 					int routeLen = XMLUtil.parseValue(elemMM, JAPModel.getMixminionRouteLen());
@@ -1757,7 +1771,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 					Element elemMMPwHash = (Element) XMLUtil.getFirstChildByName(elemMixminion,
 							JAPConstants.CONFIG_MIXMINION_PASSWORD_HASH);
 					String pwhash = XMLUtil.parseValue(elemMMPwHash,null);
-					JAPModel.getInstance().setMixinionPasswordHash(Base64.decode(pwhash));
+					if (pwhash != null)
+					{
+						JAPModel.getInstance().setMixinionPasswordHash(Base64.decode(pwhash));
+					}
 					Element elemMMKeyring = (Element) XMLUtil.getFirstChildByName(elemMixminion,
 							JAPConstants.CONFIG_MIXMINION_KEYRING);
 					String keyring = XMLUtil.parseValue(elemMMKeyring,"");
@@ -1766,13 +1783,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 				catch (Exception ex)
 				{
-					LogHolder.log(LogLevel.INFO, LogType.MISC,
-								  "Error loading Mixminion configuration.");
+					LogHolder.log(LogLevel.ERR, LogType.MISC,
+								  "Error loading Mixminion configuration.", ex);
 				}
 
-				/* read the settings of the JAP forwarding system, if it is enabled */
-//				if (JAPConstants.WITH_BLOCKINGRESISTANCE)
-//				{
+				/* read the settings of the JAP forwarding system */
 				Element japForwardingSettingsNode = (Element) (XMLUtil.getFirstChildByName(root,
 					JAPConstants.CONFIG_JAP_FORWARDING_SETTINGS));
 				if (japForwardingSettingsNode != null)
@@ -1784,8 +1799,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					LogHolder.log(LogLevel.ERR, LogType.MISC, "No JapForwardingSettings node found. Using default settings for forwarding.");
 				}
-//				}
-
 
 
 				if (JAPModel.getInstance().isCascadeAutoSwitched() &&
@@ -4684,13 +4697,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 					boolean forward = true;
 
 					availableCascades = Database.getInstance(MixCascade.class).getEntryList();
-
 					if (availableCascades.size() > 0)
 					{
 						int chosenCascadeIndex = m_random.nextInt();
 						if (chosenCascadeIndex < 0)
 						{
-							// only positive numers are allowed
+							// only positive numbers are allowed
 							chosenCascadeIndex *= -1;
 							// move backward
 							forward = false;
@@ -4790,7 +4802,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				return false;
 			}
 
-			if (a_cascade.isPayment() && isConfigAssistantShown())
+			if (a_cascade.isPayment() && isConfigAssistantShown() && !isPortableMode())
 			{
 				// do not connect to payment for new users
 				return false;

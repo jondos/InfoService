@@ -72,7 +72,7 @@ public class XMLPassivePayment implements IXMLEncodable
 	private Hashtable m_paymentData = new Hashtable();
 	private long m_transferNumber;
 	private String m_currency;
-	private double m_amount;
+	private long m_centAmount;
 	private String m_paymentName;
 	private boolean m_charged;
 
@@ -157,7 +157,7 @@ public class XMLPassivePayment implements IXMLEncodable
 		}
 
 		m_transferNumber = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, TRANSFER_NUM), (long) 0);
-		m_amount = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, AMOUNT), (double) 0);
+		m_centAmount = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, AMOUNT), (long) 0);
 		m_currency = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, CURRENCY), null);
 		m_paymentName = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, PAYMENT_NAME), null);
 		m_charged = XMLUtil.parseValue(XMLUtil.getFirstChildByName(elemRoot, CHARGED), false);
@@ -184,11 +184,11 @@ public class XMLPassivePayment implements IXMLEncodable
 
 	/**
 	 * Sets the payment amount
-	 * @param a_amount double
+	 * @param a_amount long: money amount in cents
 	 */
-	public void setAmount(double a_amount)
+	public void setAmount(long a_amount)
 	{
-		m_amount = a_amount;
+		m_centAmount = a_amount;
 	}
 
 	/**
@@ -228,9 +228,9 @@ public class XMLPassivePayment implements IXMLEncodable
 	 * Gets the payment amount
 	 * @return double
 	 */
-	public double getAmount()
+	public long getAmount()
 	{
-		return m_amount;
+		return m_centAmount;
 	}
 
 	/**
@@ -322,7 +322,7 @@ public class XMLPassivePayment implements IXMLEncodable
 		elemRoot.appendChild(elem);
 
 		elem = a_doc.createElement(AMOUNT);
-		XMLUtil.setValue(elem, String.valueOf(m_amount));
+		XMLUtil.setValue(elem, String.valueOf(m_centAmount));
 		elemRoot.appendChild(elem);
 
 		elem = a_doc.createElement(CURRENCY);

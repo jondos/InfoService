@@ -212,17 +212,43 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 	private XMLPassivePayment getEnteredCreditCardInfo()
 	{
 		/** Construct PassivePayment object */
-		XMLTransCert transCert = (XMLTransCert) ( (WorkerContentPane) getPreviousContentPane().
-												 getPreviousContentPane()).
-			getValue();
-		String amount = ( (VolumePlanSelectionPane) getPreviousContentPane().getPreviousContentPane().
-						 getPreviousContentPane().getPreviousContentPane().getPreviousContentPane()).getAmount();
-		String currency = ( (VolumePlanSelectionPane) getPreviousContentPane().getPreviousContentPane().
-						   getPreviousContentPane().getPreviousContentPane().getPreviousContentPane()).getCurrency();
+		XMLTransCert transCert = null;
+		DialogContentPane somePreviousPane = getPreviousContentPane();
+		//get transaction certificate
+	    //this elaborate structure is necessary since there are several WorkerContentPanes in the wizard returning different kinds of objects as value
+		while (transCert == null)
+		{
+			if (somePreviousPane instanceof WorkerContentPane)
+			{
+				WorkerContentPane wcp = (WorkerContentPane) somePreviousPane;
+				Object value = wcp.getValue();
+				if (value instanceof XMLTransCert)
+				{
+					transCert = (XMLTransCert) value;
+				}
+				else
+				{
+					somePreviousPane = somePreviousPane.getPreviousContentPane();
+				}
+			}
+			else
+			{
+				somePreviousPane = somePreviousPane.getPreviousContentPane();
+			}
+		}
+		//get amount and currency from VolumePlanSelectionPane (endless loop in none found!)
+		somePreviousPane = getPreviousContentPane();
+		while (! (somePreviousPane instanceof VolumePlanSelectionPane) )
+		{
+			somePreviousPane = somePreviousPane.getPreviousContentPane();
+		}
+		VolumePlanSelectionPane vpsp = (VolumePlanSelectionPane) somePreviousPane;
+		String amount = vpsp.getAmount();
+		String currency = vpsp.getCurrency();
 		XMLPassivePayment pp = new XMLPassivePayment();
 		pp.setTransferNumber(transCert.getTransferNumber());
 
-		pp.setAmount(Util.parseFloat(amount)); //because pp expects whole euros as double, but we deal with eurocents
+		pp.setAmount(Long.parseLong(amount)); //because pp expects whole euros as double, but we deal with eurocents
 
 		pp.setCurrency(currency);
 		pp.setPaymentName(m_selectedOption.getName());
@@ -241,16 +267,43 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 	public XMLPassivePayment getEnteredGenericInfo()
 	{
 		/** Construct PassivePayment object */
-		XMLTransCert transCert = (XMLTransCert) ( (WorkerContentPane) getPreviousContentPane().
-												 getPreviousContentPane()).
-			getValue();
-		String amount = ( (VolumePlanSelectionPane) getPreviousContentPane().getPreviousContentPane().
-						 getPreviousContentPane().getPreviousContentPane().getPreviousContentPane()).getAmount();
-		String currency = ( (VolumePlanSelectionPane) getPreviousContentPane().getPreviousContentPane().
-						   getPreviousContentPane().getPreviousContentPane().getPreviousContentPane()).getCurrency();
+		XMLTransCert transCert = null;
+		DialogContentPane somePreviousPane = getPreviousContentPane();
+		//get transaction certificate
+		//this elaborate structure is necessary since there are several WorkerContentPanes in the wizard returning different kinds of objects as value
+		while (transCert == null)
+		{
+			if (somePreviousPane instanceof WorkerContentPane)
+			{
+				WorkerContentPane wcp = (WorkerContentPane) somePreviousPane;
+				Object value = wcp.getValue();
+				if (value instanceof XMLTransCert)
+				{
+					transCert = (XMLTransCert) value;
+				}
+				else
+				{
+					somePreviousPane = somePreviousPane.getPreviousContentPane();
+				}
+			}
+			else
+			{
+				somePreviousPane = somePreviousPane.getPreviousContentPane();
+			}
+		}
+		//get amount and currency from VolumePlanSelectionPane (endless loop in none found!)
+		somePreviousPane = getPreviousContentPane();
+		while (! (somePreviousPane instanceof VolumePlanSelectionPane) )
+		{
+			somePreviousPane = somePreviousPane.getPreviousContentPane();
+		}
+		VolumePlanSelectionPane vpsp = (VolumePlanSelectionPane) somePreviousPane;
+		String amount = vpsp.getAmount();
+		String currency = vpsp.getCurrency();
+
 		XMLPassivePayment pp = new XMLPassivePayment();
 		pp.setTransferNumber(transCert.getTransferNumber());
-		pp.setAmount(Util.parseFloat(amount));
+		pp.setAmount(Long.parseLong(amount));
 		pp.setCurrency(currency);
 		pp.setPaymentName(m_selectedOption.getName());
 		Enumeration fields = m_inputFields.elements();
@@ -263,7 +316,7 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 				curField = (JTextField) comp;
 				String name = curField.getName();
 				String text = curField.getText();
-				pp.addData( curField.getName(), curField.getText());
+				pp.addData( name, text);
 			}
 			else if (comp instanceof JComboBox)
 			{
@@ -346,12 +399,36 @@ public class PassivePaymentPane extends DialogContentPane implements IWizardSuit
 
 	public void showForm()
 	{
-		m_selectedOption = ( (MethodSelectionPane) getPreviousContentPane().
-							getPreviousContentPane().
-							getPreviousContentPane()).getSelectedPaymentOption();
-		m_paymentOptions = (XMLPaymentOptions) ( (WorkerContentPane) getPreviousContentPane().
-												getPreviousContentPane().getPreviousContentPane().
-												getPreviousContentPane()).getValue();
+		DialogContentPane somePreviousPane = getPreviousContentPane();
+		while (! (somePreviousPane instanceof MethodSelectionPane) )
+		{
+			somePreviousPane = somePreviousPane.getPreviousContentPane();
+		}
+		MethodSelectionPane mpsp = (MethodSelectionPane) somePreviousPane;
+		m_selectedOption = mpsp.getSelectedPaymentOption();
+
+	    //this elaborate structure is necessary since there are several WorkerContentPanes in the wizard returning different kinds of objects as value
+		m_paymentOptions = null;
+	    while (m_paymentOptions == null)
+		{
+			if (somePreviousPane instanceof WorkerContentPane)
+			{
+				WorkerContentPane wcp = (WorkerContentPane) somePreviousPane;
+				Object value = wcp.getValue();
+				if (value instanceof XMLPaymentOptions)
+				{
+					m_paymentOptions = (XMLPaymentOptions) value;
+				}
+				else
+				{
+					somePreviousPane = somePreviousPane.getPreviousContentPane();
+				}
+			}
+			else
+			{
+				somePreviousPane = somePreviousPane.getPreviousContentPane();
+			}
+		}
 
 		if (m_selectedOption.isGeneric())
 		{

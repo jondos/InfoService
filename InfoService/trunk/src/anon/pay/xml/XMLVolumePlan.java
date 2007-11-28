@@ -172,7 +172,14 @@ public class XMLVolumePlan implements IXMLEncodable
 
 	public String getDisplayName()
 	{
-		return m_displayName;
+		if (m_displayName != null && !m_displayName.equals("") )
+		{
+			return m_displayName;
+		}
+		else
+		{
+			return m_name; //just in case no extra display name is set, should not happen
+		}
 	}
 
 	public int getPrice()

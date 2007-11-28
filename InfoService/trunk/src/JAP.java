@@ -456,14 +456,21 @@ public class JAP
 		// Set path to Firefox for portable JAP
 		//String firepath="";
 		String profilepath = "";
+		boolean bPortable = false;
 		if (isArgumentSet("--portable") )
 		{
-			m_controller.setPortableMode(true);
+			bPortable = true;
 			m_firefoxCommand = getArgumentValue("--portable");
-			if (isArgumentSet("--portable-browserprofile") && m_firefoxCommand != null)
+			if (m_firefoxCommand != null)
 			{
-				profilepath = getArgumentValue("--portable-browserprofile");
-				m_firefoxCommand += " -profile " + profilepath;
+				// portable configuration seems to be complete
+				m_controller.setPortableMode(true);
+
+				if (isArgumentSet("--portable-browserprofile"))
+				{
+					profilepath = getArgumentValue("--portable-browserprofile");
+					m_firefoxCommand += " -profile " + profilepath;
+				}
 			}
 		}
 
@@ -527,7 +534,7 @@ public class JAP
 		{
 			configFileName = getArgumentValue("-c");
 		}
-		if (configFileName == null && m_controller.isPortableMode())
+		if (configFileName == null && bPortable)
 		{
 			// load and create the config file in the current directory by default
 			File tempDir = ClassUtil.getClassDirectory(JAP.class);

@@ -179,6 +179,10 @@ public class ActivePaymentDetails extends JAPDialog implements ActionListener
 					{
 						extraInfoString = PaymentInfoPane.createEgoldLink(extraInfoString,amount,planName, transferNumber);
 					}
+					else if (extraInfoString.toUpperCase().indexOf("PAYSAFECARD") != -1 )
+					{
+						extraInfoString = PaymentInfoPane.createPaysafecardLink(extraInfoString,amount, transferNumber);
+					}
 					else
 					{
 						extraInfoString = Util.replaceAll(extraInfoString,"%t", transferNumber);

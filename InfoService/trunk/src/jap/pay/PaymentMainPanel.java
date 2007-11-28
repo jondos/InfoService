@@ -33,11 +33,13 @@ package jap.pay;
  * @author Bastian Voigt, Tobias Bayer, Elmar Schraml
  * @version 1.0
  */
-import java.sql.Timestamp;
 import java.net.URL;
+import java.sql.Timestamp;
 
-import java.awt.Dimension;
+import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -50,17 +52,15 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
+import anon.infoservice.MixCascade;
 import anon.pay.AIControlChannel;
 import anon.pay.PayAccount;
 import anon.pay.PayAccountsFile;
 import anon.pay.xml.XMLBalance;
 import anon.pay.xml.XMLErrorMessage;
+import anon.util.JobQueue;
 import anon.util.captcha.ICaptchaSender;
 import anon.util.captcha.IImageEncodedCaptcha;
-import anon.util.JobQueue;
-import anon.infoservice.MixCascade;
-import logging.LogHolder;
-import logging.LogLevel;
 import gui.FlippingPanel;
 import gui.GUIUtils;
 import gui.JAPMessages;
@@ -69,13 +69,12 @@ import gui.dialog.JAPDialog;
 import jap.JAPConf;
 import jap.JAPConstants;
 import jap.JAPController;
+import jap.JAPModel;
 import jap.JAPNewView;
 import jap.JAPUtil;
-import jap.JAPModel;
+import logging.LogHolder;
+import logging.LogLevel;
 import logging.LogType;
-import java.util.Date;
-import java.awt.Cursor;
-import java.awt.Color;
 
 public class PaymentMainPanel extends FlippingPanel
 {
@@ -567,9 +566,7 @@ public class PaymentMainPanel extends FlippingPanel
 							{
 								m_BalanceText.setText(JAPMessages.getString(AccountSettingsPanel.
 									MSG_NO_TRANSACTION));
-								if (activeAccount.getTransCerts().size() > 0 &&
-									!now.after(new Timestamp(activeAccount.getCreationTime().getTime() +
-									AccountSettingsPanel.TRANSACTION_EXPIRATION)))
+								if (activeAccount.getTransCerts().size() > 0 &&	!activeAccount.isTransactionExpired())
 								{
 									m_BalanceText.setToolTipText(JAPMessages.getString(AccountSettingsPanel.
 										MSG_SHOW_TRANSACTION_DETAILS));
@@ -597,7 +594,7 @@ public class PaymentMainPanel extends FlippingPanel
 
 					if (a_bWarnIfNearlyEmpty && //a_bWarnIfNearlyEmpty means warnings are not to be suppressed
 						activeAccount.getCertifiedCredit() <= WARNING_AMOUNT && !m_notifiedEmpty &&
-						activeAccount.getCertifiedCredit() != 0 &&
+						activeAccount.isCharged(now) &&
 						PayAccountsFile.getInstance().getAlternativeNonEmptyAccount(
 							JAPController.getInstance().getCurrentMixCascade().getPIID()) == null)
 					{
@@ -618,7 +615,7 @@ public class PaymentMainPanel extends FlippingPanel
 					}
 					Timestamp warningTime = new Timestamp(System.currentTimeMillis() + WARNING_TIME);
 					if (a_bWarnIfNearlyEmpty && //a_bWarnIfNearlyEmpty means warnings are not to be suppressed
-						!m_notifiedEmpty && !activeAccount.isCharged(warningTime) &&
+						!m_notifiedEmpty && activeAccount.isCharged(now) && !activeAccount.isCharged(warningTime) &&
 						PayAccountsFile.getInstance().getAlternativeNonEmptyAccount(
 							JAPController.getInstance().getCurrentMixCascade().getPIID()) == null)
 					{
