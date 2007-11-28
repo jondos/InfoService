@@ -4802,7 +4802,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 				return false;
 			}
 
-			if (a_cascade.isPayment() && isConfigAssistantShown() && !isPortableMode())
+			if (a_cascade.isPayment() && isConfigAssistantShown() && !isPortableMode() &&
+				!TrustModel.getCurrentTrustModel().isPaymentForced())
 			{
 				// do not connect to payment for new users
 				return false;
