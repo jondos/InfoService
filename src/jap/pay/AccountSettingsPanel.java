@@ -32,14 +32,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
+import java.util.Hashtable;
 import java.util.Locale;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
-import java.text.SimpleDateFormat;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -83,17 +85,23 @@ import org.w3c.dom.Element;
 import HTTPClient.ForbiddenIOException;
 import anon.crypto.DSAKeyPair;
 import anon.crypto.XMLEncryption;
+import anon.infoservice.IMutableProxyInterface;
+import anon.infoservice.MixCascade;
 import anon.pay.BIConnection;
+import anon.pay.IPaymentListener;
 import anon.pay.PayAccount;
 import anon.pay.PayAccountsFile;
 import anon.pay.PaymentInstanceDBEntry;
 import anon.pay.xml.XMLAccountInfo;
 import anon.pay.xml.XMLBalance;
 import anon.pay.xml.XMLErrorMessage;
+import anon.pay.xml.XMLGenericStrings;
+import anon.pay.xml.XMLGenericText;
 import anon.pay.xml.XMLPassivePayment;
 import anon.pay.xml.XMLPaymentOption;
 import anon.pay.xml.XMLPaymentOptions;
 import anon.pay.xml.XMLTransCert;
+import anon.pay.xml.XMLTransactionOverview;
 import anon.pay.xml.XMLVolumePlan;
 import anon.pay.xml.XMLVolumePlans;
 import anon.util.SingleStringPasswordReader;
@@ -117,35 +125,16 @@ import jap.JAPController;
 import jap.JAPControllerMessage;
 import jap.JAPModel;
 import jap.JAPUtil;
+import jap.pay.wizardnew.CancellationPolicyPane;
+import jap.pay.wizardnew.JpiSelectionPane;
 import jap.pay.wizardnew.MethodSelectionPane;
 import jap.pay.wizardnew.PassivePaymentPane;
 import jap.pay.wizardnew.PaymentInfoPane;
+import jap.pay.wizardnew.TermsAndConditionsPane;
 import jap.pay.wizardnew.VolumePlanSelectionPane;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import javax.swing.JComboBox;
-import jap.JAPControllerMessage;
-import anon.pay.xml.XMLErrorMessage;
-import anon.pay.xml.XMLPassivePayment;
-import java.sql.Timestamp;
-import java.util.Locale;
-import anon.pay.xml.XMLVolumePlans;
-import jap.pay.wizardnew.VolumePlanSelectionPane;
-import anon.pay.xml.XMLVolumePlan;
-import java.util.Vector;
-import jap.pay.wizardnew.TermsAndConditionsPane;
-import anon.pay.xml.XMLGenericText;
-import anon.pay.IPaymentListener;
-import anon.infoservice.MixCascade;
-import jap.pay.wizardnew.JpiSelectionPane;
-import jap.pay.wizardnew.CancellationPolicyPane;
-import anon.pay.xml.XMLGenericStrings;
-import anon.infoservice.IMutableProxyInterface;
-import java.util.Calendar;
-import anon.pay.xml.XMLTransactionOverview;
-import anon.util.IXMLEncodable;
-import java.util.Hashtable;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
@@ -156,7 +145,6 @@ import java.util.Hashtable;
 public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	ListSelectionListener, Observer, IPaymentListener
 {
-	public static final long TRANSACTION_EXPIRATION = 1000 * 60 * 60 * 24 * 14; // two weeks
 
 	protected static final String MSG_ACCOUNT_FLAT_VOLUME = AccountSettingsPanel.class.
 		getName() + "_account_flat_volume";
@@ -355,10 +343,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	private static final Integer[] CONNECT_TIMEOUTS =
 		new Integer[]
 		{
-		new Integer(60), new Integer(80), new Integer(100), new Integer(120), new Integer(160),
-		new Integer(200), new Integer(250), new Integer(300)};
+		new Integer(10), new Integer(20), new Integer(30), new Integer(40), new Integer(50),
+		new Integer(60), new Integer(80), new Integer(100)};
 
 	private JButton m_btnCreateAccount;
+	private JButton m_btnChargeAccount;
 	private JButton m_btnDeleteAccount;
 	private JButton m_btnExportAccount;
 	private JButton m_btnImportAccount;
@@ -831,19 +820,20 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		d.insets = new Insets(5, 5, 5, 5);
 
 		/*
-		m_btnChargeAccount = new JButton(JAPMessages.getString(MSG_BUTTON_CHARGE));
-		m_btnChargeAccount.setEnabled(false);
-		m_btnChargeAccount.addActionListener(a_actionListener);
-		buttonsPanel.add(m_btnChargeAccount, d);
-	  */
-
-		/*
 		  d.gridx++;
 		  m_btnBuyFlat = new JButton(JAPMessages.getString(MSG_BUTTON_BUYFLAT));
 		  m_btnBuyFlat.setEnabled(false);
 		  m_btnBuyFlat.addActionListener(a_actionListener);
 		  buttonsPanel.add(m_btnBuyFlat,d);
 		 */
+
+		if (JAPConstants.DEBUG)
+		{
+			m_btnChargeAccount = new JButton(JAPMessages.getString(MSG_BUTTON_CHARGE));
+			m_btnChargeAccount.addActionListener(a_actionListener);
+			buttonsPanel.add(m_btnChargeAccount, d);
+			d.gridx++;
+		}
 
 		m_btnSelect = new JButton(JAPMessages.getString(MSG_BUTTON_ACTIVATE));
 		m_btnSelect.addActionListener(a_actionListener);
@@ -1013,6 +1003,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					{
 						doCreateAccount(null);
 					}
+					else if (JAPConstants.DEBUG && source == m_btnChargeAccount)
+					{
+						doChargeAccount(getSelectedAccount());
+					}
 					else if (source == m_btnDeleteAccount)
 					{
 						doDeleteAccount(getSelectedAccount());
@@ -1130,6 +1124,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		//(since BI will only fill in transacton details, but not provide data for new ones not yet contained in the PayAccount)
 			doGetStatement(anAccount);
 		    */
+		    if (anAccount.isTransactionExpired() )
+			{
+				continue; //if the transaction is already expired, we don't want to give the user the chance to pay any more
+			}
+
 		    PaymentInstanceDBEntry jpiOfThisAccount = anAccount.getBI();
 			//only add account to the list of those to get transaction details for
 			//if the account's JPI matches the JPI of the currently active account
@@ -1273,9 +1272,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				else if (balance.getSpent() == 0 && !expired)
 				{
 					m_labelVolume.setText(JAPMessages.getString(MSG_NO_TRANSACTION));
-					if (selectedAccount.getTransCerts().size() > 0 &&
-						!now.after(new Timestamp(selectedAccount.getCreationTime().getTime() +
-												 TRANSACTION_EXPIRATION)))
+					if (selectedAccount.getTransCerts().size() > 0 && !selectedAccount.isTransactionExpired() )
 					{
 						m_labelVolume.setToolTipText(JAPMessages.getString(MSG_SHOW_TRANSACTION_DETAILS));
 						m_labelVolume.setForeground(Color.blue);
@@ -1473,10 +1470,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			private XMLVolumePlans m_volumePlans;
 			public void run()
 			{
+				BIConnection piConn = null;
 				try
 				{
 					PaymentInstanceDBEntry pi = a_accountCreationThread.getAccount().getBI();
-					BIConnection piConn = new BIConnection(pi);
+					piConn = new BIConnection(pi);
 					piConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
 
 					piConn.authenticate(a_accountCreationThread.getAccount().getAccountCertificate(),
@@ -1487,6 +1485,17 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				}
 				catch (Exception e)
 				{
+					if ( piConn != null)
+					{
+						try
+						{
+							piConn.disconnect();
+						}
+						catch (Exception ex)
+						{
+						}
+					}
+
 					if (!Thread.currentThread().isInterrupted())
 					{
 						LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
@@ -1525,10 +1534,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		   private XMLPaymentOptions m_paymentOptions;
 		   public void run()
 		   {
+			   BIConnection piConn = null;
 			   try
 			   {
 				   PaymentInstanceDBEntry pi = a_accountCreationThread.getAccount().getBI();
-				   BIConnection piConn = new BIConnection(pi);
+				   piConn = new BIConnection(pi);
 
 				   piConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
 				   piConn.authenticate(a_accountCreationThread.getAccount().getAccountCertificate(),
@@ -1540,6 +1550,16 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			   }
 			   catch (Exception e)
 			   {
+				   if (piConn != null)
+				   {
+					   try
+					   {
+						   piConn.disconnect();
+					   }
+					   catch (Exception ex)
+					   {
+					   }
+				   }
 				   if (!Thread.currentThread().isInterrupted())
 				   {
 					   LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
@@ -1629,7 +1649,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						requestData.addEntry("plan",planName);
 						requestData.addEntry("method",paymentMethod);
 						requestData.addEntry("amount",amount);
-
+						//for paysafecard, JPI has to use language-specific URLs to show result
+						String lang = JAPMessages.getLocale().getLanguage();
+						requestData.addEntry("language",lang);
 						PayAccount curAccount = a_accountCreationThread.getAccount();
 						m_transCert = curAccount.charge(JAPModel.getInstance().getPaymentProxyInterface(), requestData);
 						if (m_transCert != null)
@@ -1790,6 +1812,16 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				 }
 				 catch (Exception e)
 				 {
+					 if (biConn != null)
+					 {
+						 try
+						 {
+							 biConn.disconnect();
+						 }
+						 catch (Exception ex)
+						 {
+						 }
+					 }
 					 m_successful = new Boolean(false);
 					 if (!Thread.currentThread().isInterrupted())
 					 {
@@ -1822,7 +1854,14 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				{
 					return true;
 				}
-				else //passive or paysafecard
+				else if (methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
+					XMLPaymentOption.OPTION_MIXED))
+			    {
+					return false;
+					//we do NOT send the paysafecardpayment here any more, we do it already when getting the tan (to avoid the user accidently closing the wizard after confirming the payment but before the payment ist stored)
+					//BUT we send the passivepayment to immediately trigger polling the disposition state/crediting the user account
+				}
+				else //passive
 				{
 					return false;
 				}
@@ -1968,6 +2007,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 		public void run()
 		{
+			BIConnection piConn = null;
 			try
 			{
 				if (m_termsAndConditions != null)
@@ -1984,7 +2024,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				{
 					pi = m_jpi;
 				}
-				BIConnection piConn = new BIConnection(pi);
+				piConn = new BIConnection(pi);
 				piConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
 				//authentication is neither necessary nor possible (creating first account -> user does not yet have an account to authenticate with)
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY, "Fetching terms and conditions");
@@ -1995,6 +2035,17 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			}
 			catch (Exception e)
 			{
+				if (piConn != null)
+				{
+					try
+					{
+						piConn.disconnect();
+					}
+					catch (Exception ex)
+					{
+					}
+				}
+
 				if (!Thread.currentThread().isInterrupted())
 				{
 					LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
@@ -2058,6 +2109,18 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 						}
 						catch (Exception a_e)
 						{
+							if (biConn != null)
+							{
+								try
+								{
+									biConn.disconnect();
+								}
+								catch (Exception ex)
+								{
+								}
+							}
+
+
 							data = a_e;
 						}
 					}
@@ -2267,15 +2330,27 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					Thread.currentThread().interrupt();
 					return;
 				}
+				BIConnection biconn = null;
 				try
 				{
 					//Check if payment instance is reachable
-					BIConnection biconn = new BIConnection( jpiPane.getSelectedPaymentInstance() );
+					biconn = new BIConnection( jpiPane.getSelectedPaymentInstance() );
 					biconn.connect(JAPModel.getInstance().getPaymentProxyInterface());
 					biconn.disconnect();
 				}
 				catch (Exception e)
 				{
+					if (biconn != null)
+					{
+						try
+						{
+							biconn.disconnect();
+						}
+						catch (Exception ex)
+						{
+						}
+					}
+
 					if (!Thread.currentThread().isInterrupted())
 					{
 						showPIerror(a_parentDialog.getContentPane(), e);
@@ -2320,10 +2395,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		   private XMLGenericText cancellationPolicy;
 		   public void run()
 		   {
+			   BIConnection piConn = null;
 			   try
 			   {
 				   PaymentInstanceDBEntry pi = jpiPane.getSelectedPaymentInstance();
-				   BIConnection piConn = new BIConnection(pi);
+				   piConn = new BIConnection(pi);
 				   piConn.connect(JAPModel.getInstance().getPaymentProxyInterface());
 
 				   //authentication is neither necessary nor possible (creating first account -> user does not yet have an account to authenticate with)
@@ -2334,6 +2410,17 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			   }
 			   catch (Exception e)
 			   {
+				   if (piConn != null)
+				   {
+					   try
+					   {
+						   piConn.disconnect();
+					   }
+					   catch (Exception ex)
+					   {
+					   }
+				   }
+
 				   if (!Thread.currentThread().isInterrupted())
 				   {
 					   LogHolder.log(LogLevel.EXCEPTION, LogType.NET,
@@ -2654,18 +2741,19 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			{
 				// vecTan must be filled if charging was ok
 				PayAccountsFile.getInstance().removePaymentListener(captcha);
-				if (vecTan.size() == 0 && doIt.getValue() != null)
+				Object value = doIt.getValue();
+				if (vecTan.size() == 0 && value != null && value instanceof PayAccount)
 				{
 					PayAccountsFile.getInstance().deleteAccount(
-									   ((PayAccount)doIt.getValue()).getAccountNumber());
+						( (PayAccount) value).getAccountNumber());
 				}
 
 				updateAccountList();
 
-				if (vecTan.size() != 0 && doIt.getValue() != null)
+				if (vecTan.size() != 0 && value != null && value instanceof PayAccount)
 				{
 					/** Select new account */
-					m_listAccounts.setSelectedValue(doIt.getValue(), true);
+					m_listAccounts.setSelectedValue(value, true);
 					PayAccount account = getSelectedAccount();
 					if (account != null)
 					{
@@ -3524,7 +3612,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		{
 			return false;
 		}
-
 	};
 
 }

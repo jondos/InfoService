@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.09.005"; //Never change the layout of this line!
+	public static final String aktVersion = "00.09.006"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -64,6 +64,8 @@ public final class JAPConstants
 			strReleaseDate = CVS_GENERATED_RELEASE_DATE.substring(7, 26);
 		}
 	}
+
+	public static final boolean DEBUG = false;
 
 	public static final int DEFAULT_PORT_NUMBER = 4001;
 	public static final boolean DEFAULT_LISTENER_IS_LOCAL = true;
@@ -184,6 +186,11 @@ public final class JAPConstants
 	public static final String IMAGE_COINS_EMPTY = "coins-empty.gif";
 	public static final String IMAGE_COIN_COINSTACK = "coinstack.gif";
 
+	//images for payment methods - name has to be "IMAGE_" + XMLPaymentMethod.getName() to be found via reflection
+	public static final String IMAGE_PAYPAL = "paypal_logo.png";
+	public static final String IMAGE_PAYSAFECARD = "psc_logo.png";
+	public static final String IMAGE_EGOLD = "e-gold_logo.png";
+
 // Bastian Voigt: Icons for the account meter
 	public static final String[] ACCOUNTICONFNARRAY =
 		{
@@ -297,4 +304,9 @@ public final class JAPConstants
 
 	/** Supported non-generic payment names. Comma-separated list. e.g. "CreditCard,DirectDebit"*/
 	public final static String PAYMENT_NONGENERIC="CreditCard";
-}
+
+	/** Paysafecard: Payment confirmation timeout in minutes (older open psc payments should not be shown as usable)
+	 *  Correct value depends on the contract with the paysafecard company */
+	public final static int PAYSAFECARD_TIMEOUT = 60;
+
+	}

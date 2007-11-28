@@ -27,6 +27,8 @@
  */
 package jap.pay.wizardnew;
 
+import java.lang.reflect.Field;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -44,6 +46,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 
@@ -57,11 +60,19 @@ import gui.dialog.JAPDialog;
 import gui.dialog.WorkerContentPane;
 import jap.JAPController;
 import jap.JAPUtil;
+import jap.JAPConstants;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
-import javax.swing.JCheckBox;
+import java.util.Hashtable;
+import gui.GUIUtils;
+import javax.swing.ImageIcon;
+import javax.swing.JPanel;
+import java.awt.Graphics;
+import javax.swing.BoxLayout;
+import java.awt.Component;
+import java.awt.event.MouseListener;
 
 public class PaymentInfoPane extends DialogContentPane implements IWizardSuitable,
 	ActionListener
@@ -144,6 +155,19 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		m_url = a_url;
 	}
 
+	/**
+     * takes the extrainfo as contained in the database's paymentoption configuration, and replaces the placeholders etc
+	 * in a way suitable for the paysafecard syntax
+	 */
+	public static String createPaysafecardLink(String baseLink, long intAmount, String transferNumber)
+	{
+		baseLink = Util.replaceAll(baseLink, "%t", transferNumber);
+		String pscAmount = amountAsString(intAmount);
+		baseLink = Util.replaceAll(baseLink, "%a", pscAmount);
+		return baseLink;
+	}
+
+
 	public static String createPaypalLink(String baseLink, long amount, String planName, String transferNumber)
 	{
 		String paypalCurrency = "EUR";
@@ -189,7 +213,7 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 	private static String amountAsString(long amount)
 	{
 
-		//amountString: eurocent, e.g. "500", transform it into a format suitable for paypal
+		//amountString: eurocent, e.g. "500", transform it into a format suitable for paypal, e.g. "12.37"
 		String amountString = new Long(amount).toString();
 		String amountWhole;
 		String amountFractions;
@@ -215,8 +239,13 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 
 	public void showInfo()
 	{
-		XMLPaymentOption selectedOption = ( (MethodSelectionPane) getPreviousContentPane().
-										   getPreviousContentPane()).getSelectedPaymentOption();
+		DialogContentPane somePreviousPane = getPreviousContentPane();
+		while (! (somePreviousPane instanceof MethodSelectionPane))
+		{
+			somePreviousPane = somePreviousPane.getPreviousContentPane();
+		}
+		MethodSelectionPane msp = (MethodSelectionPane) somePreviousPane;
+		XMLPaymentOption selectedOption = msp.getSelectedPaymentOption();
 	    transCert = (XMLTransCert) ( (WorkerContentPane) getPreviousContentPane()).getValue();
 		String htmlExtraInfo = "";
 		m_selectedOption = selectedOption;
@@ -238,7 +267,7 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		if (m_strExtraInfo != null)
 		{
 
-			DialogContentPane somePreviousPane = getPreviousContentPane();
+			somePreviousPane = getPreviousContentPane();
 			while (! (somePreviousPane instanceof VolumePlanSelectionPane))
 			{
 				somePreviousPane = somePreviousPane.getPreviousContentPane();
@@ -246,18 +275,26 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 			}
 			VolumePlanSelectionPane planPane = (VolumePlanSelectionPane) somePreviousPane;
 			String amountString = planPane.getAmount();
-			String planName = planPane.getSelectedVolumePlan().getName();
+			String planName = planPane.getSelectedVolumePlan().getDisplayName();
 			int intAmount = Integer.parseInt(amountString);
 			String tan = String.valueOf(transCert.getTransferNumber());
 
-			//take special care of paypal links
+			//take special care of links
+			String imageLink = null; //url to open if logo is clicked, null if no image, or nothing should happen
 			if (m_strExtraInfo.indexOf("paypal") != -1 )
 			{
 	            m_strExtraInfo = createPaypalLink(m_strExtraInfo,intAmount,planName,tan);
+				imageLink = m_strExtraInfo;
             }
-			else if (m_strExtraInfo.indexOf("e-gold") != -1)
+			else if (m_strExtraInfo.indexOf("gold") != -1)
 			{
 				m_strExtraInfo = createEgoldLink(m_strExtraInfo,intAmount,planName,tan);
+				imageLink = m_strExtraInfo;
+			}
+			else if (m_strExtraInfo.indexOf("paysafecard") != -1)
+			{
+				m_strExtraInfo = createPaysafecardLink(m_strExtraInfo, intAmount, tan);
+				imageLink = m_strExtraInfo;
 			}
 			else
 			{
@@ -271,7 +308,27 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 			m_c.gridy++;
 			m_rootPanel.add(new JLabel(" "), m_c);
 
+			//add image if one is provided for the selected payment method
+			String imageFilename = getMethodImageFilename(selectedOption.getName() );
+			ImageIcon methodImage = GUIUtils.loadImageIcon(imageFilename, false,false);
+			m_c.gridy++;
+			if (methodImage != null)
+			{
+				JPanel imagePanel = new JPanel();
+				imagePanel.setLayout(new BoxLayout(imagePanel,BoxLayout.X_AXIS));
+			    JLabel imageLabel = new JLabel(methodImage);
+				imageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+				if (imageLink != null)
+				{
+					imageLabel.addMouseListener(new LinkMouseListener(imageLink));
+				}
+				imagePanel.add(imageLabel);
+				m_c.gridwidth = 2;
+				m_rootPanel.add(imagePanel, m_c);
+				m_c.gridwidth = 1;
+			}
 
+			//add buttons
 			m_c.gridy++;
 			m_bttnCopy = new JButton(JAPMessages.getString(MSG_BUTTONCOPY));
 			m_bttnCopy.addActionListener(this);
@@ -325,32 +382,71 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 	}
 
 	/**
+	 *
+	 * @param a_methodName String: String of the method name, as contained in db table paymentoptions and returned by <XMLPaymentOption>.getName()
+	 * @return String: path to the image file as contained in JAPConstants in a String constant called IMAGE_<METHODNAME>, or null if not found, or on error
+	 */
+	private String getMethodImageFilename(String a_methodName)
+	{
+		Class japConstantsClass = JAPConstants.class;
+		String imageFieldName = "IMAGE_" + a_methodName.toUpperCase();
+		Field pathVar = null;
+		try
+		{
+			pathVar = japConstantsClass.getDeclaredField(imageFieldName);
+		} catch (NoSuchFieldException nsfe)
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "could not load image for payment method "+a_methodName+", there is not variable " + imageFieldName + " in JAPConstants");
+			return null;
+		}
+		String path;
+		try
+		{
+			path = (String) pathVar.get(null);
+		} catch (Exception e)
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.PAY, "could not load image for payment method" + a_methodName + " , reason: " + e);
+			return null;
+		}
+		return path;
+	}
+
+	/**
 	 * Copies the extra payment info to the system clipboard
 	 */
 	private void copyExtraInfoToClipboard()
 	{
 		Clipboard sysClip = Toolkit.getDefaultToolkit().getSystemClipboard();
-		String link = m_strExtraInfo;
+		String extraInfoString = m_strExtraInfo;
 		if (m_selectedOption.getExtraInfoType(m_language).equalsIgnoreCase(XMLPaymentOption.EXTRA_TEXT))
 		{
-			link = Util.replaceAll(link, "<br>", "\n");
-			link = Util.replaceAll(link, "<p>", "\n\n");
-			link = Util.replaceAll(link, "&nbsp;", " ");
+			//convert html to normal text
+			extraInfoString = Util.replaceAll(extraInfoString, "<br>", "\n");
+			extraInfoString = Util.replaceAll(extraInfoString, "<p>", "\n\n");
+			extraInfoString = Util.replaceAll(extraInfoString,"&uuml;","\u00fc" );
+			extraInfoString = Util.replaceAll(extraInfoString,"&Uuml;","\u00dc" );
+			extraInfoString = Util.replaceAll(extraInfoString,"&auml;","\u00e4" );
+			extraInfoString = Util.replaceAll(extraInfoString,"&Auml;","\u00c4" );
+			extraInfoString = Util.replaceAll(extraInfoString,"&ouml;","\u00f6" );
+			extraInfoString = Util.replaceAll(extraInfoString,"&Ouml;","\u00d6" );
+			extraInfoString = Util.replaceAll(extraInfoString,"&szlig;","\u00df" );
+			extraInfoString = Util.replaceAll(extraInfoString, "&nbsp;", " ");
 		}
 		else
 		{
-			link = Util.replaceAll(link, "<br>", "");
-			link = Util.replaceAll(link, "<p>", "");
-			link = Util.replaceAll(link, "&nbsp;", "%20");
-			link = Util.replaceAll(link, " ", "%20");
+			//convert html to URL
+			extraInfoString = Util.replaceAll(extraInfoString, "<br>", "");
+			extraInfoString = Util.replaceAll(extraInfoString, "<p>", "");
+			extraInfoString = Util.replaceAll(extraInfoString, "&nbsp;", "%20");
+			extraInfoString = Util.replaceAll(extraInfoString, " ", "%20");
 		}
-		link = Util.replaceAll(link, "<html>", " ");
-		link = Util.replaceAll(link, "</html>", " ");
-		link = Util.replaceAll(link, "<font color=blue><u>", "");
-		link = Util.replaceAll(link, "</u></font>", "");
-		link = link.trim();
+		extraInfoString = Util.replaceAll(extraInfoString, "<html>", " ");
+		extraInfoString = Util.replaceAll(extraInfoString, "</html>", " ");
+		extraInfoString = Util.replaceAll(extraInfoString, "<font color=blue><u>", "");
+		extraInfoString = Util.replaceAll(extraInfoString, "</u></font>", "");
+		extraInfoString = extraInfoString.trim();
 
-		Transferable transfer = new StringSelection(link);
+		Transferable transfer = new StringSelection(extraInfoString);
 		sysClip.setContents(transfer, null);
 	}
 
@@ -425,19 +521,54 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 
 class LinkMouseListener extends MouseAdapter
 {
+	/**
+	 * create a LinkMouseListener that can only be applied to a JLabel
+	 * and will on click open an URL gotten from that JLabel's getText() method
+	 */
+	public LinkMouseListener()
+	{
+		super();
+	}
+
+	/**
+	 * create a LinkMouseListener that can be applied to any component
+	 * will open the supplied link on click
+	 * does not check if the supplied String is a valid URL
+	 * @param a_Link String
+	 */
+	public LinkMouseListener(String a_Link)
+	{
+		super();
+		linkToOpen = a_Link;
+	}
+
+	private String linkToOpen = null;
+
 	public void mouseClicked(MouseEvent e)
 	{
-		try
+		String linkText;
+		if (linkToOpen != null)
+		{
+			linkText = linkToOpen;
+		}
+		else
 		{
 			//Warning: will fail if LinkMouseListener is added to a JComponent other than a JLabel
 			JLabel source = (JLabel) e.getSource();
-			String linkText = source.getText();
+			linkText = source.getText();
+		}
+
+		try
+		{
 			URL linkUrl = new URL(linkText);
 			AbstractOS.getInstance().openURL(linkUrl);
-		} catch (ClassCastException cce)
+		}
+		catch (ClassCastException cce)
 		{
-			LogHolder.log(LogLevel.ERR, LogType.PAY, "opening a link failed, reason: called on non-JLabel component");
-		} catch (MalformedURLException mue)
+			LogHolder.log(LogLevel.ERR, LogType.PAY,
+						  "opening a link failed, reason: called on non-JLabel component");
+		}
+		catch (MalformedURLException mue)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.PAY, "opening a link failed, reason: malformed URL");
 		}

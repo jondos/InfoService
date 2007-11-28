@@ -226,7 +226,7 @@ public class MethodSelectionPane extends DialogContentPane implements IWizardSui
 			}
 			curPane = curPane.getPreviousContentPane();
         }
-	    String planName = selectedPlan.getName();
+	    String planName = selectedPlan.getDisplayName();
 		String planPrice = JAPUtil.formatEuroCentValue(selectedPlan.getPrice());
 	    JLabel planHeading = new JLabel(JAPMessages.getString(MSG_SELECTED_PLAN));
 		JLabel planDetails = new JLabel(planName + " (" + planPrice + ")");

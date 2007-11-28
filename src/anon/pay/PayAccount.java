@@ -130,6 +130,25 @@ public class PayAccount implements IXMLEncodable
 
 	private Calendar m_termsDate;
 
+	private static final long TRANSACTION_EXPIRATION = 1000 * 60 * 60 * 24 * 14; // two weeks
+	public boolean isTransactionExpired()
+	{
+		Timestamp creationTime = getCreationTime();
+		long creationTimeMs = creationTime.getTime();
+		Timestamp now = new Timestamp(System.currentTimeMillis());
+		long nowMs = now.getTime();
+		long timePassedMs = nowMs - creationTimeMs;
+		if (timePassedMs > TRANSACTION_EXPIRATION)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+
 	//if the user already has a flatrate, we don't let him buy another one
 	//this sets what counts as "empty" in terms of included volume
 	public static final int MAX_KBYTES_COUNTING_AS_EMPTY = 5000; //5 MB
@@ -440,6 +459,10 @@ public class PayAccount implements IXMLEncodable
 	public boolean isCharged(Timestamp a_time)
 	{
 		XMLBalance balance = getBalance();
+		if (balance == null)
+		{
+			return false;
+		}
 
 		return balance.getCredit() > 0 && balance.getFlatEnddate() != null &&
 			balance.getFlatEnddate().after(a_time);
@@ -842,13 +865,30 @@ public class PayAccount implements IXMLEncodable
 			throw new SecurityException("Account is encrypted and not usable!");
 		}
 
-		XMLAccountInfo info;
+
+		XMLAccountInfo info = null;
 		m_theBI = this.getBI();
-		BIConnection biConn = new BIConnection(m_theBI);
-		biConn.connect(a_proxys);
-		biConn.authenticate(m_accountCertificate, m_privateKey);
-		info = biConn.getAccountInfo();
-		biConn.disconnect();
+		BIConnection biConn = null;
+		try
+		{
+			biConn = new BIConnection(m_theBI);
+			biConn.connect(a_proxys);
+			biConn.authenticate(m_accountCertificate, m_privateKey);
+			info = biConn.getAccountInfo();
+			biConn.disconnect();
+		}
+		catch (Exception a_e)
+		{
+			try
+			{
+				biConn.disconnect();
+			}
+			catch (Exception a_e2)
+			{
+				// ignore
+			}
+			throw a_e;
+		}
 
 		// save in the account object
 		setAccountInfo(info); // do not access field directly here!!
@@ -872,11 +912,28 @@ public class PayAccount implements IXMLEncodable
 			throw new SecurityException("Account is encrypted and not usable!");
 		}
 
-		BIConnection biConn = new BIConnection(m_theBI);
-		biConn.connect(a_proxys);
-		biConn.authenticate(m_accountCertificate, m_privateKey);
-		XMLTransCert transcert = biConn.charge(a_parameters);
-		biConn.disconnect();
+		BIConnection biConn = null;
+		XMLTransCert transcert = null;
+		try
+		{
+			biConn = new BIConnection(m_theBI);
+			biConn.connect(a_proxys);
+			biConn.authenticate(m_accountCertificate, m_privateKey);
+			transcert = biConn.charge(a_parameters);
+			biConn.disconnect();
+		}
+		catch (Exception a_e)
+		{
+			try
+			{
+				biConn.disconnect();
+			}
+			catch (Exception a_e2)
+			{
+				// ignore
+			}
+			throw a_e;
+		}
 		m_transCerts.addElement(transcert);
 		return transcert;
 	}
