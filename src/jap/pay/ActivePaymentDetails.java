@@ -29,6 +29,7 @@ import anon.util.Util;
 import gui.GUIUtils;
 import gui.JAPHtmlMultiLineLabel;
 import gui.JAPMessages;
+import gui.LinkMouseListener;
 import gui.dialog.JAPDialog;
 import jap.JAPController;
 import jap.JAPUtil;
@@ -37,6 +38,8 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
+import javax.swing.JLabel;
+import javax.swing.ImageIcon;
 
 
 /**
@@ -168,14 +171,14 @@ public class ActivePaymentDetails extends JAPDialog implements ActionListener
 					isALink = false;
 				}
 
-
+				JPanel linkButtonsPanel;
 				if (isALink)
 				{
-					if (extraInfoString.indexOf("paypal") != -1 )
+					if (extraInfoString.toUpperCase().indexOf("PAYPAL") != -1 )
 					{
 						extraInfoString = PaymentInfoPane.createPaypalLink(extraInfoString,amount,planName,transferNumber);
 					}
-					else if (extraInfoString.indexOf("e-gold") != -1)
+					else if (extraInfoString.toUpperCase().indexOf("E-GOLD") != -1)
 					{
 						extraInfoString = PaymentInfoPane.createEgoldLink(extraInfoString,amount,planName, transferNumber);
 					}
@@ -192,16 +195,33 @@ public class ActivePaymentDetails extends JAPDialog implements ActionListener
 					//if a link, store it in final variable (for anonymous inner class ActionListeners), but don't show it
 					final String linkToUse = extraInfoString;
 
-					//add buttons and handlers
-					JPanel linkButtonsPanel = new JPanel(); //default flow layout
-					JButton bttnCopy = new JButton(JAPMessages.getString(MSG_COPYBUTTON));
-					bttnCopy.addActionListener(new ActionListener(){
-						public void actionPerformed(ActionEvent e)
+					//add image
+					String optionName = (String) optionToShow.get("name");
+					String imageFilename = PaymentInfoPane.getMethodImageFilename(optionName);
+					ImageIcon methodImage = null;
+					if (imageFilename != null)
+					{
+						methodImage = GUIUtils.loadImageIcon(imageFilename, false, false);
+					}
+	                if (methodImage != null)
+					{
+						JPanel imagePanel = new JPanel();
+						imagePanel.setLayout(new BoxLayout(imagePanel, BoxLayout.X_AXIS));
+						JLabel imageLabel = new JLabel(methodImage);
+						if (linkToUse != null)
 						{
-							copyToClipboard(linkToUse);
+							imageLabel.addMouseListener(new LinkMouseListener(linkToUse));
 						}
-					});
-					linkButtonsPanel.add(bttnCopy);
+						imagePanel.add(imageLabel);
+						imagePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+						optionPanel.add(imagePanel);
+						optionPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+					}
+
+
+					//add buttons and handlers
+					linkButtonsPanel = new JPanel(); //default flow layout
+
 					JButton bttnPay = new JButton(JAPMessages.getString(MSG_PAYBUTTON));
 					bttnPay.addActionListener(new ActionListener() {
 						public void actionPerformed(ActionEvent e)
@@ -210,23 +230,51 @@ public class ActivePaymentDetails extends JAPDialog implements ActionListener
 						}
 					});
 					linkButtonsPanel.add(bttnPay);
+
+					JButton bttnCopy = new JButton(JAPMessages.getString(MSG_COPYBUTTON));
+					bttnCopy.addActionListener(new ActionListener(){
+						public void actionPerformed(ActionEvent e)
+						{
+							copyToClipboard(linkToUse, true);
+						}
+					});
+					linkButtonsPanel.add(bttnCopy);
+
 					linkButtonsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 					optionPanel.add(linkButtonsPanel);
-					optionPanel.add(Box.createRigidArea(new Dimension(0,5)));
 				}
 				else //regular text
 				{
 					//test could contain e.g. wiring instructions, so need to replace placeholders, too
-				extraInfoString = Util.replaceAll(extraInfoString,"%t", transferNumber);
-				extraInfoString = Util.replaceAll(extraInfoString,"%a",JAPUtil.formatEuroCentValue(amount));
-				extraInfoString = Util.replaceAll(extraInfoString,"%c",""); //currency is not used, so get rid of the placeholder
+					extraInfoString = Util.replaceAll(extraInfoString,"%t", transferNumber);
+					extraInfoString = Util.replaceAll(extraInfoString,"%a",JAPUtil.formatEuroCentValue(amount));
+					extraInfoString = Util.replaceAll(extraInfoString,"%c",""); //currency is not used, so get rid of the placeholder
 
-				JAPHtmlMultiLineLabel extraInfoLabel = new JAPHtmlMultiLineLabel(extraInfoString);
-				extraInfoLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-				optionPanel.add(extraInfoLabel);
+					//add text
+					JAPHtmlMultiLineLabel extraInfoLabel = new JAPHtmlMultiLineLabel(extraInfoString);
+					extraInfoLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+					optionPanel.add(extraInfoLabel);
+					optionPanel.add(Box.createRigidArea(new Dimension(0,5)));
+
+
+					//add "copy to clipboard" button
+
+					final String finalExtraInfo = extraInfoString; //needs to be final to use it in the anonymous actionlistener
+					linkButtonsPanel = new JPanel(); //default flow layout
+					JButton bttnCopy = new JButton(JAPMessages.getString(MSG_COPYBUTTON));
+					bttnCopy.addActionListener(new ActionListener(){
+						public void actionPerformed(ActionEvent e)
+						{
+							copyToClipboard(finalExtraInfo, false);
+						}
+					});
+					linkButtonsPanel.add(bttnCopy);
+					linkButtonsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+					optionPanel.add(linkButtonsPanel);
+				}
+
 				optionPanel.add(Box.createRigidArea(new Dimension(0,5)));
-			}
-
+				optionPanel.setSize(optionPanel.getPreferredSize().width, optionPanel.getPreferredSize().height);
 			}
 		optionPanel.setBorder(BorderFactory.createRaisedBevelBorder());
 		return optionPanel;
@@ -267,13 +315,18 @@ public class ActivePaymentDetails extends JAPDialog implements ActionListener
 
 	}
 
-	private void copyToClipboard(String link)
+	private void copyToClipboard(String a_info, boolean isLink)
 	{
 		Clipboard sysClip = Toolkit.getDefaultToolkit().getSystemClipboard();
-		link = cleanupLink(link);
-
-
-		Transferable transfer = new StringSelection(link);
+		if (isLink)
+		{
+			a_info = cleanupLink(a_info);
+		}
+		else
+		{
+			a_info = cleanupText(a_info);
+        }
+		Transferable transfer = new StringSelection(a_info);
 		sysClip.setContents(transfer, null);
 	}
 
@@ -291,6 +344,20 @@ public class ActivePaymentDetails extends JAPDialog implements ActionListener
 		return link;
 	}
 
+	private String cleanupText(String a_text)
+	{
 
+		a_text = Util.replaceAll(a_text, "<br>", "\n");
+		a_text = Util.replaceAll(a_text, "<p>", "\n\n");
+		a_text = Util.replaceAll(a_text,"&uuml;","\u00fc" );
+		a_text = Util.replaceAll(a_text,"&Uuml;","\u00dc" );
+		a_text = Util.replaceAll(a_text,"&auml;","\u00e4" );
+		a_text = Util.replaceAll(a_text,"&Auml;","\u00c4" );
+		a_text = Util.replaceAll(a_text,"&ouml;","\u00f6" );
+		a_text = Util.replaceAll(a_text,"&Ouml;","\u00d6" );
+		a_text = Util.replaceAll(a_text,"&szlig;","\u00df" );
+		a_text = Util.replaceAll(a_text, "&nbsp;", " ");
+		return a_text;
+    }
 
 }

@@ -28,34 +28,36 @@
 
 package update;
 
-import gui.JAPMultilineLabel;
-import gui.wizard.BasicWizardPage;
-import jap.JAPConstants;
-import gui.JAPMessages;
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 
+import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
-import gui.GUIUtils;
-import anon.util.ClassUtil;
+
 import anon.infoservice.JAPVersionInfo;
-import java.awt.Cursor;
-import java.awt.Color;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import anon.util.ClassUtil;
+import gui.GUIUtils;
+import gui.JAPMessages;
+import gui.JAPMultilineLabel;
+import gui.wizard.BasicWizardPage;
+import jap.JAPConstants;
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 import platform.AbstractOS;
-import java.net.URL;
-import java.net.*;
-import logging.*;
 
 public class JAPWelcomeWizardPage extends BasicWizardPage implements ActionListener
 {

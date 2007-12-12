@@ -51,6 +51,8 @@ import anon.util.captcha.IImageEncodedCaptcha;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+
+
 import anon.pay.xml.XMLAccountInfo;
 
 
@@ -233,7 +235,7 @@ public class PayAccountsFile extends Observable implements IXMLEncodable, IBICon
 					//theAccount.addMessageListener(PayAccountsFile.getInstance());
 
 
-					//load messages from the balances we already have (new messages are only displayed if different from existing ones)
+					//load messages from the balances we already have (future messages are only displayed if different from existing ones)
 					XMLBalance existingBalance = theAccount.getAccountInfo().getBalance();
 					PayMessage existingMessage = existingBalance.getMessage();
 					if (existingMessage != null && !existingMessage.getShortMessage().equals(""))

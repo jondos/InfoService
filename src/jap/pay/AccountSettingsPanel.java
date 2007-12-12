@@ -138,6 +138,7 @@ import logging.LogType;
 
 /**
  * The Jap Conf Module (Settings Tab Page) for the Accounts and payment Management
+ * also contains the setup for the account creation/charging wizard
  *
  * @author Bastian Voigt, Tobias Bayer, Elmar Schraml
  * @version 1.0
@@ -1132,9 +1133,19 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		    PaymentInstanceDBEntry jpiOfThisAccount = anAccount.getBI();
 			//only add account to the list of those to get transaction details for
 			//if the account's JPI matches the JPI of the currently active account
-			if (jpiOfThisAccount.getId().equalsIgnoreCase(jpiOfActiveAccount.getId()))
+			if (jpiOfThisAccount != null && jpiOfActiveAccount != null) //jpiOfActiveAccount is sometimes null, no idea why
 			{
-				a_accounts.addElement(anAccount);
+				if (jpiOfThisAccount.getId().equalsIgnoreCase(jpiOfActiveAccount.getId()))
+				{
+					a_accounts.addElement(anAccount);
+				}
+			}
+			else
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, "JPI is null! " +
+					"Current account: " + jpiOfThisAccount + " " +
+					"Active account: " + jpiOfActiveAccount + " " +
+					"Current account ID: " + anAccount.getAccountNumber());
 			}
 		}
 
@@ -1780,7 +1791,10 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					 XMLPaymentOption.OPTION_PASSIVE))
 				 {
 					 paymentToSend = passivePaymentPane.getEnteredInfo();
-					 String planName = planSelectionPane.getSelectedVolumePlan().getName();
+					 XMLVolumePlan selectedPlan = planSelectionPane.getSelectedVolumePlan();
+					 String planName = selectedPlan.getName();
+					 int planPrice = selectedPlan.getPrice();
+					 paymentToSend.setAmount(planPrice);
 					 paymentToSend.addData(XMLPassivePayment.KEY_VOLUMEPLAN, planName);
 					 //just a crutch to avoid having to query the database for the TAN
 					 long accNum = a_accountCreationThread.getAccount().getAccountNumber();
@@ -2065,7 +2079,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 	public void showOpenTransaction(PayAccount a_account)
 	{
-		/** @todo Must be refactored completely!!!! Really ugly mad code... */
+		/** @todo Must be refactored completely!!!! Really ugly mad code... */ //Elmar: I second that opinion, but am afraid to touch it...
 		final PayAccount selectedAccount = a_account;
 		final Vector transCerts = selectedAccount.getTransCerts();
 		if (selectedAccount != null && transCerts.size() > 0)
@@ -2206,6 +2220,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					KEY_AMOUNT));
 				String planName = (String) ( (Hashtable) run.getValue()).get(XMLTransactionOverview.
 					KEY_VOLUMEPLAN);
+				String paymentMethod = (String) ( (Hashtable) run.getValue()).get(XMLTransactionOverview.KEY_PAYMENTMETHOD);
+
+
 /*
 				//biConn will return XMLErrorMessage if payment is active (= no matching record in passivepayments)
 				//(the transfers table alone does not associate a payment method or type with a transfernumber)
@@ -2236,7 +2253,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 				TransactionOverviewDialog.showActivePaymentDialog(
 								jap.JAPConf.getInstance(), new Long(transferNumber).toString(),
-								amount, selectedAccount, planName);
+								amount, selectedAccount, planName, paymentMethod);
 
 			}
 			catch (Exception e)
@@ -3233,7 +3250,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		}, JAPDialog.MESSAGE_TYPE_WARNING, null))
 		{
 			JAPDialog dialog = new JAPDialog(GUIUtils.getParentWindow(getRootPanel()),
-											 JAPMessages.getString(WorkerContentPane.MSG_PLEASE_WAIT));
+											 JAPMessages.getString(WorkerContentPane.MSG_PLEASE_WAIT) +
+											 WorkerContentPane.DOTS);
 			WorkerContentPane pane = new WorkerContentPane(dialog,
 				JAPMessages.getString(WorkerContentPane.MSG_PLEASE_WAIT),
 				new Runnable()

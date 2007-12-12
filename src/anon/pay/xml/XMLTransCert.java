@@ -27,28 +27,30 @@
  */
 package anon.pay.xml;
 
-import java.io.ByteArrayInputStream;
+import java.sql.Timestamp;
+import java.util.Date;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
-import anon.util.XMLUtil;
-import anon.util.IXMLEncodable;
-import anon.crypto.XMLSignature;
 import anon.crypto.IMyPrivateKey;
-import java.util.Date;
+import anon.crypto.XMLSignature;
+import anon.util.IXMLEncodable;
+import anon.util.XMLUtil;
+import logging.*;
 
 /** @todo add spent, BiID */
 public class XMLTransCert implements IXMLEncodable
 {
 	//~ Instance fields ********************************************************
 
-	private java.sql.Timestamp m_validTime;
+	private java.sql.Timestamp m_validTime; // how long does the JPI allow the transation to be completed
 	private Date m_receivedDate;
 	private Date m_usedDate;
 	private long m_accountNumber;
 	private long m_transferNumber;
 	private long m_deposit;
+	private Timestamp m_paysafecardValidTime = null; //how long does the initially chosen payment method allow the transaction to be completed
+	//example: paysafecard disposition (paymentMethodValidTime) is invalid after 1 hour, but the user could still send cash until 30 days later (validTime)
 	private Document m_docTheTransCert;
 
 	//~ Constructors ***********************************************************
@@ -131,6 +133,21 @@ public class XMLTransCert implements IXMLEncodable
 	{
 		return m_validTime;
 	}
+	/**
+	 *
+	 * @return Timestamp: latest date at which the initially chosen payment method allows the transaction to be completed
+	 *                    or null if not explicitly set
+	 *                    will be null for most payment methods, most common non-null case is paysafecard
+	 */
+	public Timestamp getPaysafecardValidTime()
+	{
+		return m_paysafecardValidTime;
+	}
+
+	public void setPaysafecarddValidTime(Timestamp a_Time)
+	{
+		m_paysafecardValidTime = a_Time;
+	}
 
 	private void setValues(Element elemRoot) throws Exception
 	{
@@ -156,6 +173,23 @@ public class XMLTransCert implements IXMLEncodable
 		if (str != null)
 		{
 			m_receivedDate = new Date(Long.parseLong(str));
+		}
+
+	    element = (Element) XMLUtil.getFirstChildByName(elemRoot, "PaysafecardValidTime");
+		if (element != null)
+		{
+			str = XMLUtil.parseValue(element,null);
+			if (str != null)
+			{
+				try
+				{
+					m_paysafecardValidTime = Timestamp.valueOf(str);
+				}
+				catch (IllegalArgumentException a_e)
+				{
+					LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, a_e);
+				}
+			}
 		}
 	}
 
@@ -184,8 +218,14 @@ public class XMLTransCert implements IXMLEncodable
 		elem = a_doc.createElement("ReceivedDate");
 		if (m_receivedDate != null)
 		{
-		XMLUtil.setValue(elem, m_receivedDate.getTime());
-		elemRoot.appendChild(elem);
+			XMLUtil.setValue(elem, m_receivedDate.getTime());
+			elemRoot.appendChild(elem);
+		}
+		elem = a_doc.createElement("PaysafecadValidTime");
+		if (m_paysafecardValidTime != null)
+		{
+			XMLUtil.setValue(elem,m_paysafecardValidTime.toString());
+			elemRoot.appendChild(elem);
 		}
 		return elemRoot;
 	}

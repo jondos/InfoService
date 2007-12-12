@@ -32,8 +32,8 @@ import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import java.awt.Component;
 import java.awt.Container;
-import java.awt.Cursor;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -43,17 +43,20 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 
 import anon.pay.xml.XMLPaymentOption;
 import anon.pay.xml.XMLTransCert;
 import anon.util.Util;
+import gui.GUIUtils;
 import gui.JAPMessages;
+import gui.LinkMouseListener;
 import gui.dialog.DialogContentPane;
 import gui.dialog.DialogContentPane.IWizardSuitable;
 import gui.dialog.JAPDialog;
@@ -65,14 +68,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
-import java.util.Hashtable;
-import gui.GUIUtils;
-import javax.swing.ImageIcon;
-import javax.swing.JPanel;
-import java.awt.Graphics;
-import javax.swing.BoxLayout;
-import java.awt.Component;
-import java.awt.event.MouseListener;
+
 
 public class PaymentInfoPane extends DialogContentPane implements IWizardSuitable,
 	ActionListener
@@ -326,19 +322,22 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 				m_c.gridwidth = 2;
 				m_rootPanel.add(imagePanel, m_c);
 				m_c.gridwidth = 1;
+				m_c.gridy++;
 			}
 
 			//add buttons
-			m_c.gridy++;
-			m_bttnCopy = new JButton(JAPMessages.getString(MSG_BUTTONCOPY));
-			m_bttnCopy.addActionListener(this);
-			m_rootPanel.add(m_bttnCopy, m_c);
 
-			m_c.gridx++;
 			m_bttnOpen = new JButton(JAPMessages.getString(MSG_BUTTONOPEN));
 			m_bttnOpen.addActionListener(this);
 			m_rootPanel.add(m_bttnOpen, m_c);
 			m_bttnOpen.setVisible(false);
+
+			m_c.gridx++;
+			m_bttnCopy = new JButton(JAPMessages.getString(MSG_BUTTONCOPY));
+			m_bttnCopy.addActionListener(this);
+			m_rootPanel.add(m_bttnCopy, m_c);
+			m_bttnCopy.setVisible(false);
+
 
 			isURL = selectedOption.getExtraInfoType(m_language).equalsIgnoreCase(XMLPaymentOption.EXTRA_LINK);
 			if (isURL)
@@ -348,7 +347,7 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 			}
 			else
 			{
-				m_bttnOpen.setVisible(false);
+				m_bttnCopy.setVisible(true);
 				htmlExtraInfo = "<p> <b>" + m_strExtraInfo + "</b> </p>";
 			}
 		}
@@ -371,9 +370,6 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 			setText(selectedOption.getDetailedInfo(m_language) + htmlExtraInfo);
 		}
 		if (isURL) setMouseListener(new LinkMouseListener());
-
-
-
 	}
 
 	public XMLTransCert getTransCert()
@@ -386,7 +382,7 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 	 * @param a_methodName String: String of the method name, as contained in db table paymentoptions and returned by <XMLPaymentOption>.getName()
 	 * @return String: path to the image file as contained in JAPConstants in a String constant called IMAGE_<METHODNAME>, or null if not found, or on error
 	 */
-	private String getMethodImageFilename(String a_methodName)
+	public static String getMethodImageFilename(String a_methodName)
 	{
 		Class japConstantsClass = JAPConstants.class;
 		String imageFieldName = "IMAGE_" + a_methodName.toUpperCase();
@@ -496,6 +492,7 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		}
 		else if (e.getSource() == m_bttnOpen)
 		{
+			m_bttnCopy.setVisible(true);
 			openURL();
 		}
 	}
@@ -515,75 +512,6 @@ public class PaymentInfoPane extends DialogContentPane implements IWizardSuitabl
 		 JAPMessages.getString(MSG_EXPLAIN_COULD_OPEN), LogType.PAY)};
 		}
 		return null;
-	}
-
-}
-
-class LinkMouseListener extends MouseAdapter
-{
-	/**
-	 * create a LinkMouseListener that can only be applied to a JLabel
-	 * and will on click open an URL gotten from that JLabel's getText() method
-	 */
-	public LinkMouseListener()
-	{
-		super();
-	}
-
-	/**
-	 * create a LinkMouseListener that can be applied to any component
-	 * will open the supplied link on click
-	 * does not check if the supplied String is a valid URL
-	 * @param a_Link String
-	 */
-	public LinkMouseListener(String a_Link)
-	{
-		super();
-		linkToOpen = a_Link;
-	}
-
-	private String linkToOpen = null;
-
-	public void mouseClicked(MouseEvent e)
-	{
-		String linkText;
-		if (linkToOpen != null)
-		{
-			linkText = linkToOpen;
-		}
-		else
-		{
-			//Warning: will fail if LinkMouseListener is added to a JComponent other than a JLabel
-			JLabel source = (JLabel) e.getSource();
-			linkText = source.getText();
-		}
-
-		try
-		{
-			URL linkUrl = new URL(linkText);
-			AbstractOS.getInstance().openURL(linkUrl);
-		}
-		catch (ClassCastException cce)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.PAY,
-						  "opening a link failed, reason: called on non-JLabel component");
-		}
-		catch (MalformedURLException mue)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.PAY, "opening a link failed, reason: malformed URL");
-		}
-	}
-
-	public void mouseEntered(MouseEvent e)
-	{
-		JComponent source = (JComponent) e.getSource();
-		source.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-	}
-
-	public void mouseExited(MouseEvent e)
-	{
-		JComponent source = (JComponent) e.getSource();
-		source.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 	}
 
 }

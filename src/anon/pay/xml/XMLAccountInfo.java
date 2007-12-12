@@ -38,7 +38,8 @@ import anon.util.IXMLEncodable;
 import anon.util.XMLUtil;
 
 /**
- * This class represents an XML AccountInfo structure.
+ * This class represents an XML AccountInfo structure
+ * (XMLBalance plus cost confirmations for the account)
  *
  *
  * The following XML structure is used:

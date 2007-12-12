@@ -277,6 +277,11 @@ public final class GUIUtils
 		boolean bScalingDone = false;
 		String strScaledRelativeImagePath = null;
 
+		if (a_strRelativeImagePath == null)
+		{
+			return null;
+		}
+
 		if (a_bScale && ms_resizer.getResizeFactor() != 1.0)
 		{
 			// we have to scale; look if there are pre-scaled graphics first
