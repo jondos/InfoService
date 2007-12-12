@@ -481,7 +481,8 @@ public class AIControlChannel extends XmlControlChannel
 
 	  if (priceCerts.size() != mixIDs.size())
 	  {
-		  message = "Not all Mixes in cascade " + m_connectedCascade.getId() + " have price certs!";
+		  message = "Not all Mixes in cascade " + m_connectedCascade.getId() + " have price certs! " +
+		  "PriceCerts/MixIDs:" + priceCerts.size() + "/" + mixIDs.size();
 	  }
 	  else
 	  {

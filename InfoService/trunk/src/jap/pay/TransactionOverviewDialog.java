@@ -315,6 +315,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 			long amount = ((TablecellAmount) value).getLongValue();
 			String status = (String) m_transactionsTable.getModel().getValueAt(selectedRow,6);
 			String planName = (String) m_transactionsTable.getModel().getValueAt(selectedRow,4);
+			String paymentMethod = (String) m_transactionsTable.getModel().getValueAt(selectedRow,5);
 			boolean isCompleted = false;
 			boolean isExpired = false;
 			if (status.equalsIgnoreCase(JAPMessages.getString(MSG_USEDSTATUS)) )
@@ -406,7 +407,7 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 					}
 					else
 					{
-						showActivePaymentDialog(this, transferNumber, amount, m_account, planName);
+						showActivePaymentDialog(this, transferNumber, amount, m_account, planName, paymentMethod);
 					}
 				}
 				else
@@ -424,10 +425,10 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 		}
 	}
 
-	public static void showActivePaymentDialog(JAPDialog a_parent, String transferNumber, long amount, PayAccount a_account, String planName)
+	public static void showActivePaymentDialog(JAPDialog a_parent, String transferNumber, long amount, PayAccount a_account, String planName, String a_paymentMethod)
 	{
 		String language = JAPMessages.getLocale().getLanguage();
-		Vector optionsToShow = getLocalizedActivePaymentsData(language, a_account);
+		Vector optionsToShow = getLocalizedActivePaymentsData(language, a_account, a_paymentMethod);
 
 	    ActivePaymentDetails apd = new ActivePaymentDetails(a_parent, optionsToShow, transferNumber,amount, planName);
 	}
@@ -436,11 +437,12 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 	 * getLocalizedActivePaymentsData
 	 *
 	 * @param lang: String, 2-letter language code, e.g. "en" for english
+	 * @param a_paymentMethod: the internal name of the payment method that the user chose when creating the transaction
 	 * @return Vector: of Hashtables (one per XMLPaymentOption)
 	 *         entries in Hashtable: Strings for keys "name","heading","detailedInfo",
 	 *                               Vector of Strings for key "extraInfos"
 	 */
-	private static Vector getLocalizedActivePaymentsData(String lang, PayAccount a_account)
+	private static Vector getLocalizedActivePaymentsData(String lang, PayAccount a_account, String a_paymentMethod)
 	{
 		Vector optionsToShow = new Vector();
 		try
@@ -459,10 +461,24 @@ public class TransactionOverviewDialog extends JAPDialog implements ActionListen
 			for (Enumeration options = allOptions.getAllOptions().elements();options.hasMoreElements(); )
 			{
 				XMLPaymentOption curOption = (XMLPaymentOption) options.nextElement();
+
+				//skip passive payment options
 				if (curOption.getType().equals("passive") )
 				{
 					continue; //we only need data for active and mixed payment options
 				}
+				//skip paysafecard unless it was chosen for this transfer (cause if not, no psc disposition was created in the wizard, so completing the payment via psc would not work)
+				if (curOption.getName().toUpperCase().indexOf("PAYSAFE") != -1 )
+				{
+					/** @todo do not show paysafecard here, as the user might have canceled the transaction
+					if (a_paymentMethod.toUpperCase().indexOf("PAYSAFE") == -1 )
+					 */
+					{
+						continue;
+					}
+				}
+
+
 				Hashtable curOptionData = new Hashtable();
 				curOptionData.put("name",curOption.getName());
 				curOptionData.put("heading",curOption.getHeading(lang));

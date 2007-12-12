@@ -399,7 +399,7 @@ public class InfoServiceDistributor implements IDistributor
       int statusCode = response.getStatusCode();
       LogHolder.log(LogLevel.DEBUG, LogType.NET, "Entry " + a_information.getId() + " sent to: " + a_listener.getHost() + ":" + Integer.toString(a_listener.getPort()) + a_information.getPostFile() + " Result: " + Integer.toString(statusCode));
     }
-    catch (Exception e) {
+    catch (Throwable e) {
       connected = false;
       LogHolder.log(LogLevel.ERR, LogType.NET, "Error while sending " + a_information.getId() + " to: " + a_listener.getHost() + ":" + Integer.toString(a_listener.getPort()) + a_information.getPostFile(), e);
     }

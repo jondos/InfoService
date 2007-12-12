@@ -304,7 +304,9 @@ public class XMLPaymentOption implements IXMLEncodable
 			throw new Exception(EXCEPTION_WRONG_XML_STRUCTURE);
 		}
 
-		m_type = elemRoot.getAttribute("type");
+
+
+	    m_type = elemRoot.getAttribute("type");
 		m_name = elemRoot.getAttribute("name");
 		m_generic = XMLUtil.parseAttribute(elemRoot, "generic", true);
 		m_minJapVersion = XMLUtil.parseAttribute(elemRoot, "japversion", Util.VERSION_FORMAT);
@@ -350,8 +352,8 @@ public class XMLPaymentOption implements IXMLEncodable
 		//parse payment delays
 		NodeList nodesDelay = elemRoot.getElementsByTagName("PaymentDelay");
 		for (int i = 0; i < nodesDelay.getLength(); i++)
-		{
-			String delay = XMLUtil.parseValue(nodesDelay.item(i), null);
+		{		
+			String delay = XMLUtil.parseValue(nodesDelay.item(i), "");
 			String language = ( (Element) nodesDelay.item(i)).getAttribute("lang");
 			if (language == null || delay == null)
 			{

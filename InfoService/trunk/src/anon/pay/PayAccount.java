@@ -133,6 +133,7 @@ public class PayAccount implements IXMLEncodable
 	private static final long TRANSACTION_EXPIRATION = 1000 * 60 * 60 * 24 * 14; // two weeks
 	public boolean isTransactionExpired()
 	{
+		//account (== transaction) older than validtime?
 		Timestamp creationTime = getCreationTime();
 		long creationTimeMs = creationTime.getTime();
 		Timestamp now = new Timestamp(System.currentTimeMillis());

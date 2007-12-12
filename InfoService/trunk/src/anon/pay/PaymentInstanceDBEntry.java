@@ -202,26 +202,31 @@ public class PaymentInstanceDBEntry extends AbstractDistributableCertifiedDataba
 		elemRoot.appendChild(elemLastUpdate);
 	    if (m_cert != null)
 		{
-		Element elemCert = doc.createElement(XML_ELEM_CERT);
-		elemRoot.appendChild(elemCert);
-		elemCert.appendChild(m_cert.toXmlElement(doc));
+			Element elemCert = doc.createElement(XML_ELEM_CERT);
+			elemRoot.appendChild(elemCert);
+			elemCert.appendChild(m_cert.toXmlElement(doc));
 
-		m_signature = SignatureCreator.getInstance().getSignedXml(
-			SignatureVerifier.DOCUMENT_CLASS_PAYMENT, elemRoot);
-		if (m_signature != null)
-		{
-			m_certPath = m_signature.getCertPath();
-		}
+			m_signature = SignatureCreator.getInstance().getSignedXml(
+				SignatureVerifier.DOCUMENT_CLASS_PAYMENT, elemRoot);
+			if (m_signature != null)
+			{
+				m_certPath = m_signature.getCertPath();
+			}
 
-		if (m_certPath == null ||m_certPath.getFirstCertificate() == null)
-		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Document could not be signed!");
+			if (m_certPath == null || m_certPath.getFirstCertificate() == null)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Document could not be signed!");
+			}
+			else
+			{
+				m_cert = m_certPath.getFirstCertificate();
+			}
 		}
-		else
+		else if (m_certPath != null)
 		{
 			m_cert = m_certPath.getFirstCertificate();
 		}
-		}
+
 		m_xmlDescription = elemRoot;
 	}
 

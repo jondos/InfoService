@@ -140,7 +140,7 @@ public class XMLPaymentOptions implements IXMLEncodable
 		m_currencies.addElement(a_currency);
 	}
 
-	public Enumeration getOptionHeadings(String a_language)
+	public synchronized Enumeration getOptionHeadings(String a_language)
 	{
 		Vector optionHeadings = new Vector();
 		this.setSortingLanguage(a_language);
@@ -168,7 +168,7 @@ public class XMLPaymentOptions implements IXMLEncodable
 		   return getAllOptionsSortedByRank("en");
 	}
 
-	public Vector getAllOptionsSortedByRank(String a_lang)
+	public synchronized Vector getAllOptionsSortedByRank(String a_lang)
 	{
 		//set this as Comparator -> uses XMLPaymentOptions.compare() -> enables us to use a paramater to set which language's ranks to sort by
 		this.setSortingLanguage(a_lang);
