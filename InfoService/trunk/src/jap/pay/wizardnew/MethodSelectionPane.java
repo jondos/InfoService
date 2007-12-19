@@ -28,9 +28,8 @@
 package jap.pay.wizardnew;
 
 import java.util.Enumeration;
-import java.util.Hashtable;
 import java.util.StringTokenizer;
-import java.util.Hashtable;
+import java.util.Vector;
 
 import java.awt.Container;
 import java.awt.GridBagConstraints;
@@ -39,27 +38,20 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.ButtonGroup;
-
+import javax.swing.JLabel;
 import javax.swing.JRadioButton;
 
 import anon.pay.xml.XMLPaymentOption;
 import anon.pay.xml.XMLPaymentOptions;
 import anon.pay.xml.XMLVolumePlan;
-import gui.JAPHtmlMultiLineLabel;
 import gui.JAPMessages;
 import gui.dialog.DialogContentPane;
 import gui.dialog.DialogContentPane.IWizardSuitable;
 import gui.dialog.JAPDialog;
 import gui.dialog.WorkerContentPane;
 import jap.JAPConstants;
-import jap.JAPController;
 import jap.JAPUtil;
 import logging.LogType;
-import anon.pay.xml.XMLVolumePlan;
-import jap.JAPUtil;
-import javax.swing.JLabel;
-import gui.JAPHtmlMultiLineLabel;
-import java.util.Vector;
 
 public class MethodSelectionPane extends DialogContentPane implements IWizardSuitable, ActionListener
 {
