@@ -519,8 +519,8 @@ public final class XMLSignature implements IXMLEncodable
 					currentCertificate = nextCertificate;
 					if (!certificates.hasMoreElements()) //we reached the last cert in the path
 					{
-						//LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
-						//			  "Trying to build certification path -success!");
+						LogHolder.log(LogLevel.DEBUG, LogType.CRYPTO,
+									  "Trying to build certification path -success!");
 					}
 				}
 				//the certspath was traversed as far as possible or there was only one certificate
