@@ -497,6 +497,8 @@ final class JAPConfUI extends AbstractJAPConfModule
 		m_comboLanguage.addItem(new LanguageMapper("cs", new Locale("cs", "")));
 		m_comboLanguage.addItem(new LanguageMapper("fr", new Locale("fr", "")));
 		m_comboLanguage.addItem(new LanguageMapper("nl", new Locale("nl", "")));
+		m_comboLanguage.addItem(new LanguageMapper("ca", new Locale("ca", "")));
+		m_comboLanguage.addItem(new LanguageMapper("es", new Locale("es", "")));
 		//m_comboLanguage.addItem(new LanguageMapper("pt", new Locale("pt", "")));
 
 		c.gridx = 1;

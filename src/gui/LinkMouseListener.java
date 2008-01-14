@@ -14,7 +14,7 @@ import logging.LogType;
 
 public class LinkMouseListener extends MouseAdapter
 {
-	private String linkToOpen = null;
+	private ILinkGenerator m_linkToOpen = null;
 
 	/**
 	 * create a LinkMouseListener that can only be applied to a JLabel
@@ -34,23 +34,36 @@ public class LinkMouseListener extends MouseAdapter
 	public LinkMouseListener(String a_Link)
 	{
 		super();
-		linkToOpen = a_Link;
+		m_linkToOpen = new ImmutableLinkGenerator(a_Link);
+	}
+
+	public LinkMouseListener(ILinkGenerator a_Link)
+	{
+		super();
+		m_linkToOpen = a_Link;
 	}
 
 
+	public interface ILinkGenerator
+	{
+		String createLink();
+	}
 
 	public void mouseClicked(MouseEvent e)
 	{
 		String linkText;
-		if (linkToOpen != null)
+		if (m_linkToOpen != null)
 		{
-			linkText = linkToOpen;
+			linkText = m_linkToOpen.createLink();
+		}
+		else if (e.getSource() instanceof JLabel)
+		{
+			linkText = ((JLabel) e.getSource()).getText();
 		}
 		else
 		{
-			//Warning: will fail if LinkMouseListener is added to a JComponent other than a JLabel
-			JLabel source = (JLabel) e.getSource();
-			linkText = source.getText();
+			// do nothing
+			return;
 		}
 
 		try
@@ -80,6 +93,20 @@ public class LinkMouseListener extends MouseAdapter
 	{
 		JComponent source = (JComponent) e.getSource();
 		source.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+	}
+
+	private class ImmutableLinkGenerator implements ILinkGenerator
+	{
+		private String m_LinkToOpen;
+		public ImmutableLinkGenerator(String a_LinkToOpen)
+		{
+			m_LinkToOpen = a_LinkToOpen;
+		}
+
+		public String createLink()
+		{
+			return m_LinkToOpen;
+		}
 	}
 
 }

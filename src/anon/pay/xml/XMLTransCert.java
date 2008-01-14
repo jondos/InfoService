@@ -153,7 +153,7 @@ public class XMLTransCert implements IXMLEncodable
 	{
 		if (!elemRoot.getTagName().equals("TransferCertificate"))
 		{
-			throw new Exception("XMLTransCert wrong xml structure");
+			throw new Exception("XMLTransCert wrong xml structure: " + XMLUtil.toString(elemRoot));
 		}
 
 		Element element = (Element) XMLUtil.getFirstChildByName(elemRoot, "AccountNumber");

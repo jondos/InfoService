@@ -2858,7 +2858,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				if (a_methodSelectionPane == null ||
 					a_methodSelectionPane.getSelectedPaymentOption() == null ||
 					a_methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
-						XMLPaymentOption.OPTION_PASSIVE))
+									   XMLPaymentOption.OPTION_PASSIVE) ||
+					a_methodSelectionPane.getSelectedPaymentOption().getType().equalsIgnoreCase(
+									   XMLPaymentOption.OPTION_MIXED) )
 				{
 					return false;
 				}
