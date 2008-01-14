@@ -65,7 +65,7 @@ public final class JAPConstants
 		}
 	}
 
-	public static final boolean DEBUG = true;
+	public static final boolean DEBUG = false;
 
 	public static final int DEFAULT_PORT_NUMBER = 4001;
 	public static final boolean DEFAULT_LISTENER_IS_LOCAL = true;
