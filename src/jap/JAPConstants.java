@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.09.011"; //Never change the layout of this line!
+	public static final String aktVersion = "00.09.012"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -65,7 +65,7 @@ public final class JAPConstants
 		}
 	}
 
-	public static final boolean DEBUG = false;
+	public static final boolean DEBUG = true;
 
 	public static final int DEFAULT_PORT_NUMBER = 4001;
 	public static final boolean DEFAULT_LISTENER_IS_LOCAL = true;
