@@ -1251,7 +1251,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		throughput = 0.0;
 		for(int i=1; i < throughputs.length; i++)
 			throughput += (throughputs[i-1] = throughputs[i]);
-		throughputs[throughputs.length] = pThroughput;
+		throughputs[throughputs.length-1] = pThroughput;
 		throughput = (throughput + pThroughput) / throughputs.length;
 	}
 }
