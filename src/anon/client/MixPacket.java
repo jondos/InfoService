@@ -35,10 +35,15 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.InputStream;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Vector;
+
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 import anon.client.crypto.SymCipher;
 
@@ -82,8 +87,16 @@ public class MixPacket {
     /* read the packet from the origin stream */
     byte[] rawPacket = new byte[PACKET_SIZE];
     DataInputStream sourceStream = new DataInputStream(a_inputStream);
-    sourceStream.readFully(rawPacket);
-    /* do stream-decryption */
+    try 
+    {
+    	sourceStream.readFully(rawPacket);
+    }
+    catch(EOFException eofe)
+    {
+    	LogHolder.log(LogLevel.WARNING, LogType.NET, Thread.currentThread().getName()+": received a truncated packet from a mix: ", eofe);
+    	throw eofe;
+    }
+    	/* do stream-decryption */
     if (a_inputStreamCipher != null) {
       a_inputStreamCipher.encryptAES(rawPacket, 0, rawPacket, 0, 16);
     }
