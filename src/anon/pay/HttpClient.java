@@ -27,10 +27,12 @@
  */
 package anon.pay;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.Socket;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -45,7 +47,7 @@ import anon.util.XMLUtil;
 final public class HttpClient
 {
 	private final static int MAX_LINE_LENGTH = 100;
-	private DataInputStream m_dataIS;
+	private BufferedReader m_reader;
 	private BufferedOutputStream m_OS;
 	private Socket m_socket;
 
@@ -58,10 +60,12 @@ final public class HttpClient
 	public HttpClient(Socket socket) throws IOException
 	{
 		m_socket = socket;
-		m_dataIS = new DataInputStream(m_socket.getInputStream());
+		
+		//m_dataIS = new DataInputStream(m_socket.getInputStream());
+		m_reader = new BufferedReader(new InputStreamReader(m_socket.getInputStream()));
 		m_OS = new BufferedOutputStream(m_socket.getOutputStream(),4096);
 	}
-
+	
 	/**
 	 * Schlie\uFFFDt die Http-Verbindung.
 	 *
@@ -76,7 +80,10 @@ final public class HttpClient
 		/*SK13 removed because not Java 1.1. */
 		//	m_socket.shutdownInput();
 		//  m_socket.shutdownOutput();
-		m_socket.close();
+		if(m_socket != null)
+		{
+			m_socket.close();
+		}
 	}
 
 	/**
@@ -111,10 +118,17 @@ final public class HttpClient
 	public Document readAnswer() throws Exception
 	{
 		int contentLength = -1;
-		byte[] data = null;
+		char[] data = null;
 		int index;
-		String line = readLine(m_dataIS);
-
+		//BufferedReader reader = new BufferedReader(new InputStreamReader(m_dataIS));
+		
+		/* better use BufferedReader */
+		//String line = readLine(m_dataIS);
+		String line = m_reader.readLine(); 
+				
+		if(line == null) {
+			throw new IOException("No answer received");
+		}
 		if ( (index = line.indexOf(" ")) == -1)
 		{
 			throw new IOException("Wrong Header");
@@ -126,20 +140,37 @@ final public class HttpClient
 		}
 		String Status = line.substring(0, index);
 		String statusString = line.substring(index + 1);
-		while ( (line = readLine(m_dataIS)).length() != 0)
+		
+		/* better use BufferedReader */
+		//while ( (line = readLine(m_dataIS)).length() != 0)
+		line = m_reader.readLine();
+		while (line != null)
 		{
+			if(line.equals(""))
+			{
+				break;
+			}
+			
 			if ( (index = line.indexOf(" ")) == -1)
 			{
-				throw new IOException("Wrong Header");
+				throw new IOException("Wrong Header: "+line);
 			}
 			String headerField = line.substring(0, index);
 			String headerValue = line.substring(index + 1).trim();
 			if (headerField.equalsIgnoreCase("Content-length:"))
 			{
-				contentLength = Integer.parseInt(headerValue);
+				try 
+				{
+					contentLength = Integer.parseInt(headerValue);
+				}
+				catch (NumberFormatException nfe)
+				{
+					throw new IOException("Error: received invalid value for header Content-length: "+headerValue);
+				}
 			}
+			line = m_reader.readLine();
 		}
-
+				
 		if (contentLength > 0)
 		{
 			/** @todo Check if needed!
@@ -149,13 +180,15 @@ final public class HttpClient
 			}
 		 */
 
-			data = new byte[contentLength];
+			data = new char[contentLength];
 
 			int pos = 0;
 			int ret = 0;
 			do
 			{
-				ret = m_dataIS.read(data, pos, contentLength - pos);
+				/* better use BufferedReader */
+				//ret = m_dataIS.read(data, pos, contentLength - pos);
+				ret = m_reader.read(data, pos, contentLength - pos);
 				if (ret == -1)
 				{
 					break;
@@ -171,7 +204,7 @@ final public class HttpClient
 				String descstr;
 				try
 				{
-					XMLDescription desc = new XMLDescription(data);
+					XMLDescription desc = new XMLDescription(data); 
 					descstr = desc.getDescription();
 				}
 				catch (Exception e)
@@ -183,43 +216,6 @@ final public class HttpClient
 			}
 			throw new IOException(statusString);
 		}
-
 		return XMLUtil.toXMLDocument(data);
 	}
-
-	/**
-	 * Hilfsfunktion zum Einlesen einer Textzeile.
-	 *
-	 * @param inputStream Eingabedatenstrom
-	 * @return Textzeile
-	 * @throws IOException
-	 */
-	private String readLine(DataInputStream inputStream) throws IOException
-	{
-		StringBuffer buff = new StringBuffer(256);
-		int count = 0;
-		try
-		{
-			int byteRead = inputStream.readByte();
-			while (byteRead != 10 && byteRead != -1)
-			{
-				if (byteRead != 13)
-				{
-					count++;
-					if (count > MAX_LINE_LENGTH)
-					{
-						throw new IOException("line to long");
-					}
-					buff.append( (char) byteRead);
-				}
-				byteRead = inputStream.read();
-			}
-		}
-		catch (IOException e)
-		{
-			throw e;
-		}
-		return buff.toString();
-	}
-
 }

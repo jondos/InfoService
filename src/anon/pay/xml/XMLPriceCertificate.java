@@ -195,7 +195,12 @@ public class XMLPriceCertificate implements IXMLEncodable
 		m_docThePriceCert = doc;
 		m_hashValue = XMLSignature.getHashValueOfElement(m_docThePriceCert);
 	}
-
+	
+	public XMLPriceCertificate(char[] xmldata) throws Exception
+	{
+		this(new String(xmldata));
+	}
+	
 	public XMLPriceCertificate(byte[] xmldata) throws Exception
 	{
 		ByteArrayInputStream in = new ByteArrayInputStream(xmldata);
@@ -348,7 +353,7 @@ public class XMLPriceCertificate implements IXMLEncodable
 	}
 
 	/**
-	 * toString: responsible for the represenation of a price cert in a GUI component
+	 * toString: responsible for the representation of a price cert in a GUI component
 	 *
 	 * @return String:Formatted as: Price: XX.XX Eurocent, [signed: dd.mm.yyyy | not signed]
 	 */
