@@ -27,7 +27,13 @@
  */
 package platform;
 
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
+import java.util.Vector;
 
 import logging.LogHolder;
 import logging.LogLevel;
@@ -66,7 +72,24 @@ public abstract class AbstractOS implements IExternalURLCaller, IExternalEMailCa
 
 	private IURLErrorNotifier m_notifier;
 	private IURLOpener m_URLOpener;
-
+	
+	private static File ms_tmpDir;
+	
+	static
+	{
+		// Needs to be done according to the JDK because java.io.tmpdir 
+		// seems to return wrong values on some Linux and Solaris systems.
+		String tmpDir = System.getProperty("java.io.tmpdir");
+		if(tmpDir.compareTo("/var/tmp/") == 0)
+			tmpDir = "/tmp/";
+		
+		// Assure that the tmpDir has a trailing File.seperator
+		if(tmpDir.lastIndexOf(File.pathSeparator) != (tmpDir.length() - 1))
+			tmpDir = tmpDir + File.separator;
+		
+		ms_tmpDir = new File(tmpDir);
+	}
+	
 	public static interface IURLOpener
 	{
 		boolean openURL(URL a_url);
@@ -237,5 +260,58 @@ public abstract class AbstractOS implements IExternalURLCaller, IExternalEMailCa
 			return null;
 		}
 		return a_url.toString();
+	}
+	
+	/**
+	 * Returns a vector of all running VMs. This only works on the Sun VM
+	 * 
+	 * @return a vector of all running Virtual Machines
+	 */
+	public Vector getActiveVMs()
+	{
+		Vector r_vms = new Vector();
+		int id = 0;
+		
+		if(!ms_tmpDir.isDirectory())
+			return r_vms;
+		
+		// Loop through all directories that match the filter
+		String[] dirs = ms_tmpDir.list(new FilenameFilter() 
+		{
+			public boolean accept(File a_dir, String a_name)
+			{
+				return a_name.startsWith("hsperfdata_");
+			}
+		});
+		if(dirs == null) return r_vms;
+		
+		for(int i = 0; i < dirs.length; i++)
+		{
+			File dir = new File(ms_tmpDir + File.separator + dirs[i]);
+			if(!dir.isDirectory())
+				continue;
+			
+			// Loop through all files in the directory. Each file represents one VM
+			String[] files = dir.list();
+			
+			if(files != null)
+			{
+				for(int j = 0; j < files.length; j++)
+				{
+					File file = new File(dir + File.separator + files[j]);
+					if(file.isFile() && file.canRead()) 
+					{
+						try 
+						{
+							if((id = Integer.parseInt(file.getName())) != 0)
+								r_vms.addElement(new VMPerfDataFile(id));
+						} 
+						catch(NumberFormatException e) { continue; }
+					}
+				}
+			}
+		}
+		
+		return r_vms;		
 	}
 }
