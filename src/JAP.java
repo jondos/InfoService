@@ -38,6 +38,7 @@ import java.net.URL;
 import java.security.SecureRandom;
 import java.util.Hashtable;
 import java.util.Locale;
+import java.util.Vector;
 
 import java.awt.Frame;
 
@@ -177,6 +178,7 @@ public class JAP
 			System.out.println("Usage:");
 			System.out.println("--help, -h:                  Show this text.");
 			System.out.println("--console:                   Start JAP/JonDo in console-only mode.");
+			System.out.println("--allow-multiple, -a         Allow JAP to start multiple instances.");
 			System.out.println("--minimized, -m:             Minimize JAP/JonDo on startup.");
 			System.out.println("--version, -v:               Print version information.");
 			System.out.println("--showDialogFormat           Show and set dialog format options.");
@@ -198,7 +200,26 @@ public class JAP
 		{
 			bConsoleOnly = true;
 		}
-
+		
+		if(!isArgumentSet("--allow-multiple") && !isArgumentSet("-a"))
+		{
+			// Try to detect running instances of JAP
+			Vector activeVMs = AbstractOS.getInstance().getActiveVMs();
+			Object vm;
+			int numJAPInstances = 0;
+			for(int i = 0; i < activeVMs.size(); i++)
+			{
+				vm = activeVMs.elementAt(i);
+				if(vm != null && vm.toString() != null && (vm.toString().equals("JAP")) || vm.toString().equals("JAP.jar") || vm.toString().equals("JAPMacintosh")) numJAPInstances++;
+				if(numJAPInstances > 1)
+				{
+					// multiple instances of JAP have been started, what to do?
+					System.out.println("There is already an instance of JAP running.");
+					System.exit(0);
+				}
+			}
+		}
+		
 		// Test (part 2) for right JVM....
 		if (vendor.startsWith("Transvirtual"))
 		{ // Kaffe
