@@ -729,7 +729,8 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 
 	public boolean checkId()
 	{
-		return m_userDefined || super.checkId();
+		//Note: If there is no signature check then there is possibly no certificate
+		return m_userDefined ||super.checkId()||!SignatureVerifier.getInstance().isCheckSignatures();
 	}
 
 	/**

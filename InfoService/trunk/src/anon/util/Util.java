@@ -27,8 +27,6 @@
  */
 package anon.util;
 
-import jap.TrustModel;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
