@@ -127,6 +127,14 @@ public class DynamicCommandsExtension
 			}
 			else if (a_encoding == HttpResponseStructure.HTTP_ENCODING_PLAIN)
 			{
+				/**@todo WORKAROUND FIX for a bug, there the IS reported that the message is PLAIN but in fact it is ZLIB encoded!*/
+				if(a_postData[0]!='<')
+				{//try zlib decompress...
+					byte[] b = ZLibTools.decompress(a_postData);
+					if(b!=null)
+						a_postData=b;
+				}
+				/** end workaround!*/
 				Element mixCascadeNode = (Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData), MixCascade.XML_ELEMENT_NAME));
 				mixCascadeEntry = new MixCascade(mixCascadeNode);
 			}
