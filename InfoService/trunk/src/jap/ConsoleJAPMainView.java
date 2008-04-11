@@ -51,12 +51,12 @@ public class ConsoleJAPMainView implements IJAPMainView
 	public void doClickOnCascadeChooser()
 	{
 	}
-
-	public String getBrowserCommand()
+	
+	public String[] getBrowserCommand()
 	{
 		return null;
 	}
-
+	
 	public void updateValues(boolean bSync)
 	{
 	}

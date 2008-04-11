@@ -56,6 +56,16 @@ public final class ThreadPool
 			this.parent = parent;
 		}
 
+		public void shutdown()
+		{
+			shouldRun = false;
+			while (isAlive())
+			{
+				interrupt();
+				Thread.yield();
+			}
+		}
+
 		public void run()
 		{
 			ThreadPoolRequest obj = null;
@@ -158,6 +168,14 @@ public final class ThreadPool
 			poolThreads[i].setPriority(priority);
 			poolThreads[i].setDaemon(true);
 			poolThreads[i].start();
+		}
+	}
+
+	public void shutdown()
+	{
+		for (int i = 0; i < poolThreads.length; i++)
+		{
+			poolThreads[i].shutdown();
 		}
 	}
 

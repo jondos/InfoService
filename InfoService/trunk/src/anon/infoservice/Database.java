@@ -40,6 +40,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import anon.crypto.MyRandom;
+import anon.util.Util;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import anon.util.IXMLEncodable;
@@ -68,11 +69,15 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 	 */
 	private static IDistributor m_distributor;
 
+	private static boolean ms_bShutdown = false;
+
 	/**
 	 * The DatabaseEntry class for that this Database is registered.
 	 * The Database can only hold instances of this class.
 	 */
 	private Class m_DatabaseEntryClass;
+
+	private Thread m_dbThread;
 
 	/**
 	 * Stores services we know.
@@ -153,20 +158,35 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 			if (database == null)
 			{
 				database = new Database(a_DatabaseEntryClass);
-				m_databases.put(a_DatabaseEntryClass, database);
+				if (!ms_bShutdown)
+				{
+					m_databases.put(a_DatabaseEntryClass, database);
+				}
 			}
 		}
 		return database;
 	}
 
-	/**
-	 * Get an Enumeration of all registered Databases.
-	 * @return an Enumeration of all registered Databases
-	 */
-	public static Enumeration getInstances()
+	public static void shutdownDatabases()
 	{
-		return m_databases.elements();
+		synchronized (Database.class)
+		{
+			ms_bShutdown = true;
+			Enumeration databases = m_databases.elements();
+			Database currentDB;
+			while (databases.hasMoreElements())
+			{
+				currentDB = (Database) databases.nextElement();
+				while (currentDB.m_dbThread.isAlive())
+				{
+					currentDB.m_dbThread.interrupt();
+					Thread.yield();
+				}
+			}
+			m_databases.clear();
+		}
 	}
+
 
 	/**
 	 * Creates a new instance of a Database.
@@ -186,10 +206,14 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 		m_serviceDatabase = new Hashtable();
 		m_timeoutList = new Vector();
 
-		Thread dbThread = new Thread(this, "Database Thread: " + a_DatabaseEntryClass.toString());
-		dbThread.setDaemon(true);
-		dbThread.start();
+		if (!ms_bShutdown)
+		{
+			m_dbThread = new Thread(this, "Database Thread: " + a_DatabaseEntryClass.toString());
+			m_dbThread.setDaemon(true);
+			m_dbThread.start();
+		}
 	}
+
 
 	/**
 	 * This is the garbage collector for the database. If an entry becomes
@@ -197,13 +221,13 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 	 */
 	public void run()
 	{
-		while (true)
+		while (!ms_bShutdown)
 		{
 			boolean moreOldEntrys = true;
 			synchronized (m_serviceDatabase)
 			{
 				/* we need exclusive access to the database */
-				while ( (m_timeoutList.size() > 0) && (moreOldEntrys))
+				while (!ms_bShutdown && (m_timeoutList.size() > 0) && (moreOldEntrys))
 				{
 					AbstractDatabaseEntry entry = (AbstractDatabaseEntry) m_serviceDatabase.get(m_timeoutList.
 						firstElement());
@@ -249,6 +273,11 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 					}
 					catch (Exception e)
 					{
+						if (ms_bShutdown)
+						{
+							return;
+						}
+
 					}
 				}
 				if (m_timeoutList.size() == 0)
@@ -262,6 +291,10 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 					}
 					catch (Exception e)
 					{
+						if (ms_bShutdown)
+						{
+							return;
+						}
 					}
 				}
 			}
@@ -522,9 +555,9 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 
 	/**
 	 * If the entries of this database implement IXMLEncodable and has a proper value for the field
-	 * XML_ELEMENT_CONTAINER_NAME, this database is transormed into an XML element.
+	 * XML_ELEMENT_CONTAINER_NAME, this database is transformed into an XML element.
 	 * @param a_doc a Document
-	 * @return the database als XML Element or null if transformation was not possible
+	 * @return the database as XML Element or null if transformation was not possible
 	 */
 	public Element toXmlElement(Document a_doc)
 	{
@@ -584,6 +617,15 @@ public final class Database extends Observable implements Runnable, IXMLEncodabl
 				entryList.addElement(serviceDatabaseElements.nextElement());
 			}
 		}
+		return entryList;
+	}
+
+	public Vector getSortedEntryList(Util.Comparable c)
+	{
+		Vector entryList = getEntryList();
+
+		anon.util.Util.sort(entryList, c);
+
 		return entryList;
 	}
 

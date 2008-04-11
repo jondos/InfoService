@@ -30,6 +30,7 @@ package jap;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.URL;
@@ -41,6 +42,8 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Random;
 import java.util.Vector;
+import java.io.BufferedReader;
+import java.io.FileReader;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -83,6 +86,7 @@ import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
 import anon.infoservice.MixInfo;
+import anon.infoservice.StatusInfo;
 import anon.infoservice.PreviouslyKnownCascadeIDEntry;
 import anon.infoservice.ProxyInterface;
 import anon.mixminion.MixminionServiceDescription;
@@ -116,6 +120,7 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
+import platform.MacOS;
 import proxy.DirectProxy;
 import proxy.DirectProxy.AllowUnprotectedConnectionCallback;
 import update.JAPUpdateWizard;
@@ -193,6 +198,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private static final String XML_ATTR_LOGIN_TIMEOUT = "loginTimeout";
 	private static final String XML_ATTR_INFOSERVICE_CONNECT_TIMEOUT = "isConnectionTimeout";
 	private static final String XML_ATTR_ASK_SAVE_PAYMENT = "askIfNotSaved";
+	private static final String XML_ATTR_SHOW_SPLASH_SCREEN = "ShowSplashScreen";
 
 	// store classpath as it may not be created successfully after update
 	private final String CLASS_PATH = ClassUtil.getClassPath().trim();
@@ -200,7 +206,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private final Object PROXY_SYNC = new Object();
 
 	private String m_commandLineArgs = "";
-
+	private Process m_portableFirefoxProcess = null;
+	boolean m_firstPortableFFStart = false;
 	/**
 	 * Stores all MixCascades we know (information comes from infoservice or was entered by a user).
 	 * This list may or may not include the current active MixCascade.
@@ -275,11 +282,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 	private DirectProxy.AllowUnprotectedConnectionCallback m_proxyCallback;
 
-	/** Holds the MsgID of the status message after the forwaring server was started.*/
+	/** Holds the MsgID of the status message after the forwarding server was started.*/
 	private int m_iStatusPanelMsgIdForwarderServerStatus;
 
 	private JAPController()
 	{
+		m_Model = JAPModel.getInstance();
+	}
+	
+	public void start() {
 		// simulate database distributor
 		Database.registerDistributor(new IDistributor()
 		{
@@ -309,7 +320,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 		m_messageUpdater = new MessageUpdater();
 
 		m_anonJobQueue = new JobQueue("Anon mode job queue");
-		m_Model = JAPModel.getInstance();
 		m_Model.setAnonConnectionChecker(new AnonConnectionChecker());
 		InfoServiceDBEntry.setMutableProxyInterface(m_Model.getInfoServiceProxyInterface());
 
@@ -836,37 +846,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public synchronized void loadConfigFile(String a_strJapConfFile, boolean loadPay,
 											final ISplashResponse a_splash)
 	{
-		String japConfFile = a_strJapConfFile;
-		boolean success = false;
-		if (japConfFile != null)
-		{
-			/* try the config file from the command line */
-			success = this.loadConfigFileCommandLine(japConfFile);
-		}
-		if (!success)
-		{
-			/* no config file found -> try to use the config file in the OS-specific location */
-			success = this.loadConfigFileOSdependent();
-		}
-		if (!success)
-		{
-			/* no config file found -> try to use the config file in the home directory of the user */
-			success = this.loadConfigFileHome();
-		}
-		if (!success)
-		{
-			/* no config file found -> try to use the config file in the current directory */
-			success = this.loadConfigFileCurrentDir();
-		}
-		if (!success)
-		{
-			/* no config file at any position->use OS-specific path for storing a new one*/
-			JAPModel.getInstance().setConfigFile(AbstractOS.getInstance().getConfigPath() +
-												 JAPConstants.XMLCONFFN);
-
-			/* As this is the first JAp start, show the config assistant */
-			m_bShowConfigAssistant = true;
-		}
+		// @todo: remove since we already looked for the confing file in preLoadConfigFile
+		boolean success = lookForConfigFile(a_strJapConfFile);
+		
 		if (a_strJapConfFile != null)
 		{
 			/* always try to use the config file specified on the command-line for storing the
@@ -882,11 +864,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 				 * exist -> store the configuration in the OS-specific directory
 				 */
 				JAPModel.getInstance().setConfigFile(AbstractOS.getInstance().getConfigPath() +
-					JAPConstants.XMLCONFFN);
+						JAPConstants.XMLCONFFN);
 			}
 		}
 		Document doc = null;
-
+		
 		if (success)
 		{
 			try
@@ -898,11 +880,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 				LogHolder.log(LogLevel.NOTICE, LogType.MISC, "Error while loading the configuration file!");
 			}
 		}
+
 		if (doc == null)
 		{
 			doc = XMLUtil.createDocument();
 		}
-
 
 		//if (success)
 		{
@@ -1150,11 +1132,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 					LogHolder.log(LogLevel.ERR, LogType.MISC, e);
 				}
 
-				/* load trust models */
-				TrustModel.fromXmlElement(
-								(Element)XMLUtil.getFirstChildByName(root,
-					TrustModel.XML_ELEMENT_CONTAINER_NAME));
-
 				/* load the list of blacklisted cascades */
 				Database.getInstance(BlacklistedCascadeIDEntry.class).loadFromXml(
 								(Element) XMLUtil.getFirstChildByName(root,
@@ -1245,6 +1222,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 						nodeMix = nodeMix.getNextSibling();
 					}
 				}
+				
+				/* load trust models */
+				TrustModel.fromXmlElement(
+								(Element)XMLUtil.getFirstChildByName(root,
+					TrustModel.XML_ELEMENT_CONTAINER_NAME));
+				
+				// load the stored statusinfos
+				Database.getInstance(StatusInfo.class).loadFromXml(
+						(Element) XMLUtil.getFirstChildByName(root, StatusInfo.XML_ELEMENT_CONTAINER_NAME));
 
 				// load deleted messages
 				Database.getInstance(DeletedMessageIDDBEntry.class).loadFromXml(
@@ -1455,6 +1441,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 
 				  }*/
+				
+				tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow, JAPConstants.CONFIG_START_PORTABLE_FIREFOX);
+				JAPModel.getInstance().setStartPortableFirefox(XMLUtil.parseValue(tmp, true));
+				
 				tmp = (Element) XMLUtil.getFirstChildByName(elemMainWindow,
 					JAPConstants.CONFIG_DEFAULT_VIEW);
 				String strDefaultView = XMLUtil.parseValue(tmp, JAPConstants.CONFIG_NORMAL);
@@ -1847,7 +1837,127 @@ public final class JAPController extends Observable implements IProxyListener, O
 		// fire event
 		notifyJAPObservers();
 	}
+	
+	public Process getPortableFirefoxProcess() {
+		return m_portableFirefoxProcess;
+	}
 
+	public void preLoadConfigFile(String a_strJapConfFile) 
+	{
+		if(lookForConfigFile(a_strJapConfFile))
+		{
+			try
+			{
+				BufferedReader br = new BufferedReader(new FileReader(m_Model.getConfigFile()));
+				
+				// skip the <?xml part
+				br.readLine();
+				Document doc = XMLUtil.toXMLDocument(br.readLine() + "</JAP>");
+				
+				m_Model.setShowSplashScreen(XMLUtil.parseAttribute(doc, XML_ATTR_SHOW_SPLASH_SCREEN, true));
+			}
+			catch(Exception ex)
+			{
+				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Unable to pre-load config file " + m_Model.getConfigFile() + ".");
+			}
+		}
+	}
+
+	public boolean lookForConfigFile(String a_strJapConfFile) {
+		boolean success = false;
+		if (a_strJapConfFile != null)
+		{
+			/* try the config file from the command line */
+			success = this.loadConfigFileCommandLine(a_strJapConfFile);
+		}
+		if (!success)
+		{
+			/* no config file found -> try to use the config file in the OS-specific location */
+			success = this.loadConfigFileOSdependent();
+		}
+		if (!success)
+		{
+			/* no config file found -> try to use the config file in the home directory of the user */
+			success = this.loadConfigFileHome();
+		}
+		if (!success)
+		{
+			/* no config file found -> try to use the config file in the current directory */
+			success = this.loadConfigFileCurrentDir();
+		}
+		if (!success)
+		{
+			/* no config file at any position->use OS-specific path for storing a new one*/
+			m_Model.setConfigFile(AbstractOS.getInstance().getConfigPath() +
+												 JAPConstants.XMLCONFFN);
+
+			/* As this is the first JAp start, show the config assistant */
+			m_bShowConfigAssistant = true;
+		}
+		return success;
+	}
+
+	public boolean startPortableFirefox(String[] cmds) 
+	{
+		if(m_portableFirefoxProcess != null)
+		{
+			boolean execSuccessful = false;
+			try
+			{
+				int ffExitValue = m_portableFirefoxProcess.exitValue();
+				LogHolder.log(LogLevel.INFO, LogType.MISC,
+					"previous portable firefox process exited "+
+					((ffExitValue == 0) ? "normally " : "anormally ")+
+					"(exit value "+ffExitValue+").");
+			}
+			catch(IllegalThreadStateException itse)
+			{
+				LogHolder.log(LogLevel.WARNING, LogType.MISC,
+				"Portable Firefox process is still running!");
+				return false;
+			}
+		}
+		
+		try
+		{
+			m_portableFirefoxProcess = Runtime.getRuntime().exec(cmds);
+			return true;
+		} 
+		catch (SecurityException se)
+		{
+			LogHolder.log(LogLevel.WARNING, LogType.MISC,
+					"You are not allowed to lauch portable firefox: ", se);
+			return false;
+		}
+		catch (IOException ioe3) 
+		{
+			LogHolder.log(LogLevel.WARNING, LogType.MISC,
+			"Error occured while launching portable firefox with command "+cmds[0]+": ",ioe3);
+			// open dialog and allow user to specify the firefox command
+			if(m_View instanceof JAPNewView)
+			{
+				((JAPNewView) m_View).showChooseFirefoxPathDialog();
+			}			
+		}
+		catch (NullPointerException npe) 
+		{
+			LogHolder.log(LogLevel.WARNING, LogType.MISC,
+			"Launching portable firefox failed because the firefox command is null");
+			// open dialog and allow user to specify the firefox command
+			if(m_View instanceof JAPNewView)
+			{
+				((JAPNewView) m_View).showChooseFirefoxPathDialog();
+			}			
+		}
+		catch (ArrayIndexOutOfBoundsException aioobe) 
+		{
+			LogHolder.log(LogLevel.WARNING, LogType.MISC,
+			"Launching portable firefox failed because the firefox command array is empty");
+		}
+
+		return false;
+	}
+	
 	/**
 	 * Tries to load the config file provided in the command line
 	 * @return FileInputStream
@@ -2034,10 +2144,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 	 */
 	private void restartJAP()
 	{
-
 		// restart command
+		MacOS macOS = (AbstractOS.getInstance() instanceof MacOS) ?
+							(MacOS) AbstractOS.getInstance() : null;
 		String strRestartCommand = "";
-
+		String JapMainClass = (macOS != null ) ?
+									"JAPMacintosh" : "JAP";
+		
 		//what is used: sun.java or JView?
 		String strJavaVendor = System.getProperty("java.vendor");
 		LogHolder.log(LogLevel.INFO, LogType.ALL, "Java vendor: " + strJavaVendor);
@@ -2046,7 +2159,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		String pathToJava = null;
 		if (strJavaVendor.toLowerCase().indexOf("microsoft") != -1)
 		{
-
+			System.out.println("Java vendor :"+strJavaVendor.toLowerCase());
 			pathToJava = System.getProperty("com.ms.sysdir") + File.separator;
 			javaExe = "jview /cp";
 		}
@@ -2055,20 +2168,29 @@ public final class JAPController extends Observable implements IProxyListener, O
 			pathToJava = System.getProperty("java.home") + File.separator + "bin" + File.separator;
 			javaExe = "javaw -cp"; // for windows
 		}
-		strRestartCommand = pathToJava + javaExe + " \"" + CLASS_PATH + "\" JAP" +
-			m_commandLineArgs;
-
-
-
+		boolean isMacOSBundle = (macOS != null) ? macOS.isBundle() : false;
+		if(isMacOSBundle)
+		{
+			//strRestartCommand = macOS.getBundleExecutablePath();
+			strRestartCommand = "open -n "+macOS.getBundlePath();
+		}
+		else
+		{
+			strRestartCommand = pathToJava + javaExe + " \"" + CLASS_PATH + "\" " 
+								+ JapMainClass + m_commandLineArgs;
+		}
+		
 	    try
 		{
-		    Runtime.getRuntime().exec(strRestartCommand);
-			LogHolder.log(LogLevel.INFO, LogType.ALL, "JAP restart command: " + strRestartCommand);
+	    	Runtime.getRuntime().exec(strRestartCommand);	
+	    	LogHolder.log(LogLevel.INFO, LogType.ALL, "JAP restart command: " + strRestartCommand);	
 		}
 		catch (Exception ex)
 		{
 			javaExe = "java -cp"; // Linux/UNIX
-			strRestartCommand = pathToJava + javaExe + " \"" + CLASS_PATH + "\" JAP";
+			
+			strRestartCommand = pathToJava + javaExe + " \"" + CLASS_PATH + "\" "+ JapMainClass + 
+				m_commandLineArgs;
 
 			LogHolder.log(LogLevel.INFO, LogType.ALL, "JAP restart command: " + strRestartCommand);
 			try
@@ -2077,9 +2199,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 			catch (Exception a_e)
 			{
-				LogHolder.log(LogLevel.INFO, LogType.ALL, "Error auto-restart JAP: " + ex);
+				LogHolder.log(LogLevel.EXCEPTION, LogType.ALL, "Error auto-restart JAP: " + ex);
 			}
 		}
+    	
 	}
 
 	/**
@@ -2185,8 +2308,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 			Document doc = XMLUtil.createDocument();
 			Element e = doc.createElement("JAP");
 			doc.appendChild(e);
+			
 			XMLUtil.setAttribute(e, JAPConstants.CONFIG_VERSION, JAPConstants.CURRENT_CONFIG_VERSION);
-			XMLUtil.setAttribute(e, m_Model.DLL_VERSION_UPDATE, m_Model.getDLLupdate());
+			XMLUtil.setAttribute(e, JAPModel.DLL_VERSION_UPDATE, m_Model.getDLLupdate());
 
 			XMLUtil.setAttribute(e, XML_ALLOW_NON_ANONYMOUS_UPDATE,
 								 JAPModel.getInstance().isUpdateViaDirectConnectionAllowed());
@@ -2201,6 +2325,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			XMLUtil.setAttribute(e, JAPModel.XML_DENY_NON_ANONYMOUS_SURFING,
 								 JAPModel.getInstance().isNonAnonymousSurfingDenied());
 			XMLUtil.setAttribute(e, XML_ATTR_SHOW_CONFIG_ASSISTANT, m_bShowConfigAssistant);
+			XMLUtil.setAttribute(e, XML_ATTR_SHOW_SPLASH_SCREEN, m_Model.getShowSplashScreen());
 
 			XMLUtil.setAttribute(e, XML_ATTR_LOGIN_TIMEOUT, AnonClient.getLoginTimeout());
 			XMLUtil.setAttribute(e, XML_ATTR_INFOSERVICE_CONNECT_TIMEOUT,
@@ -2299,6 +2424,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 			/* stores known cascades */
 			e.appendChild(Database.getInstance(CascadeIDEntry.class).toXmlElement(doc));
+			
+			// store status info
+			e.appendChild(Database.getInstance(StatusInfo.class).toXmlElement(doc));
+			
 			// known for the blacklist
 			e.appendChild(Database.getInstance(PreviouslyKnownCascadeIDEntry.class).toXmlElement(doc));
 
@@ -2391,6 +2520,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 			{
 				Element tmp = doc.createElement(JAPConstants.CONFIG_MOVE_TO_SYSTRAY);
 				XMLUtil.setValue(tmp, true);
+				elemMainWindow.appendChild(tmp);
+			}
+			if(!JAPModel.getInstance().getStartPortableFirefox())
+			{
+				Element tmp = doc.createElement(JAPConstants.CONFIG_START_PORTABLE_FIREFOX);
+				XMLUtil.setValue(tmp, false);
 				elemMainWindow.appendChild(tmp);
 			}
 			if (JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED)
@@ -4474,6 +4609,17 @@ public final class JAPController extends Observable implements IProxyListener, O
 		m_lastBalanceUpdateBytes = 0;
 		transferedBytes(0, IProxyListener.PROTOCOL_WWW);
 		transferedBytes(0, IProxyListener.PROTOCOL_OTHER);
+		
+		if(isPortableMode() && m_Model.getStartPortableFirefox())
+		{
+			if(!m_firstPortableFFStart)
+			{
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "First browser start");
+				m_firstPortableFFStart = true;
+				/*@todo: should better get the browser command from JAPModel */
+				startPortableFirefox(m_View.getBrowserCommand());
+			}
+		}
 	}
 
 	public void dataChainErrorSignaled()

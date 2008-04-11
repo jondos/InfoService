@@ -34,8 +34,6 @@ import java.util.Vector;
 import java.util.StringTokenizer;
 import java.util.NoSuchElementException;
 
-import anon.infoservice.MixCascade;
-
 public final class Util
 {
 	/** Defines the format of version numbers in the AN.ON project. */
@@ -398,36 +396,36 @@ public final class Util
 			quicksort(a_vec, 0, a_vec.size() - 1, c);
 	}
 	
-	private static int divide(Vector a_mixCascades, int a_left, int a_right, Comparable c)
+	private static int divide(Vector a_vec, int a_left, int a_right, Comparable c)
 	{
 		int index = a_left;
 		for (int pointer = a_left; pointer < a_right; pointer++)
 		{
-			if (c.compare((MixCascade)a_mixCascades.elementAt(pointer), (MixCascade)a_mixCascades.elementAt(a_right)) <= 0)
+			if (c.compare(a_vec.elementAt(pointer), a_vec.elementAt(a_right)) <= 0)
 			{
-				swap(a_mixCascades, index, pointer);
+				swap(a_vec, index, pointer);
 				index++;
 			}
 		}
-		swap(a_mixCascades, index, a_right);
+		swap(a_vec, index, a_right);
 		return index;
 	}
 
-	private static void quicksort(Vector a_mixCascades, int a_left, int a_right, Comparable c)
+	private static void quicksort(Vector a_vec, int a_left, int a_right, Comparable c)
 	{
 		if (a_right > a_left)
 		{
-			int divisor = divide(a_mixCascades, a_left, a_right, c);
-			quicksort(a_mixCascades, a_left, divisor - 1, c);
-			quicksort(a_mixCascades, divisor + 1, a_right, c);
+			int divisor = divide(a_vec, a_left, a_right, c);
+			quicksort(a_vec, a_left, divisor - 1, c);
+			quicksort(a_vec, divisor + 1, a_right, c);
 		}
 	}
 	
-	private static void swap(Vector a_mixCascades, int a, int b)
+	private static void swap(Vector a_vec, int a, int b)
 	{
-		Object temp = a_mixCascades.elementAt(a);
-		a_mixCascades.setElementAt(a_mixCascades.elementAt(b), a);
-		a_mixCascades.setElementAt(temp, b);
+		Object temp = a_vec.elementAt(a);
+		a_vec.setElementAt(a_vec.elementAt(b), a);
+		a_vec.setElementAt(temp, b);
 	}
 
 	/**

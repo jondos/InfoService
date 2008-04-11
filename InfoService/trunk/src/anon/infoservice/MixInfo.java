@@ -153,7 +153,22 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
    * If this MixInfo has been recevied directly from a cascade connection.
    */
   private boolean m_bFromCascade;
+  
+  /**
+   * True, if this Mix has a performance server.
+   */
+  private boolean m_bPerformanceServer;
 
+  /**
+	* The host of the performance server.
+	*/
+  private String m_strPerformanceServerHost;
+	
+  /**
+   * The port of the performance server.
+   */
+  private int m_iPerformanceServerPort;
+  
   /**
    * Creates a new MixInfo from XML description (Mix node). The state of the mix will be set to
    * non-free (only meaningful within the context of the infoservice).
@@ -194,9 +209,12 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 	  m_lastUpdate = 0;
 	  m_serial = 0;
 	  m_mixLocation = new ServiceLocation(null, m_mixCertificate);
-	  m_mixOperator = new ServiceOperator(null, m_mixCertPath.getSecondCertificate());
+	  m_mixOperator = new ServiceOperator(null, m_mixCertPath.getSecondCertificate(), 0);
 	  m_freeMix = false;
 	  m_prepaidInterval = AIControlChannel.MAX_PREPAID_INTERVAL;
+	  m_bPerformanceServer = false;
+	  m_strPerformanceServerHost = "";
+	  m_iPerformanceServerPort = -1;
   }
 
   public MixInfo(String a_mixID, CertPath a_certPath, XMLPriceCertificate a_priceCert, long a_prepaidInterval)
@@ -212,11 +230,14 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 	  m_lastUpdate = 0;
 	  m_serial = 0;
 	  m_mixLocation = new ServiceLocation(null, m_mixCertificate);
-	  m_mixOperator = new ServiceOperator(null, m_mixCertPath.getSecondCertificate());
+	  m_mixOperator = new ServiceOperator(null, m_mixCertPath.getSecondCertificate(), 0);
 	  m_freeMix = false;
 	  //
 	  m_priceCert = a_priceCert;
 	  m_prepaidInterval = a_prepaidInterval;
+	  m_bPerformanceServer = false;
+	  m_strPerformanceServerHost = "";
+	  m_iPerformanceServerPort = -1;	  
   }
 
   /**
@@ -356,12 +377,41 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 	  //get the Operator Certificate from the CertPath
 	  if (m_mixCertPath != null)
 	  {
-		  m_mixOperator = new ServiceOperator(operatorNode, m_mixCertPath.getSecondCertificate());
+		  m_mixOperator = new ServiceOperator(operatorNode, m_mixCertPath.getSecondCertificate(), m_lastUpdate);
 	  }
 	  else
 	  {
-		  m_mixOperator = new ServiceOperator(operatorNode, null);
+		  m_mixOperator = new ServiceOperator(operatorNode, null, m_lastUpdate);
 	  }
+	  
+	  m_strPerformanceServerHost = "";
+	  m_iPerformanceServerPort = -1;
+	  m_bPerformanceServer = false;
+	  Node perfNode = XMLUtil.getFirstChildByName(a_mixNode, "PerformanceServer");
+	  if(perfNode != null)
+	  {
+		  Node perfHostNode  = XMLUtil.getFirstChildByName(perfNode, "Host");
+		  Node perfHostPort = XMLUtil.getFirstChildByName(perfNode, "Port");
+		  
+		  if(perfHostNode != null && perfHostPort != null)
+		  {
+			  m_strPerformanceServerHost = XMLUtil.parseValue(perfHostNode, "localhost");
+			  m_iPerformanceServerPort = XMLUtil.parseValue(perfHostPort, 7777);
+			  m_bPerformanceServer = true;
+		  }
+	  }
+
+	  ServiceOperator currentSO =
+		  (ServiceOperator)Database.getInstance(ServiceOperator.class).getEntryById(m_mixOperator.getId());
+	  if ( (currentSO == null || currentSO.getCertificate() == null) ||
+		  (m_mixOperator.getCertificate() != null &&
+		   m_mixOperator.getCertificate().getValidity().getValidTo().after(
+			   currentSO.getCertificate().getValidity().getValidTo())))
+	  {
+		  Database.getInstance(ServiceOperator.class).update(m_mixOperator);
+	  }
+
+
 
 	  /* as default no mix is free, only if we receive a configuration request from the mix and it
 	   * it is not already assigned to a cascade, this mix will be free
@@ -683,4 +733,19 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
        return result;
    }
 
+	
+	public boolean hasPerformanceServer()
+	{
+		return m_bPerformanceServer;
+	}
+	
+	public String getPerformanceServerHost()
+	{
+		return m_strPerformanceServerHost;
+	}
+	
+	public int getPerformanceServerPort()
+	{
+		return m_iPerformanceServerPort;
+	}   
 }
