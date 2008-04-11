@@ -55,6 +55,7 @@ import anon.infoservice.MixCascade;
 import anon.infoservice.MixInfo;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
+import anon.util.ZLibTools;
 
 /**
  * This class provides the functionality needed by the "dynamic cascade
@@ -82,8 +83,22 @@ public class DynamicCommandsExtension
                 HttpResponseStructure.HTTP_RETURN_OK);
         try
         {
-            LogHolder.log(LogLevel.DEBUG, LogType.NET, "MixCascade HELO received: XML: "
-                    + (new String(a_postData)));
+					if(LogHolder.isLogged(LogLevel.DEBUG,LogType.NET))
+						{
+							String msg=null;
+							if(a_encoding==HttpResponseStructure.HTTP_ENCODING_ZLIB)
+							{
+								byte[] b=ZLibTools.decompress(a_postData);
+								if(b==null)
+									msg="ZLIB ENCODING ERROR!";
+								else
+									msg=new String(b);
+							}
+							else
+								msg=new String(a_postData);
+							LogHolder.log(LogLevel.DEBUG, LogType.NET, "MixCascade HELO received: XML: "
+                    + msg);
+						}
 
             /* verify the signature */
             MixCascade mixCascadeEntry;
