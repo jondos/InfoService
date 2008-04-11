@@ -96,6 +96,8 @@ public class DynamicCommandsExtension
 							}
 							else
 								msg=new String(a_postData);
+							msg=msg.replace('\n',' ');
+							msg=msg.replace('\r',' ');
 							LogHolder.log(LogLevel.DEBUG, LogType.NET, "MixCascade HELO received: XML: "
                     + msg);
 						}

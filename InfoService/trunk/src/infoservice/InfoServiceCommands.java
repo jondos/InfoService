@@ -287,6 +287,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	 *
 	 * @return The HTTP response for the client.
 	 */
+	/* Now in DnyamicExtensions ....
 	private HttpResponseStructure cascadePostHelo(byte[] a_postData, int a_encoding)
 	{
 		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK);
@@ -295,7 +296,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			LogHolder.log(LogLevel.DEBUG, LogType.NET,
 						  "MixCascade HELO received: XML: " + (new String(a_postData)));
 
-			/* verify the signature */
+			// verify the signature 
 			MixCascade mixCascadeEntry;
 			if (a_encoding == HttpResponseStructure.HTTP_ENCODING_ZLIB)
 			{
@@ -322,7 +323,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		return httpResponse;
 	}
-
+*/
 	private HttpResponseStructure messagePost(byte[] a_postData, int a_encoding)
 	{
 		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK);
