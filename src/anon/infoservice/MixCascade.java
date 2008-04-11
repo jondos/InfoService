@@ -136,7 +136,12 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	 * True, if this MixCascade is a payment cascade.
 	 */
 	private boolean m_isPayment;
-
+	
+	/**
+	 * True, if this MixCascade has a performance server. 
+	 */
+	private boolean m_bPerformanceServer;
+	
 	private long m_prepaidInterval = AIControlChannel.MAX_PREPAID_INTERVAL;
 
 	private String m_mixProtocolVersion;
@@ -147,19 +152,19 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	private Vector m_priceCertificates = new Vector();
 
 	/**
-	 * If this MixCascade has been recevied directly from a cascade connection.
+	 * If this MixCascade has been received directly from a cascade connection.
 	 */
 	private boolean m_bFromCascade;
 
 	/** The average response time on this cascade. */
-	private long delay;
+	private long m_lDelay;
 	/** The average data throughput on this cascade. */
-	private double throughput;
+	private double m_dThroughput;
 
 	/** An array that holds the past few measured delay times to calculate the average delay. */
-	private long[] delays;
+	private long[] m_aDelays;
 	/** An array that holds the past few measured throughputs to calculate the average throughput. */
-	private double[] throughputs;
+	private double[] m_aThroughputs;
 
 	/**
 	 * Maps the position of a Mix in a cascade to a concrete Mix ID.
@@ -354,7 +359,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		m_isPayment = XMLUtil.parseAttribute(payNode, "required", false);
 		m_paymentProtocolVersion = XMLUtil.parseAttribute(payNode, XML_ATTR_VERSION,
 			SUPPORTED_PAYMENT_PROTOCOL_VERSION);
-
+		
 		m_prepaidInterval = XMLUtil.parseAttribute(payNode, "prepaidInterval", AIControlChannel.MAX_PREPAID_INTERVAL + 1);
 		m_piid = XMLUtil.parseAttribute(payNode, "piid", "");
 
@@ -445,6 +450,9 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 			}
 		}
 
+		Node perfNode = XMLUtil.getFirstChildByName(a_mixCascadeNode, "PerformanceServer");
+		m_bPerformanceServer = perfNode == null ? false : XMLUtil.parseValue(perfNode, false);
+		
 		if (m_mixCascadeId == null)
 		{
 			m_mixCascadeId = (String)m_mixIds.elementAt(0);
@@ -729,8 +737,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 
 	public boolean checkId()
 	{
-		//Note: If there is no signature check then there is possibly no certificate
-		return m_userDefined ||super.checkId()||!SignatureVerifier.getInstance().isCheckSignatures();
+		return m_userDefined || super.checkId();
 	}
 
 	/**
@@ -1237,22 +1244,37 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	}
 
 	public void setDelay(long pDelay) {
-		if(delays == null)
-			delays = new long[3]; // TODO: Make number of fixings configurable
-		delay = 0;
-		for(int i=1;i < delays.length;i++)
-			delay += (delays[i-1] = delays[i]);
-		delays[delays.length-1] = pDelay;
-		delay = (delay + pDelay) / delays.length;
+		if(m_aDelays == null)
+			m_aDelays = new long[3]; // TODO: Make number of fixings configurable
+		m_lDelay = 0;
+		for(int i=1;i < m_aDelays.length;i++)
+			m_lDelay += (m_aDelays[i-1] = m_aDelays[i]);
+		m_aDelays[m_aDelays.length-1] = pDelay;
+		m_lDelay = (m_lDelay + pDelay) / m_aDelays.length;
 	}
 
 	public void setThroughput(double pThroughput) {
-		if(throughputs == null)
-			throughputs = new double[3]; // TODO: Make number of fixings configurable
-		throughput = 0.0;
-		for(int i=1; i < throughputs.length; i++)
-			throughput += (throughputs[i-1] = throughputs[i]);
-		throughputs[throughputs.length-1] = pThroughput;
-		throughput = (throughput + pThroughput) / throughputs.length;
+		if(m_aThroughputs == null)
+			m_aThroughputs = new double[3]; // TODO: Make number of fixings configurable
+		m_dThroughput = 0.0;
+		for(int i=1; i < m_aThroughputs.length; i++)
+			m_dThroughput += (m_aThroughputs[i-1] = m_aThroughputs[i]);
+		m_aThroughputs[m_aThroughputs.length-1] = pThroughput;
+		m_dThroughput = (m_dThroughput + pThroughput) / m_aThroughputs.length;
+	}
+
+	public double getAverageThroughput()
+	{
+		return m_dThroughput;
+	}
+	
+	public long getAverageDelay()
+	{
+		return m_lDelay;
+	}
+	
+	public boolean hasPerformanceServer()
+	{
+		return m_bPerformanceServer;
 	}
 }

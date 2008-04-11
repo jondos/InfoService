@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.09.021"; //Never change the layout of this line!
+	public static final String aktVersion = "00.09.022"; //Never change the layout of this line!
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
 
 	//Warning: This is a little bit tricky,
@@ -277,6 +277,7 @@ public final class JAPConstants
 	//public final static String CONFIG_SIZE = "Size";
 	public final static String CONFIG_MOVE_TO_SYSTRAY = "MoveToSystray";
 	public final static String CONFIG_DEFAULT_VIEW = "DefaultView";
+	public final static String CONFIG_START_PORTABLE_FIREFOX = "StartPortableFirefox";
 	public final static String CONFIG_NORMAL = "Normal";
 	public final static String CONFIG_SIMPLIFIED = "Simplified";
 	public final static String CONFIG_DEBUG = "Debug";
@@ -315,4 +316,16 @@ public final class JAPConstants
 	 *  Correct value depends on the contract with the paysafecard company */
 	public final static int PAYSAFECARD_TIMEOUT = 60;
 
+	private static final String[] SUPPORTED_LANGUAGES = {"en", "de", "cs", "nl", "fr", "ru"}; // "ca", "es", "ru"}; //pt
+
+	public static String[] getSupportedLanguages()
+	{
+		String[] languages = new String[SUPPORTED_LANGUAGES.length];
+		for (int i = 0; i < languages.length; i++)
+		{
+			languages[i] = SUPPORTED_LANGUAGES[i];
+		}
+
+		return languages;
 	}
+}

@@ -27,6 +27,7 @@
  */
 package jap;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
@@ -72,6 +73,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import javax.swing.JFileChooser;
 
 import anon.AnonServerDescription;
 import anon.infoservice.BlacklistedCascadeIDEntry;
@@ -160,6 +162,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private static final String MSG_OBSERVABLE_EXPLAIN = JAPNewView.class.getName() + "_observableExplain";
 	private static final String MSG_OBSERVABLE_TITLE = JAPNewView.class.getName() + "_observableTitle";
+	private static final String MSG_EXPLAIN_NO_FIREFOX_FOUND = JAPNewView.class.getName() + "_explainNoFirefoxFound";
 
 	private static final String MSG_LBL_ENCRYPTED_DATA =
 		JAPNewView.class.getName() + "_lblEncryptedData";
@@ -171,7 +174,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String IMG_ICONIFY = JAPNewView.class.getName() + "_iconify.gif";
 	private static final String IMG_ABOUT = JAPNewView.class.getName() + "_about.gif";
 
-	private static final String MSG_OPEN_FIREFOX = JAPMessages.getString(JAPNewView.class.getName() + "_openFirefox");
+	private static final String MSG_OPEN_FIREFOX = JAPNewView.class.getName() + "_openFirefox";
 
 
 
@@ -198,6 +201,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JAPNewView.class.getName() + "_meter10.gif"
 	};
 
+	private final Object FONT_UPDATE = new Object();
+	private boolean m_bFontsUpdated = false;
 	private final JLabel DEFAULT_LABEL = new JLabel();
 
 	//private JLabel meterLabel;
@@ -289,9 +294,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private int m_msgIDInsecure;
 
-	private String m_firefoxCommand; //the CLI command for re-opening firefox, usually just the path to the executable
+	private String[] m_firefoxCommand; //the CLI command for re-opening firefox, usually just the path to the executable
 
-	public JAPNewView(String s, JAPController a_controller, String a_firefoxCommand)
+	public JAPNewView(String s, JAPController a_controller, String[] a_firefoxCommand)
 	{
 		super(s, a_controller);
 		m_bIsSimpleView = (JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED);
@@ -323,13 +328,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			public void onOpenBrowser()
 			{
-				try
-				{
-					Runtime.getRuntime().exec(m_firefoxCommand);
-				}
-				catch (IOException ex)
-				{
-				}
+				m_Controller.startPortableFirefox(m_firefoxCommand);
 			}
 
 			public boolean isBrowserAvailable()
@@ -368,13 +367,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					{
 						public void onOpenBrowser()
 						{
-							try
-							{
-								Runtime.getRuntime().exec(m_firefoxCommand);
-							}
-							catch (IOException ex)
-							{
-							}
+							m_Controller.startPortableFirefox(m_firefoxCommand);
 						}
 
 						public boolean isBrowserAvailable()
@@ -585,24 +578,18 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		constrVersion.insets = new Insets(0, 0, 0, 0);
 		m_pnlVersion.add(m_labelVersion, constrVersion);
 
-		if (getBrowserCommand() != null)
+		if (m_Controller.isPortableMode())
 		{
 			m_firefox = new JButton(GUIUtils.loadImageIcon("firefox.png", true, false));
 			m_firefox.setOpaque(false);
-			m_firefox.setToolTipText(MSG_OPEN_FIREFOX);
+			m_firefox.setToolTipText(JAPMessages.getString(MSG_OPEN_FIREFOX));
 			m_firefox.setMnemonic('W');
 
 			m_firefox.addActionListener(new ActionListener()
 			{
 				public void actionPerformed(ActionEvent e)
 				{
-					try
-					{
-							Runtime.getRuntime().exec(m_firefoxCommand);
-					}
-					catch (IOException ex)
-					{
-					}
+					m_Controller.startPortableFirefox(m_firefoxCommand);
 				}
 			});
 
@@ -1302,6 +1289,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		Database.getInstance(CascadeIDEntry.class).addObserver(this);
 		Database.getInstance(BlacklistedCascadeIDEntry.class).addObserver(this);
 		Database.getInstance(MessageDBEntry.class).addObserver(this);
+		TrustModel.addModelObserver(this);
 
 		JAPModel.getInstance().addObserver(this);
 		JAPModel.getInstance().getRoutingSettings().addObserver(this);
@@ -1864,23 +1852,31 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				public void run()
 				{
-					// preload meter icons
-					for (int i = 0; i < METERFNARRAY.length; i++)
+					synchronized (FONT_UPDATE)
 					{
-						GUIUtils.loadImageIcon(METERFNARRAY[i], true, true);
-					}
-					SwingUtilities.updateComponentTreeUI(view);
-					SwingUtilities.updateComponentTreeUI(DEFAULT_LABEL);
-					updateFonts();
-					onUpdateValues();
+						if (!m_bFontsUpdated)
+						{
+							m_bFontsUpdated = true;
+							// preload meter icons
+							for (int i = 0; i < METERFNARRAY.length; i++)
+							{
+								GUIUtils.loadImageIcon(METERFNARRAY[i], true, true);
+							}
+							SwingUtilities.updateComponentTreeUI(view);
+							SwingUtilities.updateComponentTreeUI(DEFAULT_LABEL);
+							updateFonts();
+							onUpdateValues();
 
-					setOptimalSize();
+							setOptimalSize();
+						}
+					}
 				}
 			};
 		}
-		else if (a_observable instanceof TrustModel)
+		else if (a_observable instanceof TrustModel.InnerObservable)
 		{
 			m_bTrustChanged = true;
+			//m_comboAnonServices.updateUI(); // immediately show blocked/unblocked cascade
 			updateValues(false);
 		}
 		else if (a_message != null && (a_message.equals(JAPModel.CHANGED_INFOSERVICE_AUTO_UPDATE) ||
@@ -2570,13 +2566,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_comboAnonServices.showPopup();
 	}
 
-	public String getBrowserCommand()
+	public String[] getBrowserCommand()
 	{
-		if (m_firefoxCommand != null && !m_firefoxCommand.trim().equals(""))
-		{
-			return m_firefoxCommand;
-		}
-		return null;
+		return m_firefoxCommand;
 	}
 
 	public void onUpdateValues()
@@ -3242,6 +3234,28 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		else
 		{
 			m_StatusPanel.removeStatusMsg(messageId.intValue());
+		}
+	}
+
+	public void showChooseFirefoxPathDialog()
+	{
+		if(JAPDialog.showYesNoDialog(this, JAPMessages.getString(MSG_EXPLAIN_NO_FIREFOX_FOUND)))
+		{
+			JFileChooser chooser = new JFileChooser();
+			if(chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+			{
+				File f = chooser.getSelectedFile();
+				if(m_firefoxCommand == null)
+				{
+					m_firefoxCommand = new String[1];
+				}
+				m_firefoxCommand[0] = f.getAbsolutePath();
+				if(f != null)
+				{
+					m_Controller.startPortableFirefox(m_firefoxCommand);
+				}
+
+			}
 		}
 	}
 

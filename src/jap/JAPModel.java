@@ -174,6 +174,11 @@ public final class JAPModel extends Observable
 	private boolean m_bUseProxyAuthentication = false;
 	private JAPController.AnonConnectionChecker m_connectionChecker;
 
+	private boolean m_bShowSplashScreen = true;
+	private boolean m_bShowSplashDisabled = false;
+	
+	private boolean m_bStartPortableFirefox = true;
+	
 	private Dimension m_iconifiedSize;
 	private Dimension m_configSize;
 	private Dimension m_helpSize;
@@ -884,11 +889,15 @@ public final class JAPModel extends Observable
 		buff.append("Config path: ");
 		buff.append(getConfigFile());
 		buff.append("\n");
-		s = JAPController.getInstance().getView().getBrowserCommand();
-		if (s != null)
+		String[] pFFCommand = JAPController.getInstance().getView().getBrowserCommand();
+		//s = JAPController.getInstance().getView().getBrowserCommand();
+		if (pFFCommand != null)
 		{
-			buff.append("Portable browser: ");
-			buff.append(s);
+			buff.append("Portable browser commandline: ");
+			for (int i = 0; i < pFFCommand.length; i++) {
+				buff.append(pFFCommand[i]+
+						((i != (pFFCommand.length-1)) ? " ":""));
+			}
 			buff.append("\n");
 		}
 		buff.append("HttpListenerPortNumber: ");
@@ -1254,6 +1263,36 @@ public final class JAPModel extends Observable
 
 	public boolean getDLLupdate() {
 		return m_bUpdateDll;
+	}
+
+	public void setShowSplashScreen(boolean a_bHide)
+	{
+		m_bShowSplashScreen = a_bHide;
+	}
+	
+	public boolean getShowSplashScreen()
+	{
+		return m_bShowSplashScreen;
+	}
+	
+	public void setShowSplashDisabled(boolean a_bDisabled)
+	{
+		m_bShowSplashDisabled = a_bDisabled;
+	}
+	
+	public boolean getShowSplashDisabled()
+	{
+		return m_bShowSplashDisabled;
+	}
+	
+	public void setStartPortableFirefox(boolean a_bStart)
+	{
+		m_bStartPortableFirefox = a_bStart;
+	}
+	
+	public boolean getStartPortableFirefox()
+	{
+		return m_bStartPortableFirefox;
 	}
 
 	public static class FontResize

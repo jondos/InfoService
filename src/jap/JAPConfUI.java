@@ -112,7 +112,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 	private TitledBorder m_borderLookAndFeel, m_borderView;
 	private JComboBox m_comboLanguage, m_comboUI, m_comboDialogFormat;
 	private JCheckBox m_cbSaveWindowLocationMain, m_cbSaveWindowLocationIcon, m_cbSaveWindowLocationConfig,
-		m_cbSaveWindowLocationHelp, m_cbSaveWindowSizeConfig, m_cbSaveWindowSizeHelp, m_cbAfterStart;
+		m_cbSaveWindowLocationHelp, m_cbSaveWindowSizeConfig, m_cbSaveWindowSizeHelp, m_cbAfterStart, m_cbShowSplash, m_cbStartPortableFirefox;
 	private JRadioButton m_rbViewSimplified, m_rbViewNormal, m_rbViewMini, m_rbViewSystray;
 	private JCheckBox m_cbWarnOnClose, m_cbMiniOnTop;
 	private JSlider m_slidFontSize;
@@ -492,15 +492,11 @@ final class JAPConfUI extends AbstractJAPConfModule
 		c.weightx = 0;
 		p.add(l, c);
 		m_comboLanguage = new JComboBox();
-		m_comboLanguage.addItem(new LanguageMapper("en", new Locale("en", "")));
-		m_comboLanguage.addItem(new LanguageMapper("de", new Locale("de", "")));
-		m_comboLanguage.addItem(new LanguageMapper("cs", new Locale("cs", "")));
-		m_comboLanguage.addItem(new LanguageMapper("fr", new Locale("fr", "")));
-		m_comboLanguage.addItem(new LanguageMapper("nl", new Locale("nl", "")));
-		m_comboLanguage.addItem(new LanguageMapper("ca", new Locale("ca", "")));
-		m_comboLanguage.addItem(new LanguageMapper("es", new Locale("es", "")));
-		//m_comboLanguage.addItem(new LanguageMapper("pt", new Locale("pt", "")));
-
+		String[] languages = JAPConstants.getSupportedLanguages();
+		for (int i = 0; i < languages.length; i++)
+		{
+			m_comboLanguage.addItem(new LanguageMapper(languages[i], new Locale(languages[i], "")));
+		}
 		c.gridx = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
@@ -742,6 +738,17 @@ final class JAPConfUI extends AbstractJAPConfModule
 		p.add(m_rbViewMini, c);
 		c.gridy = 2;
 		p.add(m_rbViewSystray, c);
+
+		m_cbShowSplash = new JCheckBox(JAPMessages.getString("ngViewShowSplash"));
+		m_cbShowSplash.setEnabled(!JAPModel.getInstance().getShowSplashDisabled());
+		c.gridy = 3;
+		c.insets = new Insets(0, 10, 0, 10);
+		p.add(m_cbShowSplash, c);
+		
+		m_cbStartPortableFirefox = new JCheckBox(JAPMessages.getString("ngViewStartPortableFirefox"));
+		m_cbStartPortableFirefox.setEnabled(JAPController.getInstance().isPortableMode());
+		c.gridy = 4;
+		p.add(m_cbStartPortableFirefox, c);
 		return p;
 	}
 
@@ -757,13 +764,17 @@ final class JAPConfUI extends AbstractJAPConfModule
 
 	protected boolean onOkPressed()
 	{
-
+		int oldFontSize = JAPModel.getInstance().getFontSize();
 		if (JAPModel.getInstance().setFontSize(m_slidFontSize.getValue()) &&
 			!JAPModel.getInstance().isConfigWindowSizeSaved())
 		{
 			beforePack();
 			JAPConf.getInstance().doPack();
 			afterPack();
+		}
+		else
+		{
+			oldFontSize = -1;
 		}
 
 		JAPModel.getInstance().setSaveMainWindowPosition(m_cbSaveWindowLocationMain.isSelected());
@@ -783,6 +794,8 @@ final class JAPConfUI extends AbstractJAPConfModule
 			m_cbAfterStart.isSelected());
 		JAPController.getInstance().setMoveToSystrayOnStartup(m_rbViewSystray.isSelected() &&
 			m_cbAfterStart.isSelected());
+		JAPModel.getInstance().setShowSplashScreen(m_cbShowSplash.isSelected());
+		JAPModel.getInstance().setStartPortableFirefox(m_cbStartPortableFirefox.isSelected());
 		JAPModel.getInstance().setNeverRemindGoodbye(!m_cbWarnOnClose.isSelected());
 		JAPModel.getInstance().setMiniViewOnTop(m_cbMiniOnTop.isSelected());
 
@@ -848,9 +861,16 @@ final class JAPConfUI extends AbstractJAPConfModule
 		{
 			newLaF = UIManager.getLookAndFeel().getClass().getName();
 		}
-		if (!UIManager.getLookAndFeel().getClass().getName().equals(newLaF))
+		if (UIManager.getLookAndFeel().getClass().getName().equals(newLaF))
+		{
+			newLaF = null;
+		}
+
+
+		if (newLaF != null || oldFontSize >= 0)
 		{
 			final String lafRestart = newLaF;
+			final int OLD_FONT_SIZE = oldFontSize;
 			JAPConf.getInstance().addNeedRestart(
 				new JAPConf.AbstractRestartNeedingConfigChange()
 			{
@@ -861,7 +881,22 @@ final class JAPConfUI extends AbstractJAPConfModule
 
 				public void doChange()
 				{
-					JAPModel.getInstance().setLookAndFeel(lafRestart);
+					if (lafRestart != null)
+					{
+						JAPModel.getInstance().setLookAndFeel(lafRestart);
+					}
+				}
+
+				public void doCancel()
+				{
+					if (OLD_FONT_SIZE >= 0)
+					{
+						m_slidFontSize.setValue(OLD_FONT_SIZE);
+						JAPModel.getInstance().setFontSize(OLD_FONT_SIZE);
+						beforePack();
+						JAPConf.getInstance().doPack();
+						afterPack();
+					}
 				}
 			});
 		}
@@ -907,6 +942,8 @@ final class JAPConfUI extends AbstractJAPConfModule
 		m_rbViewMini.setSelected(JAPModel.getMinimizeOnStartup());
 		m_cbMiniOnTop.setSelected(JAPModel.getInstance().isMiniViewOnTop());
 		m_cbWarnOnClose.setSelected(!JAPModel.getInstance().isNeverRemindGoodbye());
+		m_cbShowSplash.setSelected(JAPModel.getInstance().getShowSplashScreen());
+		m_cbStartPortableFirefox.setSelected(JAPModel.getInstance().getStartPortableFirefox());
 		boolean b = JAPModel.getMoveToSystrayOnStartup() || JAPModel.getMinimizeOnStartup();
 		for (int i = 0; i < m_comboDialogFormat.getItemCount(); i++)
 		{
@@ -943,6 +980,8 @@ final class JAPConfUI extends AbstractJAPConfModule
 		m_rbViewSystray.setSelected(JAPConstants.DEFAULT_MOVE_TO_SYSTRAY_ON_STARTUP);
 		m_rbViewMini.setSelected(true);
 		m_rbViewMini.setSelected(JAPConstants.DEFAULT_MINIMIZE_ON_STARTUP);
+		m_cbShowSplash.setSelected(true);
+		m_cbStartPortableFirefox.setSelected(true);
 		m_cbWarnOnClose.setSelected(JAPConstants.DEFAULT_WARN_ON_CLOSE);
 		updateThirdPanel(JAPConstants.DEFAULT_MOVE_TO_SYSTRAY_ON_STARTUP ||
 						 JAPConstants.DEFAULT_MINIMIZE_ON_STARTUP);

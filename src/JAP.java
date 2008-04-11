@@ -89,12 +89,12 @@ public class JAP
 	private static final String MSG_INIT_RANDOM = JAP.class.getName() + "_initRandom";
 	private static final String MSG_FINISH_RANDOM = JAP.class.getName() + "_finishRandom";
 	private static final String MSG_START_LISTENER = JAP.class.getName() + "_startListener";
-
+	
 	private JAPController m_controller;
-
+	
 	Hashtable m_arstrCmdnLnArgs = null;
 	String[] m_temp = null;
-	String m_firefoxCommand; //holds command to re-open firefox, to be parsed from args and passed to JAPNewView
+	String[] m_firefoxCommand; //holds command to re-open firefox, to be parsed from args and passed to JAPNewView
 
 	public JAP()
 	{
@@ -200,7 +200,7 @@ public class JAP
 		{
 			bConsoleOnly = true;
 		}
-		
+
 		if(!isArgumentSet("--allow-multiple") && !isArgumentSet("-a"))
 		{
 			// Try to detect running instances of JAP
@@ -210,16 +210,17 @@ public class JAP
 			for(int i = 0; i < activeVMs.size(); i++)
 			{
 				vm = activeVMs.elementAt(i);
-				if(vm != null && vm.toString() != null && (vm.toString().equals("JAP")) || vm.toString().equals("JAP.jar") || vm.toString().equals("JAPMacintosh")) numJAPInstances++;
+				if(vm == null || vm.toString() == null ) continue;
+				if(vm.toString().equals("JAP") || vm.toString().equals("JAP.jar") || vm.toString().equals("JAPMacintosh")) numJAPInstances++;
 				if(numJAPInstances > 1)
 				{
 					// multiple instances of JAP have been started, what to do?
-					System.out.println("There is already an instance of JAP running.");
+					System.out.println("There is already an instance of JAP/JonDo running.");
 					System.exit(0);
 				}
 			}
 		}
-		
+
 		// Test (part 2) for right JVM....
 		if (vendor.startsWith("Transvirtual"))
 		{ // Kaffe
@@ -273,6 +274,42 @@ public class JAP
 				System.exit(0);
 			}
 		}
+		
+		// init controller and preload config
+		m_controller = JAPController.getInstance();
+		
+		// Set path to Firefox for portable JAP
+		//String firepath="";
+		String profilepath = "";
+		boolean bPortable = isArgumentSet("--portable");
+		m_controller.setPortableMode(bPortable);
+		
+		String configFileName = null;
+		/* check, whether there is the -config parameter, which means the we use userdefined config
+		 * file
+		 */
+		if ( (configFileName = getArgumentValue("--config")) == null)
+		{
+			configFileName = getArgumentValue("-c");
+		}
+		if (configFileName == null && bPortable)
+		{
+			// load and create the config file in the current directory by default
+			File tempDir = ClassUtil.getClassDirectory(JAP.class);
+			if (tempDir != null)
+			{
+				configFileName =
+					ClassUtil.getClassDirectory(JAP.class).getParent() +
+					File.separator + JAPConstants.XMLCONFFN;
+			}
+		}
+
+		if (configFileName != null)
+		{
+			LogHolder.log(LogLevel.NOTICE, LogType.MISC, "Loading config file '" + configFileName + "'.");
+		}
+		
+		m_controller.preLoadConfigFile(configFileName);
 		// Show splash screen
 		ISplashResponse splash;
 		String splashText;
@@ -302,7 +339,7 @@ public class JAP
 			splash = new ConsoleSplash();
 			splash.setText(splashText);
 		}
-		else if (isArgumentSet("--noSplash") || isArgumentSet("-s"))
+		else if (isArgumentSet("--noSplash") || isArgumentSet("-s") || !JAPModel.getInstance().getShowSplashScreen())
 		{
 			splash = new ConsoleSplash();
 			splash.setText(splashText);
@@ -459,7 +496,7 @@ public class JAP
 
 		// Create the controller object
 		splash.setText(JAPMessages.getString(MSG_STARTING_CONTROLLER));
-		m_controller = JAPController.getInstance();
+		m_controller.start();
 		if (isArgumentSet("--presentation") || isArgumentSet("-p"))
 		{
 			m_controller.setPresentationMode(true);
@@ -474,102 +511,11 @@ public class JAP
 			m_controller.setCommandLineArgs(cmdArgs);
 		}
 
-		// Set path to Firefox for portable JAP
-		//String firepath="";
-		String profilepath = "";
-		boolean bPortable = false;
-		if (isArgumentSet("--portable") )
-		{
-			bPortable = true;
-			m_firefoxCommand = getArgumentValue("--portable");
-			if (m_firefoxCommand != null)
-			{
-				// portable configuration seems to be complete
-				m_controller.setPortableMode(true);
-
-				if (isArgumentSet("--portable-browserprofile"))
-				{
-					profilepath = getArgumentValue("--portable-browserprofile");
-					m_firefoxCommand += " -profile " + profilepath;
-				}
-			}
-		}
+		
 
 		if (isArgumentSet("--portable-jre"))
 		{
 			m_controller.setPortableJava(true);
-		}
-
-		// keep this string unchangeable from "outside"
-		final String firefoxCommand = m_firefoxCommand;
-		AbstractOS.getInstance().init(new AbstractOS.IURLErrorNotifier()
-		{
-			boolean m_bReset = false;
-			public void checkNotify(URL a_url)
-			{
-				if (a_url != null && !m_controller.getAnonMode() &&
-					JAPModel.getInstance().isNonAnonymousSurfingDenied() &&
-					a_url.toString().startsWith("https"))
-				{
-					m_bReset = true;
-					JAPModel.getInstance().denyNonAnonymousSurfing(false);
-				}
-			}
-		},new AbstractOS.IURLOpener()
-		{
-			public boolean openURL(URL a_url)
-			{
-				if (firefoxCommand == null || a_url == null)
-				{
-					// no path to portable browser was given; use default
-					return false;
-				}
-				try
-				{
-					LogHolder.log(LogLevel.NOTICE, LogType.GUI, firefoxCommand + " " + a_url.toString());
-					Runtime.getRuntime().exec(new String[]
-											  {firefoxCommand, a_url.toString()});
-					return true;
-				}
-				catch (Exception ex)
-				{
-				}
-				return false;
-			}
-		});
-
-		if (m_firefoxCommand != null)
-		{
-			if (isArgumentSet("--portable-help-path") && m_firefoxCommand != null)
-			{
-				m_firefoxCommand += " " + getArgumentValue("--portable-help-path");
-			}
-		}
-
-
-		String configFileName = null;
-		/* check, whether there is the -config parameter, which means the we use userdefined config
-		 * file
-		 */
-		if ( (configFileName = getArgumentValue("--config")) == null)
-		{
-			configFileName = getArgumentValue("-c");
-		}
-		if (configFileName == null && bPortable)
-		{
-			// load and create the config file in the current directory by default
-			File tempDir = ClassUtil.getClassDirectory(JAP.class);
-			if (tempDir != null)
-			{
-				configFileName =
-					ClassUtil.getClassDirectory(JAP.class).getParent() +
-					File.separator + JAPConstants.XMLCONFFN;
-			}
-		}
-
-		if (configFileName != null)
-		{
-			LogHolder.log(LogLevel.NOTICE, LogType.MISC, "Loading config file '" + configFileName + "'.");
 		}
 
 		/* check, whether there is the -forwarding_state parameter, which extends
@@ -603,6 +549,48 @@ public class JAP
 				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
 			}
 		}
+		
+		if(bPortable)
+		{
+			m_firefoxCommand = buildPortableFFCommand();
+		}
+		// keep this string unchangeable from "outside"
+		final String[] firefoxCommand = m_firefoxCommand;
+		AbstractOS.getInstance().init(new AbstractOS.IURLErrorNotifier()
+		{
+			boolean m_bReset = false;
+			public void checkNotify(URL a_url)
+			{
+				if (a_url != null && !m_controller.getAnonMode() &&
+					JAPModel.getInstance().isNonAnonymousSurfingDenied() &&
+					a_url.toString().startsWith("https"))
+				{
+					m_bReset = true;
+					JAPModel.getInstance().denyNonAnonymousSurfing(false);
+				}
+			}
+		},new AbstractOS.IURLOpener()
+		{
+			public boolean openURL(URL a_url)
+			{
+				if (firefoxCommand == null || a_url == null)
+				{
+					// no path to portable browser was given; use default
+					return false;
+				}
+				try
+				{
+					firefoxCommand[firefoxCommand.length-1] = a_url.toString();
+					LogHolder.log(LogLevel.WARNING, LogType.GUI, firefoxCommand[0] + " " + a_url.toString());
+					return m_controller.startPortableFirefox(firefoxCommand);
+				}
+				catch (Exception ex)
+				{
+					LogHolder.log(LogLevel.WARNING, LogType.GUI, "Error running applescript: ", ex);
+				}
+				return false;
+			}
+		});
 
 		splash.setText(JAPMessages.getString(MSG_INIT_DLL));
 		JAPDll.init();
@@ -776,7 +764,95 @@ public class JAP
 	{
 		return m_arstrCmdnLnArgs.containsKey(a_argument);
 	}
-
+	
+	public String[] buildPortableFFCommand()
+	{
+		String[] pFFCommand = null;
+		String pFFExecutable = null;
+		String pFFprofile = null;
+		String pFFHelpPath = null;
+		int args_len = 0;
+		int argC = 0;
+		
+		if (!isArgumentSet("--portable") )
+		{
+			return null;
+		}
+		//--portable is set
+		pFFExecutable = getArgumentValue("--portable");
+		args_len++;
+		if (pFFExecutable != null)
+		{
+			// portable configuration seems to be complete
+			pFFExecutable = toAbsolutePath(pFFExecutable);
+		}
+		else
+		{
+			pFFExecutable = "";
+		}
+			
+		/*if (isArgumentSet("--portable-browserprofile"))
+		{
+			pFFprofile = getArgumentValue("--portable-browserprofile");
+			if(pFFprofile != null)
+			{
+				args_len += 2;
+			}
+		}*/
+		if (isArgumentSet("--portable-help-path"))
+		{
+			pFFHelpPath = getArgumentValue("--portable-help-path");
+		}
+		// One argument is reserved for the URL
+		args_len++;
+		pFFCommand = new String[args_len];
+		pFFCommand[argC] = pFFExecutable;
+		argC++;
+		/*if(pFFprofile != null)
+		{
+			pFFCommand[argC] = "-profile";
+			pFFCommand[argC+1] = toAbsolutePath(pFFprofile);
+			argC += 2;
+		}*/
+		Locale loc = JAPMessages.getLocale();
+		if(pFFHelpPath != null)
+		{
+			pFFCommand[argC] = pFFHelpPath;
+		}
+		else
+		{
+			pFFCommand[argC] = "file://"+toAbsolutePath("help/en/help/index.html");
+			if(loc != null)
+			{
+				if(loc.toString().equalsIgnoreCase("de"))
+				{
+					pFFCommand[argC] = "file://"+toAbsolutePath("help/de/help/index.html");
+				}
+			}
+		}
+		return pFFCommand;
+	}
+	
+	public static String toAbsolutePath(String path)
+	{
+		if(path != null)
+		{
+			if(!(path.startsWith(File.separator)) && 
+			   !((path.substring(1,3)).equals(":"+File.separator)) )
+			{
+				//path is relative
+				return System.getProperty("user.dir") + File.separator + path;
+				
+			}
+			else
+			{
+				//path is already absolute
+				return path;
+			}
+		}
+		return null;
+	}
+	
 	public static void main(String[] argv)
 	{
 		// do NOT change anything in main!
