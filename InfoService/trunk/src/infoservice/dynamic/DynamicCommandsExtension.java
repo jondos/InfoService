@@ -116,7 +116,7 @@ public class DynamicCommandsExtension
 				}
 				msg = msg.replace('\n', ' ');
 				msg = msg.replace('\r', ' ');
-				LogHolder.log(LogLevel.DEBUG, LogType.NET, "MixCascade HELO received (encoding was: )" + a_encoding + ": XML : " + msg);
+				LogHolder.log(LogLevel.DEBUG, LogType.NET, "MixCascade HELO received (encoding was: " + a_encoding + "): XML : " + msg);
 			}
 
 			/* verify the signature */
