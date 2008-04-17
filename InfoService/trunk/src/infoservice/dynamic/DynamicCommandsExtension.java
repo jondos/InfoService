@@ -1,29 +1,29 @@
 /*
-Copyright (c) 2000 - 2005, The JAP-Team
-All rights reserved.
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+ Copyright (c) 2000 - 2005, The JAP-Team
+ All rights reserved.
+ Redistribution and use in source and binary forms, with or without modification,
+ are permitted provided that the following conditions are met:
 
-- Redistributions of source code must retain the above copyright notice,
-this list of conditions and the following disclaimer.
+ - Redistributions of source code must retain the above copyright notice,
+ this list of conditions and the following disclaimer.
 
-- Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation and/or
-other materials provided with the distribution.
+ - Redistributions in binary form must reproduce the above copyright notice,
+ this list of conditions and the following disclaimer in the documentation and/or
+ other materials provided with the distribution.
 
-- Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
-may be used to endorse or promote products derived from this software without specific
-prior written permission.
+ - Neither the name of the University of Technology Dresden, Germany nor the names of its contributors
+ may be used to endorse or promote products derived from this software without specific
+ prior written permission.
 
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
-OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
-AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
-BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
-OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS
+ OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
+ BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
 package infoservice.dynamic;
 
@@ -80,7 +80,7 @@ public class DynamicCommandsExtension
 	public HttpResponseStructure cascadePostHelo(byte[] a_postData, int a_encoding)
 	{
 		HttpResponseStructure httpResponse = new HttpResponseStructure(
-			HttpResponseStructure.HTTP_RETURN_OK);
+				HttpResponseStructure.HTTP_RETURN_OK);
 		try
 		{
 			if (LogHolder.isLogged(LogLevel.DEBUG, LogType.NET))
@@ -110,13 +110,17 @@ public class DynamicCommandsExtension
 						}
 						else
 						{
-							msg = "WARNING: FAULTY REPORTED A PLAIN - BUT WAS ZLIB ENCODED: "+new String(b);
+							msg = "WARNING: FAULTY REPORTED A PLAIN - BUT WAS ZLIB ENCODED: "
+									+ new String(b);
 						}
 					}
 				}
 				msg = msg.replace('\n', ' ');
 				msg = msg.replace('\r', ' ');
-				LogHolder.log(LogLevel.DEBUG, LogType.NET, "MixCascade HELO received (encoding was: " + a_encoding + "): XML : " + msg);
+				LogHolder
+						.log(LogLevel.DEBUG, LogType.NET,
+								"MixCascade HELO received (encoding was: " + a_encoding
+										+ "): XML : " + msg);
 			}
 
 			/* verify the signature */
@@ -127,15 +131,19 @@ public class DynamicCommandsExtension
 			}
 			else if (a_encoding == HttpResponseStructure.HTTP_ENCODING_PLAIN)
 			{
-				/**@todo WORKAROUND FIX for a bug, there the IS reported that the message is PLAIN but in fact it is ZLIB encoded!*/
-				if(a_postData[0]!='<')
-				{//try zlib decompress...
+				/**
+				 * @todo WORKAROUND FIX for a bug, there the IS reported that
+				 *       the message is PLAIN but in fact it is ZLIB encoded!
+				 */
+				if (a_postData[0] != '<')
+				{// try zlib decompress...
 					byte[] b = ZLibTools.decompress(a_postData);
-					if(b!=null)
-						a_postData=b;
+					if (b != null)
+						a_postData = b;
 				}
-				/** end workaround!*/
-				Element mixCascadeNode = (Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData), MixCascade.XML_ELEMENT_NAME));
+				/** end workaround! */
+				Element mixCascadeNode = (Element) (XMLUtil.getFirstChildByName(XMLUtil
+						.toXMLDocument(a_postData), MixCascade.XML_ELEMENT_NAME));
 				mixCascadeEntry = new MixCascade(mixCascadeNode);
 			}
 			else
@@ -144,11 +152,11 @@ public class DynamicCommandsExtension
 			}
 			// remove temporary cascades if existig
 			VirtualCascade temporaryCascade = (VirtualCascade) Database.getInstance(
-				VirtualCascade.class).getEntryById(mixCascadeEntry.getId());
+					VirtualCascade.class).getEntryById(mixCascadeEntry.getId());
 			if (temporaryCascade != null)
 			{
 				if (temporaryCascade.getRealCascade().getMixIDsAsString().equals(
-					mixCascadeEntry.getMixIDsAsString()))
+						mixCascadeEntry.getMixIDsAsString()))
 				{
 					Database.getInstance(VirtualCascade.class).remove(temporaryCascade);
 
@@ -177,7 +185,7 @@ public class DynamicCommandsExtension
 	public HttpResponseStructure isNewCascadeAvailable(String a_strMixId)
 	{
 		HttpResponseStructure httpResponse = new HttpResponseStructure(
-			HttpResponseStructure.HTTP_RETURN_NOT_FOUND);
+				HttpResponseStructure.HTTP_RETURN_NOT_FOUND);
 
 		if (!haveNewCascadeInformation(a_strMixId))
 		{
@@ -190,15 +198,15 @@ public class DynamicCommandsExtension
 	public HttpResponseStructure reconfigureMix(String a_strMixId)
 	{
 		HttpResponseStructure httpResponse = new HttpResponseStructure(
-			HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
+				HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
 		MixCascade cascade = getTemporaryCascade(a_strMixId);
 		if (cascade != null)
 		{
 			Element doc = cascade.getXmlStructure();
 			SignatureCreator.getInstance().signXml(SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE,
-				doc);
+					doc);
 			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,
-				HttpResponseStructure.HTTP_ENCODING_PLAIN, XMLUtil.toString(doc));
+					HttpResponseStructure.HTTP_ENCODING_PLAIN, XMLUtil.toString(doc));
 		}
 		return httpResponse;
 	}
@@ -246,11 +254,13 @@ public class DynamicCommandsExtension
 	 */
 	private MixCascade getTemporaryCascade(String a_mixId)
 	{
-		Enumeration knownTemporaryMixCascades = Database.getInstance(VirtualCascade.class).getEntryList().elements();
+		Enumeration knownTemporaryMixCascades = Database.getInstance(VirtualCascade.class)
+				.getEntryList().elements();
 		MixCascade assignedTemporaryCascade = null;
 		while (knownTemporaryMixCascades.hasMoreElements() && (assignedTemporaryCascade == null))
 		{
-			MixCascade currentCascade = ((VirtualCascade) (knownTemporaryMixCascades.nextElement())).getRealCascade();
+			MixCascade currentCascade = ((VirtualCascade) (knownTemporaryMixCascades.nextElement()))
+					.getRealCascade();
 			if (currentCascade.getMixIds().contains(a_mixId))
 			{
 				/* the mix is assigned to that cascade */
@@ -272,7 +282,8 @@ public class DynamicCommandsExtension
 	private MixCascade getCurrentCascade(String a_mixId)
 	{
 		/* check whether the mix is already assigned to a mixcascade */
-		Enumeration knownMixCascades = Database.getInstance(MixCascade.class).getEntryList().elements();
+		Enumeration knownMixCascades = Database.getInstance(MixCascade.class).getEntryList()
+				.elements();
 		MixCascade assignedCascade = null;
 		while (knownMixCascades.hasMoreElements() && (assignedCascade == null))
 		{
@@ -300,14 +311,17 @@ public class DynamicCommandsExtension
 	public HttpResponseStructure lastMixPostDynaCascade(byte[] a_postData)
 	{
 		HttpResponseStructure httpResponse = new HttpResponseStructure(
-			HttpResponseStructure.HTTP_RETURN_OK);
+				HttpResponseStructure.HTTP_RETURN_OK);
 		try
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.NET, "LastMixPostDynaCascade: MixCascade HELO received: XML: " + (new String(a_postData)));
-			Element mixCascadeNode = (Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(a_postData), MixCascade.XML_ELEMENT_NAME));
+			LogHolder.log(LogLevel.DEBUG, LogType.NET,
+					"LastMixPostDynaCascade: MixCascade HELO received: XML: "
+							+ (new String(a_postData)));
+			Element mixCascadeNode = (Element) (XMLUtil.getFirstChildByName(XMLUtil
+					.toXMLDocument(a_postData), MixCascade.XML_ELEMENT_NAME));
 			/* verify the signature */
 			if (SignatureVerifier.getInstance().verifyXml(mixCascadeNode,
-				SignatureVerifier.DOCUMENT_CLASS_MIX) == true)
+					SignatureVerifier.DOCUMENT_CLASS_MIX) == true)
 			{
 				MixCascade mixCascadeEntry = new MixCascade(mixCascadeNode);
 				VirtualCascade tmp = new VirtualCascade(mixCascadeEntry);
@@ -316,9 +330,10 @@ public class DynamicCommandsExtension
 			else
 			{
 				LogHolder.log(LogLevel.WARNING, LogType.NET,
-					"Signature check failed for MixCascade entry! XML: " + (new String(a_postData)));
+						"Signature check failed for MixCascade entry! XML: "
+								+ (new String(a_postData)));
 				httpResponse = new HttpResponseStructure(
-					HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
+						HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
 			}
 		}
 		catch (Exception e)
@@ -353,10 +368,10 @@ public class DynamicCommandsExtension
 	 *         the answer XML structure) or HTTP_RETURN_INTERNAL_SERVER_ERROR
 	 */
 	public HttpResponseStructure mixPostConnectivityTest(InetAddress a_sourceAddress,
-		byte[] a_postData)
+			byte[] a_postData)
 	{
 		HttpResponseStructure httpResponse = new HttpResponseStructure(
-			HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
+				HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
 		int port = extractPort(a_postData);
 		LogHolder.log(LogLevel.EMERG, LogType.MISC, "Port: " + port);
 		if (port == -1)
@@ -375,7 +390,7 @@ public class DynamicCommandsExtension
 			docConnectivity = constructAnswer("Failed");
 		}
 		httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,
-			HttpResponseStructure.HTTP_ENCODING_PLAIN, XMLUtil.toString(docConnectivity));
+				HttpResponseStructure.HTTP_ENCODING_PLAIN, XMLUtil.toString(docConnectivity));
 		return httpResponse;
 	}
 
@@ -515,7 +530,38 @@ public class DynamicCommandsExtension
 			String virtualCascades = getCascadeHtmlTable(VirtualCascade.class);
 			String realCascades = getCascadeHtmlTable(MixCascade.class);
 
-			String htmlData = "<HTML>\n" + "  <HEAD>\n" + "    <TITLE>INFOSERVICE - Virtual-Cascades Status</TITLE>\n" + "    <STYLE TYPE=\"text/css\">\n" + "      <!--\n" + "        h1 {color:blue; text-align:center;}\n" + "        b,h3,h4,h5 {font-weight:bold; color:maroon;}\n" + "        body {margin-top:0px; margin-left:0px; margin-width:0px; margin-height:0px; background-color:white; color:black;}\n" + "        h1,h2,h3,h4,h5,p,address,ol,ul,tr,td,th,blockquote,body,.smalltext,.leftcol {font-family:geneva,arial,helvetica,sans-serif;}\n" + "        p,address,ol,ul,tr,td,th,blockquote {font-size:11pt;}\n" + "        .leftcol,.smalltext {font-size: 10px;}\n" + "        h1 {font-size:17px;}\n" + "        h2 {font-size:16px;}\n" + "        h3 {font-size:15px;}\n" + "        h4 {font-size:14px;}\n" + "        h5 {font-size:13px;}\n" + "        address {font-style:normal;}\n" + "        hr {color:#cccccc;}\n" + "        h2,.leftcol {font-weight:bold; color:#006699;}\n" + "        a:link {color:#006699; font-weight:bold; text-decoration:none;}\n" + "        a:visited {color:#666666; font-weight:bold; text-decoration:none;}\n" + "        a:active {color:#006699; font-weight:bold; text-decoration:none;}\n" + "        a:hover {color:#006699; font-weight:bold; text-decoration:underline;}\n" + "        th {color:white; background:#006699; font-weight:bold; text-align:left;}\n" + "        td.name {border-bottom-style:solid; border-bottom-width:1pt; border-color:#006699; background:#eeeeff;}\n" + "        td.status {border-bottom-style:solid; border-bottom-width:1pt; border-color:#006699;}\n" + "      -->\n" + "    </STYLE>\n" + "    <META HTTP-EQUIV=\"refresh\" CONTENT=\"10\">\n" + "  </HEAD>\n" + "  <BODY BGCOLOR=\"#FFFFFF\">\n" + "    <P ALIGN=\"right\">" + (new Date()).toString() + "</P>\n" + "    <H2>INFOSERVICE - Virtual-Cascades Status</H2><BR><BR>\n" + "<h3>Real cascades</h3>";
+			String htmlData = "<HTML>\n"
+					+ "  <HEAD>\n"
+					+ "    <TITLE>INFOSERVICE - Virtual-Cascades Status</TITLE>\n"
+					+ "    <STYLE TYPE=\"text/css\">\n"
+					+ "      <!--\n"
+					+ "        h1 {color:blue; text-align:center;}\n"
+					+ "        b,h3,h4,h5 {font-weight:bold; color:maroon;}\n"
+					+ "        body {margin-top:0px; margin-left:0px; margin-width:0px; margin-height:0px; background-color:white; color:black;}\n"
+					+ "        h1,h2,h3,h4,h5,p,address,ol,ul,tr,td,th,blockquote,body,.smalltext,.leftcol {font-family:geneva,arial,helvetica,sans-serif;}\n"
+					+ "        p,address,ol,ul,tr,td,th,blockquote {font-size:11pt;}\n"
+					+ "        .leftcol,.smalltext {font-size: 10px;}\n"
+					+ "        h1 {font-size:17px;}\n"
+					+ "        h2 {font-size:16px;}\n"
+					+ "        h3 {font-size:15px;}\n"
+					+ "        h4 {font-size:14px;}\n"
+					+ "        h5 {font-size:13px;}\n"
+					+ "        address {font-style:normal;}\n"
+					+ "        hr {color:#cccccc;}\n"
+					+ "        h2,.leftcol {font-weight:bold; color:#006699;}\n"
+					+ "        a:link {color:#006699; font-weight:bold; text-decoration:none;}\n"
+					+ "        a:visited {color:#666666; font-weight:bold; text-decoration:none;}\n"
+					+ "        a:active {color:#006699; font-weight:bold; text-decoration:none;}\n"
+					+ "        a:hover {color:#006699; font-weight:bold; text-decoration:underline;}\n"
+					+ "        th {color:white; background:#006699; font-weight:bold; text-align:left;}\n"
+					+ "        td.name {border-bottom-style:solid; border-bottom-width:1pt; border-color:#006699; background:#eeeeff;}\n"
+					+ "        td.status {border-bottom-style:solid; border-bottom-width:1pt; border-color:#006699;}\n"
+					+ "      -->\n" + "    </STYLE>\n"
+					+ "    <META HTTP-EQUIV=\"refresh\" CONTENT=\"10\">\n" + "  </HEAD>\n"
+					+ "  <BODY BGCOLOR=\"#FFFFFF\">\n" + "    <P ALIGN=\"right\">"
+					+ (new Date()).toString() + "</P>\n"
+					+ "    <H2>INFOSERVICE - Virtual-Cascades Status</H2><BR><BR>\n"
+					+ "<h3>Real cascades</h3>";
 
 			htmlData += realCascades;
 			htmlData += "<br/><h3>Virtual cascades</h3>";
@@ -548,16 +594,54 @@ public class DynamicCommandsExtension
 				htmlData += "</TR>\n";
 			}
 			htmlData = htmlData + "    </TABLE><BR><BR><BR><BR>\n";
-			htmlData = htmlData + "    <P>Infoservice [" + Constants.INFOSERVICE_VERSION + "] Startup Time: " + Configuration.getInstance().getStartupTime() + "</P>\n" + "    <HR noShade SIZE=\"1\">\n" + "    <ADDRESS>&copy; 2000 - 2006 The JAP Team</ADDRESS>\n" + "  </BODY>\n" + "</HTML>\n";
+			htmlData = htmlData + "    <P>Infoservice [" + Constants.INFOSERVICE_VERSION
+					+ "] Startup Time: " + Configuration.getInstance().getStartupTime() + "</P>\n"
+					+ "    <HR noShade SIZE=\"1\">\n"
+					+ "    <ADDRESS>&copy; 2000 - 2006 The JAP Team</ADDRESS>\n" + "  </BODY>\n"
+					+ "</HTML>\n";
 			/* send content */
 			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_HTML,
-				HttpResponseStructure.HTTP_ENCODING_PLAIN, htmlData);
+					HttpResponseStructure.HTTP_ENCODING_PLAIN, htmlData);
 		}
 		catch (Exception e)
 		{
-			String htmlData = "<HTML>\n" + "  <HEAD>\n" + "    <TITLE>INFOSERVICE - Virtual-Cascades Status</TITLE>\n" + "    <STYLE TYPE=\"text/css\">\n" + "      <!--\n" + "        h1 {color:blue; text-align:center;}\n" + "        b,h3,h4,h5 {font-weight:bold; color:maroon;}\n" + "        body {margin-top:0px; margin-left:0px; margin-width:0px; margin-height:0px; background-color:white; color:black;}\n" + "        h1,h2,h3,h4,h5,p,address,ol,ul,tr,td,th,blockquote,body,.smalltext,.leftcol {font-family:geneva,arial,helvetica,sans-serif;}\n" + "        p,address,ol,ul,tr,td,th,blockquote {font-size:11pt;}\n" + "        .leftcol,.smalltext {font-size: 10px;}\n" + "        h1 {font-size:17px;}\n" + "        h2 {font-size:16px;}\n" + "        h3 {font-size:15px;}\n" + "        h4 {font-size:14px;}\n" + "        h5 {font-size:13px;}\n" + "        address {font-style:normal;}\n" + "        hr {color:#cccccc;}\n" + "        h2,.leftcol {font-weight:bold; color:#006699;}\n" + "        a:link {color:#006699; font-weight:bold; text-decoration:none;}\n" + "        a:visited {color:#666666; font-weight:bold; text-decoration:none;}\n" + "        a:active {color:#006699; font-weight:bold; text-decoration:none;}\n" + "        a:hover {color:#006699; font-weight:bold; text-decoration:underline;}\n" + "        th {color:white; background:#006699; font-weight:bold; text-align:left;}\n" + "        td.name {border-bottom-style:solid; border-bottom-width:1pt; border-color:#006699; background:#eeeeff;}\n" + "        td.status {border-bottom-style:solid; border-bottom-width:1pt; border-color:#006699;}\n" + "      -->\n" + "    </STYLE>\n" + "    <META HTTP-EQUIV=\"refresh\" CONTENT=\"10\">\n" + "  </HEAD>\n" + "  <BODY BGCOLOR=\"#FFFFFF\">\n" + "    <P ALIGN=\"right\"><h3>Updating status, please wait...</h3></p><br/>" + " <P>Infoservice [" + Constants.INFOSERVICE_VERSION + "] Startup Time: " + Configuration.getInstance().getStartupTime() + "</P>\n" + "    <HR noShade SIZE=\"1\">\n" + "    <ADDRESS>&copy; 2000 - 2006 The JAP Team</ADDRESS>\n" + "  </BODY>\n" + "</HTML>\n";
+			String htmlData = "<HTML>\n"
+					+ "  <HEAD>\n"
+					+ "    <TITLE>INFOSERVICE - Virtual-Cascades Status</TITLE>\n"
+					+ "    <STYLE TYPE=\"text/css\">\n"
+					+ "      <!--\n"
+					+ "        h1 {color:blue; text-align:center;}\n"
+					+ "        b,h3,h4,h5 {font-weight:bold; color:maroon;}\n"
+					+ "        body {margin-top:0px; margin-left:0px; margin-width:0px; margin-height:0px; background-color:white; color:black;}\n"
+					+ "        h1,h2,h3,h4,h5,p,address,ol,ul,tr,td,th,blockquote,body,.smalltext,.leftcol {font-family:geneva,arial,helvetica,sans-serif;}\n"
+					+ "        p,address,ol,ul,tr,td,th,blockquote {font-size:11pt;}\n"
+					+ "        .leftcol,.smalltext {font-size: 10px;}\n"
+					+ "        h1 {font-size:17px;}\n"
+					+ "        h2 {font-size:16px;}\n"
+					+ "        h3 {font-size:15px;}\n"
+					+ "        h4 {font-size:14px;}\n"
+					+ "        h5 {font-size:13px;}\n"
+					+ "        address {font-style:normal;}\n"
+					+ "        hr {color:#cccccc;}\n"
+					+ "        h2,.leftcol {font-weight:bold; color:#006699;}\n"
+					+ "        a:link {color:#006699; font-weight:bold; text-decoration:none;}\n"
+					+ "        a:visited {color:#666666; font-weight:bold; text-decoration:none;}\n"
+					+ "        a:active {color:#006699; font-weight:bold; text-decoration:none;}\n"
+					+ "        a:hover {color:#006699; font-weight:bold; text-decoration:underline;}\n"
+					+ "        th {color:white; background:#006699; font-weight:bold; text-align:left;}\n"
+					+ "        td.name {border-bottom-style:solid; border-bottom-width:1pt; border-color:#006699; background:#eeeeff;}\n"
+					+ "        td.status {border-bottom-style:solid; border-bottom-width:1pt; border-color:#006699;}\n"
+					+ "      -->\n" + "    </STYLE>\n"
+					+ "    <META HTTP-EQUIV=\"refresh\" CONTENT=\"10\">\n" + "  </HEAD>\n"
+					+ "  <BODY BGCOLOR=\"#FFFFFF\">\n"
+					+ "    <P ALIGN=\"right\"><h3>Updating status, please wait...</h3></p><br/>"
+					+ " <P>Infoservice [" + Constants.INFOSERVICE_VERSION + "] Startup Time: "
+					+ Configuration.getInstance().getStartupTime() + "</P>\n"
+					+ "    <HR noShade SIZE=\"1\">\n"
+					+ "    <ADDRESS>&copy; 2000 - 2006 The JAP Team</ADDRESS>\n" + "  </BODY>\n"
+					+ "</HTML>\n";
 			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_HTML,
-				HttpResponseStructure.HTTP_ENCODING_PLAIN, htmlData);
+					HttpResponseStructure.HTTP_ENCODING_PLAIN, htmlData);
 			LogHolder.log(LogLevel.ERR, LogType.MISC, e);
 		}
 		return httpResponse;
@@ -574,7 +658,8 @@ public class DynamicCommandsExtension
 	{
 		Vector result = new Vector();
 		// First the mixes in their own cascade
-		Enumeration enumer2 = Database.getInstance(VirtualCascade.class).getEntrySnapshotAsEnumeration();
+		Enumeration enumer2 = Database.getInstance(VirtualCascade.class)
+				.getEntrySnapshotAsEnumeration();
 		MixCascade mixCascade2 = null;
 		while (enumer2.hasMoreElements())
 		{
@@ -616,9 +701,19 @@ public class DynamicCommandsExtension
 
 	private String getCascadeHtmlTable(Class a_clazz) throws Exception
 	{
-		String htmlData = "" + "    <TABLE ALIGN=\"center\" BORDER=\"0\" width=\"100%\">\n" + "      <COLGROUP>\n" // + " <COL>\n"
-			+ "        <COL>\n" + "        <COL>\n" + "        <COL>\n" + "        <COL>\n" + "        <COL>\n" + "        </COLGROUP>\n" + "      <TR>\n" // + " <TH>Cascade Name</TH>\n"
-			+ "        <TH>Cascade ID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TH>\n" + "        <TH>Mix Host</TH>\n" + "        <TH>Mix Port</TH>\n" + "        <TH>Mix Type</TH>\n" + "        <TH>Mix Id</TH>\n" + "      </TR>\n";
+		String htmlData = ""
+				+ "    <TABLE ALIGN=\"center\" BORDER=\"0\" width=\"100%\">\n"
+				+ "      <COLGROUP>\n" // + " <COL>\n"
+				+ "        <COL>\n"
+				+ "        <COL>\n"
+				+ "        <COL>\n"
+				+ "        <COL>\n"
+				+ "        <COL>\n"
+				+ "        </COLGROUP>\n"
+				+ "      <TR>\n" // + " <TH>Cascade Name</TH>\n"
+				+ "        <TH>Cascade ID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TH>\n"
+				+ "        <TH>Mix Host</TH>\n" + "        <TH>Mix Port</TH>\n"
+				+ "        <TH>Mix Type</TH>\n" + "        <TH>Mix Id</TH>\n" + "      </TR>\n";
 		/* get all status entrys from database */
 		Enumeration enumer = Database.getInstance(a_clazz).getEntrySnapshotAsEnumeration();
 		MixCascade mixCascade = null;

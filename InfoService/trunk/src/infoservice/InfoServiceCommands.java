@@ -50,6 +50,7 @@ import anon.infoservice.MessageDBEntry;
 import anon.infoservice.MixCascade;
 import anon.infoservice.MixInfo;
 import anon.infoservice.StatusInfo;
+import anon.infoservice.PerformanceEntry;
 import anon.pay.PaymentInstanceDBEntry;
 import anon.util.IXMLEncodable;
 import anon.util.XMLParseException;
@@ -97,6 +98,13 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		public Class getDatabaseClass()
 		{
 			return JavaVersionDBEntry.class;
+		}
+	};
+	private final HTTPResponseGetter m_performanceResponseGetter = new HTTPResponseGetter()
+	{
+		public Class getDatabaseClass()
+		{
+			return PerformanceEntry.class;
 		}
 	};
 
@@ -855,10 +863,18 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				"  <BODY BGCOLOR=\"#FFFFFF\">\n" +
 				"    <P ALIGN=\"right\">" + (new Date()).toString() + "</P>\n" +
 				"    <H2>InfoService Status (" + Configuration.getInstance().getID() + ")</H2>\n" +
-				"    <P>InfoService Name: " + Configuration.getInstance().getOwnName() + "<BR>\n" +
-				"    Performance Monitoring Enabled: " + Configuration.getInstance().isPerfEnabled() +"</P><BR>\n" +
+				"    <P>InfoService Name: " + Configuration.getInstance().getOwnName() + "<BR></P>\n";
+
+				if(Configuration.getInstance().isPerfEnabled())
+				{
+					htmlData += "    <P>Performance Monitoring Enabled<BR>\n" + 
+					"   - Proxy Host: " + Configuration.getInstance().getPerformanceMeterConfig()[0] + "<BR>" +
+					"   - Proxy Port: " + Configuration.getInstance().getPerformanceMeterConfig()[1] + "<BR>" +
+					"   - Datasize: " + Configuration.getInstance().getPerformanceMeterConfig()[2] + "<BR>" +
+					"   - Major Interval: " + Configuration.getInstance().getPerformanceMeterConfig()[3] + "<BR></p>";
+				}				
 				//"    <TABLE ALIGN=\"center\" BORDER=\"0\">\n" +
-				"    <TABLE BORDER=\"0\">\n" +
+				htmlData +="    <TABLE BORDER=\"0\">\n" +
 				"      <COLGROUP>\n" +
 				"        <COL WIDTH=\"20%\">\n" +
 				"        <COL WIDTH=\"15%\">\n" +
@@ -989,12 +1005,13 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		return httpResponse;
 	}
-
+	
 	/**
-	 * Sends the XML encoded mixcascade entry the ID given by cascadeId to the client.
+	 * Sends the XML encoded mix cascade entry the ID given by cascadeId to the client.
 	 *
-	 * @param a_cascadeId The ID of the requested mixcascade.
 	 * @param a_supportedEncodings defines the encoding supported by the client (deflate, gzip,...)
+	 * @param a_cascadeId The ID of the requested mix cascade.
+	 * 
 	 * @return The HTTP response for the client.
 	 */
 	private HttpResponseStructure getCascadeInfo(int a_supportedEncodings, String a_cascadeId)
@@ -1539,6 +1556,11 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			ISRuntimeStatistics.ms_lNrOfGetCascadesRequests++;
 			/* JAP or someone else wants to get information about all cascades we know */
 			httpResponse = m_cascadeResponseGetter.fetchResponse(a_supportedEncodings, false);
+		}
+		else if( (command.startsWith("/performanceentries") && (method == Constants.REQUEST_METHOD_GET)))
+		{
+			ISRuntimeStatistics.ms_lNrOfPerformanceEntriesRequests++;
+			httpResponse = m_performanceResponseGetter.fetchResponse(a_supportedEncodings, false);
 		}
 		else if ( (command.equals("/helo")) && (method == Constants.REQUEST_METHOD_POST))
 		{
