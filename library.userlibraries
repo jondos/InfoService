@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<eclipse-userlibraries version="2">
+<library name="http" systemlibrary="false">
+<archive path="C:/Users/jondos/Coding/ext_lib_jap/http.jar"/>
+</library>
+<library name="mac" systemlibrary="false">
+<archive path="C:/Users/jondos/Coding/ext_lib_jap/MRJClasses.zip"/>
+</library>
+<library name="Apache XML-RPC" systemlibrary="false">
+<archive path="C:/Users/jondos/Coding/ext_lib_jap/apache-xmlrpc-1.1.jar"/>
+</library>
+<library name="BouncyCastleLightForJAP" systemlibrary="false">
+<archive path="C:/Users/jondos/Coding/ext_lib_jap/BouncyCastleLightForJAP.jar"/>
+</library>
+<library name="JUnit" systemlibrary="false">
+<archive javadoc="file:/C:/Borland/JBuilder2006/thirdparty/junit3.8/javadoc/" path="C:/Borland/JBuilder2006/thirdparty/junit3.8/junit.jar" source="C:/Borland/JBuilder2006/thirdparty/junit3.8/src.jar"/>
+</library>
+<library name="Unit Test" systemlibrary="false">
+<archive path="C:/Borland/JBuilder2006/lib/unittest.jar"/>
+</library>
+<library name="junitx" systemlibrary="false">
+<archive path="C:/Users/jondos/Coding/ext_lib_jap/junitx-5.1.jar"/>
+</library>
+<library name="Swing" systemlibrary="false">
+<archive path="C:/Users/jondos/Coding/ext_lib_jap/swingall.jar"/>
+</library>
+<library name="ApacheBzip2" systemlibrary="false">
+<archive path="C:/Users/jondos/Coding/ext_lib_jap/ApacheBzip2.jar"/>
+</library>
+<library name="Log4j" systemlibrary="false">
+<archive path="C:/Users/jondos/Coding/ext_lib_jap/log4j.jar"/>
+</library>
+<library name="ApacheFTPClient" systemlibrary="false">
+<archive path="C:/Users/jondos/Coding/ext_lib_jap/ApacheFTPClient.jar"/>
+</library>
+<library name="XML-1.0" systemlibrary="false">
+<archive path="C:/Users/jondos/Coding/ext_lib_jap/xml.jar"/>
+</library>
+<library name="AppleJavaExtensions" systemlibrary="false">
+<archive path="C:/Users/jondos/Coding/ext_lib_jap/AppleJavaExtensions.jar"/>
+</library>
+</eclipse-userlibraries>
