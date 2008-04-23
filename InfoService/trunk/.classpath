@@ -12,5 +12,10 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3.8.1"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/junitx"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/mac"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/BouncyCastleLightForJap"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/HTTP"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Jama"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/MRJ"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/XML-RPC"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>
