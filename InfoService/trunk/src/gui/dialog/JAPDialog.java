@@ -718,9 +718,9 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		}
 		
 		public boolean isDrawFocusEnabled()
-			{
-				return true;
-			}
+		{
+			return true;
+		}
 		
 		public String getYesOKText()
 		{
@@ -1445,11 +1445,11 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 			vecOptions.addElement(dialogContentPane.getButtonNo().getText());
 		}
 		if(!a_options.isDrawFocusEnabled())
-			{
-				dialogContentPane.getButtonNo().setFocusPainted(false);
-				dialogContentPane.getButtonYesOK().setFocusPainted(false);
-				dialogContentPane.getButtonCancel().setFocusPainted(false);
-			}
+		{
+			dialogContentPane.getButtonNo().setFocusPainted(false);
+			dialogContentPane.getButtonYesOK().setFocusPainted(false);
+			dialogContentPane.getButtonCancel().setFocusPainted(false);
+		}
 		
 		dialogContentPane.setDefaultButtonOperation(DialogContentPane.ON_CLICK_DISPOSE_DIALOG);
 

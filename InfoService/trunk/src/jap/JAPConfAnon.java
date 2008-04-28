@@ -94,10 +94,12 @@ import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
 import anon.infoservice.MixInfo;
+import anon.infoservice.PerformanceEntry;
 import anon.infoservice.ServiceLocation;
 import anon.infoservice.ServiceOperator;
 import anon.infoservice.ServiceSoftware;
 import anon.infoservice.StatusInfo;
+import anon.infoservice.PerformanceInfo;
 import anon.util.Util;
 import anon.util.Util.Comparable;
 import gui.JAPHelp;
@@ -133,10 +135,12 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private static final String MSG_MIX_X_OF_Y = JAPConfAnon.class.getName() + "_mixXOfY";
 	private static final String MSG_MIX_POSITION = JAPConfAnon.class.getName() + "_mixPosition";
 	private static final String MSG_MIX_FIRST = JAPConfAnon.class.getName() + "_mixFirst";
+	private static final String MSG_MIX_SINGLE = JAPConfAnon.class.getName() + "_singleMix";
 	private static final String MSG_MIX_MIDDLE = JAPConfAnon.class.getName() + "_mixMiddle";
 	private static final String MSG_MIX_LAST = JAPConfAnon.class.getName() + "_mixLast";
 	private static final String MSG_EXPLAIN_MIX_TT = JAPConfAnon.class.getName() + "_explainMixTT";
 	private static final String MSG_FIRST_MIX_TEXT = JAPConfAnon.class.getName() + "_firstMixText";
+	private static final String MSG_SINGLE_MIX_TEXT = JAPConfAnon.class.getName() + "_singleMixText";
 	private static final String MSG_MIDDLE_MIX_TEXT = JAPConfAnon.class.getName() + "_middleMixText";
 	private static final String MSG_LAST_MIX_TEXT = JAPConfAnon.class.getName() + "_lastMixText";
 	private static final String MSG_NOT_TRUSTWORTHY = JAPConfAnon.class.getName() + "_notTrustworthy";
@@ -177,9 +181,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private static final int FILTER_SPEED_MINOR_TICK = 32;
 	private static final int FILTER_SPEED_MAX = 128;
 	
-	private static final int FILTER_LATENCY_MAJOR_TICK = 2;
-	private static final int FILTER_LATENCY_MAX = 6;
-	private static final int FILTER_LATENCY_MIN = 0;
+	private static final int FILTER_LATENCY_MAJOR_TICK = 200;
+	private static final int FILTER_LATENCY_MAX = 800;
+	private static final int FILTER_LATENCY_MIN = 200;
 	
 	private static final String DEFAULT_MIX_NAME = "AN.ON Mix";
 
@@ -209,12 +213,15 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private ManualPanel m_manualPanel;
 	private FilterPanel m_filterPanel;
 
+	private JLabel m_lblSpeed;
+	private JLabel m_lblDelay;
+	
 	private JLabel m_numOfUsersLabel;
 	private GridBagConstraints m_constrHosts, m_constrPorts;
-	private JLabel m_lblHosts;
+	/*private JLabel m_lblHosts;
 	private JLabel m_lblPorts;
 	private JAPMultilineLabel m_reachableLabel;
-	private JLabel m_portsLabel;
+	private JLabel m_portsLabel;*/
 	private JLabel m_lblSocks;
 
 	private GridBagLayout m_rootPanelLayout;
@@ -460,6 +467,16 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				}
 			}
 			
+			m_filterSpeedSlider.setValue(((Integer)m_trustModelCopy.getAttribute(TrustModel.SpeedAttribute.class).getConditionValue()).intValue());
+			
+			int delay = ((Integer)m_trustModelCopy.getAttribute(TrustModel.DelayAttribute.class).getConditionValue()).intValue();
+			
+			if(delay == 0) delay = 200;
+			else
+				delay =  (m_filterLatencySlider.getMaximum() + m_filterLatencySlider.getMinimum()) - delay;
+			
+			m_filterLatencySlider.setValue(delay);
+			
 			((OperatorsTableModel)m_listOperators.getModel()).update();
 		
 			//m_filterAnonLevelSlider.setValue(((Integer)model.getAttribute(TrustModel.AnonLevelAttribute.class).getConditionValue()).intValue());
@@ -669,7 +686,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_cascadesPanel.add(panelBttns, c);
 
 		c.insets = new Insets(5, 20, 0, 5);
-
+		
 		//l = new JLabel(JAPMessages.getString("numOfUsersOnCascade") + ":");
 		l = new JLabel(JAPMessages.getString(MSG_ANON_LEVEL) + ":");
 		c.gridx = 2;
@@ -688,38 +705,38 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_cascadesPanel.add(m_numOfUsersLabel, c);
 
 		c.insets = new Insets(5, 20, 0, 5);
-		m_lblHosts = new JLabel(JAPMessages.getString("cascadeReachableBy") + ":");
+		l = new JLabel(JAPMessages.getString(MSG_FILTER_SPEED) + ":");
 		c.gridx = 2;
 		c.gridy = 2;
 		c.weightx = 0;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		m_constrHosts = (GridBagConstraints)c.clone();
-		m_cascadesPanel.add(m_lblHosts, c);
+		m_cascadesPanel.add(l, c);
 
 		c.insets = new Insets(5, 5, 0, 5);
-		m_reachableLabel = new JAPMultilineLabel("", null, null);
+		m_lblSpeed = new JLabel("");
 		c.gridx = 3;
 		c.gridy = 2;
 		c.weightx = 0;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		m_cascadesPanel.add(m_reachableLabel, c);
+		m_cascadesPanel.add(m_lblSpeed, c);
 
 		c.insets = new Insets(5, 20, 0, 5);
-		m_lblPorts = new JLabel(JAPMessages.getString("cascadePorts") + ":");
+		l = new JLabel(JAPMessages.getString(MSG_FILTER_LATENCY) + ":");
 		c.gridx = 2;
 		c.gridy = 3;
 		c.weightx = 0;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		m_constrPorts = (GridBagConstraints)c.clone();
-		m_cascadesPanel.add(m_lblPorts, c);
+		m_cascadesPanel.add(l, c);
 
 		c.insets = new Insets(5, 5, 0, 5);
-		m_portsLabel = new JLabel("");
+		m_lblDelay = new JLabel("");
 		c.gridx = 3;
 		c.gridy = 3;
 		c.weightx = 0;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		m_cascadesPanel.add(m_portsLabel, c);
+		m_cascadesPanel.add(m_lblDelay, c);
 
 		c.insets = new Insets(5, 20, 0, 5);
 		c.gridy = 4;
@@ -822,7 +839,9 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	private void setPayLabel(MixCascade cascade)
 	{
-		if (!TrustModel.getCurrentTrustModel().isTrusted(cascade))
+		StringBuffer buff = new StringBuffer();
+		
+		if (!TrustModel.getCurrentTrustModel().isTrusted(cascade, buff))
 		{
 			m_payLabel.setForeground(Color.red);
 			m_payLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -845,7 +864,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			}
 			else
 			{
-				m_payLabel.setText(JAPMessages.getString(MSG_NOT_TRUSTWORTHY));
+				m_payLabel.setText(JAPMessages.getString(MSG_NOT_TRUSTWORTHY) + " (" + buff.toString() + ")");
 				m_payLabel.setToolTipText(JAPMessages.getString(MSG_EXPLAIN_NOT_TRUSTWORTHY,
 					TrustModel.getCurrentTrustModel().getName()));
 				m_blacklist = false;
@@ -911,21 +930,32 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			m_lblMix.setToolTipText("");
 		}
+		
+		//m_nrLblExplain.setForeground(Color.black);
 		if (m_serverList.areMixButtonsEnabled())
 		{
 			String mixType;
 			if (server == 0)
 			{
-				mixType = JAPMessages.getString(MSG_MIX_FIRST);
+				if (m_serverList.getNumberOfMixes() <= 1)
+				{
+					mixType = MSG_MIX_SINGLE;
+					//m_nrLblExplain.setForeground(Color.red);
+				}
+				else
+				{
+					mixType = MSG_MIX_FIRST;
+				}
 			}
 			else if ((server + 1) == m_serverList.getNumberOfMixes())
 			{
-				mixType = JAPMessages.getString(MSG_MIX_LAST);
+				mixType = MSG_MIX_LAST;
 			}
 			else
 			{
-				mixType = JAPMessages.getString(MSG_MIX_MIDDLE);
+				mixType = MSG_MIX_MIDDLE;
 			}
+			mixType = JAPMessages.getString(mixType);
 
 			m_nrLabel.setText(JAPMessages.getString(MSG_MIX_X_OF_Y, new Object[]{new Integer(server + 1),
 													new Integer(m_serverList.getNumberOfMixes())}));
@@ -1035,6 +1065,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			hideEditFilter();
 		}
+		
+		TrustModel.restoreDefault();
 	}
 	
 	protected void onCancelPressed()
@@ -1314,6 +1346,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 						   JAPMessages.getString("activeCascadeEdited"));
 						 }**/
 				}
+
 				new Thread(new Runnable()
 				{
 					// get out of event thread
@@ -1325,7 +1358,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 						{
 							public void run()
 							{
-								setSelectedCascade(c);
+								setSelectedCascade(c); // scroll window to cascade
 							}
 						});
 					}
@@ -1356,6 +1389,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			MixCascade cascade =
 				(MixCascade) m_tableMixCascade.getValueAt(m_tableMixCascade.getSelectedRow(), 1);
+			Enumeration enumCascades;
 			if (JAPController.getInstance().getCurrentMixCascade().equals(cascade))
 			{
 				JAPDialog.showErrorDialog(this.getRootPanel(),
@@ -1367,6 +1401,26 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				if (JAPDialog.showYesNoDialog(getRootPanel(), JAPMessages.getString(MSG_REALLY_DELETE)))
 				{
 					Database.getInstance(MixCascade.class).remove(cascade);
+					
+					if (TrustModel.getCurrentTrustModel() == TrustModel.getTrustModelUserDefined())
+					{
+						// we have the user defined trust model; look whether there are any user defined cascades left
+						enumCascades = Database.getInstance(MixCascade.class).getEntrySnapshotAsEnumeration();
+						while (enumCascades.hasMoreElements())
+						{
+							cascade = (MixCascade)enumCascades.nextElement();
+							if (cascade.isUserDefined())
+							{
+								enumCascades = null;
+								break;
+							}
+						}
+						if (enumCascades != null)
+						{							
+							// there are no more user defined cascades; set the default trust model 
+							TrustModel.setCurrentTrustModel(TrustModel.getTrustModelDefault());
+						}
+					}
 
 					if (m_tableMixCascade.getRowCount() >= 0)
 					{
@@ -1393,10 +1447,27 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 												Integer.parseInt(m_manPortField.getText()));
 			Database.getInstance(PreviouslyKnownCascadeIDEntry.class).update(
 						 new PreviouslyKnownCascadeIDEntry(c));
-			Database.getInstance(MixCascade.class).update(c);
-			((MixCascadeTableModel)m_tableMixCascade.getModel()).addElement(c);
-			setSelectedCascade(c);
-			updateValues(false);
+			Database.getInstance(MixCascade.class).update(c);			
+			((MixCascadeTableModel)m_tableMixCascade.getModel()).addElement(c);		
+			TrustModel.setCurrentTrustModel(TrustModel.getTrustModelUserDefined());
+			setSelectedCascade(c); // update the cascade information
+			new Thread(new Runnable()
+			{
+				// get out of event thread
+				public void run()
+				{
+					updateValues(true);
+					SwingUtilities.invokeLater(
+					new Runnable()
+					{
+						public void run()
+						{
+							// scroll the window to this cascade
+							setSelectedCascade(c);
+						}
+					});
+				}
+			}).start();
 		}
 		catch (Exception a_e)
 		{
@@ -1425,6 +1496,13 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			else if(m_filterAtLeast3Countries.isSelected()) value = 3;
 			m_trustModelCopy.setAttribute(TrustModel.InternationalAttribute.class, Integer.parseInt(cmd), value);
 			m_trustModelCopy.setAttribute(TrustModel.OperatorBlacklistAttribute.class, TrustModel.TRUST_IF_NOT_IN_LIST, ((OperatorsTableModel) m_listOperators.getModel()).getBlacklist());
+			
+			m_trustModelCopy.setAttribute(TrustModel.SpeedAttribute.class, TrustModel.TRUST_IF_AT_LEAST, m_filterSpeedSlider.getValue());
+						
+			int delay = (m_filterLatencySlider.getMaximum() + m_filterLatencySlider.getMinimum()) - m_filterLatencySlider.getValue();
+			if(delay == 800) delay = 0;
+			
+			m_trustModelCopy.setAttribute(TrustModel.DelayAttribute.class, TrustModel.TRUST_IF_AT_MOST, delay);
 			
 			if(m_filterNameField.getText().length() > 0)
 				m_trustModelCopy.setName(m_filterNameField.getText());
@@ -1735,18 +1813,34 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 						}
 					}
 
+					PerformanceEntry entry = m_infoService.getPerformanceEntry(cascadeId);
+					if(entry != null)
+					{
+						if(entry.isInvalid())
+						{
+							m_lblSpeed.setText(JAPMessages.getString("statusUnknown"));
+							m_lblDelay.setText(JAPMessages.getString("statusUnknown"));
+						}
+						else
+						{
+							m_lblSpeed.setText(/*entry.getAverageSpeed() + " kbit/sec"*/JAPUtil.formatKbitPerSecValueWithUnit(entry.getAverageSpeed()));
+							m_lblDelay.setText(entry.getAverageDelay() + " ms");
+						}
+					}
+					
+					
 					m_numOfUsersLabel.setText(m_infoService.getAnonLevel(cascadeId));
 					//System.out.println(m_numOfUsersLabel.getText());
 					//m_reachableLabel.setFont(m_numOfUsersLabel.getFont());
 					//m_lblHosts.setFont(m_numOfUsersLabel.getFont());
-					m_reachableLabel.setText(m_infoService.getHosts(cascadeId));
-					m_cascadesPanel.remove(m_lblHosts);
-					m_cascadesPanel.add(m_lblHosts, m_constrHosts);
+					//m_reachableLabel.setText(m_infoService.getHosts(cascadeId));
+					/*m_cascadesPanel.remove(m_lblHosts);
+					m_cascadesPanel.add(m_lblHosts, m_constrHosts);*/
 					//m_portsLabel.setFont(m_numOfUsersLabel.getFont());
 					//m_lblPorts.setFont(m_numOfUsersLabel.getFont());
-					m_portsLabel.setText(m_infoService.getPorts(cascadeId));
-					m_cascadesPanel.remove(m_lblPorts);
-					m_cascadesPanel.add(m_lblPorts, m_constrPorts);
+					//m_portsLabel.setText(m_infoService.getPorts(cascadeId));
+					/*m_cascadesPanel.remove(m_lblPorts);
+					m_cascadesPanel.add(m_lblPorts, m_constrPorts);*/
 					setPayLabel(cascade);
 					m_lblSocks.setVisible(cascade.isSocks5Supported());
 				}
@@ -2601,6 +2695,11 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 			return info;
 		}
+		
+		private PerformanceEntry getPerformanceEntry(String a_cascadeId)
+		{
+			return PerformanceInfo.getAverageEntry(a_cascadeId);
+		}
 	}
 
 	/**
@@ -2832,6 +2931,12 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					{
 						JAPDialog.showMessageDialog(
 											  getRootPanel(), JAPMessages.getString(MSG_FIRST_MIX_TEXT),
+											  mixType);
+					}
+					else if (m_nrLblExplain.getText().equals(mixType = JAPMessages.getString(MSG_MIX_SINGLE)))
+					{
+						JAPDialog.showMessageDialog(
+											  getRootPanel(), JAPMessages.getString(MSG_SINGLE_MIX_TEXT),
 											  mixType);
 					}
 					else if (m_nrLblExplain.getText().equals(mixType = JAPMessages.getString(MSG_MIX_MIDDLE)))
@@ -3102,7 +3207,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			p.add(new JLabel(JAPMessages.getString(MSG_FILTER_AT_LEAST)), c1);
 			
 			m_filterSpeedSlider = new JSlider(SwingConstants.VERTICAL);
-			m_filterSpeedSlider.setEnabled(false);
 			m_filterSpeedSlider.setMinimum(0);
 			m_filterSpeedSlider.setMaximum(FILTER_SPEED_MAX);
 			m_filterSpeedSlider.setValue(0);
@@ -3140,13 +3244,12 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			p.add(new JLabel(JAPMessages.getString(MSG_FILTER_AT_MOST)), c1);
 			
 			/* 
-			 * IMPORTANT: to get the correct value of this slider use 8 - getValue(),
-			 * if you get an 8 -> unlimited response time. This is a little trick to 
+			 * IMPORTANT: to get the correct value of this slider use (MINVALUE+MAXVALUE) - getValue(),
+			 * if you get an MAXVALUE -> unlimited response time. This is a little trick to 
 			 * display the slider in the same direction as the speed slider even though
 			 * the original direction would be the other way around.
 			 */
 			m_filterLatencySlider = new JSlider(SwingConstants.VERTICAL);
-			m_filterLatencySlider.setEnabled(false);
 			m_filterLatencySlider.setMinimum(FILTER_LATENCY_MIN);
 			m_filterLatencySlider.setMaximum(FILTER_LATENCY_MAX);
 			m_filterLatencySlider.setValue(0);
@@ -3156,10 +3259,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			m_filterLatencySlider.setInverted(true);
 			m_filterLatencySlider.setSnapToTicks(true);
 			ht = new Hashtable(4);
-			ht.put(new Integer(0), new JLabel("\u221E"));
-			ht.put(new Integer(2), new JLabel(6 + " s"));
-			ht.put(new Integer(4), new JLabel(4 + " s"));
-			ht.put(new Integer(6), new JLabel(2 + " s"));
+			ht.put(new Integer(200), new JLabel("\u221E"));
+			ht.put(new Integer(400), new JLabel(600 + " ms"));
+			ht.put(new Integer(600), new JLabel(400 + " ms"));
+			ht.put(new Integer(800), new JLabel(200 + " ms"));
 			m_filterLatencySlider.setLabelTable(ht);
 			
 			c1.gridy++;
@@ -3263,6 +3366,12 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				MixCascade cascade = (MixCascade)value;
 				ImageIcon icon;
 
+				this.setToolTipText(
+						JAPMessages.getString("cascadeReachableBy") + ": " + 
+						m_infoService.getHosts(cascade.getId()) + " - " +
+						JAPMessages.getString("cascadePorts") + ": " +
+						m_infoService.getPorts(cascade.getId()));
+				
 				if (cascade.isUserDefined())
 				{
 					if (TrustModel.getCurrentTrustModel().isTrusted(cascade))
@@ -3568,7 +3677,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			{
 				public int compare(Object a_obj1, Object a_obj2)
 				{
-					if(a_obj1 == null || a_obj2 == null ) return 0;
+					if(a_obj1 == null || a_obj2 == null || ((ServiceOperator) a_obj1).getOrganization() == null || ((ServiceOperator) a_obj2).getOrganization() == null) return 0;
 					boolean b1 = m_vecBlacklist.contains(a_obj1);
 					boolean b2 = m_vecBlacklist.contains(a_obj2);
 					
