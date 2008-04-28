@@ -160,9 +160,9 @@ public final class VMPerfDataFile
 			m_sunMiscPerfClass = Class.forName("sun.misc.Perf");
 			
 			m_byteBufferPositionMethod = m_javaNioByteBufferClass.getMethod("position", new Class[] { int.class });
-			m_byteBufferGetMethod = m_javaNioByteBufferClass.getMethod("get", null);
-			m_byteBufferGetIntMethod = m_javaNioByteBufferClass.getMethod("getInt", null);
-							
+			m_byteBufferGetMethod = m_javaNioByteBufferClass.getMethod("get", (Class[]) null);
+			m_byteBufferGetIntMethod = m_javaNioByteBufferClass.getMethod("getInt", (Class[]) null);
+			
 			/*
 			 * m_perf = (sun.misc.Perf) java.security.AccessController.doPrivileged(new sun.misc.Perf.GetPerfAction());
 			 * m_buff = m_perf.attach(a_vmId, "r");
@@ -180,7 +180,7 @@ public final class VMPerfDataFile
 			 * m_buff.order(getByteOrder());
 			 */
 			m_javaNioByteBufferClass.getMethod("order", new Class[] { m_javaNioByteOrderClass }).invoke(m_buff, new Object[] { getByteOrder() });
-	
+			
 			m_bUsable = buildEntries();
 		}
 		catch(Exception ex) { LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Java VM < 1.4 found, can't use multiple-instances feature."); }	
@@ -216,14 +216,14 @@ public final class VMPerfDataFile
 		 * m_nextEntry = m_buff.getInt();
 		 */
 		m_byteBufferPositionMethod.invoke(m_buff, new Object[] { PERFDATA_ENTRYOFFSET_POSITION });
-		m_nextEntry = ((Integer) m_byteBufferGetIntMethod.invoke(m_buff, null)).intValue();
+		m_nextEntry = ((Integer) m_byteBufferGetIntMethod.invoke(m_buff, (Object[]) null)).intValue();
 
 		/* 
 		 * m_buff.position(PERFDATA_NUMENTRIES_POSITION);
 		 * m_numEntries = m_buff.getInt();
 		 */			
 		m_byteBufferPositionMethod.invoke(m_buff, new Object[] { PERFDATA_NUMENTRIES_POSITION });
-		m_numEntries = ((Integer) m_byteBufferGetIntMethod.invoke(m_buff, null)).intValue();
+		m_numEntries = ((Integer) m_byteBufferGetIntMethod.invoke(m_buff, (Object[]) null)).intValue();
 		
 		m_tblEntries = new Hashtable();
 		
@@ -246,7 +246,7 @@ public final class VMPerfDataFile
 		if(m_nextEntry % 4 != 0) 
 			return false;
 		
-		if(m_nextEntry < 0 || m_nextEntry >= ((Integer) m_javaNioByteBufferClass.getMethod("limit", null).invoke(m_buff, null)).intValue()) 
+		if(m_nextEntry < 0 || m_nextEntry >= ((Integer) m_javaNioByteBufferClass.getMethod("limit", (Class[]) null).invoke(m_buff, (Object[]) null)).intValue()) 
 			return false;
 		
 		/* 
@@ -254,18 +254,18 @@ public final class VMPerfDataFile
 		 * int entryLength = m_buff.getInt();
 		 */
 		m_byteBufferPositionMethod.invoke(m_buff, new Object[] { new Integer(m_nextEntry) });
-		int entryLength = ((Integer) m_byteBufferGetIntMethod.invoke(m_buff, null)).intValue();
+		int entryLength = ((Integer) m_byteBufferGetIntMethod.invoke(m_buff, (Object[]) null)).intValue();
 		
-		if(m_nextEntry + entryLength > ((Integer) m_javaNioByteBufferClass.getMethod("limit", null).invoke(m_buff, null)).intValue() || entryLength == 0) return false;
+		if(m_nextEntry + entryLength > ((Integer) m_javaNioByteBufferClass.getMethod("limit", (Class[]) null).invoke(m_buff, (Object[]) null)).intValue() || entryLength == 0) return false;
 		
 		/*
 		 * int offsetName = m_buff.getInt();
 		 * int vectorLen = m_buff.getInt();
 		 * byte typeCode = m_buff.get();
 		 */
-		int offsetName = ((Integer) m_byteBufferGetIntMethod.invoke(m_buff, null)).intValue();
-		int vectorLen = ((Integer) m_byteBufferGetIntMethod.invoke(m_buff, null)).intValue();
-		byte typeCode = ((Byte) m_byteBufferGetMethod.invoke(m_buff, null)).byteValue();
+		int offsetName = ((Integer) m_byteBufferGetIntMethod.invoke(m_buff, (Object[]) null)).intValue();
+		int vectorLen = ((Integer) m_byteBufferGetIntMethod.invoke(m_buff, (Object[]) null)).intValue();
+		byte typeCode = ((Byte) m_byteBufferGetMethod.invoke(m_buff, (Object[]) null)).byteValue();
 		
 		/*
 		 * m_buff.get();
@@ -274,11 +274,11 @@ public final class VMPerfDataFile
 		 * int offsetData = m_buff.getInt();
 		 */
 		// Flags - not used
-		m_byteBufferGetMethod.invoke(m_buff, null);
-		byte units = ((Byte) m_byteBufferGetMethod.invoke(m_buff, null)).byteValue();
+		m_byteBufferGetMethod.invoke(m_buff, (Object[]) null);
+		byte units = ((Byte) m_byteBufferGetMethod.invoke(m_buff, (Object[]) null)).byteValue();
 		// Variability - not used
-		m_byteBufferGetMethod.invoke(m_buff, null);
-		int offsetData = ((Integer) m_byteBufferGetIntMethod.invoke(m_buff, null)).intValue();
+		m_byteBufferGetMethod.invoke(m_buff, (Object[]) null);
+		int offsetData = ((Integer) m_byteBufferGetIntMethod.invoke(m_buff, (Object[]) null)).intValue();
 					
 		// include possible padding
 		int maxNameLength = offsetData - offsetName;
@@ -286,7 +286,7 @@ public final class VMPerfDataFile
 		byte[] bytes = new byte[maxNameLength];
 		byte b;
 		int nameLength = 0;
-		while((b = ((Byte) m_byteBufferGetMethod.invoke(m_buff, null)).byteValue()) != 0 && maxNameLength > nameLength)
+		while((b = ((Byte) m_byteBufferGetMethod.invoke(m_buff, (Object[]) null)).byteValue()) != 0 && maxNameLength > nameLength)
 			bytes[nameLength++] = b;
 		
 		String name = new String(bytes, 0, nameLength);
@@ -305,7 +305,7 @@ public final class VMPerfDataFile
 			{
 				bytes = new byte[vectorLen];
 				int dataLen = 0;
-				while((b = ((Byte) m_byteBufferGetMethod.invoke(m_buff, null)).byteValue()) != 0 && vectorLen > dataLen)
+				while((b = ((Byte) m_byteBufferGetMethod.invoke(m_buff, (Object[]) null)).byteValue()) != 0 && vectorLen > dataLen)
 					bytes[dataLen++] = b;
 				
 				String value = new String(bytes, 0, dataLen);
@@ -335,7 +335,7 @@ public final class VMPerfDataFile
 		 * byte r_value = m_buff.get();
 		 */
 		m_byteBufferPositionMethod.invoke(m_buff, new Object[] { PERFDATA_ACCESSIBLE_POSITION });
-		byte r_value = ((Byte) m_byteBufferGetMethod.invoke(m_buff, null)).byteValue();
+		byte r_value = ((Byte) m_byteBufferGetMethod.invoke(m_buff, (Object[]) null)).byteValue();
 			
 		return r_value != 0;
 	}
@@ -356,9 +356,9 @@ public final class VMPerfDataFile
 		 * m_buff.order(ByteOrder.BIG_ENDIAN);
 		*/
 		
-		Object order = m_javaNioByteBufferClass.getMethod("order", null).invoke(m_buff, null);
+		Object order = m_javaNioByteBufferClass.getMethod("order", (Class[]) null).invoke(m_buff, (Object[]) null);
 		m_javaNioByteBufferClass.getMethod("order", new Class[] { m_javaNioByteOrderClass }).invoke(m_buff, new Object[] { m_javaNioByteOrderClass.getField("BIG_ENDIAN").get(null) });
-		
+
 		/* 
 		 * m_buff.position(PERFDATA_MAGIC_POSITION);
 		 * int r_magic = m_buff.getInt();
@@ -366,7 +366,7 @@ public final class VMPerfDataFile
 		 */
 		
 		m_byteBufferPositionMethod.invoke(m_buff, new Object[] { PERFDATA_MAGIC_POSITION });
-		int r_magic = ((Integer) m_byteBufferGetIntMethod.invoke(m_buff, null)).intValue();
+		int r_magic = ((Integer) m_byteBufferGetIntMethod.invoke(m_buff, (Object[]) null)).intValue();
 		m_javaNioByteBufferClass.getMethod("order", new Class[] { m_javaNioByteOrderClass }).invoke(m_buff, new Object[] { order });
 		
 		return r_magic;
@@ -389,7 +389,7 @@ public final class VMPerfDataFile
 		 */
 		
 		m_byteBufferPositionMethod.invoke(m_buff, new Object[] { PERFDATA_BYTEORDER_POSITION });
-		byte order = ((Byte) m_byteBufferGetMethod.invoke(m_buff, null)).byteValue();
+		byte order = ((Byte) m_byteBufferGetMethod.invoke(m_buff, (Object[]) null)).byteValue();
 		
 		if(order == 0)
 			return m_javaNioByteOrderClass.getField("BIG_ENDIAN").get(null);

@@ -1,6 +1,7 @@
 package anon.infoservice;
 
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.Document;
 
 import anon.util.XMLUtil;
@@ -10,69 +11,72 @@ import anon.util.IXMLEncodable;
 public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncodable
 {
 	private String m_strCascadeId;
-	private String m_strInfoServiceId;
 	
 	private long m_lastUpdate;
 	private long m_serial;
 	
 	private long m_lDelay;
-	private double m_dSpeed;
+	private long m_lSpeed;
 	
-	private long[] m_aDelays = new long[3];
-	private double[] m_aSpeeds = new double[3];
+	private long[] m_aDelays;
+	private long[] m_aSpeeds;
 	
-	public static final String XML_ELEMENT_NAME = "PerformanceEntry";
-	public static final String XML_ELEMENT_CONTAINER_NAME = "PerformanceEntries";
+	public static final String XML_ELEMENT_CONTAINER_NAME = "PerformanceInfo";
+	
+	public static final int PERFORMANCE_ENTRY_TTL = 1000*60*60; // 1 hour
+	
+	public static final String XML_ELEMENT_NAME = "PerformanceEntry";	
+	public static final String XML_ELEMENT_AVG_DELAY = "avgDelay";
+	public static final String XML_ELEMENT_AVG_SPEED = "avgSpeed";
 	
 	public static final String XML_ATTR_ID = "id";
-	public static final String XML_ATTR_AVG_DELAY = "avgDelay";
-	public static final String XML_ATTR_AVG_SPEED = "avgSpeed";
-	public static final String XML_ATTR_EXPIRE_TIME = "expireTime";
 	
-	public PerformanceEntry(String a_strCascadeId, String a_strInfoServiceId, long a_lExpireTime)
+	public PerformanceEntry(String a_strCascadeId, long a_lExpireTime)
 	{
 		super(a_lExpireTime);
 		
 		m_strCascadeId = a_strCascadeId;
-		m_strInfoServiceId = a_strInfoServiceId;
 		
 		m_lastUpdate = System.currentTimeMillis();
 		m_serial = System.currentTimeMillis();
 		m_lDelay = -1;
-		m_dSpeed = -1;
+		m_lSpeed = -1;
 	}
 	
 	public PerformanceEntry(Element a_entry) throws XMLParseException
 	{
-		// TODO: client expire time
-		super(System.currentTimeMillis() + 1000*60*24);
+		super(System.currentTimeMillis() + PERFORMANCE_ENTRY_TTL);
 		
 		XMLUtil.assertNodeName(a_entry, XML_ELEMENT_NAME);
 		
-		String id = XMLUtil.parseAttribute(a_entry, XML_ATTR_ID, ".");
-		int i = id.indexOf(".");
+		m_strCascadeId = XMLUtil.parseAttribute(a_entry, XML_ATTR_ID, "");
 		
-		if(i < 0)
+		if(m_strCascadeId == "")
 		{
-			throw new XMLParseException(XML_ELEMENT_NAME + ": Could not parse id");
+			throw new XMLParseException(XML_ELEMENT_NAME + ": invalid id");
 		}
 		
-		m_strCascadeId = id.substring(0, i);
-		m_strInfoServiceId = id.substring(i);
-		m_lDelay = XMLUtil.parseAttribute(a_entry, XML_ATTR_AVG_DELAY, -1);
-		m_dSpeed = XMLUtil.parseAttribute(a_entry, XML_ATTR_AVG_SPEED, -1);
+		Node elemDelay = XMLUtil.getFirstChildByName(a_entry, XML_ELEMENT_AVG_DELAY);
+		if(elemDelay == null)
+		{
+			throw new XMLParseException(XML_ELEMENT_NAME + ": Could not find node " + XML_ELEMENT_AVG_DELAY);
+		}
+		m_lDelay = XMLUtil.parseValue(elemDelay, -1);
+		
+		Node elemSpeed = XMLUtil.getFirstChildByName(a_entry, XML_ELEMENT_AVG_SPEED);
+		if(elemSpeed == null)
+		{
+			throw new XMLParseException(XML_ELEMENT_NAME + ": Could not find node " + XML_ELEMENT_AVG_SPEED);
+		}
+		m_lSpeed = XMLUtil.parseValue(elemSpeed, -1);
 		
 		m_lastUpdate = System.currentTimeMillis();
 		m_serial = System.currentTimeMillis();
 	}
 	
-	/**
-	 * Use IS and cascade IDs since this entry depends on a specific
-	 * cascade and the info service we're retrieving it from.
-	 */
 	public String getId()
 	{
-		return m_strCascadeId + "." + m_strInfoServiceId;
+		return m_strCascadeId;
 	}
 
 	public long getLastUpdate()
@@ -85,35 +89,57 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		return m_serial;
 	}
 	
-	public void updateDelay(long a_lDelay) 
+	public void updateDelay(long a_lDelay, int maxEntries) 
 	{
 		if(m_aDelays == null)
-			m_aDelays = new long[3]; // TODO: Make number of fixings configurable
+		{
+			m_aDelays = new long[maxEntries];
+		}
 		m_lDelay = 0;
-		for(int i=1;i < m_aDelays.length;i++)
+		int numEntries = 1;
+		for(int i = 1; i < m_aDelays.length; i++)
+		{
+			if(m_aDelays[i] != 0) numEntries++;
 			m_lDelay += (m_aDelays[i-1] = m_aDelays[i]);
+		}
 		m_aDelays[m_aDelays.length-1] = a_lDelay;
-		m_lDelay = (m_lDelay + a_lDelay) / m_aDelays.length;
+		m_lDelay = (m_lDelay + a_lDelay) / numEntries;
 		
 		m_lastUpdate = System.currentTimeMillis();
 	}
 	
-	public void updateSpeed(double a_dSpeed) 
+	public void updateSpeed(long a_iSpeed, int maxEntries) 
 	{
 		if(m_aSpeeds == null)
-			m_aSpeeds = new double[3]; // TODO: Make number of fixings configurable
-		m_dSpeed = 0.0;
+		{
+			m_aSpeeds = new long[maxEntries];
+		}
+		m_lSpeed = 0;
+		int numEntries = 1;
 		for(int i=1; i < m_aSpeeds.length; i++)
-			m_dSpeed += (m_aSpeeds[i-1] = m_aSpeeds[i]);
-		m_aSpeeds[m_aSpeeds.length-1] = a_dSpeed;
-		m_dSpeed = (m_dSpeed + a_dSpeed) / m_aSpeeds.length;
+		{
+			if(m_aSpeeds[i] != 0) numEntries++;
+			m_lSpeed += (m_aSpeeds[i-1] = m_aSpeeds[i]);
+		}
+		m_aSpeeds[m_aSpeeds.length-1] = a_iSpeed;
+		m_lSpeed = (m_lSpeed + a_iSpeed) / numEntries;
 		
 		m_lastUpdate = System.currentTimeMillis();
 	}
-
-	public double getAverageSpeed()
+	
+	public void setAverageSpeed(long a_lSpeed)
 	{
-		return m_dSpeed;
+		m_lSpeed = a_lSpeed;
+	}
+	
+	public void setAverageDelay(long a_lDelay)
+	{
+		m_lDelay = a_lDelay;
+	}
+	
+	public long getAverageSpeed()
+	{
+		return m_lSpeed;
 	}
 	
 	public long getAverageDelay()
@@ -121,13 +147,24 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		return m_lDelay;
 	}
 	
+	public boolean isInvalid()
+	{
+		return (m_lSpeed == -1) || (m_lSpeed == 0) || (m_lDelay == 0) || (m_lDelay == -1);
+	}
+	
 	public Element toXmlElement(Document a_doc)
 	{
 		Element elem = a_doc.createElement(XML_ELEMENT_NAME);
 		XMLUtil.setAttribute(elem, XML_ATTR_ID, getId());
-		XMLUtil.setAttribute(elem, XML_ATTR_AVG_DELAY, m_lDelay);
-		XMLUtil.setAttribute(elem, XML_ATTR_AVG_SPEED, m_dSpeed);
-		XMLUtil.setAttribute(elem, XML_ATTR_EXPIRE_TIME, getExpireTime());
+		
+		Element elemDelay = a_doc.createElement(XML_ELEMENT_AVG_DELAY);
+		XMLUtil.setValue(elemDelay, m_lDelay);
+		
+		Element elemSpeed = a_doc.createElement(XML_ELEMENT_AVG_SPEED);
+		XMLUtil.setValue(elemSpeed, m_lSpeed);
+		
+		elem.appendChild(elemDelay);
+		elem.appendChild(elemSpeed);
 		
 		return elem;
 	}
