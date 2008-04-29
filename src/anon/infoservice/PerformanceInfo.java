@@ -206,12 +206,12 @@ public class PerformanceInfo extends AbstractDatabaseEntry implements IXMLEncoda
 		delay = 0;
 		for(int j = 0; j < v.size(); j++)
 		{
-			if(((PerformanceEntry) v.get(j)).getAverageSpeed() != 0)
+			if(((PerformanceEntry) v.elementAt(j)).getAverageSpeed() != 0)
 			{
 				speed += ((PerformanceEntry) v.elementAt(j)).getAverageSpeed();
 			}
 			
-			if(((PerformanceEntry) v.get(j)).getAverageSpeed() != 0)
+			if(((PerformanceEntry) v.elementAt(j)).getAverageSpeed() != 0)
 			{
 				delay += ((PerformanceEntry) v.elementAt(j)).getAverageDelay();
 			}
