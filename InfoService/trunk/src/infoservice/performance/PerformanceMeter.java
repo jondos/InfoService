@@ -32,11 +32,13 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
+import java.util.Hashtable;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -94,6 +96,9 @@ public class PerformanceMeter implements Runnable
 	public static final int PERFORMANCE_SERVER_TIMEOUT = 5000;
 	public static final int PERFORMANCE_ENTRY_TTL = 1000*60*60;
 	public static final int MINOR_INTERVAL = 1000;
+	private PayAccountsFile m_payAccountsFile;
+
+	private Hashtable m_usedAccountFiles = new Hashtable();
 	
 	public PerformanceMeter(Object[] a_config)
 	{
@@ -129,59 +134,9 @@ public class PerformanceMeter implements Runnable
 					"An I/O error occured while setting up performance monitoring, cause: ", e1);
 			return;
 		}
-		
-		/* @todo: first effort to get infoservice connected with PayCascades */
-		/* read in an account file, as it is exported and password protected by JAP */
-		Document payAccountXMLFile = null;
-		boolean accountLoaded = false;
-		String payAccountFileName = 
-			m_infoServiceConfig.getPerfAccountFile();
-		if(payAccountFileName != null)
-		{
-			try 
-			{
-				payAccountXMLFile = XMLUtil.readXMLDocument(new File(payAccountFileName));
-				Element payAccountElem = (Element) XMLUtil.getFirstChildByName(payAccountXMLFile.getDocumentElement(), "Account");
-				if(payAccountElem != null)
-				{
-					PayAccount payAccount = null;
-					payAccount = new PayAccount(payAccountElem,new PerformanceAccountPasswordReader());
-					PayAccountsFile payAccountsFile = PayAccountsFile.getInstance();
-					
-					if(payAccountsFile != null)
-					{
-						payAccountsFile.addAccount(payAccount);
-						payAccountsFile.setActiveAccount(payAccount.getAccountNumber());
-						accountLoaded = true;
-					}
-				}
-			}
-			catch (IOException e) 
-			{
-				LogHolder.log(LogLevel.WARNING, LogType.PAY, 
-					"Cannot read account file "+payAccountFileName+" for performance monitoring.");
-			} 
-			catch (XMLParseException e) 
-			{
-				LogHolder.log(LogLevel.WARNING, LogType.PAY, 
-					"Cannot parse account file "+payAccountFileName+" for performance monitoring.");
-			}
-			catch (Exception e) 
-			{
-				LogHolder.log(LogLevel.WARNING, LogType.PAY, 
-						"An error occured while accessing the accountfile: "+payAccountFileName+
-						", cause: ",e);
-			}
-		}
-		
-		if(!accountLoaded)
-		{
-			System.out.println("Error loading account file");
-			LogHolder.log(LogLevel.WARNING, LogType.PAY, 
-					"Loading of accountfile: "+payAccountFileName+
-					" failed. Infoservice cannot perform performance check for pay cascades.");
-		}
 
+		loadAccountFiles();
+		
 		while(true)
 		{
 			Iterator knownMixCascades = Database.getInstance(MixCascade.class).getEntryList().iterator();
@@ -191,6 +146,7 @@ public class PerformanceMeter implements Runnable
 				MixCascade cascade = (MixCascade) knownMixCascades.next();
 				if(cascade.hasPerformanceServer())
 				{
+					loadAccountFiles();
 					performTest(cascade);
 				}
 			}
@@ -207,6 +163,82 @@ public class PerformanceMeter implements Runnable
 		}
 	}
 
+	private boolean loadAccountFiles() 
+	{
+		Document payAccountXMLFile = null;
+		Long oldModifyDate;
+		File file;
+		
+		File accountDir = m_infoServiceConfig.getPerfAccountDirectory();
+
+		if(accountDir == null)
+		{
+			return false;
+		}
+		
+		/* Loop through all files in the directory to find an account file we haven't used yet */
+		try
+		{
+			String[] files = accountDir.list();
+			
+			if(files == null)
+			{
+				return false;
+			}
+			
+			for (int i = 0; i < files.length; i++)
+			{
+				try
+				{
+					file = new File(accountDir.getAbsolutePath() + File.separator + files[i]);
+					oldModifyDate = (Long) m_usedAccountFiles.get(file);
+					
+					/* skip files that already used and have the same modify date */
+					if(oldModifyDate != null && oldModifyDate.longValue() == file.lastModified())
+					{
+						continue;
+					}
+					
+					payAccountXMLFile = XMLUtil.readXMLDocument(file);
+					Element payAccountElem = (Element) XMLUtil.getFirstChildByName(payAccountXMLFile.getDocumentElement(), "Account");
+					if(payAccountElem != null)
+					{
+						PayAccount payAccount = null;
+						payAccount = new PayAccount(payAccountElem,new PerformanceAccountPasswordReader());
+						m_payAccountsFile = PayAccountsFile.getInstance();
+						if(m_payAccountsFile != null)
+						{
+							LogHolder.log(LogLevel.INFO, LogType.PAY, "Added account file " + file.getName() + ".");
+							m_payAccountsFile.addAccount(payAccount);
+							m_payAccountsFile.setActiveAccount(payAccount.getAccountNumber());
+						}
+					}
+					
+					m_usedAccountFiles.put(file, new Long(file.lastModified()));
+				}
+				catch (IOException e)
+				{
+					LogHolder.log(LogLevel.WARNING, LogType.PAY, 
+						"Cannot read account file " + files[i] +" for performance monitoring.", e);
+				} 
+				catch (XMLParseException e) 
+				{
+					LogHolder.log(LogLevel.WARNING, LogType.PAY, 
+						"Cannot parse account file " + files[i] +" for performance monitoring.");
+				}
+			}
+		}
+		catch (Exception e) 
+		{
+			LogHolder.log(LogLevel.WARNING, LogType.PAY, 
+					"An error occured while processing the accountfiles, cause: ", e);
+			
+			return false;
+		}
+
+		return true;
+	}
+
 	/**
 	 * Performs a performance test on the given MixCascade using the parameters
 	 * of m_minorInterval and m_requestsPerInterval
@@ -221,7 +253,7 @@ public class PerformanceMeter implements Runnable
 		{
 			return false;
 		}
-	
+		
 
 		PerformanceEntry entry = new PerformanceEntry(a_cascade.getId(), System.currentTimeMillis() + m_majorInterval + PERFORMANCE_ENTRY_TTL);
 		
@@ -434,6 +466,65 @@ public class PerformanceMeter implements Runnable
 	public long getKiloBytesRecvd()
 	{
 		return m_lKiloBytesRecvd;
+	}
+	
+	public Hashtable getUsedAccountFiles()
+	{
+		return m_usedAccountFiles;
+	}
+	
+	public long calculateRemainingPayTime()
+	{
+		long remainingTests;
+		long trafficPerTest = calculatePayTrafficPerTest();
+		if(trafficPerTest == 0)
+		{
+			return 0;
+		}
+		
+		remainingTests = getRemainingCredit() / trafficPerTest;
+		return System.currentTimeMillis() + (remainingTests * m_majorInterval);
+	}
+	private long calculatePayTrafficPerTest() 
+	{
+		int payCascades = 0;
+		long trafficPerTest = 0;
+		
+		Iterator cascades = Database.getInstance(MixCascade.class).getEntryList().iterator();
+		
+		while(cascades.hasNext()) 
+		{
+			MixCascade cascade = (MixCascade) cascades.next();
+			if(cascade.hasPerformanceServer() && cascade.isPayment())
+			{
+				payCascades++;
+			}
+		}
+		
+		trafficPerTest = payCascades * m_requestsPerInterval * m_dataSize;
+		return trafficPerTest;
+	}
+	
+	public long calculatePayTrafficPerDay()
+	{
+		int testsPerDay = (3600 * 24 * 1000) / (m_majorInterval);
+		
+		return calculatePayTrafficPerTest() * testsPerDay;
+	}
+	
+	public long getRemainingCredit()
+	{
+		Enumeration accounts = m_payAccountsFile.getAccounts();
+		long credit = 0;
+		
+		while(accounts.hasMoreElements())
+		{
+			PayAccount account = (PayAccount) accounts.nextElement();
+			// balance credit is kb
+			credit += account.getBalance().getCredit() * 1000;
+		}
+		
+		return credit;
 	}
 	
 	private class HTTPResponse
