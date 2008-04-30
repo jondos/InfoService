@@ -31,7 +31,7 @@
  */
 package anon.client;
 
-import jap.JAPExtension;
+//import jap.JAPExtension;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
