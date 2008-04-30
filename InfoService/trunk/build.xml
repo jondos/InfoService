@@ -6,7 +6,7 @@
   <property name="src" location="src"/>
   <property name="certificates" location="certificates"/>
   
-  <property name="excludesSrcJap" value="jpi/** infoservice/** misc/**"/>
+  <property name="excludesSrcJap" value="jpi/** infoservice/** misc/** anon/crypto/tinytls/test/**"/>
   <property name="infoservice-excludes" value="jpi/** infoservice/performance/** misc/**"/>
   <property name="build" location="build"/>
   <property name="build.libs" location="build/libs"/>
