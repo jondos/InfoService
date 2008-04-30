@@ -354,13 +354,16 @@ public class SequentialChannelDataChain extends AbstractDataChain {
           case InternalChannelMessage.CODE_CHANNEL_CLOSED: {
 	    	  ChainCell dataCell = null;
 	          try {
-	            dataCell = new ChainCell(currentMessage.getMessageData());
-	            if (dataCell.isConnectionErrorFlagSet()) 
-	            {
-	              LogHolder.log(LogLevel.ERR, LogType.NET, "SequentialChannelDataChain: run(): Last mix signaled a connection-error.");
-	              addInputStreamQueueEntry(new DataChainInputStreamQueueEntry(new IOException("SequentialChannelDataChain: run(): Last mix signaled a connection-error.")));
-	              propagateConnectionError();
-	            }
+        	  if (currentMessage.getMessageData() != null)
+				{
+		            dataCell = new ChainCell(currentMessage.getMessageData());
+		            if (dataCell.isConnectionErrorFlagSet()) 
+		            {
+		              LogHolder.log(LogLevel.ERR, LogType.NET, "SequentialChannelDataChain: run(): Last mix signaled a connection-error.");
+		              addInputStreamQueueEntry(new DataChainInputStreamQueueEntry(new IOException("SequentialChannelDataChain: run(): Last mix signaled a connection-error.")));
+		              propagateConnectionError();
+		            }
+				}
 	          }
 	          catch (InvalidChainCellException e) {
 	            addInputStreamQueueEntry(new DataChainInputStreamQueueEntry(new IOException(e.toString())));	           
