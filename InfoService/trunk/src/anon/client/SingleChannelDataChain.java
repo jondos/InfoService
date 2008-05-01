@@ -247,12 +247,6 @@ public class SingleChannelDataChain extends AbstractDataChain
 							/* add data to the datastream */
 							addInputStreamQueueEntry(new DataChainInputStreamQueueEntry(
 								DataChainInputStreamQueueEntry.TYPE_DATA_AVAILABLE, dataCell.getPayloadData()));
-							if (dataCell.isConnectionErrorFlagSet())
-							{
-								addInputStreamQueueEntry(new DataChainInputStreamQueueEntry(new IOException(
-									"SingleChannelDataChain: run(): Last mix signaled connection error.")));
-								propagateConnectionError();
-							}
 						}
 						catch (InvalidChainCellException e)
 						{
@@ -265,13 +259,14 @@ public class SingleChannelDataChain extends AbstractDataChain
 					{
 						addInputStreamQueueEntry(new DataChainInputStreamQueueEntry(
 							DataChainInputStreamQueueEntry.TYPE_STREAM_END, null));
-						/*
+						
 						try
 						{
 							if (currentMessage.getMessageData() != null)
 							{
 								ChainCell dataCell = new ChainCell(currentMessage.getMessageData());
-								if (dataCell.isConnectionErrorFlagSet())
+								if (dataCell.getPayloadData().length == 0 && 
+									dataCell.isConnectionErrorFlagSet())
 								{
 									addInputStreamQueueEntry(new DataChainInputStreamQueueEntry(new IOException(
 										"SingleChannelDataChain: run(): Last mix signaled connection error.")));
@@ -283,7 +278,7 @@ public class SingleChannelDataChain extends AbstractDataChain
 						{
 							addInputStreamQueueEntry(new DataChainInputStreamQueueEntry(new IOException(e.
 								toString())));
-						}*/
+						}
 						/* stop observing the message-queue of the channel */
 						messageQueue.deleteObserver(this);
 						/* interrupt this thread because the only channel of the DataChain was
