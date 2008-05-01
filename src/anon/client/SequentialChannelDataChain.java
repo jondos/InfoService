@@ -353,6 +353,7 @@ public class SequentialChannelDataChain extends AbstractDataChain {
           }
           case InternalChannelMessage.CODE_CHANNEL_CLOSED: {
 	    	  ChainCell dataCell = null;
+	    	  /*
 	          try {
         	  if (currentMessage.getMessageData() != null)
 				{
@@ -367,7 +368,7 @@ public class SequentialChannelDataChain extends AbstractDataChain {
 	          }
 	          catch (InvalidChainCellException e) {
 	            addInputStreamQueueEntry(new DataChainInputStreamQueueEntry(new IOException(e.toString())));	           
-	          }
+	          }*/
             
             if (currentChannel.getProcessedDownstreamPackets() == 0) {
               LogHolder.log(LogLevel.ERR, LogType.NET, "SequentialChannelDataChain: run(): Last mix sent CHANNEL_CLOSE immediately without data-packets.");
