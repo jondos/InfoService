@@ -88,8 +88,6 @@ public final class JAPUtil
 	
 	public static final int MAX_FORMAT_ALL = 4;
 
-
-
 	public static JAPDialog.ILinkedInformation createDialogBrowserLink(String a_strUrl)
 	{
 		URL url;
@@ -244,8 +242,8 @@ public final class JAPUtil
 
 
 	/**
-	 * deprecated, since balances are not stored as
-	 * @param centvalue long
+	 * deprecated, since balances are not stored as centvalue
+	 * @param long
 	 * @return String
 	 */
 	public static String formatEuroCentValue(long centvalue)

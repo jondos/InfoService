@@ -496,12 +496,10 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 	}
 
 	/**
-	 * @todo when should this be invoked? happens far too often!
-	 * Should only be called if proxy is down, or not?
+	 * @todo signals proxy connection error without recovery
 	 */
 	public void dataChainErrorSignaled()
 	{
-		/* 
 		synchronized (m_eventListeners)
 		{
 			final Enumeration eventListenersList = m_eventListeners.elements();
@@ -518,7 +516,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 			}, "AnonClient: DataChainErrorSignaled notification");
 			notificationThread.setDaemon(true);
 			notificationThread.start();
-		}*/
+		}
 	}
 
 	public void setDummyTraffic(int a_interval)
