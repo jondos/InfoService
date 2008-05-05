@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry excluding="infoservice/" kind="src" path="test"/>
-	<classpathentry excluding="**/CVS|captcha/|captcha/|infoservice/" including="JAP.java|JAPMacintosh.java|JAPMessages.properties|JAPMessages_de.properties|JAPMessages_en.properties|JAPMessages_fr.properties|anon/|forward/|gui/|jap/|jarify/|logging/|misc/|platform/|proxy/|update/" kind="src" path="src"/>
+	<classpathentry including="certificates/|help/|images/" kind="src" path=""/>
+	<classpathentry excluding="**/CVS|captcha/|captcha/|infoservice/" including="*.properties|JAP.java|JAPMacintosh.java|anon/|forward/|gui/|jap/|jarify/|logging/|misc/|platform/|proxy/|update/" kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/http"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/BouncyCastleLightForJAP"/>
