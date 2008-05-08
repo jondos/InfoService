@@ -23,11 +23,12 @@ public class GenerateUpload implements Runnable
 		for(int i=0;i<randomData.length;i++)
 			randomData[i]=(byte)i;
 		Socket s=new Socket("127.0.0.1",4001);
+//		Socket s=new Socket("141.76.45.36",7);
 		OutputStream out=s.getOutputStream();
 		in=s.getInputStream();
 		Thread t=new Thread(new GenerateUpload());
 		t.start();
-		out.write("CONNECT 127.0.0.1:7 HTTP/1.0\n\r\n\r".getBytes()); //Note: Connects to the ECHO service through the cascade / proxy
+		out.write("CONNECT 141.76.45.36:7 HTTP/1.0\n\r\n\r".getBytes()); //Note: Connects to the ECHO service through the cascade / proxy
 		long l=0;
 		int currentPos=0;
 		while(true)
@@ -39,7 +40,7 @@ public class GenerateUpload implements Runnable
 			if((l%1000000)==0)
 				System.out.println("Sent: "+l/1000000+" MBytes");
 			try {
-				Thread.sleep(10);
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -61,19 +62,29 @@ public class GenerateUpload implements Runnable
 		long reported=1000000;
 		int currentPos=0;
 		int h=in.read(buff,0,39);//skip proxy response headers
+		System.out.println("Buff1:"+new String(buff,0,h));
 		h=in.read(buff,0,1); // Strange thing here: we got (sometimes?) and extra chr(13) after the HTTP response headers - why ???
+		System.out.println("Buff2:"+new String(buff,0,h));
 		while(true)
 		{
 			int r=Math.min(buff.length, randomData.length-currentPos); 
 			r=in.read(buff,0,r);
+			if(r<0)
+				{
+					System.out.println("r<0!");
+					System.exit(0);
+				}
+		//	System.out.println(new String(buff,0,r));
 			if(!Util.arraysEqual(buff, 0, randomData, currentPos, r))
 			{
 			System.out.println("REad error!");
-			for (int u=0;u<randomData.length-1;u++)
+		/*	for (int u=0;u<randomData.length-1;u++)
 			{
 				if(buff[0]==randomData[u]&&buff[1]==randomData[u+1])
-					{System.out.println(u);break;}
-			}
+					{System.out.println(u);
+					//break;
+					}
+			}*/
 			}
 			l+=r;
 			currentPos+=r;
@@ -86,6 +97,7 @@ public class GenerateUpload implements Runnable
 		}
 		}catch(Exception e)
 		{
+			e.printStackTrace();
 			System.out.println("Read failed!");
 		}
 	}
