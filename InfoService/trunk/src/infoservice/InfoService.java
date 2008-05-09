@@ -34,6 +34,9 @@ import java.util.Locale;
 
 import infoservice.performance.PerformanceMeter;
 import gui.JAPMessages;
+import jap.pay.AccountUpdater;
+import jap.JAPModel;
+import jap.JAPController;
 import anon.infoservice.Constants;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.Database;
@@ -50,7 +53,8 @@ public class InfoService
 	protected JWSInternalCommands oicHandler;
 
 	private static int m_connectionCounter;
-	private static PerformanceMeter m_perfMeter;
+	private static PerformanceMeter ms_perfMeter;
+	private static AccountUpdater ms_accountUpdater; 
 	
 	protected ThreadPool m_ThreadPool;
 
@@ -108,16 +112,26 @@ public class InfoService
 			s1.startServer();
 			System.out.println("InfoService is running!");
 			
+			JAPModel model = JAPModel.getInstance();
+			model.allowPaymentViaDirectConnection(true);
+			model.allowUpdateViaDirectConnection(true);
+			model.setAnonConnectionChecker(JAPController.getInstance().new AnonConnectionChecker());
+			model.setAutoReConnect(false);
+			model.setCascadeAutoSwitch(false);
+			
+			InfoService.ms_accountUpdater = new AccountUpdater();
+			InfoService.ms_accountUpdater.start(false);
+			
 			// start the performance meter
 			if(Configuration.getInstance().isPerfEnabled())
 			{
 				LogHolder.log(LogLevel.NOTICE, LogType.NET, "Starting Performance Meter...");
-				s1.m_perfMeter = new PerformanceMeter(Configuration.getInstance().getPerformanceMeterConfig());
-				s1.m_perfMeter.run();
+				InfoService.ms_perfMeter = new PerformanceMeter(Configuration.getInstance().getPerformanceMeterConfig());
+				InfoService.ms_perfMeter.run();
 			}
 			else
 			{
-				s1.m_perfMeter = null;
+				InfoService.ms_perfMeter = null;
 			}
 		}
 		catch (Exception e)
@@ -206,6 +220,6 @@ public class InfoService
 
 	protected static PerformanceMeter getPerfMeter()
 	{
-		return m_perfMeter;
+		return ms_perfMeter;
 	}
 }

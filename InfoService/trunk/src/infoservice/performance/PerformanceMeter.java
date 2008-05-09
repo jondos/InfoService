@@ -90,6 +90,8 @@ public class PerformanceMeter implements Runnable
 	private Configuration m_infoServiceConfig = null;
 	
 	private long m_lastUpdate;
+	private long m_nextUpdate;
+	
 	private String m_lastCascadeUpdated = "(none)";
 	private long m_lKiloBytesRecvd;
 	
@@ -139,6 +141,8 @@ public class PerformanceMeter implements Runnable
 		
 		while(true)
 		{
+			m_nextUpdate = System.currentTimeMillis() + m_majorInterval;
+			
 			Iterator knownMixCascades = Database.getInstance(MixCascade.class).getEntryList().iterator();
 
 			while(knownMixCascades.hasNext()) 
@@ -165,6 +169,7 @@ public class PerformanceMeter implements Runnable
 
 	private boolean loadAccountFiles() 
 	{
+		LogHolder.log(LogLevel.INFO, LogType.PAY, "Looking for new account files");
 		Document payAccountXMLFile = null;
 		Long oldModifyDate;
 		File file;
@@ -199,11 +204,13 @@ public class PerformanceMeter implements Runnable
 						continue;
 					}
 					
+					LogHolder.log(LogLevel.INFO, LogType.PAY, "Trying to add" + file.getName());
 					payAccountXMLFile = XMLUtil.readXMLDocument(file);
 					Element payAccountElem = (Element) XMLUtil.getFirstChildByName(payAccountXMLFile.getDocumentElement(), "Account");
 					if(payAccountElem != null)
 					{
 						PayAccount payAccount = null;
+						//LogHolder.log(LogLevel.INFO, LogType.PAY, "Trying to decode password encrypted file");
 						payAccount = new PayAccount(payAccountElem,new PerformanceAccountPasswordReader());
 						m_payAccountsFile = PayAccountsFile.getInstance();
 						if(m_payAccountsFile != null)
@@ -259,24 +266,8 @@ public class PerformanceMeter implements Runnable
 		
 		m_recvBuff = new char[m_dataSize];
 		
-		/*if((proxy.getMixCascade() != a_cascade))
-		{*/
-			proxy.start(new SimpleMixCascadeContainer(a_cascade));
+		proxy.start(new SimpleMixCascadeContainer(a_cascade));
 			
-			synchronized(proxy)
-			{
-				try
-				{
-					// @todo: doesn't work
-					proxy.wait(1000);
-				}
-				catch(InterruptedException ex)
-				{
-				
-				}
-			}
-		//}
-		
 		if(!proxy.isConnected())
 		{
 			LogHolder.log(LogLevel.INFO, LogType.NET, "Could not start performance test. Connection to cascade " + a_cascade.getName() + " failed.");
@@ -384,13 +375,13 @@ public class PerformanceMeter implements Runnable
         		delay = responseStartTime - transferInitiatedTime;
         		
         		// speed in kbit/sec
-        		speed = (long) (m_dataSize * 8 / (responseEndTime - responseStartTime));
+        		speed = (m_dataSize * 8) / (responseEndTime - responseStartTime);
         		
         		LogHolder.log(LogLevel.INFO, LogType.NET, "Verified incoming package. Delay: " + delay + " ms - Speed: " + speed + " kbit/sec.");
         		
         		entry.updateDelay(delay, m_requestsPerInterval);
         		entry.updateSpeed(speed, m_requestsPerInterval);
-
+        		
         		m_lKiloBytesRecvd += bytesRead / 1024;
         		
         		if(m_lKiloBytesRecvd < 0) 
@@ -402,6 +393,8 @@ public class PerformanceMeter implements Runnable
         	{
 	        	LogHolder.log(LogLevel.EXCEPTION, LogType.NET, e);
 	        }
+        	
+        	
         	
     		try 
     		{
@@ -453,9 +446,14 @@ public class PerformanceMeter implements Runnable
 		return r;
 	}
 	
-	public long getLastUpdate()
+	public long getLastSuccessfulUpdate()
 	{
 		return m_lastUpdate;
+	}
+	
+	public long getNextUpdate()
+	{
+		return m_nextUpdate;
 	}
 	
 	public String getLastCascadeUpdated()
