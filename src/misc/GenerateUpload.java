@@ -28,7 +28,7 @@ public class GenerateUpload implements Runnable
 		in=s.getInputStream();
 		Thread t=new Thread(new GenerateUpload());
 		t.start();
-		out.write("CONNECT 141.76.45.36:7 HTTP/1.0\n\r\n\r".getBytes()); //Note: Connects to the ECHO service through the cascade / proxy
+		out.write("CONNECT 127.0.0.1:7 HTTP/1.0\n\r\n\r".getBytes()); //Note: Connects to the ECHO service through the cascade / proxy
 		long l=0;
 		int currentPos=0;
 		while(true)
