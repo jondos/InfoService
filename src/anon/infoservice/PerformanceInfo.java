@@ -6,6 +6,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import java.util.Hashtable;
 import java.util.Vector;
+import java.util.Enumeration;
 
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
@@ -279,7 +280,7 @@ public class PerformanceInfo extends AbstractDatabaseEntry implements IXMLEncoda
 				
 				r_vecDeleted.addElement(entry);
 				
-				a_vec.removeElement(k);
+				a_vec.removeElementAt(k);
 				k--;
 				
 				if(straySpeed < nextStray)
@@ -296,7 +297,7 @@ public class PerformanceInfo extends AbstractDatabaseEntry implements IXMLEncoda
 				
 				r_vecDeleted.addElement(entry);
 				
-				a_vec.removeElement(k);
+				a_vec.removeElementAt(k);
 				k--;
 				
 				if(strayDelay < nextStray)
