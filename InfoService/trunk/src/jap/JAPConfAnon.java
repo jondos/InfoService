@@ -33,6 +33,7 @@ import java.net.URL;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Locale;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
@@ -176,7 +177,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	private static final String MSG_FILTER_AT_MOST = JAPConfAnon.class.getName() + "_atMost";
 	private static final String MSG_FILTER_SELECT_ALL_OPERATORS = JAPConfAnon.class.getName() + "_selectAllOperators";
 
-	
 	private static final int FILTER_SPEED_MAJOR_TICK = 32;
 	private static final int FILTER_SPEED_MAX = 128;
 	private static final int FILTER_SPEED_STEPS = (FILTER_SPEED_MAX / FILTER_SPEED_MAJOR_TICK) + 1;
@@ -965,11 +965,34 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		m_nrLblExplainBegin.setVisible(m_serverList.areMixButtonsEnabled());
 		m_nrLblExplainEnd.setVisible(m_serverList.areMixButtonsEnabled());
 
-
+		for(int i = 0; i < m_serverList.getNumberOfMixes(); i++)
+		{
+			String mixId = (String) (String) cascade.getMixIds().elementAt(i);
+			
+			ServiceLocation location = m_infoService.getServiceLocation(cascade, mixId);
+			ServiceOperator operator = m_infoService.getServiceOperator(cascade, mixId);
+			
+			if(location == null || operator == null || operator.getCertificate() == null || operator.getCertificate().getSubject() == null) 
+			{
+				continue;
+			}
+			
+			if(!location.getCountry().equals(operator.getCertificate().getSubject().getCountryCode()))
+			{
+				m_serverList.updateFlag(i, location, false);
+				m_serverList.updateOperatorFlag(i, operator);
+			}
+			else
+			{
+				m_serverList.updateFlag(i, location, true);
+			}
+		}
+		
 		//m_nrLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
 		m_operatorLabel.setText(GUIUtils.trim(m_infoService.getOperator(cascade, selectedMixId)));
 		//m_operatorLabel.setToolTipText(m_infoService.getOperator(selectedMixId));
-
+		m_operatorLabel.setIcon(GUIUtils.loadImageIcon("flags/" + m_infoService.getServiceOperator(cascade, selectedMixId).getCertificate().getSubject().getCountryCode() + ".png"));
+		
 		m_operatorLabel.setToolTipText(m_infoService.getUrl(cascade, selectedMixId));
 
 		if (getUrlFromLabel(m_operatorLabel) != null)
@@ -1005,6 +1028,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			m_locationLabel.setForeground(m_nrLabel.getForeground());
 		}
+		m_locationLabel.setIcon(GUIUtils.loadImageIcon("flags/" + m_infoService.getServiceLocation(cascade, selectedMixId).getCountry() + ".png"));
 		m_locationLabel.setToolTipText(m_infoService.getLocation(cascade, selectedMixId));
 
 
@@ -2458,15 +2482,38 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		public String getOperator(MixCascade a_cascade, String a_mixId)
 		{
 			ServiceOperator operator = getServiceOperator(a_cascade, a_mixId);
+			String country = null;
 			String strOperator = null;
 			if (operator != null)
 			{
 				strOperator = operator.getOrganization();
 			}
-			if (strOperator == null)
+			if (strOperator == null || strOperator.trim().length() == 0)
 			{
 				return "N/A";
 			}
+			/*
+			if(operator.getCertificate() != null && operator.getCertificate().getSubject() != null)
+			{
+				country = operator.getCertificate().getSubject().getCountryCode();
+			}
+			
+			
+			if (country != null && country.trim().length() > 0)
+			{
+				strOperator += ", ";
+				
+				try
+				{
+					strOperator += new CountryMapper(
+						country, JAPMessages.getLocale()).toString();
+				}
+				catch (IllegalArgumentException a_e)
+				{
+					strOperator += country.trim();
+				}
+			}*/
+			
 			return strOperator;
 		}
 		
