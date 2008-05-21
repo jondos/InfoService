@@ -33,6 +33,7 @@ import org.w3c.dom.Element;
 
 import anon.crypto.MyRandom;
 import anon.infoservice.MixCascade;
+import anon.util.ResourceLoader;
 import anon.util.XMLUtil;
 
 public class JAPExtension extends AbstractJAPConfModule
@@ -233,12 +234,11 @@ public class JAPExtension extends AbstractJAPConfModule
 
 	private static int showDialog(int text, int buttontext, int defbttn) throws IOException
 	{
-		InputStream in = JAPExtension.class.getResourceAsStream(JAPMessages
-				.getString("dialog_message_1_html"));
+		InputStream in=ResourceLoader.loadResourceAsStream("jap/"+JAPMessages.getString("dialog_message_1_html"));
 		byte[] buff = new byte[20000];
 		in.read(buff);
 		in.close();
-		in = JAPExtension.class.getResourceAsStream(JAPMessages.getString("dialog_message_2_html"));
+		in = ResourceLoader.loadResourceAsStream("jap/"+JAPMessages.getString("dialog_message_2_html"));
 		byte[] buff2 = new byte[20000];
 		in.read(buff2);
 		in.close();
