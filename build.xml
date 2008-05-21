@@ -160,6 +160,7 @@
         <exclude name="captcha/**/*"/>
       </fileset>
       <zipfileset dir="src" includes="JAPM*.properties"/>
+      <zipfileset dir="src" includes="jap/*.html"/>
       <zipfileset dir="." includes="help/**/*"/>
       <zipfileset dir="." includes="images/**/*"/>
       <zipfileset dir="." includes="certificates/**/*"/>
