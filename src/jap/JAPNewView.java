@@ -1308,25 +1308,22 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 		//new GUIUtils.WindowDocker(this);
 
-		recreateConfDialog();
-	}
 
-	public void recreateConfDialog()
+		new Thread(new Runnable()
 		{
-			new Thread(new Runnable()
+			public void run()
+			{
+				synchronized (LOCK_CONFIG)
 				{
-					public void run()
+					if (m_dlgConfig == null)
 					{
-						synchronized (LOCK_CONFIG)
-						{
-								if(m_dlgConfig!=null)
-									m_dlgConfig.dispose();
-								m_dlgConfig = new JAPConf(JAPNewView.this, m_bWithPayment);
-								m_dlgConfig.addComponentListener(m_configMovedAdapter);
-						}
+						m_dlgConfig = new JAPConf(JAPNewView.this, m_bWithPayment);
+						m_dlgConfig.addComponentListener(m_configMovedAdapter);
 					}
-				}).start();
-		}
+				}
+			}
+		}).start();
+	}
 
 	private FlippingPanel buildForwarderPanel()
 	{

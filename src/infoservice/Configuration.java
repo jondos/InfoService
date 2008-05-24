@@ -99,6 +99,11 @@ final public class Configuration
 	private Vector m_virtualListenerList;
 
 	/**
+	 * Stores all hosts (virtual and hardware) the infoservice ist listening on
+	 */
+	private Vector m_hostList;
+	
+	/**
 	 * Stores the name of our infoservice. The name is just for comfort reasons and has no
 	 * importance.
 	 */
@@ -216,9 +221,18 @@ final public class Configuration
 	
 	private String m_strPerfAccountPassword = null;
 	
+	private Vector m_perfBlackList = new Vector();
+	private Vector m_perfWhiteList = new Vector();
+	
 	public final static String IS_PROP_NAME_PERFORMANCE_MONITORING = "perf";
 	public final static String IS_PROP_NAME_PERFACCOUNT = 
 		IS_PROP_NAME_PERFORMANCE_MONITORING +".account";
+	
+	public final static String IS_PROP_NAME_BLACKLIST =
+		IS_PROP_NAME_PERFORMANCE_MONITORING+".blackList";
+	
+	public final static String IS_PROP_NAME_WHITELIST =
+		IS_PROP_NAME_PERFORMANCE_MONITORING+".whiteList";
 	
 	public final static String IS_PROP_NAME_PERFACCOUNT_DIRECTORY =
 		IS_PROP_NAME_PERFACCOUNT+".directory";
@@ -228,7 +242,7 @@ final public class Configuration
 		IS_PROP_NAME_PERFACCOUNT+".passw";
 	public final static String IS_PROP_VALUE_PERFACCOUNT_PASSWORD = null;
 	
-
+	
 	public Configuration(Properties a_properties) throws Exception
 	{
 		/* for running in non-graphic environments, we need the awt headless support, it is only
@@ -255,15 +269,29 @@ final public class Configuration
 			StringTokenizer stVirtual = new StringTokenizer(strVirtualListeners, ",");
 
 			/* create a list of all interfaces we are listening on */
+			m_hostList = new Vector();
 			m_hardwareListenerList = new Vector();
 			while (stHardware.hasMoreTokens())
 			{
-				m_hardwareListenerList.addElement(new ListenerInterface(stHardware.nextToken()));
+				ListenerInterface iface = new ListenerInterface(stHardware.nextToken());
+				m_hardwareListenerList.addElement(iface);
+				
+				if(iface != null && !m_hostList.contains(iface.getHost()))
+				{
+					m_hostList.addElement(iface.getHost());
+				}
 			}
+			
 			m_virtualListenerList = new Vector();
 			while (stVirtual.hasMoreTokens())
 			{
-				m_virtualListenerList.addElement(new ListenerInterface(stVirtual.nextToken()));
+				ListenerInterface iface = new ListenerInterface(stVirtual.nextToken());
+				m_virtualListenerList.addElement(iface);
+				
+				if(iface != null && !m_hostList.contains(iface.getHost()))
+				{
+					m_hostList.addElement(iface.getHost());
+				}
 			}
 
 			/* only for compatibility */
@@ -856,7 +884,7 @@ final public class Configuration
 				System.err.println("Exception: " + e2.toString());
 			}
 			
-			m_bPerfEnabled = Boolean.valueOf(a_properties.getProperty("perf", "false")).booleanValue();
+			m_bPerfEnabled = Boolean.valueOf(a_properties.getProperty("perf", "true")).booleanValue();
 			
 			if(m_bPerfEnabled)
 			{
@@ -868,7 +896,7 @@ final public class Configuration
 				if(value != null)
 					m_aPerfMeterConf[1] = Integer.valueOf(value);
 
-				value = a_properties.getProperty("perf.dataSize", "524288");
+				value = a_properties.getProperty("perf.dataSize", "200000");
 				if(value != null)
 				{
 					m_aPerfMeterConf[2] = new Integer(Math.min(512*1024*2, Integer.parseInt(value)));
@@ -880,11 +908,11 @@ final public class Configuration
 					m_aPerfMeterConf[3] = new Integer(Math.max(60*1000, Integer.parseInt(value)));
 				}
 				
-				value = a_properties.getProperty("perf.requestsPerInterval", "3");
+				value = a_properties.getProperty("perf.requestsPerInterval", "5");
 				if(value != null)
 				{
 					m_aPerfMeterConf[4] = Integer.valueOf(value);
-				}				
+				}
 				
 				m_strPerfAccountDirectory = 
 					new File(a_properties.getProperty(IS_PROP_NAME_PERFACCOUNT_DIRECTORY, 
@@ -893,6 +921,21 @@ final public class Configuration
 					a_properties.getProperty(IS_PROP_NAME_PERFACCOUNT_PASSWORD, 
 		 				 					 IS_PROP_VALUE_PERFACCOUNT_PASSWORD);
 				
+				String strPerfBlackList = a_properties.getProperty(IS_PROP_NAME_BLACKLIST, "").trim();
+				String strPerfWhiteList = a_properties.getProperty(IS_PROP_NAME_WHITELIST, "").trim();
+				
+				StringTokenizer stBlack = new StringTokenizer(strPerfBlackList, ",");
+				StringTokenizer stWhite = new StringTokenizer(strPerfWhiteList, ",");
+				
+				while (stBlack.hasMoreTokens())
+				{
+					m_perfBlackList.addElement(stBlack.nextToken());
+				}
+				
+				while (stWhite.hasMoreTokens())
+				{
+					m_perfWhiteList.addElement(stWhite.nextToken());
+				}
 			}
 		}
 		catch (Exception e)
@@ -1189,6 +1232,21 @@ final public class Configuration
 	public String getPerfAccountPassword()
 	{
 		return m_strPerfAccountPassword;
+	}
+	
+	public Vector getPerfBlackList()
+	{
+		return m_perfBlackList;
+	}
+	
+	public Vector getPerfWhiteList()
+	{
+		return m_perfWhiteList;
+	}
+	
+	public Vector getHostList()
+	{
+		return m_hostList;
 	}
 
 }
