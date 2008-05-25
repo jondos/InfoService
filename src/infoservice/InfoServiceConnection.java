@@ -30,6 +30,8 @@ package infoservice;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.Enumeration;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -151,7 +153,21 @@ final public class InfoServiceConnection implements Runnable
 				 * Attention: <CRLF> is removed from readRequestLine()
 				 */
 				initReader( /*streamFromClient,*/Constants.MAX_REQUEST_HEADER_SIZE);
-				String requestLine = readRequestLine();
+				String requestLine;
+				try
+				{
+					requestLine = readRequestLine();
+				}
+				catch (SocketException a_e)
+				{
+					LogHolder.log(LogLevel.WARNING, LogType.NET, "No request sent. " + a_e.getMessage());						
+					requestLine = null;
+				}
+				catch (SocketTimeoutException a_e)
+				{
+					LogHolder.log(LogLevel.WARNING, LogType.NET, "Request timed out. " + a_e.getMessage());
+					requestLine = null;
+				}
 				if (requestLine == null)
 				{
 					closeSockets();
@@ -409,41 +425,30 @@ final public class InfoServiceConnection implements Runnable
 		boolean requestLineReadingDone = false;
 		while (!requestLineReadingDone)
 		{
-			try
+			int byteRead = read();
+			if (byteRead == -1)
 			{
-				int byteRead = read();
-				if (byteRead == -1)
-				{
-					return null;
-				}
-				/* check for illegal characters */
-				if ( ( (byteRead < 32) && (byteRead != 13)) || (byteRead == 127))
-				{
-					return null;
-				}
-				if (byteRead == 13)
-				{
-					byteRead = read();
-					if (byteRead != 10)
-					{
-						/* only complete <CRLF> is allowed */
-						return null;
-					}
-					/* <CRLF> found -> end of line */
-					requestLineReadingDone = true;
-				}
-				else
-				{
-					m_tmpByteArrayOut.write(byteRead);
-				}
+				return null;
 			}
-			catch (Exception a_e)
+			/* check for illegal characters */
+			if ( ( (byteRead < 32) && (byteRead != 13)) || (byteRead == 127))
 			{
-				LogHolder.log(LogLevel.ERR, LogType.NET, "Error while reading request line. " +
-							  m_tmpByteArrayOut.size() +
-							  " bytes read: " +
-							  m_tmpByteArrayOut.toString());
-				throw a_e;
+				return null;
+			}
+			if (byteRead == 13)
+			{
+				byteRead = read();
+				if (byteRead != 10)
+				{
+					/* only complete <CRLF> is allowed */
+					return null;
+				}
+				/* <CRLF> found -> end of line */
+				requestLineReadingDone = true;
+			}
+			else
+			{
+				m_tmpByteArrayOut.write(byteRead);
 			}
 		}
 		return m_tmpByteArrayOut.toString();
