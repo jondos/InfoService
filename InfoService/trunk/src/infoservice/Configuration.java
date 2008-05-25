@@ -137,12 +137,6 @@ final public class Configuration
 	private String m_strStatusStatisticsLogDir;
 
 	/**
-	 * Stores the addresses of the proxy servers at the end of the cascades. This is only for
-	 * compatibility and will be removed soon.
-	 */
-	private String m_strProxyAddresses;
-
-	/**
 	 * Stores the date format information for HTTP headers.
 	 */
 	private static SimpleDateFormat ms_httpDateFormat;
@@ -295,9 +289,6 @@ final public class Configuration
 					m_hostList.addElement(iface.getHost());
 				}
 			}
-
-			/* only for compatibility */
-			m_strProxyAddresses = a_properties.getProperty("proxyAddresses").trim();
 
 			/* load the private key for signing our own infoservice messages */
 			String privatePkcs12KeyFile = a_properties.getProperty("privateKeyFile");
@@ -916,18 +907,6 @@ final public class Configuration
 	public String getStatusStatisticsLogDir()
 	{
 		return m_strStatusStatisticsLogDir;
-	}
-
-	/**
-	 * Returns the addresses of the proxy servers at the end of the cascades. The info is from
-	 * the proxyAddresses line of the properties file. This method is only for compatibility and
-	 * will be removed soon.
-	 *
-	 * @return The addresses of the proxy servers.
-	 */
-	public String getProxyAddresses()
-	{
-		return m_strProxyAddresses;
 	}
 
 	/**
