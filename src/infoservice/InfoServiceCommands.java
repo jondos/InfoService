@@ -1545,6 +1545,44 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	}
 
 	/**
+	 * This function sends the addresses of
+	 * the proxy servers at the end of the cascades as plain text to the client. The info about
+	 * the proxies comes from the configuration property file and from the information given
+	 * by Last Mixes.
+	 *
+	 * @return The HTTP response for the client.
+	 */
+	private HttpResponseStructure getProxyAddresses()
+	{
+		/* this is only the default, if we don't know the proxy addresses */
+		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.
+			HTTP_RETURN_NOT_FOUND);
+		String strConfiguredProxies = Configuration.getInstance().getProxyAddresses();
+		String strReportedProxies = VisibleProxyAddresses.getVisibleAddresses();
+		if (strConfiguredProxies == null)
+		{
+			if (strReportedProxies != null)
+			{
+				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_PLAIN,
+					HttpResponseStructure.HTTP_ENCODING_PLAIN,
+					strReportedProxies);
+			}
+
+		}
+		else
+		{
+			if (strReportedProxies != null)
+			{
+				strConfiguredProxies += " " + strReportedProxies;
+			}
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_PLAIN,
+				HttpResponseStructure.HTTP_ENCODING_PLAIN,
+				strConfiguredProxies);
+		}
+		return httpResponse;
+	}
+
+	/**
 	 * This is the handler for processing the InfoService commands.
 	 *
 	 * @param method The HTTP method used within the request from the client. See the REQUEST_METHOD
@@ -1779,6 +1817,14 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		{
 			// request for JNLP File (WebStart or Update Request
 			httpResponse = getJnlpFile(command, method);
+		}
+		else if ( (command.equals("/proxyAddresses")) && (method == Constants.REQUEST_METHOD_GET))
+		{
+			/* returns the addresses from the proxies at the end of the cascades, only
+			 * for compatibility with some old scripts (written before world war II)
+			 */
+			/** @todo remove it */
+			httpResponse = getProxyAddresses();
 		}
 		else if (command.equals("/echoip") && (method == Constants.REQUEST_METHOD_GET ||
 											   method == Constants.REQUEST_METHOD_HEAD))
