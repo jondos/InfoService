@@ -52,6 +52,8 @@ import java.io.*;
 final public class InfoServiceConnection implements Runnable
 {
 
+	private static final int RESPONSE_CHUNK_SIZE = 5000;
+
 	/**
 	 * Stores the socket which is connected to the client we got the request from.
 	 */
@@ -160,7 +162,7 @@ final public class InfoServiceConnection implements Runnable
 				}
 				catch (SocketException a_e)
 				{
-					LogHolder.log(LogLevel.WARNING, LogType.NET, "No request sent. " + a_e.getMessage());						
+					LogHolder.log(LogLevel.WARNING, LogType.NET, "No request received. " + a_e.getMessage());						
 					requestLine = null;
 				}
 				catch (SocketTimeoutException a_e)
@@ -328,17 +330,29 @@ final public class InfoServiceConnection implements Runnable
 				byte[] theResponse = response.getResponseData();
 				int index = 0;
 				int len = theResponse.length;
-				//we send the data batch to the client in chunks of 10000 bytes in order
+				//we send the data batch to the client in smaller chunks in order
 				//to avoid unwanted timeouts for large messages and slow connections
-				while (len > 10000)
+				while (len > RESPONSE_CHUNK_SIZE)
 				{
-					streamToClient.write(theResponse, index, 10000);
-					index += 10000;
-					len -= 10000;
+					streamToClient.write(theResponse, index, RESPONSE_CHUNK_SIZE);
+					streamToClient.flush();
+					index += RESPONSE_CHUNK_SIZE;
+					len -= RESPONSE_CHUNK_SIZE;
 				}
-				streamToClient.write(theResponse, index, len);
-				streamToClient.flush();
-				streamToClient.close();
+				try
+				{
+					if (len > 0)
+					{						
+							streamToClient.write(theResponse, index, len);
+							streamToClient.flush();					
+					}			
+					streamToClient.close();
+				}
+				catch (SocketException a_e)
+				{
+					LogHolder.log(LogLevel.WARNING, LogType.NET, 
+							"Client did not get response. " + a_e.getMessage());
+				}				
 			}
 			catch (Exception e)
 			{
