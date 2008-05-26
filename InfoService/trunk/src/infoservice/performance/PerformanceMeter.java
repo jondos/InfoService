@@ -209,23 +209,12 @@ public class PerformanceMeter implements Runnable
 					while (performTestThread.isAlive())
 					{	
 						iWait++;
-						if (iWait >= 10)
+	
+						performTestThread.interrupt();
+						if (m_proxy.isConnected())
 						{
-							if (iWait == 10)
-							{
-								LogHolder.log(LogLevel.WARNING, LogType.THREAD, 
-									"Trying to stop meter thread with deprecated stop procedure...");
-							}
-							performTestThread.stop();
-						}
-						else
-						{
-							performTestThread.interrupt();
-							if (m_proxy.isConnected())
-							{
-								m_proxy.stop();
-							}
-						}
+							m_proxy.stop();
+						}						
 						
 						if (iWait >= 5)
 						{			
