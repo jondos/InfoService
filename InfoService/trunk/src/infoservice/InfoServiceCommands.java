@@ -57,6 +57,7 @@ import anon.infoservice.MixCascade;
 import anon.infoservice.MixInfo;
 import anon.infoservice.StatusInfo;
 import anon.infoservice.PerformanceEntry;
+import anon.pay.PayAccount;
 import anon.pay.PaymentInstanceDBEntry;
 import anon.util.IXMLEncodable;
 import anon.util.XMLParseException;
@@ -930,8 +931,8 @@ final public class InfoServiceCommands implements JWSInternalCommands
 					htmlData += "Waiting for PaymentInstance data...<br /><br />";
 				}
 				
-				htmlData += "    <table style=\"align: left\" border=\"0\" width=\"30%\">" +
-				"<tr><th>Account File</th><th>Last Modified</th></tr>\n";
+				htmlData += "    <table style=\"align: left\" border=\"0\" width=\"50%\">" +
+				"<tr><th>Account Number</th><th>Remaining Credits</th><th>Account File</th><th>Last Modified</th></tr>\n";
 				
 				Hashtable usedFiles = InfoService.getPerfMeter().getUsedAccountFiles();
 				
@@ -939,8 +940,10 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				while (keys.hasMoreElements())
 				{
 					File file = (File) keys.nextElement();
-					
-					htmlData += "<tr><td class=\"name\">" + file.getName() + "</td><td class=\"status\">" + new Date(file.lastModified()) + "</td></tr>";
+					PayAccount account = (PayAccount)usedFiles.get(file);
+					htmlData += "<tr>" + "<td class=\"name\">" + account.getAccountNumber() + "</td>" 
+					+ "<td class=\"status\">"  + JAPUtil.formatBytesValueWithUnit(account.getBalance().getVolumeBytesLeft()) + "</td>"
+					+ "<td class=\"name\">" + file.getName() + "</td><td class=\"status\">" + new Date(account.getBackupTime()) + "</td></tr>";
 				}
 				
 				htmlData += "</table><br />";
@@ -983,7 +986,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				"        <COL WIDTH=\"20%\">\n" +
 				"        <COL WIDTH=\"15%\">\n" +
 				"        <COL WIDTH=\"10%\">\n" +
-				"        <COL WIDTH=\"2%\">\n" +
+				//"        <COL WIDTH=\"2%\">\n" +
 				"        <COL WIDTH=\"10%\">\n" +
 				"        <COL WIDTH=\"5%\">\n" +				
 				"        <COL WIDTH=\"17%\">\n" +
@@ -994,7 +997,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				"        <TH>Cascade Name</TH>\n" +
 				"        <TH>Cascade ID</TH>\n" +
 				"        <TH>Active Users</TH>\n" +
-				"        <TH>Current Risk</TH>\n" +
+				//"        <TH>Current Risk</TH>\n" +
 				"        <TH>Traffic Situation</TH>\n" +
 				"        <TH>Avg Delay</TH>\n" +
 				"        <TH>Avg Speed</TH>\n" +

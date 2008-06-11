@@ -238,7 +238,7 @@ public class ServiceOperator extends AbstractDatabaseEntry
 	{
 		return m_strUrl;
 	}
-
+	
 	public boolean equals(Object a_obj)
 	{
 		if(a_obj == null || m_certificate == null) return false;
