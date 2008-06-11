@@ -86,7 +86,9 @@ import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.JavaVersionDBEntry;
 import anon.infoservice.MessageDBEntry;
 import anon.infoservice.MixCascade;
+import anon.infoservice.MixInfo;
 import anon.infoservice.NewCascadeIDEntry;
+import anon.infoservice.ServiceOperator;
 import anon.infoservice.StatusInfo;
 import anon.pay.IMessageListener;
 import anon.pay.PayAccountsFile;
@@ -94,12 +96,15 @@ import anon.pay.PayMessage;
 import anon.proxy.IProxyListener;
 import anon.util.JobQueue;
 import anon.util.Util;
+import gui.CountryMapper;
 import gui.FlippingPanel;
 import gui.GUIUtils;
 import gui.JAPDll;
 import gui.JAPHelp;
 import gui.JAPMessages;
 import gui.JAPProgressBar;
+import gui.MixDetailsDialog;
+import gui.OperatorDetailsDialog;
 import gui.PopupMenu;
 import gui.dialog.DialogContentPane;
 import gui.dialog.JAPDialog;
@@ -226,9 +231,13 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private JAPMixCascadeComboBox m_comboAnonServices;
 	private JLabel m_labelAnonService, m_labelAnonymity, m_labelAnonymitySmall, m_labelAnonymityOnOff;
 	private JLabel m_labelAnonMeter, m_labelAnonymityLow, m_labelAnonymityHigh;
-	private JAPProgressBar m_progressAnonTraffic;
-	private JLabel m_labelAnonymityUser, m_labelAnonymityUserLabel, m_labelAnonymityTrafficLabel;
 
+	private JLabel m_labelAnonymityUser, m_labelAnonymityUserLabel, m_labelMixCountries, m_labelOperatorCountries;
+	
+	private JLabel m_labelMixFlags[], m_labelOperatorFlags[];
+	private MixMouseAdapter m_adapterMix[];
+	private OperatorMouseAdapter m_adapterOperator[];
+	
 	private JLabel m_labelOwnTraffic, m_labelOwnTrafficSmall;
 	private JLabel m_labelOwnActivity, m_labelForwarderActivity;
 	private JLabel m_labelOwnActivitySmall, m_labelForwarderActivitySmall;
@@ -775,29 +784,59 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_labelAnonymity = new JLabel(JAPMessages.getString("ngAnonymitaet"));
 		c1.insets = new Insets(0, 5, 0, 0);
 		p.add(m_labelAnonymity, c1);
+		
 		m_labelAnonymityUserLabel = new JLabel(JAPMessages.getString("ngNrOfUsers") + ":");
 		c1.gridy = 1;
 		c1.anchor = GridBagConstraints.WEST;
-		c1.insets = new Insets(10, 15, 0, 10);
+		c1.insets = new Insets(5, 15, 0, 10);
 		p.add(m_labelAnonymityUserLabel, c1);
-		m_labelAnonymityTrafficLabel = new JLabel(JAPMessages.getString("ngAnonymityTraffic"));
+		
+		m_labelMixCountries = new JLabel(JAPMessages.getString("ngMixCountries"));
 		c1.gridy = 2;
-		p.add(m_labelAnonymityTrafficLabel, c1);
-		m_labelAnonymityUser = new JLabel("", SwingConstants.CENTER);
-		c1.insets = new Insets(10, 0, 0, 0);
-		c1.anchor = GridBagConstraints.CENTER;
-		c1.weightx = 1;
+		p.add(m_labelMixCountries, c1);
+		
+		m_labelOperatorCountries = new JLabel(JAPMessages.getString("ngOperatorCountries"));
+		c1.gridy = 3;
+		p.add(m_labelOperatorCountries, c1);
+		
+		m_labelAnonymityUser = new JLabel("", SwingConstants.LEFT);
+		c1.insets = new Insets(0, 0, 0, 0);
+		c1.anchor = GridBagConstraints.WEST;
+		c1.weightx = 0;
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.gridy = 1;
 		c1.gridx = 1;
+		c1.gridwidth = 3;
 		p.add(m_labelAnonymityUser, c1);
-		m_progressAnonTraffic = new JAPProgressBar();
-		m_progressAnonTraffic.setMinimum(0);
-		m_progressAnonTraffic.setMaximum(5);
-		m_progressAnonTraffic.setBorderPainted(false);
-		c1.gridy = 2;
-		p.add(m_progressAnonTraffic, c1);
 
+		m_labelMixFlags = new JLabel[3];
+		m_labelOperatorFlags = new JLabel[3];
+		m_adapterMix = new MixMouseAdapter[3];
+		m_adapterOperator = new OperatorMouseAdapter[3];
+		
+		c1.gridwidth = 1;
+		c1.insets = new Insets(5, 2, 0, 5);
+		for(int i = 0; i < 3; i++)
+		{
+			c1.gridx = i + 1;
+			
+			m_labelMixFlags[i] = new JLabel("");
+			c1.gridy = 2;
+			p.add(m_labelMixFlags[i], c1);
+			
+			m_labelMixFlags[i].addMouseListener(m_adapterMix[i] = 
+				new MixMouseAdapter(null, i));
+			m_labelMixFlags[i].setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+			
+			c1.gridy = 3;
+			m_labelOperatorFlags[i] = new JLabel("");
+			p.add(m_labelOperatorFlags[i], c1);
+			
+			m_labelOperatorFlags[i].addMouseListener(m_adapterOperator[i] =
+				new OperatorMouseAdapter(null));
+			m_labelOperatorFlags[i].setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		}
+		
 		m_labelAnonMeter = new JLabel(getMeterImage(3));
 		m_labelAnonMeter.setToolTipText(JAPMessages.getString(MSG_ANONYMETER_TOOL_TIP));
 		m_labelAnonMeter.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -809,11 +848,11 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				JAPHelp.getInstance().setVisible(true);
 			}
 		});
-		c1.gridx = 2;
+		c1.gridx = 4;
 		c1.gridy = 0;
-		c1.gridheight = 3;
-		c1.anchor = GridBagConstraints.WEST;
-		c1.weightx = 0;
+		c1.gridheight = 4;
+		c1.anchor = GridBagConstraints.EAST;
+		c1.weightx = 1;
 		c1.fill = GridBagConstraints.NONE;
 		c1.insets = new Insets(0, 10, 0, 10);
 		p.add(m_labelAnonMeter, c1);
@@ -841,7 +880,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c2.gridy = 2;
 		p2.add(m_rbAnonOff, c2);
 
-		c1.gridx = 3;
+		c1.gridx = 5;
+		c1.weightx = 0;
 		c1.anchor = GridBagConstraints.WEST;
 		c1.insets = new Insets(0, 10, 0, 0);
 		p.add(p2, c1);
@@ -2778,7 +2818,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						m_labelAnonymityUser.setText(strTemp);
 					}
 				}
-				int t = currentStatus.getTrafficSituation();
+				/*int t = currentStatus.getTrafficSituation();
 				if (t > -1)
 				{
 					//map 0..100 --> 0..5
@@ -2788,22 +2828,70 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					//41..60 --> 3
 					//61..80 --> 4
 					//81..100 --> 5
-					m_progressAnonTraffic.setValue( (t + 19) / 20);
+					//m_progressAnonTraffic.setValue( (t + 19) / 20);
 				}
 				else
 				{
 					// no value from InfoService
-					m_progressAnonTraffic.setValue(0);
+					// TODO: labelFlags
+					//m_progressAnonTraffic.setValue(0);
 
-				}
+				}*/
 			}
 			else
 			{
 				/* we are not in anonymity mode */
-				m_progressAnonTraffic.setValue(0);
+				//m_progressAnonTraffic.setValue(0);
 				m_labelAnonymityUser.setText("");
 				m_progressAnonLevel.setValue(0);
 			}
+			
+			int numMixes = currentMixCascade.getNumberOfMixes();
+			if(currentMixCascade.getNumberOfOperators() <= 1)
+			{
+				numMixes = 1;
+			}
+			
+			for(int i = 0; i < numMixes; i++)
+			{
+				MixInfo mixInfo = currentMixCascade.getMixInfo(i);
+				
+				if(mixInfo != null && mixInfo.getCertificate() != null && 
+						mixInfo.getCertificate().getSubject() != null) 
+				{
+					String mixCountry = mixInfo.getCertificate().getSubject().getCountryCode();
+					CountryMapper country = new CountryMapper(mixCountry, JAPMessages.getLocale());
+					m_labelMixFlags[i].setIcon(GUIUtils.loadImageIcon("flags/" + mixCountry + ".png"));
+					m_labelMixFlags[i].setToolTipText(country.toString());
+					m_adapterMix[i].setMixInfo(mixInfo);
+				}
+				else
+				{
+					m_labelMixFlags[i].setIcon(null);
+				}
+				
+				if(mixInfo != null && mixInfo.getOperatorCertificate() != null && 
+						mixInfo.getOperatorCertificate().getSubject() != null) 
+				{
+					String operatorCountry = mixInfo.getOperatorCertificate().getSubject().getCountryCode();
+					CountryMapper country = new CountryMapper(operatorCountry, JAPMessages.getLocale());
+					m_labelOperatorFlags[i].setIcon(GUIUtils.loadImageIcon("flags/" + operatorCountry + ".png"));
+					m_labelOperatorFlags[i].setToolTipText(country.toString());
+					m_adapterOperator[i].setOperator(mixInfo.getServiceOperator());
+				}
+				else
+				{
+					m_labelOperatorFlags[i].setIcon(null);
+				}
+			}
+			
+			// clear the unused labels
+			for(int i = numMixes; i < 3; i++)
+			{
+				m_labelMixFlags[i].setIcon(null);
+				m_labelOperatorFlags[i].setIcon(null);
+			}
+						
 			if (m_Controller.isAnonConnected())
 			{
 				JAPDll.setSystrayTooltip("JAP (connected)\n" + currentMixCascade.getName());
@@ -3272,6 +3360,52 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		public boolean hasMoved()
 		{
 			return m_bMoved;
+		}
+	}
+	
+	private final class MixMouseAdapter extends MouseAdapter
+	{
+		private MixInfo m_mixInfo;
+		private int m_mixType;
+		
+		public MixMouseAdapter(MixInfo a_mixInfo, int a_mixType)
+		{
+			m_mixInfo = a_mixInfo;
+			m_mixType = a_mixType;
+		}
+		
+		public void mouseClicked(MouseEvent a_event)
+		{
+			MixDetailsDialog dialog = new MixDetailsDialog(JAPNewView.this, m_mixInfo, m_mixType);
+			dialog.pack();
+			dialog.setVisible(true);
+		}
+		
+		public void setMixInfo(MixInfo a_mixInfo)
+		{
+			m_mixInfo = a_mixInfo;
+		}
+	}
+	
+	private final class OperatorMouseAdapter extends MouseAdapter
+	{
+		private ServiceOperator m_operator;
+		
+		public OperatorMouseAdapter(ServiceOperator a_operator)
+		{
+			m_operator = a_operator;
+		}
+		
+		public void mouseClicked(MouseEvent a_event)
+		{
+			OperatorDetailsDialog dialog = new OperatorDetailsDialog(JAPNewView.this, m_operator);
+			dialog.pack();
+			dialog.setVisible(true);
+		}
+		
+		public void setOperator(ServiceOperator a_operator)
+		{
+			m_operator = a_operator;
 		}
 	}
 }

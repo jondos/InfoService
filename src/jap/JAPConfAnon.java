@@ -888,7 +888,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		int server = m_serverList.getSelectedIndex();
 		MixCascade cascade = (MixCascade)m_tableMixCascade.getValueAt(m_tableMixCascade.getSelectedRow(), 1);
 		String selectedMixId = null;
-
+		
 		if (cascade != null)
 		{
 			selectedMixId = (String) cascade.getMixIds().elementAt(server);
@@ -1046,7 +1046,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			m_locationLabel.setIcon(null);
 		}
 		m_locationLabel.setToolTipText(m_infoService.getLocation(cascade, selectedMixId));
-
 
 		m_serverInfo = m_infoService.getMixInfo(cascade, selectedMixId);
 		m_serverCert = m_infoService.getMixCertPath(cascade, selectedMixId);
@@ -1656,7 +1655,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 						try
 						{
 							new MapBox(getRootPanel(), (String) m_locationCoordinates.elementAt(0),
-									   (String) m_locationCoordinates.elementAt(1), 6).setVisible(true);
+									   (String) m_locationCoordinates.elementAt(1), 12).setVisible(true);
 						}
 						catch (IOException a_e)
 						{
@@ -2525,6 +2524,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			{
 				strOperator += ", ";
 				
+
 				try
 				{
 					strOperator += new CountryMapper(
@@ -2601,49 +2601,14 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		public String getLocation(MixCascade a_cascade, String a_mixId)
 		{
 			ServiceLocation location = getServiceLocation(a_cascade, a_mixId);
-			String strLocation = "";
-
-			if (location != null)
+			if(location != null)
 			{
-				if (location.getCity() != null && location.getCity().trim().length() > 0)
-				{
-					strLocation = location.getCity().trim();
-				}
-
-				if (location.getState() != null && location.getState().trim().length() > 0 &&
-					!strLocation.equals(location.getState().trim()))
-				{
-					if (strLocation.length() > 0)
-					{
-						strLocation += ", ";
-					}
-					strLocation += location.getState().trim();
-				}
-
-				if (location.getCountry() != null && location.getCountry().trim().length() > 0)
-				{
-					if (strLocation.length() > 0)
-					{
-						strLocation += ", ";
-					}
-
-					try
-					{
-						strLocation += new CountryMapper(
-							location.getCountry(), JAPMessages.getLocale()).toString();
-					}
-					catch (IllegalArgumentException a_e)
-					{
-						strLocation += location.getCountry().trim();
-					}
-				}
+				return GUIUtils.getCountryFromServiceLocation(location);
 			}
-
-			if (strLocation.trim().length() == 0)
+			else
 			{
 				return "N/A";
 			}
-			return strLocation;
 		}
 
 		/**
