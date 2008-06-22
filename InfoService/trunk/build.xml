@@ -10,7 +10,10 @@
   <property name="infoservice-excludes" value="jpi/** infoservice/performance/** misc/**"/>
   <property name="build" location="build"/>
   <property name="build.libs" location="build/libs"/>
-  <property name="dist" location="dist"/>
+  <property name="build.gcj" location="build/gcj"/>
+  <property name="build.gcj.build" location="build/gcj/build"/>
+	<property name="build.gcj.src" location="build/gcj/src"/>
+	<property name="dist" location="dist"/>
   <property name="japrelease.jnlp" location="/home/infoservice/japRelease.jnlp"/>
   <property name="japtomcat" location="/home/tomcat/webapps/jap/"/>
   <property name="japweb" location="/var/www/JapWeb/"/>
@@ -299,5 +302,19 @@
 				<zipfileset src="${classpath_xmlrpc_file_name}"/>
 			
 			</jar>
+	</target>
+	
+	<target name="jap-gcj-init">
+		<!-- Create the build directory structure used by compile -->
+	  <mkdir dir="${build}"/>
+	  <mkdir dir="${build.gcj}"/>
+    <mkdir dir="${build.gcj.build}"/>
+    <!-- Copy JAP sources -->
+		<copydir dest="${build.gcj.src}" src="${src}"></copydir>
+	</target>
+	<target name="jap-gcj-compile" depends="jap-gcj-init">
+	 <javac verbose="true" srcdir="${build.gcj.src}" destdir="${build.gcj.build}" compiler="gcj"></javac>
+	</target>
+	<target name="jap-gcj" depends="jap-gcj-compile">
 	</target>
 </project>
