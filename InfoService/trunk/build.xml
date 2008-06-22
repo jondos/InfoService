@@ -314,7 +314,7 @@
     <!-- Copy JAP sources -->
 		<copydir dest="${build.gcj.src}" src="${src}"></copydir>
 		<!-- Get sources of libraries -->
-	  <get src="http://anon.inf.tu-dresden.de/develop/ApacheFTPClient-1.3_for_JDK1.1.src.zip" verbose="true" dest="${build.gcj.libs}"></get>
+	  <get src="http://anon.inf.tu-dresden.de/develop/ApacheFTPClient-1.3_for_JDK1.1.src.zip" verbose="true" dest="${build.gcj.libs}/ApacheFTPClient-1.3_for_JDK1.1.src.zip"></get>
 	  <unzip src="${build.gcj.libs}/ApacheFTPClient-1.3_for_JDK1.1.src.zip" dest="${build.gcj.src}"></unzip>
 	</target>
 	<target name="jap-gcj-compile" depends="jap-gcj-init">
