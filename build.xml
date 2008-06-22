@@ -12,6 +12,7 @@
   <property name="build.libs" location="build/libs"/>
   <property name="build.gcj" location="build/gcj"/>
   <property name="build.gcj.build" location="build/gcj/build"/>
+  <property name="build.gcj.libs" location="build/gcj/libs"/>
 	<property name="build.gcj.src" location="build/gcj/src"/>
 	<property name="dist" location="dist"/>
   <property name="japrelease.jnlp" location="/home/infoservice/japRelease.jnlp"/>
@@ -309,7 +310,7 @@
 	  <mkdir dir="${build}"/>
 	  <mkdir dir="${build.gcj}"/>
     <mkdir dir="${build.gcj.build}"/>
-    <mkdir dir="${build.gcj.lib}"/>
+    <mkdir dir="${build.gcj.libs}"/>
     <!-- Copy JAP sources -->
 		<copydir dest="${build.gcj.src}" src="${src}"></copydir>
 		<!-- Get sources of libraries -->
