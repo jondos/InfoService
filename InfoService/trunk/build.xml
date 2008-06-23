@@ -305,6 +305,10 @@
 			</jar>
 	</target>
 	
+	<target name="jap-gcj-clean">
+	   <delete dir="${build.gcj}"/>
+	</target>
+	
 	<target name="jap-gcj-init">
 		<!-- Create the build directory structure used by compile -->
 	  <mkdir dir="${build}"/>
@@ -315,11 +319,15 @@
 		<copydir dest="${build.gcj.src}" src="${src}"></copydir>
 		<!-- Get sources of libraries -->
 	  <get src="http://anon.inf.tu-dresden.de/develop/ApacheFTPClient-1.3_for_JDK1.1.src.zip" verbose="true" dest="${build.gcj.libs}/ApacheFTPClient-1.3_for_JDK1.1.src.zip"></get>
-	  <unzip src="${build.gcj.libs}/ApacheFTPClient-1.3_for_JDK1.1.src.zip" dest="${build.gcj.src}"></unzip>
+	  <unzip src="${build.gcj.libs}/ApacheFTPClient-1.3_for_JDK1.1.src.zip" dest="${build.gcj.src}">
+	   <fileset dir="src/java/org">
+	   	 <include name="**/*.*" />
+	   </fileset>
+	  </unzip>
 	</target>
 	<target name="jap-gcj-compile" depends="jap-gcj-init">
 	 <javac verbose="true" srcdir="${build.gcj.src}" destdir="${build.gcj.build}" compiler="gcj"></javac>
 	</target>
-	<target name="jap-gcj" depends="jap-gcj-compile">
+	<target name="jap-gcj" depends="jap-gcj-clean,jap-gcj-compile">
 	</target>
 </project>
