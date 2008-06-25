@@ -310,6 +310,14 @@
 	</target>
 	
 	<target name="jap-gcj-init">
+	<!-- Delet unecessary source files -->
+	<delete dir="${src}/misc" />
+	<delete dir="${src}/infoservice" />
+	<delete dir="${src}/captcha" />
+	<delete dir="${src}/platform/signal" />
+	<delete dir="${src}/anon/tor/test"/>
+	<delete dir="${src}/anon/crypto/tinytls/test"/>
+	<delete file="${src}/JAPMacintosh.java" />
 		<!-- Create the build directory structure used by compile -->
 	  <mkdir dir="${build}"/>
 	  <mkdir dir="${build.gcj}"/>
@@ -332,10 +340,32 @@
 	   	 <exclude name="src/HTTPClient/doc/**/*.*" />
 	   </patternset>
 	  </unzip>
+	  <get src="http://anon.inf.tu-dresden.de/develop/BouncyCastleLightForJAP_src.zip" verbose="true" dest="${build.gcj.libs}/BouncyCastleLightForJAP_src.zip"></get>
+	  <unzip src="${build.gcj.libs}/BouncyCastleLightForJAP_src.zip" dest="${build.gcj.src}">
+	   <patternset>
+	   	 <include name="org/**/*.*" />	   
+	   </patternset>
+	  </unzip>
+	  <get src="http://anon.inf.tu-dresden.de/develop/log4j_src.zip" verbose="true" dest="${build.gcj.libs}/log4j_src.zip"></get>
+	  <unzip src="${build.gcj.libs}/log4j_src.zip" dest="${build.gcj.src}">
+	   <patternset>
+	   	 <include name="java/org/**/*.*" />	   
+	   </patternset>
+	   <mapper type="glob" from="java/org/*" to="org/*"/>
+	  </unzip>
+	  <get src="http://anon.inf.tu-dresden.de/develop/ApacheXMLRPC_src.zip" verbose="true" dest="${build.gcj.libs}/ApacheXMLRPC_src.zip"></get>
+	  <unzip src="${build.gcj.libs}/ApacheXMLRPC_src.zip" dest="${build.gcj}">
+	   <patternset>
+	   	 <include name="java/**/*.*" />	   
+	   </patternset>
+	   <mapper type="glob" from="java/*" to="src/*"/>
+	  </unzip>
 
 	</target>
 	<target name="jap-gcj-compile" depends="jap-gcj-init">
-	 <javac verbose="true" srcdir="${build.gcj.src}" destdir="${build.gcj.build}" compiler="gcj"></javac>
+	 <javac verbose="false" nowarn="true" srcdir="${build.gcj.src}" destdir="${build.gcj.build}" compiler="gcj">
+	 <compilerarg line="-combine -o JAP -fjni --main=JAP"/>
+	 </javac>
 	</target>
 	<target name="jap-gcj" depends="jap-gcj-clean,jap-gcj-compile">
 	</target>
