@@ -3540,16 +3540,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		}
 	}
 
-	private static interface IReturnAccountRunnable extends WorkerContentPane.IReturnRunnable
-	{
-		public PayAccount getAccount();
-	}
-
-	private static interface IReturnBooleanRunnable extends WorkerContentPane.IReturnRunnable
-	{
-		public boolean isTrue();
-	}
-
 	private static final class FixedReturnAccountRunnable implements IReturnAccountRunnable
 	{
 		private PayAccount m_account;
