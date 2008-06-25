@@ -112,7 +112,7 @@ import gui.GUIUtils;
 import gui.JAPMessages;
 import gui.dialog.CaptchaContentPane;
 import gui.dialog.DialogContentPane;
-import gui.dialog.DialogContentPane.Options;
+import gui.dialog.DialogContentPaneOptions;
 import gui.dialog.IDialogOptions;
 import gui.dialog.JAPDialog;
 import gui.dialog.PasswordContentPane;
@@ -1860,7 +1860,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		//************** show confirmation / result of payment  (dependent on method and outcome) ****************/
 		final SimpleWizardContentPane sentPane = new SimpleWizardContentPane(a_parentDialog,
 			JAPMessages.getString(MSG_SENTPASSIVE), null,
-			new Options(createUpdateAccountPane(
+			new DialogContentPaneOptions(createUpdateAccountPane(
 				a_accountCreationThread, methodSelectionPane, a_parentDialog, sendPassivePane)))
 		{
 			public boolean isSkippedAsNextContentPane()
@@ -2719,7 +2719,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		DialogContentPane saveErrorPane = new SimpleWizardContentPane(
 			a_parentDialog, "<Font color=\"red\">" + JAPMessages.getString(MSG_CREATED_ACCOUNT_NOT_SAVED) + "</Font>",
 			new DialogContentPane.Layout("", DialogContentPane.MESSAGE_TYPE_ERROR),
-			new DialogContentPane.Options(saveConfig))
+			new DialogContentPaneOptions(saveConfig))
 		{
 			public boolean isSkippedAsNextContentPane()
 			{
