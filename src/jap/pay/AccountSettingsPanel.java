@@ -1860,8 +1860,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		};
 
 		//************** show confirmation / result of payment  (dependent on method and outcome) ****************/
-		final DialogContentPaneOptions tmpOptions=new DialogContentPaneOptions(createUpdateAccountPane(
-				a_accountCreationThread, methodSelectionPane, a_parentDialog, sendPassivePane));
+		final DialogContentPane tmpPane=createUpdateAccountPane(a_accountCreationThread, methodSelectionPane, a_parentDialog, sendPassivePane);
+		final DialogContentPaneOptions tmpOptions=new DialogContentPaneOptions(tmpPane);
 		final SimpleWizardContentPane sentPane = new SimpleWizardContentPane(a_parentDialog,
 			JAPMessages.getString(MSG_SENTPASSIVE), (Layout)null,
 			tmpOptions)
