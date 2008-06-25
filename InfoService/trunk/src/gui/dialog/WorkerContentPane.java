@@ -346,12 +346,6 @@ public class WorkerContentPane extends DialogContentPane implements
 		}
 	}
 
-	/**
-	 * Implement this interface if you want your runnable object to return some kind of value.
-	 */
-	public static interface IReturnRunnable extends Runnable
-	{
-		public Object getValue();
-	}
+
 
 }
