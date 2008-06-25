@@ -54,6 +54,7 @@ import java.util.Enumeration;
 import anon.infoservice.IMutableProxyInterface;
 import anon.IServiceContainer;
 import anon.infoservice.MixCascade;
+import anon.infoservice.MixCascade.MixPosition;
 import java.util.Hashtable;
 import java.sql.Timestamp;
 
