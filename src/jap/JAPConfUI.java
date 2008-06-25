@@ -63,6 +63,7 @@ import gui.LanguageMapper;
 import gui.TitledGridBagPanel;
 import gui.dialog.DialogContentPane;
 import gui.dialog.DialogContentPaneOptions;
+import gui.dialog.IReturnRunnable;
 import gui.dialog.JAPDialog;
 import gui.dialog.SimpleWizardContentPane;
 import gui.dialog.WorkerContentPane;
@@ -329,7 +330,7 @@ final class JAPConfUI extends AbstractJAPConfModule
 					}
 				};
 
-				final WorkerContentPane.IReturnRunnable doIt = new WorkerContentPane.IReturnRunnable()
+				final IReturnRunnable doIt = new IReturnRunnable()
 				{
 					Object m_value;
 
