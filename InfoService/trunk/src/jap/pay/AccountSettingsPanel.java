@@ -119,6 +119,7 @@ import gui.dialog.JAPDialog;
 import gui.dialog.PasswordContentPane;
 import gui.dialog.SimpleWizardContentPane;
 import gui.dialog.WorkerContentPane;
+import gui.dialog.DialogContentPane.Layout;
 import jap.AbstractJAPConfModule;
 import jap.JAPConfInfoService;
 import jap.JAPConstants;
@@ -1862,7 +1863,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		final DialogContentPaneOptions tmpOptions=new DialogContentPaneOptions(createUpdateAccountPane(
 				a_accountCreationThread, methodSelectionPane, a_parentDialog, sendPassivePane));
 		final SimpleWizardContentPane sentPane = new SimpleWizardContentPane(a_parentDialog,
-			JAPMessages.getString(MSG_SENTPASSIVE), null,
+			JAPMessages.getString(MSG_SENTPASSIVE), (Layout)null,
 			tmpOptions)
 		{
 			public boolean isSkippedAsNextContentPane()
