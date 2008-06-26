@@ -363,8 +363,8 @@
 
 	</target>
 	<target name="jap-gcj-compile" depends="jap-gcj-init">
-	 <javac verbose="false" nowarn="true" srcdir="${build.gcj.src}" destdir="${build.gcj.build}" compiler="gcj">
-	 <compilerarg line="-combine -o JAP -fjni --main=JAP"/>
+	 <javac verbose="false" nowarn="true" debug="true" debuglevel="lines,vars,source" srcdir="${build.gcj.src}" destdir="${build.gcj.build}" compiler="gcj">
+	 <compilerarg line="-combine -o JAP -fjni --main=JAP -Wno-deprecated -Wno-unused -g3"/>
 	 </javac>
 	</target>
 	<target name="jap-gcj" depends="jap-gcj-clean,jap-gcj-compile">
