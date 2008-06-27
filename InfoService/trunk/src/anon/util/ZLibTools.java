@@ -154,11 +154,11 @@ final public class ZLibTools
 								break;		
 							}
 						}
-						matchedDirEntries.add(index, entryName);
+						matchedDirEntries.insertElementAt(entryName, index);
 					}
 					else
 					{
-						matchedFileEntries.add(entry);
+						matchedFileEntries.addElement(entry);
 					}
 				}
 			}
@@ -168,8 +168,8 @@ final public class ZLibTools
 				return false;
 			}
 			
-			for (Iterator iterator = matchedDirEntries.iterator(); iterator.hasNext(); dirIndex++) {
-				String dirName = (String) iterator.next();
+			for (Enumeration iterator = matchedDirEntries.elements(); iterator.hasMoreElements(); dirIndex++) {
+				String dirName = (String) iterator.nextElement();
 				File dir = new File(dest+File.separator+dirName);
 				if(dir != null)
 				{
