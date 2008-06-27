@@ -531,8 +531,8 @@ public final class JAPUpdateWizard extends BasicWizard implements Runnable
 					System.arraycopy(buff, 0, newJarBuff, currentPos, len);
 					currentPos +=  len;
 					// the Download has the Zone from 5 to 455 in the ProgressBar
-					int value = ( (450 * currentPos) / lenTotal);
-					downloadPage.progressBar.setValue( (value + 5));
+					int value = (int)(((450 * (long)currentPos) / (long)lenTotal));
+					downloadPage.progressBar.setValue(value + 5);
 					downloadPage.progressBar.repaint();
 					if (updateAborted)
 					{
