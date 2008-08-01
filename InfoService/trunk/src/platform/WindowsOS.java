@@ -82,7 +82,7 @@ public class WindowsOS extends AbstractOS
 
 	public String getDefaultHelpPath(String a_applicationName)
 	{
-		String dir = getAllUsersProfile(a_applicationName);
+		String dir = getEnvPath(a_applicationName, "ALLUSERSPROFILE");
 		
 		if (dir == null)
 		{
@@ -129,18 +129,17 @@ public class WindowsOS extends AbstractOS
 		}
 		else
 		{
-			dir = getAllUsersProfile(a_applicationName);
+			dir = getEnvPath(a_applicationName, "APPDATA");
 			if (dir == null)
 			{
 				dir = System.getProperty("user.home", ".");
 			}
 		}
 
-
 		return dir + File.separator;
 	}
 	
-	private String getAllUsersProfile(String a_applicationName)
+	private String getEnvPath(String a_applicationName, String a_envPath)
 	{
 		if (a_applicationName == null)
 		{
@@ -153,7 +152,7 @@ public class WindowsOS extends AbstractOS
 		
 		try
 		{
-			dirAllUsers = System.getenv("ALLUSERSPROFILE");
+			dirAllUsers = System.getenv(a_envPath);
 		}
 		catch (SecurityException a_e)
 		{
@@ -162,12 +161,13 @@ public class WindowsOS extends AbstractOS
 		
 		if (dirAllUsers != null && dirAllUsers.trim().length() > 0)
 		{
-			dirAllUsers += "\\Application Data\\" + a_applicationName;
+			//dirAllUsers += "\\Application Data\\" + a_applicationName;
+			dirAllUsers += File.separator + a_applicationName;
 			applicationDir = new File(dirAllUsers + File.separator);
 			if (!applicationDir.exists() && !applicationDir.mkdir())
 			{
 				LogHolder.log(LogLevel.ERR, LogType.MISC,
-						"Could not create all users profile directory: " + dirAllUsers);
+						"Could not create storage directory: " + dirAllUsers);
 				dirAllUsers = null;
 			}
 		}
