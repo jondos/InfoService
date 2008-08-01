@@ -27,18 +27,21 @@
  */
 package platform;
 
+import gui.dialog.JAPDialog;
+import gui.help.JAPHelp.IExternalEMailCaller;
+import gui.help.JAPHelp.IExternalURLCaller;
+
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.net.URL;
 import java.util.Vector;
 
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import gui.JAPHelp.IExternalURLCaller;
-import gui.JAPHelp.IExternalEMailCaller;
-import gui.dialog.JAPDialog;
-
+import anon.util.ClassUtil;
+import anon.util.ResourceLoader;
 
 /**
  * This abstract class provides access to OS-specific implementations of certain
@@ -68,10 +71,10 @@ public abstract class AbstractOS implements IExternalURLCaller, IExternalEMailCa
 	private static AbstractOS ms_operatingSystem;
 
 	private IURLErrorNotifier m_notifier;
-	private IURLOpener m_URLOpener;
+	private AbstractURLOpener m_URLOpener;
 
 	private static File ms_tmpDir;
-
+	
 	static
 	{
 		// Needs to be done according to the JDK because java.io.tmpdir
@@ -87,9 +90,72 @@ public abstract class AbstractOS implements IExternalURLCaller, IExternalEMailCa
 		ms_tmpDir = new File(tmpDir);
 	}
 
-	public static interface IURLOpener
-	{
-		boolean openURL(URL a_url);
+	public static abstract class AbstractURLOpener
+	{	
+		private Process m_portableFirefoxProcess = null;
+		private boolean m_bOneSessionOnly = false;
+		
+		public synchronized boolean openURL(URL a_url)
+		{
+			String cmd;
+			
+			if (getBrowserCommand() == null || a_url == null)
+			{
+				// no path to portable browser was given; use default
+				return false;
+			}
+				
+			if(m_portableFirefoxProcess != null && m_bOneSessionOnly)
+			{
+				try
+				{
+					int ffExitValue = m_portableFirefoxProcess.exitValue();
+					LogHolder.log(LogLevel.INFO, LogType.MISC,
+						"previous portable firefox process exited "+
+						((ffExitValue == 0) ? "normally " : "anormally ")+
+						"(exit value "+ffExitValue+").");
+				}
+				catch(IllegalThreadStateException itse)
+				{
+					LogHolder.log(LogLevel.WARNING, LogType.MISC,
+						"Portable Firefox process is still running!");
+					return true; // do not start a second process or another browser
+				}
+			}
+			
+			cmd = getBrowserCommand() + " " + a_url.toString();
+			try
+			{
+				m_portableFirefoxProcess = Runtime.getRuntime().exec(cmd);
+				return true;
+			} 
+			catch (SecurityException se)
+			{
+				LogHolder.log(LogLevel.WARNING, LogType.MISC,
+						"You are not allowed to lauch portable firefox: ", se);
+			}
+			catch (IOException ioe3) 
+			{
+				LogHolder.log(LogLevel.WARNING, LogType.MISC,
+						"Error occured while launching portable browser with command '" + 
+						cmd + "'",ioe3);	
+			}
+			
+			return false;
+		}
+		
+		public abstract String getBrowserCommand();
+		
+		public abstract URL getDefaultURL();
+		
+		public final synchronized boolean openBrowser()
+		{
+			boolean bReturn;
+			m_bOneSessionOnly = true;
+			bReturn = openURL(getDefaultURL());
+			m_bOneSessionOnly = false;
+			return bReturn;			
+		}
 	}
 
 	public static interface IURLErrorNotifier
@@ -132,7 +198,7 @@ public abstract class AbstractOS implements IExternalURLCaller, IExternalEMailCa
 		return ms_operatingSystem;
 	}
 
-	public void init(IURLErrorNotifier a_notifier, IURLOpener a_URLOpener)
+	public void init(IURLErrorNotifier a_notifier, AbstractURLOpener a_URLOpener)
 	{
 		if (a_notifier != null)
 		{
@@ -199,6 +265,29 @@ public abstract class AbstractOS implements IExternalURLCaller, IExternalEMailCa
 		}
 	}
 
+	public final boolean isDefaultURLAvailable()
+	{
+		if (m_URLOpener != null)
+		{
+			return (m_URLOpener.getDefaultURL() != null && m_URLOpener.getBrowserCommand() != null);
+		}
+		return false;
+	}
+	
+	/**
+	 * Just opens the browser with the default URL. Does not work
+	 * if no default URL is available.
+	 * @return if the browser could be opened with the default URL
+	 */
+	public final boolean openBrowser()
+	{
+		if (m_URLOpener != null)
+		{
+			return m_URLOpener.openBrowser();
+		}
+		return false;
+	}
+	
 	public final boolean openURL(URL a_url)
 	{
 		boolean success = false;
@@ -260,8 +349,26 @@ public abstract class AbstractOS implements IExternalURLCaller, IExternalEMailCa
 	}
 
 	/**
+	 * returns the default destination path for an external installtion of the help files. May be os specific.
+	 * This method returns the path to the folder which contains the Jarfile or users working directory
+	 * if JonDo is not executed. from a Jar file. 
+	 * A specific OS class may override this method if the help path should be another one.
+	 * @return the path to the folder which contains the Jarfile or the users working directory 
+	 * 			if JonDo is not executed from a Jar file
+	 */
+	public String getDefaultHelpPath()
+	{
+		File classParentFile = ClassUtil.getClassDirectory(this.getClass());
+		if(classParentFile != null && classParentFile.getPath().endsWith(".jar"))
+		{						
+			return classParentFile.getParent();
+		}
+
+		return System.getProperty("user.dir");
+	}
+	
+	/**
 	 * Returns a vector of all running VMs. This only works on the Sun VM
-	 *
 	 * @return a vector of all running Virtual Machines
 	 */
 	public Vector getActiveVMs()

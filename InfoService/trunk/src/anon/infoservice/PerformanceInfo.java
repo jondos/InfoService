@@ -2,16 +2,19 @@ package anon.infoservice;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
 import java.util.Hashtable;
 import java.util.Vector;
 import java.util.Enumeration;
 
+import anon.crypto.CertPath;
+import anon.crypto.JAPCertificate;
+import anon.crypto.SignatureVerifier;
+import anon.crypto.XMLSignature;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
 import anon.util.IXMLEncodable;
-import anon.util.XMLParseException;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -30,7 +33,7 @@ import logging.LogType;
  * 
  * @author Christian Banse
  */
-public class PerformanceInfo extends AbstractDatabaseEntry implements IXMLEncodable
+public class PerformanceInfo extends AbstractCertifiedDatabaseEntry implements IXMLEncodable
 {
 	private static final double PERFORMANCE_INFO_MIN_PERCENTAGE_OF_VALID_ENTRIES = 2.0/3.0;
 	private static final double PERFORMANCE_INFO_MAX_STRAY = 0.55;
@@ -54,6 +57,8 @@ public class PerformanceInfo extends AbstractDatabaseEntry implements IXMLEncoda
 	 * Stored XML data for toXmlElement()
 	 */
 	private Element m_xmlData;
+	
+	private JAPCertificate m_isCertificate;
 	
 	/**
 	 * All PerformanceEntry objects measured by the info service
@@ -90,9 +95,30 @@ public class PerformanceInfo extends AbstractDatabaseEntry implements IXMLEncoda
 		
 		NodeList list = a_info.getElementsByTagName("PerformanceEntry");
 		
+		
+		/* try to get the certificate from the Signature node */
+		try
+		{
+			XMLSignature signature = SignatureVerifier.getInstance().getVerifiedXml(a_info,
+				SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE);
+			if (signature != null && signature.isVerified())
+			{
+				CertPath certPath = signature.getCertPath();
+				if (certPath != null && certPath.getFirstCertificate() != null)
+				{
+					m_isCertificate = certPath.getFirstCertificate();
+				}
+			}
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.MISC, e);
+		}
+		
+		
 		m_id = XMLUtil.parseAttribute(a_info, XML_ATTR_ID, "");
 		
-		if(m_id == "")
+		if(!checkId())
 		{
 			throw new XMLParseException(XML_ELEMENT_NAME + ": invalid id");
 		}
@@ -106,6 +132,16 @@ public class PerformanceInfo extends AbstractDatabaseEntry implements IXMLEncoda
 		m_lastUpdate = System.currentTimeMillis();
 		m_serial = System.currentTimeMillis();
 		m_xmlData = a_info;
+	}
+	
+	public JAPCertificate getCertificate()
+	{
+		return m_isCertificate;
+	}
+	
+	public boolean isVerified()
+	{
+		return m_isCertificate != null;
 	}
 	
 	public String getId()
@@ -153,7 +189,7 @@ public class PerformanceInfo extends AbstractDatabaseEntry implements IXMLEncoda
 		// and calculate the average
 		
 		Vector vec = Database.getInstance(PerformanceInfo.class).getEntryList();
-		PerformanceEntry avgEntry = new PerformanceEntry(a_cascadeId, -1);
+		PerformanceEntry avgEntry = new PerformanceEntry(a_cascadeId);
 		
 		Vector v = new Vector();
 		
@@ -171,15 +207,45 @@ public class PerformanceInfo extends AbstractDatabaseEntry implements IXMLEncoda
 			return avgEntry;
 		}
 		
+		long speed = 0;
+		long delay = 0;
 		long avgSpeed = 0;
 		long avgDelay = 0;
+		int countSpeed = 0;
+		int countDelay = 0;
 		for(int j = 0; j < v.size(); j++)
 		{
-			avgSpeed += ((PerformanceEntry) v.elementAt(j)).getAverageSpeed();
-			avgDelay += ((PerformanceEntry) v.elementAt(j)).getAverageDelay();
+			speed = ((PerformanceEntry) v.elementAt(j)).getXMLAverage(PerformanceEntry.SPEED);
+			if (speed >= 0)
+			{				
+				avgSpeed += speed;
+				countSpeed++;
+			}
+			
+			delay = ((PerformanceEntry) v.elementAt(j)).getXMLAverage(PerformanceEntry.DELAY);
+			if (delay >= 0)
+			{
+				avgDelay += delay;
+				countDelay++;
+			}
 		}
-		avgSpeed /= v.size();
-		avgDelay /= v.size();
+		if (countSpeed > 0)
+		{
+			avgSpeed /= countSpeed;
+		}
+		else
+		{
+			avgSpeed = -1;
+		}
+		
+		if (countDelay > 0)
+		{
+			avgDelay /= countDelay;
+		}
+		else
+		{
+			avgDelay = -1;
+		}
 		
 		Vector vToCheck = (Vector) v.clone();
 		Vector vResult = new Vector();
@@ -211,23 +277,86 @@ public class PerformanceInfo extends AbstractDatabaseEntry implements IXMLEncoda
 		
 		avgSpeed = 0;
 		avgDelay = 0;
+		countSpeed = 0;
+		countDelay = 0;
+		
+		double stdSpeed = 0;
+		double stdDelay = 0;
+		int countStdSpeed = 0;
+		int countStdDelay = 0;
+		
+		long value = 0;
+		double dvalue = 0;
+		
 		for(int j = 0; j < vResult.size(); j++)
 		{
-			if(((PerformanceEntry) vResult.elementAt(j)).getAverageSpeed() != 0)
+			value = ((PerformanceEntry) vResult.elementAt(j)).getXMLAverage(PerformanceEntry.SPEED);
+			if(value >= 0)
 			{
-				avgSpeed += ((PerformanceEntry) vResult.elementAt(j)).getAverageSpeed();
-			}
+				avgSpeed += value;
+				countSpeed++;
+				
+				dvalue = ((PerformanceEntry) vResult.elementAt(j)).getXMLStdDeviation(PerformanceEntry.SPEED);
+				if(dvalue >= 0)
+				{
+					stdSpeed += dvalue;
+					countStdSpeed++;
+				}
+			}						
 			
-			if(((PerformanceEntry) vResult.elementAt(j)).getAverageSpeed() != 0)
+			value = ((PerformanceEntry) vResult.elementAt(j)).getXMLAverage(PerformanceEntry.DELAY);
+			if(value >= 0)
 			{
-				avgDelay += ((PerformanceEntry) vResult.elementAt(j)).getAverageDelay();
+				avgDelay += value;
+				countDelay++;
+				
+				dvalue = ((PerformanceEntry) vResult.elementAt(j)).getXMLStdDeviation(PerformanceEntry.DELAY);
+				if(dvalue >= 0)
+				{
+					stdDelay += dvalue;
+					countStdDelay++;
+				}
 			}
 		}
-		avgSpeed /= vResult.size();
-		avgDelay /= vResult.size();
+		if (countSpeed > 0)
+		{
+			avgSpeed /= countSpeed;
+			if (countStdSpeed > 0)
+			{
+				stdSpeed /= countStdSpeed;
+			}
+			else
+			{
+				stdSpeed = 0.0;
+			}
+		}
+		else
+		{
+			avgSpeed = -1;
+		}
 		
-		avgEntry.setAverageSpeed(avgSpeed);
-		avgEntry.setAverageDelay(avgDelay);
+		if (countDelay > 0)
+		{
+			avgDelay /= countDelay;		
+			if (countStdDelay > 0)
+			{
+				stdDelay /= countStdDelay;
+			}
+			else
+			{
+				stdDelay = 0.0;
+			}			
+		}
+		else
+		{
+			avgDelay = -1;
+		}
+		
+		avgEntry.overrideXMLAverage(PerformanceEntry.SPEED, avgSpeed);
+		avgEntry.overrideXMLAverage(PerformanceEntry.DELAY, avgDelay);
+		
+		avgEntry.overrideXMLStdDeviation(PerformanceEntry.SPEED, stdSpeed);
+		avgEntry.overrideXMLStdDeviation(PerformanceEntry.DELAY, stdDelay);
 		
 		return avgEntry;
 	}
@@ -272,11 +401,11 @@ public class PerformanceInfo extends AbstractDatabaseEntry implements IXMLEncoda
 		{
 			PerformanceEntry entry = ((PerformanceEntry) a_vec.elementAt(k));
 			
-			double straySpeed = (double) Math.abs(a_avgSpeed - entry.getAverageSpeed()) / (double) a_avgSpeed;
-			double strayDelay = (double) Math.abs(a_avgDelay - entry.getAverageDelay()) / (double) a_avgDelay;
-			if(straySpeed > a_maxStray)
+			double straySpeed = (double) Math.abs(a_avgSpeed - entry.getXMLAverage(PerformanceEntry.SPEED)) / (double) a_avgSpeed;
+			double strayDelay = (double) Math.abs(a_avgDelay - entry.getXMLAverage(PerformanceEntry.DELAY)) / (double) a_avgDelay;
+			if(entry.getXMLAverage(PerformanceEntry.SPEED) >= 0 && straySpeed > a_maxStray)
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Ignoring performance entry with speed " + entry.getAverageSpeed());
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Ignoring performance entry with speed " + entry.getAverage(PerformanceEntry.SPEED));
 				
 				r_vecDeleted.addElement(entry);
 				
@@ -291,9 +420,9 @@ public class PerformanceInfo extends AbstractDatabaseEntry implements IXMLEncoda
 				continue;
 			}
 			
-			if(strayDelay > a_maxStray)
+			if(entry.getXMLAverage(PerformanceEntry.DELAY) >= 0 && strayDelay > a_maxStray)
 			{
-				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Ignoring performance entry with delay " + entry.getAverageDelay());
+				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Ignoring performance entry with delay " + entry.getAverage(PerformanceEntry.DELAY));
 				
 				r_vecDeleted.addElement(entry);
 				
