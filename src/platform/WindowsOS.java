@@ -159,7 +159,8 @@ public class WindowsOS extends AbstractOS
 			LogHolder.log(LogLevel.ERR, LogType.MISC, a_e);
 		}
 		
-		if (dirAllUsers != null && dirAllUsers.trim().length() > 0)
+		if (dirAllUsers != null && dirAllUsers.trim().length() > 0 &&
+			new File(dirAllUsers).exists())
 		{
 			//dirAllUsers += "\\Application Data\\" + a_applicationName;
 			dirAllUsers += File.separator + a_applicationName;
