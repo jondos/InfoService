@@ -63,6 +63,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 
 	private static final String XML_ATTR_USER_DEFINED = "userDefined";
 	private static final String XML_ATTR_STUDY = "study";
+	private static final String XML_ATTR_MAX_USERS = "maxUsers";
 
 	//private static final String XML_ELEM_RSA_KEY_VALUE = "RSAKeyValue";
 
@@ -137,6 +138,11 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	 * If this Cascade participates in a study.
 	 */
 	private boolean m_bStudy = false;
+	
+	/**
+	 * Is greater zero if user number is restricted.
+	 */
+	private int m_maxUsers = 0;
 
 	/**
 	 * True, if this MixCascade is a payment cascade.
@@ -270,6 +276,8 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		m_userDefined = XMLUtil.parseAttribute(a_mixCascadeNode, XML_ATTR_USER_DEFINED, false);
 		
 		m_bStudy = XMLUtil.parseAttribute(a_mixCascadeNode, XML_ATTR_STUDY, false);
+		
+		m_maxUsers = XMLUtil.parseAttribute(a_mixCascadeNode, XML_ATTR_MAX_USERS, 0);
 		
 
 		/* get the ID */
@@ -649,6 +657,15 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		return m_strName;
 	}
 
+	/**
+	 * Tells if this Cascade has a maximum number of users.
+	 * @return > 0 if user number is restricted; 0 otherwise
+	 */
+	public int getMaxUsers()
+	{
+		return m_maxUsers;
+	}
+	
 	/**
 	 * Returns a String representation for this MixCascade object. It's just the name of the
 	 * mixcascade.
@@ -1069,7 +1086,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		Hashtable operatorCertificates = new Hashtable();
 		Hashtable operatorCountries = new Hashtable();
 		Hashtable mixCountries = new Hashtable();
-		Hashtable operatorIDs = new Hashtable();
+		Hashtable mixIDs = new Hashtable();
 		JAPCertificate currentCertificate;
 		m_nrOperators = 0;
 		m_nrCountries = 0;
@@ -1081,8 +1098,8 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 				continue;
 			}
 			currentCertificate = getMixInfo(i).getOperatorCertificate();
-			if (currentCertificate != null && !operatorCertificates.contains(currentCertificate) &&
-				!operatorIDs.contains(getMixInfo(i).getId()))
+			if (currentCertificate != null && !operatorCertificates.contains(currentCertificate.getId())					
+				&& !mixIDs.contains(getMixInfo(i).getId()))
 			{
 				// this Mix seems to be operated by an organisation independent from others in the cascade
 
@@ -1106,8 +1123,8 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 				}
 
 				// operator bonus
-				operatorCertificates.put(currentCertificate.getId(), currentCertificate);
-				operatorIDs.put(getMixInfo(i).getId(), getMixInfo(i).getId());
+				operatorCertificates.put(currentCertificate.getId(), currentCertificate.getId());
+				mixIDs.put(getMixInfo(i).getId(), getMixInfo(i).getId());
 				m_nrOperators++;
 			}
 		}

@@ -33,7 +33,6 @@ import logging.LogLevel;
 import logging.LogType;
 import anon.infoservice.MixCascade;
 import anon.AnonServerDescription;
-import java.awt.event.ActionListener;
 
 /**
  *
@@ -51,12 +50,6 @@ public class ConsoleJAPMainView implements IJAPMainView
 	public void doClickOnCascadeChooser()
 	{
 	}
-	
-	public String[] getBrowserCommand()
-	{
-		return null;
-	}
-	
 	public void updateValues(boolean bSync)
 	{
 	}
@@ -194,10 +187,6 @@ public class ConsoleJAPMainView implements IJAPMainView
 	}
 
 	public void transferedBytes(long bytes, int protocolType)
-	{
-	}
-
-	public void showHelpInstallDialog() 
 	{
 	}
 }

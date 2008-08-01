@@ -69,11 +69,11 @@ import anon.infoservice.ImmutableListenerInterface;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.ProxyInterface;
 import anon.infoservice.MixCascade;
-import gui.JAPHelp;
 import gui.JAPJIntField;
 import gui.JAPMessages;
 import gui.JAPMultilineLabel;
 import gui.dialog.JAPDialog;
+import gui.help.JAPHelp;
 
 import jap.forward.JAPConfForwardingServer;
 import jap.forward.JAPConfForwardingState;
@@ -220,7 +220,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 			//m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfTrust(), ANON_TRUST_TAB);
 		}
 		
-		JAPExtension.addOptOut(m_moduleSystem);
+		//JAPExtension.addOptOut(m_moduleSystem);
 
 		m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeAnon.getPath()));
 
@@ -452,7 +452,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 	{
 		if (e.getSource() == m_bttnHelp)
 		{
-			JAPHelp.getInstance().getContextObj().setContext(m_moduleSystem);
+			JAPHelp.getInstance().setContext(m_moduleSystem);
 			JAPHelp.getInstance().loadCurrentContext();
 		}
 	}
@@ -664,7 +664,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		setVisible(false);
 	}
 
-	/** Checks if all Input in all Fiels make sense. Displays InfoBoxes about what is wrong.
+	/** Checks if all input in all files make sense. Displays InfoBoxes about what is wrong.
 	 * @return true if all is ok
 	 *					false otherwise
 	 */
@@ -690,6 +690,13 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 
 	private void onOkPressed()
 	{
+		/*
+		System.out.println(m_moduleSystem.getConfigurationTree().getComponentCount());
+		System.out.println(m_moduleSystem.getConfigurationTreeRootNode().getChildCount());		
+		m_moduleSystem.getConfigurationTree().repaint();*/
+		
+		
+		
 		// Misc settings
 		int[] availableLogTypes = LogType.getAvailableLogTypes();
 		int logType = LogType.NUL;
@@ -771,7 +778,6 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 				{
 					setVisible(false);
 				}
-
 				// force notifying the observers set the right server name
 				//m_Controller.notifyJAPObservers();
 

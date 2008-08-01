@@ -32,12 +32,14 @@ import java.util.Hashtable;
 
 import java.awt.CardLayout;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import javax.swing.JPanel;
 import javax.swing.JTree;
+import javax.swing.RootPaneContainer;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
@@ -54,10 +56,10 @@ import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import gui.GUIUtils;
-import gui.JAPHelp;
-import gui.JAPHelp;
 import gui.JAPMessages;
 import gui.JAPHelpContext;
+import gui.dialog.JAPDialog;
+import gui.help.JAPHelp;
 
 /**
  * This is the implementation for the configuration module system. It manages the configuration
@@ -275,6 +277,11 @@ public class JAPConfModuleSystem implements JAPHelpContext.IHelpContext
 					{
 						return a_helpContext;
 					}
+					
+					public Container getHelpExtractionDisplayContext()
+					{
+						return JAPConf.getInstance().getContentPane();
+					}
 				});
 			}
 		}
@@ -311,6 +318,11 @@ public class JAPConfModuleSystem implements JAPHelpContext.IHelpContext
 		return m_currentHelpContext.getHelpContext();
 	}
 
+	public Container getHelpExtractionDisplayContext() 
+	{
+		return JAPConf.getInstance().getContentPane();
+	}
+	
 	public AbstractJAPConfModule getCurrentModule()
 	{
 		return null;
@@ -442,5 +454,4 @@ public class JAPConfModuleSystem implements JAPHelpContext.IHelpContext
 			}
 		}
 	}
-
 }

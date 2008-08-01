@@ -30,14 +30,12 @@ package gui;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.IOException;
 import java.util.Hashtable;
 
 import java.awt.Frame;
 import java.awt.Point;
 import java.awt.Window;
 import javax.swing.JFileChooser;
-import javax.swing.JWindow;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.filechooser.FileFilter;
@@ -690,16 +688,6 @@ final public class JAPDll {
 				public void onShowMainWindow()
 				{
 					showWindowFromTaskbar();
-				}
-				public boolean isBrowserAvailable()
-				{
-					return JAPController.getInstance().getView().getBrowserCommand() != null;
-				}
-				public void onOpenBrowser()
-				{
-					String[] pFFCommand = JAPController.getInstance().getView().getBrowserCommand();
-					JAPController.getInstance().startPortableFirefox(pFFCommand);
-					
 				}
 
 				public void onShowHelp()

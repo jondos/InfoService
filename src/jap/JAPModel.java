@@ -27,31 +27,43 @@
  */
 package jap;
 
+import gui.GUIUtils;
+import gui.JAPDll;
+import gui.JAPMessages;
+import gui.dialog.JAPDialog;
+import gui.help.AbstractHelpFileStorageManager;
+import gui.help.IHelpModel;
+import gui.help.LocalHelpFileStorageManager;
+import jap.forward.JAPRoutingSettings;
+
 import java.awt.Dimension;
 import java.awt.Point;
-import java.util.Vector;
 import java.io.File;
 import java.math.BigInteger;
-
-import anon.crypto.JAPCertificate;
-import anon.infoservice.IProxyInterfaceGetter;
-import anon.infoservice.ProxyInterface;
-import anon.util.ResourceLoader;
-import anon.infoservice.ImmutableProxyInterface;
-import gui.JAPDll;
-import gui.dialog.JAPDialog;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Locale;
 import java.util.Observable;
-import jap.forward.JAPRoutingSettings;
-import anon.infoservice.IMutableProxyInterface;
-import anon.mixminion.mmrdescription.MMRList;
+import java.util.Vector;
 
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
-import gui.GUIUtils;
+
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 import platform.AbstractOS;
+import anon.crypto.JAPCertificate;
+import anon.infoservice.IMutableProxyInterface;
+import anon.infoservice.IProxyInterfaceGetter;
+import anon.infoservice.ImmutableProxyInterface;
+import anon.infoservice.ProxyInterface;
+import anon.mixminion.mmrdescription.MMRList;
+import anon.util.ClassUtil;
+import anon.util.ResourceLoader;
 
 /* This is the Model of All. It's a Singelton!*/
-public final class JAPModel extends Observable
+public final class JAPModel extends Observable implements IHelpModel
 {
 	public static final String DLL_VERSION_UPDATE = "dllVersionUpdate";
 	public static final String XML_REMIND_OPTIONAL_UPDATE = "remindOptionalUpdate";
@@ -69,10 +81,11 @@ public final class JAPModel extends Observable
 	public static final String XML_ATTR_HEIGHT = "height";
 	public static final String XML_ATTR_SAVE = "save";
 
-
 	public static final String AUTO_CHANGE_NO_RESTRICTION = "none";
 	public static final String AUTO_CHANGE_RESTRICT_TO_PAY = "pay";
 	public static final String AUTO_CHANGE_RESTRICT = "restrict";
+	
+	public static final String NO_HELP_STORAGE_MANAGER = "help_internal";
 
 	public static final int MAX_FONT_SIZE = 3;
 
@@ -86,6 +99,7 @@ public final class JAPModel extends Observable
 	public static final Integer CHANGED_AUTO_RECONNECT = new Integer(6);
 	public static final Integer CHANGED_CASCADE_AUTO_CHANGE = new Integer(7);
 	public static final Integer CHANGED_DENY_NON_ANONYMOUS = new Integer(8);
+	public static final Integer CHANGED_HELP_PATH = new Integer(9);
 
 	private static final int DIRECT_CONNECTION_INFOSERVICE = 0;
 	private static final int DIRECT_CONNECTION_PAYMENT = 1;
@@ -139,7 +153,7 @@ public final class JAPModel extends Observable
 	private Vector m_vecLookAndFeels = new Vector();
 	private LookAndFeelInfo[] m_systemLookAndFeels;
 	private Object LOOK_AND_FEEL_SYNC = new Object();
-
+	
 	private boolean m_bShowDialogFormat = false;
 
 	private int m_fontSize = 0;
@@ -181,6 +195,9 @@ public final class JAPModel extends Observable
 	
 	private boolean m_bStartPortableFirefox = true;
 	
+	private String m_helpPath = null;
+	private boolean m_bPortableHelp = false;
+	
 	private Dimension m_iconifiedSize;
 	private Dimension m_configSize;
 	private Dimension m_helpSize;
@@ -213,6 +230,8 @@ public final class JAPModel extends Observable
 
 	private BigInteger m_iDialogVersion=new BigInteger("-1");
 
+	private AbstractHelpFileStorageManager m_helpFileStorageManager;
+	
 	private JAPModel()
 	{
 		try
@@ -245,6 +264,16 @@ public final class JAPModel extends Observable
 				};
 			}
 		};
+		
+		if (ClassUtil.getJarFile() == null)
+		{
+//			build environment; use the browser to open the local help files
+			m_helpFileStorageManager =	new LocalHelpFileStorageManager();
+		}
+		else
+		{			
+			m_helpFileStorageManager = new JARHelpFileStorageManager();
+		}		
 	}
 
 	// m_Locale=Locale.getDefault();
@@ -893,17 +922,13 @@ public final class JAPModel extends Observable
 		buff.append("Config path: ");
 		buff.append(getConfigFile());
 		buff.append("\n");
-		String[] pFFCommand = JAPController.getInstance().getView().getBrowserCommand();
-		//s = JAPController.getInstance().getView().getBrowserCommand();
-		if (pFFCommand != null)
-		{
-			buff.append("Portable browser commandline: ");
-			for (int i = 0; i < pFFCommand.length; i++) {
-				buff.append(pFFCommand[i]+
-						((i != (pFFCommand.length-1)) ? " ":""));
-			}
-			buff.append("\n");
-		}
+		buff.append("Help path: ");
+		buff.append(getHelpPath());
+		buff.append("\n");
+		buff.append("Command line arguments: ");
+		buff.append("'" + JAPController.getInstance().getCommandlineArgs() + "'");
+		buff.append("\n");
+		
 		buff.append("HttpListenerPortNumber: ");
 		buff.append(m_HttpListenerPortNumber);
 		buff.append("\n");
@@ -1260,7 +1285,318 @@ public final class JAPModel extends Observable
 		return m_paymentPassword;
 	}
 
+	public synchronized String getHelpPath()
+	{
+		return m_helpPath != null ?
+				m_helpPath : AbstractOS.getInstance().getDefaultHelpPath();
+		
+	}
+	
+	public synchronized URL getHelpURL(String a_startDoc)
+	{
+		URL helpURL = null;
+		if(m_helpFileStorageManager != null)
+		{
+			if(isHelpPathDefined())
+			{
+				m_helpFileStorageManager.ensureMostRecentVersion(m_helpPath);
+				
+				try 
+				{
+					helpURL = new URL("file://" + m_helpPath + "/" +
+								m_helpFileStorageManager.getLocalisedHelpDir() + "/" + a_startDoc);
+				} 
+				catch (MalformedURLException e) 
+				{
+					LogHolder.log(LogLevel.WARNING, LogType.MISC, e);
+					return null;
+				}
+			}
+		}
+		return helpURL;
+	}
+	
+	public URL getHelpURL()
+	{
+		return getHelpURL("index.html");
+	}
+	
+	synchronized void initHelpPath(String helpPath)
+	{
+		if (m_bPortableHelp)
+		{
+			return;
+		}
+		
+		String initPathValidity = (helpPathValidityCheck(helpPath));
+		
+		if( initPathValidity.equals(AbstractHelpFileStorageManager.HELP_VALID) || 
+			initPathValidity.equals(AbstractHelpFileStorageManager.HELP_JONDO_EXISTS) ||
+			initPathValidity.equals(NO_HELP_STORAGE_MANAGER))
+		{
+			m_helpPath = helpPath;
+		}
+		else
+		{		
+			m_helpPath = null;
+		}
+	}
+	
+	public boolean isHelpInstalled()
+	{
+		if (m_helpFileStorageManager == null ||	m_helpFileStorageManager instanceof LocalHelpFileStorageManager)
+		{
+			return false;
+		}
+		return true;
+	}
+	
+	public synchronized void setHelpPath(File hpFile)
+	{
+		setHelpPath(hpFile, false);
+	}
+	
+	public synchronized void setHelpPath(File hpFile, boolean a_bPortable)
+	{	
+		String strCheck;
+		
+		if(hpFile == null)
+		{
+			resetHelpPath();
+		}
+		else
+		{
+			hpFile = new File(hpFile.getAbsolutePath());
+			if (hpFile.isFile())
+			{
+				/* This is for backwards compatibility with old portable
+				 * launchers for Windows. The xml file check is disabled for this
+				 * kind of installation. 
+				 */				
+				int index;
+				if ((index = hpFile.getPath().toUpperCase().indexOf((
+						AbstractHelpFileStorageManager.HELP_FOLDER + File.pathSeparator + "de" + 
+						File.pathSeparator + AbstractHelpFileStorageManager.HELP_FOLDER).toUpperCase())) >= 0 ||
+						(index = hpFile.getPath().toUpperCase().indexOf((
+								AbstractHelpFileStorageManager.HELP_FOLDER + File.pathSeparator + "en" +
+								File.pathSeparator + AbstractHelpFileStorageManager.HELP_FOLDER).toUpperCase())) >= 0)
+				{
+					if (index > 0)
+					{
+						hpFile = new File(hpFile.getPath().substring(0, index));
+					}
+					else
+					{
+						hpFile = null;
+					}
+				}
+				else
+				{
+//					get the parent directory as help path
 
+					hpFile = hpFile.getParentFile();	
+				}			
+				
+				if (hpFile != null && hpFile.isDirectory() && m_helpFileStorageManager != null)										
+				{								
+					strCheck = m_helpFileStorageManager.helpPathValidityCheck(hpFile.getPath(), true);
+					if (strCheck.equals(AbstractHelpFileStorageManager.HELP_VALID) ||
+						strCheck.equals(AbstractHelpFileStorageManager.HELP_JONDO_EXISTS))
+					{						
+						//deletes old help directory if it exists and create a new one
+						if (m_helpFileStorageManager.handleHelpPathChanged(
+								m_helpPath, hpFile.getPath(), true))
+						{
+							if (m_helpPath == null || !m_helpPath.equals(hpFile.getPath()))
+							{
+								m_helpPath = hpFile.getPath();
+								setChanged();
+							}							
+						}
+						else
+						{
+							resetHelpPath();
+						}
+					}
+					else
+					{
+						resetHelpPath();
+					}
+				}
+				else
+				{
+					resetHelpPath();
+				}
+			}
+			else
+			{
+				if (hpFile.getPath().toUpperCase().endsWith(AbstractHelpFileStorageManager.HELP_FOLDER.toUpperCase()) &&
+					hpFile.getParent() != null)
+				{					
+					File file = new File(hpFile.getParent()); 
+					if (file.isDirectory())
+					{
+						hpFile = file;
+					}
+				}
+				setHelpPath(hpFile.getPath());
+			}
+		}
+		
+		if (a_bPortable && m_helpPath != null)
+		{
+			m_bPortableHelp = true;
+		}
+		notifyObservers(CHANGED_HELP_PATH);		
+	}
+	
+	private synchronized void setHelpPath(String newHelpPath)
+	{
+		String strCheck;
+		
+		if(newHelpPath == null)
+		{
+			resetHelpPath();
+			return;
+		}
+		if(newHelpPath.equals(""))
+		{
+			resetHelpPath();
+			return;
+		}
+		
+		strCheck = helpPathValidityCheck(newHelpPath);
+		if (strCheck.equals(AbstractHelpFileStorageManager.HELP_VALID) ||
+			strCheck.equals(AbstractHelpFileStorageManager.HELP_JONDO_EXISTS))
+		{
+			String oldHelpPath = m_helpPath;
+			boolean helpPathChanged =
+						isHelpPathDefined() ? !m_helpPath.equals(newHelpPath) : true;
+			
+			if(helpPathChanged)
+			{
+				boolean storageLayerChanged = true;
+				if(m_helpFileStorageManager != null)
+				{
+						storageLayerChanged = m_helpFileStorageManager.handleHelpPathChanged(
+								oldHelpPath, newHelpPath, false);
+				}
+				if(storageLayerChanged)
+				{					
+					m_helpPath = newHelpPath;
+					setChanged();
+				}
+			}
+		}
+	}
+	
+	private synchronized void resetHelpPath()
+	{
+		String oldHelpPath = m_helpPath;
+		
+		if(oldHelpPath != null && !m_bPortableHelp)
+		{
+			if(m_helpFileStorageManager != null)
+			{
+				m_helpFileStorageManager.handleHelpPathChanged(oldHelpPath, null, false);
+			}
+			setChanged();
+			m_helpPath = null;
+		}	
+	}
+	
+	public boolean hasPortableHelp()
+	{
+		return m_bPortableHelp;
+	}
+	
+	/**
+	 * performs a validity check whether the specified path is a valid 
+	 * path for external installation of the help files.
+	 * @param helpPath the path of the parent directory where the help files should be installed 
+	 * @return a string that signifies a valid path or a key for a corresponding error message otherwise
+	 */
+	public synchronized String helpPathValidityCheck(String helpPath)
+	{
+		return (m_helpFileStorageManager != null) ?
+				m_helpFileStorageManager.helpPathValidityCheck(helpPath, false) : NO_HELP_STORAGE_MANAGER;		
+	}
+	
+	/**
+	 * performs a validity check whether the specified path is a valid 
+	 * path for external installation of the help files.
+	 * @param hpFile the parent directory where the help files should be installed 
+	 * @return a string that signifies a valid path or a key for a corresponding error message otherwise
+	 */
+	public synchronized String helpPathValidityCheck(File hpFile)
+	{
+		if(hpFile == null)
+		{
+			return JAPMessages.getString(AbstractHelpFileStorageManager.HELP_INVALID_NULL);
+		}
+		return helpPathValidityCheck(hpFile.getPath());
+	}
+	
+	public boolean isHelpChangeable()
+	{
+		return m_helpFileStorageManager != null &&
+			!(m_helpFileStorageManager instanceof LocalHelpFileStorageManager);
+	}
+	
+	/**
+	 * checks if a help Path is defined and a
+	 * valid help file installation can be found there.
+	 * @return true if and only if a help path not null is defined and 
+	 * 			comprises a valid help file installation
+	 */
+	public synchronized boolean isHelpPathDefined()
+	{			
+		boolean helpPathExists = m_helpPath != null;
+		
+		/* if no storageManager is defined: don't check if installation exists */
+		boolean helpInstallationExists = m_helpFileStorageManager != null ?
+			(m_helpFileStorageManager.helpInstallationExists(m_helpPath) &&
+			helpPathValidityCheck(m_helpPath).equals(AbstractHelpFileStorageManager.HELP_JONDO_EXISTS)) : 
+				helpPathExists;
+		
+		if(helpPathExists && !helpInstallationExists)
+		{
+			LogHolder.log(LogLevel.WARNING, LogType.MISC, "Help path "+m_helpPath+" configured but no valid help could be found!");
+			if (m_bPortableHelp)
+			{
+				m_bPortableHelp = false;
+				JAPModel.getInstance().setHelpPath(new File(m_helpPath), true);
+				helpInstallationExists = m_helpPath != null;
+			}
+			else
+			{
+				m_helpPath = null;
+				m_bPortableHelp = false;
+				setChanged();
+			}
+		}
+		
+		if (m_helpPath == null && m_helpFileStorageManager.helpInstallationExists(
+				AbstractOS.getInstance().getDefaultHelpPath()) &&
+				helpPathValidityCheck(AbstractOS.getInstance().getDefaultHelpPath()).equals(
+						AbstractHelpFileStorageManager.HELP_JONDO_EXISTS))
+		{
+			m_helpPath = AbstractOS.getInstance().getDefaultHelpPath();
+			helpInstallationExists = true;
+			setChanged();
+		}
+		
+		notifyObservers(CHANGED_HELP_PATH);
+			
+		return helpInstallationExists;							
+	}
+	
+	public Observable getHelpFileStorageObservable()
+	{
+		return (m_helpFileStorageManager != null) ? 
+				m_helpFileStorageManager.getStorageObservable() : null;
+	}
+	
 	public void setDLLupdate(boolean a_update) {
 		m_bUpdateDll = a_update;
     }
@@ -1404,5 +1740,4 @@ public final class JAPModel extends Observable
 		{
 			m_iDialogVersion = dialogVersion;
 		}
-
 }

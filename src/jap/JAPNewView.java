@@ -28,8 +28,9 @@
 package jap;
 
 import java.io.File;
-import java.io.IOException;
+
 import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -39,6 +40,7 @@ import java.util.Vector;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -94,13 +96,14 @@ import anon.pay.IMessageListener;
 import anon.pay.PayAccountsFile;
 import anon.pay.PayMessage;
 import anon.proxy.IProxyListener;
+import anon.util.ClassUtil;
 import anon.util.JobQueue;
 import anon.util.Util;
 import gui.CountryMapper;
 import gui.FlippingPanel;
 import gui.GUIUtils;
 import gui.JAPDll;
-import gui.JAPHelp;
+import gui.JAPHelpContext;
 import gui.JAPMessages;
 import gui.JAPProgressBar;
 import gui.MixDetailsDialog;
@@ -110,6 +113,7 @@ import gui.dialog.DialogContentPane;
 import gui.dialog.JAPDialog;
 import gui.dialog.JAPDialog.LinkedInformationAdapter;
 import gui.dialog.JAPDialog.Options;
+import gui.help.JAPHelp;
 import jap.forward.JAPRoutingMessage;
 import jap.forward.JAPRoutingRegistrationStatusObserver;
 import jap.forward.JAPRoutingServerStatisticsListener;
@@ -120,7 +124,6 @@ import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
 import update.JAPUpdateWizard;
-import javax.swing.BorderFactory;
 
 final public class JAPNewView extends AbstractJAPMainView implements IJAPMainView, ActionListener,
 	JAPObserver, Observer, IMessageListener
@@ -166,8 +169,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String MSG_ANTI_CENSORSHIP = JAPNewView.class.getName() + "_antiCensorship";
 
 	private static final String MSG_OBSERVABLE_EXPLAIN = JAPNewView.class.getName() + "_observableExplain";
-	private static final String MSG_OBSERVABLE_TITLE = JAPNewView.class.getName() + "_observableTitle";
-	private static final String MSG_EXPLAIN_NO_FIREFOX_FOUND = JAPNewView.class.getName() + "_explainNoFirefoxFound";
+	private static final String MSG_OBSERVABLE_TITLE = JAPNewView.class.getName() + "_observableTitle";	
 
 	private static final String MSG_LBL_ENCRYPTED_DATA =
 		JAPNewView.class.getName() + "_lblEncryptedData";
@@ -205,7 +207,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JAPNewView.class.getName() + "_meter09.gif",
 		JAPNewView.class.getName() + "_meter10.gif"
 	};
-
+	
 	private final Object FONT_UPDATE = new Object();
 	private boolean m_bFontsUpdated = false;
 	private final JLabel DEFAULT_LABEL = new JLabel();
@@ -221,6 +223,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	//private Icon[] meterIcons;
 	private JAPConf m_dlgConfig;
 	private Object LOCK_CONFIG = new Object();
+	private boolean m_bConfigActive = false;
 	private JAPViewIconified m_ViewIconified;
 	private Object SYNC_ICONIFIED_VIEW = new Object();
 	private boolean m_bIsIconified;
@@ -303,9 +306,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 	private int m_msgIDInsecure;
 
-	private String[] m_firefoxCommand; //the CLI command for re-opening firefox, usually just the path to the executable
-
-	public JAPNewView(String s, JAPController a_controller, String[] a_firefoxCommand)
+	public JAPNewView(String s, JAPController a_controller)
 	{
 		super(s, a_controller);
 		m_bIsSimpleView = (JAPModel.getDefaultView() == JAPConstants.VIEW_SIMPLIFIED);
@@ -316,7 +317,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_packetMixedJobs = new JobQueue("packet mixed update job queue");
 		m_lTrafficWWW = 0;
 		m_lTrafficOther = 0;
-		m_firefoxCommand = a_firefoxCommand;
 	}
 
 	public void create(boolean loadPay)
@@ -335,16 +335,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		// important to initialise for TinyL&F!!!
 		new SystrayPopupMenu(new SystrayPopupMenu.MainWindowListener()
 		{
-			public void onOpenBrowser()
-			{
-				m_Controller.startPortableFirefox(m_firefoxCommand);
-			}
-
-			public boolean isBrowserAvailable()
-			{
-				return (getBrowserCommand() != null);
-			}
-
 			public void onShowMainWindow()
 			{
 			}
@@ -374,16 +364,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					final SystrayPopupMenu popup = new SystrayPopupMenu(
 						new SystrayPopupMenu.MainWindowListener()
 					{
-						public void onOpenBrowser()
-						{
-							m_Controller.startPortableFirefox(m_firefoxCommand);
-						}
-
-						public boolean isBrowserAvailable()
-						{
-							return (getBrowserCommand() != null);
-						}
-
 						public void onShowMainWindow()
 						{
 							// do nothing
@@ -587,7 +567,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		constrVersion.insets = new Insets(0, 0, 0, 0);
 		m_pnlVersion.add(m_labelVersion, constrVersion);
 
-		if (m_Controller.isPortableMode())
+		if (m_Controller.isPortableMode() && AbstractOS.getInstance().isDefaultURLAvailable())
 		{
 			m_firefox = new JButton(GUIUtils.loadImageIcon("firefox.png", true, false));
 			m_firefox.setOpaque(false);
@@ -598,7 +578,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				public void actionPerformed(ActionEvent e)
 				{
-					m_Controller.startPortableFirefox(m_firefoxCommand);
+					AbstractOS.getInstance().openBrowser();	
 				}
 			});
 
@@ -703,7 +683,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		m_bttnReload.setSelectedIcon(tmpIcon);
 		m_bttnReload.setRolloverSelectedIcon(tmpIcon);
 		m_bttnReload.setPressedIcon(tmpIcon);
-		m_bttnReload.setDisabledIcon(GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true, false));
+		ImageIcon reloadDisabledIcon = GUIUtils.loadImageIcon(JAPConstants.IMAGE_RELOAD_DISABLED, true, false);
+		//if(reloadDisabledIcon != null)
+		//{
+		//	if( (reloadDisabledIcon.getImageLoadStatus() & MediaTracker.COMPLETE) != 0)
+		//	{
+				m_bttnReload.setDisabledIcon(reloadDisabledIcon);
+		//	}
+		//}
 		m_bttnReload.setBorder(new EmptyBorder(0, 0, 0, 0));
 		m_bttnReload.setFocusPainted(false);
 		m_bttnReload.setBorderPainted(true);
@@ -781,7 +768,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		c1 = new GridBagConstraints();
 		c1.anchor = GridBagConstraints.NORTHWEST;
 		p.setLayout(gbl1);
-		m_labelAnonymity = new JLabel(JAPMessages.getString("ngAnonymitaet"));
+		m_labelAnonymity = new JLabel(JAPMessages.getString("ngCascadeInfo"));
 		c1.insets = new Insets(0, 5, 0, 0);
 		p.add(m_labelAnonymity, c1);
 		
@@ -844,7 +831,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		{
 			public void mouseClicked(MouseEvent a_event)
 			{
-				JAPHelp.getInstance().getContextObj().setContext(HLP_ANONYMETER);
+				JAPHelp.getInstance().setContext(
+						JAPHelpContext.createHelpContext(HLP_ANONYMETER, JAPNewView.this));
 				JAPHelp.getInstance().setVisible(true);
 			}
 		});
@@ -1319,7 +1307,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		updateValues(true);
 		setOptimalSize();
 		GUIUtils.centerOnScreen(this);
-		GUIUtils.restoreLocation(this, JAPModel.getInstance().getMainWindowLocation());
+		GUIUtils.restoreLocation(this, JAPModel.getMainWindowLocation());
 
 		Database.getInstance(StatusInfo.class).addObserver(this);
 		Database.getInstance(JAPVersionInfo.class).addObserver(this);
@@ -1334,35 +1322,32 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		JAPModel.getInstance().addObserver(this);
 		JAPModel.getInstance().getRoutingSettings().addObserver(this);
 
-		JAPHelp.init(this, AbstractOS.getInstance(), AbstractOS.getInstance());
-		JAPHelp.getInstance().setLocationCenteredOnOwner();
-		JAPHelp.getInstance().resetAutomaticLocation(JAPModel.getInstance().isHelpWindowLocationSaved());
-		JAPHelp.getInstance().restoreLocation(JAPModel.getInstance().getHelpWindowLocation());
-		JAPHelp.getInstance().restoreSize(JAPModel.getInstance().getHelpWindowSize());
-
+		JAPHelp.init(this, JAPModel.getInstance());
+		if(JAPHelp.getHelpDialog() != null)
+		{
+			JAPHelp.getHelpDialog().setLocationCenteredOnOwner();
+			JAPHelp.getHelpDialog().resetAutomaticLocation(JAPModel.getInstance().isHelpWindowLocationSaved());
+			JAPHelp.getHelpDialog().restoreLocation(JAPModel.getInstance().getHelpWindowLocation());
+			JAPHelp.getHelpDialog().restoreSize(JAPModel.getInstance().getHelpWindowSize());
+		}
 		m_mainMovedAdapter = new ComponentMovedAdapter();
 		m_helpMovedAdapter = new ComponentMovedAdapter();
 		m_configMovedAdapter = new ComponentMovedAdapter();
 		addComponentListener(m_mainMovedAdapter);
-		JAPHelp.getInstance().addComponentListener(m_helpMovedAdapter);
-
+		if(JAPHelp.getHelpDialog() != null)
+		{
+			JAPHelp.getHelpDialog().addComponentListener(m_helpMovedAdapter);
+		}
 		//new GUIUtils.WindowDocker(this);
 
-
-		new Thread(new Runnable()
+		synchronized (LOCK_CONFIG)
 		{
-			public void run()
+			if (m_dlgConfig == null)
 			{
-				synchronized (LOCK_CONFIG)
-				{
-					if (m_dlgConfig == null)
-					{
-						m_dlgConfig = new JAPConf(JAPNewView.this, m_bWithPayment);
-						m_dlgConfig.addComponentListener(m_configMovedAdapter);
-					}
-				}
+				m_dlgConfig = new JAPConf(JAPNewView.this, m_bWithPayment);
+				m_dlgConfig.addComponentListener(m_configMovedAdapter);
 			}
-		}).start();
+		}
 	}
 
 	private FlippingPanel buildForwarderPanel()
@@ -2523,7 +2508,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private void showHelpWindow()
 	{
 		JAPHelp help = JAPHelp.getInstance();
-		help.getContextObj().setContext("index");
+		help.setContext(
+				JAPHelpContext.createHelpContext("index", this));
 		help.loadCurrentContext();
 	}
 
@@ -2560,26 +2546,56 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		}
 		//if (m_helpMovedAdapter.hasMoved())
 		{
-			JAPModel.getInstance().setHelpWindowLocation(JAPHelp.getInstance().getLocation());
+			if(JAPHelp.getHelpDialog() != null)
+			{
+				JAPModel.getInstance().setHelpWindowLocation(JAPHelp.getHelpDialog().getLocation());
+			}
 		}
-		JAPModel.getInstance().setHelpWindowSize(JAPHelp.getInstance().getSize());
+		if(JAPHelp.getHelpDialog() != null)
+		{
+			JAPModel.getInstance().setHelpWindowSize(JAPHelp.getHelpDialog().getSize());
+		}
 	}
 
-	public void showConfigDialog(String card, Object a_value)
+	public void showConfigDialog(final String card, final Object a_value)
 	{
+		if (m_bConfigActive)
+		{
+			return;
+		}
+		m_bConfigActive = true;
+		
 		synchronized (LOCK_CONFIG)
 		{
+			if (!m_bConfigActive)
+			{
+				return;
+			}
+			
 			if (m_dlgConfig == null)
 			{
 				Cursor c = getCursor();
 				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-				m_dlgConfig = new JAPConf(this, m_bWithPayment);
+				m_dlgConfig = new JAPConf(JAPNewView.this, m_bWithPayment);
 				m_dlgConfig.addComponentListener(m_configMovedAdapter);
 				setCursor(c);
 			}
-
+			m_dlgConfig.updateValues();
 			m_dlgConfig.selectCard(card, a_value);
 			m_dlgConfig.setVisible(true);
+			m_bConfigActive = false;
+		}
+	}
+	
+	public Component getCurrentView()
+	{
+		synchronized (LOCK_CONFIG)
+		{
+			if (m_dlgConfig != null && m_dlgConfig.isVisible())
+			{
+				return m_dlgConfig.getContentPane();
+			}
+			return this.getContentPane();
 		}
 	}
 
@@ -2605,11 +2621,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	public void doClickOnCascadeChooser()
 	{
 		m_comboAnonServices.showPopup();
-	}
-
-	public String[] getBrowserCommand()
-	{
-		return m_firefoxCommand;
 	}
 
 	public void onUpdateValues()
@@ -2773,7 +2784,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					//{
 					//	userProgressBar.setMaximum(currentStatus.getNrOfActiveUsers());
 					//}
-					m_labelAnonymityUser.setText(Integer.toString(currentStatus.getNrOfActiveUsers()));
+					m_labelAnonymityUser.setText(Integer.toString(currentStatus.getNrOfActiveUsers()) + 
+							(currentMixCascade.getMaxUsers() > 0 ? "  / " + currentMixCascade.getMaxUsers() : ""));
 					//strSystrayTooltip += "\n" + JAPMessages.getString("ngNrOfUsers") + ": " +
 					//currentStatus.getNrOfActiveUsers();
 					if (anonLevel >= StatusInfo.ANON_LEVEL_MIN)
@@ -3323,28 +3335,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		else
 		{
 			m_StatusPanel.removeStatusMsg(messageId.intValue());
-		}
-	}
-
-	public void showChooseFirefoxPathDialog()
-	{
-		if(JAPDialog.showYesNoDialog(this, JAPMessages.getString(MSG_EXPLAIN_NO_FIREFOX_FOUND)))
-		{
-			JFileChooser chooser = new JFileChooser();
-			if(chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
-			{
-				File f = chooser.getSelectedFile();
-				if(m_firefoxCommand == null)
-				{
-					m_firefoxCommand = new String[1];
-				}
-				m_firefoxCommand[0] = f.getAbsolutePath();
-				if(f != null)
-				{
-					m_Controller.startPortableFirefox(m_firefoxCommand);
-				}
-
-			}
 		}
 	}
 

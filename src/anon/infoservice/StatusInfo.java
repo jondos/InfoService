@@ -512,13 +512,23 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 			trafficString = " (high)";
 		}
 		htmlTableLine = htmlTableLine + "</TD><TD CLASS=\"name\">" + getId() +
-			"</TD><TD CLASS=\"status\" ALIGN=\"right\">" + Integer.toString(getNrOfActiveUsers()) +
+			"</TD><TD CLASS=\"status\" ALIGN=\"right\"><a href=\"/values/users/" + getId() + "\">" + 
+			Integer.toString(getNrOfActiveUsers()) + (ownMixCascade.getMaxUsers() > 0 ? " / " + ownMixCascade.getMaxUsers() : "") +
 			//"</TD><TD CLASS=\"status\" ALIGN=\"right\">" + Integer.toString(getCurrentRisk()) +
-			"</TD><TD CLASS=\"status\" ALIGN=\"center\">" + Integer.toString(getTrafficSituation()) +
+			"</a></TD><TD CLASS=\"status\" ALIGN=\"center\">" + Integer.toString(getTrafficSituation()) +
 			trafficString +
-
-			"</TD><TD CLASS=\"status\" ALIGN=\"right\">" + (perfEntry != null ? String.valueOf(perfEntry.getAverageDelay()) : "?") + " ms" +
-			"</TD><TD CLASS=\"status\" ALIGN=\"right\">" + (perfEntry != null ? String.valueOf(perfEntry.getAverageSpeed()) : "?") + " kbit/sec" +
+			"</TD><TD CLASS=\"status\" ALIGN=\"right\">" +
+			"<a href=\"/values/delay/" + getId() + "\">" + 
+			((perfEntry != null &&
+					System.currentTimeMillis() - perfEntry.getLastTestTime() < PerformanceEntry.LAST_TEST_DATA_TTL &&
+					perfEntry.getLastTestAverage(PerformanceEntry.DELAY) != 0) ? String.valueOf(perfEntry.getLastTestAverage(PerformanceEntry.DELAY)) : "?") +
+			" (" + ((perfEntry != null && perfEntry.getAverage(PerformanceEntry.DELAY) != 0) ? String.valueOf(perfEntry.getAverage(PerformanceEntry.DELAY)) : "?") + ") ms</a>" +
+			"</TD><TD CLASS=\"status\" ALIGN=\"right\">" +
+			"<a href=\"/values/speed/" + getId() + "\">" + 
+			((perfEntry != null  &&
+					System.currentTimeMillis() - perfEntry.getLastTestTime() < PerformanceEntry.LAST_TEST_DATA_TTL &&
+					perfEntry.getLastTestAverage(PerformanceEntry.SPEED) != 0) ? String.valueOf(perfEntry.getLastTestAverage(PerformanceEntry.SPEED)) : "?") + 
+			" (" + ((perfEntry != null && perfEntry.getAverage(PerformanceEntry.SPEED) != 0) ? String.valueOf(perfEntry.getAverage(PerformanceEntry.SPEED)): "?") + ") kbit/s</a>" +
 			"</TD><TD CLASS=\"status\" ALIGN=\"right\">" +
 			NumberFormat.getInstance(Constants.LOCAL_FORMAT).format(getMixedPackets()) +
 			"</TD><TD CLASS=\"status\">" + new Date(getLastUpdate()) +
