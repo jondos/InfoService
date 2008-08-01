@@ -80,7 +80,19 @@ public class WindowsOS extends AbstractOS
 		}
 	}
 
-	public String getConfigPath()
+	public String getDefaultHelpPath(String a_applicationName)
+	{
+		String dir = getAllUsersProfile(a_applicationName);
+		
+		if (dir == null)
+		{
+			dir = super.getDefaultHelpPath(a_applicationName);
+		}
+		
+		return dir;
+	}
+	
+	public String getConfigPath(String a_applicationName)
 	{
 		String vendor = System.getProperty("java.vendor", "unknown");
 		String dir = "";
@@ -117,11 +129,53 @@ public class WindowsOS extends AbstractOS
 		}
 		else
 		{
-			dir = System.getProperty("user.home", ".");
+			dir = getAllUsersProfile(a_applicationName);
+			if (dir == null)
+			{
+				dir = System.getProperty("user.home", ".");
+			}
 		}
 
 
 		return dir + File.separator;
 	}
-
+	
+	private String getAllUsersProfile(String a_applicationName)
+	{
+		if (a_applicationName == null)
+		{
+			throw new IllegalArgumentException("Application name is null!");
+		}
+		
+		String dirAllUsers = null;
+		File applicationDir;
+		
+		
+		try
+		{
+			dirAllUsers = System.getenv("ALLUSERSPROFILE");
+		}
+		catch (SecurityException a_e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.MISC, a_e);
+		}
+		
+		if (dirAllUsers != null && dirAllUsers.trim().length() > 0)
+		{
+			dirAllUsers += "\\Application Data\\" + a_applicationName;
+			applicationDir = new File(dirAllUsers + File.separator);
+			if (!applicationDir.exists() && !applicationDir.mkdir())
+			{
+				LogHolder.log(LogLevel.ERR, LogType.MISC,
+						"Could not create all users profile directory: " + dirAllUsers);
+				dirAllUsers = null;
+			}
+		}
+		else
+		{
+			dirAllUsers = null;
+		}
+		
+		return dirAllUsers;
+	}
 }
