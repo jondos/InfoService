@@ -82,7 +82,6 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		Node elemCurrentData = XMLUtil.getFirstChildByName(a_entry, XML_ELEMENT_CURRENT_HOURLY_DATA);
 		if(elemCurrentData == null)
 		{
-			System.out.println(XMLUtil.toString(a_entry));
 			throw new XMLParseException(XML_ELEMENT_NAME + ": Could not find node " + XML_ELEMENT_CURRENT_HOURLY_DATA);
 		}
 		
@@ -484,7 +483,7 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		public static final String XML_ELEMENT_VALUES = "Values";
 		public static final String XML_ELEMENT_VALUE = "Value";
 		
-		public static final long DEFAULT_TIMEFRAME = 30 * 60 * 1000; // 30 minutes
+		public static final long DEFAULT_TIMEFRAME = 60 * 60 * 1000; // 60 minutes
 		
 		public long m_timeFrame;
 		public int m_attribute;
