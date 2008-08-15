@@ -630,7 +630,7 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 			
 			for(int i = 0; i < limit; i++)
 			{
-				vec.remove(i);
+				vec.removeElement(i);
 			}
 			
 			if(vec.elementAt(0) != null)
