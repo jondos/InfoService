@@ -474,7 +474,7 @@ final public class JAPDll {
 		JAPDialog.showMessageDialog(JAPController.getInstance().getViewWindow(),
 									JAPMessages.getString(MSG_DLL_UPDATE, "'" + JAP_DLL_32bit + "'"));
 		//close JAP
-		JAPController.getInstance().goodBye(false);
+		JAPController.goodBye(false);
 	}
 
 	/**

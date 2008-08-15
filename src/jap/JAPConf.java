@@ -35,7 +35,6 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
 
-import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -49,7 +48,6 @@ import java.awt.event.WindowListener;
 import java.awt.event.WindowEvent;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -58,18 +56,13 @@ import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
-import anon.infoservice.ImmutableListenerInterface;
-import anon.infoservice.ListenerInterface;
-import anon.infoservice.ProxyInterface;
 import anon.infoservice.MixCascade;
-import gui.JAPJIntField;
 import gui.JAPMessages;
 import gui.JAPMultilineLabel;
 import gui.dialog.JAPDialog;
@@ -82,7 +75,6 @@ import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import java.awt.Dimension;
-import gui.GUIUtils;
 import anon.pay.PayAccount;
 
 final public class JAPConf extends JAPDialog implements ActionListener, Observer, WindowListener
@@ -108,6 +100,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 	final static public String TOR_TAB = "TOR_TAB";
 	final static public String DEBUG_TAB = "DEBUG_TAB";
 	final static public String PAYMENT_TAB = "PAYMENT_TAB";
+	final static public String HTTP_FILTER_TAB = "HTTP_FILTER_TAB";
 
 	/**
 	 * This constant is a symbolic name for accessing the forwarding client configuration tab.
@@ -206,6 +199,9 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 			m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfForwardingServer(),
 												  FORWARDING_SERVER_TAB);
 			m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfCert(), CERT_TAB);
+			
+			// will be added later, just a template for now
+			//m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfHTTPFilter(), HTTP_FILTER_TAB);
 			DefaultMutableTreeNode debugNode =
 				m_moduleSystem.addComponent(rootNode, m_pMisc, "ngTreeDebugging", DEBUG_TAB, "debugging");
 			if (JAPModel.getInstance().isForwardingStateModuleVisible())
