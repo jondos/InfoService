@@ -1605,9 +1605,13 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				m_trustModelCopy.setName(m_filterNameField.getText());
 			
 			// Display a warning if the new model won't have any trusted cascades
-			if(m_trustModelCopy.hasTrustedCascades() || JAPDialog.showYesNoDialog(m_filterPanel, JAPMessages.getString(MSG_EXPLAIN_NO_CASCADES)))
+			if(m_trustModelCopy.hasTrustedCascades())
 			{
 				TrustModel.getCurrentTrustModel().copyFrom(m_trustModelCopy);
+			}
+			else
+			{
+				JAPDialog.showWarningDialog(m_filterPanel, JAPMessages.getString(MSG_EXPLAIN_NO_CASCADES));
 			}
 			
 		}
