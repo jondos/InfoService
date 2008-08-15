@@ -28,6 +28,7 @@
 package anon.infoservice;
 
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.security.SignatureException;
 
@@ -524,16 +525,62 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 			((perfEntry != null &&
 					System.currentTimeMillis() - perfEntry.getLastTestTime() < PerformanceEntry.LAST_TEST_DATA_TTL &&
 					perfEntry.getLastTestAverage(PerformanceEntry.DELAY) != 0) ? String.valueOf(perfEntry.getLastTestAverage(PerformanceEntry.DELAY)) : "?") +
-			" (" + ((perfEntry != null && perfEntry.getAverage(PerformanceEntry.DELAY) != 0) ? String.valueOf(perfEntry.getAverage(PerformanceEntry.DELAY)) : "?") + ") ms</a>" +
+			" (" + ((perfEntry != null && perfEntry.getAverage(PerformanceEntry.DELAY) != 0) ? String.valueOf(perfEntry.getAverage(PerformanceEntry.DELAY)) : "?") + ") " +
+			"[";
+		
+			long delayBound;
+			if (perfEntry == null)
+			{
+				delayBound = -1;
+			}
+			else
+			{
+				delayBound = perfEntry.getBound(PerformanceEntry.DELAY);
+			}
+		
+			if(delayBound == Long.MAX_VALUE)
+			{
+				htmlTableLine += "> " + PerformanceEntry.BOUNDARIES[PerformanceEntry.DELAY][PerformanceEntry.BOUNDARIES[PerformanceEntry.DELAY].length - 2];
+			}
+			else
+			{
+				htmlTableLine += delayBound;
+			}
+		
+			htmlTableLine += "] ms</a>" +
 			"</TD><TD CLASS=\"status\" ALIGN=\"right\">" +
 			"<a href=\"/values/speed/" + getId() + "\">" + 
 			((perfEntry != null  &&
 					System.currentTimeMillis() - perfEntry.getLastTestTime() < PerformanceEntry.LAST_TEST_DATA_TTL &&
 					perfEntry.getLastTestAverage(PerformanceEntry.SPEED) != 0) ? String.valueOf(perfEntry.getLastTestAverage(PerformanceEntry.SPEED)) : "?") + 
-			" (" + ((perfEntry != null && perfEntry.getAverage(PerformanceEntry.SPEED) != 0) ? String.valueOf(perfEntry.getAverage(PerformanceEntry.SPEED)): "?") + ") kbit/s</a>" +
+			" (" + ((perfEntry != null && perfEntry.getAverage(PerformanceEntry.SPEED) != 0) ? String.valueOf(perfEntry.getAverage(PerformanceEntry.SPEED)): "?") + ") " +
+					"[";
+			
+			long speedBound;
+			if (perfEntry == null)
+			{
+				speedBound = -1;
+			}
+			else
+			{
+				speedBound = perfEntry.getBound(PerformanceEntry.SPEED);
+			}
+			
+			
+			if(speedBound == 0)
+			{
+				htmlTableLine += "< " + PerformanceEntry.BOUNDARIES[PerformanceEntry.SPEED][1];
+			}
+			else
+			{
+				htmlTableLine += speedBound;
+			}
+
+			htmlTableLine += "] kbit/s</a>" +
 			"</TD><TD CLASS=\"status\" ALIGN=\"right\">" +
 			NumberFormat.getInstance(Constants.LOCAL_FORMAT).format(getMixedPackets()) +
-			"</TD><TD CLASS=\"status\">" + new Date(getLastUpdate()) +
+			"</TD><TD CLASS=\"status\">" + 
+			new SimpleDateFormat("HH:mm:ss").format(new Date(getLastUpdate())) +
 			"</TD></TR>";
 		return htmlTableLine;
 	}

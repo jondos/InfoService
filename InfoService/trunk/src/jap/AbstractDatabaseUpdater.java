@@ -28,13 +28,13 @@
 package jap;
 
 import java.util.Enumeration;
-import java.util.Observable;
 import java.util.Hashtable;
 
 import anon.util.Updater;
 import anon.infoservice.AbstractDatabaseEntry;
 import anon.infoservice.Database;
 import anon.infoservice.MixCascade;
+import anon.infoservice.PerformanceInfo;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -78,7 +78,7 @@ public abstract class AbstractDatabaseUpdater extends Updater
 			}
 			public boolean isUpdateDisabled()
 			{
-				return JAPModel.getInstance().isInfoServiceDisabled();
+				return JAPModel.isInfoServiceDisabled();
 			}
 		});
 	}
@@ -213,6 +213,10 @@ public abstract class AbstractDatabaseUpdater extends Updater
 			updated = doCleanup(newEntries) || updated;
 
 			if ((getUpdatedClass() == MixCascade.class) && updated)
+			{
+				JAPController.getInstance().notifyJAPObservers();
+			}
+			else if ((getUpdatedClass() == PerformanceInfo.class) && updated)
 			{
 				JAPController.getInstance().notifyJAPObservers();
 			}
