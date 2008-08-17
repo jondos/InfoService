@@ -361,7 +361,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 				if (SwingUtilities.isRightMouseButton(a_event) || a_event.isPopupTrigger())
 				{
-
 					final SystrayPopupMenu popup = new SystrayPopupMenu(
 						new SystrayPopupMenu.MainWindowListener()
 					{
@@ -390,7 +389,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					popup.show(JAPNewView.this,
 							   new Point(a_event.getX() + getLocation().x,
 										 a_event.getY() + getLocation().y));
-
 				}
 				else if (a_event.getClickCount() == 2)
 				{
@@ -2924,9 +2922,9 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 				else if(value == Long.MAX_VALUE)
 				{
-					m_labelDelay.setText("> " + JAPUtil.formatKbitPerSecValueWithUnit(
+					m_labelDelay.setText("> " + 
 							PerformanceEntry.BOUNDARIES[PerformanceEntry.DELAY][
-							PerformanceEntry.BOUNDARIES[PerformanceEntry.DELAY].length - 2]));
+							PerformanceEntry.BOUNDARIES[PerformanceEntry.DELAY].length - 2] + " ms");
 				}
 				else
 				{
