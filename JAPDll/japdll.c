@@ -32,6 +32,7 @@
 
 // Fügen Sie hier Ihre Header-Dateien ein
 #include <windows.h>
+#include <shellapi.h>
 #define NOTIFYICONDATA_SIZE NOTIFYICONDATA_V1_SIZE 
 
 #include "japdll_jni.h"
@@ -159,11 +160,12 @@ BOOL MyChangeWindowMessageFilter(UINT message, DWORD dwFlag)
 	hDLL = LoadLibrary("user32");
 	if (hDLL != NULL)
 	{
-	   fChangeWindowMessageFilter = (LPChangeWindowMessageFilter)GetProcAddress(hDLL, "ChangeWindowMessageFilter");
+	   fChangeWindowMessageFilter = 
+		   (LPChangeWindowMessageFilter)GetProcAddress(hDLL, "ChangeWindowMessageFilter");
 	   if (fChangeWindowMessageFilter!=NULL)
-				{
-					retVal = fChangeWindowMessageFilter(message, dwFlag);
-				}
+		{
+			retVal = fChangeWindowMessageFilter(message, dwFlag);
+		}
 		  // handle the error
 		  FreeLibrary(hDLL);
 	}
@@ -602,6 +604,42 @@ JNIEXPORT void JNICALL Java_gui_JAPDll_showWindowFromTaskbar_1dll
   (JNIEnv * env, jclass c) 
 {
 	ShowWindowFromTaskbar(FALSE);
+}
+#pragma warning(default:4100)
+
+#pragma warning(disable:4100) //unref parameters
+ JNIEXPORT jboolean JNICALL Java_gui_JAPDll_shellExecute_1dll( 
+	 JNIEnv *env, jclass c, jstring command, jstring parameters , jboolean a_bAsAdmin)
+
+{
+	const char *cmd = (*env)->GetStringUTFChars( env, command, NULL ) ;
+	const char *param = (*env)->GetStringUTFChars( env, parameters, NULL ) ;
+
+	SHELLEXECUTEINFO shExecInfo;
+	BOOL result;
+
+    shExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
+    shExecInfo.fMask = 0;
+    shExecInfo.hwnd = NULL;
+	if (a_bAsAdmin)
+	{
+		shExecInfo.lpVerb = "runas";
+	}
+	else
+	{
+		shExecInfo.lpVerb = NULL;
+	}
+    shExecInfo.lpFile = (*env)->GetStringUTFChars(env, command, NULL );
+    shExecInfo.lpParameters = (*env)->GetStringUTFChars(env, parameters, NULL );
+    shExecInfo.lpDirectory = NULL;
+    shExecInfo.nShow = SW_NORMAL;
+
+	result = ShellExecuteEx(&shExecInfo);
+
+	(*env)->ReleaseStringUTFChars(env, command, cmd);
+	(*env)->ReleaseStringUTFChars(env, parameters, param);
+
+     return (jboolean)result;
 }
 #pragma warning(default:4100)
 
