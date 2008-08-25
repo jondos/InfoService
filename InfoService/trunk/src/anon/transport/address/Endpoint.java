@@ -67,7 +67,7 @@ public class Endpoint {
 
 	/**
 	 * Versucht ausgehend von der uebergeben URN eine neue Instanz von
-	 * {@link Endpoint} zu erstellen, wobei Identfier und Paramter gemaeß der URN
+	 * {@link Endpoint} zu erstellen, wobei Identfier und Paramter gemaess der URN
 	 * bestimmt sind.
 	 * 
 	 * @param a_theURN

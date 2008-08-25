@@ -1,7 +1,7 @@
 package anon.transport.connection;
 
 /**
- * Konkretisierung von {@link IConnection}, bei welchem die Übertragung von
+ * Konkretisierung von {@link IConnection}, bei welchem die Uebertragung von
  * Daten ueber bidirektional und stoßweise in Form von Datenblocken beliebiger
  * Laenge (chunks) erfolgt.
  * <p>

@@ -43,7 +43,7 @@ public class ChunkConnectionAdapter implements IStreamConnection {
 	private static final byte EOF_PACKET = -1;
 
 	/**
-	 * Die Basisverbindung, welche zur Übertragung der eigentlichen Daten
+	 * Die Basisverbindung, welche zur Uebertragung der eigentlichen Daten
 	 * genutzt wird
 	 */
 	private IChunkConnection m_underliningConnection;
@@ -208,7 +208,7 @@ public class ChunkConnectionAdapter implements IStreamConnection {
 		}
 
 		/**
-		 * Fuegt das Übergebene Byte in den internen Buffer ein und uebertraegt
+		 * Fuegt das Uebergebene Byte in den internen Buffer ein und uebertraegt
 		 * diesen, falls er dadurch erschoepft ist.
 		 */
 		public void write(int b) throws IOException {
@@ -227,7 +227,7 @@ public class ChunkConnectionAdapter implements IStreamConnection {
 		}
 
 		/**
-		 * Veranlaßt die sofortige Übertragung des Buffers. Wenn es sich bei dem
+		 * Veranlaßt die sofortige Uebertragung des Buffers. Wenn es sich bei dem
 		 * aktuellen Paket um das letzte des Stroms handelt, wird diese
 		 * zusaetzlich noch als geschlossen markiert.
 		 */
