@@ -50,7 +50,7 @@ public class Endpoint {
 	 */
 	public static String toURN(IAddress a_address) {
 		String identifier = a_address.getTransportIdentifier();
-		StringBuilder builder = new StringBuilder();
+		StringBuffer builder = new StringBuffer();
 		builder.append("urn:endpoint:");
 		builder.append(identifier);
 		AddressParameter[] parameters = a_address.getAllParameters();

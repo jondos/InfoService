@@ -1,8 +1,6 @@
 package anon.transport.connection;
 
 import java.io.IOException;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import logging.LogHolder;
 import logging.LogLevel;
