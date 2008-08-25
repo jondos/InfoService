@@ -213,11 +213,16 @@ public class JAPRoutingEstablishForwardedConnectionDialog
 		 * successful -> in the other case, we show the
 		 * fetch-captcha step again in the next while loop
 		 */
-		MixCascade selectedMixCascade = showConfigClientDialogStep2(connectionOffer);
+		//MixCascade 
+		MixCascade selectedMixCascade=JAPController.getInstance().getCurrentMixCascade(); //check if we can use a self defined cascade hopefully given on the command line...
+		if(selectedMixCascade==null || !selectedMixCascade.isUserDefined()) //use a self defined cascade hopefully given on the command line...
+			{
+				selectedMixCascade = showConfigClientDialogStep2(connectionOffer);
+			}
 		if (selectedMixCascade == null) return; 
 		/*
 		 * the user has selected a mixcascade -> announce that
-		 * cascade to the forwarder; if ther user pressed
+		 * cascade to the forwarder; if there user pressed
 		 * cancel, we show the fetch-captcha step again in the
 		 * next while loop
 		 */
