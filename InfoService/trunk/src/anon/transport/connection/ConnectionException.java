@@ -14,7 +14,7 @@ public class ConnectionException extends Exception {
 	 * Erstellt eine Verbindungsausnahme, auf Basis einer anderen Ausnahme.
 	 */
 	public ConnectionException(Throwable cause) {
-		super(cause);
+		super((cause==null ? null : cause.toString()) );
 	}
 
 	/**
