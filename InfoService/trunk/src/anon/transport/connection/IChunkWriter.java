@@ -1,6 +1,6 @@
 package anon.transport.connection;
 
-import java.io.Closeable;
+import java.io.IOException;
 import java.io.OutputStream;
 
 /**
@@ -19,7 +19,7 @@ import java.io.OutputStream;
  * erfolgen, weshalb keine notwendigkeit fuer eine {@link OutputStream#flush()}
  * aehnliche Methode besteht.
  */
-public interface IChunkWriter extends Closeable {
+public interface IChunkWriter {
 
 	/**
 	 * Versucht den uebergeben Chunk in den Kanal einzuspeisen und somit zum
@@ -32,5 +32,7 @@ public interface IChunkWriter extends Closeable {
 	 *            zu uebertragene Chunk
 	 */
 	void writeChunk(byte[] a_chunk) throws ConnectionException;
+	
+	void close()  throws IOException;
 
 }
