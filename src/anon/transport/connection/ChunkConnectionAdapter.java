@@ -159,7 +159,7 @@ public class ChunkConnectionAdapter implements IStreamConnection {
 		}
 
 		/**
-		 * Schließt den Strom und den zugrundelegenden Reader
+		 * Schliesst den Strom und den zugrundelegenden Reader
 		 */
 		public void close() throws IOException {
 			m_state = ChunkConnectionAdapter.StreamState_CLOSE;
@@ -176,7 +176,7 @@ public class ChunkConnectionAdapter implements IStreamConnection {
 	private static class ChunkOutputStream extends OutputStream {
 
 		/**
-		 * Die Groeße des Buffers und somit auch die Maximalanzahl der in einem
+		 * Die Groesse des Buffers und somit auch die Maximalanzahl der in einem
 		 * Rutsch uebertragen Bytes.
 		 */
 		private final static int BUFFER_SIZE = 1000;
@@ -227,7 +227,7 @@ public class ChunkConnectionAdapter implements IStreamConnection {
 		}
 
 		/**
-		 * Veranlaßt die sofortige Uebertragung des Buffers. Wenn es sich bei dem
+		 * Veranlasst die sofortige Uebertragung des Buffers. Wenn es sich bei dem
 		 * aktuellen Paket um das letzte des Stroms handelt, wird diese
 		 * zusaetzlich noch als geschlossen markiert.
 		 */
@@ -257,7 +257,7 @@ public class ChunkConnectionAdapter implements IStreamConnection {
 		}
 
 		/**
-		 * Schließt den Strom und den zugrundeliegenen Writer und uebertraegt
+		 * Schliesst den Strom und den zugrundeliegenen Writer und uebertraegt
 		 * zuvor noch den Inhalt des Buffer.
 		 */
 		public void close() throws IOException {
@@ -328,8 +328,8 @@ public class ChunkConnectionAdapter implements IStreamConnection {
 	}
 
 	/**
-	 * Schließt die Verbindung in dem nacheinander der Ein- und Ausgabestrom
-	 * geschlossen werden und abschließend die zugrundelegende Verbindung.
+	 * Schliesst die Verbindung in dem nacheinander der Ein- und Ausgabestrom
+	 * geschlossen werden und abschliessend die zugrundelegende Verbindung.
 	 */
 	public void close() throws IOException {
 		// try to close the streams
