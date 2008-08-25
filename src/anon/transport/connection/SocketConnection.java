@@ -72,12 +72,12 @@ public class SocketConnection implements IStreamConnection {
 	public SocketConnection(Socket a_underlyingSocket) {
 		// we don't deal with closed socket, as they don't
 		// represent a connection
-		if (a_underlyingSocket.isClosed()) {
+		/*if (a_underlyingSocket.isClosed()) {
 			setCLOSE();
 			LogHolder.log(LogLevel.WARNING, LogType.TRANSPORT,
 					"Socket was allready close when creating Connection");
 			return;
-		}
+		}*/
 
 		m_localAddress = new TcpIpAddress(a_underlyingSocket.getLocalAddress(),
 				a_underlyingSocket.getLocalPort());
