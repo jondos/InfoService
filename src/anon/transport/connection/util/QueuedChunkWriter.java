@@ -75,7 +75,7 @@ public class QueuedChunkWriter implements IChunkWriter {
 		Thread caller = Thread.currentThread();
 		try {
 			// save caller for interrupting when closed
-			m_waitingThreads.add(caller);
+			m_waitingThreads.addElement(caller);
 			if (m_isClosed)
 				throw new ConnectionException("Reader allready closed");
 			// after the previous step, we assume that the writer is open.
@@ -96,7 +96,7 @@ public class QueuedChunkWriter implements IChunkWriter {
 			// thread from the list.
 			// every thread can only ones enter this method and should
 			// always be there.
-			boolean removed = m_waitingThreads.remove(caller);
+			boolean removed = m_waitingThreads.removeElement(caller);
 //			assert removed : "Unable to remove caller Thread";
 		}
 

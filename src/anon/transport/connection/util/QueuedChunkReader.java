@@ -92,7 +92,7 @@ public class QueuedChunkReader implements IChunkReader
 				try
 					{
 						// save caller for interrupting when closed
-						m_waitingThreads.add(caller);
+						m_waitingThreads.addElement(caller);
 						if (m_isClosed) throw new ConnectionException(
 								"Reader allready closed");
 						// after the previous step, we assume that the reader is open.
@@ -118,7 +118,7 @@ public class QueuedChunkReader implements IChunkReader
 						// thread from the list.
 						// every thread can only ones enter this method and should
 						// always be there.
-						boolean removed = m_waitingThreads.remove(caller);
+						boolean removed = m_waitingThreads.removeElement(caller);
 						// assert removed : "Unable to remove caller Thread";
 						// should we also close the reader?
 						if (m_isTearDown && m_readingQueue.isEmpty()) try
