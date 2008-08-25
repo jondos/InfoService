@@ -230,7 +230,7 @@ public class ForwardServerManager {
 	          LogHolder.log(LogLevel.DEBUG, LogType.NET, "Establishing ServerManager with ID '" + serverManagerId.toString() + "' was successful.");
 	        }
 	        catch (Exception e) {
-	          LogHolder.log(LogLevel.EXCEPTION, LogType.NET, "Error adding Servermanager of Type "+ a_manager.getClass().getSimpleName() +
+	          LogHolder.log(LogLevel.EXCEPTION, LogType.NET, "Error adding Servermanager of Type "+ a_manager.getClass().getName() +
 	        		  ". Reason: " + e.toString());
 	        }
 	      }

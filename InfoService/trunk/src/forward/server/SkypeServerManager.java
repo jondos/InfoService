@@ -100,7 +100,7 @@ public class SkypeServerManager implements IServerManager {
 	 * <p>
 	 * Da die Skype API das entfernen einer registrierten Applikation nicht
 	 * vorsieht, kann nur der listener entfernt werden. Um die Moeglichkeit des
-	 * Kontaktierens vollständig auszuschließen, muesste Skype geschlossen werden.
+	 * Kontaktierens vollstaendig auszuschliessen, muesste Skype geschlossen werden.
 	 */
 	public synchronized void shutdown() {
 		if (!m_isListning)
