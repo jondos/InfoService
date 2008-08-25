@@ -23,7 +23,7 @@ import com.skype.StreamListener;
  * Implementierung einer Chunk basierten Verbindung, welche Skype fuer den
  * Transport der Daten verwendet.
  * <p>
- * Änderungen des internen Zustandes (offen, geschlossen) von aussen, sprich
+ * Aenderungen des internen Zustandes (offen, geschlossen) von aussen, sprich
  * durch Skype oder den Kommunikationspartner werden wahrgenommen und
  * entsprechend ausgewertet (@see {@link #m_listner}).
  */

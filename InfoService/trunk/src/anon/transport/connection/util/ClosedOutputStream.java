@@ -42,7 +42,7 @@ public class ClosedOutputStream extends OutputStream {
 
 	/**
 	 * Gibt den geschlossen {@link OutputStream} zurueck, welcher bei erneuten
-	 * Schließen mittels {@link #close()} eine Ausnahme wirft.
+	 * Schliessen mittels {@link #close()} eine Ausnahme wirft.
 	 */
 	public static OutputStream getNotCloseable() {
 		return Holder.neverCloseable;
@@ -50,14 +50,14 @@ public class ClosedOutputStream extends OutputStream {
 
 	/**
 	 * Gibt den geschlossenen {@link OutputStream} zurueck, welcher erneutes
-	 * Schließen mittels {@link #close()} gestattet.
+	 * Schliessen mittels {@link #close()} gestattet.
 	 */
 	public static OutputStream getMultibleCloseable() {
 		return Holder.multibleCloseable;
 	}
 
 	/**
-	 * Erstellt einen geschlossen Eingabestrom, welcher bei erneuten schließen
+	 * Erstellt einen geschlossen Eingabestrom, welcher bei erneuten schliessen
 	 * mittels {@link #close()} eine Ausnahme wirft.
 	 */
 	private ClosedOutputStream() {
@@ -68,7 +68,7 @@ public class ClosedOutputStream extends OutputStream {
 	 * Erstellt einen bereits geschlossenen Ausgabestrom.
 	 * 
 	 * @param a_multibleClose
-	 *            Bestimmt ob der Versuch den Strom erneut zu schließen eine
+	 *            Bestimmt ob der Versuch den Strom erneut zu schliessen eine
 	 *            Ausnahme verursacht.
 	 */
 	private ClosedOutputStream(boolean a_multibleClose) {

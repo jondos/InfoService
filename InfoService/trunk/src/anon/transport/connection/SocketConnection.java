@@ -26,7 +26,7 @@ import logging.LogType;
  * Deswegen ist es wichtig SocketConnection nur in Verbindung mit offenen und
  * verbunden Sockets zu verwenden.
  * 
- * Außerdem wird angennomme das sich Ein- und Ausgabestrom des Sockets nicht
+ * Ausserdem wird angennomme das sich Ein- und Ausgabestrom des Sockets nicht
  * aendern.
  */
 public class SocketConnection implements IStreamConnection {
