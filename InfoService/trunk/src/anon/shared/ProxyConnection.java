@@ -32,7 +32,14 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
 
-final public class ProxyConnection
+import anon.transport.address.Endpoint;
+import anon.transport.address.IAddress;
+import anon.transport.address.TcpIpAddress;
+import anon.transport.connection.ConnectionException;
+import anon.transport.connection.IStreamConnection;
+
+
+final public class ProxyConnection implements IStreamConnection
 {
 
 	private Socket m_ioSocket;
@@ -103,6 +110,38 @@ final public class ProxyConnection
 		}
 		catch (Exception e)
 		{}
+	}
+
+	public int getCurrentState() {
+		if (m_ioSocket.isClosed()) return IStreamConnection.ConnectionState_CLOSE;
+		return IStreamConnection.ConnectionState_OPEN;
+	}
+
+	public int getTimeout() throws ConnectionException {
+		
+		try {
+			return m_ioSocket.getSoTimeout();
+		} catch (SocketException e) {
+			throw new ConnectionException(e);
+		}
+	}
+
+	public void setTimeout(int value) throws ConnectionException {
+		try {
+			m_ioSocket.setSoTimeout(value);
+		} catch (SocketException e) {
+			throw new ConnectionException(e);
+		}
+	}
+
+	public IAddress getLocalAddress() {
+		return new TcpIpAddress(m_ioSocket.getLocalAddress(),
+				m_ioSocket.getLocalPort());
+	}
+
+	public IAddress getRemoteAddress() {
+		return new TcpIpAddress(m_ioSocket.getInetAddress(),
+				m_ioSocket.getPort());
 	}
 
 }
