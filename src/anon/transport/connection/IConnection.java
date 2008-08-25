@@ -11,7 +11,7 @@ import anon.transport.address.IAddress;
  * zugehoerenden Primitive.
  * 
  * Dieses Interface ist als "abstract" anzusehen, in dem Sinne, das die
- * fundamentalen Primitive zum Empfang und der Übertragung von Daten erst in
+ * fundamentalen Primitive zum Empfang und der Uebertragung von Daten erst in
  * aufbauenden Interfaces konkretisiert werden.
  */
 public interface IConnection extends Closeable {
@@ -22,14 +22,14 @@ public interface IConnection extends Closeable {
 	//enum ConnectionState {
 		/**
 		 * Beschreibt den Zustand, in welchem eine Verbindung als offen
-		 * angesehen werden kann und zur Übertragung, sowie dem Empfang von
+		 * angesehen werden kann und zur Uebertragung, sowie dem Empfang von
 		 * Daten zur Verfuegung steht.
 		 */
 		public final static int ConnectionState_OPEN=1;
 
 		/**
 		 * Beschreibt den Zustand, in welchem eine Verbinung als geschlossen
-		 * anzusehen ist und somit keine Übertragung von Daten moeglich ist.
+		 * anzusehen ist und somit keine Uebertragung von Daten moeglich ist.
 		 * 
 		 * Der geschlossen Zustand ist der finale Zustand einer Verbindung und
 		 * kann nach erreichen nicht mehr gewaechselt werden.

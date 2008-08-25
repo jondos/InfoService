@@ -1,7 +1,7 @@
 package anon.transport.address;
 
 /**
- * Über eine {@link IAddress} werden die Endpunkte einer
+ * Ueber eine {@link IAddress} werden die Endpunkte einer
  * Kommunikationsbeziehung, ausgehend von der Bezeichnung des jeweiligen
  * Transportmediums ({@link #getTransportIdentifier()}) und der Liste der
  * notwendigen Parameter ({@link #getAllParameters()}), eindeutigt bestimmt.

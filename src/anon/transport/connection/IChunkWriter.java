@@ -9,7 +9,7 @@ import java.io.OutputStream;
  * verschickt werden koennen.
  * <p>
  * Konzeptionel handelt es sich um die chunk-basierte Entsprechung eines
- * {@link OutputStream} und erlauben die gesicherte Übertragung von mehreren
+ * {@link OutputStream} und erlauben die gesicherte Uebertragung von mehreren
  * Bytes am Stueck (Chunk), wobei davon ausgegangen werden kann, dass der
  * gesendete Chunk inhaltlich genauso empfangen wird. Die Zuordnung und die
  * Reihenfolge der einzelnen Bytes innerhalb eines Chunks wird durch die

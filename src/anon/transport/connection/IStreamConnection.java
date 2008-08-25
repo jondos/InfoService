@@ -5,12 +5,12 @@ import java.io.OutputStream;
 
 /**
  * Eine Konkretisierung des {@link IConnection} Interface, bei welchem die
- * Übertragung ueber ein bidirektionales Datenstrommodell erfolgt.
+ * Uebertragung ueber ein bidirektionales Datenstrommodell erfolgt.
  * 
  * Ein- und Ausgabestrom treten dabei ausschließlich als Paar auf und sind
  * fester Bestandteil der Verbindung.
  * 
- * Die einzelnen Stroeme kapseln die eigentlichen Übertragung von Daten und
+ * Die einzelnen Stroeme kapseln die eigentlichen Uebertragung von Daten und
  * stellen eine Schnittstelle zum garantierten und konsitenten Transport bereit.
  */
 public interface IStreamConnection extends IConnection {

@@ -152,7 +152,7 @@ public class SkypeConnection implements IChunkConnection {
 	 * Umsetzung eines {@link IChunkWriter} welcher speziell auf die Eigenheiten
 	 * der Skype Verbindung zugeschnitten ist.
 	 * <p>
-	 * Die Übertragung erfolgt indem die eigentlichen binaer Daten mit Hilfe von
+	 * Die Uebertragung erfolgt indem die eigentlichen binaer Daten mit Hilfe von
 	 * Base64 in einen String umgewandelt werden. Dies erfolgt in Anlehnung an
 	 * den Hinweis in
 	 * {@link https://developer.skype.com/Docs/ApiDoc/Application_to_application_commands}
@@ -173,7 +173,7 @@ public class SkypeConnection implements IChunkConnection {
 		 * Erstellt einen neuen Writer af Basis des uebergebenen Skype Stream
 		 * 
 		 * @param a_appStream
-		 *            Der Skype Stream, welcher zur Übertragung von Daten
+		 *            Der Skype Stream, welcher zur Uebertragung von Daten
 		 *            genutzt werden soll.
 		 */
 		public SkypeWriter(Stream a_appStream) {
@@ -187,7 +187,7 @@ public class SkypeConnection implements IChunkConnection {
 		 * Chunk in den Kanal eingefuegt werden konnte oder gibt das Scheitern
 		 * dieses Versuches durch eine entsprechende Ausnahme an.
 		 * <p>
-		 * die Übertragung erfolgt dabei, indem der Inhalt des Chunks Base64
+		 * die Uebertragung erfolgt dabei, indem der Inhalt des Chunks Base64
 		 * kodiert uebertragen werden.
 		 */
 		public void writeChunk(byte[] a_chunk) throws ConnectionException {
