@@ -99,6 +99,7 @@ import anon.pay.PaymentInstanceDBEntry;
 import anon.proxy.AnonProxy;
 import anon.proxy.IProxyListener;
 import anon.tor.TorAnonServerDescription;
+import anon.transport.address.IAddress;
 import anon.util.Base64;
 import anon.util.ClassUtil;
 import anon.util.IMiscPasswordReader;
@@ -732,10 +733,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 			// listener has started correctly
 			// do initial setting of anonMode
+			if (JAPModel.isAutoConnect())
+				startAnonymousMode(getViewWindow());
+			/*
 			if (JAPModel.isAutoConnect() &&
 				JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder())
 			{
-				/* show the connect via forwarder dialog -> the dialog will do the remaining things */
+				// show the connect via forwarder dialog -> the dialog will do the remaining things 
 				new JAPRoutingEstablishForwardedConnectionDialog(getViewWindow());
 				notifyObservers();
 			}
@@ -743,6 +747,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			{
 				setAnonMode(JAPModel.isAutoConnect());
 			}
+			*/
 		}
 	}
 
@@ -3420,7 +3425,16 @@ public final class JAPController extends Observable implements IProxyListener, O
 		if (JAPModel.getInstance().getRoutingSettings().isConnectViaForwarder())
 		{
 			/* show the connect via forwarder dialog -> the dialog will do the remaining things */
-			new JAPRoutingEstablishForwardedConnectionDialog(a_parentComponent);
+
+			// do we have an valid Forwarding Address
+			IAddress userAddress = JAPModel.getInstance().getRoutingSettings().getUserProvidetForwarder();
+			if (userAddress != null)
+				// use it
+				new JAPRoutingEstablishForwardedConnectionDialog(a_parentComponent, userAddress);
+			else
+				// otherwise use invoservice and capatcha
+				new JAPRoutingEstablishForwardedConnectionDialog(a_parentComponent);
+			
 			/* maybe connection to forwarder failed -> notify the observers, because the view maybe
 			 * still shows the anonymity mode enabled
 			 */
