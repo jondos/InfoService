@@ -10,6 +10,7 @@ import anon.transport.connection.IChunkConnection;
 import anon.transport.connection.IChunkReader;
 import anon.transport.connection.IChunkWriter;
 import anon.transport.connection.UnsuportedCommandException;
+import anon.util.ObjectQueue;
 
 
 /**
@@ -63,7 +64,7 @@ public class QueuedChunkConnection implements IChunkConnection {
 	 * @param a_loopbackQueue
 	 *            Die BlockingQueue welche als Ein- und Ausgabequeue dient
 	 */
-	public QueuedChunkConnection(BlockingQueue/*<byte[]>*/ a_loopbackQueue) {
+	public QueuedChunkConnection(ObjectQueue/*<byte[]>*/ a_loopbackQueue) {
 		this(a_loopbackQueue, a_loopbackQueue);
 		m_localAddress = new QueuedAddress("loopback");
 		m_remoteAddress = m_localAddress;
@@ -85,8 +86,8 @@ public class QueuedChunkConnection implements IChunkConnection {
 	 *            Die Queue, welche als Grundlage der schreiben Operationen der
 	 *            Verbindung Verwendung findet.
 	 */
-	public QueuedChunkConnection(BlockingQueue/*<byte[]>*/ a_readingQueue,
-			BlockingQueue/*<byte[]>*/ a_writingQueue) {
+	public QueuedChunkConnection(ObjectQueue/*<byte[]>*/ a_readingQueue,
+			ObjectQueue/*<byte[]>*/ a_writingQueue) {
 		m_reader = new QueuedChunkReader(a_readingQueue);
 		m_writer = new QueuedChunkWriter(a_writingQueue);
 		m_state = ConnectionState_OPEN;
