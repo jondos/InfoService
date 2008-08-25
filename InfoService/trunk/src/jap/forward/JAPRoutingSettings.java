@@ -354,6 +354,8 @@ final public class JAPRoutingSettings extends Observable implements IXMLEncodabl
 	 */
 	private IAddress m_userForwarder;
 
+	
+	private final static String DEFAULT_SKYPE_ADDRESS_URN="urn:endpoint:skype:user(japforwarder):application("+DEFAULT_APP_NAME+")";
 	/**
 	 * This creates a new instance of JAPRoutingSettings. We are doing some initialization here.
 	 */
@@ -858,7 +860,7 @@ final public class JAPRoutingSettings extends Observable implements IXMLEncodabl
 			throw new AddressMappingException("Transportmode is not Supported");
 		if (requestedMode == TransportMode.SKYPE)
 			result =  new SkypeAddress(endpoint);
-		if (requestedMode == TransportMode.TCPIP)
+		else if (requestedMode == TransportMode.TCPIP)
 			result =  new TcpIpAddress(endpoint);
 		/*
 		// local forwarding is not official supported 
@@ -866,7 +868,6 @@ final public class JAPRoutingSettings extends Observable implements IXMLEncodabl
 			result = new LocalAddress();
 		*/
 		m_userForwarder = result;
-		return;
 	}
 	
 	/**
@@ -894,13 +895,20 @@ final public class JAPRoutingSettings extends Observable implements IXMLEncodabl
 			if (a_value == TransportMode.UNKNOWN) return false;
 			// are there changes
 			if (a_value == m_transportMode) return true;
-			if (m_routingMode == ROUTING_MODE_DISABLED){
-				m_transportMode = a_value;
-				return true;
-			}
-			if (m_routingMode == ROUTING_MODE_CLIENT){
+			if (m_routingMode == ROUTING_MODE_DISABLED || m_routingMode == ROUTING_MODE_CLIENT){
 				// as we ignore this setting in client mode, it's easy
 				m_transportMode = a_value;
+				///@todo make skype address configurable
+				if(m_transportMode.equals(TransportMode.SKYPE))
+					{
+						try
+							{
+								setUserProvidetForwarder(DEFAULT_SKYPE_ADDRESS_URN);
+							}
+						catch (ConnectionException e)
+							{
+							}
+					}
 				return true;
 			}
 			if (m_routingMode == ROUTING_MODE_SERVER){
@@ -1485,6 +1493,7 @@ final public class JAPRoutingSettings extends Observable implements IXMLEncodabl
 		japForwardingSettingsNode.appendChild(forwardingServerNode);
 
 		Element forwardingClientNode = a_doc.createElement("ForwardingClient");
+		XMLUtil.setAttribute(forwardingClientNode, "type",getTransportMode().getIdentifier());
 		Element connectViaForwarderNode = a_doc.createElement("ConnectViaForwarder");
 		Element forwardInfoServiceNode = a_doc.createElement("ForwardInfoService");
 		XMLUtil.setValue(connectViaForwarderNode, isConnectViaForwarder());
@@ -1617,7 +1626,6 @@ final public class JAPRoutingSettings extends Observable implements IXMLEncodabl
 						if (setRoutingMode(ROUTING_MODE_SERVER) == true)
 						{
 							/* start the propaganda */
-							// temporally switched of 
 							startPropaganda(false);
 							LogHolder.log(LogLevel.INFO, LogType.MISC,
 										  "JAPRoutingSettings: loadSettingsFromXml: According to the configuration, the forwarding server was started.");
@@ -1654,6 +1662,8 @@ final public class JAPRoutingSettings extends Observable implements IXMLEncodabl
 			else
 			{
 				/* read the connect-via-forwarder client setting */
+				String type=XMLUtil.parseAttribute(forwardingClientNode, "type", getTransportMode().getIdentifier());
+				setTransportMode(TransportMode.getByIdentifier(type));
 				setConnectViaForwarder(XMLUtil.parseValue(connectViaForwarderNode, false));
 			}
 			/* get the option, whether the InfoService can reached directly or not */
