@@ -1,5 +1,6 @@
 package anon.transport.address;
 
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 
@@ -126,7 +127,12 @@ public class Endpoint {
 	 */
 	public AddressParameter[] getAllParameters() {
 		AddressParameter[] result = new AddressParameter[m_paramters.size()];
-		m_paramters.values().toArray(result);
+		Enumeration en=m_paramters.elements();
+		int i=0;
+		while(en.hasMoreElements())
+			{
+					result[i++]=(AddressParameter)en.nextElement();
+			}
 		return result;
 	}
 

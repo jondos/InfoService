@@ -137,7 +137,7 @@ public class SocketConnection implements IStreamConnection {
 
 	public synchronized void close() throws IOException {
 		if (m_internalState == ConnectionState_OPEN) {
-			if (!m_underlyingSocket.isClosed())
+			//if (!m_underlyingSocket.isClosed())
 				m_underlyingSocket.close();
 			setCLOSE();
 		}
