@@ -1,6 +1,7 @@
 package anon.transport.address;
 
 import java.util.Hashtable;
+import java.util.StringTokenizer;
 
 /**
  * Ein {@link Endpoint} stellt die Schnittstelle zwischen einer {@link IAddress}
@@ -76,7 +77,11 @@ public class Endpoint {
 	 *             Wenn das Format der URN nicht den Erwartungen entspricht.
 	 */
 	public Endpoint(String a_theURN) throws MalformedURNException {
-		String[] components = a_theURN.split(":");
+		StringTokenizer st=new StringTokenizer(a_theURN,":");
+		String[] components = new String[st.countTokens()];
+		int i=0;
+		while(st.hasMoreElements())
+			components[i++]=st.nextToken();
 		if (components.length < 3)
 			throw new MalformedURNException(
 					"A valid Endpoint needs at least 3 Components");
@@ -89,7 +94,8 @@ public class Endpoint {
 
 		// get Parameters
 		m_paramters = new Hashtable();
-		for (int i = 3, length = components.length; i < length; i++) {
+		int length=components.length;
+		for (i = 3; i < length; i++) {
 			int parentheseIndex = components[i].indexOf("(");
 			int decrementedLength = components[i].length() - 1;
 			String name = components[i].substring(0, parentheseIndex);
