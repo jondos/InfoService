@@ -13,7 +13,7 @@ import anon.transport.connection.UnsuportedCommandException;
 
 
 /**
- * Implementierung einer {@link IChunkConnection}, welcher die 2 Kanäle der
+ * Implementierung einer {@link IChunkConnection}, welcher die 2 Kanaele der
  * bidirektionalen Kommunikation durch zwei {@link BlockingQueue} ueber byte[]
  * umsetzt.
  */
@@ -54,7 +54,7 @@ public class QueuedChunkConnection implements IChunkConnection {
 
 	/**
 	 * Erstellt einen neue {@link QueuedChunkConnection} bei der Ein- und
-	 * Ausgabequeue durch die selbe {@link BlockingQueue} repräsentiert werden
+	 * Ausgabequeue durch die selbe {@link BlockingQueue} repraesentiert werden
 	 * und die Connection entsprechend mit sich selbst verbunden ist.
 	 * <p>
 	 * Die Adresse fuer lokales und entferntes Ende werden auf die selbe Instanz
@@ -71,7 +71,7 @@ public class QueuedChunkConnection implements IChunkConnection {
 
 	/**
 	 * Erstell eine neue {@link QueuedChunkConnection}, bei welcher Ein- und
-	 * Ausgabekanal durch entsprechende {@link BlockingQueue} repräsentiert
+	 * Ausgabekanal durch entsprechende {@link BlockingQueue} repraesentiert
 	 * sind.
 	 * <p>
 	 * Die Adressen des lokalen, wie des entfernten, Endpunktes erhalten den

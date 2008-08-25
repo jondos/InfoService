@@ -7,18 +7,18 @@ import anon.transport.connection.IStreamConnection;
 
 
 /**
- * Eine Implentierung von OutputStream, welche immer geschlossen ist. Sämtliche
+ * Eine Implentierung von OutputStream, welche immer geschlossen ist. Saemtliche
  * write-Methoden, werfen entsprechende Ausnahmen.
  * 
  * Diese Klasse ist zu Verwenden, wenn der Rueckgabewert einer Methode einen
  * OutputStream verlangt, aber aufgrund des inneren Zustandes des Objektes keine
- * geeignete Implentierung ausgewählt werden kann. Um in solchen Fällen dir
+ * geeignete Implentierung ausgewaehlt werden kann. Um in solchen Faellen dir
  * Rueckgabe von null oder den Wurf einer Ausnahme zuvermeiden, sollte diese
  * Klasse verwendet werden.
  * 
  * So wird sie beispielsweise oft bei konkreten Implementierungen von
  * {@link IStreamConnection} verwendet, um bei Verbindungen Verbindung, welche
- * bereits während der Initialisierung geschlossen sind, einen geeigneten
+ * bereits waehrend der Initialisierung geschlossen sind, einen geeigneten
  * Rueckgabewert fuer {@link IStreamConnection#getOutputStream()} anzugeben.
  */
 public class ClosedOutputStream extends OutputStream {

@@ -19,7 +19,7 @@ import logging.LogType;
 public class ChunkConnectionAdapter implements IStreamConnection {
 
 	/**
-	 * Die Menge der moegliche Zustände, welche die internen Umsetzungen von
+	 * Die Menge der moegliche Zustaende, welche die internen Umsetzungen von
 	 * {@link InputStream} und {@link OutputStream} annehmen koennen.
 	 */
 //	private enum StreamState {
@@ -208,7 +208,7 @@ public class ChunkConnectionAdapter implements IStreamConnection {
 		}
 
 		/**
-		 * Fuegt das Übergebene Byte in den internen Buffer ein und ueberträgt
+		 * Fuegt das Übergebene Byte in den internen Buffer ein und uebertraegt
 		 * diesen, falls er dadurch erschoepft ist.
 		 */
 		public void write(int b) throws IOException {
@@ -229,7 +229,7 @@ public class ChunkConnectionAdapter implements IStreamConnection {
 		/**
 		 * Veranlaßt die sofortige Übertragung des Buffers. Wenn es sich bei dem
 		 * aktuellen Paket um das letzte des Stroms handelt, wird diese
-		 * zusätzlich noch als geschlossen markiert.
+		 * zusaetzlich noch als geschlossen markiert.
 		 */
 		public void flush() throws IOException {
 			byte[] packet = new byte[m_writePos + 1];
@@ -257,7 +257,7 @@ public class ChunkConnectionAdapter implements IStreamConnection {
 		}
 
 		/**
-		 * Schließt den Strom und den zugrundeliegenen Writer und ueberträgt
+		 * Schließt den Strom und den zugrundeliegenen Writer und uebertraegt
 		 * zuvor noch den Inhalt des Buffer.
 		 */
 		public void close() throws IOException {

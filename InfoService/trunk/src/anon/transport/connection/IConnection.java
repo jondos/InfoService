@@ -17,7 +17,7 @@ import anon.transport.address.IAddress;
 public interface IConnection extends Closeable {
 
 	/**
-	 * Aufzählung der moeglichen Zustände einer Verbindung
+	 * Aufzaehlung der moeglichen Zustaende einer Verbindung
 	 */
 	//enum ConnectionState {
 		/**
@@ -32,7 +32,7 @@ public interface IConnection extends Closeable {
 		 * anzusehen ist und somit keine Übertragung von Daten moeglich ist.
 		 * 
 		 * Der geschlossen Zustand ist der finale Zustand einer Verbindung und
-		 * kann nach erreichen nicht mehr gewächselt werden.
+		 * kann nach erreichen nicht mehr gewaechselt werden.
 		 */
 		public final static int ConnectionState_CLOSE=2;
 	//}
@@ -64,7 +64,7 @@ public interface IConnection extends Closeable {
 	 * Gibt die Adresse des lokalen Endpunkt der Verbindung an.
 	 * <p>
 	 * Fuer Implentierungen, welche eine Bereits eingerichte Verbindung kapsel um
-	 * weitere Funktionalität bereitzustellen, sollte diese Methode die Adresse
+	 * weitere Funktionalitaet bereitzustellen, sollte diese Methode die Adresse
 	 * der drunterlegenen Verbindung zurueckgeben.
 	 */
 	IAddress getLocalAddress();
@@ -73,7 +73,7 @@ public interface IConnection extends Closeable {
 	 * Gibt die Adresse des entfernten Endpunkt an.
 	 * <p>
 	 * Fuer Implentierungen, welche eine Bereits eingerichte Verbindung kapsel um
-	 * weitere Funktionalität bereitzustellen, sollte diese Methode die Adresse
+	 * weitere Funktionalitaet bereitzustellen, sollte diese Methode die Adresse
 	 * der drunterlegenen Verbindung zurueckgeben.
 	 */
 	IAddress getRemoteAddress();

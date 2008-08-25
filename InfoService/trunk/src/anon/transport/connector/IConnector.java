@@ -7,7 +7,7 @@ import anon.transport.connection.IConnection;
 import anon.transport.connection.RequestException;
 
 /**
- * Ein Connector stellt die Funktionalität bereit um auf Basis eines bestimmten
+ * Ein Connector stellt die Funktionalitaet bereit um auf Basis eines bestimmten
  * Adresstype Verbindungen einzurichten. Er ist im generellen an einen
  * bestimmten Transportmechanismus gebunden und kapselt die darauf aufbauenden
  * Befehle zur Bereitsstellung und Initialisierung der Verbindung.
