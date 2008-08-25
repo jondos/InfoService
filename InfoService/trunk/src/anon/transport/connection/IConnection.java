@@ -1,6 +1,7 @@
 package anon.transport.connection;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.net.Socket;
 
 import anon.transport.address.IAddress;
@@ -14,7 +15,7 @@ import anon.transport.address.IAddress;
  * fundamentalen Primitive zum Empfang und der Uebertragung von Daten erst in
  * aufbauenden Interfaces konkretisiert werden.
  */
-public interface IConnection extends Closeable {
+public interface IConnection /*extends Closeable*/ {
 
 	/**
 	 * Aufzaehlung der moeglichen Zustaende einer Verbindung
@@ -85,4 +86,6 @@ public interface IConnection extends Closeable {
 	 * Konstanten folgen.
 	 */
 	int getCurrentState();
+	
+	void close()  throws IOException;
 }

@@ -1,6 +1,6 @@
 package anon.transport.connection;
 
-import java.io.Closeable;
+import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -15,7 +15,7 @@ import java.io.InputStream;
  * einzelnen Bytes innerhalb eines Chunks wird durch die uebertragung nicht
  * veraendert.
  */
-public interface IChunkReader extends Closeable {
+public interface IChunkReader{
 
 	/**
 	 * Gibt den aeltesten (im Sinne des Einfuegens in den Kanal) der im Kanal
@@ -39,4 +39,6 @@ public interface IChunkReader extends Closeable {
 	 * Zugriff auf den Kanal erfolgt.
 	 */
 	int availableChunks() throws ConnectionException;
+	
+	void close()  throws IOException;
 }
