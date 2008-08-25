@@ -1,13 +1,8 @@
 package anon.transport.connection.util;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Enumeration;
-import java.util.LinkedList;
 import java.util.Vector;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import anon.transport.connection.ConnectionException;
 import anon.transport.connection.IChunkReader;
@@ -24,7 +19,7 @@ public class QueuedChunkReader implements IChunkReader
 		private final ObjectQueue/* <byte[]> */m_readingQueue;
 
 		/** Gibt an ob der Reader geschlossen ist. */
-		private final AtomicBoolean m_isClosed;
+		private volatile boolean m_isClosed;
 
 		/**
 		 * Sammelt alle Threats, welche sich innerhalb der read() Methode befinden.
@@ -59,7 +54,7 @@ public class QueuedChunkReader implements IChunkReader
 				int a_timeout)
 			{
 				m_readingQueue = a_readingQueue;
-				m_isClosed = new AtomicBoolean(false);
+				m_isClosed = false;
 				m_waitingThreads = new Vector();// LinkedList<Thread>();
 				m_timeout = a_timeout;
 			}
@@ -74,7 +69,7 @@ public class QueuedChunkReader implements IChunkReader
 		public QueuedChunkReader(ObjectQueue/* <byte[]> */a_readingQueue)
 			{
 				m_readingQueue = a_readingQueue;
-				m_isClosed = new AtomicBoolean(false);
+				m_isClosed = false;
 				m_waitingThreads = new Vector();// new LinkedList<Thread>();
 				m_timeout = 0;
 			}
@@ -98,7 +93,7 @@ public class QueuedChunkReader implements IChunkReader
 					{
 						// save caller for interrupting when closed
 						m_waitingThreads.add(caller);
-						if (m_isClosed.get()) throw new ConnectionException(
+						if (m_isClosed) throw new ConnectionException(
 								"Reader allready closed");
 						// after the previous step, we assume that the reader is open.
 						// it could close till we reach the return, but we will
@@ -146,7 +141,11 @@ public class QueuedChunkReader implements IChunkReader
 		 */
 		public void close() throws IOException
 			{
-				if (m_isClosed.getAndSet(true)) return; // nothing more to do
+				synchronized(this)
+				{
+					if (m_isClosed) return; // nothing more to do
+					m_isClosed=true;
+				}
 				// wake up all waiting threads
 				Enumeration allthreads = m_waitingThreads.elements();
 				// for (Thread thread : m_waitingThreads)

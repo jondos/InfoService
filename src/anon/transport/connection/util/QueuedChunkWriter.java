@@ -1,13 +1,8 @@
 package anon.transport.connection.util;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Enumeration;
-import java.util.LinkedList;
 import java.util.Vector;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import anon.transport.connection.ConnectionException;
 import anon.transport.connection.IChunkWriter;
@@ -24,7 +19,7 @@ public class QueuedChunkWriter implements IChunkWriter {
 	private final ObjectQueue/*<byte[]>*/ m_writingQueue;
 
 	/** Gibt an ob der Writer geschlossen ist. */
-	private final AtomicBoolean m_isClosed;
+	private volatile boolean m_isClosed;
 
 	/**
 	 * Sammelt alle Threats, welche sich innerhalb der write() Methode befinden.
@@ -49,7 +44,7 @@ public class QueuedChunkWriter implements IChunkWriter {
 	 */
 	public QueuedChunkWriter(ObjectQueue/*<byte[]>*/ a_writingQueue, int a_timeout) {
 		m_writingQueue = a_writingQueue;
-		m_isClosed = new AtomicBoolean(false);
+		m_isClosed = false;
 		m_waitingThreads = new Vector();//LinkedList<Thread>();
 		m_timeout = a_timeout;
 	}
@@ -63,7 +58,7 @@ public class QueuedChunkWriter implements IChunkWriter {
 	 */
 	public QueuedChunkWriter(ObjectQueue/*<byte[]>*/ a_readingQueue) {
 		m_writingQueue = a_readingQueue;
-		m_isClosed = new AtomicBoolean(false);
+		m_isClosed = false;
 		m_waitingThreads = new Vector();//LinkedList<Thread>();
 		m_timeout = 0;
 	}
@@ -81,7 +76,7 @@ public class QueuedChunkWriter implements IChunkWriter {
 		try {
 			// save caller for interrupting when closed
 			m_waitingThreads.add(caller);
-			if (m_isClosed.get())
+			if (m_isClosed)
 				throw new ConnectionException("Reader allready closed");
 			// after the previous step, we assume that the writer is open.
 			// it could close until now, but we will
@@ -108,8 +103,12 @@ public class QueuedChunkWriter implements IChunkWriter {
 	}
 
 	public void close() throws IOException {
-		if (m_isClosed.getAndSet(true))
+		synchronized(this)
+		{
+		if (m_isClosed)
 			return; // nothing more to do
+		m_isClosed=true;
+		}
 		// wake up all waiting threads
 		Enumeration allthreads=m_waitingThreads.elements();
 		while (allthreads.hasMoreElements())

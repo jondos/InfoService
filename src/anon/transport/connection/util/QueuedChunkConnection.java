@@ -1,7 +1,6 @@
 package anon.transport.connection.util;
 
 import java.io.IOException;
-import java.util.concurrent.BlockingQueue;
 
 import anon.transport.address.AddressParameter;
 import anon.transport.address.IAddress;
