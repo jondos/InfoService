@@ -22,7 +22,7 @@ import logging.LogType;
  * Da Ein- und Ausgabestrom nur als Paar auftreten und fester Bestandteil der
  * {@link IStreamConnection} sind, wird bereits während der Initlisierung
  * versucht den Ein- und Ausgabestrom des Sockets zu bekommen. Sollte dies nicht
- * möglich sein, wird die Verbindung bereits zu begin als geschlossen markiert.
+ * moeglich sein, wird die Verbindung bereits zu begin als geschlossen markiert.
  * Deswegen ist es wichtig SocketConnection nur in Verbindung mit offenen und
  * verbunden Sockets zu verwenden.
  * 
@@ -36,7 +36,7 @@ public class SocketConnection implements IStreamConnection {
 	 */
 	private Socket m_underlyingSocket;
 	/**
-	 * Der Ausgabestrom der Verbindung. Bleibt über einen Zustand hinweg
+	 * Der Ausgabestrom der Verbindung. Bleibt ueber einen Zustand hinweg
 	 * konstant.
 	 */
 	private OutputStream m_outputStream;
@@ -60,9 +60,9 @@ public class SocketConnection implements IStreamConnection {
 	private IAddress m_remoteAddress;
 
 	/**
-	 * Erstellt eine neue SocketConnection auf Basis des übergebenen Sockets.
+	 * Erstellt eine neue SocketConnection auf Basis des uebergebenen Sockets.
 	 * <p>
-	 * Das übergebene Socket darf nicht geschlossen sein, da im Sinne einer
+	 * Das uebergebene Socket darf nicht geschlossen sein, da im Sinne einer
 	 * Verbindung, die Kommunikationsbeziehung bereits eingerichtet sein muss.
 	 * 
 	 * @param a_underlyingSocket

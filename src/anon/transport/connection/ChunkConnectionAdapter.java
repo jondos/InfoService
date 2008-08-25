@@ -14,13 +14,13 @@ import logging.LogType;
  * Adaptiert eine bestehende {@link IChunkConnection} um darauf aufbauend, eine
  * {@link IStreamConnection} bereitzustellen. Hierzu exitieren interne
  * Implentierung von {@link InputStream} und {@link OutputStream} welche den
- * Paketbasierten Transport von byte-Strömen organisieren.
+ * Paketbasierten Transport von byte-Stroemen organisieren.
  */
 public class ChunkConnectionAdapter implements IStreamConnection {
 
 	/**
-	 * Die Menge der mögliche Zustände, welche die internen Umsetzungen von
-	 * {@link InputStream} und {@link OutputStream} annehmen können.
+	 * Die Menge der moegliche Zustände, welche die internen Umsetzungen von
+	 * {@link InputStream} und {@link OutputStream} annehmen koennen.
 	 */
 //	private enum StreamState {
 		/** Der Strom ist offen */
@@ -37,7 +37,7 @@ public class ChunkConnectionAdapter implements IStreamConnection {
 	 */
 	private static final byte DATA_PACKET = 0;
 	/**
-	 * Konstante um anzuzeigen, das ein Paket das letzte übertragene Paket
+	 * Konstante um anzuzeigen, das ein Paket das letzte uebertragene Paket
 	 * darstellt
 	 */
 	private static final byte EOF_PACKET = -1;
@@ -56,7 +56,7 @@ public class ChunkConnectionAdapter implements IStreamConnection {
 
 	/**
 	 * Implentierung eines {@link InputStream}, welcher die durch
-	 * {@link #read()} zurückgegeben Bytes aus den einzelnen Chunks eines
+	 * {@link #read()} zurueckgegeben Bytes aus den einzelnen Chunks eines
 	 * {@link IChunkReader} nimmt.
 	 */
 	private static class ChunkInputStream extends InputStream {
@@ -66,13 +66,13 @@ public class ChunkConnectionAdapter implements IStreamConnection {
 
 		/**
 		 * Der interne Buffer stellt den zuletzt gelesen Chunk dar und ist die
-		 * Basis für die durch {@link #read()} zurückgegeben Byes
+		 * Basis fuer die durch {@link #read()} zurueckgegeben Byes
 		 */
 		private byte[] m_buffer;
 
 		/**
 		 * Die aktuelle Position innerhalb des Buffer ab welcher Daten
-		 * zurückgegeben werden.
+		 * zurueckgegeben werden.
 		 */
 		private int m_readPos;
 
@@ -80,7 +80,7 @@ public class ChunkConnectionAdapter implements IStreamConnection {
 		private int/*StreamState*/ m_state;
 
 		/**
-		 * Erstellt einen neuen {@link ChunkInputStream} auf Basis des übergeben
+		 * Erstellt einen neuen {@link ChunkInputStream} auf Basis des uebergeben
 		 * Readers
 		 * 
 		 * @param Der
@@ -142,9 +142,9 @@ public class ChunkConnectionAdapter implements IStreamConnection {
 
 		/**
 		 * Liefert die Anzahl der verbleibenen Bytes innerhalb des Buffers
-		 * zurück. Sofern der Buffer leer ist und mindestens 1 Chunk aus den
+		 * zurueck. Sofern der Buffer leer ist und mindestens 1 Chunk aus den
 		 * Kanal gelesen werden kann, wird der Buffer aufgefrischt und der
-		 * aktuelle Wert zurückgegeben.
+		 * aktuelle Wert zurueckgegeben.
 		 */
 		public int available() throws IOException {
 			try {
@@ -170,26 +170,26 @@ public class ChunkConnectionAdapter implements IStreamConnection {
 
 	/**
 	 * Private Implementierung eines {@link OutputStream}, welcher die durch
-	 * {@link #write()} übergeben Bytes als Chunk mit Hilfe eines
+	 * {@link #write()} uebergeben Bytes als Chunk mit Hilfe eines
 	 * {@link IChunkWriter} sendet.
 	 */
 	private static class ChunkOutputStream extends OutputStream {
 
 		/**
-		 * Die Größe des Buffers und somit auch die Maximalanzahl der in einem
-		 * Rutsch übertragen Bytes.
+		 * Die Groeße des Buffers und somit auch die Maximalanzahl der in einem
+		 * Rutsch uebertragen Bytes.
 		 */
 		private final static int BUFFER_SIZE = 1000;
 
-		/** Der Writer, über welchem die Daten transportiert werden. */
+		/** Der Writer, ueber welchem die Daten transportiert werden. */
 		private IChunkWriter m_writer;
 
-		/** Der interne Buffer, welcher die zu übertragenen Bytes sammelt. */
+		/** Der interne Buffer, welcher die zu uebertragenen Bytes sammelt. */
 		private byte[] m_buffer;
 
 		/**
-		 * Die Position, ab welcher neue Bytes in den Buffer eingefügt werden
-		 * können.
+		 * Die Position, ab welcher neue Bytes in den Buffer eingefuegt werden
+		 * koennen.
 		 */
 		private int m_writePos;
 
@@ -197,7 +197,7 @@ public class ChunkConnectionAdapter implements IStreamConnection {
 		private int/*StreamState*/ m_state;
 
 		/**
-		 * Erstellt einen neuen ChunkOutputStream auf Basis des übergebenen
+		 * Erstellt einen neuen ChunkOutputStream auf Basis des uebergebenen
 		 * Writers.
 		 */
 		public ChunkOutputStream(IChunkWriter a_writer) {
@@ -208,8 +208,8 @@ public class ChunkConnectionAdapter implements IStreamConnection {
 		}
 
 		/**
-		 * Fügt das Übergebene Byte in den internen Buffer ein und überträgt
-		 * diesen, falls er dadurch erschöpft ist.
+		 * Fuegt das Übergebene Byte in den internen Buffer ein und ueberträgt
+		 * diesen, falls er dadurch erschoepft ist.
 		 */
 		public void write(int b) throws IOException {
 			if (m_state == ChunkConnectionAdapter.StreamState_CLOSE)
@@ -257,7 +257,7 @@ public class ChunkConnectionAdapter implements IStreamConnection {
 		}
 
 		/**
-		 * Schließt den Strom und den zugrundeliegenen Writer und überträgt
+		 * Schließt den Strom und den zugrundeliegenen Writer und ueberträgt
 		 * zuvor noch den Inhalt des Buffer.
 		 */
 		public void close() throws IOException {
@@ -278,7 +278,7 @@ public class ChunkConnectionAdapter implements IStreamConnection {
 	}
 
 	/**
-	 * Erstellt einen neuen Adapter auf Basis der übergebenen
+	 * Erstellt einen neuen Adapter auf Basis der uebergebenen
 	 * {@link IChunkConnection}.
 	 */
 	public ChunkConnectionAdapter(IChunkConnection a_underlyingConnection) {
@@ -309,12 +309,12 @@ public class ChunkConnectionAdapter implements IStreamConnection {
 		return m_underliningConnection.getCurrentState();
 	}
 
-	/** Liefert die direkt die Adesse der zugrundeliegenen Verbindung zurück. */
+	/** Liefert die direkt die Adesse der zugrundeliegenen Verbindung zurueck. */
 	public IAddress getLocalAddress() {
 		return m_underliningConnection.getLocalAddress();
 	}
 
-	/** Liefert die direkt die Adesse der zugrundeliegenen Verbindung zurück. */
+	/** Liefert die direkt die Adesse der zugrundeliegenen Verbindung zurueck. */
 	public IAddress getRemoteAddress() {
 		return m_underliningConnection.getRemoteAddress();
 	}

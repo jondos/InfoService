@@ -18,7 +18,7 @@ public class ConnectionException extends Exception {
 	}
 
 	/**
-	 * Erstellt eine Verbindungsausnahme, mit der angegeben Begründung.
+	 * Erstellt eine Verbindungsausnahme, mit der angegeben Begruendung.
 	 */
 	public ConnectionException(String message) {
 		super(message);

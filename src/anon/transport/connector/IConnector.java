@@ -18,17 +18,17 @@ import anon.transport.connection.RequestException;
  * 
  * @param <ConnectionType>
  *            Eine von {@link IConnection} abgeleitet Schnittstelle, welche die
- *            Art der zurückgegeben Verbindung bestimmt.
+ *            Art der zurueckgegeben Verbindung bestimmt.
  */
 public interface IConnector {
 
 	/**
-	 * Zentrale Methode der Schnittstelle, welche auf Basis der übergebenen
+	 * Zentrale Methode der Schnittstelle, welche auf Basis der uebergebenen
 	 * Adresse versucht, den entfernte Endpunkt zu kontaktieren und eine
 	 * Verbindung einzurichten.
 	 * <p>
 	 * Sollte dies erfolgreich sein, wird die entsprechende Verbindung
-	 * zurückgegeben. Andernfalls wird das Scheitern des Versuches durch eine
+	 * zurueckgegeben. Andernfalls wird das Scheitern des Versuches durch eine
 	 * Ausnahme angezeigt
 	 * 
 	 * @param address
@@ -40,7 +40,7 @@ public interface IConnector {
 	 *             <p>
 	 *             Zur genaueren Beschreibung des Fehlers, sollte
 	 *             {@link CommunicationException} zur Anzeige von Fehlern bei
-	 *             der Kommunikation mit dem Endpunkt (ungültige Adresse, Fehler
+	 *             der Kommunikation mit dem Endpunkt (ungueltige Adresse, Fehler
 	 *             im Transportmedium) verwendetet werden und Instanzen von
 	 *             {@link RequestException} um anzuzeigen, dass der
 	 *             Verbindungsversuch vom Endpunkt abgelehnt wurde.

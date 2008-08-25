@@ -7,7 +7,7 @@ package anon.transport.connection;
 public class RequestException extends ConnectionException {
 
 	/**
-	 * Auflistung möglcher Gründe, für das Ablehnen der Verbindung.
+	 * Auflistung moeglcher Gruende, fuer das Ablehnen der Verbindung.
 	 */
 	//enum Reason {
 		/** Der Grund konnte nicht ermittelt werden */
@@ -35,7 +35,7 @@ public class RequestException extends ConnectionException {
 	 * existierenden Ausnahme, mit dem angegeben Grund
 	 * 
 	 * @param a_reason
-	 *            Der Grund für die Ablehnung.
+	 *            Der Grund fuer die Ablehnung.
 	 */
 	public RequestException(Throwable cause, int a_reason) {
 		super(cause);
@@ -54,11 +54,11 @@ public class RequestException extends ConnectionException {
 	}
 
 	/**
-	 * Erstellt eine neue {@link RequestException} auf Basis einer Begründung,
+	 * Erstellt eine neue {@link RequestException} auf Basis einer Begruendung,
 	 * mit dem angegeben Grund
 	 * 
 	 * @param a_reason
-	 *            Der Grund für die Ablehnung.
+	 *            Der Grund fuer die Ablehnung.
 	 */
 	public RequestException(String message, int a_reason) {
 		super(message);
@@ -66,7 +66,7 @@ public class RequestException extends ConnectionException {
 	}
 
 	/**
-	 * Erstellt eine neue {@link RequestException} auf Basis einer Begründung.
+	 * Erstellt eine neue {@link RequestException} auf Basis einer Begruendung.
 	 * <p>
 	 * Der Grund wird als unbekannt angesehen.
 	 */
@@ -76,7 +76,7 @@ public class RequestException extends ConnectionException {
 	}
 
 	/**
-	 * Liefert den Grund der Ablehnung zurück.
+	 * Liefert den Grund der Ablehnung zurueck.
 	 */
 	public int getReason() {
 		return m_reason;

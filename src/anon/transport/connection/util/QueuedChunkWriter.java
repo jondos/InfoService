@@ -15,11 +15,11 @@ import anon.transport.connection.IChunkWriter;
 
 /**
  * Implementierung eines {@link IChunkWriter}, welcher die zu senden Chunks
- * nacheinander in eine Eingangs übergebenen {@link BlockingQueue} einfügt.
+ * nacheinander in eine Eingangs uebergebenen {@link BlockingQueue} einfuegt.
  */
 public class QueuedChunkWriter implements IChunkWriter {
 
-	/** Die BlockingQueue in welche Chunks eingefügt werden. */
+	/** Die BlockingQueue in welche Chunks eingefuegt werden. */
 	private final BlockingQueue/*<byte[]>*/ m_writingQueue;
 
 	/** Gibt an ob der Writer geschlossen ist. */
@@ -33,17 +33,17 @@ public class QueuedChunkWriter implements IChunkWriter {
 	 */
 	private final /*Collection<Thread>*/ Vector m_waitingThreads;
 
-	/** Das Timeout für Schreiboperationen in Millisekunden */
+	/** Das Timeout fuer Schreiboperationen in Millisekunden */
 	private int m_timeout;
 
 	/**
 	 * Erstellt einen neuen {@link QueuedChunkWriter} auf Grundlage der
-	 * übergebene Queue und dem entsprechenden Timeout.
+	 * uebergebene Queue und dem entsprechenden Timeout.
 	 * 
 	 * @param a_writingQueue
-	 *            Die Queue in welche die Chunks eingefügt werden.
+	 *            Die Queue in welche die Chunks eingefuegt werden.
 	 * @param a_timeout
-	 *            Der initiale Wert für das Timeout der Schreiboperationen. Ein
+	 *            Der initiale Wert fuer das Timeout der Schreiboperationen. Ein
 	 *            Wert von 0 bestimmt ein unendliches Timeout.
 	 */
 	public QueuedChunkWriter(BlockingQueue/*<byte[]>*/ a_writingQueue, int a_timeout) {
@@ -55,10 +55,10 @@ public class QueuedChunkWriter implements IChunkWriter {
 
 	/**
 	 * Erstellt einen neuen {@link QueuedChunkWriter} auf Grundlage der
-	 * übergebene Queue mit unendlichen Timeout.
+	 * uebergebene Queue mit unendlichen Timeout.
 	 * 
 	 * @param a_writingQueue
-	 *            Die Queue in welche die Chunks eingefügt werden.
+	 *            Die Queue in welche die Chunks eingefuegt werden.
 	 */
 	public QueuedChunkWriter(BlockingQueue/*<byte[]>*/ a_readingQueue) {
 		m_writingQueue = a_readingQueue;

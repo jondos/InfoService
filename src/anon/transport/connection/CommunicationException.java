@@ -5,7 +5,7 @@ package anon.transport.connection;
  * Problems als Teil der Kommunikation zwischen den beiden Endpunkten bestimmt.
  * Sollte eingesetzt werden, wenn einer der Endpunkte nicht erreichbar ist oder
  * Fehler innerhalb des Transportsystems nicht mehr durch die Implentierung der
- * Verbindung ausgeglichen werden können.
+ * Verbindung ausgeglichen werden koennen.
  */
 public class CommunicationException extends ConnectionException {
 

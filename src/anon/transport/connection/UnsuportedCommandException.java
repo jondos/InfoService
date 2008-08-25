@@ -2,7 +2,7 @@ package anon.transport.connection;
 
 /**
  * Spezielle Ausnahme um anzuzeigen, das ein bestimmter Verbindungsbefehl nicht
- * unterstützt wird.
+ * unterstuetzt wird.
  */
 public class UnsuportedCommandException extends ConnectionException {
 

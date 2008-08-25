@@ -10,16 +10,16 @@ import anon.transport.connection.IStreamConnection;
  * Eine Implentierung von InputStream, welche immer geschlossen ist. Sämtliche
  * read-Methoden, werfen entsprechende Ausnahmen.
  * <p>
- * Diese Klasse ist zu Verwenden, wenn der Rückgabewert einer Methode einen
+ * Diese Klasse ist zu Verwenden, wenn der Rueckgabewert einer Methode einen
  * InputStream verlangt, aber aufgrund des inneren Zustandes des Objektes keine
  * geeignete Implentierung ausgewählt werden kann. Um in solchen Fällen dir
- * Rückgabe von null oder den Wurf einer Ausnahme zuvermeiden, sollte diese
+ * Rueckgabe von null oder den Wurf einer Ausnahme zuvermeiden, sollte diese
  * Klasse verwendet werden.
  * <p>
  * So wird sie beispielsweise oft bei konkreten Implementierungen von
  * {@link IStreamConnection} verwendet, um bei Verbindungen, welche bereits
- * während der Initialisierung geschlossen sind, einen geeigneten Rückgabewert
- * für {@link IStreamConnection#getInputStream()} anzugeben.
+ * während der Initialisierung geschlossen sind, einen geeigneten Rueckgabewert
+ * fuer {@link IStreamConnection#getInputStream()} anzugeben.
  * 
  */
 public class ClosedInputStream extends InputStream {
@@ -44,7 +44,7 @@ public class ClosedInputStream extends InputStream {
 	}
 
 	/**
-	 * Gibt den geschlossen {@link InputStream} zurück, welcher bei erneuten
+	 * Gibt den geschlossen {@link InputStream} zurueck, welcher bei erneuten
 	 * Schließen mittels {@link #close()} eine Ausnahme wirft.
 	 */
 	public static InputStream getNotCloseable() {
@@ -52,7 +52,7 @@ public class ClosedInputStream extends InputStream {
 	}
 
 	/**
-	 * Gibt den geschlossenen {@link InputStream} zurück, welcher erneutes
+	 * Gibt den geschlossenen {@link InputStream} zurueck, welcher erneutes
 	 * Schließen mittels {@link #close()} gestattet.
 	 */
 	public static InputStream getMultibleCloseable() {
