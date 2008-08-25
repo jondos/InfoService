@@ -11,6 +11,7 @@ import anon.transport.address.IAddress;
 import anon.transport.address.SkypeAddress;
 import anon.transport.connection.util.QueuedChunkReader;
 import anon.util.Base64;
+import anon.util.ObjectQueue;
 
 import com.skype.Application;
 import com.skype.ApplicationListener;
@@ -58,7 +59,7 @@ public class SkypeConnection implements IChunkConnection {
 		/**
 		 * Der Empfangspuffer
 		 */
-		private BlockingQueue/*<byte[]>*/ m_readBuffer;
+		private ObjectQueue/*<byte[]>*/ m_readBuffer;
 
 		/**
 		 * Das Skype Stream Object, welches den Kanal ueber Skype repraesentiert.
@@ -88,7 +89,7 @@ public class SkypeConnection implements IChunkConnection {
 			// we use an quasi infinite Buffer to avoid blocking in the listener
 			// Thread
 			// and possible missing of Messages
-			m_readBuffer = new LinkedBlockingQueue/*<byte[]>*/();
+			m_readBuffer = new ObjectQueue();
 			m_baseReader = new QueuedChunkReader(m_readBuffer);
 			m_listner = new StreamListener() {
 
@@ -97,15 +98,9 @@ public class SkypeConnection implements IChunkConnection {
 					// all data is transported in base64
 					byte[] packet = Base64.decode(aa_message);
 					if (packet != null && packet.length > 0)
-						try {
 							// the packet presents directly the transmitted
 							// chunk
-							m_readBuffer.put(packet);
-						} catch (InterruptedException e) {
-							LogHolder
-									.log(LogLevel.WARNING, LogType.TRANSPORT,
-											"Interrupted while adding received Packet.");
-						}
+							m_readBuffer.push(packet);
 				}
 
 				public void datagramReceived(String arg0) throws SkypeException {

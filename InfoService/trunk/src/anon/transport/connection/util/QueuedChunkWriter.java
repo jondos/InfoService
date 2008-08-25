@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import anon.transport.connection.ConnectionException;
 import anon.transport.connection.IChunkWriter;
+import anon.util.ObjectQueue;
 
 
 /**
@@ -20,7 +21,7 @@ import anon.transport.connection.IChunkWriter;
 public class QueuedChunkWriter implements IChunkWriter {
 
 	/** Die BlockingQueue in welche Chunks eingefuegt werden. */
-	private final BlockingQueue/*<byte[]>*/ m_writingQueue;
+	private final ObjectQueue/*<byte[]>*/ m_writingQueue;
 
 	/** Gibt an ob der Writer geschlossen ist. */
 	private final AtomicBoolean m_isClosed;
@@ -46,7 +47,7 @@ public class QueuedChunkWriter implements IChunkWriter {
 	 *            Der initiale Wert fuer das Timeout der Schreiboperationen. Ein
 	 *            Wert von 0 bestimmt ein unendliches Timeout.
 	 */
-	public QueuedChunkWriter(BlockingQueue/*<byte[]>*/ a_writingQueue, int a_timeout) {
+	public QueuedChunkWriter(ObjectQueue/*<byte[]>*/ a_writingQueue, int a_timeout) {
 		m_writingQueue = a_writingQueue;
 		m_isClosed = new AtomicBoolean(false);
 		m_waitingThreads = new Vector();//LinkedList<Thread>();
@@ -60,7 +61,7 @@ public class QueuedChunkWriter implements IChunkWriter {
 	 * @param a_writingQueue
 	 *            Die Queue in welche die Chunks eingefuegt werden.
 	 */
-	public QueuedChunkWriter(BlockingQueue/*<byte[]>*/ a_readingQueue) {
+	public QueuedChunkWriter(ObjectQueue/*<byte[]>*/ a_readingQueue) {
 		m_writingQueue = a_readingQueue;
 		m_isClosed = new AtomicBoolean(false);
 		m_waitingThreads = new Vector();//LinkedList<Thread>();
@@ -85,12 +86,13 @@ public class QueuedChunkWriter implements IChunkWriter {
 			// after the previous step, we assume that the writer is open.
 			// it could close until now, but we will
 			// get an interruptedException when this happens
-			if (m_timeout > 0)
+/*			if (m_timeout > 0)
 				if (!m_writingQueue.offer(a_chunk, m_timeout,
 						TimeUnit.MILLISECONDS))
 					throw new ConnectionException("Timeout elapsed");
-			m_writingQueue.put(a_chunk);
-		} catch (InterruptedException e) {
+	*/
+			m_writingQueue.push(a_chunk);
+		} catch (Exception e) {
 			throw new ConnectionException(
 					"Innterupted while reading. Probaly closed Reader.");
 		} finally {
