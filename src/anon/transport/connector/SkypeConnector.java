@@ -20,10 +20,10 @@ import com.skype.SkypeException;
 import com.skype.Stream;
 
 /**
- * Connector welche auf Basis einer übergebenen {@link SkypeAddress} versucht
+ * Connector welche auf Basis einer uebergebenen {@link SkypeAddress} versucht
  * eine Verbindung zum angegeben entfernten Ende aufzubauen.
  * <p>
- * Die zurückgegeben Verbindung ist dabei Strom basierend.
+ * Die zurueckgegeben Verbindung ist dabei Strom basierend.
  */
 public class SkypeConnector implements IConnector {
 

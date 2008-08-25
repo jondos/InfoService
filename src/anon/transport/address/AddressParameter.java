@@ -7,7 +7,7 @@ package anon.transport.address;
  * <p>
  * So werden beispielsweise fuer den Transport von Daten mittels Sockets, die
  * IP-Adresse sowie der Port benoetigt um auf dieser Abstraktionschicht einen
- * Endpunkt genau zu bestimmen. IP-Address und Port währen in diesem Beispiel
+ * Endpunkt genau zu bestimmen. IP-Address und Port waehren in diesem Beispiel
  * Parameter der jeweiligen Adresse.
  * <p>
  * Paramter besitzen einen Namen ({@link #getName()}) in Form einer
