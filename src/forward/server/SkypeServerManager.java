@@ -13,7 +13,6 @@ import com.skype.ApplicationListener;
 import com.skype.Skype;
 import com.skype.SkypeException;
 import com.skype.Stream;
-import com.sun.corba.se.spi.activation.ServerManager;
 
 /**
  * {@link IServerManager} um Verbindungsanforderungen ueber Skype
@@ -22,7 +21,7 @@ import com.sun.corba.se.spi.activation.ServerManager;
 public class SkypeServerManager implements IServerManager {
 
 	/**
-	 * Eigentlicher Listener um über Verbindungsanfragen informiert zu werden.
+	 * Eigentlicher Listener um ueber Verbindungsanfragen informiert zu werden.
 	 * <p>
 	 * Wird an eine bestimmte Application gebunden um fuer diese Anfragen
 	 * entgegenzunehmen.
@@ -66,7 +65,7 @@ public class SkypeServerManager implements IServerManager {
 	/** Das Application Object, sofern es eingerichtet werden konnte. */
 	private Application m_application;
 
-	/** Der asynchrone Listner für neue Verbindungen. */
+	/** Der asynchrone Listner fuer neue Verbindungen. */
 	private RequestListener m_listner;
 
 	/** Warten wir auf Verbindungsanfragen? */
@@ -142,7 +141,7 @@ public class SkypeServerManager implements IServerManager {
 	}
 
 	/**
-	 * String Repräsentation des jeweiligen {@link SkypeServerManager} in der
+	 * String Repraesentation des jeweiligen {@link SkypeServerManager} in der
 	 * Form "skype:app(ApplicationName)"
 	 */
 //	@Override
