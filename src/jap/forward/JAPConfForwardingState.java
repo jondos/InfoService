@@ -43,9 +43,7 @@ import javax.swing.JTable;
 import javax.swing.border.TitledBorder;
 
 
-import anon.infoservice.ListenerInterface;
 import anon.transport.address.AddressParameter;
-import anon.transport.address.Endpoint;
 import anon.transport.address.IAddress;
 import gui.JAPHtmlMultiLineLabel;
 import logging.LogHolder;
@@ -537,8 +535,8 @@ public class JAPConfForwardingState extends AbstractJAPConfModule
 								if (currentForwarderAddress != null)
 								{
 									AddressParameter[] paramters = currentForwarderAddress.getAllParameters();
-									//TODO: check ob Länge mindestens 2 und evtl. auf Reihenfolge achten
-									// ideal extra Texte für unterschiedliche Addresstypen.
+									//TODO: check ob Laenge mindestens 2 und evtl. auf Reihenfolge achten
+									// ideal extra Texte fuer unterschiedliche Addresstypen.
 									settingsRoutingClientStatusForwarderInformationLabel.setText(JAPMessages.
 										getString("settingsRoutingClientStatusForwarderInformationLabelPart1") +
 										" " + paramters[0].getValue() + "    " +

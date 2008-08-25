@@ -33,7 +33,7 @@ public class LocalForwarder implements IServerManager,
 	private static Object m_currentServerManagerId = null;
 
 	/**
-	 * Die nötigen Methoden um den lokalen Forwarder serverseitig einzurichten.
+	 * Die noetigen Methoden um den lokalen Forwarder serverseitig einzurichten.
 	 */
 	public static void registerLocalForwarder(int a_bandwith) {
 		// taken from JAPRoutingSettings
@@ -69,7 +69,7 @@ public class LocalForwarder implements IServerManager,
 	}
 
 	/**
-	 * Liefert den Server Manager für lokales Forwarding.
+	 * Liefert den Server Manager fuer lokales Forwarding.
 	 */
 	public static IServerManager getServerManager() {
 		return m_instance;
