@@ -8,7 +8,7 @@ import anon.transport.address.IAddress;
 
 /**
  * Allgemeine Beschreibung einer Verbindung zwischen zwei Endpunkten und der
- * zugehörenden Primitive.
+ * zugehoerenden Primitive.
  * 
  * Dieses Interface ist als "abstract" anzusehen, in dem Sinne, das die
  * fundamentalen Primitive zum Empfang und der Übertragung von Daten erst in
@@ -17,19 +17,19 @@ import anon.transport.address.IAddress;
 public interface IConnection extends Closeable {
 
 	/**
-	 * Aufzählung der möglichen Zustände einer Verbindung
+	 * Aufzählung der moeglichen Zustände einer Verbindung
 	 */
 	//enum ConnectionState {
 		/**
 		 * Beschreibt den Zustand, in welchem eine Verbindung als offen
 		 * angesehen werden kann und zur Übertragung, sowie dem Empfang von
-		 * Daten zur Verfügung steht.
+		 * Daten zur Verfuegung steht.
 		 */
 		public final static int ConnectionState_OPEN=1;
 
 		/**
 		 * Beschreibt den Zustand, in welchem eine Verbinung als geschlossen
-		 * anzusehen ist und somit keine Übertragung von Daten möglich ist.
+		 * anzusehen ist und somit keine Übertragung von Daten moeglich ist.
 		 * 
 		 * Der geschlossen Zustand ist der finale Zustand einer Verbindung und
 		 * kann nach erreichen nicht mehr gewächselt werden.
@@ -38,20 +38,20 @@ public interface IConnection extends Closeable {
 	//}
 
 	/**
-	 * Setzt den Timeout in Millisekunden für die Lese- und Schreiboperationen
+	 * Setzt den Timeout in Millisekunden fuer die Lese- und Schreiboperationen
 	 * der Verbindung. Der Definition von {@link Socket} folgend, bestimmt 0 ein
 	 * unendliches Timeout.
 	 * 
 	 * @throws ConnectionException
-	 *             Wird geworfen, wenn das setzen des TimeOut nicht mögliche
+	 *             Wird geworfen, wenn das setzen des TimeOut nicht moegliche
 	 *             war. Insbesondere kann durch eine
 	 *             {@link UnsuportedCommandException} Ausnahme angegben werde,
-	 *             das das setzen generell nicht möglich ist.
+	 *             das das setzen generell nicht moeglich ist.
 	 */
 	void setTimeout(int value) throws ConnectionException;
 
 	/**
-	 * Ermittelt den momentanen Wert für das Timeout in Millisekunden für Lese-
+	 * Ermittelt den momentanen Wert fuer das Timeout in Millisekunden fuer Lese-
 	 * und Schreiboperationen der Verbindung. Der Definition von {@link Socket}
 	 * folgend, bestimmt 0 ein unendliches Timeout.
 	 * 
@@ -63,18 +63,18 @@ public interface IConnection extends Closeable {
 	/**
 	 * Gibt die Adresse des lokalen Endpunkt der Verbindung an.
 	 * <p>
-	 * Für Implentierungen, welche eine Bereits eingerichte Verbindung kapsel um
+	 * Fuer Implentierungen, welche eine Bereits eingerichte Verbindung kapsel um
 	 * weitere Funktionalität bereitzustellen, sollte diese Methode die Adresse
-	 * der drunterlegenen Verbindung zurückgeben.
+	 * der drunterlegenen Verbindung zurueckgeben.
 	 */
 	IAddress getLocalAddress();
 
 	/**
 	 * Gibt die Adresse des entfernten Endpunkt an.
 	 * <p>
-	 * Für Implentierungen, welche eine Bereits eingerichte Verbindung kapsel um
+	 * Fuer Implentierungen, welche eine Bereits eingerichte Verbindung kapsel um
 	 * weitere Funktionalität bereitzustellen, sollte diese Methode die Adresse
-	 * der drunterlegenen Verbindung zurückgeben.
+	 * der drunterlegenen Verbindung zurueckgeben.
 	 */
 	IAddress getRemoteAddress();
 

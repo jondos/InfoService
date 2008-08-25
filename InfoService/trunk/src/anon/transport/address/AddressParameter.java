@@ -2,11 +2,11 @@ package anon.transport.address;
 
 /**
  * Ein {@link AddressParameter} stellt einen der Parameter des jeweiligen
- * Transporsystems dar, welche nötig sind, um eindeutig einen Endpunkt zu
+ * Transporsystems dar, welche noetig sind, um eindeutig einen Endpunkt zu
  * definieren.
  * <p>
- * So werden beispielsweise für den Transport von Daten mittels Sockets, die
- * IP-Adresse sowie der Port benötigt um auf dieser Abstraktionschicht einen
+ * So werden beispielsweise fuer den Transport von Daten mittels Sockets, die
+ * IP-Adresse sowie der Port benoetigt um auf dieser Abstraktionschicht einen
  * Endpunkt genau zu bestimmen. IP-Address und Port währen in diesem Beispiel
  * Parameter der jeweiligen Adresse.
  * <p>
@@ -37,11 +37,11 @@ public class AddressParameter {
 	private String m_value;
 
 	/**
-	 * Erzeugt einen neuen {@link AddressParameter} mit dem übergebenen Namen
+	 * Erzeugt einen neuen {@link AddressParameter} mit dem uebergebenen Namen
 	 * und Wert.
 	 * 
 	 * @param a_name
-	 *            Der Name (Schlüssel) des Parameters
+	 *            Der Name (Schluessel) des Parameters
 	 * @param a_value
 	 *            Der Wert der Parameter
 	 */
@@ -51,7 +51,7 @@ public class AddressParameter {
 	}
 
 	/**
-	 * Erzeugt einen neuen Parameter mit dem übergebenen Namen. Als Wert wird
+	 * Erzeugt einen neuen Parameter mit dem uebergebenen Namen. Als Wert wird
 	 * die leere Zeichenkette verwendet.
 	 */
 	public AddressParameter(String a_name) {

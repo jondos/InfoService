@@ -15,7 +15,7 @@ import anon.transport.connection.IChunkReader;
 
 /**
  * Implementierung eines {@link IChunkReader}, welcher die auszugebenen Chunks
- * nacheinander aus einer Eingangs übergebenen {@link BlockingQueue} bezieht.
+ * nacheinander aus einer Eingangs uebergebenen {@link BlockingQueue} bezieht.
  */
 public class QueuedChunkReader implements IChunkReader {
 
@@ -33,25 +33,25 @@ public class QueuedChunkReader implements IChunkReader {
 	 */
 	private final Vector /*Collection<Thread>*/ m_waitingThreads;
 
-	/** Das Timeout für Leseoperationen in millisekunden */
+	/** Das Timeout fuer Leseoperationen in millisekunden */
 	private int m_timeout;
 
 	/**
 	 * Gibt an ob der Reader heruntergefahren werden soll.
 	 * <p>
-	 * Dies erlaubt das Schließen des Reader solange zu verzögern, bis keine
+	 * Dies erlaubt das Schließen des Reader solange zu verzoegern, bis keine
 	 * ausstehenden Chunks mehr vorhanden sind.
 	 */
 	private boolean m_isTearDown = false; // per default we are running
 
 	/**
 	 * Erstellt einen neuen {@link QueuedChunkReader} auf Grundlage der
-	 * übergebene Queue und dem entsprechenden Timeout.
+	 * uebergebene Queue und dem entsprechenden Timeout.
 	 * 
 	 * @param a_readingQueue
 	 *            Die Queue aus welcher die Chunks gelesen werden.
 	 * @param a_timeout
-	 *            Der initiale Wert für das Timeout der Leseoperationen. Ein
+	 *            Der initiale Wert fuer das Timeout der Leseoperationen. Ein
 	 *            Wert von 0 bestimmt ein unendliches Timeout.
 	 */
 	public QueuedChunkReader(BlockingQueue/*<byte[]>*/ a_readingQueue, int a_timeout) {
@@ -63,7 +63,7 @@ public class QueuedChunkReader implements IChunkReader {
 
 	/**
 	 * Erstellt einen neuen {@link QueuedChunkReader} auf Grundlage der
-	 * übergebene Queue mit einen unendlichen Timeout.
+	 * uebergebene Queue mit einen unendlichen Timeout.
 	 * 
 	 * @param a_readingQueue
 	 *            Die Queue aus welcher die Chunks gelesen werden.
@@ -80,7 +80,7 @@ public class QueuedChunkReader implements IChunkReader {
 		return m_timeout;
 	}
 
-	/** Setzt den Wert für das Timeout der Leseoperationen */
+	/** Setzt den Wert fuer das Timeout der Leseoperationen */
 	public void setTimeout(int a_value) {
 		m_timeout = a_value;
 	}
@@ -128,7 +128,7 @@ public class QueuedChunkReader implements IChunkReader {
 	 * Schließt den Reader ungeachtet noch ausstehender Chunks innerhalb der
 	 * Queue.
 	 * <p>
-	 * Wenn gewünscht wird mit dem Schließen bis zur Auslieferung dieser Chunks
+	 * Wenn gewuenscht wird mit dem Schließen bis zur Auslieferung dieser Chunks
 	 * zu warten sollte {@link #tearDown()} gewählt werden.
 	 */
 	public void close() throws IOException {

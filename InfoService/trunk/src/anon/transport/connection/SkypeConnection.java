@@ -20,7 +20,7 @@ import com.skype.Stream;
 import com.skype.StreamListener;
 
 /**
- * Implementierung einer Chunk basierten Verbindung, welche Skype für den
+ * Implementierung einer Chunk basierten Verbindung, welche Skype fuer den
  * Transport der Daten verwendet.
  * <p>
  * Änderungen des internen Zustandes (offen, geschlossen) von außen, sprich
@@ -42,13 +42,13 @@ public class SkypeConnection implements IChunkConnection {
 	 * der Skype Verbindung zugeschnitten ist.
 	 * <p>
 	 * Da weder Skype noch Skype4Java einen gepufferten Empfang von Nachrichen
-	 * unterstützen, erzeugt die Implementierung intern eine Instanz eines
-	 * {@link QueuedChunkReader} um diesen asynchron von Skype füllen zulassen.
+	 * unterstuetzen, erzeugt die Implementierung intern eine Instanz eines
+	 * {@link QueuedChunkReader} um diesen asynchron von Skype fuellen zulassen.
 	 */
 	private static class SkypeReader implements IChunkReader {
 
 		/**
-		 * Die maximal Länge einer Nachricht, wie sie über Skype verschickt
+		 * Die maximal Länge einer Nachricht, wie sie ueber Skype verschickt
 		 * werden darf.
 		 * 
 		 * @see https://developer.skype.com/Docs/ApiDoc/Application_to_application_commands
@@ -61,12 +61,12 @@ public class SkypeConnection implements IChunkConnection {
 		private BlockingQueue/*<byte[]>*/ m_readBuffer;
 
 		/**
-		 * Das Skype Stream Object, welches den Kanal über Skype repräsentiert.
+		 * Das Skype Stream Object, welches den Kanal ueber Skype repräsentiert.
 		 */
 		private Stream m_appStream;
 
 		/**
-		 * Der Listner für ankommende Nachrichten
+		 * Der Listner fuer ankommende Nachrichten
 		 */
 		private StreamListener m_listner;
 
@@ -77,7 +77,7 @@ public class SkypeConnection implements IChunkConnection {
 		private QueuedChunkReader m_baseReader;
 
 		/**
-		 * Erstellt einen neuen reader auf Basis des übergeben Skype Stream
+		 * Erstellt einen neuen reader auf Basis des uebergeben Skype Stream
 		 * 
 		 * @param a_appStream
 		 *            Der Skype Strom, welcher als Datenkanal genutzt werden
@@ -128,7 +128,7 @@ public class SkypeConnection implements IChunkConnection {
 
 		/**
 		 * Entfernt den Listener und schließt den internen Reader. Der Stream
-		 * beleibt allerdings unberührt, da dieser die komplette Verbindung
+		 * beleibt allerdings unberuehrt, da dieser die komplette Verbindung
 		 * repräsentiert.
 		 */
 		public void close() throws IOException {
@@ -138,7 +138,7 @@ public class SkypeConnection implements IChunkConnection {
 
 		/**
 		 * Entfernt den Listener und fährt den internen Reader runter. Der
-		 * Stream beleibt allerdings unberührt, da dieser die komplette
+		 * Stream beleibt allerdings unberuehrt, da dieser die komplette
 		 * Verbindung repräsentiert.
 		 */
 		public void tearDown() throws IOException {
@@ -160,7 +160,7 @@ public class SkypeConnection implements IChunkConnection {
 	private static class SkypeWriter implements IChunkWriter {
 
 		/**
-		 * Das Skype Stream Object, welches den Kanal über Skype repräsentiert.
+		 * Das Skype Stream Object, welches den Kanal ueber Skype repräsentiert.
 		 */
 		private Stream m_appStream;
 
@@ -170,7 +170,7 @@ public class SkypeConnection implements IChunkConnection {
 		private boolean m_isClosed;
 
 		/**
-		 * Erstellt einen neuen Writer af Basis des übergebenen Skype Stream
+		 * Erstellt einen neuen Writer af Basis des uebergebenen Skype Stream
 		 * 
 		 * @param a_appStream
 		 *            Der Skype Stream, welcher zur Übertragung von Daten
@@ -182,13 +182,13 @@ public class SkypeConnection implements IChunkConnection {
 		}
 
 		/**
-		 * Versucht einen Chunk mit Hilfe von Skype zu übertragen. Nach
+		 * Versucht einen Chunk mit Hilfe von Skype zu uebertragen. Nach
 		 * {@link IChunkWriter#writeChunk(byte[])} blockiert der Aufruf, bis der
-		 * Chunk in den Kanal eingefügt werden konnte oder gibt das Scheitern
+		 * Chunk in den Kanal eingefuegt werden konnte oder gibt das Scheitern
 		 * dieses Versuches durch eine entsprechende Ausnahme an.
 		 * <p>
 		 * die Übertragung erfolgt dabei, indem der Inhalt des Chunks Base64
-		 * kodiert übertragen werden.
+		 * kodiert uebertragen werden.
 		 */
 		public void writeChunk(byte[] a_chunk) throws ConnectionException {
 			if (!m_isClosed) {
@@ -202,7 +202,7 @@ public class SkypeConnection implements IChunkConnection {
 		}
 
 		/**
-		 * Schließt der Reader aber läßt den internen Stream unberührt, da
+		 * Schließt der Reader aber läßt den internen Stream unberuehrt, da
 		 * dieser die komplette Verbindung repräsentiert.
 		 */
 		public void close() throws IOException {
@@ -212,7 +212,7 @@ public class SkypeConnection implements IChunkConnection {
 	}
 
 	/**
-	 * Der Reader für die Verbindung.
+	 * Der Reader fuer die Verbindung.
 	 */
 	private final SkypeReader m_reader;
 
@@ -226,7 +226,7 @@ public class SkypeConnection implements IChunkConnection {
 	private final SkypeAddress m_remoteAddress;
 
 	/**
-	 * Das ApplicationsObject welches mit dem übergebene Steam Verbunden ist
+	 * Das ApplicationsObject welches mit dem uebergebene Steam Verbunden ist
 	 */
 	private final Application m_application;
 
@@ -237,8 +237,8 @@ public class SkypeConnection implements IChunkConnection {
 	private int m_state;
 
 	/**
-	 * Der Listner für Veränderungen an dem Zustand der Verbindung, sofern diese
-	 * von außen (Skype, RemoteEnd) ausgelößt werden.
+	 * Der Listner fuer Veränderungen an dem Zustand der Verbindung, sofern diese
+	 * von außen (Skype, RemoteEnd) ausgeloeßt werden.
 	 */
 	private ApplicationListener m_listner;
 
@@ -314,8 +314,8 @@ public class SkypeConnection implements IChunkConnection {
 	}
 
 	/**
-	 * Da Skype nicht das setzen eines TimeOut unterstützt, wird entsprechend
-	 * ein unendliches TimeOut mit der Verbindung verknüpft.
+	 * Da Skype nicht das setzen eines TimeOut unterstuetzt, wird entsprechend
+	 * ein unendliches TimeOut mit der Verbindung verknuepft.
 	 * 
 	 * @return Immer 0
 	 */
@@ -326,7 +326,7 @@ public class SkypeConnection implements IChunkConnection {
 
 	/**
 	 * Wirft immer eine {@link UnsuportedCommandException}, da Skype keine
-	 * Unterstützung für Timeout besitzt.
+	 * Unterstuetzung fuer Timeout besitzt.
 	 */
 	public void setTimeout(int value) throws ConnectionException {
 		throw new UnsuportedCommandException(

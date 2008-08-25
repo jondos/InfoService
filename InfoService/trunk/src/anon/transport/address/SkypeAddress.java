@@ -1,7 +1,7 @@
 package anon.transport.address;
 
 /**
- * Spezialisierung von {@link Endpoint} für die Bestimmung von Endpunkten auf
+ * Spezialisierung von {@link Endpoint} fuer die Bestimmung von Endpunkten auf
  * Basis von Skype.
  */
 
@@ -22,8 +22,8 @@ public class SkypeAddress implements IAddress {
 	protected String m_app;
 
 	/**
-	 * Erstellt eine neue Skype Adresse auf Basis der übergebenen Benutzer-ID
-	 * und dem zugehörigen Applications Namen.
+	 * Erstellt eine neue Skype Adresse auf Basis der uebergebenen Benutzer-ID
+	 * und dem zugehoerigen Applications Namen.
 	 */
 	public SkypeAddress(String a_userID, String a_applicationName) {
 		m_user = a_userID;
@@ -31,9 +31,9 @@ public class SkypeAddress implements IAddress {
 	}
 
 	/**
-	 * Erstellt eine neue {@link SkypeAddress}, wobei die Belegung für
+	 * Erstellt eine neue {@link SkypeAddress}, wobei die Belegung fuer
 	 * Benutzekennung und Application Name aus den entsprechenden Parametern
-	 * eines übergebenen Endpoint ermittelt wird.
+	 * eines uebergebenen Endpoint ermittelt wird.
 	 * 
 	 * @throws AddressMappingException
 	 */
@@ -49,7 +49,7 @@ public class SkypeAddress implements IAddress {
 	}
 
 	/**
-	 * Liefert die Benutzer ID der Adresse zurück.
+	 * Liefert die Benutzer ID der Adresse zurueck.
 	 */
 	public String getUserID() {
 		return m_user;

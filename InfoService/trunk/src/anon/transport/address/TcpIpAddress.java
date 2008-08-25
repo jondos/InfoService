@@ -26,9 +26,9 @@ public class TcpIpAddress implements IAddress {
 	protected InetAddress m_ipAddress;
 
 	/**
-	 * Erstellt eine neue {@link TcpIpAddress} auf Basis des übergebenen Host
+	 * Erstellt eine neue {@link TcpIpAddress} auf Basis des uebergebenen Host
 	 * und Portes. Intern wird dabei Versucht des Hostnamen zur nummerischen
-	 * Darstellung, der IP-Addresse aufzulösen. Sollte dies nicht gelingen, ist
+	 * Darstellung, der IP-Addresse aufzuloesen. Sollte dies nicht gelingen, ist
 	 * diese null.
 	 * 
 	 * @param a_host
@@ -48,7 +48,7 @@ public class TcpIpAddress implements IAddress {
 	}
 
 	/**
-	 * Erstellt eine neue {@link TcpIpAddress} auf Basis einer übergebenen
+	 * Erstellt eine neue {@link TcpIpAddress} auf Basis einer uebergebenen
 	 * IP-Adresse und eines Portes.
 	 */
 	public TcpIpAddress(InetAddress a_ipAdress, int a_port) {
@@ -57,8 +57,8 @@ public class TcpIpAddress implements IAddress {
 	}
 
 	/**
-	 * Erstellt eine neue {@link TcpIpAddress}, wobei die Belegung für Port und
-	 * IP-Address aus den entsprechenden Paramtern eines übergebenen Endpoint
+	 * Erstellt eine neue {@link TcpIpAddress}, wobei die Belegung fuer Port und
+	 * IP-Address aus den entsprechenden Paramtern eines uebergebenen Endpoint
 	 * ermittelt wird.
 	 * 
 	 * @throws AddressMappingException
@@ -83,14 +83,14 @@ public class TcpIpAddress implements IAddress {
 	}
 
 	/**
-	 * Liefert die IP-Adresse zurück.
+	 * Liefert die IP-Adresse zurueck.
 	 */
 	public InetAddress getIPAddress() {
 		return m_ipAddress;
 	}
 
 	/**
-	 * Liefert den Port zurück.
+	 * Liefert den Port zurueck.
 	 */
 	public int getPort() {
 		return m_port;
@@ -99,7 +99,7 @@ public class TcpIpAddress implements IAddress {
 	/**
 	 * Versucht ausgehend von der IP-Adresse den Hostname zu ermitteln. Dieser
 	 * kann unter Umständen einen anderen Wert annehmen, als bei der Erstellung
-	 * übergeben.
+	 * uebergeben.
 	 */
 	public String getHostname() {
 		return m_ipAddress.getHostName();

@@ -44,7 +44,7 @@ public class Endpoint {
 	 * Identifier bezeichnet dabei den Transportidentifier der {@link IAddress}
 	 * und ParameterName bzw. ParameterValue den Name bzw. Wert eines
 	 * Parameters, wobei sämtliche Parameter der {@link IAddress} in die URN
-	 * übernommen werde.
+	 * uebernommen werde.
 	 * 
 	 * @param a_address
 	 *            Die Adresse welche als URN dargestellt werden soll.
@@ -66,12 +66,12 @@ public class Endpoint {
 	}
 
 	/**
-	 * Versucht ausgehend von der übergeben URN eine neue Instanz von
+	 * Versucht ausgehend von der uebergeben URN eine neue Instanz von
 	 * {@link Endpoint} zu erstellen, wobei Identfier und Paramter gemäß der URN
 	 * bestimmt sind.
 	 * 
 	 * @param a_theURN
-	 *            Die URN welche als Basis für die Erstellung der Adresse dienen
+	 *            Die URN welche als Basis fuer die Erstellung der Adresse dienen
 	 *            soll.
 	 * @throws MalformedURNException
 	 *             Wenn das Format der URN nicht den Erwartungen entspricht.
@@ -102,10 +102,10 @@ public class Endpoint {
 	}
 
 	/**
-	 * Gibt einen bestimmten Paramter zurück.
+	 * Gibt einen bestimmten Paramter zurueck.
 	 * 
 	 * @param a_name
-	 *            der Name des gewünschten Paramters.
+	 *            der Name des gewuenschten Paramters.
 	 */
 	public String getParameter(String a_name) {
 		AddressParameter parameter = (AddressParameter) m_paramters.get(a_name);
@@ -113,10 +113,10 @@ public class Endpoint {
 	}
 
 	/**
-	 * Liefert eine Liste aller für diese Adresse bestimmten Paramter.
+	 * Liefert eine Liste aller fuer diese Adresse bestimmten Paramter.
 	 * 
-	 * @return Eine Liste von Schlüssel-Wert-Paren in Form einer Map. Der
-	 *         Schlüssel bestimmt dabei den Namen des Parametes und Wert seine
+	 * @return Eine Liste von Schluessel-Wert-Paren in Form einer Map. Der
+	 *         Schluessel bestimmt dabei den Namen des Parametes und Wert seine
 	 *         Belegung. Beides ist in Form von Strings anzugeben.
 	 */
 	public AddressParameter[] getAllParameters() {

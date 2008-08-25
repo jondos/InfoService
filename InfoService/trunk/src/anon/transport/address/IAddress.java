@@ -9,20 +9,20 @@ package anon.transport.address;
 public interface IAddress {
 
 	/**
-	 * Liefert den Identifier des Transportmediums zurück.
+	 * Liefert den Identifier des Transportmediums zurueck.
 	 * 
-	 * @return Der Identifer des Transportmediums. Es muss dafür Sorge getragen
-	 *         werden, das der Rückgabewert nie den Wert null annimmt. Im
-	 *         Notfall sollte auf den leeren String zurückgegriffen werden.
+	 * @return Der Identifer des Transportmediums. Es muss dafuer Sorge getragen
+	 *         werden, das der Rueckgabewert nie den Wert null annimmt. Im
+	 *         Notfall sollte auf den leeren String zurueckgegriffen werden.
 	 */
 	String getTransportIdentifier();
 
 	/**
-	 * Gibt eine Liste sämtlicher Parameter der Adresse zurück.
+	 * Gibt eine Liste sämtlicher Parameter der Adresse zurueck.
 	 * 
-	 * @return Die Liste aller Parameter der Adresse. Es muss dafür Sorge
-	 *         getragen werden, das der Rückgabewert nie den Wert null annimmt.
-	 *         Im Notfall sollte eine Array der Länge 0 zurückgegeben werden..
+	 * @return Die Liste aller Parameter der Adresse. Es muss dafuer Sorge
+	 *         getragen werden, das der Rueckgabewert nie den Wert null annimmt.
+	 *         Im Notfall sollte eine Array der Länge 0 zurueckgegeben werden..
 	 */
 	AddressParameter[] getAllParameters();
 }
