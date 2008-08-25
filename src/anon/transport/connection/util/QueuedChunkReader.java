@@ -28,7 +28,7 @@ public class QueuedChunkReader implements IChunkReader {
 	/**
 	 * Sammelt alle Threats, welche sich innerhalb der read() Methode befinden.
 	 * <p>
-	 * Dient dazu um beim Schließen des Reader evtl. blockierte Threats mittelst
+	 * Dient dazu um beim Schliessen des Reader evtl. blockierte Threats mittelst
 	 * {@link Thread#interrupt()} aufzuwecken.
 	 */
 	private final Vector /*Collection<Thread>*/ m_waitingThreads;
@@ -39,7 +39,7 @@ public class QueuedChunkReader implements IChunkReader {
 	/**
 	 * Gibt an ob der Reader heruntergefahren werden soll.
 	 * <p>
-	 * Dies erlaubt das Schließen des Reader solange zu verzoegern, bis keine
+	 * Dies erlaubt das Schliessen des Reader solange zu verzoegern, bis keine
 	 * ausstehenden Chunks mehr vorhanden sind.
 	 */
 	private boolean m_isTearDown = false; // per default we are running
@@ -125,10 +125,10 @@ public class QueuedChunkReader implements IChunkReader {
 	}
 
 	/**
-	 * Schließt den Reader ungeachtet noch ausstehender Chunks innerhalb der
+	 * Schliesst den Reader ungeachtet noch ausstehender Chunks innerhalb der
 	 * Queue.
 	 * <p>
-	 * Wenn gewuenscht wird mit dem Schließen bis zur Auslieferung dieser Chunks
+	 * Wenn gewuenscht wird mit dem Schliessen bis zur Auslieferung dieser Chunks
 	 * zu warten sollte {@link #tearDown()} gewaehlt werden.
 	 */
 	public void close() throws IOException {
@@ -144,7 +144,7 @@ public class QueuedChunkReader implements IChunkReader {
 	/**
 	 * Faehrt den Reader runter.
 	 * <p>
-	 * Das heißt bis zum Erreichen einer leeren Queue bleibt der Reader offen.
+	 * Das heisst bis zum Erreichen einer leeren Queue bleibt der Reader offen.
 	 * Danach wird er automatisch geschlossen.
 	 */
 	public void tearDown() throws IOException {

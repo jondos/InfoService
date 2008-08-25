@@ -127,7 +127,7 @@ public class QueuedChunkConnection implements IChunkConnection {
 	}
 
 	/**
-	 * Schließt die Verbindung, indem der interne Zustand auf geschlossen
+	 * Schliesst die Verbindung, indem der interne Zustand auf geschlossen
 	 * gesetzt wird.
 	 * <p>
 	 * Da noch Leseoperationen anstehen koennen, wird der Reader nur

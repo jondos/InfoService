@@ -28,7 +28,7 @@ public class QueuedChunkWriter implements IChunkWriter {
 	/**
 	 * Sammelt alle Threats, welche sich innerhalb der write() Methode befinden.
 	 * <p>
-	 * Dient dazu, beim Schließen des Writers evtl. blockierte Threats mittelst
+	 * Dient dazu, beim Schliessen des Writers evtl. blockierte Threats mittelst
 	 * {@link Thread#interrupt()} aufzuwecken.
 	 */
 	private final /*Collection<Thread>*/ Vector m_waitingThreads;
