@@ -2,7 +2,7 @@ package anon.transport.connection;
 
 /**
  * Konkretisierung von {@link IConnection}, bei welchem die Uebertragung von
- * Daten ueber bidirektional und stoßweise in Form von Datenblocken beliebiger
+ * Daten ueber bidirektional und stossweise in Form von Datenblocken beliebiger
  * Laenge (chunks) erfolgt.
  * <p>
  * Aufgabe der {@link IChunkConnection}, sowie der mit ihr verbunden Reader und

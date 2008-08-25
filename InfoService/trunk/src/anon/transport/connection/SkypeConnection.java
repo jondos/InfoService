@@ -23,7 +23,7 @@ import com.skype.StreamListener;
  * Implementierung einer Chunk basierten Verbindung, welche Skype fuer den
  * Transport der Daten verwendet.
  * <p>
- * Änderungen des internen Zustandes (offen, geschlossen) von außen, sprich
+ * Änderungen des internen Zustandes (offen, geschlossen) von aussen, sprich
  * durch Skype oder den Kommunikationspartner werden wahrgenommen und
  * entsprechend ausgewertet (@see {@link #m_listner}).
  */
@@ -127,7 +127,7 @@ public class SkypeConnection implements IChunkConnection {
 		}
 
 		/**
-		 * Entfernt den Listener und schließt den internen Reader. Der Stream
+		 * Entfernt den Listener und schliesst den internen Reader. Der Stream
 		 * beleibt allerdings unberuehrt, da dieser die komplette Verbindung
 		 * repraesentiert.
 		 */
@@ -202,7 +202,7 @@ public class SkypeConnection implements IChunkConnection {
 		}
 
 		/**
-		 * Schließt der Reader aber laeßt den internen Stream unberuehrt, da
+		 * Schliesst der Reader aber laesst den internen Stream unberuehrt, da
 		 * dieser die komplette Verbindung repraesentiert.
 		 */
 		public void close() throws IOException {
@@ -238,7 +238,7 @@ public class SkypeConnection implements IChunkConnection {
 
 	/**
 	 * Der Listner fuer Veraenderungen an dem Zustand der Verbindung, sofern diese
-	 * von außen (Skype, RemoteEnd) ausgeloeßt werden.
+	 * von aussen (Skype, RemoteEnd) ausgeloesst werden.
 	 */
 	private ApplicationListener m_listner;
 
@@ -335,13 +335,13 @@ public class SkypeConnection implements IChunkConnection {
 	}
 
 	/**
-	 * Schließt die Verbindung, indem der Listner entfernt wird und Reader und
+	 * Schliesst die Verbindung, indem der Listner entfernt wird und Reader und
 	 * Writer geschlossen werden.
 	 * <p>
-	 * Gegebenfalls wird noch versucht den Stream zu schließen.
+	 * Gegebenfalls wird noch versucht den Stream zu schliessen.
 	 * 
 	 * @param a_disconnectStream
-	 *            Gibt an ob auch Versucht werden soll den Stream zu schließen.
+	 *            Gibt an ob auch Versucht werden soll den Stream zu schliessen.
 	 */
 	public void close(boolean a_disconnectStream) throws IOException {
 		if (m_state != ConnectionState_CLOSE) {
@@ -359,10 +359,10 @@ public class SkypeConnection implements IChunkConnection {
 	}
 
 	/**
-	 * Schließt die Verbindung, indem der Listner entfernt wird und Reader und
+	 * Schliesst die Verbindung, indem der Listner entfernt wird und Reader und
 	 * Writer geschlossen werden.
 	 * <p>
-	 * Es wird auf jeden Fall versucht den Stream zu schließen.
+	 * Es wird auf jeden Fall versucht den Stream zu schliessen.
 	 */
 	public void close() throws IOException {
 		close(true);
