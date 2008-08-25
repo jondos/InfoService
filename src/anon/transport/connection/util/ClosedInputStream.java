@@ -7,18 +7,18 @@ import anon.transport.connection.IStreamConnection;
 
 
 /**
- * Eine Implentierung von InputStream, welche immer geschlossen ist. Sämtliche
+ * Eine Implentierung von InputStream, welche immer geschlossen ist. Saemtliche
  * read-Methoden, werfen entsprechende Ausnahmen.
  * <p>
  * Diese Klasse ist zu Verwenden, wenn der Rueckgabewert einer Methode einen
  * InputStream verlangt, aber aufgrund des inneren Zustandes des Objektes keine
- * geeignete Implentierung ausgewählt werden kann. Um in solchen Fällen dir
+ * geeignete Implentierung ausgewaehlt werden kann. Um in solchen Faellen dir
  * Rueckgabe von null oder den Wurf einer Ausnahme zuvermeiden, sollte diese
  * Klasse verwendet werden.
  * <p>
  * So wird sie beispielsweise oft bei konkreten Implementierungen von
  * {@link IStreamConnection} verwendet, um bei Verbindungen, welche bereits
- * während der Initialisierung geschlossen sind, einen geeigneten Rueckgabewert
+ * waehrend der Initialisierung geschlossen sind, einen geeigneten Rueckgabewert
  * fuer {@link IStreamConnection#getInputStream()} anzugeben.
  * 
  */

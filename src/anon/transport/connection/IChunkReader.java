@@ -5,7 +5,7 @@ import java.io.InputStream;
 
 /**
  * Durch einen {@link IChunkReader} wird das lesende Ende eines Datenkanals
- * beschrieben, ueber welchen Daten in Form von byte[] beliebiger Länge
+ * beschrieben, ueber welchen Daten in Form von byte[] beliebiger Laenge
  * verschickt werden koennen.
  * <p>
  * Konzeptionel handelt es sich um die chunk-basierte Entsprechung eines
@@ -13,20 +13,20 @@ import java.io.InputStream;
  * Stueck (Chunk), wobei davon ausgegangen werden kann, dass der empfangen Chunk
  * inhaltlich genauso gesendet wurde. Die Zuordnung und die Reihenfolge der
  * einzelnen Bytes innerhalb eines Chunks wird durch die uebertragung nicht
- * verändert.
+ * veraendert.
  */
 public interface IChunkReader extends Closeable {
 
 	/**
-	 * Gibt den ältesten (im Sinne des Einfuegens in den Kanal) der im Kanal
+	 * Gibt den aeltesten (im Sinne des Einfuegens in den Kanal) der im Kanal
 	 * befindlichen Chunks zurueck. Sofern der Kanal leer ist blockiert der
 	 * Aufruf bis ein Chunk ausgeliefert werden kann.
 	 * <p>
-	 * Evtl. Fehler oder unzulässige Zustände des Kanals koennen durch
+	 * Evtl. Fehler oder unzulaessige Zustaende des Kanals koennen durch
 	 * entsprechende Ausnahmen angezeigt werden.
 	 * 
-	 * @return Den ältesten Chunk innerhalb des Kanals. Ein Rueckgabewert von
-	 *         <code>null</code> ist nicht zulässig und ein Rueckgabewert von
+	 * @return Den aeltesten Chunk innerhalb des Kanals. Ein Rueckgabewert von
+	 *         <code>null</code> ist nicht zulaessig und ein Rueckgabewert von
 	 *         <code>byte[0]</code> sollte vermieden werden.
 	 */
 	byte[] readChunk() throws ConnectionException;

@@ -20,14 +20,14 @@ import logging.LogType;
  * verwenden.
  * 
  * Da Ein- und Ausgabestrom nur als Paar auftreten und fester Bestandteil der
- * {@link IStreamConnection} sind, wird bereits während der Initlisierung
+ * {@link IStreamConnection} sind, wird bereits waehrend der Initlisierung
  * versucht den Ein- und Ausgabestrom des Sockets zu bekommen. Sollte dies nicht
  * moeglich sein, wird die Verbindung bereits zu begin als geschlossen markiert.
  * Deswegen ist es wichtig SocketConnection nur in Verbindung mit offenen und
  * verbunden Sockets zu verwenden.
  * 
  * Außerdem wird angennomme das sich Ein- und Ausgabestrom des Sockets nicht
- * ändern.
+ * aendern.
  */
 public class SocketConnection implements IStreamConnection {
 

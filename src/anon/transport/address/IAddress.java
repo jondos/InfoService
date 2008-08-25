@@ -18,11 +18,11 @@ public interface IAddress {
 	String getTransportIdentifier();
 
 	/**
-	 * Gibt eine Liste sämtlicher Parameter der Adresse zurueck.
+	 * Gibt eine Liste saemtlicher Parameter der Adresse zurueck.
 	 * 
 	 * @return Die Liste aller Parameter der Adresse. Es muss dafuer Sorge
 	 *         getragen werden, das der Rueckgabewert nie den Wert null annimmt.
-	 *         Im Notfall sollte eine Array der Länge 0 zurueckgegeben werden..
+	 *         Im Notfall sollte eine Array der Laenge 0 zurueckgegeben werden..
 	 */
 	AddressParameter[] getAllParameters();
 }

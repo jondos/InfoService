@@ -129,7 +129,7 @@ public class QueuedChunkReader implements IChunkReader {
 	 * Queue.
 	 * <p>
 	 * Wenn gewuenscht wird mit dem Schließen bis zur Auslieferung dieser Chunks
-	 * zu warten sollte {@link #tearDown()} gewählt werden.
+	 * zu warten sollte {@link #tearDown()} gewaehlt werden.
 	 */
 	public void close() throws IOException {
 		if (m_isClosed.getAndSet(true))
@@ -142,7 +142,7 @@ public class QueuedChunkReader implements IChunkReader {
 	}
 
 	/**
-	 * Fährt den Reader runter.
+	 * Faehrt den Reader runter.
 	 * <p>
 	 * Das heißt bis zum Erreichen einer leeren Queue bleibt der Reader offen.
 	 * Danach wird er automatisch geschlossen.

@@ -33,7 +33,7 @@ public class TcpIpAddress implements IAddress {
 	 * 
 	 * @param a_host
 	 *            Der Hostname oder Textdarstellung der nummerischen
-	 *            Repräsentation.
+	 *            Repraesentation.
 	 * @param a_port
 	 *            Der Port.
 	 */
@@ -98,7 +98,7 @@ public class TcpIpAddress implements IAddress {
 
 	/**
 	 * Versucht ausgehend von der IP-Adresse den Hostname zu ermitteln. Dieser
-	 * kann unter Umständen einen anderen Wert annehmen, als bei der Erstellung
+	 * kann unter Umstaenden einen anderen Wert annehmen, als bei der Erstellung
 	 * uebergeben.
 	 */
 	public String getHostname() {

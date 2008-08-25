@@ -31,7 +31,7 @@ public class Endpoint {
 	}
 
 	/**
-	 * Wandelt eine Übergebene {@link IAddress} in ihre URN Darstellung um. Die
+	 * Wandelt eine Uebergebene {@link IAddress} in ihre URN Darstellung um. Die
 	 * Umwandlung erfolgt dabei nach folgender Regel.
 	 * 
 	 * <pre>

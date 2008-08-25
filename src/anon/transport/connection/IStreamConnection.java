@@ -19,7 +19,7 @@ public interface IStreamConnection extends IConnection {
 	 * Liefert den Eingabestrom der Verbinundung, ueber welchen kontinuierlich
 	 * Daten empfangen werden koennen.
 	 * 
-	 * Sofern sich der Zustand der Verbindung nicht ändert, sollte diese Methode
+	 * Sofern sich der Zustand der Verbindung nicht aendert, sollte diese Methode
 	 * immer das selbe Objekt zurueckgeben.
 	 */
 	InputStream getInputStream();
@@ -28,7 +28,7 @@ public interface IStreamConnection extends IConnection {
 	 * Liefert den Ausgabestrom der verbindung, ueber welchem Daten gesendet
 	 * werden koennen.
 	 * 
-	 * Sofern sich der Zustand der Verbindung nicht ändert, sollte diese Methode
+	 * Sofern sich der Zustand der Verbindung nicht aendert, sollte diese Methode
 	 * immer das selbe Objekt zurueckgeben.
 	 */
 	OutputStream getOutputStream();

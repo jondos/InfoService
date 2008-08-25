@@ -30,7 +30,7 @@ import com.skype.StreamListener;
 public class SkypeConnection implements IChunkConnection {
 
 	/**
-	 * Das inaktivitäts Time Out, nach welchem zu erwarten ist, das eine
+	 * Das inaktivitaets Time Out, nach welchem zu erwarten ist, das eine
 	 * Verbindung zwangsweise geschlossen wird.
 	 * 
 	 * @see https://developer.skype.com/Docs/ApiDoc/Application_to_application_commands
@@ -48,7 +48,7 @@ public class SkypeConnection implements IChunkConnection {
 	private static class SkypeReader implements IChunkReader {
 
 		/**
-		 * Die maximal Länge einer Nachricht, wie sie ueber Skype verschickt
+		 * Die maximal Laenge einer Nachricht, wie sie ueber Skype verschickt
 		 * werden darf.
 		 * 
 		 * @see https://developer.skype.com/Docs/ApiDoc/Application_to_application_commands
@@ -61,7 +61,7 @@ public class SkypeConnection implements IChunkConnection {
 		private BlockingQueue/*<byte[]>*/ m_readBuffer;
 
 		/**
-		 * Das Skype Stream Object, welches den Kanal ueber Skype repräsentiert.
+		 * Das Skype Stream Object, welches den Kanal ueber Skype repraesentiert.
 		 */
 		private Stream m_appStream;
 
@@ -129,7 +129,7 @@ public class SkypeConnection implements IChunkConnection {
 		/**
 		 * Entfernt den Listener und schließt den internen Reader. Der Stream
 		 * beleibt allerdings unberuehrt, da dieser die komplette Verbindung
-		 * repräsentiert.
+		 * repraesentiert.
 		 */
 		public void close() throws IOException {
 			m_appStream.removeStreamListener(m_listner);
@@ -137,9 +137,9 @@ public class SkypeConnection implements IChunkConnection {
 		}
 
 		/**
-		 * Entfernt den Listener und fährt den internen Reader runter. Der
+		 * Entfernt den Listener und faehrt den internen Reader runter. Der
 		 * Stream beleibt allerdings unberuehrt, da dieser die komplette
-		 * Verbindung repräsentiert.
+		 * Verbindung repraesentiert.
 		 */
 		public void tearDown() throws IOException {
 			m_appStream.removeStreamListener(m_listner);
@@ -152,7 +152,7 @@ public class SkypeConnection implements IChunkConnection {
 	 * Umsetzung eines {@link IChunkWriter} welcher speziell auf die Eigenheiten
 	 * der Skype Verbindung zugeschnitten ist.
 	 * <p>
-	 * Die Übertragung erfolgt indem die eigentlichen binär Daten mit Hilfe von
+	 * Die Übertragung erfolgt indem die eigentlichen binaer Daten mit Hilfe von
 	 * Base64 in einen String umgewandelt werden. Dies erfolgt in Anlehnung an
 	 * den Hinweis in
 	 * {@link https://developer.skype.com/Docs/ApiDoc/Application_to_application_commands}
@@ -160,7 +160,7 @@ public class SkypeConnection implements IChunkConnection {
 	private static class SkypeWriter implements IChunkWriter {
 
 		/**
-		 * Das Skype Stream Object, welches den Kanal ueber Skype repräsentiert.
+		 * Das Skype Stream Object, welches den Kanal ueber Skype repraesentiert.
 		 */
 		private Stream m_appStream;
 
@@ -202,8 +202,8 @@ public class SkypeConnection implements IChunkConnection {
 		}
 
 		/**
-		 * Schließt der Reader aber läßt den internen Stream unberuehrt, da
-		 * dieser die komplette Verbindung repräsentiert.
+		 * Schließt der Reader aber laeßt den internen Stream unberuehrt, da
+		 * dieser die komplette Verbindung repraesentiert.
 		 */
 		public void close() throws IOException {
 			m_isClosed = true;
@@ -237,7 +237,7 @@ public class SkypeConnection implements IChunkConnection {
 	private int m_state;
 
 	/**
-	 * Der Listner fuer Veränderungen an dem Zustand der Verbindung, sofern diese
+	 * Der Listner fuer Veraenderungen an dem Zustand der Verbindung, sofern diese
 	 * von außen (Skype, RemoteEnd) ausgeloeßt werden.
 	 */
 	private ApplicationListener m_listner;
