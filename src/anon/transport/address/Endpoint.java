@@ -1,7 +1,6 @@
 package anon.transport.address;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Hashtable;
 
 /**
  * Ein {@link Endpoint} stellt die Schnittstelle zwischen einer {@link IAddress}
@@ -21,7 +20,7 @@ public class Endpoint {
 	/**
 	 * Liste der Parameter vom Type String,AddressParameter.
 	 */
-	protected Map m_paramters;
+	protected Hashtable m_paramters;
 
 	/**
 	 * Liefer den Namen des Transportidentifer.
@@ -89,7 +88,7 @@ public class Endpoint {
 		m_transportIdentifier = components[2];
 
 		// get Parameters
-		m_paramters = new HashMap();
+		m_paramters = new Hashtable();
 		for (int i = 3, length = components.length; i < length; i++) {
 			int parentheseIndex = components[i].indexOf("(");
 			int decrementedLength = components[i].length() - 1;
