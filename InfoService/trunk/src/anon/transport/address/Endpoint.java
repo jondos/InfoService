@@ -5,7 +5,7 @@ import java.util.Map;
 
 /**
  * Ein {@link Endpoint} stellt die Schnittstelle zwischen einer {@link IAddress}
- * und ihrer URN-Repräsentation da.
+ * und ihrer URN-Repraesentation da.
  * <p>
  * Dazu stellt sie einerseits Mechanismen bereit, eine URN zu Parsen und auf das
  * Ergebniss strukturiert zuzugreifen und andererseits eine Methode um eine
@@ -43,7 +43,7 @@ public class Endpoint {
 	 * 
 	 * Identifier bezeichnet dabei den Transportidentifier der {@link IAddress}
 	 * und ParameterName bzw. ParameterValue den Name bzw. Wert eines
-	 * Parameters, wobei sämtliche Parameter der {@link IAddress} in die URN
+	 * Parameters, wobei saemtliche Parameter der {@link IAddress} in die URN
 	 * uebernommen werde.
 	 * 
 	 * @param a_address
@@ -67,7 +67,7 @@ public class Endpoint {
 
 	/**
 	 * Versucht ausgehend von der uebergeben URN eine neue Instanz von
-	 * {@link Endpoint} zu erstellen, wobei Identfier und Paramter gemäß der URN
+	 * {@link Endpoint} zu erstellen, wobei Identfier und Paramter gemaeß der URN
 	 * bestimmt sind.
 	 * 
 	 * @param a_theURN
