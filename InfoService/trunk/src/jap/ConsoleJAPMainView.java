@@ -90,7 +90,7 @@ public class ConsoleJAPMainView implements IJAPMainView
 					// One is if JAP is run on VNC based X11 server
 					try
 						{
-							Thread.sleep(10000);
+							Thread.sleep(2000);
 						}
 					catch (InterruptedException e)
 						{
