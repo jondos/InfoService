@@ -145,6 +145,7 @@ public class ForwardUtils
 					}
 				else if (a_address instanceof SkypeAddress)
 					{
+						LogHolder.log(LogLevel.DEBUG, LogType.NET,"forwardUtils:createconnection() start connection to skype forwarder");						
 						SkypeConnector connector = new SkypeConnector();
 						try
 							{

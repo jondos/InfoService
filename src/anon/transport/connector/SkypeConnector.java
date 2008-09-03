@@ -78,6 +78,8 @@ public class SkypeConnector implements IConnector
 					{
 					}
 				// are we trying to connect to ourself?
+				LogHolder.log(LogLevel.DEBUG, LogType.NET,"Skye Connector - try to get user id");
+
 				try
 					{
 						String localID = Skype.getProfile().getId();
