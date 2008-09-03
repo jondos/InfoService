@@ -147,6 +147,10 @@ public class ForwardUtils
 					{
 						LogHolder.log(LogLevel.DEBUG, LogType.NET,"forwardUtils:createconnection() start connection to skype forwarder");						
 						SkypeConnector connector = new SkypeConnector();
+						if(connector!=null)
+							LogHolder.log(LogLevel.DEBUG, LogType.NET,"forwardUtils:createconnection() skype conector object created");						
+						else
+							LogHolder.log(LogLevel.DEBUG, LogType.NET,"forwardUtils:createconnection() skype conector object NOT created");						
 						try
 							{
 								return connector.connect((SkypeAddress) a_address);
