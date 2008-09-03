@@ -68,8 +68,15 @@ public class SkypeConnector implements IConnector
 		public IStreamConnection connect(SkypeAddress a_address)
 				throws ConnectionException
 			{
-				Application app;
-
+				Application app=null;
+				Skype.setDeamon(false);
+				try
+					{
+						Skype.setDebug(true);
+					}
+				catch (SkypeException e1)
+					{
+					}
 				// are we trying to connect to ourself?
 				try
 					{
@@ -106,8 +113,7 @@ public class SkypeConnector implements IConnector
 				Stream[] connectionStreams=null;
 				try
 					{
-						connectionStreams = app.connect(new String[] { a_address
-								.getUserID() });
+						connectionStreams = app.connect(new String[] { a_address.getUserID() });
 					}
 				catch (SkypeException e)
 					{
