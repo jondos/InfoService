@@ -532,6 +532,8 @@ final public class JAPRoutingSettings extends Observable implements IXMLEncodabl
 						LocalForwarder.registerLocalForwarder(getBandwidth());
 					
 					/* try to connect to a forwarder */
+					LogHolder.log(LogLevel.DEBUG, LogType.NET,"JAPRountingSettings:setRoutingMode() tryto connect to forwarder");
+
 					m_forwardedConnection = ForwardUtils.getInstance().createForwardingConnection(m_forwadingAddress);
 					if (m_forwardedConnection != null)
 					{
