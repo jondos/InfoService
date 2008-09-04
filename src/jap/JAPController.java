@@ -1252,7 +1252,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 				/* try to load information about cascades */
 				Node nodeCascades = XMLUtil.getFirstChildByName(root, MixCascade.XML_ELEMENT_CONTAINER_NAME);
-				MixCascade currentCascade;
+				MixCascade currentCascade=null;
 				if (nodeCascades != null)
 				{
 					Node nodeCascade = nodeCascades.getFirstChild();
