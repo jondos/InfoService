@@ -74,6 +74,7 @@ public class SkypeConnector implements IConnector
 				try
 					{
 						LogHolder.log(LogLevel.DEBUG, LogType.NET,"Skye Connector - Skype.setDebug()");
+						Skype.setDebug(true);
 						Skype.setDebug(false);
 						LogHolder.log(LogLevel.DEBUG, LogType.NET,"Skye Connector - Skype.setDebug - finished()");
 										}
