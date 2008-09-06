@@ -70,17 +70,11 @@ public class SkypeConnector implements IConnector
 				throws ConnectionException
 			{
 				Application app=null;
-				//LogHolder.log(LogLevel.DEBUG, LogType.NET,"Skye Connector - Skype.setDaemon()");
-				//Skype.setDeamon(false);
 				try
 					{
 						Connector.getInstance().setApplicationName(a_address.getApplicationName());
-						LogHolder.log(LogLevel.DEBUG, LogType.NET,"Skye Connector - Skype.setDebug()");
-						Skype.setDebug(true);
-						Skype.setDebug(false);
-						LogHolder.log(LogLevel.DEBUG, LogType.NET,"Skye Connector - Skype.setDebug - finished()");
-										}
-				catch (SkypeException e1)
+					}
+				catch (Exception e1)
 					{
 						LogHolder.log(LogLevel.DEBUG, LogType.NET,"Skye Connector - exception");
 					}
