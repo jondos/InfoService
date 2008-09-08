@@ -73,6 +73,8 @@ public class SkypeConnector implements IConnector
 				try
 					{
 						Connector.getInstance().setApplicationName(a_address.getApplicationName());
+						if(LogHolder.isLogged(LogLevel.DEBUG,LogType.TRANSPORT))
+							Skype.setDebug(true);
 					}
 				catch (Exception e1)
 					{
