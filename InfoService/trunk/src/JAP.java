@@ -65,11 +65,14 @@ import jap.JAPModel;
 import jap.JAPNewView;
 import jap.JAPSplash;
 import jap.JAPViewIconified;
+import jap.MacOSXLib;
+import jap.SystrayPopupMenu;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 import platform.AbstractOS;
 import platform.WindowsOS;
+import platform.MacOS;
 
 /** This is the main class of the JAP project. It starts everything. It can be inherited by another
  *  class that wants to initialize platform dependend features, e.g. see
@@ -849,6 +852,47 @@ public class JAP
 		if (bConsoleOnly)
 		{
 			view.setVisible(true);
+		}
+		
+		// for some reason this needs to be done here, otherwise 
+		// it won't work
+		if(AbstractOS.getInstance() instanceof MacOS)
+		{
+			MacOSXLib.init();
+			
+			/*final SystrayPopupMenu systray = new SystrayPopupMenu(
+					new SystrayPopupMenu.MainWindowListener()
+				{
+					public void onShowMainWindow()
+					{
+						// do nothing
+					}
+
+					public void onShowSettings(String card, Object a_value)
+					{
+						
+					}
+
+					public void onShowHelp()
+					{
+
+					}
+				});
+			
+			javax.swing.JPopupMenu popup = systray.getPopup();
+			
+			javax.swing.JMenu menu = new javax.swing.JMenu();
+			
+			for(int i = 0; i < popup.getComponentCount(); i++)
+			{
+				java.awt.Component c = popup.getComponent(i);
+				if(c instanceof javax.swing.JMenuItem)
+				{
+					menu.add(c);
+				}
+			}
+			
+			JAPMacOSXLib.setMenu(menu);*/
 		}
 	}
 

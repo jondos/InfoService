@@ -31,8 +31,9 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 	public static final int USERS = 2;
 	
 	public static final long[][] BOUNDARIES = new long[][] { 
-		{ 0, 100, 250, 500, 750, 1000, 1500, 2000 },
-		{ 500, 750, 1000, 2000, 2500, 3000, 4000, Long.MAX_VALUE} };
+		{ 0, 50, 100, 200, 300, 400, 500, 750, 1000 },
+		{ 500, 750, 1000, 2000, 2500, 3000, 4000, 8000, Long.MAX_VALUE},
+		{ 0 } };
 
 	private static final String XML_ATTR_ID = "id";
 	private static final String XML_ELEMENT_CURRENT_HOURLY_DATA = "Data";
@@ -156,7 +157,7 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		entry = m_entries[a_attribute][day][hour];
 		if(entry == null)
 		{
-			m_entries[a_attribute][day][hour] = entry = new PerformanceAttributeEntry();
+			m_entries[a_attribute][day][hour] = entry = new PerformanceAttributeEntry(a_attribute);
 		}
 		
 		entry.addValue(a_timestamp, a_value);
@@ -238,7 +239,7 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 			entry = m_entries[a_attribute][day][hour];
 			if(entry == null)
 			{
-				m_entries[a_attribute][day][hour] = entry = new PerformanceAttributeEntry();
+				m_entries[a_attribute][day][hour] = entry = new PerformanceAttributeEntry(a_attribute);
 			}
 			
 			entry.addValue(timestamp.longValue(), value);
@@ -399,7 +400,7 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 				"<th>Average</th>" +
 				"<th>Min</th>" +
 				"<th>Max</th>" +
-				"<th>Std. Deviation</th>" +
+				"<th>Bound</th>" +
 				//(a_selectedDay == dayOfWeek ? "<th>Last Test</th>" : "")+
 				"<th>% Std. Deviation</th>" +
 				"<th>Errors</th></tr>";
@@ -429,7 +430,34 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 				htmlData += "<td>" + entry.getAverageValue() + " " + a_unit + "</td>" +
 					"<td>" + entry.getMinValue() + " " + a_unit + "</td>" +
 					"<td>" + entry.getMaxValue() + " " + a_unit + "</td>" +
-					"<td>" + format.format(entry.getStdDeviation()) + " " + a_unit + "</td>";
+					"<td>";
+				
+				long bound = (entry == null ? -1 : entry.getBound());
+			
+				if(a_attribute == DELAY)
+				{
+					if(bound == Long.MAX_VALUE)
+					{
+						htmlData += "> " + PerformanceEntry.BOUNDARIES[PerformanceEntry.DELAY][PerformanceEntry.BOUNDARIES[PerformanceEntry.DELAY].length - 2];
+					}
+					else
+					{
+						htmlData += bound;
+					}
+				}
+				else if(a_attribute == SPEED)
+				{
+					if(bound == 0)
+					{
+						htmlData += "< " + PerformanceEntry.BOUNDARIES[PerformanceEntry.SPEED][1];
+					}
+					else
+					{
+						htmlData += bound;
+					}
+				}
+				
+				htmlData += " " + a_unit + "</td>";
 				
 				/*
 				if(a_selectedDay == dayOfWeek)
@@ -795,6 +823,7 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		private long m_lMaxValue = -1;
 		private long m_lMinValue = -1;
 		private long m_lAverageValue = -1;
+		private long m_lBound = -1;
 		private double m_lStdDeviation = 0.0;
 		
 		private long m_lastUpdate = -1;
@@ -802,6 +831,12 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		private Hashtable m_Values = new Hashtable();
 		
 		private int m_iErrors = 0;
+		private int m_attribute;
+		
+		public PerformanceAttributeEntry(int a_attribute)
+		{
+			m_attribute = a_attribute;
+		}
 		
 		public void addValue(long a_lTimeStamp, long a_lValue)
 		{
@@ -818,6 +853,7 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 					m_lMinValue = -1;
 					m_lMaxValue = -1;
 					m_lStdDeviation = -1;
+					m_lBound = -1;
 				}
 				return;
 			}
@@ -856,6 +892,81 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 			}
 			
 			m_lMaxValue = Math.max(m_lMaxValue, a_lValue);
+			
+			// bound value
+			long values = 0;
+			long errors = 0;
+			
+			Vector vec = new Vector();
+			synchronized (m_Values)
+			{
+				e = m_Values.keys();
+				
+				e = m_Values.elements();
+				while(e.hasMoreElements())
+				{
+					Long value = (Long) e.nextElement();
+					
+					if(value.longValue() > 0)
+					{
+						vec.addElement(value);
+					}
+				}
+			}
+			
+			if(m_attribute == SPEED)
+			{
+				Util.sort(vec, new LongSortAsc());
+			}
+			else
+			{
+				Util.sort(vec, new LongSortDesc());
+			}
+			
+			int limit = (int) Math.floor(vec.size() / 10);
+			
+			for(int i = 0; i < limit; i++)
+			{
+				vec.removeElementAt(i);
+			}
+			
+			if(vec.size() > 0)
+			{
+				long value = ((Long) vec.elementAt(0)).longValue();
+				
+				if(m_attribute == SPEED)
+				{
+					for(int i = BOUNDARIES[m_attribute].length -1 ; i >= 0; i--)
+					{
+						if(value >= BOUNDARIES[m_attribute][i])
+						{
+							m_lBound = BOUNDARIES[m_attribute][i];
+							return;
+						}
+					}
+				}
+				else
+				{
+					for(int i = 0; i < BOUNDARIES[m_attribute].length; i++)
+					{
+						if(value <= BOUNDARIES[m_attribute][i])
+						{
+							m_lBound = BOUNDARIES[m_attribute][i];
+							return;
+						}
+					}
+					
+					m_lBound = BOUNDARIES[m_attribute][BOUNDARIES[m_attribute].length - 1];
+					return;
+				}
+				
+				m_lBound = BOUNDARIES[m_attribute][0];
+				return;
+			}
+			else
+			{
+				m_lBound = -1;
+			}
 		}
 		
 		public long getAverageValue()
@@ -886,6 +997,11 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		public int getValueSize()
 		{
 			return m_Values.size() + m_iErrors;
+		}
+		
+		public long getBound()
+		{
+			return m_lBound;
 		}
 		
 		public long getDayTimestamp()
