@@ -1097,7 +1097,7 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		}
 		else
 		{
-			p = new PasswordContentPane(d, PasswordContentPane.PASSWORD_NEW, "");
+			p = new PasswordContentPane(d, PasswordContentPane.PASSWORD_NEW, JAPMessages.getString(MSG_ENCRYPT_ACCOUNTS));
 		}
 		p.updateDialog();
 		d.pack();
@@ -1105,7 +1105,13 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		if (p.getButtonValue() != PasswordContentPane.RETURN_VALUE_CANCEL &&
 			p.getButtonValue() != PasswordContentPane.RETURN_VALUE_CLOSED)
 		{
-			JAPController.getInstance().setPaymentPassword(new String(p.getPassword()));
+			String pw = new String(p.getPassword());
+			if(pw.equals(""))
+			{
+				pw = null;
+			}
+			
+			JAPController.getInstance().setPaymentPassword(pw);
 		}
 	}
 
