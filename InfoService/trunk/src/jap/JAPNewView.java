@@ -2585,7 +2585,6 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				m_dlgConfig.addComponentListener(m_configMovedAdapter);
 				setCursor(c);
 			}
-			m_dlgConfig.updateValues();
 			m_dlgConfig.selectCard(card, a_value);
 			m_dlgConfig.setVisible(true);
 			m_bConfigActive = false;
@@ -2920,7 +2919,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				{
 					m_labelDelay.setText(JAPMessages.getString("statusUnknown"));
 				}
-				else if(value == Long.MAX_VALUE)
+				else if(value == Integer.MAX_VALUE)
 				{
 					m_labelDelay.setText("> " + 
 							PerformanceEntry.BOUNDARIES[PerformanceEntry.DELAY][
