@@ -152,9 +152,9 @@ public final class JAPConfAnonGeneral extends AbstractJAPConfModule implements O
 			{
 				m_cbAutoConnect.setSelected(JAPModel.isAutoConnect());
 			}
-			else if (a_message.equals(JAPModel.CHANGED_DENY_NON_ANONYMOUS))
+			else if (a_message.equals(JAPModel.CHANGED_ASK_FOR_NON_ANONYMOUS))
 			{
-				m_cbDenyNonAnonymousSurfing.setSelected(JAPModel.getInstance().isNonAnonymousSurfingDenied());
+				m_cbDenyNonAnonymousSurfing.setSelected(JAPModel.getInstance().isAskForAnyNonAnonymousRequest());
 			}
 			else if(a_message.equals(JAPModel.CHANGED_ANONYMIZED_HTTP_HEADERS))
 			{
@@ -187,7 +187,7 @@ public final class JAPConfAnonGeneral extends AbstractJAPConfModule implements O
 			( (JLabel) d.get(new Integer(i * DT_INTERVAL_STEPLENGTH))).setEnabled(
 						 m_sliderDummyTrafficIntervall.isEnabled());
 		}
-		m_cbDenyNonAnonymousSurfing.setSelected(JAPModel.getInstance().isNonAnonymousSurfingDenied());
+		m_cbDenyNonAnonymousSurfing.setSelected(JAPModel.getInstance().isAskForAnyNonAnonymousRequest());
 		m_cbAnonymizedHttpHeaders.setSelected(JAPModel.getInstance().isAnonymizedHttpHeaders());
 		m_cbAutoConnect.setSelected(JAPModel.isAutoConnect());
 		m_cbAutoReConnect.setSelected(JAPModel.isAutomaticallyReconnected());
@@ -228,7 +228,7 @@ public final class JAPConfAnonGeneral extends AbstractJAPConfModule implements O
 		}).start();
 
 		// Anonservice settings
-		JAPModel.getInstance().denyNonAnonymousSurfing(m_cbDenyNonAnonymousSurfing.isSelected());
+		JAPModel.getInstance().setAskForAnyNonAnonymousRequest(m_cbDenyNonAnonymousSurfing.isSelected());
 		BlacklistedCascadeIDEntry.putNewCascadesInBlacklist(m_cbAutoBlacklist.isSelected());
 		JAPModel.getInstance().setAutoConnect(m_cbAutoConnect.isSelected());
 		JAPModel.getInstance().setAutoReConnect(m_cbAutoReConnect.isSelected());
@@ -427,7 +427,7 @@ public final class JAPConfAnonGeneral extends AbstractJAPConfModule implements O
 	//defaults
 	public void onResetToDefaultsPressed()
 	{
-		m_cbDenyNonAnonymousSurfing.setSelected(false);
+		m_cbDenyNonAnonymousSurfing.setSelected(true);
 		m_cbAnonymizedHttpHeaders.setSelected(JAPConstants.ANONYMIZED_HTTP_HEADERS);
 		//m_cbDummyTraffic.setSelected(true);
 		m_cbAutoBlacklist.setSelected(BlacklistedCascadeIDEntry.DEFAULT_AUTO_BLACKLIST);
