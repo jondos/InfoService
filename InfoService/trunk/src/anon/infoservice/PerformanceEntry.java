@@ -34,8 +34,8 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 	public static final int USERS = 2;
 	
 	public static final int[][] BOUNDARIES = new int[][] { 
-		{ 0, 50, 100, 200, 300, 400, 500, 750, 1000 },
-		{ 500, 750, 1000, 2000, 2500, 3000, 4000, 8000, Integer.MAX_VALUE},
+		{ 0, 50, 100, 200, 300, 400, 500, 750, 1000, 1500 },
+		{ 500, 750, 1000, 2000, 2500, 3000, 4000, 8000, Integer.MAX_VALUE },
 		{ 0 } };
 
 	private static final String XML_ATTR_ID = "id";
@@ -410,7 +410,7 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 
 		long dayTimestamp = getDayTimestamp(a_attribute, a_selectedDay);
 		
-		for(int hour = 0; hour < 24; hour++)
+		for (int hour = 0; hour < 24; hour++)
 		{
 			htmlData += "<tr>" +
 					"<td CLASS=\"name\">" + hour + ":00 - " + ((hour + 1) % 24) + ":00</td>";
@@ -420,7 +420,7 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 			Calendar calLastTest = Calendar.getInstance();
 			calLastTest.setTime(new Date(m_lastTestTime));
 			
-			if(entry == null || System.currentTimeMillis() - dayTimestamp > 7 * 24 * 60 * 60 * 1000 )
+			if (entry == null || System.currentTimeMillis() - dayTimestamp > 7 * 24 * 60 * 60 * 1000 )
 			{
 				htmlData += "<td colspan=\"6\" align=\"center\">No data available</td>";
 			}
@@ -437,11 +437,15 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 				
 				int bound = (entry == null ? -1 : entry.getBound());
 			
-				if(a_attribute == DELAY)
+				if (a_attribute == DELAY)
 				{
 					if(bound == Integer.MAX_VALUE)
 					{
 						htmlData += "> " + PerformanceEntry.BOUNDARIES[PerformanceEntry.DELAY][PerformanceEntry.BOUNDARIES[PerformanceEntry.DELAY].length - 2];
+					}
+					else if (bound <= 0)
+					{
+						htmlData += "?";
 					}
 					else
 					{
@@ -453,6 +457,10 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 					if(bound == 0)
 					{
 						htmlData += "< " + PerformanceEntry.BOUNDARIES[PerformanceEntry.SPEED][1];
+					}
+					else if (bound < 0 || bound == Integer.MAX_VALUE)
+					{
+						htmlData += "?";
 					}
 					else
 					{
@@ -647,14 +655,22 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 				}
 			}
 			
-			if(values == 0 && errors > 0)
+			if (values == 0)
 			{
-				return -1;
+				if(errors > 0)
+				{
+					return -1;
+				}
+				else if (a_bLow)
+				{
+					return Integer.MAX_VALUE;
+				}
+				else 
+				{
+					return 0;
+				}
 			}
-			else if (values == 0)
-			{
-				return 0;
-			}
+			
 			
 			if(a_bLow)
 			{
