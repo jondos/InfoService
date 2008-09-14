@@ -1,3 +1,31 @@
+/*
+Copyright (c) 2008 The JAP-Team, JonDos GmbH
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, 
+are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice,
+       this list of conditions and the following disclaimer in the documentation and/or
+       other materials provided with the distribution.
+    * Neither the name of the University of Technology Dresden, Germany, nor the name of
+       the JonDos GmbH, nor the names of their contributors may be used to endorse or
+       promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 package anon.proxy;
 
 import java.util.Enumeration;
@@ -12,10 +40,6 @@ import logging.LogType;
 
 public abstract class HTTPProxyCallback implements ProxyCallback
 {
-
-	protected Hashtable connectionHTTPHeaders = null; //saves the HTTP Header
-	private Hashtable headerParts = null;
-	
 	final static int HEADER_TYPE_REQUEST = 0;
 	final static int HEADER_TYPE_RESPONSE = 1;
 	
@@ -41,74 +65,78 @@ public abstract class HTTPProxyCallback implements ProxyCallback
 	public final String HTTP_PRAGMA = "Pragma";
 	public final String HTTP_IE_UA_CPU = "UA-CPU";	
 	
-
+	private Hashtable m_connectionHTTPHeaders = null; //saves the HTTP Header
+	private static final IHTTPHelper UPSTREAM_HELPER = new IHTTPHelper()
+	{
+		public byte[] dumpHeader(HTTPProxyCallback a_callback, HTTPConnectionHeader a_header)
+		{
+			a_callback.handleRequest(a_header);
+			return a_header.dumpRequestHeader();
+		}
+	};
+	private static final IHTTPHelper DOWNSTREAM_HELPER = new IHTTPHelper()
+	{
+		public byte[] dumpHeader(HTTPProxyCallback a_callback, HTTPConnectionHeader a_header)
+		{
+			a_callback.handleResponse(a_header);
+			return a_header.dumpResponseHeader();
+		}
+	};
+	
 	public HTTPProxyCallback()
 	{
-		connectionHTTPHeaders = new Hashtable();
-		headerParts = new Hashtable();
-		
+		m_connectionHTTPHeaders = new Hashtable();
 	}
 	
 	public byte[] handleUpstreamChunk(AnonProxyRequest anonRequest, byte[] chunk, int len)
 	{
-		
-		int content = (int) getLengthOfPayloadBytes(chunk, len);
-		if(content != len)
-		{
-			extractHeaderParts(anonRequest, chunk, HEADER_TYPE_REQUEST);
-			HTTPConnectionHeader connHeader;
-			synchronized(connectionHTTPHeaders)
-			{
-				connHeader = (HTTPConnectionHeader) connectionHTTPHeaders.get(anonRequest);
-			}
-			if(connHeader != null)
-			{
-				String request_line = connHeader.getRequestLine();
-				boolean performMods = (request_line == null) ? false : !request_line.startsWith("CONNECT");
-				if(performMods)
-				{
-					handleRequest(connHeader);
-					byte[] newHeaders = connHeader.dumpRequestHeader();
-					byte[] newChunk = new byte[newHeaders.length+content];
-					System.arraycopy(newHeaders, 0, newChunk, 0, newHeaders.length);
-					System.arraycopy(chunk, len-content, newChunk, newHeaders.length, content);
-					return newChunk;
-				}
-			}
-		}
-		return chunk;
-		
+		return handleStreamChunk(anonRequest, chunk, len, HEADER_TYPE_REQUEST, UPSTREAM_HELPER);
 	}
 	
 	public byte[] handleDownstreamChunk(AnonProxyRequest anonRequest, byte[] chunk, int len)
 	{
-		int content = (int) getLengthOfPayloadBytes(chunk, len);
+		return handleStreamChunk(anonRequest, chunk, len, HEADER_TYPE_RESPONSE, DOWNSTREAM_HELPER);
+	}
+	
+	private byte[] handleStreamChunk(AnonProxyRequest anonRequest, byte[] chunk, int len, 
+			int a_headerType, IHTTPHelper a_helper)
+	{
+		String chunkData = new String(chunk);
+		int content = (int) getLengthOfPayloadBytes(chunkData, len);
 		if(content != len)
 		{
-			extractHeaderParts(anonRequest, chunk, HEADER_TYPE_RESPONSE);
+			extractHeaderParts(anonRequest, chunkData, a_headerType);
 			HTTPConnectionHeader connHeader;
-			synchronized(connectionHTTPHeaders)
+			synchronized (m_connectionHTTPHeaders)
 			{
-				connHeader = (HTTPConnectionHeader) connectionHTTPHeaders.get(anonRequest);
+				connHeader = (HTTPConnectionHeader) m_connectionHTTPHeaders.get(anonRequest);
 			}
+						
 			if(connHeader != null)
 			{
 				String request_line = connHeader.getRequestLine();
+				/*
+				if (request_line == null)
+				{
+					System.out.println("**\n" + chunkData + "**");
+				}*/
 				boolean performMods = (request_line == null) ? false : !request_line.startsWith("CONNECT");
 				if(performMods)
 				{
-					handleResponse(connHeader);
-					
-					byte[] newHeaders = connHeader.dumpResponseHeader();
+					byte[] newHeaders = a_helper.dumpHeader(this, connHeader);
 					byte[] newChunk = new byte[newHeaders.length+content];
 					System.arraycopy(newHeaders, 0, newChunk, 0, newHeaders.length);
 					System.arraycopy(chunk, len-content, newChunk, newHeaders.length, content);
-					
 					return newChunk;
-				}
+				}				
 			}
 		}
-		return chunk;
+		return chunk;		
+	}
+	
+	private interface IHTTPHelper
+	{
+		byte[] dumpHeader(HTTPProxyCallback a_callback, HTTPConnectionHeader a_header);
 	}
 	
 	public abstract void handleRequest(HTTPConnectionHeader connHeader);
@@ -119,7 +147,7 @@ public abstract class HTTPProxyCallback implements ProxyCallback
 	 * 	extract headers from data chunk
 	 * returns false if header could not be extracted
 	 */
-	private boolean extractHeaderParts(AnonProxyRequest anonRequest, byte[] chunk, int headerType)
+	private boolean extractHeaderParts(AnonProxyRequest anonRequest, String chunkData, int headerType)
 	{
 		// assumes, that the complete header fits into a whole chunk and the chunk is aligned.
 		//Works in almost every case, but should work with every chunk size.
@@ -131,25 +159,24 @@ public abstract class HTTPProxyCallback implements ProxyCallback
 		
 		HTTPConnectionHeader connHeader = null;
 		
-		synchronized(connectionHTTPHeaders)
+		synchronized(m_connectionHTTPHeaders)
 		{
 			connHeader = (HTTPConnectionHeader) 
-				connectionHTTPHeaders.get(anonRequest);
+				m_connectionHTTPHeaders.get(anonRequest);
 			
 			if( (connHeader != null) && connHeader.isFinished() )
 			{
 				//This is an old one: replace it with a new one
-				connectionHTTPHeaders.remove(anonRequest);
+				m_connectionHTTPHeaders.remove(anonRequest);
 				connHeader = null;
 			}
 			
 			if ( connHeader == null )
 			{
 				connHeader = new HTTPConnectionHeader();
-				connectionHTTPHeaders.put(anonRequest, connHeader);
+				m_connectionHTTPHeaders.put(anonRequest, connHeader);
 			}
 		}
-		String chunkData = new String(chunk);
 		
 		int off_firstline= chunkData.indexOf(HTTP_VERSION_PREFIX);
 		int off_headers_end = chunkData.indexOf(HTTP_HEADER_END);
@@ -199,10 +226,8 @@ public abstract class HTTPProxyCallback implements ProxyCallback
 		}*/
 	}
 	
-	protected long getLengthOfPayloadBytes(byte[] chunk, int len)
-	{
-		String chunkData = new String(chunk);
-		
+	protected long getLengthOfPayloadBytes(String chunkData, int len)
+	{	
 		int off_firstline= chunkData.indexOf(HTTP_VERSION_PREFIX);
 		int off_headers_end = chunkData.indexOf(HTTP_HEADER_END);
 		if( (off_firstline != -1) )
@@ -390,6 +415,10 @@ public abstract class HTTPProxyCallback implements ProxyCallback
 		{
 			Vector valueContainer = (Vector) headerMap.get(HTTP_START_LINE_KEY.toLowerCase());
 			String[] startlineRet = valuesToArray(valueContainer);
+			if (startlineRet == null)
+			{
+				return null;
+			}
 			if(startlineRet.length > 1)
 			{
 				String errOutput = "";
@@ -438,7 +467,7 @@ public abstract class HTTPProxyCallback implements ProxyCallback
 		{
 			String allHeaders = "";
 			String header = null;
-			String value = null;
+
 			for(Enumeration enumeration = headerOrder.elements(); enumeration.hasMoreElements(); )
 			{
 				header = (String) enumeration.nextElement();
