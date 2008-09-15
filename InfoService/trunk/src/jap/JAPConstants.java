@@ -36,7 +36,7 @@ import anon.mixminion.Mixminion;
 public final class JAPConstants
 {
 	public static final String aktVersion = "00.10.030"; //Never change the layout of this line!
-	public final static boolean m_bUnstableVersion = false; //Set to true if this is an unstable (development) Version
+	public final static boolean m_bUnstableVersion = true; //Set to true if this is an unstable (development) Version
 
 	
 	private static final String CVS_GENERATED_RELEASE_DATE = "$Date$";
