@@ -118,7 +118,7 @@ public class SkypeConnector implements IConnector
 				Stream[] connectionStreams=null;
 				try
 					{
-						connectionStreams = app.connect(new String[] { a_address.getUserID() });
+						connectionStreams = app.connect(a_address.getUserID());
 					}
 				catch (SkypeException e)
 					{
