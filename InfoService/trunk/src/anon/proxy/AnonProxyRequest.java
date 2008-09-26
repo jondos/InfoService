@@ -341,7 +341,7 @@ public final class AnonProxyRequest implements Runnable
 		}
 		catch (IOException e)
 		{
-			LogHolder.log(LogLevel.ERR,LogType.NET,"Exception in AnonProxyRequest - upstream loop.", e );
+			LogHolder.log(LogLevel.DEBUG,LogType.NET,"Exception in AnonProxyRequest - upstream loop.", e );
 		}
 		closeRequest();
 		m_Proxy.decNumChannels();
@@ -467,7 +467,7 @@ mainLoop:		do
 					}
 					m_Proxy.transferredBytes(len, m_iProtocol);
 					Thread.yield();
-				}	while ( len > 0); 
+				}	while (len > 0 && !m_Channel.isClosed()); 
 			}
 			catch (IOException e)
 			{

@@ -652,10 +652,6 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		{
 			try
 			{
-				synchronized (m_internalSynchronizationForSocket)
-				{
-					m_socketHandler = new SocketHandler(a_connectionToMixCascade);
-				}
 				try
 				{
 					/* limit timeouts while login procedure */
@@ -666,6 +662,11 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 				{
 					/* ignore it */
 				}
+				
+				synchronized (m_internalSynchronizationForSocket)
+				{
+					m_socketHandler = new SocketHandler(a_connectionToMixCascade);
+				}				
 
 				final Vector exceptionCache = new Vector();
 				Thread loginThread = new Thread(new Runnable()
@@ -821,7 +822,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		notificationThread.setDaemon(true);
 		notificationThread.start();
 
-		LogHolder.log(LogLevel.ERR, LogType.NET,
+		LogHolder.log(LogLevel.INFO, LogType.NET,
 					  "Connected to MixCascade '" + a_serverDescription.toString() + "'!");
 		/* AnonClient successfully started */
 		m_connected = true;
