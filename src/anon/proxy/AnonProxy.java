@@ -29,6 +29,7 @@ package anon.proxy;
 
 import jap.JAPModel;
 
+import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -584,44 +585,54 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener, Obse
 			{
 				m_socketQueue.notify();
 			}
-
-
 		}
 
 		public void run()
 		{
+			Socket socket;
 			while (!Thread.currentThread().isInterrupted() && !m_bIsClosed)
 			{
-				if (m_socketQueue.getSize() > 0 && AnonProxyRequest.getNrOfRequests() < m_maxRequests)
+				synchronized (m_socketQueue)
 				{
-					try
+					while (m_socketQueue.getSize() == 0 )
 					{
-						new AnonProxyRequest(m_proxy, (Socket)m_socketQueue.pop(), m_syncObject, m_callbackHandler);
-					}
-					catch (Exception e)
-					{
-						LogHolder.log(LogLevel.ERR, LogType.NET, e);
-					}
-				}
-				else
-				{
-					try
-					{
-						synchronized (m_socketQueue)
+						try
 						{
-							if (AnonProxyRequest.getNrOfRequests() >= m_maxRequests)
-							{
-								m_socketQueue.wait(100);
-							}
-							else
-							{
-								m_socketQueue.wait();
-							}
+							m_socketQueue.wait();
+						}
+						catch (InterruptedException ex)
+						{
+							m_bIsClosed = true;							
 						}
 					}
-					catch (InterruptedException ex)
+					if (m_bIsClosed)
 					{
 						break;
+					}
+					socket = (Socket)m_socketQueue.pop();					
+				}								 
+				
+				try
+				{
+					new AnonProxyRequest(m_proxy, socket, m_syncObject, m_callbackHandler);
+				}
+				catch (IOException e)
+				{
+					LogHolder.log(LogLevel.ERR, LogType.NET, e);
+				}					
+			}	
+			
+			synchronized (m_socketQueue)
+			{
+				while (m_socketQueue.getSize() > 0)
+				{
+					try
+					{
+						((Socket)m_socketQueue.pop()).close();
+					}
+					catch (IOException e)
+					{
+						LogHolder.log(LogLevel.NOTICE, LogType.NET, e);
 					}
 				}
 			}
@@ -681,8 +692,6 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener, Obse
 								  "Could not set non-Blocking mode for Channel-Socket!", soex);
 					continue;
 				}
-
-
 			}
 		}
 		catch (Exception e)
