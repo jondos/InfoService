@@ -1,3 +1,31 @@
+/*
+ Copyright (c) 2008 The JAP-Team, JonDos GmbH
+
+ All rights reserved.
+
+ Redistribution and use in source and binary forms, with or without modification, 
+ are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation and/or
+      other materials provided with the distribution.
+    * Neither the name of the University of Technology Dresden, Germany, nor the name of
+      the JonDos GmbH, nor the names of their contributors may be used to endorse or
+      promote products derived from this software without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR
+ CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 package anon.infoservice;
 
 import java.text.NumberFormat;
@@ -19,52 +47,135 @@ import anon.util.XMLUtil;
 import anon.util.XMLParseException;
 import anon.util.IXMLEncodable;
 
-
+/**
+ * A <code>PerformanceEntry</code> stores various performance-related data 
+ * such as average speed or delay about a certain <code>MixCascade</code>.
+ * 
+ * @author Christian Banse
+ */
 public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncodable
 {
-	private static final double BOUND_ROUNDING = 0.15d; // remove the x% worst results
+	/**
+	 * Remove the worst x% results.
+	 */
+	private static final double BOUND_ROUNDING = 0.15d;
 	
+	/**
+	 * The entry's container XML element name.
+	 */
 	public static final String XML_ELEMENT_CONTAINER_NAME = "PerformanceInfo";
-	public static final String XML_ELEMENT_NAME = "PerformanceEntry";	
+
+	/**
+	 * The XML element name.
+	 */
+	public static final String XML_ELEMENT_NAME = "PerformanceEntry";
 	
+	/**
+	 * The data XML element name.
+	 */
+	private static final String XML_ELEMENT_DATA = "Data";
+
+	/**
+	 * The cascade id attribute name.
+	 */
+	private static final String XML_ATTR_ID = "id";
+	
+	/**
+	 * Time-to-live of the last-test-data display.
+	 */
 	public static final long LAST_TEST_DATA_TTL = 20 * 60 * 1000;
 	
-	public static final int SPEED = 0;
-	public static final int DELAY = 1;
-	public static final int USERS = 2;
+	/**
+	 * Time-to-live of the performance entries.
+	 */
+	private static final int PERFORMANCE_ENTRY_TTL = 1000*60*60;
 	
+	/**
+	 * Speed attribute.
+	 */
+	public static final int SPEED = 0;
+	
+	/**
+	 * Delay attribute.
+	 */
+	public static final int DELAY = 1;
+	
+	/**
+	 * Current users attribute.
+	 */
+	public static final int USERS = 2;
+
+	/**
+	 * Text representation of the performance attributes.
+	 */
+	private static final String[] ATTRIBUTES = new String[]{ "Speed", "Delay", "Users" };
+	
+	/**
+	 * The boundaries used to calculate the speed and delay bounds.
+	 */
 	public static final int[][] BOUNDARIES = new int[][] { 
 		{ 0, 50, 100, 200, 300, 400, 500, 750, 1000, 1500 },
 		{ 500, 750, 1000, 2000, 2500, 3000, 4000, 8000, Integer.MAX_VALUE },
 		{ 0 } };
-
-	private static final String XML_ATTR_ID = "id";
-	private static final String XML_ELEMENT_CURRENT_HOURLY_DATA = "Data";
-
-	private static final String[] ATTRIBUTES = new String[]{ "Speed", "Delay", "Users" };
 	
+	/**
+	 * The id of the associated cascade.
+	 */
 	private String m_strCascadeId;
+	
+	/**
+	 * A calendar used for date calculations.
+	 */
 	private Calendar m_current = Calendar.getInstance();
 	
+	/**
+	 * The time of the last update.
+	 */
 	private long m_lastUpdate;
+	
+	/**
+	 * The serial of the database entry.
+	 */
 	private long m_serial;
 	
+	/**
+	 * The time of the last performed test.
+	 */
 	private long m_lastTestTime;
 	
+	/**
+	 * The attribute entries.
+	 */
 	private PerformanceAttributeEntry[][][] m_entries =
 		new PerformanceAttributeEntry[ATTRIBUTES.length][8][24];
 	
+	/**
+	 * The floating time entry. This structure holds all attribute entries
+	 * that are not older than a given time (usually 1 hour).
+	 */
 	private PerformanceAttributeFloatingTimeEntry[] m_floatingTimeEntries;
 	
+	/**
+	 * The average entries of the last test.
+	 */
 	private int m_lastTestAverage[] = new int[3];
 	
-	private static final int PERFORMANCE_ENTRY_TTL = 1000*60*60; // 1 hour
-	
+	/**
+	 * Constructs a new <code>PerformanceEntry</code> for the given <code>MixCascade</code>.
+	 * 
+	 * @param a_strCascadeId The id of the mix cascade.
+	 */
 	public PerformanceEntry(String a_strCascadeId)
 	{
 		this(a_strCascadeId, true);
 	}
 	
+	/**
+	 * Constructs a new <code>PerformanceEntry</code> for the given <code>MixCascade</code>.
+	 * 
+	 * @param a_strCascadeId The id of the mix cascade.
+	 * @param a_bInfoService Specifies if the caller of this method is an <code>InfoService</code> or the JAP client.
+	 */
 	public PerformanceEntry(String a_strCascadeId, boolean a_bInfoService)
 	{	
 		super(Long.MAX_VALUE);
@@ -81,10 +192,17 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 				new PerformanceAttributeFloatingTimeEntry(USERS, a_bInfoService) };
 	}
 	
+	/**
+	 * Constructs a new <code>PerformanceEntry</code> from its XML representation.
+	 * 
+	 * @param a_entry The XML data.
+	 * @throws XMLParseException If the XML data is invalid.
+	 */
 	public PerformanceEntry(Element a_entry) throws XMLParseException
 	{
 		super(System.currentTimeMillis() + PERFORMANCE_ENTRY_TTL);
 		
+		// create a new floating time entry
 		m_floatingTimeEntries = new PerformanceAttributeFloatingTimeEntry[ATTRIBUTES.length];
 		
 		XMLUtil.assertNodeName(a_entry, XML_ELEMENT_NAME);
@@ -96,17 +214,19 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 			throw new XMLParseException(XML_ELEMENT_NAME + ": invalid id");
 		}
 		
-		Node elemCurrentData = XMLUtil.getFirstChildByName(a_entry, XML_ELEMENT_CURRENT_HOURLY_DATA);
+		Node elemCurrentData = XMLUtil.getFirstChildByName(a_entry, XML_ELEMENT_DATA);
 		if(elemCurrentData == null)
 		{
-			throw new XMLParseException(XML_ELEMENT_NAME + ": Could not find node " + XML_ELEMENT_CURRENT_HOURLY_DATA);
+			throw new XMLParseException(XML_ELEMENT_NAME + ": Could not find node " + XML_ELEMENT_DATA);
 		}
 		
 		m_current.setTime(new Date(System.currentTimeMillis()));
 		
+		// fill the floating time entry with the XML data
 		Node elemDelay = XMLUtil.getFirstChildByName(elemCurrentData, ATTRIBUTES[DELAY]);
 		m_floatingTimeEntries[DELAY] = new PerformanceAttributeFloatingTimeEntry(DELAY, elemDelay);
 		
+		// fill the floating time entry with the XML data
 		Node elemSpeed = XMLUtil.getFirstChildByName(elemCurrentData, ATTRIBUTES[SPEED]);
 		m_floatingTimeEntries[SPEED] = new PerformanceAttributeFloatingTimeEntry(SPEED, elemSpeed);
 		
@@ -129,6 +249,11 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		return m_serial;
 	}
 	
+	/**
+	 * Returns the time of the last test.
+	 * 
+	 * @return The time of the last test.
+	 */
 	public long getLastTestTime()
 	{
 		return m_lastTestTime;
@@ -137,12 +262,13 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 	/**
 	 * Imports a value into the entry array.
 	 * 
-	 * @param a_attribute The performance attribute (speed/delay, etc.)
-	 * @param a_timestamp The time stamp of the value
-	 * @param a_value The value itself
+	 * @param a_attribute The performance attribute.
+	 * @param a_timestamp The time stamp of the value.
+	 * @param a_value The value itself.
 	 */
 	public void importValue(int a_attribute, long a_timestamp, int a_value)
 	{
+		// check if entry is older than 7 days
 		if(System.currentTimeMillis() - a_timestamp > 7 * 24 * 60 * 60 * 1000 ||
 			a_timestamp > System.currentTimeMillis())
 		{
@@ -157,13 +283,17 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		int day = cal.get(Calendar.DAY_OF_WEEK);
 		int hour = cal.get(Calendar.HOUR_OF_DAY);
 		
+		// look for the attribute entry
 		entry = m_entries[a_attribute][day][hour];
+		// create one if necessary
 		if(entry == null)
 		{
 			m_entries[a_attribute][day][hour] = entry = new PerformanceAttributeEntry(a_attribute);
 		}
 		
+		// add the value to the entry
 		entry.addValue(a_timestamp, a_value);
+		// add the value to the floating time entry
 		m_floatingTimeEntries[a_attribute].addValue(a_timestamp, a_value);
 		
 		m_lastUpdate = a_timestamp;
@@ -176,9 +306,11 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 				continue;
 			}
 			
+			// we've found at least one value in the entry that is older than 7 days
 			if(System.currentTimeMillis() - 
 					m_entries[a_attribute][day][i].getDayTimestamp() >= 7 * 24 * 60 * 60 * 1000)
 			{
+				// invalidate the whole entry
 				m_entries[a_attribute][day][i] = null;
 			}
 		}
@@ -187,9 +319,9 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 	/**
 	 * Adds a hashtable of values into the entry array.
 	 * 
-	 * @param a_attribute The performance attribute
-	 * @param a_data The data hashtable
-	 * @return The average value of the hashtable
+	 * @param a_attribute The performance attribute.
+	 * @param a_data The data hashtable.
+	 * @return The average value of the hashtable.
 	 */
 	public int addData(int a_attribute, Hashtable a_data) 
 	{
@@ -208,11 +340,14 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		
 		int values = 0;
 		
+		// enumerate through the data hashtable
 		while(e.hasMoreElements())
 		{
+			// get the timestamp
 			timestamp = (Long) e.nextElement();
 			int value = ((Integer) a_data.get(timestamp)).intValue();
 			
+			// timestamp is older than 7 days, ignore it
 			if(System.currentTimeMillis() - timestamp.longValue() >= 7 * 24 * 60 * 60 * 1000)
 			{
 				continue;
@@ -232,23 +367,30 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 					continue;
 				}
 				
+				// we've found at least one value in the entry that is older than 7 days
 				if(System.currentTimeMillis() - 
 						m_entries[a_attribute][day][i].getDayTimestamp() > 7 * 24 * 60 * 60 * 1000)
 				{
+					// invalidate the whole entry
 					m_entries[a_attribute][day][i] = null;
 				}
 			}
 			
+			// look for the attribute entry
 			entry = m_entries[a_attribute][day][hour];
+			// create one if necessary
 			if(entry == null)
 			{
 				m_entries[a_attribute][day][hour] = entry = new PerformanceAttributeEntry(a_attribute);
 			}
 			
+			// add the value
 			entry.addValue(timestamp.longValue(), value);
 			
+			// add the value to the floating time entry
 			m_floatingTimeEntries[a_attribute].addValue(timestamp.longValue(), value);
 			
+			// if the value is valid, consider it for the average value
 			if(value > 0)
 			{
 				lAverageFromLastTest += value;
@@ -256,6 +398,7 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 			}
 		}
 		
+		// calculate the average value from the last test
 		if(values > 0)
 		{
 			lAverageFromLastTest /= values;
@@ -271,8 +414,8 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 	/**
 	 * Returns the average value from the last performed test.
 	 * 
-	 * @param a_attribute The performance attribute
-	 * @return The average value from the last performed test
+	 * @param a_attribute The performance attribute.
+	 * @return The average value from the last performed test.
 	 */
 	public int getLastTestAverage(int a_attribute)
 	{
@@ -285,8 +428,8 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 	 * 
 	 * @see anon.infoservice.PerformanceInfo#getLowestCommonBoundEntry(String)
 	 * 
-	 * @param a_attribute The performance attribute
-	 * @param a_lValue The bound value
+	 * @param a_attribute The performance attribute.
+	 * @param a_lValue The bound value.
 	 */
 	public void setBound(int a_attribute, int a_lValue)
 	{
@@ -297,8 +440,8 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 	 * Calculates (if used by the info service) and returns the
 	 * bound value of the given attribute.
 	 * 
-	 * @param a_attribute The performance attribute
-	 * @return The bound value of the given attribute
+	 * @param a_attribute The performance attribute.
+	 * @return The bound value of the given attribute.
 	 */
 	public int getBound(int a_attribute)
 	{
@@ -319,33 +462,60 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 	/**
 	 * Returns the average value of the give attribute.
 	 * 
-	 * @param a_attribute The performance attribute
-	 * @return The average value of given attribute
+	 * @param a_attribute The performance attribute.
+	 * @return The average value of given attribute.
 	 */
 	public int getAverage(int a_attribute)
 	{
 		return m_floatingTimeEntries[a_attribute].getAverage();
 	}
 	
+	/**
+	 * Returns the delay values of a specified day as HTML table.
+	 * 
+	 * @param day The day.
+	 * @return The HTML table.
+	 */
 	public String delayToHTML(int day)
 	{
 		return toHTML(DELAY, "ms", day);
 	}
 	
+	/**
+	 * Returns the speed values of a specified day as HTML table.
+	 * 
+	 * @param day The day.
+	 * @return The HTML table.
+	 */
 	public String speedToHTML(int day)
 	{
 		return toHTML(SPEED, "kbit/s", day);
 	}
 	
+	/**
+	 * Returns the users values of a specified day as HTML table.
+	 * 
+	 * @param day The day.
+	 * @return The HTML table.
+	 */
 	public String usersToHTML(int day)
 	{
 		return toHTML(USERS, "", day);
 	}
 	
+	/**
+	 * Determines the day timestamp of the oldest entry of specified 
+	 * performance attribute.
+	 * 
+	 * @param a_attribute The performance attribute.
+	 * @param a_dayOfWeek The day of the week.
+	 * @return The day timestamp.
+	 */
 	private long getDayTimestamp(int a_attribute, int a_dayOfWeek)
 	{
 		long timestamp = -1;
 		
+		// loop through all hours of the day
 		for(int i = 0; i < 24; i++)
 		{
 			if(m_entries[a_attribute][a_dayOfWeek][i] == null)
@@ -353,6 +523,7 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 				continue;
 			}
 			
+			// get the day timestamp of current hour - this actually makes sense ;-)
 			timestamp = m_entries[a_attribute][a_dayOfWeek][i].getDayTimestamp();
 			
 			if(timestamp != -1)
@@ -364,6 +535,15 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		return timestamp;
 	}
 	
+	/**
+	 * Constructs a HTML table of the specified performance attribute
+	 * on the a certain day. 
+	 * 
+	 * @param a_attribute The performance attribute.
+	 * @param a_unit The unit of the attribute.
+	 * @param a_selectedDay The day.
+	 * @return The HTML table.
+	 */
 	public String toHTML(int a_attribute, String a_unit, int a_selectedDay)
 	{
 		MixCascade cascade = (MixCascade) Database.getInstance(MixCascade.class).getEntryById(m_strCascadeId);
@@ -404,7 +584,6 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 				"<th>Min</th>" +
 				"<th>Max</th>" +
 				"<th>Bound</th>" +
-				//(a_selectedDay == dayOfWeek ? "<th>Last Test</th>" : "")+
 				"<th>% Std. Deviation</th>" +
 				"<th>Errors</th></tr>";
 
@@ -469,32 +648,7 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 				}
 				
 				htmlData += " " + a_unit + "</td>";
-				
-				/*
-				if(a_selectedDay == dayOfWeek)
-				{
-					if(hour == calLastTest.get(Calendar.HOUR_OF_DAY) && a_attribute == SPEED)
-					{
-						htmlData += "<td>" + m_lastTestAverage[SPEED] + " " + a_unit + "</td>";
-					}
-					else if(hour == calLastTest.get(Calendar.HOUR_OF_DAY) && a_attribute == DELAY)
-					{
-						htmlData += "<td>" + m_lastTestAverage[DELAY] + " " + a_unit + "</td>";
-					}
-					else if(hour == calLastTest.get(Calendar.HOUR_OF_DAY) && a_attribute == USERS)
-					{
-						htmlData += "<td>" + m_lastTestAverage[USERS] + " " + a_unit + "</td>";
-					}
-					else if(hour == m_current.get(Calendar.HOUR_OF_DAY))
-					{
-						htmlData += "<td>No test since IS startup</td>";
-					}
-					else
-					{
-						htmlData += "<td></td>";
-					}
-				}*/
-				
+								
 				if(entry.getStdDeviation() == -1)
 				{
 					htmlData += "<td>0 %</td>";
@@ -527,7 +681,7 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		Element elem = a_doc.createElement(XML_ELEMENT_NAME);
 		XMLUtil.setAttribute(elem, XML_ATTR_ID, getId());
 		
-		Element elemCurrent = a_doc.createElement(XML_ELEMENT_CURRENT_HOURLY_DATA);
+		Element elemCurrent = a_doc.createElement(XML_ELEMENT_DATA);
 		
 		Element elemDelay = m_floatingTimeEntries[DELAY].toXmlElement(a_doc);
 		elemCurrent.appendChild(elemDelay);
@@ -540,34 +694,96 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		return elem;
 	}
 	
+	/**
+	 * The floating time entry. This structure holds all attribute entries
+	 * that are not older than a given time (usually 1 hour).
+	 * 
+	 * @author Christian Banse
+	 */
 	class PerformanceAttributeFloatingTimeEntry implements IXMLEncodable
 	{
-		public static final String XML_ATTR_MIN = "min";
-		public static final String XML_ATTR_MAX = "max";
-		public static final String XML_ATTR_BOUND = "bound";
-		
-		public static final String XML_ELEMENT_VALUES = "Values";
-		public static final String XML_ELEMENT_VALUE = "Value";
-		
+		/**
+		 * The time frame of this floating time entry.
+		 */
 		public static final long DEFAULT_TIMEFRAME = 60 * 60 * 1000; // 60 minutes
 		
+		/**
+		 * The containers XML element name.
+		 */
+		public static final String XML_ELEMENT_VALUES = "Values";
+		
+		/**
+		 * The XML element name.
+		 */
+		public static final String XML_ELEMENT_VALUE = "Value";
+		
+		/**
+		 * The min value XML attribute name.
+		 */
+		public static final String XML_ATTR_MIN = "min";
+		
+		/**
+		 * The max value XML attribute name.
+		 */
+		public static final String XML_ATTR_MAX = "max";
+		
+		/**
+		 * The bound value XML attribute name.
+		 */
+		public static final String XML_ATTR_BOUND = "bound";
+		
+		/**
+		 * The performance attribute.
+		 */
 		public int m_attribute;
+		
+		/**
+		 * The time of the last update.
+		 */
 		public long m_lastUpdate;
 		
+		/**
+		 * The values.
+		 */
 		private Hashtable m_Values = new Hashtable();
+		
+		/**
+		 * The bound value. This will only be set if this object
+		 * is constructed from XML (only in the JAP client). The 
+		 * info service calculates the bound value on the fly using
+		 * {@link #getBound(boolean)}
+		 */
 		private int m_lBoundValue = -1;
 		
+		/**
+		 * True, if the object is created by the info service 
+		 * or the JAP client. Determines whether the bound value
+		 * is retrieved from the stored value or calculated on the fly.
+		 */
 		private boolean m_bInfoService; 
 		
+		/**
+		 * Constructs a new <code>PerformanceAttributeFloatingTimeEntry</code>.
+		 * 
+		 * @param a_attribute The performance attribute.
+		 * @param a_bInfoService Specifies if the caller of this method is an <code>InfoService</code> or the JAP client.
+		 */
 		public PerformanceAttributeFloatingTimeEntry(int a_attribute, boolean a_bInfoService)
 		{
 			m_attribute = a_attribute;
 			m_bInfoService = a_bInfoService;
 		}
 		
+		/**
+		 * Constructs a new <code>PerformanceAttributeFloatingTimeEntry</code> from XML data.
+		 * 
+		 * @param a_attribute The performance attribute.
+		 * @param a_node The XML node.
+		 */
 		public PerformanceAttributeFloatingTimeEntry(int a_attribute, Node a_node)
 		{
 			m_attribute = a_attribute;
+			// data comes from the XML data so this method is called by the JAP client
 			m_bInfoService = false;
 			
 			long lBoundValue = XMLUtil.parseAttribute(a_node, XML_ATTR_BOUND, -1l);
@@ -581,6 +797,12 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 			}
 		}
 		
+		/**
+		 * Adds a value to the floating time entry.
+		 * 
+		 * @param a_lTimeStamp The timestamp of the value.
+		 * @param a_lValue The value.
+		 */
 		public void addValue(long a_lTimeStamp, int a_lValue)
 		{
 			if (System.currentTimeMillis() - a_lTimeStamp > DEFAULT_TIMEFRAME)
@@ -596,9 +818,11 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 				
 				m_Values.put(new Long(a_lTimeStamp), new Integer(a_lValue));
 				
+				// loop through all values
 				while (e.hasMoreElements())
 				{
 					timestamp = (Long) e.nextElement();
+					// value is too old, remove it
 					if (System.currentTimeMillis() - timestamp.longValue() > DEFAULT_TIMEFRAME)
 					{
 						m_Values.remove(timestamp);
@@ -607,6 +831,11 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 			}
 		}
 		
+		/**
+		 * Sets the bound value. Only allowed by the client.
+		 * 
+		 * @param a_lValue The value.
+		 */
 		public void setBound(int a_lValue)
 		{
 			// only allowed by the client
@@ -616,6 +845,14 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 			}
 		}
 		
+		/**
+		 * Returns the bound value. If it is invoked by the client 
+		 * the stored m_lBoundValue is returned otherwise the bound
+		 * value is calculated from the values in the entry.
+		 * 
+		 * @param a_bLow Low or high bound.
+		 * @return The bound value.
+		 */
 		public int getBound(boolean a_bLow)
 		{
 			// if it is invoked by the client, just return the stored bound value
@@ -636,15 +873,17 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 				while(e.hasMoreElements())
 				{
 					timestamp = (Long) e.nextElement();
+					// value is too old, remove it
 					if(System.currentTimeMillis() - timestamp.longValue() > DEFAULT_TIMEFRAME)
 					{
 						continue;
 					}
-					
+
+					// get the value
 					Integer value = ((Integer) m_Values.get(timestamp));
-					
 					if(value.intValue() < 0)
 					{
+						// value is an error
 						errors++;
 					}
 					else
@@ -655,8 +894,10 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 				}
 			}
 			
+			// we don't seem to have any values
 			if (values == 0)
 			{
+				// but we have errors
 				if(errors > 0)
 				{
 					return -1;
@@ -679,7 +920,6 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 			else
 			{
 				Util.sort(vec, new IntegerSortDesc());
-				//LogHolder.log(LogLevel.ALERT, LogType.MISC, vec.toString());
 			}
 			
 			int limit = (int) Math.floor((double)vec.size() * BOUND_ROUNDING);
@@ -722,6 +962,11 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 			return -1;
 		}
 		
+		/**
+		 * Calculates and return the average value. 
+		 * 
+		 * @return The average value.
+		 */
 		public int getAverage()
 		{
 			// this method should only be invoked by the InfoService
@@ -778,6 +1023,11 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 			}
 		}
 		
+		/**
+		 * Calculates and returns the standard deviation.
+		 * 
+		 * @return The standard deviation.
+		 */
 		public double getStdDeviation()
 		{
 			// this method should only be invoked by the InfoService
@@ -852,26 +1102,74 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		}
 	}
 
+	/**
+	 * An entry that holds values of performance attributes.
+	 * 
+	 * @author Christian Banse
+	 */
 	class PerformanceAttributeEntry
 	{
+		/**
+		 * The max value.
+		 */
 		private int m_lMaxValue = -1;
+		
+		/**
+		 * The min value.
+		 */
 		private int m_lMinValue = -1;
+		
+		/**
+		 * The average value.
+		 */
 		private int m_lAverageValue = -1;
+		
+		/**
+		 * The bound value.
+		 */
 		private int m_lBound = -1;
+		
+		/**
+		 * The standard deviation.
+		 */
 		private double m_lStdDeviation = 0.0;
 		
+		/**
+		 * The time of the last update.
+		 */
 		private long m_lastUpdate = -1;
 		
+		/**
+		 * The values.
+		 */
 		private Hashtable m_Values = new Hashtable();
 		
+		/**
+		 * The amount of errors occurred.
+		 */
 		private int m_iErrors = 0;
+		
+		/**
+		 * The performance attribute.
+		 */
 		private int m_attribute;
 		
+		/**
+		 * Constructs a new <code>PerformanceAttributeEntry</code>.
+		 * 
+		 * @param a_attribute The performance attribute.
+		 */
 		public PerformanceAttributeEntry(int a_attribute)
 		{
 			m_attribute = a_attribute;
 		}
 		
+		/**
+		 * Adds a value to the entry.
+		 * 
+		 * @param a_lTimeStamp The timestamp.
+		 * @param a_lValue The value.
+		 */
 		public void addValue(long a_lTimeStamp, int a_lValue)
 		{
 			m_lastUpdate = a_lTimeStamp;
@@ -951,7 +1249,6 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 			else
 			{
 				Util.sort(vec, new IntegerSortDesc());
-				//LogHolder.log(LogLevel.ALERT, LogType.MISC, vec.toString());
 			}
 			
 			int limit = (int) Math.floor((double)vec.size() * BOUND_ROUNDING);
@@ -1000,41 +1297,81 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 			}
 		}
 		
+		/**
+		 * Returns the average value.
+		 * 
+		 * @return The average value.
+		 */
 		public int getAverageValue()
 		{
 			return m_lAverageValue;
 		}
 		
+		/**
+		 * Returns the min value.
+		 * 
+		 * @return The min value.
+		 */
 		public int getMinValue()
 		{	
 			return m_lMinValue;
 		}
 		
+		/**
+		 * Returns the max value.
+		 * 
+		 * @return The max value.
+		 */
 		public int getMaxValue()
 		{
 			return m_lMaxValue;
 		}
 		
-		public double getStdDeviation()
-		{
-			return m_lStdDeviation;
-		}
-		
-		public int getErrors()
-		{
-			return m_iErrors;
-		}
-		
-		public int getValueSize()
-		{
-			return m_Values.size() + m_iErrors;
-		}
-		
+		/**
+		 * Returns the bound value.
+		 * 
+		 * @return The bound value.
+		 */
 		public int getBound()
 		{
 			return m_lBound;
 		}
 		
+		/**
+		 * Returns the standard deviation.
+		 * 
+		 * @return The standard deviation.
+		 */
+		public double getStdDeviation()
+		{
+			return m_lStdDeviation;
+		}
+		
+		/**
+		 * Returns the amount of errors.
+		 * 
+		 * @return The amounts of errors.
+		 */
+		public int getErrors()
+		{
+			return m_iErrors;
+		}
+		
+		/**
+		 * Returns the amount of values and errors.
+		 * 
+		 * @return The amount of values and errors.
+		 */
+		public int getValueSize()
+		{
+			return m_Values.size() + m_iErrors;
+		}
+		
+		/**
+		 * Returns the day timestamp of the entry.
+		 * 
+		 * @return The day timestamp.
+		 */
 		public long getDayTimestamp()
 		{
 			Calendar cal = Calendar.getInstance();
