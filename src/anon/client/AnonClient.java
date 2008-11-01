@@ -31,6 +31,10 @@
  */
 package anon.client;
 
+import gui.dialog.JAPDialog;
+import jap.JAPController;
+import jap.TermsAndConditionsDialog;
+
 import java.io.InterruptedIOException;
 import java.io.IOException;
 import java.net.ConnectException;
@@ -61,6 +65,7 @@ import anon.client.replay.TimestampUpdater;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.ImmutableProxyInterface;
 import anon.infoservice.MixCascade;
+import anon.infoservice.MixInfo;
 import anon.pay.AIControlChannel;
 import anon.pay.Pay;
 import anon.util.XMLParseException;
@@ -71,6 +76,7 @@ import HTTPClient.HTTPConnection;
 import anon.infoservice.IMutableProxyInterface;
 import anon.IServiceContainer;
 import anon.client.TrustException;
+import anon.crypto.JAPCertificate;
 /**
  * @author Stefan Lieske
  */
@@ -170,6 +176,42 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 
 		m_serviceContainer = a_serviceContainer;
 
+		/******************* start terms and conditions check ***********************
+		int cascadeLength = mixCascade.getNumberOfMixes();
+		JAPController controller = JAPController.getInstance();
+		
+		for (int i = 0; i < cascadeLength; i++) 
+		{
+			MixInfo info = mixCascade.getMixInfo(i);
+			if(info == null)
+			{
+				return ErrorCodes.E_CONNECT;
+			}
+			
+			JAPCertificate opCert = info.getOperatorCertificate();
+			if(opCert == null)
+			{
+				return ErrorCodes.E_CONNECT;
+			}
+			
+			String opSki = opCert.getSubjectKeyIdentifier();
+			if(! controller.hasAcceptedTermsAndConditions(opSki) )
+			{
+				boolean accept = 
+					JAPDialog.showYesNoDialog(controller.getViewWindow(), "Accept the T&Cs?"); //replace with T&C Dialog
+				if(!accept)
+				{
+					controller.revokeTermsAndConditions(opSki);
+					return ErrorCodes.E_INTERRUPTED;
+				}
+				else
+				{
+					controller.acceptTermsAndConditions(opSki);
+				}
+			}
+		}
+		********************  end terms and conditions check **************************/
+		
 		StatusThread run = new StatusThread()
 		{
 			int status;
@@ -575,6 +617,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 
 		Thread notificationThread = new Thread(new Runnable()
 		{
+			
 			public void run()
 			{
 				synchronized (m_eventListeners)
@@ -592,7 +635,7 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		notificationThread.start();
 
 		Socket connectedSocket = null;
-		HTTPConnection connction;
+		HTTPConnection connection;
 		int i = 0;
 		while ( (i < a_mixCascade.getNumberOfListenerInterfaces()) && (connectedSocket == null) &&
 			   (!Thread.currentThread().isInterrupted()))
@@ -600,10 +643,13 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 			/* try out all interfaces of the mixcascade until we have a connection */
 			try
 			{
-				connction = HTTPConnectionFactory.getInstance().createHTTPConnection(a_mixCascade.
+				connection = HTTPConnectionFactory.getInstance().createHTTPConnection(a_mixCascade.
 					getListenerInterface(i), a_proxyInterface);
-				connction.setTimeout(CONNECT_TIMEOUT);
-				connectedSocket = connction.Connect();
+				connection.setTimeout(CONNECT_TIMEOUT);
+				connectedSocket = connection.Connect();
+				/*connectedSocket = new Socket(a_mixCascade.
+						getListenerInterface(i).getHost(), a_mixCascade.
+						getListenerInterface(i).getPort());*/
 			}
 			catch (InterruptedIOException e)
 			{

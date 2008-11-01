@@ -40,6 +40,7 @@ import java.util.Hashtable;
 import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.zip.ZipFile;
 
 import java.awt.Frame;
 import java.awt.Window;
@@ -53,6 +54,7 @@ import gui.JAPAWTMsgBox;
 import gui.JAPDll;
 import gui.JAPMessages;
 import gui.dialog.JAPDialog;
+import gui.help.AbstractHelpFileStorageManager;
 import jap.AbstractJAPMainView;
 import jap.ConsoleJAPMainView;
 import jap.ConsoleSplash;
@@ -66,10 +68,11 @@ import jap.JAPNewView;
 import jap.JAPSplash;
 import jap.JAPViewIconified;
 import jap.MacOSXLib;
-import jap.SystrayPopupMenu;
+import logging.FileLog;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+import logging.SystemErrLog;
 import platform.AbstractOS;
 import platform.WindowsOS;
 import platform.MacOS;
@@ -164,7 +167,11 @@ public class JAP
 		String listenHost = null;
 		int listenPort = 0;
 		MixCascade commandlineCascade = null;
-
+		
+		/* system wide socks settings should not not apply to JAP */
+		System.getProperties().remove("socksProxyHost");
+		System.getProperties().remove("socksProxyPort");
+		
 		if (isArgumentSet("--version") || isArgumentSet("-v"))
 		{
 			System.out.println("JAP/JonDo version: " + JAPConstants.aktVersion + "\n" +
@@ -179,6 +186,13 @@ public class JAP
 							   "/" + vendor + "/" + os +
 							   (mrjVersion != null ? "/" + mrjVersion : "") + ")");
 		}
+		
+		SystemErrLog templog = new SystemErrLog();
+		LogHolder.setLogInstance(templog);
+		templog.setLogType(LogType.ALL);
+		templog.setLogLevel(LogLevel.WARNING);		
+		
+		
 		//Macintosh Runtime for Java (MRJ) on Mac OS
 		// Test (part 1) for right JVM
 		if (javaVersion.compareTo("1.0.2") <= 0)
@@ -897,7 +911,7 @@ public class JAP
 		}
 	}
 
-	public String getArgumentValue(String a_argument)
+	private String getArgumentValue(String a_argument)
 	{
 		String value = (String) m_arstrCmdnLnArgs.get(a_argument);
 		if (value != null && value.trim().length() == 0)
@@ -908,17 +922,16 @@ public class JAP
 		return value;
 	}
 
-	public boolean isArgumentSet(String a_argument)
+	private boolean isArgumentSet(String a_argument)
 	{
 		return m_arstrCmdnLnArgs.containsKey(a_argument);
 	}
 	
-	public String buildPortableFFCommand(ISplashResponse a_splash)
+	private String buildPortableFFCommand(ISplashResponse a_splash)
 	{
 		String pFFExecutable = null;
 		String pFFHelpPath = null;
 
-		
 		if (!isArgumentSet("--portable") )
 		{
 			return null;
@@ -945,8 +958,53 @@ public class JAP
 			if (isArgumentSet("--portable-help-path"))
 			{
 				pFFHelpPath = getArgumentValue("--portable-help-path");
-			}	
+			}
 			
+			if (pFFHelpPath == null && isArgumentSet("--jar-path"))
+			{				
+				int index;
+				String jarpath = getArgumentValue("--jar-path");
+				String pFFHelpPathTmp;
+				
+				try
+				{
+					if (m_temp != null && m_temp.length > 0 && jarpath != null)
+					{					
+						pFFHelpPathTmp = m_temp[0];					
+						index = pFFHelpPathTmp.indexOf(jarpath);
+						if (index > 0)
+						{	
+							pFFHelpPathTmp = pFFHelpPathTmp.substring(0, index);
+							String[] dirs = new File(pFFHelpPathTmp).list();						
+							for (int i = 0; i < dirs.length; i++)
+							{
+								if (dirs[i].toUpperCase().equals(AbstractHelpFileStorageManager.HELP_FOLDER.toUpperCase()))
+								{
+									// found a help folder in the jarpath; assume that it is the right one...
+									pFFHelpPath = pFFHelpPathTmp;
+									break;
+								}
+							}
+						}									
+					}
+				}
+				catch (Exception a_e)
+				{
+					LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
+				}
+			}
+			
+//			if no path was found, set the help directory to the path where the JAP.jar is located
+			if (pFFHelpPath == null)
+			{
+				ZipFile jar = ClassUtil.getJarFile();
+				if (jar != null)
+				{
+					pFFHelpPath = new File(jar.getName()).getParent();
+				}
+			}
+			
+	
 			if(pFFHelpPath != null)
 			{
 				String messageText = a_splash.getText();
@@ -954,7 +1012,7 @@ public class JAP
 				JAPModel.getInstance().setHelpPath(new File(pFFHelpPath), true);
 				a_splash.setText(messageText);				
 			}
-		}			
+		}
 		
 		return pFFExecutable;
 	}
