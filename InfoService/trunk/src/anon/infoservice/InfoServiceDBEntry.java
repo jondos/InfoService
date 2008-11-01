@@ -53,6 +53,7 @@ import anon.crypto.XMLSignature;
 import anon.util.ClassUtil;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
+import anon.util.ZLibTools;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -1173,6 +1174,15 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 				{
 					currentEntry = new InfoServiceDBEntry(entryNode, a_getter.m_bJAPContext);
 				}
+				else if(a_getter.m_dbEntryClass == TermsAndConditions.class)
+				{
+					// the t&c operator data needs his own document to find and transform nodes
+					Document d = XMLUtil.createDocument();
+					Node node = XMLUtil.importNode(d, entryNode, true);
+					d.appendChild(node);
+					
+					currentEntry = new TermsAndConditions(d);
+				}
 				else if (a_getter.m_dbEntryClass == MixCascade.class)
 				{
 					if (a_getter.m_bJAPContext)
@@ -1248,6 +1258,40 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		return getEntries(getter);
 	}
 
+	/**
+	 * Get the MixInfo for the mix with the given ID. If we can't get a connection with the
+	 * infoservice, an Exception is thrown.
+	 *
+	 * @param mixId The ID of the mix to get the MixInfo for.
+	 *
+	 * @return The MixInfo for the mix with the given ID.
+	 */
+	public TermsAndConditionsFramework getTCFramework(String a_id) throws Exception
+	{
+		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest("/tcframework/" + a_id), 
+				HTTPConnectionFactory.HTTP_ENCODING_ZLIB);
+		
+		NodeList nodes = doc.getElementsByTagName("TermsAndConditionsFramework");
+		if (nodes.getLength() == 0)
+		{
+			throw (new Exception("Error in XML structure for mix with ID " + a_id));
+		}
+		
+		Document d = XMLUtil.createDocument();
+
+		Node node = XMLUtil.importNode(d, nodes.item(0), true);
+		d.appendChild(node);
+		TermsAndConditionsFramework framework = new TermsAndConditionsFramework(d);
+		/* check the signature */
+		if (!framework.isVerified())
+		{
+			/* signature is invalid -> throw an exception */
+			throw (new Exception("Cannot verify the signature for Mix entry: " + XMLUtil.toString(node)));
+		}
+		/* signature was valid */
+		return framework;
+	}
+	
 	public Hashtable getPaymentInstances(boolean a_bJAPClientContext) throws Exception
 	{
 		EntryGetter getter = new EntryGetter();
@@ -1504,12 +1548,36 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		return getUpdateEntries(MessageDBEntry.class, true);
 	}
 	
+	public Hashtable getTermsAndConditions() throws Exception
+	{
+		EntryGetter getter = new EntryGetter();
+		getter.m_bJAPContext = true;
+		getter.m_dbEntryClass = TermsAndConditions.class;
+		getter.m_postFile = TermsAndConditions.HTTP_REQUEST_STRING;
+		return getEntries(getter);
+	}
+	
+	public Hashtable getTermsAndConditionSerials() throws Exception
+	{
+		Document doc = getXmlDocument(HttpRequestStructure.createGetRequest(TermsAndConditions.HTTP_SERIALS_REQUEST_STRING),
+				  HTTPConnectionFactory.HTTP_ENCODING_ZLIB);
+
+		if (!SignatureVerifier.getInstance().verifyXml(doc, SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE))
+		{
+			/* signature is invalid -> throw an exception */
+			throw (new SignatureException("Cannot verify the signature: " + XMLUtil.toString(doc)));
+		}
+
+		return new AbstractDistributableDatabaseEntry.Serials(TermsAndConditions.class).parse(
+				doc.getDocumentElement());
+	}
+	
 	/**
 	 * Sends a /performanceinfo request to the Info Service, retrieves the data
 	 * and creates a new PerformanceInfo object.
-	 * 
+	 *
 	 * @return a PerformanceInfo object
-	 * 
+	 *
 	 * @throws Exception if the Signature can't be verified, the Info Service doesn't have
 	 * the information available or can't be reached.
 	 */
@@ -1526,9 +1594,9 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 			// signature could not be verified
 			throw new SignatureException("Document could not be verified!");
 		}
-		
-		
-		
+
+
+
 		return info;
 	}
 

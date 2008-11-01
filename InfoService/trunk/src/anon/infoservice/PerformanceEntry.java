@@ -437,6 +437,20 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 	}
 	
 	/**
+	 * Sets the best bound value. This should only be used by 
+	 * the PerformanceInfo class in the JAP client.
+	 * 
+	 * @see anon.infoservice.PerformanceInfo#getLowestCommonBoundEntry(String)
+	 * 
+	 * @param a_attribute The performance attribute.
+	 * @param a_lValue The best bound value.
+	 */
+	public void setBestBound(int a_attribute, int a_lValue)
+	{
+		m_floatingTimeEntries[a_attribute].setBestBound(a_lValue);
+	}
+	
+	/**
 	 * Calculates (if used by the info service) and returns the
 	 * bound value of the given attribute.
 	 * 
@@ -452,6 +466,29 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		else if(a_attribute == DELAY)
 		{
 			return m_floatingTimeEntries[a_attribute].getBound(false);
+		}
+		else
+		{
+			return 0;
+		}
+	}
+	
+	/**
+	 * Calculates (if used by the info service) and returns the
+	 * best bound value of the given attribute.
+	 * 
+	 * @param a_attribute The performance attribute.
+	 * @return The best bound value of the given attribute.
+	 */
+	public int getBestBound(int a_attribute)
+	{
+		if(a_attribute == SPEED)
+		{
+			return m_floatingTimeEntries[a_attribute].getBestBound(true);
+		}
+		else if(a_attribute == DELAY)
+		{
+			return m_floatingTimeEntries[a_attribute].getBestBound(false);
 		}
 		else
 		{
@@ -718,14 +755,9 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		public static final String XML_ELEMENT_VALUE = "Value";
 		
 		/**
-		 * The min value XML attribute name.
+		 * The best bound value XML attribute name.
 		 */
-		public static final String XML_ATTR_MIN = "min";
-		
-		/**
-		 * The max value XML attribute name.
-		 */
-		public static final String XML_ATTR_MAX = "max";
+		public static final String XML_ATTR_BEST = "best";
 		
 		/**
 		 * The bound value XML attribute name.
@@ -754,6 +786,14 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		 * {@link #getBound(boolean)}
 		 */
 		private int m_lBoundValue = -1;
+		
+		/**
+		 * The best bound value. This will only be set if this object
+		 * is constructed from XML (only in the JAP client). The 
+		 * info service calculates the best bound value on the fly using
+		 * {@link #getBound(boolean)}
+		 */
+		private int m_lBestBoundValue = -1;
 		
 		/**
 		 * True, if the object is created by the info service 
@@ -793,7 +833,31 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 			}
 			else
 			{
-				m_lBoundValue = (int)lBoundValue;
+				m_lBoundValue = (int) lBoundValue;
+			}
+			
+			long lBestBoundValue = XMLUtil.parseAttribute(a_node, XML_ATTR_BEST, -2l);
+			if(lBestBoundValue == -2)
+			{
+				if(a_attribute == SPEED)
+				{
+					m_lBestBoundValue = Integer.MAX_VALUE;
+				}
+				else
+				{
+					m_lBestBoundValue = 0;
+				}
+			}
+			else
+			{
+				if (lBestBoundValue > Integer.MAX_VALUE)
+				{	
+					m_lBestBoundValue = Integer.MAX_VALUE;
+				}
+				else
+				{
+					m_lBestBoundValue = (int) lBestBoundValue;
+				}
 			}
 		}
 		
@@ -842,6 +906,20 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 			if(!m_bInfoService)
 			{
 				m_lBoundValue = a_lValue;
+			}
+		}
+		
+		/**
+		 * Sets the best bound value. Only allowed by the client.
+		 * 
+		 * @param a_lValue The value.
+		 */
+		public void setBestBound(int a_lValue)
+		{
+			// only allowed by the client
+			if(!m_bInfoService)
+			{
+				m_lBestBoundValue = a_lValue;
 			}
 		}
 		
@@ -933,33 +1011,133 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 			{
 				int value = ((Integer) vec.elementAt(0)).intValue();
 			
-				if (a_bLow)
-				{
-					for (int i = BOUNDARIES[m_attribute].length -1 ; i >= 0; i--)
-					{
-						if (value >= BOUNDARIES[m_attribute][i])
-						{
-							return BOUNDARIES[m_attribute][i];
-						}
-					}
-				}
-				else
-				{
-					for (int i = 0; i < BOUNDARIES[m_attribute].length; i++)
-					{
-						if (value <= BOUNDARIES[m_attribute][i])
-						{
-							return BOUNDARIES[m_attribute][i];
-						}
-					}
-					
-					return BOUNDARIES[m_attribute][BOUNDARIES[m_attribute].length - 1];
-				}
-				
-				return BOUNDARIES[m_attribute][0];
+				return calculateBoundary(a_bLow, value);
 			}
 			
 			return -1;
+		}
+		
+		/**
+		 * Returns the best bound value. If it is invoked by the client 
+		 * the stored m_lBoundValue is returned otherwise the bound
+		 * value is calculated from the values in the entry.
+		 * 
+		 * @param a_bLow Low or high bound.
+		 * @return The best bound value.
+		 */
+		public int getBestBound(boolean a_bLow)
+		{
+			// if it is invoked by the client, just return the stored bound value
+			if(!m_bInfoService)
+			{
+				return m_lBestBoundValue;
+			}
+			
+			int values = 0;
+			long errors = 0;
+			Long timestamp;
+			
+			int bestValue;
+			
+			if(a_bLow)
+			{
+				bestValue = 0;
+			}
+			else
+			{
+				bestValue = Integer.MAX_VALUE;
+			}
+			
+			synchronized (m_Values)
+			{
+				Enumeration e = m_Values.keys();
+				
+				while(e.hasMoreElements())
+				{
+					timestamp = (Long) e.nextElement();
+					// value is too old, remove it
+					if(System.currentTimeMillis() - timestamp.longValue() > DEFAULT_TIMEFRAME)
+					{
+						continue;
+					}
+
+					// get the value
+					Integer value = ((Integer) m_Values.get(timestamp));
+					if(value.intValue() < 0)
+					{
+						// value is an error
+						errors++;
+					}
+					else
+					{
+						values++;
+						if(a_bLow)
+						{
+							if(value.intValue() > bestValue)
+							{
+								bestValue = value.intValue();
+							}
+						}
+						else
+						{
+							if(value.intValue() < bestValue)
+							{
+								bestValue = value.intValue();
+							}
+						}
+					}
+				}
+			}
+			
+			// we don't seem to have any values
+			if (values == 0)
+			{
+				// but we have errors
+				if(errors > 0)
+				{
+					return -1;
+				}
+				else if (a_bLow)
+				{
+					return Integer.MAX_VALUE;
+				}
+				else 
+				{
+					return 0;
+				}
+			}
+			else
+			{
+				return calculateBoundary(a_bLow, bestValue);
+			}
+		}
+		
+		private int calculateBoundary(boolean a_bLow, int value) 
+		{
+			if (a_bLow)
+			{
+				for (int i = BOUNDARIES[m_attribute].length -1 ; i >= 0; i--)
+				{
+					if (value >= BOUNDARIES[m_attribute][i])
+					{
+						return BOUNDARIES[m_attribute][i];
+					}
+				}
+			}
+			else
+			{
+				for (int i = 0; i < BOUNDARIES[m_attribute].length; i++)
+				{
+					if (value <= BOUNDARIES[m_attribute][i])
+					{
+						return BOUNDARIES[m_attribute][i];
+					}
+				}
+				
+				return BOUNDARIES[m_attribute][BOUNDARIES[m_attribute].length - 1];
+			}
+			
+			return BOUNDARIES[m_attribute][0];
 		}
 		
 		/**
@@ -1092,10 +1270,12 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 			if(this.m_attribute == SPEED)
 			{
 				XMLUtil.setAttribute(elem, XML_ATTR_BOUND, getBound(true));
+				XMLUtil.setAttribute(elem, XML_ATTR_BEST, getBestBound(true));
 			}
 			else if(this.m_attribute == DELAY)
 			{
 				XMLUtil.setAttribute(elem, XML_ATTR_BOUND, getBound(false));
+				XMLUtil.setAttribute(elem, XML_ATTR_BEST, getBestBound(false));
 			}
 			
 			return elem;

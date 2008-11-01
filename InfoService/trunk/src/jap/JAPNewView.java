@@ -2916,24 +2916,39 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			PerformanceEntry entry = PerformanceInfo.getLowestCommonBoundEntry(currentMixCascade.getId());
 			
 			int value = 0;
+			int best = 0;
 			
 			if(entry != null)
 			{
-				value = entry.getBound(PerformanceEntry.SPEED);						
+				value = entry.getBound(PerformanceEntry.SPEED);
+				best = entry.getBestBound(PerformanceEntry.SPEED);
 				if (value < 0 || value == Integer.MAX_VALUE)
 				{
 					m_labelSpeed.setText(JAPMessages.getString(MSG_UNKNOWN_PERFORMANCE));
 				}
 				else if(value == 0)
 				{
-					m_labelSpeed.setText("< " + JAPUtil.formatKbitPerSecValueWithUnit(PerformanceEntry.BOUNDARIES[PerformanceEntry.SPEED][1]));
+					m_labelSpeed.setText("< " + JAPUtil.formatKbitPerSecValueWithUnit(
+							PerformanceEntry.BOUNDARIES[PerformanceEntry.SPEED][1], 
+							JAPUtil.MAX_FORMAT_KBIT_PER_SEC));
 				}
 				else
 				{
-					m_labelSpeed.setText(JAPUtil.formatKbitPerSecValueWithUnit(value));
+					if(best == value || best == Integer.MAX_VALUE)
+					{
+						m_labelSpeed.setText(JAPUtil.formatKbitPerSecValueWithUnit(value, 
+								JAPUtil.MAX_FORMAT_KBIT_PER_SEC));
+					}
+					else
+					{
+						m_labelSpeed.setText(JAPUtil.formatKbitPerSecValueWithoutUnit(
+								value, JAPUtil.MAX_FORMAT_KBIT_PER_SEC) + "-" + 
+								JAPUtil.formatKbitPerSecValueWithUnit(best, JAPUtil.MAX_FORMAT_KBIT_PER_SEC));
+					}
 				}
 				
 				value = entry.getBound(PerformanceEntry.DELAY);
+				best = entry.getBestBound(PerformanceEntry.DELAY);
 				if (value <= 0)
 				{
 					m_labelDelay.setText(JAPMessages.getString(MSG_UNKNOWN_PERFORMANCE));
@@ -2946,7 +2961,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				}
 				else
 				{
-					m_labelDelay.setText(value + " ms");
+					if(best == value || best == 0)
+					{
+						m_labelDelay.setText(value + " ms");
+					}
+					else
+					{
+						m_labelDelay.setText(value + "-" + best + " ms");
+					}
 				}
 			}
 			else

@@ -28,6 +28,7 @@
 package gui.dialog;
 
 import gui.GUIUtils;
+
 import java.awt.BorderLayout;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -37,6 +38,7 @@ import java.util.Observer;
 import javax.swing.JLabel;
 import javax.swing.JProgressBar;
 
+import anon.util.IReturnRunnable;
 import anon.util.ProgressCapsule;
 
 /**

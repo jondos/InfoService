@@ -58,6 +58,8 @@ import anon.infoservice.MixCascade;
 import anon.infoservice.MixCascadeExitAddresses;
 import anon.infoservice.MixInfo;
 import anon.infoservice.StatusInfo;
+import anon.infoservice.TermsAndConditionsFramework;
+import anon.infoservice.TermsAndConditions;
 import anon.infoservice.PerformanceEntry;
 import anon.pay.PayAccount;
 import anon.pay.PaymentInstanceDBEntry;
@@ -124,7 +126,21 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			return MixCascadeExitAddresses.class;
 		}
 	};
-
+	private final HTTPResponseGetter m_tcFrameworksResponseGetter = new HTTPResponseGetter()
+	{
+		public Class getDatabaseClass()
+		{
+			return TermsAndConditionsFramework.class;
+		}
+	};
+	private final HTTPResponseGetter m_tcResponseGetter = new HTTPResponseGetter()
+	{
+		public Class getDatabaseClass()
+		{
+			return TermsAndConditions.class;
+		}
+	};
+	
 	private IInfoServiceAgreementAdapter m_agreementAdapter = DynamicConfiguration.getInstance().
 		getAgreementHandler();
 
@@ -384,6 +400,34 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		return httpResponse;
 	}
+	
+	private HttpResponseStructure tcopdataPost(byte[] a_postData)
+	{
+		HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK);
+		try
+		{
+			LogHolder.log(LogLevel.DEBUG, LogType.NET, "TCOpData recvd XML: " + (new String(a_postData)));
+			TermsAndConditions entry = new TermsAndConditions(XMLUtil.toXMLDocument(a_postData));
+			/* verify the signature */
+			if (entry.isVerified())
+			{
+				Database.getInstance(TermsAndConditions.class).update(entry);
+			}
+			else
+			{
+				LogHolder.log(LogLevel.WARNING, LogType.NET,
+							  "Signature check failed for Mix entry! XML: " + (new String(a_postData)));
+				httpResponse = new HttpResponseStructure(HttpResponseStructure.
+					HTTP_RETURN_INTERNAL_SERVER_ERROR);
+			}
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.NET, e);
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);
+		}
+		return httpResponse;
+	}
 
 	private abstract class HTTPResponseGetter
 	{
@@ -445,10 +489,10 @@ final public class InfoServiceCommands implements JWSInternalCommands
 							m_cachedCompressedResponse = new HttpResponseStructure(
 								HttpResponseStructure.HTTP_TYPE_TEXT_XML,
 								HttpResponseStructure.HTTP_ENCODING_ZLIB,
-								//ZLibTools.compress(XMLUtil.toByteArray(doc)));
-								ZLibTools.compress(XMLSignature.toCanonical(doc)));
+								ZLibTools.compress(XMLUtil.toByteArray(doc)));
+								//ZLibTools.compress(XMLSignature.toCanonical(doc)));
 						}
-						catch (XMLParseException ex)
+						catch (/*XMLParse*/Exception ex)
 						{
 							m_cachedCompressedResponse = new HttpResponseStructure(HttpResponseStructure.
 								HTTP_RETURN_INTERNAL_SERVER_ERROR);
@@ -462,7 +506,9 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				}
 			}
 
+			// WIEDER EINSCHALTEN NACHHER!
 			if ( (a_supportedEncodings & HttpResponseStructure.HTTP_ENCODING_ZLIB) > 0)
+				
 			{
 				httpResponse = m_cachedCompressedResponse;
 			}
@@ -689,6 +735,34 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,
 					HttpResponseStructure.HTTP_ENCODING_PLAIN,
 					XMLUtil.toString(mixEntry.getXmlStructure()));
+			}
+		}
+		catch (Exception e)
+		{
+			/* should never occur */
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_INTERNAL_SERVER_ERROR);
+			LogHolder.log(LogLevel.ERR, LogType.NET, e);
+		}
+		return httpResponse;
+	}
+	
+	private HttpResponseStructure japGetTCFramework(String a_id)
+	{
+		HttpResponseStructure httpResponse;
+		try
+		{
+			TermsAndConditionsFramework entry = (TermsAndConditionsFramework) 
+				(Database.getInstance(TermsAndConditionsFramework.class).getEntryById(a_id));
+			if (entry == null)
+			{
+				httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_NOT_FOUND);
+			}
+			else
+			{
+				 httpResponse = new HttpResponseStructure(
+							HttpResponseStructure.HTTP_TYPE_TEXT_XML,
+							HttpResponseStructure.HTTP_ENCODING_ZLIB,
+							ZLibTools.compress(XMLUtil.toByteArray(entry.getXmlStructure())));
 			}
 		}
 		catch (Exception e)
@@ -1900,6 +1974,27 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 */
 			httpResponse = cascadePostStatus(postData);
 		}
+		else if((command.equals("/tcframeworkserials")) && (method == Constants.REQUEST_METHOD_GET))
+		{
+			httpResponse = m_tcFrameworksResponseGetter.fetchResponse(a_supportedEncodings, true);
+		}
+		else if((command.equals("/tcframeworks")) && (method == Constants.REQUEST_METHOD_GET))
+		{
+			httpResponse = m_tcFrameworksResponseGetter.fetchResponse(a_supportedEncodings, false);
+		}
+		else if((command.startsWith("/tcframework/")) && (method == Constants.REQUEST_METHOD_GET))
+		{
+			String id = command.substring(13);
+			httpResponse = japGetTCFramework(id);
+		}
+		else if((command.equals(TermsAndConditions.HTTP_SERIALS_REQUEST_STRING)) && (method == Constants.REQUEST_METHOD_GET))
+		{
+			httpResponse = m_tcResponseGetter.fetchResponse(a_supportedEncodings, true);
+		}
+		else if((command.equals(TermsAndConditions.HTTP_REQUEST_STRING)) && (method == Constants.REQUEST_METHOD_GET))
+		{
+			httpResponse = m_tcResponseGetter.fetchResponse(a_supportedEncodings, false);
+		}
 		else if ( (command.equals("/status")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			/** Full Command: GET /status
@@ -2016,6 +2111,10 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 * Description_de: 
 			 */
 			httpResponse = messagePost(postData, a_supportedEncodings);
+		}
+		else if ( (command.equals(TermsAndConditions.POST_FILE)) && (method == Constants.REQUEST_METHOD_POST))
+		{
+			httpResponse = tcopdataPost(postData);
 		}
 		else if ( (command.startsWith("/cascadeinfo/")) && (method == Constants.REQUEST_METHOD_GET))
 		{

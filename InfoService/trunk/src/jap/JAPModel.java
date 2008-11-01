@@ -44,6 +44,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Observable;
 import java.util.Vector;
+import java.util.Hashtable;
 
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
@@ -244,6 +245,8 @@ public final class JAPModel extends Observable implements IHelpModel
 	private BigInteger m_iDialogVersion=new BigInteger("-1");
 
 	private AbstractHelpFileStorageManager m_helpFileStorageManager;
+	
+	private Hashtable m_acceptedTCs = new Hashtable();
 	
 	private JAPModel()
 	{
@@ -1307,7 +1310,7 @@ public final class JAPModel extends Observable implements IHelpModel
 
 	public synchronized String getHelpPath()
 	{
-		return m_helpPath != null ?
+		return (m_helpPath != null || m_bPortableHelp) ?
 				m_helpPath : AbstractOS.getInstance().getDefaultHelpPath(
 						JAPConstants.APPLICATION_NAME);
 		
@@ -1316,10 +1319,8 @@ public final class JAPModel extends Observable implements IHelpModel
 	public synchronized URL getHelpURL(String a_startDoc)
 	{
 		URL helpURL = null;
-		if(isHelpPathDefined())
+		if(isHelpPathDefined() && m_helpFileStorageManager.ensureMostRecentVersion(m_helpPath))
 		{
-			m_helpFileStorageManager.ensureMostRecentVersion(m_helpPath);
-			
 			try 
 			{
 				helpURL = new URL("file://" + m_helpPath + "/" +
@@ -1383,6 +1384,11 @@ public final class JAPModel extends Observable implements IHelpModel
 	{	
 		String strCheck;
 		
+		if (m_bPortableHelp && !a_bPortable)
+		{
+			return;
+		}
+		
 		if(hpFile == null)
 		{
 			resetHelpPath();
@@ -1390,50 +1396,54 @@ public final class JAPModel extends Observable implements IHelpModel
 		else
 		{
 			hpFile = new File(hpFile.getAbsolutePath());
-			if (hpFile.isFile())
+			if (a_bPortable)
 			{
-				/* This is for backwards compatibility with old portable
-				 * launchers for Windows. The xml file check is disabled for this
-				 * kind of installation. 
-				 */				
-				int index;
-				if ((index = hpFile.getPath().toUpperCase().indexOf((
-						AbstractHelpFileStorageManager.HELP_FOLDER + File.pathSeparator + "de" + 
-						File.pathSeparator + AbstractHelpFileStorageManager.HELP_FOLDER).toUpperCase())) >= 0 ||
-						(index = hpFile.getPath().toUpperCase().indexOf((
-								AbstractHelpFileStorageManager.HELP_FOLDER + File.pathSeparator + "en" +
-								File.pathSeparator + AbstractHelpFileStorageManager.HELP_FOLDER).toUpperCase())) >= 0)
+				m_bPortableHelp = true;
+				if (hpFile.isFile())
 				{
-					if (index > 0)
+					/* This is for backwards compatibility with old portable
+					 * launchers for Windows. The xml file check is disabled for this
+					 * kind of installation. 
+					 */				
+					int index;
+					if ((index = hpFile.getPath().toUpperCase().indexOf((
+							AbstractHelpFileStorageManager.HELP_FOLDER + File.pathSeparator + "de" + 
+							File.pathSeparator + AbstractHelpFileStorageManager.HELP_FOLDER).toUpperCase())) >= 0 ||
+							(index = hpFile.getPath().toUpperCase().indexOf((
+									AbstractHelpFileStorageManager.HELP_FOLDER + File.pathSeparator + "en" +
+									File.pathSeparator + AbstractHelpFileStorageManager.HELP_FOLDER).toUpperCase())) >= 0)
 					{
-						hpFile = new File(hpFile.getPath().substring(0, index));
+						if (index > 0)
+						{
+							hpFile = new File(hpFile.getPath().substring(0, index));
+						}
+						else
+						{
+							hpFile = null;
+						}
 					}
 					else
 					{
-						hpFile = null;
-					}
+	//					get the parent directory as help path
+						String tmp = hpFile.getParent();
+						if (tmp != null)
+						{
+							hpFile = new File(tmp);
+						}
+						else
+						{
+							hpFile = null;
+						}
+					}	
 				}
-				else
-				{
-//					get the parent directory as help path
-					String tmp = hpFile.getParent();
-					if (tmp != null)
-					{
-						hpFile = new File(tmp);
-					}
-					else
-					{
-						hpFile = null;
-					}
-				}			
 				
 				if (hpFile != null && hpFile.isDirectory())										
-				{			LogHolder.log(LogLevel.EMERG, LogType.MISC, hpFile.getPath());					
+				{				
 					strCheck = m_helpFileStorageManager.helpPathValidityCheck(hpFile.getPath(), true);
 					if (strCheck.equals(AbstractHelpFileStorageManager.HELP_VALID) ||
 						strCheck.equals(AbstractHelpFileStorageManager.HELP_JONDO_EXISTS))
 					{						
-						//deletes old help directory if it exists and create a new one
+						//delete old help directory if it exists and create a new one
 						if (m_helpFileStorageManager.handleHelpPathChanged(
 								m_helpPath, hpFile.getPath(), true))
 						{
@@ -1445,13 +1455,11 @@ public final class JAPModel extends Observable implements IHelpModel
 						}
 						else
 						{
-							LogHolder.log(LogLevel.EMERG, LogType.MISC, "reset1");
 							resetHelpPath();
 						}
 					}
 					else
-					{
-						LogHolder.log(LogLevel.EMERG, LogType.MISC, "reset2");		
+					{	
 						resetHelpPath();
 					}
 				}
@@ -1475,10 +1483,6 @@ public final class JAPModel extends Observable implements IHelpModel
 			}
 		}
 		
-		if (a_bPortable && m_helpPath != null)
-		{
-			m_bPortableHelp = true;
-		}
 		notifyObservers(CHANGED_HELP_PATH);		
 	}
 	
@@ -1588,22 +1592,14 @@ public final class JAPModel extends Observable implements IHelpModel
 		
 		if(helpPathExists && !helpInstallationExists)
 		{
-			LogHolder.log(LogLevel.WARNING, LogType.MISC, "Help path "+m_helpPath+" configured but no valid help could be found!");
-			if (m_bPortableHelp)
-			{
-				m_bPortableHelp = false;
-				JAPModel.getInstance().setHelpPath(new File(m_helpPath), true);
-				helpInstallationExists = m_helpPath != null;
-			}
-			else
-			{
-				m_helpPath = null;
-				m_bPortableHelp = false;
-				setChanged();
-			}
+			LogHolder.log(LogLevel.WARNING, LogType.MISC, "Help path " + m_helpPath + 
+					" configured but no valid help could be found!");
+			m_helpPath = null;
+			setChanged();
 		}
 		
-		if (m_helpPath == null && m_helpFileStorageManager.helpInstallationExists(
+		if (!m_bPortableHelp && m_helpPath == null 
+				&& m_helpFileStorageManager.helpInstallationExists(
 				AbstractOS.getInstance().getDefaultHelpPath(JAPConstants.APPLICATION_NAME)) &&
 				helpPathValidityCheck(AbstractOS.getInstance().getDefaultHelpPath(JAPConstants.APPLICATION_NAME)).equals(
 						AbstractHelpFileStorageManager.HELP_JONDO_EXISTS))
@@ -1863,4 +1859,9 @@ public final class JAPModel extends Observable implements IHelpModel
 		{
 			m_iDialogVersion = dialogVersion;
 		}
+		
+	public Hashtable getAcceptedTCs()
+	{
+		return m_acceptedTCs;
+	}
 }
