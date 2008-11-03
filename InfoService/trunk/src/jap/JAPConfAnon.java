@@ -304,6 +304,17 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			m_infoService = new InfoServiceTempLayer(false);
 		}
+		else if (!m_infoService.isFilled())
+		{
+			new Thread(new Runnable()
+			{
+				public void run()
+				{
+					m_infoService.fill(true);
+					updateValues(false);
+				}
+			}).start();
+		}
 	}
 
 	public void recreateRootPanel()
@@ -927,7 +938,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	public synchronized void itemStateChanged(ItemEvent e)
 	{
-		//System.out.println("\nbegin item state");
 		int server = m_serverList.getSelectedIndex();
 		MixCascade cascade = (MixCascade)m_tableMixCascade.getValueAt(m_tableMixCascade.getSelectedRow(), 1);
 		String selectedMixId = null;
@@ -1126,7 +1136,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 
 		pRoot.validate();
-		//System.out.println("final item state");
 	}
 
 	/**
@@ -2032,17 +2041,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					m_anonLevelLabel.setText(m_infoService.getAnonLevel(cascadeId));
 					m_numOfUsersLabel.setText(m_infoService.getNumOfUsers(cascadeId));
 					
-					//System.out.println(m_numOfUsersLabel.getText());
-					//m_reachableLabel.setFont(m_numOfUsersLabel.getFont());
-					//m_lblHosts.setFont(m_numOfUsersLabel.getFont());
-					//m_reachableLabel.setText(m_infoService.getHosts(cascadeId));
-					/*m_cascadesPanel.remove(m_lblHosts);
-					m_cascadesPanel.add(m_lblHosts, m_constrHosts);*/
-					//m_portsLabel.setFont(m_numOfUsersLabel.getFont());
-					//m_lblPorts.setFont(m_numOfUsersLabel.getFont());
-					//m_portsLabel.setText(m_infoService.getPorts(cascadeId));
-					/*m_cascadesPanel.remove(m_lblPorts);
-					m_cascadesPanel.add(m_lblPorts, m_constrPorts);*/
 					setPayLabel(cascade);
 					m_lblSocks.setVisible(cascade.isSocks5Supported());
 				}
@@ -2354,7 +2352,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	 * Temporary image of relevant infoservice entries. For better response time
 	 * of the GUI.
 	 */
-	final class InfoServiceTempLayer
+	private final class InfoServiceTempLayer
 	{
 		private Hashtable m_Cascades;
 		private boolean m_isFilled = false;
@@ -2371,25 +2369,36 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 		public boolean isFilled()
 		{
-			return m_isFilled;
+			synchronized (LOCK_FILL)
+			{
+				return m_isFilled;
+			}
 		}
 
-		public synchronized void removeCascade(MixCascade a_cascade)
+		public void removeCascade(MixCascade a_cascade)
 		{
 			if (a_cascade == null)
 			{
 				return;
 			}
-			m_Cascades.remove(a_cascade.getId());
+			synchronized (LOCK_FILL)
+			{
+				m_Cascades.remove(a_cascade.getId());
+			}
 		}
 
 		/**
 		 * Adds or updates cached cascade information concerning ports and hosts.
 		 * @param a_cascade the cascade that should be updated
 		 */
-		public synchronized void updateCascade(MixCascade a_cascade)
+		public void updateCascade(MixCascade a_cascade)
 		{
-			if (a_cascade == null)
+			updateCascade(a_cascade, m_Cascades);
+		}
+		
+		private void updateCascade(MixCascade a_cascade, Hashtable a_hashtable)
+		{
+			if (a_cascade == null || a_hashtable == null)
 			{
 				return;
 			}
@@ -2450,13 +2459,16 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					ports += ", ";
 				}
 			}
-
-			m_Cascades.put(id, new TempCascade(id, interfaces, ports, a_cascade.getMaxUsers()));
+			
+			synchronized (LOCK_FILL)
+			{
+				a_hashtable.put(id, new TempCascade(id, interfaces, ports, a_cascade.getMaxUsers()));
+			}
 		}
 
 		private void fill(boolean a_bCheckInfoServiceUpdateStatus)
 		{
-			synchronized (LOCK_FILL)
+			//synchronized (LOCK_FILL)
 			{
 				if (!fill(Database.getInstance(MixCascade.class).getEntryList(),
 						  a_bCheckInfoServiceUpdateStatus))
@@ -2479,7 +2491,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			}
 			synchronized (LOCK_FILL)
 			{
-				m_Cascades = new Hashtable();
+				Hashtable cascades = new Hashtable();
 
 				for (int j = 0; j < c.size(); j++)
 				{
@@ -2491,28 +2503,25 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				for (int j = 0; j < c.size(); j++)
 				{
 					MixCascade cascade = (MixCascade) c.elementAt(j);
-					/* fetch the current cascade state */
-					if (!cascade.isUserDefined() &&
-						(!a_bCheckInfoServiceUpdateStatus || !JAPModel.isInfoServiceDisabled()))
-					{
-						Database.getInstance(StatusInfo.class).update(cascade.fetchCurrentStatus());
-					}
-					// update hosts and ports
-					updateCascade(cascade);
-				}
-				for (int j = 0; j < c.size(); j++)
-				{
-					
-					// update MixInfo for each mix in cascade
-					/** @todo really needed?
-					MixCascade cascade = (MixCascade) c.elementAt(j);
-					update(Database.getInstance(MixCascade.class),
-						   new DatabaseMessage(DatabaseMessage.ENTRY_ADDED, cascade));
-					*/
-				}
 
-				m_isFilled = true;
+					// update hosts and ports
+					updateCascade(cascade, cascades);
+				}
+				m_Cascades = cascades;
+				m_isFilled = true;								
 			}
+			
+			for (int j = 0; j < c.size(); j++)
+			{
+				MixCascade cascade = (MixCascade) c.elementAt(j);
+				/* fetch the current cascade state */
+				if (!cascade.isUserDefined() &&
+					(!a_bCheckInfoServiceUpdateStatus || !JAPModel.isInfoServiceDisabled()))
+				{
+					Database.getInstance(StatusInfo.class).update(cascade.fetchCurrentStatus());
+				}
+			}
+			
 			return true;
 		}
 
