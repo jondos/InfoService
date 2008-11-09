@@ -27,6 +27,7 @@
  */
 package anon.infoservice;
 
+import java.net.InetAddress;
 import java.util.Enumeration;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -55,7 +56,7 @@ import anon.pay.AIControlChannel;
  * Holds the information for a mixcascade.
  */
 public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
-	implements AnonServerDescription, IVerifyable
+	implements AnonServerDescription, IVerifyable, IServiceContextContainer
 {
 	public static final String SUPPORTED_PAYMENT_PROTOCOL_VERSION = "2.0";
 
@@ -166,6 +167,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	 * If this MixCascade has been received directly from a cascade connection.
 	 */
 	private boolean m_bFromCascade;
+	private String m_context;
 
 	
 	/**
@@ -281,6 +283,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		
 		m_bStudy = XMLUtil.parseAttribute(a_mixCascadeNode, XML_ATTR_STUDY, false);
 		
+		m_context = XMLUtil.parseAttribute(a_mixCascadeNode, XML_ATTR_CONTEXT, CONTEXT_JONDONYM);
 		m_maxUsers = XMLUtil.parseAttribute(a_mixCascadeNode, XML_ATTR_MAX_USERS, 0);
 		m_maxUsers = Math.min(m_maxUsers, 9999); // 10000 is seen as unlimited
 
@@ -409,6 +412,24 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 			catch (XMLParseException a_e)
 			{
 				m_mixInfos[i] = null;
+			}
+		}
+		
+		if (a_expireTime == 0 && m_mixInfos.length > 0)
+		{
+			// this seems to be InfoService context
+			Vector visibleAddresses = m_mixInfos[m_mixInfos.length - 1].getVisibleAddresses();
+			if (visibleAddresses.size() == 0)
+			{
+				// take the last mix IP addresses
+				visibleAddresses = m_mixInfos[m_mixInfos.length - 1].getListenerAddresses();
+			}
+			for (int i = 0; i < visibleAddresses.size(); i++)
+			{
+				InetAddress addr = (InetAddress)visibleAddresses.elementAt(i);
+				/*LogHolder.log(LogLevel.WARNING, LogType.NET, 
+        				"Adding IP address from file: " + addr.getHostAddress());*/
+				MixCascadeExitAddresses.addInetAddress(getId(), addr);
 			}
 		}
 		
@@ -1356,5 +1377,15 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		{
 			m_strMixIds += m_mixIds.elementAt(i);
 		}
+	}
+
+	public String getContext() 
+	{
+		return m_context;
+	}
+
+	public void setContext(String context) 
+	{
+		m_context = context;
 	}
 }
