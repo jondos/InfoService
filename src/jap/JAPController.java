@@ -74,6 +74,7 @@ import anon.infoservice.AbstractMixCascadeContainer;
 import anon.infoservice.BlacklistedCascadeIDEntry;
 import anon.infoservice.CascadeIDEntry;
 import anon.infoservice.Database;
+import anon.infoservice.IServiceContextContainer;
 import anon.infoservice.PerformanceInfo;
 import anon.infoservice.DatabaseMessage;
 import anon.infoservice.DeletedMessageIDDBEntry;
@@ -86,6 +87,7 @@ import anon.infoservice.JAPMinVersion;
 import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
+import anon.infoservice.ServiceOperator;
 import anon.infoservice.StatusInfo;
 import anon.infoservice.PreviouslyKnownCascadeIDEntry;
 import anon.infoservice.ProxyInterface;
@@ -127,6 +129,7 @@ import jap.pay.AccountUpdater;
 import jap.TermsAndConditionsUpdater;
 import anon.infoservice.ClickedMessageIDDBEntry;
 import anon.client.TrustException;
+import anon.infoservice.TermsAndConditions;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
@@ -489,6 +492,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		JAPModel.getInstance().getRoutingSettings().addObserver(this);
 		JAPModel.getInstance().getRoutingSettings().getServerStatisticsListener().addObserver(this);
 		JAPModel.getInstance().getRoutingSettings().getRegistrationStatusObserver().addObserver(this);
+		m_Model.addObserver(this);
 		m_iStatusPanelMsgIdForwarderServerStatus = -1;
 	}
 
@@ -1278,6 +1282,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				if (nodeCascades != null)
 				{
 					Node nodeCascade = nodeCascades.getFirstChild();
+					String currentCascadeContext = null;
 					while (nodeCascade != null)
 					{
 						if (nodeCascade.getNodeName().equals(MixCascade.XML_ELEMENT_NAME))
@@ -1285,15 +1290,31 @@ public final class JAPController extends Observable implements IProxyListener, O
 							try
 							{
 								currentCascade = new MixCascade( (Element) nodeCascade, Long.MAX_VALUE);
-								try
+								
+								currentCascadeContext = currentCascade.getContext();
+								/* JonDonym is the defult service context */
+								if(currentCascadeContext == null)
 								{
-									Database.getInstance(MixCascade.class).update(currentCascade);
+									currentCascadeContext = IServiceContextContainer.CONTEXT_JONDONYM;
 								}
-								catch (Exception e)
-								{}
-								/* register loaded cascades as known cascades */
-								Database.getInstance(CascadeIDEntry.class).update(
-									new CascadeIDEntry(currentCascade));
+								/* only add to database when the service context matches */
+								if(currentCascadeContext.equals(m_Model.getContext()))
+								{
+									try
+									{
+										Database.getInstance(MixCascade.class).update(currentCascade);
+									}
+									catch (Exception e)
+									{}
+									/* register loaded cascades as known cascades */
+									Database.getInstance(CascadeIDEntry.class).update(
+										new CascadeIDEntry(currentCascade));
+								}
+								else
+								{
+									LogHolder.log(LogLevel.NOTICE, LogType.MISC, 
+											"No service context match "+currentCascadeContext+"."+currentCascade.getName());
+								}
 							}
 							catch (Exception a_e)
 							{
@@ -1950,6 +1971,21 @@ public final class JAPController extends Observable implements IProxyListener, O
 				Database.getInstance(MixCascade.class).update(m_currentMixCascade);
 				Database.getInstance(CascadeIDEntry.class).update(
 								new CascadeIDEntry(m_currentMixCascade));
+				
+				Element elemTCs = (Element) XMLUtil.getFirstChildByName(root, JAPConstants.CONFIG_ACCEPTED_TERMS_AND_CONDITIONS);
+				
+				if(elemTCs != null)
+				{
+					NodeList list = elemTCs.getElementsByTagName(TermsAndConditions.XML_ELEMENT_NAME);
+					for(i = 0; i < list.getLength(); i++)
+					{
+						Node node = list.item(i);
+						String ski = XMLUtil.parseAttribute(node, TermsAndConditions.XML_ATTR_ID, "");
+						long timestamp = XMLUtil.parseAttribute(node, TermsAndConditions.XML_ATTR_TIME_ACCEPTED, -1l);
+						
+						acceptTermsAndConditions(ski, timestamp);
+					}
+				}
 			}
 			catch (Exception e)
 			{
@@ -2762,8 +2798,24 @@ public final class JAPController extends Observable implements IProxyListener, O
 			
 			e.appendChild(JAPModel.getInstance().getRoutingSettings().toXmlElement(doc));
 			
+			Element elemTCs = doc.createElement(JAPConstants.CONFIG_ACCEPTED_TERMS_AND_CONDITIONS);
 			
+			Hashtable acceptedTCs = JAPModel.getInstance().getAcceptedTCs();
+			Enumeration keys = acceptedTCs.keys();
+			String ski;
+			
+			while(keys.hasMoreElements())
+			{
+				ski = (String) keys.nextElement();
+				Long timestamp = (Long) acceptedTCs.get(ski);
+				Element elemTC = doc.createElement(TermsAndConditions.XML_ELEMENT_NAME);
+				XMLUtil.setAttribute(elemTC, TermsAndConditions.XML_ATTR_ID, ski);
+				XMLUtil.setAttribute(elemTC, TermsAndConditions.XML_ATTR_TIME_ACCEPTED, timestamp.longValue());
+				elemTCs.appendChild(elemTC);
+			}
 
+			e.appendChild(elemTCs);
+			
 			return doc;
 		}
 		catch (Throwable ex)
@@ -3066,6 +3118,10 @@ public final class JAPController extends Observable implements IProxyListener, O
 								JAPModel.getInstance().getPaymentProxyInterface());
 						}
 					}
+					
+					m_proxyAnon.setHTTPHeaderProcessingEnabled(JAPModel.getInstance().isAnonymizedHttpHeaders());
+					m_proxyAnon.setJonDoFoxHeaderEnabled(JAPModel.getInstance().isAnonymizedHttpHeaders());	
+					
 					if (!JAPModel.isInfoServiceDisabled())
 					{
 						m_feedback.updateAsync();
@@ -3508,9 +3564,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 	{
 		m_Model.setDummyTraffic(msIntervall);
 		ForwardServerManager.getInstance().setDummyTrafficInterval(msIntervall);
-		if (m_proxyAnon != null)
+		synchronized (PROXY_SYNC)
 		{
-			m_proxyAnon.setDummyTraffic(msIntervall);
+			if (m_proxyAnon != null)
+			{
+				m_proxyAnon.setDummyTraffic(msIntervall);
+			}
 		}
 	}
 
@@ -4514,6 +4573,21 @@ public final class JAPController extends Observable implements IProxyListener, O
 						}
 					}
 				}).start();
+			} 
+			else if (a_notifier == m_Model && a_message != null)
+			{
+				if (a_message.equals(JAPModel.CHANGED_ANONYMIZED_HTTP_HEADERS))
+				{
+					synchronized (PROXY_SYNC)
+					{
+						if(m_proxyAnon != null)
+						{
+							m_proxyAnon.setHTTPHeaderProcessingEnabled(JAPModel.getInstance().isAnonymizedHttpHeaders());
+							m_proxyAnon.setJonDoFoxHeaderEnabled(JAPModel.getInstance().isAnonymizedHttpHeaders());
+							
+						}
+					}
+				}
 			}
 		}
 		catch (Exception e)
@@ -4974,23 +5048,35 @@ public final class JAPController extends Observable implements IProxyListener, O
 		m_bPayCascadeNoAsk = a_payCascadeNoAsk;
 	}
 	
-	public void acceptTermsAndConditions(String a_ski)
+	public void acceptTermsAndConditions(ServiceOperator a_op)
 	{
 		Hashtable tcs = JAPModel.getInstance().getAcceptedTCs();
 		
-		tcs.put(a_ski, new Long(System.currentTimeMillis()));
+		if(a_op != null)
+		{
+			tcs.put(a_op.getId(), new Long(System.currentTimeMillis()));
+		}
 	}
 	
-	public boolean hasAcceptedTermsAndConditions(String a_ski)
+	public void acceptTermsAndConditions(String a_ski, long a_timestamp)
 	{
-		return JAPModel.getInstance().getAcceptedTCs().containsKey(a_ski);
+		Hashtable tcs = JAPModel.getInstance().getAcceptedTCs();
+		tcs.put(a_ski, new Long(a_timestamp));
 	}
 	
-	public void revokeTermsAndConditions(String a_ski)
+	public boolean hasAcceptedTermsAndConditions(ServiceOperator a_op)
+	{
+		return (a_op == null) ? false : JAPModel.getInstance().getAcceptedTCs().containsKey(a_op.getId());
+	}
+	
+	public void revokeTermsAndConditions(ServiceOperator a_op)
 	{
 		Hashtable tcs = JAPModel.getInstance().getAcceptedTCs();
 		
-		tcs.remove(a_ski);
+		if(a_op != null)
+		{
+			tcs.remove(a_op.getId());
+		}
 	}
 
 	/**

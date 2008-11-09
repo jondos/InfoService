@@ -53,7 +53,6 @@ public class InfoServiceDistributor implements IDistributor
 	// look for jobs; for
 	// debugging only
 	private static final int CONNECTION_TIMEOUT = 10000;
-
 	private static final int BLOCKING_FACTOR = 5;
 
 	/**
@@ -156,7 +155,7 @@ public class InfoServiceDistributor implements IDistributor
 							if (!sendToInfoService(entry, job))
 							{
 								LogHolder.log(LogLevel.ERR, LogType.NET, "Could not send entry "
-										+ job + "to InfoService " + entry + "!");
+										+ job + " to InfoService " + entry + "!");
 							}
 						}
 						/*
