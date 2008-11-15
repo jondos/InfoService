@@ -1886,6 +1886,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	protected void onRootPanelShown()
 	{
+		boolean bUpdateValues = false;
 		synchronized (LOCK_OBSERVABLE)
 		{
 			if (!m_observablesRegistered)
@@ -1897,13 +1898,20 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				Database.getInstance(MixCascade.class).addObserver(this);
 				Database.getInstance(StatusInfo.class).addObserver(this);
 				Database.getInstance(MixInfo.class).addObserver(this);
+				m_cmbCascadeFilter.setSelectedItem(TrustModel.getCurrentTrustModel());
 				TrustModel.addModelObserver(this);
 				m_observablesRegistered = true;
+				bUpdateValues = true;
 			}
 		}
 
 		if (!m_infoService.isFilled())
 		{
+			bUpdateValues = true;			
+		}
+		if (bUpdateValues)
+		{
+			//updateValues(false); // deadlock in MacOS
 			new Thread(new Runnable()
 			{
 				public void run()
@@ -1914,7 +1922,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			}).start();
 			//fetchCascades(false, false, true);
 		}
-
 
 		if (m_tableMixCascade.getRowCount() > 0 && m_tableMixCascade.getSelectedRow() < 0)
 		{
@@ -2576,11 +2583,13 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		public String getAnonLevel(String a_cascadeId)
 		{
 			StatusInfo statusInfo = getStatusInfo(a_cascadeId);
-			if (statusInfo != null)
+			if (statusInfo != null && statusInfo.getAnonLevel() >= 0)
 			{
 				return "" + statusInfo.getAnonLevel() + " / " + StatusInfo.ANON_LEVEL_MAX;
 			}
-			return "N/A";
+					
+			//return "N/A";
+			return "? / " + StatusInfo.ANON_LEVEL_MAX;
 		}
 
 
