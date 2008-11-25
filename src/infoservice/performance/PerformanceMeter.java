@@ -44,6 +44,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
+import java.util.GregorianCalendar;
 import java.util.Hashtable;
 import java.util.Random;
 import java.util.Calendar;
@@ -265,7 +266,7 @@ public class PerformanceMeter implements Runnable, Observer
 		m_infoServiceConfig = Configuration.getInstance(); 
 		if(m_infoServiceConfig == null)
 		{
-			//@todo: throw something. Assert InfoServiceConfig is not null
+			// TODO throw something. Assert InfoServiceConfig is not null
 		}
 		
 		// get the performance meter config from the infoservice config
@@ -322,9 +323,10 @@ public class PerformanceMeter implements Runnable, Observer
 	{
 		int year = m_cal.get(Calendar.YEAR);
 		
-		if(week < 0)
+		if (week == 0)
 		{
 			year--;
+			week = new GregorianCalendar(year, Calendar.DECEMBER, 31).get(Calendar.WEEK_OF_YEAR);
 		}
 		
 		try
@@ -417,22 +419,22 @@ public class PerformanceMeter implements Runnable, Observer
 					PerformanceEntry entry = (PerformanceEntry) Database.getInstance(PerformanceEntry.class).getEntryById(id);
 					
 					// create one if necessary
-					if(entry == null)
+					if (entry == null)
 					{
 						entry = new PerformanceEntry(id);
 					}
 					
-					// import the extracted value into the performace entry
+					// import the extracted value into the performance entry
 					entry.importValue(PerformanceEntry.DELAY, timestamp, delay);
 					entry.importValue(PerformanceEntry.SPEED, timestamp, speed);
 					
 					// only import users if we have a valid value
-					if(users != -1)
+					if (users != -1)
 					{
 						entry.importValue(PerformanceEntry.USERS, timestamp, users);
 					}
 					
-					if(packets != -1)
+					if (packets != -1)
 					{
 						entry.importValue(PerformanceEntry.PACKETS, timestamp, packets);
 					}
@@ -443,7 +445,8 @@ public class PerformanceMeter implements Runnable, Observer
 		}
 		catch(IOException ex)
 		{
-			LogHolder.log(LogLevel.WARNING, LogType.NET, "Could not read "+ PERFORMANCE_LOG_FILE + ". No previous performanace date for this week found.");
+			LogHolder.log(LogLevel.WARNING, LogType.NET, "Could not read "+ PERFORMANCE_LOG_FILE + 
+					". No previous performance data for this week found: " + ex.getMessage());
 		}
 		
 		LogHolder.log(LogLevel.NOTICE, LogType.NET, "Added previous performance data for week" + week);
@@ -939,6 +942,7 @@ public class PerformanceMeter implements Runnable, Observer
 			int lastSpeed;
 			int lastUsers;
 			int lastPackets;
+			int waitTime;
 			
 			if (iUpdates > 0)
 			{
@@ -947,6 +951,22 @@ public class PerformanceMeter implements Runnable, Observer
 			}
 			
 			timestamp = System.currentTimeMillis();
+			waitTime = a_requestsPerInterval - iUpdates;
+			while (waitTime > 0)
+			{
+				try 
+				{
+					//wait until 
+					Thread.sleep(waitTime);
+					waitTime = 0;
+				} 
+				catch (InterruptedException e) 
+				{
+					// should not be possible
+					LogHolder.log(LogLevel.EMERG, LogType.THREAD, e);
+					waitTime--;
+				}
+			}
 			while (iUpdates < a_requestsPerInterval)
 			{				
 		    	// timestamp at which the test data was retrieved
@@ -978,7 +998,7 @@ public class PerformanceMeter implements Runnable, Observer
 				
 				logPerftestData(timestamp, a_cascade, Integer.MAX_VALUE, Integer.MAX_VALUE, 
 						info.getNrOfActiveUsers(), packets, null);				
-			}									
+			}
 			
 			lastDelay = entry.addData(PerformanceEntry.DELAY, vDelay);
 			lastSpeed = entry.addData(PerformanceEntry.SPEED, vSpeed);
@@ -1144,9 +1164,9 @@ public class PerformanceMeter implements Runnable, Observer
 	        long responseStartTime = System.currentTimeMillis();
 	        
 	        //	delay in ms
-	        if (responseStartTime - transferInitiatedTime > Integer.MAX_VALUE)
+	        if (responseStartTime - transferInitiatedTime >= Integer.MAX_VALUE)
 	        {
-	        	delay = Integer.MAX_VALUE;
+	        	delay = Integer.MAX_VALUE - 1;
 	        }
 	        else
 	        {
@@ -1339,6 +1359,7 @@ public class PerformanceMeter implements Runnable, Observer
     			m_stream.write((a_timestamp + "\t" + a_cascade.getId() + "\t" + a_delay + 
     					"\t" + a_speed + "\t" + a_users + "\t" + a_packets + "\t" +
     					(a_ip == null ? "0.0.0.0" : a_ip.getHostAddress()) + "\n").getBytes());
+    			m_stream.flush();
 			}
 		}
 		catch(IOException ex)

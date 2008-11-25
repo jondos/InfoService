@@ -551,19 +551,20 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 
 		JLabel l;
-		
+		/*
 		l = new JLabel(JAPMessages.getString(MSG_FILTER) + ":");
 		c.gridx = 0;
 		c.gridy = 0;
 		c.gridwidth = 1;
 		c.anchor = GridBagConstraints.WEST;
 		c.insets = new Insets(-5, 0, 0, 5);
-		m_cascadesPanel.add(l, c);
+		m_cascadesPanel.add(l, c);*/
 
-		c.gridx = 1;
+		c.gridx = 0;
 		c.gridy = 0;
-		c.gridwidth = 1;
-		c.insets = new Insets(0, 0, 0, 0);
+		c.gridwidth = 2;
+		c.anchor = GridBagConstraints.WEST;
+		c.insets = new Insets(0, 5, 0, 0);
 		c.anchor = GridBagConstraints.NORTHEAST;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weighty = 0.2;
@@ -1077,7 +1078,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				continue;
 			}
 			
-			if(!location.getCountry().equals(operator.getCertificate().getSubject().getCountryCode()))
+			if(!location.getCountryCode().equals(operator.getCertificate().getSubject().getCountryCode()))
 			{
 				m_serverList.updateFlag(i, location, false);
 				m_serverList.updateOperatorFlag(i, operator);
@@ -1139,7 +1140,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		ServiceLocation location = m_infoService.getServiceLocation(cascade, selectedMixId);
 		if (location != null)
 		{
-			m_locationLabel.setIcon(GUIUtils.loadImageIcon("flags/" + location.getCountry() + ".png"));
+			m_locationLabel.setIcon(GUIUtils.loadImageIcon("flags/" + location.getCountryCode() + ".png"));
 		}
 		else
 		{

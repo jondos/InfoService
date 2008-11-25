@@ -55,6 +55,11 @@ public class MixCascadeUpdater extends AbstractDatabaseUpdater
 		super(new DynamicUpdateInterval(UPDATE_INTERVAL_MS));
 	}
 
+	public MixCascadeUpdater(long interval)
+	{
+		super(interval);
+	}
+	
 	public Class getUpdatedClass()
 	{
 		return MixCascade.class;
@@ -121,13 +126,16 @@ public class MixCascadeUpdater extends AbstractDatabaseUpdater
 	{
 		Hashtable result = 
 			InfoServiceHolder.getInstance().getMixCascadeSerials(JAPModel.getInstance().getContext());
-		if (result == null)
+		if (getUpdateInterval() instanceof DynamicUpdateInterval)
 		{
-			((DynamicUpdateInterval)getUpdateInterval()).setUpdateInterval(MIN_UPDATE_INTERVAL_MS);
-		}
-		else
-		{
-			((DynamicUpdateInterval)getUpdateInterval()).setUpdateInterval(UPDATE_INTERVAL_MS);
+			if (result == null)
+			{
+				((DynamicUpdateInterval)getUpdateInterval()).setUpdateInterval(MIN_UPDATE_INTERVAL_MS);
+			}
+			else
+			{
+				((DynamicUpdateInterval)getUpdateInterval()).setUpdateInterval(UPDATE_INTERVAL_MS);
+			}
 		}
 		
 		return result;
@@ -151,7 +159,7 @@ public class MixCascadeUpdater extends AbstractDatabaseUpdater
 		return getUpdatedEntries_internal(a_entriesToUpdate);
 	}
 
-	private Hashtable getUpdatedEntries_internal(Hashtable a_entriesToUpdate)
+	protected Hashtable getUpdatedEntries_internal(Hashtable a_entriesToUpdate)
 	{
 		Hashtable result;
 		if (a_entriesToUpdate == null)

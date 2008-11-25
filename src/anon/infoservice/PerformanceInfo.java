@@ -185,7 +185,7 @@ public class PerformanceInfo extends AbstractCertifiedDatabaseEntry implements I
 	public static PerformanceEntry getLowestCommonBoundEntry(String a_cascadeId)
 	{
 		// loop through all PerformanceInfo objects (from the different Info Services)
-		PerformanceEntry perfEntry = new PerformanceEntry(a_cascadeId, false);
+		PerformanceEntry perfEntry = new PerformanceEntry(a_cascadeId, true);
 		PerformanceEntry.StabilityAttributes attributes;
 		
 		Vector vPerfEntries = new Vector();
@@ -266,12 +266,12 @@ public class PerformanceInfo extends AbstractCertifiedDatabaseEntry implements I
 				getMajorityBoundFromSortedBounds(vUnknownBoundaries, 0),
 				getMajorityBoundFromSortedBounds(vErrorBoundaries, 0),
 				getMajorityBoundFromSortedBounds(vResetsBoundaries, 0));
-		
-		perfEntry.setStabilityAttributes(attributes);
+				
 		perfEntry.setBound(PerformanceEntry.SPEED, getMajorityBoundFromSortedBounds(vSpeedBoundaries, Integer.MAX_VALUE));
 		perfEntry.setBestBound(PerformanceEntry.SPEED, getMajorityBoundFromSortedBounds(vSpeedBestBoundaries, Integer.MAX_VALUE));
 		perfEntry.setBound(PerformanceEntry.DELAY, getMajorityBoundFromSortedBounds(vDelayBoundaries, 0));
 		perfEntry.setBestBound(PerformanceEntry.DELAY, getMajorityBoundFromSortedBounds(vDelayBestBoundaries, 0));
+		perfEntry.setStabilityAttributes(attributes);
 		
 		return perfEntry;
 	}

@@ -16,6 +16,11 @@ public class PerformanceInfoUpdater extends AbstractDatabaseUpdater
 		super(new DynamicUpdateInterval(UPDATE_INTERVAL));
 	}
 	
+	public PerformanceInfoUpdater(long interval)
+	{
+		super(interval);
+	}
+	
 	protected Hashtable getEntrySerials() 
 	{
 		return new Hashtable();
@@ -24,14 +29,17 @@ public class PerformanceInfoUpdater extends AbstractDatabaseUpdater
 	protected Hashtable getUpdatedEntries(Hashtable toUpdate) 
 	{
 		Hashtable hashtable = InfoServiceHolder.getInstance().getPerformanceInfos();
-		if (hashtable == null)
+		if (getUpdateInterval() instanceof DynamicUpdateInterval)
 		{
-			((DynamicUpdateInterval)getUpdateInterval()).setUpdateInterval(MIN_UPDATE_INTERVAL_MS);
-			return new Hashtable();
-		}
-		else
-		{
-			((DynamicUpdateInterval)getUpdateInterval()).setUpdateInterval(UPDATE_INTERVAL);
+			if (hashtable == null)
+			{
+				((DynamicUpdateInterval)getUpdateInterval()).setUpdateInterval(MIN_UPDATE_INTERVAL_MS);
+				return new Hashtable();
+			}
+			else
+			{
+				((DynamicUpdateInterval)getUpdateInterval()).setUpdateInterval(UPDATE_INTERVAL);
+			}
 		}
 
 		return hashtable;

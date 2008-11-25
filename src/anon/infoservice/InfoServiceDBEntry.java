@@ -31,6 +31,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.InterruptedIOException;
 import java.net.ConnectException;
+import java.net.InetAddress;
 import java.security.SignatureException;
 import java.util.Date;
 import java.util.Enumeration;
@@ -93,6 +94,11 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 	 * The name of the infoservice.
 	 */
 	private String m_strName;
+	
+	/**
+	 * Indicates if this is a temporary InfoService entry creates for bootstrapping.
+	 */
+	private boolean m_bTemp = false;
 
 	/**
 	 * Some information about the used infoservice software.
@@ -671,6 +677,16 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 			m_infoserviceSoftware = new ServiceSoftware(Constants.INFOSERVICE_VERSION);
 		}
 		m_xmlDescription = generateXmlRepresentation();
+	}
+	
+	public void markAsBootstrap()
+	{
+		m_bTemp = true;
+	}
+	
+	public boolean isBootstrap()
+	{
+		return m_bTemp;
 	}
 
 	/**
@@ -1394,6 +1410,51 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		return getStatusInfo(a_cascade, -1);
 	}
 
+	public Object getExitAddresses() throws Exception
+	{
+		boolean bUpdated = false;
+		Document doc =
+			getXmlDocument(HttpRequestStructure.createGetRequest("/exitaddresses"));
+		if (doc == null)
+		{
+			return null;
+		}
+		Element parent = doc.getDocumentElement();
+		if (parent == null)
+		{
+			return null;
+		}
+		
+		Node exitAddressesNode = XMLUtil.getFirstChildByName(parent, MixCascadeExitAddresses.XML_ELEMENT_NAME);
+		Node currentAddress = null;
+		String currentID = null;
+		String currentIP = null;
+		while(exitAddressesNode != null)
+		{
+			currentID = XMLUtil.parseAttribute(exitAddressesNode, MixCascadeExitAddresses.XML_ATTR_ID,"");
+			if(!currentID.equals(""))
+			{
+				currentAddress = XMLUtil.getFirstChildByName(exitAddressesNode, MixCascadeExitAddresses.XML_ELEMENT_ADDRESS_NAME);
+				while(currentAddress != null)
+				{
+					currentIP = XMLUtil.parseValue(currentAddress, "");
+					if(!currentIP.equals(""))
+					{						
+						MixCascadeExitAddresses.addInetAddress(currentID, InetAddress.getByName(currentIP));
+						bUpdated = true;
+					}
+					currentAddress = XMLUtil.getNextSiblingByName(currentAddress, MixCascadeExitAddresses.XML_ELEMENT_ADDRESS_NAME);
+				}
+			}
+			exitAddressesNode = XMLUtil.getNextSiblingByName(exitAddressesNode, MixCascadeExitAddresses.XML_ELEMENT_NAME);
+		}
+		if (bUpdated)
+		{
+			return new Object(); // dummy to prevent InfoServiceHolder from throwing error messages
+		}
+		return null;
+	}
+	
 	/**
 	 * Get the StatusInfo for the cascade with the given ID. If we can't get a connection with the
 	 * infoservice, an Exception is thrown.
@@ -1588,15 +1649,11 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		
 		Element nodePerf = (Element) XMLUtil.getFirstChildByName(doc, PerformanceInfo.XML_ELEMENT_NAME);
 		PerformanceInfo info = new PerformanceInfo(nodePerf);
-		
 		if (!info.isVerified())
 		{
 			// signature could not be verified
 			throw new SignatureException("Document could not be verified!");
 		}
-
-
-
 		return info;
 	}
 

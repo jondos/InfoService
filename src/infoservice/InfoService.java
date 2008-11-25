@@ -35,15 +35,17 @@ import java.util.Observer;
 import java.util.Observable;
 import platform.signal.SignalHandler;
 
+import infoservice.PassiveInfoServiceInitializer;
 import infoservice.performance.PerformanceMeter;
 import gui.JAPMessages;
 import jap.pay.AccountUpdater;
 import jap.JAPModel;
 import jap.JAPController;
-import jap.MixCascadeUpdater;
 import anon.infoservice.Constants;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.Database;
+import anon.infoservice.IDistributable;
+import anon.infoservice.IDistributor;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.TermsAndConditionsFramework;
 import anon.util.ThreadPool;
@@ -60,8 +62,6 @@ public class InfoService implements Observer
 	private static int m_connectionCounter;
 	private static PerformanceMeter ms_perfMeter;
 	private static AccountUpdater ms_accountUpdater;
-	//private static MixCascadeUpdater ms_cascadeUpdater;
-	//private static MixCascadeUpdater ms_cascadeUpdater;
 	
 	private String m_configFileName;
 	
@@ -131,11 +131,6 @@ public class InfoService implements Observer
 			else
 			{
 				InfoService.ms_perfMeter = null;
-			}
-			
-			if(Configuration.getInstance().isPassive())
-			{
-				
 			}
 			
 			// start info service server
@@ -276,14 +271,27 @@ public class InfoService implements Observer
 	{
 		HTTPConnectionFactory.getInstance().setTimeout(Constants.COMMUNICATION_TIMEOUT);
 		/* initialize Distributor */
-		InfoServiceDistributor.getInstance();
-		Database.registerDistributor(InfoServiceDistributor.getInstance());
+		
+		
 		/* initialize internal commands of InfoService */
 		oicHandler = new InfoServiceCommands();
 		/* initialize propagandist for our infoservice */
 		if(!Configuration.getInstance().isPassive())
 		{
 			InfoServicePropagandist.generateInfoServicePropagandist(ms_perfMeter);
+			Database.registerDistributor(InfoServiceDistributor.getInstance());
+		}
+		else
+		{
+			// suppress distributor warnings
+			Database.registerDistributor(new IDistributor()
+			{
+				public void addJob(IDistributable a_distributable)
+				{
+				}
+			});
+			//in passive mode we obtain our information by requesting it from other services
+			PassiveInfoServiceInitializer.init();
 		}
 		// start server
 		LogHolder.log(LogLevel.EMERG, LogType.MISC, "InfoService -- Version " + Constants.INFOSERVICE_VERSION);

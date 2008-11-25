@@ -133,8 +133,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	public static final String MSG_UNKNOWN_PERFORMANCE = JAPNewView.class.getName() + "_unknownPerformance";
 
 	public static final String MSG_USERS = JAPNewView.class.getName() + "_users";
-	private static final String MSG_ANONYMETER_TOOL_TIP = JAPNewView.class.getName() + "_anonymeterToolTip";
-	private static final String MSG_SERVICE_NAME = JAPNewView.class.getName() + "_ngAnonymisierungsdienst";
+	protected static final String MSG_SERVICE_NAME = JAPNewView.class.getName() + "_ngAnonymisierungsdienst";
+	private static final String MSG_ANONYMETER_TOOL_TIP = JAPNewView.class.getName() + "_anonymeterToolTip";	
 	private static final String MSG_ERROR_DISCONNECTED = JAPNewView.class.getName() + "_errorDisconnected";
 	private static final String MSG_ERROR_PROXY = JAPNewView.class.getName() + "_errorProxy";
 	private static final String MSG_TITLE_OLD_JAVA = JAPNewView.class.getName() + "_titleOldJava";
@@ -1729,13 +1729,16 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					cascade.getMixIDsAsString()) != null)
 				{
 					m_bTrustChanged = true;
-					synchronized (SYNC_NEW_SERVICES)
+					if (!JAPController.getInstance().getCurrentMixCascade().isPayment())
 					{
-						if (m_newServicesID < 0)
+						synchronized (SYNC_NEW_SERVICES)
 						{
-							m_newServicesID = m_StatusPanel.addStatusMsg(
-								JAPMessages.getString(MSG_LBL_NEW_SERVICES_FOUND),
-								JOptionPane.INFORMATION_MESSAGE, false, m_listenerNewServices);
+							if (m_newServicesID < 0)
+							{
+								m_newServicesID = m_StatusPanel.addStatusMsg(
+									JAPMessages.getString(MSG_LBL_NEW_SERVICES_FOUND),
+									JOptionPane.INFORMATION_MESSAGE, false, m_listenerNewServices);
+							}
 						}
 					}
 				}
