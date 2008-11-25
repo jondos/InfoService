@@ -49,7 +49,7 @@ public class PassiveInfoServiceMainUpdater extends AbstractDatabaseUpdater
 	private final Calendar m_cal = Calendar.getInstance();
 	
 	
-	public PassiveInfoServiceMainUpdater(long interval) throws FileNotFoundException
+	public PassiveInfoServiceMainUpdater(long interval) throws IOException
 	{
 		super(interval);
 		m_performanceInfoUpdater = new PerformanceInfoUpdater(Long.MAX_VALUE);
@@ -85,7 +85,7 @@ public class PassiveInfoServiceMainUpdater extends AbstractDatabaseUpdater
 		}
 	}
 	
-	public PassiveInfoServiceMainUpdater() throws FileNotFoundException
+	public PassiveInfoServiceMainUpdater() throws IOException
 	{
 		this(Long.MAX_VALUE);
 	}
