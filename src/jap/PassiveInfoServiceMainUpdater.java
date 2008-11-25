@@ -78,7 +78,7 @@ public class PassiveInfoServiceMainUpdater extends AbstractDatabaseUpdater
 			m_stream = new FileOutputStream(PERFORMANCE_LOG_FILE + 				
 					m_cal.get(Calendar.YEAR) + "_" + m_currentWeek + ".log", true);
 		}
-		catch(FileNotFoundException ex)
+		catch(IOException ex)
 		{
 			LogHolder.log(LogLevel.WARNING, LogType.NET, "Could not open "+ PERFORMANCE_LOG_FILE + ".");
 			throw ex;
