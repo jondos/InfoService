@@ -288,7 +288,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private static JAPController m_Controller = null;
 	private static JAPModel m_Model = null;
 	private static JAPFeedback m_feedback = null;
-	private Vector observerVector = null;
+	private Vector observerVector = new Vector();
 	private Vector m_anonServiceListener;
 	private IPasswordReader m_passwordReader;
 	private Object m_finishSync = new Object();
@@ -341,7 +341,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	}
 	
 	public void start() {
-		// simulate database distributor
+		// simulate database distributor and suppress distributor warnings
 		Database.registerDistributor(new IDistributor()
 		{
 			public void addJob(IDistributable a_distributable)
@@ -369,7 +369,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		m_minVersionUpdater = new MinVersionUpdater();
 		m_javaVersionUpdater = new JavaVersionUpdater();
 		m_messageUpdater = new MessageUpdater();
-		m_termsUpdater = new TermsAndConditionsUpdater();
+		//m_termsUpdater = new TermsAndConditionsUpdater();
 
 		m_anonJobQueue = new JobQueue("Anon mode job queue");
 		m_Model.setAnonConnectionChecker(new AnonConnectionChecker());
@@ -377,8 +377,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 
 		queueFetchAccountInfo = new JobQueue("FetchAccountInfoJobQueue");
 
-		// Create observer object
-		observerVector = new Vector();
 		// create service listener object
 		m_anonServiceListener = new Vector();
 
@@ -661,7 +659,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					m_minVersionUpdater.start(false);
 					m_javaVersionUpdater.start(false);
 					m_messageUpdater.start(false);	
-					m_termsUpdater.start(false);
+					//m_termsUpdater.start(false);
 				}
 				else
 				{
@@ -693,9 +691,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						m_messageUpdater.updateAsync();
 					}
-					if (!m_termsUpdater.isFirstUpdateDone())
+					//if (!m_termsUpdater.isFirstUpdateDone())
 					{
-						m_termsUpdater.updateAsync();
+						//m_termsUpdater.updateAsync();
 					}
 				}
 
@@ -757,8 +755,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				public void run()
 				{
 					if (JAPController.getInstance().isConfigAssistantShown() &&
-						!(JAPDialog.isConsoleOnly()||JAPModel.isSmallDisplay()) &&
-						!isPortableMode())
+						!(JAPDialog.isConsoleOnly()||JAPModel.isSmallDisplay()))
 					{
 						showInstallationAssistant();
 					}
@@ -1317,16 +1314,17 @@ public final class JAPController extends Observable implements IProxyListener, O
 						{
 							try
 							{
-								currentCascade = new MixCascade( (Element) nodeCascade, Long.MAX_VALUE);
-								
+								currentCascade = new MixCascade( (Element) nodeCascade, Long.MAX_VALUE);								
 								currentCascadeContext = currentCascade.getContext();
 								/* JonDonym is the defult service context */
 								if(currentCascadeContext == null)
 								{
 									currentCascadeContext = IServiceContextContainer.CONTEXT_JONDONYM;
 								}
+								
 								/* only add to database when the service context matches */
-								if(currentCascadeContext.equals(m_Model.getContext()))
+								if ((currentCascadeContext == null && m_Model.getContext() == null) || 
+									currentCascadeContext.equals(m_Model.getContext()))
 								{
 									try
 									{
@@ -3405,7 +3403,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 						{
 							LogHolder.log(LogLevel.DEBUG, LogType.NET, "AN.ON service started successfully");
 							adapter.connectionEstablished(proxyAnon.getMixCascade());
-
+							
+							/*
 							if (!mbActCntMessageNotRemind && !JAPModel.isSmallDisplay() &&
 								!m_bShowConfigAssistant && !getInstance().isPortableMode())
 							{
@@ -3429,7 +3428,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 										}
 									}
 								});
-							}
+							}*/
 						}
 						else
 						{
@@ -4042,7 +4041,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							m_Controller.m_javaVersionUpdater.stop();
 							m_Controller.m_messageUpdater.stop();
 							m_Controller.m_perfInfoUpdater.stop();
-							m_Controller.m_termsUpdater.stop();
+							//m_Controller.m_termsUpdater.stop();
 						}
 					}, "Finish IS threads");
 					finishIS.start();
@@ -4871,6 +4870,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			entries[i] = new InfoServiceDBEntry(
 						 JAPConstants.DEFAULT_INFOSERVICE_NAMES[i],
 						 JAPConstants.DEFAULT_INFOSERVICE_NAMES[i], listeners, false, true, 0, 0, false);
+			entries[i].markAsBootstrap();
 		}
 
 		return entries;

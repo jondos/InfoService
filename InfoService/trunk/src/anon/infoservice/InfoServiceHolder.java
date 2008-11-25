@@ -38,6 +38,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import anon.pay.PaymentInstanceDBEntry;
+import anon.util.ClassUtil;
 import anon.util.IXMLEncodable;
 import anon.util.Util;
 import anon.util.XMLParseException;
@@ -134,6 +135,8 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	
 	private static final int GET_TCS = 22;
 	private static final int GET_TC_SERIALS = 23;
+	
+	private static final int GET_EXIT_ADDRESSES = 24;
 
 	/**
 	 * This defines, whether there is an automatic change of infoservice after failure as default.
@@ -225,7 +228,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 		{
 			/* also if m_preferredInfoService.equals(a_preferredInfoService), there is the possibility
 			 * that some values of the infoservice, like listener interfaces or the name have been
-			 * changed, so we always update the internal stored pererred infoservice
+			 * changed, so we always update the internal stored preferred infoservice
 			 */
 			m_preferredInfoService = a_preferredInfoService;
 			setChanged();
@@ -389,7 +392,8 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 				functionNumber == GET_LATEST_JAVA || functionNumber == GET_MESSAGES ||
 				functionNumber == GET_MESSAGE_SERIALS || functionNumber == GET_PAYMENT_INSTANCES ||
 				functionNumber == GET_PERFORMANCE_INFO || 
-				functionNumber == GET_TCS || functionNumber == GET_TC_SERIALS)
+				functionNumber == GET_TCS || functionNumber == GET_TC_SERIALS ||
+				functionNumber == GET_EXIT_ADDRESSES)
 			{
 				result = new Hashtable();
 				//if (functionNumber == GET_CASCADEINFO)
@@ -419,7 +423,6 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 				 */
 				currentInfoService = null;
 			}
-
 			while ( ( (infoServiceList.size() > 0) || (currentInfoService != null)) &&
 				   !Thread.currentThread().isInterrupted())
 			{
@@ -559,6 +562,11 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 					{
 						result = currentInfoService.getPaymentInstance( (String) arguments.firstElement());
 					}
+					else if (functionNumber == GET_EXIT_ADDRESSES)
+					{
+						// TODO ask more than one infoservice
+						result = currentInfoService.getExitAddresses();
+					}
 					else if (functionNumber == GET_CASCADEINFO)
 					{
 						AbstractDatabaseEntry dbEntry =
@@ -622,9 +630,11 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 									{
 										LogHolder.log(LogLevel.WARNING, LogType.NET,
 													  "InfoServices report different verification status for " +
+													  ClassUtil.getShortClassName(currentEntry.getClass()) + 
+													  " with id " +
 													  currentSerialEntry.getId() + "!");
 										/**
-										 * This may only be used for filtring if allInfoServices think this entry
+										 * This may only be used for filtering if allInfoServices think this entry
 										 * is unverified.
 										 * If at least one IS reports it as verified, it must not be filtered.
 										 */
@@ -640,7 +650,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 													  "InfoServices report different validity status for " +
 													  currentSerialEntry.getId() + "!");
 										/**
-										 * This may only be used for filtring if allInfoServices think this entry
+										 * This may only be used for filtering if allInfoServices think this entry
 										 * is invalid.
 										 * If at least one IS reports it as valid, it must not be filtered.
 										 */
@@ -805,6 +815,11 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	public Hashtable getPerformanceInfos()
 	{
 		return (Hashtable) (fetchInformation(GET_PERFORMANCE_INFO, null));
+	}
+	
+	public void getExitAddresses()
+	{
+		fetchInformation(GET_EXIT_ADDRESSES, null);
 	}
 	
 
@@ -1071,12 +1086,43 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 			}
 		}
 
+		/* remove bootstrap entries is possible; at least three InfoServices have to be loaded, excluding default */
+		Vector currentEntries = Database.getInstance(InfoServiceDBEntry.class).getEntryList();
+		Vector bootstrapIDs = new Vector();
+		int nrLoadedIS = 0;
+		InfoServiceDBEntry entry;
+		for (int i = 0; i < currentEntries.size(); i++)
+		{
+			entry = (InfoServiceDBEntry)currentEntries.elementAt(i);
+			if (entry.isBootstrap())
+			{
+				bootstrapIDs.addElement(entry.getId());
+			}
+			else if (!entry.isUserDefined())
+			{
+				nrLoadedIS++;
+			}
+		}
+		if (nrLoadedIS >= 3) // we need at least 3 InfoServices for some majority calculations
+		{
+			// remove all bootstrap entries
+			for (int i = 0; i < bootstrapIDs.size(); i++)
+			{
+				Database.getInstance(InfoServiceDBEntry.class).remove(bootstrapIDs.elementAt(i).toString());
+			}
+		}
+		
+		
 		synchronized (this)
 		{
 			/* we have collected all values -> set them */
 			if (preferredInfoService != null)
 			{
 				setPreferredInfoService(preferredInfoService);
+			}
+			else if (getPreferredInfoService() == null)
+			{
+				setPreferredInfoService((InfoServiceDBEntry)Database.getInstance(InfoServiceDBEntry.class).getRandomEntry());
 			}
 			if (a_bForceISChange)
 			{

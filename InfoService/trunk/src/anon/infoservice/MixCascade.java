@@ -66,7 +66,22 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	private static final String XML_ATTR_USER_DEFINED = "userDefined";
 	private static final String XML_ATTR_STUDY = "study";
 	private static final String XML_ATTR_MAX_USERS = "maxUsers";
-
+	private static final String XML_ATTR_PAYMENT = "payment";
+	
+	/* Constants for the JonDonym service status */
+	public static final String XML_ELEMENT_WEBINFO_ROOT = "CascadeWebInfos";
+	public static final String XML_ELEMENT_WEBINFO = "CascadeWebInfo";
+	public static final String XML_ELEMENT_WEBINFO_CASCADE_NAME = "CascadeName";
+	public static final String XML_ELEMENT_WEBINFO_NAME = "Name";
+	public static final String XML_ELEMENT_WEBINFO_COMPOSED_NAME = "ComposedName";
+	public static final String XML_ELEMENT_WEBINFO_CURR_USERS = "CurrentUsers";
+	public static final String XML_ATTR_WEBINFO_MIX_COUNTRY = "mixCountry";
+	public static final String XML_ATTR_WEBINFO_MIX_POSITION = "mixPosition";
+	public static final String XML_ATTR_WEBINFO_OP_COUNTRY = "operatorCountry";
+	
+	public static final String INFOSERVICE_COMMAND_WEBINFOS = "/cascadewebinfos";
+	public static final String INFOSERVICE_COMMAND_WEBINFO = "/cascadewebinfo/";
+	
 	//private static final String XML_ELEM_RSA_KEY_VALUE = "RSAKeyValue";
 
 	private boolean m_bDefaultVerified = false;
@@ -427,8 +442,6 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 			for (int i = 0; i < visibleAddresses.size(); i++)
 			{
 				InetAddress addr = (InetAddress)visibleAddresses.elementAt(i);
-				/*LogHolder.log(LogLevel.WARNING, LogType.NET, 
-        				"Adding IP address from file: " + addr.getHostAddress());*/
 				MixCascadeExitAddresses.addInetAddress(getId(), addr);
 			}
 		}
@@ -736,7 +749,6 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	 */
 	public String toString()
 	{
-		//return getMixNames();
 		return getName();
 	}
 
@@ -1387,5 +1399,222 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	public void setContext(String context) 
 	{
 		m_context = context;
+	}
+	
+	public Element getWebInfo(Document webInfoDoc)
+	{
+		if(webInfoDoc == null)
+		{
+			return null;
+		}
+		
+		Vector decomposedNames = getDecomposedCascadeName();
+		Vector namesToAdd = new Vector(decomposedNames.size());
+		String tempName = null;
+		for (int i = 0; i < decomposedNames.size(); i++) 
+		{
+			tempName = (String) decomposedNames.elementAt(i);
+			if(tempName == null || namesToAdd.contains(tempName))
+			{
+				tempName = "";
+			}
+			namesToAdd.insertElementAt(tempName, i);
+		}
+		
+		Element rootElement = webInfoDoc.createElement(XML_ELEMENT_WEBINFO);
+		XMLUtil.setAttribute(rootElement, XML_ATTR_PAYMENT, isPayment());
+		XMLUtil.setAttribute(rootElement, XML_ATTR_ID, getId());
+		Element cascadeName = XMLUtil.createChildElement(rootElement, XML_ELEMENT_WEBINFO_CASCADE_NAME);
+		Element mixList = webInfoDoc.createElement(MixInfo.XML_ELEMENT_CONTAINER_NAME);
+		
+		XMLUtil.createChildElementWithValue(rootElement, 
+				XML_ELEMENT_WEBINFO_CURR_USERS, 
+				(""+getCurrentStatus().getNrOfActiveUsers()));
+		
+		PerformanceEntry perfEntry = 
+			(PerformanceEntry) Database.getInstance(PerformanceEntry.class).getEntryById(getId());
+		
+		if(perfEntry != null)
+		{
+			rootElement.appendChild(perfEntry.toXmlElement(webInfoDoc));
+		}
+		
+		Element currentNameElement = null;
+		String currentDecomposedNameComponent = null;
+		MixInfo currentMixInfo = null;
+		ServiceOperator currentMixOperator = null;
+		ServiceLocation currentMixLocation = null;
+		Element currentMixElement = null;
+		Element currentMixOperatorElement = null;
+		Element currentMixLocationElement = null;
+		String currentMixName = null;
+		rootElement.appendChild(mixList);
+		for (int i = 0; i < getNumberOfMixes(); i++) 
+		{
+			currentMixInfo = getMixInfo(i);
+			if(currentMixInfo != null)
+			{
+				if(currentMixInfo.getOperatorCertificate() == null || 
+				   currentMixInfo.getCertificate() == null)
+				{
+					/* no valid document can be returned */
+					return null;
+				}
+				currentMixOperator = new ServiceOperator(null, currentMixInfo.getOperatorCertificate(), 0l);
+				currentMixLocation = new ServiceLocation(null, currentMixInfo.getCertificate());
+				currentMixName = currentMixInfo.getName();
+				
+				if(currentMixOperator == null || 
+				   currentMixLocation == null)
+				{
+					/* no valid document can be returned */
+					return null;
+				}
+				
+				/* set the cascade name components */
+				currentDecomposedNameComponent = null;
+				if( i < namesToAdd.size() )
+				{
+					currentDecomposedNameComponent = (String) namesToAdd.elementAt(i);
+					if(currentDecomposedNameComponent != null && 
+						currentDecomposedNameComponent.equals(""))
+					{
+						currentDecomposedNameComponent = null;
+					}
+				}
+				
+				if(currentDecomposedNameComponent != null)
+				{
+					currentNameElement = 
+						XMLUtil.createChildElementWithValue(cascadeName, 
+								XML_ELEMENT_WEBINFO_NAME, 
+								currentDecomposedNameComponent);
+				
+					if (currentMixLocation.getCountryCode() != null )
+					{
+						XMLUtil.setAttribute(currentNameElement, XML_ATTR_WEBINFO_MIX_COUNTRY, currentMixLocation.getCountryCode());
+					}
+					
+					if (currentMixOperator.getCountryCode() != null )
+					{
+						XMLUtil.setAttribute(currentNameElement, XML_ATTR_WEBINFO_OP_COUNTRY, currentMixOperator.getCountryCode());
+					}
+					XMLUtil.setAttribute(currentNameElement, XML_ATTR_WEBINFO_MIX_POSITION, i);
+				}
+				
+				/* now set the current Mix Attributes */ 
+				currentMixElement = XMLUtil.createChildElement(mixList, MixInfo.XML_ELEMENT_NAME);
+				
+				if(currentMixName != null)
+				{
+					XMLUtil.createChildElementWithValue(currentMixElement, XML_ELEMENT_WEBINFO_NAME,
+							currentMixName);
+				}
+				
+				currentMixOperatorElement = currentMixOperator.toXMLElement(webInfoDoc);
+				currentMixLocationElement = currentMixLocation.toXMLElement(webInfoDoc);
+				
+				if(currentMixOperatorElement != null)
+				{
+					currentMixElement.appendChild(currentMixOperatorElement);
+				}
+				
+				if(currentMixLocationElement != null)
+				{
+					currentMixElement.appendChild(currentMixLocationElement);
+				}
+			}
+		}	
+		
+		currentNameElement = 
+			XMLUtil.createChildElementWithValue(cascadeName, 
+					XML_ELEMENT_WEBINFO_COMPOSED_NAME, getName());
+		
+		Element listenerInterfaces = 
+			XMLUtil.createChildElement(rootElement, ListenerInterface.XML_ELEMENT_CONTAINER_NAME);
+		ListenerInterface listenerInterface;
+		Element elemInterface;
+		Hashtable hashInterfaceHosts = new Hashtable();
+		for (int i = 0; i < getNumberOfListenerInterfaces(); i++)
+		{
+			listenerInterface = getListenerInterface(i);
+			if (hashInterfaceHosts.containsKey(listenerInterface.getHost()))
+			{
+				elemInterface = (Element)hashInterfaceHosts.get(listenerInterface.getHost());
+			}
+			else
+			{
+				elemInterface = XMLUtil.createChildElement(listenerInterfaces, 
+						ListenerInterface.XML_ELEMENT_NAME);
+				XMLUtil.setAttribute(elemInterface, "Host", listenerInterface.getHost());
+				hashInterfaceHosts.put(listenerInterface.getHost(), elemInterface);
+			}
+			
+			XMLUtil.createChildElementWithValue(elemInterface, "Port", "" + listenerInterface.getPort());
+		}
+		
+		return rootElement;
+	}
+	
+	public static Document getCascadeWebInfo(String cascadeID)
+	{
+		if(cascadeID == null )
+		{
+			return null;
+		}
+		if(cascadeID.equals(""))
+		{
+			return null;
+		}
+		
+		Document webInfoDoc = XMLUtil.createDocument();
+		Database cascadeDB =Database.getInstance(MixCascade.class);
+		
+		if(cascadeDB == null)
+		{
+			return null;
+		}
+		
+		MixCascade cascade = (MixCascade) cascadeDB.getEntryById(cascadeID);
+		Element webInfoElement =
+			(cascade == null) ? null : cascade.getWebInfo(webInfoDoc);
+		if(webInfoElement == null)
+		{
+			return null;
+		}
+		webInfoDoc.appendChild(webInfoElement);
+		return webInfoDoc;
+	}
+	
+	public static Document getAllCascadeWebInfos()
+	{
+		Document allWebInfosDoc = XMLUtil.createDocument();
+		Database cascadeDB =Database.getInstance(MixCascade.class);
+		if(cascadeDB == null)
+		{
+			return null;
+		}
+		Vector cascadeDBEntries = cascadeDB.getEntryList();
+		MixCascade currentCascade = null;
+		
+		if(cascadeDBEntries == null)
+		{
+			return null;
+		}
+		
+		Element rootElement = allWebInfosDoc.createElement(XML_ELEMENT_WEBINFO_ROOT);
+		Element listItem = null;
+		allWebInfosDoc.appendChild(rootElement);
+		
+		for (int i = 0; i < cascadeDBEntries.size(); i++) 
+		{
+			currentCascade = (MixCascade) cascadeDBEntries.elementAt(i);
+			listItem = currentCascade.getWebInfo(allWebInfosDoc);
+			if(listItem != null)
+			{
+				rootElement.appendChild(listItem);
+			}
+		}
+		return allWebInfosDoc;
 	}
 }
