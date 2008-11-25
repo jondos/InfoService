@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.Hashtable;
@@ -55,7 +56,8 @@ public class PassiveInfoServiceMainUpdater extends AbstractDatabaseUpdater
 		m_cascadeUpdater = new PassiveInfoServiceCascadeUpdater(Long.MAX_VALUE);
 		
 		// set calendar to current time
-		m_cal.setTimeInMillis(System.currentTimeMillis());
+		m_cal.setTime(new Date(System.currentTimeMillis()));
+
 		
 		// set the current week
 		m_currentWeek = m_cal.get(Calendar.WEEK_OF_YEAR);
@@ -350,7 +352,7 @@ public class PassiveInfoServiceMainUpdater extends AbstractDatabaseUpdater
 		{
 			StabilityAttributes attributes;
 			
-			m_cal.setTimeInMillis(System.currentTimeMillis());
+			m_cal.setTime(new Date(System.currentTimeMillis()));
 			// check if we're still in the same week, if not open a new performance log file
 			if (m_cal.get(Calendar.WEEK_OF_YEAR) != m_currentWeek)
 			{
