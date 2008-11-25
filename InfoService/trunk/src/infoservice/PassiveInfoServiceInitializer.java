@@ -56,7 +56,7 @@ public class PassiveInfoServiceInitializer
 	private final static int GLOBAL_UPDATE_INTERVAL = 60000;
 	private static final long UPDATE_SYNC_INTERVAL = 4000;
 	
-	public static synchronized void init() throws FileNotFoundException
+	public static synchronized void init() throws IOException
 	{
 		Document doc = null;
 		try 
@@ -131,7 +131,7 @@ public class PassiveInfoServiceInitializer
 		
 		private static PassiveInfoServiceMainUpdater mainUpdater = null;
 		
-		PassiveInfoServiceGlobalUpdater() throws FileNotFoundException
+		PassiveInfoServiceGlobalUpdater() throws IOException
 		{
 			mainUpdater = new PassiveInfoServiceMainUpdater();
 		}
