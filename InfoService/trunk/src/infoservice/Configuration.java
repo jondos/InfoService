@@ -605,6 +605,7 @@ final public class Configuration
 					new InfoServiceDBEntry(null, null,
 										   ( (ListenerInterface) m_initialNeighbourInfoServices.elementAt(i)).
 										   toVector(), false, false, System.currentTimeMillis(), 0, false);
+				entry.markAsBootstrap();
 
 				//entry.setNeighbour(true);
 				try
@@ -817,12 +818,6 @@ final public class Configuration
 				if(value != null)
 				{
 					m_aPerfMeterConf[5] = new Integer(Math.max(5*1000, Integer.parseInt(value)));
-				}
-				
-				value = a_properties.getProperty("perf.minPackets", "0");
-				if(value != null)
-				{
-					m_aPerfMeterConf[6] = new Integer(Integer.parseInt(value));
 				}
 				
 				m_strPerfAccountDirectory = 
