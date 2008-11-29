@@ -66,7 +66,7 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 	/**
 	 * Remove the worst x% results.
 	 */
-	private static final double BOUND_ROUNDING = 0.15d;
+	private static final double BOUND_ROUNDING = 0.10d;
 	
 	/**
 	 * The entry's container XML element name.
@@ -316,7 +316,7 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		{
 			setBound(i, a_entry.getBound(i));
 			setBestBound(i, a_entry.getBestBound(i));
-			if ((i == DELAY && getBound(i) > 0) || (i != DELAY && getBound(i) >= 0))
+			if ((i == DELAY && getBound(i).getBound() > 0) || (i != DELAY && getBound(i).getBound() >= 0))
 			{
 				bUpdated = true;
 			}
@@ -346,7 +346,7 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		
 		for (int i = 0; i < ATTRIBUTES.length; i++)
 		{			
-			bound = getBound(i);
+			bound = getBound(i).getNotRecoveredBound();
 			if (i == SPEED && bound == Integer.MAX_VALUE)
 			{
 				bound = -1;
@@ -587,7 +587,7 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 	 * @param a_attribute The performance attribute.
 	 * @param a_lValue The bound value.
 	 */
-	public void setBound(int a_attribute, int a_lValue)
+	public void setBound(int a_attribute, Bound a_lValue)
 	{
 		m_floatingTimeEntries[a_attribute].setBound(a_lValue);
 	}
@@ -613,7 +613,7 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 	 * @param a_attribute The performance attribute.
 	 * @return The bound value of the given attribute.
 	 */
-	public int getBound(int a_attribute)
+	public Bound getBound(int a_attribute)
 	{
 		return m_floatingTimeEntries[a_attribute].getBound();
 	}
@@ -949,6 +949,8 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		 */
 		public static final String XML_ATTR_BOUND = "bound";
 		
+		public static final String XML_ATTR_NOT_RECOVERED_BOUND = "notRecovered";
+		
 		/**
 		 * The last value that has been added. This is only useful for PACKETS.
 		 */
@@ -976,7 +978,7 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		 * info service calculates the bound value on the fly using
 		 * {@link #getBound(boolean)}
 		 */
-		private int m_lBoundValue = -1;
+		private Bound m_lBoundValue = new Bound(-1, -1);
 		
 		/**
 		 * The best bound value. This will only be set if this object
@@ -1022,14 +1024,25 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 			m_bInfoService = false;
 			
 			long lBoundValue = XMLUtil.parseAttribute(a_node, XML_ATTR_BOUND, -1l);
+			int iBoundValue, iNotRecoveredBound;
 			if (lBoundValue > Integer.MAX_VALUE)
 			{
-				m_lBoundValue = Integer.MAX_VALUE;
+				iBoundValue = Integer.MAX_VALUE;
 			}
 			else
 			{
-				m_lBoundValue = (int) lBoundValue;
+				iBoundValue = (int) lBoundValue;
 			}
+			lBoundValue = XMLUtil.parseAttribute(a_node, XML_ATTR_NOT_RECOVERED_BOUND, -1l);
+			if (lBoundValue > Integer.MAX_VALUE)
+			{
+				iNotRecoveredBound = Integer.MAX_VALUE;
+			}
+			else
+			{
+				iNotRecoveredBound = (int) lBoundValue;
+			}
+			m_lBoundValue = new Bound(iBoundValue, iNotRecoveredBound);
 			
 			long lBestBoundValue = XMLUtil.parseAttribute(a_node, XML_ATTR_BEST, -2l);
 			if(lBestBoundValue == -2)
@@ -1162,12 +1175,12 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		 * 
 		 * @param a_lValue The value.
 		 */
-		public void setBound(int a_lValue)
+		public void setBound(Bound a_bound)
 		{
 			// only allowed by the client
 			if(!m_bInfoService)
 			{
-				m_lBoundValue = a_lValue;
+				m_lBoundValue = a_bound;
 			}
 		}
 		
@@ -1204,13 +1217,13 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		 * the next best bound compared to the bound calculated as above. 
 		 * If there are at least BOUND_ROUNDING per cent (%) valid values 
 		 * (errors and tries are not counted) left afterwards, calculate the 
-		 * bound again but remove this and all previous values from the 
-		 * calculation. This should honor the fact that some services quickly 
-		 * recover from bad performance.
+		 * bound again but remove all later values from the calculation. This 
+		 * should honor the fact that some services quickly recover from bad 
+		 * performance.
 		 * 
 		 * @return The bound value.
 		 */
-		public int getBound()
+		public Bound getBound()
 		{
 			// if it is invoked by the client, just return the stored bound value
 			if (!m_bInfoService)
@@ -1222,9 +1235,9 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 			int nextBound;
 			Vector vecTimestamps = new Vector();
 			Hashtable hashValues = (Hashtable)m_Values.clone();
-			int bound = calculateBound(hashValues, vecTimestamps);
-			int limit = (int) Math.floor((double)vecTimestamps.size() * BOUND_ROUNDING);
-	
+			int nonRecoveredBound = calculateBound(hashValues, vecTimestamps);			
+			int limit = Math.max((int) Math.floor((double)vecTimestamps.size() * BOUND_ROUNDING), 2);
+			int bound = nonRecoveredBound;
 			
 			Util.sort(vecTimestamps, new LongSortDesc()); // start with the latest timestamp
 			for (int i = 0; i < vecTimestamps.size(); i++)
@@ -1249,7 +1262,6 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 							{
 								nextBound = BOUNDARIES[m_attribute][j - 1];
 							}
-								
 							break;
 						}
 					}
@@ -1270,23 +1282,35 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 				}
 				
 				if (nextBound != bound &&
-					((m_attribute == SPEED && value <= nextBound) || (m_attribute == DELAY && value >= nextBound)))
+					((m_attribute == SPEED && value < nextBound) || (m_attribute == DELAY && value > nextBound)))
 				{
-					// We have found the last value that supersedes this bound. Now check the limit!
-					if (i >= limit)
+					//System.out.println("calculating better bound. Limit=" + limit + ", i=" + i );
+					// We have found the last value that supersedes this bound. All newer values are better (at least "limit").
+					if (i > limit)
 					{	
 						//LogHolder.log(LogLevel.WARNING, LogType.MISC, "Limit: " + limit +  " Old bound: " +
 							//	bound + " Next bound: " + nextBound);
-						
+						//System.out.println("Before: " + hashValues.size() + ", bound: " + bound + " , next:" +  nextBound  + " , limit: " + limit);
 						// remove all values worse than or equal to the current bound 
 						for (int j = i; j < vecTimestamps.size(); j++)
 						{
 							hashValues.remove(vecTimestamps.elementAt(j));
 						}
+						//System.out.println("After: " + hashValues.size());
 						
 						// recalculate the bound
 						vecTimestamps.removeAllElements();
 						bound = calculateBound(hashValues, vecTimestamps);
+						
+						/*
+						if (m_attribute == SPEED)
+						{
+							System.out.println("New speed bound: " + bound);
+						}
+						else
+						{
+							System.out.println("New delay bound: " + bound);
+						}*/
 						
 						//LogHolder.log(LogLevel.WARNING, LogType.MISC, "i: " + i +  " new bound: " + bound);
 					}
@@ -1294,7 +1318,7 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 				}
 			}
 			
-			return bound;
+			return new Bound(bound, nonRecoveredBound);
 		}
 		
 		/**
@@ -1416,7 +1440,7 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 			
 			int bestValue;
 			
-			if (m_attribute == SPEED)
+			if (m_attribute == DELAY)
 			{
 				bestValue = Integer.MAX_VALUE;
 			}
@@ -1441,7 +1465,7 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 
 					// get the value
 					Integer value = ((Integer) m_Values.get(timestamp));
-					if(value.intValue() < 0)
+					if (value.intValue() < 0)
 					{
 						// value is an error
 						errors++;
@@ -1454,7 +1478,7 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 					{
 						values++;
 						
-						if (m_attribute == SPEED)
+						if (m_attribute == DELAY)
 						{
 							if(value.intValue() < bestValue)
 							{
@@ -1659,8 +1683,10 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 		public Element toXmlElement(Document a_doc)
 		{
 			Element elem = a_doc.createElement(ATTRIBUTES[m_attribute]);
+			Bound bound = getBound();
 			
-			XMLUtil.setAttribute(elem, XML_ATTR_BOUND, getBound());
+			XMLUtil.setAttribute(elem, XML_ATTR_BOUND, bound.getBound());
+			XMLUtil.setAttribute(elem, XML_ATTR_NOT_RECOVERED_BOUND, bound.getNotRecoveredBound());
 			XMLUtil.setAttribute(elem, XML_ATTR_BEST, getBestBound());
 			
 			return elem;
@@ -2176,6 +2202,28 @@ public class PerformanceEntry extends AbstractDatabaseEntry implements IXMLEncod
 			XMLUtil.setAttribute(elem, XML_ATTR_BOUND_RESETS, m_boundResets);
 			
 			return elem;
+		}
+	}
+	
+	public static class Bound
+	{
+		private int m_bound;
+		private int m_nonRecoveredBound;
+		
+		public Bound(int a_bound, int a_nonRecoveredBound)
+		{
+			m_bound = a_bound;
+			m_nonRecoveredBound = a_nonRecoveredBound;
+		}
+		
+		public int getBound()
+		{
+			return m_bound;
+		}
+		
+		public int getNotRecoveredBound()
+		{
+			return m_nonRecoveredBound;
 		}
 	}
 }

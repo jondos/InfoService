@@ -320,14 +320,6 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 			throw new XMLParseException(XMLParseException.ROOT_TAG, "Malformed Mix-Cascade ID: " + m_mixCascadeId);
 		}
 
-
-		/* get the name */
-		m_strName = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_mixCascadeNode, "Name"), null);
-		if (m_strName == null && !m_bFromCascade)
-		{
-			throw (new XMLParseException("Name"));
-		}
-
 		m_mixProtocolVersion =
 			XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_mixCascadeNode, "MixProtocolVersion"), null);
 		if (m_mixProtocolVersion != null)
@@ -428,6 +420,16 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 			{
 				m_mixInfos[i] = null;
 			}
+		}
+		
+		/* get the name */
+		m_strName = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_mixCascadeNode, "Name"), null);
+		//@todo: rather use this for setting m_strName: generateNameFromMixNames()
+		//(when the mix providers support it)
+		if ( m_strName == null && !m_bFromCascade)
+		{
+			generateNameFromMixNames();
+			//throw (new XMLParseException("Name"));	
 		}
 		
 		if (a_expireTime == 0 && m_mixInfos.length > 0)
@@ -686,7 +688,8 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	}
 
 	/**
-	 * Gets the concatenated names of the Mixes in this Cascade.
+	 * Gets (and sets) the concatenated names of the Mixes in this Cascade.
+	 * @todo can't getName() be used instead of that?
 	 * @return
 	 */
 	public String getMixNames()
@@ -706,7 +709,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 					{
 						m_strMixNames += "-";
 					}
-					m_strMixNames += m_mixInfos[i].getName();					
+					m_strMixNames += m_mixInfos[i].getNameFragmentForCascade(); //m_mixInfos[i].getName();					
 				}
 				if (m_strMixNames.length() == 0)
 				{
@@ -721,6 +724,52 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		return m_strMixNames;
 	}
 	
+	/* this function generates a cascadeName form the namefragments of the corresponding
+	 * mixes. (but only namefragments of mixes with different operators will appear)
+	 * this overwrites the existing cascadename
+	 */
+	private void generateNameFromMixNames()
+	{
+		//no null checks neccessary because NO NullPointers must occur! 
+		if(m_decomposedCascadeName == null)
+		{
+			m_decomposedCascadeName = new Vector();
+		}
+		else
+		{
+			m_decomposedCascadeName.removeAllElements();
+		}
+		
+		Vector operators = new Vector();
+		ServiceOperator currentOp = null;
+		String currentNameFragment = null;
+		m_strName = "";
+		
+		/* special case: If the operator of the first and the last mix are the same
+		 * only this operator is displayed. 
+		 */
+		if(m_mixInfos[0].getServiceOperator().equals(m_mixInfos[m_mixInfos.length-1].getServiceOperator()))
+		{
+			//@todo: should we better use only the provider name in this case? 
+			currentNameFragment = m_mixInfos[0].getNameFragmentForCascade();
+			m_decomposedCascadeName.addElement(currentNameFragment);
+			m_strName = currentNameFragment;
+			return;
+		}
+		
+		for (int i = 0; i < m_mixInfos.length; i++) 
+		{
+			currentOp = m_mixInfos[i].getServiceOperator();
+			if(! operators.contains(m_mixInfos[i].getServiceOperator()))
+			{
+				currentNameFragment = m_mixInfos[i].getNameFragmentForCascade();
+				m_strName += (i == (m_mixInfos.length-1)) ? currentNameFragment : (currentNameFragment+"-");	
+				operators.addElement(currentOp);
+				m_decomposedCascadeName.addElement(currentNameFragment);
+			}
+		}
+	}
+	
 	/**
 	 * Returns the name of the mixcascade.
 	 *
@@ -728,7 +777,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	 */
 	public String getName()
 	{
-		getDecomposedCascadeName();
+		getDecomposedCascadeName(); /*@todo: remove */
 		return m_strName;
 	}
 
@@ -753,13 +802,19 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	}
 
 	/**
-	 * @todo remove this when the operator short name is certified
+	 * @todo use generateNameFromMixNames when the operator short name is certified.
+	 * and this method only to return the container containg the name fragments
 	 * @return
 	 */
 	public Vector getDecomposedCascadeName()
 	{
+		if( m_strName == null )
+		{
+			return null;
+		}
 		synchronized (m_strName)
 		{
+			
 			if (m_decomposedCascadeName == null)
 			{			
 				m_decomposedCascadeName = new Vector();
@@ -804,16 +859,31 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 				{
 					// cannot decompose this name
 					m_decomposedCascadeName.addElement(m_strName);
-				}	
+				}
+				/* special case: If the operator of the first and the last mix are the same
+				 * only this operator is displayed. 
+				 */
+				else if (m_mixInfos[0].getServiceOperator().equals(m_mixInfos[m_mixInfos.length-1].getServiceOperator()))
+				{
+					m_strName = (String) m_decomposedCascadeName.elementAt(0);
+					m_decomposedCascadeName.addElement(m_strName);
+					return m_decomposedCascadeName;
+				}
 				else
 				{
-					m_strName = "";					
-					for (int i = 0; i < m_decomposedCascadeName.size() && i < getNumberOfOperators(); i++)
+					Vector ops = new Vector();
+					ServiceOperator currentOp = null;
+					m_strName = "";
+					
+					for (int i = 0; (i < m_decomposedCascadeName.size() ) &&
+									(i < m_mixInfos.length); i++)
 					{
-						m_strName += m_decomposedCascadeName.elementAt(i);
-						if (i + 1 < m_decomposedCascadeName.size() && i + 1 < getNumberOfOperators())
+						currentOp = m_mixInfos[i].getServiceOperator();
+						if( !ops.contains(currentOp) )
 						{
-							m_strName += "-";
+							ops.addElement(currentOp);
+							m_strName += m_strName.equals("") ? "" : "-";
+							m_strName += m_decomposedCascadeName.elementAt(i);
 						}
 					}
 				}
@@ -1395,11 +1465,6 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	{
 		return m_context;
 	}
-
-	public void setContext(String context) 
-	{
-		m_context = context;
-	}
 	
 	public Element getWebInfo(Document webInfoDoc)
 	{
@@ -1424,6 +1489,10 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		Element rootElement = webInfoDoc.createElement(XML_ELEMENT_WEBINFO);
 		XMLUtil.setAttribute(rootElement, XML_ATTR_PAYMENT, isPayment());
 		XMLUtil.setAttribute(rootElement, XML_ATTR_ID, getId());
+		if (getContext() != null)
+		{
+			XMLUtil.setAttribute(rootElement, XML_ATTR_CONTEXT, getContext());
+		}
 		Element cascadeName = XMLUtil.createChildElement(rootElement, XML_ELEMENT_WEBINFO_CASCADE_NAME);
 		Element mixList = webInfoDoc.createElement(MixInfo.XML_ELEMENT_CONTAINER_NAME);
 		
@@ -1556,6 +1625,9 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		return rootElement;
 	}
 	
+	/**
+	 * get WebInfos for a cascade with the specified ID
+	 */
 	public static Document getCascadeWebInfo(String cascadeID)
 	{
 		if(cascadeID == null )
@@ -1586,6 +1658,9 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		return webInfoDoc;
 	}
 	
+	/**
+	 * get WebInfos for all cascades
+	 */
 	public static Document getAllCascadeWebInfos()
 	{
 		Document allWebInfosDoc = XMLUtil.createDocument();

@@ -35,6 +35,7 @@ import anon.crypto.CertPath;
 import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
 import anon.crypto.XMLSignature;
+import anon.util.Util;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
 import logging.LogHolder;
@@ -54,11 +55,17 @@ import anon.pay.AIControlChannel;
  */
 public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry implements IVerifyable
 {
+	public static final String NAME_TYPE_MIX = "Mix";
+	public static final String NAME_TYPE_OPERATOR = "Operator";
+	public static final String DEFAULT_NAME_TYPE = NAME_TYPE_MIX;
+	
 	public static final String DEFAULT_NAME = "AN.ON Mix";
-
+	
 	public static final String XML_ELEMENT_CONTAINER_NAME = "Mixes";
 	public static final String XML_ELEMENT_NAME = "Mix";
-
+	public static final String XML_ELEMENT_MIX_NAME = "Name";
+	public final static String XML_ATTRIBUTE_NAME_FOR_CASCADE = "forCascade";
+	
 
     /* LERNGRUPPE: Mix types */
     public static final int FIRST_MIX = 0;
@@ -103,6 +110,11 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
    */
   private String m_name;
 
+  /**
+   * The name to contribute to the cascade name .
+   */
+  private String m_nameFragmentForCascade;
+  
   /**
    * Some information about the location of the mix.
    */
@@ -166,21 +178,6 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
   private boolean m_bFromCascade;
   
   /**
-   * True, if this Mix has a performance server.
-   */
-  private boolean m_bPerformanceServer;
-
-  /**
-	* The host of the performance server.
-	*/
-  private String m_strPerformanceServerHost;
-	
-  /**
-   * The port of the performance server.
-   */
-  private int m_iPerformanceServerPort;
-  
-  /**
    * Creates a new MixInfo from XML description (Mix node). The state of the mix will be set to
    * non-free (only meaningful within the context of the infoservice).
    *
@@ -223,9 +220,6 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 	  m_mixOperator = new ServiceOperator(null, m_mixCertPath.getSecondCertificate(), 0);
 	  m_freeMix = false;
 	  m_prepaidInterval = AIControlChannel.MAX_PREPAID_INTERVAL;
-	  m_bPerformanceServer = false;
-	  m_strPerformanceServerHost = "";
-	  m_iPerformanceServerPort = -1;
   }
 
   public MixInfo(String a_mixID, CertPath a_certPath, XMLPriceCertificate a_priceCert, long a_prepaidInterval)
@@ -246,9 +240,6 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 	  //
 	  m_priceCert = a_priceCert;
 	  m_prepaidInterval = a_prepaidInterval;
-	  m_bPerformanceServer = false;
-	  m_strPerformanceServerHost = "";
-	  m_iPerformanceServerPort = -1;	  
   }
 
   /**
@@ -312,9 +303,7 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 	  {
 		  throw new XMLParseException(XMLParseException.ROOT_TAG, "Malformed Mix ID: " + m_mixId);
 	  }
-
-	  m_name = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_mixNode, "Name"), DEFAULT_NAME);
-
+	  
 	  m_bSocks = XMLUtil.parseAttribute(
 		   XMLUtil.getFirstChildByName(a_mixNode, "Proxies"), "socks5Support", false);
 
@@ -394,23 +383,6 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 		  m_mixOperator = new ServiceOperator(operatorNode, null, m_lastUpdate);
 	  }
 	  
-	  m_strPerformanceServerHost = "";
-	  m_iPerformanceServerPort = -1;
-	  m_bPerformanceServer = false;
-	  Node perfNode = XMLUtil.getFirstChildByName(a_mixNode, "PerformanceServer");
-	  if(perfNode != null)
-	  {
-		  Node perfHostNode  = XMLUtil.getFirstChildByName(perfNode, "Host");
-		  Node perfHostPort = XMLUtil.getFirstChildByName(perfNode, "Port");
-		  
-		  if(perfHostNode != null && perfHostPort != null)
-		  {
-			  m_strPerformanceServerHost = XMLUtil.parseValue(perfHostNode, "localhost");
-			  m_iPerformanceServerPort = XMLUtil.parseValue(perfHostPort, 7777);
-			  m_bPerformanceServer = true;
-		  }
-	  }
-
 	  /*
 	   * Store the Service Operator if
 	   * - it doesn't exist yet or
@@ -436,6 +408,36 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
 	  m_freeMix = false;
 	  m_xmlStructure = a_mixNode;
 
+	  /* a name type specifies whether the name should be extracted from the
+	   * operator- or the mix certificate.
+	   */
+	  m_name = null;
+	  Node nameNode = XMLUtil.getFirstChildByName(a_mixNode, XML_ELEMENT_MIX_NAME);
+	  
+	  m_name = XMLUtil.parseValue(nameNode, DEFAULT_NAME);
+	  
+	  String nameType = XMLUtil.parseAttribute(nameNode, XML_ATTRIBUTE_NAME_FOR_CASCADE, "" );// DEFAULT_NAME_TYPE);
+	  //uncomment the above line to enable a default name type 
+	  
+	  if( nameType.equals(NAME_TYPE_OPERATOR) && (m_operatorCertificate != null) )
+	  {
+		  m_nameFragmentForCascade = (m_mixOperator != null) ? m_mixOperator.getOrganization() : null;
+		  // right now the common name doesn't contain anything useful. Perhaps later it is useful
+		  // to use the common name of the operator cert instead of the organisation name
+		  //(m_operatorCertificate.getSubject() != null) ? 
+		  //	m_operatorCertificate.getSubject().getCommonName() : null; */
+	  }
+	  else if (nameType.equals(NAME_TYPE_MIX) && (m_mixCertificate != null) )
+	  {
+		  m_nameFragmentForCascade = ""+m_name;
+		  //same as above
+			  //(m_mixCertificate.getSubject() != null) ? 
+			  //	  m_mixCertificate.getSubject().getCommonName() : null;
+	  }
+	  if( m_nameFragmentForCascade == null )
+	  {
+		  m_nameFragmentForCascade = ""+m_name;
+	  }
 
   }
   
@@ -576,7 +578,8 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
    *
    * @return The name of this mix.
    */
-  public String getName() {
+  public String getName() 
+  {
     return m_name;
   }
 
@@ -817,19 +820,13 @@ public class MixInfo extends AbstractDistributableCertifiedDatabaseEntry impleme
        return result;
    }
 
-	
-	public boolean hasPerformanceServer()
+	public String getNameFragmentForCascade()
 	{
-		return m_bPerformanceServer;
+		return m_nameFragmentForCascade;
 	}
 	
-	public String getPerformanceServerHost()
+	public void setNameFragmentForCascade(String fragmentForCascade) 
 	{
-		return m_strPerformanceServerHost;
+		m_nameFragmentForCascade = fragmentForCascade;
 	}
-	
-	public int getPerformanceServerPort()
-	{
-		return m_iPerformanceServerPort;
-	}   
 }

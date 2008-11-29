@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.10.043"; //Never change the layout of this line!
+	public static final String aktVersion = "00.10.044"; //Never change the layout of this line!
 	public final static boolean m_bUnstableVersion = false; //Set to true if this is an unstable (development) Version
 
 	
@@ -43,7 +43,7 @@ public final class JAPConstants
 
 	//Warning: This is a little bit tricky,
 	//because CVS will expand the $Date$
-	//to the date of the last commmit of this file
+	//to the date of the last commit of this file
 
 	//Never change the layout of the next two lines as several automated tools use these lines to do fancy things...
 	public final static boolean m_bReleasedVersion = false; //Set to true if this is a stable (release) Version

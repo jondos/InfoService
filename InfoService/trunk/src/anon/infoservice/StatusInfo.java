@@ -32,6 +32,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.security.SignatureException;
 
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -157,6 +161,9 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 	 * Creates a new StatusInfo from XML description (MixCascadeStatus node). There is no anonymity
 	 * level calculated for the new status entry -> getAnonLevel() will return -1. This constructor
 	 * should only be called within the context of the infoservice.
+	 * 
+	 * Beware of creating a constructor (Element, long), as Database.loadFromXML will then use an
+	 * unlimited timeout!
 	 *
 	 * @param a_statusNode The MixCascadeStatus node from an XML document.
 	 */
@@ -532,14 +539,14 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 			" (" + ((perfEntry != null && perfEntry.getAverage(PerformanceEntry.DELAY) != 0) ? String.valueOf(perfEntry.getAverage(PerformanceEntry.DELAY)) : "?") + ") ") : "") +
 			(!a_bPassiveMode ? "[" : "");
 		
-			long delayBound;
+			int delayBound;
 			if (perfEntry == null)
 			{
 				delayBound = 0;
 			}
 			else
 			{
-				delayBound = perfEntry.getBound(PerformanceEntry.DELAY);
+				delayBound = perfEntry.getBound(PerformanceEntry.DELAY).getBound();
 			}
 		
 			if (delayBound == Integer.MAX_VALUE)
@@ -566,16 +573,15 @@ public final class StatusInfo extends AbstractDatabaseEntry implements IDistribu
 			" (" + ((perfEntry != null && perfEntry.getAverage(PerformanceEntry.SPEED) != 0) ? String.valueOf(perfEntry.getAverage(PerformanceEntry.SPEED)): "?") + ") ") : "") +
 			(!a_bPassiveMode ? "[" : "");
 			
-			long speedBound;
+			int speedBound;
 			if (perfEntry == null)
 			{
 				speedBound = Integer.MAX_VALUE;
 			}
 			else
-			{
-				speedBound = perfEntry.getBound(PerformanceEntry.SPEED);
+			{				
+				speedBound = perfEntry.getBound(PerformanceEntry.SPEED).getBound();				
 			}
-			
 			
 			if(speedBound == 0)
 			{
