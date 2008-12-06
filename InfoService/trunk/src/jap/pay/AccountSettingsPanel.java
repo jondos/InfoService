@@ -2838,12 +2838,15 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 */
 	private void doSelectAccount(PayAccount selectedAccount)
 	{
+		boolean bDisconnected = false;
+		
 		if (selectedAccount == null)
 		{
 			return;
 		}
 
-		if (JAPController.getInstance().getAnonMode() && !hasDisconnected(true))
+		if (JAPController.getInstance().getAnonMode() && 
+			!(bDisconnected = hasDisconnected(true)))
 		{
 			return;
 		}
@@ -2857,6 +2860,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		{
 			JAPDialog.showErrorDialog(GUIUtils.getParentWindow(this.getRootPanel()),
 									  JAPMessages.getString("Could not select account!"), LogType.PAY, ex);
+		}
+		
+		if (bDisconnected)
+		{
+			// re-establish connection
+			reconnect();
 		}
 	}
 
@@ -3320,6 +3329,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 */
 	private void doDeleteAccount(PayAccount selectedAccount)
 	{
+		boolean bDisconnected = false;
+		
 		if (selectedAccount == null)
 		{
 			return;
@@ -3330,9 +3341,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		String message;
 
 		if (accounts.getActiveAccount() == selectedAccount && JAPController.getInstance().getAnonMode() &&
-			!hasDisconnected(false))
+			!(bDisconnected = hasDisconnected(false)))
 		{
-				return;
+			return;
 		}
 		
 		balance = selectedAccount.getBalance();
@@ -3391,7 +3402,32 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 										  JAPMessages.getString(MSG_ERROR_DELETING), LogType.MISC, a_ex);
 			}
 		}
+		
+		if (bDisconnected)
+		{
+			// re-establish connection
+			reconnect();
+		}
 	}
+	
+	private void reconnect()
+	{
+		MixCascade cascade = JAPController.getInstance().getCurrentMixCascade();
+		PayAccount account = PayAccountsFile.getInstance().getActiveAccount();
+		PaymentInstanceDBEntry pi = null;
+		if (account != null)
+		{
+			pi = account.getBI();
+		}
+		
+		if (!cascade.isPayment() || 
+			(cascade.getPIID() != null && pi.getId().equals(cascade.getPIID())) &&
+			account.isCharged(new Timestamp(System.currentTimeMillis())))
+		{
+			JAPController.getInstance().setAnonMode(true);				
+		}
+	}
+	
 
 	public String getHelpContext()
 	{
