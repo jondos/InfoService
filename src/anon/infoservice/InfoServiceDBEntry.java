@@ -1176,7 +1176,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 					Node node = XMLUtil.importNode(d, entryNode, true);
 					d.appendChild(node);
 					
-					currentEntry = new TermsAndConditions(d);
+					currentEntry = new TermsAndConditions(d, true);
 				}
 				else if (a_getter.m_dbEntryClass == MixCascade.class)
 				{
@@ -1228,8 +1228,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 			{
 				/* an error while parsing the node occured -> we don't use this db entry */
 				LogHolder.log(LogLevel.ERR, LogType.MISC, "Error in " +
-							  ClassUtil.getShortClassName(a_getter.m_dbEntryClass) +
-							  " XML node:" + e.toString());
+							  ClassUtil.getShortClassName(a_getter.m_dbEntryClass) + " XML node!", e);
 			}
 		}
 		return entries;
