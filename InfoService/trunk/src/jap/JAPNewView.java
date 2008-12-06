@@ -483,7 +483,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					}
 				}
 
-				if (!JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed() &&
+				if (JAPModel.getInstance().getInfoServiceAnonymousConnectionSetting() ==
+					JAPModel.CONNECTION_FORCE_ANONYMOUS &&
 					!JAPController.getInstance().isAnonConnected())
 				{
 					if (JAPDialog.showConfirmDialog(JAPNewView.this, JAPMessages.getString(
@@ -492,7 +493,26 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 						JAPDialog.MESSAGE_TYPE_WARNING)
 						== JAPDialog.RETURN_VALUE_YES)
 					{
-						JAPModel.getInstance().allowInfoServiceViaDirectConnection(true);
+						
+						JAPModel.getInstance().setInfoServiceAnonymousConnectionSetting(
+								JAPModel.CONNECTION_ALLOW_ANONYMOUS);
+							
+					}
+				}
+				else if (JAPModel.getInstance().getInfoServiceAnonymousConnectionSetting() ==
+					JAPModel.CONNECTION_BLOCK_ANONYMOUS &&
+					JAPController.getInstance().isAnonConnected())
+				{
+					if (JAPDialog.showConfirmDialog(JAPNewView.this, JAPMessages.getString(
+						JAPController.MSG_IS_NOT_ALLOWED_FOR_ANONYMOUS),
+						JAPDialog.OPTION_TYPE_YES_NO,
+						JAPDialog.MESSAGE_TYPE_WARNING)
+						== JAPDialog.RETURN_VALUE_YES)
+					{
+						
+						JAPModel.getInstance().setInfoServiceAnonymousConnectionSetting(
+								JAPModel.CONNECTION_ALLOW_ANONYMOUS);
+							
 					}
 				}
 			}
@@ -1894,7 +1914,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				{
 					if (!JAPController.getInstance().isShuttingDown()
 						&& (JAPModel.isInfoServiceDisabled() ||
-							(!JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed() &&
+							(JAPModel.getInstance().getInfoServiceAnonymousConnectionSetting() ==
+							JAPModel.CONNECTION_FORCE_ANONYMOUS &&
 							 !JAPController.getInstance().isAnonConnected())))
 					{
 						synchronized (SYNC_STATUS_ENABLE_IS)
@@ -2667,7 +2688,8 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 		if (!JAPController.getInstance().isShuttingDown()
 			&& (JAPModel.isInfoServiceDisabled() ||
-				(!JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed() &&
+				(JAPModel.getInstance().getInfoServiceAnonymousConnectionSetting() ==
+					JAPModel.CONNECTION_FORCE_ANONYMOUS &&
 				 !JAPController.getInstance().isAnonConnected())))
 		{
 			synchronized (SYNC_STATUS_ENABLE_IS)
@@ -2886,16 +2908,24 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				if (value < 0 || value == Integer.MAX_VALUE)
 				{
 					m_labelSpeed.setText(JAPMessages.getString(MSG_UNKNOWN_PERFORMANCE));
+					m_labelSpeed.setForeground(m_lblUsers.getForeground());
 				}
-				else if(value == 0)
+				else if (value == 0)
 				{
 					m_labelSpeed.setText("< " + JAPUtil.formatKbitPerSecValueWithUnit(
 							PerformanceEntry.BOUNDARIES[PerformanceEntry.SPEED][1], 
 							JAPUtil.MAX_FORMAT_KBIT_PER_SEC));
+					m_labelSpeed.setForeground(Color.red);
 				}
 				else
 				{
-					if(best == value || best == Integer.MAX_VALUE)
+					if (PerformanceEntry.BOUNDARIES[PerformanceEntry.SPEED]
+					    [PerformanceEntry.BOUNDARIES[PerformanceEntry.SPEED].length - 1] == best)
+					{
+						m_labelSpeed.setText("> " + JAPUtil.formatKbitPerSecValueWithUnit(value, 
+								JAPUtil.MAX_FORMAT_KBIT_PER_SEC));
+					}
+					else if (best == value || best == Integer.MAX_VALUE)
 					{
 						m_labelSpeed.setText(JAPUtil.formatKbitPerSecValueWithUnit(value, 
 								JAPUtil.MAX_FORMAT_KBIT_PER_SEC));
@@ -2906,6 +2936,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 								value, JAPUtil.MAX_FORMAT_KBIT_PER_SEC) + "-" + 
 								JAPUtil.formatKbitPerSecValueWithUnit(best, JAPUtil.MAX_FORMAT_KBIT_PER_SEC));
 					}
+					m_labelSpeed.setForeground(m_lblUsers.getForeground());
 				}
 				
 				value = entry.getBound(PerformanceEntry.DELAY).getBound();
@@ -2913,16 +2944,22 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 				if (value <= 0)
 				{
 					m_labelDelay.setText(JAPMessages.getString(MSG_UNKNOWN_PERFORMANCE));
+					m_labelDelay.setForeground(m_lblUsers.getForeground());
 				}
-				else if(value == Integer.MAX_VALUE)
+				else if (value == Integer.MAX_VALUE)
 				{
 					m_labelDelay.setText("> " + 
 							PerformanceEntry.BOUNDARIES[PerformanceEntry.DELAY][
 							PerformanceEntry.BOUNDARIES[PerformanceEntry.DELAY].length - 2] + " ms");
+					m_labelDelay.setForeground(Color.red);
 				}
 				else
 				{
-					if(best == value || best == 0)
+					if (PerformanceEntry.BOUNDARIES[PerformanceEntry.DELAY][0] == best)
+					{
+						m_labelDelay.setText("< " + value + " ms");
+					}
+					else if(best == value || best == 0)
 					{
 						m_labelDelay.setText(value + " ms");
 					}
@@ -2930,12 +2967,15 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					{
 						m_labelDelay.setText(value + "-" + best + " ms");
 					}
+					m_labelDelay.setForeground(m_lblUsers.getForeground());
 				}
 			}
 			else
 			{
 				m_labelSpeed.setText(JAPMessages.getString(MSG_UNKNOWN_PERFORMANCE));
 				m_labelDelay.setText(JAPMessages.getString(MSG_UNKNOWN_PERFORMANCE));
+				m_labelSpeed.setForeground(m_lblUsers.getForeground());
+				m_labelDelay.setForeground(m_lblUsers.getForeground());
 			}
 			
 			JAPDll.setSystrayTooltip(strSystrayTooltip);

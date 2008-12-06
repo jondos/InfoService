@@ -343,6 +343,17 @@ public final class AnonProxyRequest implements Runnable
 		{
 			LogHolder.log(LogLevel.DEBUG,LogType.NET,"Exception in AnonProxyRequest - upstream loop.", e );
 		}
+		catch ( ChunkNotProcessableException cnpe)
+		{
+			try 
+			{
+				m_OutSocket.write(cnpe.getErrorResponse());
+			} 
+			catch (IOException e) 
+			{
+			}
+			LogHolder.log(LogLevel.ERR,LogType.NET,"chunk could not be processed. Terminating",  cnpe );
+		}
 		closeRequest();
 		m_Proxy.decNumChannels();
 	}
@@ -476,6 +487,17 @@ mainLoop:		do
 			catch (IOException e)
 			{
 				LogHolder.log(LogLevel.ERR, LogType.NET, e);
+			}
+			catch (ChunkNotProcessableException cnpe)
+			{
+				LogHolder.log(LogLevel.ERR, LogType.NET, cnpe);
+				try 
+				{
+					m_OutSocket.write(cnpe.getErrorResponse());
+				} 
+				catch (IOException e) 
+				{
+				}
 			}
 			try
 			{

@@ -44,6 +44,7 @@ import anon.ErrorCodes;
 import anon.NotConnectedToMixException;
 import anon.client.AnonClient;
 import anon.client.DummyTrafficControlChannel;
+import anon.client.ITermsAndConditionsContainer;
 import anon.infoservice.MixCascade;
 import anon.infoservice.AbstractMixCascadeContainer;
 import anon.mixminion.MixminionServiceDescription;
@@ -55,6 +56,7 @@ import logging.LogType;
 import anon.AnonServerDescription;
 import anon.pay.IAIEventListener;
 import anon.infoservice.IMutableProxyInterface;
+import anon.util.IMessages;
 import anon.util.ObjectQueue;
 import java.security.SignatureException;
 
@@ -237,7 +239,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		m_Anon.addEventListener(this);
 	}
 	
-	public void setHTTPHeaderProcessingEnabled(boolean enable)
+	public void setHTTPHeaderProcessingEnabled(boolean enable, IMessages a_messages)
 	{
 		if(enable)
 		{
@@ -248,7 +250,7 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 			}
 			if(m_httpProxyCallback == null)
 			{
-				m_httpProxyCallback = new HTTPProxyCallback();
+				m_httpProxyCallback = new HTTPProxyCallback(a_messages);
 			}
 			m_callbackHandler.registerProxyCallback(m_httpProxyCallback);
 		}
@@ -1134,6 +1136,11 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		{
 			return false;
 		}
+		
+		public ITermsAndConditionsContainer getTCContainer()
+		{
+			return null;
+		}
 	}
 
 	private class EncapsulatedMixCascadeContainer extends AbstractMixCascadeContainer
@@ -1149,7 +1156,6 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		{
 			m_mixCascadeContainer.checkTrust(a_cascade);
 		}
-
 
 		public MixCascade getNextMixCascade()
 		{
@@ -1175,6 +1181,11 @@ final public class AnonProxy implements Runnable, AnonServiceEventListener
 		{
 			/** @todo reconnect is not yet supported with forwarded connections */
 			return!m_forwardedConnection && m_mixCascadeContainer.isReconnectedAutomatically();
+		}
+		
+		public ITermsAndConditionsContainer getTCContainer()
+		{
+			return m_mixCascadeContainer.getTCContainer();
 		}
 	}
 }

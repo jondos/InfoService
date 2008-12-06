@@ -33,6 +33,9 @@ import java.util.Hashtable;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import anon.infoservice.HttpResponseStructure;
+import anon.util.IMessages;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -63,6 +66,9 @@ public class HTTPProxyCallback implements ProxyCallback
 	
 	final static String[] HTTP_REQUEST_METHODS = { "GET", "POST", "CONNECT", "HEAD" , "PUT", "OPTIONS", "DELETE", "TRACE"};
 	final static byte[][] HTTP_REQUEST_METHODS_BYTES;
+	
+	final static String MSG_INVALID_LINETERM_REQUEST ="httpFilter.invalidlineterm.request";
+	final static String MSG_INVALID_LINETERM_RESPONSE ="httpFilter.invalidlineterm.response";
 	
 	static 
 	{
@@ -104,12 +110,14 @@ public class HTTPProxyCallback implements ProxyCallback
 	
 	private Vector m_httpConnectionListeners = null;
 	
+	private IMessages m_messages;
+	
 	private static final IHTTPHelper UPSTREAM_HELPER = new IHTTPHelper()
 	{
 		public byte[] dumpHeader(HTTPProxyCallback a_callback, HTTPConnectionHeader a_header, AnonProxyRequest anonRequest)
 		{
 			a_callback.fireRequestHeadersReceived(a_callback.getEvent(anonRequest));
-			return a_header.dumpRequestHeader();
+			return a_header.dumpRequestHeaders();
 		}
 	};
 	private static final IHTTPHelper DOWNSTREAM_HELPER = new IHTTPHelper()
@@ -118,12 +126,25 @@ public class HTTPProxyCallback implements ProxyCallback
 		{
 			//a_callback.handleResponse(a_header);
 			a_callback.fireResponseHeadersReceived(a_callback.getEvent(anonRequest));
-			return a_header.dumpResponseHeader();
+			return a_header.dumpResponseHeaders();
 		}
 	};
 	
-	public HTTPProxyCallback()
+	public HTTPProxyCallback(IMessages a_messages)
 	{
+		m_messages = a_messages;
+		
+		if (m_messages == null)
+		{
+			m_messages = new IMessages()
+			{
+				public String getMessage(String a_key)
+				{
+					return "A proxy message error occured!";
+				}
+			};
+		}
+		
 		m_connectionHTTPHeaders = new Hashtable();
 		m_unfinishedRequests = new Hashtable();
 		m_unfinishedResponses = new Hashtable();
@@ -132,33 +153,54 @@ public class HTTPProxyCallback implements ProxyCallback
 		m_httpConnectionListeners = new Vector();
 	}
 	
-	public byte[] handleUpstreamChunk(AnonProxyRequest anonRequest, byte[] chunk, int len)
+	public byte[] handleUpstreamChunk(AnonProxyRequest anonRequest, byte[] chunk, int len) throws ChunkNotProcessableException
 	{
 		return handleStreamChunk(anonRequest, chunk, len, MESSAGE_TYPE_REQUEST, UPSTREAM_HELPER);
 		//return chunk;
 	}
 	
-	public byte[] handleDownstreamChunk(AnonProxyRequest anonRequest, byte[] chunk, int len)
+	public byte[] handleDownstreamChunk(AnonProxyRequest anonRequest, byte[] chunk, int len) throws ChunkNotProcessableException
 	{
-		return handleStreamChunk(anonRequest, chunk, len, MESSAGE_TYPE_RESPONSE, DOWNSTREAM_HELPER);
+		/* set noResponseExptected when a response to a request was already 
+		 * parsed and no further requests were sent so we don't expect
+		 * to receive a response either. 
+		 * 
+		 * This flag should avoid confusion when received byte-content contains the
+		 * same aligned byte sequence that would identify it as a response.
+		 */
+		boolean noResponseExpected = false;
+		synchronized(this)
+		{
+			HTTPConnectionHeader connHeader =
+				(HTTPConnectionHeader) m_connectionHTTPHeaders.get(anonRequest);
+			noResponseExpected = (connHeader == null) ? true : !connHeader.isResponseExpected();
+		}
+		
+		return noResponseExpected ? chunk : handleStreamChunk(anonRequest, chunk, len, MESSAGE_TYPE_RESPONSE, DOWNSTREAM_HELPER);
+					
 		//return chunk;
 	}
 
 	private byte[] handleStreamChunk(AnonProxyRequest anonRequest, byte[] chunk, int len, 
-			int a_messageType, IHTTPHelper a_helper)
+			int a_messageType, IHTTPHelper a_helper) throws ChunkNotProcessableException
 	{
-		
 		/* Does only work with a valid AnonProxy reference */
 		if(anonRequest == null)
 		{
 			throw new NullPointerException("AnonProxyRequest must not be null!");
 		}
 		/* get the startindex of the CRLFCRLF end delimiter header */		
+		int headerEndLength = HTTP_HEADER_END.length();
 		int headerEndIndex = indexOfHTTPHeaderEnd(chunk);
+		
 		/* this specifies how many bytes of the chunk may contain header data 
 		 * (if the chunk contain header data at all)
 		 */
-		int endLen = (headerEndIndex == -1) ? len : Math.min((headerEndIndex+HTTP_HEADER_END.length()), len);
+		int endLen = (headerEndIndex == -1) ? len : Math.min((headerEndIndex+headerEndLength), len);
+		if(headerEndIndex == -1)
+		{
+			
+		}
 		int contentBytes = len;
 		String chunkData = null;
 		
@@ -183,6 +225,7 @@ public class HTTPProxyCallback implements ProxyCallback
 			chunkData = ( (unfinishedHeaderPart == null) ? "" : unfinishedHeaderPart) + new String(chunk, 0, endLen );
 			
 			boolean finished = extractHeaderParts(anonRequest, chunkData, a_messageType);
+
 			if(!finished)
 			{
 				/* if header parsing hasn't finished yet:
@@ -292,6 +335,7 @@ public class HTTPProxyCallback implements ProxyCallback
 	 * returns false if header could not be extracted
 	 */
 	private synchronized boolean extractHeaderParts(AnonProxyRequest anonRequest, String chunkData, int messageType)
+		throws ChunkNotProcessableException
 	{
 		// assumes, that the chunk is aligned.
 		//Works in almost every case.
@@ -324,12 +368,36 @@ public class HTTPProxyCallback implements ProxyCallback
 			connHeader = new HTTPConnectionHeader();
 			m_connectionHTTPHeaders.put(anonRequest, connHeader);
 		}
-	
-		if(hasAlignedHTTPStartLine(chunkData, messageType))
-		{
+		
+		//if(hasAlignedHTTPStartLine(chunkData, messageType))
+		//{
+			
 			Hashtable unfinishedMessages = 
 				(messageType == MESSAGE_TYPE_REQUEST) ? 
 					m_unfinishedRequests : m_unfinishedResponses;
+			
+			if(!checkValidity(chunkData))
+			{
+				String errorMsgKey = null;
+				if(messageType == MESSAGE_TYPE_REQUEST)
+				{
+					connHeader.setRequestFinished(true);
+					errorMsgKey = MSG_INVALID_LINETERM_REQUEST;
+				}
+				else if (messageType == MESSAGE_TYPE_RESPONSE)
+				{
+					connHeader.setResponseFinished(true);
+					errorMsgKey = MSG_INVALID_LINETERM_RESPONSE;
+				}
+				
+				unfinishedMessages.remove(anonRequest);
+				
+				throw new HTTPHeaderParseException(
+						HttpResponseStructure.HTTP_RETURN_BAD_REQUEST,
+						messageType, 
+						m_messages.getMessage(errorMsgKey));
+			}
+			
 			int off_headers_end = chunkData.indexOf(HTTP_HEADER_END);
 			if((off_headers_end != -1))
 			{
@@ -338,10 +406,14 @@ public class HTTPProxyCallback implements ProxyCallback
 				if(messageType == MESSAGE_TYPE_REQUEST)
 				{
 					connHeader.setRequestFinished(true);
+					/* response for that request expected. */
+					connHeader.setResponseExpected(true);
 				}
 				else if (messageType == MESSAGE_TYPE_RESPONSE)
 				{
 					connHeader.setResponseFinished(true);
+					/* next response expected when new request is parsed. */
+					connHeader.setResponseExpected(false);
 				}
 				unfinishedMessages.remove(anonRequest);
 				return true;
@@ -351,8 +423,51 @@ public class HTTPProxyCallback implements ProxyCallback
 				unfinishedMessages.put(anonRequest, chunkData);
 				return false;
 			}
+		//}
+		//return false;
+	}
+	
+	public static boolean checkValidity(String headerData)
+	{
+		int currentCRIndex = -1;
+		int currentLFIndex = -1;
+		
+		//a CR that stands without a trailing LF
+		boolean onlyCR = false;
+		//a LF that stands without a leading CR
+		boolean onlyLF = false;
+		boolean endsWithCR = false;
+		boolean noMoreLineTerminations = false;
+		boolean indexExceeds = (Math.max((currentCRIndex+1), (currentLFIndex+1)) >= headerData.length());
+		
+		while(!indexExceeds )
+		{
+			currentCRIndex = headerData.indexOf('\r', (currentCRIndex+1));
+			currentLFIndex = headerData.indexOf('\n', (currentLFIndex+1));
+		
+			noMoreLineTerminations = ( (currentCRIndex == -1) && (currentLFIndex == -1));
+			
+			if(noMoreLineTerminations)
+			{
+				break;
+			}
+			
+			onlyLF = (currentLFIndex != -1) && ( (currentCRIndex == -1) || (currentCRIndex != (currentLFIndex-1)) );
+			if(onlyLF)
+			{
+				break;
+			}
+			
+			onlyCR = (currentCRIndex != -1) && ( (currentLFIndex == -1) || (currentCRIndex != (currentLFIndex-1)) );
+			
+			endsWithCR = (currentCRIndex == (headerData.length() - 1));
+			if(endsWithCR)
+			{
+				break;
+			}
+			indexExceeds = (Math.max((currentCRIndex+1), (currentLFIndex+1)) >= headerData.length());
 		}
-		return false;
+		return !onlyLF && ( !onlyCR || endsWithCR );
 	}
 	
 	private boolean hasAlignedHTTPStartLine(String chunkData, int messageType)
@@ -481,6 +596,10 @@ public class HTTPProxyCallback implements ProxyCallback
 		{
 			header = lineTokenizer.nextToken();
 			int delim = header.indexOf(HTTP_HEADER_DELIM);
+			if(delim == -1)
+			{
+				delim = header.indexOf("\n\n");
+			}
 			if(delim != -1)
 			{
 				key = header.substring(0, delim).trim();
@@ -594,6 +713,18 @@ public class HTTPProxyCallback implements ProxyCallback
 		private boolean requestFinished = false;
 		private boolean responseFinished = false;
 		
+		private boolean responseExpected = false;
+		
+		public synchronized boolean isResponseExpected() 
+		{
+			return responseExpected;
+		}
+
+		public synchronized void setResponseExpected(boolean responseExpected) 
+		{
+			this.responseExpected = responseExpected;
+		}
+
 		public synchronized boolean isResponseFinished() 
 		{
 			return responseFinished;
@@ -677,7 +808,7 @@ public class HTTPProxyCallback implements ProxyCallback
 			clearHeader(resHeaders, resHeaderOrder);
 		}
 		
-		/* private util-fucntion area. All of these functions are not thread safe and are only to be accessed  
+		/* private util-function area. All of these functions are not thread safe and are only to be accessed  
 		 * synchronized by the actual ConnectionHeader object
 		 */
 		private void setHeader(Hashtable headerMap, Vector headerOrder, String header, String value)
@@ -785,17 +916,17 @@ public class HTTPProxyCallback implements ProxyCallback
 			return values;
 		}
 		
-		private byte[] dumpRequestHeader()
+		private byte[] dumpRequestHeaders()
 		{
-			return dumpHeader(reqHeaders, reqHeaderOrder);
+			return dumpHeaders(reqHeaders, reqHeaderOrder);
 		}
 		
-		private byte[] dumpResponseHeader()
+		private byte[] dumpResponseHeaders()
 		{
-			return dumpHeader(resHeaders, resHeaderOrder);
+			return dumpHeaders(resHeaders, resHeaderOrder);
 		}
 		
-		private byte[] dumpHeader(Hashtable headerMap, Vector headerOrder)
+		private byte[] dumpHeaders(Hashtable headerMap, Vector headerOrder)
 		{
 			String allHeaders = "";
 			String header = null;

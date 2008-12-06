@@ -31,9 +31,6 @@
  */
 package anon.client;
 
-//import jap.JAPController;
-//import jap.TermsAndConditionsDialog;
-
 import java.io.InterruptedIOException;
 import java.io.IOException;
 import java.net.ConnectException;
@@ -175,39 +172,27 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		m_serviceContainer = a_serviceContainer;
 
 		int cascadeLength = mixCascade.getNumberOfMixes();
-		//JAPController controller = JAPController.getInstance();
-				
-		/* When connecting InfoServices must not be contacted */
-		for (int i = 0; i < cascadeLength; i++) 
+		ITermsAndConditionsContainer tcc = m_serviceContainer.getTCContainer();
+		
+		if(tcc != null)
 		{
-			/* Do not do this for manually created cascades!!!!!
-			MixInfo info = mixCascade.getMixInfo(i);
-			if(info == null)
+			for (int i = 0; i < cascadeLength; i++) 
 			{
-				return ErrorCodes.E_CONNECT;
-			}*/
-			
-			/*
-			ServiceOperator op = info.getServiceOperator();
-			if(!controller.hasAcceptedTermsAndConditions(op) && op != null)
-			{
-				TermsAndConditionsDialog dlg = new TermsAndConditionsDialog(controller.getViewWindow(), op.getId());
-				
-				if(dlg.hasFoundTC())
+				MixInfo info = mixCascade.getMixInfo(i);
+				if(info == null)
 				{
-					dlg.setVisible(true);
+					continue; // ignore
+				}			
+			
+				ServiceOperator op = info.getServiceOperator();
+				if(op != null && !tcc.hasAcceptedTermsAndConditions(op) &&
+				op.hasTermsAndConditions())
+				{
+					tcc.showTermsAndConditionsDialog(op);
 					
-					if(!dlg.isTermsAccepted())
-					{
-						controller.revokeTermsAndConditions(op);
-						return ErrorCodes.E_INTERRUPTED;
-					}
-					else
-					{
-						controller.acceptTermsAndConditions(op);
-					}
+					// TODO: interrupt etc.
 				}
-			}*/
+			}
 		}
 		
 		StatusThread run = new StatusThread()

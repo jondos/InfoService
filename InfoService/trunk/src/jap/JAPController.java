@@ -69,6 +69,7 @@ import anon.AnonServiceEventAdapter;
 import anon.AnonServiceEventListener;
 import anon.ErrorCodes;
 import anon.client.AnonClient;
+import anon.client.ITermsAndConditionsContainer;
 import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
 import anon.infoservice.AbstractMixCascadeContainer;
@@ -135,7 +136,7 @@ import anon.infoservice.TermsAndConditions;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
-	AnonServiceEventListener, IAIEventListener
+	AnonServiceEventListener, IAIEventListener, ITermsAndConditionsContainer
 {
 	/** Messages */
 	public static final String MSG_ERROR_SAVING_CONFIG = JAPController.class.getName() +
@@ -172,6 +173,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private static final String MSG_EXPLAIN_ALLOWUNPROTECTED_ALL = JAPController.class.getName() + "_allowunprotectedAllExplain";
 	
 	public static final String MSG_IS_NOT_ALLOWED = JAPController.class.getName() + "_isNotAllowed";
+	public static final String MSG_IS_NOT_ALLOWED_FOR_ANONYMOUS = JAPController.class.getName() + "_isNotAllowedForAnonymous";
 	public static final String MSG_ASK_SWITCH = JAPController.class.getName() + "_askForSwitchOnError";
 	public static final String MSG_ASK_RECONNECT = JAPController.class.getName() + "_askForReconnectOnError";
 	public static final String MSG_ASK_AUTO_CONNECT = JAPController.class.getName() + "_reallyAutoConnect";
@@ -369,7 +371,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		m_minVersionUpdater = new MinVersionUpdater();
 		m_javaVersionUpdater = new JavaVersionUpdater();
 		m_messageUpdater = new MessageUpdater();
-		//m_termsUpdater = new TermsAndConditionsUpdater();
+		m_termsUpdater = new TermsAndConditionsUpdater();
 
 		m_anonJobQueue = new JobQueue("Anon mode job queue");
 		m_Model.setAnonConnectionChecker(new AnonConnectionChecker());
@@ -653,16 +655,20 @@ public final class JAPController extends Observable implements IProxyListener, O
 				if (JAPModel.isInfoServiceDisabled())
 				{
 					m_InfoServiceUpdater.start(false);
+					m_termsUpdater.start(false);
 					m_perfInfoUpdater.start(false);
 					m_paymentInstanceUpdater.start(false);
 					m_MixCascadeUpdater.start(false);
 					m_minVersionUpdater.start(false);
 					m_javaVersionUpdater.start(false);
 					m_messageUpdater.start(false);	
-					//m_termsUpdater.start(false);
 				}
 				else
 				{
+					if (!m_termsUpdater.isFirstUpdateDone())
+					{
+						m_termsUpdater.updateAsync();
+					}
 					if (!m_InfoServiceUpdater.isFirstUpdateDone())
 					{
 						m_InfoServiceUpdater.updateAsync();
@@ -690,10 +696,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 					if (!m_messageUpdater.isFirstUpdateDone())
 					{
 						m_messageUpdater.updateAsync();
-					}
-					//if (!m_termsUpdater.isFirstUpdateDone())
-					{
-						//m_termsUpdater.updateAsync();
 					}
 				}
 
@@ -1097,10 +1099,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 	            m_Model.setDllWarningVersion(XMLUtil.parseAttribute(root, JAPModel.DLL_VERSION_WARNING_BELOW, 0));
 	            m_Model.setMacOSXLibraryUpdateAtStartupNeeded(XMLUtil.parseAttribute(root, JAPModel.MACOSX_LIB_NEEDS_UPDATE, false));
 
-
-				JAPModel.getInstance().allowUpdateViaDirectConnection(
-								XMLUtil.parseAttribute(root, XML_ALLOW_NON_ANONYMOUS_UPDATE,
-					JAPConstants.DEFAULT_ALLOW_UPDATE_NON_ANONYMOUS_CONNECTION));
+	            if (XMLUtil.parseAttribute(root, XML_ALLOW_NON_ANONYMOUS_UPDATE, true))
+	            {
+	            	JAPModel.getInstance().setUpdateAnonymousConnectionSetting(
+	            			XMLUtil.parseAttribute(root, XML_ALLOW_NON_ANONYMOUS_UPDATE, JAPModel.CONNECTION_ALLOW_ANONYMOUS));
+	            }
+	            else
+	            {
+	            	JAPModel.getInstance().setUpdateAnonymousConnectionSetting(JAPModel.CONNECTION_FORCE_ANONYMOUS);
+	            }
 				
 				JAPModel.getInstance().setAnonymizedHttpHeaders(
 						XMLUtil.parseAttribute(root, JAPModel.XML_ANONYMIZED_HTTP_HEADERS, 
@@ -1639,10 +1646,20 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					Element infoserviceManagementNode = (Element) (XMLUtil.getFirstChildByName(root,
 						InfoServiceHolder.getXmlSettingsRootNodeName()));
-					JAPModel.getInstance().allowInfoServiceViaDirectConnection(
-					   XMLUtil.parseAttribute(infoserviceManagementNode,
+					if (XMLUtil.parseAttribute(infoserviceManagementNode,
+						XML_ALLOW_NON_ANONYMOUS_CONNECTION, true))
+					{
+						JAPModel.getInstance().setInfoServiceAnonymousConnectionSetting(
+								XMLUtil.parseAttribute(infoserviceManagementNode,
 											  XML_ALLOW_NON_ANONYMOUS_CONNECTION,
-											  JAPConstants.DEFAULT_ALLOW_INFOSERVICE_NON_ANONYMOUS_CONNECTION));
+											  JAPModel.CONNECTION_ALLOW_ANONYMOUS));
+					}
+					else
+					{
+						// backwards compatibility
+						JAPModel.getInstance().setInfoServiceAnonymousConnectionSetting(
+								JAPModel.CONNECTION_FORCE_ANONYMOUS);
+					}
 					if (infoserviceManagementNode != null)
 					{
 						InfoServiceHolder.getInstance().loadSettingsFromXml(
@@ -1665,9 +1682,18 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						Element elemPay = (Element) XMLUtil.getFirstChildByName(root,
 							JAPConstants.CONFIG_PAYMENT);
-						JAPModel.getInstance().allowPaymentViaDirectConnection(
-											  XMLUtil.parseAttribute(elemPay, XML_ALLOW_NON_ANONYMOUS_CONNECTION,
-							JAPConstants.DEFAULT_ALLOW_PAYMENT_NON_ANONYMOUS_CONNECTION));
+						if (XMLUtil.parseAttribute(elemPay, XML_ALLOW_NON_ANONYMOUS_CONNECTION, true))
+						{
+							JAPModel.getInstance().setPaymentAnonymousConnectionSetting(
+									  XMLUtil.parseAttribute(elemPay, XML_ALLOW_NON_ANONYMOUS_CONNECTION,
+											  JAPModel.CONNECTION_ALLOW_ANONYMOUS));
+						}
+						else
+						{
+							JAPModel.getInstance().setPaymentAnonymousConnectionSetting(
+											  JAPModel.CONNECTION_FORCE_ANONYMOUS);
+						}
+						
 						m_bAskSavePayment = XMLUtil.parseAttribute(elemPay, XML_ATTR_ASK_SAVE_PAYMENT, true);
 						BIConnection.setConnectionTimeout(XMLUtil.parseAttribute(elemPay,
 							BIConnection.XML_ATTR_CONNECTION_TIMEOUT,
@@ -2572,7 +2598,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 								JAPModel.getInstance().isAnonymizedHttpHeaders());
 			
 			XMLUtil.setAttribute(e, XML_ALLOW_NON_ANONYMOUS_UPDATE,
-								 JAPModel.getInstance().isUpdateViaDirectConnectionAllowed());
+								 JAPModel.getInstance().getUpdateAnonymousConnectionSetting());
 			XMLUtil.setAttribute(e, JAPModel.XML_REMIND_OPTIONAL_UPDATE,
 								 JAPModel.getInstance().isReminderForOptionalUpdateActivated());
 			XMLUtil.setAttribute(e, JAPModel.XML_REMIND_JAVA_UPDATE,
@@ -2604,7 +2630,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					Element elemPayment = doc.createElement(JAPConstants.CONFIG_PAYMENT);
 					XMLUtil.setAttribute(elemPayment, XML_ALLOW_NON_ANONYMOUS_CONNECTION,
-										 JAPModel.getInstance().isPaymentViaDirectConnectionAllowed());
+										 JAPModel.getInstance().getPaymentAnonymousConnectionSetting());
 					XMLUtil.setAttribute(elemPayment, BIConnection.XML_ATTR_CONNECTION_TIMEOUT,
 										 BIConnection.getConnectionTimeout());
 					XMLUtil.setAttribute(elemPayment, XML_ATTR_ASK_SAVE_PAYMENT, m_bAskSavePayment);
@@ -2848,7 +2874,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			/* adding infoservice settings */
 			Element elemIS = InfoServiceHolder.getInstance().toXmlElement(doc);
 			XMLUtil.setAttribute(elemIS, XML_ALLOW_NON_ANONYMOUS_CONNECTION,
-								 JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed());
+								 JAPModel.getInstance().getInfoServiceAnonymousConnectionSetting());
 			e.appendChild(elemIS);
 
 
@@ -3232,7 +3258,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 						}
 					}
 					
-					m_proxyAnon.setHTTPHeaderProcessingEnabled(JAPModel.getInstance().isAnonymizedHttpHeaders());
+					m_proxyAnon.setHTTPHeaderProcessingEnabled(
+							JAPModel.getInstance().isAnonymizedHttpHeaders(),
+							JAPMessages.getInstance());
 					m_proxyAnon.setJonDoFoxHeaderEnabled(JAPModel.getInstance().isAnonymizedHttpHeaders());	
 					
 					if (!JAPModel.isInfoServiceDisabled())
@@ -4041,7 +4069,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							m_Controller.m_javaVersionUpdater.stop();
 							m_Controller.m_messageUpdater.stop();
 							m_Controller.m_perfInfoUpdater.stop();
-							//m_Controller.m_termsUpdater.stop();
+							m_Controller.m_termsUpdater.stop();
 						}
 					}, "Finish IS threads");
 					finishIS.start();
@@ -4229,14 +4257,30 @@ public final class JAPController extends Observable implements IProxyListener, O
 			if (!JAPModel.isSmallDisplay() &&
 				(bShowError || Database.getInstance(MixCascade.class).getNumberOfEntries() == 0))
 			{
-				if (!JAPModel.getInstance().isInfoServiceViaDirectConnectionAllowed() && !isAnonConnected())
+				if (JAPModel.getInstance().getInfoServiceAnonymousConnectionSetting() ==
+					JAPModel.CONNECTION_FORCE_ANONYMOUS && !isAnonConnected())
 				{
 					int returnValue =
 						JAPDialog.showConfirmDialog(a_view, JAPMessages.getString(MSG_IS_NOT_ALLOWED),
 						JAPDialog.OPTION_TYPE_YES_NO, JAPDialog.MESSAGE_TYPE_ERROR);
 					if (returnValue == JAPDialog.RETURN_VALUE_YES)
 					{
-						JAPModel.getInstance().allowInfoServiceViaDirectConnection(true);
+						JAPModel.getInstance().setInfoServiceAnonymousConnectionSetting(
+								JAPModel.CONNECTION_ALLOW_ANONYMOUS);
+						updateInfoServices(false);
+						continue;
+					}
+				}
+				else if (JAPModel.getInstance().getInfoServiceAnonymousConnectionSetting() ==
+					JAPModel.CONNECTION_BLOCK_ANONYMOUS && isAnonConnected())
+				{
+					int returnValue =
+						JAPDialog.showConfirmDialog(a_view, JAPMessages.getString(MSG_IS_NOT_ALLOWED_FOR_ANONYMOUS),
+						JAPDialog.OPTION_TYPE_YES_NO, JAPDialog.MESSAGE_TYPE_ERROR);
+					if (returnValue == JAPDialog.RETURN_VALUE_YES)
+					{
+						JAPModel.getInstance().setInfoServiceAnonymousConnectionSetting(
+								JAPModel.CONNECTION_ALLOW_ANONYMOUS);
 						updateInfoServices(false);
 						continue;
 					}
@@ -4705,7 +4749,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						if(m_proxyAnon != null)
 						{
-							m_proxyAnon.setHTTPHeaderProcessingEnabled(JAPModel.getInstance().isAnonymizedHttpHeaders());
+							m_proxyAnon.setHTTPHeaderProcessingEnabled(
+									JAPModel.getInstance().isAnonymizedHttpHeaders(),
+									JAPMessages.getInstance());
 							m_proxyAnon.setJonDoFoxHeaderEnabled(JAPModel.getInstance().isAnonymizedHttpHeaders());
 							
 						}
@@ -5202,6 +5248,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 			tcs.remove(a_op.getId());
 		}
 	}
+	
+	public void showTermsAndConditionsDialog(ServiceOperator a_op)
+	{
+		TermsAndConditionsDialog dlg = new TermsAndConditionsDialog(this.getViewWindow(), a_op); 
+		if(dlg.hasFoundTC())
+		{
+			dlg.setVisible(true);
+		}
+	}
 
 	/**
 	 * This class returns a new random cascade from all currently available cascades every time
@@ -5418,6 +5473,11 @@ public final class JAPController extends Observable implements IProxyListener, O
 		public void checkTrust(MixCascade a_cascade) throws TrustException, SignatureException
 		{
 			TrustModel.getCurrentTrustModel().checkTrust(a_cascade);
+		}
+		
+		public ITermsAndConditionsContainer getTCContainer()
+		{
+			return JAPController.this;
 		}
 	}
 }
