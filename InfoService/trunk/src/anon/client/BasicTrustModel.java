@@ -31,7 +31,7 @@ import java.security.SignatureException;
 import anon.client.TrustException;
 import java.util.Observable;
 
-import gui.JAPMessages;
+//import gui.JAPMessages;
 import anon.infoservice.MixCascade;
 
 
@@ -50,7 +50,7 @@ public class BasicTrustModel extends Observable implements ITrustModel
 	{
 		if (a_cascade == null || !a_cascade.isVerified())
 		{
-			throw (new SignatureException(JAPMessages.getString("invalidSignature")));
+			throw (new SignatureException("Invalid Signature"));
 		}
 	}
 
