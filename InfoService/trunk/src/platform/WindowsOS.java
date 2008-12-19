@@ -27,7 +27,7 @@
  */
 package platform;
 
-import gui.JAPDll;
+//import gui.JAPDll;
 
 import java.io.File;
 import java.io.BufferedReader;
@@ -37,6 +37,8 @@ import java.util.StringTokenizer;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+
+import java.lang.reflect.Method;
 import java.net.URL;
 
 import anon.util.IMiscPasswordReader;
@@ -45,202 +47,228 @@ import anon.util.IMiscPasswordReader;
  * This class is instantiated by AbstractOS if the current OS is Windows
  */
 public class WindowsOS extends AbstractOS
-{
-	public static final int HKEY_CLASSES_ROOT = 0x80000000;
-	public static final int HKEY_CURRENT_USER = 0x80000001;
-	public static final int HKEY_LOCAL_MACHINE = 0x80000002;
-	
-	public static final int DELETE = 0x10000;
-	public static final int KEY_QUERY_VALUE = 0x0001;
-	public static final int KEY_SET_VALUE = 0x0002;
-	public static final int KEY_CREATE_SUB_KEY = 0x0004;
-	public static final int KEY_ENUMERATE_SUB_KEYS = 0x0008;
-	public static final int KEY_READ = 0x20019;
-	public static final int KEY_WRITE = 0x20006;
-	public static final int KEY_ALL_ACCESS = 0xf003f;
-	
-	public static final int ERROR_SUCCESS = 0;
-	public static final int ERROR_FILE_NOT_FOUND = 2;
-	public static final int ERROR_ACCESS_DENIED = 5;
-    
-	public WindowsOS() throws Exception
 	{
-		String osName = System.getProperty("os.name", "").toLowerCase();
-		if (osName.indexOf("win") == -1)
-		{
-			throw new Exception("Operating system is not Windows");
-		}
-		
-		if (osName.indexOf("windows 9") > -1) 
-		{
-			initEnv("command.com /c set");
-		}
-		else  
-		{
-			initEnv("cmd.exe /c set");
-		} 
-	}
+		public static final int HKEY_CLASSES_ROOT = 0x80000000;
+		public static final int HKEY_CURRENT_USER = 0x80000001;
+		public static final int HKEY_LOCAL_MACHINE = 0x80000002;
 
-	protected boolean openLink(String a_link)
-	{
-		try
-		{
-			//java.awt.Desktop.getDesktop().browse(new java.net.URI(a_link));			
-			Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + a_link);
-			//Runtime.getRuntime().exec(
-				//	new String[]{"C:\\Program Files\\Mozilla Firefox\\firefox.exe", a_link});
-			
-			return true;
-		}
-		catch (Exception ex)
-		{
-			LogHolder.log(LogLevel.ERR, LogType.MISC,
-						  "Cannot open '" + a_link + "' in Windows default program.", ex);
-		}
+		public static final int DELETE = 0x10000;
+		public static final int KEY_QUERY_VALUE = 0x0001;
+		public static final int KEY_SET_VALUE = 0x0002;
+		public static final int KEY_CREATE_SUB_KEY = 0x0004;
+		public static final int KEY_ENUMERATE_SUB_KEYS = 0x0008;
+		public static final int KEY_READ = 0x20019;
+		public static final int KEY_WRITE = 0x20006;
+		public static final int KEY_ALL_ACCESS = 0xf003f;
 
-		return false;
-	}
+		public static final int ERROR_SUCCESS = 0;
+		public static final int ERROR_FILE_NOT_FOUND = 2;
+		public static final int ERROR_ACCESS_DENIED = 5;
 
-	protected String getAsString(URL a_url)
-	{
-		String strURL = super.getAsString(a_url);
-		if (new StringTokenizer(strURL).countTokens() > 1)
-		{
-			return "\"" + strURL +"\"";
-		}
-		else
-		{
-			return strURL;
-		}
-	}
-
-	public boolean isHelpAutoInstalled()
-	{
-		return true;
-	}
-	
-	public String getDefaultHelpPath(String a_applicationName)
-	{
-		//String dir = getEnvPath(a_applicationName, "ALLUSERSPROFILE"); 
-//		 ALLUSERSPROFILE has become virtual in Vista
-		String dir = getAppdataDefaultDirectory(a_applicationName);
-		if (dir == null)
-		{
-			dir = super.getDefaultHelpPath(a_applicationName);
-		}
-		
-		return dir;
-	}
-	
-	public String getConfigPath(String a_applicationName)
-	{
-		String vendor = System.getProperty("java.vendor", "unknown");
-		String dir = "";
-		if (vendor.trim().toLowerCase().startsWith("microsoft"))
-		{
-			try
+		public WindowsOS() throws Exception
 			{
-				BufferedReader winPropertiesReader =
-					new BufferedReader(
-						new InputStreamReader(
-							Runtime.getRuntime().exec("CMD /C SET").getInputStream()));
-				String line;
-				while ((line = winPropertiesReader.readLine()) != null)
-				{
-					if (line.startsWith("USERPROFILE"))
+				String osName = System.getProperty("os.name", "").toLowerCase();
+				if (osName.indexOf("win") == -1)
 					{
-						break;
+						throw new Exception("Operating system is not Windows");
 					}
-				}
-				if (line != null)
-				{
-					StringTokenizer tokenizer = new StringTokenizer(line, "=");
-					tokenizer.nextToken();
-					dir = tokenizer.nextToken().trim();
-				}
-			}
-			catch (Exception a_e)
-			{
-			}
-			if (dir == null)
-			{
-				dir = System.getProperty("user.dir");
-			}
-		}
-		else
-		{
-			dir = getAppdataDefaultDirectory(a_applicationName);
-			if (dir == null)
-			{
-				dir = System.getProperty("user.home");
-			}
-		}
 
-		return dir + File.separator;
-	}
-	
-	public String getAppdataDefaultDirectory(String a_applicationName)
-	{
-		return getEnvPath(a_applicationName, "APPDATA");
-	}
-	
-	public boolean copyAsRoot(File a_sourceFile, File a_targetDirectory, 
-			IMiscPasswordReader a_passwordReader)
-	{
-		return JAPDll.xcopy(a_sourceFile, a_targetDirectory, true);
-	}
-	
-	public String getTempPath()
-	{
-		String tempDir = super.getTempPath();
-		
-		if (tempDir == null)
-		{
-			tempDir = getenv("TEMP");
-		}
-		
-		if (tempDir == null)
-		{
-			tempDir = getenv("TMP");
-		}
-		
-		if (tempDir != null && !tempDir.endsWith(File.separator))
-		{
-			tempDir += File.separator;
-		}
-		
-		return tempDir;
-	}
-	
-	private String getEnvPath(String a_applicationName, String a_envPath)
-	{
-		if (a_applicationName == null)
-		{
-			throw new IllegalArgumentException("Application name is null!");
-		}
-		
-		String path = null;
-		File directory;
-	
-		path = getenv(a_envPath);
-	
-		if (path != null && path.trim().length() > 0 && new File(path).exists())
-		{
-			//dirAllUsers += "\\Application Data\\" + a_applicationName;
-			path += File.separator + a_applicationName;
-			directory = new File(path + File.separator);
-			if (!directory.exists() && !directory.mkdir())
-			{
-				LogHolder.log(LogLevel.ERR, LogType.MISC,
-						"Could not create storage directory: " + path);
-				path = null;
+				if (osName.indexOf("windows 9") > -1)
+					{
+						initEnv("command.com /c set");
+					}
+				else
+					{
+						initEnv("cmd.exe /c set");
+					}
 			}
-		}
-		else
-		{
-			path = null;
-		}
-		
-		return path;
+
+		protected boolean openLink(String a_link)
+			{
+				try
+					{
+						// java.awt.Desktop.getDesktop().browse(new java.net.URI(a_link));
+						Runtime.getRuntime().exec(
+								"rundll32 url.dll,FileProtocolHandler " + a_link);
+						// Runtime.getRuntime().exec(
+						// new String[]{"C:\\Program Files\\Mozilla Firefox\\firefox.exe",
+						// a_link});
+
+						return true;
+					}
+				catch (Exception ex)
+					{
+						LogHolder.log(LogLevel.ERR, LogType.MISC, "Cannot open '" + a_link
+								+ "' in Windows default program.", ex);
+					}
+
+				return false;
+			}
+
+		protected String getAsString(URL a_url)
+			{
+				String strURL = super.getAsString(a_url);
+				if (new StringTokenizer(strURL).countTokens() > 1)
+					{
+						return "\"" + strURL + "\"";
+					}
+				else
+					{
+						return strURL;
+					}
+			}
+
+		public boolean isHelpAutoInstalled()
+			{
+				return true;
+			}
+
+		public String getDefaultHelpPath(String a_applicationName)
+			{
+				// String dir = getEnvPath(a_applicationName, "ALLUSERSPROFILE");
+				// ALLUSERSPROFILE has become virtual in Vista
+				String dir = getAppdataDefaultDirectory(a_applicationName);
+				if (dir == null)
+					{
+						dir = super.getDefaultHelpPath(a_applicationName);
+					}
+
+				return dir;
+			}
+
+		public String getConfigPath(String a_applicationName)
+			{
+				String vendor = System.getProperty("java.vendor", "unknown");
+				String dir = "";
+				if (vendor.trim().toLowerCase().startsWith("microsoft"))
+					{
+						try
+							{
+								BufferedReader winPropertiesReader = new BufferedReader(
+										new InputStreamReader(Runtime.getRuntime().exec(
+												"CMD /C SET").getInputStream()));
+								String line;
+								while ((line = winPropertiesReader.readLine()) != null)
+									{
+										if (line.startsWith("USERPROFILE"))
+											{
+												break;
+											}
+									}
+								if (line != null)
+									{
+										StringTokenizer tokenizer = new StringTokenizer(line, "=");
+										tokenizer.nextToken();
+										dir = tokenizer.nextToken().trim();
+									}
+							}
+						catch (Exception a_e)
+							{
+							}
+						if (dir == null)
+							{
+								dir = System.getProperty("user.dir");
+							}
+					}
+				else
+					{
+						dir = getAppdataDefaultDirectory(a_applicationName);
+						if (dir == null)
+							{
+								dir = System.getProperty("user.home");
+							}
+					}
+
+				return dir + File.separator;
+			}
+
+		public String getAppdataDefaultDirectory(String a_applicationName)
+			{
+				return getEnvPath(a_applicationName, "APPDATA");
+			}
+
+		public boolean copyAsRoot(File a_sourceFile, File a_targetDirectory,
+				IMiscPasswordReader a_passwordReader)
+			{
+				/*
+				 * Removed dependency to JAPDll --> otherwise we will need the whol JAP
+				 * Code for the MixConfig Tool..
+				 * 
+				 * The original call was: return JAPDll.xcopy(a_sourceFile,
+				 * a_targetDirectory, true);
+				 */
+				try
+					{
+						Class c = Class.forName("gui.JAPDll");
+						Class arArgClasses[] = new Class[3];
+						arArgClasses[0] = File.class;
+						arArgClasses[1] = File.class;
+						arArgClasses[2] = boolean.class;
+						Method methodXcopy = c.getMethod("xcopy", arArgClasses);
+						Object args[] = new Object[3];
+						args[0] = a_sourceFile;
+						args[1] = a_targetDirectory;
+						args[2] = Boolean.TRUE;
+						Object ret = methodXcopy.invoke(null, args);
+						return ((Boolean) ret).booleanValue();
+					}
+				catch (Throwable t)
+					{
+					}
+				return false;
+			}
+
+		public String getTempPath()
+			{
+				String tempDir = super.getTempPath();
+
+				if (tempDir == null)
+					{
+						tempDir = getenv("TEMP");
+					}
+
+				if (tempDir == null)
+					{
+						tempDir = getenv("TMP");
+					}
+
+				if (tempDir != null && !tempDir.endsWith(File.separator))
+					{
+						tempDir += File.separator;
+					}
+
+				return tempDir;
+			}
+
+		private String getEnvPath(String a_applicationName, String a_envPath)
+			{
+				if (a_applicationName == null)
+					{
+						throw new IllegalArgumentException("Application name is null!");
+					}
+
+				String path = null;
+				File directory;
+
+				path = getenv(a_envPath);
+
+				if (path != null && path.trim().length() > 0 && new File(path).exists())
+					{
+						// dirAllUsers += "\\Application Data\\" + a_applicationName;
+						path += File.separator + a_applicationName;
+						directory = new File(path + File.separator);
+						if (!directory.exists() && !directory.mkdir())
+							{
+								LogHolder.log(LogLevel.ERR, LogType.MISC,
+										"Could not create storage directory: " + path);
+								path = null;
+							}
+					}
+				else
+					{
+						path = null;
+					}
+
+				return path;
+			}
 	}
-}
