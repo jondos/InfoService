@@ -128,6 +128,7 @@ import jap.JAPController;
 import jap.JAPControllerMessage;
 import jap.JAPModel;
 import jap.JAPUtil;
+import jap.TrustModel;
 import jap.pay.wizardnew.CancellationPolicyPane;
 import jap.pay.wizardnew.JpiSelectionPane;
 import jap.pay.wizardnew.MethodSelectionPane;
@@ -1279,7 +1280,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				m_labelStatementDate.setText(JAPUtil.formatTimestamp(balance.getTimestamp(), false,
 					JAPMessages.getLocale().getLanguage()));
 				
-				m_labelSpent.setText(JAPUtil.formatBytesValueWithUnit(balance.getSpent()));
+				//m_labelSpent.setText(JAPUtil.formatBytesValueWithUnit(balance.getSpent()));
+				m_labelSpent.setText(JAPUtil.formatBytesValueWithUnit(selectedAccount.getCurrentSpent()));
+				
 				//m_labelBalance.setText(JAPUtil.formatEuroCentValue(balance.getBalance()));
 
 				Locale curLocale = JAPMessages.getLocale();
@@ -1288,7 +1291,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				Timestamp now = new Timestamp(System.currentTimeMillis());
 
 				boolean expired = false;
-				if (balance.getCredit() == 0)
+				//if (balance.getVolumeKBytesLeft() == 0)
+				if (selectedAccount.getCurrentCredit() == 0)
 				{
 					m_labelValid.setText("");
 				}
@@ -1305,16 +1309,20 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 
 
 				//m_labelEnddate.setText(JAPUtil.formatTimestamp(flatEnddate, false, curLang));
-				if (balance.getCredit() > 0)
+				//if (balance.getVolumeKBytesLeft() > 0)
+				if (selectedAccount.getCurrentCredit() > 0)
 				{
 					m_labelVolume.setText(((expired ? "(" : "") +
-										   JAPUtil.formatBytesValueWithUnit(balance.getVolumeBytesLeft() * 1000) +
-										   (expired ? ")" : "")));
+										  // JAPUtil.formatBytesValueWithUnit(balance.getVolumeKBytesLeft() * 1000) +
+							 				JAPUtil.formatBytesValueWithUnit(selectedAccount.getCurrentCredit() * 1000) +
+											(expired ? ")" : "")));
 					m_labelVolume.setForeground(m_labelValid.getForeground());
 					m_labelVolume.setToolTipText(null);
 					m_labelVolume.setCursor(Cursor.getDefaultCursor());					
 				}
-				else if (balance.getSpent() == 0 && !expired)
+				else if ( /* balance.getSpent() == 0 */  
+						selectedAccount.getCurrentSpent() == 0 &&
+						!expired)
 				{
 					bTransaction = false;					
 					if (selectedAccount.getTransCerts().size() > 0 && !selectedAccount.isTransactionExpired() )
@@ -1369,9 +1377,11 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 				}
 				else
 				{
-					//long dep = balance.getVolumeBytesLeft()*1000 + balance.getSpent();
+					//long dep = balance.getVolumeKBytesLeft()*1000 + balance.getSpent();
+					long dep = selectedAccount.getCurrentCredit()*1000 + selectedAccount.getCurrentSpent();
 					deposit = PaymentMainPanel.FULL_AMOUNT * 1000;
-					long credit = balance.getCredit() * 1000;
+					//long credit = balance.getVolumeKBytesLeft() * 1000;
+					long credit = selectedAccount.getCurrentCredit() * 1000;
 					double percent = (double) credit / (double) deposit;
 
 					if (percent > 0.87)
@@ -2051,6 +2061,12 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 					currentCascade.getPIID().equals(a_accountCreationThread.getAccount().getBI().getId()) &&
 					JAPModel.isAutomaticallyReconnected())
 				{
+					// switch the trust model to premium so that this user from now on connects to premium services only
+					if (TrustModel.getCurrentTrustModel() == TrustModel.TRUST_MODEL_DEFAULT &&
+						TrustModel.TRUST_MODEL_PREMIUM.isTrusted(currentCascade))
+					{
+						TrustModel.setCurrentTrustModel(TrustModel.TRUST_MODEL_PREMIUM);
+					}
 					// try to connect to the current Cascade if not yet connected
 					JAPController.getInstance().setAnonMode(true);
 				}
@@ -3459,9 +3475,9 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			pi = account.getBI();
 		}
 		
-		if (!cascade.isPayment() || 
+		if (JAPModel.isAutomaticallyReconnected() && (!cascade.isPayment() || 
 			(cascade.getPIID() != null && pi.getId().equals(cascade.getPIID())) &&
-			account.isCharged(new Timestamp(System.currentTimeMillis())))
+			account.isCharged(new Timestamp(System.currentTimeMillis()))))
 		{
 			JAPController.getInstance().setAnonMode(true);
 		}

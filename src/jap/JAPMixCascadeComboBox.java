@@ -312,11 +312,11 @@ public class JAPMixCascadeComboBox extends JComboBox
 			contraints.gridx++;
 			contraints.anchor = GridBagConstraints.EAST;
 			contraints.weightx = 1.0;
-			if ((AbstractOS.getInstance() instanceof LinuxOS))
+			/*if ((AbstractOS.getInstance() instanceof LinuxOS))
 			{
 				m_lblMenuArrow = new JLabel(GUIUtils.loadImageIcon("", true));				
 			}
-			else
+			else*/
 			{
 				m_lblMenuArrow = new JLabel(GUIUtils.loadImageIcon("arrow46.gif", true));
 			}
@@ -436,7 +436,7 @@ public class JAPMixCascadeComboBox extends JComboBox
 			{
 				if (isSelected)
 				{
-					if (!(AbstractOS.getInstance() instanceof LinuxOS))
+					//if (!(AbstractOS.getInstance() instanceof LinuxOS))
 					{
 						synchronized (SYNC_POPUP)
 						{
@@ -611,10 +611,10 @@ public class JAPMixCascadeComboBox extends JComboBox
 				m_componentConstraints.gridx++;
 				
 				mixInfo = cascade.getMixInfo(i);				
-				if (mixInfo != null && mixInfo.getCertificate() != null && 
-					mixInfo.getCertificate().getSubject() != null) 
+				if (mixInfo != null && mixInfo.getCertPath() != null && 
+					mixInfo.getCertPath().getSubject() != null) 
 				{
-					String mixCountry = mixInfo.getCertificate().getSubject().getCountryCode();
+					String mixCountry = mixInfo.getCertPath().getSubject().getCountryCode();
 					m_flags[i].setIcon(GUIUtils.loadImageIcon("flags/" + mixCountry + ".png"));
 				}
 				else

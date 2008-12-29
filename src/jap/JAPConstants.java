@@ -35,7 +35,7 @@ import anon.mixminion.Mixminion;
 
 public final class JAPConstants
 {
-	public static final String aktVersion = "00.10.048"; //Never change the layout of this line!
+	public static final String aktVersion = "00.10.049"; //Never change the layout of this line!
 	public final static boolean m_bUnstableVersion = false; //Set to true if this is an unstable (development) Version
 
 	
@@ -326,4 +326,7 @@ public final class JAPConstants
 
 		return languages;
 	}
+	
+	public static final String IN_ADDR_ANY_IPV4 = "0.0.0.0";
+	public static final String IN_ADDR_LOOPBACK_IPV4 = "127.0.0.1";
 }
