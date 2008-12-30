@@ -1273,8 +1273,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		((MixCascadeTableModel) m_tableMixCascade.getModel()).update();
 	}
 
-	private void fetchCascades(final boolean bErr, final boolean a_bForceCascadeUpdate,
-							   final boolean a_bCheckInfoServiceUpdateStatus)
+	private void fetchCascades(final boolean bErr, final boolean a_bCheckInfoServiceUpdateStatus)
 	{
 		m_reloadCascadesButton.setEnabled(false);
 		final Component component = getRootPanel();
@@ -1282,14 +1281,60 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			public void run()
 			{
+				Vector previousEntries;
+				// delete all non-manual cascades
+				synchronized (Database.getInstance(MixCascade.class))
+				{
+					Vector entries = Database.getInstance(MixCascade.class).getEntryList();
+					for (int i = 0; i < entries.size(); i++)
+					{
+						if (!((MixCascade)entries.elementAt(i)).isUserDefined())
+						{
+							Database.getInstance(MixCascade.class).remove((MixCascade)entries.elementAt(i));
+						}
+					}
+					previousEntries = entries;
+					//Database.getInstance(MixCascade.class).removeAll();
+				}
+				
 				// fetch available mix cascades from the Internet
 				//Cursor c = getRootPanel().getCursor();
 				//getRootPanel().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
-				if (a_bForceCascadeUpdate)
+				
+				if (JAPController.getInstance().fetchMixCascades(bErr, component, false))
 				{
-					JAPController.getInstance().fetchMixCascades(bErr, component, false);
+					JAPController.getInstance().updatePerformanceInfo(!false);
 				}
+				else 
+				{
+					// if the services could not be fetched for some reason, restore the previous ones
+					synchronized (Database.getInstance(MixCascade.class))
+					{
+						Vector entries = Database.getInstance(MixCascade.class).getEntryList();
+						boolean bOnlyUserDefinedLeft = true;
+						for (int i = 0; i < entries.size(); i++)
+						{
+							if (!((MixCascade)entries.elementAt(i)).isUserDefined())
+							{
+								bOnlyUserDefinedLeft = false;
+								LogHolder.log(LogLevel.ERR, LogType.DB, 
+										"All services were deleted and only user defined services should be left. " + 
+										"However, we found a service fetched from the InfoService in the database!");
+								break;								
+							}
+						}
+						if (bOnlyUserDefinedLeft)
+						{
+							LogHolder.log(LogLevel.ERR, LogType.DB, "Could not connect to InfoService. Restoring services database...");
+							for (int i = 0; i < previousEntries.size(); i++)
+							{
+								Database.getInstance(MixCascade.class).update((MixCascade)previousEntries.elementAt(i));
+							}
+						}
+					}
+				}
+				
 				//Update the temporary infoservice database
 				m_infoService.fill(a_bCheckInfoServiceUpdateStatus);
 				updateValues(false);
@@ -1374,20 +1419,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		}
 		else if (e.getSource() == m_reloadCascadesButton)
 		{
-			// delete all non-manual cascades
-			synchronized (Database.getInstance(MixCascade.class))
-			{
-				Vector entries = Database.getInstance(MixCascade.class).getEntryList();
-				for (int i = 0; i < entries.size(); i++)
-				{
-					if (!((MixCascade)entries.elementAt(i)).isUserDefined())
-					{
-						Database.getInstance(MixCascade.class).remove((MixCascade)entries.elementAt(i));
-					}
-				}
-				//Database.getInstance(MixCascade.class).removeAll();
-			}
-			fetchCascades(true, true, false);
+			fetchCascades(true, false);
 		}
 		else if (e.getSource() == m_selectCascadeButton)
 		{
