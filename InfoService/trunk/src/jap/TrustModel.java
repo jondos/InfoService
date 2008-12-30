@@ -607,7 +607,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 		model.setAttribute(ExpiredCertsAttribute.class, TRUST_RESERVED);
 		model.setAttribute(DelayAttribute.class, TRUST_IF_AT_MOST, new Integer(8000), true);
 		model.setAttribute(SpeedAttribute.class, TRUST_IF_AT_LEAST, new Integer(100), true);
-		model.setAttribute(NumberOfMixesAttribute.class, TRUST_IF_AT_LEAST, new Integer(3));
+		model.setAttribute(NumberOfMixesAttribute.class, TRUST_IF_AT_LEAST, 3);
 		TRUST_MODEL_PREMIUM = model;
 		ms_trustModels.addElement(model);
 
@@ -864,7 +864,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 					LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Exception occured while trying to get the default value of a TrustAttribute: ", ex);
 				}
 				
-				return setAttribute(a_attr, TRUST_ALWAYS, defaultValue);
+				return setAttribute(a_attr, TRUST_ALWAYS, defaultValue.intValue());
 			}
 
 			return attr;
