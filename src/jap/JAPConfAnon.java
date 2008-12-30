@@ -1281,6 +1281,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		{
 			public void run()
 			{
+				/*
 				Vector previousEntries;
 				// delete all non-manual cascades
 				synchronized (Database.getInstance(MixCascade.class))
@@ -1295,7 +1296,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 					}
 					previousEntries = entries;
 					//Database.getInstance(MixCascade.class).removeAll();
-				}
+				}*/
 				
 				// fetch available mix cascades from the Internet
 				//Cursor c = getRootPanel().getCursor();
@@ -1304,8 +1305,8 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				
 				if (JAPController.getInstance().fetchMixCascades(bErr, component, false))
 				{
-					JAPController.getInstance().updatePerformanceInfo(!false);
-				}
+					JAPController.getInstance().updatePerformanceInfo(bErr);
+				}/*
 				else 
 				{
 					// if the services could not be fetched for some reason, restore the previous ones
@@ -1333,31 +1334,13 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 							}
 						}
 					}
-				}
+				}*/
 				
 				//Update the temporary infoservice database
 				m_infoService.fill(a_bCheckInfoServiceUpdateStatus);
 				updateValues(false);
 
 				//getRootPanel().setCursor(c);
-
-				/*
-				if (Database.getInstance(MixCascade.class).getNumberOfEntries() == 0)
-				{
-					if (!JAPModel.isSmallDisplay() && false)
-					{
-						JAPDialog.showMessageDialog(getRootPanel(),
-							JAPMessages.getString("settingsNoServersAvailable"),
-							JAPMessages.getString("settingsNoServersAvailableTitle"));
-					}
-					//No mixcascades returned by Infoservice
-					//deactivate();
-				}
-				else
-				{
-					// show a window containing all available cascades
-					//m_listMixCascade.setEnabled(true);
-				}*/
 
 
 				LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Enabling reload button");
