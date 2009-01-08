@@ -174,7 +174,7 @@ public class MultiCertOverview extends JAPDialog implements MouseListener
 		rootPanel.add(tabbedPane, c);
 		
 		//Close Button
-		/*m_closeButton = new JButton("Schlie§en");
+		/*m_closeButton = new JButton("Schliessen");
 		m_closeButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
