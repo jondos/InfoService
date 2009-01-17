@@ -3398,7 +3398,7 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 			pnlContrs.weightx = 1.0;
 			pnlContrs.fill = GridBagConstraints.NONE;
 			pnlContrs.anchor = GridBagConstraints.WEST;
-			pnlContrs.insets = new Insets(5, 0, 5, 5);
+			pnlContrs.insets = new Insets(5, 0, 5, 0);
 			
 			//m_moveMixLeft = new BasicArrowButton(BasicArrowButton.WEST);
 			/*m_moveMixLeft = new JButton(GUIUtils.createScaledIcon(GUIUtils.loadImageIcon(JAPHelp.IMG_PREVIOUS, true),
