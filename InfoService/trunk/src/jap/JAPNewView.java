@@ -29,6 +29,7 @@ package jap;
 
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Observable;
@@ -55,6 +56,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+
+import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -70,11 +73,13 @@ import javax.swing.LookAndFeel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
 import anon.AnonServerDescription;
 import anon.client.TrustException;
+import anon.crypto.MultiCertPath;
 import anon.infoservice.BlacklistedCascadeIDEntry;
 import anon.infoservice.CascadeIDEntry;
 import anon.infoservice.ClickedMessageIDDBEntry;
@@ -110,7 +115,6 @@ import gui.dialog.JAPDialog;
 import gui.dialog.JAPDialog.LinkedInformationAdapter;
 import gui.dialog.JAPDialog.Options;
 import gui.help.JAPHelp;
-import jap.TrustModel.DelayAttribute;
 import jap.forward.JAPRoutingMessage;
 import jap.forward.JAPRoutingRegistrationStatusObserver;
 import jap.forward.JAPRoutingServerStatisticsListener;
@@ -173,6 +177,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	private static final String MSG_VIEW_MESSAGE = JAPNewView.class.getName() + "_viewMessage";
 	private static final String MSG_ANTI_CENSORSHIP = JAPNewView.class.getName() + "_antiCensorship";
 
+	private static final String MSG_DATA_RETENTION_EXPLAIN = JAPNewView.class.getName() + "_dataRetentionExplain";
 	private static final String MSG_OBSERVABLE_EXPLAIN = JAPNewView.class.getName() + "_observableExplain";
 	private static final String MSG_OBSERVABLE_TITLE = JAPNewView.class.getName() + "_observableTitle";	
 
@@ -687,7 +692,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			{
 				m_firefox.setBackground(Color.gray);
 			}*/
-			m_bttnReload.setBackground(Color.gray);
+			m_bttnReload.setBackground(m_panelAnonService.getBackground());
 		}
 		m_bttnReload.addActionListener(new ActionListener()
 		{
@@ -813,17 +818,20 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 		
 		c1.gridwidth = 1;
 		c1.insets = new Insets(5, 2, 0, 5);
+		c1.fill = GridBagConstraints.NONE;
 		for (int i = 0; i < m_labelOperatorFlags.length; i++)
 		{
 			c1.gridx = i + 1;
 			c1.gridy = 4;
 			m_labelOperatorFlags[i] = new JLabel("");
+			m_labelOperatorFlags[i].setBorder(BorderFactory.createEmptyBorder());
 			p.add(m_labelOperatorFlags[i], c1);
 			
 			m_labelOperatorFlags[i].addMouseListener(m_adapterOperator[i] =
-				new MixMouseAdapter(null, i));
+				new MixMouseAdapter(null, i, m_labelOperatorFlags[i]));
 			m_labelOperatorFlags[i].setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		}
+		c1.fill = GridBagConstraints.HORIZONTAL;
 		
 		m_labelAnonMeter = new JLabel(getMeterImage(3));
 		m_labelAnonMeter.setToolTipText(JAPMessages.getString(MSG_ANONYMETER_TOOL_TIP));
@@ -2246,16 +2254,28 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 
 		if (a_serverDescription != null && a_serverDescription instanceof MixCascade)
 		{
-			Database.getInstance(NewCascadeIDEntry.class).remove(
-						 ( (MixCascade) a_serverDescription).getMixIDsAsString());
-			if (((MixCascade)a_serverDescription).getNumberOfOperators() <= 1)
+			final MixCascade cascade = (MixCascade) a_serverDescription;
+			Database.getInstance(NewCascadeIDEntry.class).remove(cascade.getMixIDsAsString());
+			
+			if (cascade.getNumberOfOperators() <= 1 || cascade.isDataRetentionActive())
 			{
 				m_msgIDInsecure = m_StatusPanel.addStatusMsg(JAPMessages.getString(MSG_OBSERVABLE_TITLE),
 					JAPDialog.MESSAGE_TYPE_WARNING, false, new ActionListener()
 				{
 					public void actionPerformed(ActionEvent a_event)
 					{
-						JAPDialog.showWarningDialog(JAPNewView.this, JAPMessages.getString(MSG_OBSERVABLE_EXPLAIN));
+						if (cascade.isDataRetentionActive())
+						{
+							JAPDialog.showWarningDialog(JAPNewView.this, 
+									JAPMessages.getString(MSG_DATA_RETENTION_EXPLAIN, 
+											new String[]{"<b>" + cascade.getName() + "</b>",
+											"<i>" + JAPMessages.getString("ngBttnAnonDetails") + "</i>"}));
+						}
+						else
+						{
+							JAPDialog.showWarningDialog(JAPNewView.this, 
+									JAPMessages.getString(MSG_OBSERVABLE_EXPLAIN, "<b>" + cascade.getName() + "</b>"));
+						}
 						doClickOnCascadeChooser();
 					}
 				});
@@ -2871,27 +2891,66 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			}
 			
 			int numMixes = currentMixCascade.getNumberOfMixes();
-			if(currentMixCascade.getNumberOfOperators() <= 1)
+			if (currentMixCascade.getNumberOfOperators() <= 1)
 			{
 				numMixes = 1;
 			}
 			
-			for(int i = 0; i < numMixes && i < m_labelOperatorFlags.length; i++)
+			for (int i = 0; i < numMixes && i < m_labelOperatorFlags.length; i++)
 			{
 				MixInfo mixInfo = currentMixCascade.getMixInfo(i);
+				MultiCertPath certPath;
+				Color borderColor = m_panelAnonService.getBackground();
 				
-				if(mixInfo != null && mixInfo.getCertPath() != null && 
+				if (mixInfo != null && mixInfo.getCertPath() != null && 
 						mixInfo.getCertPath().getIssuer() != null) 
 				{
-					String operatorCountry = mixInfo.getCertPath().getIssuer().getCountryCode();
-					CountryMapper country = new CountryMapper(operatorCountry, JAPMessages.getLocale());
+					certPath = mixInfo.getCertPath();
+					
+					String operatorCountry = certPath.getIssuer().getCountryCode();	
+					String strTooltip = new CountryMapper(operatorCountry, JAPMessages.getLocale()).toString();
 					m_labelOperatorFlags[i].setIcon(GUIUtils.loadImageIcon("flags/" + operatorCountry + ".png"));
-					m_labelOperatorFlags[i].setToolTipText(country.toString());
 					m_adapterOperator[i].setMixInfo(mixInfo);
+					
+					if (certPath.isVerified())
+					{
+						if (!certPath.isValid(new Date()))
+						{
+							borderColor = Color.yellow;
+							strTooltip += ", " + 
+								JAPMessages.getString(MixDetailsDialog.MSG_INVALID);
+						}
+						else if (certPath.countVerifiedPaths() > 2)
+						{
+							borderColor = Color.green;
+							strTooltip += ", " + 
+								JAPMessages.getString(MixDetailsDialog.MSG_INDEPENDENT_CERTIFICATIONS, 
+										certPath.countVerifiedPaths());
+						}
+						else if (certPath.countVerifiedPaths() > 1)
+						{
+							borderColor = new Color(100, 215, 255);
+							strTooltip += ", " +
+								JAPMessages.getString(MixDetailsDialog.MSG_INDEPENDENT_CERTIFICATIONS, 
+										certPath.countVerifiedPaths());
+						}
+					}
+					else
+					{
+						borderColor = Color.red;
+						strTooltip += ", " + 
+								JAPMessages.getString(MixDetailsDialog.MSG_NOT_VERIFIED);
+					}
+					m_labelOperatorFlags[i].setToolTipText(strTooltip);
 				}
 				else
 				{
 					m_labelOperatorFlags[i].setIcon(null);
+				}
+				
+				synchronized (m_labelOperatorFlags[i])
+				{
+					m_labelOperatorFlags[i].setBorder(BorderFactory.createLineBorder(borderColor, 2));
 				}
 			}
 			
@@ -2899,6 +2958,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			for(int i = numMixes; i < m_labelOperatorFlags.length; i++)
 			{
 				m_labelOperatorFlags[i].setIcon(null);
+				m_labelOperatorFlags[i].setBorder(BorderFactory.createLineBorder(m_panelAnonService.getBackground(), 2));
 			}
 			
 			PerformanceEntry entry = PerformanceInfo.getLowestCommonBoundEntry(currentMixCascade.getId());
@@ -2937,7 +2997,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					m_labelSpeed.setText("< " + JAPUtil.formatKbitPerSecValueWithUnit(
 							PerformanceEntry.BOUNDARIES[PerformanceEntry.SPEED][1], 
 							JAPUtil.MAX_FORMAT_KBIT_PER_SEC));
-					bTrusted = false;
+					//bTrusted = false;
 				}
 				else
 				{										
@@ -2997,7 +3057,7 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 					m_labelDelay.setText("> " + 
 							PerformanceEntry.BOUNDARIES[PerformanceEntry.DELAY][
 							PerformanceEntry.BOUNDARIES[PerformanceEntry.DELAY].length - 2] + " ms");
-					bTrusted = false;
+					//bTrusted = false;
 				}
 				else
 				{
@@ -3484,11 +3544,14 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 	{
 		private MixInfo m_mixInfo;
 		private int m_mixType;
+		private JLabel m_registeredLabel;
+		private LineBorder m_borderOriginal;
 		
-		public MixMouseAdapter(MixInfo a_mixInfo, int a_mixType)
+		public MixMouseAdapter(MixInfo a_mixInfo, int a_mixType, JLabel a_registeredLabel)
 		{
 			m_mixInfo = a_mixInfo;
 			m_mixType = a_mixType;
+			m_registeredLabel = a_registeredLabel;
 		}
 		
 		public void mouseClicked(MouseEvent a_event)
@@ -3496,6 +3559,41 @@ final public class JAPNewView extends AbstractJAPMainView implements IJAPMainVie
 			MixDetailsDialog dialog = new MixDetailsDialog(JAPNewView.this, m_mixInfo, m_mixType);
 			dialog.pack();
 			dialog.setVisible(true);
+		}
+		
+		public void mouseEntered(MouseEvent a_event)
+		{
+			synchronized (m_registeredLabel)
+			{
+				if (m_borderOriginal == null)
+				{
+					Border border = m_registeredLabel.getBorder();
+					if (border != null && border instanceof LineBorder)
+					{					
+						m_borderOriginal = (LineBorder)border;
+						m_registeredLabel.setBorder(
+								new LineBorder(m_borderOriginal.getLineColor().darker(), 
+										m_borderOriginal.getThickness()));
+					}
+				}
+				else
+				{
+					m_borderOriginal = null;
+				}
+			}
+		}
+		
+		
+		public void mouseExited(MouseEvent a_event)
+		{
+			synchronized (m_registeredLabel)
+			{
+				if (m_borderOriginal != null)
+				{
+					m_registeredLabel.setBorder(m_borderOriginal);
+					m_borderOriginal = null;
+				}
+			}
 		}
 		
 		public void setMixInfo(MixInfo a_mixInfo)

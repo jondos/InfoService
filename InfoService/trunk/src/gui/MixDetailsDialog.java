@@ -1,15 +1,17 @@
 package gui;
 
-import java.awt.event.MouseListener;
-import java.awt.event.MouseEvent;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Cursor;
+import java.awt.FlowLayout;
 import java.awt.Insets;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.net.URL;
+import java.util.Date;
 
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
@@ -19,20 +21,31 @@ import anon.infoservice.MixInfo;
 import anon.infoservice.ServiceLocation;
 import anon.infoservice.ServiceOperator;
 import gui.dialog.JAPDialog;
+import gui.MultiCertOverview;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
 
-public class MixDetailsDialog extends JAPDialog implements MouseListener
-{
-	private MixInfo m_mixInfo;
-	private JLabel m_lblOperator;
-	private JLabel m_lblNationality;;
-	private JLabel m_lblEMail;
+public class MixDetailsDialog extends JAPDialog
+{	
+	public static final String MSG_NOT_VERIFIED = MixDetailsDialog.class.getName() + "_notVerified";
+	public static final String MSG_INVALID = MixDetailsDialog.class.getName() + "_invalid";
+	public static final String MSG_VALID = MixDetailsDialog.class.getName() + "_valid";
+	public static final String MSG_INDEPENDENT_CERTIFICATIONS = MixDetailsDialog.class.getName() + "_independentCertifications";
+	public static final String MSG_MIX_X_OF_Y = MixDetailsDialog.class.getName() + "_mixXOfY";
 	
-	private static String MSG_MIX_NAME = MixDetailsDialog.class.getName() + "_mixName";
+	public static String MSG_MIX_NAME = MixDetailsDialog.class.getName() + "_mixName";	
+	public static String MSG_LOCATION = MixDetailsDialog.class.getName() + "_mixLocation";
+	public static String MSG_HOMEPAGE = MixDetailsDialog.class.getName() + "_operatorHomepage";
+	public static String MSG_E_MAIL = MixDetailsDialog.class.getName() + "_email";
+	public static String MSG_CERTIFICATES = MixDetailsDialog.class.getName() + "_certificates";
+	public static String MSG_BTN_DATA_RETENTION = MixDetailsDialog.class.getName() + "_btnDataRetention";
+	
 	private static String MSG_TITLE = MixDetailsDialog.class.getName() + "_title";
-	private static String MSG_NATIONALITY = MixDetailsDialog.class.getName() + "_nationality";
+	
+	private MixInfo m_mixInfo;
+	private ActionListener m_buttonListener;
+	private JButton m_btnHomepage, m_btnEMail, m_btnCertificates, m_btnDataRetention;
 	
 	public MixDetailsDialog(Component a_parent, MixInfo a_mixInfo, int a_mixType)
 	{
@@ -41,8 +54,10 @@ public class MixDetailsDialog extends JAPDialog implements MouseListener
 		
 		GridBagConstraints c = new GridBagConstraints();
 		JPanel p = (JPanel) getContentPane();
+		JPanel pnlButtons = new JPanel(new FlowLayout());
 		p.setLayout(new GridBagLayout());
 		JLabel lbl;
+		String strText;
 		
 		if(m_mixInfo == null)
 		{
@@ -57,7 +72,7 @@ public class MixDetailsDialog extends JAPDialog implements MouseListener
 			return;
 		}
 		
-		lbl = new JLabel(JAPMessages.getString(MSG_MIX_NAME));
+		lbl = new JLabel(JAPMessages.getString(MSG_MIX_NAME) + ":");
 		c.gridy = 0;
 		c.gridx = 0;
 		c.insets = new Insets(15, 15, 10, 15);
@@ -68,7 +83,7 @@ public class MixDetailsDialog extends JAPDialog implements MouseListener
 		c.gridx = 1;
 		p.add(lbl, c);
 		
-		lbl = new JLabel(JAPMessages.getString("mixLocation") + ":");
+		lbl = new JLabel(JAPMessages.getString(MSG_LOCATION) + ":");
 		c.gridy = 1;
 		c.gridx = 0;
 		c.insets = new Insets(0, 15, 10, 15);
@@ -84,88 +99,144 @@ public class MixDetailsDialog extends JAPDialog implements MouseListener
 		c.gridx = 0;
 		c.gridy++;
 		c.anchor = GridBagConstraints.WEST;
-		p.add(lbl, c);
+		p.add(lbl, c);		
 		
-		m_lblOperator = new JLabel(op.getOrganization());
-		m_lblOperator.setToolTipText(op.getUrl());
-		m_lblOperator.setForeground(Color.blue);
-		m_lblOperator.addMouseListener(this);
-		m_lblOperator.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-		c.gridx = 1;
-		p.add(m_lblOperator, c);
+		strText = op.getOrganization();
+		lbl = new JLabel();	
 		
-		if(op.getCertificate() != null && op.getCertificate().getSubject() != null)
+		if (op.getCountryCode() != null)
 		{
-			lbl = new JLabel(JAPMessages.getString(MSG_NATIONALITY) + ":");
-			c.gridx = 0;
-			c.gridy++;
-			p.add(lbl, c);
-			m_lblNationality = new JLabel(new CountryMapper(
-					op.getCertificate().getSubject().getCountryCode(), 
-					JAPMessages.getLocale()).toString());
-			m_lblNationality.setIcon(GUIUtils.loadImageIcon("flags/" + op.getCertificate().getSubject().getCountryCode() + ".png"));
-			c.gridx = 1;
-			p.add(m_lblNationality, c);
+			strText += "  (" + (new CountryMapper(
+					op.getCountryCode(), 
+					JAPMessages.getLocale()).toString()) + ")";
+			lbl.setIcon(GUIUtils.loadImageIcon("flags/" + op.getCountryCode() + ".png"));
 		}
 		
-		lbl = new JLabel(JAPMessages.getString("eMail:"));
-		c.gridx = 0;
-		c.gridy++;
+		lbl.setText(strText);
+		c.gridx = 1;
 		p.add(lbl, c);
 		
-		m_lblEMail = new JLabel(op.getEMail());
-		m_lblEMail.setToolTipText(op.getEMail());
-		m_lblEMail.setForeground(Color.blue);
-		m_lblEMail.addMouseListener(this);
-		m_lblEMail.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		m_buttonListener = new MyButtonListener();
+		c.gridx = 0;
+		c.gridy++;
+		c.gridwidth = 2;
+		p.add(pnlButtons, c);
+		
+		
+		if (m_mixInfo.getCertPath() != null)
+		{
+			m_btnCertificates = new JButton(JAPMessages.getString(MSG_CERTIFICATES));
+			m_btnCertificates.addActionListener(m_buttonListener);
+			if (!m_mixInfo.getCertPath().isVerified())
+			{
+				m_btnCertificates.setIcon(GUIUtils.loadImageIcon(MultiCertOverview.IMG_NOT_TRUSTED));
+				m_btnCertificates.setToolTipText(JAPMessages.getString(MSG_NOT_VERIFIED));
+				m_btnCertificates.setForeground(Color.red);
 
-		c.gridx = 1;
-		p.add(m_lblEMail, c);
+			}
+			else if (!m_mixInfo.getCertPath().isValid(new Date()))
+			{
+				m_btnCertificates.setIcon(GUIUtils.loadImageIcon(MultiCertOverview.IMG_INVALID));
+				m_btnCertificates.setToolTipText(JAPMessages.getString(MSG_INVALID));
+			}
+			else if (m_mixInfo.getCertPath().countVerifiedPaths() > 1)
+			{
+				m_btnCertificates.setToolTipText(JAPMessages.getString(MSG_INDEPENDENT_CERTIFICATIONS, 
+						m_mixInfo.getCertPath().countVerifiedPaths()));
+				if (m_mixInfo.getCertPath().countVerifiedPaths() > 2)
+				{
+					m_btnCertificates.setIcon(GUIUtils.loadImageIcon(MultiCertOverview.IMG_TRUSTED_THREE_CERTS));				
+				}
+				else
+				{
+					m_btnCertificates.setIcon(GUIUtils.loadImageIcon(MultiCertOverview.IMG_TRUSTED_DOUBLE));
+				}				
+			}
+			else 
+			{
+				m_btnCertificates.setToolTipText(JAPMessages.getString(MSG_VALID));
+				m_btnCertificates.setIcon(GUIUtils.loadImageIcon(MultiCertOverview.IMG_TRUSTED));
+			}
+			
+			pnlButtons.add(m_btnCertificates, c);
+		}
+		
+		if (op.getEMail() != null)
+		{
+			m_btnEMail = new JButton(JAPMessages.getString(MSG_E_MAIL));
+			m_btnEMail.setToolTipText(op.getEMail());
+			m_btnEMail.addActionListener(m_buttonListener);
+			pnlButtons.add(m_btnEMail, c);			
+		}
+		
+		if (op.getUrl() != null)
+		{
+			m_btnHomepage = new JButton(JAPMessages.getString(MSG_HOMEPAGE));
+			m_btnHomepage.setToolTipText(op.getUrl());
+			m_btnHomepage.addActionListener(m_buttonListener);
+			pnlButtons.add(m_btnHomepage, c);
+		}
+		
+		URL urlDataRetention = a_mixInfo.getDataRetentionURL(JAPMessages.getLocale().getLanguage());
+		if (urlDataRetention != null)
+		{
+			m_btnDataRetention = new JButton(JAPMessages.getString(MSG_BTN_DATA_RETENTION),
+					GUIUtils.loadImageIcon(MultiCertOverview.IMG_INVALID));
+			m_btnDataRetention.setToolTipText(urlDataRetention.toString());
+			m_btnDataRetention.addActionListener(m_buttonListener);
+			pnlButtons.add(m_btnDataRetention, c);
+		}
 		
 		this.pack();
 		this.setResizable(false);
 		p.setVisible(true);
 	}
 	
-	public void mouseEntered(MouseEvent event)
-	{
-		
-	}
 	
-	public void mouseExited(MouseEvent event)
+	private class MyButtonListener implements ActionListener
 	{
-		
-	}
-	
-	public void mouseClicked(MouseEvent event)
-	{
-		if(event.getSource() == m_lblOperator)
+		public void actionPerformed(ActionEvent a_event)
 		{
-			String url = m_lblOperator.getToolTipText();
-			if (url == null)
+			if (a_event.getSource() == m_btnHomepage || a_event.getSource() == m_btnDataRetention)
 			{
-				return;
-			}
+				String url = ((JButton)a_event.getSource()).getToolTipText();
+				if (url == null)
+				{
+					return;
+				}
 
-			AbstractOS os = AbstractOS.getInstance();
-			try
-			{
-				os.openURL(new URL(url));
+				AbstractOS os = AbstractOS.getInstance();
+				try
+				{
+					os.openURL(new URL(url));
+				}
+				catch (Exception a_e)
+				{
+					LogHolder.log(LogLevel.ERR, LogType.MISC, "Error opening URL in browser");
+				}
 			}
-			catch (Exception a_e)
+			else if (a_event.getSource() == m_btnEMail)
 			{
-				LogHolder.log(LogLevel.ERR, LogType.MISC, "Error opening URL in browser");
+				String url = m_btnEMail.getToolTipText();
+				if (url == null)
+				{
+					return;
+				}
+
+				AbstractOS os = AbstractOS.getInstance();
+				try
+				{
+					os.openEMail(url);
+				}
+				catch (Exception a_e)
+				{
+					LogHolder.log(LogLevel.ERR, LogType.MISC, "Error creating E-Mail!");
+				}
+			}
+			else if (a_event.getSource() == m_btnCertificates)
+			{
+				new MultiCertOverview(MixDetailsDialog.this.getContentPane(), m_mixInfo.getCertPath(), m_mixInfo.getName(), false);
 			}
 		}
-	}
-	
-	public void mouseReleased(MouseEvent event)
-	{
-		
-	}
-	
-	public void mousePressed(MouseEvent event)
-	{
-		
 	}
 }

@@ -27,6 +27,8 @@
  */
 package anon.infoservice;
 
+import gui.JAPMessages;
+
 import java.net.InetAddress;
 import java.util.Enumeration;
 import java.util.StringTokenizer;
@@ -92,6 +94,8 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	private boolean m_bImplicitTrust = false;
 
 	private boolean m_bSock5Support = false;
+	
+	private boolean m_bDataRetention = false;
 
 	/**
 	 * This is the ID of the mixcascade.
@@ -384,6 +388,8 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 			m_mixNodes.addElement(mixNode);
 		}
 		m_mixInfos = new MixInfo[mixNodes.getLength()];
+		boolean bNullMixInfo = false;
+		int countDataRetentionMixes = 0;
 		for (int i = 0; i < mixNodes.getLength(); i++)
 		{
 			try
@@ -409,11 +415,21 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 												 m_mixInfos[i].getPriceCertificate().getHashValue());
 					m_nrPriceCerts++;
 				}
+				if (m_mixInfos[i].getDataRetentionURL("en") != null)
+				{
+					countDataRetentionMixes++;
+				}
 			}
 			catch (XMLParseException a_e)
 			{
+				bNullMixInfo = true;
 				m_mixInfos[i] = null;
 			}
+		}
+		if (countDataRetentionMixes == mixNodes.getLength() || 
+			(countDataRetentionMixes > 0 && bNullMixInfo))
+		{
+			m_bDataRetention = true;
 		}
 		
 		/* get the name */
@@ -1273,6 +1289,11 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		return false;
 	}
 	
+	public boolean isDataRetentionActive()
+	{
+		return m_bDataRetention;
+	}
+	
 	public boolean isActiveStudy()
 	{
 		return m_bStudy||m_userDefined;
@@ -1316,11 +1337,11 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 				continue;
 			}
 			currentName = getMixInfo(i).getCertPath().getIssuer();
-			if (currentName != null && 
-					!operators.contains(currentName.toString())					
+			if (currentName != null && currentName.getOrganisation() != null &&
+				!operators.contains(currentName.getOrganisation())					
 				&& !mixIDs.contains(getMixInfo(i).getId()))
 			{
-				// this Mix seems to be operated by an organisation independent from others in the cascade
+				// this Mix seems to be operated by an organization independent from others in the cascade
 
 				// country bonus
 				operatorCountryCode = currentName.getCountryCode();
@@ -1346,8 +1367,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 				}
 
 				// operator bonus
-				operators.put(currentName.toString(), 
-						currentName.toString());
+				operators.put(currentName.getOrganisation(), currentName.getOrganisation());
 				mixIDs.put(getMixInfo(i).getId(), getMixInfo(i).getId());
 				m_nrOperators++;
 			}
@@ -1538,7 +1558,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 					return null;
 				}
 				CertPath path = currentMixInfo.getCertPath().getPath();
-				currentMixOperator = new ServiceOperator(null, path.getSecondCertificate(), 0l);
+				currentMixOperator = new ServiceOperator(null, currentMixInfo.getCertPath(), 0l);
 				currentMixLocation = new ServiceLocation(null, path.getFirstCertificate());
 				currentMixName = currentMixInfo.getName();
 				
