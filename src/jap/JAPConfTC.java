@@ -5,6 +5,7 @@ import jap.pay.wizardnew.TermsAndConditionsPane;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.util.Enumeration;
 import java.util.Vector;
 
 import javax.swing.JEditorPane;
@@ -22,6 +23,7 @@ import anon.infoservice.MixCascade;
 import anon.infoservice.ServiceOperator;
 import anon.infoservice.TermsAndConditions;
 import anon.infoservice.TermsAndConditionsFramework;
+import anon.util.Util;
 
 import gui.OperatorsCellRenderer;
 import gui.JAPMessages;
@@ -29,6 +31,7 @@ import gui.JAPMessages;
 public class JAPConfTC extends AbstractJAPConfModule implements ListSelectionListener
 {
 	private static final String MSG_TAB_TITLE = JAPConfTC.class.getName() + "_tabTitle";
+	private static final String MSG_TNC_ACEPTED = JAPConfTC.class.getName() + "_tncAccepted";
 	
 	JTable m_tblOperators;
 	private JEditorPane m_termsPane;
@@ -59,8 +62,8 @@ public class JAPConfTC extends AbstractJAPConfModule implements ListSelectionLis
 		
 		m_tblOperators = new JTable();
 		m_tblOperators.setModel(new OperatorsTableModel());
-		m_tblOperators.getColumnModel().getColumn(0).setMaxWidth(1);
-		m_tblOperators.getColumnModel().getColumn(0).setPreferredWidth(1);
+		m_tblOperators.getColumnModel().getColumn(0).setMinWidth(4);
+		m_tblOperators.getColumnModel().getColumn(0).setPreferredWidth(4);
 		m_tblOperators.getColumnModel().getColumn(1).setCellRenderer(new OperatorsCellRenderer());
 		m_tblOperators.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		m_tblOperators.getSelectionModel().addListSelectionListener(this);
@@ -77,6 +80,7 @@ public class JAPConfTC extends AbstractJAPConfModule implements ListSelectionLis
 		c.gridy++;
 		
 		m_termsPane = new JEditorPane("text/html", "");
+		m_termsPane.addHyperlinkListener(new JAPHyperlinkAdapter());
 		m_termsPane.setEditable(false);
 		m_scrollingTerms = new JScrollPane(m_termsPane);
 		/**@todo make this dynamic */
@@ -111,7 +115,8 @@ public class JAPConfTC extends AbstractJAPConfModule implements ListSelectionLis
 			
 			if(op != null)
 			{
-				TermsAndConditions tc = TermsAndConditions.getById(op.getId(), JAPMessages.getLocale());
+				String opIdWithoutColons = Util.replaceAll(op.getId(),":", "");
+				TermsAndConditions tc = TermsAndConditions.getById(opIdWithoutColons, JAPMessages.getLocale());
 				
 				if(tc == null)
 				{
@@ -125,7 +130,7 @@ public class JAPConfTC extends AbstractJAPConfModule implements ListSelectionLis
 				}
 				
 				fr.importData(tc);
-				
+				//TODO: links don't work
 				m_termsPane.setText(fr.transform());
 			}
 		}
@@ -146,7 +151,7 @@ public class JAPConfTC extends AbstractJAPConfModule implements ListSelectionLis
 		/**
 		 * The column names
 		 */
-		private String columnNames[] = new String[] { "B", "Operator" };
+		private String columnNames[] = new String[] { JAPMessages.getString(MSG_TNC_ACEPTED), JAPMessages.getString("mixOperator") };
 		
 		/**
 		 * The column classes
@@ -174,7 +179,16 @@ public class JAPConfTC extends AbstractJAPConfModule implements ListSelectionLis
 			/*if(m_trustModelCopy != null)
 				m_vecBlacklist = (Vector) ((Vector) m_trustModelCopy.getAttribute(TrustModel.OperatorBlacklistAttribute.class).getConditionValue()).clone();*/
 			
-			m_vecOperators = Database.getInstance(ServiceOperator.class).getEntryList();
+			Vector allOperators = Database.getInstance(ServiceOperator.class).getEntryList();
+			for (Enumeration enumeration = allOperators.elements(); enumeration.hasMoreElements();)
+			{
+				ServiceOperator operator = (ServiceOperator) enumeration.nextElement();
+				if(operator.hasTermsAndConditions())
+				{
+					m_vecOperators.addElement(operator);
+				}
+			}
+			//m_vecOperators = Database.getInstance(ServiceOperator.class).getEntryList();
 		}
 		
 		public Class getColumnClass(int columnIndex)
@@ -194,7 +208,10 @@ public class JAPConfTC extends AbstractJAPConfModule implements ListSelectionLis
 				if(columnIndex == 0)
 				{
 					//return new Boolean(!m_vecBlacklist.contains(m_vecOperators.elementAt(rowIndex)));
-					return Boolean.FALSE;
+					
+					ServiceOperator op = (ServiceOperator) m_vecOperators.elementAt(rowIndex);
+					return new Boolean(JAPController.getInstance().hasAcceptedTermsAndConditions(op));
+					//return Boolean.FALSE;
 				}
 				if(columnIndex == 1)
 				{

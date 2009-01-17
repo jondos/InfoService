@@ -483,29 +483,42 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 		public OperatorBlacklistAttribute(int a_trustCondtion, Object a_conditionValue, boolean a_bIgnoreNoDataAvailable)
 		{
 			// MUST always be TRUST_IF_NOT_IN_LIST and value must be a vector
-			super(TRUST_IF_NOT_IN_LIST, (a_conditionValue == null || 
+			super (TRUST_IF_NOT_IN_LIST, (a_conditionValue == null || 
 					!(a_conditionValue instanceof Vector)) ? new Vector() : a_conditionValue, a_bIgnoreNoDataAvailable);
 		}
 
 		public void checkTrust(MixCascade a_cascade) throws TrustException, SignatureException
 		{
-			if(getTrustCondition() == TRUST_IF_NOT_IN_LIST)
+			ServiceOperator mixOperator;
+			ServiceOperator blacklistedOperator;
+			
+			if (getTrustCondition() == TRUST_IF_NOT_IN_LIST)
 			{
 				for(int i = 0; i < a_cascade.getNumberOfMixes(); i++)
 				{
 					Vector list = (Vector) getConditionValue();
-
-					if(list.contains(a_cascade.getMixInfo(i).getServiceOperator()))
+					
+					mixOperator = a_cascade.getMixInfo(i).getServiceOperator();
+					if (list.contains(mixOperator))
 					{
 						throw new TrustException(JAPMessages.getString(MSG_EXCEPTION_BLACKLISTED));
 					}
-					/*for(int j = 0; j < ((Vector)m_conditionValue).size(); j++)
+					if (mixOperator.getOrganization() != null)
 					{
-						if(((Vector)m_conditionValue).elementAt(j).equals(a_cascade.getMixInfo(i).getServiceOperator()))
+						// additionally, test if this operator is known with another ID but the same name
+						for (int j = 0; j < list.size(); j++)
 						{
-							throw new TrustException("This cascade has a blacklisted mix!");
+							blacklistedOperator = (ServiceOperator)list.elementAt(j);
+							if (blacklistedOperator.getOrganization() == null)
+							{
+								continue;
+							}
+							if (blacklistedOperator.getOrganization().equals(mixOperator.getOrganization()))
+							{
+								throw new TrustException(JAPMessages.getString(MSG_EXCEPTION_BLACKLISTED));
+							}
 						}
-					}*/
+					}
 				}
 			}
 		}
@@ -563,6 +576,12 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 			PerformanceEntry entry = PerformanceInfo.getLowestCommonBoundEntry(a_cascade.getId());
 			int maxDelay = ((Integer) getConditionValue()).intValue();
 			
+			if (maxDelay == Integer.MAX_VALUE)
+			{
+				// do not test delay, as all delay values are accepted
+				return;
+			}
+			
 			if (entry == null || entry.getBound(PerformanceEntry.DELAY).getBound() == 0)
 			{
 				if (isNoDataIgnored())
@@ -597,16 +616,16 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 
 		model = new TrustModel(MSG_ALL_SERVICES, 0);
 		model.setAttribute(ExpiredCertsAttribute.class, TRUST_RESERVED);
-		model.setAttribute(DelayAttribute.class, TRUST_IF_AT_MOST, new Integer(8000), true);
-		model.setAttribute(SpeedAttribute.class, TRUST_IF_AT_LEAST, new Integer(50), true);
+		//model.setAttribute(DelayAttribute.class, TRUST_IF_AT_MOST, new Integer(8000), true);
+		//model.setAttribute(SpeedAttribute.class, TRUST_IF_AT_LEAST, new Integer(50), true);
 		TRUST_MODEL_DEFAULT = model;
 		ms_trustModels.addElement(model);
 
 		model = new TrustModel(MSG_SERVICES_WITH_COSTS, 2);
 		model.setAttribute(PaymentAttribute.class, TRUST_IF_TRUE);
 		model.setAttribute(ExpiredCertsAttribute.class, TRUST_RESERVED);
-		model.setAttribute(DelayAttribute.class, TRUST_IF_AT_MOST, new Integer(8000), true);
-		model.setAttribute(SpeedAttribute.class, TRUST_IF_AT_LEAST, new Integer(100), true);
+		//model.setAttribute(DelayAttribute.class, TRUST_IF_AT_MOST, new Integer(4000), true);
+		//model.setAttribute(SpeedAttribute.class, TRUST_IF_AT_LEAST, new Integer(100), true);
 		model.setAttribute(NumberOfMixesAttribute.class, TRUST_IF_AT_LEAST, 3);
 		TRUST_MODEL_PREMIUM = model;
 		ms_trustModels.addElement(model);
