@@ -30,7 +30,13 @@ package platform;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
+
+import java.io.File;
 import java.util.Properties;
+
+import platform.AbstractOS.IRetry;
+
+import anon.util.IMiscPasswordReader;
 
 /**
  * This class is instantiated by AbstractOS if the current OS is Linux
@@ -108,5 +114,68 @@ public class LinuxOS extends AbstractOS
 	{
 		//Return path in user's home directory with hidden file (preceded by ".")
 		return System.getProperty("user.home", "") + "/.";
+	}
+	
+	/**
+	 * @author G. Koppen
+	 */
+	public boolean copyAsRoot(File a_sourceFile, File a_targetDirectory, IRetry a_checkRetry)
+	{
+		if (a_sourceFile == null || a_targetDirectory == null || !a_targetDirectory.isDirectory())
+		{
+			return false;
+		}
+		
+		String cmd;
+		boolean bUsedXterm = false;
+		String sourcePath = a_sourceFile.getPath();
+		String targetPath = a_targetDirectory.getPath() + "/";
+
+		if (m_bKDE)
+		{
+			cmd = "kdesu 'cp -r " + sourcePath + " " + targetPath + "'";
+			executeShell(cmd);
+		}
+		else if (m_bGnome)
+		{
+			cmd = "gksu 'cp -r " + sourcePath + " " + targetPath + "'";
+			executeShell(cmd);
+		}
+		else
+		{
+			cmd = "xterm -e su -c 'cp -r " + sourcePath + " " + targetPath + "'";
+			executeShell(cmd);
+			bUsedXterm = true;
+		}   
+
+		File target = new File(targetPath + a_sourceFile.getName());
+		while (bUsedXterm && !target.exists())
+		{	
+			if (a_checkRetry == null || !a_checkRetry.checkRetry())
+			{
+				break;
+			}
+			executeShell(cmd);
+		}
+		
+		return target.exists();
+	}
+	   	
+	private void executeShell(String a_cmd) 
+	{
+		try
+		{
+			String[] command = new String[3];
+		    command[0] = "sh";
+		    command[1] = "-c";
+		    command[2] = a_cmd;
+		    Runtime rt = Runtime.getRuntime();
+		    Process pr = rt.exec(command);
+		    pr.waitFor();
+		}
+		catch (Exception e)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, e);
+		}
 	}
 }
