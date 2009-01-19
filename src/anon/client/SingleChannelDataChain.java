@@ -183,6 +183,7 @@ public class SingleChannelDataChain extends AbstractDataChain
 		if (a_order.getOrderData() != null)
 		{
 			int dataLength = Math.min(a_order.getOrderData().length, a_order.getChannelCell().length - 3);
+			int dataLengthField=dataLength;
 			if (m_supportFlowControl)
 			{
 				/* check whether we shall send a flow-control flag */
@@ -191,7 +192,7 @@ public class SingleChannelDataChain extends AbstractDataChain
 					if ( ( (Boolean) (a_order.getAdditionalProtocolData())).booleanValue())
 					{
 						/* we shall send a packet with flow-control flag */
-						dataLength = dataLength | FLAG_FLOW_CONTROL;
+						dataLengthField = dataLengthField | FLAG_FLOW_CONTROL;
 					}
 				}
 			}
@@ -199,7 +200,7 @@ public class SingleChannelDataChain extends AbstractDataChain
 			DataOutputStream dataStream = new DataOutputStream(byteStream);
 			try
 			{
-				dataStream.writeShort(dataLength);
+				dataStream.writeShort(dataLengthField);
 				dataStream.flush();
 				if (m_firstUpstreamPacket)
 				{
