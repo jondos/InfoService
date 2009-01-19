@@ -27,8 +27,6 @@
  */
 package anon.infoservice;
 
-import gui.JAPMessages;
-
 import java.net.InetAddress;
 import java.util.Enumeration;
 import java.util.StringTokenizer;
@@ -40,13 +38,11 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import anon.AnonServerDescription;
-import anon.crypto.JAPCertificate;
 import anon.crypto.MultiCertPath;
 import anon.crypto.SignatureVerifier;
 import anon.crypto.X509DistinguishedName;
 import anon.crypto.XMLSignature;
 import anon.crypto.CertPath;
-import anon.crypto.XMLSignatureElement;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
 import anon.util.ZLibTools;
