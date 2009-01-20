@@ -60,6 +60,9 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 	implements AnonServerDescription, IVerifyable, IServiceContextContainer, Database.IWebInfo
 {
 	public static final String SUPPORTED_PAYMENT_PROTOCOL_VERSION = "2.0";
+	
+	public static final int DISTRIBUTION_MIN = 0;
+	public static final int DISTRIBUTION_MAX = 6;
 
 	public static final String XML_ELEMENT_NAME = "MixCascade";
 	public static final String XML_ELEMENT_CONTAINER_NAME = "MixCascades";
@@ -145,7 +148,9 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 
 	private int m_nrCountries = 0;
 	private int m_nrOperators = 0;
+	private int m_nrOperatorsCountForDistribution = 0;
 	private int m_nrOperatorsShown = 0;
+	private int m_distributionPoints = 0;
 	private boolean[] m_mixCertVerifiedAndValid;
 	private Object SYNC_OPERATORS_AND_COUNTRIES = new Object();
 
@@ -833,7 +838,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 				
 				StringTokenizer tokenizer = new StringTokenizer(m_strName,"-");
 				StringTokenizer tempTokenizer;
-				String token;								
+				String token;
 				
 				if (tokenizer.countTokens() == getNumberOfMixes())
 				{
@@ -1312,6 +1317,17 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 		return m_nrCountries;
 	}
 	
+	/**
+	 * Returns a number that tells how distributed this service is. The higher, the better.
+	 * Numbers range from 0 to 6, where 0 is an unknown state.
+	 * @return a number that tells how distributed this service is
+	 */
+	public int getDistribution()
+	{
+		calculateOperatorsAndCountries();
+		return m_distributionPoints;
+	}
+	
 	private void calculateOperatorsAndCountries()
 	{
 		synchronized (SYNC_OPERATORS_AND_COUNTRIES)
@@ -1354,6 +1370,7 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 				return;
 			}
 		
+			m_nrOperatorsCountForDistribution = 0;
 			m_nrOperators = 0;
 			m_nrOperatorsShown = 0;
 			m_nrCountries = 0;
@@ -1382,18 +1399,26 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 						// operator and Mix are located in different countries than the others in the cascade
 						if (m_mixCertVerifiedAndValid[i])
 						{
-							m_nrCountries++;
+							if (i <= 1 || (i + 1 == getNumberOfMixes()))
+							{
+								// do not count more than one middle Mix to get a maximum of 6 distribution points
+								m_nrCountries++;
+							}
 						}
 					}
-					if (operatorCountryCode != null)
+					
+					if (m_mixCertVerifiedAndValid[i])
 					{
-						//operatorCountries.put(operatorCountryCode, operatorCountryCode);
-						countries.put(operatorCountryCode, operatorCountryCode);
-					}
-					if (mixCountryCode != null)
-					{
-						//mixCountries.put(mixCountryCode, mixCountryCode);
-						countries.put(mixCountryCode, mixCountryCode);
+						if (operatorCountryCode != null)
+						{
+							//operatorCountries.put(operatorCountryCode, operatorCountryCode);
+							countries.put(operatorCountryCode, operatorCountryCode);
+						}
+						if (mixCountryCode != null)
+						{
+							//mixCountries.put(mixCountryCode, mixCountryCode);
+							countries.put(mixCountryCode, mixCountryCode);
+						}
 					}
 		
 					// operator bonus
@@ -1402,25 +1427,58 @@ public class MixCascade extends AbstractDistributableCertifiedDatabaseEntry
 					if (m_mixCertVerifiedAndValid[i])
 					{
 						m_nrOperators++;
-						m_nrOperatorsShown++;
+						if (i <= 1 || (i + 1 == getNumberOfMixes()))
+						{
+							// do not count more than one middle Mix to get a maximum of 6 distribution points
+							m_nrOperatorsCountForDistribution++;
+						}
 					}
+					m_nrOperatorsShown++;
 				}
 				else
 				{
-					// This Cascade has at least two operators which are the same. Assume only one operator!
-					m_nrOperators = 1;
+					// This Cascade has at least two operators which are the same. Assume only one operator at maximum!
+					if (m_nrOperators <= 0)
+					{
+						for (int j = 0; j < getNumberOfMixes(); j++)
+						{
+							if (m_mixCertVerifiedAndValid[j])
+							{
+								m_nrOperators = 1;
+								m_nrOperatorsCountForDistribution = 1;
+								break;
+							}
+						}
+					}
+					else
+					{
+						m_nrOperators = 1;
+						m_nrOperatorsCountForDistribution = 1;
+					}
 					m_nrOperatorsShown = 1;
-					m_nrCountries = 1;
+					m_nrCountries = Math.min(m_nrOperatorsCountForDistribution, 1);
 					break;
 				}
 			}
-			if (m_nrCountries == 0)
+			// calculate distribution points
+			if (m_nrOperatorsCountForDistribution == 2 && m_nrCountries == 2)
 			{
-				// no Mix seems to have information both about operator and Mix country; assume 1 country
-				m_nrCountries = 1;
+				m_distributionPoints = 3;
+			}
+			else if (m_nrOperatorsCountForDistribution == 2 && m_nrCountries == 1)
+			{
+				m_distributionPoints = 2;
+			}
+			else if (m_nrOperatorsCountForDistribution == 1)
+			{
+				m_distributionPoints = 1;
+			}
+			else
+			{
+				m_distributionPoints = m_nrOperatorsCountForDistribution + m_nrCountries;
 			}
 			
-			// Test is trust has changed meanwhile and recalculate if needed.
+			// Test is trust has changed meanwhile and recalculate distribution if it has.
 			calculateOperatorsAndCountries();
 		}
 	}
