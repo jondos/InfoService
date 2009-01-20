@@ -16,6 +16,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/XML-RPC"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/BouncyCastleLightForJap"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Log4j"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Skype4Java"/>
+	<classpathentry kind="lib" path="C:/data/jdk1.1.8/skype/skype/skype.jar"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>
