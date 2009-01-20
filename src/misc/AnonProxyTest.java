@@ -1,6 +1,9 @@
 package misc;
 
+import java.io.File;
 import java.net.ServerSocket;
+
+import platform.WindowsOS;
 import anon.proxy.AnonProxy;
 import anon.infoservice.MixCascade;
 import anon.infoservice.SimpleMixCascadeContainer;
@@ -27,8 +30,12 @@ public class AnonProxyTest
 			log.setLogType(LogType.ALL);
 			log.setLogLevel(LogLevel.DEBUG);
 			LogHolder.setLogInstance(new SystemErrLog());
+			
+			WindowsOS os=new WindowsOS();
+			os.copyAsRoot(new File("a"),new File( "b"), null);
+			
 			ServerSocket ss = new ServerSocket(4005);
-			IPasswordReader pass=new IPasswordReader()
+			/*IPasswordReader pass=new IPasswordReader()
 			{
 				public String readPassword(ImmutableProxyInterface a_proxyInterface)
 				{
@@ -50,7 +57,7 @@ public class AnonProxyTest
 					};
 				}
 		};
-			AnonProxy theProxy = new AnonProxy(ss, mutableProxyInterface, mutableProxyInterface);
+		*/	AnonProxy theProxy = new AnonProxy(ss, null,null);//mutableProxyInterface, mutableProxyInterface);
 
 			//we need to disbale certificate checks (better: set valid root certifcates for productive environments!)
 			SignatureVerifier.getInstance().setCheckSignatures(false);

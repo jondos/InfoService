@@ -336,7 +336,7 @@ public class KeyExchangeManager {
 				  {
 					  /* no modification of the default settings required */
 				  }
-				  else if (chainMixProtocolVersionValue.equals("0.4"))
+				  else if (chainMixProtocolVersionValue.equals("0.6"))
 				  {
 					  m_chainProtocolWithFlowControl = true;
 				  }
