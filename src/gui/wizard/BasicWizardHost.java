@@ -27,7 +27,6 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 */
 package gui.wizard;
 
-
 import java.awt.CardLayout;
 import java.awt.Container;
 import java.awt.Dialog;
@@ -243,8 +242,7 @@ public class BasicWizardHost implements WizardHost,ActionListener
 				}
 			else if(command.equals(COMMAND_CANCEL))
 				{
-					m_Wizard.wizardCompleted();
-					m_Dialog.dispose();
+					doCancel();
 				}
 				else if(command.equals(COMMAND_FINISH))
 				{
@@ -256,4 +254,20 @@ public class BasicWizardHost implements WizardHost,ActionListener
 				//todo show help-dialog
 				}
 		}
+	
+	public void lockDialog()
+	{
+		m_Dialog.setEnabled(false);
+	}
+	
+	public void unlockDialog()
+	{
+		m_Dialog.setEnabled(true);
+	}
+	
+	public void doCancel()
+	{
+		m_Wizard.wizardCompleted();
+		m_Dialog.dispose();
+	}
 }
