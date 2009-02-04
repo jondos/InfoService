@@ -1272,7 +1272,7 @@ public final class JAPCertificate implements IXMLEncodable, Cloneable, ICertific
 			m_strIgnoreCertMark = a_strIgnoreCertMark;
 		}
 
-		public Object getInstance(File a_file, File a_topDirectory) throws Exception
+		public Object getInstance(File a_file, File a_topDirectory) throws IOException
 		{
 			if (a_file == null || (m_strIgnoreCertMark != null && a_file.getName().endsWith(m_strIgnoreCertMark)))
 			{
@@ -1281,7 +1281,7 @@ public final class JAPCertificate implements IXMLEncodable, Cloneable, ICertific
 			return JAPCertificate.getInstance(new FileInputStream(a_file));
 		}
 
-		public Object getInstance(ZipEntry a_entry, ZipFile a_file) throws Exception
+		public Object getInstance(ZipEntry a_entry, ZipFile a_file) throws IOException
 		{
 			if (a_file == null || (m_strIgnoreCertMark != null && a_file.getName().endsWith(m_strIgnoreCertMark)))
 			{
@@ -1289,6 +1289,11 @@ public final class JAPCertificate implements IXMLEncodable, Cloneable, ICertific
 			}
 
 			return JAPCertificate.getInstance(a_file.getInputStream(a_entry));
+		}
+		
+		public Object getInstance(InputStream a_inputStream)
+		{
+			return JAPCertificate.getInstance(a_inputStream);
 		}
 	}
 	
