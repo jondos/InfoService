@@ -427,6 +427,7 @@ public final class ResourceLoader
 		}
 		catch (Exception a_e)
 		{
+			a_e.printStackTrace();
 			// ignore, maybe this is no file
 		}
 		

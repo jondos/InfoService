@@ -301,6 +301,7 @@ public final class JAPCertificate implements IXMLEncodable, Cloneable, ICertific
 		}
 		catch (Exception a_e)
 		{
+			a_e.printStackTrace();
 			return new Hashtable();
 		}
 	}
