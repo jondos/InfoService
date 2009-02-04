@@ -418,7 +418,6 @@ public final class ResourceLoader
 		// check if this is just a file path seems to be a file path
 		try
 		{
-			LogHolder.log(LogLevel.INFO, LogType.MISC, a_strResourceSearchPath);
 			Object resource = a_instantiator.getInstance(loadResourceAsStream(a_strResourceSearchPath));
 			if (resource != null)
 			{
@@ -427,12 +426,11 @@ public final class ResourceLoader
 			}
 			else
 			{
-				LogHolder.log(LogLevel.INFO, LogType.MISC, a_strResourceSearchPath + ": not loaded");
 			}
 		}
 		catch (Exception a_e)
 		{
-			LogHolder.log(LogLevel.INFO, LogType.MISC, a_e);
+			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
 			// ignore, maybe this is no file
 		}
 		
