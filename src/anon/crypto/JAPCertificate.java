@@ -301,7 +301,7 @@ public final class JAPCertificate implements IXMLEncodable, Cloneable, ICertific
 		}
 		catch (Exception a_e)
 		{
-			LogHolder.log(LogLevel.INFO, LogType.MISC, a_e);
+			LogHolder.log(LogLevel.ERR, LogType.MISC, a_e);
 			return new Hashtable();
 		}
 	}
