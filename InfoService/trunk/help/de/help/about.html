@@ -25,10 +25,10 @@ alt="-&gt;"></a></span> </p>
 href="http://anon.inf.tu-dresden.de">JAP</a>) erm&ouml;glicht es Ihrem
 Webbrowser, Webseiten &uuml;ber eine <a
 href="wwwprivacy.html#ip">IP-Adresse</a> im <a
-href="jondonym.html">JonDonym</a>-System zu besuchen. Das bedeutet, da&szlig;
-weder der angefragte Server, noch ein Lauscher auf den Verbindungen, noch die
-Betreiber des JonDonym-Dienstes selbst mitbekommen, welche Webseiten Sie
-aufrufen. Die Verwendung von <a
+href="jondonym.html">JonDonym</a>-System zu besuchen und Ihren Datenverkehr zu
+verschl&uuml;sseln. Das bedeutet, dass weder der angefragte Server, noch ein
+Lauscher auf den Verbindungen, noch die Betreiber des JonDonym-Dienstes selbst
+mitbekommen, welche Webseiten Sie aufrufen. Die Verwendung von <a
 href="jondonym.html#premiumservices">Premiumdiensten</a> gestattet es Ihnen
 au&szlig;erdem neben dem Browser noch folgende weitere Anwendungen zu
 anonymisieren:</p>
@@ -50,9 +50,13 @@ benutzen.</p>
 
 <h3>Was ist JonDo?</h3>
 <ul>
-  <li>JonDo ist eine Anwendung zur Verschleierung der eigenen IP-Adresse bei
-    Internet-Zugriffen &uuml;ber bestimmte Anwendungen (z.B. &uuml;ber den
-    Webbrowser).</li>
+  <li>JonDo ist eine Anwendung zur Verschleierung der eigenen <a
+    href="wwwprivacy.html#ip">IP-Adresse</a> bei Internet-Zugriffen &uuml;ber
+    bestimmte Anwendungen (z.B. &uuml;ber den Webbrowser).</li>
+  <li>JonDo verschl&uuml;sselt die &uuml;ber JonDonym &uuml;bertragenen Daten
+    mehrfach. Weder Ihr Zugangs-Provider noch die JonDonym-Betreiber (bis auf
+    den jeweils letzten in einer <a href="jondonym.html">Kaskade</a>)
+    k&ouml;nnen die Klartext-Daten sehen.</li>
   <li>JonDo ist eine <a
     href="forwarding_client.html">Anti-Zensur-Anwendung</a>, die den Zugriff
     auf ansonsten gesperrte Internetseiten erm&ouml;glicht. Nutzer k&ouml;nnen
@@ -80,23 +84,24 @@ benutzen.</p>
 
 <h3>Was ist JonDo nicht?</h3>
 <ul>
-  <li>JonDo macht die IP-Adresse Ihres Rechners/Routers NICHT unsichtbar. Ihre
-    IP-Adresse wird Ihnen durch Ihren Provider zugeteilt und ist durch Dritte
-    unver&auml;nderlich. Sie ben&ouml;tigen diese IP-Adresse, damit der
-    JonDo-Client sich mit JonDonym-Diensten im Internet verbinden kann. Wenn
-    Sie JonDo einsetzen, surfen Sie aber &uuml;ber Rechner (Mixe) im Internet,
-    welche jeweils eine eigene IP-Adresse haben. Die von Ihnen aufgerufenen
-    Webseiten sehen deshalb jeweils diese ausgehende IP-Adresse und nicht Ihre
-    eigene.</li>
+  <li>JonDo macht die <a href="wwwprivacy.html#ip">IP-Adresse</a> Ihres
+    Rechners/Routers NICHT unsichtbar. Ihre IP-Adresse wird Ihnen durch Ihren
+    Provider zugeteilt und ist durch Dritte unver&auml;nderlich. Sie
+    ben&ouml;tigen diese IP-Adresse, damit der JonDo-Client sich mit
+    JonDonym-Diensten im Internet verbinden kann. Wenn Sie JonDo einsetzen,
+    surfen Sie aber &uuml;ber Rechner (Mixe) im Internet, welche jeweils eine
+    eigene IP-Adresse haben. Die von Ihnen aufgerufenen Webseiten sehen deshalb
+    jeweils diese ausgehende IP-Adresse und nicht Ihre eigene.</li>
   <li>JonDo wechselt NICHT regelm&auml;&szlig;ig die ausgehende IP-Adresse,
     sondern beh&auml;lt die gleiche Ausgangs-IP-Adresse, solange er mit
     derselben Mixkaskade verbunden ist. Dies k&ouml;nnen Minuten, Stunden oder
     auch Tage sein. Die Adressen von JonDonym-Mixen sind ohnehin
     &ouml;ffentlich, weshalb ein Wechsel der IP-Adresse keine zus&auml;tzliche
     Sicherheit bringen w&uuml;rde.</li>
-  <li>JonDo versteckt NICHT die MAC-Adresse Ihres Rechners/Routers. Die
-    MAC-Adresse ist lediglich notwendig, damit Ihr Provider Ihnen eine
-    IP-Adresse zuweisen kann und ist im Internet anonsten nicht sichtbar.</li>
+  <li>JonDo versteckt NICHT die <a href="wwwprivacy.html#mac">MAC-Adresse</a>
+    Ihres Rechners/Routers. Die MAC-Adresse ist lediglich notwendig, damit Ihr
+    Provider Ihnen eine IP-Adresse zuweisen kann und ist im Internet anonsten
+    ohnehin nicht sichtbar.</li>
   <li>JonDo ist KEIN Filesharing-Anonymisierungstool. Sie k&ouml;nnen manche
     Filesharing-Anwendungen &uuml;ber JonDo laufen lassen, k&ouml;nnen aber
     selbst keine Dateien anbieten.</li>
