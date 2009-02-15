@@ -33,33 +33,46 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Text;
 
 import anon.ErrorCodes;
+import anon.crypto.MyRSA;
 import anon.crypto.MyRSAPublicKey;
 import anon.util.Base64;
 
-public class ASymCipher {
-  // /* My hack Crypt...
-  private BigInteger m_Modulus;
+public class ASymMixCipherPlainRSA implements IASymMixCipher {
 
-  private BigInteger m_Exponent;
+	MyRSA m_RSA;
+	private MyRSAPublicKey m_PublicKey;
+  //protected byte[] tmpP;
 
-  private byte[] tmpP;
-
-  public ASymCipher() {
-    m_Modulus = null;
-    m_Exponent = null;
-    tmpP = new byte[128];
+  public ASymMixCipherPlainRSA() {
+    m_RSA=new MyRSA();
+    m_PublicKey=null;
+    //tmpP = new byte[128];
   }
   
+  /* (non-Javadoc)
+	 * @see anon.client.crypto.IASymMixCipher#encrypt(byte[], int, byte[], int)
+	 */
   public int encrypt(byte[] from, int ifrom, byte[] to, int ito) {
-    BigInteger P = null;
+  	byte[] r =null;
+  	try
+			{
+				r =m_RSA.processBlock(from, ifrom,128);
+			}
+		catch (Exception e)
+			{//Hm should never happen
+				return -1;
+			}
+  	
+/*  	BigInteger P = null;
     if (from.length == 128) {
       P = new BigInteger(1, from);
     } else {
       System.arraycopy(from, ifrom, tmpP, 0, 128);
       P = new BigInteger(1, tmpP);
     }
-    BigInteger C = P.modPow(m_Exponent, m_Modulus);
-    byte[] r = C.toByteArray();
+*/    
+ //   BigInteger C = P.modPow(m_PublicKey.getPublicExponent(), m_PublicKey.getModulus());
+ //    r =C.toByteArray();
     if (r.length == 128) {
       System.arraycopy(r, 0, to, ito, 128);
     } else if (r.length == 129) {
@@ -73,15 +86,50 @@ public class ASymCipher {
     return 128;
   }
 
+  /* (non-Javadoc)
+	 * @see anon.client.crypto.IASymMixCipher#getOutputBlockSize()
+	 */
+  public int getOutputBlockSize()
+  	{
+  		return 128;
+  	}
+
+  public int getInputBlockSize()
+  	{
+  		return 128;
+  	}
+ 
+  /* (non-Javadoc)
+	 * @see anon.client.crypto.IASymMixCipher#getPaddingSize()
+	 */
+  public int getPaddingSize()
+  	{
+  		return 0;
+  	}
+  
+  /* (non-Javadoc)
+	 * @see anon.client.crypto.IASymMixCipher#setPublicKey(java.math.BigInteger, java.math.BigInteger)
+	 */
   public int setPublicKey(BigInteger modulus, BigInteger exponent) {
     if (modulus == null || exponent == null) {
       return ErrorCodes.E_UNKNOWN;
     }
-    m_Modulus = modulus;
-    m_Exponent = exponent;
+    m_PublicKey=new MyRSAPublicKey(modulus, exponent);
+    try
+			{
+				m_RSA.init(m_PublicKey);
+			}
+		catch (Exception e)
+			{
+				// Hm should never happen
+				return ErrorCodes.E_INVALID_KEY;
+			}
     return ErrorCodes.E_SUCCESS;
   }
 
+  /* (non-Javadoc)
+	 * @see anon.client.crypto.IASymMixCipher#setPublicKey(org.w3c.dom.Element)
+	 */
   public int setPublicKey(Element xmlKey) {
     try {
       Element elemRSAKEyValue = (Element) xmlKey.getElementsByTagName("RSAKeyValue").item(0);
@@ -93,8 +141,11 @@ public class ASymCipher {
     }
   }
 
+  /* (non-Javadoc)
+	 * @see anon.client.crypto.IASymMixCipher#getPublicKey()
+	 */
   public MyRSAPublicKey getPublicKey() {
-    return new MyRSAPublicKey(m_Modulus, m_Exponent);
+    return m_PublicKey;
   }
 
   private BigInteger getBigIntegerFromXml(Element root, String name) {

@@ -47,7 +47,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import anon.ErrorCodes;
-import anon.client.crypto.ASymCipher;
+import anon.client.crypto.ASymMixCipherPlainRSA;
+import anon.client.crypto.ASymMixCipherRSAOAEP;
+import anon.client.crypto.IASymMixCipher;
 import anon.client.crypto.KeyPool;
 import anon.client.crypto.SymCipher;
 import anon.crypto.SignatureVerifier;
@@ -307,16 +309,29 @@ public class KeyExchangeManager {
 			  }
 
 			  Element currentMixNode = mixinfo.getXmlStructure();
-			  m_mixParameters[i] = new MixParameters(mixinfo.getId(), new ASymCipher());
+
+			  //setting AsymCipher
+			  IASymMixCipher asymCipher=null;
+			  if(m_bEnhancedChannelEncryption)
+			  	{
+			  		asymCipher=new ASymMixCipherRSAOAEP();
+			  	}
+			  else
+			  	{
+			  		asymCipher=new ASymMixCipherPlainRSA();			  		
+			  	}
+			  m_mixParameters[i] = new MixParameters(mixinfo.getId(), asymCipher);
 			  if (m_mixParameters[i].getMixCipher().setPublicKey(currentMixNode) != ErrorCodes.E_SUCCESS)
-			  {
-				  throw (new XMLParseException(
-					  "Received XML structure contains an invalid public key for Mix " + Integer.toString(i) +
-					  "."));
-			  }
+				  {
+					  throw (new XMLParseException(
+						  "Received XML structure contains an invalid public key for Mix " + Integer.toString(i) +
+						  "."));
+				  }
+			  
+			  
 			  if (i == (m_cascade.getNumberOfMixes() - 1))
 			  {
-				  /* get the chain protocol version from the last mix */
+			  	/* get the chain protocol version from the last mix */
 				  NodeList chainMixProtocolVersionNodes = currentMixNode.getElementsByTagName(
 					  "MixProtocolVersion");
 				  if (chainMixProtocolVersionNodes.getLength() == 0)
@@ -424,7 +439,10 @@ public class KeyExchangeManager {
 						  "Unknown chain protocol version used ('" + chainMixProtocolVersionValue + "')."));
 				  }
 			  }
+
 		  }
+
+		  
 		  /* sending symmetric keys for multiplexer stream encryption */
 		  m_multiplexerInputStreamCipher = new SymCipher();
 		  m_multiplexerOutputStreamCipher = new SymCipher();
