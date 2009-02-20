@@ -144,6 +144,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 	private JAPConfServices m_confServices;
 	private AbstractJAPMainView m_parentView;
 	private AccountSettingsPanel m_accountSettings;
+	private JAPConfUI m_confUI;
 
 	public static JAPConf getInstance()
 	{
@@ -169,8 +170,8 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 
 		m_moduleSystem = new JAPConfModuleSystem();
 		DefaultMutableTreeNode rootNode = m_moduleSystem.getConfigurationTreeRootNode();
-		JAPConfUI confUI = new JAPConfUI();
-		m_moduleSystem.addConfigurationModule(rootNode, confUI, UI_TAB);
+		m_confUI = new JAPConfUI();
+		m_moduleSystem.addConfigurationModule(rootNode, m_confUI, UI_TAB);
 		if (m_bWithPayment)
 		{
 			m_accountSettings = new AccountSettingsPanel();
@@ -189,10 +190,11 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 
 
 		m_confServices = new JAPConfServices();
-		DefaultMutableTreeNode nodeAnon =
-			m_moduleSystem.addComponent(rootNode, null, "ngAnonymitaet", null, null);
+		
 		if (!m_bIsSimpleView)
 		{
+			DefaultMutableTreeNode nodeAnon =
+				m_moduleSystem.addComponent(rootNode, null, "ngAnonymitaet", null, null);
 			m_moduleSystem.addConfigurationModule(nodeAnon, m_confServices, ANON_SERVICES_TAB);
 			m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfInfoService(), INFOSERVICE_TAB);			
 			//m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfTrust(), ANON_TRUST_TAB);
@@ -209,16 +211,19 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 				m_moduleSystem.addConfigurationModule(debugNode, new JAPConfForwardingState(),
 					FORWARDING_STATE_TAB);
 			}
+			m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeAnon.getPath()));
 		}
 		else
 		{
-			m_moduleSystem.addConfigurationModule(nodeAnon, m_confServices, ANON_SERVICES_TAB);
+			DefaultMutableTreeNode dummy = 
+				m_moduleSystem.addConfigurationModule(rootNode, m_confServices, ANON_SERVICES_TAB);
+			m_moduleSystem.getConfigurationTree().expandPath(new TreePath(dummy.getPath()));
 			//m_moduleSystem.addConfigurationModule(nodeAnon, new JAPConfTrust(), ANON_TRUST_TAB);
 		}
 		
 		//JAPExtension.addOptOut(m_moduleSystem);
 
-		m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeAnon.getPath()));
+		
 
 		//m_moduleSystem.getConfigurationTree().expandPath(new TreePath(nodeNet.getPath()));
 
@@ -329,7 +334,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 				doPack();
 			}
 		}
-		confUI.afterPack();
+		m_confUI.afterPack();
 		m_moduleSystem.selectNode(UI_TAB);
 		restoreLocation(JAPModel.getInstance().getConfigWindowLocation());
 		//setDockable(true);
@@ -614,13 +619,13 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		JPanel panelDebugDetailLevel = new JPanel();
 		m_sliderDebugDetailLevel = new JSlider(SwingConstants.VERTICAL, LogHolder.DETAIL_LEVEL_LOWEST,
 											   LogHolder.DETAIL_LEVEL_HIGHEST, LogHolder.getDetailLevel());
-		m_sliderDebugDetailLevel.addChangeListener(new ChangeListener()
+		/*m_sliderDebugDetailLevel.addChangeListener(new ChangeListener()
 		{
 			public void stateChanged(ChangeEvent e)
 			{
 				LogHolder.setDetailLevel(m_sliderDebugDetailLevel.getValue());
 			}
-		});
+		});*/
 		m_sliderDebugDetailLevel.setPaintTicks(false);
 		m_sliderDebugDetailLevel.setPaintLabels(true);
 		m_sliderDebugDetailLevel.setMajorTickSpacing(1);
@@ -683,7 +688,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 		{
 			m_cbLogTypes[i].setSelected(true);
 		}
-		m_sliderDebugDetailLevel.setValue(0);
+		m_sliderDebugDetailLevel.setValue(LogHolder.DETAIL_LEVEL_HIGHEST);
 		m_cbDebugToFile.setSelected(false);
 	}
 
@@ -706,6 +711,7 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 
 		JAPDebug.getInstance().setLogType(logType);
 		JAPDebug.getInstance().setLogLevel(m_sliderDebugLevel.getValue());
+		LogHolder.setDetailLevel(m_sliderDebugDetailLevel.getValue());
 		String strFilename = m_tfDebugFileName.getText().trim();
 		if (!m_cbDebugToFile.isSelected())
 		{
@@ -829,7 +835,18 @@ final public class JAPConf extends JAPDialog implements ActionListener, Observer
 	{
 		if (a_strSelectedCard != null)
 		{
-			if (a_strSelectedCard.equals(ANON_TAB))
+			if (a_strSelectedCard.equals(UI_TAB))
+			{
+				m_moduleSystem.selectNode(UI_TAB);
+				new Thread(new Runnable()
+				{
+					public void run()
+					{
+						m_confUI.chooseBrowserPath();
+					}
+				}).start();
+			}
+			else if (a_strSelectedCard.equals(ANON_TAB))
 			{
 				m_moduleSystem.selectNode(ANON_SERVICES_TAB);
 				if (a_value instanceof MixCascade)
