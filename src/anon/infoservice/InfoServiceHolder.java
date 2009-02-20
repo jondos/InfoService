@@ -159,7 +159,7 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 	/**
 	 * Allows only 3 concurrent update operations.
 	 */
-	private ThreadPool m_poolFetchInformation = new ThreadPool("Fetch Information Thread Pool", 10, Thread.MIN_PRIORITY);
+	private ThreadPool m_poolFetchInformation = new ThreadPool("Fetch Information Thread Pool", 5, Thread.MIN_PRIORITY);
 
 	/**
 	 * Stores the preferred InfoService. This InfoService is asked first for every information.
@@ -511,14 +511,14 @@ public class InfoServiceHolder extends Observable implements IXMLEncodable
 					{
 						result = currentInfoService.getTCFramework((String) (arguments.elementAt(0)));
 					}
-					else if (functionNumber == GET_TCS)
+					/*else if (functionNumber == GET_TCS)
 					{
 						tempHashtable = currentInfoService.getTermsAndConditions();
 					}
 					else if (functionNumber == GET_TC_SERIALS)
 					{
 						tempHashtable = currentInfoService.getTermsAndConditionSerials();
-					}
+					}*/
 					else if (functionNumber == GET_PERFORMANCE_INFO)
 					{
 						AbstractDatabaseEntry dbEntry = currentInfoService.getPerformanceInfo();

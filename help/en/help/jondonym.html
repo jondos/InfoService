@@ -19,6 +19,14 @@ alt="-&gt;"></a></span> </p>
 
 <h2>JonDonym, AN.ON and Tor</h2>
 
+<p><strong>The JonDonym/AN.ON technology is based on the principle of multiple
+encryption, distribution and processing. This procedure does not only protect
+your internet activities from being observed by third parties (<em>against your
+access provider, WLAN hackers, advertising services and websites</em>), but
+also against observation by the individual JonDonym providers themselves
+(<em>against JonDonym service operators and their billing
+providers</em>).</strong></p>
+
 <p>The anonymization service JonDonym is a development branch of the <a
 href="http://anon.inf.tu-dresden.de">AN.ON Project</a>. It consists of multiple
 user selectable mix cascades. A cascade consists of two or three mix servers
@@ -27,33 +35,27 @@ individuals who all <a href="certificates.html">publish their identity</a>. The
 operators have to abide by strict provisions which prohibit saving connection
 data or exchanging such data with other operators in a cascade. Every
 connection from a user is differently encrypted for every mix server within a
-cascade and transferred through the cascade to the target, e.g. a website. The
-aim of <em>multiple encryption, distribution and processing</em> is to make
-sure no mix operator can by himself alone expose the user, and that
-eavesdropping on the connection produces zero useful content. Also, since a lot
-of users surf the anonymization service simultaneously, and thus share the same
-<a href="wwwprivacy.html#ip">IP address</a>, all connections of every user are
-concealed amidst each other: a correlation is not possible any more.
-<em></em></p>
+cascade and transferred through the cascade to the target, e.g. a website.
+Thereby no mix operator alone can by himself expose the user. Eavesdroppers on
+the connections to JonDonym mixes get garbage data only. Also, since a lot of
+users surf the anonymization service simultaneously, and thus share the same <a
+href="wwwprivacy.html#ip">IP address</a>, all connections of every user are
+concealed amidst each other: a correlation is not possible any more. </p>
 
-<p><strong>JonDonym thereby prevents that others, except for the user himself,
-may discover which internet connections he initiates . The specific
-characteristic of this procedure is that it does not only protect against
-observation by external parties / outsiders (access provider, WLAN sniffers,
-websites), but also against the different JonDonym providers themselves (mix
-operators, billing providers). The JonDonym/AN.ON technology is based on the
-principle of multiple encryption, distribution and processing.</strong></p>
+<p style="text-align:center;"><img alt="JonDonym" src="jondonym.jpg"
+width="515"></p>
 
 <p>JonDonym has many advantages to other anonymization services:</p>
 <ul>
-  <li><b>Strong encryption and authentication:</b> Nobody can read the traffic
-    between your PC and the JonDonym service. (Encrypted with RSA 1024 and AES
-    128; signed with DSA, RSA or ECDSA; realized with the BouncyCastle and
-    OpenSSL libraries)</li>
-  <li><b>Protection from the mix operator:</b> Unless all mix operators in a
-    JonDonym cascade are separately forced by a court order, blackmail or a
-    hacker attack to monitor you, your JonDonym connections are safe. The mix
-    operators are revaluated regularly concerning seriosity and
+  <li><b>Protection against your own internet access provider:</b> Strong
+    encryption and authentication protect you from being observed. Nobody can
+    read the traffic between your PC and the JonDonym service. (Encrypted with
+    RSA 1024 and AES 128; signed with DSA, RSA or ECDSA; realized with the
+    BouncyCastle and OpenSSL libraries)</li>
+  <li><b>Protection against the anonymity service operators:</b> Unless all mix
+    operators in a JonDonym cascade are separately forced by a court order,
+    blackmail or a hacker attack to monitor you, your JonDonym connections are
+    safe. The mix operators are revaluated regularly concerning seriosity and
     professionalism. Their identity is made public also. Even in the highly
     improbable case that they all are forced to unmask a certain connection,
     this function would have to be compiled into each server software
@@ -65,7 +67,9 @@ principle of multiple encryption, distribution and processing.</strong></p>
   <li><b>Transparent functionality:</b>The program user interface has an
     especially informative design. The source codes of all program components
     are published according to an <a href="http://www.jondos.de/en/licence">OSI
-    compliant licence</a>.</li>
+    compliant licence</a> (<a href="https://svn.jondos.de/">SVN-Repository</a>
+    and <a
+    href="http://anon.inf.tu-dresden.de/develop/sources_de.html">CVS-Repository</a>).</li>
   <li><b>No software backdoor:</b> There is no possibility to inspect single
     connections in the <a href="about.html">JonDo</a> client. The software runs
     completely on your PC and can not be manipulated without your approval. No
@@ -92,11 +96,11 @@ principle of multiple encryption, distribution and processing.</strong></p>
     free.</li>
 </ul>
 
-<p>A similar anonymization can only be offered by the non-commercial system <a
-href="http://tor.eff.org/">Tor</a>. Internet beginners should be careful with
-Tor, though: there is no control over who runs the servers in this service over
-which your data travels. In the past, there has been ongoing suspicion that
-criminals and intelligence agencies exploit the Tor network in order to
+<p>A similar anonymization can only be offered by the non-commercial software
+<a href="http://tor.eff.org/">Tor</a>. Internet beginners should be careful
+with Tor, though: there is no control over who runs the servers in this service
+over which your data travels. In the past, there has been ongoing suspicion
+that criminals and intelligence agencies exploit the Tor network in order to
 secretly attain unencrypted information like passwords, bank accounts and
 credit cards. Certain tricks can enable the Tor server to concentrate much of
 the traffic on itself, making the exploit even more effective. Tor may be set
@@ -105,13 +109,13 @@ slower but, in some individual cases, even more secure than with JonDonym alone
 because the last servers in this chain will be part of the verified JonDonym
 network.</p>
 
-<p>Also the respective last mix server in a JonDonym cascade could record data
-which is not separately secured by HTTPS/SSL. Unlike Tor and other services,
-however, in JonDonym only certified and publicized persons and organizations
-may operate a mix server. The user may then decide for himself on whether he
-trusts the operator or not. If needed, they may simply choose other operators.
-All this makes it highly improbable for criminal operators to infiltrate
-JonDonym.</p>
+<p>Like in Tor, the respective last mix server in a JonDonym cascade could
+record data which is not separately secured by HTTPS/SSL (has to be offered by
+the web site itself). Unlike Tor and other services, however, in JonDonym only
+certified and publicized persons and organizations may operate a mix server.
+The user may then decide for himself on whether he trusts the operator or not.
+If needed, they may simply choose other operators. All this makes it highly
+improbable for criminal operators to infiltrate JonDonym.</p>
 <hr>
 
 <p class="navipar"><span class="prevlink"><a href="wwwprivacy.html"><img
