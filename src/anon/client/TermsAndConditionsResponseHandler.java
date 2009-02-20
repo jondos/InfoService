@@ -150,7 +150,7 @@ public class TermsAndConditionsResponseHandler extends Observable
 		
 		void addTermsAndConditonsToRead(TermsAndConditions tc)
 		{
-			tcsTosShow.add(tc);
+			tcsTosShow.addElement(tc);
 		}
 		
 		Enumeration getTermsTermsAndConditonsToRead()
