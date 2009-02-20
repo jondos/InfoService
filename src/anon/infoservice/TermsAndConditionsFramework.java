@@ -11,9 +11,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.text.DateFormat;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.Locale;
-import java.util.Vector;
 
 import javax.xml.transform.Source;
 import javax.xml.transform.dom.DOMSource;
@@ -22,8 +20,6 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.Transformer;
 
-import anon.crypto.CertPath;
-import anon.crypto.JAPCertificate;
 import anon.crypto.MultiCertPath;
 import anon.crypto.SignatureCreator;
 import anon.crypto.SignatureVerifier;
@@ -31,7 +27,6 @@ import anon.crypto.XMLSignature;
 import anon.infoservice.TermsAndConditions.Translation;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
-import anon.util.Util;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -171,12 +166,12 @@ public class TermsAndConditionsFramework extends AbstractDistributableCertifiedD
 		try
 		{
 			// find the ServiceOperator object to our T&C
-			ServiceOperator op = (ServiceOperator) 
-				Database.getInstance(ServiceOperator.class).getEntryById(tcTranslation.getId());
+			ServiceOperator op = tcTranslation.getOperator();
 			
 			if(op == null)
 			{
-				return;
+				//Must never happen!
+				throw new NullPointerException("The operator of a tc translation cannot be null. This must never happen. Please report!");
 			}
 			
 			// create the operator node
@@ -185,18 +180,6 @@ public class TermsAndConditionsFramework extends AbstractDistributableCertifiedD
 			{
 				throw new XMLParseException("Operator must not be null. Mix violates T&C protocol.");
 			}
-			
-			/*Element elemOpName = m_docWorkingCopy.createElement(XML_ELEMENT_OPERATOR_NAME);
-			Element elemOpEmail = m_docWorkingCopy.createElement(XML_ELEMENT_OPERATOR_EMAIL);
-			elemOpName.setNodeValue(op.getOrganization());
-			elemOpEmail.setNodeValue(op.getEMail());
-			
-			replaceNode(elemOpName, XML_ELEMENT_OPERATOR_NAME);
-			replaceNode(elemOpEmail, XML_ELEMENT_OPERATOR_EMAIL);*/
-			
-			//TODO: perhaps move somewhere else
-			XMLUtil.createChildElementWithValue(operator, XML_ELEMENT_OPERATOR_NAME, op.getOrganization());
-			XMLUtil.createChildElementWithValue(operator, XML_ELEMENT_OPERATOR_EMAIL, op.getEMail());
 			
 			// get country from country code
 			Locale loc = new Locale(op.getCountryCode(), op.getCountryCode());
@@ -211,9 +194,14 @@ public class TermsAndConditionsFramework extends AbstractDistributableCertifiedD
 			//appendChildNodeFromTC(a_data, operator, XML_ELEMENT_OPERATOR_CITY);
 			//appendChildNodeFromTC(a_data, operator, XML_ELEMENT_OPERATOR_VAT);
 			//appendChildNodeFromTC(a_data, operator, XML_ELEMENT_OPERATOR_FAX);
-			//appendChildNodeFromTC(a_data, operator, XML_ELEMENT_OPERATOR_EMAIL);
+			//appendChildNodeFromTC(a_data, operator, XML_ELEMENT_OPERATOR_EMAIL); 
 			
 			replaceNode(operator, XML_ELEMENT_OPERATOR);
+			Element replacedOpNode = (Element)
+				XMLUtil.getFirstChildByNameUsingDeepSearch(m_docWorkingCopy.getDocumentElement(), XML_ELEMENT_OPERATOR);
+			XMLUtil.createChildElementWithValue(replacedOpNode, XML_ELEMENT_OPERATOR_NAME, op.getOrganization());
+			XMLUtil.createChildElementWithValue(replacedOpNode, XML_ELEMENT_OPERATOR_EMAIL, op.getEMail());
+			
 			replaceNode(country, XML_ELEMENT_OPERATOR_COUNTRY);
 			
 			// replace PrivacyPolicyUrl
@@ -311,28 +299,6 @@ public class TermsAndConditionsFramework extends AbstractDistributableCertifiedD
 		{
 			return node;
 		}
-		/*else if(!tcTranslation.getLocale().equals("en"))
-		{
-			// look in the English version of this T&C
-			TermsAndConditions tcDefault = TermsAndConditions.getById(tcTranslation.getSKI(), Locale.ENGLISH);
-			
-			if(tcDefault != null)
-			{
-				node = XMLUtil.getFirstChildByName(tcDefault.getDocument().getDocumentElement(), a_nodeName);
-				if(node != null)
-				{
-					try
-					{
-						return XMLUtil.importNode(tcTranslation.getDocument(), node, true);
-					}
-					catch (XMLParseException a_e)
-					{
-						LogHolder.log(LogLevel.EXCEPTION, LogType.PAY, a_e);
-						return null;
-					}
-				}
-			}
-		}*/
 		
 		return null;
 	}

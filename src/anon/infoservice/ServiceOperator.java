@@ -36,7 +36,6 @@ import anon.crypto.JAPCertificate;
 import anon.crypto.MultiCertPath;
 import anon.crypto.X509DistinguishedName;
 import anon.crypto.X509SubjectAlternativeName;
-import anon.crypto.X509SubjectKeyIdentifier;
 import anon.util.Util;
 import anon.util.XMLUtil;
 import java.util.Vector;
@@ -340,7 +339,7 @@ public class ServiceOperator extends AbstractDatabaseEntry
 	
 	public boolean hasTermsAndConditions()
 	{
-		return TermsAndConditions.getById(getId()) != null;
+		return TermsAndConditions.getTermsAndConditions(this) != null;
 	}
 	
 	/* creates a DOM-Tree with the data which will be owned by

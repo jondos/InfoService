@@ -122,6 +122,7 @@ import gui.dialog.SimpleWizardContentPane;
 import gui.dialog.WorkerContentPane;
 import gui.dialog.DialogContentPane.Layout;
 import jap.AbstractJAPConfModule;
+import jap.JAPConf;
 import jap.JAPConfInfoService;
 import jap.JAPConstants;
 import jap.JAPController;
@@ -398,8 +399,20 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	public AccountSettingsPanel()
 	{
 		super(null);
-		PayAccountsFile.getInstance().addPaymentListener(this);
-		JAPController.getInstance().addObserver(this);
+	}
+	
+	protected boolean initObservers()
+	{
+		if (super.initObservers())
+		{
+			synchronized(LOCK_OBSERVABLE)
+			{
+				PayAccountsFile.getInstance().addPaymentListener(this);
+				JAPController.getInstance().addObserver(this);
+				return true;
+			}
+		}
+		return false;
 	}
 
 
@@ -439,12 +452,6 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 		{
 		}
 
-
-	public void fontSizeChanged(JAPModel.FontResize a_fontSize, JLabel a_dummyLabel)
-	{
-		m_coinstack.setUI(new CoinstackProgressBarUI(GUIUtils.loadImageIcon(JAPConstants.
-			IMAGE_COIN_COINSTACK, true), 0, 8));
-	}
 
 	public void update(Observable a_observable, Object a_arg)
 	{
@@ -505,6 +512,8 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 			contraints.weighty = 1;
 			rootPanel.add(new JLabel(), contraints);
 		}
+		m_coinstack.setUI(new CoinstackProgressBarUI(GUIUtils.loadImageIcon(JAPConstants.
+				IMAGE_COIN_COINSTACK, true), 0, 8));
 	}
 
 	private JPanel createBasicSettingsTab()
@@ -3542,12 +3551,15 @@ public class AccountSettingsPanel extends AbstractJAPConfModule implements
 	 */
 	protected void onUpdateValues()
 	{
-		m_comboAnonymousConnection.setSelectedIndex(
-			JAPModel.getInstance().getPaymentAnonymousConnectionSetting());
-		m_cbxAskIfNotSaved.setSelected(JAPController.getInstance().isAskSavePayment());
-		m_cbxShowAIErrors.setSelected(!PayAccountsFile.getInstance().isAIAccountErrorIgnored());
-		m_cbxBalanceAutoUpdateEnabled.setSelected(PayAccountsFile.getInstance().isBalanceAutoUpdateEnabled());
-		setConnectionTimeout(BIConnection.getConnectionTimeout());
+		//synchronized (JAPConf.getInstance())
+		{
+			m_comboAnonymousConnection.setSelectedIndex(
+				JAPModel.getInstance().getPaymentAnonymousConnectionSetting());
+			m_cbxAskIfNotSaved.setSelected(JAPController.getInstance().isAskSavePayment());
+			m_cbxShowAIErrors.setSelected(!PayAccountsFile.getInstance().isAIAccountErrorIgnored());
+			m_cbxBalanceAutoUpdateEnabled.setSelected(PayAccountsFile.getInstance().isBalanceAutoUpdateEnabled());
+			setConnectionTimeout(BIConnection.getConnectionTimeout());
+		}
 	}
 
 	public void valueChanged(ListSelectionEvent e)

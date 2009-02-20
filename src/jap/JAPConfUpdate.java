@@ -94,7 +94,20 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 	public JAPConfUpdate()
 	{
 		super(null);
-		JAPModel.getInstance().addObserver(this);
+		
+	}
+	
+	protected boolean initObservers()
+	{
+		if (super.initObservers())
+		{
+			synchronized(LOCK_OBSERVABLE)
+			{
+				JAPModel.getInstance().addObserver(this);
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public void recreateRootPanel()
@@ -389,9 +402,12 @@ final class JAPConfUpdate extends AbstractJAPConfModule implements ActionListene
 
 	protected void onUpdateValues()
 	{
-		m_comboAnonymousConnection.setSelectedIndex(JAPModel.getInstance().getUpdateAnonymousConnectionSetting());
-		m_cbxRemindOptionalUpdate.setSelected(JAPModel.getInstance().isReminderForOptionalUpdateActivated());
-		m_cbxRemindJavaUpdate.setSelected(JAPModel.getInstance().isReminderForJavaUpdateActivated());
+		//synchronized (JAPConf.getInstance())
+		{
+			m_comboAnonymousConnection.setSelectedIndex(JAPModel.getInstance().getUpdateAnonymousConnectionSetting());
+			m_cbxRemindOptionalUpdate.setSelected(JAPModel.getInstance().isReminderForOptionalUpdateActivated());
+			m_cbxRemindJavaUpdate.setSelected(JAPModel.getInstance().isReminderForJavaUpdateActivated());
+		}
 	}
 
 	public void run()

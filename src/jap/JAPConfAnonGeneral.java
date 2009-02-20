@@ -125,8 +125,21 @@ public final class JAPConfAnonGeneral extends AbstractJAPConfModule implements O
 	protected JAPConfAnonGeneral(IJAPConfSavePoint savePoint)
 	{
 		super(null);
-		JAPModel.getInstance().addObserver(this);
+		
 		m_Controller = JAPController.getInstance();
+	}
+	
+	protected boolean initObservers()
+	{
+		if (super.initObservers())
+		{
+			synchronized(LOCK_OBSERVABLE)
+			{
+				JAPModel.getInstance().addObserver(this);
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public String getTabTitle()
