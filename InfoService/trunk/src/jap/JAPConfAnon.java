@@ -304,8 +304,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	private boolean m_bMixInfoShown = false;
 	private boolean m_mapShown = false;
-	private boolean m_observablesRegistered = false;
-	private final Object LOCK_OBSERVABLE = new Object();
 
 	/** the Certificate of the selected Mix-Server */
 	private MultiCertPath m_serverCertPaths;
@@ -1347,7 +1345,10 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 
 	protected void onUpdateValues()
 	{
-		((MixCascadeTableModel) m_tableMixCascade.getModel()).update();
+		//synchronized (JAPConf.getInstance())
+		{
+			((MixCascadeTableModel) m_tableMixCascade.getModel()).update();
+		}
 	}
 
 	private void fetchCascades(final boolean bErr, final boolean a_bCheckInfoServiceUpdateStatus)
@@ -2031,15 +2032,12 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 		return "services_anon";
 	}
 
-
-	protected void onRootPanelShown()
+	protected boolean initObservers()
 	{
-		boolean bUpdateValues = false;
-		synchronized (LOCK_OBSERVABLE)
+		if (super.initObservers())
 		{
-			if (!m_observablesRegistered)
+			synchronized (LOCK_OBSERVABLE)
 			{
-				/* register observables */
 				JAPController.getInstance().addObserver(this);
 				JAPModel.getInstance().getRoutingSettings().addObserver(this);
 				SignatureVerifier.getInstance().getVerificationCertificateStore().addObserver(this);
@@ -2049,10 +2047,16 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 				Database.getInstance(PerformanceInfo.class).addObserver(this);
 				m_cmbCascadeFilter.setSelectedItem(TrustModel.getCurrentTrustModel());
 				TrustModel.addModelObserver(this);
-				m_observablesRegistered = true;
-				bUpdateValues = true;
 			}
+			return true;
 		}
+		return false;
+	}
+	
+
+	protected void onRootPanelShown()
+	{
+		boolean bUpdateValues = false;
 
 		if (!m_infoService.isFilled())
 		{
@@ -2084,43 +2088,6 @@ class JAPConfAnon extends AbstractJAPConfModule implements MouseListener, Action
 	{
 		//m_listMixCascade.setSelectedValue(a_cascade, true);
 		((MixCascadeTableModel)m_tableMixCascade.getModel()).setSelectedCascade(a_cascade);
-	}
-
-	public void fontSizeChanged(final JAPModel.FontResize a_resize, final JLabel a_dummyLabel)
-	{
-		if (m_infoService == null)
-		{
-			m_infoService = new InfoServiceTempLayer(false);
-		}
-		onUpdateValues();
-		MixCascadeTableModel model = (MixCascadeTableModel) m_tableMixCascade.getModel();
-		synchronized (model)
-		{
-
-			// Determine highest cell in the row
-			//for (int i = 0; i < m_tableMixCascade.getColumnCount(); i++)
-			{
-				TableCellRenderer renderer = m_tableMixCascade.getCellRenderer(0, 1);
-				Component comp = m_tableMixCascade.prepareRenderer(renderer, 0, 1);
-				int height = comp.getPreferredSize().height - 2;
-				m_tableMixCascade.setRowHeight(height);
-			}
-
-
-		}
-
-
-		if (m_serverList != null)
-		{
-			m_serverList.fontSizeChanged(a_resize, a_dummyLabel);
-		}
-
-		/*
-		m_lblCascadeInfo.setFont(new Font(a_dummyLabel.getFont().getName(), Font.BOLD,
-										  (int) (a_dummyLabel.getFont().getSize() * 1.2)));
-		m_lblMix.setFont(new Font(a_dummyLabel.getFont().getName(), Font.BOLD,
-								  (int) (a_dummyLabel.getFont().getSize() * 1.2)));
-						   */
 	}
 
 	/**

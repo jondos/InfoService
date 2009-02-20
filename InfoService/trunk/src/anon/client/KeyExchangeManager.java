@@ -31,7 +31,6 @@
  */
 package anon.client;
 
-
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -40,6 +39,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
 import java.security.SignatureException;
+import java.text.ParseException;
+import java.util.Locale;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -47,6 +48,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import anon.ErrorCodes;
+import anon.client.TermsAndConditionsResponseHandler.TermsAndConditionsReadException;
+import anon.client.TermsAndConditionsRequest.IllegalTCRequestPostConditionException;
 import anon.client.crypto.ASymMixCipherPlainRSA;
 import anon.client.crypto.ASymMixCipherRSAOAEP;
 import anon.client.crypto.IASymMixCipher;
@@ -58,6 +61,10 @@ import anon.crypto.XMLSignature;
 import anon.infoservice.Database;
 import anon.infoservice.MixCascade;
 import anon.infoservice.MixInfo;
+import anon.infoservice.ServiceOperator;
+import anon.infoservice.TermsAndConditions;
+import anon.infoservice.TermsAndConditionsFramework;
+import anon.infoservice.TermsAndConditionsMixInfo;
 import anon.util.Base64;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
@@ -105,7 +112,12 @@ public class KeyExchangeManager {
 
   private MixCascade m_cascade;
 
-
+  private TermsAndConditionsRequest m_tnCRequest;
+  
+  private TermsAndConditionsReadException tcrException = null;
+  
+  private boolean tcOverallAccept = true;
+  
   /**
    * @todo allow to connect if one or more mixes (user specified) cannot be verified
    * @param a_inputStream InputStream
@@ -115,12 +127,14 @@ public class KeyExchangeManager {
    * @throws SignatureException
    * @throws IOException
    * @throws UnknownProtocolVersionException
+ * @throws TermsAndConditionsReadException 
+ * @throws IllegalTCRequestPostConditionException 
    * @todo remove MixInfo entries when changes in the certificate ID of a mix are discovered
    */
   public KeyExchangeManager(InputStream a_inputStream, OutputStream a_outputStream, MixCascade a_cascade,
-							ITrustModel a_trustModel)
+							ITrustModel a_trustModel, ITermsAndConditionsContainer a_tcContainer)
 	  throws XMLParseException, SignatureException, IOException, UnknownProtocolVersionException,
-	  TrustException
+	  TrustException, TermsAndConditionsReadException, IllegalTCRequestPostConditionException
   {
 	  try
 	  {
@@ -290,17 +304,16 @@ public class KeyExchangeManager {
 		  }
 
 		 m_mixParameters = new MixParameters[m_cascade.getNumberOfMixes()];
-		  for (int i = 0; i < m_cascade.getNumberOfMixes(); i++)
-		  {
+		 m_tnCRequest = new TermsAndConditionsRequest();
+		 
+		 for (int i = 0; i < m_cascade.getNumberOfMixes(); i++)
+		 {
 			  MixInfo mixinfo = m_cascade.getMixInfo(i);
-
 			  if (mixinfo == null)
 			  {
 				  // should not happen
 				  throw new XMLParseException("Could not get MixInfo object for Mix " + i + "!");
-
 			  }
-
 			  if (i > 0 && !mixinfo.isVerified())
 			  {
 				  throw (new SignatureException(
@@ -313,25 +326,106 @@ public class KeyExchangeManager {
 			  //setting AsymCipher
 			  IASymMixCipher asymCipher=null;
 			  if(m_bEnhancedChannelEncryption)
-			  	{
-			  		asymCipher=new ASymMixCipherRSAOAEP();
-			  	}
+			  {
+			  	asymCipher=new ASymMixCipherRSAOAEP();
+			  }
 			  else
-			  	{
-			  		asymCipher=new ASymMixCipherPlainRSA();			  		
-			  	}
+			  {
+			  	asymCipher=new ASymMixCipherPlainRSA();			  		
+			  }
 			  m_mixParameters[i] = new MixParameters(mixinfo.getId(), asymCipher);
 			  if (m_mixParameters[i].getMixCipher().setPublicKey(currentMixNode) != ErrorCodes.E_SUCCESS)
-				  {
-					  throw (new XMLParseException(
-						  "Received XML structure contains an invalid public key for Mix " + Integer.toString(i) +
-						  "."));
-				  }
+			  {
+				  throw (new XMLParseException(
+					  "Received XML structure contains an invalid public key for Mix " + Integer.toString(i) +
+					  "."));
+			  }
 			  
+			  	// prepare request for Terms and Conditions resources, if necessary
+			  	if(m_cascade.isTermsAndConditionsConfirmationRequired())
+				{
+					ServiceOperator currentOperator = mixinfo.getServiceOperator();
+			  		if( a_tcContainer == null )
+					{
+						throw new NullPointerException("Terms and Conditions confirmation required but no tc container is specified!");
+					}
+					TermsAndConditionsMixInfo tncInfo = mixinfo.getTermsAndConditionMixInfo();
+					if(tncInfo != null)
+					{
+						try
+						{
+							TermsAndConditions tc = TermsAndConditions.getTermsAndConditions(currentOperator);
+							if( (tc == null) || !tc.isMostRecent(tncInfo.getDate()))
+							{
+								if(tc != null) 
+								{
+									//T & C is obsolete: get the new one.
+									TermsAndConditions.removeTermsAndConditions(tc);
+								}
+								tc = new TermsAndConditions(currentOperator, tncInfo.getDate());
+								if(tcrException == null)
+								{
+									tcrException = new TermsAndConditionsReadException();
+								}
+								tcrException.addTermsAndConditonsToRead(tc);
+								TermsAndConditions.storeTermsAndConditions(tc);
+							}
+							else
+							{
+								if(!tc.isAccepted())
+								{
+									if(tcrException == null)
+									{
+										tcrException = new TermsAndConditionsReadException();
+									}
+									tcrException.addTermsAndConditonsToRead(tc);
+								}
+							}
+							
+							Locale currentLocale = a_tcContainer.getDisplayLanguageLocale();
+							
+							String langCode = 
+								tncInfo.hasTranslation(currentLocale) ? 
+										currentLocale.getLanguage().trim().toLowerCase(): tncInfo.getDefaultLanguage();
+							
+							//if no default translation is specified make sure it will be loaded from the mix.
+							if(!langCode.equals(tncInfo.getDefaultLanguage()) && !tc.hasDefaultTranslation())
+							{
+								m_tnCRequest.addCustomizedSectionsRequest(currentOperator, tncInfo.getDefaultLanguage());
+								if(TermsAndConditionsFramework.getById(tncInfo.getDefaultTemplateRefId(), false) == null)
+								{
+									m_tnCRequest.addTemplateRequest(currentOperator, 
+											tncInfo.getDefaultLanguage(), 
+											tncInfo.getDefaultTemplateRefId());
+								}
+							}
+							
+							String templateRefID = tncInfo.getTemplateRefId(langCode);
+							if(TermsAndConditionsFramework.getById(templateRefID, false) == null)
+							{
+								m_tnCRequest.addTemplateRequest(currentOperator, langCode, templateRefID);
+							}
+							
+							if(!tc.hasTranslation(langCode))
+							{
+								m_tnCRequest.addCustomizedSectionsRequest(currentOperator, langCode);
+							}
+						}
+						catch(ParseException e)
+						{
+							LogHolder.log(LogLevel.ERR, LogType.NET, "tc mix info "+tncInfo.getId()+" has an invalid date format: "+tncInfo.getDate());
+						}
+					}
+					else
+					{
+						LogHolder.log(LogLevel.WARNING, LogType.NET, "Cascade requires Terms And Conditions confirmation but Mix "+
+								mixinfo.getName()+ " does not send any TC Infos!");
+					}
+				}
 			  
 			  if (i == (m_cascade.getNumberOfMixes() - 1))
 			  {
-			  	/* get the chain protocol version from the last mix */
+				  /* get the chain protocol version from the last mix */
 				  NodeList chainMixProtocolVersionNodes = currentMixNode.getElementsByTagName(
 					  "MixProtocolVersion");
 				  if (chainMixProtocolVersionNodes.getLength() == 0)
@@ -439,10 +533,7 @@ public class KeyExchangeManager {
 						  "Unknown chain protocol version used ('" + chainMixProtocolVersionValue + "')."));
 				  }
 			  }
-
 		  }
-
-		  
 		  /* sending symmetric keys for multiplexer stream encryption */
 		  m_multiplexerInputStreamCipher = new SymCipher();
 		  m_multiplexerOutputStreamCipher = new SymCipher();
@@ -596,6 +687,68 @@ public class KeyExchangeManager {
 				  throw (new SignatureException("Invalid symmetric keys signature received."));
 			  }
 		  }
+		 
+		  // T&C protocol data exchange.
+		  if( (m_cascade.isTermsAndConditionsConfirmationRequired()) )
+		  {
+			  if(m_tnCRequest.hasResourceRequests())
+			  {
+				  Document tcRequestDoc = XMLUtil.createDocument();
+				  Element tcRequestRoot = m_tnCRequest.toXmlElement(tcRequestDoc);
+				  String tcRequest = XMLUtil.toString(tcRequestDoc);
+				  if(tcRequest != null)
+				  {
+					 ByteArrayOutputStream tcRequestBytesOut = new ByteArrayOutputStream();
+					 DataOutputStream tcReqStream = new DataOutputStream(tcRequestBytesOut);
+					 tcReqStream.writeShort(tcRequest.length());
+					 tcReqStream.writeBytes(tcRequest);
+					 a_outputStream.write(tcRequestBytesOut.toByteArray());
+					 a_outputStream.flush();
+					 int answerBytes = dataStreamFromMix.readInt();
+					 byte[] answerData = new byte[answerBytes];
+					 a_inputStream.read(answerData, 0, answerBytes);
+					 Document answerDoc = XMLUtil.toXMLDocument(answerData);
+					 if(answerDoc != null)
+					 {
+						 a_tcContainer.getTermsAndConditionsResponseHandler().handleXMLResourceResponse(answerDoc, m_tnCRequest);
+					 }
+				  }
+			  }
+			  
+			  Document confirmDoc = XMLUtil.createDocument();
+			  Element confirmDocRoot = null;
+			  if( tcrException != null ) 
+			  {
+				  //interrupt to read the T&Cs
+				  confirmDocRoot = 
+					  confirmDoc.createElement(TermsAndConditionsRequest.XML_MSG_TC_INTERRUPT);
+			  }
+			  else
+			  {
+				  confirmDocRoot = 
+					  confirmDoc.createElement(TermsAndConditionsRequest.XML_MSG_TC_CONFIRM);
+				  //only if all necessary Terms And Conditions are accepted
+				  //we can reach this point.
+				  XMLUtil.setAttribute(confirmDocRoot, 
+						  TermsAndConditions.XML_ATTR_ACCEPTED, true);
+			  }
+			  confirmDoc.appendChild(confirmDocRoot);
+			  
+			  String acceptMsg = XMLUtil.toString(confirmDoc);
+			  ByteArrayOutputStream tcConfirmBytesOut = new ByteArrayOutputStream();
+			  DataOutputStream tcConfirmStream = new DataOutputStream(tcConfirmBytesOut);
+			  tcConfirmStream.writeShort(acceptMsg.length());
+			  
+			  tcConfirmStream.writeBytes(acceptMsg);
+			  a_outputStream.write(tcConfirmBytesOut.toByteArray());
+			  a_outputStream.flush();
+			  
+			  if(tcrException != null)
+			  {
+				  throw tcrException;
+			  }
+		  }
+		  
 	  }
 	  catch (SignatureException e)
 	  {
@@ -662,9 +815,8 @@ public class KeyExchangeManager {
   }
 
 	public boolean isProtocolWithEnhancedChannelEncryption()
-		{
-			// TODO Auto-generated method stub
-			return m_bEnhancedChannelEncryption;
-		}
+	{
+		return m_bEnhancedChannelEncryption;
+	}
 
 }
