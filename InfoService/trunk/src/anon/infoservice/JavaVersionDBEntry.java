@@ -72,7 +72,7 @@ public class JavaVersionDBEntry  extends AbstractDistributableDatabaseEntry
 	/**
 	 * This should be an infinite timeout (1000 years are infinite enough).
 	 */
-	private static final long TIMEOUT = 1000 * 365 * 24 * 3600 * 1000L;
+	private static final long TIMEOUT = Long.MAX_VALUE;
 
 
 	private long m_lastUpdate;
@@ -141,7 +141,7 @@ public class JavaVersionDBEntry  extends AbstractDistributableDatabaseEntry
 */
 	public JavaVersionDBEntry(Element a_xmlElement) throws XMLParseException
 	{
-		super(System.currentTimeMillis() + TIMEOUT);
+		super(TIMEOUT);
 		Node currentElement;
 		NodeList nodes;
 		String strTemp;
