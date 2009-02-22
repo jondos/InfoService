@@ -2825,7 +2825,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				XMLUtil.setValue(tmp, true);
 				elemMainWindow.appendChild(tmp);
 			}
-			if(!JAPModel.getInstance().getStartPortableFirefox())
+			if (!JAPModel.getInstance().getStartPortableFirefox())
 			{
 				Element tmp = doc.createElement(JAPConstants.CONFIG_START_PORTABLE_FIREFOX);
 				XMLUtil.setValue(tmp, false);
@@ -2835,6 +2835,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 			{
 				Element tmp = doc.createElement(JAPConstants.CONFIG_DEFAULT_VIEW);
 				XMLUtil.setValue(tmp, JAPConstants.CONFIG_SIMPLIFIED);
+				elemMainWindow.appendChild(tmp);
+			}
+			else 
+			{
+				Element tmp = doc.createElement(JAPConstants.CONFIG_DEFAULT_VIEW);
+				XMLUtil.setValue(tmp, JAPConstants.CONFIG_NORMAL);
 				elemMainWindow.appendChild(tmp);
 			}
 			// adding Debug-Element
