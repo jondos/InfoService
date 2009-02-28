@@ -1,5 +1,6 @@
 package gui.dialog;
 
+import java.awt.Component;
 import java.awt.Container;
 
 import gui.JAPHelpContext;
