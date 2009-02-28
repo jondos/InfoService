@@ -31,6 +31,7 @@ import gui.dialog.JAPDialog;
 import gui.dialog.SimpleWizardContentPane;
 import gui.dialog.WorkerContentPane;
 
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Frame;
 import java.net.URL;
@@ -92,7 +93,7 @@ public final class JAPExternalHelpViewer extends JAPHelp
 			m_alternativeHelp.setVisible(a_bVisible);
 			return;
 		}
-		Container container = context.getHelpExtractionDisplayContext();
+		Component container = context.getHelpExtractionDisplayContext();
 		
 		/* If no external help path is specified and no help is installed: 
 		 * open dialog to ask the user
@@ -119,14 +120,17 @@ public final class JAPExternalHelpViewer extends JAPHelp
 			synchronized (SYNC_INSTALL)
 			{
 				m_bInstallationDialogShown = true;		
-				
+				boolean bDialogShown = false;
 				if (!m_helpModel.isHelpPathDefined() && 
-					(!m_helpModel.isHelpPathChangeable() || !showInstallDialog(container)))
+					(!m_helpModel.isHelpPathChangeable() || 
+						!(bDialogShown = showInstallDialog(container))))
 				{			
 					m_bInstallationDialogShown = false;
 					
 					LogHolder.log(LogLevel.ERR, LogType.GUI, 
-					"Cannot show help externally: Help installation failed");
+						"Cannot show help externally: Help installation failed " +
+						"(changeable: " + m_helpModel.isHelpPathChangeable() + 
+						" showDialog: " + bDialogShown + ")");
 					m_alternativeHelp.setContext(getHelpContext());
 					m_alternativeHelp.setVisible(a_bVisible);
 					return;
@@ -160,7 +164,7 @@ public final class JAPExternalHelpViewer extends JAPHelp
 		}
 	}	
 	
-	private boolean showInstallDialog(Container a_container)
+	private boolean showInstallDialog(Component a_container)
 	{
 		if (m_helpModel.getHelpPath() == null || !m_helpModel.isHelpPathChangeable())
 		{
