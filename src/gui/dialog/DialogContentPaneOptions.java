@@ -114,7 +114,7 @@ public final class DialogContentPaneOptions
 		this(a_optionType,
 			 new JAPHelpContext.IHelpContext(){
 				public String getHelpContext(){return a_strHelpContext;}
-				public Container getHelpExtractionDisplayContext(){return null;}
+				public Component getHelpExtractionDisplayContext(){return null;}
 				},
 			a_previousContentPane);
 	}
