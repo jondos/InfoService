@@ -20,10 +20,12 @@
 	<property name="jarfile" location="${dist}/${jarfile.name}.jar"/>
 	<property name="dist.osx" location="${dist}/MacOsX"/>
 	
-	<!--<path id="classpath.mrj" location="${lib.mrj_classes}"/>
+	<property name="portableFirefoxPath" value="Portable%20Firefox.app/Contents/MacOS/Portable%20Firefox"/>
+	
+	<path id="classpath.mrj" location="${lib.mrj_classes}"/>
 	<path id="classpath.aje" location="${lib.appleJavaExtensions}"/>
 	
-	<target name="init-mac-libs">
+	<target name="init-mac-libs" depends="getcurrentmacosxlibversion">
 		<ant antfile="${buildfile.core}" target="init-dirs"/>
 		
 		<get src="${lib.mrj_classes.url}" dest="${lib.mrj_classes}"
@@ -34,7 +36,7 @@
 		
 		<get src="${lib.macOSX.url}" dest="${lib.macOSX}"
 			verbose="true" usetimestamp="true" ignoreerrors="true"/>
-	</target>-->
+	</target>
 	
 	<target name="getcurrentmacosxlibversion" 
 			description="Sets the property 'currentMacOSXLibVersion' to the value provided on the Web">	
@@ -76,7 +78,7 @@
 		<echo message="Release Date is: ${releaseDate}"/>
 	</target>
 	
-	<target name="jar-mac" depends="getcurrentmacosxlibversion"
+	<target name="jar-mac" depends="init-mac-libs"
 			description="creates a jar for Mac OS X distributions containing the libMacOSX.jnilib">
 		
 		<ant antfile="${buildfile.core}" target="${buildfile.core.target.jar}">
@@ -127,6 +129,14 @@
 			<param name="dist.osx" value="${dist.osx}/manioq"/>
 		</antcall>
 	</target>
+	
+	<target name="portable-mac-dist-archive">
+		<antcall target="mac-dist-archive">
+			<param name="JAP_args" value="--portable ${portableFirefoxPath}"/>
+			<param name="dist.osx" value="${dist.osx}/portable"/>
+		</antcall>
+	</target>
+	
 	
 	<target name="clean">
 		<ant antfile="${buildfile.core}" target="clean"/>
