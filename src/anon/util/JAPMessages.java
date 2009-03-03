@@ -26,7 +26,7 @@
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
 
-package gui;
+package anon.util;
 
 import java.util.Locale;
 import java.util.Hashtable;
@@ -34,11 +34,7 @@ import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 import java.util.MissingResourceException;
 import java.text.MessageFormat;
-import java.awt.Frame;
 
-import anon.util.IMessages;
-import anon.util.Util;
-import anon.util.ResourceLoader;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -51,14 +47,13 @@ import logging.LogType;
  * language strings. The other bundles may contain a subset of these strings.
  * @see http://www.w3.org/WAI/ER/IG/ert/iso639.htm
  */
-public final class JAPMessages implements IMessages
+public final class JAPMessages
 {
 	private static ResourceBundle ms_resourceBundle = null;
 	private static ResourceBundle ms_defaultResourceBundle = null;
 	private static Locale ms_locale;
 	private final static Locale SYSTEM_LOCALE;
 	private static Hashtable ms_cachedMessages;
-	private static JAPMessages ms_instance; 
 	private static final Object SYNC = new Object();
 
 	static
@@ -69,32 +64,10 @@ public final class JAPMessages implements IMessages
 	private JAPMessages()
 	{
 	}
-
-	public String getMessage(String a_key)
-	{
-		return getString(a_key);
-	}
-	
-	public String getMessage(String a_key, Object a_argument)
-	{
-		return getString(a_key, a_argument);
-	}
 	
 	public static Locale getSystemLocale()
 	{
 		return SYSTEM_LOCALE;
-	}
-	
-	public static JAPMessages getInstance()
-	{
-		synchronized (SYNC)
-		{
-			if (ms_instance == null)
-			{
-				ms_instance = new JAPMessages();
-			}
-		}
-		return ms_instance;
 	}
 
 	/**
@@ -103,10 +76,10 @@ public final class JAPMessages implements IMessages
 	 * @param a_resourceBundleFilename a file name for the resource bundle; the language code for the
 	 * locale will be added programmatically (e.g. _en, _de, ...).
 	 */
-	public static void init(String a_resourceBundleFilename)
+	public static boolean init(String a_resourceBundleFilename)
 	{
 		// Load Texts for Messages and Windows
-		init(Locale.getDefault(), a_resourceBundleFilename);
+		return init(Locale.getDefault(), a_resourceBundleFilename);
 	}
 
 	private static String getBundleLocalisedFilename(String a_resourceBundleFilename, Locale a_locale)
@@ -143,7 +116,7 @@ public final class JAPMessages implements IMessages
 	 * @param a_resourceBundleFilename a file name for the resource bundle; the language code for the
 	 * locale will be added programmatically (e.g. _en, _de, ...).
 	 */
-	public static synchronized void init(Locale locale, String a_resourceBundleFilename)
+	public static synchronized boolean init(Locale locale, String a_resourceBundleFilename)
 	{
 		if (ms_locale != null)
 		{
@@ -161,12 +134,8 @@ public final class JAPMessages implements IMessages
 		}
 		catch (Exception a_e)
 		{
-			JAPAWTMsgBox.MsgBox(new Frame(),
-								"File not found: " + a_resourceBundleFilename + "_en" +
-								".properties\nYour package of JAP may be corrupted.\n" +
-								"Try again to download or install the package.",
-								"Error");
-			System.exit(1);
+			LogHolder.log(LogLevel.EMERG, LogType.GUI, a_e);
+			return false;
 		}
 		ms_resourceBundle = ms_defaultResourceBundle;
 
@@ -203,9 +172,10 @@ public final class JAPMessages implements IMessages
 			}
 		}
 
-
 		ms_cachedMessages = new Hashtable();
 		ms_locale = locale;
+		
+		return true;
 	}
 
 	public static boolean isInitialised()
@@ -257,7 +227,6 @@ public final class JAPMessages implements IMessages
 				throw new MissingResourceException("Resource is empty",
 					PropertyResourceBundle.class.getName(), a_key);
 			}
-
 		}
 		catch (Exception e)
 		{
@@ -278,10 +247,10 @@ public final class JAPMessages implements IMessages
 
 			if (string == null || string.trim().length() == 0)
 			{
-			LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Could not load messsage string: " + a_key, true);
+				LogHolder.log(LogLevel.DEBUG, LogType.GUI, "Could not load messsage string: " + a_key, true);
 				string = a_key;
+			}
 		}
-	}
 
 		ms_cachedMessages.put(a_key, string);
 		return string;

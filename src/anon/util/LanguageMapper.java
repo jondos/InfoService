@@ -25,12 +25,11 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package gui;
+package anon.util;
 
 import java.util.Locale;
 import java.util.Vector;
 
-import anon.util.Util;
 
 /**
  * Objects of this class store a language code and can translate it into
@@ -38,7 +37,7 @@ import anon.util.Util;
  * this class is bound to the locale used in JAPMessages.
  *
  * @author Rolf Wendolsky
- * @see gui.JAPMessages
+ * @see anon.util.JAPMessages
  * @see http://www.w3.org/WAI/ER/IG/ert/iso639.htm
  * @version ISO 639 on 27.12.05
  */
@@ -161,7 +160,7 @@ public class LanguageMapper extends AbstractISOCodeMapper
 	 * Creates a Locale object from the language code and a given country code.
 	 * @param a_countryCode an ISO country code
 	 * @return a Locale object from the language code and a given country code
-	 * @see gui.CountryMapper
+	 * @see anon.util.CountryMapper
 	 */
 	public Locale getLocale(String a_countryCode)
 	{
