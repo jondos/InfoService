@@ -25,12 +25,11 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package gui;
+package anon.util;
 
 import java.util.Locale;
 import java.util.Vector;
 
-import anon.util.Util;
 
 /**
  * Objects of this class store a country code and can translate it into
