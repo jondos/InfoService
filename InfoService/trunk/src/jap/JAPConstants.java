@@ -36,7 +36,7 @@ import anon.mixminion.Mixminion;
 public final class JAPConstants
 {
 	// Note: probably you like to change anon.AnonService.ANONLIB_VERSION as well
-	public static final String aktVersion = "00.10.073"; //Never change the layout of this line!
+	public static final String aktVersion = "00.10.074"; //Never change the layout of this line!
 	
 	public final static boolean m_bUnstableVersion = false; //Set to true if this is an unstable (development) Version
 
@@ -218,6 +218,7 @@ public final class JAPConstants
 	public final static String PAYMENT_ROOT_CERTS[] = new String[] {};
 	public final static String PAYMENT_DEFAULT_CERTSPATH = "acceptedPIs/";
 	public final static String MIX_CERTSPATH = "acceptedMixCAs/";
+	public final static String OPERATOR_CERTSPATH = "acceptedMixOperators/";
 	public final static String MIX_ROOT_CERTS[] =
 		new String[] {"japmixroot.cer", "Operator_CA.cer", "Test_CA.cer.dev", "gpf_jondonym_ca.cer"};
 	public final static String INFOSERVICE_ROOT_CERTS[] =
