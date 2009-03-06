@@ -25,7 +25,7 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap;
+package anon.client;
 
 import java.security.SignatureException;
 import java.util.Enumeration;
@@ -39,7 +39,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import anon.client.BasicTrustModel;
+import anon.infoservice.BlacklistedCascadeIDEntry;
 import anon.infoservice.Database;
 import anon.infoservice.IServiceContextContainer;
 import anon.infoservice.MixCascade;
@@ -47,6 +47,8 @@ import anon.infoservice.ServiceOperator;
 import anon.infoservice.StatusInfo;
 import anon.infoservice.PerformanceEntry;
 import anon.infoservice.PerformanceInfo;
+import anon.pay.PayAccountsFile;
+import anon.util.ClassUtil;
 import anon.util.IXMLEncodable;
 import anon.util.JAPMessages;
 import anon.util.XMLParseException;
@@ -54,9 +56,6 @@ import anon.util.XMLUtil;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
-import anon.infoservice.BlacklistedCascadeIDEntry;
-import anon.pay.PayAccountsFile;
-import anon.client.TrustException;
 
 
 /**
@@ -143,8 +142,10 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 	
 	private static Vector ms_trustModels = new Vector();
 	private static TrustModel ms_currentTrustModel;
+	
+	private static String ms_strContext = IServiceContextContainer.CONTEXT_JONDONYM;
 
-	protected static class InnerObservable extends Observable
+	public static class InnerObservable extends Observable
 	{
 		public void setChanged()
 		{
@@ -275,7 +276,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 			String name = XMLUtil.parseAttribute(a_e, XML_ATTR_NAME, null);
 			int trustCondition = XMLUtil.parseAttribute(a_e, XML_ATTR_TRUST_CONDITION, TRUST_ALWAYS);
 			int conditionValue = XMLUtil.parseAttribute(a_e, XML_ATTR_CONDITION_VALUE, 0);
-			boolean bIgnoreNoData = XMLUtil.parseAttribute(a_e, XML_ATTR_IGNORE_NO_DATA, false);			
+			boolean bIgnoreNoData = XMLUtil.parseAttribute(a_e, XML_ATTR_IGNORE_NO_DATA, false);
 
 			TrustAttribute attr;
 
@@ -283,7 +284,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 			{
 				Object value = null;
 
-				if(trustCondition == TRUST_IF_NOT_IN_LIST)
+				if (trustCondition == TRUST_IF_NOT_IN_LIST)
 				{
 					Node n = XMLUtil.getFirstChildByName(a_e, XML_VALUE_CONTAINER_ELEMENT_NAME);
 					XMLUtil.assertNotNull(n);
@@ -291,7 +292,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 					NodeList list = n.getChildNodes();
 					value = new Vector();
 
-					for(int i = 0; i < list.getLength(); i++)
+					for (int i = 0; i < list.getLength(); i++)
 					{
 						// look for a matching ServiceOperator database entry
 						ServiceOperator op = (ServiceOperator) Database.getInstance(ServiceOperator.class).getEntryById(XMLUtil.parseValue(list.item(i),null));
@@ -303,6 +304,11 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 					value = new Integer(conditionValue);
 				}
 				
+				if (name != null && name.startsWith("jap.TrustModel"))
+				{
+					// backwards compatibility
+					name = TrustModel.class.getName() + name.substring(("jap.TrustModel").length(), name.length());
+				}
 				attr = getInstance(Class.forName(name), trustCondition, value, bIgnoreNoData);
 				if (attr == null)
 				{
@@ -310,7 +316,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 				}
 			}
 			catch(Exception ex)
-			{
+			{ex.printStackTrace();
 				throw new XMLParseException(XML_ELEMENT_NAME, ex.getMessage());
 			}
 			
@@ -343,7 +349,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 		public void checkTrust(MixCascade a_cascade) throws TrustException, SignatureException
 		{
 			String strContextCascade = a_cascade.getContext();
-			String strContextModel = JAPModel.getInstance().getContext();
+			String strContextModel = ms_strContext;
 			
 			if (getTrustCondition() == TRUST_IF_TRUE && !strContextCascade.equals(strContextModel))
 			{
@@ -694,10 +700,32 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 		setCurrentTrustModel((TrustModel)ms_trustModels.elementAt(0));
 	}
 
-	protected static void updateContext()
+	public static String getContext()
+	{
+		return ms_strContext;
+	}
+	
+	public static boolean updateContext(String a_context)
 	{
 		synchronized (ms_trustModels)
 		{
+			boolean bChanged = false;
+			if (ms_strContext != a_context && a_context != null && (ms_strContext == null || !ms_strContext.equals(a_context)))
+			{
+				// changed!
+				if ((ms_strContext == null && !a_context.equals(IServiceContextContainer.CONTEXT_JONDONYM)) || ms_strContext != null)
+				{
+					//changed from default to other context or the other way round
+					bChanged = true;
+				}
+				ms_strContext = a_context;
+			}
+			
+			if (!bChanged)
+			{
+				return false;
+			}
+			
 			TrustModel temp = ms_currentTrustModel;
 			
 			ms_trustModels.removeElement(CONTEXT_MODEL_ALL);
@@ -706,7 +734,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 			ms_trustModels.removeElement(CONTEXT_MODEL_PREMIUM_PRIVATE);
 			ms_trustModels.removeElement(CONTEXT_MODEL_BUSINESS);
 			
-			if (JAPModel.getInstance().getContext().equals(JAPModel.CONTEXT_JONDONYM))
+			if (ms_strContext.equals(IServiceContextContainer.CONTEXT_JONDONYM))
 			{
 				ms_trustModels.insertElementAt(CONTEXT_MODEL_FREE, 0);
 				ms_trustModels.insertElementAt(CONTEXT_MODEL_PREMIUM, 0);
@@ -714,7 +742,7 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 				ms_currentTrustModel = CONTEXT_MODEL_ALL;
 				
 			}
-			else if (JAPModel.getInstance().getContext().startsWith(JAPModel.CONTEXT_JONDONYM))
+			else if (ms_strContext.startsWith(IServiceContextContainer.CONTEXT_JONDONYM_PREMIUM))
 			{
 				ms_trustModels.insertElementAt(CONTEXT_MODEL_PREMIUM_PRIVATE, 0);
 				ms_trustModels.insertElementAt(CONTEXT_MODEL_BUSINESS, 0);
@@ -729,6 +757,8 @@ public class TrustModel extends BasicTrustModel implements IXMLEncodable
 			
 			ms_trustModelObservable.setChanged();
 			setCurrentTrustModel(temp.getId());
+			
+			return true;
 		}
 	}
 	

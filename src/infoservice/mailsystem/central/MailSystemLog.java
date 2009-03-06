@@ -47,7 +47,11 @@ public class MailSystemLog extends AbstractLog4jLog {
    */
   public MailSystemLog(Properties a_properties) {
     PropertyConfigurator.configure(a_properties);
-    m_Log = Logger.getRootLogger();
+
   }
   
+  protected Logger getLogger()
+	{
+		return Logger.getRootLogger();
+	}
 }

@@ -25,16 +25,14 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap;
+package anon.infoservice.update;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-import anon.util.Updater;
 import anon.infoservice.AbstractDatabaseEntry;
 import anon.infoservice.Database;
-import anon.infoservice.MixCascade;
-import anon.infoservice.PerformanceInfo;
+import anon.util.Updater;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -60,27 +58,17 @@ public abstract class AbstractDatabaseUpdater extends Updater
 	/**
 	 * Initialises and starts the database update thread.
 	 */
-	public AbstractDatabaseUpdater(long a_updateInterval)
+	public AbstractDatabaseUpdater(long a_updateInterval, ObservableInfo a_observableInfo)
 	{
-		this (new ConstantUpdateInterval(a_updateInterval));
+		this (new ConstantUpdateInterval(a_updateInterval), a_observableInfo);
 	}
 	
 	/**
 	 * Initialises and starts the database update thread.
 	 */
-	public AbstractDatabaseUpdater(IUpdateInterval a_updateInterval)
+	public AbstractDatabaseUpdater(IUpdateInterval a_updateInterval, ObservableInfo a_observableInfo)
 	{
-		super(a_updateInterval, new ObservableInfo(JAPModel.getInstance())
-		{
-			public Integer getUpdateChanged()
-			{
-				return JAPModel.CHANGED_INFOSERVICE_AUTO_UPDATE;
-			}
-			public boolean isUpdateDisabled()
-			{
-				return JAPModel.isInfoServiceDisabled();
-			}
-		});
+		super(a_updateInterval, a_observableInfo);
 	}
 
 	/**
@@ -191,12 +179,12 @@ public abstract class AbstractDatabaseUpdater extends Updater
 			Enumeration entries = newEntries.elements();
 			while (entries.hasMoreElements())
 			{
-
 				AbstractDatabaseEntry currentEntry = (AbstractDatabaseEntry) (entries.nextElement());
 				if (Database.getInstance(getUpdatedClass()).update(currentEntry))
 				{
 					updated = true;
 				}
+
 				AbstractDatabaseEntry preferredEntry = getPreferredEntry();
 				if (preferredEntry != null)
 				{
@@ -210,16 +198,10 @@ public abstract class AbstractDatabaseUpdater extends Updater
 				}
 			}
 
-			updated = doCleanup(newEntries) || updated;
-
-			if ((getUpdatedClass() == MixCascade.class) && updated)
+			if (doCleanup(newEntries) || updated)
 			{
-				JAPController.getInstance().notifyJAPObservers();
-			}
-			else if ((getUpdatedClass() == PerformanceInfo.class) && updated)
-			{
-				JAPController.getInstance().notifyJAPObservers();
-			}
+				getObservableInfo().notifyAdditionalObserversOnUpdate(getUpdatedClass());
+			}		
 		}
 	}
 

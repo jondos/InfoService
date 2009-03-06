@@ -25,81 +25,54 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap;
+package anon.infoservice.update;
 
 import java.util.Hashtable;
-import java.util.Vector;
 
-import anon.infoservice.AbstractDatabaseEntry;
-import anon.infoservice.Database;
+import anon.infoservice.JavaVersionDBEntry;
 import anon.infoservice.InfoServiceHolder;
-import anon.pay.PaymentInstanceDBEntry;
-import anon.pay.PayAccountsFile;
-import logging.*;
 
 /**
- * Updates the list of available MixCascades.
+ * Updates the latest java version.
  * @author Rolf Wendolsky
  */
-public class PaymentInstanceUpdater extends AbstractDatabaseUpdater
+public class JavaVersionUpdater extends AbstractDatabaseUpdater
 {
-	private static final long UPDATE_INTERVAL_MS = 15 * 60000l; //every 15 minutes
-	private static final long MIN_UPDATE_INTERVAL_MS = 60000l;
+	private static final long UPDATE_INTERVAL_MS = 1000 * 60 * 60 * 12l ; // half a day (update twice per day)
+	private static final long UPDATE_INTERVAL_MS_SHORT = 1000 * 60 * 10l; // 10 minutes
 
-	public PaymentInstanceUpdater()
+	public JavaVersionUpdater(ObservableInfo a_observableInfo)
 	{
-		super(new DynamicUpdateInterval(UPDATE_INTERVAL_MS));
-	}
-	
-	public PaymentInstanceUpdater(long a_updateInterval)
-	{
-		super(a_updateInterval);
+		super(new DynamicUpdateInterval(UPDATE_INTERVAL_MS_SHORT), a_observableInfo);
 	}
 
 	public Class getUpdatedClass()
 	{
-		return PaymentInstanceDBEntry.class;
+		return JavaVersionDBEntry.class;
+	}
+
+	protected Hashtable getUpdatedEntries(Hashtable a_dummy)
+	{
+		Hashtable hashtable = InfoServiceHolder.getInstance().getLatestJavaVersions();
+		if (hashtable == null)
+		{
+			((DynamicUpdateInterval)getUpdateInterval()).setUpdateInterval(UPDATE_INTERVAL_MS_SHORT);
+			return new Hashtable();
+		}
+		((DynamicUpdateInterval)getUpdateInterval()).setUpdateInterval(UPDATE_INTERVAL_MS);
+		return hashtable;
 	}
 
 	protected Hashtable getEntrySerials()
 	{
-		return new Hashtable();
-	}
-
-	protected Hashtable getUpdatedEntries(Hashtable a_entriesToUpdate)
-	{
-		Hashtable pis = InfoServiceHolder.getInstance().getPaymentInstances();
-
-		if (getUpdateInterval() instanceof DynamicUpdateInterval)
+		//return new Hashtable();
+		Hashtable hashtable = InfoServiceHolder.getInstance().getLatestJavaVersionSerials();
+		if (hashtable == null)
 		{
-			if (pis == null)
-			{
-				// no entries where found
-				((DynamicUpdateInterval)getUpdateInterval()).setUpdateInterval(MIN_UPDATE_INTERVAL_MS);
-			}
-			else
-			{
-				((DynamicUpdateInterval)getUpdateInterval()).setUpdateInterval(UPDATE_INTERVAL_MS);
-			}
+			((DynamicUpdateInterval)getUpdateInterval()).setUpdateInterval(UPDATE_INTERVAL_MS_SHORT);
+			return new Hashtable();
 		}
-
-		if (pis != null && pis.size() == 0)
-		{
-			// no payment instances found in InfoService; do not delete remaining pis!
-			pis = null;
-		}
-
-		return pis;
-	}
-	
-	protected boolean protectFromCleanup(AbstractDatabaseEntry a_currentEntry)
-	{
-		// do not delete any payment instances for that we still have an account
-		if (PayAccountsFile.getInstance().getAccounts(a_currentEntry.getId()).size() > 0)
-		{
-			return true;
-		}
-		
-		return false;
+		((DynamicUpdateInterval)getUpdateInterval()).setUpdateInterval(UPDATE_INTERVAL_MS);
+		return hashtable;
 	}
 }

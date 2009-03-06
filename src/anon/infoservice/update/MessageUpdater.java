@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2006, The JAP-Team
+ Copyright (c) 2007, The JAP-Team
  All rights reserved.
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -25,47 +25,55 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap;
+package anon.infoservice.update;
+
+import java.util.Hashtable;
 
 import anon.infoservice.InfoServiceHolder;
-import java.util.Hashtable;
-import anon.infoservice.JAPMinVersion;
+import anon.infoservice.MessageDBEntry;
+
 
 /**
- *
+ * Updates the messages.
  * @author Rolf Wendolsky
  */
-public class MinVersionUpdater extends AbstractDatabaseUpdater
+public class MessageUpdater extends AbstractDatabaseUpdater
 {
-	private static final long UPDATE_INTERVAL_MS = 1000 * 60 * 60 * 12l ; // half a day (update twice per day)
-	private static final long UPDATE_INTERVAL_MS_SHORT = 1000 * 60 * 8l; // 8 minutes
+	private static final long UPDATE_INTERVAL_MS = 1000 * 60 * 60 * 1l ; // one hour
+	private static final long UPDATE_INTERVAL_MS_SHORT = 1000 * 60 * 10l; // 10 minutes
 
-	public MinVersionUpdater()
+	public MessageUpdater(ObservableInfo a_observableInfo)
 	{
-		super(new DynamicUpdateInterval(UPDATE_INTERVAL_MS_SHORT));
+		super(new DynamicUpdateInterval(UPDATE_INTERVAL_MS_SHORT), a_observableInfo);
 	}
 
 	public Class getUpdatedClass()
 	{
-		return JAPMinVersion.class;
+		return MessageDBEntry.class;
 	}
 
 	protected Hashtable getUpdatedEntries(Hashtable a_dummy)
 	{
-		Hashtable hashtable = new Hashtable();
-		JAPMinVersion version = InfoServiceHolder.getInstance().getNewVersionNumber();
-		if (version != null)
+		Hashtable hashtable = InfoServiceHolder.getInstance().getMessages();
+		if (hashtable == null)
 		{
 			((DynamicUpdateInterval)getUpdateInterval()).setUpdateInterval(UPDATE_INTERVAL_MS_SHORT);
-			hashtable.put(version.getId(), version);
+			return new Hashtable();
 		}
 		((DynamicUpdateInterval)getUpdateInterval()).setUpdateInterval(UPDATE_INTERVAL_MS);
-		return  hashtable;
+		return hashtable;
 	}
 
 	protected Hashtable getEntrySerials()
 	{
-		return new Hashtable();
-	}
+		Hashtable hashtable = InfoServiceHolder.getInstance().getMessageSerials();
+		if (hashtable == null)
+		{
+			((DynamicUpdateInterval)getUpdateInterval()).setUpdateInterval(UPDATE_INTERVAL_MS_SHORT);
+			return new Hashtable();
+		}
+		((DynamicUpdateInterval)getUpdateInterval()).setUpdateInterval(UPDATE_INTERVAL_MS);
+		return hashtable;
 
+	}
 }

@@ -1,4 +1,6 @@
-package jap;
+package infoservice;
+
+
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -24,6 +26,10 @@ import anon.infoservice.PerformanceEntry;
 import anon.infoservice.PerformanceInfo;
 import anon.infoservice.PerformanceEntry.PerformanceAttributeEntry;
 import anon.infoservice.PerformanceEntry.StabilityAttributes;
+import anon.infoservice.update.AbstractDatabaseUpdater;
+import anon.infoservice.update.PaymentInstanceUpdater;
+import anon.infoservice.update.PerformanceInfoUpdater;
+import anon.util.Updater.ObservableInfo;
 
 public class PassiveInfoServiceMainUpdater extends AbstractDatabaseUpdater
 {
@@ -50,18 +56,18 @@ public class PassiveInfoServiceMainUpdater extends AbstractDatabaseUpdater
 	private final Calendar m_cal = Calendar.getInstance();
 	
 	
-	public PassiveInfoServiceMainUpdater(long interval, boolean a_bFetchPerformanceData) 
+	public PassiveInfoServiceMainUpdater(long interval, boolean a_bFetchPerformanceData, ObservableInfo a_observableInfo) 
 	throws IOException
 	{
-		super(interval);
+		super(interval, a_observableInfo);
 		
-		m_cascadeUpdater = new PassiveInfoServiceCascadeUpdater(Long.MAX_VALUE);
-		m_mixUpdater = new MixInfoUpdater();
-		piUpdater = new PaymentInstanceUpdater(Long.MAX_VALUE);
+		m_cascadeUpdater = new PassiveInfoServiceCascadeUpdater(Long.MAX_VALUE, a_observableInfo);
+		m_mixUpdater = new MixInfoUpdater(a_observableInfo);
+		piUpdater = new PaymentInstanceUpdater(Long.MAX_VALUE, a_observableInfo);
 		
 		if (a_bFetchPerformanceData)
 		{
-			m_performanceInfoUpdater = new PerformanceInfoUpdater(Long.MAX_VALUE);
+			m_performanceInfoUpdater = new PerformanceInfoUpdater(Long.MAX_VALUE, a_observableInfo);
 		
 			// set calendar to current time
 			m_cal.setTime(new Date(System.currentTimeMillis()));
@@ -104,9 +110,9 @@ public class PassiveInfoServiceMainUpdater extends AbstractDatabaseUpdater
 		}
 	}
 	
-	public PassiveInfoServiceMainUpdater(boolean a_bFetchPerformanceData) throws IOException
+	public PassiveInfoServiceMainUpdater(boolean a_bFetchPerformanceData, ObservableInfo a_observableInfo) throws IOException
 	{
-		this(Long.MAX_VALUE, a_bFetchPerformanceData);
+		this(Long.MAX_VALUE, a_bFetchPerformanceData, a_observableInfo);
 	}
 	
 	protected boolean doCleanup(Hashtable a_newEntries)
