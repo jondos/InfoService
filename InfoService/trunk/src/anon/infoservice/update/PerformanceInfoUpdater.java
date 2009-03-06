@@ -1,4 +1,4 @@
-package jap;
+package anon.infoservice.update;
 
 import java.util.Hashtable;
 
@@ -11,14 +11,14 @@ public class PerformanceInfoUpdater extends AbstractDatabaseUpdater
 	private static final long MIN_UPDATE_INTERVAL_MS = 20000l;
 	
 	
-	public PerformanceInfoUpdater()
+	public PerformanceInfoUpdater(ObservableInfo a_observableInfo)
 	{
-		super(new DynamicUpdateInterval(UPDATE_INTERVAL));
+		super(new DynamicUpdateInterval(UPDATE_INTERVAL), a_observableInfo);
 	}
 	
-	public PerformanceInfoUpdater(long interval)
+	public PerformanceInfoUpdater(long interval, ObservableInfo a_observableInfo)
 	{
-		super(interval);
+		super(interval, a_observableInfo);
 	}
 	
 	protected Hashtable getEntrySerials() 

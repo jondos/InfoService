@@ -25,13 +25,14 @@
  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap;
+package anon.infoservice.update;
 
 import java.util.Hashtable;
 
 import anon.infoservice.AbstractDatabaseEntry;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
+
 
 /**
  * Updates the known InfoServices. This may be done automatically (by a background thread) and manually
@@ -42,9 +43,9 @@ public class InfoServiceUpdater extends AbstractDatabaseUpdater
 {
 	private static final long UPDATE_INTERVAL_MS = 5 * 60000l; // every five minutes
 
-	public InfoServiceUpdater()
+	public InfoServiceUpdater(ObservableInfo a_observableInfo)
 	{
-		super(new ConstantUpdateInterval(UPDATE_INTERVAL_MS));
+		super(new ConstantUpdateInterval(UPDATE_INTERVAL_MS), a_observableInfo);
 	}
 
 

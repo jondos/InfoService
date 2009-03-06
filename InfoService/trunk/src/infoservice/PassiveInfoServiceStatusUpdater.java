@@ -1,4 +1,4 @@
-package jap;
+package infoservice;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -6,14 +6,16 @@ import java.util.Hashtable;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.MixCascade;
 import anon.infoservice.StatusInfo;
+import anon.infoservice.update.AbstractDatabaseUpdater;
+import anon.util.Updater.ObservableInfo;
 
 public class PassiveInfoServiceStatusUpdater extends AbstractDatabaseUpdater 
 {
 	private static final long UPDATE_INTERVAL_MS = 7000l;
 	
-	public PassiveInfoServiceStatusUpdater() 
+	public PassiveInfoServiceStatusUpdater(ObservableInfo a_observableInfo) 
 	{
-		super(UPDATE_INTERVAL_MS);
+		super(UPDATE_INTERVAL_MS, a_observableInfo);
 	}
 
 	protected Hashtable getEntrySerials() 
