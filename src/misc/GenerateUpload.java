@@ -11,82 +11,230 @@ import java.io.InputStream;
 
 import anon.util.Util;
 
-public class GenerateUpload implements Runnable
-{
-	private static InputStream in;
-	private static byte[] randomData;
-	public static void main(String[] args) throws UnknownHostException, IOException
+public class GenerateUpload
 	{
-		randomData=new byte[10000000];
-		Random rand=new Random();
-		//rand.nextBytes(randomData);
-		for(int i=0;i<randomData.length;i++)
-			randomData[i]=(byte)i;
-		Socket s=new Socket("127.0.0.1",4001);
-		OutputStream out=s.getOutputStream();
-		in=s.getInputStream();
-		Thread t=new Thread(new GenerateUpload());
-		t.start();
-		out.write("CONNECT 127.0.0.1:7 HTTP/1.0\n\r\n\r".getBytes()); //Note: Connects to the ECHO service through the cascade / proxy
-		long l=0;
-		int currentPos=0;
-		while(true)
-		{
-			out.write(randomData,currentPos,10000);
-			currentPos+=10000;
-			currentPos%=10000000;
-			l+=10000;
-			if((l%1000000)==0)
-				System.out.println("Sent: "+l/1000000+" MBytes");
-			try {
-				Thread.sleep(10);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
+		private static final int MAX_WAIT_BETWEEN_CHANNELS = 1000;
+		private static final int MAX_CHANNELS = 50;
+		private static final int MAX_SINGLE_CALL_UPLOAD = 800;
+		static int MAX_UPLOAD = 10000;
+		private static byte[] randomData;
+		static Random rand;
+		static int success = 0;
+		static int failed = 0;
 
-	}
+		static synchronized void incFailed()
+			{
+				failed++;
+			}
 
-	public void run()
-	{
-		try{
-			//LineNumberReader inr=new LineNumberReader(new InputStreamReader(in));
-			//System.out.println(inr.readLine());
-			//String s=inr.readLine();
-			//s=inr.readLine();
-			
-		byte[] buff=new byte[10000];
-		long l=0;
-		long reported=1000000;
-		int currentPos=0;
-		int h=in.read(buff,0,39);//skip proxy response headers
-		h=in.read(buff,0,1); // Strange thing here: we got (sometimes?) and extra chr(13) after the HTTP response headers - why ???
-		while(true)
-		{
-			int r=Math.min(buff.length, randomData.length-currentPos); 
-			r=in.read(buff,0,r);
-			if(!Util.arraysEqual(buff, 0, randomData, currentPos, r))
+		static synchronized void incSuccess()
 			{
-			System.out.println("REad error!");
-			for (int u=0;u<randomData.length-1;u++)
+				success++;
+			}
+
+		public static void main(String[] args) throws UnknownHostException,
+				IOException
 			{
-				if(buff[0]==randomData[u]&&buff[1]==randomData[u+1])
-					{System.out.println(u);break;}
+				rand = new Random();
+
+				randomData = new byte[500000];
+				for (int i = 0; i < randomData.length; i++)
+					randomData[i] = (byte) i;
+				GenerateUpload g = new GenerateUpload();
+				g.start();
 			}
-			}
-			l+=r;
-			currentPos+=r;
-			currentPos%=10000000;
-			if(l>=reported)
+
+		void start()
 			{
-				System.out.println("Read: "+l/1000000.0+" MBytes");
-				reported+=1000000;
+				Upload uploads[] = new Upload[MAX_CHANNELS];
+				for (int i = 0; i < MAX_CHANNELS; i++)
+					{
+						uploads[i] = new Upload(rand.nextInt(MAX_UPLOAD), i);
+						try
+							{
+								Thread.sleep(rand.nextInt(MAX_WAIT_BETWEEN_CHANNELS));
+							}
+						catch (InterruptedException e)
+							{
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+					}
+				for (int i = 0; i < MAX_CHANNELS; i++)
+					{
+						uploads[i].join();
+					}
+				System.out.println(success + " ok / " + failed + " failed");
 			}
-		}
-		}catch(Exception e)
-		{
-			System.out.println("Read failed!");
-		}
+
+		class Upload implements Runnable
+			{
+				int maxLen;
+				int id;
+				Thread t;
+
+				public Upload(int maxL, int ID)
+					{
+						id = ID;
+						maxLen = maxL;
+						t = new Thread(this);
+						t.start();
+					}
+
+				public void join()
+					{
+						try
+							{
+								t.join();
+							}
+						catch (InterruptedException e)
+							{
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+					}
+
+				public void run()
+					{
+						try
+							{
+								// rand.nextBytes(randomData);
+								Socket s = new Socket("127.0.0.1", 4001);
+								OutputStream out = s.getOutputStream();
+								Download d = new Download(s.getInputStream(), maxLen, id);
+								out.write("CONNECT 127.0.0.1:7 HTTP/1.0\n\r\n\r".getBytes()); // Note:
+																																							// Connects
+																																							// to
+																																							// the
+																																							// ECHO
+																																							// service
+																																							// through
+																																							// the
+																																							// cascade
+																																							// /
+																																							// proxy
+								int l = 0;
+								int currentPos = 0;
+								int len = 0;
+								while (l < maxLen)
+									{
+										len = Math.min(rand.nextInt(MAX_SINGLE_CALL_UPLOAD),
+												randomData.length - currentPos);
+										len = Math.min(len, maxLen - l);
+										out.write(randomData, currentPos, len);
+										currentPos += len;
+										currentPos %= randomData.length;
+										l += len;
+										if ((l % 1000000) == 0) System.out.println("Sent: " + l
+												/ 1000000 + " MBytes");
+										try
+											{
+												Thread.sleep(100);
+											}
+										catch (InterruptedException e)
+											{
+												// TODO Auto-generated catch block
+												e.printStackTrace();
+											}
+									}
+								System.out.println("Upload: " + id + " Sent: " + l + " Bytes");
+								d.join();
+								s.close();
+							}
+						catch (Throwable t)
+							{
+								t.printStackTrace();
+							}
+					}
+
+				class Download implements Runnable
+					{
+						InputStream in;
+						int maxLen;
+						int id;
+						Thread t;
+
+						Download(InputStream i, int maxL, int ID)
+							{
+								id = ID;
+								in = i;
+								maxLen = maxL;
+								t = new Thread(this);
+								t.start();
+							}
+
+						public void join()
+							{
+								try
+									{
+										t.join();
+									}
+								catch (InterruptedException e)
+									{
+										// TODO Auto-generated catch block
+										e.printStackTrace();
+									}
+							}
+
+						public void run()
+							{
+								try
+									{
+										// LineNumberReader inr=new LineNumberReader(new
+										// InputStreamReader(in));
+										// System.out.println(inr.readLine());
+										// String s=inr.readLine();
+										// s=inr.readLine();
+
+										byte[] buff = new byte[10000];
+										int l = 0;
+										long reported = 1000000;
+										int currentPos = 0;
+										int h = in.read(buff, 0, 39);// skip proxy response headers
+										h = in.read(buff, 0, 1); // Strange thing here: we got
+																							// (sometimes?) and extra chr(13)
+																							// after the HTTP response headers
+																							// - why ???
+										while (l < maxLen)
+											{
+												int r = Math.min(buff.length, randomData.length
+														- currentPos);
+												r = Math.min(r, maxLen - l);
+
+												r = in.read(buff, 0, r);
+												if (!Util.arraysEqual(buff, 0, randomData, currentPos,
+														r))
+													{
+														System.out.println("Download: " + id
+																+ " -- Read error!");
+														incFailed();
+														return;
+														/*
+														 * for (int u=0;u<randomData.length-1;u++) {
+														 * if(buff[
+														 * 0]==randomData[u]&&buff[1]==randomData[u+1])
+														 * {System.out.println(u);break;} }
+														 */}
+												l += r;
+												currentPos += r;
+												currentPos %= randomData.length;
+												if (l >= reported)
+													{
+														System.out.println("Read: " + l / 1000000.0
+																+ " MBytes");
+														reported += 1000000;
+													}
+											}
+										System.out.println("Download: " + id
+												+ " -- Succesfully received: " + l + " Bytes");
+										incSuccess();
+									}
+
+								catch (Exception e)
+									{
+										System.out.println("Read failed!");
+									}
+							}
+					}
+			}
 	}
-}
