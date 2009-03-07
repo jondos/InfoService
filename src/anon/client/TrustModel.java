@@ -48,7 +48,6 @@ import anon.infoservice.StatusInfo;
 import anon.infoservice.PerformanceEntry;
 import anon.infoservice.PerformanceInfo;
 import anon.pay.PayAccountsFile;
-import anon.util.ClassUtil;
 import anon.util.IXMLEncodable;
 import anon.util.JAPMessages;
 import anon.util.XMLParseException;
