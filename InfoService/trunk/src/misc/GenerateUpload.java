@@ -14,9 +14,10 @@ import anon.util.Util;
 public class GenerateUpload
 	{
 		private static final int MAX_WAIT_BETWEEN_CHANNELS = 1000;
-		private static final int MAX_CHANNELS = 50;
-		private static final int MAX_SINGLE_CALL_UPLOAD = 800;
-		static int MAX_UPLOAD = 10000;
+		private static final int MAX_CHANNELS = 1000	;
+		private static final int MAX_SINGLE_CALL_UPLOAD = 18000;
+		public int MAX_WAIT_BETWEEN_SINGLE_CALL_UPLOAD=10;
+	static int MAX_UPLOAD = 270000;
 		private static byte[] randomData;
 		static Random rand;
 		static int success = 0;
@@ -44,6 +45,7 @@ public class GenerateUpload
 				g.start();
 			}
 
+	
 		void start()
 			{
 				Upload uploads[] = new Upload[MAX_CHANNELS];
@@ -96,24 +98,33 @@ public class GenerateUpload
 
 				public void run()
 					{
+						int l = 0;
+						Socket s = null;
+						try
+							{
+								s = new Socket("127.0.0.1", 7777);
+							}
+						catch (Exception e1)
+							{
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
 						try
 							{
 								// rand.nextBytes(randomData);
-								Socket s = new Socket("127.0.0.1", 4001);
 								OutputStream out = s.getOutputStream();
 								Download d = new Download(s.getInputStream(), maxLen, id);
 								out.write("CONNECT 127.0.0.1:7 HTTP/1.0\n\r\n\r".getBytes()); // Note:
-																																							// Connects
-																																							// to
-																																							// the
-																																							// ECHO
-																																							// service
-																																							// through
-																																							// the
-																																							// cascade
-																																							// /
-																																							// proxy
-								int l = 0;
+								// Connects
+								// to
+								// the
+								// ECHO
+								// service
+								// through
+								// the
+								// cascade
+								// /
+								// proxy
 								int currentPos = 0;
 								int len = 0;
 								while (l < maxLen)
@@ -129,7 +140,7 @@ public class GenerateUpload
 												/ 1000000 + " MBytes");
 										try
 											{
-												Thread.sleep(100);
+												Thread.sleep(rand.nextInt(MAX_WAIT_BETWEEN_SINGLE_CALL_UPLOAD));
 											}
 										catch (InterruptedException e)
 											{
@@ -143,6 +154,7 @@ public class GenerateUpload
 							}
 						catch (Throwable t)
 							{
+								System.out.println("Exception in Upload -- l=" + l);
 								t.printStackTrace();
 							}
 					}
@@ -192,9 +204,9 @@ public class GenerateUpload
 										int currentPos = 0;
 										int h = in.read(buff, 0, 39);// skip proxy response headers
 										h = in.read(buff, 0, 1); // Strange thing here: we got
-																							// (sometimes?) and extra chr(13)
-																							// after the HTTP response headers
-																							// - why ???
+										// (sometimes?) and extra chr(13)
+										// after the HTTP response headers
+										// - why ???
 										while (l < maxLen)
 											{
 												int r = Math.min(buff.length, randomData.length
@@ -202,19 +214,18 @@ public class GenerateUpload
 												r = Math.min(r, maxLen - l);
 
 												r = in.read(buff, 0, r);
-												if (!Util.arraysEqual(buff, 0, randomData, currentPos,
-														r))
+												for (int z = 0; z < r; z++)
 													{
-														System.out.println("Download: " + id
-																+ " -- Read error!");
-														incFailed();
-														return;
-														/*
-														 * for (int u=0;u<randomData.length-1;u++) {
-														 * if(buff[
-														 * 0]==randomData[u]&&buff[1]==randomData[u+1])
-														 * {System.out.println(u);break;} }
-														 */}
+														if (buff[z] != randomData[currentPos+z])
+															{
+																System.out.println("Download: " + id
+																		+ " -- Read error! -- Position: " + l
+																		+ " -- Read: " + (buff[z]&0x00FF) + " -- Expected: "
+																		+ (randomData[currentPos+z]&0x00FF));
+																incFailed();
+																return;
+															}
+													}
 												l += r;
 												currentPos += r;
 												currentPos %= randomData.length;
