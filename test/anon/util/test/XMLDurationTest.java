@@ -56,11 +56,11 @@ public class XMLDurationTest extends XtendedPrivateTestCase
 		assertEquals(0, duration.getMinutes());
 		assertEquals(0.0, duration.getSeconds(), 0.01);
 	}
-
+	
 	public void testSimpleFormats() throws Exception
 	{
 		XMLDuration duration;
-
+		
 		duration = new XMLDuration("P6M");
 		assertEquals(6, duration.getMonths());
 		assertEquals(0, duration.getYears());
@@ -74,12 +74,12 @@ public class XMLDurationTest extends XtendedPrivateTestCase
 			// ignore
 		}
 		assertEquals(1, duration.getSign());
-
+		
 		duration = new XMLDuration("-P1Y");
 		assertEquals(0, duration.getMonths());
 		assertEquals(1, duration.getYears());
 		assertEquals(-1, duration.getSign());
-
+		
 		duration = new XMLDuration("P1Y8M");
 		assertEquals(8, duration.getMonths());
 		assertEquals(1, duration.getYears());
