@@ -13,11 +13,12 @@ import anon.util.Util;
 
 public class GenerateUpload
 	{
-		private static final int MAX_WAIT_BETWEEN_CHANNELS = 1000;
-		private static final int MAX_CHANNELS = 1000	;
-		private static final int MAX_SINGLE_CALL_UPLOAD = 18000;
+		private static final int MAX_WAIT_BETWEEN_CHANNELS = 10000;
+		private static final int MAX_CHANNELS = 50	;
+		private static final int MAX_SINGLE_CALL_UPLOAD = 1800;
 		public int MAX_WAIT_BETWEEN_SINGLE_CALL_UPLOAD=10;
-	static int MAX_UPLOAD = 270000;
+		static int MIN_UPLOAD = 597000;
+		static int MAX_UPLOAD = 700000;
 		private static byte[] randomData;
 		static Random rand;
 		static int success = 0;
@@ -38,7 +39,7 @@ public class GenerateUpload
 			{
 				rand = new Random();
 
-				randomData = new byte[500000];
+				randomData = new byte[256000];
 				for (int i = 0; i < randomData.length; i++)
 					randomData[i] = (byte) i;
 				GenerateUpload g = new GenerateUpload();
@@ -48,10 +49,11 @@ public class GenerateUpload
 	
 		void start()
 			{
+				
 				Upload uploads[] = new Upload[MAX_CHANNELS];
 				for (int i = 0; i < MAX_CHANNELS; i++)
 					{
-						uploads[i] = new Upload(rand.nextInt(MAX_UPLOAD), i);
+						uploads[i] = new Upload(MIN_UPLOAD+rand.nextInt(MAX_UPLOAD-MIN_UPLOAD), i);
 						try
 							{
 								Thread.sleep(rand.nextInt(MAX_WAIT_BETWEEN_CHANNELS));
@@ -102,7 +104,7 @@ public class GenerateUpload
 						Socket s = null;
 						try
 							{
-								s = new Socket("127.0.0.1", 7777);
+								s = new Socket("127.0.0.1", 4001);
 							}
 						catch (Exception e1)
 							{
