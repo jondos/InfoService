@@ -35,7 +35,9 @@ import anon.client.ITermsAndConditionsContainer;
 import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
 import anon.util.ClassUtil;
+import anon.util.Configuration;
 import anon.util.ResourceLoader;
+import anon.util.XMLUtil;
 import anon.util.Updater.ObservableInfo;
 
 public class AnonProxyTest
@@ -46,7 +48,7 @@ public class AnonProxyTest
 	private static AnonProxy m_jondonymProxy;
 	
 	
-	public static synchronized void init(final Logger a_logger) throws Exception
+	public static synchronized void init(final Logger a_logger, Configuration a_configuration) throws Exception
 	{		
 		if (ms_isUpdater != null)
 		{
@@ -75,8 +77,8 @@ public class AnonProxyTest
    		
    		LogHolder.log(LogLevel.ALERT, LogType.MISC, "Initialising AnonProxyTest version 0.1");
    		
-		ClassUtil.enableFindSubclasses(false); // This would otherwise start non-daemon AWT threads!
-		 
+		ClassUtil.enableFindSubclasses(false); // This would otherwise start non-daemon AWT threads, blow up memory and prevent closing the app.
+		XMLUtil.setStorageMode(XMLUtil.STORAGE_MODE_AGRESSIVE); // Store as few XML data as possible for memory optimization.
 		SignatureVerifier.getInstance().setCheckSignatures(true);
 		
 		 
@@ -119,7 +121,7 @@ public class AnonProxyTest
 	{
 		try
 		{
-			init(null);
+			init(null, null);
 			start();
 			
 			if (!isRunning())
@@ -164,11 +166,11 @@ public class AnonProxyTest
 				}
 				System.out.println(m_jondonymProxy.getMixCascade().getName());
 				  
-	            System.out.println(JAPUtil.formatBytesValueWithUnit(Runtime.getRuntime().totalMemory()) + " : " +
+	            System.out.println("Memory usage: " + 
+	            		JAPUtil.formatBytesValueWithUnit(Runtime.getRuntime().totalMemory()) + ", Max VM memory: " +
 
-						 JAPUtil.formatBytesValueWithUnit(Runtime.getRuntime().maxMemory()) + " : " +
+						 JAPUtil.formatBytesValueWithUnit(Runtime.getRuntime().maxMemory()) + ", Free memory: " +
 						 JAPUtil.formatBytesValueWithUnit(Runtime.getRuntime().freeMemory()));
-	            
 			}			
 			
 		}
@@ -234,26 +236,24 @@ public class AnonProxyTest
 	        ms_cascadeUpdater.update();
 	         
 	        MixCascade cascade;
-	        if (m_jondonymProxy == null)
+	        if (m_jondonymProxy == null || m_jondonymProxy.getMixCascade() == null)
 	        {
-		        m_jondonymProxy = new AnonProxy(m_socketListener, null,null);
-		        m_jondonymProxy.setDummyTraffic(DummyTrafficControlChannel.DT_MAX_INTERVAL_MS);
 		        cascade = (MixCascade)Database.getInstance(MixCascade.class).getRandomEntry();
 	        }
 	        else
 	        {
-	        	m_jondonymProxy = new AnonProxy(m_socketListener, null,null);
-	        	m_jondonymProxy.setDummyTraffic(DummyTrafficControlChannel.DT_MAX_INTERVAL_MS);
 	        	cascade = m_jondonymProxy.getMixCascade();
 	        }
 	        
-	      	// cascade = new MixCascade("mix.inf.tu-dresden.de", 6544);
 	        if (cascade == null)
 	        {
-	        	new MixCascade("none", 6544);
+	        	// cascade = new MixCascade("mix.inf.tu-dresden.de", 6544);
+	        	cascade = new MixCascade("none", 6544);
 	        }
+	        
+	        m_jondonymProxy = new AnonProxy(m_socketListener, null,null);
+	        m_jondonymProxy.setDummyTraffic(DummyTrafficControlChannel.DT_MAX_INTERVAL_MS);
 	        m_jondonymProxy.start(new AutoSwitchedMixCascadeContainer(cascade));
-
 		}
 		catch (Exception e)
 		{
