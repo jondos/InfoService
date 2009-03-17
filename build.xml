@@ -28,6 +28,7 @@
   <property name="classpath_bouncy_file_name" location="${build.libs}/BouncyCastleLightForJAP.jar"/>
   <property name="classpath_xmlrpc_file_name" location="${build.libs}/apache-xml-rpc-1.1.jar"/>
   <property name="classpath_jaf_file_name" location="${build.libs}/activation.jar"/>
+  <property name="classpath_skype_file_name" location="${build.libs}/skype.jar"/>
 	
   <path id="classpath_httplib" location="${classpath_httplib_file_name}"/>
   <path id="classpath_ftplib" location="${classpath_ftplib_file_name}"/>
@@ -40,19 +41,20 @@
   <path id="classpath_log4j" location="${classpath_log4j_file_name}"/>
   <path id="classpath_bouncycastle_jap" location="${classpath_bouncy_file_name}"/>
   <path id="classpath_jaf" location="${classpath_jaf_file_name}"/>
+  <path id="classpath_skype" location="${classpath_skype_file_name}"/>
 	
   <path id="classpath_all">
     <path refid="classpath_swing"/>
     <path refid="classpath_httplib"/>
     <path refid="classpath_ftplib"/>
     <path refid="classpath_xml-rpc"/>
-    <path refid="classpath_java_mail"/>
-    <path refid="classpath_jama"/>
+<!--    <path refid="classpath_java_mail"/> -->
+    <path refid="classpath_jama"/> 
     <path refid="classpath_log4j"/>
     <path refid="classpath_mrj"/>
     <path refid="classpath_aje"/>
     <path refid="classpath_bouncycastle_jap"/>
-  	<path refid="classpath_jaf"/>
+    <path refid="classpath_skype"/>
   </path>
   <path id="java_1_1_boot_classes" location="${build.libs}/java_1_1_classes.zip"/>
   <target name="init-dirs">
@@ -77,6 +79,7 @@
     <get src="http://anon.inf.tu-dresden.de/develop/AppleJavaExtensions.jar" verbose="true" dest="${build.libs}/AppleJavaExtensions.jar">    </get>
     <get src="http://anon.inf.tu-dresden.de/develop/japdll.dll" verbose="true" dest="${build.libs}/japdll.dll"> </get>
     <get src="http://anon.inf.tu-dresden.de/develop/activation.jar" verbose="true" dest="${build.libs}/activation.jar"> </get>
+    <get src="http://anon.inf.tu-dresden.de/develop/skype.jar" verbose="true" dest="${build.libs}/skype.jar"> </get>
    
     <get src="http://anon.inf.tu-dresden.de/develop/japdllversion.txt" verbose="true" dest="${build.libs}/japdllversion.txt">
     </get>
