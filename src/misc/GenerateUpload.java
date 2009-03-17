@@ -4,21 +4,18 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Random;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
 import java.io.OutputStream;
 import java.io.InputStream;
 
-import anon.util.Util;
 
 public class GenerateUpload
 	{
-		private static final int MAX_WAIT_BETWEEN_CHANNELS = 10000;
-		private static final int MAX_CHANNELS = 50	;
-		private static final int MAX_SINGLE_CALL_UPLOAD = 1800;
+		private static final int MAX_WAIT_BETWEEN_CHANNELS = 100;
+		private static final int MAX_CHANNELS = 1	;
+		private static final int MAX_SINGLE_CALL_UPLOAD = 18000;
 		public int MAX_WAIT_BETWEEN_SINGLE_CALL_UPLOAD=10;
-		static int MIN_UPLOAD = 597000;
-		static int MAX_UPLOAD = 700000;
+		static int MIN_UPLOAD = 59700000;
+		static int MAX_UPLOAD = 170000000;
 		private static byte[] randomData;
 		static Random rand;
 		static int success = 0;
