@@ -29,8 +29,6 @@ package anon.pay.xml;
 
 import java.io.ByteArrayInputStream;
 
-//import javax.xml.parsers.DocumentBuilderFactory;
-
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
