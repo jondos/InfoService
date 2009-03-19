@@ -24,14 +24,13 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABIL
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
  */
-package jap.pay;
+package anon.infoservice.update;
 
 import anon.util.Updater;
 import anon.pay.xml.XMLAccountInfo;
 import logging.LogLevel;
 import logging.LogHolder;
 import java.util.Enumeration;
-import jap.JAPModel;
 import anon.pay.PayAccountsFile;
 import anon.pay.PayAccount;
 import logging.LogType;
@@ -42,7 +41,7 @@ public class AccountUpdater extends Updater
 	private static final long UPDATE_INTERVAL_MS = 1000 * 60 * 5l; // 5 minutes
 	private boolean m_successfulUpdate = false;
 
-	public AccountUpdater()
+	public AccountUpdater(ObservableInfo a_observableInfo)
 	{
 		super(new IUpdateInterval()
 		{
@@ -51,20 +50,7 @@ public class AccountUpdater extends Updater
 				return UPDATE_INTERVAL_MS;
 			}
 		}
-		,
-		new ObservableInfo(JAPModel.getInstance())
-		{
-			public Integer getUpdateChanged()
-			{
-				return PayAccountsFile.CHANGED_AUTO_UPDATE;
-			}
-
-			public boolean isUpdateDisabled()
-			{
-				return !PayAccountsFile.getInstance().isBalanceAutoUpdateEnabled();
-			}
-		}
-		);
+		,a_observableInfo);
 	}
 
 	/**
@@ -102,7 +88,7 @@ public class AccountUpdater extends Updater
 			{
 				LogHolder.log(LogLevel.DEBUG, LogType.PAY,
 							  "Fetching statement for account: " + account.getAccountNumber());
-				if (account.fetchAccountInfo(JAPModel.getInstance().getPaymentProxyInterface(), false) != null)
+				if (account.fetchAccountInfo(false) != null)
 				{
 					m_successfulUpdate = true;
 				}
