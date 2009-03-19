@@ -50,7 +50,7 @@ public class AnonProxyTest
 					};
 				}
 		};
-			AnonProxy theProxy = new AnonProxy(ss, mutableProxyInterface, mutableProxyInterface);
+			AnonProxy theProxy = null;//new AnonProxy(ss, mutableProxyInterface, mutableProxyInterface);
 
 			//we need to disbale certificate checks (better: set valid root certifcates for productive environments!)
 			SignatureVerifier.getInstance().setCheckSignatures(false);
