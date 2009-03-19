@@ -343,7 +343,7 @@ public final class AnonProxyRequest implements Runnable
 		}
 		catch (IOException e)
 		{
-			LogHolder.log(LogLevel.DEBUG,LogType.NET,"Exception in AnonProxyRequest - upstream loop - client socket="+m_clientSocket, e );
+			LogHolder.log(LogLevel.DEBUG,LogType.NET,"Exception in AnonProxyRequest - upstream loop.", e );
 		}
 		catch ( ChunkNotProcessableException cnpe)
 		{
@@ -410,7 +410,6 @@ public final class AnonProxyRequest implements Runnable
 		}
 		try
 		{
-			LogHolder.log(LogLevel.DEBUG, LogType.NET, "AnonProyRequest - close client socket: "+m_clientSocket);
 			m_clientSocket.close();
 		}
 		catch (Throwable t)

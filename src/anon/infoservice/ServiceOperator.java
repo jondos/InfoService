@@ -97,7 +97,7 @@ public class ServiceOperator extends AbstractDatabaseEntry
 	private MultiCertPath m_certPath;
 
 	/** operator address information as a certificate independent extension */ 
-	private OperatorAddress address;
+	//private OperatorAddress address;
 	
 	/**
 	 * Creates a ServiceOperator just by his Certificate
@@ -159,7 +159,6 @@ public class ServiceOperator extends AbstractDatabaseEntry
 			LogHolder.log(LogLevel.ALERT, LogType.DB, "Could not create ID for ServiceOperator entry!");
 			m_strID = "";
 		}
-	    address = null;
 	}
 	
 	/**
@@ -170,7 +169,7 @@ public class ServiceOperator extends AbstractDatabaseEntry
 	 * @param a_certificate The operator certificate
 	 * @param a_lastUpdate Last update time.
 	 */
-	public ServiceOperator(Node a_node, MultiCertPath a_certPath, long a_lastUpdate)
+	public ServiceOperator( Node a_node, MultiCertPath a_certPath, long a_lastUpdate)
 	{
 		super(Long.MAX_VALUE);
 
@@ -366,14 +365,17 @@ public class ServiceOperator extends AbstractDatabaseEntry
 		return TermsAndConditions.getTermsAndConditions(this) != null;
 	}
 	
-	
+	public Element toXMLElement(Document ownerDocument, boolean spamSafe)
+	{
+		return toXMLElement(ownerDocument, null, spamSafe);
+	}
 	/* creates a DOM-Tree with the data which will be owned by
 	 * ownerDocument but not appended to it.
 	 * if spamSafe is true than the Email-Tag as well as the content are 
 	 * modified in a way to make it harder for Spam-parsers to evaluate the
 	 * email-address. 
 	 */
-	public Element toXMLElement(Document ownerDocument, boolean spamSafe)
+	public Element toXMLElement(Document ownerDocument, OperatorAddress address, boolean spamSafe)
 	{
 		if(ownerDocument == null)
 		{
@@ -385,31 +387,31 @@ public class ServiceOperator extends AbstractDatabaseEntry
 		{
 			XMLUtil.createChildElementWithValue(mixOperatorElement, 
 					XML_ELEMENT_ORGANISATION, 
-					Util.filterXMLChars(m_strOrganization));
+					XMLUtil.filterXMLChars(m_strOrganization));
 		}
 		if( m_strUrl != null )
 		{
 			XMLUtil.createChildElementWithValue(mixOperatorElement, 
 					XML_ELEMENT_URL, 
-					Util.filterXMLChars(m_strUrl));
+					XMLUtil.filterXMLChars(m_strUrl));
 		}
 		if( m_countryCode != null )
 		{
 			XMLUtil.createChildElementWithValue(mixOperatorElement, 
 					XML_ELEMENT_COUNTRYCODE, 
-					Util.filterXMLChars(m_countryCode));
+					XMLUtil.filterXMLChars(m_countryCode));
 		}
 		if( m_strOrgUnit != null )
 		{
 			XMLUtil.createChildElementWithValue(mixOperatorElement, 
 					XML_ELEMENT_ORG_UNIT, 
-					Util.filterXMLChars(m_strOrgUnit));
+					XMLUtil.filterXMLChars(m_strOrgUnit));
 		}
 		if( m_strEmail != null )
 		{
 			XMLUtil.createChildElementWithValue(mixOperatorElement, 
 					spamSafe ? XML_ELEMENT_EMAIL_SPAMSAFE : XML_ELEMENT_EMAIL, 
-					spamSafe ? Util.filterXMLChars(getEMailSpamSafe()) : Util.filterXMLChars(getEMail()));
+					spamSafe ? XMLUtil.filterXMLChars(getEMailSpamSafe()) : XMLUtil.filterXMLChars(getEMail()));
 		}
 		
 		if (address != null)
@@ -437,7 +439,7 @@ public class ServiceOperator extends AbstractDatabaseEntry
 		return getId().equals(op.getId());
 	}
 
-	public OperatorAddress getAddress() 
+	/*public OperatorAddress getAddress() 
 	{
 		return address;
 	}
@@ -445,5 +447,5 @@ public class ServiceOperator extends AbstractDatabaseEntry
 	public void setAddress(OperatorAddress address) 
 	{
 		this.address = address;
-	}
+	}*/
 }
