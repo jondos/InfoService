@@ -6,7 +6,7 @@
   <property name="src" location="src"/>
   <property name="certificates" location="certificates"/>
   
-  <property name="excludesSrcJap" value="jpi/** infoservice/** misc/** jondonym/** captcha/** anon/crypto/tinytls/test/**"/>
+  <property name="excludesSrcJap" value="jpi/** infoservice/** misc/** platform/signal/** jondonym/** captcha/** anon/crypto/tinytls/test/**"/>
   <property name="infoservice-excludes" value="jpi/** infoservice/performance/** misc/**"/>
   <property name="build" location="build"/>
   <property name="build.libs" location="build/libs"/>
@@ -33,6 +33,7 @@
   <path id="classpath_httplib" location="${classpath_httplib_file_name}"/>
   <path id="classpath_ftplib" location="${classpath_ftplib_file_name}"/>
   <path id="classpath_xml-rpc" location="${classpath_xmlrpc_file_name}"/>
+  <path id="classpath_xml" location="${classpath_xmllib_file_name}"/>
   <path id="classpath_java_mail" location="${build.libs}/mail.jar"/>
   <path id="classpath_mrj" location="${build.libs}/MRJClasses.zip"/>
   <path id="classpath_aje" location="${build.libs}/AppleJavaExtensions.jar"/>
@@ -48,7 +49,7 @@
     <path refid="classpath_httplib"/>
     <path refid="classpath_ftplib"/>
     <path refid="classpath_xml-rpc"/>
-<!--    <path refid="classpath_java_mail"/> -->
+    <path refid="classpath_xml"/> 
     <path refid="classpath_jama"/> 
     <path refid="classpath_log4j"/>
     <path refid="classpath_mrj"/>
@@ -150,7 +151,7 @@
   <target name="compile" depends="init" description="compile the source ">
     <!-- Compile the java code from ${src} into ${build} -->
     <javac sourcepath=""  srcdir="${src}" excludes="${excludesSrcJap}"
-    destdir="${build}"  classpathref="classpath_all" target="1.1" source="1.2" fork="yes" compiler="${mycompilerversion}" executable="${mycompilerexecutable}">
+    destdir="${build}"  classpathref="classpath_all" target="1.1" source="1.2" fork="yes" bootclasspathref="java_1_1_boot_classes" verbose="no" compiler="${mycompilerversion}" executable="${mycompilerexecutable}">
     <include name="**/*.java"/>
     </javac>
 
