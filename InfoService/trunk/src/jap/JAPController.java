@@ -1062,7 +1062,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				 * exist -> store the configuration in the OS-specific directory
 				 */
 				JAPModel.getInstance().setConfigFile(AbstractOS.getInstance().getConfigPath(
-						JAPConstants.APPLICATION_NAME) + JAPConstants.XMLCONFFN);
+						JAPConstants.APPLICATION_CONFIG_DIR_NAME) + JAPConstants.XMLCONFFN);
 			}
 		}
 		Document doc = null;
@@ -1216,7 +1216,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					{
 						JAPModel.getInstance().setHelpPath(new File(
 								AbstractOS.getInstance().getDefaultHelpPath(
-										JAPConstants.APPLICATION_NAME)));
+										JAPConstants.APPLICATION_CONFIG_DIR_NAME)));
 					}
 						}
 					catch(Throwable t)
@@ -2061,7 +2061,6 @@ public final class JAPController extends Observable implements IProxyListener, O
 					// choose a random initial cascade
 					AutoSwitchedMixCascadeContainer cascadeSwitcher =
 						new AutoSwitchedMixCascadeContainer(true);
-						//new AutoSwitchedMixCascadeContainer();
 					setCurrentMixCascade(cascadeSwitcher.getNextCascade());
 				}
 				else
@@ -2171,13 +2170,13 @@ public final class JAPController extends Observable implements IProxyListener, O
 			// ok, there is no (more) such a config file
 		}
 		/* Now remove the application data directory at its default path if it exists. */
-		strDataPath = AbstractOS.getInstance().getAppdataDefaultDirectory(JAPConstants.APPLICATION_NAME);
+		strDataPath = AbstractOS.getInstance().getAppdataDefaultDirectory(JAPConstants.APPLICATION_CONFIG_DIR_NAME);
 		if (strDataPath != null)
 		{
 			dataDir = new File(strDataPath);
 			classdir = ClassUtil.getClassDirectory(JAPController.class);
 			if (dataDir.exists() && dataDir.isDirectory() &&
-					dataDir.getPath().indexOf(JAPConstants.APPLICATION_NAME) >= 0 &&
+					dataDir.getPath().indexOf(JAPConstants.APPLICATION_CONFIG_DIR_NAME) >= 0 &&
 				(classdir == null || !classdir.equals(dataDir)))
 			{
 				/* the above checks should be sufficient to safely delete this directory now */
@@ -2282,7 +2281,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			/* no config file at any position->use OS-specific path for storing a new one*/
 			m_Model.setConfigFile(AbstractOS.getInstance().getConfigPath(
-					JAPConstants.APPLICATION_NAME) + JAPConstants.XMLCONFFN);
+					JAPConstants.APPLICATION_CONFIG_DIR_NAME) + JAPConstants.XMLCONFFN);
 
 			/* As this is the first JAP start, show the config assistant */
 			m_bShowConfigAssistant = true;
@@ -2381,7 +2380,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private boolean loadConfigFileOSdependent()
 	{
 		String japConfFile = AbstractOS.getInstance().getConfigPath(
-				JAPConstants.APPLICATION_NAME) + JAPConstants.XMLCONFFN;
+				JAPConstants.APPLICATION_CONFIG_DIR_NAME) + JAPConstants.XMLCONFFN;
 		LogHolder.log(LogLevel.INFO, LogType.MISC,
 					  "Trying to load configuration from: " + japConfFile);
 		try
@@ -3434,15 +3433,16 @@ public final class JAPController extends Observable implements IProxyListener, O
 						m_proxyAnon.setProxyListener(m_Controller);
 						m_proxyAnon.setDummyTraffic(JAPModel.getDummyTraffic());
 
-						// -> we can try to start anonymity
-						if (m_proxyDirect != null)
-						{
-							m_proxyDirect.shutdown(true);
-						}
-						m_proxyDirect = null;
-
 						LogHolder.log(LogLevel.DEBUG, LogType.NET, "Try to start AN.ON service...");
 					}
+					
+					// -> we can try to start anonymity
+					if (m_proxyDirect != null)
+					{
+						m_proxyDirect.shutdown(true);
+					}
+					m_proxyDirect = null;
+					
 					//JAPExtension.doIt();
 					//System.out.println("Try to start AN.ON service...");
 					ret = m_proxyAnon.start(cascadeContainer);

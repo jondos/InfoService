@@ -76,19 +76,22 @@ public final class JAPConstants
 
 	public static final boolean DEBUG = false;
 	
-	public static final String APPLICATION_NAME = "JAP/JonDo";
+	public static final String APPLICATION_CONFIG_DIR_NAME = "JonDo";
 
 	public static final int DEFAULT_PORT_NUMBER = 4001;
 	public static final boolean DEFAULT_LISTENER_IS_LOCAL = true;
 	static final String DEFAULT_ANON_NAME = "noCascadesAvail";
-	static final String[] DEFAULT_ANON_MIX_IDs = new String[]{"F30905FCD73B6B30CB5FEFD3250FD66EF4B32591",
-		"75ACF4F101510607BA3E9E348821D8697BE8FC58"};
-	static final String[] DEFAULT_ANON_HOSTS = {"mix.inf.tu-dresden.de", "141.76.45.33"};
+	//static final String[] DEFAULT_ANON_MIX_IDs = new String[]{"BA6F90FB9120E0998ACFCC3A601F1B406A4655A1",
+		//"75ACF4F101510607BA3E9E348821D8697BE8FC58"};
+	static final String[] DEFAULT_ANON_MIX_IDs = new String[]{"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"};
+	//static final String[] DEFAULT_ANON_HOSTS = {"mix.inf.tu-dresden.de", "141.76.45.33"};
+	static final String[] DEFAULT_ANON_HOSTS = {"0.0.0.0"};
 
-	static final int DEFAULT_ANON_PORT_NUMBERS[] =
-		{
-		22, 80, 443, 6544};
-	
+	//static final int DEFAULT_ANON_PORT_NUMBERS[] =
+	//	{
+	//	22, 80, 443, 6544};
+	static final int DEFAULT_ANON_PORT_NUMBERS[] = {6544};
+
 	/**
 	 * The names of the default infoservices.
 	 */
