@@ -1023,8 +1023,7 @@ public final class XMLSignature
 		}
 		catch (Exception e)
 		{
-			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Error while making canonical XML");
-			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, e);
+			LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Error while making canonical XML", e);
 			return -1;
 		}
 	}
