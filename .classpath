@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="infoservice/" kind="src" path="test"/>
 	<classpathentry including="certificates/|help/|images/" kind="src" path=""/>
-	<classpathentry excluding="**/CVS|captcha/|captcha/|infoservice/|platform/signal/" including="*.properties|JAP.java|JAPMacintosh.java|anon/|forward/|gui/|jap/|jarify/|logging/|misc/|platform/|proxy/|transport/|update/" kind="src" path="src"/>
+	<classpathentry excluding="**/CVS|infoservice/|misc/|platform/signal/" including="*.properties|JAP.java|JAPMacintosh.java|anon/|forward/|gui/|jap/|jarify/|logging/|platform/|proxy/|transport/|update/" kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/http"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/AppleJavaExtensions"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/ApacheFTPClient"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3.8.1"/>
@@ -17,5 +15,8 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/BouncyCastleLightForJap"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Log4j"/>
 	<classpathentry kind="lib" path="C:/data/jdk1.1.8/skype/skype/skype.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/XML-1.1"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Java1.1"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Swing"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>

@@ -532,6 +532,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		catch (Exception e)
 		{
 			LogHolder.log(LogLevel.EMERG, LogType.NET, e);
+			System.exit(-1);
 		}
 		/* set a default infoservice */
 		try
@@ -1206,6 +1207,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					String messageText = a_splash.getText();
 					a_splash.setText(JAPMessages.getString(MSG_UPDATING_HELP));
+					try
+						{
 					JAPModel.getInstance().getHelpURL();
 					if (!JAPModel.getInstance().isHelpPathDefined() &&
 						AbstractOS.getInstance().isHelpAutoInstalled() &&
@@ -1215,6 +1218,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 								AbstractOS.getInstance().getDefaultHelpPath(
 										JAPConstants.APPLICATION_NAME)));
 					}
+						}
+					catch(Throwable t)
+						{
+							LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Error while installing help");
+							LogHolder.log(LogLevel.EXCEPTION, LogType.MISC,t);
+						}
 					a_splash.setText(messageText);
 				}
 
@@ -2052,11 +2061,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 					// choose a random initial cascade
 					AutoSwitchedMixCascadeContainer cascadeSwitcher =
 						new AutoSwitchedMixCascadeContainer(true);
+						//new AutoSwitchedMixCascadeContainer();
 					setCurrentMixCascade(cascadeSwitcher.getNextCascade());
 				}
 				else
 				{
-					/* try to get the info from the MixCascade node */
+					// try to get the info from the MixCascade node 
 					Element mixCascadeNode = (Element) XMLUtil.getFirstChildByName(root,
 						MixCascade.XML_ELEMENT_NAME);
 					try
