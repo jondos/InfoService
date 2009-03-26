@@ -806,12 +806,26 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		m_preferedListenerInterface = nextIndex;
 		/* create the connection descriptor */
 		ListenerInterface target = (ListenerInterface) (m_listenerInterfaces.elementAt(nextIndex));
-		Vector headers = new Vector();
-		addPropertyHeader("java.version", headers);
-		addPropertyHeader("java.vm.vendor", headers);
-		addPropertyHeader("os.name", headers);
-		addPropertyHeader("os.version", headers);
-		addPropertyHeader("anonlib.version", AnonService.ANONLIB_VERSION, headers);
+		
+			Vector headers = new Vector();
+		try
+		{			
+			Vector properties = new Vector();
+			properties.addElement("java.version");
+			properties.addElement("java.vm.vendor");
+			addPropertyHeader(properties, headers);
+	
+			properties = new Vector();
+			properties.addElement("os.name");
+			properties.addElement("os.version");
+			addPropertyHeader(properties, headers);
+			
+			addPropertyHeader("anonlib.version", AnonService.ANONLIB_VERSION, headers);
+		}
+		catch (Exception a_e)
+		{
+			LogHolder.log(LogLevel.EXCEPTION, LogType.NET, a_e);
+		}
 		
 		HTTPConnection connection =
 			HTTPConnectionFactory.getInstance().createHTTPConnection(
@@ -824,23 +838,88 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		addPropertyHeader(a_systemPropertyName, null, a_headers);
 	}
 	
-	private static void addPropertyHeader(String a_systemPropertyName,String strVersion, Vector a_headers)
+	private static void addPropertyHeader(String a_systemPropertyName, String strVersion, Vector a_headers)
 	{
-		if (a_systemPropertyName == null || a_headers == null)
+		addPropertyHeader(Util.toVector(a_systemPropertyName), strVersion, a_headers);
+	}
+	
+	private static void addPropertyHeader(Vector a_systemPropertyNames, Vector a_headers)
+	{
+		addPropertyHeader(a_systemPropertyNames, null, a_headers);
+	}
+	
+	private static void addPropertyHeader(Vector a_systemPropertyNames, String strVersion, Vector a_headers)
+	{
+		if (a_systemPropertyNames == null || a_systemPropertyNames.size() == 0 || a_headers == null ||
+			a_systemPropertyNames.elementAt(0) == null)
 		{
 			return;
 		}
 		
+		String propertyName = null;
+		String newPropertyName;
+		int indexCurrent;
+		
 		if (strVersion == null)
 		{
-			try
+			strVersion = "";
+			for (int i = 0; i < a_systemPropertyNames.size(); i++)
 			{
-				strVersion = System.getProperty(a_systemPropertyName);
+				newPropertyName = (String)a_systemPropertyNames.elementAt(i);
+				if (newPropertyName == null || newPropertyName.trim().length() == 0)
+				{
+					continue;
+				}
+				
+				try
+				{
+					strVersion += System.getProperty(newPropertyName);
+				}
+				catch (Exception a_e)
+				{
+					continue;
+				}
+				
+				if (i + 1 < a_systemPropertyNames.size())
+				{
+					strVersion += " / ";
+				}
+				
+				newPropertyName = Util.replaceAll(newPropertyName, ".", "-").trim();
+				if (propertyName == null)
+				{
+					propertyName = newPropertyName;
+				}
+				else
+				{
+					while (propertyName.length() > 0)
+					{
+						if (newPropertyName.startsWith(propertyName))
+						{
+							// we have found the common name path
+							break;
+						}
+						
+						indexCurrent = propertyName.lastIndexOf("-");
+						if (indexCurrent < 0)
+						{
+							propertyName = "";
+						}
+						else
+						{
+							propertyName = propertyName.substring(0, indexCurrent);
+						}
+					}
+				}
 			}
-			catch (Exception a_e)
+			if (strVersion.trim().length() == 0)
 			{
 				return;
 			}
+		}
+		else
+		{
+			propertyName = Util.replaceAll((String)a_systemPropertyNames.elementAt(0), ".", "-").trim();
 		}
 		
 		if (strVersion != null)
@@ -855,8 +934,13 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 			{
 				return;
 			}
+	
+			if (propertyName.length() > 0)
+			{
+				propertyName = "-" + propertyName;
+			}
 			
-			a_headers.addElement(new NVPair(HEADER_STATISTICS + "-" + Util.replaceAll(a_systemPropertyName, ".", "-"), strVersion));
+			a_headers.addElement(new NVPair(HEADER_STATISTICS + propertyName, strVersion));
 		}
 	}
 
