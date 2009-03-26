@@ -876,9 +876,9 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 				{
 					propertyValue = System.getProperty(newPropertyName);
 					if (propertyValue != null && 
-						!propertyValue.equals("Sun Microsystems Inc.")) // ignore default vendor
+						!propertyValue.trim().equals("Sun Microsystems Inc.")) // ignore default vendor
 					{
-						strVersion += propertyValue;
+						strVersion += propertyValue.trim();
 					}
 				}
 				catch (Exception a_e)
