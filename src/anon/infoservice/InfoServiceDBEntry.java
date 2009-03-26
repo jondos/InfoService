@@ -38,6 +38,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
 import java.util.Vector;
 
 import logging.LogHolder;
@@ -51,14 +52,18 @@ import org.w3c.dom.NodeList;
 
 import HTTPClient.HTTPConnection;
 import HTTPClient.HTTPResponse;
+import HTTPClient.NVPair;
+import anon.AnonService;
 import anon.crypto.IVerifyable;
 import anon.crypto.MultiCertPath;
 import anon.crypto.SignatureCreator;
 import anon.crypto.SignatureVerifier;
 import anon.crypto.XMLSignature;
 import anon.pay.PaymentInstanceDBEntry;
+import anon.util.Base64;
 import anon.util.ClassUtil;
 import anon.util.IXMLEncodable;
+import anon.util.Util;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
 
@@ -70,6 +75,8 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 {
 	public static final String XML_ELEMENT_CONTAINER_NAME = "InfoServices";
 	public static final String XML_ELEMENT_NAME = "InfoService";
+	
+	public static final String HEADER_STATISTICS = "statistics";
 
 	public static final int DEFAULT_GET_XML_CONNECTION_TIMEOUT = 20000;
 
@@ -114,7 +121,7 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 	private Vector m_listenerInterfaces;
 
 	/**
-	 * Stores the number of the prefered ListenerInterface in the listenerInterfaces list. If we
+	 * Stores the number of the preferred ListenerInterface in the listenerInterfaces list. If we
 	 * have to connect to the infoservice, this interface is used first. If there is a connection
 	 * error, all other interfaces will be tested. If we can get the connection over another
 	 * interface, this interface will be set as new preferedListenerInterface.
@@ -782,10 +789,9 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 	 * @param lastConnectionDescriptor The HTTPConnectionDescriptor of the last connection try (the
 	 *                                 last output of this function) or null, if you want a new
 	 *                                 connection (connection to preferedListenerInterface is opened).
-	 * @param a_supportedEncodings supported http encodings ussed to receive the data (e.g. HTTP_ENCODING_ZLIB)
+	 * @param a_supportedEncodings supported http encodings used to receive the data (e.g. HTTP_ENCODING_ZLIB)
 	 * @return HTTPConnectionDescriptor with a connection to the next ListenerInterface in the list
 	 *         or to the preferedListenerInterface, if you supplied null.
-	 * @todo Create the connections via a changing proxy interface!!
 	 */
 	private HTTPConnectionDescriptor connectToInfoService(HTTPConnectionDescriptor lastConnectionDescriptor,
 		ImmutableProxyInterface a_proxy, int a_supportedEncodings)
@@ -800,10 +806,58 @@ public class InfoServiceDBEntry extends AbstractDistributableCertifiedDatabaseEn
 		m_preferedListenerInterface = nextIndex;
 		/* create the connection descriptor */
 		ListenerInterface target = (ListenerInterface) (m_listenerInterfaces.elementAt(nextIndex));
+		Vector headers = new Vector();
+		addPropertyHeader("java.version", headers);
+		addPropertyHeader("java.vm.vendor", headers);
+		addPropertyHeader("os.name", headers);
+		addPropertyHeader("os.version", headers);
+		addPropertyHeader("anonlib.version", AnonService.ANONLIB_VERSION, headers);
+		
 		HTTPConnection connection =
 			HTTPConnectionFactory.getInstance().createHTTPConnection(
-				target, a_proxy, a_supportedEncodings, true);
+				target, a_proxy, a_supportedEncodings, true, headers);
 		return new HTTPConnectionDescriptor(connection, target);
+	}
+	
+	private static void addPropertyHeader(String a_systemPropertyName,  Vector a_headers)
+	{
+		addPropertyHeader(a_systemPropertyName, null, a_headers);
+	}
+	
+	private static void addPropertyHeader(String a_systemPropertyName,String strVersion, Vector a_headers)
+	{
+		if (a_systemPropertyName == null || a_headers == null)
+		{
+			return;
+		}
+		
+		if (strVersion == null)
+		{
+			try
+			{
+				strVersion = System.getProperty(a_systemPropertyName);
+			}
+			catch (Exception a_e)
+			{
+				return;
+			}
+		}
+		
+		if (strVersion != null)
+		{
+			StringTokenizer tokenizer = new StringTokenizer(strVersion, "\r\n");
+			if (tokenizer.hasMoreTokens())
+			{
+				// remove new lines!
+				strVersion = tokenizer.nextToken();
+			}
+			else
+			{
+				return;
+			}
+			
+			a_headers.addElement(new NVPair(HEADER_STATISTICS + "-" + Util.replaceAll(a_systemPropertyName, ".", "-"), strVersion));
+		}
 	}
 
 	private Document getXmlDocument(final HttpRequestStructure a_httpRequest) throws Exception
