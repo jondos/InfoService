@@ -1,6 +1,7 @@
 package infoservice;
 
 import anon.util.MyStringBuilder;
+import anon.util.Util;
 
 import java.math.BigInteger;
 import java.text.NumberFormat;
@@ -8,6 +9,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Vector;
 
 import anon.infoservice.Database;
 import infoservice.japforwarding.ForwarderDBEntry;
@@ -218,8 +220,10 @@ final class ISRuntimeStatistics
 		}
 		
 		// now print all the properties
-		BigInteger totalValues;
-		BigInteger currentValue;
+		BigInteger totalCounts;
+		BigInteger currentCount;
+		Vector vecValues;
+		
 		enumProperties = hashVersionStrings.keys();
 		while (enumProperties.hasMoreElements())
 		{
@@ -227,20 +231,34 @@ final class ISRuntimeStatistics
 			hashValue = (Hashtable)hashVersionStrings.get(strProperty);
 			sb.append("</td></tr><tr><td>" + strProperty + ": </td><td>");
 			
-			enumValues = hashValue.keys();
-			totalValues = BigInteger.valueOf(0);
-			while (enumValues.hasMoreElements())
-			{
-				totalValues = totalValues.add((BigInteger)hashValue.get(enumValues.nextElement()));
-			}
-			
+			totalCounts = BigInteger.valueOf(0);
+			vecValues = new Vector();
 			enumValues = hashValue.keys();
 			while (enumValues.hasMoreElements())
 			{
 				strValue = (String)enumValues.nextElement();
-				currentValue = (BigInteger)hashValue.get(strValue);
-				currentValue = currentValue.multiply(BigInteger.valueOf(100));
-				sb.append(strValue + " (" + currentValue.divide(totalValues) + "%)");
+				currentCount = (BigInteger)hashValue.get(strValue);
+				int i = 0;
+				for (; i < vecValues.size(); i++)
+				{
+					if (currentCount.compareTo((BigInteger)hashValue.get(vecValues.elementAt(i))) >= 0)
+					{
+						break;
+					}
+				}
+				vecValues.insertElementAt(strValue, i);
+				totalCounts = totalCounts.add(currentCount);
+			}
+			
+			enumValues = vecValues.elements();
+			while (enumValues.hasMoreElements())
+			{
+				strValue = (String)enumValues.nextElement();
+				currentCount = (BigInteger)hashValue.get(strValue);
+				currentCount = currentCount.multiply(BigInteger.valueOf(1000));
+				
+				
+				sb.append(strValue + " (" + currentCount.divide(totalCounts).doubleValue() / 10.0 + "%)");
 				
 				if (enumValues.hasMoreElements())
 				{
