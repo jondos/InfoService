@@ -110,11 +110,20 @@ final class ISRuntimeStatistics
 		Hashtable hashProperty;
 		BigInteger count;
 		synchronized(a_hashtable)
-		{
+		{	
 			hashProperty = (Hashtable)a_hashtable.get(a_property);
 			if (hashProperty == null)
 			{
 				hashProperty = new Hashtable();
+			}
+			else
+			{
+				// this is just a flooding protection
+				if (a_hashtable.size() > 20 || a_property.length() > 100 || a_value.length() > 100)
+				{
+					// do nothing
+					return;
+				}
 			}
 			count = (BigInteger)hashProperty.get(a_value);
 			if (count == null)
