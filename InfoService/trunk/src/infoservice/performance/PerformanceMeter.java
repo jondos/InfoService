@@ -886,10 +886,10 @@ public class PerformanceMeter implements Runnable, Observer
 		    		break;
 		    	}
 		    	//	try to recover from this error; maybe a temporary problem
-		    	m_proxy.stop();
+		    	//m_proxy.stop();
 				try
 				{
-					Thread.sleep(400);
+					Thread.sleep(1000);
 				}
 				catch (InterruptedException e)
 				{
