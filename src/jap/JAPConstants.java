@@ -36,7 +36,7 @@ import anon.mixminion.Mixminion;
 public final class JAPConstants
 {
 	// Note: probably you like to change anon.AnonService.ANONLIB_VERSION as well
-	public static final String aktVersion = "00.11.014"; //Never change the layout of this line!
+	public static final String aktVersion = "00.11.015"; //Never change the layout of this line!
 	
 	public final static boolean m_bUnstableVersion = false; //Set to true if this is an unstable (development) Version
 
@@ -49,7 +49,7 @@ public final class JAPConstants
 
 	//Never change the layout of the next two lines as several automated tools use these lines to do fancy things...
 	public final static boolean m_bReleasedVersion = false; //Set to true if this is a stable (release) Version
-	private static final String RELEASE_DATE = "2009/03/20 14:00:00"; // Set only to a Value, if m_bReleaseVersion=true
+	private static final String RELEASE_DATE = "2009/03/21 18:10:00"; // Set only to a Value, if m_bReleaseVersion=true
 
 	public static final String CURRENT_CONFIG_VERSION = aktVersion;
 
