@@ -1,4 +1,4 @@
-package jap;
+package gui;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -6,9 +6,8 @@ import java.awt.Frame;
 
 import javax.swing.JDialog;
 
-import jap.pay.wizardnew.TermsAndConditionsPane;
-import gui.JapHtmlPane;
 import gui.dialog.JAPDialog;
+import gui.dialog.TermsAndConditionsPane;
 import anon.client.ITermsAndConditionsContainer.TermsAndConditonsDialogReturnValues;
 import anon.infoservice.TermsAndConditionsFramework;
 import anon.infoservice.TermsAndConditions;
