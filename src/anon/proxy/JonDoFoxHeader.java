@@ -10,7 +10,10 @@ public final class JonDoFoxHeader implements HTTPConnectionListener {
 	final static String HTTP_ENCODING_DEFLATE = "deflate";
 	
 	public final static String JONDOFOX_USER_AGENT = "Mozilla/5.0 Gecko/20070713 Firefox/2.0.0.0";
+	public final static String JONDOFOX_USER_AGENT_NEW = "Mozilla/5.0 (en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7";
+		
 	public final static String JONDOFOX_LANGUAGE = "en";
+	public final static String JONDOFOX_LANGUAGE_NEW = "en-US";
 	public final static String JONDOFOX_CHARSET = "utf-8,*";
 	public final static String JONDOFOX_CONTENT_TYPES = "*/*";
 	public final static String JONDOFOX_ENCODING = HTTP_ENCODING_GZIP+","+HTTP_ENCODING_DEFLATE;
@@ -26,10 +29,11 @@ public final class JonDoFoxHeader implements HTTPConnectionListener {
 
 	public void requestHeadersReceived(HTTPConnectionEvent event) 
 	{
-		if(event == null)
+		if (event == null)
 		{
 			return;
 		}
+		
 		HTTPConnectionHeader connHeader = event.getConnectionHeader();
 		if(connHeader != null)
 		{
@@ -53,20 +57,34 @@ public final class JonDoFoxHeader implements HTTPConnectionListener {
 				}
 			}
 			
-			connHeader.replaceRequestHeader(HTTPProxyCallback.HTTP_USER_AGENT, JONDOFOX_USER_AGENT);
-			connHeader.replaceRequestHeader(HTTPProxyCallback.HTTP_ACCEPT_LANGUAGE, JONDOFOX_LANGUAGE);
-			connHeader.replaceRequestHeader(HTTPProxyCallback.HTTP_ACCEPT_CHARSET, JONDOFOX_CHARSET);
-			connHeader.replaceRequestHeader(HTTPProxyCallback.HTTP_ACCEPT, JONDOFOX_CONTENT_TYPES);
-			String[] clientSupportedencodings = connHeader.getRequestHeader(HTTPProxyCallback.HTTP_ACCEPT_ENCODING);
-			event.getAnonRequest().setInternalEncodingRequired(
-					detectInternaEncodingRequired(clientSupportedencodings));
-			//will be determined when the server response is received
-			event.getAnonRequest().setContentEncodings(null);
+			if (event.getConnectionHeader().getRequestLine().startsWith("CONNECT"))
+			{
+				// this is a CONNECT tunneling command - ask the user what to do now
+				String[] uaHeader = connHeader.getRequestHeader(HTTPProxyCallback.HTTP_USER_AGENT);
+				if (uaHeader == null || uaHeader.length != 1 || uaHeader[0] == null || 
+					(!uaHeader[0].equals(JONDOFOX_USER_AGENT) && !uaHeader[0].equals(JONDOFOX_USER_AGENT_NEW)))
+				{
+					event.setNeedsConfirmation(true);
+				}
+			}
 			
-			connHeader.replaceRequestHeader(HTTPProxyCallback.HTTP_ACCEPT_ENCODING, JONDOFOX_ENCODING);
-			//connHeader.removeRequestHeader(HTTPProxyCallback.HTTP_KEEP_ALIVE);
-			//connHeader.replaceRequestHeader(HTTPProxyCallback.HTTP_PROXY_CONNECTION, "close");
-			connHeader.removeRequestHeader(HTTPProxyCallback.HTTP_IE_UA_CPU);
+			connHeader.replaceRequestHeader(HTTPProxyCallback.HTTP_USER_AGENT, JONDOFOX_USER_AGENT);
+			if (!event.getConnectionHeader().getRequestLine().startsWith("CONNECT"))
+			{
+				connHeader.replaceRequestHeader(HTTPProxyCallback.HTTP_ACCEPT_LANGUAGE, JONDOFOX_LANGUAGE);
+				connHeader.replaceRequestHeader(HTTPProxyCallback.HTTP_ACCEPT_CHARSET, JONDOFOX_CHARSET);
+				connHeader.replaceRequestHeader(HTTPProxyCallback.HTTP_ACCEPT, JONDOFOX_CONTENT_TYPES);
+				String[] clientSupportedencodings = connHeader.getRequestHeader(HTTPProxyCallback.HTTP_ACCEPT_ENCODING);
+				event.getAnonRequest().setInternalEncodingRequired(
+						detectInternaEncodingRequired(clientSupportedencodings));
+				//will be determined when the server response is received
+				event.getAnonRequest().setContentEncodings(null);
+			
+				connHeader.replaceRequestHeader(HTTPProxyCallback.HTTP_ACCEPT_ENCODING, JONDOFOX_ENCODING);
+				//connHeader.removeRequestHeader(HTTPProxyCallback.HTTP_KEEP_ALIVE);
+				//connHeader.replaceRequestHeader(HTTPProxyCallback.HTTP_PROXY_CONNECTION, "close");
+				connHeader.removeRequestHeader(HTTPProxyCallback.HTTP_IE_UA_CPU);
+			}
 		}
 	}
 
