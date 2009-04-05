@@ -57,6 +57,7 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.URL;
+import java.security.SignatureException;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Locale;
@@ -93,6 +94,7 @@ import anon.client.AnonClient;
 import anon.client.ITermsAndConditionsContainer;
 import anon.client.TermsAndConditionsResponseHandler;
 import anon.client.TrustModel;
+import anon.crypto.ExpiredSignatureException;
 import anon.crypto.JAPCertificate;
 import anon.crypto.SignatureVerifier;
 import anon.infoservice.BlacklistedCascadeIDEntry;
@@ -107,6 +109,7 @@ import anon.infoservice.IDistributor;
 import anon.infoservice.IServiceContextContainer;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
+import anon.infoservice.InfoServiceHolderMessage;
 import anon.infoservice.JAPMinVersion;
 import anon.infoservice.JAPVersionInfo;
 import anon.infoservice.ListenerInterface;
@@ -219,6 +222,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 	public static final String MSG_FORWARDER_REG_ERROR_SHORT = JAPController.class.getName() + "_forwardErrorShort";
 	public static final String MSG_READ_NEW_HELP = JAPController.class.getName() + "_readNewHelp";
 	
+	public static final String MSG_WARNING_IS_CERTS_EXPIRED = JAPController.class.getName() + "_warningISCertsExpired";
+	public static final String MSG_WARNING_IS_CERTS_INVALID = JAPController.class.getName() + "_warningISCertsInvalid";
+	
 	
 
 	private static final String XML_ELEM_LOOK_AND_FEEL = "LookAndFeel";
@@ -306,6 +312,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private boolean mbDoNotAbuseReminder = false; // indicates if new warning message in setAnonMode (containing Do no abuse) has been shown
 	private boolean m_bForwarderNotExplain = false; //indicates if the warning message about forwarding should be shown
 
+	private boolean m_bExpiredISCertificatesShown = false;
+	private final Object SYNC_EXPIRED_IS_CERTS = new Object();
+	
 	private boolean m_bAskSavePayment;
 	private boolean m_bPresentationMode = false;
 	private boolean m_bPortableJava = false;
@@ -348,7 +357,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 	};
 
-	private DirectProxy.AllowUnprotectedConnectionCallback m_proxyCallback;
+	private DirectProxy.AllowProxyConnectionCallback m_proxyCallback;
 
 	/** Holds the MsgID of the status message after the forwarding server was started.*/
 	private int m_iStatusPanelMsgIdForwarderServerStatus;
@@ -432,9 +441,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 		// initialise HTTP proxy
 		if (!JAPModel.isSmallDisplay())
 		{
-			m_proxyCallback = new DirectProxy.AllowUnprotectedConnectionCallback()
+			m_proxyCallback = new DirectProxy.AllowProxyConnectionCallback()
 			{
-				public DirectProxy.AllowUnprotectedConnectionCallback.Answer callback(
+				public DirectProxy.AllowProxyConnectionCallback.Answer callback(
 						DirectProxy.RequestInfo a_requestInfo)
 				{	
 					String uri;
@@ -568,6 +577,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		JAPModel.getInstance().getRoutingSettings().getRegistrationStatusObserver().addObserver(this);
 		m_Model.addObserver(this);
 		Database.getInstance(PerformanceInfo.class).addObserver(this);
+		InfoServiceHolder.getInstance().addObserver(this);
 		m_iStatusPanelMsgIdForwarderServerStatus = -1;
 	}
 
@@ -4429,7 +4439,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		}
 
 		LogHolder.log(LogLevel.INFO, LogType.MISC, "Trying to fetch mixcascades from infoservice.");
-		while (!m_MixCascadeUpdater.update())
+		while (!m_MixCascadeUpdater.update() && !m_bExpiredISCertificatesShown)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.NET, "No connection to infoservices.");
 			if (!JAPModel.isSmallDisplay() &&
@@ -4507,9 +4517,9 @@ public final class JAPController extends Observable implements IProxyListener, O
 		LogHolder.log(LogLevel.NOTICE, LogType.MISC,
 					  "Checking if new " + versionType + " version of JAP is available...");
 
-		JAPVersionInfo vi = null;
-		JAPVersionInfo viRelease = null;
-		String updateVersionNumber = null;
+		JAPVersionInfo viDefault = null;
+		JAPVersionInfo viRecommended;
+		String updateVersionNumber;
 
 
 		Database.getInstance(JAPVersionInfo.class).update(
@@ -4517,73 +4527,52 @@ public final class JAPController extends Observable implements IProxyListener, O
 		Database.getInstance(JAPVersionInfo.class).update(
 			  InfoServiceHolder.getInstance().getJAPVersionInfo(JAPVersionInfo.JAP_DEVELOPMENT_VERSION));
 
-		vi = (JAPVersionInfo)Database.getInstance(JAPVersionInfo.class).getEntryById(
-			  JAPVersionInfo.ID_RELEASE);
-		if (!JAPConstants.m_bReleasedVersion)
+		if (JAPConstants.m_bReleasedVersion)
 		{
-			viRelease = vi;
-			vi = (JAPVersionInfo) Database.getInstance(JAPVersionInfo.class).getEntryById(
-				JAPVersionInfo.ID_DEVELOPMENT);
+			viDefault = (JAPVersionInfo) Database.getInstance(JAPVersionInfo.class).getEntryById(
+				JAPVersionInfo.ID_STABLE);
 		}
+		else
+		{
+			viDefault = (JAPVersionInfo) Database.getInstance(JAPVersionInfo.class).getEntryById(
+					JAPVersionInfo.ID_BETA);
+		}
+		viRecommended = 
+			JAPVersionInfo.getRecommendedUpdate(JAPConstants.aktVersion, JAPConstants.m_bReleasedVersion);
 
-		if (vi == null)
+		if (viDefault == null)
 		{
 			LogHolder.log(LogLevel.ERR, LogType.MISC,
 						  "Could not get the current JAP version from infoservice.");
 			return 1;
 		}
-		if (viRelease != null && viRelease.getJapVersion() != null && vi.getJapVersion() != null &&
-			//Util.convertVersionStringToNumber(viRelease.getJapVersion()) + 2 >= //patch
-			//Util.convertVersionStringToNumber(vi.getJapVersion()) &&  // patch
-			//viRelease.getJapVersion().compareTo(JAPConstants.aktVersion) > 0) // patch
-			viRelease.getJapVersion().equals(vi.getJapVersion()))
+		if (viRecommended != null && !viDefault.equals(viRecommended))
 		{
-			// developer and release version are equal; recommend to switch to release
+			// beta and stable version are equal or both newer than the current version 
+			// recommend to switch to stable
 			recommendToSwitchToRelease = true;
+			updateVersionNumber = viRecommended.getJapVersion();
+		}
+		else
+		{
+			updateVersionNumber = viDefault.getJapVersion();
 		}
 
-		/*
-		if (a_bForced)
-		{
-			updateVersionNumber = a_minVersion;
-		}*/
-
-		if (updateVersionNumber == null)
-		{
-			updateVersionNumber = vi.getJapVersion();
-		}
-
-		if (updateVersionNumber == null)
-		{
-			/* can't get the current version number from the infoservices. Ignore this,
-			 * as this is not a problem!
-			 */
-			LogHolder.log(LogLevel.ERR, LogType.MISC,
-						  "Could not get the current JAP version number from infoservice.");
-			/*
-				JAPDialog.showErrorDialog(m_View, JAPMessages.getString("errorConnectingInfoService"),
-					LogType.NET);*/
-			//notifyJAPObservers();
-			return 1;
-		}
-
-		if (!a_bForced && !recommendToSwitchToRelease)
-		{
-			if (updateVersionNumber.compareTo(JAPConstants.aktVersion) <= 0 || isConfigAssistantShown()
-				|| !JAPModel.getInstance().isReminderForOptionalUpdateActivated())
-			{
-				// no update needed; do not show dialog
-				return 0;
-			}
-		}
-
-		updateVersionNumber = updateVersionNumber.trim();
-		LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Local version: " + JAPConstants.aktVersion);
 		if (updateVersionNumber.compareTo(JAPConstants.aktVersion) <= 0)
 		{
 			/* the local JAP version is up to date -> exit */
 			return 0;
 		}
+		
+		if (!a_bForced && !recommendToSwitchToRelease)
+		{
+			if (isConfigAssistantShown() || !JAPModel.getInstance().isReminderForOptionalUpdateActivated())
+			{
+				// no update needed; do not show dialog
+				return 0;
+			}
+		}
+		
 		/* local version is not up to date, new version is available -> ask the user whether to
 		 * download the new version or not
 		 */
@@ -4611,7 +4600,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 			try
 			{
 				URL tempURL;
-				if (vi.getId().equals(JAPVersionInfo.ID_RELEASE))
+				if (viDefault.getId().equals(JAPVersionInfo.ID_STABLE) || 
+					(viRecommended != null && viRecommended.equals(JAPVersionInfo.ID_STABLE)))
 				{
 					tempURL = 
 						new URL(JAPMessages.getString(JAPWelcomeWizardPage.MSG_CHANGELOG_URL));
@@ -4634,7 +4624,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		if (recommendToSwitchToRelease)
 		{
 			message += "<br><br>" + JAPMessages.getString(MSG_ASK_WHICH_VERSION);
-			options = new JAPDialog.Options(JAPDialog.OPTION_TYPE_YES_NO_CANCEL)
+			options = new JAPDialog.Options(JAPDialog.OPTION_TYPE_YES_NO)
 			{
 				public String getYesOKText()
 				{
@@ -4674,12 +4664,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 		{
 			if (bAnswer == JAPDialog.RETURN_VALUE_NO)
 			{
-				vi = viRelease;
+				viDefault = viRecommended;
 			}
 			/* User has selected to download new version of JAP -> Download, Alert, exit program */
 			//store current configuration first
 			saveConfigFile();
-			JAPUpdateWizard wz = new JAPUpdateWizard(vi, getCurrentView());
+			JAPUpdateWizard wz = new JAPUpdateWizard(viDefault, getCurrentView());
 			/* we got the JAPVersionInfo from the infoservice */
 			/* Assumption: If we are here, the download failed for some resaons, otherwise the
 			 * program would quit
@@ -4935,6 +4925,37 @@ public final class JAPController extends Observable implements IProxyListener, O
 				{
 					/* the registration status of the local forwarding server has changed */
 					notifyJAPObservers();
+				}
+			}
+			else if (a_notifier == InfoServiceHolder.getInstance())
+			{
+				final InfoServiceHolderMessage message = (InfoServiceHolderMessage)a_message;
+				
+				synchronized (SYNC_EXPIRED_IS_CERTS)
+				{
+					if (!m_bExpiredISCertificatesShown && message != null && 
+							message.getMessageData() != null)
+					{
+						m_bExpiredISCertificatesShown = true;
+						new Thread(new Runnable()
+						{
+							public void run()
+							{
+								JAPDialog.LinkedHelpContext context = new JAPDialog.LinkedHelpContext("certificates");
+								if (message.getMessageData() instanceof ExpiredSignatureException)
+								{
+									JAPDialog.showWarningDialog(getCurrentView(), 
+											JAPMessages.getString(MSG_WARNING_IS_CERTS_EXPIRED), context);
+								}
+								else if (message.getMessageData() instanceof SignatureException)
+								{
+									JAPDialog.showWarningDialog(getCurrentView(), 
+											JAPMessages.getString(MSG_WARNING_IS_CERTS_INVALID), context);
+								}
+								m_bExpiredISCertificatesShown = false;
+							}
+						}).start();
+					}
 				}
 			}
 			else if (a_notifier == Database.getInstance(JAPMinVersion.class) && a_message != null &&

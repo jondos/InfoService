@@ -247,31 +247,29 @@ public class HTTPProxyCallback implements ProxyCallback
 				connHeader = (HTTPConnectionHeader) m_connectionHTTPHeaders.get(anonRequest);
 			}
 						
-			if(connHeader != null)
+			if (connHeader != null && connHeader.getRequestLine() != null)
 			{
-				String request_line = connHeader.getRequestLine();
-				
-				boolean performMods = (request_line == null) ? false : !request_line.startsWith("CONNECT");
-				if(performMods)
+				byte[] newHeaders = a_helper.dumpHeader(this, connHeader, anonRequest);
+				if (getEvent(anonRequest).isConfirmationNeeded())
 				{
-					byte[] newHeaders = a_helper.dumpHeader(this, connHeader, anonRequest);
-					
-					countContentBytes(anonRequest, contentBytes, byteCounter, FIRE_EVENT);
-					
-					int contentDataStart = newHeaders.length + startOffset;
-					int trailingDataStart = contentDataStart+contentBytes;
-					byte[] newChunk = new byte[trailingDataStart + buffer.getTrailingDataLength()];
-					
-					buffer.copyLeadingData(newChunk);
-					System.arraycopy(newHeaders, 0, newChunk, startOffset, newHeaders.length);
-		 			System.arraycopy(chunk, (endOffset+1-contentBytes), newChunk, contentDataStart, contentBytes);
-					buffer.copyTrailingData(newChunk, trailingDataStart);
-					
-					buffer.setChunk(newChunk);
-					buffer.setModificationStartOffset(contentDataStart);
-					buffer.setModificationEndOffset(trailingDataStart-1);
-					return STATUS_PROCESSABLE;
-				}				
+					// TODO check whether we are allowed to perform this request
+				}
+				
+				countContentBytes(anonRequest, contentBytes, byteCounter, FIRE_EVENT);
+				
+				int contentDataStart = newHeaders.length + startOffset;
+				int trailingDataStart = contentDataStart+contentBytes;
+				byte[] newChunk = new byte[trailingDataStart + buffer.getTrailingDataLength()];
+				
+				buffer.copyLeadingData(newChunk);
+				System.arraycopy(newHeaders, 0, newChunk, startOffset, newHeaders.length);
+	 			System.arraycopy(chunk, (endOffset+1-contentBytes), newChunk, contentDataStart, contentBytes);
+				buffer.copyTrailingData(newChunk, trailingDataStart);
+				
+				buffer.setChunk(newChunk);
+				buffer.setModificationStartOffset(contentDataStart);
+				buffer.setModificationEndOffset(trailingDataStart-1);
+				return STATUS_PROCESSABLE;
 			}
 		}
 		countContentBytes(anonRequest, contentBytes, byteCounter, FIRE_EVENT);
@@ -740,10 +738,10 @@ public class HTTPProxyCallback implements ProxyCallback
 	
 	public synchronized void fireRequestHeadersReceived(HTTPConnectionEvent event)
 	{
-		for(Enumeration enumeration = m_httpConnectionListeners.elements(); enumeration.hasMoreElements();)
+		for (Enumeration enumeration = m_httpConnectionListeners.elements(); enumeration.hasMoreElements();)
 		{
 			HTTPConnectionListener listener = (HTTPConnectionListener) enumeration.nextElement();
-			if(listener != null)
+			if (listener != null)
 			{
 				listener.requestHeadersReceived(event);
 			}
@@ -752,10 +750,10 @@ public class HTTPProxyCallback implements ProxyCallback
 	
 	public synchronized void fireResponseHeadersReceived(HTTPConnectionEvent event)
 	{
-		for(Enumeration enumeration = m_httpConnectionListeners.elements(); enumeration.hasMoreElements();)
+		for (Enumeration enumeration = m_httpConnectionListeners.elements(); enumeration.hasMoreElements();)
 		{
 			HTTPConnectionListener listener = (HTTPConnectionListener) enumeration.nextElement();
-			if(listener != null)
+			if( listener != null)
 			{
 				listener.responseHeadersReceived(event);
 			}
@@ -764,10 +762,10 @@ public class HTTPProxyCallback implements ProxyCallback
 	
 	public synchronized void fireDownstreamContentBytesReceived(HTTPConnectionEvent event)
 	{
-		for(Enumeration enumeration = m_httpConnectionListeners.elements(); enumeration.hasMoreElements();)
+		for (Enumeration enumeration = m_httpConnectionListeners.elements(); enumeration.hasMoreElements();)
 		{
 			HTTPConnectionListener listener = (HTTPConnectionListener) enumeration.nextElement();
-			if(listener != null)
+			if (listener != null)
 			{
 				listener.downstreamContentBytesReceived(event);
 			}
@@ -776,10 +774,10 @@ public class HTTPProxyCallback implements ProxyCallback
 	
 	public synchronized void fireUpstreamContentBytesReceived(HTTPConnectionEvent event)
 	{
-		for(Enumeration enumeration = m_httpConnectionListeners.elements(); enumeration.hasMoreElements();)
+		for (Enumeration enumeration = m_httpConnectionListeners.elements(); enumeration.hasMoreElements();)
 		{
 			HTTPConnectionListener listener = (HTTPConnectionListener) enumeration.nextElement();
-			if(listener != null)
+			if (listener != null)
 			{
 				listener.upstreamContentBytesReceived(event);
 			}
