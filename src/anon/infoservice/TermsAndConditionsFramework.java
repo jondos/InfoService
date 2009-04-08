@@ -1,24 +1,30 @@
 package anon.infoservice;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Locale;
 
 import javax.xml.transform.Source;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import anon.crypto.MultiCertPath;
 import anon.crypto.SignatureCreator;
@@ -26,9 +32,6 @@ import anon.crypto.SignatureVerifier;
 import anon.crypto.XMLSignature;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 
 public class TermsAndConditionsFramework extends AbstractDistributableCertifiedDatabaseEntry
 {
@@ -171,7 +174,8 @@ public class TermsAndConditionsFramework extends AbstractDistributableCertifiedD
 		{
 			// find the ServiceOperator object to our T&C
 			ServiceOperator op = tcTranslation.getOperator();
-			
+			Element translationElement = tcTranslation.getTranslationElement();
+			OperatorAddress opAddress = tcTranslation.getOperatorAddress();
 			if(op == null)
 			{
 				//Must never happen!
@@ -179,13 +183,8 @@ public class TermsAndConditionsFramework extends AbstractDistributableCertifiedD
 			}
 			
 			// create the operator node
-			Element tcTranslationElement = tcTranslation.getTranslationElement();
-			if(tcTranslationElement == null)
-			{
-				throw new XMLParseException("Translation node must not be null. Mix violates T&C protocol.");
-			}
-			
-			Element operator = operator = op.toXMLElement(XMLUtil.createDocument(), tcTranslation.getOperatorAddress(), false);
+			Element operator = operator = 
+				op.toXMLElement(XMLUtil.createDocument(), tcTranslation.getOperatorAddress(), false);
 			if(operator == null)
 			{
 				throw new XMLParseException("Operator must not be null.");
@@ -198,25 +197,12 @@ public class TermsAndConditionsFramework extends AbstractDistributableCertifiedD
 			
 			Element country = m_docWorkingCopy.createElement(XML_ELEMENT_OPERATOR_COUNTRY);
 			XMLUtil.setValue(country, loc.getDisplayCountry(tcLoc));
-			//operator.appendChild(country);
-			
-			//appendChildNodeFromTC(a_data, operator, XML_ELEMENT_OPERATOR_STREET);
-			//appendChildNodeFromTC(a_data, operator, XML_ELEMENT_OPERATOR_POSTAL_CODE);
-			//appendChildNodeFromTC(a_data, operator, XML_ELEMENT_OPERATOR_CITY);
-			//appendChildNodeFromTC(a_data, operator, XML_ELEMENT_OPERATOR_VAT);
-			//appendChildNodeFromTC(a_data, operator, XML_ELEMENT_OPERATOR_FAX);
-			//appendChildNodeFromTC(a_data, operator, XML_ELEMENT_OPERATOR_EMAIL); 
 			
 			replaceNode(operator, XML_ELEMENT_OPERATOR);
 			Element replacedOpNode = (Element)
 				XMLUtil.getFirstChildByNameUsingDeepSearch(m_docWorkingCopy.getDocumentElement(), XML_ELEMENT_OPERATOR);
-			//XMLUtil.createChildElementWithValue(replacedOpNode, XML_ELEMENT_OPERATOR_NAME, op.getOrganization());
-			//XMLUtil.createChildElementWithValue(replacedOpNode, XML_ELEMENT_OPERATOR_EMAIL, op.getEMail());
 			
 			replaceNode(country, XML_ELEMENT_OPERATOR_COUNTRY);
-			
-			// replace PrivacyPolicyUrl
-			//replaceNodeFromTC(tcTranslationElement, XML_ELEMENT_PRIVACY_POLICY_URL);
 			
 			String[] replaceElements = new String[]
 			{
@@ -233,8 +219,8 @@ public class TermsAndConditionsFramework extends AbstractDistributableCertifiedD
 					tcTranslation.getPrivacyPolicyUrl(),
 					tcTranslation.getLegalOpinionsUrl(),
 					tcTranslation.getOperationalAgreementUrl(),
-					tcTranslation.getOperatorAddress().getCity(),
-					tcTranslation.getOperatorAddress().getVenue(),
+					(opAddress != null) ? tcTranslation.getOperatorAddress().getCity() : "",
+					(opAddress != null) ? tcTranslation.getOperatorAddress().getVenue() : "",
 					DateFormat.getDateInstance(DateFormat.MEDIUM, tcLoc).format(tcTranslation.getDate())
             };
 			
@@ -263,56 +249,45 @@ public class TermsAndConditionsFramework extends AbstractDistributableCertifiedD
 					}
 				}
 			}
-			// replace LegalOpinionsUrl
-			//replaceNodeFromTC(tcTranslationElement, XML_ELEMENT_LEGAL_OPINIONS_URL);
 			
-			// replace OperationalAgreementUrl
-			//replaceNodeFromTC(tcTranslationElement, XML_ELEMENT_OPERATIONAL_AGREEMENT_URL);
-			
-			// replace Location
-			//replaceNodeFromTC(operator, XML_ELEMENT_OPERATOR_CITY);
-			
-			// replace Venue
-			//replaceNodeFromTC(operator, XML_ELEMENT_VENUE);
-			
-			// ExtendedOperatorCountry
-			//replaceNodeFromTC(tcTranslationElement, "ExtendedOperatorCountry");
-			
-			// loop through all Paragraph nodes in our import document
-			NodeList paragraphs = tcTranslation.getTranslationElement().getElementsByTagName(XML_ELEMENT_PARAGRAPH);
-			for(int i = 0; i < paragraphs.getLength(); i++)
+			if(translationElement != null)
 			{
-				Node importParagraph = XMLUtil.importNode(m_docWorkingCopy, paragraphs.item(i), true);
-				String id = XMLUtil.parseAttribute(importParagraph, XML_ATTR_ID, "-1");
-				
-				// try to find it in our original document
-				Node para = findParagraphById(id);
-				Node section = null;
-				// insert it if the paragraph doesn't exist yet
-				if(para == null)
+				// loop through all Paragraph nodes in our import document
+				NodeList paragraphs = translationElement.getElementsByTagName(XML_ELEMENT_PARAGRAPH);
+				for(int i = 0; i < paragraphs.getLength(); i++)
 				{
-					// invalid id, skip
-					if(id.length() < 2)
+					Node importParagraph = XMLUtil.importNode(m_docWorkingCopy, paragraphs.item(i), true);
+					String id = XMLUtil.parseAttribute(importParagraph, XML_ATTR_ID, "-1");
+					
+					// try to find it in our original document
+					Node para = findParagraphById(id);
+					Node section = null;
+					// insert it if the paragraph doesn't exist yet
+					if(para == null)
 					{
-						continue;
+						// invalid id, skip
+						if(id.length() < 2)
+						{
+							continue;
+						}
+						
+						String sectionId = id.substring(0, 1);
+						section = findSectionById(sectionId);
+						
+						// invalid section id, skip
+						if(section == null)
+						{
+							continue;
+						}
+						
+						section.appendChild(importParagraph);
 					}
-					
-					String sectionId = id.substring(0, 1);
-					section = findSectionById(sectionId);
-					
-					// invalid section id, skip
-					if(section == null)
+					// replace it otherwise
+					else
 					{
-						continue;
+						section = para.getParentNode();
+						section.replaceChild(importParagraph, para);
 					}
-					
-					section.appendChild(importParagraph);
-				}
-				// replace it otherwise
-				else
-				{
-					section = para.getParentNode();
-					section.replaceChild(importParagraph, para);
 				}
 			}
 		}
@@ -418,45 +393,46 @@ public class TermsAndConditionsFramework extends AbstractDistributableCertifiedD
 			parent.replaceChild(node.cloneNode(true), list.item(i));
 		}
 	}
-	
 	public String transform()
 	{
-		try
-		{		
-			//File xsltFile = new File("tac.xslt");
-			//File output = new File("output.html");
-			//FileOutputStream stream = new FileOutputStream(output);
-			
-			Source xmlSource = new DOMSource(m_docWorkingCopy);
-			
-			Source xsltSource = new StreamSource(this.getClass().getResourceAsStream(XSLT_PATH));
-			
-			TransformerFactory factory = TransformerFactory.newInstance();
-			Transformer transformer = factory.newTransformer(xsltSource);
-			
-			//transformer.transform(xmlSource, new StreamResult(stream));
-			//stream.close();
-			
+		try 
+		{
 			StringWriter writer = new StringWriter();
-			transformer.transform(xmlSource, new StreamResult(writer));
+			transform(writer);
 			writer.close();
-			
 			String s = writer.toString();
 			
 			// otherwise inserted elements such as Venue or OperatorCountry 
 			// will have additional whitespace after them. 
 			// TODO: find a better way to deal with this
-			s = anon.util.Util.replaceAll(s, "\n", "");
-			s = anon.util.Util.replaceAll(s, "\r", "");
+			//s = anon.util.Util.replaceAll(s, "\n", "");
+			//s = anon.util.Util.replaceAll(s, "\r", "");
 			
 			// this is needed on some older java versions (mainly 1.5)
 			// otherwise br's will not be displayed correctly
 			return anon.util.Util.replaceAll(s, "<br/>", "<br>");
-		}
-		catch(Exception ex)
+		} 
+		catch (IOException e) 
 		{
+			LogHolder.log(LogLevel.ERR, LogType.MISC, "IOException caught while transforming terms and conditions.");
+			return null;
+		} 
+		catch (TransformerException e)
+		{
+			LogHolder.log(LogLevel.ERR, LogType.MISC, "Could not transform terms and conditions.");
 			return null;
 		}
+	}
+	
+	public void transform(Writer writer) throws IOException, TransformerException
+	{
+		Source xmlSource = new DOMSource(m_docWorkingCopy);
+		Source xsltSource = new StreamSource(this.getClass().getResourceAsStream(XSLT_PATH));
+		
+		TransformerFactory factory = TransformerFactory.newInstance();
+		Transformer transformer = factory.newTransformer(xsltSource);
+	
+		transformer.transform(xmlSource, new StreamResult(writer));
 	}
 	
 	public String getId() 
