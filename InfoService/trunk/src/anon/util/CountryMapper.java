@@ -86,11 +86,11 @@ public class CountryMapper extends AbstractISOCodeMapper
 	{
 		String[] codesJava = null;
 		
-		codesJava = Locale.getISOCountries();
-		
 		try 
 		{
-			Locale.class.getMethod("getISOCountries", new Class[]{});
+			//codesJava = Locale.getISOCountries();
+			codesJava = (String[])Locale.class.getMethod("getISOCountries", (Class[])null).invoke(Locale.class, (Object[])null);
+			
 		} 
 		catch (Exception e) 
 		{
