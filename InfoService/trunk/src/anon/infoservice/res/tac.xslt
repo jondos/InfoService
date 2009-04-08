@@ -10,6 +10,7 @@
 	<xsl:template match="TermsAndConditionsFramework">
 		<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 			<head>
+				<title><xsl:value-of select="@name" /></title>
 				<style style="text/css">
 					body { font-family: Lucida Grande, Arial; font-size: 90% }
 					h1 { text-align: center }
@@ -40,12 +41,12 @@
 	<xsl:template match="PreAmble/Operator">
 		<xsl:value-of select="Organisation" /><br />
 		<xsl:value-of select="Street" /><br />
-		<xsl:value-of select="PostalCode" /> - <xsl:value-of select="City" /><br />
+		<xsl:value-of select="PostalCode" /> <xsl:text> </xsl:text> <xsl:value-of select="City" /><br />
 		<xsl:value-of select="OperatorCountry" /><br />
 		<br />
-		VAT: <xsl:value-of select="Vat" /><br />
-		Fax: <xsl:value-of select="Fax" /><br />
-		E-Mail: <xsl:value-of select="EMail" /><br />
+		<xsl:text>VAT: </xsl:text> <xsl:value-of select="Vat" /><br />
+		<xsl:text>Fax: </xsl:text><xsl:value-of select="Fax" /><br />
+		<xsl:text>E-Mail: </xsl:text> <xsl:value-of select="EMail" /><br />
 	</xsl:template>
 		
 	<xsl:template match="Section">
@@ -71,10 +72,10 @@
 		<p class="operatorAddress">
 			<xsl:value-of select="Name" /><br />
 			<xsl:value-of select="Street" /><br />
-			<xsl:value-of select="PostalCode" /><xsl:value-of select="City" /><br />
+			<xsl:value-of select="PostalCode" /><xsl:text> </xsl:text><xsl:value-of select="City" /><br />
 			<xsl:value-of select="Country" /><br />
-			Fax: <xsl:value-of select="Fax" /><br />
-			E-Mail: <xsl:value-of select="eMail" /><br />
+			<xsl:text>Fax: </xsl:text> <xsl:value-of select="Fax" /><br />
+			<xsl:text> E-Mail: </xsl:text> <xsl:value-of select="EMail" /><br />
 		</p>
 	</xsl:template>
 	
