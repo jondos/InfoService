@@ -80,7 +80,7 @@ public class TermsAndConditions implements IXMLEncodable
 	public final static String XML_ELEMENT_NAME = "TermsAndConditions";
 	public final static String XML_ELEMENT_TRANSLATION_NAME = Translation.XML_ELEMENT_NAME;
 
-	private static final String DATE_FORMAT = "yyyyMMdd"; 
+	public static final String DATE_FORMAT = "yyyyMMdd"; 
 	
 	//private String m_strId;
 	private ServiceOperator operator;
@@ -245,7 +245,12 @@ public class TermsAndConditions implements IXMLEncodable
 	
 	public TermsAndConditionsTranslation removeTranslation(String locale)
 	{
-		return (TermsAndConditionsTranslation) translations.remove(locale.trim().toLowerCase());
+		Translation removedTranslation = (Translation) translations.remove(locale.trim().toLowerCase());
+		if(defaultTl == removedTranslation)
+		{
+			defaultTl = null;
+		}
+		return (TermsAndConditionsTranslation) removedTranslation;
 	}
 	
 	public TermsAndConditionsTranslation removeTranslation(Locale locale)
@@ -681,7 +686,7 @@ public class TermsAndConditions implements IXMLEncodable
 			}
 			
 			this.locale = this.locale.trim().toLowerCase();
-			this.defaultTranslation = XMLUtil.parseAttribute(translationElement, XML_ATTR_DEFAULT_LOCALE, false);
+			setDefaultTranslation(XMLUtil.parseAttribute(translationElement, XML_ATTR_DEFAULT_LOCALE, false));
 	
 			privacyPolicyUrl = XMLUtil.parseValue(XMLUtil.getFirstChildByName(translationElement, XML_ELEMENT_PRIVACY_POLICY), "");
 			legalOpinionsUrl = XMLUtil.parseValue(XMLUtil.getFirstChildByName(translationElement, XML_ELEMENT_LEGAL_OPINIONS), "");
@@ -738,6 +743,10 @@ public class TermsAndConditions implements IXMLEncodable
 			this.defaultTranslation = defaultTranslation;
 			if(defaultTranslation)
 			{
+				if(TermsAndConditions.this.defaultTl != null)
+				{
+					TermsAndConditions.this.defaultTl.setDefaultTranslation(false);
+				}
 				TermsAndConditions.this.defaultTl = this;
 			}
 		}

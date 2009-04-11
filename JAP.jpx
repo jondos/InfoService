@@ -154,6 +154,12 @@
 <property category="optimize.1" name="oira.FilterFile" value="G:\projects\Jap\JAP.oif"/>
 <property category="optimize.11" name="OptimizableType" value="com.borland.jbuilder.optimize.IntroOptimizeitProfiler"/>
 <property category="optimize.15" name="OptimizableType" value="com.borland.jbuilder.optimize.IntroOptimizeitProfiler"/>
+<property category="optimize.2" name="OptimizableType" value="intuitive.ide.borland.jb10.ProfilerBootstrap"/>
+<property category="optimize.2" name="oicc.FilterFile" value="C:\Users\jondos\Coding\Jap\JAP.oif"/>
+<property category="optimize.2" name="oipr.EnableUnitTest" value="0"/>
+<property category="optimize.2" name="oipr.FilterFile" value="C:\Users\jondos\Coding\Jap\JAP.oif"/>
+<property category="optimize.2" name="oira.AttachHost" value="localhost"/>
+<property category="optimize.2" name="oira.FilterFile" value="C:\Users\jondos\Coding\Jap\JAP.oif"/>
 <property category="optimize.5" name="OptimizableType" value="intuitive.ide.borland.jb10.ProfilerBootstrap"/>
 <property category="optimize.5" name="oicc.FilterFile" value="G:\projects\Jap\JAP.oif"/>
 <property category="optimize.5" name="oipr.FilterFile" value="E:\Eigene Dateien\rolf\Coding\Jap\JAP.oif"/>
@@ -275,7 +281,7 @@
 <property category="runtime.2" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
 <property category="runtime.2" name="ConfigurationName" value="AnonProxyTest"/>
 <property category="runtime.2" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
-<property category="runtime.2" name="application.class" value="misc.AnonProxyTest"/>
+<property category="runtime.2" name="application.class" value="jondonym.console.JonDoConsole"/>
 <property category="runtime.3" name="BuildTargetOnRun" value="com.borland.jbuilder.build.ProjectBuilder$ProjectBuildAction;make"/>
 <property category="runtime.3" name="ConfigurationName" value="TLSServerSocketTest"/>
 <property category="runtime.3" name="RunnableType" value="com.borland.jbuilder.runtime.ApplicationRunner"/>
@@ -362,7 +368,7 @@
 <property category="sys" name="InstanceVisibility" value="0"/>
 <property category="sys" name="JDK" value="java version 1.5.0_03-b07"/>
 <property category="sys" name="LastTag" value="192"/>
-<property category="sys" name="Libraries" value="http;mac;Apache XML-RPC;BouncyCastleLightForJAP;JUnit;junitx;Swing;ApacheBzip2;Log4j;ApacheFTPClient;XML-1.0;AppleJavaExtensions"/>
+<property category="sys" name="Libraries" value="http;mac;Apache XML-RPC;BouncyCastleLightForJAP;JUnit;junitx;Swing;ApacheBzip2;Log4j;ApacheFTPClient;XML-1.0;AppleJavaExtensions;Skype"/>
 <property category="sys" name="MakeStable" value="0"/>
 <property category="sys" name="OutPath" value="classes"/>
 <property category="sys" name="ShowWarnings" value="0"/>
@@ -4862,6 +4868,7 @@
 <node name="jap.forward" type="Package"/>
 <node name="jap.pay" type="Package"/>
 <node name="jarify" type="Package"/>
+<node name="jondonym.console" type="Package"/>
 <node name="junitx.framework.extension" type="Package"/>
 <node name="logging" type="Package"/>
 <node name="misc" type="Package"/>
@@ -5781,6 +5788,7 @@
 <file path="src/JAPMessages_fr.properties"/>
 <file path="src/JAPMessages_nl.properties"/>
 <file path="src/JAPMessages_pt.properties"/>
+<file path="src/jondonym/console/JonDoConsole.java"/>
 <file path="magicdraw.magicdraw"/>
 <file path="MANIFEST.MF"/>
 </project>
