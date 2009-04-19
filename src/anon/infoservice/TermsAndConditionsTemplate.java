@@ -1,3 +1,31 @@
+/*
+Copyright (c) 2008 The JAP-Team, JonDos GmbH
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, 
+are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice,
+       this list of conditions and the following disclaimer in the documentation and/or
+       other materials provided with the distribution.
+    * Neither the name of the University of Technology Dresden, Germany, nor the name of
+       the JonDos GmbH, nor the names of their contributors may be used to endorse or
+       promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 package anon.infoservice;
 
 import java.io.File;
@@ -33,7 +61,7 @@ import anon.crypto.XMLSignature;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
 
-public class TermsAndConditionsFramework extends AbstractDistributableCertifiedDatabaseEntry
+public class TermsAndConditionsTemplate extends AbstractDistributableCertifiedDatabaseEntry
 {
 	private static final String XML_ELEMENT_VENUE = "Venue";
 
@@ -62,6 +90,10 @@ public class TermsAndConditionsFramework extends AbstractDistributableCertifiedD
 	private static final String XML_ELEMENT_OPERATOR_COUNTRY = "OperatorCountry";
 	private static final String XML_ELEMENT_OPERATOR_CITY = "City";
 	
+	public static final String INFOSERVICE_PATH = "/tctemplate/";
+	public static final String INFOSERVICE_CONTAINER_PATH = "/tctemplates";
+	public static final String INFOSERVICE_SERIALS_PATH = "/tctemplateserials";
+	
 	/*private static final String XML_ELEMENT_OPERATOR_NAME = "Name";
 	private static final String XML_ELEMENT_OPERATOR_STREET = "Street";
 	private static final String XML_ELEMENT_OPERATOR_POSTAL_CODE = "PostalCode";
@@ -80,8 +112,8 @@ public class TermsAndConditionsFramework extends AbstractDistributableCertifiedD
 	public static String TERMS_AND_CONDITIONS_TYPE_GERMAN_LAW = "GermanLaw";
 	public static String TERMS_AND_CONDITIONS_TYPE_GENERAL_LAW = "GeneralLaw";
 	
-	public static String XML_ELEMENT_CONTAINER_NAME = "TermsAndConditionsFrameworks";
-	public static String XML_ELEMENT_NAME = "TermsAndConditionsFramework";
+	public static String XML_ELEMENT_CONTAINER_NAME = "TermsAndConditionsTemplates";
+	public static String XML_ELEMENT_NAME = "TermsAndConditionsTemplate";
 	
 	public String m_strId = null;
 	public Locale m_locale = null;
@@ -97,13 +129,13 @@ public class TermsAndConditionsFramework extends AbstractDistributableCertifiedD
 
 	private MultiCertPath m_certPath = null;
 	
-	public TermsAndConditionsFramework(Element a_elem) throws XMLParseException
+	public TermsAndConditionsTemplate(Element a_elem) throws XMLParseException
 	{
 		this(a_elem, true);
 	}
 	
 	// creation from xml structure
-	public TermsAndConditionsFramework(Element a_elem, boolean a_bJAPContext) throws XMLParseException
+	public TermsAndConditionsTemplate(Element a_elem, boolean a_bJAPContext) throws XMLParseException
 	{
 		super(a_bJAPContext ? Long.MAX_VALUE : System.currentTimeMillis() + TERMS_AND_CONDITIONS_TTL);
 		
@@ -132,7 +164,7 @@ public class TermsAndConditionsFramework extends AbstractDistributableCertifiedD
 	}
 	
 	// infoservice-creation from file
-	public TermsAndConditionsFramework(File a_file) throws XMLParseException, IOException
+	public TermsAndConditionsTemplate(File a_file) throws XMLParseException, IOException
 	{
 		super(System.currentTimeMillis() + TERMS_AND_CONDITIONS_TTL);
 		
@@ -457,6 +489,7 @@ public class TermsAndConditionsFramework extends AbstractDistributableCertifiedD
 	
 	public String getPostFile()
 	{
+		//TODO: rename
 		return "/posttcframework";
 	}
 	
@@ -485,8 +518,8 @@ public class TermsAndConditionsFramework extends AbstractDistributableCertifiedD
 		{
 			try
 			{
-				Database.getInstance(TermsAndConditionsFramework.class).update(
-						new TermsAndConditionsFramework(current));
+				Database.getInstance(TermsAndConditionsTemplate.class).update(
+						new TermsAndConditionsTemplate(current));
 				current = (Element) XMLUtil.getNextSiblingByName(current, XML_ELEMENT_NAME);
 			}
 			catch(XMLParseException xpe)
@@ -499,7 +532,7 @@ public class TermsAndConditionsFramework extends AbstractDistributableCertifiedD
 	
 	public static synchronized Enumeration getAllStoredRefIDs()
 	{
-		final Enumeration e = Database.getInstance(TermsAndConditionsFramework.class).getEntryList().elements();
+		final Enumeration e = Database.getInstance(TermsAndConditionsTemplate.class).getEntryList().elements();
 		return new Enumeration()
 		{
 			public boolean hasMoreElements() 
@@ -509,7 +542,7 @@ public class TermsAndConditionsFramework extends AbstractDistributableCertifiedD
 
 			public Object nextElement() 
 			{
-				return ((TermsAndConditionsFramework)e.nextElement()).getId();
+				return ((TermsAndConditionsTemplate)e.nextElement()).getId();
 			}
 			
 		};
@@ -537,9 +570,9 @@ public class TermsAndConditionsFramework extends AbstractDistributableCertifiedD
 			try
 			{
 				file = new File(a_dir.getAbsolutePath() + File.separator + files[i]);
-				TermsAndConditionsFramework tac = new TermsAndConditionsFramework(file);
+				TermsAndConditionsTemplate tac = new TermsAndConditionsTemplate(file);
 				
-				Database.getInstance(TermsAndConditionsFramework.class).update(tac);
+				Database.getInstance(TermsAndConditionsTemplate.class).update(tac);
 			}
 			catch(XMLParseException ex)
 			{
@@ -552,10 +585,10 @@ public class TermsAndConditionsFramework extends AbstractDistributableCertifiedD
 		}
 	}
 	
-	public static TermsAndConditionsFramework getById(String a_id, boolean a_bUpdateFromInfoService)
+	public static TermsAndConditionsTemplate getById(String a_id, boolean a_bUpdateFromInfoService)
 	{
 		// first look if it's in our database
-		TermsAndConditionsFramework tc = (TermsAndConditionsFramework) Database.getInstance(TermsAndConditionsFramework.class).getEntryById(a_id);
+		TermsAndConditionsTemplate tc = (TermsAndConditionsTemplate) Database.getInstance(TermsAndConditionsTemplate.class).getEntryById(a_id);
 		
 		if(!a_bUpdateFromInfoService || tc != null)
 		{
@@ -563,7 +596,7 @@ public class TermsAndConditionsFramework extends AbstractDistributableCertifiedD
 		}
 		
 		tc = InfoServiceHolder.getInstance().getTCFramework(a_id);
-		Database.getInstance(TermsAndConditionsFramework.class).update(tc);
+		Database.getInstance(TermsAndConditionsTemplate.class).update(tc);
 		
 		return tc;
 	}
@@ -573,9 +606,9 @@ public class TermsAndConditionsFramework extends AbstractDistributableCertifiedD
 		boolean objectEquals = false;
 		if (a_object != null)
 		{
-			if (a_object instanceof TermsAndConditionsFramework)
+			if (a_object instanceof TermsAndConditionsTemplate)
 			{
-				objectEquals = this.getId().equals( ( (TermsAndConditionsFramework) a_object).getId());
+				objectEquals = this.getId().equals( ( (TermsAndConditionsTemplate) a_object).getId());
 			}
 		}
 		return objectEquals;
@@ -595,5 +628,10 @@ public class TermsAndConditionsFramework extends AbstractDistributableCertifiedD
 	{
 		// TODO Auto-generated method stub
 		return m_certPath;
+	}
+	
+	public Document getDocument() 
+	{
+		return m_docWorkingCopy;
 	}
 }
