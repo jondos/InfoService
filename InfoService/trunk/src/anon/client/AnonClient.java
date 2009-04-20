@@ -75,7 +75,7 @@ import anon.util.XMLParseException;
  */
 public class AnonClient implements AnonService, Observer, DataChainErrorListener
 {
-	private static boolean ENABLE_CONTROL_CHANNEL_TEST=true; 
+	private static boolean ENABLE_CONTROL_CHANNEL_TEST=false; 
 	
 	public static final int DEFAULT_LOGIN_TIMEOUT = 30000;
 	private static final int FAST_LOGIN_TIMEOUT = 4000; // try the fast timeout first
