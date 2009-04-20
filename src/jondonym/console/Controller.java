@@ -76,7 +76,6 @@ import anon.client.DummyTrafficControlChannel;
 import anon.client.ITermsAndConditionsContainer;
 import anon.client.TrustException;
 import anon.client.TrustModel;
-import anon.client.TrustModel.NumberOfMixesAttribute;
 import anon.client.TrustModel.TrustAttribute;
 import anon.client.crypto.KeyPool;
 import anon.crypto.JAPCertificate;
@@ -104,7 +103,7 @@ public class Controller
 	public static final int LOG_DETAIL_LEVEL_HIGH = LogHolder.DETAIL_LEVEL_HIGH;
 	public static final int LOG_DETAIL_LEVEL_HIGHEST = LogHolder.DETAIL_LEVEL_HIGHEST;
 	
-	private static final String VERSION = "00.00.009";
+	private static final String VERSION = "00.00.010";
 	private static final String XML_ROOT_NODE = "ConsoleController";
 	
 	private static final String MESSAGES = "JAPMessages";
@@ -256,7 +255,6 @@ public class Controller
 		// predefine trust model; force premium services if charged account is available, but do not use them if not
 		TrustModel modelDynamicPremium = new TrustModel(MSG_DEFAULT_TRUST_MODEL, TrustModel.FIRST_UNRESERVED_MODEL_ID);
 		modelDynamicPremium.setAttribute(ForcePremiumIfAccountAvailableAttribute.class, TrustModel.TRUST_IF_TRUE);
-		modelDynamicPremium.setAttribute(NumberOfMixesAttribute.class, TrustModel.TRUST_IF_AT_LEAST, 3);
 		TrustModel.addTrustModel(modelDynamicPremium);
 		TrustModel.setCurrentTrustModel(modelDynamicPremium);
 		LogHolder.log(LogLevel.NOTICE, LogType.CRYPTO, "Trust filters initialised.");
