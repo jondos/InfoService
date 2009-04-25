@@ -52,7 +52,6 @@ import javax.swing.JRadioButton;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.LookAndFeel;
-import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.border.TitledBorder;
@@ -1155,19 +1154,18 @@ final class JAPConfUI extends AbstractJAPConfModule
 	{
 		JAPModel model = JAPModel.getInstance();
 		int oldFontSize = model.getFontSize();
-		if (model.getFontSize() != m_slidFontSize.getValue())
+		if (model.setFontSize(m_slidFontSize.getValue()))
 		{
-			if (model.setFontSize(m_slidFontSize.getValue()) &&
-				!model.isConfigWindowSizeSaved())
+			if (!model.isConfigWindowSizeSaved())
 			{
 				beforePack();
 				JAPConf.getInstance().doPack();
 				afterPack();
 			}
-			else
-			{
-				oldFontSize = -1;
-			}
+		}
+		else
+		{
+			oldFontSize = -1;
 		}
 
 		model.setSaveMainWindowPosition(m_cbSaveWindowLocationMain.isSelected());
