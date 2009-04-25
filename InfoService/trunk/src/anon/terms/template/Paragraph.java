@@ -183,7 +183,7 @@ public class Paragraph extends TCComponent implements IXMLEncodable
 					elementNodes.addElement(n);
 					hasElementNodes = true;
 				}
-				contentNodes().add(n);
+				contentNodes().addElement(n);
 			}	
 		}
 	}
