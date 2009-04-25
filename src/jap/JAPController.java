@@ -92,7 +92,6 @@ import anon.ErrorCodes;
 import anon.client.AbstractAutoSwitchedMixCascadeContainer;
 import anon.client.AnonClient;
 import anon.client.ITermsAndConditionsContainer;
-import anon.client.TermsAndConditionsResponseHandler;
 import anon.client.TrustModel;
 import anon.crypto.ExpiredSignatureException;
 import anon.crypto.JAPCertificate;
@@ -121,8 +120,6 @@ import anon.infoservice.PreviouslyKnownCascadeIDEntry;
 import anon.infoservice.ProxyInterface;
 import anon.infoservice.ServiceOperator;
 import anon.infoservice.StatusInfo;
-import anon.infoservice.TermsAndConditions;
-import anon.infoservice.TermsAndConditionsTemplate;
 import anon.infoservice.update.AccountUpdater;
 import anon.infoservice.update.InfoServiceUpdater;
 import anon.infoservice.update.JavaVersionUpdater;
@@ -143,6 +140,9 @@ import anon.proxy.HTTPProxyCallback;
 import anon.proxy.HttpConnectionListenerAdapter;
 import anon.proxy.IProxyListener;
 import anon.proxy.JonDoFoxHeader;
+import anon.terms.TermsAndConditions;
+import anon.terms.TermsAndConditionsResponseHandler;
+import anon.terms.template.TermsAndConditionsTemplate;
 import anon.tor.TorAnonServerDescription;
 import anon.transport.address.IAddress;
 import anon.util.Base64;
@@ -436,7 +436,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 		
 		// initialise IS update threads
 		m_feedback = new JAPFeedback();
-		m_AccountUpdater = new AccountUpdater();
+		//m_AccountUpdater = new AccountUpdater();
 		m_InfoServiceUpdater = new InfoServiceUpdater(m_observableInfo);
 		m_perfInfoUpdater = new PerformanceInfoUpdater(m_observableInfo);
 		m_paymentInstanceUpdater = new PaymentInstanceUpdater(m_observableInfo);
@@ -1950,6 +1950,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 					}
 					boolean accountLoaded = PayAccountsFile.init(elemAccounts, passwordReader, 
 							JAPConstants.m_bReleasedVersion, 1);
+					m_AccountUpdater = new AccountUpdater();
 					if (tempDialog != null)
 					{
 						tempDialog.dispose();
@@ -5795,17 +5796,20 @@ public final class JAPController extends Observable implements IProxyListener, O
 	private static class WarnNoJonDoFoxHttpListener extends HttpConnectionListenerAdapter implements IBrowserIdentification
 	{
 		public static final int BROWSER_RECOGNITION_UNINITIALISED = -1;
-		public static final int BROWSER_JONDOFOX = 0;
-		public static final int BROWSER_INTERNET_EXPLORER = 1;
-		public static final int BROWSER_FIREFOX = 2;
-		public static final int BROWSER_OPERA = 3;
-		public static final int BROWSER_SAFARI = 4;
-		public static final int BROWSER_CHROME = 5;
-		public static final int BROWSER_TORBUTTON = 6;
+		public static final int BROWSER_UNKNOWN = 0;
+		public static final int BROWSER_TORBUTTON = 1;
+		public static final int BROWSER_JONDOFOX = 2;
+		public static final int BROWSER_INTERNET_EXPLORER = 3;
+		public static final int BROWSER_FIREFOX = 4;
+		public static final int BROWSER_OPERA = 5;
+		public static final int BROWSER_SAFARI = 6;
+		public static final int BROWSER_KONQUEROR = 7;
+		public static final int BROWSER_CHROME = 8;
 		
-		private static final long[] BROWSER_OCCURENCE = new long[7];
+		
+		private static final long[] BROWSER_OCCURENCE = new long[9];
 		private static final String[] BROWSER_NAME = 
-			new String[]{"JonDoFox", "Internet Explorer", "Firefox", "Opera", "Safari", "Chrome", "Tor"}; 
+			new String[]{"other", "Tor", "JonDoFox", "Internet Explorer", "Firefox", "Opera", "Safari", "Konqueror", "Chrome"}; 
 		
 		private static boolean ms_bWarned;
 		private static boolean ms_bShowWarning;
@@ -5855,10 +5859,12 @@ public final class JAPController extends Observable implements IProxyListener, O
 			if (!event.getConnectionHeader().getRequestLine().startsWith("CONNECT"))
 			{
 				int detectedBrowser = -1;
-				String [] ua = event.getConnectionHeader().getRequestHeader(HTTPProxyCallback.HTTP_USER_AGENT);
+				String strUA;
+				String[] ua = event.getConnectionHeader().getRequestHeader(HTTPProxyCallback.HTTP_USER_AGENT);
 				if (ua.length > 0)
 				{
-					if (ua[0].indexOf("Firefox") >= 0)
+					strUA = ua[0].toLowerCase();
+					if (strUA.indexOf("firefox") >= 0)
 					{
 						if (ua[0].equals(JonDoFoxHeader.USER_AGENT_JONDOFOX_NEW) ||
 							ua[0].equals(JonDoFoxHeader.USER_AGENT_JONDOFOX))
@@ -5875,21 +5881,29 @@ public final class JAPController extends Observable implements IProxyListener, O
 							detectedBrowser = BROWSER_FIREFOX;
 						}
 					}
-					else if (ua[0].indexOf("MSIE") >= 0)
+					else if (strUA.indexOf("msie") >= 0)
 					{
 						detectedBrowser = BROWSER_INTERNET_EXPLORER;
 					}
-					else if (ua[0].indexOf("Opera") >= 0)
+					else if (strUA.indexOf("opera") >= 0)
 					{
 						detectedBrowser = BROWSER_OPERA;
 					}
-					else if (ua[0].indexOf("Konqueror") >= 0)
+					else if (strUA.indexOf("konqueror") >= 0)
+					{
+						detectedBrowser = BROWSER_KONQUEROR;
+					}
+					else if (strUA.indexOf("safari") >= 0)
 					{
 						detectedBrowser = BROWSER_SAFARI;
 					}
-					else if (ua[0].indexOf("Chrome") >= 0)
+					else if (strUA.indexOf("chrome") >= 0)
 					{
 						detectedBrowser = BROWSER_CHROME;
+					}
+					else if (strUA.indexOf("httpclient") < 0) // do not count InfoService/HttpClient messages
+					{
+						detectedBrowser = BROWSER_UNKNOWN;
 					}
 					if (detectedBrowser >= 0)
 					{
