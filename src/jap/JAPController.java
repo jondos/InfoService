@@ -5890,7 +5890,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 				int detectedBrowser = -1;
 				String strUA;
 				String[] ua = event.getConnectionHeader().getRequestHeader(HTTPProxyCallback.HTTP_USER_AGENT);
-				if (ua.length > 0)
+				if (ua != null && ua.length > 0)
 				{
 					strUA = ua[0].toLowerCase();
 					if (strUA.indexOf("firefox") >= 0)
