@@ -88,6 +88,8 @@ public class JAPVersionInfo extends AbstractDistributableDatabaseEntry
    * Stores the URL of the server, where the corresponding JAP software can be downloaded from.
    */
   private URL m_codeBase;
+  
+  private String m_lastSupportedJavaVersion;
 
   /**
    * Time (see System.currentTimeMillis()) when the root-of-update information infoservice has
@@ -154,6 +156,8 @@ public class JAPVersionInfo extends AbstractDistributableDatabaseEntry
       catch (Exception e) {
       }
     }
+    m_lastSupportedJavaVersion = XMLUtil.parseAttribute(a_jnlpRootNode, "java", 
+    		JavaVersionDBEntry.CURRENT_JAVA_VERSION);
     m_lastUpdate = XMLUtil.parseValue(XMLUtil.getFirstChildByName(a_jnlpRootNode, "LastUpdate"), -1L);
     if (m_lastUpdate == -1) {
 		/**@todo FixMe Removed because new Is does not work..*/
@@ -162,7 +166,7 @@ public class JAPVersionInfo extends AbstractDistributableDatabaseEntry
     }
     m_xmlStructure = a_jnlpRootNode;
   }
-
+  
   public static JAPVersionInfo getRecommendedUpdate(String a_currentVersion, boolean a_bStable)
   {
 	  JAPVersionInfo viStable = 
@@ -201,7 +205,11 @@ public class JAPVersionInfo extends AbstractDistributableDatabaseEntry
 	  return null;
   }
 
-
+  public String getLastSupportedJavaVersion()
+  {
+	  return m_lastSupportedJavaVersion;
+  }
+  
   /**
    * Returns the ID of this version information. It's the filename where this version info is
    * available on the infoservice ('/japRelease.jnlp' or '/japDevelopment.jnlp' depending on the
