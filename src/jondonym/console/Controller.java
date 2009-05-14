@@ -73,7 +73,6 @@ import logging.LogLevel;
 import logging.SystemErrLog;
 import anon.client.AbstractAutoSwitchedMixCascadeContainer;
 import anon.client.DummyTrafficControlChannel;
-import anon.client.ITermsAndConditionsContainer;
 import anon.client.TrustException;
 import anon.client.TrustModel;
 import anon.client.TrustModel.TrustAttribute;
@@ -210,6 +209,7 @@ public class Controller
 		Util.addDefaultCertificates("acceptedInfoServiceCAs/", JAPCertificate.CERTIFICATE_TYPE_ROOT_INFOSERVICE);
 		Util.addDefaultCertificates("acceptedMixCAs/", JAPCertificate.CERTIFICATE_TYPE_ROOT_MIX);
 		Util.addDefaultCertificates("acceptedPIs/", JAPCertificate.CERTIFICATE_TYPE_PAYMENT);
+		Util.addDefaultCertificates("acceptedTaCTemplates/", JAPCertificate.CERTIFICATE_TYPE_TERMS_AND_CONDITIONS);
 		LogHolder.log(LogLevel.NOTICE, LogType.CRYPTO, "General settings initialised.");
 
 		LogHolder.log(LogLevel.NOTICE, LogType.CRYPTO, "Initialising database updaters...");
@@ -1058,11 +1058,6 @@ public class Controller
 		public boolean isReconnectedAutomatically()
 		{
 			return true;
-		}
-		
-		public ITermsAndConditionsContainer getTCContainer()
-		{
-			return null;
 		}
 	}	
 	

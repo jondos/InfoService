@@ -30,9 +30,7 @@ package anon.terms;
 
 import java.io.IOException;
 import java.security.SignatureException;
-import java.util.Enumeration;
 import java.util.Observable;
-import java.util.Vector;
 
 import logging.LogHolder;
 import logging.LogLevel;
@@ -81,7 +79,13 @@ public class TermsAndConditionsResponseHandler extends Observable
 	public static final String XML_ELEMENT_INVALID_REQUEST_NAME = "InvalidTermsAndConditionsRequest";
 	public static final String XML_ELEMENT_RESPONSE_NAME = "TermsAndConditionsResponse";
 	
-	public void handleXMLResourceResponse(Document answerDoc, TermsAndConditionsRequest request) throws XMLParseException, IOException, IllegalTCRequestPostConditionException
+	private static final TermsAndConditionsResponseHandler SINGLETON = 
+		new TermsAndConditionsResponseHandler();
+	
+	private TermsAndConditionsResponseHandler() {}
+	
+	public void handleXMLResourceResponse(Document answerDoc, TermsAndConditionsRequest request) throws 
+		XMLParseException, IOException, IllegalTCRequestPostConditionException, SignatureException
 	{
 		if(answerDoc.getDocumentElement().getTagName().equals(XML_ELEMENT_INVALID_REQUEST_NAME))
 		{
@@ -108,6 +112,10 @@ public class TermsAndConditionsResponseHandler extends Observable
 			while(currentResourceNode != null)
 			{
 				TermsAndConditionsTemplate fr = new TermsAndConditionsTemplate((Element)currentResourceNode.getFirstChild());
+				if (!fr.isVerified())
+				{
+					throw new SignatureException("TermsAndConditionsTemplate cannot be verified!");
+				}
 				Database db = Database.getInstance(TermsAndConditionsTemplate.class);
 				db.update(fr);
 				currentResourceNode = (Element) XMLUtil.getNextSiblingByName(currentResourceNode, 
@@ -146,9 +154,17 @@ public class TermsAndConditionsResponseHandler extends Observable
 			currentResourceParentNode = XMLUtil.getNextSiblingByName(currentResourceParentNode, 
 					TermsAndConditionsRequest.XML_ELEMENT_NAME);
 		}
-		request.checkRequestPostCondition();
-		
+		request.checkRequestPostCondition();	
+	}
+	
+	public void notifyAboutChanges()
+	{
 		setChanged();
 		notifyObservers();
+	}
+	
+	public static TermsAndConditionsResponseHandler get()
+	{
+		return SINGLETON;
 	}
 }

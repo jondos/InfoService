@@ -55,9 +55,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import anon.client.TrustModel.PremiumAttribute;
 import anon.crypto.MultiCertPath;
-import anon.crypto.SignatureCreator;
 import anon.crypto.SignatureVerifier;
 import anon.crypto.XMLSignature;
 import anon.infoservice.AbstractDistributableCertifiedDatabaseEntry;
@@ -67,7 +65,6 @@ import anon.infoservice.OperatorAddress;
 import anon.infoservice.ServiceOperator;
 import anon.terms.TCComponent;
 import anon.terms.TCComposite;
-import anon.terms.TermsAndConditions;
 import anon.terms.TermsAndConditionsTranslation;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
@@ -112,7 +109,7 @@ public class TermsAndConditionsTemplate extends AbstractDistributableCertifiedDa
 	public long m_date;
 	
 	public Document signedDocument = null;
-	
+
 	private XMLSignature m_signature = null;
 
 	private MultiCertPath m_certPath = null;
@@ -120,6 +117,12 @@ public class TermsAndConditionsTemplate extends AbstractDistributableCertifiedDa
 	private String name = "";
 	private Preamble preamble = null;
 	private TCComposite sections = new TCComposite();
+	
+	//constructor needed for being loaded by the database class 
+	public TermsAndConditionsTemplate(Element element, long aLong) throws XMLParseException
+	{
+		this(element);
+	}
 	
 	public TermsAndConditionsTemplate(Node rootNode) throws XMLParseException
 	{
@@ -145,13 +148,20 @@ public class TermsAndConditionsTemplate extends AbstractDistributableCertifiedDa
 		m_strId = m_type + "_" + m_locale + "_" + m_date;
 		m_lastUpdate = System.currentTimeMillis();
 		m_signature = SignatureVerifier.getInstance().getVerifiedXml(templateRoot,
-			SignatureVerifier.DOCUMENT_CLASS_INFOSERVICE);
+			SignatureVerifier.DOCUMENT_CLASS_TERMS);
 		
 		if (m_signature != null)
 		{
 			m_certPath = m_signature.getMultiCertPath();
-			signedDocument = 
-				(rootNode.getNodeType() == Node.DOCUMENT_NODE) ? (Document) rootNode : templateRoot.getOwnerDocument();	
+			if(rootNode.getNodeType() == Node.DOCUMENT_NODE)
+			{
+				signedDocument = (Document) rootNode;	
+			}
+			else
+			{
+				signedDocument = XMLUtil.createDocument();
+				signedDocument.appendChild(signedDocument.importNode(templateRoot, true));
+			}
 		}
 		
 		// get the defined sections of this template
@@ -517,6 +527,11 @@ public class TermsAndConditionsTemplate extends AbstractDistributableCertifiedDa
 	public Document getSignedDocument()
 	{
 		return signedDocument;
+	}
+	
+	public void setSignedDocument(Document signedDocument) 
+	{
+		this.signedDocument = signedDocument;
 	}
 	
 	public Element getXmlStructure() 

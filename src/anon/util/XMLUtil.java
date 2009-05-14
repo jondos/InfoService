@@ -274,7 +274,7 @@ public class XMLUtil
 		{
 			try
 			{
-				i = Util.parseFloat(s);
+				i = Util.parseDouble(s);
 			}
 			catch (Exception e)
 			{
@@ -377,7 +377,8 @@ public class XMLUtil
 
 		try
 		{
-			d = Util.parseFloat(parseAttribute(a_node, a_attribute, null));
+			d = Util.parseDouble(parseAttribute(a_node, a_attribute, null));
+			//d = Double.parseDouble(parseAttribute(a_node, a_attribute, null));
 		}
 		catch (Exception ex)
 		{
@@ -897,7 +898,7 @@ public class XMLUtil
 			case Node.TEXT_NODE:
 			{
 				Node tmpParent = a_source.getParentNode();
-				if (tmpParent != null && tmpParent.getNodeType() != Node.ATTRIBUTE_NODE)
+				if ( (tmpParent == null) || (tmpParent.getNodeType() != Node.ATTRIBUTE_NODE) )
 				{
 					newnode = a_doc.createTextNode(a_source.getNodeValue());
 				}

@@ -35,12 +35,16 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.IOException;
 import java.security.SignatureException;
 import java.text.ParseException;
 import java.util.Locale;
+
+import logging.LogHolder;
+import logging.LogLevel;
+import logging.LogType;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -63,16 +67,14 @@ import anon.infoservice.MixInfo;
 import anon.infoservice.ServiceOperator;
 import anon.terms.TermsAndConditions;
 import anon.terms.TermsAndConditionsMixInfo;
+import anon.terms.TermsAndConditionsReadException;
 import anon.terms.TermsAndConditionsRequest;
 import anon.terms.TermsAndConditionsResponseHandler;
-import anon.terms.TermsAndConditionsReadException;
 import anon.terms.template.TermsAndConditionsTemplate;
 import anon.util.Base64;
+import anon.util.JAPMessages;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
-import logging.LogHolder;
-import logging.LogLevel;
-import logging.LogType;
 
 
 /**
@@ -136,7 +138,7 @@ public class KeyExchangeManager {
    * @todo remove MixInfo entries when changes in the certificate ID of a mix are discovered
    */
   public KeyExchangeManager(InputStream a_inputStream, OutputStream a_outputStream, MixCascade a_cascade,
-							ITrustModel a_trustModel, ITermsAndConditionsContainer a_tcContainer)
+							ITrustModel a_trustModel)
 	  throws XMLParseException, SignatureException, IOException, UnknownProtocolVersionException,
 	  TrustException, TermsAndConditionsReadException, IllegalTCRequestPostConditionException
   {
@@ -348,11 +350,7 @@ public class KeyExchangeManager {
 			  	// prepare request for Terms and Conditions resources, if necessary
 			  	if(m_cascade.isTermsAndConditionsConfirmationRequired())
 				{
-					ServiceOperator currentOperator = mixinfo.getServiceOperator();
-			  		if( a_tcContainer == null )
-					{
-						throw new NullPointerException("Terms and Conditions confirmation required but no tc container is specified!");
-					}
+			  		ServiceOperator currentOperator = mixinfo.getServiceOperator();
 					TermsAndConditionsMixInfo tncInfo = mixinfo.getTermsAndConditionMixInfo();
 					if(tncInfo != null)
 					{
@@ -386,7 +384,7 @@ public class KeyExchangeManager {
 								}
 							}
 							
-							Locale currentLocale = a_tcContainer.getDisplayLanguageLocale();
+							Locale currentLocale = JAPMessages.getLocale();
 							
 							String langCode = 
 								tncInfo.hasTranslation(currentLocale) ? 
@@ -734,7 +732,7 @@ public class KeyExchangeManager {
 					 Document answerDoc = XMLUtil.toXMLDocument(answerData);
 					 if(answerDoc != null)
 					 {
-						 a_tcContainer.getTermsAndConditionsResponseHandler().handleXMLResourceResponse(answerDoc, m_tnCRequest);
+						 TermsAndConditionsResponseHandler.get().handleXMLResourceResponse(answerDoc, m_tnCRequest);
 					 }
 				  }
 			  }

@@ -27,20 +27,15 @@
  */
 package jap;
 
-import java.util.Vector;
-
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.util.Vector;
+
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
-import anon.crypto.SignatureVerifier;
-import anon.infoservice.Database;
 import anon.infoservice.MixCascade;
-import anon.infoservice.MixInfo;
-import anon.infoservice.PerformanceInfo;
-import anon.infoservice.StatusInfo;
 import anon.util.JAPMessages;
 
 /**
@@ -340,7 +335,7 @@ public class JAPConfServices extends AbstractJAPConfModule
 		{
 			if (m_tcModule == null)
 			{
-				m_tcModule = new JAPConfTC(null, JAPController.getInstance());
+				m_tcModule = new JAPConfTC(null);
 			}
 		}
 		return m_tcModule;
