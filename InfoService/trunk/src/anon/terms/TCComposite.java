@@ -2,11 +2,6 @@ package anon.terms;
 
 import java.util.Vector;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
-import anon.terms.template.Paragraph;
-
 /**
  * Container of TCComponents using the composite pattern
  *
@@ -109,9 +104,6 @@ public class TCComposite extends TCComponent
 		return this.getClass()+"@"+this.id+": "+tcComponents.toString();
 	}
 	
-	/**
-	 * returns an object with a reference to a clone of the internal vector.
-	 */
 	public Object clone()
 	{
 		TCComposite composite = null;

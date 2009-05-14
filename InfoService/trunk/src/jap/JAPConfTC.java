@@ -1,14 +1,42 @@
+/*
+Copyright (c) 2008 The JAP-Team, JonDos GmbH
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, 
+are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice,
+       this list of conditions and the following disclaimer in the documentation and/or
+       other materials provided with the distribution.
+    * Neither the name of the University of Technology Dresden, Germany, nor the name of
+       the JonDos GmbH, nor the names of their contributors may be used to endorse or
+       promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 package jap;
 
 import gui.JAPHyperlinkAdapter;
-import gui.OperatorsCellRenderer;
+import gui.TermsAndConditionsOperatorTable;
+import gui.TermsAndCondtionsTableController;
+import gui.UpperLeftStartViewport;
 import gui.dialog.JAPDialog;
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.util.Date;
-import java.util.Enumeration;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
@@ -16,40 +44,28 @@ import java.util.Vector;
 import javax.swing.JEditorPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.AbstractTableModel;
 
-import logging.LogHolder;
-import logging.LogLevel;
 import logging.LogType;
-import anon.client.ITermsAndConditionsContainer;
 import anon.infoservice.Database;
 import anon.infoservice.ServiceOperator;
 import anon.terms.TermsAndConditions;
+import anon.terms.TermsAndConditionsResponseHandler;
 import anon.util.JAPMessages;
 
-public class JAPConfTC extends AbstractJAPConfModule implements ListSelectionListener, Observer
+public class JAPConfTC extends AbstractJAPConfModule implements Observer, TermsAndCondtionsTableController
 {
 	private static final String MSG_TAB_TITLE = JAPConfTC.class.getName() + "_tabTitle";
 	private static final String MSG_ERR_REJECT_IMPOSSIBLE = JAPConfTC.class.getName() + "_errRejectImpossible";
 	
-	JTable m_tblOperators;
+	private TermsAndConditionsOperatorTable m_tblOperators;
 	private JEditorPane m_termsPane;
 	private JScrollPane m_scrollingTerms;
-	private ITermsAndConditionsContainer m_tcc;
 	
-	protected JAPConfTC(IJAPConfSavePoint savePoint, ITermsAndConditionsContainer tcc)
+	
+	protected JAPConfTC(IJAPConfSavePoint savePoint)
 	{
 		super(null);
-		if (tcc == null)
-		{
-			throw new NullPointerException();
-		}
-		m_tcc = tcc;
 	}
 	
 	protected boolean initObservers()
@@ -58,7 +74,7 @@ public class JAPConfTC extends AbstractJAPConfModule implements ListSelectionLis
 		{
 			synchronized(LOCK_OBSERVABLE)
 			{
-				m_tcc.getTermsAndConditionsResponseHandler().addObserver(this);
+				TermsAndConditionsResponseHandler.get().addObserver(this);
 				return true;
 			}
 		}
@@ -83,21 +99,14 @@ public class JAPConfTC extends AbstractJAPConfModule implements ListSelectionLis
 		c.gridy = 0;
 		c.anchor = GridBagConstraints.NORTHWEST;
 		
-		m_tblOperators = new JTable();
-		m_tblOperators.setModel(new OperatorsTableModel(JAPController.getInstance()));
-		m_tblOperators.getColumnModel().getColumn(OperatorsTableModel.ACCEPTED_COL).setMinWidth(4);
-		m_tblOperators.getColumnModel().getColumn(OperatorsTableModel.ACCEPTED_COL).setPreferredWidth(4);
-		m_tblOperators.setDefaultRenderer(ServiceOperator.class, new OperatorsCellRenderer());
-		m_tblOperators.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		m_tblOperators.getSelectionModel().addListSelectionListener(this);
-		//m_tblOperators.getDefaultEditor(Boolean.class).addCellEditorListener(new AcceptedRejectListener(m_tblOperators));
+		m_tblOperators = new TermsAndConditionsOperatorTable();
+		m_tblOperators.setController(this);
+	
 		JScrollPane scroll;
 
 		scroll = new JScrollPane(m_tblOperators);
 		scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-		//scroll.setMinimumSize(new Dimension(100, 100));
-		//scroll.setPreferredSize(preferredSize);
-		
+
 		root.add(scroll, c);
 		
 		c.gridy++;
@@ -105,8 +114,11 @@ public class JAPConfTC extends AbstractJAPConfModule implements ListSelectionLis
 		m_termsPane = new JEditorPane("text/html", "");
 		m_termsPane.addHyperlinkListener(new JAPHyperlinkAdapter());
 		m_termsPane.setEditable(false);
-		m_scrollingTerms = new JScrollPane(m_termsPane);
+		m_scrollingTerms = new JScrollPane();
+		m_scrollingTerms.setViewport(new UpperLeftStartViewport());
+		m_scrollingTerms.getViewport().add(m_termsPane);
 		/**@todo make this dynamic */
+		
 		m_scrollingTerms.setPreferredSize(new Dimension(400,200));
 		root.add(m_scrollingTerms, c);
 		
@@ -118,302 +130,93 @@ public class JAPConfTC extends AbstractJAPConfModule implements ListSelectionLis
 		return "services_tc";
 	}
 	
-	protected void onUpdateValues()
+	protected void onRootPanelShown()
 	{
-		//synchronized (JAPConf.getInstance())
-		{
-			((OperatorsTableModel) m_tblOperators.getModel()).update();
-		}
+		m_tblOperators.setOperators(Database.getInstance(ServiceOperator.class).getEntryList());
 	}
 	
-	/**
-	 * Handles the selection of an operator
-	 * @param e ListSelectionEvent
-	 */
-	public void valueChanged(ListSelectionEvent e)
+	protected boolean onOkPressed()
 	{
-		if(!e.getValueIsAdjusting())
+		Vector[] allHandledTerms = new Vector[]
 		{
-			ServiceOperator op = (ServiceOperator) m_tblOperators.getValueAt(
-					m_tblOperators.getSelectedRow(), OperatorsTableModel.OPERATOR_COL);
-			
-			m_termsPane.setText("");
-			
-			if(op != null)
+				m_tblOperators.getTermsAccepted(),
+				m_tblOperators.getTermsRejected()
+		};
+		TermsAndConditions terms = null;
+		boolean accept = false;
+		boolean errorDialogShown = false;
+		
+		for(int j=0; j < allHandledTerms.length; j++)
+		{
+			accept = (j==0);
+			if(allHandledTerms[j] != null)
 			{
-				//String opIdWithoutColons = Util.replaceAll(op.getId(),":", "");
-				TermsAndConditions tc = TermsAndConditions.getTermsAndConditions(op);
-				if(tc == null)
+				for(int i = 0; i < allHandledTerms[j].size(); i++)
 				{
-					return;
-				}
-				String tcHtmlText = tc.getHTMLText(JAPMessages.getLocale());
-				//TermsAndConditionsTemplate fr = TermsAndConditionsTemplate.getById(tc.getReferenceId(), true);
-				
-				//if(fr == null)
-				//{
-				//	return;
-				//}
-				
-				//fr.importData(tc);
-				m_termsPane.setText(tcHtmlText);
-			}
-		}
-	}
-	
-	/*private class AcceptedRejectListener implements CellEditorListener
-	{
-
-		JTable target = null;
-		
-		public AcceptedRejectListener(JTable target)
-		{
-			if(target == null) throw new NullPointerException("target table is null"); 
-			this.target = target;
-		}
-		
-		public void editingCanceled(ChangeEvent e)
-		{
-		}
-
-		public void editingStopped(ChangeEvent e) 
-		{
-			TableCellEditor tced = (TableCellEditor) e.getSource();
-			//boolean value = ((Boolean)).booleanValue();
-			target.getModel().setValueAt(tced.getCellEditorValue(), target.getSelectedRow(), target.getSelectedColumn());
-		}
-		
-	}*/
-	
-	private static class OperatorsTableModel extends AbstractTableModel
-	{
-		/**
-		 * serial version UID
-		 */
-		private static final long serialVersionUID = 1L;
-
-		/**
-		 * Vector containing all the operators in the list
-		 */
-		private Vector m_vecOperators = new Vector();
-		
-		/**
-		 * The column names
-		 */
-		private String columnNames[];
-		
-		/**
-		 * The column classes
-		 */
-		private Class columnClasses[]; 		
-		
-		private final static int OPERATOR_COL = 0;
-		private final static int DATE_COL = 1;
-		private final static int ACCEPTED_COL = 2;
-		
-		private final static String OPERATOR_COL_NAMEKEY = "mixOperator";
-		private final static String DATE_COL_NAMEKEY = "validFrom";
-		private final static String ACCEPTED_COL_NAMEKEY = JAPConfTC.class.getName() + "_tncAccepted";
-		
-		private final static int COLS = 3;
-		
-		private ITermsAndConditionsContainer tncModel;
-		
-		private OperatorsTableModel(ITermsAndConditionsContainer tncModel)
-		{
-			columnClasses = new Class[COLS];
-			columnNames = new String[COLS];
-			
-			columnClasses[OPERATOR_COL] = ServiceOperator.class;
-			columnClasses[DATE_COL] = Date.class;
-			columnClasses[ACCEPTED_COL] = Boolean.class;
-			
-			columnNames[OPERATOR_COL] = JAPMessages.getString(OPERATOR_COL_NAMEKEY);
-			columnNames[DATE_COL] = JAPMessages.getString(DATE_COL_NAMEKEY);
-			columnNames[ACCEPTED_COL] = JAPMessages.getString(ACCEPTED_COL_NAMEKEY);
-			this.tncModel = tncModel;
-		}
-		
-		public int getRowCount()
-		{
-			return m_vecOperators.size();
-		}
-		
-		public int getColumnCount()
-		{
-			return columnNames.length;
-		}
-		
-		public boolean isCellEditable(int rowIndex, int columnIndex)
-		{
-			if (columnIndex == ACCEPTED_COL) return true;
-			else return false;
-		}		
-		
-		public synchronized void update()
-		{
-			/*if(m_trustModelCopy != null)
-				m_vecBlacklist = (Vector) ((Vector) m_trustModelCopy.getAttribute(TrustModel.OperatorBlacklistAttribute.class).getConditionValue()).clone();*/
-			
-			m_vecOperators.removeAllElements();
-			Vector allOperators = Database.getInstance(ServiceOperator.class).getEntryList();
-			for (Enumeration enumeration = allOperators.elements(); enumeration.hasMoreElements();)
-			{
-				ServiceOperator operator = (ServiceOperator) enumeration.nextElement();
-				//System.out.println("Operator "+operator.getId());
-				if(operator.hasTermsAndConditions())
-				{
-					//System.out.println("has tcs.");
-					m_vecOperators.addElement(operator);
-				}
-			}
-			//m_vecOperators = Database.getInstance(ServiceOperator.class).getEntryList();
-		}
-		
-		public Class getColumnClass(int columnIndex)
-		{
-			return columnClasses[columnIndex];
-		}
-
-		public String getColumnName(int columnIndex)
-		{
-			return columnNames[columnIndex];
-		}		
-		
-		public Object getValueAt(int rowIndex, int columnIndex)
-		{
-			try
-			{
-				switch (columnIndex)
-				{
-					case OPERATOR_COL:
+					terms = (TermsAndConditions) allHandledTerms[j].elementAt(i);
+					if(terms != null)
 					{
-						return (ServiceOperator)m_vecOperators.elementAt(rowIndex);
-						
-					}
-					case DATE_COL:
-					{
-						ServiceOperator op = (ServiceOperator) m_vecOperators.elementAt(rowIndex);
-						//if(op == null) return null;
-						TermsAndConditions tc = TermsAndConditions.getTermsAndConditions(op);
-						return (tc != null) ? tc.getDate() : null;
-					}
-					case ACCEPTED_COL:
-					{
-						ServiceOperator op = (ServiceOperator) m_vecOperators.elementAt(rowIndex);
-						//if(op == null) return null; //must never happen
-						TermsAndConditions tc = TermsAndConditions.getTermsAndConditions(op);
-						//if(tc == null) return null; //must never happen
-						return new Boolean(tc.isAccepted());
-					}
-					default:
-					{
-						throw new IndexOutOfBoundsException("No definition for column "+columnIndex);
-					}
-				}
-			}
-			catch(Exception ex) 
-			{ 
-				LogHolder.log(LogLevel.ERR, LogType.GUI, ex);
-			}
-			
-			return null;
-		}
-		
-		public void setValueAt(Object aValue, int rowIndex, int columnIndex)
-		{
-			switch (columnIndex)
-			{
-				case OPERATOR_COL:
-				{
-					break;
-				}
-				case DATE_COL:
-				{
-					break;
-				}
-				case ACCEPTED_COL:
-				{
-					boolean value = ((Boolean) aValue).booleanValue(); 
-					ServiceOperator op = (ServiceOperator) m_vecOperators.elementAt(rowIndex);
-					//if(op == null) return null; //must never happen
-					TermsAndConditions tc = TermsAndConditions.getTermsAndConditions(op);
-					JAPController.getInstance();
-					//if(tc == null) return null; //must never happen
-					
-					if(!value && !JAPController.getInstance().isTCRejectingPossible(tc))
-					{
-						JAPDialog.showErrorDialog(JAPConf.getInstance(), 
-								JAPMessages.getString(MSG_ERR_REJECT_IMPOSSIBLE, op.getOrganization()), LogType.MISC);
-					}
-					else
-					{
-						tc.setAccepted(value);
-					}
-					tc.setRead(true);
-					break;
-				}
-				default:
-				{
-					throw new IndexOutOfBoundsException("No definition for column "+columnIndex);
-				}
-			}
-			/*if(aValue instanceof Boolean)
-			{
-				
-				ServiceOperator currentOp = 
-					(ServiceOperator) getValueAt(rowIndex, OPERATOR_COL);
-				
-				if(!value && tncModel.hasAcceptedTermsAndConditions(currentOp))
-				{
-					tncModel.revokeTermsAndConditions(currentOp);
-					
-				}
-				else if (!tncModel.hasAcceptedTermsAndConditions(currentOp))
-				{
-					tncModel.acceptTermsAndConditions(currentOp);
-					
-				}
-			}*/
-		}
-		
-		/*public void setValueAt(Object aValue, int rowIndex, int columnIndex)
-		{
-			try
-			{
-				switch (columnIndex)
-				{
-					case ACCEPTED_COL:
-					{
-						Object op = m_vecOperators.elementAt(rowIndex);
-						if(aValue == Boolean.FALSE)
+						if(!accept && !JAPController.getInstance().isOperatorOfConnectedMix(terms.getOperator()))
 						{
-							//if(!m_vecBlacklist.contains(op))
-							//{
-							//	m_vecBlacklist.addElement(op);
-							//}
+							if(!errorDialogShown)
+							{
+								JAPDialog.showErrorDialog(JAPConf.getInstance(), 
+										JAPMessages.getString(MSG_ERR_REJECT_IMPOSSIBLE, terms.getOperator().getOrganization()), LogType.MISC);
+								errorDialogShown = true;
+							}
 						}
 						else
 						{
-							//m_vecBlacklist.removeElement(op);
+							terms.setAccepted(accept);
 						}
-						break;
-					}
-					default:
-					{
-						throw new IndexOutOfBoundsException("No definition for column "+columnIndex+" or column not editable");
 					}
 				}
 			}
-			catch(Exception ex) 
-			{ 
-				LogHolder.log(LogLevel.ERR, LogType.GUI, ex);
-			}
-		}*/
+		}
+		m_tblOperators.setOperators(Database.getInstance(ServiceOperator.class).getEntryList());
+		return true;
 	}
-
+	
+	protected void onCancelPressed()
+	{
+		m_tblOperators.setOperators(Database.getInstance(ServiceOperator.class).getEntryList());
+	}
+	
 	public void update(Observable o, Object arg) 
 	{
-		//onUpdateValues();
+		onUpdateValues();
+		getRootPanel().revalidate();
+	}
+
+	protected void onUpdateValues()
+	{
+		// is this update really needed?
+		//m_tblOperators.setOperators(Database.getInstance(ServiceOperator.class).getEntryList());
+	}
+
+	public boolean handleOperatorAction(ServiceOperator operator, boolean accepted) 
+	{
+		return accepted;
+	}
+
+	public void handleSelectLineAction(ServiceOperator operator) 
+	{
+		TermsAndConditions tc = TermsAndConditions.getTermsAndConditions(operator);
+		if(tc == null)
+		{
+			return;
+		}
+		String tcHtmlText = tc.getHTMLText(JAPMessages.getLocale());
+		m_termsPane.setText(tcHtmlText);
+	}
+
+	public void handleAcceptAction(ServiceOperator operator, boolean accept) 
+	{
+		if(!accept && !JAPController.getInstance().isOperatorOfConnectedMix(operator) )
+		{
+				JAPDialog.showErrorDialog(JAPConf.getInstance(), 
+						JAPMessages.getString(MSG_ERR_REJECT_IMPOSSIBLE, operator.getOrganization()), LogType.MISC);
+				throw new IllegalStateException(JAPMessages.getString(MSG_ERR_REJECT_IMPOSSIBLE, operator.getOrganization()));
+		}
 	}
 }

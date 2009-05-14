@@ -33,6 +33,8 @@ import java.io.StringReader;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import javax.swing.text.html.HTML;
+
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -41,6 +43,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.Text;
 
 import anon.terms.TCComponent;
 import anon.util.IXMLEncodable;
@@ -147,37 +150,50 @@ public class Paragraph extends TCComponent implements IXMLEncodable
 	
 	public void setContent(Object o)
 	{	
+		NodeList nl = null;
+		
+		if(o != null)
+		{	
+			if(!(o instanceof NodeList) )
+			{
+				if(o instanceof Node[])
+				{
+					nl = toNodeList((Node[]) o);
+				}
+				else
+				{
+					//try to make a NodeList out the object content.
+					StringBuffer contentBuffer = new StringBuffer();
+					
+					contentBuffer.append("<?xml version=\"1.0\"?><temp>");
+					contentBuffer.append(o);
+					contentBuffer.append("</temp>");	
+					try 
+					{
+						Document tempDoc = XMLUtil.readXMLDocument(new StringReader(contentBuffer.toString()));
+						nl = (tempDoc.getDocumentElement() != null) ? tempDoc.getDocumentElement().getChildNodes() : null;
+					} 
+					catch (IOException e) 
+					{
+						LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Cannot set content, reason: "+e.getMessage());
+						return;
+					} 
+					catch (XMLParseException e) 
+					{
+						LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Cannot set content, reason: "+e.getMessage());
+						return;
+					}
+				}
+			}
+			else
+			{
+				nl = (NodeList) o;
+			}
+		}
+		
 		elementNodes.removeAllElements();
 		contentNodes().removeAllElements();
 		hasElementNodes = false;
-		NodeList nl = null;
-		
-		if(!(o instanceof NodeList) )
-		{
-			//try to make a NodeList out the object content.
-			StringBuffer contentBuffer = new StringBuffer();
-			
-			contentBuffer.append("<?xml version=\"1.0\"?><temp>");
-			contentBuffer.append(o);
-			contentBuffer.append("</temp>");	
-			try 
-			{
-				Document tempDoc = XMLUtil.readXMLDocument(new StringReader(contentBuffer.toString()));
-				nl = (tempDoc.getDocumentElement() != null) ? tempDoc.getDocumentElement().getChildNodes() : null;
-			} 
-			catch (IOException e) 
-			{
-				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Cannot set content, reason: "+e.getMessage());
-			} 
-			catch (XMLParseException e) 
-			{
-				LogHolder.log(LogLevel.DEBUG, LogType.MISC, "Cannot set content, reason: "+e.getMessage());
-			}
-		}
-		else
-		{
-			nl = (NodeList) o;
-		}
 		
 		if(nl != null)
 		{
@@ -195,6 +211,69 @@ public class Paragraph extends TCComponent implements IXMLEncodable
 		}
 	}
 	
+	public Object getContent()
+	{
+		final Node[] contentNodesArray =
+			new Node[contentNodes().size()];
+		
+		for (int i = 0; i < contentNodesArray.length; i++) 
+		{
+			contentNodesArray[i] = (Node) contentNodes().elementAt(i);
+		}
+		
+		return new NodeList()
+		{
+			public int getLength() 
+			{
+				return contentNodesArray.length;
+			}
+
+			public Node item(int index) 
+			{
+				return contentNodesArray[index];
+			}
+		};
+	}
+	
+	public void setContentBold()
+	{
+		NodeList contentNodeList = (NodeList) getContent();
+		Document tempDoc = XMLUtil.createDocument();
+		Node boldElement = null;
+		
+		elementNodes.removeAllElements();
+		contentNodes().removeAllElements();
+		
+		for (int i = 0; i < contentNodeList.getLength(); i++) 
+		{
+			if( (contentNodeList.item(i).getNodeType() == Node.ELEMENT_NODE) &&
+				((Element) contentNodeList.item(i)).getTagName().equals(HTML.Tag.B.toString()))
+			{
+				//don't enclose an already existing <b>-Tag.
+				boldElement = contentNodeList.item(i);
+			}
+			else if( (contentNodeList.item(i).getNodeType() != Node.TEXT_NODE) ||
+					( (contentNodeList.item(i).getNodeValue() != null) &&
+					  !(contentNodeList.item(i).getNodeValue().trim().equals(""))) )
+			{
+				
+				boldElement = tempDoc.createElement(HTML.Tag.B.toString()); 
+				boldElement.appendChild(tempDoc.importNode(contentNodeList.item(i), true));
+			}
+			else
+			{
+				boldElement = null;
+			}
+			
+			if(boldElement != null)
+			{
+				contentNodes().addElement(boldElement);
+				elementNodes.addElement(boldElement);
+			}
+		}
+		hasElementNodes = (elementNodes.size() > 0);
+	}
+	
 	private Vector contentNodes()
 	{
 		return (Vector) content;
@@ -207,7 +286,12 @@ public class Paragraph extends TCComponent implements IXMLEncodable
 	
 	public Element toXmlElement(Document ownerDoc) 
 	{
-		if(id < 0 || (contentNodes().size() == 0) ) return null;
+		return toXmlElement(ownerDoc, false);
+	}
+	
+	public Element toXmlElement(Document ownerDoc, boolean outputEmpty) 
+	{
+		if(id < 0 || ((contentNodes().size() == 0) && !outputEmpty) ) return null;
 		Element rootElement = ownerDoc.createElement(XML_ELEMENT_NAME);
 		rootElement.setAttribute(XML_ATTR_ID, ""+this.id);
 		for (int i = 0; i < contentNodes().size(); i++) 
@@ -228,19 +312,7 @@ public class Paragraph extends TCComponent implements IXMLEncodable
 	{
 		Paragraph paragraph = new Paragraph();
 		paragraph.setId(id);
-		paragraph.setContent(
-				new NodeList()
-				{
-					public int getLength() 
-					{
-						return contentNodes().size();
-					}
-
-					public Node item(int index) 
-					{
-						return (Node) contentNodes().elementAt(index);
-					}
-				});
+		paragraph.setContent(getContent());
 		return paragraph;
 	}
 	
@@ -259,6 +331,23 @@ public class Paragraph extends TCComponent implements IXMLEncodable
 				buff.append("\n");
 			}
 		}
-		return buff.toString();
+		return buff.toString().trim();
+	}
+	
+	public static NodeList toNodeList(Node[] nodeArray)
+	{
+		final Node[] fNodeArray = nodeArray;
+		return new NodeList()
+		{
+			public int getLength() 
+			{
+				return fNodeArray.length;
+			}
+
+			public Node item(int index) 
+			{
+				return fNodeArray[index];
+			}
+		};
 	}
 }

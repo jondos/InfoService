@@ -31,6 +31,9 @@
  */
 package anon.client;
 
+import gui.TermsAndConditionsInfoDialog;
+import jap.JAPController;
+
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.ConnectException;
@@ -54,17 +57,16 @@ import anon.AnonServiceEventListener;
 import anon.ErrorCodes;
 import anon.IServiceContainer;
 import anon.NotConnectedToMixException;
-import anon.client.ITermsAndConditionsContainer.TermsAndConditonsDialogReturnValues;
-import anon.terms.TermsAndConditionsReadException;
 import anon.client.replay.ReplayControlChannel;
 import anon.client.replay.TimestampUpdater;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.IMutableProxyInterface;
 import anon.infoservice.ImmutableProxyInterface;
 import anon.infoservice.MixCascade;
-import anon.terms.TermsAndConditions;
 import anon.pay.AIControlChannel;
 import anon.pay.Pay;
+import anon.terms.TermsAndConditionsReadException;
+import anon.terms.TermsAndConditionsResponseHandler;
 import anon.transport.connection.ConnectionException;
 import anon.transport.connection.IStreamConnection;
 import anon.transport.connection.SocketConnection;
@@ -119,8 +121,6 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 
 	private boolean m_connected;
 	
-	
-	
 	static 
 	{
 		resetInternalLoginTimeout();				
@@ -166,45 +166,6 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 		final MixCascade mixCascade = (MixCascade) a_mixCascade;
 
 		m_serviceContainer = a_serviceContainer;
-
-		int cascadeLength = mixCascade.getNumberOfMixes();
-		ITermsAndConditionsContainer tcc = m_serviceContainer.getTCContainer();
-		
-		/*if(tcc != null)
-		{
-			for (int i = 0; i < cascadeLength; i++) 
-			{
-				MixInfo info = mixCascade.getMixInfo(i);
-				if(info == null)
-				{
-					continue; // ignore
-				}			
-			
-				ServiceOperator op = info.getServiceOperator();
-				if(op != null && !tcc.hasAcceptedTermsAndConditions(op) &&
-				op.hasTermsAndConditions())
-				{
-					Boolean bError = Boolean.TRUE;
-					Boolean bAcceptedTC = Boolean.FALSE;
-					
-					TermsAndConditonsDialogReturnValues ret = tcc.showTermsAndConditionsDialog(op);
-					
-					// only continue if we successfully displayed the TnC dialog
-					if(ret != null && !ret.hasError())
-					{	
-						if(!ret.hasAccepted())
-						{
-							tcc.revokeTermsAndConditions(op);
-							return ErrorCodes.E_INTERRUPTED;
-						}
-						else
-						{
-							tcc.acceptTermsAndConditions(op);
-						}
-					}
-				}
-			}
-		}*/
 		
 		StatusThread run = new StatusThread()
 		{
@@ -746,43 +707,34 @@ public class AnonClient implements AnonService, Observer, DataChainErrorListener
 								try
 								{
 									m_keyExchangeManager = new KeyExchangeManager(m_socketHandler.getInputStream(),
-											m_socketHandler.getOutputStream(), (MixCascade) a_mixCascade,
-											a_serviceContainer, a_serviceContainer.getTCContainer());
+											m_socketHandler.getOutputStream(), (MixCascade) a_mixCascade, a_serviceContainer);
 									tcRetry = false;
 								}
 								catch(TermsAndConditionsReadException tcie)
 								{
-									//now the user gets all the time he needs to read the Terms and Conditions.
-									//after that the connection is reestablished
-									Enumeration tcsToshow = tcie.getTermsTermsAndConditonsToRead();
-									TermsAndConditions currentTCToShow = null;
-									TermsAndConditonsDialogReturnValues currentReturnValues = null;
-									while (tcsToshow.hasMoreElements()) 
+									TermsAndConditionsInfoDialog d = 
+										new TermsAndConditionsInfoDialog(JAPController.getInstance().getViewWindow(),
+												tcie.getOperators(), ((MixCascade) a_mixCascade).getName() );
+									d.setVisible(true);
+									TermsAndConditionsResponseHandler.get().notifyAboutChanges();
+									if(!d.areAllAccepted())
 									{
-										currentTCToShow = 
-											(TermsAndConditions) tcsToshow.nextElement();
-										currentReturnValues =
-											a_serviceContainer.getTCContainer().showTermsAndConditionsDialog(currentTCToShow);
-										currentTCToShow.setAccepted(currentReturnValues.hasAccepted());
-										currentTCToShow.setRead(true);
-										if(!currentReturnValues.hasAccepted())
-										{
-											throw new IOException("Client rejected T&C after reading.");
-										}
+										a_serviceContainer.keepCurrentService(false);
+										throw new InterruptedException("Client rejected T&C after reading.");
 									}
 									
-									//try to establish a new connection. for the second try to accept the Terms and Conditions
+									tctry++;
+									if(tctry > 1)
+									{
+										LogHolder.log(LogLevel.ERR, LogType.NET, 
+												"Requesting t&cs after the first try is not allowed!");
+										throw new InterruptedException("A second tc request must never be sent.");
+									}
+									
 									m_socketHandler =
 										new SocketHandler(
 												connectMixCascade( (MixCascade) a_mixCascade,
 														m_proxyInterface.getProxyInterface(false).getProxyInterface()));
-									if(tctry > 1)
-									{
-										LogHolder.log(LogLevel.ERR, LogType.NET, 
-												"Still requested  t&cs after the first try is not allowed!");
-										//TODO: throw a more specific Exception
-										throw new Exception("A second tc request must never be sent.");
-									}
 								}
 							}
 						}

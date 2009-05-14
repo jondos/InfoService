@@ -26,39 +26,13 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package anon.terms;
-
-import java.util.Enumeration;
-import java.util.Vector;
+package gui;
 
 import anon.infoservice.ServiceOperator;
 
-public class TermsAndConditionsReadException extends Exception
+public interface TermsAndCondtionsTableController 
 {
-	Vector tcsTosShow = new Vector();
-	
-	public void addTermsAndConditonsToRead(TermsAndConditions tc)
-	{
-		tcsTosShow.addElement(tc);
-	}
-	
-	public Enumeration getTermsTermsAndConditonsToRead()
-	{
-		return tcsTosShow.elements();
-	}
-	
-	public Vector getOperators()
-	{
-		Vector v = new Vector();
-		ServiceOperator op = null;
-		for(int i = 0; i < tcsTosShow.size(); i++)
-		{
-			op = ((TermsAndConditions) tcsTosShow.elementAt(i)).getOperator();
-			if(!v.contains(op) )
-			{
-				v.add(op);
-			}
-		}
-		return v;
-	}
+	public boolean handleOperatorAction(ServiceOperator operator, boolean accepted);
+	public void handleSelectLineAction(ServiceOperator operator);
+	public void handleAcceptAction(ServiceOperator operator, boolean accept);
 }

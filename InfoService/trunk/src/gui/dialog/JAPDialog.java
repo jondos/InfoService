@@ -2501,6 +2501,13 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		showErrorDialog(getInternalDialog(a_parentDialog), a_message, a_title, a_logType, (Throwable)null,
 						(ILinkedInformation)null);
 	}
+	
+	public static void showErrorDialog(JAPDialog a_parentDialog, String a_message,  int a_logType,
+			ILinkedInformation a_linkedInformation)
+	{
+		showErrorDialog(getInternalDialog(a_parentDialog), a_message, (String)null, a_logType, (Throwable)null,
+		(ILinkedInformation)null);
+	}
 
 	/**
 	 * Displays a dialog showing an error message to the user and logs the error message
@@ -2672,14 +2679,14 @@ public class JAPDialog implements Accessible, WindowConstants, RootPaneContainer
 		LogHolder.log(LogLevel.ERR, a_logType, a_message, true);
 		if (a_throwable != null)
 		{
-			// the exception is only shown in debug mode or in case of an application error
+			// the exception is only shown in info mode or in case of an application error
 			if (bPossibleApplicationError)
 			{
 				LogHolder.log(LogLevel.ERR, a_logType, a_throwable);
 			}
 			else
 			{
-				LogHolder.log(LogLevel.DEBUG, a_logType, a_throwable);
+				LogHolder.log(LogLevel.INFO, a_logType, a_throwable);
 			}
 		}
 
