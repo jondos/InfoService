@@ -29,7 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jap;
 
 import gui.JAPHyperlinkAdapter;
-import gui.TermsAndCondtionsTableController;
 import gui.UpperLeftStartViewport;
 import gui.dialog.JAPDialog;
 
@@ -97,7 +96,7 @@ public class JAPConfTC extends AbstractJAPConfModule implements Observer, TermsA
 		c.gridx = 0;
 		c.gridy = 0;
 		c.anchor = GridBagConstraints.NORTHWEST;
-		
+		c.fill = GridBagConstraints.BOTH;
 		m_tblOperators = new TermsAndConditionsOperatorTable();
 		m_tblOperators.setController(this);
 	
@@ -105,11 +104,12 @@ public class JAPConfTC extends AbstractJAPConfModule implements Observer, TermsA
 
 		scroll = new JScrollPane(m_tblOperators);
 		scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-
+		//scroll.setPreferredSize(new Dimension(450, 60));
+		scroll.setPreferredSize(m_tblOperators.getPreferredSize());
 		root.add(scroll, c);
 		
 		c.gridy++;
-		
+		c.weighty = 0.8;
 		m_termsPane = new JEditorPane("text/html", "");
 		m_termsPane.addHyperlinkListener(new JAPHyperlinkAdapter());
 		m_termsPane.setEditable(false);
@@ -118,7 +118,7 @@ public class JAPConfTC extends AbstractJAPConfModule implements Observer, TermsA
 		m_scrollingTerms.getViewport().add(m_termsPane);
 		/**@todo make this dynamic */
 		
-		m_scrollingTerms.setPreferredSize(new Dimension(400,200));
+		//m_scrollingTerms.setPreferredSize(new Dimension(400,200));
 		root.add(m_scrollingTerms, c);
 		
 		root.validate();
@@ -190,7 +190,7 @@ public class JAPConfTC extends AbstractJAPConfModule implements Observer, TermsA
 	protected void onUpdateValues()
 	{
 		// is this update really needed?
-		//m_tblOperators.setOperators(Database.getInstance(ServiceOperator.class).getEntryList());
+		m_tblOperators.setOperators(Database.getInstance(ServiceOperator.class).getEntryList());
 	}
 
 	public boolean handleOperatorAction(ServiceOperator operator, boolean accepted) 
