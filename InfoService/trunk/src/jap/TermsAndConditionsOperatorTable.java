@@ -28,9 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package jap;
 
-import gui.OperatorsCellRenderer;
-import gui.TermsAndCondtionsTableController;
 
+import java.awt.Dimension;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.BitSet;
@@ -88,8 +87,10 @@ public class TermsAndConditionsOperatorTable extends JTable implements MouseList
 		getColumnModel().getColumn(DATE_COL).setMinWidth(100);
 		getColumnModel().getColumn(DATE_COL).setPreferredWidth(100);
 		
-		//getColumnModel().getColumn(ACCEPTED_COL).setMinWidth(4);
-		//getColumnModel().getColumn(ACCEPTED_COL).setPreferredWidth(4);
+		int opertorsSize = getOperators().size();
+		setPreferredSize(new Dimension(450, 
+				Math.min(10+(opertorsSize*12), 100)));
+		
 		addMouseListener(this);
 	}
 	

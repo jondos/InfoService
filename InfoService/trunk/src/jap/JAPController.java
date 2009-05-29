@@ -139,6 +139,7 @@ import anon.proxy.HTTPProxyCallback;
 import anon.proxy.HttpConnectionListenerAdapter;
 import anon.proxy.IProxyListener;
 import anon.proxy.JonDoFoxHeader;
+import anon.terms.TermsAndConditionConfirmation;
 import anon.terms.TermsAndConditions;
 import anon.terms.TermsAndConditionsResponseHandler;
 import anon.terms.template.TermsAndConditionsTemplate;
@@ -159,7 +160,7 @@ import anon.util.Updater.ObservableInfo;
 
 /* This is the Controller of All. It's a Singleton!*/
 public final class JAPController extends Observable implements IProxyListener, Observer,
-	AnonServiceEventListener, IAIEventListener
+	AnonServiceEventListener, TermsAndConditionConfirmation
 {
 	/** Messages */
 	public static final String MSG_ERROR_SAVING_CONFIG = JAPController.class.getName() +
@@ -3427,7 +3428,8 @@ public final class JAPController extends Observable implements IProxyListener, O
 						if (!bSwitchCascade)
 						{
 							m_proxyAnon = new AnonProxy(
-								m_socketHTTPListener, JAPModel.getInstance().getMutableProxyInterface());
+								m_socketHTTPListener, JAPModel.getInstance().getMutableProxyInterface(), 
+								JAPController.getInstance());
 						}
 					}
 					
@@ -3604,6 +3606,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 							{
 								if (bWaitingForConnection)
 								{
+									/*
 									try
 									{
 										proxyAnon.addAIListener(JAPController.getInstance());
@@ -3611,7 +3614,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 									catch (Exception a_e)
 									{
 										// do nothing
-									}
+									}*/
 									JAPController.getInstance().removeEventListener(this);
 									bWaitingForConnection = false;
 								}
@@ -5451,30 +5454,7 @@ public final class JAPController extends Observable implements IProxyListener, O
 			}
 		}
 	}
-
-	public void unrealisticBytes(long a_bytes)
-	{
-		JAPDialog.LinkedInformationAdapter adapter =
-			new JAPDialog.LinkedInformationAdapter()
-		{
-			public boolean isOnTop()
-			{
-				return true;
-			}
-		};
-
-		boolean choice = JAPDialog.showYesNoDialog(
-			getCurrentView(),
-			JAPMessages.getString("unrealBytesDesc") + "<p>" +
-			JAPMessages.getString("unrealBytesDifference") + " " + Util.formatBytesValueWithUnit(a_bytes),
-			JAPMessages.getString("unrealBytesTitle"),adapter
-			);
-
-		if (!choice)
-		{
-			this.setAnonMode(false);
-		}
-	}
+	
 
 	/**
 	 * Gets the password for payment data encryption
@@ -5910,5 +5890,15 @@ public final class JAPController extends Observable implements IProxyListener, O
 				}
 			}
 		}
+	}
+
+	public boolean confirmTermsAndConditions(Vector operators, Vector terms) 
+	{
+		TermsAndConditionsInfoDialog d = 
+			new TermsAndConditionsInfoDialog(JAPController.getInstance().getViewWindow(),
+					operators, (getCurrentMixCascade() != null) ? getCurrentMixCascade().getName() : "");
+		d.setVisible(true);
+		TermsAndConditionsResponseHandler.get().notifyAboutChanges();
+		return d.areAllAccepted();
 	}
 }

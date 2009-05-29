@@ -76,6 +76,9 @@ public class TermsAndConditionsTemplate extends AbstractDistributableCertifiedDa
 	private static final String XML_ATTR_NAME = "name";
 	private static final String XML_ATTR_TYPE = "type";
 	
+	private final static String[] REQUIRED_ATTRIBUTES =
+		new String[]{XML_ATTR_TYPE, XML_ATTR_LOCALE, XML_ATTR_DATE, XML_ATTR_ID, XML_ATTR_NAME};
+	
 	private static final String XML_ELEMENT_OPERATOR_COUNTRY = "OperatorCountry";
 	private static final String XML_ELEMENT_SIGNATURE = "Sig";
 	private static final String XML_ELEMENT_DATE = "Date";
@@ -101,14 +104,14 @@ public class TermsAndConditionsTemplate extends AbstractDistributableCertifiedDa
 	public static String XML_ELEMENT_CONTAINER_NAME = "TermsAndConditionsTemplates";
 	public static String XML_ELEMENT_NAME = "TermsAndConditionsTemplate";
 	
-	public String m_strId = null;
-	public Locale m_locale = null;
-	public String m_type = null;
+	private String m_strId = null;
+	private String m_locale = null;
+	private String m_type = null;
 	
-	public long m_lastUpdate;
-	public long m_date;
+	//public long m_lastUpdate;
+	private String m_date;
 	
-	public Document signedDocument = null;
+	private Document signedDocument = null;
 
 	private XMLSignature m_signature = null;
 
@@ -142,11 +145,10 @@ public class TermsAndConditionsTemplate extends AbstractDistributableCertifiedDa
 		}
 		
 		name = XMLUtil.parseAttribute(templateRoot, XML_ATTR_NAME, "");
-		m_date = XMLUtil.parseAttribute(templateRoot, XML_ATTR_DATE, -1);
-		m_locale = new Locale(XMLUtil.parseAttribute(templateRoot, XML_ATTR_LOCALE, Locale.ENGLISH.toString()), "");
+		m_date = XMLUtil.parseAttribute(templateRoot, XML_ATTR_DATE, "");
+		m_locale = XMLUtil.parseAttribute(templateRoot, XML_ATTR_LOCALE, "");
 		m_type = XMLUtil.parseAttribute(templateRoot, XML_ATTR_TYPE, TERMS_AND_CONDITIONS_TYPE_COMMON_LAW);
 		m_strId = m_type + "_" + m_locale + "_" + m_date;
-		m_lastUpdate = System.currentTimeMillis();
 		m_signature = SignatureVerifier.getInstance().getVerifiedXml(templateRoot,
 			SignatureVerifier.DOCUMENT_CLASS_TERMS);
 		
@@ -200,7 +202,14 @@ public class TermsAndConditionsTemplate extends AbstractDistributableCertifiedDa
 		TCComposite copiedSections = getSections();
 		TCComponent[] allSections = null;
 		
-		tcRootElement.setAttribute(XML_ATTR_NAME, name);
+		String[] requiredAttributeValues = 
+			new String[]{m_type, m_locale, m_date, m_strId, name};
+		
+		for (int i = 0; i < REQUIRED_ATTRIBUTES.length; i++) 
+		{
+			tcRootElement.setAttribute(REQUIRED_ATTRIBUTES[i], 
+					requiredAttributeValues[i]);
+		}
 		tcDocument.appendChild(tcRootElement);
 		
 		if(tcTranslation != null)
@@ -208,8 +217,10 @@ public class TermsAndConditionsTemplate extends AbstractDistributableCertifiedDa
 			operator = tcTranslation.getOperator();
 			address = tcTranslation.getOperatorAddress();
 			
-			Locale operatorLocale = new Locale(operator.getCountryCode(), operator.getCountryCode());
+			Locale operatorLocale = new Locale(tcTranslation.getLocale(), operator.getCountryCode());
 			Locale tcLocale = new Locale(tcTranslation.getLocale(), "", "");
+			
+			address.setOperatorCountry(operatorLocale.getDisplayCountry(tcLocale));
 			
 			Element operatorElement = operator.toXMLElement(tcDocument, address, false);
 			Element operatorCountryElement = tcDocument.createElement(XML_ELEMENT_OPERATOR_COUNTRY);
@@ -220,7 +231,9 @@ public class TermsAndConditionsTemplate extends AbstractDistributableCertifiedDa
 					(address != null) ? tcTranslation.getOperatorAddress().getVenue() : "");
 			XMLUtil.setValue(dateElement,
 					DateFormat.getDateInstance(DateFormat.MEDIUM, tcLocale).format(tcTranslation.getDate()));
-			XMLUtil.setValue(operatorCountryElement, operatorLocale.getDisplayCountry(tcLocale));
+			operatorElement.appendChild(operatorCountryElement);
+			
+			XMLUtil.setValue(operatorCountryElement, address.getOperatorCountry());
 			
 			//add/replace the customized sections/paragraphs
 			TCComponent[] translationSections = tcTranslation.getSections().getTCComponents();
@@ -309,6 +322,7 @@ public class TermsAndConditionsTemplate extends AbstractDistributableCertifiedDa
 				sectionsElement.appendChild(sectionElement);
 			}
 		}
+		
 		tcRootElement.appendChild(sectionsElement);
 		tcRootElement.appendChild(signatureElement);
 		return tcDocument;
@@ -357,6 +371,11 @@ public class TermsAndConditionsTemplate extends AbstractDistributableCertifiedDa
 		transformer.transform(xmlSource, new StreamResult(writer));
 	}
 	
+	public String getType()
+	{
+		return m_type;
+	}
+	
 	public String getId() 
 	{
 		return m_strId;
@@ -364,10 +383,20 @@ public class TermsAndConditionsTemplate extends AbstractDistributableCertifiedDa
 
 	public long getLastUpdate()
 	{
-		return m_lastUpdate;
+		return 0l;
 	}
 	
 	public long getVersionNumber()
+	{
+		return 0l;
+	}
+	
+	public String getLanguage()
+	{
+		return m_locale;
+	}
+	
+	public String getDate()
 	{
 		return m_date;
 	}
@@ -485,7 +514,7 @@ public class TermsAndConditionsTemplate extends AbstractDistributableCertifiedDa
 			return tc;
 		}
 		
-		tc = InfoServiceHolder.getInstance().getTCFramework(a_id);
+		tc = InfoServiceHolder.getInstance().getTCTemplate(a_id);
 		Database.getInstance(TermsAndConditionsTemplate.class).update(tc);
 		
 		return tc;
