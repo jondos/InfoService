@@ -1,0 +1,80 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>anon</groupId>
+  <artifactId>InfoService</artifactId>
+  <name>InfoService</name>
+  <version>00.08.043-SNAPSHOT</version>
+ <repositories>
+  <repository>
+      <id>anon.inf.tu-dresden.de</id>
+      <url>https://anon.inf.tu-dresden.de/artifactory/repo</url>
+    </repository>
+  
+   
+  </repositories>
+ <url>http://anon.inf.tu-dresden.de/develop/MixConfig.html</url>
+ <build>
+  <plugins>
+    <plugin>
+      <artifactId>maven-compiler-plugin</artifactId>
+      <configuration>
+     <!--   <source>1.5</source>
+      <target>1.5</target> -->
+      </configuration>
+    </plugin>
+    <plugin>
+    <artifactId>maven-assembly-plugin</artifactId>
+    <executions>
+    <execution>
+    <id>create-executable-jar</id>
+    <phase>package</phase>
+    <goals>
+    <goal>single</goal>
+    </goals>
+    <configuration>
+    <descriptorRefs>
+    <descriptorRef>jar-with-dependencies</descriptorRef>
+    </descriptorRefs>
+    <archive>
+    <manifest>
+    <mainClass>infoservice.InfoService</mainClass>
+    </manifest>
+    </archive>
+    </configuration>
+    </execution>
+    </executions>
+    </plugin>
+  </plugins>
+ </build>
+ <profiles>
+ <profile>
+  <id>anon-cc-dev</id>
+  <distributionManagement>
+   <repository>
+        <id>anon.inf.tu-dresden.de-releases</id>
+        <name>anon.inf.tu-dresden.de-releases</name>
+        <url>https://anon.inf.tu-dresden.de:443/artifactory/artifacts-release</url>
+    </repository>
+  <snapshotRepository>
+        <id>anon.inf.tu-dresden.de-snapshots</id>
+        <name>anon.inf.tu-dresden.de-snapshots</name>
+        <url>https://anon.inf.tu-dresden.de:443/artifactory/artifacts-dev</url>
+    </snapshotRepository>
+    
+  </distributionManagement>
+ </profile> 
+ </profiles>
+ <dependencies>
+  <dependency>
+    <groupId>anon</groupId>
+    <artifactId>anonlib</artifactId>
+    <version>00.00.002-SNAPSHOT</version>
+  </dependency>
+  <dependency>
+    <groupId>junit</groupId>
+    <artifactId>junit</artifactId>
+    <version>3.8.1</version>
+    <scope>test</scope>
+  </dependency>
+ </dependencies>
+</project>
