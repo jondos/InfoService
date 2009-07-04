@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry excluding="**/.svn/" kind="src" path="src/main/java"/>
+	<classpathentry kind="src" path="src/test/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/http"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/ApacheFTPClient"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3.8.1"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/junitx"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/HTTP"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Jama"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/XML-RPC"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/BouncyCastleLightForJap"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Log4j"/>
@@ -15,5 +14,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/logginglib"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Mail"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Jama"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/junitx"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>
