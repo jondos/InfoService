@@ -86,5 +86,12 @@
       <artifactId>jama</artifactId>
       <version>1.0.2</version>
     </dependency>
+        <dependency>
+      <groupId>junitx</groupId>
+      <artifactId>junitx</artifactId>
+      <version>5.1</version>
+      <scope>test</scope>
+    </dependency>
+    
  </dependencies>
 </project>
