@@ -81,5 +81,10 @@
   	<artifactId>mail</artifactId>
   	<version>1.4.1</version>
   </dependency>
+   <dependency>
+      <groupId>jama</groupId>
+      <artifactId>jama</artifactId>
+      <version>1.0.2</version>
+    </dependency>
  </dependencies>
 </project>
