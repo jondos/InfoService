@@ -2,12 +2,9 @@
 <classpath>
 	<classpathentry excluding="**/.svn/" kind="src" path="src/main/java"/>
 	<classpathentry kind="src" path="src/test/java"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/http"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/ApacheFTPClient"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3.8.1"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/HTTP"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/XML-RPC"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/BouncyCastleLightForJap"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Log4j"/>
 	<classpathentry kind="lib" path="C:/data/jdk1.1.8/skype/skype/skype.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/anonlib"/>
@@ -16,5 +13,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Mail"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Jama"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/junitx"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/HTTPClient"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/BouncyCastleLightForAN.ON"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>
