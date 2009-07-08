@@ -2011,7 +2011,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 * Category: dIS
 			* Descrption: message from another infoservice (can be forwared by an infoservice), which includes
 			 * information about that infoservice
-			 * Description_de: "Ubermittlung einer Beschreibung eines InfoService-Servers (Erreichbarkeit, Verf"ugbarkeit etc.)
+			 * Description_de: \"Ubermittlung einer Beschreibung eines InfoService-Servers (Erreichbarkeit, Verf\"ugbarkeit etc.)
 			 */
 			httpResponse = infoServerPostHelo(postData);
 		}
@@ -2022,7 +2022,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 * Category: dIS
 			* Description: get information about the InfoService with the given ID (it's the same information as
 			 * /infoservices but there you get information about all known infoservices)
-			 * Description: Abruf von Information über den InfoService-Server mit der ID \{infoserviceid}
+			 * Description: Abruf von Information \"uber den InfoService-Server mit der ID \{infoserviceid}
 			 */
 			String infoserviceId = command.substring(13);
 			httpResponse = getInfoServiceInfo(infoserviceId);
@@ -2033,7 +2033,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 * Source: JAP
 			 * Category: dIS
 			 * Description: JAP or someone else wants to get information about all infoservices we know
-			 * Description_de: Abruf von Informationen "uber alle bekannten InfoService-Server
+			 * Description_de: Abruf von Informationen \"uber alle bekannten InfoService-Server
 			 *  */
 			ISRuntimeStatistics.ms_lNrOfGetInfoservicesRequests++;
 			httpResponse = m_isResponseGetter.fetchResponse(a_supportedEncodings, false);
@@ -2056,9 +2056,8 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 * Category: core
 			 * Description: message from the first mix of a cascade (can be forwarded by an infoservice), which
 			 * includes information about the cascade, or from other IS
-			 * Description_de: "Ubermittlung einer Beschreibung der Kaskade (Erreichbarkeit, beteiligte Mixe etc.)
+			 * Description_de: \"Ubermittlung einer Beschreibung der Kaskade (Erreichbarkeit, beteiligte Mixe etc.)
 			 */
-//			httpResponse = cascadePostHelo(postData, a_supportedEncodings);
 			httpResponse = DynamicCommandsExtension.cascadePostHelo(postData, a_supportedEncodings);
 		}
 		else if ( (command.equals("/cascadeserials")) && (method == Constants.REQUEST_METHOD_GET))
@@ -2078,7 +2077,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 * Source: JAP
 			 * Category: core
 			 * Description: JAP or someone else wants to get information about all cascades we know
-			 * Description_de: Abruf von Informationen "uber alle bekannten Kaskaden
+			 * Description_de: Abruf von Informationen \"uber alle bekannten Kaskaden
 			 */
 			ISRuntimeStatistics.ms_lNrOfGetCascadesRequests++;
 			httpResponse = m_cascadeResponseGetter.fetchResponse(a_supportedEncodings, false);
@@ -2098,35 +2097,34 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		{
 			/** Full Command: GET /exitaddresses
 			 * Source: 
+			 * Category: misc
 			 * Description: ?
 			 * Description_de: 
 			 */
-			//ISRuntimeStatistics.ms_lNrOfPerformanceInfoRequests++;
 			httpResponse = m_exitAddressListResponseGetter.fetchResponse(a_supportedEncodings, false);
 		}
 		else if( ( command.startsWith(MixCascade.INFOSERVICE_COMMAND_WEBINFOS)) && 
 				 ( method == Constants.REQUEST_METHOD_GET ) )
 		{
+			/** Full Command: GET /cascadewebinfos
+			 * Source: ?
+			 * Category: ?
+			 * Description: ?
+			 * Description_de: 
+			 */
 			httpResponse = m_cascadeWebInfoResponseGetter.fetchResponse(a_supportedEncodings, false);
 		}
 		else if( (command.startsWith(MixCascade.INFOSERVICE_COMMAND_WEBINFO) && (method == Constants.REQUEST_METHOD_GET)))
 		{
+			/** Full Command: GET /cascadewebinfo/
+			 * Source: ?
+			 * Category: ?
+			 * Description: ?
+			 * Description_de: 
+			 */
 			String cascadeID = command.substring(MixCascade.INFOSERVICE_COMMAND_WEBINFO.length());
 			
 			Document doc = Database.getInstance(MixCascade.class).getWebInfos(cascadeID);
-			httpResponse = (doc == null) ? 
-					new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST) : new HttpResponseStructure(doc);
-		}
-		else if( ( command.startsWith(MixInfo.INFOSERVICE_COMMAND_WEBINFOS)) && 
-				 ( method == Constants.REQUEST_METHOD_GET ) )
-		{
-			httpResponse =  m_mixWebInfoResponseGetter.fetchResponse(a_supportedEncodings, false);
-		}
-		else if( (command.startsWith(MixInfo.INFOSERVICE_COMMAND_WEBINFO) && (method == Constants.REQUEST_METHOD_GET)))
-		{
-			String cascadeID = command.substring(MixInfo.INFOSERVICE_COMMAND_WEBINFO.length());
-			
-			Document doc = Database.getInstance(MixInfo.class).getWebInfos(cascadeID);
 			httpResponse = (doc == null) ? 
 					new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST) : new HttpResponseStructure(doc);
 		}
@@ -2137,7 +2135,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 * Category: core
 			 * Description: message from a mix (can be forwarded by an infoservice), which includes information
 			 * about that mix
-			 * Description_de: "Ubermittlung von Informationen "uber einen Mix (Betreiber, Standort etc.)
+			 * Description_de: \"Ubermittlung von Informationen \"uber einen Mix (Betreiber, Standort etc.)
 			 */
 			httpResponse = mixPostHelo(postData);
 		}
@@ -2157,7 +2155,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 * Source: JAP
 			 * Category: core
 			 * Description: JAP or someone else wants to get information about the mix with the given ID
-			 * Description_de: Abruf von Informationen "uber den Mix mit der ID {\tt mixid}
+			 * Description_de: Abruf von Informationen \"uber den Mix mit der ID {\tt mixid}
 			 */
 			ISRuntimeStatistics.ms_lNrOfGetMixinfoRequests++;
 			String mixId = command.substring(9);
@@ -2170,41 +2168,51 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 * Category: core
 			 * Description: message from the first mix of a cascade (can be forwarded by an infoservice), which
 			 * includes status information (traffic) of that cascade
-			 * Description_de: "Ubermittlung von Statusinformationen einer Kaskade (Nutzerzahl, Verkehrssituation etc.)
+			 * Description_de: \"Ubermittlung von Statusinformationen einer Kaskade (Nutzerzahl, Verkehrssituation etc.)
 			 */
 			httpResponse = cascadePostStatus(postData);
 		}
 		else if( (command.equals(TermsAndConditionsTemplate.INFOSERVICE_SERIALS_PATH)) && 
 				 (method == Constants.REQUEST_METHOD_GET))
 		{
+			/** Full Command: GET /tctemplateserials
+			 * Source: ?
+			 * Category: ?
+			 * Description: ?
+			 * Description_de: 
+			 */
 			httpResponse = m_tcTemplatesResponseGetter.fetchResponse(a_supportedEncodings, true);
 		}
 		else if( (command.equals(TermsAndConditionsTemplate.INFOSERVICE_CONTAINER_PATH)) && 
 				 (method == Constants.REQUEST_METHOD_GET))
 		{
+			/** Full Command: GET /tctemplates
+			 * Source: ?
+			 * Category: ?
+			 * Description: ?
+			 * Description_de: 
+			 */
 			httpResponse = m_tcTemplatesResponseGetter.fetchResponse(a_supportedEncodings, false);
 		}
 		else if( (command.startsWith(TermsAndConditionsTemplate.INFOSERVICE_PATH)) && 
 				 (method == Constants.REQUEST_METHOD_GET))
 		{
+			/** Full Command: GET /tctemplate/
+			 * Source: ?
+			 * Category: ?
+			 * Description: ?
+			 * Description_de: 
+			 */
 			httpResponse = japGetTCTemplate(
 					command.substring(TermsAndConditionsTemplate.INFOSERVICE_PATH.length()));
 		}
-		/*else if((command.equals(TermsAndConditions.HTTP_SERIALS_REQUEST_STRING)) && (method == Constants.REQUEST_METHOD_GET))
-		{
-			httpResponse = m_tcResponseGetter.fetchResponse(a_supportedEncodings, true);
-		}
-		else if((command.equals(TermsAndConditions.HTTP_REQUEST_STRING)) && (method == Constants.REQUEST_METHOD_GET))
-		{
-			httpResponse = m_tcResponseGetter.fetchResponse(a_supportedEncodings, false);
-		}*/
 		else if ((command.startsWith("/status")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			/** Full Command: GET /status
 			 * Source: Browser
 			 * Category: usability
 			 * Description: get the status (traffic) information about all cascades for human view as html file
-			 * Description_de: Abruf einer "Ubersicht "uber alle bekannten Kaskaden in einer in einem Browser darstellbaren Form 
+			 * Description_de: Abruf einer \"Ubersicht \"uber alle bekannten Kaskaden in einer in einem Browser darstellbaren Form 
 			 */
 			ISRuntimeStatistics.ms_lNrOfGetStatus++;
 			httpResponse = humanGetStatus();
@@ -2233,6 +2241,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		{
 			/** Full Command: GET /values
 			 * Source: Browser
+			 * Category: usability
 			 * Description: get the delay values for a specific cascade for human view as html file
 			 * Description_de: 
 			 */
@@ -2286,7 +2295,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 * Source: JAP
 			 * Category: core
 			 * Description: get information about all mixes (mixes of all cascades)
-			 * Description_de: Abruf von Informationen "uber alle Mixe aller Kaskaden
+			 * Description_de: Abruf von Informationen \"uber alle Mixe aller Kaskaden
 			 *  */
 			httpResponse = fetchAllMixes();
 		}
@@ -2296,7 +2305,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 * Source: JAP
 			 * Category: dynCascade
 			 * Description: get information about all free mixes
-			 * Description_de: Abruf von Informationen "uber alle freien Mixe
+			 * Description_de: Abruf von Informationen \"uber alle freien Mixe
 			 */
 			httpResponse = fetchAvailableMixes();
 		}
@@ -2332,10 +2341,6 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 */
 			httpResponse = messagePost(postData, a_supportedEncodings);
 		}
-		/*else if ( (command.equals(TermsAndConditions.POST_FILE)) && (method == Constants.REQUEST_METHOD_POST))
-		{
-			httpResponse = tcopdataPost(postData);
-		}*/
 		else if ( (command.startsWith("/cascadeinfo/")) && (method == Constants.REQUEST_METHOD_GET))
 		{
 			/** Full command: GET /cascadeinfo/[cascadeid]
@@ -2343,7 +2348,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 * Category: core
 			 * Description: get information about the cascade with the given ID (it's the same information as
 			 * /cascades but there you get information about all known cascades)
-			 * Description_de: Abruf von Informationen "uber die Kaskade mit der  ID {\tt cascadeid}
+			 * Description_de: Abruf von Informationen \"uber die Kaskade mit der  ID {\tt cascadeid}
 			 */
 			ISRuntimeStatistics.ms_lNrOfGetCascadeinfoRequests++;
 			String cascadeId = command.substring(13);
@@ -2375,7 +2380,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 * Source: JAP
 			 * Category: blockingresistance
 			 * Description: adds a new JAP forwarder to the database of known forwarders
-			 * Description_de: "Ubermittlung von Informationen "uber einen Forwarder (Erreichbarkeit etc.) 
+			 * Description_de: \"Ubermittlung von Informationen \"uber einen Forwarder (Erreichbarkeit etc.) 
 			 */
 			ISRuntimeStatistics.ms_lNrOfGetForwarding++;
 			httpResponse = addJapForwarder(postData, a_sourceAddress);
@@ -2397,7 +2402,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 * Source: JAP
 			 * Category: blockingresistance
 			 * Description: get a captcha with information about a JAP forwarder
-			 * Description_de: Anfrage nach Informationen "uber einen Forwarder 
+			 * Description_de: Anfrage nach Informationen \"uber einen Forwarder 
 			 */
 			ISRuntimeStatistics.ms_lNrOfGetForwarding++;
 			httpResponse = getJapForwarder();
@@ -2410,7 +2415,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 * Source: JAP
 			 * Category: usability
 				 * Description: Returns information about known "good" java versions
-			 * Description_de: Abruf von Informationen "uber empfohlene Java-Versionen
+			 * Description_de: Abruf von Informationen \"uber empfohlene Java-Versionen
 			 */
 				httpResponse = m_javaVersionResponseGetter.fetchResponse(a_supportedEncodings, false);
 				//httpResponse = getLatestJavaVersions();
@@ -2490,7 +2495,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 * Source: JAP
 			 * Category: usability
 			 * Description: request for JNLP File (WebStart or Update Request
-			 * Description_de: Abruf von Informationen "uber die aktuelleste Entwicklerversion von JAP
+			 * Description_de: Abruf von Informationen \"uber die aktuelleste Entwicklerversion von JAP
 			 * Source: 
 			* Description: request for JNLP File (WebStart or Update Request
 			 * Description_de: 
@@ -2504,7 +2509,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 * Source: Mix
 			 * Category: dynCascade
 			* Description:just echo the clients ip adresse - for mix autoconfig resons
-			 * Description_de: Gibt die IP-Adresse des Anfragers zur"uck, beispielsweise zur Ermittlung der externen IP-Adresse im Fall von NAT
+			 * Description_de: Gibt die IP-Adresse des Anfragers zur\"uck, beispielsweise zur Ermittlung der externen IP-Adresse im Fall von NAT
 			 */
 			httpResponse = echoIP(a_sourceAddress);
 		}
@@ -2526,7 +2531,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			 * Source: JAP
 			 * Category: payment
 			 * Description: JAP or someone else wants to get information about all payment instacnes we know
-			 * Description_de: Abruf von Informationen "uber alle bekannten Bezahlinstanzen
+			 * Description_de: Abruf von Informationen \"uber alle bekannten Bezahlinstanzen
 			 */
 			ISRuntimeStatistics.ms_lNrOfGetPaymentRequests++;
 			httpResponse = japFetchPaymentInstances();
