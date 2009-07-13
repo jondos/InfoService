@@ -5,15 +5,13 @@
 	<artifactId>InfoService</artifactId>
 	<name>InfoService</name>
 	<version>00.08.043-SNAPSHOT</version>
-	<repositories>
-		<repository>
-			<id>anon.inf.tu-dresden.de</id>
-			<url>https://anon.inf.tu-dresden.de/artifactory/repo</url>
-		</repository>
-
-
-	</repositories>
 	<url>http://anon.inf.tu-dresden.de/</url>
+  <repositories>
+    <repository>
+      <id>anon.inf.tu-dresden.de</id>
+      <url>http://anon.inf.tu-dresden.de/artifactory/repo</url>
+    </repository>
+  </repositories>
 	<build>
 		<plugins>
 
