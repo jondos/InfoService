@@ -1283,7 +1283,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			}
 			htmlData = htmlData + "    </TABLE><BR>";
 			
-			htmlData = htmlData + "<a href=\"mixwebinfos\">List available Mixes</a>";
+			htmlData = htmlData + "<a href=\""+MixCascade.INFOSERVICE_COMMAND_WEBINFOS+"\">List available Mixes</a>";
 			
 			if (Configuration.getInstance().isPassive())
 			{
