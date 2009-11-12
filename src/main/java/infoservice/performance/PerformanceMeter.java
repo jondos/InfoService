@@ -373,6 +373,7 @@ public class PerformanceMeter implements Runnable, Observer
 				int fourthTab = line.indexOf('\t', thirdTab + 1);
 				int fifthTab = line.indexOf('\t', fourthTab + 1);
 				int sixthTab = line.indexOf('\t', fifthTab + 1);
+				int seventhTab = line.indexOf('\t', sixthTab + 1);
 				
 				// we have found at list 3 tabs (timestamp, cascade id, speed, delay)
 				if(firstTab != -1 && secondTab != -1 && thirdTab != -1)
@@ -412,14 +413,34 @@ public class PerformanceMeter implements Runnable, Observer
 						if (fifthTab != -1 && sixthTab != -1)							
 						{					
 							// format with packets
-							String strAddr = line.substring(sixthTab + 1);
+							String strAddr;
+							int cascadeDistribution;
+							
+							if (seventhTab != -1)
+							{
+								cascadeDistribution = Integer.parseInt(line.substring(seventhTab + 1));
+								strAddr = line.substring(sixthTab + 1, seventhTab);
+							}
+							else
+							{
+								cascadeDistribution = MixCascade.DISTRIBUTION_MAX;
+								strAddr = line.substring(sixthTab + 1);
+							}
+							MixCascade cascade = (MixCascade)Database.getInstance(MixCascade.class).getEntryById(id);
+							if (cascade != null)
+							{
+								cascadeDistribution = cascade.getDistribution();
+							}
+							
 							if (!strAddr.equals("0.0.0.0"))
 							{
 								InetAddress addr = InetAddress.getByName(strAddr);
 								/*
 								LogHolder.log(LogLevel.WARNING, LogType.NET, 
 				        				"Adding IP address from file: " + addr.getHostAddress() + " from " + line.substring(sixthTab + 1));*/
-								MixCascadeExitAddresses.addInetAddress(id, addr);
+							
+								
+								MixCascadeExitAddresses.addInetAddress(id, addr, cascadeDistribution);
 							}
 							packets = Integer.parseInt(line.substring(fifthTab +1, sixthTab));
 							users = Integer.parseInt(line.substring(fourthTab +1, fifthTab));
@@ -1281,7 +1302,7 @@ public class PerformanceMeter implements Runnable, Observer
 	        		addr = InetAddress.getByAddress(ip);
 	        		/*LogHolder.log(LogLevel.WARNING, LogType.NET, 
 	        				"Adding IP address: " + addr.getHostAddress());*/
-	        		MixCascadeExitAddresses.addInetAddress(a_cascade.getId(), addr);	        		
+	        		MixCascadeExitAddresses.addInetAddress(a_cascade.getId(), addr, a_cascade.getDistribution());	        		
 	        	}
 	        	catch(Exception ex)
 	        	{
@@ -1378,7 +1399,7 @@ public class PerformanceMeter implements Runnable, Observer
     			
     			m_stream.write((a_timestamp + "\t" + a_cascade.getId() + "\t" + a_delay + 
     					"\t" + a_speed + "\t" + a_users + "\t" + a_packets + "\t" +
-    					(a_ip == null ? "0.0.0.0" : a_ip.getHostAddress()) + "\n").getBytes());
+    					(a_ip == null ? "0.0.0.0" : a_ip.getHostAddress()) + "\t" + a_cascade.getDistribution() + "\n").getBytes());
     			m_stream.flush();
 			}
 		}
