@@ -28,6 +28,7 @@
 package infoservice.agreement.multicast;
 
 import infoservice.Configuration;
+import infoservice.InfoService;
 import infoservice.InfoServiceDistributor;
 import infoservice.agreement.IInfoServiceAgreementAdapter;
 import infoservice.agreement.common.FifoQueue;
@@ -52,6 +53,7 @@ import anon.infoservice.HttpResponseStructure;
 import anon.infoservice.IDistributable;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.ListenerInterface;
+import anon.infoservice.ServiceSoftware;
 
 /**
  * @author LERNGRUPPE An adapter for the infoservice to give them the ability to
@@ -109,7 +111,8 @@ public class InfoserviceEMCAdapter extends AbstractEMCAdapter implements
         Vector virtualListeners = Configuration.getInstance().getVirtualListeners();
         return new InfoServiceDBEntry(Configuration.getInstance().getOwnName(), Configuration
                 .getInstance().getID(), virtualListeners, Configuration.getInstance()
-                .holdForwarderList(), false, System.currentTimeMillis(), System.currentTimeMillis(), Configuration.getInstance().isPerfServerEnabled());
+                .holdForwarderList(), false, System.currentTimeMillis(), System.currentTimeMillis(), Configuration.getInstance().isPerfServerEnabled(),
+                new ServiceSoftware(InfoService.INFOSERVICE_VERSION));
     }
 
     /**

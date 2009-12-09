@@ -27,6 +27,8 @@
  */
 package infoservice.mailsystem.central;
 
+import infoservice.InfoService;
+
 import java.io.FileInputStream;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -36,6 +38,7 @@ import anon.infoservice.Database;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.InfoServiceHolder;
 import anon.infoservice.ListenerInterface;
+import anon.infoservice.ServiceSoftware;
 import logging.LogHolder;
 
 /**
@@ -131,7 +134,10 @@ public class MailContext {
       StringTokenizer stInfoServiceList = new StringTokenizer(infoServiceList, ",");
       while (stInfoServiceList.hasMoreTokens()) {
         StringTokenizer stCurrentInfoService = new StringTokenizer(stInfoServiceList.nextToken(), ":");
-        Database.getInstance(InfoServiceDBEntry.class).update(new InfoServiceDBEntry(null, null, new ListenerInterface(stCurrentInfoService.nextToken().trim(), Integer.parseInt(stCurrentInfoService.nextToken().trim())).toVector(), true, true, 0, 0, false));
+        Database.getInstance(InfoServiceDBEntry.class).update(new InfoServiceDBEntry(null, null, 
+        		new ListenerInterface(stCurrentInfoService.nextToken().trim(), 
+        				Integer.parseInt(stCurrentInfoService.nextToken().trim())).toVector(), true, true, 0, 0, false,
+        				(ServiceSoftware)null));
       }
     }
     InfoServiceHolder.getInstance().setChangeInfoServices(true);

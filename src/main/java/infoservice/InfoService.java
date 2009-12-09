@@ -58,7 +58,11 @@ import logging.LogType;
 
 public class InfoService implements Observer
 {
-
+	/**
+	 * This is the version number of the infoservice software.
+	 */
+	public static final String INFOSERVICE_VERSION = "IS.08.047"; //never change the layout of this line!
+	
 	protected JWSInternalCommands oicHandler;
 
 	private static int m_connectionCounter;
@@ -109,7 +113,7 @@ public class InfoService implements Observer
 			}
 			else if (fn.equalsIgnoreCase("--version"))
 			{
-				System.out.println("InfoService version: " + Constants.INFOSERVICE_VERSION);
+				System.out.println("InfoService version: " + INFOSERVICE_VERSION);
 				System.exit(0);
 			}
 		}
@@ -339,7 +343,7 @@ public class InfoService implements Observer
 			PassiveInfoServiceInitializer.init();
 		}
 		// start server
-		LogHolder.log(LogLevel.EMERG, LogType.MISC, "InfoService -- Version " + Constants.INFOSERVICE_VERSION);
+		LogHolder.log(LogLevel.EMERG, LogType.MISC, "InfoService -- Version " + INFOSERVICE_VERSION);
 		LogHolder.log(LogLevel.EMERG, LogType.MISC, System.getProperty("java.version"));
 		LogHolder.log(LogLevel.EMERG, LogType.MISC, System.getProperty("java.vendor"));
 		LogHolder.log(LogLevel.EMERG, LogType.MISC, System.getProperty("java.home"));

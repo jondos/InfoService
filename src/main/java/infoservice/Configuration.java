@@ -53,6 +53,7 @@ import anon.crypto.SignatureVerifier;
 import anon.infoservice.Constants;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.Database;
+import anon.infoservice.ServiceSoftware;
 import infoservice.tor.TorDirectoryAgent;
 import infoservice.tor.TorDirectoryServer;
 import infoservice.tor.TorDirectoryServerUrl;
@@ -611,7 +612,8 @@ final public class Configuration
 				entry =
 					new InfoServiceDBEntry(null, null,
 										   ( (ListenerInterface) m_initialNeighbourInfoServices.elementAt(i)).
-										   toVector(), false, false, System.currentTimeMillis(), 0, false);
+										   toVector(), false, false, System.currentTimeMillis(), 0, false, 
+										   (ServiceSoftware)null);
 				entry.markAsBootstrap();
 
 				//entry.setNeighbour(true);
