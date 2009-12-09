@@ -29,6 +29,7 @@ package infoservice;
 
 import java.net.InetAddress;
 import java.io.File;
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -1012,7 +1013,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 	private String getHumanStatusFooter()
 	{
 		return 
-		"    <P>Infoservice [" + Constants.INFOSERVICE_VERSION + "] Startup Time: " +
+		"    <P>Infoservice [" + InfoService.INFOSERVICE_VERSION + "] Startup Time: " +
 			Configuration.getInstance().getStartupTime() +
 			"</P>\n" +
 			"    <HR noShade SIZE=\"1\">\n" +
@@ -1059,7 +1060,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				{
 					PaymentInstanceDBEntry pi = (PaymentInstanceDBEntry) vPIs.elementAt(i);
 					
-					htmlData += "<h2>" + pi.getName() + "</h2><table style=\"align: left\" border=\"0\" width=\"30%\">" +
+					htmlData += "<h2><a href=\"/paymentinstance/" + pi.getId() + "\">" + pi.getName() + "</a></h2><table style=\"align: left\" border=\"0\" width=\"30%\">" +
 					"<tr><td class=\"name\">Estimated PayTraffic per Day</td><td class=\"status\">" + Util.formatBytesValueWithUnit(InfoService.getPerfMeter().calculatePayTrafficPerDay(pi.getId())) + "</td></tr>" +
 					"<tr><td class=\"name\">Remaining PayCredit</td><td class=\"status\">" + Util.formatBytesValueWithUnit(InfoService.getPerfMeter().getRemainingCredit(pi.getId())) + "</td></tr>" +				
 					"<tr><td class=\"name\">Estimated Pay End Time</td><td class=\"status\">" + (InfoService.getPerfMeter().calculateRemainingPayTime(pi.getId()) == 0 ? "(unknown)" : new Date(InfoService.getPerfMeter().calculateRemainingPayTime(pi.getId())).toString()) + "</td></tr>" +
@@ -1071,9 +1072,10 @@ final public class InfoServiceCommands implements JWSInternalCommands
 					htmlData += "Waiting for PaymentInstance data...<br /><br />";
 				}
 				
-				htmlData += "    <table style=\"align: left\" border=\"0\" width=\"50%\">" +
-				"<tr><th>Account Number</th><th>Remaining Credits</th><th>Account File</th><th>Last Modified</th></tr>\n";
+				htmlData += "    <table style=\"align: left\" border=\"0\" width=\"100%\">" +
+				"<tr><th>Account Number</th><th>Remaining Credits</th><th>Account File</th><th>Last Modified</th><th>Payment instance</th></tr>\n";
 				
+				Timestamp now = new Timestamp(System.currentTimeMillis());
 				if(vPIs.size() != 0)
 				{
 					Hashtable usedFiles = InfoService.getPerfMeter().getUsedAccountFiles();
@@ -1085,8 +1087,9 @@ final public class InfoServiceCommands implements JWSInternalCommands
 						PayAccount account = (PayAccount)usedFiles.get(file);
 						htmlData += "<tr>" + "<td class=\"name\">" + account.getAccountNumber() + "</td>" 
 						//+ "<td class=\"status\">"  + JAPUtil.formatBytesValueWithUnit(account.getBalance().getVolumeKBytesLeft() * 1000) + "</td>"
-						+ "<td class=\"status\">"  + Util.formatBytesValueWithUnit(account.getCurrentCredit()) + "</td>"
-						+ "<td class=\"name\">" + file.getName() + "</td><td class=\"status\">" + new Date(account.getBackupTime()) + "</td></tr>";
+						+ "<td class=\"status\">"  + (account.isCharged(now)?""+Util.formatBytesValueWithUnit(account.getCurrentCredit()):"0") + "</td>"
+						+ "<td class=\"name\">" + file.getName() + "</td><td class=\"status\">" + new Date(account.getBackupTime()) + "</td>" +
+						"<td class=\"name\">" + account.getPIID() + "</td></tr>";
 					}
 				}
 				
@@ -1406,7 +1409,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		
 		htmlData += 
 		"    <H2>InfoService Name: " + Configuration.getInstance().getOwnName() + "</H2>\n" +
-		"    <P>Infoservice [" + Constants.INFOSERVICE_VERSION + "] Startup Time: " +
+		"    <P>Infoservice [" + InfoService.INFOSERVICE_VERSION + "] Startup Time: " +
 			Configuration.getInstance().getStartupTime() +
 		"</P>\n" +
 		"   <P>This is an InfoService for AN.ON/JonDonym technology networks.<br>\n" +

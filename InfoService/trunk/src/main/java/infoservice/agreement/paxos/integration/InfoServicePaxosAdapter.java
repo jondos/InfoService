@@ -28,6 +28,7 @@
 package infoservice.agreement.paxos.integration;
 
 import infoservice.Configuration;
+import infoservice.InfoService;
 import infoservice.InfoServiceDistributor;
 import infoservice.agreement.IInfoServiceAgreementAdapter;
 import infoservice.agreement.common.AgreementConstants;
@@ -53,6 +54,7 @@ import anon.infoservice.HttpResponseStructure;
 import anon.infoservice.IDistributable;
 import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.ListenerInterface;
+import anon.infoservice.ServiceSoftware;
 
 /**
  * @author ss1
@@ -147,7 +149,8 @@ public class InfoServicePaxosAdapter extends PaxosAdapter implements IInfoServic
         Vector virtualListeners = Configuration.getInstance().getVirtualListeners();
         return new InfoServiceDBEntry(Configuration.getInstance().getOwnName(), Configuration
                 .getInstance().getID(), virtualListeners, Configuration.getInstance()
-                .holdForwarderList(), false, System.currentTimeMillis(), System.currentTimeMillis(), Configuration.getInstance().isPerfServerEnabled());
+                .holdForwarderList(), false, System.currentTimeMillis(), System.currentTimeMillis(), Configuration.getInstance().isPerfServerEnabled(),
+                new ServiceSoftware(InfoService.INFOSERVICE_VERSION));
     }
 
     /**

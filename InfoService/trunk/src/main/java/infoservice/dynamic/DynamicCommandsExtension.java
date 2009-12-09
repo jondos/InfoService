@@ -28,6 +28,7 @@
 package infoservice.dynamic;
 
 import infoservice.Configuration;
+import infoservice.InfoService;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -602,7 +603,7 @@ public class DynamicCommandsExtension
 				htmlData += "</TR>\n";
 			}
 			htmlData = htmlData + "    </TABLE><BR><BR><BR><BR>\n";
-			htmlData = htmlData + "    <P>Infoservice [" + Constants.INFOSERVICE_VERSION
+			htmlData = htmlData + "    <P>Infoservice [" + InfoService.INFOSERVICE_VERSION
 					+ "] Startup Time: " + Configuration.getInstance().getStartupTime() + "</P>\n"
 					+ "    <HR noShade SIZE=\"1\">\n"
 					+ "    <ADDRESS>&copy; 2000 - 2006 The JAP Team</ADDRESS>\n" + "  </BODY>\n"
@@ -643,7 +644,7 @@ public class DynamicCommandsExtension
 					+ "    <META HTTP-EQUIV=\"refresh\" CONTENT=\"10\">\n" + "  </HEAD>\n"
 					+ "  <BODY BGCOLOR=\"#FFFFFF\">\n"
 					+ "    <P ALIGN=\"right\"><h3>Updating status, please wait...</h3></p><br/>"
-					+ " <P>Infoservice [" + Constants.INFOSERVICE_VERSION + "] Startup Time: "
+					+ " <P>Infoservice [" + InfoService.INFOSERVICE_VERSION + "] Startup Time: "
 					+ Configuration.getInstance().getStartupTime() + "</P>\n"
 					+ "    <HR noShade SIZE=\"1\">\n"
 					+ "    <ADDRESS>&copy; 2000 - 2006 The JAP Team</ADDRESS>\n" + "  </BODY>\n"

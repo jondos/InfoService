@@ -40,6 +40,7 @@ import anon.infoservice.InfoServiceDBEntry;
 import anon.infoservice.MixCascade;
 import anon.infoservice.MixInfo;
 import anon.infoservice.InfoServiceIDEntry;
+import anon.infoservice.ServiceSoftware;
 import anon.pay.PaymentInstanceDBEntry;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -186,7 +187,8 @@ public class InfoServicePropagandist implements Runnable
 					new InfoServiceDBEntry(Configuration.getInstance().getOwnName(),
 										   Configuration.getInstance().getID(),
 										   virtualListeners, Configuration.getInstance().holdForwarderList(), false,
-										   System.currentTimeMillis(), ms_serialNumber, Configuration.getInstance().isPerfServerEnabled());
+										   System.currentTimeMillis(), ms_serialNumber, Configuration.getInstance().isPerfServerEnabled(),
+										   new ServiceSoftware(InfoService.INFOSERVICE_VERSION));
 				/* put the own entry in the database -> it is forwarded automatically to all neighbour
 				 * infoservices, which are also in the database
 				 */

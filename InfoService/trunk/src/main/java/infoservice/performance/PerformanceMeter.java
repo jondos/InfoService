@@ -37,6 +37,7 @@ import java.io.FileInputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.FileNotFoundException;
+import java.sql.Timestamp;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Vector;
@@ -66,6 +67,7 @@ import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
 import anon.infoservice.MixCascadeExitAddresses;
 import anon.infoservice.PerformanceEntry;
+import anon.infoservice.ServiceSoftware;
 import anon.infoservice.SimpleMixCascadeContainer;
 import anon.infoservice.Database;
 import anon.infoservice.InfoServiceDBEntry;
@@ -78,6 +80,7 @@ import anon.util.IMiscPasswordReader;
 import anon.util.XMLParseException;
 import anon.util.XMLUtil;
 import infoservice.Configuration;
+import infoservice.InfoService;
 import logging.LogHolder;
 import logging.LogLevel;
 import logging.LogType;
@@ -336,7 +339,8 @@ public class PerformanceMeter implements Runnable, Observer
 			new InfoServiceDBEntry(Configuration.getInstance().getOwnName(),
 								   Configuration.getInstance().getID(),
 								   Configuration.getInstance().getVirtualListeners(), Configuration.getInstance().holdForwarderList(), false,
-								   System.currentTimeMillis(), 0, Configuration.getInstance().isPerfServerEnabled());
+								   System.currentTimeMillis(), 0, Configuration.getInstance().isPerfServerEnabled(), 
+								   new ServiceSoftware(InfoService.INFOSERVICE_VERSION));
 	}
 	
 	/**
@@ -609,7 +613,8 @@ public class PerformanceMeter implements Runnable, Observer
 			if (account == null)
 			{
 				LogHolder.log(LogLevel.WARNING, LogType.PAY, 
-						"Could not start test because no valid account was available for PI " + a_cascade.getPIID() + "!");
+						"Could not start test for cascade " + a_cascade.getName() + 
+						" because no valid account was available for PI " + a_cascade.getPIID() + "!");
 //				 this test is useless
 				return;
 			}
@@ -974,6 +979,8 @@ public class PerformanceMeter implements Runnable, Observer
 					break;
 				}
 			}
+			
+			LogHolder.log(LogLevel.NOTICE, LogType.NET, "Finished performance test on cascade " + a_cascade.getMixNames() + ".");
 		}
 		
 		// add the data hashtable to the PerformanceEntry 
@@ -1597,11 +1604,12 @@ public class PerformanceMeter implements Runnable, Observer
 		Enumeration accounts = m_payAccountsFile.getAccounts();
 		long credit = 0;
 		
+		Timestamp now = new Timestamp(System.currentTimeMillis());
 		while(accounts.hasMoreElements())
 		{
 			PayAccount account = (PayAccount) accounts.nextElement();
 			
-			if(account.getBI() != null && account.getBI().getId().equals(a_piid))
+			if(account.getBI() != null && account.getBI().getId().equals(a_piid) && account.isCharged(now))
 			{
 				//credit += account.getBalance().getVolumeKBytesLeft() * 1000;
 				credit += account.getCurrentCredit();
