@@ -107,10 +107,27 @@ final class ISRuntimeStatistics
 		}
 	}
 	
+	private static String removeVersionAppendix(String a_version, int a_indexStart)
+	{
+		int indexEnd;
+		
+		indexEnd = a_version.indexOf("/");
+		if (indexEnd < 0)
+		{
+			a_version = a_version.substring(0, a_indexStart);
+		}
+		else if (a_indexStart < indexEnd)
+		{
+			a_version = a_version.substring(0, a_indexStart) + " " + a_version.substring(indexEnd, a_version.length());
+		}
+		return a_version;
+	}
+	
 	private static void putClientVersion(String a_property, String a_value, Hashtable a_hashtable, BigInteger a_addedValue)
 	{
 		Hashtable hashProperty;
 		BigInteger count;
+		int indexStart;
 		
 		// this is just a flooding protection
 		if (a_property.length() > 100 || a_value.length() > 100)
@@ -126,6 +143,23 @@ final class ISRuntimeStatistics
 		if (a_value.endsWith("/"))
 		{
 			a_value = a_value.substring(0, a_value.length() - 1).trim();
+		}
+		
+		
+		
+		if (a_property.equals("statistics-java"))
+		{
+			indexStart = a_value.indexOf("_");
+			if (indexStart > 0)
+			{
+				a_value = removeVersionAppendix(a_value, indexStart);
+			}
+			
+			indexStart = a_value.indexOf("-");
+			if (indexStart > 0)
+			{
+				a_value = removeVersionAppendix(a_value, indexStart);
+			}
 		}
 		
 		synchronized(a_hashtable)
