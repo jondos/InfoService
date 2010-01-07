@@ -1275,7 +1275,19 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				"        <TH>Last Notification</TH>\n" +
 				"      </TR>\n";
 			/* get all status entries from database */
-			Enumeration enumer = Database.getInstance(StatusInfo.class).getEntrySnapshotAsEnumeration();
+			Hashtable hashStatusInfo = Database.getInstance(StatusInfo.class).getEntryHash();
+			Enumeration enumCascades = Database.getInstance(MixCascade.class).getEntrySnapshotAsEnumeration();
+			MixCascade cascade;
+			while (enumCascades.hasMoreElements())
+			{
+				cascade = (MixCascade)(enumCascades.nextElement());
+				if (!hashStatusInfo.containsKey(cascade.getId()))
+				{
+					hashStatusInfo.put(cascade.getId(), StatusInfo.createDummyStatusInfo(cascade.getId()));
+				}
+			}
+			
+			Enumeration enumer = hashStatusInfo.elements();
 			StatusInfo info;
 			while (enumer.hasMoreElements())
 			{
