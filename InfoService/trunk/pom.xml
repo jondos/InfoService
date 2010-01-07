@@ -10,7 +10,7 @@
     <repository>
       <id>anon.inf.tu-dresden.de</id>
       <url>http://anon.inf.tu-dresden.de/artifactory/repo</url>
-    </repository>
+    </repository> 
   </repositories> 
 	<build>
 
