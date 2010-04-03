@@ -62,6 +62,7 @@ import anon.ErrorCodes;
 import anon.client.AnonClient;
 import anon.client.DummyTrafficControlChannel;
 import anon.crypto.SignatureVerifier;
+import anon.error.AnonServiceException;
 import anon.infoservice.DatabaseMessage;
 import anon.infoservice.ListenerInterface;
 import anon.infoservice.MixCascade;
@@ -910,7 +911,23 @@ public class PerformanceMeter implements Runnable, Observer
 		while (!Thread.currentThread().isInterrupted())
 		{
 			// connect to the mix cascade
-		    errorCode = m_proxy.start(new SimpleMixCascadeContainer(a_cascade));
+			AnonServiceException exception = null;
+			try
+			{
+				m_proxy.start(new SimpleMixCascadeContainer(a_cascade));
+			}
+			catch (AnonServiceException a_e)
+			{
+				exception = a_e;
+			}
+			if (exception == null)
+			{
+				errorCode = ErrorCodes.E_SUCCESS;
+			}
+			else
+			{
+				errorCode = exception.getErrorCode();
+			}
 		    if (errorCode == ErrorCodes.E_CONNECT || errorCode == ErrorCodes.E_UNKNOWN)
 		    {
 		    	m_proxy.stop();
@@ -1239,8 +1256,8 @@ public class PerformanceMeter implements Runnable, Observer
 	        			m_proxy.stop();
 	        		}
 	  
-	    		    if (m_proxy.start(new SimpleMixCascadeContainer(a_cascade)) == 
-	    		    	ErrorCodes.E_SUCCESS && m_proxy.isConnected())
+	        		m_proxy.start(new SimpleMixCascadeContainer(a_cascade));
+	    		    if (m_proxy.isConnected())
 	    		    {
 	    		    	bRetry = true;
 	    		    }
