@@ -170,7 +170,7 @@ public class PassiveInfoServiceMainUpdater extends AbstractDatabaseUpdater
 		/* 3. Exit addresses Database update */
 		InfoServiceHolder.getInstance().getExitAddresses();
 				
-		m_mixUpdater.updateAsync();
+		m_mixUpdater.updateAsync(null);
 		
 		Hashtable performanceEntries = new Hashtable();
 		if (m_performanceInfoUpdater != null)
