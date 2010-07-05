@@ -215,7 +215,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			AbstractDatabaseEntry idEntry = Database.getInstance(InfoServiceIDEntry.class).getEntryById(
 				newEntry.getId());
 
-			if (newEntry.isVerified())
+			if (newEntry.isVerified() && newEntry.isValid())
 			{
 				if (newEntry.isNewerThan(idEntry) && 
 					!newEntry.getId().equals(Configuration.getInstance().getID()))
@@ -679,7 +679,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				MixInfo.XML_ELEMENT_NAME));
 			MixInfo mixEntry = new MixInfo(mixNode);
 			/* verify the signature */
-			if (mixEntry.isVerified())
+			if (mixEntry.isVerified() && mixEntry.isValid())
 			{
 				Database.getInstance(MixInfo.class).update(mixEntry);
 			}
@@ -720,7 +720,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				MixInfo.XML_ELEMENT_NAME));
 			MixInfo mixEntry = new MixInfo(mixNode);
 			/* verify the signature */
-			if (mixEntry.isVerified())
+			if (mixEntry.isVerified() && mixEntry.isValid())
 			{
 				/* check whether the mix is already assigned to a mixcascade */
 				Enumeration knownMixCascades = Database.getInstance(MixCascade.class).getEntryList().elements();
@@ -849,7 +849,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				a_postData), StatusInfo.XML_ELEMENT_NAME));
 			StatusInfo statusEntry = new StatusInfo(mixCascadeStatusNode);
 			/* verify the signature */
-			if (statusEntry.isVerified())
+			if (statusEntry.isVerified() && statusEntry.isValid())
 			{
 				Database.getInstance(StatusInfo.class).update(statusEntry);
 				/* update the statistics, if they are not enabled or we know the received status message

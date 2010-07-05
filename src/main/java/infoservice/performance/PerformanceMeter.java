@@ -1089,6 +1089,11 @@ public class PerformanceMeter implements Runnable, Observer
 	{		
 		HTTPResponse httpResponse;
 		
+		if (!a_cascade.isVerified() || !a_cascade.isValid())
+		{
+			throw new InfoServiceException("Could not measure performance for unvrified service: " + a_cascade);
+		}
+		
 		Document doc;
 		String host;
 		int port;
@@ -1142,8 +1147,32 @@ public class PerformanceMeter implements Runnable, Observer
 		       	}
 		        
 		       	// get the host and port from the chosen info service
-		       	host = ((ListenerInterface)infoservice.getListenerInterfaces().elementAt(0)).getHost();
-		       	port = ((ListenerInterface)infoservice.getListenerInterfaces().elementAt(0)).getPort();
+		       	port = 0;
+		       	host = null;
+		       	int tempPort = 0;
+		       	String tempHost = null;
+		       	for (int i = 0; i < infoservice.getListenerInterfaces().size(); i++)
+		       	{
+		       		tempPort = ((ListenerInterface)infoservice.getListenerInterfaces().elementAt(i)).getPort();
+		       		tempHost = ((ListenerInterface)infoservice.getListenerInterfaces().elementAt(i)).getHost();
+		       		{
+		       			if (tempPort == 80)
+		       			{
+		       				port = tempPort;
+		       				host = tempHost;
+		       				break;
+		       			}
+		       			else if (tempPort == 443 || port == 0)
+		       			{
+		       				port = tempPort;
+		       				host = tempHost;
+		       			}
+		       		}	
+		       	}
+		       	if (host == null)
+		       	{
+		       		throw new InfoServiceException("No network interface found for connection!");
+		       	}
         		
 		       	// request token from info service directly
 		       	PerformanceTokenRequest tokenRequest = new PerformanceTokenRequest(Configuration.getInstance().getID());
