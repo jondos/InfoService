@@ -163,7 +163,19 @@ public class DynamicCommandsExtension
 
 				}
 			}
-			Database.getInstance(MixCascade.class).update(mixCascadeEntry);
+			
+			if (mixCascadeEntry.isVerified() && mixCascadeEntry.isValid())
+			{
+				Database.getInstance(MixCascade.class).update(mixCascadeEntry);
+			}
+			else 
+			{
+				LogHolder.log(LogLevel.NOTICE, LogType.NET,
+							  "Security check failed for mix cascade entry! XML: " + (new String(a_postData)));
+				httpResponse = new HttpResponseStructure(HttpResponseStructure.
+					HTTP_RETURN_INTERNAL_SERVER_ERROR);
+			}
+			
 			/*
 			if (Database.getInstance(MixCascade.class).update(mixCascadeEntry))
 			{

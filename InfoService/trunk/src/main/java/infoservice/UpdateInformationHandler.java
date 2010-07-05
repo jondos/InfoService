@@ -29,6 +29,7 @@ package infoservice;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.Enumeration;
 import java.util.Vector;
 
 import org.w3c.dom.Document;
@@ -37,6 +38,7 @@ import org.w3c.dom.NodeList;
 
 import anon.crypto.SignatureCreator;
 import anon.crypto.SignatureVerifier;
+import anon.infoservice.AbstractDistributableDatabaseEntry;
 import anon.infoservice.Constants;
 import anon.infoservice.Database;
 import anon.infoservice.JAPVersionInfo;
@@ -98,7 +100,7 @@ public class UpdateInformationHandler implements Runnable
 	public void run()
 	{
 		IDistributable distributable;
-		Vector distributables;
+		Vector<AbstractDistributableDatabaseEntry> distributables;
 		Element[] entries;
 
 		while (true)
@@ -250,12 +252,19 @@ public class UpdateInformationHandler implements Runnable
 				 * information infoservice is down)
 				 */
 				distributables = Database.getInstance(JavaVersionDBEntry.class).getEntryList();
-				distributables.addElement(Database.getInstance(JAPVersionInfo.class).
-										  getEntryById(JAPVersionInfo.ID_STABLE));
-				distributables.addElement(Database.getInstance(JAPVersionInfo.class).
-										  getEntryById(JAPVersionInfo.ID_BETA));
-				distributables.addElement(Database.getInstance(JAPMinVersion.class).
-										  getEntryById(JAPMinVersion.DEFAULT_ID));
+				Enumeration<AbstractDistributableDatabaseEntry> enumDistributales =
+					Database.getInstance(JAPVersionInfo.class).getEntrySnapshotAsEnumeration();
+				while (enumDistributales.hasMoreElements())
+				{
+					distributables.addElement(enumDistributales.nextElement());
+				}
+
+				enumDistributales =
+					Database.getInstance(JAPMinVersion.class).getEntrySnapshotAsEnumeration();
+				while (enumDistributales.hasMoreElements())
+				{
+					distributables.addElement(enumDistributales.nextElement());
+				}
 
 				for (int i = 0; i < distributables.size(); i++)
 				{
