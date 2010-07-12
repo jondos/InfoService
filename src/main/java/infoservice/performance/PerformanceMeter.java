@@ -534,11 +534,11 @@ public class PerformanceMeter implements Runnable, Observer
 			{
 				synchronized(SYNC_TEST)
 				{
-					LogHolder.log(LogLevel.INFO, LogType.THREAD, "Cascades left to test: " + knownMixCascades.size());
+					LogHolder.log(LogLevel.INFO, LogType.MISC, "Cascades left to test: " + knownMixCascades.size());
 
-					// randomly choose the next mix cascade					
+					// randomly choose the next mix cascade
 					intRandom = Math.abs(ms_rnd.nextInt()) % knownMixCascades.size();
-					final MixCascade cascade = (MixCascade) knownMixCascades.elementAt(intRandom);		
+					final MixCascade cascade = (MixCascade) knownMixCascades.elementAt(intRandom);
 					
 					// remove the cascade from the to-be-tested-vector
 					knownMixCascades.removeElementAt(intRandom);
@@ -562,7 +562,7 @@ public class PerformanceMeter implements Runnable, Observer
 				{
 					if (!bFirstTestDone)
 					{
-						m_nextUpdate = System.currentTimeMillis() + 30000; // wait 30 seconds fo the next try
+						m_nextUpdate = System.currentTimeMillis() + 30000; // wait 30 seconds for the next try
 					}
 					
 					long sleepFor = m_nextUpdate - System.currentTimeMillis();    	
@@ -570,7 +570,7 @@ public class PerformanceMeter implements Runnable, Observer
 					if (sleepFor > 0)
 					{
 						LogHolder.log(LogLevel.INFO, LogType.NET, "Performance thread sleeping for " + sleepFor + " ms.");
-			    		try 
+			    		try
 			    		{	    			    			
 		    				SYNC_METER.wait(sleepFor);	    				
 			    		}
@@ -603,7 +603,7 @@ public class PerformanceMeter implements Runnable, Observer
 		
 		// update the account files again
 		loadAccountFiles();
-		m_accUpdater.update();
+		//m_accUpdater.update();
 		
 		// check if we have the payment instance and a valid account file
 		if (a_cascade.isPayment() && a_cascade.getPIID() != null)
@@ -613,7 +613,7 @@ public class PerformanceMeter implements Runnable, Observer
 					a_cascade.getPIID(), null);
 			if (account == null)
 			{
-				LogHolder.log(LogLevel.WARNING, LogType.PAY, 
+				LogHolder.log(LogLevel.ERR, LogType.PAY, 
 						"Could not start test for cascade " + a_cascade.getName() + 
 						" because no valid account was available for PI " + a_cascade.getPIID() + "!");
 //				 this test is useless
@@ -675,7 +675,7 @@ public class PerformanceMeter implements Runnable, Observer
 				closeMeterSocket();
 				if (iWait > 20)
 				{
-					LogHolder.log(LogLevel.EMERG, LogType.THREAD, 
+					LogHolder.log(LogLevel.EMERG, LogType.MISC, 
 						"Using deprecated stop method to finish meter thread!");
 					synchronized (SYNC_INTERRUPT)
 					{
@@ -684,7 +684,7 @@ public class PerformanceMeter implements Runnable, Observer
 				}
 				else if (iWait > 5)
 				{
-				LogHolder.log(LogLevel.EMERG, LogType.THREAD, 
+				LogHolder.log(LogLevel.EMERG, LogType.MISC, 
 					"Problems finishing meter thread!");
 				}
 
@@ -1059,7 +1059,7 @@ public class PerformanceMeter implements Runnable, Observer
 				catch (InterruptedException e) 
 				{
 					// should never happen
-					LogHolder.log(LogLevel.EMERG, LogType.THREAD, e);
+					LogHolder.log(LogLevel.EMERG, LogType.MISC, e);
 				}
 			}
 			
@@ -1091,7 +1091,7 @@ public class PerformanceMeter implements Runnable, Observer
 		
 		if (!a_cascade.isVerified() || !a_cascade.isValid())
 		{
-			throw new InfoServiceException("Could not measure performance for unvrified service: " + a_cascade);
+			throw new InfoServiceException("Could not measure performance for unverified service: " + a_cascade);
 		}
 		
 		Document doc;
@@ -1712,7 +1712,7 @@ public class PerformanceMeter implements Runnable, Observer
 			DatabaseMessage msg = (DatabaseMessage) a_message;
 			
 			// a new entry was added
-			if(msg.getMessageCode() == DatabaseMessage.ENTRY_ADDED)
+			if (msg.getMessageCode() == DatabaseMessage.ENTRY_ADDED)
 			{
 				try
 				{
@@ -1720,8 +1720,8 @@ public class PerformanceMeter implements Runnable, Observer
 					final PerformanceEntry entry = (PerformanceEntry) Database.getInstance(PerformanceEntry.class).getEntryById(cascade.getId());
 					
 					// we don't have a PerformanceEntry for this cascade yet
-					if (entry == null || 
-						(System.currentTimeMillis() - entry.getLastUpdate()) >= m_majorInterval)
+					if (entry == null) // || 
+						// (System.currentTimeMillis() - entry.getLastUpdate()) >= m_majorInterval) // this might lead to endless updates??
 					{
 						// let's start our performance test immediately
 						new Thread(new Runnable()
