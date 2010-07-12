@@ -928,7 +928,7 @@ public class PerformanceMeter implements Runnable, Observer
 			{
 				errorCode = exception.getErrorCode();
 			}
-		    if (errorCode == ErrorCodes.E_CONNECT || errorCode == ErrorCodes.E_UNKNOWN)
+		    if (errorCode == ErrorCodes.E_CONNECT) // || errorCode == ErrorCodes.E_UNKNOWN)
 		    {
 		    	m_proxy.stop();
 		    	
