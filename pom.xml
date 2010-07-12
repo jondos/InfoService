@@ -84,6 +84,11 @@
 			<version>00.12.056-SNAPSHOT</version>
 		</dependency>
 		<dependency>
+			<groupId>anon</groupId>
+			<artifactId>BouncyCastleLightForAN.ON</artifactId>
+			<version>01.43.000-SNAPSHOT</version>
+		</dependency>		
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>3.8.1</version>
