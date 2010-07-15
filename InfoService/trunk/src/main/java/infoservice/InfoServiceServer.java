@@ -87,13 +87,13 @@ final class InfoServiceServer implements Runnable
 						}
 						socket = null;
 					}
-					LogHolder.log(LogLevel.EXCEPTION, LogType.THREAD, "Run-Loop-Exception: " + e2);
+					LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "Run-Loop-Exception: " + e2);
 				}
 			}
 		}
 		catch (Throwable t)
 		{
-			LogHolder.log(LogLevel.ALERT, LogType.THREAD,
+			LogHolder.log(LogLevel.ALERT, LogType.MISC,
 						  "Unexcpected Exception in Run-Loop (exiting): " + t);
 			try
 			{
@@ -108,9 +108,9 @@ final class InfoServiceServer implements Runnable
 			}
 			LogHolder.log(LogLevel.ERR, LogType.NET, "JWS Exception: " + t);
 		}
-		LogHolder.log(LogLevel.ALERT, LogType.THREAD,
+		LogHolder.log(LogLevel.ALERT, LogType.NET,
 					  "Server on interface: " + strInterface + " on port: " + m_Listener.getPort());
-		LogHolder.log(LogLevel.EMERG, LogType.THREAD, "Exiting because of fatal Error!");
+		LogHolder.log(LogLevel.EMERG, LogType.NET, "Exiting because of fatal Error!");
 	}
 
 	public String toString()
