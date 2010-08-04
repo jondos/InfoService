@@ -804,7 +804,7 @@ final public class Configuration
 					m_aPerfMeterConf[2] = new Integer(Math.min(512*1024*2, Integer.parseInt(value)));
 				}
 				
-				value = a_properties.getProperty("perf.majorInterval", "150000");
+				value = a_properties.getProperty("perf.majorInterval", "240000");
 				if(value != null)
 				{
 					m_aPerfMeterConf[3] = new Integer(Math.max(60*1000, Integer.parseInt(value)));
