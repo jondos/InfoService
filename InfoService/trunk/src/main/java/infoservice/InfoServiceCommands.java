@@ -848,6 +848,14 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			Element mixCascadeStatusNode = (Element) (XMLUtil.getFirstChildByName(XMLUtil.toXMLDocument(
 				a_postData), StatusInfo.XML_ELEMENT_NAME));
 			StatusInfo statusEntry = new StatusInfo(mixCascadeStatusNode);
+			/*
+			if (statusEntry.getId().equals("0098C73150DD90A0DC1C39C995CC33571674CE24"))
+			{
+				LogHolder.log(LogLevel.ALERT, LogType.DB, "Found status entry for missing service: " +
+						statusEntry.getId());
+			}
+			*/
+			
 			/* verify the signature */
 			if (statusEntry.isVerified() && statusEntry.isValid())
 			{
@@ -868,7 +876,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		}
 		catch (Exception e)
 		{
-			LogHolder.log(LogLevel.ERR, LogType.NET, e);
+			LogHolder.log(LogLevel.EXCEPTION, LogType.NET, e);
 			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);
 		}
 		return httpResponse;
@@ -1073,7 +1081,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				}
 				
 				htmlData += "    <table style=\"align: left\" border=\"0\" width=\"100%\">" +
-				"<tr><th>Account Number</th><th>Remaining Credits</th><th>Account File</th><th>Last Modified</th><th>Payment instance</th></tr>\n";
+				"<tr><th>Account Number</th><th>Remaining</th><th>Monthly</th><th>Account File</th><th>Last Modified</th><th>Payment instance</th></tr>\n";
 				
 				Timestamp now = new Timestamp(System.currentTimeMillis());
 				if(vPIs.size() != 0)
@@ -1088,6 +1096,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 						htmlData += "<tr>" + "<td class=\"name\">" + account.getAccountNumber() + "</td>" 
 						//+ "<td class=\"status\">"  + JAPUtil.formatBytesValueWithUnit(account.getBalance().getVolumeKBytesLeft() * 1000) + "</td>"
 						+ "<td class=\"status\">"  + (account.isCharged(now)?""+Util.formatBytesValueWithUnit(account.getCurrentCredit()):"0") + "</td>"
+						+ "<td class=\"status\">"  + (account.getVolumeBytesMonthly() <= 0?""+Util.formatBytesValueWithUnit(account.getVolumeBytesMonthly()):"0") + "</td>"
 						+ "<td class=\"name\">" + file.getName() + "</td><td class=\"status\">" + new Date(account.getBackupTime()) + "</td>" +
 						"<td class=\"name\">" + account.getPIID() + "</td></tr>";
 					}

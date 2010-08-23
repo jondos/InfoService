@@ -61,7 +61,7 @@ public class InfoService implements Observer
 	/**
 	 * This is the version number of the infoservice software.
 	 */
-	public static final String INFOSERVICE_VERSION = "IS.08.067"; //never change the layout of this line!
+	public static final String INFOSERVICE_VERSION = "IS.08.070"; //never change the layout of this line!
 	
 	protected JWSInternalCommands oicHandler;
 
@@ -131,7 +131,7 @@ public class InfoService implements Observer
 			{				
 				LogHolder.log(LogLevel.NOTICE, LogType.NET, "Starting Performance Meter...");
 				
-				ms_accountUpdater = new AccountUpdater();		
+				ms_accountUpdater = new AccountUpdater(false);		
 				ms_accountUpdater.start(false);				
 				ms_perfMeter = new PerformanceMeter(ms_accountUpdater);
 				Thread perfMeterThread = new Thread(InfoService.ms_perfMeter);			
