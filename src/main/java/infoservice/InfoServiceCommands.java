@@ -1096,7 +1096,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 						htmlData += "<tr>" + "<td class=\"name\">" + account.getAccountNumber() + "</td>" 
 						//+ "<td class=\"status\">"  + JAPUtil.formatBytesValueWithUnit(account.getBalance().getVolumeKBytesLeft() * 1000) + "</td>"
 						+ "<td class=\"status\">"  + (account.isCharged(now)?""+Util.formatBytesValueWithUnit(account.getCurrentCredit()):"0") + "</td>"
-						+ "<td class=\"status\">"  + (account.getVolumeBytesMonthly() <= 0?""+Util.formatBytesValueWithUnit(account.getVolumeBytesMonthly()):"0") + "</td>"
+						+ "<td class=\"status\">"  + (account.getVolumeBytesMonthly() > 0?""+Util.formatBytesValueWithUnit(account.getVolumeBytesMonthly()):"0") + "</td>"
 						+ "<td class=\"name\">" + file.getName() + "</td><td class=\"status\">" + new Date(account.getBackupTime()) + "</td>" +
 						"<td class=\"name\">" + account.getPIID() + "</td></tr>";
 					}
