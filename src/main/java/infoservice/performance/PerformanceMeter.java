@@ -646,17 +646,27 @@ public class PerformanceMeter implements Runnable, Observer
 		}
 						
 		// interrupt the test if it is not finished yet
-		if (m_proxy.isConnected())
-		{
-			m_proxy.stop();
-		}
 		try
 		{
+			if (performTestThread.isAlive())
+			{
+				synchronized (SYNC_INTERRUPT)
+				{
+					performTestThread.interrupt();
+				}
+				m_proxy.stop();
+			}
+			
 			performTestThread.join(500);						
 		}
 		catch (InterruptedException e)
 		{
 			// test is finished
+		}
+		
+		if (m_proxy.isConnected())
+		{
+			m_proxy.stop();
 		}
 		
 		// for some reason the test thread is still alive, try various methods to stop it
@@ -668,6 +678,11 @@ public class PerformanceMeter implements Runnable, Observer
 			synchronized (SYNC_INTERRUPT)
 			{
 				performTestThread.interrupt();
+			}
+			
+			if (m_proxy.isConnected())
+			{
+				m_proxy.stop();
 			}
 		
 			if (iWait > 5)
@@ -920,6 +935,12 @@ public class PerformanceMeter implements Runnable, Observer
 			{
 				exception = a_e;
 			}
+			
+			if (Thread.currentThread().isInterrupted())
+			{
+				errorCode = ErrorCodes.E_INTERRUPTED;
+			}
+			
 			if (exception == null)
 			{
 				errorCode = ErrorCodes.E_SUCCESS;
