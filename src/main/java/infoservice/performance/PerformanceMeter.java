@@ -655,6 +655,10 @@ public class PerformanceMeter implements Runnable, Observer
 					performTestThread.interrupt();
 				}
 				m_proxy.stop();
+				synchronized (SYNC_INTERRUPT)
+				{
+					performTestThread.interrupt();
+				}
 			}
 			
 			performTestThread.join(1000);						
