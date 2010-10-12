@@ -130,8 +130,8 @@ public class PassiveInfoServiceInitializer
 		statusUpdater = new PassiveInfoServiceStatusUpdater(observableInfo); /** Handler of status entries */
 		globalUpdater = new PassiveInfoServiceGlobalUpdater(observableInfo);
 		
-		infoServiceUpdater.start(false);
-		statusUpdater.start(false);
+		infoServiceUpdater.updateAsync(null);
+		statusUpdater.updateAsync(null);
 		globalUpdater.start();
 	}
 	
