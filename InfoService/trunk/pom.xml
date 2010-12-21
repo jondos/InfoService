@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>anon</groupId>
@@ -6,25 +7,25 @@
 	<name>InfoService</name>
 	<version>00.08.080-SNAPSHOT</version>
 	<url>http://anon.inf.tu-dresden.de/</url>
-  <repositories>
-    <repository>
-      <id>anon.inf.tu-dresden.de</id>
-      <url>http://anon.inf.tu-dresden.de/artifactory/repo</url>
-    </repository> 
-  </repositories> 
+	<repositories>
+		<repository>
+			<id>anon.inf.tu-dresden.de</id>
+			<url>http://anon.inf.tu-dresden.de/artifactory/repo</url>
+		</repository>
+	</repositories>
 	<build>
 
-	<plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>2.3.1</version>
-        <configuration>
-      	</configuration>
-      </plugin>	  
-      <plugin>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.1</version>
+				<configuration>
+				</configuration>
+			</plugin>
+			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
-				<version>2.2</version> <!-- previous versions have unacceptable errors!  -->
+				<version>2.2</version> <!-- previous versions have unacceptable errors! -->
 				<executions>
 					<execution>
 						<id>create-executable-jar</id>
@@ -45,10 +46,8 @@
 					</execution>
 				</executions>
 			</plugin>
-			<!--
-				right now: skip tests because some of the tests still fail!!,  TODO:  
-				fix everything to pass all tests
-			-->
+			<!-- right now: skip tests because some of the tests still 
+				fail!!, TODO: fix everything to pass all tests -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
@@ -81,13 +80,8 @@
 		<dependency>
 			<groupId>anon</groupId>
 			<artifactId>anonlib</artifactId>
-			<version>00.13.007-SNAPSHOT</version>
+			<version>00.13.009-SNAPSHOT</version>
 		</dependency>
-		<dependency>
-			<groupId>anon</groupId>
-			<artifactId>BouncyCastleLightForAN.ON</artifactId>
-			<version>01.43.000-SNAPSHOT</version>
-		</dependency>		
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
