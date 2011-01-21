@@ -168,7 +168,7 @@ public class PassiveInfoServiceMainUpdater extends AbstractDatabaseUpdater
 		/* 2. MixCascades Database update */
 		m_cascadeUpdater.update();
 		/* 3. Exit addresses Database update */
-		InfoServiceHolder.getInstance().getExitAddresses();
+		InfoServiceHolder.getInstance().updateExitAddresses();
 				
 		m_mixUpdater.updateAsync(null);
 		
