@@ -1363,6 +1363,7 @@ public class PerformanceMeter implements Runnable, Observer
 	        	ipSize = 16;
 	        }
 	        
+	        addr = null;
 	        if(ipSize > 0)
 	        {
 	        	ip = new byte[ipSize];
@@ -1379,8 +1380,7 @@ public class PerformanceMeter implements Runnable, Observer
 	        	{
 	        		addr = InetAddress.getByAddress(ip);
 	        		/*LogHolder.log(LogLevel.WARNING, LogType.NET, 
-	        				"Adding IP address: " + addr.getHostAddress());*/
-	        		MixCascadeExitAddresses.addInetAddress(a_cascade.getId(), addr, a_cascade.getDistribution());	        		
+	        				"Adding IP address: " + addr.getHostAddress());*/	        		
 	        	}
 	        	catch(Exception ex)
 	        	{
@@ -1401,6 +1401,14 @@ public class PerformanceMeter implements Runnable, Observer
     			LogHolder.log(LogLevel.WARNING, LogType.NET, "Too few bytes for measuring speed: " + bytesRead + " bytes.");
 				bytesRead = 0;
 			}
+    		else
+    		{
+    			if (addr != null)
+    			{
+    				// this seems to be a valid data packet...
+    				MixCascadeExitAddresses.addInetAddress(a_cascade.getId(), addr, a_cascade.getDistribution());
+    			}
+    		}
     		
     		// speed in bit/s;
     		long lSpeed = (bytesRead * 8) / (responseEndTime - responseStartTime);
