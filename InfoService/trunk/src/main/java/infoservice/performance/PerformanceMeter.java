@@ -445,7 +445,7 @@ public class PerformanceMeter implements Runnable, Observer
 				        				"Adding IP address from file: " + addr.getHostAddress() + " from " + line.substring(sixthTab + 1));*/
 							
 								
-								MixCascadeExitAddresses.addInetAddress(id, addr, cascadeDistribution);
+								MixCascadeExitAddresses.addInetAddress(id, addr, cascadeDistribution, null);
 							}
 							packets = Integer.parseInt(line.substring(fifthTab +1, sixthTab));
 							users = Integer.parseInt(line.substring(fourthTab +1, fifthTab));
@@ -1406,7 +1406,7 @@ public class PerformanceMeter implements Runnable, Observer
     			if (addr != null)
     			{
     				// this seems to be a valid data packet...
-    				MixCascadeExitAddresses.addInetAddress(a_cascade.getId(), addr, a_cascade.getDistribution());
+    				MixCascadeExitAddresses.addInetAddress(a_cascade.getId(), addr, a_cascade.getDistribution(), null);
     			}
     		}
     		

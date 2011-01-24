@@ -344,6 +344,10 @@ public class JapForwardingTools
 						 * answerJapForwarderNode
 						 */
 						answerJapForwarderNode = XMLUtil.importNode(answerDoc, japForwarderNode, true);
+						if (answerJapForwarderNode == null)
+						{
+							continue;
+						}
 						gotForwarder = true;
 						LogHolder.log(LogLevel.INFO, LogType.MISC,
 							"JapForwardingTools: getForwarder: Returned one JAP forwarder fetched from a remote infoservice.");
