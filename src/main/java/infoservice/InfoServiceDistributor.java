@@ -460,15 +460,18 @@ public class InfoServiceDistributor implements IDistributor
 					+ " to: " + a_listener.getHost() + ":" + Integer.toString(a_listener.getPort())
 					+ a_information.getPostFile(), e);
 		}
-		if (connection != null)
+		finally
 		{
-			/*
-			 * we have received a status code or an exception occured -> we can
-			 * interrupt the connection because our post request has been
-			 * processed or an exception occured -> we don't need the connection
-			 * any more in both cases
-			 */
-			connection.stop();
+			if (connection != null)
+			{
+				/*
+				 * we have received a status code or an exception occurred -> we can
+				 * interrupt the connection because our post request has been
+				 * processed or an exception occurred -> we don't need the connection
+				 * any more in both cases
+				 */
+				connection.stop();
+			}
 		}
 		return connected;
 	}
