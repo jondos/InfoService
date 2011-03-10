@@ -5,7 +5,7 @@
 	<groupId>anon</groupId>
 	<artifactId>InfoService</artifactId>
 	<name>InfoService</name>
-	<version>00.08.089-SNAPSHOT</version>
+	<version>00.08.090-SNAPSHOT</version>
 	<url>http://anon.inf.tu-dresden.de/</url>
 	<repositories>
 		<repository>
@@ -80,7 +80,7 @@
 		<dependency>
 			<groupId>anon</groupId>
 			<artifactId>anonlib</artifactId>
-			<version>00.13.039-SNAPSHOT</version>
+			<version>00.14.006-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
