@@ -667,8 +667,7 @@ public class PerformanceMeter implements Runnable, Observer
 		{
 			// test is finished
 		}
-		
-		if (m_proxy.isConnected())
+		finally
 		{
 			m_proxy.stop();
 		}
