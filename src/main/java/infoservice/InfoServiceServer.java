@@ -7,12 +7,15 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.InetAddress;
 import anon.infoservice.ListenerInterface;
+import anon.util.SocketGuard;
 import logging.LogType;
 
 final class InfoServiceServer implements Runnable
 {
-	ListenerInterface m_Listener;
-	InfoService m_IS;
+	private static final int GUARD_TIMEOUT_IN_MS = 120000;
+	
+	private ListenerInterface m_Listener;
+	private InfoService m_IS;
 
 	public InfoServiceServer(ListenerInterface listener,InfoService is)
 	{
@@ -27,7 +30,7 @@ final class InfoServiceServer implements Runnable
 					  "Server on interface: " + strInterface + " on port: " + m_Listener.getPort() +
 					  " starting...");
 		ServerSocket server = null;
-		Socket socket = null;
+		SocketGuard socket = null;
 		try
 		{
 			server = new ServerSocket(m_Listener.getPort(), 200, InetAddress.getByName(m_Listener.getHost()));
@@ -37,7 +40,8 @@ final class InfoServiceServer implements Runnable
 				try
 				{
 					socket = null;
-					socket = server.accept();
+					socket = new SocketGuard(server.accept(), GUARD_TIMEOUT_IN_MS);
+					//socket = server.accept();
 				}
 				catch (IOException ioe)
 				{

@@ -40,6 +40,7 @@ import anon.infoservice.Constants;
 import anon.infoservice.HTTPConnectionFactory;
 import anon.infoservice.HttpResponseStructure;
 import anon.infoservice.InfoServiceDBEntry;
+import anon.util.SocketGuard;
 import anon.util.TimedOutputStream;
 import logging.LogHolder;
 import logging.LogLevel;
@@ -61,7 +62,7 @@ final public class InfoServiceConnection implements Runnable
 	/**
 	 * Stores the socket which is connected to the client we got the request from.
 	 */
-	private Socket m_socket;
+	private SocketGuard m_socket;
 
 	private InputStream m_inputStream;
 	/**
@@ -97,7 +98,7 @@ final public class InfoServiceConnection implements Runnable
 	 *                               request and creating the HTTP response which is sent back to
 	 *                               the client.
 	 */
-	public InfoServiceConnection(Socket a_socket, int a_connectionId,
+	public InfoServiceConnection(SocketGuard a_socket, int a_connectionId,
 								 JWSInternalCommands a_serverImplementation)
 	{
 		m_socket = a_socket;

@@ -324,7 +324,11 @@ public class PerformanceMeter implements Runnable, Observer
 	
 		try
 		{
-			m_proxy = new AnonProxy(new ServerSocket(m_proxyPort, -1, InetAddress.getByName(m_proxyHost)), null);
+			if (m_proxy != null)
+			{
+				m_proxy.stop();
+			}
+			m_proxy = new AnonProxy(new ServerSocket(m_proxyPort, -1, InetAddress.getByName(m_proxyHost)), null, m_maxWaitForTest * 2);
 		}
 		catch (IOException a_e)
 		{
