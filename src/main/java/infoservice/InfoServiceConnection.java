@@ -188,7 +188,18 @@ final public class InfoServiceConnection implements Runnable
 				   {
 				 throw (new Exception("Invalid HTTP request line: " + requestLine));
 				   }*/
+				if (!requestLineTokenizer.hasMoreElements())
+				{
+					closeSockets();
+					return;
+				}
 				requestMethod = requestLineTokenizer.nextToken();
+				
+				if (!requestLineTokenizer.hasMoreElements())
+				{
+					closeSockets();
+					return;
+				}
 				requestUrl = requestLineTokenizer.nextToken();
 				if (requestMethod.equals("POST"))
 				{
