@@ -2073,6 +2073,16 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			ISRuntimeStatistics.ms_lNrOfGetInfoserviceserialsRequests++;
 			httpResponse = m_isResponseGetter.fetchResponse(a_supportedEncodings, true);
 		}
+		else if(command.equals("/robots.txt") && (method == Constants.REQUEST_METHOD_GET))
+		{
+			String txtData = "User-agent: *\n" + "Disallow: /";
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_PLAIN,
+					HttpResponseStructure.HTTP_ENCODING_PLAIN, txtData);
+		}
+		else if(command.equals("/favicon.ico") && (method == Constants.REQUEST_METHOD_GET))
+        {
+			httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_NOT_FOUND);
+        }		
 		else if ( (command.equals("/cascade")) && (method == Constants.REQUEST_METHOD_POST))
 		{
 			/** Full Command: POST /cascade
