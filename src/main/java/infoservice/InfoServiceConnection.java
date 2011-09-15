@@ -64,7 +64,6 @@ final public class InfoServiceConnection implements Runnable
 	 */
 	private SocketGuard m_socket;
 
-	private InputStream m_inputStream;
 	/**
 	 * Stores the ID of the connection which is used in the log-output for identifying the current
 	 * connection.
@@ -129,24 +128,7 @@ final public class InfoServiceConnection implements Runnable
 							  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
 							  "): Cannot set socket timeout: " + e.toString());
 			}
-			try
-			{
-				m_inputStream = m_socket.getInputStream();
-			}
-			catch (Exception e)
-			{
-				LogHolder.log(LogLevel.ERR, LogType.NET,
-							  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-							  "): Error while accessing the socket streams: " + e.toString());
-				try
-				{
-					m_socket.close();
-				}
-				catch (Exception e1)
-				{
-				}
-				return ;
-			}
+			
 			int internalRequestMethodCode = 0;
 			String requestMethod = null;
 			String requestUrl = null;
@@ -313,7 +295,7 @@ final public class InfoServiceConnection implements Runnable
 					int currentPos = 0;
 					while (currentPos < contentLength)
 					{
-						int byteRead = m_inputStream.read();
+						int byteRead = m_socket.getInputStream().read();
 						if (byteRead == -1)
 						{
 							throw (new Exception(
@@ -441,41 +423,12 @@ final public class InfoServiceConnection implements Runnable
 
 		try
 		{
-			if(!m_socket.isClosed())
-			{
-				m_socket.getOutputStream().close();
-			}
-		}
-		catch (IOException a_e)
-		{
-			/* if we get an error here, normally there was already one -> log only for debug reasons */
-			LogHolder.log(LogLevel.DEBUG, LogType.NET,
-						  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-//						  ", " + m_socket.getInetAddress() +
-						  "): Error while closing output stream to client!", a_e);
-		}
-
-		try
-		{
-			m_inputStream.close();
-		}
-		catch (Exception e)
-		{
-			/* if we get an error here, normally there was already one -> log only for debug reasons */
-			LogHolder.log(LogLevel.DEBUG, LogType.NET,
-						  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-//						  ", " + m_socket.getInetAddress() +
-						  "): Error while closing input stream from client!", e);
-		}
-		m_inputStream = null;
-		try
-		{
 			m_socket.close();
 		}
 		catch (Exception e)
 		{
 			/* if we get an error here, normally there was already one -> log only for debug reasons */
-			LogHolder.log(LogLevel.DEBUG, LogType.NET,
+			LogHolder.log(LogLevel.ERR, LogType.NET,
 						  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
 //						  ", " + m_socket.getInetAddress() +
 						  "): Error while closing connection!", e);
@@ -554,14 +507,14 @@ final public class InfoServiceConnection implements Runnable
 		int returnByte = -1;
 		try
 		{
-			returnByte = m_inputStream.read();
+			returnByte = m_socket.getInputStream().read();
 			m_byteLimit--;
 		}
 		catch (Exception e)
 		{
 			throw (e);
 		}
-		//This does not seem to be usefull as -1 means that EOF was reached - so we can not read something anyway - can't we?
+		//This does not seem to be useful as -1 means that EOF was reached - so we can not read something anyway - can't we?
 		//Therefore i comment this out...
 		/*if (returnByte == -1)
 		   {
