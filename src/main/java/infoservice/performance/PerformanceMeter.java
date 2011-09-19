@@ -595,7 +595,7 @@ public class PerformanceMeter implements Runnable, Observer
 	 *  
 	 * @param a_cascade The mix cascade that needs to be tested.
 	 */
-	private void startTest(final MixCascade a_cascade) 
+	private synchronized void startTest(final MixCascade a_cascade) 
 	{
 /*
 		if (!a_cascade.getId().equals("B13473DF6235B7F20EF0A5F74F69A32CC68745DE"))
@@ -639,6 +639,7 @@ public class PerformanceMeter implements Runnable, Observer
 		});
 		
 		// start the thread
+		LogHolder.log(LogLevel.WARNING, LogType.NET, "Starting test for: " + a_cascade);
 		performTestThread.start();
 		try
 		{
@@ -648,6 +649,7 @@ public class PerformanceMeter implements Runnable, Observer
 		{
 			// test is finished
 		}
+		LogHolder.log(LogLevel.WARNING, LogType.NET, "Finishing test for: " + a_cascade);
 						
 		// interrupt the test if it is not finished yet
 		try
@@ -669,7 +671,8 @@ public class PerformanceMeter implements Runnable, Observer
 		}
 		catch (InterruptedException e)
 		{
-			// test is finished
+			LogHolder.log(LogLevel.ERR, LogType.NET,
+					"Test was interrupted for service: " + a_cascade, e);
 		}
 		finally
 		{
@@ -728,6 +731,13 @@ public class PerformanceMeter implements Runnable, Observer
 				{								
 				}
 			}
+		}
+		
+		LogHolder.log(LogLevel.WARNING, LogType.NET, "Finished test for: " + a_cascade);
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+		
 		}
 	}
 
