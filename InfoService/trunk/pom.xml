@@ -5,7 +5,11 @@
 	<groupId>anon</groupId>
 	<artifactId>InfoService</artifactId>
 	<name>InfoService</name>
-	<version>00.08.112-SNAPSHOT</version>
+	<properties>
+		<anonlib.version>00.15.041</anonlib.version>
+		<infoservice.version>00.08.113-SNAPSHOT</infoservice.version>
+	</properties>
+	<version>${infoservice.version}</version>
 	<url>http://anon.inf.tu-dresden.de/</url>
 	<repositories>
 		<repository>
@@ -13,16 +17,9 @@
 			<url>http://anon.inf.tu-dresden.de/artifactory/repo</url>
 		</repository>
 	</repositories>
-	<build>
 
+	<build>
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-				</configuration>
-			</plugin>
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<version>2.2.1</version> <!-- previous versions have unacceptable errors! -->
@@ -60,7 +57,40 @@
 	</build>
 	<profiles>
 		<profile>
+			<id>default</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<dependencies>
+				<dependency>
+					<groupId>anon</groupId>
+					<artifactId>anonlib</artifactId>
+					<version>${anonlib.version}-SNAPSHOT</version>
+				</dependency>
+			</dependencies>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<version>2.3.2</version>
+						<configuration>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+		<profile>
 			<id>anon-cc-dev</id>
+			<dependencies>
+				<dependency>
+					<groupId>anon</groupId>
+					<artifactId>anonlib</artifactId>
+					<version>${anonlib.version}-SNAPSHOT</version>
+				</dependency>
+			</dependencies>
+
 			<distributionManagement>
 				<repository>
 					<id>anon.inf.tu-dresden.de-releases</id>
@@ -72,16 +102,61 @@
 					<name>anon.inf.tu-dresden.de-snapshots</name>
 					<url>https://anon.inf.tu-dresden.de:443/artifactory/artifacts-dev</url>
 				</snapshotRepository>
-
 			</distributionManagement>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<version>2.3.2</version>
+						<configuration>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+		<profile>
+			<id>anon-release</id>
+			<properties>
+				<infoservice.version>00.08.113</infoservice.version>
+			</properties>
+			<dependencies>
+				<dependency>
+					<groupId>anon</groupId>
+					<artifactId>anonlib</artifactId>
+					<version>${anonlib.version}</version>
+				</dependency>
+			</dependencies>
+			<distributionManagement>
+				<repository>
+					<id>anon.inf.tu-dresden.de-releases</id>
+					<name>anon.inf.tu-dresden.de-releases</name>
+					<url>https://anon.inf.tu-dresden.de:443/artifactory/artifacts-release</url>
+				</repository>
+				<snapshotRepository>
+					<id>anon.inf.tu-dresden.de-snapshots</id>
+					<name>anon.inf.tu-dresden.de-snapshots</name>
+					<url>https://anon.inf.tu-dresden.de:443/artifactory/artifacts-dev</url>
+				</snapshotRepository>
+			</distributionManagement>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<version>2.3.2</version>
+						<configuration>
+							<debug>false</debug>
+							<optimize>true</optimize>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 	</profiles>
+
 	<dependencies>
-		<dependency>
-			<groupId>anon</groupId>
-			<artifactId>anonlib</artifactId>
-			<version>00.15.041-SNAPSHOT</version>
-		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
