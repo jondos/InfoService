@@ -332,9 +332,9 @@ final public class InfoServiceConnection implements Runnable
 				
 				if (response == null)
 				{
-					LogHolder.log(LogLevel.WARNING, LogType.NET,
+					LogHolder.log(LogLevel.NOTICE, LogType.NET,
 								  "InfoServiceConnection (" + Integer.toString(m_connectionId) +
-//								  ", " + m_socket.getInetAddress() +
+			//					  ", " + m_socket.getInetAddress() +
 								  "): Response could not be generated: Request: " + requestMethod +
 								  " " + requestUrl);
 					response = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_NOT_FOUND);
