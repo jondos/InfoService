@@ -937,7 +937,7 @@ public class PerformanceMeter implements Runnable, Observer
 		}
 		
 		// try to fetch the current cascade status
-		a_cascade.fetchCurrentStatus();
+		//a_cascade.fetchCurrentStatus(); // useless, only takes time...
 		
 		// look for a performance entry for this cascade
 		PerformanceEntry entry = (PerformanceEntry) Database.getInstance(PerformanceEntry.class).getEntryById(a_cascade.getId());
@@ -948,7 +948,7 @@ public class PerformanceMeter implements Runnable, Observer
 			entry = new PerformanceEntry(a_cascade.getId());
 		}		
 		
-		//LogHolder.log(LogLevel.WARNING, LogType.NET, "Testing cascade " + a_cascade.getName() + "...");
+		LogHolder.log(LogLevel.WARNING, LogType.NET, "Testing cascade " + a_cascade.getName() + "...");
 		
 		while (!Thread.currentThread().isInterrupted())
 		{
@@ -1018,7 +1018,7 @@ public class PerformanceMeter implements Runnable, Observer
 		else
 		{
 				
-			LogHolder.log(LogLevel.NOTICE, LogType.NET, "Starting performance test on cascade " + a_cascade.getMixNames() + " with " + requestsPerInterval + " requests and " + m_maxWaitForTest + " ms timeout.");
+			LogHolder.log(LogLevel.WARNING, LogType.NET, "Starting performance test on cascade " + a_cascade.getMixNames() + " with " + requestsPerInterval + " requests and " + m_maxWaitForTest + " ms timeout.");
 			
 			// hashtable that holds the delay, speed and users value from this test			
 			
