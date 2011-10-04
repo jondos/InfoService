@@ -597,6 +597,9 @@ public class PerformanceMeter implements Runnable, Observer
 	 */
 	private synchronized void startTest(final MixCascade a_cascade) 
 	{
+		LogHolder.log(LogLevel.WARNING, LogType.MISC,
+				"Initiating performance test for service " + a_cascade + "...");
+		
 /*
 		if (!a_cascade.getId().equals("B13473DF6235B7F20EF0A5F74F69A32CC68745DE"))
 		{
@@ -625,21 +628,28 @@ public class PerformanceMeter implements Runnable, Observer
 			}
 		}
 		
+		LogHolder.log(LogLevel.WARNING, LogType.MISC,
+				"Create performance test thread for service " + a_cascade + "...");
+		
 		// create the test thread
 		performTestThread = new Thread(new Runnable()
 		{
 			public void run()
 			{
+				LogHolder.log(LogLevel.WARNING, LogType.MISC,
+						"Initiating performance test thread for service " + a_cascade + "...");
+				
 				// the actual testing is done inside performTest()
 				if (performTest(a_cascade) > 0)
 				{
 					m_lastTotalUpdates++;
+					LogHolder.log(LogLevel.WARNING, LogType.MISC,
+							"Finished performance test thread for service " + a_cascade + ".");
 				}										
 			}
 		});
 		
 		// start the thread
-		LogHolder.log(LogLevel.WARNING, LogType.NET, "Starting test for: " + a_cascade);
 		performTestThread.start();
 		try
 		{
