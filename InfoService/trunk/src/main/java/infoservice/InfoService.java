@@ -76,6 +76,7 @@ public class InfoService implements Observer
 	public static void main(String[] argv)
 	{
 		String fn = null;
+		String strPasswd=null;
 		if (argv.length >= 1)
 		{
 			fn = argv[0].trim();
@@ -116,12 +117,20 @@ public class InfoService implements Observer
 				System.out.println("InfoService version: " + INFOSERVICE_VERSION);
 				System.exit(0);
 			}
+			else if(fn.equalsIgnoreCase("--password"))
+				{
+					strPasswd=argv[1].trim();
+					if(argv.length>2)
+						fn = argv[2].trim();
+					else
+						fn=null;
+				}
 		}
 
 		// start the InfoService
 		try
 		{
-			InfoService s1 = new InfoService(fn);
+			InfoService s1 = new InfoService(fn,strPasswd);
 			
 			// start info service server
 			s1.startServer();
@@ -207,7 +216,7 @@ public class InfoService implements Observer
 			
 			try
 			{
-				loadConfig();
+				loadConfig(null);
 				ms_perfMeter.init();
 			}
 			catch(Exception ex)
@@ -246,11 +255,11 @@ public class InfoService implements Observer
 		}
 	}
 	
-	private InfoService(String a_configFileName) throws Exception
+	private InfoService(String a_configFileName,String strPasswd) throws Exception
 	{
 		m_configFileName = a_configFileName;
 		
-		loadConfig();
+		loadConfig(strPasswd);
 		
 		m_connectionCounter = 0;
 	}
@@ -296,7 +305,7 @@ public class InfoService implements Observer
 		}
 	}
 
-	private void loadConfig() throws Exception 
+	private void loadConfig(String strPasswd) throws Exception 
 	{
 		Properties properties = new Properties();
 		if (m_configFileName == null)
@@ -313,7 +322,7 @@ public class InfoService implements Observer
 			System.out.println(a_e.getMessage());
 			System.exit(1);
 		}
-		new Configuration(properties);
+		new Configuration(properties,strPasswd);
 	}
 
 	private void startServer() throws Exception
