@@ -13,7 +13,7 @@ import anon.crypto.PKCS10CertificationRequest;
 import anon.crypto.PKCS12;
 import anon.crypto.Validity;
 import anon.crypto.X509DistinguishedName;
-import anon.crypto.X509Extensions;
+import anon.crypto.MyX509Extensions;
 import anon.crypto.X509SubjectKeyIdentifier;
 
 public class KeyGenTest
@@ -83,7 +83,7 @@ public class KeyGenTest
 		FileOutputStream out1 = new FileOutputStream("private.pfx");
 		FileOutputStream out2 = new FileOutputStream("public.cer");
 		FileOutputStream out3 = new FileOutputStream("public.csr");
-		X509Extensions extensions = new X509Extensions(new X509SubjectKeyIdentifier(keyPair.getPublic()));
+		MyX509Extensions extensions = new MyX509Extensions(new X509SubjectKeyIdentifier(keyPair.getPublic()));
 		Hashtable<String, String> hashtable = new Hashtable<String, String>();
 		hashtable.put(X509DistinguishedName.IDENTIFIER_CN, strInfoServiceName);
 		hashtable.put(X509DistinguishedName.IDENTIFIER_C, strCountry);
