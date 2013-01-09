@@ -163,10 +163,10 @@ public class MailContext
 						while (stInfoServiceList.hasMoreTokens())
 							{
 								StringTokenizer stCurrentInfoService = new StringTokenizer(stInfoServiceList.nextToken(), ":");
-								Database.getInstance(InfoServiceDBEntry.class).update(
-										new InfoServiceDBEntry(null, null, new ListenerInterface(stCurrentInfoService.nextToken().trim(),
-												Integer.parseInt(stCurrentInfoService.nextToken().trim())).toVector(), true, true, 0, 0, false,
-												(ServiceSoftware) null));
+								InfoServiceDBEntry entry=new InfoServiceDBEntry(null, null, new ListenerInterface(stCurrentInfoService.nextToken().trim(),
+												Integer.parseInt(stCurrentInfoService.nextToken().trim())).toVector(), true, true, 0, 0, false,	(ServiceSoftware) null);
+								entry.setUserDefined(true);
+								Database.getInstance(InfoServiceDBEntry.class).update(entry);
 							}
 					}
 				InfoServiceHolder.getInstance().setChangeInfoServices(true);
