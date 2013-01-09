@@ -56,6 +56,7 @@ public class AllTests
 	public static Test suite()
 	{
 		TestSuite suite = new TestSuite(AllTests.class.getName());
+		suite.addTestSuite(infoservice.mailsystem.central.commands.GetForwarderCommandTest.class);
 		//suite.addTest(anon.test.AllTests.suite());
 		return suite;
 	}

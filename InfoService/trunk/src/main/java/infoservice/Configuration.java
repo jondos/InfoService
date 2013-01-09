@@ -1121,7 +1121,7 @@ final public class Configuration
 				return m_holdForwarderList;
 			}
 
-		private void loadTrustedCertificateFiles(Properties a_properties, String a_strProperty, int a_certificateType,
+		public static void loadTrustedCertificateFiles(Properties a_properties, String a_strProperty, int a_certificateType,
 				String a_strName, boolean bWarnIfNotAvailable)
 			{
 				String trustedCertFiles = a_properties.getProperty(a_strProperty);
@@ -1200,7 +1200,7 @@ final public class Configuration
 		 * @return The X509 certificate or null, if there was an error while loading
 		 *         the certificate from the specified file.
 		 */
-		private JAPCertificate loadX509Certificate(String a_x509FileName)
+		public static JAPCertificate loadX509Certificate(String a_x509FileName)
 			{
 				return JAPCertificate.getInstance(new File(a_x509FileName));
 			}
