@@ -41,7 +41,7 @@ public class MailSystem {
    * This is the default name and location of the mailsystem configuration file. We look
    * in the current path for the "mailsystem.conf" file.
    */
-  private static final String DEFAULT_CONFIG_FILE = "mailsystem.conf";
+  public static final String DEFAULT_CONFIG_FILE = "mailsystem.conf";
 
   
   /**

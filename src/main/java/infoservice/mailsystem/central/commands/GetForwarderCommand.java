@@ -37,37 +37,47 @@ import infoservice.mailsystem.central.MailMessages;
 import infoservice.mailsystem.central.AbstractMailSystemCommand;
 
 /**
- * This is the implementation for generating a reply message for the GetForwarder command.
+ * This is the implementation for generating a reply message for the
+ * GetForwarder command.
  */
-public class GetForwarderCommand extends AbstractMailSystemCommand {
+public class GetForwarderCommand extends AbstractMailSystemCommand
+	{
 
-  /**
-   * Creates a new instance of GetForwarderCommand.
-   *
-   * @param a_localization The MailMessages instance with the localization to use when creating
-   *                       the response message.
-   */
-  public GetForwarderCommand(MailMessages a_localization) {
-    super(a_localization);
-  }
+		/**
+		 * Creates a new instance of GetForwarderCommand.
+		 * 
+		 * @param a_localization
+		 *          The MailMessages instance with the localization to use when
+		 *          creating the response message.
+		 */
+		public GetForwarderCommand(MailMessages a_localization)
+			{
+				super(a_localization);
+			}
 
+		/**
+		 * Creates the response for the GetForwarder command. We connect to the
+		 * infoservices in the InfoServiceDatabase and try to fetch a forwarder.
+		 * 
+		 * @param a_receivedMessage
+		 *          The message we have received (not used).
+		 * @param a_replyMessage
+		 *          A pre-initialized message (recipients and subject already set),
+		 *          which shall be filled with the GetForwarder reply.
+		 */
+		public void createReplyMessage(MimeMessage a_receivedMessage, MimeMessage a_replyMessage) throws Exception
+			{
+				Element forwarderEntry = InfoServiceHolder.getInstance().getForwarder();
+				if (forwarderEntry != null)
+					{
+						a_replyMessage.setContent(
+								getLocalization().getString("getForwarderSuccessMessage")
+										+ XMLUtil.toString(forwarderEntry.getOwnerDocument()) + "\n", "text/plain");
+					}
+				else
+					{
+						a_replyMessage.setContent(getLocalization().getString("getForwarderFailureMessage"), "text/plain");
+					}
+			}
 
-  /**
-   * Creates the response for the GetForwarder command. We connect to the infoservices in the
-   * InfoServiceDatabase and try to fetch a forwarder.
-   *
-   * @param a_receivedMessage The message we have received (not used).
-   * @param a_replyMessage A pre-initialized message (recipients and subject already set), which
-   *                       shall be filled with the GetForwarder reply.
-   */  
-  public void createReplyMessage(MimeMessage a_receivedMessage, MimeMessage a_replyMessage) throws Exception {
-    Element forwarderEntry = InfoServiceHolder.getInstance().getForwarder();
-    if (forwarderEntry != null) {
-      a_replyMessage.setContent(getLocalization().getString("getForwarderSuccessMessage") + XMLUtil.toString(forwarderEntry.getOwnerDocument()) + "\n", "text/plain");
-    }
-    else {
-      a_replyMessage.setContent(getLocalization().getString("getForwarderFailureMessage"), "text/plain");
-    }
-  }
-  
-} 
+	}
