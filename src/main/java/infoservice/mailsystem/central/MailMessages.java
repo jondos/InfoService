@@ -34,73 +34,86 @@ import java.util.ResourceBundle;
 /**
  * This class is the implementation of the mail message localizations.
  */
-public class MailMessages {
+public class MailMessages
+	{
 
-  /**
-   * This is the base of the resource files. The single single resource files append this base
-   * .properties (default resource, if necessary) or _??.properties, where ?? is the language code,
-   * e.g. 'de' (localized resources).
-   */
-  private static final String RESOURCE_BASE = "infoservice/mailsystem/central/messages/MailMessages";
+		/**
+		 * This is the base of the resource files. The single single resource files
+		 * append this base .properties (default resource, if necessary) or
+		 * _??.properties, where ?? is the language code, e.g. 'de' (localized
+		 * resources).
+		 */
+		private static final String RESOURCE_BASE = "infoservice/mailsystem/central/messages/MailMessages";
 
-  /**
-   * This is the default localization (English as default).
-   */
-  private static final Locale DEFAULT_LOCALE = Locale.ENGLISH;
+		/**
+		 * This is the default localization (English as default).
+		 */
+		private static final Locale DEFAULT_LOCALE = Locale.ENGLISH;
 
+		/**
+		 * This stores the resource for the used localization.
+		 */
+		private ResourceBundle m_messageResource;
 
-  /**
-   * This stores the resource for the used localization.
-   */
-  private ResourceBundle m_messageResource;
+		/**
+		 * Creates a new MailMessages instance.
+		 * 
+		 * @param a_localeToUse
+		 *          The localization to use when obtaining strings via the new
+		 *          instance. If there is no resource for the specified
+		 *          localization, the default one is used.
+		 */
+		public MailMessages(Locale a_localeToUse)
+			{
+				try
+					{
+						m_messageResource = PropertyResourceBundle.getBundle(RESOURCE_BASE, a_localeToUse);
+					}
+				catch (Exception e)
+					{
+						/*
+						 * the resources for the specified locale could not be found, try to
+						 * get it for the default locale
+						 */
+						try
+							{
+								m_messageResource = PropertyResourceBundle.getBundle(RESOURCE_BASE, DEFAULT_LOCALE);
+							}
+						catch (Exception e2)
+							{
+								/* also the default locale isn't available, we can't do anything */
+								m_messageResource = null;
+							}
+					}
+			}
 
+		/**
+		 * Returns the localized version of the message assigned to the specified
+		 * key in the resource files.
+		 * 
+		 * @param a_key
+		 *          A key, which specifies the wanted message.
+		 * 
+		 * @return The localized version of the specified message. If we can't find
+		 *         a localized version of the message, the default localization is
+		 *         returned. If that also fails, the key itself is returned.
+		 */
+		public String getString(String a_key)
+			{
+				String localeString = null;
+				try
+					{
+						localeString = m_messageResource.getString(a_key);
+					}
+				catch (Exception e)
+					{
+						/*
+						 * if there was an exception, the default value (the key itself) is
+						 * returned
+						 */
+						localeString = a_key;
+					}
+				return localeString;
+			}
 
-  /**
-   * Creates a new MailMessages instance. 
-   *
-   * @param a_localeToUse The localization to use when obtaining strings via the new instance. If
-   *                      there is no resource for the specified localization, the default one is
-   *                      used.
-   */
-  public MailMessages(Locale a_localeToUse) {
-    try {
-      m_messageResource = PropertyResourceBundle.getBundle(RESOURCE_BASE, a_localeToUse);
-    }
-    catch (Exception e) {
-      /* the resources for the specified locale could not be found, try to get it for the default
-       * locale
-       */
-      try {
-        m_messageResource = PropertyResourceBundle.getBundle(RESOURCE_BASE, DEFAULT_LOCALE);
-      }
-      catch (Exception e2) {
-        /* also the default locale isn't available, we can't do anything */
-        m_messageResource = null;
-      }
-    }
-  }
-
-
-  /**
-   * Returns the localized version of the message assigned to the specified key in the resource
-   * files.
-   *
-   * @param a_key A key, which specifies the wanted message.
-   *
-   * @return The localized version of the specified message. If we can't find a localized version
-   *         of the message, the default localization is returned. If that also fails, the key
-   *         itself is returned.
-   */
-  public String getString(String a_key) {
-    String localeString = null;
-    try {
-      localeString = m_messageResource.getString(a_key);
-    }
-    catch (Exception e) {
-      /* if there was an exception, the default value (the key itself) is returned */
-      localeString = a_key;
-    }
-    return localeString;
-  }
-  
-}
+	}
