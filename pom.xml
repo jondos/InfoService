@@ -7,6 +7,12 @@
 	<name>InfoService</name>
 	<version>00.09.004-SNAPSHOT</version>
 	<url>http://anon.inf.tu-dresden.de/</url>
+		<properties>
+		<compiler.plugin.version>3.1</compiler.plugin.version>
+		<jdk.path>/opt/java/jdk1.7</jdk.path>
+		<jdk.version>1.7</jdk.version>
+	</properties>
+	
 	<repositories>
 		<repository>
 			<id>anon.inf.tu-dresden.de</id>
@@ -19,7 +25,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.0</version>
+						<version>${compiler.plugin.version}</version>
 				<configuration>
 				</configuration>
 			</plugin>
