@@ -19,8 +19,37 @@
 			<url>http://anon.inf.tu-dresden.de/artifactory/repo</url>
 		</repository>
 	</repositories>
+	<dependencies>
+		<dependency>
+			<groupId>anon</groupId>
+			<artifactId>anonlib</artifactId>
+			<version>00.18.011-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>3.8.1</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax.mail</groupId>
+			<artifactId>mail</artifactId>
+			<version>1.4.1</version>
+		</dependency>
+		<dependency>
+			<groupId>jama</groupId>
+			<artifactId>jama</artifactId>
+			<version>1.0.2</version>
+		</dependency>
+		<dependency>
+			<groupId>junitx</groupId>
+			<artifactId>junitx</artifactId>
+			<version>5.1</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 	<build>
-
+	    
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -82,34 +111,71 @@
 
 			</distributionManagement>
 		</profile>
+				<profile>
+			<!-- This profile is for creating a daily snapshot of the 
+				current developer version and publish it on the Web -->
+			<id>anon-cc-daily-snapshot</id>
+			<build>
+				<plugins>
+					<plugin>
+						<!-- This is for signing the .jar -->
+						<artifactId>maven-jarsigner-plugin</artifactId>
+						<version>1.2</version>
+						<executions>
+							<execution>
+								<id>sign-executable-jar</id>
+								<phase>package</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+								<configuration>
+									<alias>jap</alias>
+									<storepass>${jar.sign.storepass}</storepass> <!-- Has to be defined as a property in settings.xml -->
+									<keypass>${jar.sign.keypass}</keypass> <!-- dito -->
+									<sigfile>JAP-TEAM</sigfile>
+									<archive>${project.build.directory}/${project.artifactId}-${project.version}-jar-with-dependencies.jar</archive>
+									<verify>false</verify>
+									<processMainArtifact>false</processMainArtifact>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<!-- This runs an ANT script which does all the copying 
+							of the right files to the right positions... -->
+						<artifactId>maven-antrun-plugin</artifactId>
+						<version>1.6</version>
+						<executions>
+							<execution>
+								<phase>deploy</phase>
+								<configuration>
+									<target>
+										<property name="src_dir"
+											value="${project.build.sourceDirectory}" />
+										<property name="WWWDEVELOP" value="/var/www/JapWeb/develop/" />
+										<property name="signedJarFile"
+											value="${project.build.directory}/${project.artifactId}-${project.version}-jar-with-dependencies.jar" />
+										<ant
+											antfile="${basedir}/ant_build_maven_anon_cc_daily_snapshot.xml">
+											<target name="deploy_daily_snapshot" />
+										</ant>
+									</target>
+								</configuration>
+								<goals>
+									<goal>run</goal>
+								</goals>
+							</execution>
+						</executions>
+						<dependencies>
+							<dependency>
+								<groupId>org.apache.ant</groupId>
+								<artifactId>ant-nodeps</artifactId>
+								<version>1.8.1</version>
+							</dependency>
+						</dependencies>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 	</profiles>
-	<dependencies>
-		<dependency>
-			<groupId>anon</groupId>
-			<artifactId>anonlib</artifactId>
-			<version>00.18.011-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>javax.mail</groupId>
-			<artifactId>mail</artifactId>
-			<version>1.4.1</version>
-		</dependency>
-		<dependency>
-			<groupId>jama</groupId>
-			<artifactId>jama</artifactId>
-			<version>1.0.2</version>
-		</dependency>
-		<dependency>
-			<groupId>junitx</groupId>
-			<artifactId>junitx</artifactId>
-			<version>5.1</version>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
 </project>
