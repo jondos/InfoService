@@ -1,7 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <project name="InfoService">
 
-	<target name="deploy_daily_snapshot" >
+<target name="getCurrentVersionInformation">
+		<loadfile srcfile="${src_dir}/infoservice/InfoService.java"
+			property="currentVersion">
+			<filterchain>
+				<linecontains>
+					<contains value="public static final String INFOSERVICE_VERSION" />
+				</linecontains>
+				<tokenfilter>
+					<stringtokenizer delims='"' suppressdelims="true" />
+					<containsstring contains="." />
+				</tokenfilter>
+			</filterchain>
+		</loadfile>
+</target>
+		
+	<target name="deploy_daily_snapshot" depends="getCurrentVersionInformation" >
+		<echo message="${currentVersion}" file="${WWWDEVELOP}/infoserviceversion.txt" />
 		<copy file="${signedJarFile}" tofile="${WWWDEVELOP}/InfoService.jar" />
 	</target>
 </project>
