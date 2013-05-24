@@ -14,6 +14,7 @@
 				</tokenfilter>
 			</filterchain>
 		</loadfile>
+		<echo message="Current Version: ${currentVersion}" />
 </target>
 		
 	<target name="deploy_daily_snapshot" depends="getCurrentVersionInformation" >
