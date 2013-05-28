@@ -36,7 +36,10 @@
 		<!-- release it using REST-API -->
 		<http
 			url="https://sourceforge.net/projects/anon/files/infoservice-development/InfoService_${currentVersion}.jar"
-			method="PUT">
+			method="PUT" printrequest="true" printresponseheaders="true">
+			<headers>
+			<header name="Content-Type:" value="application/x-www-form-urlencoded"/>
+			</headers>
 			<entity>
 				<![CDATA[api_key=${sf.api.key}]]>
 			</entity>
