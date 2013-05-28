@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <project name="InfoService">
 
-	<taskdef name="http" classname="org.missinglink.ant.task.http.HttpClientTask">
+	<taskdef name="http"
+		classname="org.missinglink.ant.task.http.HttpClientTask">
 	</taskdef>
 
 	<target name="getCurrentVersionInformation">
@@ -28,9 +29,18 @@
 	</target>
 
 	<target name="deploy_to_sourceforge" depends="getCurrentVersionInformation">
-		<scp file="${signedJarFile}" 
-		remoteTofile="${sf.user}@frs.sourceforge.net:/home/frs/project/anon/infoservice-development/InfoService_${currentVersion}.jar"
-		password="${sf.pass}"/>
+		<!-- copy file to sf -->
+		<scp file="${signedJarFile}"
+			remoteTofile="${sf.user}@frs.sourceforge.net:/home/frs/project/anon/infoservice-development/InfoService_${currentVersion}.jar"
+			password="${sf.pass}" />
+		<!-- release it using REST-API -->
+		<http
+			url="https://sourceforge.net/projects/anon/files/infoservice-development/InfoService_${currentVersion}.jar"
+			method="PUT">
+			<query>
+				<parameter name="api_key" vaule="${sf.api.key}" />
+			</query>
+		</http>
 	</target>
 
 	<target name="deploy_daily_snapshot" depends="deploy_to_anon,deploy_to_sourceforge">
