@@ -40,9 +40,7 @@
 			<headers>
 			<header name="Content-Type:" value="application/x-www-form-urlencoded"/>
 			</headers>
-			<entity>
-				<![CDATA[api_key=${sf.api.key}]]>
-			</entity>
+			<entity>api_key=${sf.api.key}</entity>
 					</http>
 	</target>
 
