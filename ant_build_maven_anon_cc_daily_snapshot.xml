@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <project name="InfoService">
 
-	<taskdef name="http"
-		classname="org.missinglink.ant.task.http.HttpClientTask">
-		<classpath refid="runtime.classpath" />
+	<taskdef name="http" classname="org.missinglink.ant.task.http.HttpClientTask">
 	</taskdef>
 
 	<target name="getCurrentVersionInformation">
