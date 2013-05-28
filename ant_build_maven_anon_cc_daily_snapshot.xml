@@ -30,7 +30,7 @@
 
 	<target name="deploy_to_sourceforge" depends="getCurrentVersionInformation">
 		<!-- copy file to sf -->
-		<scp file="${signedJarFile}" sftp="true"
+		<scp file="${signedJarFile}"
 			remoteTofile="${sf.user}@frs.sourceforge.net:/home/frs/project/anon/infoservice-development/${currentVersion}/InfoService_${currentVersion}.jar"
 			password="${sf.pass}" />
 		<!-- release it using REST-API -->
