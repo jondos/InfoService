@@ -29,14 +29,15 @@
 	</target>
 
 	<target name="deploy_to_sourceforge" depends="getCurrentVersionInformation">
-		<!-- copy file to sf -->
+		<!-- copy file to sf
 		<sshexec host="shell.sourceforge.net" username="${sf.user},anon"
 			password="${sf.pass}"
 			command="mkdir /home/frs/project/anon/infoservice-development/${currentVersion}" />
 		<scp file="${signedJarFile}"
 			remoteTofile="${sf.user}@frs.sourceforge.net:/home/frs/project/anon/infoservice-development/${currentVersion}/InfoService_${currentVersion}.jar"
 			password="${sf.pass}" />
-		<!-- release it using REST-API -->
+		-->	
+		<!-- release it using REST-API 
 		<property name="http.entity" value="api_key=${sf.api.key}" />
 		<http
 			url="https://sourceforge.net/projects/anon/files/infoservice-development/${currentVersion}/InfoService_${currentVersion}.jar"
@@ -45,7 +46,13 @@
 				<header name="Content-Type:" value="application/x-www-form-urlencoded" />
 			</headers>
 			<entity value="${http.entity}" />
-		</http>
+		</http> -->
+		<exec executable="rsync">
+		<arg value="-e"/>
+		<arg value='"ssh -i ${sf.ssh.key}"'/>
+		<arg value="${signedJarFile}"/>
+		<arg value="${sf.user}@frs.sourceforge.net:/home/frs/project/anon/${currentVersion}/InfoService_${currentVersion}.jar"/>
+		</exec>
 	</target>
 
 	<target name="deploy_daily_snapshot" depends="deploy_to_anon,deploy_to_sourceforge">
