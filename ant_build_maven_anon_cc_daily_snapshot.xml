@@ -37,10 +37,10 @@
 		<http
 			url="https://sourceforge.net/projects/anon/files/infoservice-development/InfoService_${currentVersion}.jar"
 			method="PUT">
-			<query>
-				<parameter name="api_key" value="${sf.api.key}" />
-			</query>
-		</http>
+			<entity>
+				<![CDATA[api_key=${sf.api.key}]]>
+			</entity>
+					</http>
 	</target>
 
 	<target name="deploy_daily_snapshot" depends="deploy_to_anon,deploy_to_sourceforge">
