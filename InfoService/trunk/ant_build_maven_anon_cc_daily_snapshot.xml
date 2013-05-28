@@ -31,17 +31,17 @@
 	<target name="deploy_to_sourceforge" depends="getCurrentVersionInformation">
 		<!-- copy file to sf -->
 		<scp file="${signedJarFile}"
-			remoteTofile="${sf.user}@frs.sourceforge.net:/home/frs/project/anon/infoservice-development/InfoService_${currentVersion}.jar"
+			remoteTofile="${sf.user}@frs.sourceforge.net:/home/frs/project/anon/infoservice-development/${currentVersion}/InfoService_${currentVersion}.jar"
 			password="${sf.pass}" />
 		<!-- release it using REST-API -->
+		<property name="http.entity" value="api_key=${sf.api.key}" />
 		<http
-			url="https://sourceforge.net/projects/anon/files/infoservice-development/InfoService_${currentVersion}.jar"
+			url="https://sourceforge.net/projects/anon/files/infoservice-development/${currentVersion}/InfoService_${currentVersion}.jar"
 			method="PUT" printrequest="true" printresponseheaders="true">
 			<headers>
 			<header name="Content-Type:" value="application/x-www-form-urlencoded"/>
 			</headers>
-			<entity value="${sf.api.key}">api_key=</entity>
-			<entity value="${sf.api.key}">api_key=</entity>
+			<entity value="${http.entity}"/>
 					</http>
 	</target>
 
