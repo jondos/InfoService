@@ -22,8 +22,18 @@
 		<echo message="Current Version: ${currentVersion}" />
 	</target>
 
-	<target name="deploy_daily_snapshot" depends="getCurrentVersionInformation">
+	<target name="deploy_to_anon" depends="getCurrentVersionInformation">
 		<echo message="${currentVersion}" file="${WWWDEVELOP}/infoserviceversion.txt" />
 		<copy file="${signedJarFile}" tofile="${WWWDEVELOP}/InfoService.jar" />
 	</target>
+
+	<target name="deploy_to_sourceforge" depends="getCurrentVersionInformation">
+		<scp file="${signedJarFile}" 
+		remoteTofile="${sf.user}@frs.sourceforge.net:/home/frs/project/anon/infoservice-development/InfoService_${currentVersion}.jar"
+		password="${sf.pass}"/>
+	</target>
+
+	<target name="deploy_daily_snapshot" depends="deploy_to_anon,deploy_to_sourceforge">
+	</target>
+
 </project>
