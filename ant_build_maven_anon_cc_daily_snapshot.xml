@@ -47,7 +47,7 @@
 			</headers>
 			<entity value="${http.entity}" />
 		</http> -->
-		<exec executable="rsync">
+		<exec executable="rsync" failonerror="true">
 		<arg value="-e"/>
 		<arg value="ssh -i ${sf.ssh.key}"/>
 		<arg value="${signedJarFile}"/>
