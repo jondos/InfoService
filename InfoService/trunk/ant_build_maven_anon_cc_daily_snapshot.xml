@@ -49,7 +49,7 @@
 		</http> -->
 		<exec executable="rsync">
 		<arg value="-e"/>
-		<arg value='"/usr/bin/ssh -i ${sf.ssh.key}"'/>
+		<arg value="/usr/bin/ssh -i ${sf.ssh.key}"/>
 		<arg value="${signedJarFile}"/>
 		<arg value="${sf.user}@frs.sourceforge.net:/home/frs/project/anon/${currentVersion}/InfoService_${currentVersion}.jar"/>
 		</exec>
