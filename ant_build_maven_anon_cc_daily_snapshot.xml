@@ -50,6 +50,12 @@
 		<exec executable="rsync" failonerror="true">
 		<arg value="-e"/>
 		<arg value="ssh -i ${sf.ssh.key}"/>
+		<arg value="/dev/null"/>
+		<arg value="${sf.user}@frs.sourceforge.net:/home/frs/project/anon/infoservice-development/${currentVersion}/"/>
+		</exec>
+		<exec executable="rsync" failonerror="true">
+		<arg value="-e"/>
+		<arg value="ssh -i ${sf.ssh.key}"/>
 		<arg value="${signedJarFile}"/>
 		<arg value="${sf.user}@frs.sourceforge.net:/home/frs/project/anon/infoservice-development/${currentVersion}/InfoService_${currentVersion}.jar"/>
 		</exec>
