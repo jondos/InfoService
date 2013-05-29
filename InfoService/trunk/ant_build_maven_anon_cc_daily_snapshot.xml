@@ -51,7 +51,7 @@
 		<arg value="-e"/>
 		<arg value="ssh -i ${sf.ssh.key}"/>
 		<arg value="${signedJarFile}"/>
-		<arg value="${sf.user}@frs.sourceforge.net:/home/frs/project/anon/${currentVersion}/InfoService_${currentVersion}.jar"/>
+		<arg value="${sf.user}@frs.sourceforge.net:/home/frs/project/anon/infoservice-development/${currentVersion}/InfoService_${currentVersion}.jar"/>
 		</exec>
 	</target>
 
