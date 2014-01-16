@@ -2141,8 +2141,8 @@ final public class InfoServiceCommands implements JWSInternalCommands
 				 ( method == Constants.REQUEST_METHOD_GET ) )
 		{
 			/** Full Command: GET /cascadewebinfos
-			 * Source: ?
-			 * Category: ?
+			 * Source: Browser
+			 * Category: usability
 			 * Description: ?
 			 * Description_de: 
 			 */
@@ -2151,8 +2151,8 @@ final public class InfoServiceCommands implements JWSInternalCommands
 		else if( (command.startsWith(MixCascade.INFOSERVICE_COMMAND_WEBINFO) && (method == Constants.REQUEST_METHOD_GET)))
 		{
 			/** Full Command: GET /cascadewebinfo/[cascadeid]
-			 * Source: ?
-			 * Category: ?
+			 * Source: Browser
+			 * Category: usability
 			 * Description: ?
 			 * Description_de: 
 			 */
