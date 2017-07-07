@@ -12,8 +12,8 @@
 		<assembly.plugin.version>3.0.0</assembly.plugin.version>
 		<signer.plugin.version>1.4</signer.plugin.version>
 		<antrun.plugin.version>1.8</antrun.plugin.version>
-		<jdk.path>/opt/java/jdk1.7</jdk.path>
-		<jdk.version>1.7</jdk.version>
+		<jdk.path>/opt/java/jdk1.8</jdk.path>
+		<jdk.version>1.8</jdk.version>
 	</properties>
 	
 	<repositories>
