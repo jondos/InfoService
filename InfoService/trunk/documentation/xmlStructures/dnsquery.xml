@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DNSQuery>
+	<Queries>
+		<Query id="ID"> <!-- id will be used to link a query with a response -->
+			<QName></QName> <!-- the domain name asked for (see RFC 1035) -->
+		</Query>
+	</Queries>
+</DNSQuery>

@@ -5,10 +5,13 @@
 	<groupId>anon</groupId>
 	<artifactId>InfoService</artifactId>
 	<name>InfoService</name>
-	<version>00.09.006-SNAPSHOT</version>
+	<version>00.09.008-SNAPSHOT</version>
 	<url>http://anon.inf.tu-dresden.de/</url>
 		<properties>
-		<compiler.plugin.version>3.1</compiler.plugin.version>
+		<compiler.plugin.version>3.6.1</compiler.plugin.version>
+		<assembly.plugin.version>3.0.0</assembly.plugin.version>
+		<signer.plugin.version>1.4</signer.plugin.version>
+		<antrun.plugin.version>1.8</antrun.plugin.version>
 		<jdk.path>/opt/java/jdk1.7</jdk.path>
 		<jdk.version>1.7</jdk.version>
 	</properties>
@@ -29,7 +32,7 @@
 		<dependency>
 			<groupId>anon</groupId>
 			<artifactId>anonlib</artifactId>
-			<version>00.20.001-SNAPSHOT</version>
+			<version>00.20.011-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -66,7 +69,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
-				<version>2.4</version> <!-- previous versions have unacceptable errors! -->
+				<version>${assembly.plugin.version}</version> <!-- previous versions have unacceptable errors! -->
 				<executions>
 					<execution>
 						<id>create-executable-jar</id>
@@ -126,7 +129,7 @@
 					<plugin>
 						<!-- This is for signing the .jar -->
 						<artifactId>maven-jarsigner-plugin</artifactId>
-						<version>1.2</version>
+						<version>${signer.plugin.version}</version>
 						<executions>
 							<execution>
 								<id>sign-executable-jar</id>
@@ -150,7 +153,7 @@
 						<!-- This runs an ANT script which does all the copying 
 							of the right files to the right positions... -->
 						<artifactId>maven-antrun-plugin</artifactId>
-						<version>1.7</version>
+						<version>${antrun.plugin.version}</version>
 						<executions>
 							<execution>
 								<phase>deploy</phase>
