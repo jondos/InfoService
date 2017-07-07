@@ -98,7 +98,7 @@ final public class Configuration
 		 * Stores the ListenerInterfaces of all interfaces our infoservice
 		 * propagates to others.
 		 */
-		private Vector m_virtualListenerList;
+		private Vector<ListenerInterface> m_virtualListenerList;
 
 		/**
 		 * Stores all hosts (virtual and hardware) the infoservice ist listening on
@@ -308,7 +308,7 @@ final public class Configuration
 
 						if (strVirtualListeners != null)
 							{
-								m_virtualListenerList = new Vector();
+								m_virtualListenerList = new Vector<ListenerInterface>();
 								StringTokenizer stVirtual = new StringTokenizer(strVirtualListeners.trim(), ",");
 								while (stVirtual.hasMoreTokens())
 									{
@@ -323,7 +323,7 @@ final public class Configuration
 							}
 						else
 							{
-								m_virtualListenerList = (Vector) m_hardwareListenerList.clone();
+								m_virtualListenerList =  (Vector<ListenerInterface>) m_hardwareListenerList.clone();
 							}
 
 						/* only for compatibility */
@@ -928,7 +928,7 @@ final public class Configuration
 		 * 
 		 * @return the ListenerInterfaces of propagated interfaces.
 		 */
-		public Vector getVirtualListeners()
+		public Vector<ListenerInterface> getVirtualListeners()
 			{
 				return m_virtualListenerList;
 			}
