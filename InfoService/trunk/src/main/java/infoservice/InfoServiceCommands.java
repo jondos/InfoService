@@ -647,7 +647,7 @@ final public class InfoServiceCommands implements JWSInternalCommands
 						while(st.hasMoreTokens())
 							{
 								String strToken=st.nextToken();
-								String strValue=strToken.substring(strToken.indexOf('='));
+								String strValue=strToken.substring(strToken.indexOf('=')+1);
 								if(strToken.startsWith("QNAME"))
 									{
 										strQName=strValue;
