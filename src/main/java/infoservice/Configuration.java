@@ -92,7 +92,7 @@ final public class Configuration
 		 * Stores the ListenerInterfaces of all interfaces our infoservice is bound
 		 * to.
 		 */
-		private Vector m_hardwareListenerList;
+		private Vector<ListenerInterface> m_hardwareListenerList;
 
 		/**
 		 * Stores the ListenerInterfaces of all interfaces our infoservice
@@ -294,7 +294,7 @@ final public class Configuration
 
 						/* create a list of all interfaces we are listening on */
 						m_hostList = new Vector();
-						m_hardwareListenerList = new Vector();
+						m_hardwareListenerList = new Vector<ListenerInterface>();
 						while (stHardware.hasMoreTokens())
 							{
 								ListenerInterface iface = new ListenerInterface(stHardware.nextToken());
@@ -911,7 +911,7 @@ final public class Configuration
 		 * 
 		 * @return the ListenerInterfaces of bound interfaces.
 		 */
-		public Vector getHardwareListeners()
+		public Vector<ListenerInterface> getHardwareListeners()
 			{
 				return m_hardwareListenerList;
 			}

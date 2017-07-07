@@ -36,7 +36,6 @@ import java.util.Properties;
 import java.util.Locale;
 import java.util.Observer;
 import java.util.Observable;
-//import platform.signal.SignalHandler;
 
 import infoservice.PassiveInfoServiceInitializer;
 import infoservice.performance.PerformanceMeter;
@@ -57,333 +56,330 @@ import logging.LogLevel;
 import logging.LogType;
 
 public class InfoService implements Observer
-{
-	/**
-	 * This is the version number of the infoservice software.
-	 */
-	public static final String INFOSERVICE_VERSION = "IS.09.006"; //never change the layout of this line!
-	
-	protected JWSInternalCommands oicHandler;
-
-	private static int m_connectionCounter;
-	private static PerformanceMeter ms_perfMeter;
-	private static AccountUpdater ms_accountUpdater;
-	
-	private String m_configFileName;
-	
-	protected ThreadPool m_ThreadPool;
-
-	public static void main(String[] argv)
 	{
-		String fn = null;
-		String strPasswd=null;
-		if (argv.length >= 1)
-		{
-			fn = argv[0].trim();
-		}
-		if (fn != null)
-		{
-			if (fn.equalsIgnoreCase("--generatekey"))
+		/**
+		 * This is the version number of the infoservice software.
+		 */
+		public static final String INFOSERVICE_VERSION = "IS.09.007"; //never change the layout of this line!
+
+		protected JWSInternalCommands oicHandler;
+
+		private static int m_connectionCounter;
+		private static PerformanceMeter ms_perfMeter;
+		private static AccountUpdater ms_accountUpdater;
+
+		private String m_configFileName;
+
+		protected ThreadPool m_ThreadPool;
+
+		public static void main(String[] argv)
 			{
-				int i = 1;
-				String isName=null;
-				String passwd=null;
-				try
-				{
-					while (i < argv.length)
+				String fn = null;
+				String strPasswd = null;
+				if (argv.length >= 1)
 					{
-						String arg = argv[i].trim();
-						if (arg.equals("--name"))
-						{
-							i++;
-							isName = argv[i].trim();
-						}
-						else if (arg.equals("--passwd"))
-						{
-							i++;
-							passwd = argv[i].trim();
-						}
-						i++;
+						fn = argv[0].trim();
 					}
-				}
-				catch (Throwable t)
-				{
-				}
-				InfoService.generateKeyPair(isName, passwd);
-				System.exit(0);
-			}
-			else if (fn.equalsIgnoreCase("--version"))
-			{
-				System.out.println("InfoService version: " + INFOSERVICE_VERSION);
-				System.exit(0);
-			}
-			else if(fn.equalsIgnoreCase("--password"))
-				{
-					strPasswd=argv[1].trim();
-					if(argv.length>2)
-						fn = argv[2].trim();
-					else
-						fn=null;
-				}
-		}
-
-		// start the InfoService
-		try
-		{
-			InfoService s1 = new InfoService(fn,strPasswd);
-			
-			// start info service server
-			s1.startServer();
-			
-//			 configure the performance meter
-			if (Configuration.getInstance().isPerfEnabled())
-			{				
-				LogHolder.log(LogLevel.NOTICE, LogType.NET, "Starting Performance Meter...");
-				
-				ms_accountUpdater = new AccountUpdater(false);		
-				ms_accountUpdater.start(false);				
-				ms_perfMeter = new PerformanceMeter(ms_accountUpdater);
-				Thread perfMeterThread = new Thread(InfoService.ms_perfMeter);			
-				perfMeterThread.start();
-			}
-			else
-			{
-				InfoService.ms_perfMeter = null;
-			}
-			
-			/*SignalHandler handler = new SignalHandler();
-			handler.addObserver(s1);
-			handler.addSignal("HUP");
-			handler.addSignal("TERM");
-			*/
-			
-			JAPMessages.setLocale(Locale.ENGLISH);			
-
-			System.out.println("InfoService is running!");
-			
-			Thread tacLoader = new Thread()
-			{
-				public void run()
-				{
-					while(true)
-					{							
-						try
-						{
-							Thread.sleep(1000*60*60 * 5);	
-						}
-						catch(InterruptedException ex)
-						{
-							break;
-						}
-						try
-						{
-							loadTemplatesFromDirectory(
-									Configuration.getInstance().getTermsAndConditionsDir());
-						} 
-						catch (SignatureException e)
-						{
-							LogHolder.log(LogLevel.EMERG, LogType.CRYPTO, e);
-						}
+				if (fn != null)
+					{
+						if (fn.equalsIgnoreCase("--generatekey"))
+							{
+								int i = 1;
+								String isName = null;
+								String passwd = null;
+								try
+									{
+										while (i < argv.length)
+											{
+												String arg = argv[i].trim();
+												if (arg.equals("--name"))
+													{
+														i++;
+														isName = argv[i].trim();
+													}
+												else if (arg.equals("--passwd"))
+													{
+														i++;
+														passwd = argv[i].trim();
+													}
+												i++;
+											}
+									}
+								catch (Throwable t)
+									{
+									}
+								InfoService.generateKeyPair(isName, passwd);
+								System.exit(0);
+							}
+						else if (fn.equalsIgnoreCase("--version"))
+							{
+								System.out.println("InfoService version: " + INFOSERVICE_VERSION);
+								System.exit(0);
+							}
+						else if (fn.equalsIgnoreCase("--password"))
+							{
+								strPasswd = argv[1].trim();
+								if (argv.length > 2)
+									fn = argv[2].trim();
+								else
+									fn = null;
+							}
 					}
-				}
-			};
-			loadTemplatesFromDirectory(
-					Configuration.getInstance().getTermsAndConditionsDir());
-			
-			tacLoader.start();
-		}
-		catch (Exception e)
-		{
-			System.out.println("Cannot start InfoService...");
-			e.printStackTrace();
-			System.exit(1);
-		}
-	}
-	
-	public void update(Observable a_ob, Object a_args)
-	{
-		if(a_args == null || a_args.toString() == null)
-		{
-			return;
-		}
-		
-		String signal = a_args.toString();
-		
-		if(signal.equals("SIGHUP"))
-		{
-			System.out.println("Reloading configuration...");
-			LogHolder.log(LogLevel.ALERT, LogType.ALL, "Caught SIGHUP. Reloading config...");
-			
-			try
-			{
-				loadConfig(null);
-				ms_perfMeter.init();
+
+				// start the InfoService
+				try
+					{
+						InfoService s1 = new InfoService(fn, strPasswd);
+
+						// start info service server
+						s1.startServer();
+
+						//			 configure the performance meter
+						if (Configuration.getInstance().isPerfEnabled())
+							{
+								LogHolder.log(LogLevel.NOTICE, LogType.NET, "Starting Performance Meter...");
+
+								ms_accountUpdater = new AccountUpdater(false);
+								ms_accountUpdater.start(false);
+								ms_perfMeter = new PerformanceMeter(ms_accountUpdater);
+								Thread perfMeterThread = new Thread(InfoService.ms_perfMeter);
+								perfMeterThread.start();
+							}
+						else
+							{
+								InfoService.ms_perfMeter = null;
+							}
+
+						/*SignalHandler handler = new SignalHandler();
+						handler.addObserver(s1);
+						handler.addSignal("HUP");
+						handler.addSignal("TERM");
+						*/
+
+						JAPMessages.setLocale(Locale.ENGLISH);
+
+						System.out.println("InfoService is running!");
+
+						Thread tacLoader = new Thread()
+							{
+								public void run()
+									{
+										while (true)
+											{
+												try
+													{
+														Thread.sleep(1000 * 60 * 60 * 5);
+													}
+												catch (InterruptedException ex)
+													{
+														break;
+													}
+												try
+													{
+														loadTemplatesFromDirectory(Configuration.getInstance().getTermsAndConditionsDir());
+													}
+												catch (SignatureException e)
+													{
+														LogHolder.log(LogLevel.EMERG, LogType.CRYPTO, e);
+													}
+											}
+									}
+							};
+						loadTemplatesFromDirectory(Configuration.getInstance().getTermsAndConditionsDir());
+
+						tacLoader.start();
+					}
+				catch (Exception e)
+					{
+						System.out.println("Cannot start InfoService...");
+						e.printStackTrace();
+						System.exit(1);
+					}
 			}
-			catch(Exception ex)
+
+		public void update(Observable a_ob, Object a_args)
 			{
-				System.out.println("Could not load configuration. Exiting...");
-				LogHolder.log(LogLevel.ALERT, LogType.ALL, "Could not load configuration. Exiting...");
+				if (a_args == null || a_args.toString() == null)
+					{
+						return;
+					}
+
+				String signal = a_args.toString();
+
+				if (signal.equals("SIGHUP"))
+					{
+						System.out.println("Reloading configuration...");
+						LogHolder.log(LogLevel.ALERT, LogType.ALL, "Caught SIGHUP. Reloading config...");
+
+						try
+							{
+								loadConfig(null);
+								ms_perfMeter.init();
+							}
+						catch (Exception ex)
+							{
+								System.out.println("Could not load configuration. Exiting...");
+								LogHolder.log(LogLevel.ALERT, LogType.ALL, "Could not load configuration. Exiting...");
+							}
+					}
+
+				if (signal.equals("SIGTERM"))
+					{
+						System.out.println("Exiting...");
+						LogHolder.log(LogLevel.ALERT, LogType.ALL, "Caught SIGTERM. Exiting...");
+
+						stopServer();
+
+						System.exit(1);
+					}
 			}
-		}
-		
-		if (signal.equals("SIGTERM"))
-		{
-			System.out.println("Exiting...");
-			LogHolder.log(LogLevel.ALERT, LogType.ALL, "Caught SIGTERM. Exiting...");
-			
-			stopServer();
-			
-			System.exit(1);
-		}
-	}
 
-	/**
-	 * Generates a key pair for the infoservice
-	 */
-	private static void generateKeyPair(String isName, String passwd)
-	{
-		try
-		{
-			System.out.println("Start generating new KeyPair (this can take some minutes)...");
-			KeyGenTest.generateKeys(isName, passwd);
-			System.out.println("Finished generating new KeyPair!");
-		}
-		catch (Exception e)
-		{
-			System.out.println("Error generating KeyPair!");
-			e.printStackTrace();
-		}
-	}
-	
-	private InfoService(String a_configFileName,String strPasswd) throws Exception
-	{
-		m_configFileName = a_configFileName;
-		
-		loadConfig(strPasswd);
-		
-		m_connectionCounter = 0;
-	}
-
-	public static void loadTemplatesFromDirectory(File a_dir) throws SignatureException
-	{
-		File file = null;
-			
-		if(a_dir == null)
-		{
-			return;
-		}
-		
-		String[] files = a_dir.list();
-			
-		if(files == null)
-		{
-			return;
-		}
-			
-		/* Loop through all files in the directory to find XML files */
-		for (int i = 0; i < files.length; i++)
-		{
-			try
+		/**
+		 * Generates a key pair for the infoservice
+		 */
+		private static void generateKeyPair(String isName, String passwd)
 			{
-				file = new File(a_dir.getAbsolutePath() + File.separator + files[i]);
-				TermsAndConditionsTemplate tac = new TermsAndConditionsTemplate(file);
-				if (!tac.isVerified())
-				{
-					throw new SignatureException("Cannot verify tac template file: " + tac.getId());
-				}
-				
-				Database.getInstance(TermsAndConditionsTemplate.class).update(tac);
+				try
+					{
+						System.out.println("Start generating new KeyPair (this can take some minutes)...");
+						KeyGenTest.generateKeys(isName, passwd);
+						System.out.println("Finished generating new KeyPair!");
+					}
+				catch (Exception e)
+					{
+						System.out.println("Error generating KeyPair!");
+						e.printStackTrace();
+					}
 			}
-			catch(XMLParseException ex)
+
+		private InfoService(String a_configFileName, String strPasswd) throws Exception
 			{
-				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "XMLParseException while loading Terms & Conditions: ", ex);
+				m_configFileName = a_configFileName;
+
+				loadConfig(strPasswd);
+
+				m_connectionCounter = 0;
 			}
-			catch(IOException ex)
+
+		public static void loadTemplatesFromDirectory(File a_dir) throws SignatureException
 			{
-				LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "IOException while loading Terms & Conditions: ", ex);
+				File file = null;
+
+				if (a_dir == null)
+					{
+						return;
+					}
+
+				String[] files = a_dir.list();
+
+				if (files == null)
+					{
+						return;
+					}
+
+				/* Loop through all files in the directory to find XML files */
+				for (int i = 0; i < files.length; i++)
+					{
+						try
+							{
+								file = new File(a_dir.getAbsolutePath() + File.separator + files[i]);
+								TermsAndConditionsTemplate tac = new TermsAndConditionsTemplate(file);
+								if (!tac.isVerified())
+									{
+										throw new SignatureException("Cannot verify tac template file: " + tac.getId());
+									}
+
+								Database.getInstance(TermsAndConditionsTemplate.class).update(tac);
+							}
+						catch (XMLParseException ex)
+							{
+								LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "XMLParseException while loading Terms & Conditions: ",
+										ex);
+							}
+						catch (IOException ex)
+							{
+								LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, "IOException while loading Terms & Conditions: ", ex);
+							}
+					}
 			}
-		}
-	}
 
-	private void loadConfig(String strPasswd) throws Exception 
-	{
-		Properties properties = new Properties();
-		if (m_configFileName == null)
-		{
-			m_configFileName = Constants.DEFAULT_RESSOURCE_FILENAME;
-		}
-		try
-		{
-			properties.load(new FileInputStream(m_configFileName));
-		}
-		catch (Exception a_e)
-		{
-			System.out.println("Error reading configuration!");
-			System.out.println(a_e.getMessage());
-			System.exit(1);
-		}
-		new Configuration(properties,strPasswd);
-	}
-
-	private void startServer() throws Exception
-	{
-		HTTPConnectionFactory.getInstance().setTimeout(Constants.COMMUNICATION_TIMEOUT);
-		/* initialize Distributor */
-		
-		
-		/* initialize internal commands of InfoService */
-		oicHandler = new InfoServiceCommands();
-		/* initialize propagandist for our infoservice */
-		if(!Configuration.getInstance().isPassive())
-		{
-			InfoServicePropagandist.generateInfoServicePropagandist(ms_perfMeter);
-			Database.registerDistributor(InfoServiceDistributor.getInstance());
-		}
-		else
-		{
-			// suppress distributor warnings
-			Database.registerDistributor(new IDistributor()
+		private void loadConfig(String strPasswd) throws Exception
 			{
-				public void addJob(IDistributable a_distributable)
-				{
-				}
-			});
-			//in passive mode we obtain our information by requesting it from other services
-			PassiveInfoServiceInitializer.init();
-		}
-		// start server
-		LogHolder.log(LogLevel.EMERG, LogType.MISC, "InfoService -- Version " + INFOSERVICE_VERSION);
-		LogHolder.log(LogLevel.EMERG, LogType.MISC, System.getProperty("java.version"));
-		LogHolder.log(LogLevel.EMERG, LogType.MISC, System.getProperty("java.vendor"));
-		LogHolder.log(LogLevel.EMERG, LogType.MISC, System.getProperty("java.home"));
-		LogHolder.log(LogLevel.EMERG, LogType.MISC, System.getProperty("os.name"));
-		LogHolder.log(LogLevel.EMERG, LogType.MISC, System.getProperty("os.arch"));
-		LogHolder.log(LogLevel.EMERG, LogType.MISC, System.getProperty("os.version"));
-		m_ThreadPool = new ThreadPool("ISConnection",
-									  Configuration.getInstance().getNrOfConcurrentConnections());
-		TimedOutputStream.init();
-		Enumeration enumer = Configuration.getInstance().getHardwareListeners().elements();
-		while (enumer.hasMoreElements())
-		{
-			InfoServiceServer server = new InfoServiceServer( (ListenerInterface) (enumer.nextElement()), this);
-			Thread currentThread = new Thread(server, server.toString());
-			currentThread.setDaemon(true);
-			currentThread.start();
-		}
-	}
-	
-	private void stopServer()
-	{
-		// TODO: implement
-	}
+				Properties properties = new Properties();
+				if (m_configFileName == null)
+					{
+						m_configFileName = Constants.DEFAULT_RESSOURCE_FILENAME;
+					}
+				try
+					{
+						properties.load(new FileInputStream(m_configFileName));
+					}
+				catch (Exception a_e)
+					{
+						System.out.println("Error reading configuration!");
+						System.out.println(a_e.getMessage());
+						System.exit(1);
+					}
+				new Configuration(properties, strPasswd);
+			}
 
-	protected static int getConnectionCounter()
-	{
-		return m_connectionCounter++;
-	}
+		private void startServer() throws Exception
+			{
+				HTTPConnectionFactory.getInstance().setTimeout(Constants.COMMUNICATION_TIMEOUT);
+				/* initialize Distributor */
 
-	protected static PerformanceMeter getPerfMeter()
-	{
-		return ms_perfMeter;
+				/* initialize internal commands of InfoService */
+				oicHandler = new InfoServiceCommands();
+				/* initialize propagandist for our infoservice */
+				if (!Configuration.getInstance().isPassive())
+					{
+						InfoServicePropagandist.generateInfoServicePropagandist(ms_perfMeter);
+						Database.registerDistributor(InfoServiceDistributor.getInstance());
+					}
+				else
+					{
+						// suppress distributor warnings
+						Database.registerDistributor(new IDistributor()
+							{
+								public void addJob(IDistributable a_distributable)
+									{
+									}
+							});
+						//in passive mode we obtain our information by requesting it from other services
+						PassiveInfoServiceInitializer.init();
+					}
+				// start server
+				LogHolder.log(LogLevel.EMERG, LogType.MISC, "InfoService -- Version " + INFOSERVICE_VERSION);
+				LogHolder.log(LogLevel.EMERG, LogType.MISC, System.getProperty("java.version"));
+				LogHolder.log(LogLevel.EMERG, LogType.MISC, System.getProperty("java.vendor"));
+				LogHolder.log(LogLevel.EMERG, LogType.MISC, System.getProperty("java.home"));
+				LogHolder.log(LogLevel.EMERG, LogType.MISC, System.getProperty("os.name"));
+				LogHolder.log(LogLevel.EMERG, LogType.MISC, System.getProperty("os.arch"));
+				LogHolder.log(LogLevel.EMERG, LogType.MISC, System.getProperty("os.version"));
+				m_ThreadPool = new ThreadPool("ISConnection", Configuration.getInstance().getNrOfConcurrentConnections());
+				TimedOutputStream.init();
+				Enumeration<ListenerInterface> enumer = Configuration.getInstance().getHardwareListeners().elements();
+				while (enumer.hasMoreElements())
+					{
+						InfoServiceServer server = new InfoServiceServer(enumer.nextElement(), this);
+						Thread currentThread = new Thread(server, server.toString());
+						currentThread.setDaemon(true);
+						currentThread.start();
+					}
+			}
+
+		private void stopServer()
+			{
+				// TODO: implement
+			}
+
+		protected static int getConnectionCounter()
+			{
+				return m_connectionCounter++;
+			}
+
+		protected static PerformanceMeter getPerfMeter()
+			{
+				return ms_perfMeter;
+			}
 	}
-}

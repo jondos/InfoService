@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DNSResponse>
+	<Responses>
+		<Response id="ID"> <!-- id will be used to link a response to the query -->
+			<A> <!-- A RDATA (RFC 1035) [given as dotted decimal representation] -->
+			</A>
+		</Response>
+	</Responses>
+</DNSResponse>
