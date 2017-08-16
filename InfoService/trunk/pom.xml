@@ -19,13 +19,13 @@
 	<repositories>
 		<repository>
 			<id>anon.inf.tu-dresden.de</id>
-			<url>http://anon.inf.tu-dresden.de/artifactory/repo</url>
+			<url>https://anon.inf.tu-dresden.de/artifactory/repo</url>
 		</repository>
 	</repositories>
 	<pluginRepositories>
 		<pluginRepository>
 			<id>anon.inf.tu-dresden.de</id>
-			<url>http://anon.inf.tu-dresden.de/artifactory/repo</url>
+			<url>https://anon.inf.tu-dresden.de/artifactory/repo</url>
 		</pluginRepository>
 	</pluginRepositories>
 	<dependencies>

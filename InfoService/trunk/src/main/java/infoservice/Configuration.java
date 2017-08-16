@@ -654,6 +654,8 @@ final public class Configuration
 										LogHolder.log(LogLevel.EXCEPTION, LogType.MISC, a_e);
 									}
 								Database.getInstance(InfoServiceDBEntry.class).update(entry, false);
+								LogHolder.log(LogLevel.DEBUG, LogType.MISC,"Added intial neighbour IS: "+entry.getId());
+								
 							}
 
 						/* start the UpdateInformationHandler announce thread */
