@@ -390,7 +390,7 @@ public class PerformanceMeter implements Runnable, Observer
 								if (firstTab != -1 && secondTab != -1 && thirdTab != -1)
 									{
 										// extract the timestamp
-										long timestamp = Long.parseLong(line.substring(0, firstTab));
+										long timestamp = -1;
 
 										try
 											{
