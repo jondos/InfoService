@@ -28,7 +28,6 @@
 package infoservice;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.io.File;
 import java.sql.Timestamp;
 import java.util.Date;
@@ -43,6 +42,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import anon.crypto.SignatureCreator;
 import anon.crypto.SignatureVerifier;
+import anon.infoservice.ANONAddress;
 import anon.infoservice.AbstractDatabaseEntry;
 import anon.infoservice.Constants;
 import anon.infoservice.Database;
@@ -1854,6 +1854,58 @@ final public class InfoServiceCommands implements JWSInternalCommands
 			}
 
 		/**
+		 * This method is called, when we receive data from an anonymous recipient who
+		 * want to publish its anonymous address
+		 *
+		 * @param id
+		 *          The ID of the address under which it can be accessed.
+		 * @param a_postData
+		 *          The data we have received. Should be an <ANONAddress>-XML-structure
+		 *
+		 * @return The HTTP response for the client.
+		 */
+		private HttpResponseStructure postANONAddress(String id, byte[] a_postData)
+			{
+				HttpResponseStructure httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_OK);
+				try
+					{
+						Document doc=XMLUtil.toXMLDocument(a_postData);
+						Element elemANONAddress = (Element) (XMLUtil.getFirstChildByName(doc,ANONAddress.getXmlElementName()));
+						ANONAddress anonaddress=new ANONAddress(id,elemANONAddress);
+						Database.getInstance(ANONAddress.class).update(anonaddress);
+					}
+				catch (Throwable e)
+					{
+						LogHolder.log(LogLevel.ERR, LogType.NET, e);
+						httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_BAD_REQUEST);
+					}
+				return httpResponse;
+			}		
+		
+		
+		/**
+		 * Sends the ANONAddress information for the requested ANONAddress ID.
+		 *
+		 * @return The HTTP response for the client.
+		 */
+		private HttpResponseStructure getANONAddress(String id)
+			{
+				/* this is only the default, if we don't know the requested ANONAddress */
+				HttpResponseStructure httpResponse = null;
+				ANONAddress addr = (ANONAddress) (Database.getInstance(ANONAddress.class).getEntryById(id));
+				if (addr != null)
+					{
+						httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_TYPE_TEXT_XML,
+								HttpResponseStructure.HTTP_ENCODING_PLAIN, addr.getPostData());
+					}
+				else
+					{
+						httpResponse = new HttpResponseStructure(HttpResponseStructure.HTTP_RETURN_NOT_FOUND);
+					}
+				return httpResponse;
+			}
+		
+		/**
 		 * This is the handler for processing the InfoService commands.
 		 *
 		 * @param method
@@ -2642,6 +2694,33 @@ final public class InfoServiceCommands implements JWSInternalCommands
 							{
 								httpResponse=doDNSQuery(postData);
 							}
+					}
+				else if (command.startsWith("/anonaddress/"))
+					{
+						String id = command.substring(13);
+						if(method == Constants.REQUEST_METHOD_GET)
+						/**
+						 * Full Command: GET /anonaddress/[id] 
+						 * Source: AN.ON Clients
+						 * Category: misc 
+						 * Description: Get address information about anonymous recipient
+						 * Description_de: Abruf von Adressinformationen eines anonymen Empf\"angers
+						 */
+							{
+								httpResponse=getANONAddress(id);
+							}
+						else if(method == Constants.REQUEST_METHOD_POST)
+							/**
+							 * Full Command: POST /anonaddress/[id] 
+							 * Source: AN.ON Clients
+							 * Category: misc 
+							 * Description: Publish address information about anonymous recipient
+							 * Description_de: Veröffentlichen von Adressinformationen eines anonymen Empf\"angers
+							 */
+							{
+								httpResponse=postANONAddress(id,postData);
+							}
+						
 					}
 				else
 					{
