@@ -60,7 +60,7 @@ public class InfoService implements Observer
 		/**
 		 * This is the version number of the infoservice software.
 		 */
-		public static final String INFOSERVICE_VERSION = "IS.09.008"; //never change the layout of this line!
+		public static final String INFOSERVICE_VERSION = "IS.09.009"; //never change the layout of this line!
 
 		protected JWSInternalCommands oicHandler;
 
