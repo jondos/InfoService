@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ANONAddress>
 <Address></Address> <!-- Encrypted address information -->
+<BlindedKey></BlindedKey> <!-- The blinded public key -->
 <Expire></Expire><!-- Validity date as Unix time stamp -->
 <LastUpdate></LastUpdate> <!-- Unix time stamp of last update of the information -->
 </ANONAddress>
