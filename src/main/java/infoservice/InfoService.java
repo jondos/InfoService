@@ -37,7 +37,6 @@ import java.util.Locale;
 import java.util.Observer;
 import java.util.Observable;
 
-import infoservice.PassiveInfoServiceInitializer;
 import infoservice.performance.PerformanceMeter;
 import anon.infoservice.Constants;
 import anon.infoservice.HTTPConnectionFactory;
@@ -60,7 +59,7 @@ public class InfoService implements Observer
 		/**
 		 * This is the version number of the infoservice software.
 		 */
-		public static final String INFOSERVICE_VERSION = "IS.09.009"; //never change the layout of this line!
+		public static final String INFOSERVICE_VERSION = "IS.09.010"; //never change the layout of this line!
 
 		protected JWSInternalCommands oicHandler;
 
